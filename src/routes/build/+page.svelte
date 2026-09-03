@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Build / create — bakes the "Builder Sheet Inspector" mock (docs/builder-plan.md): the character
+	// Build / create (docs/internals/ui.md ▸ "The builder is a live sheet, not a form"): the character
 	// as a LIVE SHEET on the left, and one choice at a time in the inspector on the right. Every
 	// changeable thing on the sheet is a click that opens its choice; nothing is picked blind, because
 	// the inspector shows what taking an option would do to the sheet before it is taken.

@@ -90,11 +90,10 @@ for math** (they lock in bugs); snapshots only for stable serialization shapes
 size, push/drag/lift = 2×carry; **effect stacking is order-stable & idempotent for
 declared-commutative bonuses**; save→load identity; merge row-count = Σ enabled rows;
 locale resolve never throws (missing locale→EN, EN→id).
-**The roller** (added 2026-08-24, the gap ROLLER-PLAN finding M named): a total is its dice
-plus the ONE d20 that counts plus the modifier and nothing else; cycling the advantage state
-never changes the multiset of dice drawn (the property the pre-2026-08-22 re-roll leak
-violated); the kept d20 is never worse than a dropped one; a full lap of the cycle returns
-the roll exactly as it landed.
+**The roller** (`docs/internals/roller.md`): a total is its dice plus the ONE d20 that counts plus
+the modifier and nothing else; cycling the advantage state never changes the multiset of dice drawn
+(the property a re-roll leak once violated — see that doc on why the mode may not draw); the kept
+d20 is never worse than a dropped one; a full lap of the cycle returns the roll exactly as it landed.
 
 ## Determinism
 Inject a **seeded RNG** for dice (4d6 stat roll, the dice roller, HP rolls on level-up)

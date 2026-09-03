@@ -269,7 +269,7 @@ describe('parseLegacyExpr (reading a roll off disk that predates `dice`)', () =>
 
 /*
  * The record is the DICE now, not the string. What matters is that a roll answers with what happened
- * (ROLLER-PLAN finding A), that the string it still emits is a faithful rendering of that, and that a
+ * at all, that the string it still emits is a faithful rendering of that, and that a
  * roll read back off disk arrives in the same shape as one just rolled — no caller should ever have
  * to know which of the two it is holding.
  */
@@ -526,7 +526,7 @@ describe('rollPool · crits', () => {
 });
 
 /*
- * Properties, not examples — the roller had none, which ROLLER-PLAN finding M calls out as the gap
+ * Properties, not examples — the roller had none, and that was the gap
  * that let the advantage re-roll leak live so long. These four pin what must be true of EVERY roll,
  * whatever it drew, and they are the ones the design argued from rather than a coverage exercise.
  */

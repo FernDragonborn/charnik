@@ -11,7 +11,7 @@
  * the two halves ever mixing.
  *
  * A line is a list of PILLS, not a formula string. That is the same decision `Rolled.dice` made one
- * floor down (ROLLER-PLAN finding A): a pill can carry what a string cannot — which effect the die
+ * floor down: a pill can carry what a string cannot — which effect the die
  * came from, that a bound applies to it, that a damage type was inherited rather than typed.
  */
 import {
@@ -247,7 +247,7 @@ export function pillsFromPool(
 			...bounds,
 		}));
 	// An effect die arrives here KNOWN but UNNAMED: the roll site has the die and not the effect that
-	// gave it (`RolledDie.source` is still unfilled — ROLLER-PLAN §2). The empty source is what keeps
+	// gave it (`RolledDie.source` is still unfilled — plan.md ▸ ROLLER-N). The empty source is what keeps
 	// it an EFFECT die rather than a pool one, so it can't pick up the pool's rerolls; the caption
 	// simply has nothing to print until provenance is threaded through.
 	for (const b of opts.bonusDice ?? [])
@@ -463,8 +463,8 @@ export interface RollerIssue {
 }
 
 /** Everything wrong with a set of lines, in reading order. Collected and returned rather than
- *  thrown — the content loader's `issues[]` precedent, and the `{roll, issues}` shape ROLLER-PLAN §5
- *  asks for at the point the formula string is a plugin's public API. */
+ *  thrown — the content loader's `issues[]` precedent, and the `{roll, issues}` shape plan.md ▸
+ *  ROLLER-N asks for at the point the formula string is a plugin's public API. */
 export function rollerIssues(lines: RollerLine[]): RollerIssue[] {
 	const issues: RollerIssue[] = [];
 	for (const line of lines) {

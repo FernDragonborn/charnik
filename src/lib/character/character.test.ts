@@ -307,11 +307,11 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 
 	it('rotates the log file so it stays bounded (B4)', async () => {
 		const s = new MemoryStorage();
-		for (let i = 0; i < 550; i++)
+		for (let i = 0; i < 150; i++)
 			await appendLog(s, 'mirt', { t: i, kind: LOG_KIND.roll, label: `r${i}`, result: i });
 		const log = await readLog(s, 'mirt');
-		expect(log.length).toBe(500); // capped at LOG_MAX_LINES
-		expect(log.map((e) => e.label).at(0)).toBe('r549'); // newest kept
+		expect(log.length).toBe(100); // capped at LOG_MAX_LINES
+		expect(log.map((e) => e.label).at(0)).toBe('r149'); // newest kept
 		expect(log.map((e) => e.label).at(-1)).toBe('r50'); // oldest 50 dropped
 	});
 });

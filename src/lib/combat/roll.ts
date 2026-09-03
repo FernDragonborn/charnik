@@ -106,7 +106,8 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
  *  The sentence is ONE ` · ` segment, and the parenthetical is why: it used to read "advantage after
  *  the roll · kept 19 over 7", which this pattern could only eat as far as the next `·` — so every
  *  lap round the cycle left another "· kept 19 over 7" behind and the note grew. Reading back a
- *  sentence we wrote ourselves is the sin ROLLER-PLAN §3 names; one segment is the cheap half of the
+ *  sentence we wrote ourselves is the same sin as parsing a rendered roll back; one segment is the
+ *  cheap half of the
  *  fix, and the structured `amendments: [{kind, from, to}]` is the real one. */
 const AMEND_NOTE = /(?:^\s*|\s·\s)(?:(?:dis)?advantage after the roll|advantage cleared)[^·]*/;
 

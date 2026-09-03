@@ -27,8 +27,9 @@ import {
 	type DamagePartSpec,
 } from '$lib/combat/helpers';
 
-/** Cap on the retained roll log (newest kept). */
-const ROLL_LOG_MAX = 200;
+/** Cap on the retained roll log (newest kept). Matches `LOG_MAX_LINES` on disk on purpose: a
+ *  deeper in-session log silently loses everything past the disk cap on the next reload. */
+const ROLL_LOG_MAX = 100;
 
 /** A roll request — the pool + modifier and optional advantage / bonus dice / reroll-min_die mods.
  *  The ONE shape prefill / rollDiceNow / queueDamage (and the VM's openRoll) all speak, so a roll
@@ -87,8 +88,7 @@ export class RollTray {
 	 * `persist` appends a completed roll. `persistRevision` REPLACES the line a roll already wrote:
 	 * an amendment (advantage applied after the fact, a Savage Attacker reroll) is not a new roll, it
 	 * changes what that roll was decided as — and without this the correction lived only until the
-	 * page reloaded, while the pill happily offered to amend the rehydrated one again (ROLLER-PLAN
-	 * finding G).
+	 * page reloaded, while the pill happily offered to amend the rehydrated one again.
 	 */
 	constructor(
 		private readonly persist?: (entry: RollLogEntry) => void,

@@ -237,7 +237,18 @@ offer two or three **rendered** variants — they are picked from seeing them, n
 
 ## The docs
 
-`docs/README.md` is the full map. What you will reach for most:
+**Read `docs/README.md` before anything else in a session.** It is the full map, one line per file
+saying what that file rules on, and the tree moves — a doc you did not know exists is a decision you
+are about to re-take or contradict.
+
+**Touching a subsystem means opening its doc FIRST — before the recommendation, not just before the
+code.** These files hold what is already settled, so the cost of skipping one is not a missed detail,
+it is re-opening a closed question and spending a maintainer's attention on it. The trigger is the
+TOPIC, never the size of the change: a one-sentence answer about a CSV column is `content.md`'s
+jurisdiction as much as a rewrite is. Surveying a plan is not an exemption — a plan says what is left
+to do, the internals doc says what it is allowed to be.
+
+What you will reach for most:
 
 - **`docs/plan.md`** — the authoritative spec and the only place that says what is still **open**.
   When a decision there proves wrong, fix it in the same change.

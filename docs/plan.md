@@ -986,7 +986,7 @@ stay semi-manual.
     search through hundreds of rows, which is what the builder's equipment pane is for.
   - **MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work now**; the schema may
     change freely (breaking) until release, and the schemaVersion machinery stays for post-release.
-  - Still open here: **item charges** live in RECHARGE slice 3, not in this panel.
+  - Still open here: **item charges** live in RECHARGE-3, not in this panel.
 - [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
   surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,
@@ -1030,7 +1030,7 @@ stay semi-manual.
   **App-verified (first tranche):** demo Karroth's attuned Cloak now
   reads AC 14 → **15** with "Cloak of Protection +1" in the trace, and every save +1
   (`design-preview/magic-item-efx.png`). **REMAINING (the `[~]`):** the other ~240 magic items — mostly
-  charges/activated procedures (RECHARGE slice 3), GM-chosen variants (Ring/Armor of Resistance),
+  charges/activated procedures (RECHARGE-3), GM-chosen variants (Ring/Armor of Resistance),
   weapon-scoped bonuses (the open §A `damage:<qualifier>` gap) and the generic +1/+2/+3 rows that need
   one row per tier.
 - [x] **DEMO-1 · Showcase demo character — DONE 2026-08-04.** **Karroth the Red**, id `karroth` —
@@ -1063,24 +1063,53 @@ stay semi-manual.
   Attacks panel shows ×N. Prereq: the fold must gather these feature tokens; content-schema
   columns bump + converter updates.
   Order: shapes 1→3→2, Wild Shape last as its own item.
-- [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
-  picked blind (spells, feats, subclasses, maneuvers, features). **BAKED 2026-08-27** from the
-  "Builder Sheet Inspector" mock: the builder is now a LIVE SHEET on the left and a one-choice-at-a-
-  time inspector on the right, each choice showing the reused `WikiDetail` article plus **what taking
-  it would do to the sheet** (`previewSheet` runs the real pipeline on a trial draft →
-  `lib/build/sheet-diff`). Level-up reuses the same page. Every target has its own inspector body
-  (a feat slot is not an ability allocator); all of them render side by side at `/dev/inspector`.
-  Remaining under this item: the **guided ("walk me through it") second mode** — deliberately not
-  built, the inspector's targets are a data descriptor so a wizard is a second entry point onto the
-  same view-model, not a rewrite. Choice groups (N2 shape 3) still render here when N2 lands.
-  Working notes: `docs/builder-plan.md`.
-  Also remaining, from the 2026-09-02 builder audit — three items that stop at a decision we have not
-  taken, each costed under `builder-plan.md` ▸ Known sharp edges: the **sectioned picker's ARIA
-  shape** (a `listbox` cannot own the section-header buttons; the recommendation is the APG grid
-  popup, now that `SheetAttacks` shows a `subgrid` row wrapper costs no pixels), the **shared
-  provenance popover** (repo-wide, not builder-only — `title` is mouse-only and focus does not fix
-  it), and **keyboard navigation past the double-Enter take**. Everything else the audit found is in
-  code.
+  **The measurement that sizes shape 3, so it is not re-taken:** across all 428 shipped
+  class-feature rows in both editions, only 21 carry any effect token and none encodes a numeric stat
+  bonus. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
+  Order · Primal Order · Epic Boon have no column a picker could read, and a panel for them today
+  would be a lie — they are blocked on the `choice_group` / `choose_n` columns, not on UI.
+  Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
+  Divinity, Font of Magic, Wild Shape, Indomitable, Arcane Recovery, Mystic Arcanum, Stunning Strike.
+  The Resources block discovers pools from the engine, so each appears the moment content encodes it;
+  the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`, `ki`,
+  `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
+  (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
+  is still game data, and hand-authoring it from memory is the failure that passes every gate.
+  - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
+        `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
+        restore, so it waits on the model above rather than on the mechanism, which is shipped.
+- [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is picked
+  blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
+  built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
+  "the picker contract". Choice groups (N2 shape 3) render here when N2 lands. Open tails:
+  - [ ] **The guided ("walk me through it") second mode.** **Decided: not this release** — it needs
+        its own design session, and the todo bar already carries the guidance a first-time build
+        needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
+        second entry point onto the same view-model, not a rewrite.
+  - [ ] **The sectioned picker's ARIA shape.** A `listbox` may own `option` and `group`, not the
+        interactive `<button>` each section header is — so a screen reader hears the header wrong
+        while the options, their taken state and the whole keyboard walk are announced correctly.
+        Three shapes were costed: one listbox per section (breaks the single `aria-controls` /
+        `aria-activedescendant` a combobox needs — it points at ONE popup); a non-interactive header
+        with collapsing moved to the jump rail (loses only "collapse ONE section by clicking it");
+        or the APG **combobox-with-grid-popup** — `role="grid"`, a section header as a single-cell
+        row, an option as a `row` of two `gridcell`s, whose wrappers used to be the objection until
+        `SheetAttacks` showed a `subgrid` row wrapper costs zero pixels. **Decided: the grid popup,
+        pending a standards + assistive-technology check and a hand-tested edge-case pass** (a
+        collapsed section must not hide a search match, Home/End, type-ahead, what
+        `aria-activedescendant` names when the highlight is on a header, taken-state announcement in
+        a picker where rows toggle independently, RTL).
+  - [ ] **A shared provenance popover — repo-wide, not builder-only.** `ui.md` ▸ UX pattern contract
+        rule 3 requires every auto-calculated value to explain itself on hover **or focus**; today
+        provenance rides `title`, which is mouse-only, and making the tiles focusable does not help
+        because no browser shows a `title` on keyboard focus. **Decided: a small affordance that
+        appears on hover AND focus and is itself a button**, so the keyboard path exists without a
+        new gesture. A modifier key is not available — a click on a spell or action row already
+        means *roll*, `Ctrl` is the builder's undo chord, and `Alt`+click is the tray-damage path.
+  - [ ] **Keyboard navigation past the double-Enter take.** The walk moves the highlight and takes,
+        but does not reach the take toggle, the jump rail or the card's own controls without `Tab`.
+        Roving tabindex inside the row; **the jump rail stays its own tab stop** rather than joining
+        the arrow cycle, so the arrows keep meaning one thing.
 - [~] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
   — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
   progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;
@@ -1168,9 +1197,9 @@ were learned the hard way.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
-- **W2 · The roller → ROLLER-N → UBUG-11. ROLLER-N and UBUG-21 closed 2026-08-24**; the ledger,
-  **[`docs/roller-plan.md`](roller-plan.md)**, stays as the record of the 2026-08-10 audit that
-  turned "add a loop for N attacks" into "the result SHAPE is what aged", and of the organ's design.
+- **W2 · The roller → ROLLER-N → UBUG-11. ROLLER-N and UBUG-21 are closed.** The audit behind it
+  turned "add a loop for N attacks" into "the result SHAPE is what aged"; the design that came out of
+  it is `docs/internals/roller.md` and the open tails are on ROLLER-N below.
   What the wave still owes: `UBUG-11` — a class action that makes N attacks (Flurry of Blows) needs
   the `rolls` intent in actions.md to CALL the roller, which now exists to be called.
   **A session of live testing on 2026-08-25 (`48a68c3`..`6c8d82e`) closed 27 findings against the
@@ -1186,8 +1215,8 @@ were learned the hard way.
   gets translated and then rewritten. **And after W2** — this reason is new and load-bearing: the
   roller currently writes an English SENTENCE into `log.jsonl`, and prose already on disk cannot be
   localised afterwards. The roller has to start recording facts before the i18n pass has anything
-  worth localising (ROLLER-PLAN, "the record holds facts").
-- **W4 · N1 Inventory → RECHARGE slice 3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
+  worth localising (ROLLER-N ▸ "amendments are STRUCTURE, not a sentence").
+- **W4 · N1 Inventory → RECHARGE-3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
   SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
   change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
@@ -1211,7 +1240,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   therefore still `titleCase(id)` everywhere, because the same string is both the row's display text
   and the label of the roll it fires — translating the display half alone would show a Ukrainian
   skill whose own roll toast says it in English. That is one change, after W2, across the combat
-  sheet AND the builder (`docs/builder-plan.md` carries the same open tail).
+  sheet AND the builder, as one change.
   **The boundary is sharper than "chrome vs body", and it is what the rest of the sweep must
   respect:** a string is safe when nothing it names is ALSO a roll label. The Controls toolbar, the
   panel heads and the turn bar pass that test, which is why they are done. The stat tiles do NOT —
@@ -1332,7 +1361,8 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D16 · generalized player-choice model.** Half-feat ability-choice and Skilled's skill grants
   are DONE, at a level's slot AND under the background's granted origin feat — both ask through the
   same `FeatSubChoices` block, keyed by a slot key or by `ORIGIN_SLOT_KEY`. Still open: Magic Initiate
-  spell picks, and the tool half of Skilled (tools are not modelled — see `docs/n2-plan.md` feat tail).
+  spell picks (the `magic_initiate` feat's spell-learning half) and the tool half of Skilled, since
+  tools are not modelled at all.
   One "player choice at a slot" abstraction covers all.
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
@@ -1386,7 +1416,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   (2) damage (weapon/spell dice + mod) with a **Crit toggle**"). Only stage 1 was ever built. The tray
   needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
   separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
-  (roller-plan.md). Building it here first would build it twice.
+  (`docs/internals/roller.md`). Building it here first would build it twice.
   **Interim honesty — TAKEN 2026-08-21, because the roller did slip.** The tray's heading now reads
   "Greataxe · to hit" and carries the queued damage as a read-only line ("then 1d12 +3 slashing —
   rolled with it, not from this pool"), so the pool can no longer be read as the whole attack. It is
@@ -1398,68 +1428,43 @@ holds the done-work log; these are the OPEN tails it carried):**
   New shot state `combat-dice-attack` pins it: the prefilled tray had no visual coverage at all,
   which is part of why this survived so long. **The real fix is still ROLLER-N** — this changes no
   structure and buys none of it.
-- [x] **ROLLER-N · one roller that fires N independent sub-rolls — CLOSED 2026-08-24 (promoted to its
-  own item 2026-08-09; working ledger + the 2026-08-10 audit behind it →
-  [`docs/roller-plan.md`](roller-plan.md)).**
-  **Slices 5–6 (2026-08-24): the ROLLER ORGAN.** A roll is built as LINES carrying a role — a d20
-  test is a verdict, damage is a quantity, and they are different kinds of thing rather than two
-  instances of "a roll". One action fires N instances of them, logged per line and toasted as one
-  card, which is the capability this item was filed for. Crits landed with it (`CRIT_METHOD`
-  classic/loyal, §9's rule option + a per-roll override). Design decisions, and what is still open,
-  are in ROLLER-PLAN ▸ "The organ".
-  **Slices 1–3 are done. 1 and 2 (2026-08-21): UBUG-22, then the ONE record** — the persisted line now
-  carries the whole roll (damage, the advantage pair, the note), an amendment rewrites its own line
-  instead of dying with the session, and old lines still load. That was the "do this EARLY" slice,
-  because every slice after it makes the in-session record richer.
-  **Slice 3 (2026-08-22): the roller answers with DICE, not with prose.** `Rolled` carries
-  `dice: RolledDie[]` + `mod`; `expr` is now a rendering of them, read only by `parseLegacyExpr` for
-  lines already on disk, behind one `rehydrateRoll` / `rehydrateLogEntry` seam. The house contract
-  ("value + provenance, never a bare number") finally covers the one computation that answered with a
-  string, and the toast stopped parsing a format we wrote ourselves.
-  **Slice 4 (2026-08-22): advantage is a MODE over recorded dice.** `d20s` + `advantage` replace
-  `kept`/`dropped`/`original`/`mode`/`advantageMode`; `setAdvantage` draws only on the first switch
-  away from neutral, which closes the leak where cycling back to neutral deleted the second die and
-  the next tap drew a fresh one — a control that could be tapped until it gave a better number.
-  Verified in the browser over six taps.
-  Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
-  one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
-  advantage, own crit, own target), rendered as one grouped result. **The callers were the reason, and each now
-  needs only its own CALL:** (1) `count`-scaling cantrips — Eldritch Blast beams, Scorching Ray,
-  Magic Missile, Chain Lightning; `remindCountScaling` (`combat/spell-casting.svelte.ts`) still casts
-  ONE instance and toasts "N×: make N separate rolls at this level", a reminder standing in for the
-  rolls (item 9: never a silently-wrong single big die) — it can now prefill the roller with a
-  `×N` count pill instead. (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows =
-  2× Unarmed Strike); that item keeps its own half, the `rolls` intent in actions.md. (3) any future
-  multiattack. **Built once here** — a second per-feature path is the failure mode that was being
-  avoided. **Carried `UBUG-21` with it** (above), and closed it: the tray only ever built the to-hit
-  half, and the line model is the same one that fixes it.
-  **The audit says the shape itself is what aged** — the roller answers with a formatted STRING that
-  the UI parses back, so provenance, damage type and crit-doubling have nowhere to live, and the
-  advantage amend/undo does string surgery. Details, decisions and slices are in `roller-plan.md`;
-  the two items below are the ones already agreed.
-  **Fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
-  spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
-  `RollToastAttack.advantageMode?: 1 | -1` on the view model, the second re-derived from the first
-  with a legacy fallback. That breaks AGENTS.md ▸ Taste (one name per fact), and both are two-state where a named
-  member belongs (AGENTS.md ▸ Taste (open enums, never booleans) — the same reasoning that turned `RollRow`'s `line: boolean`
-  into `ROLL_LAYOUT`). Two changes, and the FOLD is the bigger one:
-  - **Collapse, don't just rename.** `RollToastAttack` carries `dropped` AND `advantageMode` — both
-    are projections of the one `AdvantageRoll`. Carry the object itself and the two fields become
-    one, along with the fallback that re-derives the mode.
-  - **Name the members** (`advantage` / `disadvantage`) rather than `1 | -1`. This field is persisted
-    into `log.jsonl`, where `-1` tells a reader nothing.
-  **Do NOT convert the input axis with it.** `rollPool(advantage)` / `netAdvantage(fx)` use −1 · 0 ·
-  +1 as arithmetic that sums and clamps across effects; that is a different fact from "how this roll
-  was decided", and it stays numeric. Only the RESULT's record becomes a named member.
-  **The rolled dice must SURVIVE a state change (maintainer, 2026-08-10) — and today they don't.**
-  Cycling back to neutral drops the second d20 from the record, so the next tap draws a fresh one and
-  a player who keeps cycling keeps getting new dice to pick from. That defeats the exact property the
-  control was justified with. The fix is that a roll records the dice it drew and the mode merely
-  selects which counts — NOT pre-rolling two batches for every roll, which would draw dice nobody
-  asked for and change the RNG consumption of every roll in the app (`roller-plan.md` has the shape). ~~Contract `DiceTrayRequest.instances` is already fixed~~ — **WRONG, corrected
-  2026-08-10: no such field exists anywhere in `src`.** Nothing of the contract is settled; the loop,
-  the grouped roll/toast/log rendering and the request shape are all unbuilt. The reminder text stays the fallback for what the roller
-  can't express. Ties roller-plan.md + the RollToast row model (UBUG-12).
+- [x] **ROLLER-N · one roller that fires N independent sub-rolls.** One action fires N instances of
+  two-level lines, each logged on its own line and toasted as one card; crits landed with it. The
+  roller answers with structured dice instead of a formatted string, advantage is a mode over
+  recorded dice, and the persisted record is the in-session record. **The design, the rejected
+  alternatives and the conventions are `docs/internals/roller.md`**; only what is still open lives
+  here:
+  - [ ] **`{roll, issues}` — a formula the parser could not fully account for must SURFACE.** Today
+        an unrecognised fragment is ignored and the understood part rolls, which is the same failure
+        class as UBUG-22 and worse in one place: `plugins.md` makes the formula string the plugin
+        API, so a sandboxed plugin miscomputes and cannot tell. **Shape: a `parseFormula(str) →
+        {terms, issues}`, with `rollFormula` staying sugar over it** — a smaller diff than changing
+        every call site's return type, and the sites that do not want issues do not change. Inside
+        the roller the existing "an arithmetic-looking fragment blocks the roll" behaviour is the
+        surfacing; for a formula that came from CONTENT or a plugin it is a `deriveIssue`, because
+        that is a data defect and must be visible outside the moment of the roll.
+  - [ ] **Amendments are STRUCTURE, not a sentence.** `amendedNote` composes English prose that a
+        reader then has to match back out; one regex for it has already eaten an upcast's provenance
+        and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates W3**: prose
+        already written into `log.jsonl` cannot be localised afterwards, so the facts have to land
+        before the i18n sweep has anything to work with.
+  - [ ] **`RolledDie.source` is declared and nothing fills it.** `pillsFromPool` takes
+        `{type, mods, bonusDice}` — an effect's identity is not in that signature, so a Bless die
+        arrives known but UNNAMED. **Thread the effect's label down to the pool** rather than adding
+        a side map, which would be a second source of truth for the same fact. This is the house
+        provenance contract applied to a die.
+  - [ ] **The roller takes `RollSpec` itself** — one request carrying the label, the type and the
+        damage parts, not just the dice. Half of this shipped (`rollPool(dice, RollPoolOptions)`
+        killed the positional `−1 | 0 | +1`); the rest waited for the result to be facts, which it
+        now is.
+  - [ ] **A token typed WITHOUT spaces parses as one raw fragment and blocks the roll** (`2d6+3`).
+        The parser splits on whitespace only, and no-spaces is what a person types.
+  - [ ] **Damage types have no localized names anywhere in the data**, so they match and display in
+        English. Rides the same boundary as ARCH-1: the 13 SRD types are a closed rules vocabulary
+        and take catalog keys, an invented homebrew type is data and passes through.
+  - [ ] **Deliberately unbuilt, with the reason:** Elven Accuracy (now merely a third element in
+        `d20s`, not a modelling question), a per-instance target, and a per-instance advantage — a
+        volley rolls the same set N times, which is what the two-level model decided a volley IS.
 - [x] **RES-NAME · a resource pool has a NAME of its own — DONE 2026-08-21** (maintainer's call on
   the hunch filed the same day: "ім'я у ресурсу має бути окремим, а не виводитись із айді").
   **What was wrong.** A pool's `id` is identity — the key in `play.resourcesSpent` on disk, what
@@ -1510,6 +1515,44 @@ holds the done-work log; these are the OPEN tails it carried):**
   rule is written down as **docs/internals/content.md ▸ A new content TYPE** — including that a file of a NEW type should not
   declare `#content-type:`, because an older build then reports an ERROR where it would otherwise
   report a warning.
+- [ ] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The two axes the
+  `recharge` enum cannot express and that a rest policy should not be bent into. Nothing tracks item
+  charges as a resource today — no column, no consumer — which is exactly why the generic model waits
+  for this rather than being pre-built; the reasoning is `docs/internals/effects.md` ▸ Recharge-model
+  roadmap, axis 2. Wants N1's inventory first (W4).
+  - [ ] **Item-charge data:** a `charges` (max) + `recharge` spec on the item schema; an owned or
+        attuned charged item GRANTS an ordinary resource pool, reusing `grant_resource` and the whole
+        resource subsystem rather than inventing a parallel counter.
+  - [ ] **Generalize recharge → `{trigger, amount}`:** trigger ∈ `short|long|dawn|dusk`, amount ∈
+        `all|<N>|<formula>`, with the existing `short`/`long`/`short_one`/`consumable` members
+        becoming sugar over it so nothing on disk breaks. A formula amount resolves through the L2
+        evaluator at rest/dawn time.
+  - [ ] **Wire `dawn`/`dusk`** to the out-of-combat "pass time" control (`advanceTime`) — a day
+        boundary fires the dawn recharge.
+  - [ ] **A shipped SRD charged item or two as the first consumer**, converter-sourced.
+- [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
+  small, each fires on an existing path, and none blocks the others.
+  - [ ] **Champion Heroic Rally — a turn-start heal.** It is the SECOND declarative event-action after
+        `regain_on_initiative`, which is the condition `effects.md` ▸ Recharge-model roadmap set for
+        generalizing the trigger dimension. **So generalize it now** (`on_event:<event>:<action>` over
+        a bounded event set × the bounded action verbs) rather than adding a third narrow token and
+        waiting again. Arbitrary event LOGIC stays L3 plugin `onEvent` — widening L1 past a bounded
+        vocabulary is a security property, not a style choice.
+  - [ ] **Concentration: several saves for one lump of EQUAL projectiles** (Magic Missile, Scorching
+        Ray) — a segmented `1 · 2 · 3` control choosing HOW MANY saves, all at the same flat DC 10,
+        never dividing the entered damage. Different SOURCES already work with no new UI: they are
+        separate Damage presses, each raising its own save. Prototype:
+        `design-preview/concentration-split-button.html`. **Weigh killing this instead of building
+        it**: 2024 dropped the per-source sentence, and even under 2014 the player can press Damage
+        three times.
+  - [ ] **Massive Damage / System Shock** — ≥ half max HP in one instance → DC 15 CON → the System
+        Shock table. **DMG-optional, NOT SRD**, so it can only ever ship as a toggle beside
+        encumbrance, never as core rows or shipped data. Opening it means opening the category
+        "optional DMG rules", which is the actual decision. (SRD overkill instant death is separate
+        and already built.)
+  - [ ] **2014 long rest recovers HALF your Hit Dice and the app picks them largest-first**; RAW lets
+        the player choose which. Visible on a multiclass d12+d6 pool. A picker if anyone asks — 2024
+        recovers all and is unaffected.
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
   `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
   problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
@@ -1522,6 +1565,21 @@ holds the done-work log; these are the OPEN tails it carried):**
   ad-hoc in the fold. Independent of ROLLER-N (each ships without the other), but the per-beam case
   only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
   invocations.
+  **Two constraints the grammar decision must respect, and one shape that satisfies both.**
+  (1) The qualifier slot is ALREADY spoken for and routes by TARGET: `parseQualifier`
+  (`effects/token-parser.ts`) reads `flat_bonus:attack:<q>` as a weapon scope and any other target's
+  `:<q>` as a damage TYPE — so Dueling written the obvious way, `flat_bonus:damage:melee+2`, parses
+  `melee` as a damage type and folds silently wrong. (`min_die` gets away with a scope there only
+  because its trailing integer anchors the end; a signed value cannot.) (2)
+  `docs/internals/compatibility.md` §4 **reserves the 4th token segment for a bonus TYPE** (family B
+  stacks by type, not by layer), so spending it on a 5e-only scope is exactly the foot-gun that doc
+  exists to prevent. ⇒ **Put the scope in the TARGET namespace, where dotted sub-targets already
+  live** (`speed.fly`, `save.str`, `skill.<id>`, `passive.<skill>`): `flat_bonus:damage.melee+2`.
+  It consumes no new segment, keeps the weapon-category vocabulary out of L1 (the target is validated
+  downstream as it already is), and scales to what this item actually wants —
+  `damage.<weapon_id>` / `damage.<spell_id>` — because a namespace is not an enum.
+  Rage's broad damage fold plus a note is the live consequence: RAW-faithful STR-melee scoping waits
+  on this.
 - [ ] **B11 · size-cap on `Storage.read()` — LOCAL reads only, which is why it stays YAGNI.** The
   path that mattered is already capped, by REL-4: `MAX_REMOTE_BYTES` (8 MB, one response),
   `MAX_PACK_FILES` (200) + `MAX_PACK_BYTES` (50 MB) read off the tree listing before a byte is
@@ -1547,7 +1605,16 @@ holds the done-work log; these are the OPEN tails it carried):**
 - **Won't-do (recorded so they aren't re-audited as bugs):** **D19** exhaustion `max 6` stays a RAW
   constant (identical both editions — not a data-driven win, YAGNI); **SMELL-2** `deriveHealth` is
   single-open + `characterName` is a display-only label — keying it by `c.id` is dead flexibility;
-  loose `z.record` play-state keys stay un-branded (see `docs/internals/characters.md` ▸ Play-state modelling).
+  loose `z.record` play-state keys stay un-branded (see `docs/internals/characters.md` ▸ Play-state modelling);
+  **`two_weapon_fighting`** stays text — `computeAttacks` adds the ability mod to every weapon's
+  damage, so the off-hand penalty the style REMOVES was never modelled and there is nothing to
+  encode; **2014 `grappler`** stays text — it is relational ("advantage against a creature grappled
+  by you") and the app has no target model.
+- [ ] **SAVAGE-TAIL · two known limits of the `damage_reroll` offer.** It rerolls the WHOLE primary
+  damage part, so a Bless die riding that part is rerolled with the weapon dice — arguably "use
+  either roll", but not what the feat says. And the offer rides the INSTANT attack tap only: the
+  `Alt`+click tray path rolls damage later and gets no offer there. Both are small and neither is a
+  wrong number.
 
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
 - [x] **UBUG-1 · Short rest heals via Hit Dice** — `1d<die> + CON`, min 1 HP, player picks how
@@ -1609,7 +1676,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   gain_action/rest, but a "make N attacks" action degrades to text. **Rework how class actions resolve:**
   let an action fire ATTACK sub-rolls (to-hit + damage) through the existing `attackRoll` path — Flurry =
   2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into actions.md (the
-  `rolls` intent field) + roller-plan.md. The whole "action from a class
+  `rolls` intent field) + the roller. The whole "action from a class
   feature" model is the target, not just Flurry.
   **Split 2026-08-09:** the "fire N sub-rolls" half is `ROLLER-N` (a general roller, also what a
   `count`-scaling cantrip needs — re-reported the same day on a Warlock: Eldritch Blast at level 5 just
@@ -1711,8 +1778,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   **Open tails:** an inert ↻ MARKER on the toast's pill (a cue, not a capability — the always-visible
   Playbar carries the live control on the same roll); the toast has no labelled close control, which
   is its own a11y nit since the card IS a labelled dismiss button today; the volley chooser waits on
-  `ROLLER-N`. That an amendment never reaches the append-only `log.jsonl` is finding G in
-  [`docs/roller-plan.md`](roller-plan.md), not a tail of this item.
+  `ROLLER-N`. That an amendment reaches the append-only `log.jsonl` was the roller's own fix, not a
+  tail of this item.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing.** Fixed end-to-end via a persisted
   `ui.spellsHidden`; pins likewise persist in `ui.spellsPinned` (D3), no demo hardcode.
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
@@ -2828,12 +2895,15 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    builder**: a dice **pool with selectable COUNT per die** (`N × dY`, e.g. 8d6), a flat
    modifier, adv/dis, and a **roll log** — opened from the "last roll" readout on the sheet —
    listing every roll with its source, formula breakdown, total, round, and adv/crit flags
-   (rerollable). The log is backed by the character's append-only **`log.jsonl`** → **full
-   persistent history across sessions**, grouped by session/date and searchable — NOT capped
-   to recent rolls; the panel **scrolls back through the entire history** (virtualized for
-   large logs). Each row has a **hover delete (trash)** to drop a roll. Keyboard- and
-   touch-equivalent (focus opens the same dropdown; long-press
-   to edit a value on touch).
+   (rerollable). The log is backed by the character's append-only **`log.jsonl`**, and it is a
+   **rolling recent history, not an archive**: the last **100 rolls**, which survive a restart so
+   reopening the app shows the session before. Measured: a structured attack line (d20 + the
+   advantage pair + a damage line + a note) is 678 B and a plain save 296 B, so 100 lines is
+   **~30–66 KB**. The cap is also the per-roll IO cost — `writeLogLine` reads and rewrites the whole
+   file on every append — which is the second reason not to keep more. Grouping by session/date,
+   search, virtualized scrollback and a per-row delete are **not built**; nothing has asked for them,
+   and an unbounded log makes every roll pay for the whole campaign. Keyboard- and touch-equivalent
+   (focus opens the same dropdown; long-press to edit a value on touch).
    **Attacks**, **spells**, and **actions/maneuvers** are THREE SEPARATE panels. The
    **attacks panel** lists weapon attacks (melee/ranged, incl. unarmed/thrown). The
    **Actions panel** lists the **full set of standard actions** (system-aware 2014/2024 —

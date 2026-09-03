@@ -277,7 +277,7 @@ class CombatVM {
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
 		const hist = await readLog(getUserStorage(), c.id);
 		// a line written since the record was unified carries the WHOLE roll; an older one carries only
-		// the flattened summary, which is all there ever was in it (ROLLER-PLAN finding G). Either way
+		// the flattened summary, which is all there ever was in it. Either way
 		// it goes through `rehydrateRoll`, which fills the per-die record from the rendered `expr` when
 		// the line predates it — the one place the legacy string is still read.
 		this.tray.seed(

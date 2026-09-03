@@ -118,6 +118,49 @@ good", so they are pinned here and every component follows them.
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
 
+## The builder is a live sheet, not a form
+
+Two panes, full-bleed, each scrolling on its own. **Left: the whole character sheet, always live** —
+every block renders what the draft currently derives, every changeable thing on it opens the inspector
+on that choice, and an unfilled thing renders as an empty slot in crimson saying what it will give.
+**Right: the inspector** (`clamp(480px, 32vw, 680px)`), one choice at a time.
+
+**Nothing is picked blind, and that is the whole point of the page.** An option shows the reused
+`WikiDetail` — one article renderer, never a builder-only summary — plus **what taking it would do to
+the sheet**, computed by applying the candidate to a trial draft and diffing the two derived sheets
+(`BuildVM.previewSheet` → `diffSheets`). That runs the real pipeline, so it builds a whole second
+`BuildVM` per preview: call it for the ONE option a player is reading, never per row. The cost buys a
+`$derived` that stays pure, which this doc requires above.
+
+**Taking has no confirm step, and it is not the same click as reading.** The toggle on a row takes and
+untakes; the row body opens the article, which repeats the take where the eyes already are. A one-of
+pick replaces rather than toggles, and `Clear` in the pane footer is its way out.
+
+**The whole draft has undo** — Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y plus a pair of header buttons, because a
+shortcut is not a way in for someone who never learns it. A step is a snapshot of `DraftState`
+(`draft-history.svelte.ts`) taken on the autosave's debounce, so a name being typed is one thing to
+take back rather than one per keystroke. Nothing there knows what a class is, which is why a new field
+on the draft is undoable the moment it exists — and it is what makes the fast gestures safe to offer.
+
+**Level-up reuses this page** (`?levelup=<slug>`), and a character may be built at ANY starting level:
+every subclass and every ASI/feat slot the chosen levels opened is its own todo line, and the
+class-features list shows every level up to this one plus a three-level look-ahead. Jumping straight
+to level 8 cannot silently skip three choices. `blocking` gates Create; leaving is not intercepted,
+because the draft autosaves and waits in the roster (`characters.md`).
+
+**One shared inspector shell** (title, blurb, footer) with a body component per target — a feat slot
+and an ability allocator are not the same question. `/dev/inspector` renders every target at once, so
+a regression in one is visible at a glance.
+
+Two derived read-outs earn their place by re-presenting numbers the sheet already computed, changing
+no mechanic: the **social bars** (Sway, Read the room, Lore — each the best passive among its skills,
+scaled 5…30, `lib/build/social.ts`), whose hover carries the winning skill's provenance; and
+**story**, free prose in `build.notes`, one bullet per line, for the GM.
+
+**Prose on the sheet is markdown-stripped** (`rowText`): a two-line clamp is not an article, and
+`_Origin Feat_` reading as literal underscores is worse than losing the emphasis. The full article,
+markdown intact, is one click away in the inspector.
+
 ## Choosing one row out of many — the picker contract
 
 Every "pick a content row" surface in the builder follows this. The research behind each rule, with

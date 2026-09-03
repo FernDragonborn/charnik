@@ -8,7 +8,7 @@
  * It answers with WHAT HAPPENED, not with how to show it: `{total, dice, d20s, advantage, mod}`, one
  * `RolledDie` per die. `expr` is a rendering of that, kept only because entries already in
  * `log.jsonl` have nothing else — it used to BE the record, and the display parsed it back with a
- * regex to get its chips (ROLLER-PLAN finding A).
+ * regex to get its chips.
  *
  * Advantage is a MODE over the d20 it drew, not a fact about them: the dice are what happened, how
  * many of them count is an interpretation, and re-reading a roll the other way round must never draw
@@ -47,7 +47,7 @@ export const ADVANTAGE_CUE: Record<AdvantageMode, 'up' | 'down' | 'neither'> = {
 };
 
 /** Mode ↔ the ±1 axis every roll site speaks (it is arithmetic over effects). The two are different
- *  facts on purpose (ROLLER-PLAN, "not in scope"), and this pair is the one seam between them. */
+ *  facts on purpose (docs/internals/roller.md), and this pair is the one seam between them. */
 export const ADVANTAGE_SIGN: Record<AdvantageMode, number> = {
 	[ADVANTAGE_MODE.advantage]: 1,
 	[ADVANTAGE_MODE.disadvantage]: -1,
@@ -105,7 +105,7 @@ export type CritMethod = (typeof CRIT_METHOD)[keyof typeof CRIT_METHOD];
 /**
  * ONE die, as it was actually rolled. This is the roll's record — the house contract is "value +
  * provenance, never a bare number" (CLAUDE.md), and until this existed the only per-die record was
- * the rendered `expr` string, which the display then parsed back with a regex (ROLLER-PLAN finding A).
+ * the rendered `expr` string, which the display then parsed back with a regex.
  */
 export interface RolledDie {
 	sides: number;
@@ -137,7 +137,7 @@ export interface Rolled {
 	 *  re-reads these dice instead of drawing (see `setAdvantage`). Empty for a damage roll.
 	 *
 	 *  A second POOL d20 (`{20: 2}`) is not a candidate and stays in `dice`: advantage has always
-	 *  applied to the first d20 only, and nothing in the app rolls two (ROLLER-PLAN finding D). */
+	 *  applied to the first d20 only, and nothing in the app rolls two. */
 	d20s: RolledDie[];
 	/** How those d20 are read. Not a property of the dice — an interpretation of them. */
 	advantage: AdvantageMode;
@@ -354,7 +354,7 @@ export interface RollPoolOptions extends RollOptions {
 	/** Set → this roll crit: every DIE it rolled gains a twin (`DIE_ROLE.crit`), by the given method.
 	 *  The flat modifier is not doubled, which is the rule and also the only part of a crit players
 	 *  reliably get wrong. Manual, never inferred from a natural 20: the same 20 is a crit on an
-	 *  attack and just a 20 on a check, and a crit happens without one (ROLLER-PLAN finding B). */
+	 *  attack and just a 20 on a check, and a crit happens without one. */
 	crit?: CritMethod;
 }
 
@@ -416,7 +416,7 @@ export const totalOf = (roll: Pick<Rolled, 'dice' | 'd20s' | 'advantage' | 'mod'
  * Read an `expr` back into dice + the trailing flat modifier. **LEGACY ONLY.** `expr` used to be the
  * single per-die record, so a `log.jsonl` line written before `Rolled.dice` existed carries the dice
  * nowhere else — this is how those lines are still readable, and it is the only reason it survives
- * (ROLLER-PLAN, "explicitly not wanted": a formatted string as the record). Nothing that rolls today
+ * (docs/internals/roller.md: a formatted string is never the record). Nothing that rolls today
  * should call it; go through `rehydrateRoll` at the point a stored roll is read.
  *
  * What it can and cannot recover: a floored die ("3→10") gives back both its face and its value; a
@@ -552,8 +552,7 @@ export function rehydrateRoll(roll: StoredRoll): Rolled {
  * so every later switch — including back to `neither` and out again — re-reads dice already on the
  * table. That is the property the d20 pill was justified with, and until 2026-08-22 it was false:
  * going back to neutral DELETED the pair, so the next tap drew a fresh second die and a player who
- * kept cycling could keep drawing until they liked the result (ROLLER-PLAN, "the dice must survive a
- * state change").
+ * kept cycling could keep drawing until they liked the result. The dice must survive a state change.
  *
  * The dice are compared by what they CONTRIBUTE, not by their raw faces. A die floored by `min_die`
  * (Reliable Talent's 3→10) contributed 10, and RAW would floor the new die the same way — so the

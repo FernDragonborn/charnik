@@ -4,7 +4,7 @@
 	// the sheet below scrolls. The `.segment-group` toggles are styled by build.css (.build-page).
 	//
 	// There is deliberately no "guided vs full sheet" switch: only the full sheet exists (see
-	// docs/builder-plan.md). A guided flow becomes a second entry point onto this view-model.
+	// plan.md ▸ N3). A guided flow becomes a second entry point onto this view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';

@@ -325,7 +325,7 @@ export interface LogEntry {
 	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21
 	/** What KIND of line this is. One member so far — every writer has always said `roll`, while the
 	 *  type advertised a taxonomy ("attack" | "save" | "check" | …) nothing ever wrote, so a reader
-	 *  could not trust it (ROLLER-PLAN finding H). A named member rather than a free string, per
+	 *  could not trust it. A named member rather than a free string, per
 	 *  AGENTS.md ▸ Taste (open enums, never booleans): reviving the taxonomy means adding a member here, and every switch over it
 	 *  then fails to compile until it handles the new one. */
 	kind: LogKind;
@@ -333,7 +333,7 @@ export interface LogEntry {
 	/** The COMPLETE in-session record: dice, per-type damage, the advantage pair, the provenance
 	 *  note. The line used to carry a flattened summary instead, so a reload silently returned a
 	 *  poorer log than the one on screen — an attack without its damage, an advantaged roll without
-	 *  its pair (ROLLER-PLAN finding G). Absent on lines written before that. */
+	 *  its pair. Absent on lines written before that. */
 	roll?: RollLogEntry;
 	/** The flattened total + rendered expression. LEGACY: still written so a line stays readable by
 	 *  an older build, and still read for lines that predate `roll`. Nothing new should grow here. */
@@ -355,8 +355,13 @@ export function logLineFor(roll: RollLogEntry): LogEntry {
 }
 
 /** Cap on retained roll-log lines on disk — the log is a rolling history, not an archive, so it
- *  can't grow without bound (B4). Older lines drop off the front when the file exceeds this. */
-const LOG_MAX_LINES = 500;
+ *  can't grow without bound (B4). Older lines drop off the front when the file exceeds this.
+ *  100 is enough to reopen the app and see the session before, at ~30–66 KB (a structured attack
+ *  line is 678 B, a plain save 296 B). It also bounds the cost of a ROLL: `writeLogLine` reads and
+ *  rewrites the whole file on every append, so the cap is the per-roll IO too. Matches
+ *  `ROLL_LOG_MAX`, the in-session cap — a memory log deeper than the disk one loses half of itself
+ *  on reload with nothing said. */
+const LOG_MAX_LINES = 100;
 
 /** Per-slug append chain (BUG-4): `appendLog` is read-modify-write and fire-and-forget from the
  *  combat view, so two fast rolls would both read the same `prev` and the second write would clobber

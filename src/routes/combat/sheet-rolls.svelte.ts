@@ -2,9 +2,8 @@
  * Roll semantics: what a tap on a stat, a save, a skill or an attack actually rolls — which effects
  * it picks up, whether the outcome is forced, and the once-per-turn weapon-damage reroll.
  *
- * **ROLLER-N lands here.** Its finding (ROLLER-PLAN) is that the roller answers with a formatted
- * STRING the UI parses back, so provenance and crit-doubling have nowhere to live — the rewrite is
- * against these functions and the host interface below is what it has to satisfy.
+ * These functions are what the roller organ calls, and the host interface below is the contract it
+ * satisfies (docs/internals/roller.md).
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';

@@ -1,16 +1,15 @@
 # Charnik core action / event / state-channel model
 
-> **STATUS: NORMATIVE SPECIFICATION — `onUse` executor implemented (first slice); `onEvent` +
-> plugin hooks deferred.** This document OWNS the play-state mutation model that plugins.md §8
-> previously pinned from the plugin side — the fresh-eyes #1 correction (2026-07-15, plan.md):
-> using an ability, reacting to a game event, and the action economy are things the TRACKING app
-> needs with or without plugins, so the model is a CORE concern and plugin hooks are THIN adapters
-> returning this same shape. Where plugins.md §8 and this document disagree, THIS document wins.
-> **Implementation:** the `onUse` write-half shipped with N2 (activatable actions, shape 2) —
-> `ActionExecutor.activateResourceOption` + `runActionToken` (`src/routes/combat/action-executor.svelte.ts`),
-> all-or-nothing validate→execute, verified 2026-08-02 (see `docs/n2-plan.md`). **Still deferred:**
-> the `onEvent` write-half (`docs/recharge-plan.md` slice 2) and plugin `onUse`/`onEvent`
-> (`api: 2`), which hook in after.
+> **STATUS: NORMATIVE SPECIFICATION — the `onUse` executor is implemented; the `onEvent` write-half
+> and both plugin hooks are deferred.** This document OWNS the play-state mutation model that
+> plugins.md §8 pins from the plugin side: using an ability, reacting to a game event, and the action
+> economy are things the TRACKING app needs with or without plugins, so the model is a CORE concern
+> and plugin hooks are THIN adapters returning this same shape. Where plugins.md §8 and this document
+> disagree, THIS document wins.
+> **Implementation:** `ActionExecutor.activateResourceOption` + `runActionToken`
+> (`src/routes/combat/action-executor.svelte.ts`), all-or-nothing validate→execute. What is still
+> open rides `plan.md` — the `onEvent` generalization under RECHARGE-TAIL, plugin `onUse`/`onEvent`
+> at `api: 2`.
 
 ## 1. The three state channels
 
