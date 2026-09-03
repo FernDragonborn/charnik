@@ -1472,11 +1472,35 @@ holds the done-work log; these are the OPEN tails it carried):**
         and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates W3**: prose
         already written into `log.jsonl` cannot be localised afterwards, so the facts have to land
         before the i18n sweep has anything to work with.
-  - [ ] **`RolledDie.source` is declared and nothing fills it.** `pillsFromPool` takes
-        `{type, mods, bonusDice}` — an effect's identity is not in that signature, so a Bless die
-        arrives known but UNNAMED. **Thread the effect's label down to the pool** rather than adding
-        a side map, which would be a second source of truth for the same fact. This is the house
-        provenance contract applied to a die.
+  - [ ] **`foldValues` is where provenance dies — one seam, four losses.** The organ KNOWS where every
+        contribution came from and throws it away one step before the roll, so this is not a missing
+        feature but a lossy narrowing to the four shapes `rollPool` happens to accept
+        (`dice`, `mod`, `bonusDice`, `mods`). Fix it at the seam, not at the call sites:
+    - **A die's source.** `DicePill.source` is read at `roller.ts` only to CLASSIFY the die as a
+      bonus die, then dropped: `bonusDice.push({sides, count, sign})`. `RolledDie.source` is declared,
+      `StoredRoll` already persists it, and no path ever fills it — the record has the slot and the
+      fold empties it. So a Bless d4 and a weapon d4 are one thing on the sheet, in the toast and on
+      disk.
+    - **A flat modifier's source.** `FlatPill.source` is never read at all — `mod += p.amount`. "+2
+      from Bless" and "+2 someone typed" are indistinguishable the instant Roll is pressed, and unlike
+      a die there is not even a role to tell them apart afterwards.
+    - **The player's own label.** A `note` pill ("1d4 dm's luck") is walked past by the fold and never
+      reaches the roll. Its own comment claimed the log keeps it; corrected in the same change as this
+      entry.
+    - **Per-die bounds**, deliberately: `min`/`max`/`reroll` fold to the LINE's `DieMods`, so two dice
+      in one line with different floors share the most generous. Marked `ponytail:` in place, no 5e
+      mechanic writes it, and `rollPool` would need per-die mods to fix it. Left alone knowingly.
+    **Shape:** the fold keeps a contribution's identity instead of flattening it, and `rollPool` takes
+    dice that carry their own `source`. That is the house provenance contract — `{source, op, amount}`
+    — applied to the one computation still answering without it. A side map keyed by die would be a
+    second source of truth for the same fact; do not.
+  - [ ] **A volley stops being a volley the moment it is rolled.** `RollerOrgan.roll()` returns N
+        entries that differ only by `at + i`, and `RollLogEntry` has no field saying they were one
+        action. So "one action fires N instances" — the thing ROLLER-N exists to model — is the one
+        fact the record does not keep: after a reload, three Eldritch Blast beams are three unrelated
+        lines, and nothing can total them or show them as one card again. Wants a group identity on
+        the entry, **a GUID rather than a counter** (AGENTS.md ▸ Taste), since it is shared between
+        lines that are written independently.
   - [ ] **The roller takes `RollSpec` itself** — one request carrying the label, the type and the
         damage parts, not just the dice. Half of this shipped (`rollPool(dice, RollPoolOptions)`
         killed the positional `−1 | 0 | +1`); the rest waited for the result to be facts, which it

@@ -41,7 +41,8 @@ export const PILL_KIND = {
 	count: 'count',
 	/** A word the vocabulary doesn't know, written beside a die as a label ("1d4 dm's luck"). Not an
 	 *  error: §6 says so outright. It adds nothing and blocks nothing — it is what the player called
-	 *  this die, and the log keeps it. */
+	 *  this die. It lives in the LINE only: `foldValues` walks past it and the roll never sees it, so
+	 *  pressing Roll drops the name (plan.md ▸ ROLLER-N, the fold is where provenance dies). */
 	note: 'note',
 	/** Text the parser could not account for AS ARITHMETIC — `+d4?`. Never dropped, never rolled,
 	 *  and the one thing that stops the roll (§5 / §10 / finding J). */
