@@ -123,7 +123,7 @@ The Combat view is the reference implementation. Reuse the existing primitives (
 Two panes, full-bleed, each scrolling on its own. **Left: the whole character sheet, always live** —
 every block renders what the draft currently derives, every changeable thing on it opens the inspector
 on that choice, and an unfilled thing renders as an empty slot in crimson saying what it will give.
-**Right: the inspector** (`clamp(480px, 32vw, 680px)`), one choice at a time.
+**Right: the inspector** (`clamp(520px, 40vw, 880px)`), one choice at a time.
 
 **Nothing is picked blind, and that is the whole point of the page.** An option shows the reused
 `WikiDetail` — one article renderer, never a builder-only summary — plus **what taking it would do to

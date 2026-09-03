@@ -135,7 +135,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.combat-row-hint` | components.css |  |
 | `.combat-row-marker` | components.css |  |
 | `.count-pill` | components.css | The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every multi-item review dial… |
-| `.detail-body` | components.css | An article renders at very different widths — a compendium half-screen, a 500px builder inspector — so its heads size… |
+| `.detail-body` | components.css | An article renders at very different widths — a compendium half-screen, a builder inspector — so its heads size again… |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
 | `.detail-meta` | components.css |  |
 | `.deyebrow` | components.css | compendium/detail article bits (WikiDetail + the homebrew EditContentForm) |

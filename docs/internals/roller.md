@@ -14,6 +14,7 @@ interface RolledDie {
 	face: number;   // what it showed — after a reroll, BEFORE a min_die floor
 	value: number;  // what it contributed
 	sign: 1 | -1;
+	detail: string; // the raw story — "4", "1↻4" rerolled, "3→10" floored
 	role: DieRole;  // pool · bonus · crit
 	source?: string; // which effect gave it — "Greataxe", "Bless"
 }

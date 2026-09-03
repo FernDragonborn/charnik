@@ -276,7 +276,7 @@ describe('deriveSheet aggregator', () => {
 		expect(s.deriveIssues.some((i) => i.token === 'cost:spell_level')).toBe(true);
 	});
 
-	it('slice 2: an `available` guard (is_combat_start) greys the option out of combat, opens it at initiative', () => {
+	it('an `available` guard (is_combat_start) greys the option out of combat, opens it at initiative', () => {
 		const c = wizard();
 		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // grants arcane_ward + its options
 		// out of combat → the gated option is present but NOT available (greyed); ungated ones are

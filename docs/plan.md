@@ -1086,19 +1086,43 @@ stay semi-manual.
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
-  - [ ] **The sectioned picker's ARIA shape.** A `listbox` may own `option` and `group`, not the
-        interactive `<button>` each section header is — so a screen reader hears the header wrong
-        while the options, their taken state and the whole keyboard walk are announced correctly.
-        Three shapes were costed: one listbox per section (breaks the single `aria-controls` /
-        `aria-activedescendant` a combobox needs — it points at ONE popup); a non-interactive header
-        with collapsing moved to the jump rail (loses only "collapse ONE section by clicking it");
-        or the APG **combobox-with-grid-popup** — `role="grid"`, a section header as a single-cell
-        row, an option as a `row` of two `gridcell`s, whose wrappers used to be the objection until
-        `SheetAttacks` showed a `subgrid` row wrapper costs zero pixels. **Decided: the grid popup,
-        pending a standards + assistive-technology check and a hand-tested edge-case pass** (a
-        collapsed section must not hide a search match, Home/End, type-ahead, what
-        `aria-activedescendant` names when the highlight is on a header, taken-state announcement in
-        a picker where rows toggle independently, RTL).
+  - [ ] **The sectioned picker's ARIA shape — a ONE-COLUMN `grid`, and `combobox` comes off.**
+        The section-header `<button>` is the least of it. `role="presentation"` on `.srow` does not
+        hide its descendants (ARIA 1.2 §presentation exposes non-presentational children), so the
+        listbox's illegal children are not 8–14 headers but **658/773 `.addbtn` take toggles** — and
+        the escape hatch is shut, because `option` is Children-Presentational, so moving the toggle
+        inside the option flattens it to text an AT user cannot reach. ⇒ **`listbox` structurally
+        cannot express two independent controls per row**, which `ui.md` ▸ picker contract rule 6
+        ("reading and taking are separate controls") makes non-negotiable. That, not the header, is
+        why the role has to change.
+        `role="combobox"` is wrong for a second, independent reason: APG defines a combobox as
+        **single-select with selection following focus**, and this picker is multi-select whose
+        arrows deliberately never commit (`option-walk.ts`). `aria-activedescendant` is what was
+        actually needed, and MDN names `searchbox` alongside `combobox` as a valid holder of it — so
+        the role goes and nothing is lost.
+        **Shape: one cell per row.** `role="grid"` + `aria-multiselectable`; a header is a `row`
+        carrying `aria-expanded` (which `row` supports natively) around one `gridcell` holding the
+        real button; an option is a `row[aria-selected]` around one `gridcell` holding both buttons.
+        One column means no `aria-colspan`, no Left/Right walk to define, nothing to mirror in RTL,
+        and no "column 1 of 2" for any screen reader to say — the two-column shape imports exactly
+        the verbosity this was worried about, for a split carrying no information. **No `subgrid`**:
+        `.rows` is a flex column, not a shared grid, so a plain wrapper is already zero pixels.
+        Keep `aria-activedescendant` naming the **gridcell** and never a header — NVDA #16414 drops
+        out of forms mode when it names a non-gridcell, and `walkable` already excludes headers, so
+        this is an invariant to assert in a test rather than a change.
+        Rejected: one listbox per section (does not fix `.addbtn` at all, and `aria-activedescendant`
+        is defined against ONE controlled element); a non-interactive header (same, plus its stated
+        fallback does not exist — `jumpTo` only ever ADDS to `openKeys`, so the rail cannot collapse
+        one section, which would make this a one-way door); `role="tree"` (`treeitem`'s superclass is
+        `option`, so `.addbtn` is unsafe there too).
+        **Hand-test when it lands** (interaction, so it is confirmed in the running app): the sticky
+        header is the likeliest silent regression — `position: sticky` must move onto the new row
+        wrapper or the header can no longer travel; a collapsed section must still not hide a search
+        match; Home/End stays as it is (already APG-correct); no first-letter type-ahead (printable
+        keys belong to the search box); Enter-Enter still takes; RTL; and `Inspector.svelte`'s
+        `OPERABLE` list mentions `[role="option"]`, which disappears.
+        **`ui.md` ▸ picker contract says the search box is a `combobox`** — true of the code today,
+        and it must be rewritten in the same commit that changes it.
   - [ ] **A shared provenance popover — repo-wide, not builder-only.** `ui.md` ▸ UX pattern contract
         rule 3 requires every auto-calculated value to explain itself on hover **or focus**; today
         provenance rides `title`, which is mouse-only, and making the tiles focusable does not help
@@ -1553,6 +1577,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   - [ ] **2014 long rest recovers HALF your Hit Dice and the app picks them largest-first**; RAW lets
         the player choose which. Visible on a multiclass d12+d6 pool. A picker if anyone asks — 2024
         recovers all and is unaffected.
+  - [ ] **Highlight a conditional ability the moment its window opens.** `ActionsPanel` greys an
+        unavailable option and gives it a `title`, which is the "never hidden" half; the "highlighted
+        with a notice when it opens" half is the reason a player notices Persistent Rage at all, and
+        it does not exist. `characters.md` ▸ "A tracker surfaces, it never decides" is the contract.
+        While in there: that `title` is a hardcoded English `'Not available right now'`, which
+        `ui.md` ▸ "Strings live in the catalogs" forbids.
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
   `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
   problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
@@ -1610,6 +1640,26 @@ holds the done-work log; these are the OPEN tails it carried):**
   damage, so the off-hand penalty the style REMOVES was never modelled and there is nothing to
   encode; **2014 `grappler`** stays text — it is relational ("advantage against a creature grappled
   by you") and the app has no target model.
+- [ ] **PORTRAIT · a character has `build.photo` in the schema and no way to set one.** Nothing under
+  `src/routes/build/` writes it. Its own piece because of an ordering problem, not a UI one: the file
+  write goes through `Storage` and a character has no folder until it is saved, so a portrait chosen
+  during the build has nowhere to land yet. `characters.md` already says a photo is a SIBLING file
+  referenced by name, never base64 in the JSON — so the answer is where the bytes wait, not how they
+  are stored.
+- [ ] **COMPANION · no data model exists for a bound creature** — a familiar, a steed, a beast
+  companion, a summon. Not a missing panel: there is nothing in the character schema for a creature
+  that belongs to a character, so a Ranger's companion and a Wizard's familiar are today entirely
+  outside the app. Adjacent to N2's Wild Shape (`play.form`), which replaces the character's own
+  statblock rather than adding a second creature beside it — related shapes, different problems.
+- [ ] **A11Y-LISTBOX · three more listboxes claiming something they are not.** Found by the same rule
+  that condemned the sectioned picker, so they belong in that change rather than in three visits.
+  `SectionedPicker` and `OptionGrid` set `aria-selected` per row independently while declaring a
+  listbox with **no `aria-multiselectable`** — a single-select list reporting twenty selected options.
+  `LanguagesPane` already gets this right, so the house has one name for the fact and two of three
+  call sites ignore it. Worse, **`LanguagePicker` is a `role="listbox"` containing an `<input>`,
+  section headers and bare `<button>`s with no `role="option"` anywhere** — a listbox with zero
+  options. `CommandPalette` is the one place the combobox/listbox pair IS correct (single-select,
+  selection follows the highlight, transient popup); `ui.md` should say why it differs.
 - [ ] **SAVAGE-TAIL · two known limits of the `damage_reroll` offer.** It rerolls the WHOLE primary
   damage part, so a Bless die riding that part is rerolled with the weapon dice — arguably "use
   either roll", but not what the feat says. And the offer rides the INSTANT attack tap only: the

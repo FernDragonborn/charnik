@@ -85,7 +85,8 @@ turn — so it cannot decide correctly even when it wants to. And forcing breaks
 concentration prompt on every Damage press fires again when someone enters 72, then 71, then +1 to
 fix it.
 
-In practice: conditional abilities are always listed, greyed when unavailable, and highlighted with a
-notice when their window opens. A mandatory save — concentration on damage — is an on-demand button
-beside its indicator, like the death-save button at 0 HP, carrying a suggested but editable DC.
-Prefer *event → reminder* over an auto-mutating event bus.
+In practice: a conditional ability is always listed and greyed when unavailable, never hidden, so its
+existence is never news. Highlighting it the moment its window opens is the other half and is not
+built (`plan.md` ▸ RECHARGE-TAIL). A mandatory save — concentration on damage — is an on-demand
+button beside its indicator, like the death-save button at 0 HP, carrying a suggested but editable
+DC. Prefer *event → reminder* over an auto-mutating event bus.

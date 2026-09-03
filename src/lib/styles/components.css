@@ -256,7 +256,7 @@ svg.lucide {
 }
 
 /* --- content-detail layout (WikiDetail render + EditContentForm edit) --- */
-/* An article renders at very different widths — a compendium half-screen, a 500px builder inspector —
+/* An article renders at very different widths — a compendium half-screen, a builder inspector —
    so its heads size against THIS box, never the viewport. A viewport media query got the builder's
    inspector wrong in exactly the way it was written to prevent: the window was 1920px wide, the
    column 430px, and the stat grid stayed at its two-column desktop layout inside it. */

@@ -68,7 +68,7 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 	});
 });
 
-describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', () => {
+describe('shipped class features · Persistent Rage regain at combat start', () => {
 	it('5.5e: Barb 15 grants the once/long-rest gate + a restore_resource:rage option gated to combat start', async () => {
 		const g = await loadEdition('srd-2024');
 		const c = barbarian('SRD 5.2.1', '5.5e', 15);
@@ -98,7 +98,7 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 	});
 });
 
-describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHARGE slice 2 / N2)', () => {
+describe('shipped class feature · Uncanny Metabolism MULTI-action regain at combat start', () => {
 	it('5.5e: Monk 2 gets the once/long gate + a combat-start option that regains focus AND heals (MA die + level)', async () => {
 		const g = await loadEdition('srd-2024');
 		const c = charOf('SRD 5.2.1', '5.5e', 'monk', 2);
