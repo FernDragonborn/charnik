@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { sourceLabel, editionLabel, buildDetail, entryMeta } from './detail';
-import type { ContentType } from './schemas';
-import { makeRow } from './test-utils';
-
-const row = (data: Record<string, unknown>, type: ContentType = 'spell', source = 'SRD 5.2.1') =>
-	makeRow(type, data, source);
+import { row } from './test-utils';
 
 describe('sourceLabel', () => {
 	it('maps SRD tags to friendly D&D edition names, passes others through', () => {

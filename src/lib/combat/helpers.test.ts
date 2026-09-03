@@ -44,6 +44,26 @@ import type { SpellcastingClass } from '$lib/character/spellcasting';
 // (never raw play.effects — B21); collectFacts is that one conversion.
 const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
 
+/** A spellcasting class carrying only what these helpers read. `classId`/`cap` are optional because
+ *  `casterForSpell` never looks at them, while the prepared-tally helpers need both. */
+const cls = (over: {
+	classId?: string;
+	className: string;
+	dc: number;
+	cap?: number;
+	spells: string[];
+}): SpellcastingClass =>
+	({
+		classId: over.classId,
+		className: over.className,
+		preparedCap: over.cap,
+		saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: over.dc }]),
+		accessSpellIds: over.spells,
+	}) as unknown as SpellcastingClass;
+const sheetOf = (...classes: SpellcastingClass[]) =>
+	({ spellcasting: { classes } }) as unknown as CharacterSheet;
+const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
+
 describe('enhancementTokens — a magic-weapon buff (item 7)', () => {
 	it('spawns a +n attack AND damage bonus (untyped — v1 has no per-instance weapon target)', () => {
 		expect(enhancementTokens(2)).toEqual(['flat_bonus:attack+2', 'flat_bonus:damage+2']);
@@ -56,19 +76,11 @@ describe('enhancementTokens — a magic-weapon buff (item 7)', () => {
 
 describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () => {
 	// a minimal sheet carrying only what casterForSpell reads
-	const cls = (className: string, dc: number, spells: string[]): SpellcastingClass =>
-		({
-			className,
-			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells,
-		}) as unknown as SpellcastingClass;
-	const sheetOf = (...classes: SpellcastingClass[]) =>
-		({ spellcasting: { classes } }) as unknown as CharacterSheet;
 
 	it('returns the caster class whose list grants the spell', () => {
 		const sheet = sheetOf(
-			cls('Wizard', 16, ['spell:x:fireball']),
-			cls('Cleric', 13, ['spell:x:cure_wounds']),
+			cls({ className: 'Wizard', dc: 16, spells: ['spell:x:fireball'] }),
+			cls({ className: 'Cleric', dc: 13, spells: ['spell:x:cure_wounds'] }),
 		);
 		expect(casterForSpell(sheet, 'spell:x:cure_wounds')?.className).toBe('Cleric');
 		expect(casterForSpell(sheet, 'spell:x:fireball')?.className).toBe('Wizard');
@@ -76,8 +88,8 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 
 	it('on an overlap the higher save DC wins; unknown spell falls back to the first class', () => {
 		const sheet = sheetOf(
-			cls('Wizard', 16, ['spell:x:shield']),
-			cls('Cleric', 13, ['spell:x:shield']),
+			cls({ className: 'Wizard', dc: 16, spells: ['spell:x:shield'] }),
+			cls({ className: 'Cleric', dc: 13, spells: ['spell:x:shield'] }),
 		);
 		expect(casterForSpell(sheet, 'spell:x:shield')?.className).toBe('Wizard'); // DC 16 > 13
 		expect(casterForSpell(sheet, 'spell:x:unknown')?.className).toBe('Wizard'); // fallback
@@ -85,28 +97,22 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 });
 
 describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', () => {
-	const cls = (
-		classId: string,
-		className: string,
-		dc: number,
-		cap: number,
-		spells: string[],
-	): SpellcastingClass =>
-		({
-			classId,
-			className,
-			preparedCap: cap,
-			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells,
-		}) as unknown as SpellcastingClass;
-	const sheetOf = (...classes: SpellcastingClass[]) =>
-		({ spellcasting: { classes } }) as unknown as CharacterSheet;
-	const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
-
 	it('attributes each prepared spell to the class that grants it, counting per class', () => {
 		const sheet = sheetOf(
-			cls('wizard', 'Wizard', 16, 9, ['spell:x:fireball', 'spell:x:mage_armor']),
-			cls('cleric', 'Cleric', 13, 5, ['spell:x:cure_wounds']),
+			cls({
+				classId: 'wizard',
+				className: 'Wizard',
+				dc: 16,
+				cap: 9,
+				spells: ['spell:x:fireball', 'spell:x:mage_armor'],
+			}),
+			cls({
+				classId: 'cleric',
+				className: 'Cleric',
+				dc: 13,
+				cap: 5,
+				spells: ['spell:x:cure_wounds'],
+			}),
 		);
 		const tallies = preparedTalliesByClass(
 			[prep('spell:x:fireball'), prep('spell:x:mage_armor'), prep('spell:x:cure_wounds')],
@@ -120,8 +126,8 @@ describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', (
 
 	it('never counts always-prepared or unprepared spells; an overlap goes to the higher-DC class', () => {
 		const sheet = sheetOf(
-			cls('wizard', 'Wizard', 16, 9, ['spell:x:shield']),
-			cls('cleric', 'Cleric', 13, 5, ['spell:x:shield']),
+			cls({ classId: 'wizard', className: 'Wizard', dc: 16, cap: 9, spells: ['spell:x:shield'] }),
+			cls({ classId: 'cleric', className: 'Cleric', dc: 13, cap: 5, spells: ['spell:x:shield'] }),
 		);
 		const tallies = preparedTalliesByClass(
 			[
@@ -137,30 +143,25 @@ describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', (
 });
 
 describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + spellbook)', () => {
-	const cls = (
-		classId: string,
-		className: string,
-		dc: number,
-		cap: number,
-		spells: string[],
-	): SpellcastingClass =>
-		({
-			classId,
-			className,
-			preparedCap: cap,
-			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells,
-		}) as unknown as SpellcastingClass;
-	const sheetOf = (...classes: SpellcastingClass[]) =>
-		({ spellcasting: { classes } }) as unknown as CharacterSheet;
-	const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
 	const entry = { prepared: false, alwaysPrepared: false };
 
 	it('enforces the cap PER class — a full Wizard blocks a Wizard spell but not a Cleric one', () => {
 		// Wizard cap 1 (already 1 prepared → full); Cleric cap 3 (0 prepared)
 		const sheet = sheetOf(
-			cls('wizard', 'Wizard', 16, 1, ['spell:x:magic_missile', 'spell:x:shield']),
-			cls('cleric', 'Cleric', 13, 3, ['spell:x:cure_wounds']),
+			cls({
+				classId: 'wizard',
+				className: 'Wizard',
+				dc: 16,
+				cap: 1,
+				spells: ['spell:x:magic_missile', 'spell:x:shield'],
+			}),
+			cls({
+				classId: 'cleric',
+				className: 'Cleric',
+				dc: 13,
+				cap: 3,
+				spells: ['spell:x:cure_wounds'],
+			}),
 		);
 		const spells = [prep('spell:x:magic_missile')]; // fills the Wizard cap
 
@@ -187,7 +188,15 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 	});
 
 	it('refuses a cantrip and an always-prepared entry outright', () => {
-		const sheet = sheetOf(cls('wizard', 'Wizard', 16, 5, ['spell:x:fire_bolt']));
+		const sheet = sheetOf(
+			cls({
+				classId: 'wizard',
+				className: 'Wizard',
+				dc: 16,
+				cap: 5,
+				spells: ['spell:x:fire_bolt'],
+			}),
+		);
 		expect(
 			canTogglePreparedFor({
 				spells: [],

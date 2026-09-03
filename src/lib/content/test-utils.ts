@@ -36,3 +36,15 @@ export function makeRow<T extends ContentType>(
 	};
 	return row as LoadedRow;
 }
+
+/**
+ * `makeRow` with the argument order tests actually want: data first, because the type and source are
+ * usually defaults and the data is always the point. Two suites had written this same wrapper.
+ */
+export function row(
+	data: Record<string, unknown>,
+	type: ContentType = 'spell',
+	source = 'SRD 5.2.1',
+): LoadedRow {
+	return makeRow(type, data, source);
+}

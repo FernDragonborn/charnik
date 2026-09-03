@@ -1012,6 +1012,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/test-utils.ts`
 
 - `function makeRow` — * Build a `LoadedRow` of type `T` from partial data, for tests.
+- `function row` — * `makeRow` with the argument order tests actually want: data first, because the type and source are * usually defaul…
 
 ### `src/lib/content/translate.ts`
 
@@ -1527,4 +1528,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 901 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 902 exports across 125 modules · 58 duplicate suspects._

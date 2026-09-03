@@ -46,6 +46,22 @@ const resolve = (
 	expandCondition: (id: string) => { source: string; tokens: string[] } | undefined = noExpand,
 ) => resolveActiveEffects({ active, makeCtx: () => ctx, expandCondition });
 
+/** A live ctx over the resolve state — what derive wires up for real (here in miniature). */
+const liveCtx = (state: ResolveState): ExprContext => ({
+	number: (name) => {
+		const abil = /^([a-z]{3})_(mod|score)$/.exec(name);
+		const ab = ABILITY_IDS.find((a) => a === abil?.[1]);
+		if (ab !== undefined) return abil?.[2] === 'mod' ? state.mods[ab] : state.scores[ab];
+		if (name === 'hp_max') return state.hpMax.value;
+		return undefined;
+	},
+	boolean: (name) =>
+		name.startsWith('has_condition.')
+			? state.conditions.has(name.slice('has_condition.'.length))
+			: false,
+	enum: () => undefined,
+});
+
 describe('splitGuard', () => {
 	it('splits a condition-first guard on the first `?`', () => {
 		expect(splitGuard('is_raging ? advantage:attack')).toEqual({
@@ -192,21 +208,6 @@ describe('resolveActiveEffects · guard + value expression combined', () => {
 });
 
 describe('resolveActiveEffects · dependency order (the DAG)', () => {
-	/** A live ctx over the resolve state — what derive wires up for real (here in miniature). */
-	const liveCtx = (state: ResolveState): ExprContext => ({
-		number: (name) => {
-			const abil = /^([a-z]{3})_(mod|score)$/.exec(name);
-			const ab = ABILITY_IDS.find((a) => a === abil?.[1]);
-			if (ab !== undefined) return abil?.[2] === 'mod' ? state.mods[ab] : state.scores[ab];
-			if (name === 'hp_max') return state.hpMax.value;
-			return undefined;
-		},
-		boolean: (name) =>
-			name.startsWith('has_condition.')
-				? state.conditions.has(name.slice('has_condition.'.length))
-				: false,
-		enum: () => undefined,
-	});
 	const strBase: Partial<Record<Ability, Contribution[]>> = {
 		str: [{ source: 'Base score', layer: 'base', op: 'add', amount: 10 }],
 	};
@@ -334,20 +335,6 @@ describe('resolveActiveEffects · dependency order (the DAG)', () => {
 /* ─────────────────────────── P2 · dependency-graph edges ─────────────────────────── */
 
 describe('resolveActiveEffects · P2 · cycle & guard edge cases', () => {
-	const liveCtx = (state: ResolveState): ExprContext => ({
-		number: (name) => {
-			const abil = /^([a-z]{3})_(mod|score)$/.exec(name);
-			const ab = ABILITY_IDS.find((a) => a === abil?.[1]);
-			if (ab !== undefined) return abil?.[2] === 'mod' ? state.mods[ab] : state.scores[ab];
-			if (name === 'hp_max') return state.hpMax.value;
-			return undefined;
-		},
-		boolean: (name) =>
-			name.startsWith('has_condition.')
-				? state.conditions.has(name.slice('has_condition.'.length))
-				: false,
-		enum: () => undefined,
-	});
 	const abilityBase = (amt: number): Partial<Record<Ability, Contribution[]>> => {
 		const b: Partial<Record<Ability, Contribution[]>> = {};
 		for (const ab of ABILITY_IDS)

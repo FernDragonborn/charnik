@@ -127,15 +127,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
 		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
 	});
 
 	it('level-up restores filled ASI slots and applies each boost ONCE, not twice (UBUG-13)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.name = 'Asi';
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
@@ -158,8 +154,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a full ability picker replaces its oldest pick rather than ignoring the click', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		const key = build.feats.featSlots[0]?.key ?? '';
 		build.feats.setSlotFeat(key, ASI);
@@ -185,8 +179,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a class row that already holds one says it swaps, not adds', () => {
-		build.reset();
-		build.graph = graph;
 		build.inspector.open({ id: 'class', index: 0 });
 		expect(build.inspector.spec?.blurbKey).toBe('classBlurb');
 
@@ -198,8 +190,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a class another row already holds is not offered again', () => {
-		build.reset();
-		build.graph = graph;
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.classRows.addClass();
 		build.classRows.setClass(1, `class:${S}:fighter`);
@@ -211,8 +201,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('undo and redo walk the whole draft back and forward', () => {
-		build.reset();
-		build.graph = graph;
 		// the page records on the autosave debounce; a test settles each step itself
 		build.draft.name = 'Alia';
 		build.history.record();
@@ -234,8 +222,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a fresh change forgets what was undone, and an unchanged draft is not a step', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.name = 'Alia';
 		build.history.record();
 		build.history.record(); // settled twice with nothing between
@@ -249,8 +235,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {
-		build.reset();
-		build.graph = graph;
 		const out = build.assembled;
 		expect(out.build.name).toBeTruthy();
 		expect(out.build.classes).toEqual([]);
@@ -274,8 +258,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a level-up that lands before the content graph does not double the carried boost (B1)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.name = 'Asi';
 		// level 6 is a Fighter-only ASI level: the fallback the builder uses with no graph does not
 		// know about it, which is what made the timing matter
@@ -314,8 +296,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a level-up does not inherit the previous build class stash (B3)', () => {
-		build.reset();
-		build.graph = graph;
 		build.classRows.setClass(0, `class:${S}:fighter`);
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
 		build.draft.skills = ['athletics'];
@@ -328,8 +308,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('closes the inspector when the draft under it is replaced (B17)', () => {
-		build.reset();
-		build.graph = graph;
 		build.inspector.open({ id: 'species' });
 		build.hydrate(savedCharacter());
 		expect(build.inspector.target).toBeNull();
@@ -358,8 +336,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a class picker left open on a removed row cannot empty the shared pools (B4)', () => {
-		build.reset();
-		build.graph = graph;
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.skills = ['arcana'];
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
@@ -378,8 +354,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('filling a row that was already there cannot push the character past the cap (B7)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [
 			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 20 },
 			{ ...newClassRow(), classId: null, subclassId: null, level: 1 }, // added while the level was still low
@@ -390,8 +364,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('undo takes the class stash back with the draft (B18)', () => {
-		build.reset();
-		build.graph = graph;
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
 		build.history.record();
@@ -409,8 +381,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('expertise stays reachable when the class grants none, and never dead-ends at the cap (B15, B16)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 3 }];
 		build.draft.skills = ['athletics', 'perception', 'survival'];
 		expect(build.skillPicks.expertiseCap).toBe(0); // this Fighter grants no expertise slots
@@ -439,8 +409,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a draft written by an older Charnik opens instead of taking the page down (B6)', () => {
-		build.reset();
-		build.graph = graph;
 		build.hydrateDraft({
 			guid: 'older-draft',
 			savedAt: new Date().toISOString(),
@@ -489,8 +457,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a feat left in a slot the level no longer grants stops blocking the others (B8)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [
 			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 8 },
 		];
@@ -510,8 +476,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('switching edition clears the picks the new one has no row for (B12)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.speciesId = `species:${S}:hardy`; // 5.5e only, like everything in this fixture
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
@@ -561,8 +525,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a feat spent in another slot is offered with a reason, not withheld (N15)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.classes = [
 			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 8 },
 		];
@@ -577,8 +539,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a granted origin feat asks its own choices, and they land on the character (B13)', () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.backgroundId = `background:${S}:scholar`;
 		expect(build.feats.originFeatRef).toBe(`feat:${S}:skilled`);
 		// Skilled grants three skills of the player's choice — unpicked, they are three choices owed,
@@ -596,8 +556,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it("a granted half-feat's +1 is asked for, and reaches the ability score (B13)", () => {
-		build.reset();
-		build.graph = graph;
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
 		build.draft.backgroundId = `background:${S}:prodigy`;
 		expect(build.feats.halfFeatOptionsFor(ORIGIN_SLOT_KEY)).toEqual(['str', 'dex']);
@@ -651,8 +609,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('Free lifts every level-up lock — that is what the toggle is for', () => {
-		build.reset();
-		build.graph = graph;
 		const saved = savedCharacter();
 		saved.ui.strict = false;
 		build.hydrate(characterSchema.parse(saved));
@@ -667,8 +623,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a new character settles nothing at all', () => {
-		build.reset();
-		build.graph = graph;
 		expect(build.settledDraft).toBeNull();
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.classRows.bumpClassLevel(0, 1);

@@ -17,6 +17,16 @@ import {
 	type SlotTable,
 } from './spellcasting';
 
+/** A long-rest slot pool at one spell level, and the three-level ladder both slot suites read. */
+const pool = (spellLevel: number, max: number): CastPool => ({
+	id: `slot-${spellLevel}`,
+	label: `Level ${spellLevel}`,
+	spellLevel,
+	max,
+	recharge: 'long',
+});
+const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
+
 describe('cantrip damage scaling (A15 — 5/11/17 steps, both editions)', () => {
 	it('steps the die multiplier at levels 5, 11, 17', () => {
 		expect(cantripDieMultiplier(1)).toBe(1);
@@ -138,15 +148,6 @@ describe('slots + caps', () => {
 });
 
 describe('slotToSpend — which slot a cast consumes (A17)', () => {
-	const pool = (spellLevel: number, max: number): CastPool => ({
-		id: `slot-${spellLevel}`,
-		label: `Level ${spellLevel}`,
-		spellLevel,
-		max,
-		recharge: 'long',
-	});
-	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
-
 	it('spends a slot of the spell own level when free', () => {
 		expect(slotToSpend(2, pools, {})).toEqual({ key: '2' });
 	});
@@ -200,15 +201,6 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 });
 
 describe('castableSlotLevels — the upcast picker options', () => {
-	const pool = (spellLevel: number, max: number): CastPool => ({
-		id: `slot-${spellLevel}`,
-		label: `Level ${spellLevel}`,
-		spellLevel,
-		max,
-		recharge: 'long',
-	});
-	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
-
 	it('lists every open slot level ≥ the spell level, ascending', () => {
 		expect(castableSlotLevels(1, pools, {})).toEqual([1, 2, 3]);
 		expect(castableSlotLevels(2, pools, {})).toEqual([2, 3]);
