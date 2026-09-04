@@ -18,7 +18,13 @@ import {
 	type RolledDie,
 	type Rolled,
 } from '$lib/rules/dice';
-import { damageTotal, type RollLogEntry, type TypedRoll } from '$lib/combat/roll';
+import {
+	AMENDMENT_KIND,
+	damageTotal,
+	type RollAmendment,
+	type RollLogEntry,
+	type TypedRoll,
+} from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
@@ -88,6 +94,25 @@ export interface RollToastModel {
 	note?: string;
 }
 
+/**
+ * Amendments → the words under the card. THE one place a roll's amendment becomes a sentence, which
+ * is the whole reason the record keeps facts instead: prose written into `log.jsonl` cannot be
+ * localised afterwards, and a sentence composed there had to be matched back out with a regex.
+ *
+ * The dice are read from the ROLL rather than from the amendment: `keptD20`/`droppedD20s` derive
+ * from the pair actually recorded, so the sentence cannot disagree with the numbers beside it.
+ */
+export function describeAmendments(
+	roll: Rolled,
+	amendments: RollAmendment[] | undefined,
+): string[] {
+	return (amendments ?? []).map((a) =>
+		a.kind === AMENDMENT_KIND.advantage
+			? `${a.to} after the roll (kept ${keptD20(roll)?.value} over ${droppedD20s(roll)[0]?.value})`
+			: `${a.source}: kept ${a.to} (other roll ${a.from})`,
+	);
+}
+
 /** A nat 1 is the ONE miss the app can call without knowing the target's AC — so its damage is shown
  *  struck and left out of every total. Anything else is the DM's call, not the toast's. */
 const landed = (a: RollToastAttack): boolean => a.natural !== 1;
@@ -139,7 +164,12 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
 	const entries = Array.isArray(rolled) ? rolled : [rolled];
 	const attacks = entries.map((e) => attackLine(e, e.damage ?? []));
 	const damaging = attacks.some((a) => a.damage.length > 0);
-	const note = entries.find((e) => e.note)?.note;
+	// the roll's own provenance first, then what was changed about it afterwards — one line, because
+	// that is the one line the card has for a record
+	const noted = entries.find((e) => e.note ?? e.amendments?.length);
+	const note = noted
+		? [noted.note, ...describeAmendments(noted, noted.amendments)].filter(Boolean).join(' · ')
+		: undefined;
 	return {
 		label: entries[0]?.label ?? '',
 		attacks,

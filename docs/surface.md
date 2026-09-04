@@ -686,7 +686,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `function actionRuns` — The roll log as the ACTIONS it recorded: consecutive entries sharing a `group` are one action's * throws, and everyth…
-- `function amendedNote` — A roll's note after it has been re-read at a different advantage: whatever the note already said, * minus any previou…
+- `const AMENDMENT_KIND` — What KIND of change was made to a roll after it landed.
+- `type AmendmentKind`
+- `type RollAmendment` — * One change made to a roll after it landed, as FACTS.
+- `function amendedAdvantage` — The amendments a roll carries once it has been re-read at a different advantage.
+- `const withoutLegacyAmendment` — A roll's own note with any legacy amendment sentence removed — never the note itself, which is * provenance the roll …
 - `function rollFormulaEntry` — * A formula that came from CONTENT (a monster's HP, a spell's damage) → the entry that rolls it, * carrying anything …
 - `const damageTotal` — Combined total across every typed damage part.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
@@ -1062,6 +1066,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ROLL_LAYOUT` — How a roll is presented.
 - `type RollLayout`
 - `interface RollToastModel`
+- `function describeAmendments` — * Amendments → the words under the card.
 - `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
 
@@ -1531,4 +1536,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 904 exports across 125 modules · 59 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 909 exports across 125 modules · 59 duplicate suspects._

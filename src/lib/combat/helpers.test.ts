@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { actionRuns, amendedNote, rollFormulaEntry, type RollLogEntry } from './roll';
+import {
+	AMENDMENT_KIND,
+	actionRuns,
+	amendedAdvantage,
+	rollFormulaEntry,
+	withoutLegacyAmendment,
+	type RollLogEntry,
+} from './roll';
+import { describeAmendments } from '$lib/dice/roll-toast';
 import {
 	ADVANTAGE_MODE,
 	DIE_ROLE,
@@ -719,7 +727,7 @@ describe('actionRuns — the log as the actions it recorded', () => {
 	});
 });
 
-describe('amendedNote', () => {
+describe('amendments are facts, and exactly one place turns them into words', () => {
 	const d20 = (value: number): RolledDie => ({
 		sides: 20,
 		value,
@@ -737,23 +745,68 @@ describe('amendedNote', () => {
 		expr: '',
 	});
 
-	it('replaces the previous amendment instead of stacking, lap after lap', () => {
-		const start = '8d6 base + 1d6 @ slot 4';
-		const adv = amendedNote(start, roll(ADVANTAGE_MODE.advantage));
-		expect(adv).toBe('8d6 base + 1d6 @ slot 4 · advantage after the roll (kept 19 over 7)');
-		const dis = amendedNote(adv, roll(ADVANTAGE_MODE.disadvantage));
-		expect(dis).toBe('8d6 base + 1d6 @ slot 4 · disadvantage after the roll (kept 7 over 19)');
-		const none = amendedNote(dis, roll(ADVANTAGE_MODE.neither));
-		expect(none).toBe(
-			'8d6 base + 1d6 @ slot 4 · advantage cleared (the second d20, 19, does not count)',
-		);
-		// and round again — the note must not grow
-		expect(amendedNote(none, roll(ADVANTAGE_MODE.advantage))).toBe(adv);
+	it('replaces the advantage amendment instead of stacking, lap after lap', () => {
+		const adv = amendedAdvantage(undefined, roll(ADVANTAGE_MODE.advantage));
+		expect(adv).toEqual([
+			{
+				kind: AMENDMENT_KIND.advantage,
+				from: ADVANTAGE_MODE.neither,
+				to: ADVANTAGE_MODE.advantage,
+			},
+		]);
+		const dis = amendedAdvantage(adv, roll(ADVANTAGE_MODE.disadvantage));
+		expect(dis).toEqual([
+			{
+				kind: AMENDMENT_KIND.advantage,
+				from: ADVANTAGE_MODE.neither,
+				to: ADVANTAGE_MODE.disadvantage,
+			},
+		]);
+		// back at the mode it was ROLLED at: the struck-through second d20 already says everything
+		expect(amendedAdvantage(dis, roll(ADVANTAGE_MODE.neither))).toEqual([]);
+		// and round again — the list must not grow
+		expect(amendedAdvantage(dis, roll(ADVANTAGE_MODE.advantage))).toEqual(adv);
 	});
 
-	it('says nothing at all when no second die was ever rolled', () => {
+	it('keeps an amendment of another kind while it replaces its own', () => {
+		const reroll = {
+			kind: AMENDMENT_KIND.damageReroll,
+			source: 'Savage Attacker',
+			from: 4,
+			to: 9,
+		} as const;
+		expect(amendedAdvantage([reroll], roll(ADVANTAGE_MODE.advantage))).toEqual([
+			reroll,
+			{
+				kind: AMENDMENT_KIND.advantage,
+				from: ADVANTAGE_MODE.neither,
+				to: ADVANTAGE_MODE.advantage,
+			},
+		]);
+	});
+
+	it('records nothing when no second die was ever rolled', () => {
 		const single: Rolled = { ...roll(ADVANTAGE_MODE.neither), d20s: [d20(7)] };
-		expect(amendedNote(undefined, single)).toBe('');
-		expect(amendedNote('8d6 base', single)).toBe('8d6 base');
+		expect(amendedAdvantage(undefined, single)).toEqual([]);
+	});
+
+	it('reads the dice off the ROLL when it puts an amendment into words', () => {
+		const revised = roll(ADVANTAGE_MODE.advantage);
+		expect(describeAmendments(revised, amendedAdvantage(undefined, revised))).toEqual([
+			'advantage after the roll (kept 19 over 7)',
+		]);
+		expect(
+			describeAmendments(revised, [
+				{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker', from: 4, to: 9 },
+			]),
+		).toEqual(['Savage Attacker: kept 9 (other roll 4)']);
+	});
+
+	it('strips a prose amendment written before amendments were structured, and nothing else', () => {
+		expect(withoutLegacyAmendment('8d6 base · advantage after the roll (kept 19 over 7)')).toBe(
+			'8d6 base',
+		);
+		expect(withoutLegacyAmendment('8d6 base')).toBe('8d6 base');
+		expect(withoutLegacyAmendment(undefined)).toBe('');
 	});
 });

@@ -35,11 +35,13 @@
         or spell damage string carries `DamagePart.issues` to the attack row's note, and every
         instant-roll affordance goes through `rollFormulaEntry`, which puts them in the roll's own
         note. Inside the roller the raw pill was already the surfacing.
-  - [ ] **Amendments are STRUCTURE, not a sentence.** `amendedNote` composes English prose that a
-        reader then has to match back out; one regex for it has already eaten an upcast's provenance
-        and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates the i18n
-        sweep**: prose already written into `log.jsonl` cannot be localised afterwards, so the
-        facts have to land before the sweep has anything to work with.
+  - [x] **Amendments are STRUCTURE, not a sentence.** `amendments: RollAmendment[]` — a discriminated
+        union over `AMENDMENT_KIND`, carrying only what cannot be derived (an advantage amendment
+        holds the two modes; the dice are the roll's own `d20s`). `describeAmendments` is the ONE
+        place they become words, which is what the i18n sweep now has to work with instead of prose
+        on disk. The Savage Attacker reroll became an amendment in the same change — it used to
+        overwrite `note`, destroying an upcast's provenance. A pre-2026-09-04 prose amendment is
+        stripped by `withoutLegacyAmendment` when such a roll is next amended.
   - [x] **Provenance survives the fold.** `foldValues` narrowed every contribution to the four
         shapes `rollPool` happened to accept and threw the rest away one step before the roll. It
         now hands over dice that carry their own `source` (`BonusDie.source` → `RolledDie.source`)

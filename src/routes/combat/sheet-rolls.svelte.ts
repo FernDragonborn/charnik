@@ -20,6 +20,7 @@ import {
 	NO_ROLL_EFFECTS,
 	rollDamageParts,
 	dealsDamage,
+	AMENDMENT_KIND,
 	type RollEffects,
 	type Attack,
 	type DamagePartSpec,
@@ -236,7 +237,17 @@ export class SheetRolls {
 		const revised: RollLogEntry = {
 			...p.entry,
 			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
-			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`,
+			// an amendment, not a note: overwriting `note` used to destroy whatever provenance the roll
+			// already carried (an upcast's "8d6 base + 1d6 @ slot 4")
+			amendments: [
+				...(p.entry.amendments ?? []),
+				{
+					kind: AMENDMENT_KIND.damageReroll,
+					source: label,
+					from: dropped.total,
+					to: keep.total,
+				},
+			],
 		};
 		this.host().tray.reviseEntry(p.entry, revised);
 		this.savageUsedRound = this.host().round;

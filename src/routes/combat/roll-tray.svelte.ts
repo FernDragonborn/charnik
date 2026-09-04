@@ -21,7 +21,8 @@ import {
 import { toastRoll } from '$lib/dice/roll-toast';
 import { RollerOrgan } from '$lib/dice/roller.svelte';
 import {
-	amendedNote,
+	amendedAdvantage,
+	withoutLegacyAmendment,
 	type RollLogEntry,
 	type TypedRoll,
 	type DamagePartSpec,
@@ -244,10 +245,17 @@ export class RollTray {
 	amendAdvantage = (entry: RollLogEntry) => {
 		const revised = cycleAdvantage(entry);
 		if (!revised) return;
-		const note = amendedNote(entry.note, revised);
-		// a spread can't REMOVE a key, and a roll cycled back to neutral must lose the amendment line
-		const { note: _replaced, ...rest } = revised;
-		this.reviseEntry(entry, note ? { ...rest, note } : rest);
+		const amendments = amendedAdvantage(entry.amendments, revised);
+		// the roll's own note stays; only a legacy prose amendment is stripped, so an entry written
+		// before amendments were structured does not end up carrying both
+		const note = withoutLegacyAmendment(entry.note);
+		// a spread can't REMOVE a key, and a roll cycled back to how it was rolled must lose both
+		const { note: _replaced, amendments: _restated, ...rest } = revised;
+		this.reviseEntry(entry, {
+			...rest,
+			...(note ? { note } : {}),
+			...(amendments.length ? { amendments } : {}),
+		});
 	};
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */

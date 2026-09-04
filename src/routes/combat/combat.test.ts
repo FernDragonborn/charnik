@@ -812,7 +812,10 @@ describe('CombatVM · S2 split net', () => {
 
 		combat.savageReroll();
 		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
-		expect(combat.tray.log[0]!.note).toContain('Savage Attacker');
+		// the reroll is recorded as an AMENDMENT, so it cannot overwrite provenance the roll already had
+		expect(combat.tray.log[0]!.amendments).toMatchObject([
+			{ kind: 'damageReroll', source: 'Savage Attacker' },
+		]);
 		expect(combat.savageLabel).toBeNull(); // once-per-turn use spent
 
 		// a second attack the SAME turn does NOT re-offer (use already spent this round)

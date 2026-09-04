@@ -6,7 +6,7 @@
 import {
 	ADVANTAGE_MODE,
 	droppedD20s,
-	keptD20,
+	type AdvantageMode,
 	parseDiceTerm,
 	parseFormula,
 	rehydrateRoll,
@@ -79,6 +79,8 @@ export type RollLogEntry = Rolled & {
 	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
 	 *  rewrite its own line. Absent only on a view-model literal that is toasted but never logged. */
 	at?: number;
+	/** What was changed about this roll after it landed, as facts rather than as a sentence. */
+	amendments?: RollAmendment[];
 	/** The ACTION this roll belonged to, when one action fired several — a volley's beams, Extra
 	 *  Attack's strikes. A GUID rather than a counter (AGENTS.md ▸ Taste): the lines are written
 	 *  independently and each may be rewritten by an amendment, so nothing may depend on their order
@@ -98,6 +100,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	note?: string;
 	at?: number;
 	group?: string;
+	amendments?: RollAmendment[];
 	damage?: (StoredRoll & { type: string })[];
 };
 
@@ -115,6 +118,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.note !== undefined ? { note: e.note } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),
+	...(e.amendments ? { amendments: e.amendments } : {}),
 	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),
 });
 
@@ -134,32 +138,58 @@ export function actionRuns(entries: RollLogEntry[]): RollLogEntry[][] {
 	return runs;
 }
 
-/** The amendment sentence a roll's note carries, matched so re-amending REPLACES it rather than
- *  stacking, and so undoing removes it without eating a note the roll already had (an upcast's
- *  "8d6 base + 1d6 @ slot 4" is provenance, and amending the d20 must not destroy it).
+/** What KIND of change was made to a roll after it landed. A named member, so a third kind has to be
+ *  handled everywhere rather than falling through as an unrecognised string. */
+export const AMENDMENT_KIND = {
+	/** How the roll's d20 were read, changed after it landed (UX-3). */
+	advantage: 'advantage',
+	/** A damage part rolled again with the better kept (Savage Attacker). */
+	damageReroll: 'damageReroll',
+} as const;
+export type AmendmentKind = (typeof AMENDMENT_KIND)[keyof typeof AMENDMENT_KIND];
+
+/**
+ * One change made to a roll after it landed, as FACTS. It used to be an English sentence composed
+ * into `note` and matched back out with a regex — which ate an upcast's provenance once and grew the
+ * note a lap. Prose already written into `log.jsonl` also cannot be localised afterwards, so the
+ * record keeps what happened and exactly one place (`describeAmendments`) turns it into words.
  *
- *  The sentence is ONE ` · ` segment, and the parenthetical is why: it used to read "advantage after
- *  the roll · kept 19 over 7", which this pattern could only eat as far as the next `·` — so every
- *  lap round the cycle left another "· kept 19 over 7" behind and the note grew. Reading back a
- *  sentence we wrote ourselves is the same sin as parsing a rendered roll back; one segment is the
- *  cheap half of the
- *  fix, and the structured `amendments: [{kind, from, to}]` is the real one. */
+ * Only what cannot be derived is stored: an advantage amendment does not carry the dice, because the
+ * roll's own `d20s` are the record of those and a second copy could disagree with them.
+ */
+export type RollAmendment =
+	| { kind: typeof AMENDMENT_KIND.advantage; from: AdvantageMode; to: AdvantageMode }
+	| { kind: typeof AMENDMENT_KIND.damageReroll; source: string; from: number; to: number };
+
+/** The amendments a roll carries once it has been re-read at a different advantage. The advantage
+ *  amendment is REPLACED rather than stacked — a roll was decided one way however many times the
+ *  control was tapped — and `from` stays the mode it was originally rolled at, so a whole lap round
+ *  the cycle cannot drift. Every other kind is kept untouched.
+ *
+ *  Nothing is recorded when the roll is back at the mode it was rolled at: the second d20 is still
+ *  in `d20s` and still drawn struck through, which says everything "advantage cleared" said. */
+export function amendedAdvantage(
+	previous: RollAmendment[] | undefined,
+	revised: Rolled,
+): RollAmendment[] {
+	const prior = previous ?? [];
+	const others = prior.filter((a) => a.kind !== AMENDMENT_KIND.advantage);
+	const was = prior.find((a) => a.kind === AMENDMENT_KIND.advantage);
+	const from = was?.kind === AMENDMENT_KIND.advantage ? was.from : ADVANTAGE_MODE.neither;
+	if (!droppedD20s(revised).length || from === revised.advantage) return others;
+	return [...others, { kind: AMENDMENT_KIND.advantage, from, to: revised.advantage }];
+}
+
+/** An amendment sentence a note written before amendments were structured still carries. LEGACY
+ *  ONLY, the same seam `parseLegacyExpr` is for `expr`: it strips the old sentence the first time
+ *  such a roll is amended, so the structured amendment does not land beside a prose copy of itself.
+ *  Delete it once logs from before 2026-09-04 have rotated out. */
 const AMEND_NOTE = /(?:^\s*|\s·\s)(?:(?:dis)?advantage after the roll|advantage cleared)[^·]*/;
 
-/** A roll's note after it has been re-read at a different advantage: whatever the note already said,
- *  minus any previous amendment, plus what this one is. Pure so the sentence has one definition and
- *  a test can walk a whole lap of the cycle over it. */
-export function amendedNote(previous: string | undefined, revised: Rolled): string {
-	const dropped = droppedD20s(revised)[0];
-	const kept = (previous ?? '').replace(AMEND_NOTE, '').trim();
-	if (!dropped) return kept;
-	const amendment =
-		revised.advantage === ADVANTAGE_MODE.neither
-			? // the second die was really rolled and the record says so; it just doesn't count
-				`advantage cleared (the second d20, ${dropped.value}, does not count)`
-			: `${revised.advantage} after the roll (kept ${keptD20(revised)?.value} over ${dropped.value})`;
-	return [kept, amendment].filter(Boolean).join(' · ');
-}
+/** A roll's own note with any legacy amendment sentence removed — never the note itself, which is
+ *  provenance the roll had before anyone amended it (an upcast's "8d6 base + 1d6 @ slot 4"). */
+export const withoutLegacyAmendment = (note: string | undefined): string =>
+	(note ?? '').replace(AMEND_NOTE, '').trim();
 
 /**
  * A formula that came from CONTENT (a monster's HP, a spell's damage) → the entry that rolls it,
