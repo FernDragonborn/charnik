@@ -42,8 +42,15 @@ the data directory. There is no scattered raw `fs`, and **nothing above the inte
   fetched as static assets, `watch` is a no-op, and there is no folder picker. Browser storage is
   evictable, so **export is the backup story**.
 
-`dataDir` resolves through Tauri's `path`: OS app-data by default, or a portable `data/` beside the
-executable.
+**`dataDir` is a folder the user can FIND.** "You own your data as plain CSV" is not true of a
+hidden per-app directory nobody can name, so the default is `<documentDir>/charnik` — visible, and
+literally called charnik — never `%APPDATA%\io.github.ferndragonborn.charnik`. First launch proposes
+that path in a dialog and lets the user pick another; the answer goes in a tiny pointer config at
+`appConfigDir()/config.json` (`{ dataDir }`), the one app-managed file they never edit, and
+resolution is pointer-then-default. Settings ▸ Data shows the path, re-picks it, and reveals it in
+the OS file manager. Capabilities statically allow `$DOCUMENT/charnik/**` and `$APPCONFIG/**`; a
+folder the user picks anywhere else is granted at runtime by a Rust command
+(`app.fs_scope().allow_directory`), re-applied on every startup for a saved custom path.
 
 The web build is a **Storage-seam swap and nothing else** — the SPA deploys to GitHub Pages as-is,
 `PUBLIC_PLATFORM` picks the factory, and export/import uses the identical `character.json` and bundle
@@ -66,8 +73,16 @@ link and a `404.html` SPA fallback.
 ## Live switching
 
 Language, active system, theme, and per-character layout all switch **live, through reactive stores,
-with no reload**. A CSV edited on disk is picked up in real time by the file watcher, which reparses
-only the changed file; a manual refresh is the fallback.
+with no reload**. Views derive from the shared content store rather than caching the graph at mount,
+so rotating the graph re-renders every list without touching the open character's play-state or
+draft. A CSV edited on disk is picked up by the watcher, which reloads the whole graph — measured at
+~90 ms for 2866 rows, which is why nothing parses incrementally (`packs.md`, and `content.md` for
+why the watcher must ignore the app's own writes).
+
+**One coordinator resets every cache**, or a view goes stale while its neighbour updates: the storage
+root, the graph, the roster, spell access, and search all rotate together in `reloadContent()`. The
+heavier `reloadApp()` — flush pending writes, then reload the webview, not the process — stays the
+fallback and is what a changed data folder uses.
 
 ## Toolchain
 

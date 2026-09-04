@@ -4,6 +4,29 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
+- [ ] **ITEM-TEMPLATES · "any melee weapon" magic items have no base.** Flame Tongue is not a
+  `base_item_id` case: the base is the PLAYER's choice at equip time, so it needs
+  `inventoryEntry.base` in the character schema and a UI for it. Until then the attack row says
+  "Base weapon not set" rather than rolling a bare modifier and looking complete.
+- [ ] **MASTERY-HALF · weapon mastery is half-modelled.** The WEAPON half is data and shipped: every
+  2024 weapon carries its one mastery property as `mastery:<name>` (5.5e only — 2014 has no such
+  rule, so only the 2024 converter writes it). The CHARACTER half does not exist: RAW the property
+  does nothing until a feature unlocks it, and the five SRD classes that grant Weapon Mastery at
+  level 1 each unlock it for N kinds of weapon of the player's CHOICE, N growing per the class table
+  and one swappable on a long rest. That is build state (`build.masteries`, re-editable at level-up
+  like every other chosen option) plus the eight mastery effects, none of which exist.
+  `versatile:1d10` is the same shape: data with no mechanic reading it.
+- [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
+  block the loader; each raises fidelity where the UI later wants a structured filter. In priority
+  order: species ability bonuses as `effects` (`flat_bonus:con+2`) rather than only prose — 5e on
+  the species, 5.5e on the background; a monster's `saving_throws`, `damage_resist/immune`,
+  `condition_immune`, `legendary_actions` and `proficiency_bonus`, all of which live in `text_en`
+  today; and `resource` on class features (rage and ki counts), currently unparsed. Each arrives
+  through a `schemaVersion` migration, and each number comes from the converter, never from memory.
+- [ ] **SUBCLASS-LEVEL-2024 · every 2024 subclass unlocks at level 3**, but the seeded
+  `subclass_level` carries the 2014 value. Wants a per-system override column rather than a second
+  row.
+
 - [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
   surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,

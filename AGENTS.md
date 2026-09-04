@@ -55,7 +55,8 @@ say so out loud and get a human sign-off instead of quietly breaking it.
 - **article** — one content row as the compendium presents it (a spell, an item, a species).
 - **source** — the book or pack a row claims (`SRD 5.1`), kept exact for attribution and shown to
   users as a friendly label (`D&D 5e`).
-- **`source:id`** — a row's effective identity, so the same `id` from two sources coexists.
+- **`type:source:id`** — a row's effective identity, so the same `id` from two sources coexists,
+  and a `shield` spell does not collide with a `shield` item.
 - **pack** — one folder under `content/`, discovered by scanning, describing itself in-band.
 - **token** — a raw effect **string**. It becomes an **effect** (`ParsedEffect`) once `parseToken`
   turns it into an object. String-form names say token; object-form names say effect.

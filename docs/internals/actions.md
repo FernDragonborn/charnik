@@ -122,6 +122,15 @@ post-hoc not veto (`effectGained` fires AFTER application); no recursive cascade
 applied by an event handler does not re-fire events); deterministic order (multiple listeners
 resolve in a fixed order).
 
+## A class's action list is DATA, never a hardcoded list
+
+Battle Master maneuvers, Monk ki actions, Rogue cunning action, Barbarian rage, Sorcerer metamagic,
+Warlock invocations, Paladin and Cleric Channel Divinity, Druid Wild Shape — every one of them is the
+same shape: a named list of options bound to a class **resource**, shown only for the granting class.
+So there is ONE generic feature-action group panel and no class-name branch anywhere near it. The
+entries come from content rows, which is what lets homebrew merge identically — a user adds a
+maneuver exactly as they add a spell, source-namespaced and behind the same per-source toggle.
+
 ## 4. Consumers, in build order
 
 1. **Native activatable actions (N2 shape 2) — the 90% case, no sandbox.** An action is DATA: its

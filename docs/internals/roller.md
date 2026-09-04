@@ -149,6 +149,13 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
 
 - **The roller stays pure**: no Svelte, no toast, no storage. Determinism under a seeded rng is both a
   test property and a correctness property, and the four roller properties are listed in `testing.md`.
+- **The log is a rolling recent history, not an archive** — the last **100 rolls**, which survive a
+  restart so reopening the app shows the session before. Measured: a structured attack line (d20 +
+  the advantage pair + a damage line + a note) is 678 B and a plain save 296 B, so the cap is
+  ~30–66 KB. It is also the per-roll IO cost, because `writeLogLine` reads and rewrites the whole
+  file on every append. Grouping by session, search, virtualized scrollback and a per-row delete are
+  deliberately **not built**: nothing has asked for them, and an unbounded log makes every roll pay
+  for the whole campaign.
 - **A change to what a roll RECORDS is a change to `log.jsonl`.** Old entries must keep loading — the
   legacy reader is the seam for that, not a migration. The persisted entry and the in-session entry
   are the SAME shape (`logLineFor` is the one builder an append and a revision share), and an

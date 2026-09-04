@@ -46,6 +46,29 @@ play-state action model lives in [`actions.md`](actions.md), and the threat mode
 | `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `plugins.md`.                                                                                                                                     |
 | `suggest.ts`                                                                             | "did you mean?" fuzzy hints for a typo'd token/target.                                                                                                         |
 
+### The token DSL is snake_case, with `.` for namespacing
+
+Kinds, targets, variables and ids inside a token are `snake_case` — `flat_bonus`, `grant_resource`,
+`hp_max`, `wis_mod`, `class_level.monk`, `acid_splash`. **`-` is banned anywhere it can appear
+inside an expression**, because L2 makes it the subtraction operator: `class_level.blood-hunter`
+would parse as a subtraction. That is why content ids are snake too, not only the grammar's own
+words. Snake also matches the CSV column convention (`hit_die`, `name_en`).
+
+TypeScript identifiers stay camelCase, PascalCase and SCREAMING_CASE — a separate layer, and one
+nobody types into a CSV.
+
+### Effects a player adds by hand
+
+Beyond content-defined effects, a player can add an ad-hoc one from the effects panel: a **catalog**
+of common ones (Bless, Bane, Haste, cover, Guidance…), which is an ordinary `effects.csv` content
+type so it localizes and extends like everything else, plus a **Custom…** entry — a name and one or
+more bounded-vocab modifiers, or free text with a manual modifier. These live in **play-state**, not
+in the build.
+
+Any active effect may carry an optional duration in rounds (blank = until removed). The round
+counter decrements them, an effect that reaches zero **expires with a notice rather than
+silently**, rests expire what they should, and manual removal is always available.
+
 ### Naming rule (token vs effect)
 
 A raw effect **string** is a **token** until `parseToken` turns it into an object, after which it

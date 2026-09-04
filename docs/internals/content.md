@@ -21,8 +21,11 @@ plus `level`. JSON-in-a-cell appears only where nothing else works.
 
 ## Identity
 
-A row's effective identity is **`source:id`**, so the same `id` from two different sources coexists
-and both remain addressable. An exact `source:id` clash *within one source* is a real error.
+A row's effective identity is **`type:source:id`**, so the same `id` from two different sources
+coexists and both remain addressable. An exact clash *within one source* is a real error. The **type**
+scopes it because slugs are unique per type and not globally: `shield` is both a spell and an item,
+so `source:id` alone would collide. Links (class → features, character → content) and the loader's
+`byEffectiveId` all use the full key.
 
 Duplicate-group resolutions (keep one, keep all) live in a separate **`collisions.json`** — never in
 `charnik.config.json`, because a decision *between* sources cannot live inside one of them without
@@ -35,6 +38,62 @@ making that one authoritative over the others.
 `string | undefined`, because the lookup tables (spell slots, XP thresholds) have no such column at
 all — so `String(row.data.name_en)` renders the literal "undefined" for exactly those rows. The
 accessor falls back to the id. Narrowed rows, where the column is simply present, read it directly.
+
+**An unrecognised file is never silently dropped.** Type comes from the `#content-type:` directive
+first, then the filename, and if neither answers, the file is surfaced in content health for the user
+to assign a type once — written into the file's own header, since there is nowhere else for it to
+live. Guessing the type from the column set was considered and rejected: localization and custom
+columns make the fingerprint unreliable, and schemas overlap.
+
+**Robustness is output, not exceptions.** An invalid row, an unknown file, a malformed locale column
+or a duplicate id becomes an entry in `issues` — the loader does not throw. `get()` answers
+`undefined` and `resolveRefs()` reports what was missing, so the render layer can show everything
+that still works and flag the rest.
+
+**A row that differs between systems is SPLIT, never made to lie about both.** `systems=5e,5.5e`
+asserts the mechanics are identical. Where they are not: two rows sharing a base id for a real
+divergence, or a per-system override column (`mastery@5.5e`) for a small one.
+
+## A column, or a tag
+
+The rule for every schema change:
+
+> **A column when its emptiness is a hole. A tag when its absence means "does not apply."**
+
+`weight_lb` is blank on most items — a hole, because the converter never extracted it, and somebody
+should. `str_min` is blank on a dagger because daggers have no Strength requirement. The first is a
+column with a bug; the second was never column-shaped.
+
+- **Fold alternatives, never companions.** A tag cell stays short only because the folded facts are
+  mutually exclusive by kind — a weapon never carries armour tags. Folding facts that CO-OCCUR
+  (`cost`, `weight_lb`, `rarity` all apply to one row) grows every cell without bound, which is
+  what "everything in tags" fails at.
+- **A compound field stays a column even where it would fit.** `damage` is `1d6 slashing; 1d4
+  radiant` — its own internal structure, carrying the separators a tag list uses. Same class as
+  `effects`. A fact that has grown a grammar is not a tag, however sparse it is.
+- **What a tag costs**, worst first: zod stops validating it (`ac: optInt` rejects `"eleven"` by
+  column name; `ac:eleven` inside a tag list is just a string), so **a bad tag value must surface in
+  content health**, never a silent zero; the header stops advertising that the fact exists (an empty
+  `str_min` column says "armour can require Strength", a missing tag says nothing); and there is no
+  fill-down, sort or filter in a table processor. Hence the quick test: **if you would ever drag it
+  down the whole sheet, it is a column.**
+- **Grammar.** A tag is `name` or `name:value`, lowercase snake, comma or semicolon separated, read
+  by `splitList`. No nesting, no ordering, no third separator. `-` is banned because it is the L2
+  minus operator, and `name:value` is the shape every effect token already uses — so a tag name and
+  an effect scope are the same string (`two_handed`).
+
+A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
+underneath, the item's own win by name, resolved in one place (`content/item-tags.ts ▸ resolveItem`).
+
+## One article, two editions
+
+A single content row is an **article**. When the same article exists in both editions — the same base
+slug under `SRD 5.1` and `SRD 5.2.1` — the article view and the search results carry a 5e↔5.5e
+toggle, and the loader's `articles` index groups them by that base slug. They remain two distinct
+rows: `type:source:id` differs, `systems` differs, and neither is a translation of the other.
+
+That toggle is **per-article and local**, unrelated to the global active system, which only sets the
+browsing context.
 
 ## Locales are discovered, never listed
 
@@ -153,6 +212,10 @@ Game data is converted from a real CC-BY source, never authored from memory. The
 - **Avoid open5e** — it mixes non-SRD OGL material.
 
 Tag every row by the SRD it came from; never claim both editions unverified.
+
+**Shipped translations are English only.** No CC-licensed Ukrainian SRD exists, so the localization
+columns ship filled for `en` and empty elsewhere; other locales are community-filled through the
+translate flow, which is why that flow has to be good rather than an export to a spreadsheet.
 
 **Ship SRD-only data.** Do not commit non-SRD content — PHB-only material, Beholder, Artificer,
 Aasimar. Users add that themselves as homebrew. Keep the CC-BY attribution with the shipped data;

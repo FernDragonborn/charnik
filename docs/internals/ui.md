@@ -25,6 +25,25 @@ IO, no toast, no store write. Svelte re-runs deriveds whenever their dependencie
 more than once, so a side effect inside one fires unpredictably and creates reactive loops. Anything
 that *acts* on a change belongs in `$effect`.
 
+## Panels, and the views made of them
+
+The sheet is built from discrete **panels** — HP, combat stats, abilities, skills, attacks, spells,
+actions, effects and conditions, inventory, notes. A **view is a preset arrangement of panels**
+(Profile · Combat · Inventory · Build), with a fixed stats header above and a two-column panel area
+below; the panel area is the only customizable zone. Every panel collapses, reorders and hides, and
+that arrangement is per character and lives in `ui`, not in `play` (`characters.md`).
+
+**Conditions are not their own panel.** A condition is an effect of kind `apply_condition`, so ONE
+"Effects & conditions" list is the single source of truth for what is currently modifying the
+character — each row with its provenance, duration, kind tag and remove control, concentration shown
+inline, and both quick-pickers writing into that same list. A second panel would be a second answer
+to "what is affecting me".
+
+**The inventory view is a card grid, not a list.** Items are cards in sections (equipped and attuned,
+weapons, consumables, gear, treasure), each with a category icon, the key stat, quantity, and its
+equipped or attuned badge — because an item is recognised by kind at a glance, where a spell is found
+by reading down a list.
+
 ## Splitting a large view
 
 1. The view-model goes to `<view>-view-model.svelte.ts`.
@@ -59,8 +78,11 @@ Stylelint's `property-disallowed-list` holds the line. Bare `left`/`right` offse
 they anchor a `fixed`/`absolute` box to the viewport, and some are written from JS — where the side
 is a real choice, ask `getComputedStyle(el).direction`, as `card-placement.ts` does.
 
-**Semantic colours are fixed:** crimson is important or dangerous, teal is good or confirming, gold
-is a neutral marker. Visibility is an open/closed **eye** (teal means shown); state is a **toggle
+**Semantic colours are fixed:** crimson is important or dangerous (a pinned row, a negative effect, a
+destructive or primary action), teal is good or confirming (an available resource or slot pip, temp
+HP, a toggle that is on), gold is a neutral marker (proficiency and prepared dots, resource
+counters). An on/off dot is **filled when active and hollow when inactive** — never a dimmed fill,
+which reads as disabled rather than off. Visibility is an open/closed **eye** (teal means shown); state is a **toggle
 switch**. Avoid the templated look of cream and terracotta; the shipped theme is slate with heraldic
 crimson and gold, set in Space Grotesk, Inter, and JetBrains Mono.
 
@@ -308,6 +330,12 @@ method, and a writing prompt are each a fixed id list in code and a set of catal
 **Data is not copy.** A content row's own word for something — a species option labelled "Subrace" vs
 "Lineage" — passes through as an ICU *value*, because no UI catalog can know what a user's pack calls
 its columns.
+
+**The catalogs are loaded at RUNTIME, and the locale list is discovered.** A user drops a JSON file
+in and switches to it live — a locale is never a release we plan or a list we hardcode. A missing key
+falls back to English rather than showing the key; sorting goes through `Intl.Collator` for the
+active locale, because an alphabet is not ASCII order; and an RTL locale is served by setting `dir`,
+not by a second stylesheet.
 
 `src/lib/i18n/catalogs.test.ts` is the guard: every bundled locale must carry the same keys as
 English, no value may be blank, and a placeholder used in one locale must exist in every other. A key

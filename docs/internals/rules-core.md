@@ -92,6 +92,69 @@ Infusions) and **Blood Hunter** (martial with hemocraft resources, and a Profane
 is a pact-like caster). Truly exotic logic the bounded vocabulary cannot express belongs in the
 plugin sandbox, never in baked-in code.
 
+## Spellcasting, in one mechanism
+
+**A slot IS a resource.** One "castable pool" engine covers everything: a pool is
+`{id, spellLevel?, max, recharge}`, so class slots are pools keyed by level recharging on a long
+rest, pact slots recharge on a short one, and a Mystic Arcanum or an item's "3/day" is the same shape
+without a spell level. The UI renders level-tagged pools as pips and the rest as trackers. Anything
+"N/day" is therefore `grant_resource:<id>:<max>:<recharge>`, a spell says how it is paid for
+(`cast_via: slot | resource:<id> | at-will`), and `grant_slot:<level>` covers the rare artifact that
+grants a real slot.
+
+**Multiclass slots are the SUM, never the senior class**: Σ full levels + Σ⌊half/2⌋ + Σ⌊third/3⌋
+(`half-up` rounds up, which is all Artificer needs), indexed into the ONE full table. **Warlock
+levels contribute nothing** — Pact Magic is a separate pool alongside it. A single-class caster reads
+its own table by its own level.
+
+**The known-set is one concept with three populations.** Wizard = a spellbook the player owns and
+grows; sorcerer, bard and ranger = a self-known list; cleric and druid = a curated prepared set sized
+by data. Prepared is then a subset of the known-set, and the cap is a column, never a formula in
+code. A **per-class picker appears only when multiclassed** — one caster class gets a flat list,
+which is the 99% case; with two, each class gets its own block, its own caps and its own attribution
+for a spell that sits on both lists.
+
+**Spell ↔ class access is a bidirectional UNION index**, so neither side has to edit the other's
+files: a spell may tag its classes, and a class may list spell ids in its own `spell_lists` file.
+The loader unions both into `class_id → spells` and its reverse. Three things follow. Access carries
+**provenance**, not a boolean — `{via: class-list | subclass | feat | item | species, flavor:
+selectable | always-prepared | resource}` — which is what lets the sheet say "you can cast this
+because you are a Wizard" rather than merely that you can. It is **edition-scoped**: a 2014 class
+resolves to 2014 spells, never across. And a spell article's "available to" list must read the
+**reverse index**, never the raw `classes` column, or a class that gained the spell through
+`spell_lists` silently vanishes from it.
+
+The character level sits ABOVE that index: subclass, feat, item and species grants are computed in
+derive, not baked into the shared content index.
+
+**The rules that are easy to get wrong**, each of which the model has to keep expressible:
+always-prepared spells (domain, oath, Magic Initiate) sit OUTSIDE the prepared count but still count
+as class spells; a ritual is castable without preparation or a slot, and its SOURCE varies (a wizard
+rituals from the spellbook unprepared, a prepared caster only what is prepared); cantrips are
+independent of slots, which is why a pure warlock has cantrips and no shared slots; a slot casts any
+spell of level ≤ its own, and **Pact Magic forces the upcast** — every pact spell is cast at the
+current pact-slot level; and the highest level you can LEARN is capped by your level in that class,
+while slots may exceed it.
+
+The builder's spell picker follows the page's Strict/Free toggle like every other picker: Strict
+offers only what is legal through the access map and the caps, Free offers everything, for homebrew
+and house rules.
+
+## Preparation, and the two kinds of caster
+
+A **prepared** caster (cleric, druid, wizard, paladin) keeps a known or spellbook pool and prepares a
+subset: a per-spell toggle against a cap of class level plus the ability modifier, with
+always-prepared and domain spells flagged, and rituals castable unprepared where the class allows
+it. A **known** caster (sorcerer, bard, warlock, ranger) skips preparation — everything known is
+castable. A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
+because house rules exist and the tracker does not enforce.
+
+**Grapple and Shove have no fixed DC, and the editions disagree about what they even are.** 2014
+makes them a CONTEST — your Athletics against the target's Athletics or Acrobatics — so the
+"difficulty" is another creature's roll and must render as `contest`, never as a number. 2024 makes
+them a save against a derived DC of `8 + STR mod + proficiency`. A single "DC" field for both would
+be wrong in one edition whichever way it was filled.
+
 ## Scope: the whole game, shipped data only SRD
 
 The engine must be able to represent the **entire PHB, the official rulebooks, and the most popular
