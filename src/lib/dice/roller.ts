@@ -163,6 +163,26 @@ const ADVANTAGE_WORDS: Record<string, AdvantageMode> = {
 	neither: ADVANTAGE_MODE.neither,
 };
 
+/** A flat modifier written on its own — `+3`, `−2`, or a bare `2`. Named because two things read it:
+ *  the token parser, and the compound splitter that has to know a fragment means something. */
+const FLAT_TERM = /^([+\-−]?)(\d+)$/;
+
+/**
+ * `2d6+3` — a compound token → its signed terms, or null when it is not one. Whitespace parses a
+ * token (§4), but no-spaces is what a person types, and a formula pasted off a statblock has none
+ * either; without this the whole thing lands as one raw fragment and BLOCKS the roll.
+ *
+ * The split only happens when EVERY term means something arithmetic on its own. That is what keeps
+ * the house rule intact at the same time: `+d4?` still has a fragment nothing accounts for, so it
+ * stays one raw pill and still blocks, and `dm's-luck` stays one label rather than becoming a word
+ * plus an unrollable `-luck`.
+ */
+function compoundTerms(text: string): string[] | null {
+	const terms = text.split(/(?=[+\-−])/).filter(Boolean);
+	if (terms.length < 2) return null;
+	return terms.every((t) => parseDiceTerm(t) !== null || FLAT_TERM.test(t)) ? terms : null;
+}
+
 /**
  * One token → what it means. Ordered so the cheap, unambiguous forms are decided before anything is
  * looked up by name: a word can only be an effect or a damage type once it is not a die, a number or
@@ -206,7 +226,7 @@ export function parseRollerToken(raw: string, resolve: RollerResolver): ParsedRo
 
 	// a bare number reads as a positive modifier: writing "2" for "+2" is what people do, and a
 	// modifier that is right is worth more than a purism that turns it into an unrollable fragment
-	const flat = /^([+\-−]?)(\d+)$/.exec(text);
+	const flat = FLAT_TERM.exec(text);
 	if (flat)
 		return pill({
 			kind: PILL_KIND.flat,
@@ -328,6 +348,8 @@ function wordPill(pill: RollerPill, role: RollerRole): RollerPill {
  *  line rather than becoming a pill of its own — it is a property of that die (§5) — and with no die
  *  to land on it stays raw, because a floor over nothing is not a fact we can keep. */
 export function addToken(line: RollerLine, raw: string, resolve: RollerResolver): RollerLine {
+	const compound = compoundTerms(raw.trim());
+	if (compound) return compound.reduce((l, t) => addToken(l, t, resolve), line);
 	const parsed = parseRollerToken(raw, resolve);
 	if (!parsed) return line;
 	if (parsed.kind === TOKEN_KIND.advantage) return { ...line, advantage: parsed.mode };

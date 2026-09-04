@@ -104,6 +104,32 @@ describe('parseRollerToken', () => {
 	});
 });
 
+describe('a compound token typed without spaces', () => {
+	it('splits into its signed terms and rolls', () => {
+		const line = type(ROLLER_ROLE.damage, '2d6+3');
+		expect(line.pills).toHaveLength(2);
+		expect(line.pills[0]).toMatchObject({ kind: PILL_KIND.dice, count: 2, sides: 6, sign: 1 });
+		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.flat, amount: 3 });
+		expect(canRoll([line])).toBe(true);
+	});
+
+	it('takes a leading sign and several dice terms', () => {
+		const line = type(ROLLER_ROLE.damage, '-2d4+1d6-1');
+		expect(line.pills.map((p) => p.text)).toEqual(['-2d4', '+1d6', '-1']);
+	});
+
+	it('stays ONE raw fragment when a term means nothing — the roll still blocks', () => {
+		const line = type(ROLLER_ROLE.test, '1d6+d4?');
+		expect(line.pills).toEqual([{ kind: PILL_KIND.raw, text: '1d6+d4?' }]);
+		expect(canRoll([line])).toBe(false);
+	});
+
+	it('does not cut a hyphenated label in half', () => {
+		const line = type(ROLLER_ROLE.test, 'd20', "dm's-luck");
+		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.note, text: "dm's-luck" });
+	});
+});
+
 describe('bounds belong to a die', () => {
 	it('lands on the last die in the line', () => {
 		const line = type(ROLLER_ROLE.test, 'd20', '>10');

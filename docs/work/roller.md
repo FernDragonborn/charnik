@@ -73,8 +73,10 @@
         damage parts, not just the dice. Half of this shipped (`rollPool(dice, RollPoolOptions)`
         killed the positional `−1 | 0 | +1`); the rest waited for the result to be facts, which it
         now is.
-  - [ ] **A token typed WITHOUT spaces parses as one raw fragment and blocks the roll** (`2d6+3`).
-        The parser splits on whitespace only, and no-spaces is what a person types.
+  - [x] **A token typed WITHOUT spaces parses as one raw fragment and blocks the roll** (`2d6+3`).
+        `addToken` splits a compound token into its signed terms first, so every path that builds a
+        line — typing, a paste, a prefill retyped — gets it from one seam. It splits only when EVERY
+        term is arithmetic on its own, which is what keeps `+d4?` blocking and `dm's-luck` one label.
   - [ ] **Damage types have no localized names anywhere in the data**, so they match and display in
         English. Rides the same boundary as ARCH-1: the 13 SRD types are a closed rules vocabulary
         and take catalog keys, an invented homebrew type is data and passes through.

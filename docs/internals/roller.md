@@ -107,6 +107,10 @@ state) · `components/Roller.svelte` + `RollerLine.svelte`.
   WORD never blocks: on a damage line it is a damage type (homebrew invents them freely), anywhere
   else it is a label the player wrote beside a die. A missing damage type underlines and rolls — the
   number is not in doubt.
+- **Whitespace parses a token, but a token typed WITHOUT it still splits.** `2d6+3` is what a person
+  types and what a pasted statblock carries, so a compound token becomes its signed terms — but only
+  when EVERY term means something arithmetic on its own. `+d4?` therefore still arrives whole and
+  still blocks, and `dm's-luck` stays one label instead of a word plus an unrollable `-luck`.
 - **The caret is in the line.** ← / Ctrl+Z / Ctrl+arrow walk it token by token, and typing inserts
   where it stands.
 - **The language you type in is not the language the UI is in.** A name matches across every localized
