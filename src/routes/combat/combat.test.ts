@@ -11,6 +11,7 @@ import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
+import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
@@ -753,6 +754,14 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.spellSlotsSpent).toEqual({});
 		expect(character.play.hp.current).toBe(20);
 		expect(character.play.hp.temp).toBe(0);
+	});
+
+	it('rests: a SHORT rest returns the pact pool and leaves the leveled slots spent', () => {
+		// Pact Magic is the one slot pool that recharges on a short rest, which is what makes it its
+		// own pip strip rather than a row in the leveled ladder
+		character.play.spellSlotsSpent = { '1': 2, [PACT_SLOT_KEY]: 2 };
+		combat.resources.rest('short');
+		expect(character.play.spellSlotsSpent).toEqual({ '1': 2 });
 	});
 
 	it('spell grouping: level mode yields a Cantrips group and a 1st-level group', () => {
