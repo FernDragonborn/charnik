@@ -504,7 +504,11 @@ export function damageParts(line: RollerLine): DamagePartSpec[] {
  *  The distinction is the house rule, not a severity dial: an unaccounted fragment would make the
  *  number quietly smaller, and a missing damage type would not (§10). */
 export interface RollerIssue {
-	text: string;
+	/** Catalog key for what is wrong — the roller answers in the reader's language, and an issue is a
+	 *  fact the surface words, the same ruling a roll's own name got. */
+	key: string;
+	/** ICU values for `key`. Only ever the player's own text, which is data and passes through. */
+	values?: Record<string, string>;
 	blocking: boolean;
 }
 
@@ -518,10 +522,14 @@ export function rollerIssues(lines: RollerLine[]): RollerIssue[] {
 			// true whether the fragment is nonsense or merely ambiguous — the vocabulary leaves a name
 			// shared by two candidates unresolved rather than picking one, and both land here
 			if (p.kind === PILL_KIND.raw)
-				issues.push({ text: `I can't account for “${p.text}”`, blocking: true });
+				issues.push({
+					key: 'roller.issue.unaccounted',
+					values: { text: p.text },
+					blocking: true,
+				});
 		if (line.role !== ROLLER_ROLE.damage) continue;
 		if (damageParts(line).some((part) => !part.type))
-			issues.push({ text: 'damage with no type — rolling anyway', blocking: false });
+			issues.push({ key: 'roller.issue.untypedDamage', blocking: false });
 	}
 	return issues;
 }

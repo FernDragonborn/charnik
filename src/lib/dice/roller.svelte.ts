@@ -604,8 +604,10 @@ export class RollerOrgan {
 			const primary = rollPool(spec?.dice ?? {}, opts);
 			const damage = parts.length ? rollDamageParts(parts, rng) : undefined;
 			out.push({
+				// no name typed → the roll is called what the catalog calls an unnamed one, and carries
+				// that as its KEY so the log is not frozen in the language it was rolled in
 				label: this.label || 'Custom roll',
-				...(this.labelKey ? { labelKey: this.labelKey } : {}),
+				...(this.labelKey || !this.label ? { labelKey: this.labelKey || 'roller.customRoll' } : {}),
 				...primary,
 				...(damage ? { damage } : {}),
 				...(note ? { note } : {}),

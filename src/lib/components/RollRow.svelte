@@ -78,17 +78,17 @@
 	 *  its diagonals to mush (`◆` came out a blob, `⇈` drew its two arrows at different heights). */
 	const cueShape = (a: RollToastAttack) => ADVANTAGE_CUE[a.advantageMode ?? ADVANTAGE_MODE.neither];
 	const CUE_TITLE: Record<AdvantageMode, string> = {
-		[ADVANTAGE_MODE.advantage]: 'rolled with advantage — tap for disadvantage',
-		[ADVANTAGE_MODE.disadvantage]: 'rolled with disadvantage — tap to undo',
-		[ADVANTAGE_MODE.neither]: 'roll a second d20 and keep the better — advantage',
+		[ADVANTAGE_MODE.advantage]: 'roller.cue.advantage',
+		[ADVANTAGE_MODE.disadvantage]: 'roller.cue.disadvantage',
+		[ADVANTAGE_MODE.neither]: 'roller.cue.neither',
 	};
 	/** The pill states its own advantage; only a d20 roll can be told a different one. */
 	const HIT_TITLE: Record<AdvantageMode, string | undefined> = {
-		[ADVANTAGE_MODE.advantage]: 'rolled with advantage',
-		[ADVANTAGE_MODE.disadvantage]: 'rolled with disadvantage',
+		[ADVANTAGE_MODE.advantage]: 'roller.hit.advantage',
+		[ADVANTAGE_MODE.disadvantage]: 'roller.hit.disadvantage',
 		[ADVANTAGE_MODE.neither]: undefined,
 	};
-	const cueTitle = (a: RollToastAttack) => CUE_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither];
+	const cueTitle = (a: RollToastAttack) => $_(CUE_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither]);
 
 	/**
 	 * One line can hold a bounded number of pills, and a pool is NOT bounded — a Fireball is 8d6, a
@@ -123,7 +123,8 @@
 </script>
 
 {#snippet hitDice(a: RollToastAttack)}
-	<span class="roll-to-hit" title={HIT_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither]}>
+	{@const hitKey = HIT_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither]}
+	<span class="roll-to-hit" title={hitKey ? $_(hitKey) : undefined}>
 		{#each shownChips(a) as c, i (i)}
 			{#if c.sides === 20 && i === 0 && canAmend(a)}
 				<button
@@ -142,7 +143,7 @@
 			{/if}
 		{/each}
 		{#if a.dropped !== undefined}
-			<span class="roll-die dropped-die" title="dropped d20">{a.dropped}</span>
+			<span class="roll-die dropped-die" title={$_('roller.droppedD20')}>{a.dropped}</span>
 		{/if}
 		{#if foldedDice(a)}
 			<span class="roll-die folded-dice" title={a.chips.map((c) => c.detail).join(' + ')}
@@ -211,7 +212,9 @@
 		     exists to avoid. A strip says WHAT happened and how much; the card and the log carry the
 		     attack-by-attack breakdown. -->
 		<span class="roll-grid volley">
-			<span class="roll-modifier">{attacks.length} attacks</span>
+			<span class="roll-modifier"
+				>{$_('roller.attacks', { values: { count: attacks.length } })}</span
+			>
 			{#each model.byType as t, i (i)}
 				<span class="roll-type-sum" title={damageTypeLabel(t.type, $_) || undefined}>
 					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
@@ -230,9 +233,9 @@
 		     own width can't widen them, and lands on the to-hit total's right edge. A damage-only roll
 		     has nothing to distinguish, so it gets no captions at all. -->
 			{#if twoPart}
-				<span class="roll-caption hit eyebrow">to hit</span>
+				<span class="roll-caption hit eyebrow">{$_('roller.toHit')}</span>
 				<span></span>
-				<span class="roll-caption eyebrow">damage</span>
+				<span class="roll-caption eyebrow">{$_('roller.damage')}</span>
 			{/if}
 			{#each attacks as a, i (i)}
 				{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
@@ -261,7 +264,7 @@
 					class:nat-1={a.natural === 1}
 				>
 					{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="roll-miss"
-							>miss</span
+							>{$_('roller.miss')}</span
 						>{:else}{a.damageTotal}{/if}
 				</span>
 			{/each}

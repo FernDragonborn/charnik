@@ -9,6 +9,7 @@
 	//    "this is a test" and "this line is active" can't be read as the same signal.
 	//  · the menu is a CONTINUATION of the line, not a dropdown over it: same width, joined borders,
 	//    so the pills appear to grow downward.
+	import { _ } from '$lib/i18n';
 	import { tick } from 'svelte';
 	import DamageIcon from './DamageIcon.svelte';
 	import { isDamageType } from '$lib/dice/roller-vocabulary';
@@ -257,11 +258,9 @@
      that is exactly what it is — something the parser could not turn into a pill (§4). -->
 {#snippet pillView(pill: RollerPill, at: number)}
 	{#if pill.kind === PILL_KIND.raw}
-		<span class="roller-raw" title="I can't account for this — the roll is held until it goes"
-			>{pill.text}</span
-		>
+		<span class="roller-raw" title={$_('roller.rawHeld')}>{pill.text}</span>
 	{:else if pill.kind === PILL_KIND.note}
-		<span class="roller-note" title="your own label — it changes no number">{pill.text}</span>
+		<span class="roller-note" title={$_('roller.noteHint')}>{pill.text}</span>
 	{:else}
 		<!-- Focusable but NOT in the tab order on purpose: a line can hold half a dozen pills, and
 		     tabbing through every one to leave the roller would be worse than the affordance is worth.
@@ -318,12 +317,12 @@
 				<span class="roller-steps">
 					<button
 						type="button"
-						aria-label="one less"
+						aria-label={$_('roller.oneLess')}
 						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, -1))}
 						ondblclick={(e) => e.stopPropagation()}><Icon name="minus" size={9} /></button
 					><button
 						type="button"
-						aria-label="one more"
+						aria-label={$_('roller.oneMore')}
 						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, 1))}
 						ondblclick={(e) => e.stopPropagation()}><Icon name="plus" size={9} /></button
 					>
@@ -340,7 +339,7 @@
 		class="roller-group"
 		class:typed={closedByType(group)}
 		class:untyped={untyped(group)}
-		title={untyped(group) ? 'damage with no type — it rolls anyway' : undefined}
+		title={untyped(group) ? $_('roller.untypedGroup') : undefined}
 	>
 		{#each group as at (at)}{@const pill = line.pills[at]}{#if pill}{@render pillView(
 					pill,
@@ -359,7 +358,7 @@
 			type="text"
 			size={(organ.drafts[index] ?? '').length + 1}
 			value={organ.drafts[index] ?? ''}
-			aria-label={isTest ? 'test roll' : 'damage roll'}
+			aria-label={$_(isTest ? 'roller.testRoll' : 'roller.damageRoll')}
 			oninput={(e) => organ.type(index, e.currentTarget.value)}
 			onfocus={() => {
 				organ.focus = index;
@@ -398,7 +397,7 @@
 					type="button"
 					class="roller-field-rest"
 					tabindex="-1"
-					aria-label="type into this line"
+					aria-label={$_('roller.typeIntoLine')}
 					onclick={() => {
 						// the empty rest of the row is past every token, so clicking it means "type at the end"
 						organ.caretToEnd(index);
@@ -459,12 +458,12 @@
 				</div>
 				<span class="roller-menu-hints">
 					{#if picking >= 0}
-						<span><b>↓ ↑ ← →</b> pick a type</span>
-						<span><b>Esc</b> keep this one</span>
+						<span><b>↓ ↑ ← →</b> {$_('roller.pickType')}</span>
+						<span><b>Esc</b> {$_('roller.keepThisOne')}</span>
 					{:else}
-						<span><b>Tab</b> complete</span>
-						<span><b>↓</b> into the list</span>
-						<span><b>↑</b> back to the line</span>
+						<span><b>Tab</b> {$_('roller.complete')}</span>
+						<span><b>↓</b> {$_('roller.intoTheList')}</span>
+						<span><b>↑</b> {$_('roller.backToLine')}</span>
 					{/if}
 				</span>
 			</div>
@@ -474,7 +473,7 @@
 		<button
 			type="button"
 			class="roller-state advantage {cue}"
-			title="advantage → disadvantage → neither"
+			title={$_('roller.advantageCycle')}
 			onclick={() => organ.cycleAdvantage(index)}
 		>
 			<span class="advantage-cue advantage-cue-{cue}"></span>
@@ -484,7 +483,7 @@
 			type="button"
 			class="roller-state crit"
 			class:on={line.crit}
-			title="crit — double this line's dice"
+			title={$_('roller.critHint')}
 			onclick={() => organ.toggleCrit(index)}>×2</button
 		>
 	{/if}

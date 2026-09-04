@@ -700,11 +700,51 @@
 		"overCapacity": "Over capacity → speed 5 ft"
 	},
 	"roller": {
+		"addModifier": "add a modifier to the line the caret is in",
+		"advantageCycle": "advantage → disadvantage → neither",
+		"attacks": "{count} attacks",
+		"backToLine": "back to the line",
+		"complete": "complete",
+		"critHint": "crit — double this line’s dice",
+		"cue": {
+			"advantage": "rolled with advantage — tap for disadvantage",
+			"disadvantage": "rolled with disadvantage — tap to undo",
+			"neither": "roll a second d20 and keep the better — advantage"
+		},
+		"customRoll": "Custom roll",
+		"damage": "damage",
+		"damageRoll": "damage roll",
+		"droppedD20": "dropped d20",
+		"hit": {
+			"advantage": "rolled with advantage",
+			"disadvantage": "rolled with disadvantage"
+		},
+		"intoTheList": "into the list",
+		"issue": {
+			"unaccounted": "I can’t account for “{text}”",
+			"untypedDamage": "damage with no type — rolling anyway",
+			"blockingWhy": "rolling the part I did understand would just be a quietly smaller number",
+			"warnWhy": "a type is not arithmetic, so the number is right without it"
+		},
+		"keepThisOne": "keep this one",
+		"miss": "miss",
 		"mode": {
 			"advantage": "advantage",
 			"disadvantage": "disadvantage",
 			"neutral": "neutral"
-		}
+		},
+		"notAccounted": "the formula is not fully accounted for",
+		"noteHint": "your own label — it changes no number",
+		"oneLess": "one less",
+		"oneMore": "one more",
+		"pickType": "pick a type",
+		"rawHeld": "I can’t account for this — the roll is held until it goes",
+		"roll": "Roll",
+		"rollHint": "roll · Ctrl+Enter",
+		"testRoll": "test roll",
+		"toHit": "to hit",
+		"typeIntoLine": "type into this line",
+		"untypedGroup": "damage with no type — it rolls anyway"
 	},
 	"damageType": {
 		"slashing": "Slashing",

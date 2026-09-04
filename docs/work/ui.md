@@ -84,7 +84,8 @@
   the sentence.
   **What is left:** the LOG MARKERS (`logMarker` takes a finished sentence, so a short rest and a
   no-roll cast freeze in the language they happened in — the fix is the one a roll already has, a
-  `RollName` with its key), the spell-grouping label on the panel header, and the builder's remaining
+  `RollName` with its key; the auto-outcome marker is the hard one, because its sentence names a roll
+  that is itself a key), the spell-grouping label on the panel header, and the builder's remaining
   body copy. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).

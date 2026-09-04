@@ -1,16 +1,24 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { userEvent } from 'vitest/browser';
 import Roller from './Roller.svelte';
 import { RollerOrgan } from '$lib/dice/roller.svelte';
 import { rollerCandidates, type NamedRollSource } from '$lib/dice/roller-vocabulary';
 import { PILL_KIND, ROLLER_ROLE } from '$lib/dice/roller';
+import { startI18n, locale, waitLocale } from '$lib/i18n';
 
 /*
  * The organ's KEYBOARD, in a real browser — the half of the design that unit tests can't reach,
  * because it is about what a keypress does to a caret, a menu and a pill. The model beneath is
  * covered in `dice/roller*.test.ts`; these assert that the wiring above it actually fires.
  */
+// the organ's own chrome (the Roll button, the pill hints) reads from the catalog
+beforeAll(async () => {
+	await startI18n('en');
+	void locale.set('en');
+	await waitLocale();
+});
+
 const SOURCES: NamedRollSource[] = [
 	{
 		key: 'bless',

@@ -8,6 +8,7 @@
 	// not a second screen, and not a mode.
 	import RollerLine from './RollerLine.svelte';
 	import { DICE } from '$lib/combat/helpers';
+	import { _ } from '$lib/i18n';
 	import type { RollLogEntry } from '$lib/combat/roll';
 	import { ROLLER_ROLE } from '$lib/dice/roller';
 	import type { RollerOrgan } from '$lib/dice/roller.svelte';
@@ -52,7 +53,7 @@
 			<button
 				type="button"
 				class="roller-die-btn ghost"
-				title="add a modifier to the line the caret is in"
+				title={$_('roller.addModifier')}
 				onclick={organ.addMod}>±mod</button
 			>
 		</div>
@@ -83,9 +84,9 @@
 			<div class="roller-blocked" class:warn={!issue.blocking}>
 				{#if issue.blocking}<span class="roller-blocked-badge">!</span>{/if}
 				<span
-					>{issue.text} — {issue.blocking
-						? 'rolling the part I did understand would just be a quietly smaller number'
-						: 'a type is not arithmetic, so the number is right without it'}.</span
+					>{$_(issue.key, { ...(issue.values ? { values: issue.values } : {}) })} — {$_(
+						issue.blocking ? 'roller.issue.blockingWhy' : 'roller.issue.warnWhy',
+					)}.</span
 				>
 			</div>
 		{/if}
@@ -95,8 +96,8 @@
 			class="roller-roll"
 			class:muted={!organ.rollable}
 			disabled={!organ.rollable}
-			title={organ.rollable ? 'roll · Ctrl+Enter' : 'the formula is not fully accounted for'}
-			onclick={fire}>Roll</button
+			title={$_(organ.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
+			onclick={fire}>{$_('roller.roll')}</button
 		>
 	</div>
 </div>

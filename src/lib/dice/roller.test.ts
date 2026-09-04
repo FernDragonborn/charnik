@@ -249,9 +249,7 @@ describe('damage types', () => {
 		const line = type(ROLLER_ROLE.damage, '2d6');
 		expect(damageParts(line)).toMatchObject([{ dice: { 6: 2 }, type: '' }]);
 		expect(canRoll([line])).toBe(true);
-		expect(rollerIssues([line])).toEqual([
-			{ text: 'damage with no type — rolling anyway', blocking: false },
-		]);
+		expect(rollerIssues([line])).toEqual([{ key: 'roller.issue.untypedDamage', blocking: false }]);
 	});
 });
 
