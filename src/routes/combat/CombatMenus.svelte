@@ -11,6 +11,7 @@
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import { titleCase, ABIL, MOD_TARGETS } from '$lib/combat/helpers';
+	import { sanitizeHtml } from '$lib/content/markdown';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
@@ -103,64 +104,61 @@
 			<DiceTray />
 		{:else if overlay.kind === 'temphp'}
 			<div class="menu-panel">
-				<div class="popup-heading eyebrow" style="border: 0">Set temporary HP</div>
+				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.tempHpTitle')}</div>
 				<div class="field">
 					<input type="number" bind:value={combat.tempHpInput} />
-					<button class="submit-btn" onclick={setTempHp}>Set</button>
+					<button class="submit-btn" onclick={setTempHp}>{$_('combat.menu.set')}</button>
 				</div>
-				<p class="note">
-					Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
-				</p>
+				<p class="note">{$_('combat.menu.tempHpNote')}</p>
 			</div>
 		{:else if overlay.kind === 'levelup'}
-			<div class="popup-heading eyebrow" style="border: 0">Level up · which class</div>
+			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.levelUpTitle')}</div>
 			{#each combat.levelUpClasses as cl (cl.index)}
 				<button class="menu-row" onclick={() => combat.levelUp(cl.index)}>
 					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
-					<span class="meta">+1 level</span>
+					<span class="meta">{$_('combat.menu.levelUpDelta')}</span>
 				</button>
 			{/each}
-			<p class="note">
-				HP, proficiency, spell slots & features update automatically. Pick any new ASI / feat /
-				spells in the builder.
-			</p>
+			<p class="note">{$_('combat.menu.levelUpNote')}</p>
 		{:else if overlay.kind === 'addeffect'}
 			<div class="search">
 				<span class="search-icon"><Icon name="search" size={13} /></span><input
-					placeholder="Search effects…"
+					placeholder={$_('combat.menu.searchEffects')}
 				/>
 			</div>
-			<div class="section eyebrow">Duration · applied to what you add</div>
+			<div class="section eyebrow">{$_('combat.menu.durationApplied')}</div>
 			<div class="dur-picker">
 				<button
 					class="pill-btn"
 					onclick={() =>
 						(combat.effects.newEffectDuration = Math.max(0, combat.effects.newEffectDuration - 1))}
-					><Icon name="minus" size={12} label="One round fewer" /></button
+					><Icon name="minus" size={12} label={$_('combat.menu.roundsFewer')} /></button
 				>
 				<input
 					class="modifier-amount"
 					type="number"
 					min="0"
 					placeholder="∞"
-					aria-label="Duration in rounds"
+					aria-label={$_('combat.menu.durationRounds')}
 					bind:value={combat.effects.newEffectDuration}
 				/>
 				<span class="dur-val"
-					>{combat.effects.newEffectDuration > 0 ? 'rds' : 'until removed (∞)'}</span
+					>{combat.effects.newEffectDuration > 0
+						? $_('combat.menu.roundsShort')
+						: $_('combat.menu.untilRemovedValue')}</span
 				>
 				<button class="pill-btn" onclick={() => (combat.effects.newEffectDuration += 1)}
-					><Icon name="plus" size={12} label="One round more" /></button
+					><Icon name="plus" size={12} label={$_('combat.menu.roundsMore')} /></button
 				>
 				<button
 					class="pill-btn"
 					class:on={combat.effects.newEffectDuration === 0}
-					title="Lasts until you remove it"
+					title={$_('combat.menu.untilRemovedTitle')}
 					onclick={() => (combat.effects.newEffectDuration = 0)}
-					><Icon name="infinity" size={13} label="Until removed" /></button
+					><Icon name="infinity" size={13} label={$_('combat.menu.untilRemoved')} /></button
 				>
 			</div>
-			<div class="section eyebrow">Catalog</div>
+			<div class="section eyebrow">{$_('combat.menu.catalog')}</div>
 			{#each combat.effects.effectCatalog as p (p.label)}
 				{@const dur = p.durationRounds ?? combat.effects.newEffectDuration}
 				<button
@@ -178,7 +176,7 @@
 						><span class="effect-icon" class:negative={p.negative}
 							><Icon name="plus" size={11} /></span
 						>{p.label}</span
-					><span class="durpill">{dur > 0 ? `${dur} rds` : '∞'}</span>
+					><span class="durpill">{dur > 0 ? `${dur} ${$_('combat.menu.roundsShort')}` : '∞'}</span>
 				</button>
 			{/each}
 			<div class="divider-light"></div>
@@ -187,18 +185,21 @@
 				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
 			>
 				<span class="main"
-					><span class="effect-icon"><Icon name="pencil" size={11} /></span><b>Custom effect…</b
+					><span class="effect-icon"><Icon name="pencil" size={11} /></span><b
+						>{$_('combat.menu.customEffect')}</b
 					></span
-				><span class="meta">text + manual mod</span>
+				><span class="meta">{$_('combat.menu.customEffectMeta')}</span>
 			</button>
 		{:else if overlay.kind === 'customeffect'}
 			<div class="menu-panel">
-				<div class="popup-heading eyebrow" style="border: 0">Custom modifier</div>
+				<div class="popup-heading eyebrow" style="border: 0">
+					{$_('combat.menu.customModifier')}
+				</div>
 				<div class="modifier-row">
 					<select
 						class="modifier-target"
 						bind:value={combat.customModTarget}
-						aria-label="Modifier target"
+						aria-label={$_('combat.menu.modifierTarget')}
 					>
 						{#each MOD_TARGETS as g (g.group)}
 							<optgroup label={g.group}>
@@ -209,17 +210,19 @@
 					<button
 						class="modifier-sign"
 						onclick={() => (combat.customModSign = combat.customModSign === '+' ? '-' : '+')}
-						title="Toggle bonus / penalty">{combat.customModSign}</button
+						title={$_('combat.menu.toggleSign')}>{combat.customModSign}</button
 					>
 					<input
 						class="modifier-amount"
 						type="number"
 						min="1"
 						bind:value={combat.customModAmount}
-						aria-label="Amount"
+						aria-label={$_('combat.menu.amount')}
 					/>
 				</div>
-				<div class="section eyebrow" style="padding-inline-start: 0">Duration</div>
+				<div class="section eyebrow" style="padding-inline-start: 0">
+					{$_('combat.menu.duration')}
+				</div>
 				<div class="dur-picker">
 					<button
 						class="dur-step"
@@ -227,40 +230,52 @@
 							(combat.effects.newEffectDuration = Math.max(
 								0,
 								combat.effects.newEffectDuration - 1,
-							))}><Icon name="minus" size={12} label="One round fewer" /></button
+							))}><Icon name="minus" size={12} label={$_('combat.menu.roundsFewer')} /></button
 					>
 					<span class="dur-picker-val"
 						>{combat.effects.newEffectDuration > 0
-							? `${combat.effects.newEffectDuration} rds`
-							: '∞ until removed'}</span
+							? `${combat.effects.newEffectDuration} ${$_('combat.menu.roundsShort')}`
+							: $_('combat.menu.untilRemovedLong')}</span
 					>
 					<button class="dur-step" onclick={() => (combat.effects.newEffectDuration += 1)}
-						><Icon name="plus" size={12} label="One round more" /></button
+						><Icon name="plus" size={12} label={$_('combat.menu.roundsMore')} /></button
 					>
 					<button
 						class="dur-inf"
 						class:on={combat.effects.newEffectDuration === 0}
-						title="Lasts until you remove it"
+						title={$_('combat.menu.untilRemovedTitle')}
 						onclick={() => (combat.effects.newEffectDuration = 0)}
-						><Icon name="infinity" size={13} label="Until removed" /></button
+						><Icon name="infinity" size={13} label={$_('combat.menu.untilRemoved')} /></button
 					>
 				</div>
 				<div class="field">
 					<!-- svelte-ignore a11y_autofocus -->
-					<input placeholder="Label (optional)…" bind:value={combat.customEffectLabel} autofocus />
-					<button class="submit-btn" onclick={addCustomModifier}>Add</button>
+					<input
+						placeholder={$_('combat.menu.labelOptional')}
+						bind:value={combat.customEffectLabel}
+						autofocus
+					/>
+					<button class="submit-btn" onclick={addCustomModifier}>{$_('combat.menu.add')}</button>
 				</div>
 				<p class="note">
-					Adds a <b>{combat.customModSign}{Math.abs(combat.customModAmount) || 1}</b> modifier — applied
-					live to the chosen stat and listed in the effects panel.
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
+					{@html sanitizeHtml(
+						$_('combat.menu.customModNote', {
+							values: {
+								mod: `${combat.customModSign}${Math.abs(combat.customModAmount) || 1}`,
+							},
+						}),
+					)}
 				</p>
 			</div>
 		{:else if overlay.kind === 'log'}
 			<RollLog />
 		{:else if overlay.kind === 'showhide'}
 			<div class="popup-heading eyebrow">
-				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
-					><Icon name="x" size={13} label="Close" /></button
+				{$_('combat.menu.whichActions')}<button
+					class="icon-button"
+					onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
 			{#each actions as a (a.id)}
@@ -268,15 +283,16 @@
 					<span class="passive-eye" class:on={!hiddenActions[a.id]}
 						><EyeIcon on={!hiddenActions[a.id]} /></span
 					><span class="main">{a.name}</span>{#if hiddenActions[a.id]}<span class="meta"
-							>hidden</span
+							>{$_('combat.menu.hidden')}</span
 						>{/if}
 				</button>
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
 			<div class="popup-heading eyebrow">
-				Passive senses · <EyeIcon on={true} /> = shown<button
+				{$_('combat.menu.passiveSenses')}<EyeIcon on={true} />{$_('combat.menu.legendShown')}<button
 					class="icon-button"
-					onclick={() => (combat.overlay = null)}><Icon name="x" size={13} label="Close" /></button
+					onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
 			<div class="pin-wrap">
@@ -301,18 +317,24 @@
 		{:else if overlay.kind === 'upcast'}
 			{@const r = combat.upcastSpell}
 			{#if r}
-				<div class="popup-heading eyebrow" style="border: 0">Cast {r.name} · at which slot</div>
+				<div class="popup-heading eyebrow" style="border: 0">
+					{$_('combat.menu.upcastTitle', { values: { name: r.name } })}
+				</div>
 				{#each combat.castableSlots(r) as lvl (lvl)}
 					{@const preview = combat.castPreview(r, lvl)}
 					<button class="menu-row" onclick={(e) => combat.castAtSlot(lvl, e)}>
-						<span class="main">Level {lvl}{lvl === r.level ? ' · base' : ''}</span>
+						<span class="main"
+							>{$_(lvl === r.level ? 'combat.menu.slotLevelBase' : 'combat.menu.slotLevel', {
+								values: { level: lvl },
+							})}</span
+						>
 						{#if preview}<span class="meta">{preview}</span>{/if}
 					</button>
 				{/each}
-				<p class="note" style="padding: 6px 13px 2px">Upcasting spends the higher-level slot.</p>
+				<p class="note" style="padding: 6px 13px 2px">{$_('combat.menu.upcastNote')}</p>
 			{/if}
 		{:else if overlay.kind === 'restshort'}
-			<div class="popup-heading eyebrow" style="border: 0">Short rest · spend Hit Dice</div>
+			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
 			{#if combat.hitDice.length}
 				{#each combat.hitDice as h (h.die)}
 					<div class="hitdice-row">
@@ -322,49 +344,52 @@
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) <= 0}
 								onclick={() => combat.hdPickInc(h.die, -1)}
-								><Icon name="minus" size={12} label="One die fewer" /></button
+								><Icon name="minus" size={12} label={$_('combat.menu.dieFewer')} /></button
 							>
 							<span class="hitdice-pick">{combat.hdPick[h.die] ?? 0}</span>
 							<button
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) >= h.left}
 								onclick={() => combat.hdPickInc(h.die, 1)}
-								><Icon name="plus" size={12} label="One die more" /></button
+								><Icon name="plus" size={12} label={$_('combat.menu.dieMore')} /></button
 							>
 						</div>
 					</div>
 				{/each}
 				<p class="note" style="padding: 4px 13px">
-					Each die heals its roll <b>+ CON</b> (min 1). Rolls show in the log.
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
+					{@html sanitizeHtml($_('combat.menu.hitDiceNote'))}
 				</p>
 				<div class="field" style="padding: 0 13px 4px">
 					<button class="submit-btn" onclick={() => combat.commitShortRest()}>
-						Take short rest{combat.hdPickCount ? ` · spend ${combat.hdPickCount}` : ''}
+						{combat.hdPickCount
+							? $_('combat.menu.takeShortRestSpend', { values: { count: combat.hdPickCount } })
+							: $_('combat.menu.takeShortRest')}
 					</button>
 				</div>
 			{:else}
-				<p class="note" style="padding: 8px 13px">
-					No Hit Dice — a short rest still refreshes pools.
-				</p>
+				<p class="note" style="padding: 8px 13px">{$_('combat.menu.noHitDiceNote')}</p>
 				<div class="field" style="padding: 0 13px 4px">
 					<button class="submit-btn" onclick={() => combat.commitShortRest()}
-						>Take short rest</button
+						>{$_('combat.menu.takeShortRest')}</button
 					>
 				</div>
 			{/if}
 		{:else if overlay.kind === 'manage'}
 			<div class="popup-heading eyebrow">
-				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}
-					><Icon name="x" size={13} label="Close" /></button
+				{$_('combat.menu.spellbook')}<button
+					class="icon-button"
+					onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
-			<p class="note" style="padding: 11px 13px">
-				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
-			</p>
+			<p class="note" style="padding: 11px 13px">{$_('combat.menu.spellbookNote')}</p>
 		{:else if overlay.kind === 'condition'}
 			<div class="popup-heading eyebrow">
-				Conditions · multi-select<button class="icon-button" onclick={() => (combat.overlay = null)}
-					><Icon name="x" size={13} label="Close" /></button
+				{$_('combat.menu.conditionsTitle')}<button
+					class="icon-button"
+					onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
 			{#each conditionList as cn (cn.id)}
@@ -561,7 +586,10 @@
 		color: var(--color-text-muted);
 		margin: 0;
 	}
-	.note b {
+	/* `:global` because the two notes carrying a <b> arrive through `{@html}` — a translated sentence
+	   keeps its emphasis inside the string, where a translator can move it, and scoped styles do not
+	   reach markup Svelte never compiled. */
+	.note :global(b) {
 		color: var(--color-resource);
 	}
 	.gold {

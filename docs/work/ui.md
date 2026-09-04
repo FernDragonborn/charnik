@@ -82,11 +82,12 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left:** the stat tiles (`ARMOR CLASS`, `INITIATIVE`, `SPEED`, `SAVE`) and the passive
-  sense names — all unblocked now that a roll carries its key — plus the builder's remaining body
-  copy and the VM toasts (`get(_)` inside a function: a toast is fire-and-forget, so the one-shot
-  store read is correct; never at module top level, where it would freeze at the load-time locale).
-  UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
+  **What is left:** the LOG MARKERS (`logMarker` takes a finished sentence, so a short rest and a
+  no-roll cast freeze in the language they happened in — the fix is the one a roll already has, a
+  `RollName` with its key), the spell-grouping label on the panel header, and the builder's remaining
+  body copy. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  fire-and-forget, so that is correct — never at module top level, where it would freeze at the
+  load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
   MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`
   zeroes the min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per

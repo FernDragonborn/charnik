@@ -15,23 +15,20 @@
 
 <DialogShell
 	titleId="death-title"
-	title="You have died"
+	title={$_('combat.death.title')}
 	subtitle={$_(DEATH_CAUSE_LABEL[cause])}
 	badge="skull"
 	width="min(460px, calc(100vw - 2 * var(--space-4)))"
 >
 	<div class="body">
-		<p class="line">
-			The sheet stays exactly as it is — hit points, effects and the roll log are all still here.
-			Nothing but a revival effect brings a character back, so this stays up until one does.
-		</p>
+		<p class="line">{$_('combat.death.body')}</p>
 	</div>
 	<footer class="dialog-foot">
 		<!-- the ONLY other way out: the nav is behind the backdrop, so without this a permanently dead
 		     character would lock the player out of switching characters. -->
-		<a class="btn ghost" href="{base}/">Back to the roster</a>
+		<a class="btn ghost" href="{base}/">{$_('combat.death.backToRoster')}</a>
 		<span class="dialog-spacer"></span>
-		<button class="btn primary" onclick={combat.revive}>I was revived</button>
+		<button class="btn primary" onclick={combat.revive}>{$_('combat.death.revived')}</button>
 	</footer>
 </DialogShell>
 

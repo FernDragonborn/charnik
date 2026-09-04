@@ -2,10 +2,11 @@
 	// Spells panel body: per-class cast line (save DC / attack), an armor-block warning, then spell
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { toast } from 'svelte-sonner';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed } from '$lib/combat/helpers';
+	import { why, signed, range } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
@@ -40,11 +41,11 @@
 				<div class="spell-category eyebrow" class:star={g.key === 'pinned'}>
 					{g.label}
 					{#if g.slots}{@const sl = g.slots}<span class="pips"
-							>{#each Array(sl.full) as _, i (i)}<button
+							>{#each range(sl.full) as i (i)}<button
 									class="slot-pip"
 									class:full={i < sl.full - sl.spent}
 									class:spent={i >= sl.full - sl.spent}
-									title="tap to spend / restore"
+									title={$_('combat.spells.slotPip')}
 									onclick={() => slotClick(g.key, sl.full, sl.spent, i)}
 								></button>{/each}</span
 						>{/if}
@@ -57,7 +58,11 @@
 								class="prep"
 								class:on={r.prepState === 'on'}
 								class:always={r.prepState === 'always'}
-								title={r.prepState === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
+								title={$_(
+									r.prepState === 'always'
+										? 'combat.spells.alwaysPrepared'
+										: 'combat.spells.togglePrepared',
+								)}
 								onclick={(e) => {
 									e.stopPropagation();
 									togglePrepared(r);
@@ -69,7 +74,7 @@
 								class:on={pinned[r.id]}
 								role="button"
 								tabindex="-1"
-								title="pin to top"
+								title={$_('combat.spells.pinToTop')}
 								onclick={(e) => {
 									e.stopPropagation();
 									combat.togglePin(r.id);
@@ -91,7 +96,7 @@
 									class="ritual-cast"
 									role="button"
 									tabindex="-1"
-									title="Cast as ritual (no slot, +10 min)"
+									title={$_('combat.spells.castRitual')}
 									onclick={(e) => {
 										e.stopPropagation();
 										cast(r, e, { ritual: true });
@@ -105,11 +110,23 @@
 						<span class="spell-level"
 							>{#if r.castTimeIcon}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
 									class="cast-icon"
-									title={r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}
+									title={$_(
+										r.castTimeIcon === 'react'
+											? 'combat.spells.reaction'
+											: 'combat.spells.bonusAction',
+									)}
 									onclick={(e) => {
 										e.stopPropagation();
 										toast(
-											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`,
+											$_('combat.notice.castingTime', {
+												values: {
+													when: $_(
+														r.castTimeIcon === 'react'
+															? 'combat.spells.reaction'
+															: 'combat.spells.bonusAction',
+													),
+												},
+											}),
 										);
 									}}
 									><Icon
@@ -120,7 +137,7 @@
 									class="upcast-btn"
 									role="button"
 									tabindex="-1"
-									title="Cast at a higher slot (upcast)"
+									title={$_('combat.spells.castUpcast')}
 									onclick={(e) => {
 										e.stopPropagation();
 										combat.openUpcast(r, e);

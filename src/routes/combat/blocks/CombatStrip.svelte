@@ -144,7 +144,7 @@
 						>{/if}
 				</span>
 			{:else}
-				<span class="ability-save"><i>none pinned</i></span>
+				<span class="ability-save"><i>{$_('combat.section.nonePinned')}</i></span>
 			{/each}
 			<button class="edit" onclick={(e) => openMenu('pinskills', e)}
 				><Icon name="pencil" size={13} /> {$_('combat.section.pinSkills')}</button

@@ -219,13 +219,14 @@ export function groupEffects(effects: EffectInstance[]): {
 /** Recharge id → the label shown on a resource's recharge chip. A `Record<Recharge, …>` so adding a
  *  recharge policy is a compile error here until it gets a label (no silent 'special' fallthrough). */
 const RECHARGE_LABEL: Record<Recharge, string> = {
-	long: 'long rest',
-	short: 'short rest',
-	short_one: 'short rest (+1)',
-	consumable: 'consumable',
-	other: 'special',
+	long: 'combat.recharge.long',
+	short: 'combat.recharge.short',
+	short_one: 'combat.recharge.shortOne',
+	consumable: 'combat.recharge.consumable',
+	other: 'combat.recharge.other',
 };
-export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'special';
+/** The catalog KEY for a recharge policy — the caller translates, as it does for a death cause. */
+export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'combat.recharge.other';
 
 /** Rounds an effect has left at the given round counter (null = indefinite, floor 0). */
 export const remainingRounds = (e: EffectInstance, round: number): number | null =>
@@ -267,9 +268,9 @@ export function durationToRounds(text: string): number | null {
 /** The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
  *  `rounds: null` = indefinite (until removed). "Custom…" is handled separately in the menu. */
 export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[] = [
-	{ label: '1 round', rounds: 1 },
-	{ label: '1 minute · 10 rds', rounds: 10 },
-	{ label: '10 minutes · 100 rds', rounds: 100 },
-	{ label: '1 hour · 600 rds', rounds: 600 },
-	{ label: '∞ until removed', rounds: null },
+	{ label: 'combat.duration.round1', rounds: 1 },
+	{ label: 'combat.duration.minute1', rounds: 10 },
+	{ label: 'combat.duration.minutes10', rounds: 100 },
+	{ label: 'combat.duration.hour1', rounds: 600 },
+	{ label: 'combat.duration.untilRemoved', rounds: null },
 ];

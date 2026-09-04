@@ -82,7 +82,9 @@
 				<span class="conc-warn"><Icon name="circle-x" size={13} /> Save failed</span>
 				<span class="conc-detail">{combat.conc.label} ends</span>
 			{:else}
-				<span class="conc-warn"><Icon name="triangle-alert" size={13} /> Concentration check</span>
+				<span class="conc-warn"
+					><Icon name="triangle-alert" size={13} /> {$_('combat.hp.concentrationCheck')}</span
+				>
 				<span class="conc-detail">
 					{combat.conc.label} · DC
 					<input
@@ -90,7 +92,7 @@
 						type="number"
 						min="1"
 						bind:value={pend.dc}
-						aria-label="Concentration save DC"
+						aria-label={$_('combat.hp.concentrationDc')}
 					/>
 					· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
 				</span>
@@ -98,20 +100,20 @@
 			<span class="conc-actions">
 				{#if !pend.failed}
 					<button class="conc-btn roll" onclick={combat.rollConcentrationSave}
-						><DiceIcon size={14} /> Roll</button
+						><DiceIcon size={14} /> {$_('combat.hp.roll')}</button
 					>
 				{/if}
 				<button
 					class="conc-btn drop"
-					title="End concentration on {combat.conc.label}"
-					onclick={combat.dropConcentrationFromSave}>Drop spell</button
+					title={$_('combat.hp.endConcentration', { values: { spell: combat.conc.label } })}
+					onclick={combat.dropConcentrationFromSave}>{$_('combat.hp.dropSpell')}</button
 				>
 				<button
 					class="conc-btn dismiss"
-					title="Dismiss — keep concentrating"
-					aria-label="Dismiss, keep concentrating"
+					title={$_('combat.hp.keepConcentrating')}
+					aria-label={$_('combat.hp.keepConcentratingAria')}
 					onclick={combat.dismissConcentrationSave}
-					><Icon name="x" size={13} label="Dismiss" /></button
+					><Icon name="x" size={13} label={$_('combat.hp.dismiss')} /></button
 				>
 			</span>
 		</div>
@@ -123,32 +125,33 @@
 			<button
 				class="hp-btn death-roll"
 				onclick={() => combat.deathSave()}
-				title="Roll a death save"
+				title={$_('combat.hp.rollDeathSave')}
 			>
-				<DiceIcon size={14} /> Death save
+				<DiceIcon size={14} />
+				{$_('combat.hp.deathSave')}
 			</button>
 			<div class="death-tracks">
-				<div class="death-track" role="group" aria-label="Death save successes">
-					<span class="death-track-label good">Success</span>
+				<div class="death-track" role="group" aria-label={$_('combat.hp.deathSuccesses')}>
+					<span class="death-track-label good">{$_('combat.hp.success')}</span>
 					{#each pips as i (i)}
 						<button
 							type="button"
 							class="death-pip good"
 							class:filled={c.play.deathSaves.successes > i}
-							aria-label="Success {i + 1}"
+							aria-label={$_('combat.hp.successN', { values: { n: i + 1 } })}
 							aria-pressed={c.play.deathSaves.successes > i}
 							onclick={() => combat.toggleDeathSave('successes', i)}
 						></button>
 					{/each}
 				</div>
-				<div class="death-track" role="group" aria-label="Death save failures">
-					<span class="death-track-label bad">Failure</span>
+				<div class="death-track" role="group" aria-label={$_('combat.hp.deathFailures')}>
+					<span class="death-track-label bad">{$_('combat.hp.failure')}</span>
 					{#each pips as i (i)}
 						<button
 							type="button"
 							class="death-pip bad"
 							class:filled={c.play.deathSaves.failures > i}
-							aria-label="Failure {i + 1}"
+							aria-label={$_('combat.hp.failureN', { values: { n: i + 1 } })}
 							aria-pressed={c.play.deathSaves.failures > i}
 							onclick={() => combat.toggleDeathSave('failures', i)}
 						></button>

@@ -4,6 +4,7 @@
 	// remaining-rounds control, clamped to the viewport, follows that control when the page scrolls,
 	// and closes on a pointer outside it. Writes through the combat view-model.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
 
@@ -81,17 +82,17 @@
 	bind:this={el}
 	class="dur-menu"
 	role="dialog"
-	aria-label="Effect duration"
+	aria-label={$_('combat.duration.menu')}
 	style="top:{pos.top}px; left:{pos.left}px"
 >
 	<div class="dur-step-row">
 		<button
 			type="button"
 			onclick={() => combat.effects.bumpEffectDuration(iid, -1)}
-			aria-label="One round fewer"><Icon name="minus" size={12} /></button
+			aria-label={$_('combat.duration.roundFewer')}><Icon name="minus" size={12} /></button
 		>
 		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, 1)}
-			><Icon name="plus" size={12} label="Add a round" /></button
+			><Icon name="plus" size={12} label={$_('combat.duration.roundMore')} /></button
 		>
 	</div>
 	{#each EFFECT_DURATION_PRESETS as p (p.label)}
@@ -99,7 +100,7 @@
 			type="button"
 			class="dur-item"
 			class:on={rounds === p.rounds || (p.rounds === null && rounds == null)}
-			onclick={() => pick(p.rounds)}>{p.label}</button
+			onclick={() => pick(p.rounds)}>{$_(p.label)}</button
 		>
 	{/each}
 	{#if custom}
@@ -108,12 +109,16 @@
 				type="number"
 				min="0"
 				bind:value={customValue}
-				aria-label="Custom rounds"
+				aria-label={$_('combat.duration.customRounds')}
 				onkeydown={(e) => e.key === 'Enter' && applyCustom()}
-			/><span>rds</span><button type="button" onclick={applyCustom}>Set</button>
+			/><span>{$_('combat.menu.roundsShort')}</span><button type="button" onclick={applyCustom}
+				>{$_('combat.duration.set')}</button
+			>
 		</div>
 	{:else}
-		<button type="button" class="dur-item dur-custom-open" onclick={openCustom}>Custom…</button>
+		<button type="button" class="dur-item dur-custom-open" onclick={openCustom}
+			>{$_('combat.duration.custom')}</button
+		>
 	{/if}
 </div>
 

@@ -495,9 +495,12 @@ describe('parseResourceEffect + rechargeLabel', () => {
 			parseResourceEffect(eff({ iid: 'x', label: 'Bless', effects: ['flat_bonus:ac+2'] })),
 		).toBeNull();
 	});
-	it('labels recharges', () => {
-		expect(rechargeLabel('long')).toBe('long rest');
-		expect(rechargeLabel('short')).toBe('short rest');
+	// the KEY, not the word: a recharge chip reads in the player's language, so the catalog owns the
+	// wording and this only guards that every policy has a key of its own
+	it('names a catalog key per recharge policy', () => {
+		expect(rechargeLabel('long')).toBe('combat.recharge.long');
+		expect(rechargeLabel('short')).toBe('combat.recharge.short');
+		expect(rechargeLabel('short_one')).toBe('combat.recharge.shortOne');
 	});
 });
 

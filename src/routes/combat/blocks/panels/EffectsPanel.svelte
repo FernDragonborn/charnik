@@ -4,6 +4,7 @@
 	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu / info-expand
 	// local state and the per-effect row snippet.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import ArticleProse from '$lib/components/ArticleProse.svelte';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
@@ -44,7 +45,7 @@
 	// the menu prefills / the chip shows REMAINING rounds at the live round counter, not the total
 	const menuRounds = $derived(menuEffect ? remainingRounds(menuEffect, combat.round) : null);
 	const durationLabel = (rounds: number | null | undefined) =>
-		rounds != null ? `${rounds} rds` : '∞';
+		rounds != null ? $_('combat.effects.roundsLeft', { values: { rounds } }) : '∞';
 	// item/feature-derived contributions + unknown/plugin notes (read-only, from sheet.facts)
 	const derivedEffects = $derived(describeDerivedEffects(s.facts));
 </script>
@@ -65,14 +66,15 @@
 				     reads as a "Concentration" marker, not a blank buff. Tap to drop it. -->
 				<button
 					class="conc-badge"
-					title="Concentrating — tap to drop"
-					onclick={combat.clearConcentration}><Icon name="target" size={13} /> Concentration</button
+					title={$_('combat.effects.concentrating')}
+					onclick={combat.clearConcentration}
+					><Icon name="target" size={13} /> {$_('combat.effects.concentration')}</button
 				>
 			{/if}
 			{#each tags as tok (tok)}
 				{@const note = noteText(tok)}
 				{#if note}
-					<span class="effect-tag effect-tag--note" title="Shown for reference — not auto-applied"
+					<span class="effect-tag effect-tag--note" title={$_('combat.effects.referenceOnly')}
 						>ⓘ {note}</span
 					>
 				{:else}
@@ -85,23 +87,23 @@
 				<button
 					class="icon-button effect-info-btn"
 					class:on={infoOpen === e.iid}
-					title="Rules text"
+					title={$_('combat.effects.rulesText')}
 					aria-expanded={infoOpen === e.iid}
 					onclick={() => (infoOpen = infoOpen === e.iid ? null : e.iid)}>ⓘ</button
 				>
 			{/if}
 			<button
 				class="duration-select"
-				title="Set duration"
+				title={$_('combat.effects.setDuration')}
 				onclick={(ev) => (durationMenu = { iid: e.iid, anchor: ev.currentTarget })}
 				>{durationLabel(remainingRounds(e, combat.round))}
 				<Icon name="chevron-down" size={12} /></button
 			>
 			<button
 				class="icon-button effect-remove"
-				title="Remove effect"
+				title={$_('combat.effects.remove')}
 				onclick={() => combat.effects.removeEffect(e.iid)}
-				><Icon name="x" size={13} label="Remove effect" /></button
+				><Icon name="x" size={13} label={$_('combat.effects.remove')} /></button
 			>
 		</span>
 	</div>
@@ -113,7 +115,7 @@
 {/snippet}
 
 {#if !c.play.effects.length && !derivedEffects.groups.length && !derivedEffects.unknown.length && !s.facts.pluginNotes.length}
-	<p class="trace">No active effects.</p>
+	<p class="trace">{$_('combat.effects.none')}</p>
 {:else}
 	{#if effectGroups.buffs.length}
 		<div class="effect-section" class:effect-section--first={firstKind === 'buffs'}>
@@ -132,7 +134,8 @@
 						stroke-linecap="round"
 					/></svg
 				>
-				Buffs <span class="section-count">· {effectGroups.buffs.length}</span>
+				{$_('combat.effects.buffs')}
+				<span class="section-count">· {effectGroups.buffs.length}</span>
 			</div>
 			{#each effectGroups.buffs as e (e.iid)}{@render effectRow(e, 'positive')}{/each}
 		</div>
@@ -154,7 +157,8 @@
 						stroke-linecap="round"
 					/></svg
 				>
-				Debuffs <span class="section-count">· {effectGroups.debuffs.length}</span>
+				{$_('combat.effects.debuffs')}
+				<span class="section-count">· {effectGroups.debuffs.length}</span>
 			</div>
 			{#each effectGroups.debuffs as e (e.iid)}{@render effectRow(e, 'negative')}{/each}
 		</div>
@@ -176,7 +180,8 @@
 						stroke-linecap="round"
 					/><path d="M6 10 H9" stroke-linecap="round" /></svg
 				>
-				Resources <span class="section-count">· {effectGroups.resources.length}</span>
+				{$_('combat.effects.resources')}
+				<span class="section-count">· {effectGroups.resources.length}</span>
 			</div>
 			{#each effectGroups.resources as r (r.iid)}
 				{@const spent = combat.resources.resourceSpent(r.id)}
@@ -215,13 +220,13 @@
 						<!-- unlimited pool (`inf` max): no pips, count = uses since recharge -->
 						<span class="resource-count">{spent} · ∞</span>
 					{/if}
-					<span class="recharge-chip">{rechargeLabel(r.recharge)}</span>
+					<span class="recharge-chip">{$_(rechargeLabel(r.recharge))}</span>
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<span
 						class="icon-button effect-remove"
 						role="button"
 						tabindex="-1"
-						title="Remove effect"
+						title={$_('combat.effects.remove')}
 						onclick={(e) => {
 							e.stopPropagation();
 							combat.effects.removeEffect(r.iid);
@@ -235,7 +240,7 @@
 		<!-- B14: content-borne item/feature contributions — read-only (they follow equip/feature
 		     state, not user CRUD), read from sheet.facts (D7), never re-parsed here. -->
 		<div class="effect-section">
-			<div class="section-head">From items &amp; features</div>
+			<div class="section-head">{$_('combat.effects.fromItems')}</div>
 			{#each derivedEffects.groups as g (g.source)}
 				<div class="derived-effect-row">
 					<span class="row-name">{g.source}</span>
@@ -249,7 +254,7 @@
 	{#if derivedEffects.unknown.length}
 		<!-- unknown/unsupported tokens — surfaced as distinctly-styled inert notes (never dropped) -->
 		<div class="effect-section">
-			<div class="section-head">Unrecognized</div>
+			<div class="section-head">{$_('combat.effects.unrecognized')}</div>
 			{#each derivedEffects.unknown as u, i (i)}
 				<p class="trace"><b>{u.source}</b> — <code>{u.token}</code></p>
 			{/each}
@@ -259,7 +264,10 @@
 		<!-- L3 plugin notes (plugins.md §4.3) — PLAIN TEXT only (PLG-SEC 3), attributed to
 		     the carrying effect · plugin namespace, styled like the display-only rules notes -->
 		<div class="effect-section">
-			<div class="section-head"><Icon name="settings" size={13} /> Plugin notes</div>
+			<div class="section-head">
+				<Icon name="settings" size={13} />
+				{$_('combat.effects.pluginNotes')}
+			</div>
 			{#each s.facts.pluginNotes as n, i (i)}
 				<p class="plugin-note"><b>{n.source}</b> — {n.text}</p>
 			{/each}
