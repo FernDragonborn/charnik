@@ -239,7 +239,10 @@
 		"log": {
 			"rollLog": "Roll log · history",
 			"noRolls": "Tap any check · save · attack · spell to roll it.",
-			"logCue": "log"
+			"logCue": "log",
+			"dismiss": "Dismiss",
+			"rollAria": "{label} — {total}",
+			"rollAriaDismiss": "{label} — {total}. Dismiss"
 		}
 	},
 	"mobile": {

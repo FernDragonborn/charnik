@@ -6,6 +6,7 @@
 	// It mounts RollRow with NO action props, so every pill is inert: a toast announces, the Playbar
 	// and the log control (UX-3) — which is also why it no longer has to stay open indefinitely.
 	import type { RollToastModel } from '$lib/dice/roll-toast';
+	import { _ } from '$lib/i18n';
 	import { ADVANTAGE_MODE } from '$lib/rules/dice';
 	import RollRow from './RollRow.svelte';
 
@@ -15,9 +16,26 @@
 
 	// HOW the d20 was rolled is the one thing you can't read off the numbers, and on a toast — which
 	// you glance at once — it belongs to the whole card rather than to a frame around two dice. The
-	// row's own cue (the triangle in the d20) still says it inside. First attack: nothing rolls a
-	// volley yet, and a volley whose attacks were rolled differently has no single card colour anyway.
+	// row's own cue (the triangle in the d20) still says it inside. The FIRST attack decides it: a
+	// volley whose throws were read differently has no single card colour anyway.
 	const advantage = $derived(model.attacks[0]?.advantageMode);
+
+	// The card IS the labelled dismiss control — deliberately, because no control may live INSIDE it
+	// (it is itself the dismiss target). So the label has to carry both what the roll was and what a
+	// click does; a screen reader gets one button that says both, not an unnamed region plus an ✕.
+	const rollLabel = $derived(
+		model.labelKey
+			? $_(model.labelKey, {
+					default: model.label,
+					...(model.labelValues ? { values: model.labelValues } : {}),
+				})
+			: model.label,
+	);
+	const cardLabel = $derived(
+		$_(closeToast ? 'combat.log.rollAriaDismiss' : 'combat.log.rollAria', {
+			values: { label: rollLabel, total: model.total },
+		}),
+	);
 </script>
 
 <div
@@ -31,8 +49,8 @@
 		type="button"
 		class="roll-card"
 		class:dismissible={closeToast}
-		aria-label="{model.label} — {model.total}{closeToast ? '. Dismiss' : ''}"
-		title={closeToast ? 'Dismiss' : undefined}
+		aria-label={cardLabel}
+		title={closeToast ? $_('combat.log.dismiss') : undefined}
 		onclick={closeToast}
 	>
 		<RollRow {model} />

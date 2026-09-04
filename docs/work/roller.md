@@ -9,8 +9,6 @@
   either roll", but not what the feat says. Small, and not a wrong number.
   The offer also rides the INSTANT attack tap only: the Shift-click tray path rolls damage later and
   gets none.
-- [ ] **The toast's two tails.** An inert ↻ marker on the toast pill, and no labelled close control —
-  an a11y nit, since the card itself IS the dismiss button today.
 - [ ] **UBUG-11 · a class-granted action must DO its mechanical effect, not just toast a note.** A
   Monk's Flurry of Blows toasts "Make two Unarmed Strikes" and rolls nothing, which is meaningless
   when the app can roll attacks. **The app half is built:** `attack:<weapon id>[:<count>]` is an
