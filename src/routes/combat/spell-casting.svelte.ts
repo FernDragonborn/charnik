@@ -517,7 +517,8 @@ export class SpellCasting {
 			sheet: this.host.sheet,
 			entry: sp,
 			spellRef: r.ref,
-			isCantrip: r.levelTag === 'cantrip',
+			// the LEVEL decides it, not the chip that displays it — the chip is a translated label now
+			isCantrip: r.level === 0,
 		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);

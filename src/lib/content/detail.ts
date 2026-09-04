@@ -412,7 +412,15 @@ export function entryMeta(row: LoadedRow, t: Translate): string {
 			d.range ? shortRange(String(d.range)) : '',
 			d.damage ? String(d.damage) : '',
 			d.resolution === 'save' && d.save_ability
-				? t('entryMeta.save', { values: { ability: String(d.save_ability).toUpperCase() } })
+				? t('entryMeta.save', {
+						// the ability's short name is a catalog entry, so a save reads "ряткидок МУД" rather
+						// than an upper-cased English id — the same resolution the spell panel's chip makes
+						values: {
+							ability: t(`abilityShort.${String(d.save_ability).toLowerCase()}`, {
+								default: String(d.save_ability).toUpperCase(),
+							}),
+						},
+					})
 				: '',
 			d.resolution === 'attack' ? t('entryMeta.attack') : '',
 			d.concentration ? t('entryMeta.concentration') : '',

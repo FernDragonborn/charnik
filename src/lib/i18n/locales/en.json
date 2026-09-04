@@ -716,6 +716,8 @@
 		},
 		"spells": {
 			"alwaysPrepared": "always prepared",
+			"attackRoll": "attack roll",
+			"autoHit": "auto",
 			"bonusAction": "bonus action",
 			"castRitual": "Cast as ritual (no slot, +10 min)",
 			"castUpcast": "Cast at a higher slot (upcast)",
@@ -730,8 +732,10 @@
 			"pinToTop": "pin to top",
 			"pinned": "★ Pinned",
 			"prepared": "Prepared",
+			"prepared_count": "Prepared",
 			"reaction": "reaction",
 			"slotPip": "tap to spend / restore",
+			"tempHp": "temp HP",
 			"togglePrepared": "tap to prepare / unprepare"
 		},
 		"death": {
@@ -1200,6 +1204,7 @@
 		"survival": "Survival"
 	},
 	"spellLevel": {
+		"cantrip": "cantrip",
 		"cantrips": "Cantrips",
 		"nth": "{level, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
 	},

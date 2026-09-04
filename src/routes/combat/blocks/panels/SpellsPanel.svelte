@@ -110,7 +110,12 @@
 							{/if}
 						</span>
 						<span class="spell-summary">{r.summary}</span>
-						{#if r.resolution}<span class="resolution-tag {r.resolution}">{r.resolutionLabel}</span
+						{#if r.resolution}<span class="resolution-tag {r.resolution}"
+								>{$_(r.resolutionLabelKey, {
+									...(r.resolutionAbility
+										? { values: { ability: $_(`abilityShort.${r.resolutionAbility}`) } }
+										: {}),
+								})}</span
 							>{:else}<span></span>{/if}
 						<span class="spell-level"
 							>{#if r.castTimeIcon}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
@@ -147,7 +152,9 @@
 										e.stopPropagation();
 										combat.openUpcast(r, e);
 									}}><Icon name="arrow-up" size={12} /></span
-								>{/if}{r.levelTag}</span
+								>{/if}{$_(r.levelTagKey, {
+								...(r.levelTagValues ? { values: r.levelTagValues } : {}),
+							})}</span
 						>
 					</button>
 				{/each}

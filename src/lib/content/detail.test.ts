@@ -93,9 +93,10 @@ describe('entryMeta', () => {
 	});
 
 	it('a spell that is cast, concentrated on, or ritual says so in the reader s language', () => {
+		// the ability inside the save line goes through the catalog too — the nesting IS the assertion
 		expect(
 			entryMeta(row({ school: 'abjuration', resolution: 'save', save_ability: 'dex' }), t),
-		).toBe('«abjuration» · «save:DEX»');
+		).toBe('«abjuration» · «save:«dex»»');
 		expect(entryMeta(row({ school: 'abjuration', concentration: true, ritual: true }), t)).toBe(
 			'«abjuration» · «concentration» · «ritual»',
 		);

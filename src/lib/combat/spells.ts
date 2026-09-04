@@ -48,8 +48,14 @@ export interface SpellRow {
 	ritual: boolean;
 	summary: string;
 	resolution: '' | 'hit' | 'save' | 'auto' | 'temp';
-	resolutionLabel: string;
-	levelTag: string;
+	/** Catalog key for the result chip ('' for utility) — the panel words it. */
+	resolutionLabelKey: string;
+	/** The ability a save chip is against, as its ID: the short NAME is itself a catalog entry, so the
+	 *  panel resolves it rather than baking one language's word into the row. */
+	resolutionAbility?: string;
+	/** Catalog key for the level chip, with the level as an ICU ordinal value (0 = cantrip). */
+	levelTagKey: string;
+	levelTagValues?: Record<string, number>;
 	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
 	/** The spell's base damage/healing as typed parts (`parseDamageParts` of the `damage` column) — one
 	 *  per damage type so a multi-type spell (Ice Knife's piercing + cold) keeps its types through the
@@ -314,14 +320,14 @@ const SP_RES_CHIP: Record<string, SpellRow['resolution']> = {
 	temp: 'temp',
 };
 
-/** resolution → the row's result label ('' for utility); a save shows its ability. */
-function spResLabel(res: string, saveAbility: string): string {
-	if (res === 'attack') return 'attack roll';
-	if (res === 'save') return `${saveAbility} save`;
-	if (res === 'auto') return 'auto';
-	if (res === 'temp') return 'temp HP';
-	return '';
-}
+/** resolution → the catalog key for the row's result chip ('' for utility); a save names the
+ *  ability it is against, which `entryMeta.save` takes as a value. */
+const SP_RES_LABEL_KEY: Record<string, string> = {
+	attack: 'combat.spells.attackRoll',
+	save: 'entryMeta.save',
+	auto: 'combat.spells.autoHit',
+	temp: 'combat.spells.tempHp',
+};
 
 /** Casting dice for a spell: the STRUCTURED `damage` column (healing spells now carry their base dice
  *  there too — never scraped from prose). A DAMAGE cantrip scales its dice by `charLevel` (the 5/11/17
@@ -360,8 +366,10 @@ export function spellRow(
 		level: lvl,
 		summary: dmg || effectHint(d),
 		resolution: SP_RES_CHIP[res] ?? '',
-		resolutionLabel: spResLabel(res, d.save_ability ?? ''),
-		levelTag: lvl === 0 ? 'cantrip' : ordinal(lvl),
+		resolutionLabelKey: SP_RES_LABEL_KEY[res] ?? '',
+		...(res === 'save' && d.save_ability ? { resolutionAbility: String(d.save_ability) } : {}),
+		levelTagKey: lvl === 0 ? 'spellLevel.cantrip' : 'spellLevel.nth',
+		...(lvl === 0 ? {} : { levelTagValues: { level: lvl } }),
 		castTimeIcon: castingIcon(d.casting_time ?? ''),
 		// typed parts keep a multi-type spell's types through the cast (Ice Knife piercing + cold, item 2)
 		damageParts: dmg ? parseDamageParts(dmg) : [],

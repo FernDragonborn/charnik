@@ -3,6 +3,7 @@
 	// so the two can't render the per-class figures differently. A single caster collapses to the plain
 	// "Prepared X / Y"; a multiclass caster shows one "Class X/Y" chip per caster class. Renders purely
 	// from the tallies (count + cap already attributed per class), so callers just pass them.
+	import { _ } from '$lib/i18n';
 	import type { PreparedClassTally } from '$lib/combat/helpers';
 
 	let { tallies }: { tallies: PreparedClassTally[] } = $props();
@@ -10,7 +11,7 @@
 
 {#if tallies.length === 1 && tallies[0]}
 	{@const only = tallies[0]}
-	Prepared <b>{only.count}</b> / {only.cap}
+	{$_('combat.spells.prepared_count')} <b>{only.count}</b> / {only.cap}
 {:else}
 	{#each tallies as t (t.classId)}<span class="prep-cls"
 			>{t.className} <b>{t.count}</b>/{t.cap}</span

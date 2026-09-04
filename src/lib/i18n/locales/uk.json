@@ -716,6 +716,8 @@
 		},
 		"spells": {
 			"alwaysPrepared": "завжди підготовлене",
+			"attackRoll": "кидок атаки",
+			"autoHit": "авто",
 			"bonusAction": "бонусна дія",
 			"castRitual": "Створити як ритуал (без комірки, +10 хв)",
 			"castUpcast": "Створити з комірки вищого рівня",
@@ -730,8 +732,10 @@
 			"pinToTop": "закріпити вгорі",
 			"pinned": "★ Закріплені",
 			"prepared": "Підготовлені",
+			"prepared_count": "Підготовлено",
 			"reaction": "реакція",
 			"slotPip": "натисніть, щоб витратити / повернути",
+			"tempHp": "тимч. ОЗ",
 			"togglePrepared": "натисніть, щоб підготувати / скасувати"
 		},
 		"death": {
@@ -1200,6 +1204,7 @@
 		"survival": "Виживання"
 	},
 	"spellLevel": {
+		"cantrip": "замовляння",
 		"cantrips": "Замовляння",
 		"nth": "{level, selectordinal, other {#-й}}"
 	},
