@@ -291,11 +291,19 @@ export class RollTray {
 		});
 	};
 
-	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */
-	logMarker = (label: string) => {
+	/**
+	 * A no-roll cast (buff/utility): a bare log marker, not a rolled total. Takes the same `RollName`
+	 * a rolled entry does, so a marker carries its catalog key and reads in the language the log is
+	 * being READ in — `log.jsonl` keeps the line verbatim, and a finished sentence written into it
+	 * would be frozen in whatever language the marker happened in.
+	 */
+	logMarker = (name: RollName) => {
+		const { text: label, key: labelKey, values: labelValues } = name;
 		this.log = [
 			{
 				label,
+				...(labelKey ? { labelKey } : {}),
+				...(labelValues ? { labelValues } : {}),
 				expr: '',
 				dice: [],
 				d20s: [],

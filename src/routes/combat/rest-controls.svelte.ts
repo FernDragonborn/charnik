@@ -102,7 +102,11 @@ export class RestControls {
 		this.host().resources.rest('short');
 		const heal = shortRestHalfHeal(this.host().hpMax);
 		p.hp.current = Math.min(this.host().hpMax, p.hp.current + heal);
-		this.host().tray.logMarker(`Short rest — +${heal} HP (½ max)`);
+		this.host().tray.logMarker({
+			text: `Short rest — +${heal} HP (½ max)`,
+			key: 'combat.log.shortRestHalf',
+			values: { hp: heal },
+		});
 		toast(t('combat.notice.shortRestHealed', { hp: heal }));
 	}
 	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (roll + CON, min 1 HP —

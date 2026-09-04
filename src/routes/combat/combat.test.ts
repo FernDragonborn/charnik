@@ -764,6 +764,18 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.spellSlotsSpent).toEqual({ '1': 2 });
 	});
 
+	it('a log MARKER carries its catalog key, so the log is not frozen in one language', () => {
+		// `log.jsonl` keeps the line verbatim, so a marker written as a finished sentence would still
+		// read in the language it happened in after the player switches the UI
+		character.ui.shortRestMode = 'half';
+		character.play.hp = { current: 1, max: 40, temp: 0 };
+		combat.startShortRest(noModifiers);
+		expect(combat.tray.log[0]).toMatchObject({
+			labelKey: 'combat.log.shortRestHalf',
+			labelValues: { hp: 20 },
+		});
+	});
+
 	it('spell grouping: level mode yields a Cantrips group and a 1st-level group', () => {
 		const keys = combat.spellGroups.map((g) => g.key);
 		expect(keys).toContain('0'); // Fire Bolt (cantrip)

@@ -373,9 +373,15 @@ export class SpellCasting {
 		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
 			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, up.note);
 		} else {
-			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
+			// a cast with no roll (buff/utility): a bare log marker, not a rolled total. The spell's own
+			// name is DATA and rides as a value; whether it was a ritual picks the whole phrase, because
+			// a parenthetical tacked onto a translated sentence is not one a translator can move.
 			const suffix = ritual ? ' (ritual)' : '';
-			this.host.tray.logMarker(`Cast ${r.name}${suffix}`);
+			this.host.tray.logMarker({
+				text: `Cast ${r.name}${suffix}`,
+				key: ritual ? 'combat.log.castRitual' : 'combat.log.cast',
+				values: { name: r.name },
+			});
 			toast(t('combat.notice.castSpell', { name: r.name, suffix }));
 		}
 	}

@@ -82,11 +82,11 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left:** the LOG MARKERS (`logMarker` takes a finished sentence, so a short rest and a
-  no-roll cast freeze in the language they happened in — the fix is the one a roll already has, a
-  `RollName` with its key; the auto-outcome marker is the hard one, because its sentence names a roll
-  that is itself a key), the spell-grouping label on the panel header, and the builder's remaining
-  body copy. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  **What is left:** the AUTO-OUTCOME marker — `logMarker` takes a `RollName` now and every other
+  marker carries its key, but this one's sentence names a ROLL whose own name is a key, and an entry
+  holds one. Making it read in the reader's language wants the outcome as a FACT on the entry (the
+  shape amendments already have) rather than a word baked into its label. Then the spell-grouping
+  label on the panel header, and the builder's remaining body copy. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
