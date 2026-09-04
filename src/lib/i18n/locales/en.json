@@ -223,6 +223,23 @@
 			"resist": "Resist",
 			"immune": "Immune",
 			"vulnerable": "Vulnerable"
+		},
+		"hp": {
+			"hitPoints": "Hit points",
+			"tempHp": "Temp HP",
+			"heal": "Heal",
+			"healTitle": "Apply healing",
+			"damage": "Damage",
+			"damageTitle": "Apply damage",
+			"hpAmount": "HP amount",
+			"untyped": "untyped",
+			"damageTypeLabel": "Damage type (applies resistance / immunity / vulnerability)",
+			"temp": "temp"
+		},
+		"log": {
+			"rollLog": "Roll log · history",
+			"noRolls": "Tap any check · save · attack · spell to roll it.",
+			"logCue": "log"
 		}
 	},
 	"mobile": {

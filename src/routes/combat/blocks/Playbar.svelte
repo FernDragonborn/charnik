@@ -12,6 +12,7 @@
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
@@ -46,10 +47,12 @@
 				layout={ROLL_LAYOUT.strip}
 			/>
 		{:else}
-			<span class="no-roll">Tap any check · save · attack · spell to roll it.</span>
+			<span class="no-roll">{$_('combat.log.noRolls')}</span>
 		{/if}
-		<button class="log-cue" onclick={(e) => openMenu('log', e)} title="Roll log · history"
-			><DiceIcon size={15} /> log <Icon name="chevron-right" size={12} /></button
+		<button class="log-cue" onclick={(e) => openMenu('log', e)} title={$_('combat.log.rollLog')}
+			><DiceIcon size={15} />
+			{$_('combat.log.logCue')}
+			<Icon name="chevron-right" size={12} /></button
 		>
 	</div>
 </div>

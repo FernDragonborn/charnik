@@ -65,7 +65,7 @@
 		>
 			<div class="tile-key">{$_('combat.roll.initiative')}</div>
 			<div class="tile-value">{signed(s.initiative.value)}</div>
-			<div class="tile-text">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
+			<div class="tile-text">{$_('abilityShort.dex')} <b>{signed(s.abilities.dex.mod)}</b></div>
 		</button>
 		<div class="tile" title={why(s.speed)}>
 			<div class="tile-key">{$_('combat.section.speed')}</div>

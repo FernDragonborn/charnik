@@ -2,6 +2,8 @@
 	// Hit-points panel (current/max/temp, bar, damage/heal, temp-HP). Always shown.
 	// Reads the `combat` view-model singleton; character + sheet come in as props.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
@@ -21,15 +23,16 @@
 	<div class="hp-main">
 		<div class="hp-readout">
 			<div class="hitpoints-label">
-				<span>Hit points</span>
+				<span>{$_('combat.hp.hitPoints')}</span>
 				<button class="temptag" onclick={(e) => openMenu('temphp', e)}
-					><Icon name="plus" size={13} /> Temp HP</button
+					><Icon name="plus" size={13} /> {$_('combat.hp.tempHp')}</button
 				>
 			</div>
 			<div class="hitpoints-value" title={why(s.maxHp)}>
 				{c.play.hp.current}<small>
 					/ {c.play.hp.max ?? s.maxHp.value}</small
-				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
+				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} {$_('combat.hp.temp')}</span
+					>{/if}
 			</div>
 			<div class="hitpoints-bar">
 				<i class="hitpoints-bar-current" style="width:{hpBar.cur}%"></i><i
@@ -39,17 +42,19 @@
 			</div>
 		</div>
 		<div class="hp-controls">
-			<button class="hp-btn heal" onclick={combat.heal} title="Apply healing"
-				><Icon name="plus" size={13} /> Heal</button
+			<button class="hp-btn heal" onclick={combat.heal} title={$_('combat.hp.healTitle')}
+				><Icon name="plus" size={13} /> {$_('combat.hp.heal')}</button
 			>
 			<input
 				class="hp-number"
 				type="number"
 				min="0"
 				bind:value={combat.hpAmount}
-				aria-label="HP amount"
+				aria-label={$_('combat.hp.hpAmount')}
 			/>
-			<button class="hp-btn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
+			<button class="hp-btn damage" onclick={combat.damage} title={$_('combat.hp.damageTitle')}
+				>− {$_('combat.hp.damage')}</button
+			>
 		</div>
 	</div>
 	{#if combat.damageTypeOptions.length}
@@ -58,11 +63,11 @@
 		<select
 			class="hp-damage-type"
 			bind:value={combat.damageType}
-			aria-label="Damage type (applies resistance / immunity / vulnerability)"
+			aria-label={$_('combat.hp.damageTypeLabel')}
 		>
-			<option value={null}>untyped</option>
+			<option value={null}>{$_('combat.hp.untyped')}</option>
 			{#each combat.damageTypeOptions as t (t)}
-				<option value={t}>{t}</option>
+				<option value={t}>{damageTypeLabel(t, $_)}</option>
 			{/each}
 		</select>
 	{/if}

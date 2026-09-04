@@ -14,12 +14,13 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
 	import { actionRuns } from '$lib/combat/roll';
+	import { _ } from '$lib/i18n';
 	import RollRow from '$lib/components/RollRow.svelte';
 
 	const actions = $derived(actionRuns(combat.tray.log));
 </script>
 
-<div class="log-head"><span class="menu-title eyebrow">Roll log · history</span></div>
+<div class="log-head"><span class="menu-title eyebrow">{$_('combat.log.rollLog')}</span></div>
 <div class="log-scroll">
 	{#each actions as run, i (i)}
 		<div class="log-row" class:one-action={run.length > 1}>
@@ -47,7 +48,7 @@
 			{/each}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
-			No rolls yet — tap a stat, skill, save, or attack.
+			{$_('combat.log.noRolls')}
 		</p>{/each}
 </div>
 
