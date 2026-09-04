@@ -10,6 +10,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);
@@ -43,7 +44,7 @@
 	<section class="combat-grid" class:has-resources={s.resources.length}>
 		<button
 			class="tile"
-			title={why(s.ac)}
+			use:provenance={why(s.ac)}
 			onclick={(e) => roll({ text: 'AC (touch)', key: 'combat.roll.acTouch' }, 0, e)}
 		>
 			<div class="tile-key">{$_('combat.section.armorClass')}</div>
@@ -54,7 +55,7 @@
 		</button>
 		<button
 			class="tile"
-			title={why(s.initiative)}
+			use:provenance={why(s.initiative)}
 			onclick={(e) =>
 				roll(
 					{ text: 'Initiative', key: 'combat.roll.initiative' },
@@ -67,7 +68,7 @@
 			<div class="tile-value">{signed(s.initiative.value)}</div>
 			<div class="tile-text">{$_('abilityShort.dex')} <b>{signed(s.abilities.dex.mod)}</b></div>
 		</button>
-		<div class="tile" title={why(s.speed)}>
+		<div class="tile" use:provenance={why(s.speed)}>
 			<div class="tile-key">{$_('combat.section.speed')}</div>
 			<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
 			     one inside it is dropped and the metric hugs the "ft" -->
@@ -131,7 +132,7 @@
 				{@const advDis = p.comp.trace.find(
 					(t) => t.source === 'Advantage' || t.source === 'Disadvantage',
 				)}
-				<span class="ability-save" title={why(p.comp)}>
+				<span class="ability-save" use:provenance={why(p.comp)}>
 					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={advDis.source === 'Disadvantage'}

@@ -48,13 +48,6 @@
         `OPERABLE` list mentions `[role="option"]`, which disappears.
         **`ui.md` ▸ picker contract says the search box is a `combobox`** — true of the code today,
         and it must be rewritten in the same commit that changes it.
-  - [ ] **A shared provenance popover — repo-wide, not builder-only.** `ui.md` ▸ UX pattern contract
-        rule 3 requires every auto-calculated value to explain itself on hover **or focus**; today
-        provenance rides `title`, which is mouse-only, and making the tiles focusable does not help
-        because no browser shows a `title` on keyboard focus. **The shape: a small affordance that
-        appears on hover AND focus and is itself a button**, so the keyboard path exists without a
-        new gesture. A modifier key is not available — a click on a spell or action row already
-        means *roll*, `Ctrl` is the builder's undo chord, and `Alt`+click is the tray-damage path.
   - [ ] **Keyboard navigation past the double-Enter take.** The walk moves the highlight and takes,
         but does not reach the take toggle, the jump rail or the card's own controls without `Tab`.
         Roving tabindex inside the row; **the jump rail stays its own tab stop** rather than joining
@@ -99,9 +92,8 @@
   zeroes the min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per
   the recipe in `Turnbar.svelte` when a locale is added.
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
-  it is unimportant: the UI is moving under it right now (the a11y picker rework, the features panel,
-  the provenance popover), and onboarding written against a surface that is still changing has to be
-  written twice. Schedule the session once the current UI wave settles; until then this item collects
+  it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
+  written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects
   the trigger and the constraints, nothing more. The trigger: the
   app keeps accumulating things a first-time user cannot deduce (Shift-click a stat to open the roll
   tray instead of rolling it, `Ctrl+K`, the fact that all content is CSV on disk they may edit live,

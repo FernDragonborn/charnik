@@ -254,9 +254,8 @@ position and are given per wave, because most of them were learned the hard way.
   words, so there is a single target to localise instead of sentences already written into
   `log.jsonl`. Damage types take catalog names in the same pass: the 13 SRD types are a closed rules
   vocabulary, while an invented homebrew type stays data and passes through.
-- **The cheap surface wins, none of which depend on anything.** N5(1) the Features panel — a
-  character cannot read their own traits anywhere — plus the shared provenance popover, the pact
-  pool's own short-rest pips, the spell-picker preview and UPCAST-PREVIEW-TOOLTIP.
+- **The cheap surface wins, none of which depend on anything.** The pact pool's own short-rest
+  pips, the spell-picker preview and UPCAST-PREVIEW-TOOLTIP.
 - **The a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
   one-column `grid`) + keyboard navigation past the double-Enter take. It is the same ruling applied
   in four places; split up, it gets re-derived four times, and the picker's shape is already decided

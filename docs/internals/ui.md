@@ -105,7 +105,10 @@ good", so they are pinned here and every component follows them.
 3. **Every auto-calculated value carries a provenance popover** on hover or focus, listing each
    `{source, op, amount}` contribution and the rule notes: AC, DCs, attack bonus, modifiers,
    passives, max HP, carrying capacity. A manually overridden value shows a `manual` marker instead
-   of a breakdown.
+   of a breakdown. `use:provenance={why(value)}` (`lib/actions/provenance.ts`) is the one
+   implementation, and **`title` is not it** — no browser shows a native tooltip on keyboard focus,
+   so half the rule was unreachable. **The VALUE is the trigger**: the action makes it focusable and
+   describes it, rather than adding an affordance to two dozen unrelated layouts to say one thing.
 4. **Any value is click-to-edit** — a manual override is available at any time, independent of
    whether auto-calculation is on.
 5. **Lists are keyboard-navigable**: ↑/↓ move a highlight, **Enter is identical to a left click**,

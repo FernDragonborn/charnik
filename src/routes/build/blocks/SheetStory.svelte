@@ -12,6 +12,7 @@
 	import { socialBars } from '$lib/build/social';
 	import { skillLabel } from '../rows';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	const b = build;
 
 	const bars = $derived(socialBars(b.sheet?.passives));
@@ -30,9 +31,9 @@
 			{#each bars as bar (bar.id)}
 				<div
 					class="bar"
-					title="{$_('build.story.barHint', {
+					use:provenance={`${$_('build.story.barHint', {
 						values: { skill: skillLabel(bar.via, $_), passive: bar.passive }
-					})} — {why(bar.trace)}"
+					})} — ${why(bar.trace)}`}
 				>
 					<span class="blabel">{$_(`build.social.${bar.id}`)}</span>
 					<span class="meter"><span style:width="{bar.fill * 100}%"></span></span>

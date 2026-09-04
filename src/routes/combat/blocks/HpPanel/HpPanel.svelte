@@ -9,6 +9,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const hpBar = $derived(combat.hpBar);
@@ -28,7 +29,7 @@
 					><Icon name="plus" size={13} /> {$_('combat.hp.tempHp')}</button
 				>
 			</div>
-			<div class="hitpoints-value" title={why(s.maxHp)}>
+			<div class="hitpoints-value" use:provenance={why(s.maxHp)}>
 				{c.play.hp.current}<small>
 					/ {c.play.hp.max ?? s.maxHp.value}</small
 				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} {$_('combat.hp.temp')}</span

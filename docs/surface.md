@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (60)
+## Duplicate suspects (62)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,11 +17,12 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
+- `open` ×5 — src/lib/actions/provenance.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
+- `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/rows.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
-- `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
-- `place` ×4 — src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
@@ -29,7 +30,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
-- `onKeydown` ×3 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `say` ×3 — src/routes/build/blocks/ChangeList.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
@@ -40,6 +40,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
+- `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
 - `closeOnOutside` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
@@ -71,6 +72,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-tray.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
+- `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×2 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
@@ -113,7 +115,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (73)
+## Global CSS classes (77)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -158,9 +160,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
 | `.good` | components.css |  |
+| `.has-provenance` | components.css | a plain value that explains itself says so; a CONTROL that also explains itself keeps the cursor its click deserves, … |
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
+| `.is-open` | components.css |  |
 | `.loading` | components.css | --- full-view loading / empty state --- |
 | `.lucide` | components.css | --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so no consumer's scope… |
 | `.meta-key` | GenericHead.svelte :global |  |
@@ -174,6 +178,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
+| `.provenance-description` | components.css | the same text as an accessible description. |
+| `.provenance-popover` | components.css | --- the provenance popover: how an auto-calculated value explains itself (ui.md ▸ rule 3). |
 | `.roll-toast` | RollToast.svelte :global |  |
 | `.row-name` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
@@ -412,14 +418,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (111 modules)
+## Library functions & types (112 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
 - `const dismissOnEscape` — * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home * for the `<svel…
 
+### `src/lib/actions/provenance.ts`
+
+- `const provenance`
+
 ### `src/lib/actions/trapFocus.ts`
 
+- `const FOCUSABLE` — Elements that can hold keyboard focus — the tab ring a trapped dialog cycles within, and the * question `provenance` …
 - `const trapFocus` — * Trap keyboard focus inside a modal dialog (AUDIT F8) — the accessibility half the `.dialog` shell * was missing: ba…
 
 ### `src/lib/build/derive.ts`
@@ -1549,4 +1560,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 918 exports across 126 modules · 60 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 920 exports across 127 modules · 62 duplicate suspects._

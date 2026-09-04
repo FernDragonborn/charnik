@@ -1,7 +1,8 @@
 import type { Action } from 'svelte/action';
 
-/** Elements that can hold keyboard focus — the tab ring a trapped dialog cycles within. */
-const FOCUSABLE =
+/** Elements that can hold keyboard focus — the tab ring a trapped dialog cycles within, and the
+ *  question `provenance` asks before handing a value a tab stop it may already have. */
+export const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**

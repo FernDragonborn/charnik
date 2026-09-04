@@ -10,16 +10,10 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	const b = build;
 
 	let { columns = 2 }: { columns?: number } = $props();
-
-	/** A background-granted skill explains why it is locked; every other row explains its number. */
-	function skillTitle(skill: SkillId): string {
-		if (b.skillPicks.autoSkills.includes(skill)) return $_('build.skills.fromBackgroundHint');
-		const comp = b.sheet?.skills[skill];
-		return comp ? why(comp) : '';
-	}
 
 	const SKILLS = Object.keys(SKILL_ABILITY) as SkillId[];
 	const groups = ABILITIES.map((ab) => ({
@@ -43,7 +37,7 @@
 					<button
 						class="name"
 						disabled={auto || (!on && !pickable)}
-						title={skillTitle(skill)}
+						title={auto ? $_('build.skills.fromBackgroundHint') : ''}
 						onclick={() => b.skillPicks.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert></i>
@@ -57,11 +51,11 @@
 							onclick={() => b.skillPicks.toggleExpertise(skill)}>×2</button
 						>
 					{/if}
-					<b class="val">{comp ? signed(comp.value) : ''}</b>
+					<b class="val" use:provenance={comp ? why(comp) : ''}>{comp ? signed(comp.value) : ''}</b>
 					<!-- every skill has a passive score, not just the three the old card listed (derive.ts
 					     `passives` is keyed by SkillId) — so it reads here, next to the check it belongs to,
 					     instead of in a separate card that could only ever show three of them. -->
-					{#if pas}<span class="passive" title={why(pas)}>{pas.value}</span>{/if}
+					{#if pas}<span class="passive" use:provenance={why(pas)}>{pas.value}</span>{/if}
 				</div>
 			{/each}
 		</div>

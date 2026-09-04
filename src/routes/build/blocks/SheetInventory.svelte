@@ -6,6 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	import { kilograms } from '$lib/combat/constants';
 	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 	const b = build;
@@ -79,7 +80,7 @@
 						values: { lb: Math.round(carried), kg: kilograms(carried) }
 					})}</span
 				>
-				<b>{$_('build.inventory.capacity')}</b><span title={s ? why(s.carryingCapacity) : ''}
+				<b>{$_('build.inventory.capacity')}</b><span use:provenance={s ? why(s.carryingCapacity) : ''}
 					>{$_('build.inventory.pounds', { values: { lb: capacity } })}</span
 				>
 			</div>

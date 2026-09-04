@@ -6,6 +6,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const spellGroups = $derived(combat.spellGroups);
@@ -21,8 +22,8 @@
 			{#if i > 0}<span class="cast-separator"> · </span>{/if}
 			{#if multi}<b class="cast-class">{sc.className}</b>
 			{/if}Save DC
-			<b title={why(sc.saveDC)}>{sc.saveDC.value}</b> · attack
-			<b>{signed(sc.attack.value)}</b>
+			<b use:provenance={why(sc.saveDC)}>{sc.saveDC.value}</b> · attack
+			<b use:provenance={why(sc.attack)}>{signed(sc.attack.value)}</b>
 		{/each}
 		{#if !multi}
 			— every spell{/if}

@@ -5,6 +5,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, ABIL } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
 
 	let { s }: { s: CharacterSheet } = $props();
@@ -31,10 +32,11 @@
 				<button
 					type="button"
 					class="ability-check"
+					use:provenance={why(a.score)}
 					onclick={(e) =>
 						roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)}
 				>
-					<span class="ability-name" title={why(a.score)}>
+					<span class="ability-name">
 						<b>{$_(`abilityShort.${ab}`)}</b> · {a.score.value}
 					</span>
 					<span class="ability-mod">{signed(a.mod)}</span>
@@ -43,7 +45,7 @@
 					type="button"
 					class="ability-save"
 					class:prof
-					title={why(a.save)}
+					use:provenance={why(a.save)}
 					onclick={(e) =>
 						roll(
 							{ text: `${ab.toUpperCase()} save`, key: `combat.roll.save.${ab}` },

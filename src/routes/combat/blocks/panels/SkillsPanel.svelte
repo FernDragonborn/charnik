@@ -5,6 +5,7 @@
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed, titleCase, ABIL } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
@@ -28,7 +29,7 @@
 					{#if sk}
 						<button
 							class="skill-row"
-							title={why(sk)}
+							use:provenance={why(sk)}
 							onclick={(e) =>
 								roll(
 									{ text: titleCase(skill), key: `skillName.${skill}` },

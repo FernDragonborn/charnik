@@ -7,6 +7,7 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	import { abilityProvenanceText } from '../ability-allocation.svelte';
 	const b = build;
 
@@ -23,7 +24,9 @@
 			class="slot tile ability"
 			class:active
 			class:boosted
-			title={block ? why(block.score) : abilityProvenanceText(b.abilities.provenance(ab, score), $_)}
+			use:provenance={block
+				? why(block.score)
+				: abilityProvenanceText(b.abilities.provenance(ab, score), $_)}
 			onclick={open}
 		>
 			<small>{ab}</small>

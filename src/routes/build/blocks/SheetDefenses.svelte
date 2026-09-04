@@ -11,6 +11,7 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed, titleCase } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	import { damageTypeLabel } from '$lib/combat/attacks';
 	import { gatherProfGrants, UNCONSTRAINED } from '$lib/rules/proficiency';
 	import { splitList } from '$lib/content/schemas';
@@ -64,7 +65,7 @@
 			<div class="saves">
 				{#each ABILITIES as ab (ab)}
 					{@const block = s.abilities[ab]}
-					<div class="save" class:is-taken={block.saveProficient} title={why(block.save)}>
+					<div class="save" class:is-taken={block.saveProficient} use:provenance={why(block.save)}>
 						<span class="code">{ab}</span>
 						<b>{signed(block.save.value)}</b>
 					</div>

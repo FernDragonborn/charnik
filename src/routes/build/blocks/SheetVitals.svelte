@@ -5,6 +5,7 @@
 	import { build } from '../build-view-model.svelte';
 	import { signed } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { provenance } from '$lib/actions/provenance';
 	import { metres } from '$lib/combat/constants';
 	const b = build;
 
@@ -14,10 +15,10 @@
 
 {#if s}
 	<div class="vitals">
-		<div class="tile" title={why(s.ac)}><b>{s.ac.value}</b><small>{$_('build.vitals.ac')}</small></div>
-		<div class="tile" title={why(s.maxHp)}><b>{s.maxHp.value}</b><small>{$_('build.vitals.maxHp')}</small></div>
-		<div class="tile" title={why(s.initiative)}><b>{signed(s.initiative.value)}</b><small>{$_('build.vitals.initiative')}</small></div>
-		<div class="tile" title={why(s.speed)}>
+		<div class="tile" use:provenance={why(s.ac)}><b>{s.ac.value}</b><small>{$_('build.vitals.ac')}</small></div>
+		<div class="tile" use:provenance={why(s.maxHp)}><b>{s.maxHp.value}</b><small>{$_('build.vitals.maxHp')}</small></div>
+		<div class="tile" use:provenance={why(s.initiative)}><b>{signed(s.initiative.value)}</b><small>{$_('build.vitals.initiative')}</small></div>
+		<div class="tile" use:provenance={why(s.speed)}>
 			<b>{s.speed.value}</b><small
 				>{$_('build.vitals.speed', { values: { metres: metres(s.speed.value) } })}</small
 			>
@@ -28,10 +29,10 @@
 			</div>
 		{/if}
 		{#if caster}
-			<div class="tile gold" title={why(caster.saveDC)}>
+			<div class="tile gold" use:provenance={why(caster.saveDC)}>
 				<b>{caster.saveDC.value}</b><small>{$_('build.vitals.spellDc')}</small>
 			</div>
-			<div class="tile gold" title={why(caster.attack)}>
+			<div class="tile gold" use:provenance={why(caster.attack)}>
 				<b>{signed(caster.attack.value)}</b><small>{$_('build.vitals.spellAttack')}</small>
 			</div>
 		{/if}
