@@ -10,7 +10,7 @@ import { t } from '$lib/i18n';
 import { attackName } from '$lib/combat/attacks';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { rollPool } from '$lib/rules/dice';
+import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
 	wantsTray,
@@ -20,6 +20,7 @@ import {
 	NO_ROLL_EFFECTS,
 	rollDamageParts,
 	dealsDamage,
+	dieModsOf,
 	AMENDMENT_KIND,
 	type RollEffects,
 	type Attack,
@@ -135,7 +136,7 @@ export class SheetRolls {
 						mod,
 						advantage: adv,
 						bonusDice: fx?.bonusDice ?? [],
-						mods: fx ?? {},
+						mods: fx ? dieModsOf(fx) : {},
 					},
 				},
 				e,
@@ -149,7 +150,7 @@ export class SheetRolls {
 					mod,
 					advantage: adv,
 					bonusDice: fx?.bonusDice ?? [],
-					mods: fx ?? {},
+					mods: fx ? dieModsOf(fx) : {},
 				},
 			});
 	};
@@ -170,7 +171,7 @@ export class SheetRolls {
 						mod: at.toHit + fx.flat,
 						advantage: netAdvantage(fx),
 						bonusDice: fx.bonusDice,
-						mods: fx,
+						mods: dieModsOf(fx),
 					},
 					...(hasDmg ? { damage: parts } : {}),
 				},
@@ -218,7 +219,7 @@ export class SheetRolls {
 			dice: p.pool,
 			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
 			type: p.type,
-			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {}),
+			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dieModsOf(dmgFx) } : {}),
 		}));
 		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
 		return { fx, parts, hasDmg: dealsDamage(parts) };
@@ -241,20 +242,46 @@ export class SheetRolls {
 		return { spec: primary, roll: primaryRoll };
 	}
 
-	/** Savage Attacker: reroll the pending weapon damage and KEEP THE HIGHER total, rewriting the log
-	 *  entry in place (truthful record) and spending the once-per-turn use. Rerolls the whole PRIMARY
-	 *  damage part — RAW rerolls only the weapon's own dice, so any bonus die riding that part (Bless) is
-	 *  rerolled too: a negligible, arguably-faithful deviation ("use either roll"). */
+	/**
+	 * Savage Attacker: reroll the pending WEAPON damage and keep the higher, rewriting the log entry
+	 * in place (truthful record) and spending the once-per-turn use.
+	 *
+	 * RAW rerolls the weapon's OWN dice, so the reroll goes out with the part's `bonusDice` and its
+	 * flat modifier stripped: a Bless d4 riding the same part is not the weapon's die and keeps the
+	 * face it rolled. The two candidates are then compared as weapon dice against weapon dice — the
+	 * flat modifier is identical on both sides and would only flatten the difference — and the kept
+	 * set is re-assembled with the effect dice that never moved.
+	 *
+	 * ponytail: a CRIT's twin of a Bless die carries `DIE_ROLE.crit`, so the split below counts it
+	 * with the weapon's dice. Fixing it wants the twin to remember which role it doubled; nothing
+	 * else needs that, and the case is a crit and an effect die and this feat at once.
+	 */
 	savageReroll = () => {
 		const p = this.savagePending;
 		const label = this.savageLabel;
 		const entry = this.savagePendingEntry;
 		if (!p || !label || !entry) return;
-		const re = rollDamageParts([p.spec])[0];
-		if (!re) return;
-		const keptRe = re.total > p.roll.total;
-		const keep = keptRe ? re : p.roll;
-		const dropped = keptRe ? p.roll : re;
+		const weaponOnly: DamagePartSpec = {
+			dice: p.spec.dice,
+			mod: 0,
+			type: p.spec.type,
+			...(p.spec.mods ? { mods: p.spec.mods } : {}),
+			...(p.spec.crit ? { crit: p.spec.crit } : {}),
+		};
+		const rerolled = rollDamageParts([weaponOnly])[0];
+		if (!rerolled) return;
+		const isEffectDie = (d: RolledDie) => d.role === DIE_ROLE.bonus;
+		const sum = (dice: RolledDie[]) => dice.reduce((n, d) => n + d.sign * d.value, 0);
+		const effectDice = p.roll.dice.filter(isEffectDie);
+		const wasWeapon = p.roll.dice.filter((d) => !isEffectDie(d));
+		// the same part with one weapon set or the other, so both candidates are read the one way
+		const partWith = (weapon: RolledDie[]): TypedRoll => {
+			const part = { ...p.roll, dice: [...weapon, ...effectDice] };
+			return { ...part, total: totalOf(part) };
+		};
+		const keptRe = sum(rerolled.dice) > sum(wasWeapon);
+		const keep = partWith(keptRe ? rerolled.dice : wasWeapon);
+		const dropped = partWith(keptRe ? wasWeapon : rerolled.dice);
 		const revised: RollLogEntry = {
 			...entry,
 			damage: [keep, ...(entry.damage ?? []).slice(1)],

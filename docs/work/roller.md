@@ -4,11 +4,9 @@
 > [`../internals/roller.md`](../internals/roller.md); the ORDER these are done in is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **SAVAGE-TAIL · one known limit of the `damage_reroll` offer.** It rerolls the WHOLE primary
-  damage part, so a Bless die riding that part is rerolled with the weapon dice — arguably "use
-  either roll", but not what the feat says. Small, and not a wrong number.
-  The offer also rides the INSTANT attack tap only: the Shift-click tray path rolls damage later and
-  gets none.
+- [ ] **SAVAGE-TAIL · the offer rides the INSTANT attack tap only.** The Shift-click tray path rolls
+  its damage later, through the organ, and gets no reroll offer there. The reroll itself is RAW now:
+  it rerolls the weapon's own dice and leaves an effect die riding the same part alone.
 - [ ] **UBUG-11 · a class-granted action must DO its mechanical effect, not just toast a note.** A
   Monk's Flurry of Blows toasts "Make two Unarmed Strikes" and rolls nothing, which is meaningless
   when the app can roll attacks. **The app half is built:** `attack:<weapon id>[:<count>]` is an

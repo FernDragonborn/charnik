@@ -713,6 +713,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RollEffects` — What a roll target (e.g.
 - `const NO_ROLL_EFFECTS`
 - `function rollEffectsFor`
+- `const dieModsOf` — Just the roll-MANIPULATION half of a `RollEffects` — the `DieMods` a die carries.
 - `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
 - `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
 
@@ -1548,4 +1549,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 917 exports across 126 modules · 60 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 918 exports across 126 modules · 60 duplicate suspects._

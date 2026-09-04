@@ -327,6 +327,17 @@ export function rollEffectsFor(
 	return out;
 }
 
+/** Just the roll-MANIPULATION half of a `RollEffects` — the `DieMods` a die carries. `RollEffects`
+ *  extends `DieMods`, so passing the whole thing where `DieMods` is asked for type-checks while
+ *  smuggling `bonusDice` and `flat` along with it: they then reach `rollPool`'s options through a
+ *  spread and are applied a SECOND time. Narrow at the seam, so no caller can hand over more than
+ *  the field is documented to hold. */
+export const dieModsOf = (fx: RollEffects): DieMods => ({
+	...(fx.reroll !== undefined ? { reroll: fx.reroll } : {}),
+	...(fx.minDie !== undefined ? { minDie: fx.minDie } : {}),
+	...(fx.maxDie !== undefined ? { maxDie: fx.maxDie } : {}),
+});
+
 /** A forced roll outcome for `key`, or null to roll normally. `auto_fail`/`auto_succeed` effects
  *  (paralyzed → STR/DEX saves) override the RESULT, not the die — so a matched save doesn't roll at
  *  all. Auto-fail wins a contradictory pair (the debuff bias: conditions that force outcomes are

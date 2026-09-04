@@ -11,6 +11,7 @@ import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
+import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
@@ -790,6 +791,39 @@ describe('CombatVM · S2 split net', () => {
 		const before = combat.tray.log.length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.tray.log.length).toBe(before + 1);
+	});
+
+	it('Savage Attacker rerolls the WEAPON dice and leaves an effect die alone', () => {
+		character.play.inCombat = true;
+		// its OWN round: `combat` is a singleton and `savageUsedRound` outlives the character the
+		// beforeEach replaces, so two tests spending the use in round 1 would starve the second
+		character.play.round = 7;
+		character.play.turn.action = 0;
+		combat.effects.addEffect({
+			label: 'Savage Attacker',
+			tokens: ['damage_reroll'],
+			positive: true,
+		});
+		// a damage-riding effect die (Bless-shaped): RAW it is not the weapon's die, so the reroll
+		// must not touch it — before this it was rerolled along with the weapon's
+		combat.effects.addEffect({
+			label: 'Hex',
+			tokens: ['flat_bonus:damage+1d6'],
+			positive: true,
+		});
+
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		const before = combat.savagePendingEntry!.damage![0]!;
+		const effectBefore = before.dice.filter((d) => d.role === DIE_ROLE.bonus);
+		expect(effectBefore.length).toBeGreaterThan(0);
+
+		combat.savageReroll();
+		const after = combat.tray.log[0]!.damage![0]!;
+		const effectAfter = after.dice.filter((d) => d.role === DIE_ROLE.bonus);
+		// the same effect dice, face for face, on the other side of the reroll
+		expect(effectAfter.map((d) => d.value)).toEqual(effectBefore.map((d) => d.value));
+		// and the part still adds up to what its dice and modifier say
+		expect(after.total).toBe(after.dice.reduce((n, d) => n + d.sign * d.value, 0) + after.mod);
 	});
 
 	it('Savage Attacker: a data-driven `damage_reroll` fact offers a once-per-turn reroll that never lowers the kept damage', () => {
