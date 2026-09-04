@@ -32,7 +32,7 @@
 				<button
 					type="button"
 					class="ability-check"
-					use:provenance={why(a.score)}
+					use:provenance={why(a.score, $_)}
 					onclick={(e) =>
 						roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)}
 				>
@@ -45,7 +45,7 @@
 					type="button"
 					class="ability-save"
 					class:prof
-					use:provenance={why(a.save)}
+					use:provenance={why(a.save, $_)}
 					onclick={(e) =>
 						roll(
 							{ text: `${ab.toUpperCase()} save`, key: `combat.roll.save.${ab}` },

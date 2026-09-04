@@ -29,7 +29,7 @@
 					{#if sk}
 						<button
 							class="skill-row"
-							use:provenance={why(sk)}
+							use:provenance={why(sk, $_)}
 							onclick={(e) =>
 								roll(
 									{ text: titleCase(skill), key: `skillName.${skill}` },

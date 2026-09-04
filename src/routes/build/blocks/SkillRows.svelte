@@ -51,11 +51,11 @@
 							onclick={() => b.skillPicks.toggleExpertise(skill)}>×2</button
 						>
 					{/if}
-					<b class="val" use:provenance={comp ? why(comp) : ''}>{comp ? signed(comp.value) : ''}</b>
+					<b class="val" use:provenance={comp ? why(comp, $_) : ''}>{comp ? signed(comp.value) : ''}</b>
 					<!-- every skill has a passive score, not just the three the old card listed (derive.ts
 					     `passives` is keyed by SkillId) — so it reads here, next to the check it belongs to,
 					     instead of in a separate card that could only ever show three of them. -->
-					{#if pas}<span class="passive" use:provenance={why(pas)}>{pas.value}</span>{/if}
+					{#if pas}<span class="passive" use:provenance={why(pas, $_)}>{pas.value}</span>{/if}
 				</div>
 			{/each}
 		</div>

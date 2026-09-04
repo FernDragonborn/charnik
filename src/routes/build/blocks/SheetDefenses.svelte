@@ -65,7 +65,7 @@
 			<div class="saves">
 				{#each ABILITIES as ab (ab)}
 					{@const block = s.abilities[ab]}
-					<div class="save" class:is-taken={block.saveProficient} use:provenance={why(block.save)}>
+					<div class="save" class:is-taken={block.saveProficient} use:provenance={why(block.save, $_)}>
 						<span class="code">{ab}</span>
 						<b>{signed(block.save.value)}</b>
 					</div>

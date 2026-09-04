@@ -23,6 +23,7 @@ import {
 	autoOutcome,
 	conditionIdOf,
 	effectTag,
+	why,
 	effectTagResolved,
 	pipClick,
 	groupEffects,
@@ -266,6 +267,30 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 			attack: 0,
 			damage: 0,
 		});
+	});
+});
+
+describe('why — a rule note reads through the translator the caller passes', () => {
+	const computed = {
+		value: 5,
+		trace: [{ source: 'Base', op: 'add' as const, amount: 5 }],
+		notes: [
+			{ text: 'Encumbered at 100 lb (−10 ft)', key: 'provenance.encumbered', params: { lb: 100 } },
+		],
+	};
+
+	it('renders the note VERBATIM with no translator — the node-test view', () => {
+		expect(why(computed)).toBe('Base +5 · Encumbered at 100 lb (−10 ft)');
+	});
+
+	it('hands the key and its values to the translator when the UI passes one', () => {
+		const seen: { key: string; values?: Record<string, string | number> }[] = [];
+		const t = (key: string, o?: { values?: Record<string, string | number> }) => {
+			seen.push({ key, ...(o?.values ? { values: o.values } : {}) });
+			return 'ПЕРЕВАНТАЖЕНО';
+		};
+		expect(why(computed, t)).toBe('Base +5 · ПЕРЕВАНТАЖЕНО');
+		expect(seen).toEqual([{ key: 'provenance.encumbered', values: { lb: 100 } }]);
 	});
 });
 

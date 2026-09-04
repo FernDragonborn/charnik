@@ -1381,7 +1381,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`
 - `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
-- `function formatNote` — Render a note to a string: localized when a `translate` fn + a `key` are present, else the EN * `text` verbatim.
+- `type Translate` — * svelte-i18n's `$format`, taken as a parameter so the rules core and every pure view helper stay * locale-free — the…
+- `function formatNote`
 - `const NOTE_KEY` — i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline / * apply / core and the …
 - `interface Computed`
 - `interface Clamp`
@@ -1560,4 +1561,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 920 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 921 exports across 127 modules · 62 duplicate suspects._

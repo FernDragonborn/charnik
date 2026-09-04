@@ -15,10 +15,10 @@
 
 {#if s}
 	<div class="vitals">
-		<div class="tile" use:provenance={why(s.ac)}><b>{s.ac.value}</b><small>{$_('build.vitals.ac')}</small></div>
-		<div class="tile" use:provenance={why(s.maxHp)}><b>{s.maxHp.value}</b><small>{$_('build.vitals.maxHp')}</small></div>
-		<div class="tile" use:provenance={why(s.initiative)}><b>{signed(s.initiative.value)}</b><small>{$_('build.vitals.initiative')}</small></div>
-		<div class="tile" use:provenance={why(s.speed)}>
+		<div class="tile" use:provenance={why(s.ac, $_)}><b>{s.ac.value}</b><small>{$_('build.vitals.ac')}</small></div>
+		<div class="tile" use:provenance={why(s.maxHp, $_)}><b>{s.maxHp.value}</b><small>{$_('build.vitals.maxHp')}</small></div>
+		<div class="tile" use:provenance={why(s.initiative, $_)}><b>{signed(s.initiative.value)}</b><small>{$_('build.vitals.initiative')}</small></div>
+		<div class="tile" use:provenance={why(s.speed, $_)}>
 			<b>{s.speed.value}</b><small
 				>{$_('build.vitals.speed', { values: { metres: metres(s.speed.value) } })}</small
 			>
@@ -29,10 +29,10 @@
 			</div>
 		{/if}
 		{#if caster}
-			<div class="tile gold" use:provenance={why(caster.saveDC)}>
+			<div class="tile gold" use:provenance={why(caster.saveDC, $_)}>
 				<b>{caster.saveDC.value}</b><small>{$_('build.vitals.spellDc')}</small>
 			</div>
-			<div class="tile gold" use:provenance={why(caster.attack)}>
+			<div class="tile gold" use:provenance={why(caster.attack, $_)}>
 				<b>{signed(caster.attack.value)}</b><small>{$_('build.vitals.spellAttack')}</small>
 			</div>
 		{/if}

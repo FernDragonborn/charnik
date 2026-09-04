@@ -23,9 +23,9 @@
 			{#if i > 0}<span class="cast-separator"> · </span>{/if}
 			{#if multi}<b class="cast-class">{sc.className}</b>
 			{/if}{$_('combat.spells.saveDc')}
-			<b use:provenance={why(sc.saveDC)}>{sc.saveDC.value}</b>
+			<b use:provenance={why(sc.saveDC, $_)}>{sc.saveDC.value}</b>
 			· {$_('combat.spells.attackBonus')}
-			<b use:provenance={why(sc.attack)}>{signed(sc.attack.value)}</b>
+			<b use:provenance={why(sc.attack, $_)}>{signed(sc.attack.value)}</b>
 		{/each}
 		{#if !multi}
 			{$_('combat.spells.everySpell')}{/if}

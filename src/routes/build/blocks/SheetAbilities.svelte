@@ -25,7 +25,7 @@
 			class:active
 			class:boosted
 			use:provenance={block
-				? why(block.score)
+				? why(block.score, $_)
 				: abilityProvenanceText(b.abilities.provenance(ab, score), $_)}
 			onclick={open}
 		>

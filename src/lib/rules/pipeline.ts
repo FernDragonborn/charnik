@@ -61,11 +61,19 @@ export interface Note {
 /** Render a note to a string: localized when a `translate` fn + a `key` are present, else the EN
  *  `text` verbatim. PURE — the `translate` fn is injected by the UI (`svelte-i18n`), so core/rules
  *  code (which never passes one) stays i18n-runtime-free and every note reproduces its EN text. */
-export function formatNote(
-	note: Note,
-	translate?: (key: string, params?: Record<string, string | number>) => string,
-): string {
-	return translate && note.key ? translate(note.key, note.params) : note.text;
+/**
+ * svelte-i18n's `$format`, taken as a parameter so the rules core and every pure view helper stay
+ * locale-free — the caller hands its own translator over. Without one, a label renders its English
+ * text verbatim, which is what a node test sees.
+ */
+export type Translate = (
+	key: string,
+	options?: { values?: Record<string, string | number>; default?: string },
+) => string;
+
+export function formatNote(note: Note, translate?: Translate): string {
+	if (!translate || !note.key) return note.text;
+	return translate(note.key, note.params ? { values: note.params } : {});
 }
 
 /** i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline /

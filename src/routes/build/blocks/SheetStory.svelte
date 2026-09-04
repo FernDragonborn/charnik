@@ -33,7 +33,7 @@
 					class="bar"
 					use:provenance={`${$_('build.story.barHint', {
 						values: { skill: skillLabel(bar.via, $_), passive: bar.passive }
-					})} — ${why(bar.trace)}`}
+					})} — ${why(bar.trace, $_)}`}
 				>
 					<span class="blabel">{$_(`build.social.${bar.id}`)}</span>
 					<span class="meter"><span style:width="{bar.fill * 100}%"></span></span>

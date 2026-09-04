@@ -4,7 +4,7 @@
  * debuffs / resources, and duration math. Pure. Split out of the old combat/helpers.ts junk-drawer.
  */
 import { ABILITY_IDS } from '$lib/rules/core';
-import { formatNote, type Computed, type Contribution } from '$lib/rules/pipeline';
+import { formatNote, type Computed, type Contribution, type Translate } from '$lib/rules/pipeline';
 import { titleCase, signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
@@ -25,10 +25,7 @@ const OP_SYMBOL: Record<Contribution['op'], string> = {
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`
  *  (svelte-i18n's `$format`) to localize the rule notes; without it every note renders its EN text
  *  verbatim (the B18 invariant — structure changed, EN output byte-for-byte unchanged). */
-export function why(
-	c: Computed,
-	translate?: (key: string, params?: Record<string, string | number>) => string,
-): string {
+export function why(c: Computed, translate?: Translate): string {
 	const opSym = (op: Contribution['op']): string => (OP_SYMBOL[op] ? `${OP_SYMBOL[op]} ` : '');
 	const parts = c.trace
 		// a comparison op says something even at 0; a plain addend of 0 says nothing

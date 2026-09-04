@@ -80,7 +80,7 @@
 						values: { lb: Math.round(carried), kg: kilograms(carried) }
 					})}</span
 				>
-				<b>{$_('build.inventory.capacity')}</b><span use:provenance={s ? why(s.carryingCapacity) : ''}
+				<b>{$_('build.inventory.capacity')}</b><span use:provenance={s ? why(s.carryingCapacity, $_) : ''}
 					>{$_('build.inventory.pounds', { values: { lb: capacity } })}</span
 				>
 			</div>
