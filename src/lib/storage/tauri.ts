@@ -117,7 +117,7 @@ async function walkTree(dir: string): Promise<DirFile[]> {
 		for (const e of await readDir(abs)) {
 			const childAbs = await join(abs, e.name);
 			const childRel = rel ? `${rel}/${e.name}` : e.name;
-			// W5: never FOLLOW a symlinked directory — a looped symlink would recurse forever, and a
+			// Never FOLLOW a symlinked directory — a looped symlink would recurse forever, and a
 			// symlink pointing outside the data dir shouldn't be walked into (traversal safety) anyway.
 			if (e.isSymlink) continue;
 			if (e.isDirectory) await recurse(childAbs, childRel);

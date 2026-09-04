@@ -193,7 +193,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   `recharge` enum cannot express and that a rest policy should not be bent into. Nothing tracks item
   charges as a resource today — no column, no consumer — which is exactly why the generic model waits
   for this rather than being pre-built; the reasoning is `docs/internals/effects.md` ▸ Recharge-model
-  roadmap, axis 2. N1's inventory, which it needs, is built (W7).
+  roadmap, axis 2. N1's inventory, which it needs, is built.
   - [ ] **Item-charge data:** a `charges` (max) + `recharge` spec on the item schema; an owned or
         attuned charged item GRANTS an ordinary resource pool, reusing `grant_resource` and the whole
         resource subsystem rather than inventing a parallel counter.

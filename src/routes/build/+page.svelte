@@ -113,7 +113,7 @@
 <svelte:head><title>{$_('nav.build')} — Charnik</title></svelte:head>
 
 {#if content.error}
-	<!-- W2: a content-load failure was silent here (empty pickers) — surface it like the other views. -->
+	<!-- A content-load failure was silent here (empty pickers) — surface it like other views. -->
 	<Loading error={content.error} />
 {:else}
 	<section class="page build-page">

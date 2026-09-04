@@ -241,46 +241,47 @@ and its file does not move with it.
 | [work/code-quality.md](work/code-quality.md) | repo-wide typing, lint, refactoring debt |
 | [work/release.md](work/release.md) | packaging, distribution, dependencies |
 
-The order the maintainer and Claude are actually working to. Wave = a coherent chunk, not a sprint;
-the SEQUENCING REASONS matter more than the numbering and are given per wave, because most of them
-were learned the hard way. Numbers are stable: a wave that closes leaves the list and the ones after
-it do not renumber.
+The order the maintainer and Claude are actually working to. Wave = a coherent chunk, not a sprint,
+named after what it does rather than numbered — the order is this list's order, so a wave that
+closes leaves the list and nothing else is renamed. The SEQUENCING REASONS matter more than the
+position and are given per wave, because most of them were learned the hard way.
 
-- **W0 / W1 — DONE.** REL-4 content packs, then the roll card. One consequence stays live: SRD
+- **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **W2 · the roller's remaining tails.** ROLLER-N and UBUG-21 are closed and
+- **The roller's tails.** ROLLER-N and UBUG-21 are closed and
   `docs/internals/roller.md` is the design; what this wave owes is the open list under ROLLER-N — a
   token typed WITHOUT spaces (`2d6+3`) blocking the roll, `parseFormula → {terms, issues}`,
   provenance surviving `foldValues`, a volley's group identity, `RollSpec` as the request, and
   **amendments as STRUCTURE**.
-  **That last one is why this wave precedes W3, not the other way round:** the roller writes an
-  English sentence into `log.jsonl`, and prose already on disk cannot be localised afterwards.
-  `UBUG-11` rides here and is no longer app work — the `attack:<weapon_id>[:<count>]` verb is built,
-  and what remains is the `resource_options` rows still saying `note:`, a commit in the content repo.
-- **W3 · ARCH-1 i18n sweep.** UX-1 cleared the copy prerequisite, W2 clears the other one. Damage
-  types take catalog names in the same pass: the 13 SRD types are a closed rules vocabulary, while an
-  invented homebrew type stays data and passes through.
-- **W4 · the cheap surface wins, none of which depend on anything.** N5(1) the Features panel — a
+  **That last one is why this wave precedes the i18n sweep, not the other way round:** the roller
+  writes an English sentence into `log.jsonl`, and prose already on disk cannot be localised
+  afterwards. `UBUG-11` rides here and is no longer app work — the `attack:<weapon_id>[:<count>]`
+  verb is built, and what remains is the `resource_options` rows still saying `note:`, a commit in
+  the content repo.
+- **The i18n sweep · ARCH-1.** UX-1 cleared the copy prerequisite, the roller's tails clear the
+  other one. Damage types take catalog names in the same pass: the 13 SRD types are a closed rules
+  vocabulary, while an invented homebrew type stays data and passes through.
+- **The cheap surface wins, none of which depend on anything.** N5(1) the Features panel — a
   character cannot read their own traits anywhere — plus the shared provenance popover, the pact
   pool's own short-rest pips, the spell-picker preview, UPCAST-PREVIEW-TOOLTIP and SAVAGE-TAIL.
-- **W5 · the a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
+- **The a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
   one-column `grid`) + keyboard navigation past the double-Enter take. It is the same ruling applied
   in four places; split up, it gets re-derived four times, and the picker's shape is already decided
   down to why `aria-activedescendant` names the gridcell.
-- **W6 · "everything is doable from the UI", where it is not.** Edit and delete existing homebrew,
+- **"Everything is doable from the UI", where it is not.** Edit and delete existing homebrew,
   the generic grid for spell and monster, the UI type-assign form, and authoring a `resource` /
   `resource_option` row at all. A shipped invariant currently unmet, not a feature.
-- **W7 · N6 currency → RECHARGE-3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
-  SCOPED-BONUS.** Item charges want an inventory, which N1 built. SCOPED-BONUS is an L1 grammar
-  change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than
-  riding another wave.
-- **W8 · the content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
+- **Currency and item charges** · N6 currency → RECHARGE-3 (item charges) → D16 choice-UI
+  (→ `magic_initiate`) → SCOPED-BONUS. Item charges want an inventory, which N1 built.
+  SCOPED-BONUS is an L1 grammar change and a `docs/internals/compatibility.md` chokepoint, so it
+  stays its own piece rather than riding another wave.
+- **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
-- **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not on code), ANY-HOST-PACKAGE-DISTRIBUTION
-  (post-1.0), ONBOARD (its own design session, once the UI stops moving) and COMPANION (research
-  first).
+- **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
+  on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
+  stops moving) and COMPANION (research first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
 `UBUG-22` was the last one and is closed.)_

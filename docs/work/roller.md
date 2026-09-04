@@ -35,9 +35,9 @@
         that is a data defect and must be visible outside the moment of the roll.
   - [ ] **Amendments are STRUCTURE, not a sentence.** `amendedNote` composes English prose that a
         reader then has to match back out; one regex for it has already eaten an upcast's provenance
-        and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates W3**: prose
-        already written into `log.jsonl` cannot be localised afterwards, so the facts have to land
-        before the i18n sweep has anything to work with.
+        and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates the i18n
+        sweep**: prose already written into `log.jsonl` cannot be localised afterwards, so the
+        facts have to land before the sweep has anything to work with.
   - [ ] **`foldValues` is where provenance dies — one seam, four losses.** The organ KNOWS where every
         contribution came from and throws it away one step before the roll, so this is not a missing
         feature but a lossy narrowing to the four shapes `rollPool` happens to accept
