@@ -256,7 +256,7 @@ interface ActiveClassFeature {
  * `extraLevels` is the only difference between its two readers — the sheet previews what the next
  * level or two will bring, a cap counts only what is in hand.
  */
-export function* activeClassFeatures(
+function* activeClassFeatures(
 	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
 	system: string,

@@ -26,7 +26,7 @@ import {
 } from '$lib/build/rules';
 
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
-export const ASI_SHAPES = ['2', '1-1'] as const;
+const ASI_SHAPES = ['2', '1-1'] as const;
 export type AsiShape = (typeof ASI_SHAPES)[number];
 /** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
 export const asiPickCount = (shape: AsiShape): number => (shape === '2' ? 1 : 2);
@@ -83,7 +83,7 @@ export const newClassRow = (): DraftClass => ({
 export const ORIGIN_SLOT_KEY = 'origin';
 
 /** The four per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
-export interface SlotMaps {
+interface SlotMaps {
 	slotFeats: Record<string, string>;
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	slotFeatAbility: Record<string, Ability>;
@@ -97,7 +97,7 @@ export interface SlotMaps {
  * getting `rowId` now takes its `0:4`, `0:8` … with it. Runs on both read paths; a row that already
  * carries an id is left alone, so this costs one pass and never fires twice.
  */
-export function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
+function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
 	// one element type, so a write into any of them is a write of that map's own value type — the
 	// four maps hold different values, and reading them as one union makes every write a cast
 	const maps: Record<string, unknown>[] = [
@@ -215,7 +215,7 @@ export const slotMapSchemas = {
 	skills: z.record(z.string(), z.array(z.string())),
 } as const;
 
-export const draftStateSchema: z.ZodType<DraftState> = z.object({
+const draftStateSchema: z.ZodType<DraftState> = z.object({
 	name: z.string().catch(''),
 	system: z.enum(SYSTEMS).catch(DEFAULT_SYSTEM),
 	strict: z.boolean().catch(true),

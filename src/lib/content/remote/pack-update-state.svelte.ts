@@ -176,7 +176,7 @@ export async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyRes
 
 /** An apply that wrote nothing, and why. The ONE shape a refusal takes: an apply either reports what
  *  it did or reports why it did nothing — it never answers `null`, which says neither (NULL-1). */
-export function applyFailed(error: UpdateError): ApplyResult {
+function applyFailed(error: UpdateError): ApplyResult {
 	return { written: [], preserved: [], removed: [], error };
 }
 

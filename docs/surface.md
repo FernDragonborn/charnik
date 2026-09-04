@@ -316,7 +316,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function checkFailure` — * How such a failure reads to the user.
 - `function fetchRepo` — * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
 - `function guarded` — * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY` * from a content C…
-- `function applyFailed` — An apply that wrote nothing, and why.
 - `function refuse` — Refuse to write, on BOTH channels at once: the panel's error list and the caller's answer.
 
 ### `src/lib/content/remote/updates.svelte.ts`
@@ -575,7 +574,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function listCharacters` — List the roster.
 - `function deleteCharacter` — Delete a character folder (character.json, log, photo).
 - `const LOG_KIND` — The kinds of line `log.jsonl` holds.
-- `type LogKind`
 - `interface LogEntry`
 - `function logLineFor` — The stored line for one completed roll: the WHOLE record, plus the flattened summary an older * build reads.
 - `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
@@ -1282,7 +1280,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ABILITY_IDS` — The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare.
 - `type Ability`
 - `const SIZES` — Creature sizes, smallest→largest (an ORDERED ladder — L2 `size` compares by ordinal).
-- `type Size`
 - `const ARMOR_TYPES` — Armor weight classes ('none' = unarmored).
 - `type ArmorType`
 - `function abilityModifier` — Ability modifier: floor((score − 10) / 2).
@@ -1313,9 +1310,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ADVANTAGE_SIGN` — Mode ↔ the ±1 axis every roll site speaks (it is arithmetic over effects).
 - `function advantageFromSign`
 - `const NEXT_ADVANTAGE` — The lap a tap on the cue takes.
-- `interface LegacyAdvantageRoll` — The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`.
 - `const DIE_ROLE` — What a die was drawn FOR.
-- `type DieRole`
 - `const CRIT_METHOD` — How a crit doubles damage.
 - `type CritMethod`
 - `interface RolledDie` — * ONE die, as it was actually rolled.
@@ -1528,4 +1523,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 902 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 58 duplicate suspects._

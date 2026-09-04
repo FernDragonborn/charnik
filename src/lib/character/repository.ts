@@ -319,7 +319,7 @@ export async function deleteCharacter(storage: Storage, slug: string): Promise<v
 
 /** The kinds of line `log.jsonl` holds. `roll` is the only one written today — see `LogEntry.kind`. */
 export const LOG_KIND = { roll: 'roll' } as const;
-export type LogKind = (typeof LOG_KIND)[keyof typeof LOG_KIND];
+type LogKind = (typeof LOG_KIND)[keyof typeof LOG_KIND];
 
 export interface LogEntry {
 	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21

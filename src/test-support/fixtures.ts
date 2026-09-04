@@ -11,15 +11,14 @@ import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import type { SYSTEMS } from '$lib/rules/pipeline';
 
-/** The one content root these fixtures write into. Tests that reload name it themselves. */
-export const TEST_CONTENT_ROOT = 'c';
+/** The one content root these fixtures write into. */
+const TEST_CONTENT_ROOT = 'c';
 
 /** CSV files by name. A row array is joined with newlines, which is how every call site writes them. */
-export type ContentFiles = Record<string, string | readonly string[]>;
+type ContentFiles = Record<string, string | readonly string[]>;
 
-/** An in-memory content root holding `files`. Use when the test also needs the storage — to rewrite a
- *  file and reload, or to assert on what was written. Otherwise use {@link makeTempContentRoot}. */
-export async function makeTempContentStorage(files: ContentFiles): Promise<MemoryStorage> {
+/** An in-memory content root holding `files`. */
+async function makeTempContentStorage(files: ContentFiles): Promise<MemoryStorage> {
 	const storage = new MemoryStorage();
 	for (const [name, body] of Object.entries(files)) {
 		await storage.write(

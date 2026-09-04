@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
-import { makeTempContentRoot } from '../../test-support/fixtures';
+import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
 import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
@@ -652,11 +652,15 @@ describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 	}
 
 	function monk(level: number): Character {
-		const c = newCharacter('kwai', 'Kwai', '5.5e');
-		c.build.species = `species:${S}:ward`;
-		c.build.classes = [{ class: `class:${S}:monk`, level }];
-		c.build.abilities = { str: 12, dex: 16, con: 12, int: 10, wis: 14, cha: 10 };
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'kwai',
+			name: 'Kwai',
+			build: {
+				species: `species:${S}:ward`,
+				classes: [{ class: `class:${S}:monk`, level }],
+				abilities: { str: 12, dex: 16, con: 12, int: 10, wis: 14, cha: 10 },
+			},
+		});
 	}
 
 	it('folds a level-scaling AC expression into the sheet', async () => {
@@ -691,12 +695,18 @@ describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 	}
 
 	function brute(hpCurrent: number, hpMax: number): Character {
-		const c = newCharacter('grog', 'Grog', '5.5e');
-		c.build.species = `species:${S}:brute`;
-		c.build.classes = [{ class: `class:${S}:barbarian`, level: 5 }];
-		c.build.abilities = { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 };
-		c.play.hp = { current: hpCurrent, max: hpMax, temp: 0 };
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'grog',
+			name: 'Grog',
+			build: {
+				species: `species:${S}:brute`,
+				classes: [{ class: `class:${S}:barbarian`, level: 5 }],
+				abilities: { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 },
+			},
+			play: {
+				hp: { current: hpCurrent, max: hpMax, temp: 0 },
+			},
+		});
 	}
 
 	it('applies an enum-guarded override only when the guard holds', async () => {
@@ -748,12 +758,18 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 	}
 
 	function brute(): Character {
-		const c = newCharacter('grog', 'Grog', '5.5e');
-		c.build.species = `species:${S}:brute`;
-		c.build.classes = [{ class: `class:${S}:barbarian`, level: 5 }];
-		c.build.abilities = { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 };
-		c.play.hp = { current: 50, max: 50, temp: 0 };
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'grog',
+			name: 'Grog',
+			build: {
+				species: `species:${S}:brute`,
+				classes: [{ class: `class:${S}:barbarian`, level: 5 }],
+				abilities: { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 },
+			},
+			play: {
+				hp: { current: 50, max: 50, temp: 0 },
+			},
+		});
 	}
 
 	it('a FALSE-guarded apply_condition does not activate its condition (no fail-open)', async () => {
@@ -995,11 +1011,15 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 	}
 
 	function ringWearer(): Character {
-		const c = newCharacter('x', 'X', '5.5e');
-		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
-		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
-		c.build.inventory = [{ item: `item:${S}:cursed_ring`, qty: 1, equipped: true, attuned: false }];
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'x',
+			name: 'X',
+			build: {
+				classes: [{ class: `class:${S}:monk`, level: 1 }],
+				abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+				inventory: [{ item: `item:${S}:cursed_ring`, qty: 1, equipped: true, attuned: false }],
+			},
+		});
 	}
 
 	it('a returned apply_condition registers AND expands one level (its stat tokens apply)', async () => {
@@ -1053,10 +1073,14 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 		});
 	}
 	function plainWizard(): Character {
-		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 1 }];
-		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 };
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'gandalf',
+			name: 'Gandalf',
+			build: {
+				classes: [{ class: `class:${S}:wizard`, level: 1 }],
+				abilities: { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 },
+			},
+		});
 	}
 
 	it('the homebrew feature (own source) reaches the SRD wizard — old source-pin no longer blocks it', async () => {
@@ -1095,10 +1119,14 @@ describe('RV2: a same-(class,level,id) feature from two active sources folds ONC
 		});
 	}
 	function plainWizard(): Character {
-		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 1 }];
-		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 };
-		return characterSchema.parse(c);
+		return buildCharacter({
+			id: 'gandalf',
+			name: 'Gandalf',
+			build: {
+				classes: [{ class: `class:${S}:wizard`, level: 1 }],
+				abilities: { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 },
+			},
+		});
 	}
 
 	it('applies the feature once (AC 15, not 20) and flags the duplicate', async () => {

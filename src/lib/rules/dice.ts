@@ -67,7 +67,7 @@ export const NEXT_ADVANTAGE: Record<AdvantageMode, AdvantageMode> = {
 
 /** The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`. Read by
  *  `rehydrateRoll` and by nothing else — `d20s` + `advantage` replaced every field of it. */
-export interface LegacyAdvantageRoll {
+interface LegacyAdvantageRoll {
 	kept: number;
 	dropped: number;
 	mode?: 1 | -1;
@@ -88,7 +88,7 @@ export const DIE_ROLE = {
 	 *  divided pill: they are the same damage, rolled twice, not two damages. */
 	crit: 'crit',
 } as const;
-export type DieRole = (typeof DIE_ROLE)[keyof typeof DIE_ROLE];
+type DieRole = (typeof DIE_ROLE)[keyof typeof DIE_ROLE];
 
 /** How a crit doubles damage. A rule OPTION, not a house rule: 5e RAW is *classic*, and *loyal* is
  *  the common table variant that trades the swinginess of a second roll for a guaranteed floor. Set
