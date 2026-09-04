@@ -124,6 +124,12 @@ family B can't stack without the type.
 
 - **Cheap now:** nothing. Grammar is extensible (extra `:` segment). Just **don't spend
   the 4th token segment on a 5e-only meaning** — mentally reserve it for bonus-type.
+- **Where a SCOPE goes instead:** the target namespace, beside the dotted sub-targets that already
+  live there (`speed.fly`, `save.str`, `skill.<id>`) — `flat_bonus:damage.melee+2`,
+  `damage.<weapon_id>`, `damage.<spell_id>`. It costs no segment, keeps 5e's weapon vocabulary out
+  of the grammar (the target is validated downstream, as it already is), and a namespace extends
+  where an enum would not. Never in the qualifier slot: `parseQualifier` reads `flat_bonus:damage:melee+2`
+  as the damage TYPE `melee` and folds it silently wrong.
 
 ### 5. License / attribution is per-source, not global
 

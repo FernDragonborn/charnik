@@ -190,6 +190,12 @@ nothing: fakes overwrite happily, while Windows refuses to rename a directory on
 and designs here depend on that. Write a `/dev/<name>` probe that asserts on mount and writes a report
 into the data dir, point `devUrl` at it, run the app, read the report, revert `devUrl`.
 
+**Who signs the work off.** The four methods above — a node test, `shot.mjs`, a one-off Playwright
+drive, a `/dev/` probe on the real app — are yours to run and yours to CONCLUDE from: evidence from
+any of them closes the item without waiting for us. Stopping to ask for confirmation you could have
+produced is the expensive failure, not the careless one. What stays ours is what no harness can
+reach: a drag, hover timing, IME and input-method behaviour, and the final look on a real install.
+
 **Screenshots go in `design-preview/`.** Never the repo root, never a temp folder. That folder also
 holds the iterated `*.html` design mocks: when a view has one, **bake it faithfully** and wire live
 data onto it, rather than building a simplified version from scratch. When a design choice is open,
@@ -237,8 +243,8 @@ offer two or three **rendered** variants — they are picked from seeing them, n
   comments. One reason, in one place.
 - **Do not keep dead code in active development** without checking whether it is scaffolding for
   planned work — but do not keep it unmarked either.
-- Interaction-heavy fixes are ours to confirm in the running app. Do not call a drag, a hover, or a
-  keyboard path done because it compiles.
+- A drag, a hover and an input method are ours to confirm in the running app. A keyboard path is
+  not — drive it in Playwright and look, rather than calling it done because it compiles.
 
 ## The docs
 

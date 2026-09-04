@@ -372,9 +372,13 @@ everything — old homebrew is never wrong-downward.
     via `snapshotBaseTokens` (a custom `[data-theme]` cannot inherit another theme by cascade).
   - [ ] **Persistence + portability** — themes live in `localStorage` (app-store) today; move to a
     user-owned `themes.json` in the data dir via the `Storage` seam so a theme is
-    shareable/importable like content packs; export/import one theme.
-  - [ ] **Theme scope decision** — colours only (today), or also expose density/roundness/type
-    tokens (now possible since font-size/radius/tracking were tokenized) under `[data-theme]`.
+    shareable/importable like content packs; export/import one theme. A theme is user-owned data and
+    belongs on their disk like everything else they own, not in browser storage the app happens to
+    have.
+  - [ ] **Theme scope is COLOURS ONLY.** Density, roundness and type stay app-owned even though
+    font-size/radius/tracking are tokenized and could be exposed. A theme that can move spacing turns
+    every layout into N layouts nobody screenshots, and nobody has asked. This is also why the px
+    spacing guard is not worth building: with colours-only themes an off-scale `14px` breaks nothing.
   - [x] **Guard** — stylelint `color-no-hex` (tokens.css exempt) keeps new hardcoded colours from
     leaking past the token layer and silently breaking themes.
 
@@ -962,8 +966,9 @@ columns; generalizes the builder's slotFeats pattern; chosen rows then behave as
 Level scaling stays formula-free: per-level `class_features` rows re-grant (monk die d6→d12,
 superiority d8→d12) — the table is already keyed by level; L2 expressions not needed for ~90%
 of PHB. **Acceptance: FULL PHB integration — every feature of every PHB
-class must be expressible via one of the three shapes (or explicitly marked manual-text
-fallback) — PLUS the tier-1 homebrew set** (researched 2026-07-15): Blood Hunter (Mercer;
+class must be EXPRESSIBLE via one of the three shapes (or explicitly marked manual-text
+fallback) — PLUS the tier-1 homebrew set:** this sizes the vocabulary, it does not authorize
+authoring PHB rows; what SHIPS stays SRD. The homebrew set is Blood Hunter (Mercer;
 D&D-Beyond-hosted, the most-played homebrew), Gunslinger (Mercer), Pugilist (Ben Hoffman),
 KibblesTasty Psion/Warlord/Inventor/Spellblade, laserllama alternate classes (Exploit Dice),
 Scholar (A. M. Black). That set adds a mechanics superset the engine must cover:
@@ -1043,17 +1048,8 @@ stay semi-manual.
   the Eldritch Invocations are untokenized, both waiting on N2; and a base Warlock has **no Ritual
   Casting**, so the `R` badge cannot appear here without Book of Ancient Secrets — demo rituals on a
   Wizard/Cleric aspect instead, and with a REAL shipped SRD ritual, never a hand-authored one.
-- [ ] **N2 · Class-feature engine ("features as data").** The three shapes above + the hard
-  case: **Wild Shape = stat-block replacement** (USER-RECONFIRMED 2026-07-19: still fully
-  unimplemented — a druid has no working Wild Shape at all; the complexity + the 5e↔5.5e
-  divergence is exactly why the spec-sheet gate below exists). Model: `play.form =
-  {monsterRef, formHp} | null`; deriveSheet branches — physical scores/AC/attacks/speed from
-  the (already-typed!) monster row, mental stays own; isolated removable seam like effects;
-  2014/2024 diverge (2024 = temp HP, known-forms list). **Gate:
-  implement ONLY against a written per-edition spec sheet taken verbatim from PHB'14 +
-  PHB'24 — 100% RAW fidelity in both editions is a hard requirement here** (HP pool vs temp
-  HP, CR/movement limits per level, what's kept vs replaced, revert-at-0 carryover,
-  equipment handling, casting rules).
+- [ ] **N2 · Class-feature engine ("features as data").** The three shapes above, in the order
+  1→3→2. Wild Shape carved out as N2b: it is a stat-block REPLACEMENT, not one of the shapes.
   Superiority dice: extend the grammar —
   `grant_resource:superiority-dice:4:d8:short` (die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
@@ -1062,7 +1058,6 @@ stay semi-manual.
   attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
   Attacks panel shows ×N. Prereq: the fold must gather these feature tokens; content-schema
   columns bump + converter updates.
-  Order: shapes 1→3→2, Wild Shape last as its own item.
   **The measurement that sizes shape 3, so it is not re-taken:** across all 428 shipped
   class-feature rows in both editions, only 21 carry any effect token and none encodes a numeric stat
   bonus. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
@@ -1075,6 +1070,20 @@ stay semi-manual.
   `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **N2b · Wild Shape = stat-block replacement.** A druid has no working Wild Shape at all.
+  Model: `play.form = {monsterRef, formHp} | null`; deriveSheet branches — physical
+  scores/AC/attacks/speed from the (already-typed) monster row, mental stays own; an isolated
+  removable seam like effects; the editions diverge (2024 = temp HP + a known-forms list).
+  **The gate is a written per-edition spec sheet — from that edition's own SHIPPED SRD text**, never
+  from memory and not from the PHB, which we have no licence to read into the app. Wild Shape is in
+  both SRDs, so the text exists: HP pool vs temp HP, the CR/movement limits per level, what is kept
+  vs replaced, revert-at-0 carryover, equipment, casting.
+  **What actually blocks it is a converter bug, not a missing source.** The 2024 `druid_wild_shape`
+  row ships COMPLETE (~2600 chars, Beast Shapes table and the Rules While Shape-Shifted section);
+  the 2014 row stops at 502 chars, cut exactly where its table begins — and 2014's
+  `class_features_srd.csv` carries **zero** `<table>` rows against 8 in 2024 — `convert-2014.mjs`
+  drops embedded tables and truncates the prose at them. Fix that first; the 2014 spec sheet is
+  unwritable until it lands, and other 2014 features are losing tables the same silent way.
   - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
         `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
         restore, so it waits on the model above rather than on the mechanism, which is shipped.
@@ -1082,7 +1091,7 @@ stay semi-manual.
   blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
   built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
   "the picker contract". Choice groups (N2 shape 3) render here when N2 lands. Open tails:
-  - [ ] **The guided ("walk me through it") second mode.** **Not this release** — it needs
+  - [ ] **The guided ("walk me through it") second mode.** Not this release — it needs
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
@@ -1141,11 +1150,12 @@ stay semi-manual.
   Strict enforces (Free doesn't), UI shows `expertise N/M` + disables ×2 at cap. Wizard "Scholar"
   (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
   restriction, so encoding it would over-permit. Unit + real-content tests both editions. **UI not
-  screenshot-verified in a Rogue state** (needs a build-flow drive). (b) effects integration:
-  `grant:expertise` missing from the L1 vocab,
-  effect-granted skills not shown as locked-on in the builder; (c) 'half' (Jack of All
-  Trades) is a dead branch — type + `skillCheck(halfProficient)` exist, nothing calls them;
-  wire via a bard feature token (needs a `half` grant the L1 vocab lacks — vocab extension);
+  screenshot-verified in a Rogue state** (needs a build-flow drive). (b)+(c) are ONE grammar step: the L1
+  vocab grows a proficiency LEVEL in the third segment — `grant_proficiency:skill.<id>:half` and
+  `:expertise`, defaulting to `proficient` when absent, so every existing token keeps parsing. That
+  makes Jack of All Trades a content row (the `half` type and `skillCheck(halfProficient)` already
+  exist and nothing calls them) and lets the builder show an effect-granted skill as locked-on
+  instead of silently proficient. The same third segment is what `TOOLS` reuses;
   (d) **DONE (2026-08-02):** the combat SkillsPanel already showed the proficient/expertise
   tiers (filled / ringed dot) with `why()` provenance on the row hover; added the 4th tier —
   a faded `half` dot (color-mix on `--color-resource`, scaffolding until a half-prof producer
@@ -1244,7 +1254,7 @@ were learned the hard way.
   SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
   change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
-- **W5 · tail:** REL-2 packaging channels, ARCH-4 / R7 / LINT-1.
+- **W5 · tail:** REL-2 packaging channels, LINT-1.
   UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21; UBUG-4 came off it on
   2026-08-22, verified on a real install. B24 and B11 have since been answered (both won't-do, with the measurement /
   the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
@@ -1287,8 +1297,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   (the rule says roll a second d20 and take the higher; rolling it late changes nothing) and identical
   on mouse and finger. Full survey + the three findings behind it:
   [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
-- [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
-  need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
+- [ ] **UX-2 · First-run onboarding — needs its own design session, and it comes LATE.** Not because
+  it is unimportant: the UI is moving under it right now (the a11y picker rework, the features panel,
+  the provenance popover), and onboarding written against a surface that is still changing has to be
+  written twice. Schedule the session once the current UI wave settles; until then this item collects
+  the trigger and the constraints, nothing more. The trigger: the
   app keeps accumulating things a first-time user cannot deduce (Shift-click a stat to open the roll
   tray instead of rolling it, `Ctrl+K`, the fact that all content is CSV on disk they may edit live,
   and — once UBUG-20 lands — that an eligible damage pill is clickable). **Maintainer constraints:**
@@ -1353,17 +1366,22 @@ holds the done-work log; these are the OPEN tails it carried):**
   **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
   OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
   already on disk can't be localised afterwards), so ARCH-1 still waits on W2, not on this.
-- [ ] **CONDEFF · one content type for conditions and effects** (maintainer, 2026-08-26 — from the
-  roller: "I can't add Poisoned to an attack roll"). Poisoned IS disadvantage on the attack the same
+- [ ] **CONDEFF · one content type for conditions and effects.** From the roller: "I can't add
+  Poisoned to an attack roll". Poisoned IS disadvantage on the attack the same
   way Bless is +1d4 on it; that they are two content TYPES is an authoring accident the player is
   made to know about. **Already merged, and staying that way:** play-state has ONE list
   (`play.effects`, an "effect/condition instance"), everything runtime folds at the **`condition`
   LAYER** — which is stacking algebra and survives the merge untouched — and both schemas are
   `baseRow` + the same `effects` token column.
   **What actually differs:** three columns (`max_level` on conditions, `duration_rounds` on effects,
-  and `negative`, whose DEFAULT is inverted between them — the only real design question), plus two
-  UIs (a binary multi-select vs the "+" catalog with a duration), plus the `apply_condition:<id>`
-  indirection between an applied instance and what it does.
+  and `negative`), plus two UIs (a binary multi-select vs the "+" catalog with a duration), plus the
+  `apply_condition:<id>` indirection between an applied instance and what it does.
+  **`negative` is DELETED, not merged.** Its default is inverted between the two types, so merging it
+  means picking whose default wins for every row of the other — a question with no right answer.
+  Replace it with `valence`, an open enum (`harmful` | `helpful` | `neutral`) with no default:
+  blank reads `neutral`, the converters state it per row, and the inversion stops existing. It also
+  says more than the boolean did — Bless and a cover bonus were both "not negative", which is not the
+  same fact as Poisoned being harmful.
   **Size, measured not guessed:** the merged schema is the union of those columns behind a `kind`
   open enum (AGENTS.md ▸ Taste (open enums, never booleans)); `~10` call sites of `graph.list('condition', …)`
   (derive-gather, derive, resolver, effects-editor ×4, roller-sources); character JSON is untouched
@@ -1371,13 +1389,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   of the other); the content repo needs a `#content-type` change on `conditions_*.csv` + a re-stamp,
   no row rewriting, since the loader already merges any number of CSVs into one type. So: a day, and
   the risk sits in the content-repo diff, not in the engine.
-  **Unblocked meanwhile (2026-08-26):** the roller's vocabulary lists BOTH types, so Poisoned is
-  typeable into a roll today; the merge is what stops the next surface from having to remember to.
-- [ ] **ARCH-4 · stylelint spacing px-guard.** The `font-size:["px"]` guard is DONE + enforced (green).
-  The spacing half (`padding`/`margin`/`gap` px → `--space-*`) is ~523 warnings: blocked on a design
-  call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
-  not a blind sweep. Warn-only on 523 = noise that trains people to ignore stylelint, so it stays out
-  until the migration is done as its own pass.
+  **Unblocked meanwhile:** the roller's vocabulary lists BOTH types, so Poisoned is typeable into a
+  roll today; the merge is what stops the next surface from having to remember to.
+  **On disk this stays a header change.** The loader folds any number of CSVs into one type, so the
+  files keep their names and their rows — `conditions_*.csv` declares the merged `#content-type`,
+  gets its `valence`, and is re-stamped. No row is rewritten and no id moves.
 - [x] **B25 / RV4 · Subclass-caster spell list.** The seam is DATA, not a class-name branch: a
   `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
   off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out
@@ -1385,9 +1401,17 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D16 · generalized player-choice model.** Half-feat ability-choice and Skilled's skill grants
   are DONE, at a level's slot AND under the background's granted origin feat — both ask through the
   same `FeatSubChoices` block, keyed by a slot key or by `ORIGIN_SLOT_KEY`. Still open: Magic Initiate
-  spell picks (the `magic_initiate` feat's spell-learning half) and the tool half of Skilled, since
-  tools are not modelled at all.
-  One "player choice at a slot" abstraction covers all.
+  spell picks (the `magic_initiate` feat's spell-learning half). One "player choice at a slot"
+  abstraction covers all. Skilled's TOOL half moved out to `TOOLS`, which is a model, not a choice.
+- [ ] **TOOLS · a tool proficiency, and that is the whole mechanic.** Tools already exist as things:
+  `tool` is an `ITEM_CATEGORIES` member, so they sit in the inventory today. What is missing is being
+  PROFICIENT with one — a build field, a grant reusing N4's third segment
+  (`grant_proficiency:tool.<id>`), and a check that adds the proficiency bonus. Nothing else: no
+  crafting, no downtime, no tool-specific rules.
+  **The one edition divergence:** 2014 leaves the ability for a tool check to the GM, 2024 pairs an
+  ability with each tool. So the ability comes from a column where that edition's SRD states one, and
+  from the player at roll time where it does not — never guessed.
+  Unblocks Skilled's tool half in D16.
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
@@ -1607,16 +1631,16 @@ holds the done-work log; these are the OPEN tails it carried):**
         it does not exist. `characters.md` ▸ "A tracker surfaces, it never decides" is the contract.
         While in there: that `title` is a hardcoded English `'Not available right now'`, which
         `ui.md` ▸ "Strings live in the catalogs" forbids.
-- [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
-  `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
-  problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
+- [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
   this spell / only on this instance", so: **Magic Weapon** buffs ALL the caster's weapons (and leaks
   into spell rolls), and **Agonizing Blast** (+CHA per beam) / **Eldritch Spear** can't be expressed at
   all. Both need the same thing — a scope key on the bonus. `attacks.ts` §A/§B already scopes by weapon
   CATEGORY; the extension is a general scope (`weapon_id` / `spell_id` / per-instance), NOT a feat
   enumeration — every invocation is then just "a scoped effect on a spell". **This is an L1 grammar
-  change and a `docs/internals/compatibility.md` chokepoint** (effect-token grammar) — decide it there, not
-  ad-hoc in the fold. Independent of ROLLER-N (each ships without the other), but the per-beam case
+  change and a `docs/internals/compatibility.md` chokepoint** (effect-token grammar), and it is
+  SETTLED: the scope goes in the TARGET namespace — `flat_bonus:damage.melee+2`,
+  `damage.<weapon_id>`, `damage.<spell_id>`. `compatibility.md` §4 says so too, in the same change
+  that builds this. Independent of ROLLER-N (each ships without the other), but the per-beam case
   only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
   invocations.
   **Two constraints the grammar decision must respect, and one shape that satisfies both.**
@@ -1656,7 +1680,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   on screen until the next launch.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
   the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
-- **Won't-do (recorded so they aren't re-audited as bugs):** **D19** exhaustion `max 6` stays a RAW
+- **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
+  `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
+  Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart
+  and gets the same saves, and how a table reads "one source" is a table's call, not the app's;
+  **MASSIVE-DAMAGE / System Shock** — the ≥ half-max-HP → DC 15 CON → System Shock table rule is
+  **DMG, not SRD, so no CC-BY text for it exists**. Authoring it from memory is exactly the failure
+  that passes every gate. If it ever ships it is content someone else authors into a pack, and what
+  we might add is the general ability to install such optional-rule content — never the rule itself;
+  **ARCH-4** the `padding`/`margin`/`gap` px → `--space-*` sweep — measured at 186 declarations, of
+  which 2px (61) and 1px (24) are hairline nudges no spacing scale should own, and the rest cluster
+  where the scale simply has no step (13–15, 17–22). The reason to hold the line was themeability, and
+  themes are colours-only, so an off-scale `14px` breaks nothing for anyone; **D19** exhaustion
+  `max 6` stays a RAW
   constant (identical both editions — not a data-driven win, YAGNI); **SMELL-2** `deriveHealth` is
   single-open + `characterName` is a display-only label — keying it by `c.id` is dead flexibility;
   loose `z.record` play-state keys stay un-branded (see `docs/internals/characters.md` ▸ Play-state modelling);
@@ -1670,11 +1706,24 @@ holds the done-work log; these are the OPEN tails it carried):**
   during the build has nowhere to land yet. `characters.md` already says a photo is a SIBLING file
   referenced by name, never base64 in the JSON — so the answer is where the bytes wait, not how they
   are stored.
+  **The bytes wait in memory**, as one downscaled blob on the draft, previewed through an object URL,
+  and land in the character's folder in a single `Storage` write when it is first saved. **Downscale
+  at PICK time** (longest side ~512px): the picker hands over whatever a phone camera produced, and a
+  12 MB JPEG in a folder the user is told they own is a worse gift than a resized one. Losing the
+  photo when an unsaved build is abandoned is how every other draft field already behaves.
 - [ ] **COMPANION · no data model exists for a bound creature** — a familiar, a steed, a beast
   companion, a summon. Not a missing panel: there is nothing in the character schema for a creature
   that belongs to a character, so a Ranger's companion and a Wizard's familiar are today entirely
-  outside the app. Adjacent to N2's Wild Shape (`play.form`), which replaces the character's own
+  outside the app. Adjacent to N2b's Wild Shape (`play.form`), which replaces the character's own
   statblock rather than adding a second creature beside it — related shapes, different problems.
+  **This one starts as RESEARCH, and the research owes four answers:** (1) where a companion lives on
+  screen — its own sheet, or a panel on the owner's; (2) whose turn it acts on, which the editions
+  disagree about (a 2024 Beast Master's companion spends the OWNER's action, a familiar spends
+  nothing); (3) whether the owner's effects fold onto it at all; (4) where it sits in the character
+  file. **One constraint is already fixed:** a companion's stats start from a `monster` row but are
+  the player's to EDIT — every score, HP and attack stays writable, because a bound creature drifts
+  from its statblock the moment a table plays it. So the model is an editable overlay over a monster
+  ref, never a read-only pointer at one.
 - [ ] **A11Y-LISTBOX · three more listboxes claiming something they are not.** Found by the same rule
   that condemned the sectioned picker, so they belong in that change rather than in three visits.
   `SectionedPicker` and `OptionGrid` set `aria-selected` per row independently while declaring a
@@ -1713,6 +1762,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
     so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
     ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
+    **The form WRITES the token; it does not rename anything.** What lands in the CSV is the same
+    `upcast` string an author could type by hand, so the file and the UI never hold two names for one
+    fact — the fields are input widgets over the grammar, labelled from the catalogs like every other
+    label. Build them off the same `kindOf`/`optionsOf` the homebrew form already derives from the
+    schema, so the widget cannot offer what the grammar rejects. v1 covers `per_slot`, `count` and
+    `duration`; anything else stays the raw field.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
   - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
@@ -1782,8 +1837,14 @@ holds the done-work log; these are the OPEN tails it carried):**
   one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal 6 would kill
   you again on the spot. The dead screen is deliberately **not dismissible by backdrop or Escape** —
   a roster link is the other way out, so a dead character cannot lock the player out.
-  - [ ] **RAW tail:** taking damage at 0 HP should add a death-save failure (two on a crit); we do
-    not know crit-ness at the Damage button, so it needs its own think.
+  - [ ] **RAW tail: damage taken at 0 HP adds a death-save FAILURE** (two if the hit was a crit).
+    Everything else about dying is modelled — `deathSave()` runs nat 20 → 1 HP, nat 1 → two failures,
+    three successes → stable, three failures → `die()`, and `damage()` already resolves instant
+    death — but `damage()` never touches `play.deathSaves.failures`, so a downed character can be hit
+    all day for free. **Crit-ness comes from a `critical` checkbox** that appears beside the damage
+    input only at 0 HP, default off: the Damage button has no attack behind it to read crit-ness
+    from, and asking in one checkbox beats inferring wrong. Surfacing, not deciding — the failure is
+    applied because RAW is unconditional here, and the count stays hand-editable as it is today.
 - [x] **UBUG-16 · Abilities now cost their action / bonus action.** The rule, since it decides what
   a resource chip DOES: with exactly ONE spend option, using the resource IS that action, so the chip
   runs it through `activateResourceOption` (validate → spend → charge the turn slot → run the
@@ -1978,7 +2039,6 @@ holds the done-work log; these are the OPEN tails it carried):**
   (`classes/`, `monsters/`) instead of one repo each. Users still enable or disable each edition
   independently, because the two-dimensional file × `source` filtering does not care where a file
   came from.
-
 
   **Slices, and where the work stands (2026-08-10).**
   0. `[x]` **Split the SRD into its own repo — TWO INDEPENDENT REPOS (maintainer, 2026-08-11).**
@@ -2337,7 +2397,6 @@ holds the done-work log; these are the OPEN tails it carried):**
   listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature
   it constrains — **REL-5** — rather than here, since it is the thing to decide when that is built.
 
-
   **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
   *check and notify* / *check and pre-download* — plus a manual button (global **and** per-pack, since
   "I want to test this one" is the real use) that deliberately bypasses the throttle. Config text states
@@ -2400,9 +2459,18 @@ holds the done-work log; these are the OPEN tails it carried):**
   - **Homebrew Cask** (macOS) — **out of scope for now**: no macOS build host to compile on, so no
     artifact to ship. Revisit if a mac runner/notarization appears (blocked on same as REL-1 macOS).
   Most of these consume the Release artifacts, so they hang off REL-1 (need Linux + eventual mac
-  builds published first). Sequence by effort/reach: AppImage (done) → Flathub + WinGet → AUR → Choco.
-- [ ] **REL-5 · A content pack from ANY HTTPS host, not only GitHub — MUCH LATER (maintainer,
-  2026-08-11).** Carved out of REL-4's audit list so that item closes clean: this was never a defect
+  builds published first). **Order: WinGet → AUR → Choco → Flathub** — reach per hour of work, with
+  Flathub last because its cost is not the manifest but the sandbox: arbitrary dataDirs need portals
+  or a broad `--filesystem`, which is exactly what reviewers push back on.
+  **This is its own session, and it is blocked on ACCOUNTS, not on code.** Every manifest can be
+  written and validated ahead of time; what cannot be done for the maintainer is registering on AUR
+  (account + SSH key), Chocolatey (API key) and Flathub, and opening the `winget-pkgs` PR from a
+  personal GitHub account. So: **remind the maintainer to create those accounts**, then do all four
+  in one sitting — each is a different registry's rules, and paying that context cost four times over
+  four unrelated sessions is the waste.
+- [ ] **REL-5 · A content pack from ANY HTTPS host, not only GitHub — POST-1.0.** Not before the
+  release: it adds a network surface that has to be got right, and nothing about 1.0 needs it.
+  Carved out of REL-4's audit list so that item closes clean: this was never a defect
   in the pack updater, it is a separate feature with its own security surface, and it is not
   scheduled into a wave. **Deliberately deferred, not forgotten** — REL-4 was designed so this stays
   possible: `RemoteFetcher` takes an HTTPS URL and GitHub is a HOST ADAPTER over it, the semantics
@@ -2605,10 +2673,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   missing is purely DATA: `content/srd-2014/class_casting_srd.csv` **doesn't exist**, so every 2014 caster
   reports **cantripCap 0**, and known-casters (bard/sorcerer/warlock/ranger) get the prepared FORMULA
   instead of their table's "Spells Known" (a 2014 bard 1 should read 2 cantrips / 4 known, not 0 / CHA+1).
-  Fix = teach `convert-2014.mjs` to parse the per-class Features tables' "Cantrips Known" / "Spells Known"
-  columns and emit the rows (the same shape 2024 already ships). Fiddly only because those tables are
-  space-aligned text — assert per-class counts against the source, since wrong numbers here ship silently.
-  Also still open: backfilling the truncated 2014 class-feature prose.
+  Fix = the rows, in the same shape 2024 already ships. **A converter is no longer assumed to be the
+  route** — the 2014 tables are space-aligned text where a parser slips a column and the numbers go
+  wrong SILENTLY, and the remaining 2014 gaps (these counts, the tables `convert-2014.mjs` drops, the
+  truncated feature prose) are small enough to author by hand against the source and cheaper to
+  verify than to parse. Whichever route: the numbers land with a per-class assert against the SRD
+  text, because this is the failure class that passes every other gate.
+  Also still open: backfilling the truncated 2014 class-feature prose, and the tables lost with it
+  (N2b names the same bug).
+
 - [~] **Combat UI**: multiclass DC + header **DONE** — `SpellsPanel` renders every caster class's
   save DC / attack (A18-tail), and the sheet header (`combat.className`) now joins all classes
   ("Wizard 2 / Fighter 3") instead of `classes[0]`. **Still open [ ]:** pact pool as a distinct
@@ -2666,8 +2739,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   `SOURCE_LABELS` keys, a local `S` in demo/sheet); the raw `'SRD 5.x'` strings that remain live in the
   edition-SCOPED converters (each `.mjs` emits one edition, declared once) + per-file test `S` consts,
   where a shared TS const can't reach cleanly. Low value; leave.
-- [ ] **R7 · Strict/Free as a named mode** — NOT DONE (optional, low priority). `strict: boolean` is
-  self-documenting and works; deferring.
+- **R7 · Strict/Free as a named mode — won't-do.** `strict: boolean` is self-documenting and works.
+  The "open enum, never a boolean" rule is about DATA columns, where a third case arrives from
+  content; this is a runtime switch with exactly two sides. Reopen only if a third mode turns up.
 Done R1–R5 as a focused pass (typos, duplication, drift). R6 moot, R7 deferred. (The R1–R7 +
 CH1–CH14 call-chain and per-file audit checklists were COMPLETE 2026-07-11/14 — the done log lived
 here and was removed in the 2026-07-27 plan trim; git holds the detail.)
