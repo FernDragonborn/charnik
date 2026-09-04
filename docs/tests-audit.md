@@ -4,10 +4,10 @@ A one-off inventory of tests that are **dead**, **duplicated**, or **tautologica
 be cut without losing a single real guard. Everything in [the list](#the-list) is applied; the file
 stays as the record of what was measured, how, and what the measurements refused to confirm.
 
-Scope: `src/**/*.test.ts` + `tests/**/*.test.ts` — **100 files, 19 405 lines, 1 460 authored cases in
-364 `describe` blocks**, which `.each` parameterisation expands to **1 883 executed** (`pnpm test`:
-1 880 passed, 3 skipped — `live-github` without its env flag). Zero `skip`/`todo`/`only` in source. (A
-glob returns 101 paths: one is the `__screenshots__/Roller.browser.test.ts` *directory*, not a test.)
+Scope: `src/**/*.test.ts` + `tests/**/*.test.ts`. As measured: **100 files, 19 405 lines,
+1 460 authored cases in 364 `describe` blocks**, expanded by `.each` to **1 883 executed**. After
+the changes below: 19 144 lines and 1 873 executed. Zero `skip`/`todo`/`only` in source. (A glob
+returns 101 paths: one is the `__screenshots__/Roller.browser.test.ts` *directory*, not a test.)
 
 Jurisdiction for every call in here is [internals/testing.md](internals/testing.md) — and the audit
 sends two corrections back to it: the doc's claim that rule-blocks, concentration and rests are
@@ -458,3 +458,37 @@ Read Step 3 before trusting the output.
 - `internals/testing.md` ▸ Fixtures = contract described `tests/fixtures/` and three helpers as if
   they existed. It now describes what tests actually load, and the missing helpers are open work in
   [plan.md](plan.md) ▸ Backlog ▸ Code quality.
+
+---
+
+## What was implemented
+
+Every finding above is applied. The duplication the audit set out to measure went from
+**1 012 duplicated lines (5.22%, 147 clones)** to **806 (4.21%, 123 clones)** — and the part that
+went is the part that was worth going, because none of it was coverage.
+
+| Change | Effect |
+| --- | --- |
+| `makeTempContentRoot` + `buildCharacter` (`src/test-support/fixtures.ts`) | Zero `loadContent(st, …)` call sites left in the suite; ~180 lines |
+| `rngSequence` hoisted to `src/test-support/rng.ts` | One seeded-draw helper, not one per file |
+| `pluginCtx` + `carrier` (`src/test-support/plugin-fixtures.ts`) | Three drifted 30-line ctx copies become one; 88 lines |
+| `liveCtx`, slot `pool`, `cls`/`sheetOf`/`prep`, `row()` hoisted | Five fixtures that existed two or three times now exist once |
+| 23 × `build.reset(); build.graph = graph;` deleted | The `beforeEach` had already done it |
+| Nine exports narrowed to file scope, one dead type deleted | knip is quiet |
+
+The suite runs **1 873 cases** (from 1 883): fifteen redundant ones gone, five added — four for
+`DialogShell`, one pinning the reroll boundary.
+
+### Deliberately not done
+
+- **`combat.test.ts`, 161 duplicated lines.** Only four of its 32 `beforeEach` bodies are the same
+  four lines; the rest differ in ways that matter (extra abilities, a different graph, a transient
+  the singleton has to be reset). Forcing one helper over 110 VM tests risks an ordering bug to
+  save ~30 lines.
+- **`remote/install.test.ts`, 133 lines.** Each repetition is a `MemoryStorage` seeded into a
+  different pre-apply state; the scaffolding IS the test setup, not a fixture.
+- **`styles/customThemes` ↔ `themeFiles`.** The two `theme()` builders differ in the token value
+  each suite is asserting on (`rgb(0 20 40)` vs `#012`). Sharing them would cost the coverage.
+- **`pipeline.ts`, 10 unreached mutants.** Closing those means writing new tests against a fresh
+  measurement, and Stryker is no longer installed — a separate piece of work, not a cleanup.
+
