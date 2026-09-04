@@ -65,7 +65,10 @@ export class RestControls {
 			...c.play.hitDiceSpent,
 			[die]: this.host().resources.hitDiceSpent(die) + 1,
 		};
-		this.host().tray.pushRoll(`Hit Die ${die}`, r);
+		this.host().tray.pushRoll(
+			{ text: `Hit Die ${die}`, key: 'combat.roll.hitDie', values: { die } },
+			r,
+		);
 	};
 
 	/** The character's short-rest healing model (per-character rules variant; `dice` = RAW default). */

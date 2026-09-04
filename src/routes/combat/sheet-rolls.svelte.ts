@@ -27,6 +27,7 @@ import {
 	type TypedRoll,
 	type MenuKind,
 	type RollLogEntry,
+	type RollName,
 } from '$lib/combat/helpers';
 import type { RollSpec, RollTray } from './roll-tray.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
@@ -100,10 +101,13 @@ export class SheetRolls {
 		this.host().tray.prefill(spec);
 		this.host().openMenu('dice', e);
 	};
-	// EVERY roll site: normal tap rolls instantly; Shift-click opens the prefilled tray. `key`
-	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects. NB the
-	// flat part is IGNORED for save/skill keys — it's already folded into the sheet value `mod`.
-	roll = (label: string, mod: number, e: Event, key?: string) => {
+	// EVERY roll site: normal tap rolls instantly; Shift-click opens the prefilled tray. `name` is
+	// what the roll is called (and its catalog key, when it has one — the record keeps the key so the
+	// log is not frozen in one language). `key` (e.g. "save.dex", "skill.stealth", "attack") is a
+	// different thing: it lets the roll pick up matching EFFECTS. NB the flat part is IGNORED for
+	// save/skill keys — it's already folded into the sheet value `mod`.
+	roll = (name: RollName, mod: number, e: Event, key?: string) => {
+		const label = name.text;
 		// a forced outcome (paralyzed → auto-fail its STR/DEX save) skips the die entirely — the result
 		// is decided by the condition, not the roll; logged as a no-roll marker so it's still visible
 		const forced = key ? this.autoOutcomeFor(key) : null;
@@ -125,6 +129,7 @@ export class SheetRolls {
 			this.openRoll(
 				{
 					label,
+					...(name.key ? { labelKey: name.key } : {}),
 					test: {
 						dice: { 20: 1 },
 						mod,
@@ -138,6 +143,7 @@ export class SheetRolls {
 		else
 			this.host().tray.rollDiceNow({
 				label,
+				...(name.key ? { labelKey: name.key } : {}),
 				test: {
 					dice: { 20: 1 },
 					mod,
@@ -193,7 +199,7 @@ export class SheetRolls {
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
 		// (The Shift-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.host().tray.pushRoll(label, toHit, dmgRolls);
+		const entry = this.host().tray.pushRoll({ text: label }, toHit, dmgRolls);
 		if (savage && entry.at !== undefined)
 			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};

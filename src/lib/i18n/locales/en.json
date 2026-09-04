@@ -182,6 +182,47 @@
 			"effectExpired": "{label} — expired",
 			"incapacitated": "Incapacitated",
 			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions."
+		},
+		"roll": {
+			"check": {
+				"str": "STR check",
+				"dex": "DEX check",
+				"con": "CON check",
+				"int": "INT check",
+				"wis": "WIS check",
+				"cha": "CHA check"
+			},
+			"save": {
+				"str": "STR save",
+				"dex": "DEX save",
+				"con": "CON save",
+				"int": "INT save",
+				"wis": "WIS save",
+				"cha": "CHA save"
+			},
+			"initiative": "Initiative",
+			"acTouch": "AC (touch)",
+			"concentration": "Concentration save",
+			"deathSave": "Death save",
+			"hitDie": "Hit Die {die}"
+		},
+		"section": {
+			"abilities": "Abilities",
+			"abilitiesHint": "tap to roll a check or save",
+			"combat": "Combat",
+			"defenses": "Defenses",
+			"passiveSenses": "Passive senses",
+			"resources": "Resources",
+			"pinSkills": "Pin skills",
+			"armorClass": "Armor class",
+			"speed": "Speed",
+			"baseWalk": "base walk",
+			"save": "SAVE"
+		},
+		"defense": {
+			"resist": "Resist",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable"
 		}
 	},
 	"mobile": {
@@ -975,5 +1016,21 @@
 		"large": "Large",
 		"huge": "Huge",
 		"gargantuan": "Gargantuan"
+	},
+	"abilityName": {
+		"str": "Strength",
+		"dex": "Dexterity",
+		"con": "Constitution",
+		"int": "Intelligence",
+		"wis": "Wisdom",
+		"cha": "Charisma"
+	},
+	"abilityShort": {
+		"str": "STR",
+		"dex": "DEX",
+		"con": "CON",
+		"int": "INT",
+		"wis": "WIS",
+		"cha": "CHA"
 	}
 }

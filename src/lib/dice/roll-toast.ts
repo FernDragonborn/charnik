@@ -80,6 +80,11 @@ export type RollLayout = (typeof ROLL_LAYOUT)[keyof typeof ROLL_LAYOUT];
 
 export interface RollToastModel {
 	label: string;
+	/** The catalog key for `label`, when the roll had one. Translated by `RollRow` — this module has
+	 *  no locale and must not acquire one (docs/internals/ui.md ▸ Strings live in the catalogs). */
+	labelKey?: string;
+	/** ICU values for `labelKey`. */
+	labelValues?: Record<string, string | number>;
 	attacks: RollToastAttack[];
 	/** True once anything was damaged: the damage column and the per-type footer hang off this. */
 	damaging: boolean;
@@ -170,8 +175,11 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
 	const note = noted
 		? [noted.note, ...describeAmendments(noted, noted.amendments)].filter(Boolean).join(' · ')
 		: undefined;
+	const first = entries[0];
 	return {
-		label: entries[0]?.label ?? '',
+		label: first?.label ?? '',
+		...(first?.labelKey ? { labelKey: first.labelKey } : {}),
+		...(first?.labelValues ? { labelValues: first.labelValues } : {}),
 		attacks,
 		damaging,
 		tested: attacks.some((a) => a.chips.length > 0 || a.mod !== 0),

@@ -5,6 +5,8 @@
 	// rather than a full-width bar of their own; the chips wrap to fill the block (1 or 12, it scales).
 	// Reads the `combat` view-model; the derived sheet comes in as a prop.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
@@ -23,9 +25,9 @@
 	// per-type pills instead of a bold run-on list.
 	const defenseGroups = $derived(
 		[
-			{ bucket: 'resist', label: 'Resist', types: s.defenses.resist },
-			{ bucket: 'immune', label: 'Immune', types: s.defenses.immune },
-			{ bucket: 'vulnerable', label: 'Vulnerable', types: s.defenses.vulnerable },
+			{ bucket: 'resist', types: s.defenses.resist },
+			{ bucket: 'immune', types: s.defenses.immune },
+			{ bucket: 'vulnerable', types: s.defenses.vulnerable },
 		].filter((g) => g.types.length),
 	);
 </script>
@@ -34,13 +36,17 @@
 	<button class="slabtoggle" onclick={() => toggle('combat')}
 		><span class="chevron"
 			><Icon name={collapsed.combat ? 'chevron-right' : 'chevron-down'} size={13} /></span
-		>Combat</button
+		>{$_('combat.section.combat')}</button
 	>
 </div>
 {#if !collapsed.combat}
 	<section class="combat-grid" class:has-resources={s.resources.length}>
-		<button class="tile" title={why(s.ac)} onclick={(e) => roll('AC (touch)', 0, e)}>
-			<div class="tile-key">Armor class</div>
+		<button
+			class="tile"
+			title={why(s.ac)}
+			onclick={(e) => roll({ text: 'AC (touch)', key: 'combat.roll.acTouch' }, 0, e)}
+		>
+			<div class="tile-key">{$_('combat.section.armorClass')}</div>
 			<div class="tile-value">{s.ac.value}</div>
 			<div class="tile-text">
 				{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}
@@ -49,24 +55,30 @@
 		<button
 			class="tile"
 			title={why(s.initiative)}
-			onclick={(e) => roll('Initiative', s.initiative.value, e, 'initiative')}
+			onclick={(e) =>
+				roll(
+					{ text: 'Initiative', key: 'combat.roll.initiative' },
+					s.initiative.value,
+					e,
+					'initiative',
+				)}
 		>
-			<div class="tile-key">Initiative</div>
+			<div class="tile-key">{$_('combat.roll.initiative')}</div>
 			<div class="tile-value">{signed(s.initiative.value)}</div>
 			<div class="tile-text">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
 		</button>
 		<div class="tile" title={why(s.speed)}>
-			<div class="tile-key">Speed</div>
+			<div class="tile-key">{$_('combat.section.speed')}</div>
 			<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
 			     one inside it is dropped and the metric hugs the "ft" -->
 			<div class="tile-value">{s.speed.value} ft <small>({metres(s.speed.value)})</small></div>
-			<div class="tile-text">base walk</div>
+			<div class="tile-text">{$_('combat.section.baseWalk')}</div>
 		</div>
 
 		{#if s.resources.length}
 			<!-- tall Resources block (right column, spans both rows); chips wrap by size to fill it -->
 			<div class="resources-block">
-				<span class="bar-label eyebrow">Resources</span>
+				<span class="bar-label eyebrow">{$_('combat.section.resources')}</span>
 				<div class="resource-chips">
 					{#each s.resources as r (r.id)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
@@ -113,14 +125,14 @@
 		{/if}
 
 		<div class="senses-strip">
-			<span class="bar-label eyebrow">Passive senses</span>
+			<span class="bar-label eyebrow">{$_('combat.section.passiveSenses')}</span>
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="separator-dot">·</span>{/if}
 				{@const advDis = p.comp.trace.find(
 					(t) => t.source === 'Advantage' || t.source === 'Disadvantage',
 				)}
 				<span class="ability-save" title={why(p.comp)}>
-					<i>{p.name}</i>{p.comp.value}{#if advDis}<span
+					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={advDis.source === 'Disadvantage'}
 							title={advDis.source}
@@ -134,17 +146,19 @@
 				<span class="ability-save"><i>none pinned</i></span>
 			{/each}
 			<button class="edit" onclick={(e) => openMenu('pinskills', e)}
-				><Icon name="pencil" size={13} /> Pin skills</button
+				><Icon name="pencil" size={13} /> {$_('combat.section.pinSkills')}</button
 			>
 		</div>
 
 		{#if defenseGroups.length}
 			<div class="senses-strip defenses-strip">
-				<span class="bar-label eyebrow">Defenses</span>
+				<span class="bar-label eyebrow">{$_('combat.section.defenses')}</span>
 				{#each defenseGroups as g (g.bucket)}
 					<span class="def-group">
-						<span class="def-label">{g.label}</span>
-						{#each g.types as t (t)}<span class="def-chip def-chip--{g.bucket}">{t}</span>{/each}
+						<span class="def-label">{$_(`combat.defense.${g.bucket}`)}</span>
+						{#each g.types as t (t)}<span class="def-chip def-chip--{g.bucket}"
+								>{damageTypeLabel(t, $_)}</span
+							>{/each}
 					</span>
 				{/each}
 			</div>

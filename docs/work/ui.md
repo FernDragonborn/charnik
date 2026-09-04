@@ -70,28 +70,25 @@
   navigable (the picker contract, `docs/internals/ui.md`). (7) Multiclass: combat preparedCap reads
   classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
   toggle first, automation later.
-- [~] **ARCH-1 / B8 · i18n sweep of combat + build.** `build.*` is done (270 keys). `combat.*` now
-  exists and covers the **page chrome**: the Controls toolbar, the Hero subline, Exhaustion, the turn
-  bar, Pass time, every panel head, and the Inventory panel. The dead `sheet.*` group — eight keys
-  nothing referenced, the same orphaning drift `settings.data.*` had — was folded into it.
-  **What is deliberately NOT translated, and why it must stay that way until the roller's tails
-  land:** anything that becomes a **roll label**. `repository.ts ▸ logLineFor` writes `roll.label`
-  verbatim into `log.jsonl`, and prose already on disk cannot be localised afterwards. Skill and
-  ability NAMES are therefore still `titleCase(id)` everywhere, because the same string is both the
-  row's display text and the label of the roll it fires — translating the display half alone would
-  show a Ukrainian skill whose own roll toast says it in English. That is one change, after the
-  roller's tails, across the combat sheet AND the builder, as one change.
-  **The boundary is sharper than "chrome vs body", and it is what the rest of the sweep must
-  respect:** a string is safe when nothing it names is ALSO a roll label. The Controls toolbar, the
-  panel heads and the turn bar pass that test, which is why they are done. The stat tiles do NOT —
-  `ARMOR CLASS` and `INITIATIVE` sit on buttons that roll `'AC (touch)'` and `'Initiative'`, so
-  translating the tile alone puts a Ukrainian tile above an English toast. Same for the ability
-  grid, the skills list and every panel body that rolls. All of that rides with the roller's tails,
-  as one change.
-  **Genuinely free of the roller's tails, and therefore next:** VM toasts (`get(_)` inside a
-  function — a toast is fire-and-forget, so the one-shot store read is correct and needs no
-  plumbing; never at module top level, where it would freeze at the load-time locale), and the
-  section headers that name no roll (`Passive senses`, `Defenses`, `Resources`, `Pin skills`).
+- [~] **ARCH-1 / B8 · i18n sweep of combat + build.** `build.*` is done (270 keys). `combat.*` covers
+  the page chrome, the section headers, the ability grid, the skills list, the defenses strip and
+  every damage type.
+  **A roll's NAME travels as a catalog key, not as a translated sentence.** `RollLogEntry.labelKey`
+  carries it and `RollRow` is the one place it becomes a word — the same ruling amendments got, and
+  for the same reason: `logLineFor` writes the entry verbatim into `log.jsonl`, so a localized label
+  would freeze that roll in whatever language it was made in and switching the UI afterwards could
+  never reach it. Translating display and label together — the plan this item used to carry — would
+  have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
+  English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
+  row's own word is DATA and passes through untranslated.
+  **A roll label is one whole phrase per key, never `{ability} check`.** Interpolating a noun into a
+  phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
+  substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
+  the sentence.
+  **What is left:** the stat tiles (`ARMOR CLASS`, `INITIATIVE`, `SPEED`, `SAVE`) and the passive
+  sense names — all unblocked now that a roll carries its key — plus the builder's remaining body
+  copy and the VM toasts (`get(_)` inside a function: a toast is fire-and-forget, so the one-shot
+  store read is correct; never at module top level, where it would freeze at the load-time locale).
   UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
   MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`

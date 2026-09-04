@@ -24,6 +24,7 @@ import {
 	amendedAdvantage,
 	withoutLegacyAmendment,
 	type RollLogEntry,
+	type RollName,
 	type TypedRoll,
 	type DamagePartSpec,
 } from '$lib/combat/helpers';
@@ -44,6 +45,9 @@ const ROLL_LOG_MAX = 100;
  */
 export interface RollSpec {
 	label: string;
+	/** The catalog key for `label` when the roll's name is a closed vocabulary (a skill, an ability
+	 *  check or save). Travels to the record so the log is not frozen in one language. */
+	labelKey?: string;
 	/** The d20 half. ABSENT means the roll is a QUANTITY and not a verdict: a Fireball has damage and
 	 *  no test, because the target saves rather than you rolling to hit. The roller then builds no
 	 *  test line at all, so there is no advantage toggle and no to-hit total to explain away. */
@@ -72,18 +76,24 @@ export interface RollSpec {
  *  and a lone attack are the same record — only their timestamps differ. */
 const entryOf = ({
 	label,
+	labelKey,
+	labelValues,
 	r,
 	at,
 	damage,
 	note,
 }: {
 	label: string;
+	labelKey?: string;
+	labelValues?: Record<string, string | number>;
 	r: Rolled;
 	at: number;
 	damage?: TypedRoll[];
 	note?: string;
 }): RollLogEntry => ({
 	label,
+	...(labelKey ? { labelKey } : {}),
+	...(labelValues ? { labelValues } : {}),
 	...r,
 	...(damage ? { damage } : {}),
 	...(note ? { note } : {}),
@@ -126,6 +136,7 @@ export class RollTray {
 	prefill = (spec: RollSpec) => {
 		this.organ.prefill({
 			label: spec.label,
+			...(spec.labelKey ? { labelKey: spec.labelKey } : {}),
 			...(spec.test
 				? {
 						test: {
@@ -149,7 +160,7 @@ export class RollTray {
 	 *  nothing for this method to roll, and "silently rolls nothing" is not a state worth having. */
 	rollDiceNow = (spec: RollSpec & Required<Pick<RollSpec, 'test'>>) => {
 		this.pushRoll(
-			spec.label,
+			{ text: spec.label, ...(spec.labelKey ? { key: spec.labelKey } : {}) },
 			rollPool(spec.test.dice, {
 				...(spec.test.mods ?? {}),
 				mod: spec.test.mod,
@@ -161,13 +172,16 @@ export class RollTray {
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
-	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[], note?: string): RollLogEntry => {
+	pushRoll = (name: RollName, r: Rolled, damage?: TypedRoll[], note?: string): RollLogEntry => {
+		const { text: label, key: labelKey, values: labelValues } = name;
 		// spread rather than passed straight through: `damage: undefined` is not the same as "no damage"
 		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
 		const entry = entryOf({
 			label,
 			r,
 			at: Date.now(),
+			...(labelKey ? { labelKey } : {}),
+			...(labelValues ? { labelValues } : {}),
 			...(damage ? { damage } : {}),
 			...(note ? { note } : {}),
 		});

@@ -127,7 +127,7 @@ export class HitPoints {
 				advantage: netAdvantage(fx),
 			},
 		);
-		this.host().tray.pushRoll('Concentration save', r);
+		this.host().tray.pushRoll({ text: 'Concentration save', key: 'combat.roll.concentration' }, r);
 		if (r.total >= pend.dc) {
 			toast(t('combat.notice.concentrationHeld', { total: r.total, dc: pend.dc }));
 			this.pendingConcentrationSave = null;
@@ -163,7 +163,7 @@ export class HitPoints {
 		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
 		// (advantage/effects already fold via `fx`), so there's no reason to offer the tray here.
 		const r = rollPool({ 20: 1 }, { ...fx, mod: fx.flat, advantage: netAdvantage(fx) });
-		this.host().tray.pushRoll('Death save', r);
+		this.host().tray.pushRoll({ text: 'Death save', key: 'combat.roll.deathSave' }, r);
 		const ds = c.play.deathSaves;
 		const natural = naturalOf(r);
 		if (natural === 20) {

@@ -64,6 +64,21 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 	}));
 }
 
+/** What a roll is CALLED: the English text, and the catalog key for it when the roll's name comes
+ *  from a closed vocabulary (a skill, an ability check or save, initiative). One object because they
+ *  are one fact and always travel together — a roll site that knows the key knows the text.
+ *
+ *  A roll whose name is DATA — a spell, a homebrew action, whatever the player typed — carries text
+ *  alone, which is correct: no UI catalog can know what someone's own pack calls its rows. */
+export interface RollName {
+	text: string;
+	key?: string;
+	/** ICU values for `key`. Only ever a SYMBOL or a number — a die size, a count. A noun belongs in
+	 *  its own whole-phrase key instead: interpolating one into a frame is what breaks in an inflected
+	 *  language, where "Перевірка СИЛ" is not "{ability} перевірка". */
+	values?: Record<string, string | number>;
+}
+
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the per-type damage rolls that follow it. Rendered as the roll, the dropped adv die, then one line
  *  per damage type plus a combined total. `note` is an optional provenance line (item 4): an upcast
@@ -71,6 +86,15 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
  *  bare bigger total. */
 export type RollLogEntry = Rolled & {
 	label: string;
+	/** The CATALOG KEY for `label`, when the roll's name is a closed vocabulary — a skill, an ability
+	 *  check or save, initiative, AC. The record keeps the key and the view makes the word, for the
+	 *  same reason an amendment is facts: a localized sentence written into `log.jsonl` freezes that
+	 *  roll in whatever language it happened to be made in, and switching the UI afterwards cannot
+	 *  reach it. `label` stays beside it as the English fallback, which is also all a custom roll or
+	 *  a homebrew spell name ever has. */
+	labelKey?: string;
+	/** ICU values for `labelKey` — see `RollName.values`. */
+	labelValues?: Record<string, string | number>;
 	damage?: TypedRoll[];
 	note?: string;
 	/** When it was rolled (epoch ms), stamped by `pushRoll` — so it belongs to the ROLL rather than to
@@ -96,6 +120,8 @@ export type RollLogEntry = Rolled & {
  *  the rendered `expr`, and so does every damage part under it. */
 export type StoredRollLogEntry = StoredRoll & {
 	label: string;
+	labelKey?: string;
+	labelValues?: Record<string, string | number>;
 	note?: string;
 	at?: number;
 	group?: string;
@@ -114,6 +140,8 @@ export type StoredRollLogEntry = StoredRoll & {
 export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...rehydrateRoll(e),
 	label: e.label,
+	...(e.labelKey !== undefined ? { labelKey: e.labelKey } : {}),
+	...(e.labelValues !== undefined ? { labelValues: e.labelValues } : {}),
 	...(e.note !== undefined ? { note: e.note } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),

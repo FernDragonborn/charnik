@@ -394,7 +394,8 @@ export class SpellCasting {
 			this.host.openMenu('dice', e);
 		} else {
 			this.host.tray.pushRoll(
-				label,
+				// a spell's name is DATA — a content row's own word, never a UI catalog key
+				{ text: label },
 				rollPool(primary.dice, {
 					...(primary.mods ?? {}),
 					mod: primary.mod,

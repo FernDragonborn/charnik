@@ -17,7 +17,6 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import {
-	titleCase,
 	GROUP_MODES,
 	type GroupMode,
 	computeAttacks,
@@ -413,9 +412,10 @@ class CombatVM {
 	passives = $derived.by(() => {
 		const sheet = this.sheet;
 		if (!sheet) return [];
+		// the KEY only — the word for a skill is `skillName.<id>`, and a view-model has no locale to
+		// spend on it (docs/internals/ui.md ▸ Strings live in the catalogs)
 		return this.passiveSkills.map((k) => ({
 			key: k,
-			name: titleCase(k),
 			comp: sheet.passives[k], // effect-adjusted (adv/dis ±5, passive.<skill>), not bare 10+mod
 		}));
 	});
@@ -467,7 +467,8 @@ class CombatVM {
 	actionClick = (a: StandardAction, e: Event) => {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.economy.trySpend('action')) return;
-		if (a.roll) this.rolls.roll(a.roll[0], a.roll[1], e);
+		// an action's name is DATA (a content row's own word), so it travels as text with no key
+		if (a.roll) this.rolls.roll({ text: a.roll[0] }, a.roll[1], e);
 		else toast(t('combat.notice.actionUsed', { name: a.name }));
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */

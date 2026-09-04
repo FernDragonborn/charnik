@@ -2,8 +2,9 @@
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
 	// and shows proficiency tier (none / half / proficient / expertise) + provenance on hover.
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
+	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed, titleCase, ABIL, ABILITY_NAME } from '$lib/combat/helpers';
+	import { why, signed, titleCase, ABIL } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
@@ -21,14 +22,20 @@
 		{@const list = (Object.keys(SKILL_ABILITY) as SkillId[]).filter((k) => SKILL_ABILITY[k] === ab)}
 		{#if list.length}
 			<div class="category-block">
-				<div class="ability-heading">{ABILITY_NAME[ab]}</div>
+				<div class="ability-heading">{$_(`abilityName.${ab}`)}</div>
 				{#each list as skill (skill)}
 					{@const sk = s.skills[skill]}
 					{#if sk}
 						<button
 							class="skill-row"
 							title={why(sk)}
-							onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
+							onclick={(e) =>
+								roll(
+									{ text: titleCase(skill), key: `skillName.${skill}` },
+									sk.value,
+									e,
+									`skill.${skill}`,
+								)}
 						>
 							<i
 								class="prof-dot"
@@ -37,7 +44,9 @@
 								class:expertise={sk.prof === 'expertise'}
 								title={PROF_LABEL[sk.prof]}
 							></i>
-							<span class="skill-name">{titleCase(skill)}</span>
+							<span class="skill-name"
+								>{$_(`skillName.${skill}`, { default: titleCase(skill) })}</span
+							>
 							<b class="skill-mod">{signed(sk.value)}</b>
 						</button>
 					{/if}

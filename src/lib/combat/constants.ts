@@ -33,15 +33,6 @@ export const DEATH_CAUSE_LABEL: Record<DeathCause, string> = {
 
 /** Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`. */
 export const ABIL: readonly Ability[] = ABILITY_IDS;
-export const ABILITY_NAME: Record<Ability, string> = {
-	str: 'Strength',
-	dex: 'Dexterity',
-	con: 'Constitution',
-	int: 'Intelligence',
-	wis: 'Wisdom',
-	cha: 'Charisma',
-};
-
 /** The 18 SRD skills (id order) — for the custom-modifier target picker. */
 // the 18 skill ids from the ONE owner (AUDIT F4) — snake-case post-E3, so the target values below
 // are `skill.animal_handling` (a stale kebab list here silently produced unmatched targets).

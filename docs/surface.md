@@ -640,7 +640,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
 - `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one key per `play.death.cause`.
 - `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
-- `const ABILITY_NAME`
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
 - `function modTargetLabel` — Human label for a custom-modifier target key (for the auto effect name).
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
@@ -684,6 +683,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DamagePartSpec` — One damage part to roll: its dice pool + flat mod + type, plus any effect bonus dice / mods that * ride it (folded on…
 - `const dealsDamage` — Does this set of parts actually deal damage?
 - `function rollDamageParts` — Roll each damage part into a `TypedRoll`, preserving order (primary part first).
+- `interface RollName` — What a roll is CALLED: the English text, and the catalog key for it when the roll's name comes * from a closed vocabu…
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.

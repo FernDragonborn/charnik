@@ -3,13 +3,14 @@
 	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { titleCase, ABIL, ABILITY_NAME, MOD_TARGETS } from '$lib/combat/helpers';
+	import { titleCase, ABIL, MOD_TARGETS } from '$lib/combat/helpers';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
@@ -285,7 +286,7 @@
 					)}
 					{#if list.length}
 						<div class="category-block">
-							<div class="section eyebrow">{ABILITY_NAME[ab]}</div>
+							<div class="section eyebrow">{$_(`abilityName.${ab}`)}</div>
 							{#each list as skill (skill)}
 								<button class="menu-row" onclick={() => togglePassive(skill)}>
 									<span class="passive-eye" class:on={passiveSkills.includes(skill)}

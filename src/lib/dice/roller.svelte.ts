@@ -53,6 +53,9 @@ import {
  *  with no test — the target saves, not you (§3). */
 export interface RollerPrefill {
 	label: string;
+	/** The catalog key for `label`, carried straight through to the entries `roll()` answers with —
+	 *  the organ has no locale and never turns it into a word. */
+	labelKey?: string;
 	test?: {
 		dice: Record<number, number>;
 		mod: number;
@@ -97,6 +100,7 @@ const AT_END = Number.MAX_SAFE_INTEGER;
 export class RollerOrgan {
 	/** What the roll is for ("Greataxe"). Empty for an ad-hoc roll. */
 	label = $state('');
+	labelKey = $state('');
 	/** Provenance carried into the logged entry (an upcast's extra dice), never shown as a pill —
 	 *  it explains the roll rather than contributing to it. */
 	note = $state('');
@@ -491,6 +495,7 @@ export class RollerOrgan {
 
 	reset = (): void => {
 		this.label = '';
+		this.labelKey = '';
 		this.note = '';
 		this.lines = [emptyLine(ROLLER_ROLE.test)];
 		this.drafts = [''];
@@ -506,6 +511,7 @@ export class RollerOrgan {
 	prefill = (spec: RollerPrefill): void => {
 		this.reset();
 		this.label = spec.label;
+		this.labelKey = spec.labelKey ?? '';
 		this.note = spec.note ?? '';
 		const lines: RollerLine[] = [];
 		if (spec.test)
@@ -592,6 +598,7 @@ export class RollerOrgan {
 			const damage = parts.length ? rollDamageParts(parts, rng) : undefined;
 			out.push({
 				label: this.label || 'Custom roll',
+				...(this.labelKey ? { labelKey: this.labelKey } : {}),
 				...primary,
 				...(damage ? { damage } : {}),
 				...(note ? { note } : {}),

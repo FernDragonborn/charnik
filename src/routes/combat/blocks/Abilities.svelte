@@ -5,6 +5,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, ABIL } from '$lib/combat/helpers';
+	import { _ } from '$lib/i18n';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const collapsed = $derived(combat.layout.collapsed);
@@ -16,8 +17,8 @@
 	<button class="slabtoggle" onclick={() => toggle('abilities')}
 		><span class="chevron"
 			><Icon name={collapsed.abilities ? 'chevron-right' : 'chevron-down'} size={13} /></span
-		>Abilities</button
-	><em>tap to roll a check or save</em>
+		>{$_('combat.section.abilities')}</button
+	><em>{$_('combat.section.abilitiesHint')}</em>
 </div>
 {#if !collapsed.abilities}
 	<section class="grid">
@@ -30,10 +31,11 @@
 				<button
 					type="button"
 					class="ability-check"
-					onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}
+					onclick={(e) =>
+						roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)}
 				>
 					<span class="ability-name" title={why(a.score)}>
-						<b>{ab.toUpperCase()}</b> · {a.score.value}
+						<b>{$_(`abilityShort.${ab}`)}</b> · {a.score.value}
 					</span>
 					<span class="ability-mod">{signed(a.mod)}</span>
 				</button>
@@ -42,9 +44,16 @@
 					class="ability-save"
 					class:prof
 					title={why(a.save)}
-					onclick={(e) => roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`)}
+					onclick={(e) =>
+						roll(
+							{ text: `${ab.toUpperCase()} save`, key: `combat.roll.save.${ab}` },
+							a.save.value,
+							e,
+							`save.${ab}`,
+						)}
 				>
-					<i class="prof-dot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
+					<i class="prof-dot" class:on={prof}></i>{$_('combat.section.save')}
+					<b>{signed(a.save.value)}</b>
 				</button>
 			</div>
 		{/each}

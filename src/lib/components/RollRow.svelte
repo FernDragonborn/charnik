@@ -195,7 +195,16 @@
 {/snippet}
 
 <div class="roll-row" class:strip title={strip && model.note ? model.note : undefined}>
-	<span class="roll-label">{model.label}</span>
+	<!-- the key when the roll has one, so a roll made under one language still reads in the language
+	     the log is being READ in; `label` is the English fallback every custom roll has -->
+	<span class="roll-label"
+		>{model.labelKey
+			? $_(model.labelKey, {
+					default: model.label,
+					...(model.labelValues ? { values: model.labelValues } : {}),
+				})
+			: model.label}</span
+	>
 	{#if strip && multi}
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout

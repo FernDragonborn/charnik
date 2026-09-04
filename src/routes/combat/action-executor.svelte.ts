@@ -164,10 +164,10 @@ export class ActionExecutor {
 			if (!p || !arg) return;
 			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.host().hpMax, p.hp.current + Math.max(0, r.total));
-			this.host().tray.pushRoll(`${opt.name} — heal`, r);
+			this.host().tray.pushRoll({ text: `${opt.name} — heal` }, r);
 		},
 		roll: (opt, arg) => {
-			if (arg) this.host().tray.pushRoll(opt.name, rollFormula(arg));
+			if (arg) this.host().tray.pushRoll({ text: opt.name }, rollFormula(arg));
 		},
 		apply_condition: (opt, arg) => {
 			if (arg)
