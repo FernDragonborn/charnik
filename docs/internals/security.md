@@ -96,11 +96,11 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > any GitHub-published one. Supporting an arbitrary self-hosted URL means choosing between a
    > wildcard capability and a Rust-side dynamic check — decide it when someone actually needs it,
    > don't widen the manifest speculatively. **That decision is now its own backlog item, PLAN
-   > REL-5**, scheduled for much later: the intended answer is a per-host user GRANT checked in Rust
+   > ANY-HOST-PACKAGE-DISTRIBUTION**, scheduled for much later: the intended answer is a per-host user GRANT checked in Rust
    > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
    > arrive pre-authorised), never a wildcard on its own.
    >
-   > **Authenticity is left unsolved on purpose — PLAN ▸ REL-5a.** Pack signing
+   > **Authenticity is left unsolved on purpose — PLAN ▸ PACK-AUTHENTICITY.** Pack signing
    > was designed and dropped: a multi-author pack has nobody to sign it, the key lands in CI where
    > "signed" restates who can push, and the one thing that executes is already pinned byte-for-byte
    > by plugin consent. Revisit only if Charnik ever becomes a central distributor.

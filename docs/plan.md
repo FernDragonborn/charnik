@@ -1251,8 +1251,8 @@ it do not renumber.
 - **W8 · the content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
-- **Deliberately in no wave:** REL-2 (its own session, blocked on accounts, not on code), REL-5
-  (post-1.0), UX-2 (its own design session, once the UI stops moving) and COMPANION (research
+- **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not on code), ANY-HOST-PACKAGE-DISTRIBUTION
+  (post-1.0), ONBOARD (its own design session, once the UI stops moving) and COMPANION (research
   first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
@@ -1293,7 +1293,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   (the rule says roll a second d20 and take the higher; rolling it late changes nothing) and identical
   on mouse and finger. Full survey + the three findings behind it:
   [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
-- [ ] **UX-2 · First-run onboarding — needs its own design session, and it comes LATE.** Not because
+- [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework, the features panel,
   the provenance popover), and onboarding written against a surface that is still changing has to be
   written twice. Schedule the session once the current UI wave settles; until then this item collects
@@ -1919,7 +1919,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **REL-4 · Content packs from a URL — update content independently of the app. FEATURE CLOSED
   2026-08-11; hardening closed 2026-08-12** (maintainer 2026-08-10; slices 0–11 built and verified
   against the real GitHub, then audited architecturally, and that audit's own list closed the same
-  day — `0cf0c4c`). Reaching a NON-GitHub host was carved out to **REL-5** as a separate, much-later
+  day — `0cf0c4c`). Reaching a NON-GitHub host was carved out to **ANY-HOST-PACKAGE-DISTRIBUTION** as a separate, much-later
   feature. A second read-only pass (2026-08-12) found seven more, all fixed the same day (`001a9dc`,
   `9f28d52`..`54d0bb6` — see "the second pass" below). **A third pass the same day asked the question
   as a SECURITY one and found twelve; all are fixed and live-verified (24/24 on real Windows) — see
@@ -2235,7 +2235,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 
   **THE AUDIT'S OPEN LIST, CLOSED (2026-08-11, `59ffc26`..`0cf0c4c`).** Every item below is done.
   The audit's tenth entry — a generic, non-GitHub HTTPS host — was never a defect in this work and is
-  not a tail of it: it is a separate feature with its own security surface, moved out to **REL-5** on
+  not a tail of it: it is a separate feature with its own security surface, moved out to **ANY-HOST-PACKAGE-DISTRIBUTION** on
   the maintainer's instruction (2026-08-11) so REL-4 closes clean instead of carrying a permanent
   open box. GitHub stays the fast path AND the only path, said in the description rather than in a
   failure.
@@ -2391,7 +2391,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 
   **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
   listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature
-  it constrains — **REL-5** — rather than here, since it is the thing to decide when that is built.
+  it constrains — **ANY-HOST-PACKAGE-DISTRIBUTION** — rather than here, since it is the thing to decide when that is built.
 
   **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
   *check and notify* / *check and pre-download* — plus a manual button (global **and** per-pack, since
@@ -2441,8 +2441,8 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **A11Y-1 · Dialog focus management.** `trapFocus` on every dialog. **Deliberately NOT
   trapped:** `CommandPalette` (it restores focus itself — a second restorer fights it) and the
   combat popovers, which are anchored menus rather than modals.
-- [ ] **REL-2 · Package-repo distribution channels.** Beyond GitHub Releases, ship Charnik through
-  the platform package managers so users install/update the native way. Target set:
+- [ ] **DISTRIBUTION-EXPANSION · ship through the platform package managers**, beyond GitHub
+  Releases, so users install and update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
     `aur.archlinux.org`, no review, cheapest channel.
   - **Flathub** (Linux) — Flatpak manifest; widest cross-distro reach, one channel for all Linux.
@@ -2464,7 +2464,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   personal GitHub account. So: **remind the maintainer to create those accounts**, then do all four
   in one sitting — each is a different registry's rules, and paying that context cost four times over
   four unrelated sessions is the waste.
-- [ ] **REL-5 · A content pack from ANY HTTPS host, not only GitHub — POST-1.0.** Not before the
+- [ ] **ANY-HOST-PACKAGE-DISTRIBUTION · A content pack from ANY HTTPS host, not only GitHub — POST-1.0.** Not before the
   release: it adds a network surface that has to be got right, and nothing about 1.0 needs it.
   Carved out of REL-4's audit list so that item closes clean: this was never a defect
   in the pack updater, it is a separate feature with its own security surface, and it is not
@@ -2492,7 +2492,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     host with an autoindex", the answer is still NOT a `pack.json` (docs/internals/content.md ▸ No manifests), and
     deciding what to do about a host with neither is part of this item rather than a surprise inside
     it.
-  - **REL-5a · Pack AUTHENTICITY — no signing.**
+  - **PACK-AUTHENTICITY · no signing.**
     Downloaded bytes are verified against the git blob SHA the tree listing published. That is
     INTEGRITY against a truncated or swapped transfer; it says nothing about the publisher, so a
     typo-squatted URL or an account takeover passes every check. That remains the posture, stated in

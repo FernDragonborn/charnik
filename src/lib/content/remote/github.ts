@@ -17,7 +17,7 @@
  * hosts are pinned in `src-tauri/capabilities/default.json` (api.github.com + raw.githubusercontent),
  * a capability is compiled in, and widening it wholesale would hand any pasted URL the network. The
  * next rung is a per-host user grant (paste URL → "allow this host?" → stored allow-list checked in
- * Rust), at which point the `unsupported` branch grows a real fallback. That rung is **PLAN REL-5**,
+ * Rust), at which point the `unsupported` branch grows a real fallback. That rung is **PLAN ANY-HOST-PACKAGE-DISTRIBUTION**,
  * scheduled for much later and deliberately not a tail of REL-4. Until then this file is the fast
  * path AND the only path — deliberately.
  */
