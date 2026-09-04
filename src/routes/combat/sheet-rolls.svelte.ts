@@ -118,22 +118,26 @@ export class SheetRolls {
 			this.openRoll(
 				{
 					label,
-					dice: { 20: 1 },
-					mod,
-					advantage: adv,
-					bonusDice: fx?.bonusDice ?? [],
-					mods: fx ?? {},
+					test: {
+						dice: { 20: 1 },
+						mod,
+						advantage: adv,
+						bonusDice: fx?.bonusDice ?? [],
+						mods: fx ?? {},
+					},
 				},
 				e,
 			);
 		else
 			this.host().tray.rollDiceNow({
 				label,
-				dice: { 20: 1 },
-				mod,
-				advantage: adv,
-				bonusDice: fx?.bonusDice ?? [],
-				mods: fx ?? {},
+				test: {
+					dice: { 20: 1 },
+					mod,
+					advantage: adv,
+					bonusDice: fx?.bonusDice ?? [],
+					mods: fx ?? {},
+				},
 			});
 	};
 
@@ -148,15 +152,17 @@ export class SheetRolls {
 			this.openRoll(
 				{
 					label: attackName(at, t),
-					dice: { 20: 1 },
-					mod: at.toHit + fx.flat,
-					advantage: netAdvantage(fx),
-					bonusDice: fx.bonusDice,
-					mods: fx,
+					test: {
+						dice: { 20: 1 },
+						mod: at.toHit + fx.flat,
+						advantage: netAdvantage(fx),
+						bonusDice: fx.bonusDice,
+						mods: fx,
+					},
+					...(hasDmg ? { damage: parts } : {}),
 				},
 				e,
 			);
-			if (hasDmg) this.host().tray.queueDamage({ label: `${attackName(at, t)} damage`, parts });
 			return;
 		}
 		this.rollAttackNow(at);

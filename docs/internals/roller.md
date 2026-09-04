@@ -145,6 +145,10 @@ state) · `components/Roller.svelte` + `RollerLine.svelte`.
 **Where the organ lives:** a popover anchored to whatever launched it. Inline-in-the-Playbar and a
 two-mode panel were both weighed and are not built.
 
+**Deliberately unbuilt, with the reason:** Elven Accuracy — merely a third element in `d20s`, not a
+modelling question; a per-instance target; and a per-instance advantage. A volley rolls the same set
+N times, which is what the two-level model decided a volley IS.
+
 **Rejected, so it is not re-proposed:** a `|` pipe separating the two halves of one field; tabs
 instead of two lines (both halves must be visible at once); a separate "situational modifier" control
 (it is an ordinary pill in the line it belongs to); an "untyped" segment in the result.

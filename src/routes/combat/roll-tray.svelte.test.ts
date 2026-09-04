@@ -22,10 +22,11 @@ beforeEach(() => {
 
 describe('prefill', () => {
 	it('gives an attack a test line AND an editable damage line (UBUG-21)', () => {
-		tray.prefill({ label: 'Greataxe', dice: { 20: 1 }, mod: 6, advantage: -1 });
-		tray.queueDamage({
-			label: 'Greataxe damage',
-			parts: [{ dice: { 12: 1 }, mod: 3, type: 'slashing' }],
+		// ONE request carries the whole action: the to-hit, the damage and what it is called
+		tray.prefill({
+			label: 'Greataxe',
+			test: { dice: { 20: 1 }, mod: 6, advantage: -1 },
+			damage: [{ dice: { 12: 1 }, mod: 3, type: 'slashing' }],
 		});
 
 		const lines = tray.organ.lines;
@@ -41,9 +42,7 @@ describe('prefill', () => {
 	it('carries an effect die into the line as a pill of its own, sign kept', () => {
 		tray.prefill({
 			label: 'Athletics',
-			dice: { 20: 1 },
-			mod: 5,
-			bonusDice: [{ sides: 4, count: 1, sign: 1 }],
+			test: { dice: { 20: 1 }, mod: 5, bonusDice: [{ sides: 4, count: 1, sign: 1 }] },
 		});
 		// it stays an EFFECT die (not folded into the pool), so a pool reroll can never reach it
 		expect(testRoll(tray.organ.lines[0]!).bonusDice).toEqual([{ sides: 4, count: 1, sign: 1 }]);
@@ -51,14 +50,17 @@ describe('prefill', () => {
 	});
 
 	it('puts the pool’s reroll/floor on the pool’s own dice', () => {
-		tray.prefill({ label: 'Stealth', dice: { 20: 1 }, mod: 11, mods: { minDie: 10, reroll: 1 } });
+		tray.prefill({
+			label: 'Stealth',
+			test: { dice: { 20: 1 }, mod: 11, mods: { minDie: 10, reroll: 1 } },
+		});
 		expect(testRoll(tray.organ.lines[0]!).mods).toEqual({ minDie: 10, reroll: 1 });
 	});
 
-	it('prefillDamage builds a roll with NO test line — Fireball has no to-hit', () => {
-		tray.prefillDamage({
+	it('a request with no test half builds NO test line — Fireball has no to-hit', () => {
+		tray.prefill({
 			label: 'Fireball',
-			parts: [{ dice: { 6: 8 }, mod: 0, type: 'fire' }],
+			damage: [{ dice: { 6: 8 }, mod: 0, type: 'fire' }],
 			note: '8d6 base',
 		});
 		expect(tray.organ.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);

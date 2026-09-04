@@ -32,20 +32,34 @@ import {
  *  deeper in-session log silently loses everything past the disk cap on the next reload. */
 const ROLL_LOG_MAX = 100;
 
-/** A roll request — the pool + modifier and optional advantage / bonus dice / reroll-min_die mods.
- *  The ONE shape prefill / rollDiceNow / queueDamage (and the VM's openRoll) all speak, so a roll
- *  site passes one typed object instead of 5–6 positional args. */
+/**
+ * ONE roll request, carrying the whole action: what it is called, the d20 test, the damage it deals
+ * and how many instances it fires. A roll site describes what it wants rolled ONCE — an attack used
+ * to arrive in two calls (`prefill` then `queueDamage`), and the second call's label was dropped on
+ * the floor because the roll already had one.
+ *
+ * The advantage axis stays NUMERIC here: a roll site gets it from `netAdvantage(fx)`, arithmetic
+ * over effects that sums and clamps. It becomes the named `AdvantageMode` — "how this roll was
+ * decided" — at exactly one seam, `prefill` below (docs/internals/roller.md).
+ */
 export interface RollSpec {
 	label: string;
-	dice: Record<number, number>;
-	mod: number;
-	/** −1 disadvantage · 0 normal · +1 advantage (default 0). */
-	advantage?: number;
-	/** Signed effect bonus dice (Bless +1d4). They ride an instant roll, and a prefilled roller shows
-	 *  them as pills you can edit or drag to the other line. */
-	bonusDice?: BonusDie[];
-	/** reroll/min_die effect facts — apply on the tray's Roll too. */
-	mods?: DieMods;
+	/** The d20 half. ABSENT means the roll is a QUANTITY and not a verdict: a Fireball has damage and
+	 *  no test, because the target saves rather than you rolling to hit. The roller then builds no
+	 *  test line at all, so there is no advantage toggle and no to-hit total to explain away. */
+	test?: {
+		dice: Record<number, number>;
+		mod: number;
+		/** −1 disadvantage · 0 normal · +1 advantage (default 0). */
+		advantage?: number;
+		/** Signed effect bonus dice (Bless +1d4). They ride an instant roll, and a prefilled roller
+		 *  shows them as pills you can edit or drag to the other line. */
+		bonusDice?: BonusDie[];
+		/** reroll/min_die effect facts — apply on the tray's Roll too. */
+		mods?: DieMods;
+	};
+	/** The damage half, one part per damage type. */
+	damage?: DamagePartSpec[];
 	/** Optional provenance line recorded with the completed roll (item 4: an upcast's "Xd base + Yd @
 	 *  slot N"), so a boosted roll explains where the extra dice came from. */
 	note?: string;
@@ -104,55 +118,43 @@ export class RollTray {
 	/** Clear the organ to an empty test line (opening the dice menu fresh). */
 	reset = () => this.organ.reset();
 
-	/** Prefill the roller for a specific roll (a stat/attack), so the player can pick advantage then
-	 *  Roll. `spec.mods` = the roll's reroll/min_die effect facts; they ride the POOL's dice, so a
-	 *  Great Weapon Fighting reroll never reaches a Bless die that lands in the same line. */
+	/** Prefill the roller for one whole action, so the player can pick advantage then Roll. The organ
+	 *  takes the request as it stands; the only translation left is the advantage axis, numeric on the
+	 *  way in and named inside the roller. `test.mods` = the roll's reroll/min_die effect facts; they
+	 *  ride the POOL's dice, so a Great Weapon Fighting reroll never reaches a Bless die that lands in
+	 *  the same line. */
 	prefill = (spec: RollSpec) => {
 		this.organ.prefill({
 			label: spec.label,
-			test: {
-				dice: spec.dice,
-				mod: spec.mod,
-				advantage: advantageFromSign(spec.advantage ?? 0),
-				...(spec.mods ? { mods: spec.mods } : {}),
-				...(spec.bonusDice?.length ? { bonusDice: spec.bonusDice } : {}),
-				...(spec.times ? { times: spec.times } : {}),
-			},
+			...(spec.test
+				? {
+						test: {
+							dice: spec.test.dice,
+							mod: spec.test.mod,
+							advantage: advantageFromSign(spec.test.advantage ?? 0),
+							...(spec.test.mods ? { mods: spec.test.mods } : {}),
+							...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
+						},
+					}
+				: {}),
+			...(spec.damage?.length ? { damage: spec.damage } : {}),
+			...(spec.times ? { times: spec.times } : {}),
 			...(spec.note ? { note: spec.note } : {}),
 		});
-	};
-
-	/** Prefill a roll that is PURE DAMAGE — nothing decides it with a d20 (Fireball: the target saves,
-	 *  not you). A separate entry point rather than a flag on `prefill`, because the two are different
-	 *  SHAPES: this one has no test line at all, and giving damage one would hand it an advantage
-	 *  toggle and a to-hit total it has no use for. */
-	prefillDamage = (spec: { label: string; parts: DamagePartSpec[]; note?: string }) => {
-		this.organ.prefill({
-			label: spec.label,
-			damage: spec.parts,
-			...(spec.note ? { note: spec.note } : {}),
-		});
-	};
-
-	/** Give the roll its damage half — one part per damage type. UBUG-21: this used to be a queue the
-	 *  tray could neither show nor edit, so everything the player could change belonged to the to-hit
-	 *  under a heading that said "Greataxe"; it is now the organ's second LINE, made of the same
-	 *  pills. The label is dropped on purpose — the roll already has one, and "Greataxe" plus
-	 *  "Greataxe damage" was one name said twice. */
-	queueDamage = (spec: { label: string; parts: DamagePartSpec[] }) => {
-		this.organ.setDamage(spec.parts);
 	};
 
 	/** Roll a dice pool immediately (a tap that "just works"): advantage, signed bonus dice and
-	 *  reroll/min_die mods all come from the stat's active effects (via the RollSpec). */
+	 *  reroll/min_die mods all come from the stat's active effects (via the RollSpec). A spec with no
+	 *  test half has nothing to roll here: it is a quantity, and its damage is rolled at its own site. */
 	rollDiceNow = (spec: RollSpec) => {
+		if (!spec.test) return;
 		this.pushRoll(
 			spec.label,
-			rollPool(spec.dice, {
-				...(spec.mods ?? {}),
-				mod: spec.mod,
-				...(spec.advantage === undefined ? {} : { advantage: spec.advantage }),
-				...(spec.bonusDice ? { bonusDice: spec.bonusDice } : {}),
+			rollPool(spec.test.dice, {
+				...(spec.test.mods ?? {}),
+				mod: spec.test.mod,
+				...(spec.test.advantage === undefined ? {} : { advantage: spec.test.advantage }),
+				...(spec.test.bonusDice ? { bonusDice: spec.test.bonusDice } : {}),
 			}),
 		);
 	};

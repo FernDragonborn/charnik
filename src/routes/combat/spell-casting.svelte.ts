@@ -280,17 +280,19 @@ export class SpellCasting {
 			this.host.openRoll(
 				{
 					label,
-					dice: { 20: 1 },
-					mod: toHit,
-					advantage: netAdvantage(fx),
-					bonusDice: fx.bonusDice,
-					mods: fx,
+					test: {
+						dice: { 20: 1 },
+						mod: toHit,
+						advantage: netAdvantage(fx),
+						bonusDice: fx.bonusDice,
+						mods: fx,
+					},
+					...(hasDmg ? { damage: parts } : {}),
 					...(up.note ? { note: up.note } : {}),
 					...(times > 1 ? { times } : {}),
 				},
 				e,
 			);
-			if (hasDmg) this.host.tray.queueDamage({ label: `${r.name} damage${up.suffix}`, parts });
 		} else {
 			// N beams = N separate attacks, each with its own to-hit and its own damage — one action, so
 			// one toast, N log lines. This used to roll ONE and ask the player to roll the rest by hand.
@@ -388,7 +390,7 @@ export class SpellCasting {
 			// EVERY part is damage — there is no d20 here. The tray used to put the primary part on the
 			// pool it built the to-hit from, which under the roller's line model would give a Fireball an
 			// advantage toggle and a to-hit total.
-			this.host.tray.prefillDamage({ label, parts, ...(note ? { note } : {}) });
+			this.host.tray.prefill({ label, damage: parts, ...(note ? { note } : {}) });
 			this.host.openMenu('dice', e);
 		} else {
 			this.host.tray.pushRoll(

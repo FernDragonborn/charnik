@@ -714,7 +714,7 @@ describe('CombatVM · S2 split net', () => {
 
 	it('roll/log: rollDiceNow prepends a labelled entry with a numeric total', () => {
 		const before = combat.tray.log.length;
-		combat.tray.rollDiceNow({ label: 'Stealth', dice: { 20: 1 }, mod: 5 });
+		combat.tray.rollDiceNow({ label: 'Stealth', test: { dice: { 20: 1 }, mod: 5 } });
 		expect(combat.tray.log.length).toBe(before + 1);
 		expect(combat.tray.log[0]!.label).toBe('Stealth');
 		expect(typeof combat.tray.log[0]!.total).toBe('number');

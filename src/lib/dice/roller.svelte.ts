@@ -62,11 +62,13 @@ export interface RollerPrefill {
 		/** Signed effect dice (Bless +1d4). They arrive without the effect's NAME — see
 		 *  `pillsFromPool` — but they arrive, which is more than the old tray managed. */
 		bonusDice?: BonusDie[];
-		/** How many instances this fires — Eldritch Blast's beams. It arrives as the same `×N` pill a
-		 *  person types, so the count is visible and editable rather than a hidden multiplier. */
-		times?: number;
 	};
 	damage?: DamagePartSpec[];
+	/** How many instances the ACTION fires — Eldritch Blast's beams. It belongs to the action and not
+	 *  to its test half, because a damage-only spell can fire N times too (`roll()` reads the count
+	 *  off whichever line carries it). It arrives as the same `×N` pill a person types, so the count
+	 *  is visible and editable rather than a hidden multiplier. */
+	times?: number;
 	/** Provenance recorded with the roll — an upcast's "8d6 base + 1d6 @ slot 4". */
 	note?: string;
 }
@@ -505,13 +507,10 @@ export class RollerOrgan {
 		if (spec.test)
 			lines.push({
 				...emptyLine(ROLLER_ROLE.test),
-				pills: [
-					...pillsFromPool(spec.test.dice, spec.test.mod, {
-						...(spec.test.mods ? { mods: spec.test.mods } : {}),
-						...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
-					}),
-					...((spec.test.times ?? 1) > 1 ? [countPill(spec.test.times ?? 1)] : []),
-				],
+				pills: pillsFromPool(spec.test.dice, spec.test.mod, {
+					...(spec.test.mods ? { mods: spec.test.mods } : {}),
+					...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
+				}),
 				advantage: spec.test.advantage ?? ADVANTAGE_MODE.neither,
 			});
 		this.lines = lines;
@@ -526,6 +525,9 @@ export class RollerOrgan {
 			this.lines = [emptyLine(ROLLER_ROLE.test)];
 			this.drafts = [''];
 		}
+		// the count belongs to the ACTION, so it goes on the first line the action HAS. `roll()` reads
+		// it off whichever line carries it, which is what lets a damage-only spell fire N times.
+		if ((spec.times ?? 1) > 1) this.insertPill(0, countPill(spec.times ?? 1));
 	};
 
 	/**

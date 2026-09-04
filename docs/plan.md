@@ -249,18 +249,10 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **The roller's tails.** ROLLER-N and UBUG-21 are closed and
-  `docs/internals/roller.md` is the design; what this wave owes is the open list under ROLLER-N — a
-  token typed WITHOUT spaces (`2d6+3`) blocking the roll, `parseFormula → {terms, issues}`,
-  provenance surviving `foldValues`, a volley's group identity, `RollSpec` as the request, and
-  **amendments as STRUCTURE**.
-  **That last one is why this wave precedes the i18n sweep, not the other way round:** the roller
-  writes an English sentence into `log.jsonl`, and prose already on disk cannot be localised
-  afterwards. `UBUG-11` rides here and is no longer app work — the `attack:<weapon_id>[:<count>]`
-  verb is built, and what remains is the `resource_options` rows still saying `note:`, a commit in
-  the content repo.
-- **The i18n sweep · ARCH-1.** UX-1 cleared the copy prerequisite, the roller's tails clear the
-  other one. Damage types take catalog names in the same pass: the 13 SRD types are a closed rules
+- **The i18n sweep · ARCH-1.** Both prerequisites are clear: UX-1 settled the copy, and the roller
+  records facts rather than prose — an amendment is `{kind, from, to}` and one function turns it into
+  words, so there is a single target to localise instead of sentences already written into
+  `log.jsonl`. Damage types take catalog names in the same pass: the 13 SRD types are a closed rules
   vocabulary, while an invented homebrew type stays data and passes through.
 - **The cheap surface wins, none of which depend on anything.** N5(1) the Features panel — a
   character cannot read their own traits anywhere — plus the shared provenance popover, the pact

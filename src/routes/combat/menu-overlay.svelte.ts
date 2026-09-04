@@ -89,32 +89,29 @@ export class MenuOverlay {
 		// test line would give it an advantage toggle and a to-hit total. Every caller that means a
 		// test has a d20 in its pool, so the pool IS the signal — no extra field on the seam.
 		if (!pool[20]) {
-			this.host().tray.prefillDamage({
+			this.host().tray.prefill({
 				label: req.label,
-				parts: [{ dice: pool, mod, type: parsed?.type ?? '' }],
+				damage: [{ dice: pool, mod, type: parsed?.type ?? '' }],
 			});
 			this.openMenuCentered('dice');
 			return;
 		}
 		this.host().tray.prefill({
 			label: req.label,
-			dice: pool,
-			mod,
-			advantage: req.advantage ?? 0,
-			mods: req.mods ?? {},
+			test: { dice: pool, mod, advantage: req.advantage ?? 0, mods: req.mods ?? {} },
+			...(req.queuedDamage
+				? {
+						damage: [
+							{
+								dice: req.queuedDamage.dice,
+								mod: req.queuedDamage.mod,
+								type: '',
+								...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {}),
+							},
+						],
+					}
+				: {}),
 		});
-		if (req.queuedDamage)
-			this.host().tray.queueDamage({
-				label: req.queuedDamage.label,
-				parts: [
-					{
-						dice: req.queuedDamage.dice,
-						mod: req.queuedDamage.mod,
-						type: '',
-						...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {}),
-					},
-				],
-			});
 		this.openMenuCentered('dice');
 	};
 
