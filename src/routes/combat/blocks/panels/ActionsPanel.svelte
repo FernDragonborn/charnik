@@ -9,8 +9,11 @@
 
 {#each visibleActions as a (a.id)}
 	<button class="combat-row" onclick={(e) => combat.actionClick(a, e)}>
-		<span class="row-name">{a.name}</span><span class="combat-row-hint">{a.hint || '—'}</span>
-		<span class="combat-row-desc">{a.desc}</span><span class="combat-row-marker">{a.marker}</span>
+		<span class="row-name">{$_(a.nameKey)}</span><span class="combat-row-hint">{a.hint || '—'}</span
+		>
+		<span class="combat-row-desc">{$_(a.descKey)}</span><span class="combat-row-marker"
+			>{$_(a.markerKey)}</span
+		>
 	</button>
 {/each}
 <!-- EFX-ROLL: feature-granted rollables (Sneak Attack Nd6, Bardic Inspiration die). The expr is

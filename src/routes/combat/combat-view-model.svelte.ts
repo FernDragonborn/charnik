@@ -478,9 +478,10 @@ class CombatVM {
 	actionClick = (a: StandardAction, e: Event) => {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.economy.trySpend('action')) return;
-		// an action's name is DATA (a content row's own word), so it travels as text with no key
-		if (a.roll) this.rolls.roll({ text: a.roll[0] }, a.roll[1], e);
-		else toast(t('combat.notice.actionUsed', { name: a.name }));
+		// the roll's NAME is a key: a standard action is a closed rules vocabulary, so its check reads
+		// in the language the log is READ in rather than the one it was made in
+		if (a.roll) this.rolls.roll({ text: t(a.roll[0]), key: a.roll[0] }, a.roll[1], e);
+		else toast(t('combat.notice.actionUsed', { name: t(a.nameKey) }));
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */
 	casting = new SpellCasting(this);

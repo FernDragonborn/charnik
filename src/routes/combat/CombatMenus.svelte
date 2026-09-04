@@ -282,7 +282,7 @@
 				<button class="menu-row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
 					<span class="passive-eye" class:on={!hiddenActions[a.id]}
 						><EyeIcon on={!hiddenActions[a.id]} /></span
-					><span class="main">{a.name}</span>{#if hiddenActions[a.id]}<span class="meta"
+					><span class="main">{$_(a.nameKey)}</span>{#if hiddenActions[a.id]}<span class="meta"
 							>{$_('combat.menu.hidden')}</span
 						>{/if}
 				</button>

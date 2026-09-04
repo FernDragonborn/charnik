@@ -677,16 +677,18 @@ describe('applyDefense — resist / immune / vulnerable applied to damage (B20)'
 
 describe('standardActions — edition-aware terms (D5)', () => {
 	it('2024 has Study + Utilize', () => {
-		const names = standardActions(null, '5.5e').map((a) => a.name);
-		expect(names).toContain('Study');
-		expect(names).toContain('Utilize');
-		expect(names).not.toContain('Use an Object');
+		// the KEYS, not the words: a standard action is named by the catalog, so this guards which
+		// actions an edition has rather than how they are spelled
+		const keys = standardActions(null, '5.5e').map((a) => a.nameKey);
+		expect(keys).toContain('combat.action.study');
+		expect(keys).toContain('combat.action.utilize');
+		expect(keys).not.toContain('combat.action.useAnObject');
 	});
 	it('2014 has no Study and uses "Use an Object" instead of Utilize', () => {
-		const names = standardActions(null, '5e').map((a) => a.name);
-		expect(names).not.toContain('Study');
-		expect(names).not.toContain('Utilize');
-		expect(names).toContain('Use an Object');
+		const keys = standardActions(null, '5e').map((a) => a.nameKey);
+		expect(keys).not.toContain('combat.action.study');
+		expect(keys).not.toContain('combat.action.utilize');
+		expect(keys).toContain('combat.action.useAnObject');
 	});
 });
 
