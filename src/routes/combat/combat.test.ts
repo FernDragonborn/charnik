@@ -808,12 +808,21 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.savageLabel).toBe('Savage Attacker');
 		const entry = combat.savagePendingEntry!;
 		expect(entry).toBe(combat.tray.log[0]);
-		const keptBefore = entry.damage![0]!.total;
+
+		// re-reading the d20 REPLACES the log element; the offer names its roll by `at`, so it must
+		// still be on that row rather than silently withdrawing itself
+		combat.tray.amendAdvantage(entry);
+		expect(combat.savagePendingEntry).toBe(combat.tray.log[0]);
+		expect(combat.savagePendingEntry).not.toBe(entry);
+		expect(combat.savageLabel).toBe('Savage Attacker');
+		const keptBefore = combat.savagePendingEntry!.damage![0]!.total;
 
 		combat.savageReroll();
 		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
-		// the reroll is recorded as an AMENDMENT, so it cannot overwrite provenance the roll already had
+		// the reroll is an AMENDMENT, so it cannot overwrite provenance the roll already had — and it
+		// lands BESIDE the advantage amendment above rather than replacing it
 		expect(combat.tray.log[0]!.amendments).toMatchObject([
+			{ kind: AMENDMENT_KIND.advantage },
 			{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker' },
 		]);
 		expect(combat.savageLabel).toBeNull(); // once-per-turn use spent

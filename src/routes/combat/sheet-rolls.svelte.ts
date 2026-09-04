@@ -52,10 +52,14 @@ export class SheetRolls {
 	// the use auto-frees each turn with no reset hook. Whether it's OFFERED is fully data-driven — only
 	// when a feature contributes a `damage_reroll` fact, and the button is labelled from that feature's
 	// own name (see the `damage_reroll` token in token-parser.ts; no feat id/string is hardcoded here).
+	/** The pending reroll names its roll by `at`, the roll's own identity, NOT by holding the entry
+	 *  object: an amendment REPLACES that object in the log, so a held reference dangles the moment
+	 *  the player re-reads the d20 — and both surfaces that draw the offer match it by identity, so
+	 *  the offer silently withdrew itself. */
 	private savagePending = $state<{
 		spec: DamagePartSpec;
 		roll: TypedRoll;
-		entry: RollLogEntry;
+		at: number;
 	} | null>(null);
 	private savageUsedRound = $state<number | null>(null);
 	/** The feature name offering a once-per-turn weapon-damage reroll RIGHT NOW, or null when none is
@@ -64,9 +68,12 @@ export class SheetRolls {
 		if (!this.savagePending || this.savageUsedRound === this.host().round) return null;
 		return this.host().sheet?.facts.damageReroll[0]?.source ?? null;
 	}
-	/** The log entry the pending reroll would rewrite — so the roll log can put the button on that row. */
+	/** The log entry the pending reroll would rewrite — so the roll log can put the button on that row.
+	 *  Looked up fresh every read, so an amended roll is still the row the offer belongs to. */
 	get savagePendingEntry(): RollLogEntry | null {
-		return this.savagePending?.entry ?? null;
+		const at = this.savagePending?.at;
+		if (at === undefined) return null;
+		return this.host().tray.log.find((e) => e.at === at) ?? null;
 	}
 
 	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
@@ -187,7 +194,8 @@ export class SheetRolls {
 		// (The Shift-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
 		const entry = this.host().tray.pushRoll(label, toHit, dmgRolls);
-		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };
+		if (savage && entry.at !== undefined)
+			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};
 
 	/** The effects and damage parts an attack rolls with — shared by the tap, the tray and the action
@@ -234,19 +242,20 @@ export class SheetRolls {
 	savageReroll = () => {
 		const p = this.savagePending;
 		const label = this.savageLabel;
-		if (!p || !label) return;
+		const entry = this.savagePendingEntry;
+		if (!p || !label || !entry) return;
 		const re = rollDamageParts([p.spec])[0];
 		if (!re) return;
 		const keptRe = re.total > p.roll.total;
 		const keep = keptRe ? re : p.roll;
 		const dropped = keptRe ? p.roll : re;
 		const revised: RollLogEntry = {
-			...p.entry,
-			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
+			...entry,
+			damage: [keep, ...(entry.damage ?? []).slice(1)],
 			// an amendment, not a note: overwriting `note` used to destroy whatever provenance the roll
 			// already carried (an upcast's "8d6 base + 1d6 @ slot 4")
 			amendments: [
-				...(p.entry.amendments ?? []),
+				...(entry.amendments ?? []),
 				{
 					kind: AMENDMENT_KIND.damageReroll,
 					source: label,
@@ -255,7 +264,7 @@ export class SheetRolls {
 				},
 			],
 		};
-		this.host().tray.reviseEntry(p.entry, revised);
+		this.host().tray.reviseEntry(entry, revised);
 		this.savageUsedRound = this.host().round;
 		this.savagePending = null;
 		// re-toast the REVISED roll, not a summary line: the reroll changed the damage, so the player

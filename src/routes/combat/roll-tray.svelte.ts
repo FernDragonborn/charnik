@@ -226,7 +226,11 @@ export class RollTray {
 	 *  reroll to rewrite a completed damage roll in place so the log stays truthful. No-op if the entry
 	 *  has rolled off the capped log. */
 	reviseEntry = (old: RollLogEntry, revised: RollLogEntry) => {
-		this.log = this.log.map((e) => (e === old ? revised : e));
+		// matched on `at`, the roll's own identity, falling back to the object only for an entry that
+		// was never stamped: a previous amendment has already replaced the object once, so a caller
+		// holding the pre-amendment copy would otherwise rewrite the disk line and no row on screen
+		const same = (e: RollLogEntry) => (old.at === undefined ? e === old : e.at === old.at);
+		this.log = this.log.map((e) => (same(e) ? revised : e));
 		// the same roll, decided differently — rewrite ITS line rather than appending a second one
 		if (revised.at !== undefined) this.persistRevision?.(revised);
 	};
