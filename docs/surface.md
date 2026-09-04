@@ -630,6 +630,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Attack` — A weapon/unarmed attack row.
 - `const attackName` — What to print for an attack.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
+- `const damageTypeLabel` — What a damage type is CALLED.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
@@ -1537,4 +1538,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 909 exports across 125 modules · 60 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 910 exports across 125 modules · 60 duplicate suspects._

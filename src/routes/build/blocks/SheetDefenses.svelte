@@ -11,6 +11,7 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed, titleCase } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 	import { gatherProfGrants, UNCONSTRAINED } from '$lib/rules/proficiency';
 	import { splitList } from '$lib/content/schemas';
 	const b = build;
@@ -20,9 +21,6 @@
 		b.draft.classes.map((c) => rowOfType(b.row(c.classId), 'class')).filter((r) => !!r)
 	);
 
-	/** A damage type is an id (`bludgeoning`), and the catalog holds the word for it. A homebrew type
-	 *  nobody has translated falls back to the id, which is still what its author wrote. */
-	const damageTypeLabel = (type: string): string => $_(`damageType.${type}`, { default: type });
 
 	/** "all · shields" reads better than a list of category words, and an undeclared class means
 	 *  proficient with everything (the lenient default the rules layer already uses). */
@@ -93,13 +91,13 @@
 					>{/if}
 				{#if hasDefenses}
 					{#each defenses.resist as d (d)}<span class="tag gold"
-							>{$_('build.defenses.resists', { values: { type: damageTypeLabel(d) } })}</span
+							>{$_('build.defenses.resists', { values: { type: damageTypeLabel(d, $_) } })}</span
 						>{/each}
 					{#each defenses.immune as d (d)}<span class="tag gold"
-							>{$_('build.defenses.immuneTo', { values: { type: damageTypeLabel(d) } })}</span
+							>{$_('build.defenses.immuneTo', { values: { type: damageTypeLabel(d, $_) } })}</span
 						>{/each}
 					{#each defenses.vulnerable as d (d)}<span class="tag accent"
-							>{$_('build.defenses.vulnerableTo', { values: { type: damageTypeLabel(d) } })}</span
+							>{$_('build.defenses.vulnerableTo', { values: { type: damageTypeLabel(d, $_) } })}</span
 						>{/each}
 				{:else}
 					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>

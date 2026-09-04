@@ -4,9 +4,6 @@
 > [`../internals/roller.md`](../internals/roller.md); the ORDER these are done in is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **Damage types have no localized names anywhere in the data**, so they match and display in
-  English. Rides the same boundary as ARCH-1: the 13 SRD types are a closed rules vocabulary and
-  take catalog keys, an invented homebrew type is data and passes through.
 - [ ] **SAVAGE-TAIL · one known limit of the `damage_reroll` offer.** It rerolls the WHOLE primary
   damage part, so a Bless die riding that part is rerolled with the weapon dice — arguably "use
   either roll", but not what the feat says. Small, and not a wrong number.

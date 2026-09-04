@@ -27,6 +27,8 @@
 	} from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
+	import { _ } from '$lib/i18n';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 
 	let {
 		model,
@@ -158,7 +160,7 @@
 		rerollDamage && rerollDamage.attack === attack && rerollDamage.part === part
 			? rerollDamage
 			: undefined}
-	<span class="roll-damage-part" title={d.type || undefined}>
+	<span class="roll-damage-part" title={damageTypeLabel(d.type, $_) || undefined}>
 		<DamageIcon type={d.type} />
 		<svelte:element
 			this={re ? 'button' : 'span'}
@@ -202,7 +204,7 @@
 		<span class="roll-grid volley">
 			<span class="roll-modifier">{attacks.length} attacks</span>
 			{#each model.byType as t, i (i)}
-				<span class="roll-type-sum" title={t.type || undefined}>
+				<span class="roll-type-sum" title={damageTypeLabel(t.type, $_) || undefined}>
 					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 				</span>
 			{/each}
@@ -257,7 +259,7 @@
 			{#if multi}
 				<span class="roll-type-sums">
 					{#each model.byType as t, i (i)}
-						<span class="roll-type-sum" title={t.type || undefined}>
+						<span class="roll-type-sum" title={damageTypeLabel(t.type, $_) || undefined}>
 							<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 						</span>
 					{/each}

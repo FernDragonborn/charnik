@@ -13,6 +13,7 @@ import { signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
+import type { Translate } from '$lib/i18n';
 
 /** One typed slice of a weapon's damage: its dice pool, flat mod, and damage type. A plain weapon is
  *  one part ("1d8 slashing"); a multi-type weapon is several ("1d6 slashing" + "1d4 radiant"). */
@@ -88,12 +89,29 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 		});
 }
 
+/** What a damage type is CALLED. The type is an id (`bludgeoning`) and the catalog holds the word for
+ *  it; a homebrew type nobody has translated falls back to the id, which is still what its author
+ *  wrote. Takes the translator rather than reaching for one, so this module stays pure and
+ *  node-testable (docs/internals/ui.md ▸ Strings live in the catalogs). */
+export const damageTypeLabel = (type: string, translate: Translate): string =>
+	type ? translate(`damageType.${type}`, { default: type }) : '';
+
 /** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4
- *  radiant"). Inverse of `parseDamageParts` for the panel. Pure. */
-export function formatDamageParts(parts: DamagePart[]): string {
+ *  radiant"). Inverse of `parseDamageParts` for the panel. Pure.
+ *
+ *  Without a translator the TYPE ID is printed, which is the right answer for a caller that has no
+ *  locale to spend — a node test, or a string that is about to be re-parsed. Every surface a person
+ *  reads passes one. */
+export function formatDamageParts(parts: DamagePart[], translate?: Translate): string {
 	return parts
 		.map((p) =>
-			[formatDicePool(p.pool), p.mod ? signed(p.mod) : '', p.type].filter(Boolean).join(' '),
+			[
+				formatDicePool(p.pool),
+				p.mod ? signed(p.mod) : '',
+				translate ? damageTypeLabel(p.type, translate) : p.type,
+			]
+				.filter(Boolean)
+				.join(' '),
 		)
 		.join(' + ');
 }
