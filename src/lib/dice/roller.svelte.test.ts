@@ -97,6 +97,18 @@ describe('typing', () => {
 	});
 });
 
+describe('a compound token leaves the caret past ALL of itself', () => {
+	it('keeps a modifier with the damage type it was typed for', () => {
+		organ.addDamageLine();
+		// "2d6+3 fire 1d6 cold" — the +3 belongs to the fire, the way it was written
+		typeInto(1, '2d6+3 fire 1d6 cold ');
+		expect(damageParts(organ.lines[1]!)).toMatchObject([
+			{ dice: { 6: 2 }, mod: 3, type: 'fire' },
+			{ dice: { 6: 1 }, mod: 0, type: 'cold' },
+		]);
+	});
+});
+
 describe('editing pills', () => {
 	it('unfolds the last pill back into the exact text it was made from', () => {
 		typeInto(0, 'd20 bless ');

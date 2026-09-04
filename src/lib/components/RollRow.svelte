@@ -38,8 +38,8 @@
 		/** Present → the d20 pill becomes a control that applies advantage AFTER the fact (UX-3): tap
 		 *  it and a second d20 joins the first. Absent → every pill is inert, which is how the toast
 		 *  mounts it (a toast expires mid-decision, so it announces and the Playbar/log control). No
-		 *  attack index: a volley can't offer a per-attack chooser until something rolls more than one
-		 *  attack (blocked on ROLLER-N), and shipping one that can't be exercised is how it goes wrong. */
+		 *  attack index: a volley rolls the same set N times, which is what the two-level model decided
+		 *  a volley IS, so a per-instance advantage is not a thing there is to choose. */
 		onAdvantage?: (() => void) | undefined;
 		/** The ONE damage pill that can be rerolled right now, and what taking it does. Names the pill
 		 *  by position because that is the RAW unit — "reroll the weapon's damage dice" is one damage
@@ -198,8 +198,7 @@
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
 		     exists to avoid. A strip says WHAT happened and how much; the card and the log carry the
-		     attack-by-attack breakdown. (Nothing rolls a volley yet — blocked on ROLLER-N — but the
-		     gallery renders one, and it must not be the shape that ships.) -->
+		     attack-by-attack breakdown. -->
 		<span class="roll-grid volley">
 			<span class="roll-modifier">{attacks.length} attacks</span>
 			{#each model.byType as t, i (i)}

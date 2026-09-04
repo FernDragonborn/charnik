@@ -607,6 +607,9 @@ export function rehydrateRoll(roll: StoredRoll): Rolled {
 		total,
 		expr,
 		...parsed,
+		// provenance is the point of recording it — a roll whose "+2" knew it came from Bless must
+		// still know after a reload, exactly as its dice do
+		...(roll.modParts ? { modParts: roll.modParts } : {}),
 		...(roll.drawOrderUnknown ? { drawOrderUnknown: true as const } : {}),
 	};
 	if (roll.d20s && roll.advantage)

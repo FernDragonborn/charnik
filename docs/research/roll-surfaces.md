@@ -71,7 +71,7 @@ others bind, and how do they reach it on touch?
 ## The single most useful finding: nobody binds a modifier to "open the configurator"
 
 Every tool surveyed binds the gesture to the **outcome** — roll with advantage, roll with
-disadvantage — not to "open a thing where you can choose". Charnik's `Alt-click → tray` is the odd
+disadvantage — not to "open a thing where you can choose". Charnik's `Shift-click → tray` is the odd
 one out, and it costs an extra step for the case that dominates play.
 
 That is independent confirmation of the decomposition argued in PLAN (UX/tray discussion): for a

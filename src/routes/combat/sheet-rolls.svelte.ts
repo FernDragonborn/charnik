@@ -112,7 +112,7 @@ export class SheetRolls {
 		const fx = key ? this.effectsFor(key) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
 		if (wantsTray(e))
-			// the effect DICE ride too: the tray used to drop them, so alt-clicking a roll under Bless
+			// the effect DICE ride too: the tray used to drop them, so Shift-clicking a roll under Bless
 			// rolled a d4 short of the same roll tapped normally — a silently-wrong number, and exactly
 			// what the roller's pills exist to make visible
 			this.openRoll(
@@ -184,7 +184,7 @@ export class SheetRolls {
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
-		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
+		// (The Shift-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
 		const entry = this.host().tray.pushRoll(label, toHit, dmgRolls);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };

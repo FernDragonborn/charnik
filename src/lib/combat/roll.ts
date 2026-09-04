@@ -4,7 +4,6 @@
  * the effects-auto toggle. Split out of the old combat/helpers.ts junk-drawer.
  */
 import {
-	ADVANTAGE_MODE,
 	droppedD20s,
 	type AdvantageMode,
 	parseDiceTerm,
@@ -56,8 +55,8 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 		...rollPool(p.dice, {
 			...(p.mods ?? {}),
 			...(rng ? { rng } : {}),
-			mod: p.mod,
-			...(p.modParts ? { modParts: p.modParts } : {}),
+			// one or the other, never both: `modParts` IS the modifier, told with its provenance
+			...(p.modParts ? { modParts: p.modParts } : { mod: p.mod }),
 			...(p.bonusDice ? { bonusDice: p.bonusDice } : {}),
 			...(p.crit ? { crit: p.crit } : {}),
 		}),
@@ -163,19 +162,24 @@ export type RollAmendment =
 
 /** The amendments a roll carries once it has been re-read at a different advantage. The advantage
  *  amendment is REPLACED rather than stacked — a roll was decided one way however many times the
- *  control was tapped — and `from` stays the mode it was originally rolled at, so a whole lap round
- *  the cycle cannot drift. Every other kind is kept untouched.
+ *  control was tapped — and `from` stays the mode the roll was ORIGINALLY made at, so a whole lap
+ *  round the cycle cannot drift. Every other kind is kept untouched.
  *
- *  Nothing is recorded when the roll is back at the mode it was rolled at: the second d20 is still
- *  in `d20s` and still drawn struck through, which says everything "advantage cleared" said. */
+ *  `original` is the roll as it stands BEFORE this amendment, which is the only place that mode can
+ *  come from: a roll made under Bless starts at `advantage`, and defaulting to `neither` would both
+ *  record a false `from` and then drop the amendment entirely the moment the player cycled back to
+ *  the mode it never had.
+ *
+ *  Nothing is recorded when the roll is back at the mode it was made at: the second d20 is still in
+ *  `d20s` and still drawn struck through, which says everything a sentence would. */
 export function amendedAdvantage(
-	previous: RollAmendment[] | undefined,
+	original: Pick<RollLogEntry, 'advantage' | 'amendments'>,
 	revised: Rolled,
 ): RollAmendment[] {
-	const prior = previous ?? [];
+	const prior = original.amendments ?? [];
 	const others = prior.filter((a) => a.kind !== AMENDMENT_KIND.advantage);
 	const was = prior.find((a) => a.kind === AMENDMENT_KIND.advantage);
-	const from = was?.kind === AMENDMENT_KIND.advantage ? was.from : ADVANTAGE_MODE.neither;
+	const from = was?.kind === AMENDMENT_KIND.advantage ? was.from : original.advantage;
 	if (!droppedD20s(revised).length || from === revised.advantage) return others;
 	return [...others, { kind: AMENDMENT_KIND.advantage, from, to: revised.advantage }];
 }

@@ -79,13 +79,15 @@
 	.log-row.one-action {
 		position: relative;
 		border-inline-start: 2px solid var(--color-border-strong);
-		padding-inline-start: var(--space-2-5);
+		/* wide enough for the ×N badge that sits in this gutter — it is an overlay, so the padding is
+		   the only thing keeping it off the first row's label */
+		padding-inline-start: var(--space-5);
 		margin-inline-start: var(--space-1);
 	}
 	.action-count {
 		position: absolute;
 		inset-inline-start: var(--space-1);
-		top: var(--space-1);
+		top: var(--space-2);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}

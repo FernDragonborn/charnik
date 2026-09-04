@@ -510,7 +510,7 @@ export interface RollerIssue {
 
 /** Everything wrong with a set of lines, in reading order. Collected and returned rather than
  *  thrown — the content loader's `issues[]` precedent, and the `{roll, issues}` shape plan.md ▸
- *  ROLLER-N asks for at the point the formula string is a plugin's public API. */
+ *  `docs/internals/roller.md` asks for at the point the formula string is a plugin's public API. */
 export function rollerIssues(lines: RollerLine[]): RollerIssue[] {
 	const issues: RollerIssue[] = [];
 	for (const line of lines) {

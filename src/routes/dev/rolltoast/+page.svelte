@@ -26,7 +26,7 @@
 		const revised = cycleAdvantage(live);
 		if (!revised) return;
 		// the same facts the combat VM records, through the same builder
-		const amendments = amendedAdvantage(live.amendments, revised);
+		const amendments = amendedAdvantage(live, revised);
 		const { amendments: _restated, ...rest } = revised;
 		live = amendments.length ? { ...rest, amendments } : rest;
 	};

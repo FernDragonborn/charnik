@@ -242,8 +242,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   change and a `docs/internals/compatibility.md` chokepoint** (effect-token grammar), and it is
   SETTLED: the scope goes in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>`. `compatibility.md` §4 says so too, in the same change
-  that builds this. Independent of ROLLER-N (each ships without the other), but the per-beam case
-  only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
+  that builds this. The per-beam case is visible now that a volley rolls N beams. Also the mechanical half of DEMO-1 gap 4 / N2
   invocations.
   **Two constraints the grammar decision must respect, and one shape that satisfies both.**
   (1) The qualifier slot is ALREADY spoken for and routes by TARGET: `parseQualifier`

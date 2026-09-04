@@ -77,8 +77,8 @@ export interface RollerPrefill {
  *  a named function rather than an inline literal because every instance of it is an optional field
  *  that is only spelled when it has a value (`exactOptionalPropertyTypes`). */
 const poolOptions = (spec: ReturnType<typeof testRoll> | null, rng?: Rng): RollPoolOptions => ({
-	mod: spec?.mod ?? 0,
-	...(spec?.modParts ? { modParts: spec.modParts } : {}),
+	// one or the other, never both: `modParts` IS the modifier, told with its provenance
+	...(spec?.modParts ? { modParts: spec.modParts } : { mod: spec?.mod ?? 0 }),
 	advantage: spec?.advantage ?? 0,
 	...(spec?.bonusDice.length ? { bonusDice: spec.bonusDice } : {}),
 	...(spec?.mods ?? {}),
@@ -289,7 +289,11 @@ export class RollerOrgan {
 			index,
 			normalizeLine({ ...grown, pills: [...grown.pills, ...line.pills.slice(at)] }),
 		);
-		if (grown.pills.length > head.pills.length) this.setCaret(index, at + 1);
+		// by however many pills the token became, not by one: a compound token (`2d6+3`) adds several,
+		// and a caret left inside it puts the next token in the MIDDLE of what was just typed — which
+		// on a damage line hands a modifier to the wrong damage type
+		const added = grown.pills.length - head.pills.length;
+		if (added > 0) this.setCaret(index, at + added);
 	}
 
 	/** Put a finished pill in at the caret — the mouse's half of `commitText`. */

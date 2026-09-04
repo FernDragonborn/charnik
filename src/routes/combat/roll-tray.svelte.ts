@@ -143,11 +143,11 @@ export class RollTray {
 		});
 	};
 
-	/** Roll a dice pool immediately (a tap that "just works"): advantage, signed bonus dice and
-	 *  reroll/min_die mods all come from the stat's active effects (via the RollSpec). A spec with no
-	 *  test half has nothing to roll here: it is a quantity, and its damage is rolled at its own site. */
-	rollDiceNow = (spec: RollSpec) => {
-		if (!spec.test) return;
+	/** Roll a d20 test immediately (a tap that "just works"): advantage, signed bonus dice and
+	 *  reroll/min_die mods all come from the stat's active effects (via the RollSpec). The parameter
+	 *  REQUIRES the test half rather than shrugging at a spec without one — a damage-only request has
+	 *  nothing for this method to roll, and "silently rolls nothing" is not a state worth having. */
+	rollDiceNow = (spec: RollSpec & Required<Pick<RollSpec, 'test'>>) => {
 		this.pushRoll(
 			spec.label,
 			rollPool(spec.test.dice, {
@@ -247,7 +247,7 @@ export class RollTray {
 	amendAdvantage = (entry: RollLogEntry) => {
 		const revised = cycleAdvantage(entry);
 		if (!revised) return;
-		const amendments = amendedAdvantage(entry.amendments, revised);
+		const amendments = amendedAdvantage(entry, revised);
 		// the roll's own note stays; only a legacy prose amendment is stripped, so an entry written
 		// before amendments were structured does not end up carrying both
 		const note = withoutLegacyAmendment(entry.note);

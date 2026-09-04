@@ -4,13 +4,16 @@ import {
 	actionRuns,
 	amendedAdvantage,
 	rollFormulaEntry,
+	rehydrateLogEntry,
 	withoutLegacyAmendment,
+	type RollAmendment,
 	type RollLogEntry,
 } from './roll';
-import { describeAmendments } from '$lib/dice/roll-toast';
+import { describeAmendments, rollToastModel } from '$lib/dice/roll-toast';
 import {
 	ADVANTAGE_MODE,
 	DIE_ROLE,
+	rollPool,
 	type AdvantageMode,
 	type Rolled,
 	type RolledDie,
@@ -704,6 +707,23 @@ describe('rollFormulaEntry (a CONTENT formula, and what it could not read)', () 
 	});
 });
 
+describe('a roll survives the trip to disk with its provenance', () => {
+	it('brings modParts back — a Bless +2 must still name itself after a reload', () => {
+		const rolled = rollPool(
+			{ 20: 1 },
+			{ modParts: [{ amount: 2, source: 'Bless' }, { amount: 3 }], rng: () => 0.5 },
+		);
+		expect(rolled.mod).toBe(5);
+		const onDisk = JSON.parse(JSON.stringify({ ...rolled, label: 'Athletics' })) as Parameters<
+			typeof rehydrateLogEntry
+		>[0];
+		expect(rehydrateLogEntry(onDisk).modParts).toEqual([
+			{ amount: 2, source: 'Bless' },
+			{ amount: 3 },
+		]);
+	});
+});
+
 describe('actionRuns — the log as the actions it recorded', () => {
 	const entry = (at: number, group?: string): RollLogEntry => ({
 		label: 'Eldritch Blast',
@@ -736,6 +756,8 @@ describe('amendments are facts, and exactly one place turns them into words', ()
 		detail: `${value}`,
 		role: DIE_ROLE.pool,
 	});
+	/** A roll that drew a pair, read at `advantage`. `made` is the mode it was MADE at, which is what
+	 *  the entry carries and what an amendment measures against — not always `neither`. */
 	const roll = (advantage: AdvantageMode): Rolled => ({
 		total: 0,
 		dice: [],
@@ -744,28 +766,39 @@ describe('amendments are facts, and exactly one place turns them into words', ()
 		mod: 0,
 		expr: '',
 	});
+	const entry = (made: AdvantageMode, amendments?: RollAmendment[]) => ({
+		advantage: made,
+		...(amendments ? { amendments } : {}),
+	});
 
 	it('replaces the advantage amendment instead of stacking, lap after lap', () => {
-		const adv = amendedAdvantage(undefined, roll(ADVANTAGE_MODE.advantage));
+		const made = ADVANTAGE_MODE.neither;
+		const adv = amendedAdvantage(entry(made), roll(ADVANTAGE_MODE.advantage));
 		expect(adv).toEqual([
-			{
-				kind: AMENDMENT_KIND.advantage,
-				from: ADVANTAGE_MODE.neither,
-				to: ADVANTAGE_MODE.advantage,
-			},
+			{ kind: AMENDMENT_KIND.advantage, from: made, to: ADVANTAGE_MODE.advantage },
 		]);
-		const dis = amendedAdvantage(adv, roll(ADVANTAGE_MODE.disadvantage));
+		const dis = amendedAdvantage(entry(made, adv), roll(ADVANTAGE_MODE.disadvantage));
 		expect(dis).toEqual([
-			{
-				kind: AMENDMENT_KIND.advantage,
-				from: ADVANTAGE_MODE.neither,
-				to: ADVANTAGE_MODE.disadvantage,
-			},
+			{ kind: AMENDMENT_KIND.advantage, from: made, to: ADVANTAGE_MODE.disadvantage },
 		]);
-		// back at the mode it was ROLLED at: the struck-through second d20 already says everything
-		expect(amendedAdvantage(dis, roll(ADVANTAGE_MODE.neither))).toEqual([]);
+		// back at the mode it was MADE at: the struck-through second d20 already says everything
+		expect(amendedAdvantage(entry(made, dis), roll(made))).toEqual([]);
 		// and round again — the list must not grow
-		expect(amendedAdvantage(dis, roll(ADVANTAGE_MODE.advantage))).toEqual(adv);
+		expect(amendedAdvantage(entry(made, dis), roll(ADVANTAGE_MODE.advantage))).toEqual(adv);
+	});
+
+	it('measures against the mode the roll was MADE at, not against neither', () => {
+		// a roll made under Bless starts at advantage; clearing it IS the amendment
+		const made = ADVANTAGE_MODE.advantage;
+		const dis = amendedAdvantage(entry(made), roll(ADVANTAGE_MODE.disadvantage));
+		expect(dis).toEqual([
+			{ kind: AMENDMENT_KIND.advantage, from: made, to: ADVANTAGE_MODE.disadvantage },
+		]);
+		expect(amendedAdvantage(entry(made, dis), roll(ADVANTAGE_MODE.neither))).toEqual([
+			{ kind: AMENDMENT_KIND.advantage, from: made, to: ADVANTAGE_MODE.neither },
+		]);
+		// and re-reading it the way it was made records nothing
+		expect(amendedAdvantage(entry(made, dis), roll(made))).toEqual([]);
 	});
 
 	it('keeps an amendment of another kind while it replaces its own', () => {
@@ -775,7 +808,9 @@ describe('amendments are facts, and exactly one place turns them into words', ()
 			from: 4,
 			to: 9,
 		} as const;
-		expect(amendedAdvantage([reroll], roll(ADVANTAGE_MODE.advantage))).toEqual([
+		expect(
+			amendedAdvantage(entry(ADVANTAGE_MODE.neither, [reroll]), roll(ADVANTAGE_MODE.advantage)),
+		).toEqual([
 			reroll,
 			{
 				kind: AMENDMENT_KIND.advantage,
@@ -787,19 +822,29 @@ describe('amendments are facts, and exactly one place turns them into words', ()
 
 	it('records nothing when no second die was ever rolled', () => {
 		const single: Rolled = { ...roll(ADVANTAGE_MODE.neither), d20s: [d20(7)] };
-		expect(amendedAdvantage(undefined, single)).toEqual([]);
+		expect(amendedAdvantage(entry(ADVANTAGE_MODE.neither), single)).toEqual([]);
 	});
 
 	it('reads the dice off the ROLL when it puts an amendment into words', () => {
 		const revised = roll(ADVANTAGE_MODE.advantage);
-		expect(describeAmendments(revised, amendedAdvantage(undefined, revised))).toEqual([
-			'advantage after the roll (kept 19 over 7)',
-		]);
+		expect(
+			describeAmendments(revised, amendedAdvantage(entry(ADVANTAGE_MODE.neither), revised)),
+		).toEqual(['advantage after the roll (kept 19 over 7)']);
 		expect(
 			describeAmendments(revised, [
 				{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker', from: 4, to: 9 },
 			]),
 		).toEqual(['Savage Attacker: kept 9 (other roll 4)']);
+	});
+
+	it('composes the card note from the roll own note AND its amendments, in that order', () => {
+		const model = rollToastModel({
+			...roll(ADVANTAGE_MODE.advantage),
+			label: 'Fire Bolt',
+			note: '8d6 base + 1d6 @ slot 4',
+			amendments: amendedAdvantage(entry(ADVANTAGE_MODE.neither), roll(ADVANTAGE_MODE.advantage)),
+		});
+		expect(model.note).toBe('8d6 base + 1d6 @ slot 4 · advantage after the roll (kept 19 over 7)');
 	});
 
 	it('strips a prose amendment written before amendments were structured, and nothing else', () => {

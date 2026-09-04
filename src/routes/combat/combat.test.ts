@@ -10,7 +10,7 @@ import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
-import { spellRow } from '$lib/combat/helpers';
+import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
 import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
@@ -814,7 +814,7 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
 		// the reroll is recorded as an AMENDMENT, so it cannot overwrite provenance the roll already had
 		expect(combat.tray.log[0]!.amendments).toMatchObject([
-			{ kind: 'damageReroll', source: 'Savage Attacker' },
+			{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker' },
 		]);
 		expect(combat.savageLabel).toBeNull(); // once-per-turn use spent
 

@@ -25,7 +25,7 @@ describe('dice tray contract', () => {
 			pool: { 20: 1 },
 			mod: 5,
 			advantage: 1,
-			queuedDamage: { label: 'Longsword damage', dice: { 8: 1 }, mod: 3 },
+			queuedDamage: { dice: { 8: 1 }, mod: 3 },
 		};
 		openDiceTray(req);
 		off();

@@ -1,7 +1,7 @@
 # The roller
 
 > For maintainers. The pure dice engine, the record a roll leaves behind, and the roller organ the
-> player types into. What is still OPEN lives in `plan.md` ▸ ROLLER-N.
+> player types into. What is still OPEN lives in [`work/roller.md`](../work/roller.md).
 
 ## A roll answers with what happened, not with how to show it
 

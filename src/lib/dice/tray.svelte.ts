@@ -9,9 +9,10 @@ import type { DieMods } from '$lib/rules/dice';
 import { rollFormulaEntry } from '$lib/combat/roll';
 import { toastRoll } from './roll-toast';
 
-/** A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage). */
+/** The damage half of an attack request — the second line the tray builds beside the to-hit. It
+ *  carries no label of its own: the roll already has one, and "Greataxe" plus "Greataxe damage" was
+ *  one name said twice. */
 interface QueuedDamage {
-	label: string;
 	dice: Record<number, number>;
 	mod: number;
 	mods?: DieMods;
