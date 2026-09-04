@@ -205,7 +205,8 @@
 			"acTouch": "AC (touch)",
 			"concentration": "Concentration save",
 			"deathSave": "Death save",
-			"hitDie": "Hit Die {die}"
+			"hitDie": "Hit Die {die}",
+			"rerollDamage": "{name} — reroll damage, keep the higher"
 		},
 		"section": {
 			"abilities": "Abilities",

@@ -40,7 +40,7 @@
 						? {
 								attack: 0,
 								part: 0,
-								label: `${combat.savageLabel} — reroll damage, keep the higher`,
+								label: $_('combat.roll.rerollDamage', { values: { name: combat.savageLabel } }),
 								run: combat.savageReroll,
 							}
 						: undefined}
