@@ -2,7 +2,7 @@
  * "What changes on the sheet" — the diff behind the builder's inspector. Take the sheet as it
  * stands, take the sheet a candidate pick would produce, and say what actually moves.
  *
- * This is what stops a choice from being made blind (docs/plan.md N3): the compendium prose says
+ * This is what stops a choice from being made blind (docs/work/ui.md ▸ N3): the compendium prose says
  * what a background IS, this says what taking it DOES to these six numbers. Only changed rows come
  * back — an unchanged AC is not information.
  *

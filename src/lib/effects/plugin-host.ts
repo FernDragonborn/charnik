@@ -1,7 +1,7 @@
 /*
  * L3 plugin HOST — discovery + consent hashing (pure logic; the reactive store and registry wiring
  * live in plugin-store.svelte.ts). Normative contract: docs/internals/plugins.md §2 (packaging) + §6
- * (lifecycle/consent) and the PLG-SEC checklist in docs/plan.md.
+ * (lifecycle/consent) and the PLG-SEC checklist in docs/internals/plugins.md.
  *
  * A plugin is a folder `<namespace>/` with `plugin.json` + `main.js`, read through the Storage seam
  * (own-your-data: a plugin is a folder you can read; tests use MemoryStorage). It lives EITHER in

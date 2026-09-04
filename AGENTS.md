@@ -261,8 +261,11 @@ to do, the internals doc says what it is allowed to be.
 
 What you will reach for most:
 
-- **`docs/plan.md`** — the authoritative spec and the only place that says what is still **open**.
-  When a decision there proves wrong, fix it in the same change.
+- **`docs/plan.md`** — the product spec, and the ORDER the open work is done in. When a decision
+  there proves wrong, fix it in the same change.
+- **`docs/work/*.md`** — the open items, one file per subject (`roller`, `ui`, `mechanics`,
+  `content`, `authoring`, `code-quality`, `release`). An item lives in exactly one of them, and a
+  wave in the plan names items, never files.
 - **`docs/internals/`** — how the software works, in the present tense, one file per subsystem:
   `overview` (the seams and the path a number takes) · `rules-core` · `content` · `packs` ·
   `characters` · `ui` (the UX pattern contract lives here) · `tooling` (the repo's own tools and

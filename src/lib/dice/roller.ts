@@ -42,7 +42,7 @@ export const PILL_KIND = {
 	/** A word the vocabulary doesn't know, written beside a die as a label ("1d4 dm's luck"). Not an
 	 *  error: §6 says so outright. It adds nothing and blocks nothing — it is what the player called
 	 *  this die. It lives in the LINE only: `foldValues` walks past it and the roll never sees it, so
-	 *  pressing Roll drops the name (plan.md ▸ ROLLER-N, the fold is where provenance dies). */
+	 *  pressing Roll drops the name (docs/work/roller.md ▸ ROLLER-N, the fold is where provenance dies). */
 	note: 'note',
 	/** Text the parser could not account for AS ARITHMETIC — `+d4?`. Never dropped, never rolled,
 	 *  and the one thing that stops the roll (§5 / §10 / finding J). */
@@ -248,7 +248,7 @@ export function pillsFromPool(
 			...bounds,
 		}));
 	// An effect die arrives here KNOWN but UNNAMED: the roll site has the die and not the effect that
-	// gave it (`RolledDie.source` is still unfilled — plan.md ▸ ROLLER-N). The empty source is what keeps
+	// gave it (`RolledDie.source` is still unfilled — docs/work/roller.md ▸ ROLLER-N). The empty source is what keeps
 	// it an EFFECT die rather than a pool one, so it can't pick up the pool's rerolls; the caption
 	// simply has nothing to print until provenance is threaded through.
 	for (const b of opts.bonusDice ?? [])

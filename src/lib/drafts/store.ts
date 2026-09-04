@@ -3,7 +3,7 @@
  * for any reason (nav away, reload, crash) restores its last state. Storage-agnostic (over the one
  * `Storage` seam), so desktop writes real files under `<dataDir>/drafts/` and web uses IndexedDB.
  *
- * Design (docs/plan.md DRAFT-CACHE):
+ * Design (docs/work/authoring.md ▸ DRAFT-CACHE):
  *   - ONE self-contained JSON per draft, NO manifest/index — discover by scanning `drafts/` + reading
  *     each. A lost/corrupt file loses only that draft, never the set (same principle as the removed
  *     `_pack.json` and content's self-describing `#content-` headers).

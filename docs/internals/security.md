@@ -100,7 +100,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
    > arrive pre-authorised), never a wildcard on its own.
    >
-   > **Authenticity is left unsolved on purpose — PLAN ▸ PACK-AUTHENTICITY.** Pack signing
+   > **Authenticity is left unsolved on purpose — `work/release.md` ▸ PACK-AUTHENTICITY.** Pack signing
    > was designed and dropped: a multi-author pack has nobody to sign it, the key lands in CI where
    > "signed" restates who can push, and the one thing that executes is already pinned byte-for-byte
    > by plugin consent. Revisit only if Charnik ever becomes a central distributor.

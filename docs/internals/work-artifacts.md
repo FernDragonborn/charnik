@@ -27,10 +27,17 @@ Rank a fix by what a reader would *do* with the lie. Worst is a doc that instruc
 architecture forbids. Next is a summary that contradicts its own body, because the summary is what
 people read. Last, and still worth fixing, is shipped work listed as owed.
 
-## Planned work belongs in the plan
+## Planned work belongs in the tracker
 
-`docs/plan.md` is the tracker: it states what is **open**, with the outcome and constraints each item
-must satisfy. A status box is `[ ]` open, `[~]` decided or in flight, `[x]` done.
+The tracker is `docs/work/*.md`, one file per subject; each item states its outcome and the
+constraints it must satisfy. A status box is `[ ]` open, `[~]` decided or in flight, `[x]` done.
+`docs/plan.md` holds the product spec and the ORDER — its waves name items, never files, so
+reprioritising moves nothing on disk.
+
+**The subject owns the file, and an item lives in exactly one.** Two ledgers for one item is how the
+plan grew a side-doc problem before; the split works only because the unit is the item and the file
+is decided by what the item is ABOUT, never by when it is scheduled or who asked for it. An item
+whose subject changes moves, and the id goes with it — ids are stable, files are not addresses.
 
 **The box is the only status marker.** A settled call is written into the item's own body, in the
 present tense, as what the thing IS — never stamped `(DECIDED 2026-07-15)` beside it. The box already

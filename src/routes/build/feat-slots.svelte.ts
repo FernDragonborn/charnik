@@ -127,7 +127,7 @@ export class FeatSlots {
 	// --- §C skill choice-grant (Skilled: pick N skill proficiencies) ------------
 	// Data-driven off the feat's `skill_choice` column (author-set count, no feat-id hardcode), so a
 	// homebrew Skilled/Prodigy Just Works. NB SRD Skilled is "skills OR tools"; tools aren't modelled
-	// yet → skills-only (a flagged RAW deviation; plan.md ▸ D16 owns the tool half).
+	// yet → skills-only (a flagged RAW deviation; docs/work/mechanics.md ▸ TOOLS owns it).
 	/** How many skills a feat REF grants by choice (0 = not a choice-grant feat). */
 	featSkillCountOf = (ref: string | null | undefined): number => {
 		if (!ref || ref === ASI) return 0;
