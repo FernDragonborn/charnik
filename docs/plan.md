@@ -1212,52 +1212,48 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
-### Implementation order (current focus — WAVES, set 2026-08-10)
+### Implementation order (current focus — WAVES)
 
 The order the maintainer and Claude are actually working to. Wave = a coherent chunk, not a sprint;
 the SEQUENCING REASONS matter more than the numbering and are given per wave, because most of them
-were learned the hard way.
+were learned the hard way. Numbers are stable: a wave that closes leaves the list and the ones after
+it do not renumber.
 
-- **W0 · REL-4 content packs — DONE 2026-08-11** (slices 0–11, then an architectural audit whose own
-  open list is closed too; `0cf0c4c` is the tip). SRD content is out of the app and updates without a
-  release. The one thing carved OFF rather than finished is a generic non-GitHub HTTPS host, now
-  **REL-5**, deliberately not in any wave.
-  **Consequence, now live:** the content passes (MAGIC-ITEM-EFX, E4, D6/D10) have left the app
-  roadmap entirely; they ship from the content repo.
-  **Reopened and closed again 2026-08-12:** a third, security-angled read found twelve items, two of
-  them silent data loss reachable without any hostility — a `.prev` that resurrected an uninstalled
-  pack, and case-folded folder collisions on NTFS/APFS. All fixed and live-verified (REL-4 · "THE
-  THIRD PASS").
-- **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
-  tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
-  listed on UBUG-20 itself.
-- **W2 · The roller → ROLLER-N → UBUG-11. ROLLER-N and UBUG-21 are closed.** The audit behind it
-  turned "add a loop for N attacks" into "the result SHAPE is what aged"; the design that came out of
-  it is `docs/internals/roller.md` and the open tails are on ROLLER-N below.
-  What the wave still owes: `UBUG-11` — a class action that makes N attacks (Flurry of Blows) needs
-  the `rolls` intent in actions.md to CALL the roller, which now exists to be called.
-  **A session of live testing on 2026-08-25 (`48a68c3`..`6c8d82e`) closed 27 findings against the
-  built organ** — the model ones: the CARET IS IN THE LINE (← / Ctrl+Z / Ctrl+arrow walk it token by
-  token, and typing inserts where it stands), a line's ROLE decides its vocabulary (a damage type is
-  neither offered nor resolved on a d20 line, and a type pill re-opens that menu to change it), a
-  cantrip's beam COUNT is rolled as a volley rather than delegated to the player by toast, and an
-  INHERITED type is derived so no edit may target it. Tail left open by that session: a token typed
-  WITHOUT spaces (`2d6+3`) still parses as one raw fragment and blocks the roll — the parser splits
-  on whitespace only, and that is what a person types.
-- **W3 · UX-1 error-copy pass → ARCH-1 i18n sweep.** After W0, because REL-4 adds a whole class of
-  new user-facing messages that would otherwise be written twice. UX-1 before ARCH-1, or bad copy
-  gets translated and then rewritten. **And after W2** — this reason is new and load-bearing: the
-  roller currently writes an English SENTENCE into `log.jsonl`, and prose already on disk cannot be
-  localised afterwards. The roller has to start recording facts before the i18n pass has anything
-  worth localising (ROLLER-N ▸ "amendments are STRUCTURE, not a sentence").
-- **W4 · N1 Inventory → RECHARGE-3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
-  SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
-  change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than riding
-  another wave.
-- **W5 · tail:** REL-2 packaging channels, LINT-1.
-  UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21; UBUG-4 came off it on
-  2026-08-22, verified on a real install. B24 and B11 have since been answered (both won't-do, with the measurement /
-  the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
+- **W0 / W1 — DONE.** REL-4 content packs, then the roll card. One consequence stays live: SRD
+  content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
+  not app-roadmap work at all.
+- **W2 · the roller's remaining tails.** ROLLER-N and UBUG-21 are closed and
+  `docs/internals/roller.md` is the design; what this wave owes is the open list under ROLLER-N — a
+  token typed WITHOUT spaces (`2d6+3`) blocking the roll, `parseFormula → {terms, issues}`,
+  provenance surviving `foldValues`, a volley's group identity, `RollSpec` as the request, and
+  **amendments as STRUCTURE**.
+  **That last one is why this wave precedes W3, not the other way round:** the roller writes an
+  English sentence into `log.jsonl`, and prose already on disk cannot be localised afterwards.
+  `UBUG-11` rides here and is no longer app work — the `attack:<weapon_id>[:<count>]` verb is built,
+  and what remains is the `resource_options` rows still saying `note:`, a commit in the content repo.
+- **W3 · ARCH-1 i18n sweep.** UX-1 cleared the copy prerequisite, W2 clears the other one. Damage
+  types take catalog names in the same pass: the 13 SRD types are a closed rules vocabulary, while an
+  invented homebrew type stays data and passes through.
+- **W4 · the cheap surface wins, none of which depend on anything.** N5(1) the Features panel — a
+  character cannot read their own traits anywhere — plus the shared provenance popover, the pact
+  pool's own short-rest pips, the spell-picker preview, UPCAST-PREVIEW-TOOLTIP and SAVAGE-TAIL.
+- **W5 · the a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
+  one-column `grid`) + keyboard navigation past the double-Enter take. It is the same ruling applied
+  in four places; split up, it gets re-derived four times, and the picker's shape is already decided
+  down to why `aria-activedescendant` names the gridcell.
+- **W6 · "everything is doable from the UI", where it is not.** Edit and delete existing homebrew,
+  the generic grid for spell and monster, the UI type-assign form, and authoring a `resource` /
+  `resource_option` row at all. A shipped invariant currently unmet, not a feature.
+- **W7 · N6 currency → RECHARGE-3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
+  SCOPED-BONUS.** Item charges want an inventory, which N1 built. SCOPED-BONUS is an L1 grammar
+  change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than
+  riding another wave.
+- **W8 · the content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
+  three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
+  casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
+- **Deliberately in no wave:** REL-2 (its own session, blocked on accounts, not on code), REL-5
+  (post-1.0), UX-2 (its own design session, once the UI stops moving) and COMPANION (research
+  first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
 `UBUG-22` was the last one and is closed.)_
@@ -1591,7 +1587,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   `recharge` enum cannot express and that a rest policy should not be bent into. Nothing tracks item
   charges as a resource today — no column, no consumer — which is exactly why the generic model waits
   for this rather than being pre-built; the reasoning is `docs/internals/effects.md` ▸ Recharge-model
-  roadmap, axis 2. Wants N1's inventory first (W4).
+  roadmap, axis 2. N1's inventory, which it needs, is built (W7).
   - [ ] **Item-charge data:** a `charges` (max) + `recharge` spec on the item schema; an owned or
         attuned charged item GRANTS an ordinary resource pool, reusing `grant_resource` and the whole
         resource subsystem rather than inventing a parallel counter.
