@@ -85,8 +85,9 @@
   **What is left:** the AUTO-OUTCOME marker — `logMarker` takes a `RollName` now and every other
   marker carries its key, but this one's sentence names a ROLL whose own name is a key, and an entry
   holds one. Making it read in the reader's language wants the outcome as a FACT on the entry (the
-  shape amendments already have) rather than a word baked into its label. Then the spell-grouping
-  label on the panel header, and the builder's remaining body copy. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  shape amendments already have) rather than a word baked into its label. Then the builder's remaining
+  body copy, and the CONTENT-HEALTH copy — every `issues[].reason` in `derive.ts` and the loader is
+  an English sentence built where the fault is found, which is its own domain and its own pass. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the

@@ -716,11 +716,14 @@
 		},
 		"spells": {
 			"alwaysPrepared": "always prepared",
+			"attackBonus": "attack",
 			"attackRoll": "attack roll",
 			"autoHit": "auto",
 			"bonusAction": "bonus action",
 			"castRitual": "Cast as ritual (no slot, +10 min)",
 			"castUpcast": "Cast at a higher slot (upcast)",
+			"castingBlocked": "Spellcasting blocked — not proficient with {armor}",
+			"everySpell": "— every spell",
 			"groupBy": {
 				"level": "By level",
 				"prepared": "Prepared",
@@ -734,6 +737,7 @@
 			"prepared": "Prepared",
 			"prepared_count": "Prepared",
 			"reaction": "reaction",
+			"saveDc": "Save DC",
 			"slotPip": "tap to spend / restore",
 			"tempHp": "temp HP",
 			"togglePrepared": "tap to prepare / unprepare"

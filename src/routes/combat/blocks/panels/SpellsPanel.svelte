@@ -22,17 +22,20 @@
 		{#each s.spellcasting.classes as sc, i (sc.className)}
 			{#if i > 0}<span class="cast-separator"> · </span>{/if}
 			{#if multi}<b class="cast-class">{sc.className}</b>
-			{/if}Save DC
-			<b use:provenance={why(sc.saveDC)}>{sc.saveDC.value}</b> · attack
+			{/if}{$_('combat.spells.saveDc')}
+			<b use:provenance={why(sc.saveDC)}>{sc.saveDC.value}</b>
+			· {$_('combat.spells.attackBonus')}
 			<b use:provenance={why(sc.attack)}>{signed(sc.attack.value)}</b>
 		{/each}
 		{#if !multi}
-			— every spell{/if}
+			{$_('combat.spells.everySpell')}{/if}
 	</div>
 	{#if combat.armorBlock}
+		<!-- the `title` stays the rules note verbatim: it is the same sentence Content health shows for
+		     this block, and that copy is its own i18n domain (docs/work/ui.md ▸ ARCH-1) -->
 		<div class="armor-block" title={combat.armorBlock.note}>
-			<Icon name="triangle-alert" size={13} /> Spellcasting blocked — not proficient with {combat
-				.armorBlock.source}
+			<Icon name="triangle-alert" size={13} />
+			{$_('combat.spells.castingBlocked', { values: { armor: combat.armorBlock.source } })}
 		</div>
 	{/if}
 	<div class="spell-rows">
