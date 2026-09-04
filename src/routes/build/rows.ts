@@ -10,7 +10,7 @@ import {
 	contentLabel,
 	entryMeta,
 	localizedName,
-	localizedProse,
+	plainProse,
 	type DetailModel,
 } from '$lib/content/detail';
 import type { Translate } from '$lib/i18n';
@@ -45,17 +45,11 @@ export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): 
 /** Localised body text for a content row (falls back to EN, then empty) — `rowName`'s sibling, for
  *  the sheet blocks that print a feature's or trait's prose straight onto the sheet.
  *
- *  Content prose is markdown, and the sheet renders these as a two-line clamp rather than an
- *  article, so the syntax is stripped rather than rendered: `_Origin Feat_` reading as literal
- *  underscores is worse than losing the emphasis. The full article, markdown intact, is one click
- *  away in the inspector. */
+ *  The strip itself is `plainProse`'s (one owner — the play sheet prints the same rows). What this
+ *  adds is the builder's two defaults: the undefined-row guard and the active locale. The full
+ *  article, markdown intact, is one click away in the inspector. */
 export function rowText(row: LoadedRow | undefined, locale = app.activeLocale): string {
-	if (!row) return '';
-	return localizedProse(row, 'text', locale)
-		.replace(/[*_`]+/g, '')
-		.replace(/^#+\s*/gm, '')
-		.replace(/\s*\n+\s*/g, ' ')
-		.trim();
+	return row ? plainProse(row, locale) : '';
 }
 
 /**

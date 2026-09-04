@@ -412,7 +412,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (110 modules)
+## Library functions & types (111 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -545,6 +545,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function loadDraft`
 - `function deleteDraft`
 - `function listDrafts` — Newest first.
+
+### `src/lib/character/features.ts`
+
+- `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
+- `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
+- `const FEATURE_SECTION` — What section a feature is read under.
+- `type FeatureSection`
+- `interface CharacterFeature` — One thing a character HAS, as the sheet reads it.
+- `function characterFeatures` — Every feature, trait and feat a character has, in reading order: class features by level, then * what their origin ga…
 
 ### `src/lib/character/inventory.ts`
 
@@ -741,6 +750,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
 - `const localizedProse` — A content row's PROSE in `locale`, falling back to EN then a legacy bare column — the same rule * the detail pane use…
+- `const plainProse` — A row's prose with its markdown syntax STRIPPED rather than rendered — for the sheets that print * a feature's or tra…
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
 - `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
@@ -1538,4 +1548,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 910 exports across 125 modules · 60 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 917 exports across 126 modules · 60 duplicate suspects._

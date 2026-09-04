@@ -84,7 +84,8 @@
 			"addEffect": "Add effect",
 			"manageAll": "Manage all",
 			"changeGrouping": "Change grouping",
-			"dragToReorder": "drag to reorder"
+			"dragToReorder": "drag to reorder",
+			"features": "Features"
 		},
 		"inventory": {
 			"load": "Load",
@@ -243,6 +244,14 @@
 			"dismiss": "Dismiss",
 			"rollAria": "{label} — {total}",
 			"rollAriaDismiss": "{label} — {total}. Dismiss"
+		},
+		"features": {
+			"classFeatures": "Class features",
+			"speciesTraits": "Species traits",
+			"background": "Background",
+			"feats": "Feats",
+			"noText": "This row carries no description.",
+			"empty": "Nothing yet — features arrive with a species, a background and a class."
 		}
 	},
 	"mobile": {

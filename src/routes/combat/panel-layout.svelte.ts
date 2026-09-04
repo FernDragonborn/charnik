@@ -8,7 +8,7 @@ export class PanelLayout {
 	collapsed = $state<Record<string, boolean>>({});
 	// two independent column arrays (svelte-dnd-action items need an id)
 	columns = $state<{ id: string }[][]>([
-		[{ id: 'skills' }, { id: 'spells' }],
+		[{ id: 'skills' }, { id: 'spells' }, { id: 'features' }],
 		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }, { id: 'inventory' }],
 	]);
 	dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)

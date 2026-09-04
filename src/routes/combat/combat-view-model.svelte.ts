@@ -16,6 +16,7 @@ import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/d
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
+import { characterFeatures } from '$lib/character/features';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -407,6 +408,14 @@ class CombatVM {
 		if (c.play.hp.current <= 0 || this.economy.incapacitated || this.cantConcentrate)
 			this.clearConcentration();
 	};
+
+	/** What this character HAS, to read — the Features panel's whole model. Not derived from the
+	 *  sheet's effect list: a feature made purely of prose carries no effect tokens and never reaches
+	 *  it (`character/features.ts`). */
+	features = $derived.by(() => {
+		const c = this.character;
+		return c && this.graph ? characterFeatures(c, this.graph) : [];
+	});
 
 	// configurable passive-sense skills (Pin skills)
 	passives = $derived.by(() => {

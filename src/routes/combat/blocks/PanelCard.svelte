@@ -17,6 +17,7 @@
 	import EffectsPanel from './panels/EffectsPanel.svelte';
 	import SpellsPanel from './panels/SpellsPanel.svelte';
 	import InventoryPanel from './panels/InventoryPanel.svelte';
+	import FeaturesPanel from './panels/FeaturesPanel.svelte';
 
 	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
 
@@ -76,6 +77,8 @@
 		<SpellsPanel {s} />
 	{:else if pid === 'inventory'}
 		<InventoryPanel />
+	{:else if pid === 'features'}
+		<FeaturesPanel />
 	{/if}
 {/if}
 

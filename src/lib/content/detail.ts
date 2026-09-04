@@ -94,6 +94,18 @@ export const localizedName = (row: LoadedRow, locale: string): string =>
  *  `DetailModel` (the builder sheet lists feature and trait text inline). */
 export const localizedProse = (row: LoadedRow, base: string, locale: string): string =>
 	localized(row.data, base, locale);
+
+/** A row's prose with its markdown syntax STRIPPED rather than rendered — for the sheets that print
+ *  a feature's or trait's text as plain running text. `_Origin Feat_` reading as literal underscores
+ *  is worse than losing the emphasis, and neither sheet is an article renderer. One owner, because
+ *  both sheets print the same rows and a strip written twice drifts. */
+export const plainProse = (row: LoadedRow, locale: string): string =>
+	localizedProse(row, 'text', locale)
+		.replace(/[*_`]+/g, '')
+		.replace(/^#+\s*/gm, '')
+		.replace(/\s*\n+\s*/g, ' ')
+		.trim();
+
 const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
 interface AbilityScore {

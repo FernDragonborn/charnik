@@ -10,6 +10,7 @@ import type { CharacterSheet } from '../character/derive';
 import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import type { StatMethod } from './rules';
+import { activeClassFeatures } from '../character/features';
 
 /** The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all
  *  six (Epic Boons), else the listed subset (`str,dex` → Grappler). Empty/absent → `[]` (not a
@@ -231,63 +232,6 @@ export function classFeatureLines({
 		})
 	);
 	return out.sort((a, b) => a.level - b.level || a.className.localeCompare(b.className));
-}
-
-/** One class feature a drafted row actually has, with the row it came from. */
-interface ActiveClassFeature {
-	entry: DraftClassEntry;
-	classRow: LoadedRowByType<'class'>;
-	row: LoadedRowByType<'class_feature'>;
-	level: number;
-	fromSubclass: boolean;
-	/** False for the look-ahead rows — what the next level or two will bring. */
-	gained: boolean;
-}
-
-/**
- * Every class feature the drafted rows grant, under the gate the derive itself applies: the level is
- * reached, the feature belongs to this edition, and a subclass feature belongs to the subclass that
- * row actually chose. Deduped by (id, level, subclass) across sources, like the derive does.
- *
- * ONE iterator, because a gate written twice is a gate that drifts: the copy that fed the expertise
- * cap compared a feature's bare `subclass_id` against the draft's `effectiveId` REF, so no subclass
- * feature ever matched and a subclass-granted expertise slot was silently worth nothing.
- *
- * `extraLevels` is the only difference between its two readers — the sheet previews what the next
- * level or two will bring, a cap counts only what is in hand.
- */
-function* activeClassFeatures(
-	classes: readonly DraftClassEntry[],
-	graph: ContentGraph,
-	system: string,
-	{ extraLevels = 0 }: { extraLevels?: number } = {}
-): Generator<ActiveClassFeature> {
-	const seen = new Set<string>();
-	for (const entry of classes) {
-		if (!entry.classId) continue;
-		const classRow = graph.get(entry.classId);
-		if (classRow?.type !== 'class') continue;
-		const subclassRow = entry.subclassId ? graph.get(entry.subclassId) : undefined;
-		const subclassId = subclassRow?.type === 'subclass' ? subclassRow.id : '';
-		for (const row of graph.featuresForClass(classRow)) {
-			const level = Number(row.data.level);
-			if (level > entry.level + extraLevels) continue;
-			if (!row.systems.includes(system)) continue;
-			const forSubclass = row.data.subclass_id;
-			if (forSubclass && forSubclass !== subclassId) continue;
-			const key = `${row.data.id}:${level}:${forSubclass ?? ''}`;
-			if (seen.has(key)) continue;
-			seen.add(key);
-			yield {
-				entry,
-				classRow,
-				row,
-				level,
-				fromSubclass: !!forSubclass,
-				gained: level <= entry.level
-			};
-		}
-	}
 }
 
 /** What part of the sheet a todo is about — the caller maps this to the control that fixes it, so

@@ -59,9 +59,13 @@
         but does not reach the take toggle, the jump rail or the card's own controls without `Tab`.
         Roving tabindex inside the row; **the jump rail stays its own tab stop** rather than joining
         the arrow cycle, so the arrows keep meaning one thing.
-- [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **Features panel on the combat
-  sheet** — a character can't READ their own features/traits anywhere; read-only prose list,
-  cheapest big win, zero prereqs. (2) **DONE** — concentration check prompt on damage (CON save DC
+- [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **DONE** — the Features panel. A character
+  can read their own class features, species traits, background and feats on the play sheet, as
+  separate sections and never one blob. It reads `character/features.ts`, NOT the sheet's effect
+  list: the gather keeps only rows carrying effect TOKENS, so a feature made purely of prose — most
+  of them — never reaches it. Each row is a native `<details>`, which is already everything a
+  read-only list needs. `activeClassFeatures` moved there too, so the builder and the play sheet
+  share one gate instead of two that drift. (2) **DONE** — concentration check prompt on damage (CON save DC
   max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
   (4) Ammunition as consumable — tracking OFF by default (a toggle
   that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest

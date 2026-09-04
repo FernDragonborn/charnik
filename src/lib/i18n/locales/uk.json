@@ -84,7 +84,8 @@
 			"addEffect": "Додати ефект",
 			"manageAll": "Керувати всіма",
 			"changeGrouping": "Змінити групування",
-			"dragToReorder": "перетягніть, щоб змінити порядок"
+			"dragToReorder": "перетягніть, щоб змінити порядок",
+			"features": "Вміння"
 		},
 		"inventory": {
 			"load": "Навантаження",
@@ -243,6 +244,14 @@
 			"dismiss": "Закрити",
 			"rollAria": "{label} — {total}",
 			"rollAriaDismiss": "{label} — {total}. Закрити"
+		},
+		"features": {
+			"classFeatures": "Класові вміння",
+			"speciesTraits": "Видові риси",
+			"background": "Передісторія",
+			"feats": "Риси",
+			"noText": "Цей рядок не має опису.",
+			"empty": "Поки нічого — вміння з’являються з видом, передісторією та класом."
 		}
 	},
 	"mobile": {

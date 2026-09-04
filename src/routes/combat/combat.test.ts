@@ -1537,10 +1537,10 @@ describe('PanelLayout · a saved layout is reconciled with the panels that exist
 
 	it('leaves an up-to-date layout exactly as saved, order included', () => {
 		const layout = new PanelLayout();
-		const saved = [
-			['inventory', 'skills'],
-			['effects', 'attacks', 'actions', 'spells'],
-		];
+		// built from the SHIPPED set, reversed, so "up to date" stays true when a panel is added —
+		// a hardcoded list here would fail the next time one is, and say nothing about reconciliation
+		const shipped = layout.columns.flat().map((p) => p.id);
+		const saved = [shipped.slice(0, 2).reverse(), shipped.slice(2).reverse()];
 		layout.restore(saved);
 		expect(layout.columns.map((col) => col.map((p) => p.id))).toEqual(saved);
 	});
