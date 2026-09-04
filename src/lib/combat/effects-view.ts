@@ -37,16 +37,60 @@ export function why(c: Computed, translate?: Translate): string {
 	);
 }
 
+/** A target key → its catalog key and the English it reads as with no translator. Both live in one
+ *  entry because they are one fact said twice: the module is locale-free, so a caller that hands it
+ *  no translator (a node test, an attack note) still gets a readable label rather than a key.
+ *  Everything outside this map is a dotted family (`save.<ab>`, `skill.<id>`, `passive.<skill>`), an
+ *  ability, or a homebrew target — all handled below. */
+const TARGET: Record<string, { key: string; en: string }> = {
+	saves: { key: 'combat.tag.allSaves', en: 'all saves' },
+	skills: { key: 'combat.tag.allSkills', en: 'all skills' },
+	ability_checks: { key: 'combat.tag.abilityChecks', en: 'ability checks' },
+	d20_tests: { key: 'combat.tag.d20Tests', en: 'all d20 tests' },
+	ac: { key: 'combat.tag.ac', en: 'AC' },
+	initiative: { key: 'combat.tag.initiative', en: 'Initiative' },
+	speed: { key: 'combat.tag.speed', en: 'Speed' },
+	'speed.fly': { key: 'combat.tag.speedFly', en: 'Fly speed' },
+	'speed.swim': { key: 'combat.tag.speedSwim', en: 'Swim speed' },
+	hp_max: { key: 'combat.tag.hpMax', en: 'Max HP' },
+	attack: { key: 'combat.tag.attack', en: 'Attack' },
+	damage: { key: 'combat.tag.damage', en: 'Damage' },
+	spell_dc: { key: 'combat.tag.spellDc', en: 'Spell DC' },
+	spell_attack: { key: 'combat.tag.spellAttack', en: 'Spell attack' },
+	'save.death': { key: 'combat.tag.saveDeath', en: 'Death save' },
+	action: { key: 'combat.tag.action', en: 'Action' },
+	bonus: { key: 'combat.tag.bonus', en: 'Bonus action' },
+	reaction: { key: 'combat.tag.reaction', en: 'Reaction' },
+};
+
+/** Say one catalog key, falling back to the English it reads as when no translator was handed in. */
+function say(
+	translate: Translate | undefined,
+	key: string,
+	en: string,
+	values?: Record<string, string | number>,
+): string {
+	return translate ? translate(key, { ...(values ? { values } : {}), default: en }) : en;
+}
+
 /** A bounded-vocab target key → a short readable label ("ac" → "AC", "save.dex" → "DEX save",
  *  "skill.stealth" → "Stealth", "saves"/"skills" → the group names). */
-function targetLabel(t: string): string {
-	if (t === 'saves') return 'all saves';
-	if (t === 'skills') return 'all skills';
-	if (t.startsWith('save.')) return `${t.slice(5).toUpperCase()} save`;
-	if (t.startsWith('skill.')) return titleCase(t.slice(6));
-	if (t === 'ac') return 'AC';
-	if ((ABILITY_IDS as readonly string[]).includes(t)) return t.toUpperCase(); // STR/DEX/…
-	return titleCase(t);
+function targetLabel(t: string, translate?: Translate): string {
+	const known = TARGET[t];
+	if (known) return say(translate, known.key, known.en);
+	const ability = (id: string) => say(translate, `abilityShort.${id}`, id.toUpperCase());
+	const skill = (id: string) => say(translate, `skillName.${id}`, titleCase(id));
+	if (t.startsWith('save.')) {
+		const ab = ability(t.slice(5));
+		return say(translate, 'entryMeta.save', `${ab} save`, { ability: ab });
+	}
+	if (t.startsWith('skill.')) return skill(t.slice(6));
+	if (t.startsWith('passive.')) {
+		const s = skill(t.slice(8));
+		return say(translate, 'combat.tag.passive', `Passive ${s}`, { skill: s });
+	}
+	if ((ABILITY_IDS as readonly string[]).includes(t)) return ability(t); // STR/DEX/…
+	return titleCase(t); // a homebrew target is a content row's own word
 }
 
 type ParsedEffect = ReturnType<typeof parseToken>;
@@ -61,45 +105,84 @@ function flatDelta(p: ParsedEffect): string {
 /** Per-kind tag formatter (assumes the required field is present — the caller guards on the result).
  *  Each returns undefined when its token lacks a target/plugin, falling through to the raw fallback. */
 const TAG_FORMATTERS: Partial<
-	Record<ParsedEffect['kind'], (p: ParsedEffect) => string | undefined>
+	Record<ParsedEffect['kind'], (p: ParsedEffect, tr?: Translate) => string | undefined>
 > = {
-	[EFFECT_KIND.flatBonus]: (p) => p.target && `${targetLabel(p.target)} ${flatDelta(p)}`,
-	[EFFECT_KIND.setOverride]: (p) =>
+	[EFFECT_KIND.flatBonus]: (p, tr) => p.target && `${targetLabel(p.target, tr)} ${flatDelta(p)}`,
+	[EFFECT_KIND.setOverride]: (p, tr) =>
 		p.target &&
-		`${targetLabel(p.target)} ${OP_SYMBOL[p.setMode ?? 'set']} ${p.amount ?? p.valueExpr ?? '?'}`,
-	[EFFECT_KIND.blockBonus]: (p) => p.target && `block · ${targetLabel(p.target)}`,
-	[EFFECT_KIND.halve]: (p) => p.target && `${targetLabel(p.target)} ×½`,
-	[EFFECT_KIND.resistImmune]: (p) => p.target && `${p.defense ?? 'resist'} · ${p.target}`,
-	[EFFECT_KIND.advantage]: (p) => p.target && `adv · ${targetLabel(p.target)}`,
-	[EFFECT_KIND.disadvantage]: (p) => p.target && `disadv · ${targetLabel(p.target)}`,
-	[EFFECT_KIND.grantProficiency]: (p) => p.target && `prof · ${titleCase(p.target)}`,
-	[EFFECT_KIND.grantRoll]: (p) => p.target && `roll · ${titleCase(p.target)}`,
+		`${targetLabel(p.target, tr)} ${OP_SYMBOL[p.setMode ?? 'set']} ${p.amount ?? p.valueExpr ?? '?'}`,
+	[EFFECT_KIND.blockBonus]: (p, tr) => p.target && prefixed(tr, 'block', p.target),
+	[EFFECT_KIND.halve]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.halve', `${targetLabel(p.target)} ×½`, {
+			target: targetLabel(p.target, tr),
+		}),
+	[EFFECT_KIND.resistImmune]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.defense', `${p.defense ?? 'resist'} · ${p.target}`, {
+			defense: say(tr, `combat.defense.${p.defense ?? 'resist'}`, p.defense ?? 'resist'),
+			target: say(tr, `damageType.${p.target}`, p.target),
+		}),
+	[EFFECT_KIND.advantage]: (p, tr) => p.target && prefixed(tr, 'advantage', p.target),
+	[EFFECT_KIND.disadvantage]: (p, tr) => p.target && prefixed(tr, 'disadvantage', p.target),
+	[EFFECT_KIND.grantProficiency]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.proficiency', `prof · ${titleCase(p.target)}`, {
+			target: targetLabel(p.target, tr),
+		}),
+	[EFFECT_KIND.grantRoll]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.grantRoll', `roll · ${titleCase(p.target)}`, {
+			target: targetLabel(p.target, tr),
+		}),
 	[EFFECT_KIND.applyCondition]: (p) => p.target && titleCase(p.target),
-	[EFFECT_KIND.autoFail]: (p) => p.target && `auto-fail · ${targetLabel(p.target)}`,
-	[EFFECT_KIND.autoSucceed]: (p) => p.target && `auto-succeed · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.autoFail]: (p, tr) => p.target && prefixed(tr, 'autoFail', p.target),
+	[EFFECT_KIND.autoSucceed]: (p, tr) => p.target && prefixed(tr, 'autoSucceed', p.target),
 	[EFFECT_KIND.note]: (p) => p.target, // free-form display text, as authored
 	// a handler REFERENCE — the namespace is the readable part; args are opaque machine input
-	[EFFECT_KIND.plugin]: (p) => p.plugin && `plugin · ${p.plugin.namespace}`,
+	[EFFECT_KIND.plugin]: (p, tr) =>
+		p.plugin &&
+		say(tr, 'combat.tag.plugin', `plugin · ${p.plugin.namespace}`, {
+			namespace: p.plugin.namespace,
+		}),
 };
+
+/** The tags shaped "<what> · <target>" — one key, one target label, said once. */
+const PREFIX_EN: Record<string, string> = {
+	block: 'block',
+	advantage: 'adv',
+	disadvantage: 'disadv',
+	autoFail: 'auto-fail',
+	autoSucceed: 'auto-succeed',
+};
+function prefixed(tr: Translate | undefined, kind: keyof typeof PREFIX_EN, target: string): string {
+	return say(tr, `combat.tag.${kind}`, `${PREFIX_EN[kind]} · ${targetLabel(target)}`, {
+		target: targetLabel(target, tr),
+	});
+}
 
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
  *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; resist_immune → "resist · fire";
  *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
  *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
-export function effectTag(token: string): string {
+export function effectTag(token: string, translate?: Translate): string {
 	const p = parseToken(token);
-	return TAG_FORMATTERS[p.kind]?.(p) || token.replace(/[-:]/g, ' ');
+	return TAG_FORMATTERS[p.kind]?.(p, translate) || token.replace(/[-:]/g, ' ');
 }
 
 /** Panel tag for a token, preferring the DERIVE-RESOLVED value when the token's value is an L2
  *  EXPRESSION — `effectTag` alone can only show a literal, so an expression-valued numeric renders as
  *  a bare "Damage +". Match the resolved `NumericFact` (by its guard-stripped token) and render its
  *  concrete amount ("Damage +2"). Falls back to the literal tag for everything else. */
-export function effectTagResolved(token: string, facts: { numeric: NumericFact[] }): string {
+export function effectTagResolved(
+	token: string,
+	facts: { numeric: NumericFact[] },
+	translate?: Translate,
+): string {
 	const f = facts.numeric.find(
 		(n) => n.token === token && (n.amount !== undefined || n.diceFormula),
 	);
-	return f ? numericFactTag(f) : effectTag(token);
+	return f ? numericFactTag(f, translate) : effectTag(token, translate);
 }
 
 /** One source's derived contributions, as short display tags (B14). */
@@ -110,8 +193,8 @@ export interface DerivedEffectGroup {
 
 /** A short tag for a numeric fact, formatted from the FACT FIELDS (never re-parsing the token — the
  *  D7 invariant): "AC +1" / "Speed = 0" / "INT ≥ 19" / "hp_max ×½" / "attack +1d6". */
-function numericFactTag(f: NumericFact): string {
-	const t = targetLabel(f.target);
+function numericFactTag(f: NumericFact, translate?: Translate): string {
+	const t = targetLabel(f.target, translate);
 	if (f.amount !== undefined) {
 		if (f.op === 'set') return `${t} = ${f.amount}`;
 		if (f.op === 'floor') return `${t} ≥ ${f.amount}`;
@@ -120,7 +203,9 @@ function numericFactTag(f: NumericFact): string {
 		return `${t} ${signed(f.amount)}`;
 	}
 	if (f.diceFormula) return `${t} ${f.diceFormula.startsWith('-') ? '' : '+'}${f.diceFormula}`;
-	return `${t} (unresolved)`;
+	return say(translate, 'combat.tag.unresolved', `${targetLabel(f.target)} (unresolved)`, {
+		target: t,
+	});
 }
 
 /**
@@ -130,7 +215,10 @@ function numericFactTag(f: NumericFact): string {
  * panel already lists), grouped by source, plus the unknown tokens (distinctly styled inert notes).
  * Advantage/defense/proficiency facts already surface on their own stats, so they stay out here.
  */
-export function describeDerivedEffects(facts: EffectFacts): {
+export function describeDerivedEffects(
+	facts: EffectFacts,
+	translate?: Translate,
+): {
 	groups: DerivedEffectGroup[];
 	unknown: { source: string; token: string }[];
 } {
@@ -138,8 +226,8 @@ export function describeDerivedEffects(facts: EffectFacts): {
 	for (const f of facts.numeric) {
 		if (f.layer !== 'item' && f.layer !== 'feature') continue;
 		const cur = bySource.get(f.source);
-		if (cur) cur.push(numericFactTag(f));
-		else bySource.set(f.source, [numericFactTag(f)]);
+		if (cur) cur.push(numericFactTag(f, translate));
+		else bySource.set(f.source, [numericFactTag(f, translate)]);
 	}
 	return {
 		groups: [...bySource.entries()].map(([source, tags]) => ({ source, tags })),

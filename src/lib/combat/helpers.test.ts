@@ -273,7 +273,7 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 describe('why — a rule note reads through the translator the caller passes', () => {
 	const computed = {
 		value: 5,
-		trace: [{ source: 'Base', op: 'add' as const, amount: 5 }],
+		trace: [{ source: 'Base', layer: 'base' as const, op: 'add' as const, amount: 5 }],
 		notes: [
 			{ text: 'Encumbered at 100 lb (−10 ft)', key: 'provenance.encumbered', params: { lb: 100 } },
 		],

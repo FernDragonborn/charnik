@@ -23,6 +23,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/rows.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
+- `say` ×4 — src/lib/combat/effects-view.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
@@ -32,7 +33,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `of` ×3 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
-- `say` ×3 — src/routes/build/blocks/ChangeList.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts

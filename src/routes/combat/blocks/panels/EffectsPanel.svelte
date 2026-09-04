@@ -47,7 +47,7 @@
 	const durationLabel = (rounds: number | null | undefined) =>
 		rounds != null ? $_('combat.effects.roundsLeft', { values: { rounds } }) : '∞';
 	// item/feature-derived contributions + unknown/plugin notes (read-only, from sheet.facts)
-	const derivedEffects = $derived(describeDerivedEffects(s.facts));
+	const derivedEffects = $derived(describeDerivedEffects(s.facts, $_));
 </script>
 
 <!-- one Buffs/Debuffs effect row: name (white) + wrapping tags, then the duration dropdown + remove -->
@@ -78,7 +78,9 @@
 						>ⓘ {note}</span
 					>
 				{:else}
-					<span class="effect-tag effect-tag--{polarity}">{effectTagResolved(tok, s.facts)}</span>
+					<span class="effect-tag effect-tag--{polarity}"
+						>{effectTagResolved(tok, s.facts, $_)}</span
+					>
 				{/if}
 			{/each}
 		</div>
