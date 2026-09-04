@@ -145,6 +145,14 @@ describe('rollPool · roll-manipulation (L1 reroll / min_die facts)', () => {
 		expect(r.expr).toBe('d6(1↻5)');
 	});
 
+	// the boundary itself: the rule is "≤ the threshold", so a die landing exactly ON it rerolls.
+	// Without this the `<=` could be a `<` and nothing would notice (a mutation proved it).
+	it('rerolls a die that lands exactly ON the threshold', () => {
+		const r = rollPool({ 6: 1 }, { rng: rngSequence(0.2, 0.7), reroll: 2 }); // d6 → 2 (=2) → 5
+		expect(r.total).toBe(5);
+		expect(r.expr).toBe('d6(2↻5)');
+	});
+
 	it('does NOT reroll a die above the threshold', () => {
 		const r = rollPool({ 6: 1 }, { rng: rngSequence(0.5), reroll: 2 }); // d6 → 4, kept
 		expect(r.total).toBe(4);

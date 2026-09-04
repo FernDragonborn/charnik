@@ -115,10 +115,12 @@ kind.
 point of the test (no armour block, no dead-end row, no `aria-activedescendant`), which is a real
 assertion about absence.
 
-**Unused source exports (knip): 10, none of them tested.** `activeClassFeatures`, `applyFailed`,
-`ASI_SHAPES`, `adoptRowIds`, `draftStateSchema`, `LogKind`, `Size`, `LegacyAdvantageRoll`, `DieRole`,
-`SlotMaps` have no reference anywhere in `src/`, tests included. So there is no dead test riding on
-dead code — but that is source cleanup worth doing separately.
+**Unused source exports (knip): 10.** knip reports exports that nothing _outside_ their own file
+imports — not unreferenced symbols. Nine were used inside their own module and only the `export`
+keyword was surplus (`activeClassFeatures`, `applyFailed`, `ASI_SHAPES`, `adoptRowIds`,
+`draftStateSchema`, `SlotMaps`, `LogKind`, `LegacyAdvantageRoll`, `DieRole`); they are file-local
+now. One, `Size` in `rules/core.ts`, was genuinely dead — `content/schemas.ts` declares its own —
+and is deleted. No dead test rode on any of them.
 
 **Repeated case titles: 3, all legitimate.** `strips anything executable` twice in
 `content/markdown.browser.test.ts` (block renderer and inline renderer are two functions),
@@ -357,12 +359,18 @@ Half the survivors are `StringLiteral` mutants in error copy and note text — a
 
 - **The always-prepared exclusion was never asserted** (fixed, finding 6 below).
 - **The encumbrance note's number is unasserted** (fixed, finding 7 below).
-- **The dice options are tested in the middle, never at the edge.** `dice.ts:379-387` — the `reroll`,
-  `minDie` and `maxDie` guards all survive being replaced by `true`, and their `<`/`>` comparisons
-  survive becoming `<=`/`>=`. The features work; their boundaries are unproven. Left open: each is a
-  new test, not a sharpened one.
-- **`pipeline.ts` holds 10 of the 20 never-reached mutants** — the lowest score of the five, and the
-  one file where the answer is "write a test" rather than "strengthen one".
+- **The dice options are guarded after all — the report was wrong here.** Stryker listed the
+  `reroll` / `minDie` / `maxDie` guards in `dice.ts:379-387` as surviving replacement by `true`.
+  Hand-checking each says otherwise: `reroll → true` fails 35 of 64 tests, `minDie → true` fails
+  32, `maxDie → true` fails 35. They are **false survivors**, most plausibly mis-attributed by
+  `coverageAnalysis: "perTest"`. What genuinely survives is the comparison pair (`v < o.minDie` →
+  `<=`, `v > o.maxDie` → `>=`) and those are **equivalent mutants**: at the boundary the mutated
+  branch assigns the value the die already holds, so no test can ever tell them apart. Unkillable
+  by construction, not a gap. The one thing worth adding was a case pinning that the reroll rule is
+  "≤ the threshold" — a die landing exactly on it rerolls — which two other tests only implied.
+
+  **A survivor list is a list of candidates, not of gaps.** Every machine finding in this audit was
+  confirmed by hand before it was believed; this entry is why that rule exists.
 
 ---
 
