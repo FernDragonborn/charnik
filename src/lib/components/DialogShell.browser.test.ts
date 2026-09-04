@@ -44,7 +44,7 @@ describe('DialogShell — the way out', () => {
 	it('a click on the backdrop dismisses', async () => {
 		const onDismiss = vi.fn();
 		const screen = await shell(onDismiss);
-		await screen.container.querySelector<HTMLElement>('.dialog-backdrop')?.click();
+		screen.container.querySelector<HTMLElement>('.dialog-backdrop')?.click();
 		expect(onDismiss).toHaveBeenCalledOnce();
 	});
 
