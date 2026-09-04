@@ -54,11 +54,72 @@ engine disabled (identical shape; trace = base-only when off).
   Verifying that path needs a manual `pnpm tauri dev` run (or a future `tauri-driver` E2E + an
   OS-level dialog automator). So "no driver for the S2 dialog" means *this layer*, not "no driver".
 
-## Mutation (measured once, not a standing gate)
-`src/lib/rules` scores **82.37%** against Stryker — the only measure that separates running a line
-from asserting it. The tool is deliberately NOT a dependency: it was run once, the survivors it found
-were fixed, and the score plus the recipe to redo it live in [tests-audit.md](../tests-audit.md).
-Reach for it when a module's assertions feel decorative, not on a schedule.
+## Measured once, not a standing gate
+Seven detection methods were run across the whole suite. The findings are applied; what stays here is
+what the measurements **rule out**, so nobody spends the hours again on a question already answered.
+
+**Nothing to hunt for.** Zero snapshots anywhere (`toMatchSnapshot` and friends have never been used,
+so the ban below has nothing to catch), zero dead tests, zero over-mocked tests, zero tests of a
+dependency rather than our shim. A scan for cases whose every assertion is
+`toBeDefined`/`toBeTruthy`/`not.toThrow` returned no real hit — every candidate stood beside a
+structural assertion or was a type-narrowing guard. Redo it only per file, per suspicion.
+
+**Coverage uniqueness is nearly blind here.** Running each test file alone under v8 coverage (~7 min)
+found thirteen files whose statements no other file misses — and twelve were false positives: data
+gates asserting on real shipped CSV through loader code other tests also walk, a source-text scanner
+that executes nothing by design, an opt-in network test. Statement coverage cannot tell running a line
+from asserting about it, so it produces one true positive per sweep at best.
+
+**Mutation (Stryker, `src/lib/rules`).** 1 021 mutants, 15 min, **82.37% total / 84.02% of covered**:
+
+| File | Score | Survived | Unreached |
+| --- | ---: | ---: | ---: |
+| `spellcasting.ts` | 88.79 | 24 | 2 |
+| `proficiency.ts` | 86.36 | 6 | 0 |
+| `dice.ts` | 82.71 | 63 | 6 |
+| `core.ts` | 78.64 | 42 | 2 |
+| `pipeline.ts` | 75.00 | 25 | 10 |
+
+Half the survivors are `StringLiteral` mutants in error copy nothing asserts — cheap to kill, rarely
+worth it. `dice.ts:379-387`'s `minDie`/`maxDie` comparison mutants (`<` → `<=`) are **equivalent
+mutants**: at the boundary the mutated branch assigns the value the die already holds, so no test can
+separate them. Do not try to close them. `pipeline.ts`'s 10 unreached mutants are the one real gap,
+and closing them means new tests against a fresh measurement.
+
+**A survivor list is a list of candidates, not of gaps** — Stryker also reported the `reroll`/`minDie`/
+`maxDie` guards as surviving replacement by `true`, and hand-checking each showed 32-35 failing tests.
+Confirm every machine finding by hand before believing it.
+
+**Redoing the mutation run.** `pnpm add -D @stryker-mutator/core @stryker-mutator/vitest-runner`, a
+config with `testRunner: "vitest"`, `plugins: ["@stryker-mutator/vitest-runner"]` (pnpm will not find
+it by glob), `mutate: ["src/lib/rules/**/*.ts", "!**/*.test.ts"]`, `coverageAnalysis: "perTest"`, and a
+vitest config keeping only the `node` project — a Chromium launch per mutant costs more than the whole
+node suite. Then remove all of it again. **`inPlace: true` is mandatory and it bites:** the default
+sandbox copies the repo per run, which means copying an 11 GB `src-tauri/target` (it filled the disk
+mid-copy) and it breaks content resolution, because `../charnik-content-srd` does not exist beside a
+sandbox. In place, Stryker stamps `// @ts-nocheck` across every TS file and swaps one line at a time —
+do not edit or run anything while it works, commit first so a crash is one `git checkout -- .` away,
+and delete `.stryker-tmp` afterwards or `eslint .` reports 1 193 parse errors about "multiple
+candidate TSConfigRootDirs" that mean nothing.
+
+**Targeted probes beat a sweep.** Breaking one behaviour on purpose and running the tests that should
+notice answers "would this fail if the code were wrong" directly, in seconds. Pick the mutation to
+settle a question you already have; `git checkout -- <file>` in a `finally` so a crashed run cannot
+leave the tree dirty.
+
+## Duplication is a missing fixture, not a redundant test
+`config/jscpd.json` excludes `**/*.test.ts`. Lifting the exclusion measures **4.21%** duplicated
+lines, and reading every pair found no shared assertion — it is `beforeEach` bodies, object factories,
+and per-case content graphs. Three clusters are deliberately left alone, so a fresh scan does not
+re-raise them:
+
+- **`routes/combat/combat.test.ts`** — only four of its 32 `beforeEach` bodies are the same four
+  lines; the rest differ in ways that matter. One helper over 110 VM tests risks an ordering bug to
+  save ~30 lines.
+- **`content/remote/install.test.ts`** — each repetition seeds `MemoryStorage` into a different
+  pre-apply state. The scaffolding IS the test setup.
+- **`styles/customThemes` ↔ `themeFiles`** — the two `theme()` builders differ in the token value each
+  suite asserts on. Sharing them costs the coverage.
 
 ## Cross-system
 Parameterize rules/effects tests `describe.each(['5e','5.5e'])`; assert known

@@ -1,10 +1,9 @@
 /*
- * The two fixture builders every suite that needs content or a character was hand-rolling.
+ * The two fixture builders for any suite that needs a content graph or a character.
  *
- * Before these, `new MemoryStorage()` → `st.write('c/<table>_srd.csv', …)` → `loadContent(st, ['c'])`
- * appeared nine times in `character/derive.test.ts` alone and again across sheet-diff, build, combat,
- * picker, spell-picks and the content suites — around a thousand duplicated lines, and the single
- * largest source of duplication in the test suite (docs/tests-audit.md).
+ * Hand-rolling `new MemoryStorage()` → `st.write('c/<table>_srd.csv', …)` → `loadContent(st, ['c'])`
+ * per case is the largest source of duplication this suite is capable of growing — it reached ~1 000
+ * lines once. Reach for these instead (docs/internals/testing.md ▸ Fixtures = contract).
  */
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
