@@ -157,11 +157,6 @@
 - [x] **A11Y-1 · Dialog focus management.** `trapFocus` on every dialog. **Deliberately NOT
   trapped:** `CommandPalette` (it restores focus itself — a second restorer fights it) and the
   combat popovers, which are anchored menus rather than modals.
-- [~] **Combat UI**: multiclass DC + header **DONE** — `SpellsPanel` renders every caster class's
-  save DC / attack (A18-tail), and the sheet header (`combat.className`) now joins all classes
-  ("Wizard 2 / Fighter 3") instead of `classes[0]`. **Still open [ ]:** spell picker preview
-  (EntryList+WikiDetail on pick).
-
 - [x] **CSS class-naming rename pass.** Verbose, self-evident, kebab-case names with a feature
   prefix, gated by `shot.mjs` at 0px. **What stays short on purpose:** a word already self-evident
   inside its component (`.pip`, `.move`, `.dice`, `.filled`), the `class:strip` shorthands, and any
