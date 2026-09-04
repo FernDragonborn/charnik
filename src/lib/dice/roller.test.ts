@@ -10,6 +10,7 @@ import {
 	normalizeLine,
 	parseRollerToken,
 	rollerIssues,
+	rollerNotes,
 	testRoll,
 	volleyOf,
 	type ParsedRollerToken,
@@ -17,7 +18,7 @@ import {
 	type RollerPill,
 	type RollerResolver,
 } from './roller';
-import { ADVANTAGE_MODE } from '$lib/rules/dice';
+import { ADVANTAGE_MODE, rollPool } from '$lib/rules/dice';
 
 /* A stand-in vocabulary: one effect (a signed die with provenance) and one damage type. The real one
    reads the content graph and every locale's names; the LINE only ever sees this shape. */
@@ -154,9 +155,39 @@ describe('the test line', () => {
 		expect(roll.dice).toEqual({ 20: 1 });
 		expect(roll.mod).toBe(7);
 		expect(roll.bonusDice).toEqual([
-			{ sides: 4, count: 1, sign: 1 },
-			{ sides: 4, count: 1, sign: -1 },
+			{ sides: 4, count: 1, sign: 1, source: 'Bless' },
+			{ sides: 4, count: 1, sign: -1, source: 'Bane' },
 		]);
+	});
+
+	it('keeps a die and a modifier provenance instead of flattening it into the pool', () => {
+		const roll = testRoll(type(ROLLER_ROLE.test, 'd20', 'bless', '+7'));
+		// a die the player typed has no source, and the fold does not invent one for it
+		expect(testRoll(type(ROLLER_ROLE.test, 'd20', '1d4')).bonusDice).toEqual([]);
+		expect(roll.modParts).toBeUndefined();
+		const rolled = rollPool(roll.dice, {
+			bonusDice: roll.bonusDice,
+			mod: roll.mod,
+			rng: () => 0.5,
+		});
+		expect(rolled.dice.map((d) => d.source)).toEqual(['Bless']);
+	});
+
+	it('records what a NAMED modifier was made of, and nothing when nothing is named', () => {
+		const line: RollerLine = {
+			...emptyLine(ROLLER_ROLE.test),
+			pills: [
+				{ kind: PILL_KIND.flat, text: '+2', amount: 2, source: 'Bless' },
+				{ kind: PILL_KIND.flat, text: '+3', amount: 3 },
+			],
+		};
+		expect(testRoll(line).mod).toBe(5);
+		expect(testRoll(line).modParts).toEqual([{ amount: 2, source: 'Bless' }, { amount: 3 }]);
+	});
+
+	it('takes the label a player wrote beside a die to the roll instead of dropping it', () => {
+		expect(rollerNotes([type(ROLLER_ROLE.test, 'd20', "dm's-luck")])).toEqual(["dm's-luck"]);
+		expect(rollerNotes([type(ROLLER_ROLE.test, 'd20')])).toEqual([]);
 	});
 
 	it('counts a modifier wherever it sits, not only at the end', () => {

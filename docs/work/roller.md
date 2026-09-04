@@ -40,28 +40,15 @@
         and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates the i18n
         sweep**: prose already written into `log.jsonl` cannot be localised afterwards, so the
         facts have to land before the sweep has anything to work with.
-  - [ ] **`foldValues` is where provenance dies — one seam, four losses.** The organ KNOWS where every
-        contribution came from and throws it away one step before the roll, so this is not a missing
-        feature but a lossy narrowing to the four shapes `rollPool` happens to accept
-        (`dice`, `mod`, `bonusDice`, `mods`). Fix it at the seam, not at the call sites:
-    - **A die's source.** `DicePill.source` is read at `roller.ts` only to CLASSIFY the die as a
-      bonus die, then dropped: `bonusDice.push({sides, count, sign})`. `RolledDie.source` is declared,
-      `StoredRoll` already persists it, and no path ever fills it — the record has the slot and the
-      fold empties it. So a Bless d4 and a weapon d4 are one thing on the sheet, in the toast and on
-      disk.
-    - **A flat modifier's source.** `FlatPill.source` is never read at all — `mod += p.amount`. "+2
-      from Bless" and "+2 someone typed" are indistinguishable the instant Roll is pressed, and unlike
-      a die there is not even a role to tell them apart afterwards.
-    - **The player's own label.** A `note` pill ("1d4 dm's luck") is walked past by the fold and never
-      reaches the roll. Its own comment claimed the log keeps it; corrected in the same change as this
-      entry.
-    - **Per-die bounds**, deliberately: `min`/`max`/`reroll` fold to the LINE's `DieMods`, so two dice
-      in one line with different floors share the most generous. Marked `ponytail:` in place, no 5e
-      mechanic writes it, and `rollPool` would need per-die mods to fix it. Left alone knowingly.
-    **Shape:** the fold keeps a contribution's identity instead of flattening it, and `rollPool` takes
-    dice that carry their own `source`. That is the house provenance contract — `{source, op, amount}`
-    — applied to the one computation still answering without it. A side map keyed by die would be a
-    second source of truth for the same fact; do not.
+  - [x] **Provenance survives the fold.** `foldValues` narrowed every contribution to the four
+        shapes `rollPool` happened to accept and threw the rest away one step before the roll. It
+        now hands over dice that carry their own `source` (`BonusDie.source` → `RolledDie.source`)
+        and a flat modifier told as the `FlatPart[]` it was made of, so a Bless d4 and a typed d4
+        are two things on the card, in the toast and on disk. `modParts` is recorded only when
+        something is named — the roll log is capped, and a list that says nothing does not earn its
+        bytes. A `note` pill carries no number, so it never belonged in the fold: `rollerNotes`
+        takes the player's own words to the roll's note. Per-die bounds stay a knowing loss, marked
+        `ponytail:` in place, because no 5e mechanic writes two floors in one line.
   - [ ] **A volley stops being a volley the moment it is rolled.** `RollerOrgan.roll()` returns N
         entries that differ only by `at + i`, and `RollLogEntry` has no field saying they were one
         action. So "one action fires N instances" — the thing ROLLER-N exists to model — is the one

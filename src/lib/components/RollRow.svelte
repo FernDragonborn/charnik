@@ -22,6 +22,7 @@
 		ADVANTAGE_CUE,
 		ADVANTAGE_MODE,
 		type AdvantageMode,
+		type FlatPart,
 		type RolledDie,
 	} from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
@@ -95,6 +96,16 @@
 	 * the log is one tap away — the die-by-die breakdown is audit information, the same reasoning the
 	 * design already applies to a volley's rows.
 	 */
+	/** A die's hover story: what it showed, and which effect gave it when the roll recorded one.
+	 *  `source` is the provenance the fold now carries through — a Bless d4 reads as a Bless d4. */
+	const dieTitle = (c: RolledDie): string =>
+		`d${c.sides} · ${c.detail}${c.source ? ` · ${c.source}` : ''}`;
+
+	/** A flat modifier's hover: what it was made of, when the roll recorded it. Without parts there is
+	 *  nothing to say the number does not already say, so there is no tooltip at all. */
+	const modTitle = (parts: FlatPart[] | undefined): string | undefined =>
+		parts?.map((p) => `${signed(p.amount)}${p.source ? ` ${p.source}` : ''}`).join(' · ');
+
 	const shownChips = (a: RollToastAttack) =>
 		strip ? a.chips.filter((c) => c.sides === 20) : a.chips;
 	const foldedDice = (a: RollToastAttack): string => {
@@ -121,7 +132,7 @@
 					>{face(c)}<span class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"></span></button
 				>
 			{:else}
-				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
+				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title={dieTitle(c)}
 					>{face(c)}{#if c.sides === 20 && i === 0 && a.advantageMode}<span
 							class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"
 						></span>{/if}</span
@@ -136,7 +147,7 @@
 				>{foldedDice(a)}</span
 			>
 		{/if}
-		{#if a.mod}<span class="roll-modifier">{signed(a.mod)}</span>{/if}
+		{#if a.mod}<span class="roll-modifier" title={modTitle(a.modParts)}>{signed(a.mod)}</span>{/if}
 	</span>
 {/snippet}
 
@@ -168,14 +179,16 @@
 			{:else if d.chips.length}
 				{#each d.chips as c, i (i)}
 					{#if i}<span class="roll-die-divider"></span>{/if}
-					<span title="d{c.sides} · {c.detail}">{face(c)}</span>
+					<span title={dieTitle(c)}>{face(c)}</span>
 				{/each}
 			{:else}
 				<span>{d.total}</span>
 			{/if}
 			{#if re}<span class="roll-cue"><Icon name="rotate-ccw" size={9} /></span>{/if}
 		</svelte:element>
-		{#if d.mod && d.chips.length && !strip}<span class="roll-modifier">{signed(d.mod)}</span>{/if}
+		{#if d.mod && d.chips.length && !strip}<span class="roll-modifier" title={modTitle(d.modParts)}
+				>{signed(d.mod)}</span
+			>{/if}
 	</span>
 {/snippet}
 

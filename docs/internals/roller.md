@@ -29,6 +29,12 @@ positive bonus die's sign, so after one pass a pool die and an effect die become
 `+`, a pool die does not), and it is where "these are the doubled dice" lives without a field beside
 the die.
 
+**A flat modifier answers the same way.** `Rolled.mod` is a sum, and `modParts: FlatPart[]` is what
+the sum was made of — so "+2 from Bless" and "+2 someone typed" stay two facts. It is recorded only
+when at least one part knows its source: an anonymous `+3` is fully described by the total already
+beside it, and the roll log is a capped file every roll pays into. `rollPool` takes `mod` OR
+`modParts`, never both, so exactly one place decides the number.
+
 **The legacy string is behind one seam.** `parseLegacyExpr` reads lines already on disk and nothing
 else; a stored roll enters through `rehydrateRoll`, a log row through `rehydrateLogEntry` (which also
 refills the damage parts — rehydrating only the row gives a reloaded attack its d20 back while its
@@ -99,6 +105,12 @@ state) · `components/Roller.svelte` + `RollerLine.svelte`.
 - **A line is a list of PILLS, not a formula string** — the same decision `Rolled.dice` makes one floor
   down. A pill holds what a string cannot: which effect gave the die, that a bound applies to it, that
   a damage type was inherited rather than typed.
+- **The fold keeps what a pill knows.** `foldValues` hands `rollPool` dice that carry their own
+  `source` and a modifier told as its parts, so a Bless d4 and a typed d4 stay different on the card,
+  in the toast and on disk. A die's and a modifier's hover names the effect; a `note` pill has no
+  number, so `rollerNotes` takes the player's own words to the roll's note instead. The one loss
+  still taken knowingly is per-die bounds — `min`/`max`/`reroll` fold to the LINE's `DieMods`, marked
+  `ponytail:` in place, because no 5e mechanic writes two floors in one line.
 - **Colour lives in the TEXT, never in a pill's fill.** Every pill is `--color-surface-2` +
   `--color-border-strong`; the number's colour says what it is. Tinted fills belong to the two state
   toggles alone, so "this is a test" and "this line is focused" cannot read as one signal — which is

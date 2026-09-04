@@ -18,10 +18,12 @@ import {
 	ADVANTAGE_MODE,
 	ADVANTAGE_SIGN,
 	MAX_DICE_PER_TERM,
+	flatTotal,
 	parseDiceTerm,
 	type AdvantageMode,
 	type BonusDie,
 	type DieMods,
+	type FlatPart,
 } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { DamagePartSpec } from '$lib/combat/roll';
@@ -41,8 +43,8 @@ export const PILL_KIND = {
 	count: 'count',
 	/** A word the vocabulary doesn't know, written beside a die as a label ("1d4 dm's luck"). Not an
 	 *  error: §6 says so outright. It adds nothing and blocks nothing — it is what the player called
-	 *  this die. It lives in the LINE only: `foldValues` walks past it and the roll never sees it, so
-	 *  pressing Roll drops the name (docs/work/roller.md ▸ ROLLER-N, the fold is where provenance dies). */
+	 *  this die. It carries no number, so the fold walks past it; `rollerNotes` is what takes it to the
+	 *  roll's own note, which is where the player's own words belong. */
 	note: 'note',
 	/** Text the parser could not account for AS ARITHMETIC — `+d4?`. Never dropped, never rolled,
 	 *  and the one thing that stops the roll (§5 / §10 / finding J). */
@@ -267,10 +269,9 @@ export function pillsFromPool(
 			sign: 1,
 			...bounds,
 		}));
-	// An effect die arrives here KNOWN but UNNAMED: the roll site has the die and not the effect that
-	// gave it (`RolledDie.source` is still unfilled — docs/work/roller.md ▸ ROLLER-N). The empty source is what keeps
-	// it an EFFECT die rather than a pool one, so it can't pick up the pool's rerolls; the caption
-	// simply has nothing to print until provenance is threaded through.
+	// An effect die keeps whatever name the roll site knew. An empty one is not a missing field: it
+	// says "an effect die nobody named", which is what makes it an EFFECT die rather than a pool one
+	// so it cannot pick up the pool's rerolls. The caption prints a name only when there is one.
 	for (const b of opts.bonusDice ?? [])
 		pills.push({
 			kind: PILL_KIND.dice,
@@ -278,7 +279,7 @@ export function pillsFromPool(
 			count: b.count,
 			sides: b.sides,
 			sign: b.sign < 0 ? -1 : 1,
-			source: '',
+			source: b.source ?? '',
 		});
 	if (mod) pills.push({ kind: PILL_KIND.flat, text: signed(mod), amount: mod });
 	if (opts.type) pills.push({ kind: PILL_KIND.damageType, text: opts.type, type: opts.type });
@@ -379,25 +380,44 @@ export function addToken(line: RollerLine, raw: string, resolve: RollerResolver)
 function foldValues(pills: RollerPill[]): {
 	dice: Record<number, number>;
 	mod: number;
+	modParts: FlatPart[] | undefined;
 	bonusDice: BonusDie[];
 	mods: DieMods;
 } {
 	const dice: Record<number, number> = {};
 	const bonusDice: BonusDie[] = [];
 	const mods: DieMods = {};
-	let mod = 0;
+	const flats: FlatPart[] = [];
 	for (const p of pills) {
-		if (p.kind === PILL_KIND.flat) mod += p.amount;
+		if (p.kind === PILL_KIND.flat)
+			flats.push({ amount: p.amount, ...(p.source !== undefined ? { source: p.source } : {}) });
 		if (p.kind !== PILL_KIND.dice) continue;
 		if (p.min !== undefined) mods.minDie = Math.max(mods.minDie ?? 0, p.min);
 		if (p.max !== undefined) mods.maxDie = Math.min(mods.maxDie ?? p.max, p.max);
 		if (p.reroll !== undefined) mods.reroll = Math.max(mods.reroll ?? 0, p.reroll);
 		if (p.sign < 0 || p.source !== undefined)
-			bonusDice.push({ sides: p.sides, count: p.count, sign: p.sign });
+			bonusDice.push({
+				sides: p.sides,
+				count: p.count,
+				sign: p.sign,
+				...(p.source ? { source: p.source } : {}),
+			});
 		else dice[p.sides] = (dice[p.sides] ?? 0) + p.count;
 	}
-	return { dice, mod, bonusDice, mods };
+	return { dice, mod: flatTotal(flats), modParts: namedParts(flats), bonusDice, mods };
 }
+
+/** The flat parts worth RECORDING: only when at least one of them knows where it came from. An
+ *  anonymous `+3` is already fully described by the total beside it, and the roll log is a capped
+ *  file every roll pays into — a list that says nothing does not earn its bytes on disk. */
+const namedParts = (parts: FlatPart[]): FlatPart[] | undefined =>
+	parts.some((p) => p.source !== undefined) ? parts : undefined;
+
+/** What the player CALLED the dice in these lines — the `note` pills, which carry no number and so
+ *  are the one contribution the fold has nothing to do with. They go to the roll's own note: a label
+ *  someone typed beside a die is their words, not a fact the engine can name. */
+export const rollerNotes = (lines: RollerLine[]): string[] =>
+	lines.flatMap((l) => l.pills.filter((p) => p.kind === PILL_KIND.note).map((p) => p.text.trim()));
 
 /**
  * The line's pills as DAMAGE GROUPS, by index: everything left of a type pill belongs to it, so a
@@ -430,14 +450,16 @@ export const volleyOf = (line: RollerLine): number =>
 export function testRoll(line: RollerLine): {
 	dice: Record<number, number>;
 	mod: number;
+	modParts: FlatPart[] | undefined;
 	advantage: number;
 	bonusDice: BonusDie[];
 	mods: DieMods;
 } {
-	const { dice, mod, bonusDice, mods } = foldValues(line.pills);
+	const { dice, mod, modParts, bonusDice, mods } = foldValues(line.pills);
 	return {
 		dice,
 		mod,
+		modParts,
 		bonusDice,
 		mods,
 		advantage: ADVANTAGE_SIGN[line.advantage],
@@ -459,11 +481,12 @@ export function damageParts(line: RollerLine): DamagePartSpec[] {
 	let run: RollerPill[] = [];
 	const close = (type: string) => {
 		if (!run.some(isValue)) return;
-		const { dice, mod, bonusDice, mods } = foldValues(run);
+		const { dice, mod, modParts, bonusDice, mods } = foldValues(run);
 		parts.push({
 			dice,
 			mod,
 			type,
+			...(modParts ? { modParts } : {}),
 			...(bonusDice.length ? { bonusDice } : {}),
 			...(Object.keys(mods).length ? { mods } : {}),
 		});

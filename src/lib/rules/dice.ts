@@ -23,7 +23,23 @@ export interface BonusDie {
 	sides: number;
 	count: number;
 	sign: number;
+	/** Which effect gave it ("Bless"). Carried onto every `RolledDie` it becomes, so the roll's record
+	 *  can tell a Bless d4 from a d4 the player typed — the one thing a count-by-sides pool cannot
+	 *  hold, and the reason the fold hands dice over as a list rather than as a tally. */
+	source?: string;
 }
+
+/** ONE flat contribution to a roll: what it added, and what added it. `Rolled.mod` is their sum;
+ *  this is what the sum was MADE of, so "+2 from Bless" and "+2 someone typed" stay two facts
+ *  instead of one number (`rules-core.md` ▸ every value carries its provenance). */
+export interface FlatPart {
+	amount: number;
+	source?: string;
+}
+
+/** What a set of flat contributions comes to. The one place the sum is defined, so a request that
+ *  carries parts and a result that reports a total cannot drift. */
+export const flatTotal = (parts: FlatPart[]): number => parts.reduce((n, p) => n + p.amount, 0);
 
 /** How a roll's d20 were read. An INTERPRETATION of dice already on the table, freely switchable —
  *  which is the whole point: the dice are a fact, the mode is not, so changing it must never draw.
@@ -143,6 +159,9 @@ export interface Rolled {
 	advantage: AdvantageMode;
 	/** The flat modifier added after the dice. */
 	mod: number;
+	/** What that modifier was made of, when the roll site knew. Absent on a roll given a bare `mod`
+	 *  (a formula, a legacy line) — and absent is honest there: nobody recorded where it came from. */
+	modParts?: FlatPart[];
 	/** e.g. "d8(5) + d6(2) +3" — a RENDERING of `dice` + `mod`, kept because it is what entries
 	 *  already in `log.jsonl` carry and what an older build reads. Nothing new should read it:
 	 *  `parseLegacyExpr` exists for those old entries and for nothing else. */
@@ -401,6 +420,9 @@ function critTwin(
 export interface RollPoolOptions extends RollOptions {
 	/** Flat modifier added after the dice. */
 	mod?: number;
+	/** The same modifier told with its provenance. SUPERSEDES `mod` — a caller gives one or the
+	 *  other, never both, so there is exactly one place the number comes from. */
+	modParts?: FlatPart[];
 	/** −1 disadvantage · 0 normal · +1 advantage. */
 	advantage?: number;
 	/** Signed effect dice (Bless +1d4 / Bane −1d4). */
@@ -421,7 +443,7 @@ export interface RollPoolOptions extends RollOptions {
 export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | Rng = {}): Rolled {
 	const o: RollPoolOptions = typeof opts === 'function' ? { rng: opts } : opts;
 	const rng = o.rng ?? Math.random;
-	const mod = o.mod ?? 0;
+	const mod = o.modParts ? flatTotal(o.modParts) : (o.mod ?? 0);
 	const advantage = o.advantage ?? 0;
 	const bonusDice = o.bonusDice ?? [];
 	// one pool die with reroll + bounds applied; `detail` spells out what happened (1↻4, 3→10). `face`
@@ -454,11 +476,17 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 				sign: b.sign < 0 ? -1 : 1,
 				detail: `${v}`,
 				role: DIE_ROLE.bonus,
+				...(b.source !== undefined && b.source !== '' ? { source: b.source } : {}),
 			});
 		}
 	if (o.crit) for (const d of [...rolled]) rolled.push(critTwin(d, o.crit, rollOne, o.maxDie));
 	const roll = { dice: rolled, d20s: pool.d20s, advantage: advantageFromSign(advantage), mod };
-	return { ...roll, total: totalOf(roll), expr: formatExpr(roll) };
+	return {
+		...roll,
+		...(o.modParts ? { modParts: o.modParts } : {}),
+		total: totalOf(roll),
+		expr: formatExpr(roll),
+	};
 }
 
 /** What a roll comes to: its dice, the one d20 that counts, and the flat modifier. The one place the

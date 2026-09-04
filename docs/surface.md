@@ -1098,6 +1098,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const countPill` — The volley pill for a roll the app already knows fires N times (Eldritch Blast's beams) — the * same pill typing `×3`…
 - `const isInherited` — A pill `normalizeLine` DERIVED rather than one that was typed.
 - `function addToken` — Add a typed token to a line, resolving what it means first.
+- `const rollerNotes` — What the player CALLED the dice in these lines — the `note` pills, which carry no number and so * are the one contrib…
 - `function pillGroups` — * The line's pills as DAMAGE GROUPS, by index: everything left of a type pill belongs to it, so a * group is a run of…
 - `const volleyOf` — How many instances this line fires — the volley multiplier (§12: a volley rolls the SAME set N * times, so it is a co…
 - `function testRoll` — A test line → what `rollPool` needs.
@@ -1306,6 +1307,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
+- `interface FlatPart` — ONE flat contribution to a roll: what it added, and what added it.
+- `const flatTotal` — What a set of flat contributions comes to.
 - `const ADVANTAGE_MODE` — How a roll's d20 were read.
 - `type AdvantageMode`
 - `const ADVANTAGE_CUE` — Mode → the shape that says it: the modifier suffix of the shared `.advantage-cue` class * (`styles/components.css`).
@@ -1527,4 +1530,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 900 exports across 125 modules · 59 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 903 exports across 125 modules · 59 duplicate suspects._

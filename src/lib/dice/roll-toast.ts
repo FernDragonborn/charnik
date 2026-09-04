@@ -14,6 +14,7 @@ import {
 	keptD20,
 	naturalOf,
 	type AdvantageMode,
+	type FlatPart,
 	type RolledDie,
 	type Rolled,
 } from '$lib/rules/dice';
@@ -27,6 +28,9 @@ export interface RollToastDamage {
 	type: string;
 	chips: RolledDie[];
 	mod: number;
+	/** What `mod` was made of, when the roll recorded it — the modifier's hover says which effect
+	 *  each part came from. Absent when nothing named a source. */
+	modParts?: FlatPart[];
 	total: number;
 }
 
@@ -42,6 +46,8 @@ export interface RollToastAttack {
 	 *  `ADVANTAGE_MODE.neither` is not a state to report. */
 	advantageMode?: AdvantageMode;
 	mod: number;
+	/** See `RollToastDamage.modParts`. */
+	modParts?: FlatPart[];
 	/** What the to-hit (or, with no damage, the roll itself) came to. */
 	subtotal: number;
 	/** The natural face of the d20. 20 tints the line gold, 1 calls it a miss. Deliberately NOT
@@ -91,6 +97,7 @@ const damagePart = (part: TypedRoll): RollToastDamage => ({
 	type: part.type,
 	chips: part.dice,
 	mod: part.mod,
+	...(part.modParts ? { modParts: part.modParts } : {}),
 	total: part.total,
 });
 
@@ -106,6 +113,7 @@ function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
 		...(dropped ? { dropped: dropped.value } : {}),
 		...(dropped ? { advantageMode: roll.advantage } : {}),
 		mod: roll.mod,
+		...(roll.modParts ? { modParts: roll.modParts } : {}),
 		subtotal: roll.total,
 		...(natural !== undefined ? { natural } : {}),
 		damage: damage.map(damagePart),

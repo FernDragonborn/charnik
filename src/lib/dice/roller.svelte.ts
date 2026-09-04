@@ -18,6 +18,7 @@ import {
 	type BonusDie,
 	type DieMods,
 	type Rng,
+	type RollPoolOptions,
 } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import {
@@ -33,6 +34,7 @@ import {
 	normalizeLine,
 	pillsFromPool,
 	rollerIssues,
+	rollerNotes,
 	testRoll,
 	volleyOf,
 	type RollerLine,
@@ -68,6 +70,18 @@ export interface RollerPrefill {
 	/** Provenance recorded with the roll — an upcast's "8d6 base + 1d6 @ slot 4". */
 	note?: string;
 }
+
+/** The folded test line → what `rollPool` is asked for. Loop-invariant, so a volley builds it once;
+ *  a named function rather than an inline literal because every instance of it is an optional field
+ *  that is only spelled when it has a value (`exactOptionalPropertyTypes`). */
+const poolOptions = (spec: ReturnType<typeof testRoll> | null, rng?: Rng): RollPoolOptions => ({
+	mod: spec?.mod ?? 0,
+	...(spec?.modParts ? { modParts: spec.modParts } : {}),
+	advantage: spec?.advantage ?? 0,
+	...(spec?.bonusDice.length ? { bonusDice: spec.bonusDice } : {}),
+	...(spec?.mods ?? {}),
+	...(rng ? { rng } : {}),
+});
 
 /** The caret is in the LINE, not in the suggestion menu. `↓` moves it in, `↑` off the top row moves
  *  it back — so there is one selection, not a line selection and a menu selection at once. */
@@ -560,22 +574,21 @@ export class RollerOrgan {
 		// a volley is a count on ANY line, not only the test one: a damage-only spell can fire N times
 		// too, and reading it off the test line alone would silently drop that
 		const times = Math.max(1, ...this.lines.map(volleyOf));
+		// what the player called their own dice rides the note beside whatever provenance the roll site
+		// already wrote there — the fold has no number to give those pills, and dropping them was the
+		// last of the four losses at that seam
+		const note = [this.note, ...rollerNotes(this.lines)].filter(Boolean).join(' · ');
 		const at = Date.now();
+		const opts = poolOptions(spec, rng);
 		const out: RollLogEntry[] = [];
 		for (let i = 0; i < times; i++) {
-			const primary = rollPool(spec?.dice ?? {}, {
-				mod: spec?.mod ?? 0,
-				advantage: spec?.advantage ?? 0,
-				...(spec?.bonusDice.length ? { bonusDice: spec.bonusDice } : {}),
-				...(spec?.mods ?? {}),
-				...(rng ? { rng } : {}),
-			});
+			const primary = rollPool(spec?.dice ?? {}, opts);
 			const damage = parts.length ? rollDamageParts(parts, rng) : undefined;
 			out.push({
 				label: this.label || 'Custom roll',
 				...primary,
 				...(damage ? { damage } : {}),
-				...(this.note ? { note: this.note } : {}),
+				...(note ? { note } : {}),
 				// one instance per millisecond: `at` is what an amendment matches on to rewrite ITS line,
 				// so a volley whose three attacks shared a timestamp would rewrite the wrong one
 				at: at + i,

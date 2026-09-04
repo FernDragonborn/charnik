@@ -14,6 +14,7 @@ import {
 	type BonusDie,
 	type CritMethod,
 	type DieMods,
+	type FlatPart,
 	type Rng,
 	type Rolled,
 	type StoredRoll,
@@ -30,6 +31,9 @@ export type TypedRoll = Rolled & { type: string };
 export interface DamagePartSpec {
 	dice: Record<number, number>;
 	mod: number;
+	/** What `mod` was made of, when the roll site knew — an effect's named `+2` beside a typed one.
+	 *  Absent means nobody recorded a source, not that there was no modifier. */
+	modParts?: FlatPart[];
 	type: string;
 	bonusDice?: BonusDie[];
 	mods?: DieMods;
@@ -53,6 +57,7 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 			...(p.mods ?? {}),
 			...(rng ? { rng } : {}),
 			mod: p.mod,
+			...(p.modParts ? { modParts: p.modParts } : {}),
 			...(p.bonusDice ? { bonusDice: p.bonusDice } : {}),
 			...(p.crit ? { crit: p.crit } : {}),
 		}),
