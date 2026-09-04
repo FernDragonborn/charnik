@@ -39,7 +39,12 @@
 		{#each spellGroups as g (g.key)}
 			<div class="spgroup">
 				<div class="spell-category eyebrow" class:star={g.key === 'pinned'}>
-					{g.label}
+					{g.labelKey
+						? $_(g.labelKey, {
+								default: g.label,
+								...(g.labelValues ? { values: g.labelValues } : {}),
+							})
+						: g.label}
 					{#if g.slots}{@const sl = g.slots}<span class="pips"
 							>{#each range(sl.full) as i (i)}<button
 									class="slot-pip"

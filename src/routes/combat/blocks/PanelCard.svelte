@@ -49,7 +49,7 @@
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
 		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}
-			>{groupByLabel} <Icon name="chevron-down" size={12} /></button
+			>{$_(groupByLabel)} <Icon name="chevron-down" size={12} /></button
 		>
 		<a class="pill-btn" href="{base}/spellbook"
 			><Icon name="settings" size={13} /> {$_('combat.panel.manageAll')}</a

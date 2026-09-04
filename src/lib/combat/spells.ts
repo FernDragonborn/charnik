@@ -68,7 +68,13 @@ export interface SpellRow {
 /** A group of spells (Pinned / by level / by prepared / by school). */
 export interface SpellGroup {
 	key: string;
+	/** English fallback — all a homebrew school's own word ever has. */
 	label: string;
+	/** Catalog key for `label` when the heading is a closed vocabulary (a spell level, a school, one
+	 *  of the four fixed buckets). The panel words it, so a group header reads in the UI language. */
+	labelKey?: string;
+	/** ICU values for `labelKey` — a NUMBER only (a spell level), never a noun. */
+	labelValues?: Record<string, number>;
 	slots: { full: number; spent: number } | null;
 	rows: SpellRow[];
 }
@@ -179,6 +185,8 @@ function groupByLevel(
 		.map((lvl) => ({
 			key: String(lvl),
 			label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
+			labelKey: lvl === 0 ? 'spellLevel.cantrips' : 'spellLevel.nth',
+			...(lvl === 0 ? {} : { labelValues: { level: lvl } }),
 			slots:
 				lvl === 0
 					? null
@@ -192,8 +200,22 @@ function groupByPrepared(all: SpEntry[]): SpellGroup[] {
 	const groups: SpellGroup[] = [];
 	const prep = all.filter((x) => x.row.prepState).map((x) => x.row);
 	const rest = all.filter((x) => !x.row.prepState).map((x) => x.row);
-	if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
-	if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
+	if (prep.length)
+		groups.push({
+			key: 'prep',
+			label: 'Prepared',
+			labelKey: 'combat.spells.prepared',
+			slots: null,
+			rows: prep,
+		});
+	if (rest.length)
+		groups.push({
+			key: 'unprep',
+			label: 'Not prepared',
+			labelKey: 'combat.spells.notPrepared',
+			slots: null,
+			rows: rest,
+		});
 	return groups;
 }
 
@@ -208,6 +230,9 @@ function groupBySchool(all: SpEntry[], graph: ContentGraph): SpellGroup[] {
 	return [...bySchool.keys()].sort().map((sch) => ({
 		key: 'sch:' + sch,
 		label: titleCase(sch),
+		// the eight SRD schools are a catalog; a homebrew school is a content row's own word and falls
+		// back to it, which is what `default:` at the render site is for
+		labelKey: sch === 'Other' ? 'combat.spells.otherSchool' : `spellSchool.${sch.toLowerCase()}`,
 		slots: null,
 		rows: bySchool.get(sch) ?? [],
 	}));
@@ -252,7 +277,13 @@ export function buildSpellGroups({
 	const groups: SpellGroup[] = [];
 	const pins = all.filter((x) => pinned[x.row.id]);
 	if (pins.length)
-		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
+		groups.push({
+			key: 'pinned',
+			label: '★ Pinned',
+			labelKey: 'combat.spells.pinned',
+			slots: null,
+			rows: pins.map((x) => x.row),
+		});
 
 	// Pact Magic (warlock): ONE forced-upcast pool shared by every warlock spell regardless of its own
 	// level, so it renders as its own pip strip (a rowless header) rather than per-level pips — clicking
@@ -262,6 +293,8 @@ export function buildSpellGroups({
 		groups.push({
 			key: PACT_SLOT_KEY,
 			label: `Pact Magic · ${ordinal(pact.spellLevel)}`,
+			labelKey: 'combat.spells.pactMagic',
+			labelValues: { level: pact.spellLevel },
 			slots: { full: pact.max, spent: character.play.spellSlotsSpent[PACT_SLOT_KEY] ?? 0 },
 			rows: [],
 		});

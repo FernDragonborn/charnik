@@ -350,9 +350,8 @@ class CombatVM {
 	useResourceOrEnter = (...args: Parameters<ActionExecutor['useResourceOrEnter']>) =>
 		this.executor.useResourceOrEnter(...args);
 	toggleCombat = () => this.executor.toggleCombat();
-	groupByLabel = $derived(
-		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy],
-	);
+	/** The catalog KEY for how the spell list is grouped — the panel header words it. */
+	groupByLabel = $derived(`combat.spells.groupBy.${this.spellGroupBy}`);
 	cycleGroupBy = () =>
 		(this.spellGroupBy =
 			GROUP_MODES[(GROUP_MODES.indexOf(this.spellGroupBy) + 1) % GROUP_MODES.length] ?? 'level');
