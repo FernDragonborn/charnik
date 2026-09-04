@@ -11,7 +11,7 @@ vi.mock('$lib/dice/roll-toast', () => ({ toastRoll }));
 
 const { RollTray } = await import('./roll-tray.svelte');
 const { MenuOverlay } = await import('./menu-overlay.svelte');
-const { ROLLER_ROLE, damageParts, testRoll } = await import('$lib/dice/roller');
+const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('$lib/dice/roller');
 const { ADVANTAGE_MODE } = await import('$lib/rules/dice');
 
 let tray: InstanceType<typeof RollTray>;
@@ -55,6 +55,16 @@ describe('prefill', () => {
 			test: { dice: { 20: 1 }, mod: 11, mods: { minDie: 10, reroll: 1 } },
 		});
 		expect(testRoll(tray.organ.lines[0]!).mods).toEqual({ minDie: 10, reroll: 1 });
+	});
+
+	it('gives a DAMAGE-only action its volley count — it belongs to the action, not to a to-hit', () => {
+		tray.prefill({
+			label: 'Scorching Ray',
+			damage: [{ dice: { 6: 2 }, mod: 0, type: 'fire' }],
+			times: 3,
+		});
+		expect(tray.organ.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
+		expect(volleyOf(tray.organ.lines[0]!)).toBe(3);
 	});
 
 	it('a request with no test half builds NO test line — Fireball has no to-hit', () => {
