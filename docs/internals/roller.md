@@ -90,6 +90,13 @@ One action fires N instances of those lines — `RollerOrgan.roll()` answers wit
 each logged on its own line and toasted as one card. `RollToastAttack[]` is the toast's VIEW model,
 which is all it should ever have been.
 
+**A roll site describes the whole action ONCE.** `RollSpec` carries the label, the d20 test, the
+damage parts, the note and how many instances fire; an absent `test` is what makes a roll a
+QUANTITY (a Fireball's target saves, so it has no to-hit half). An attack used to arrive in two
+calls whose second label was dropped on the floor. `times` belongs to the ACTION and not to its
+test half, so a damage-only spell can fire N times too. The advantage axis is numeric in the
+request — arithmetic over effects — and becomes the named mode at one seam, `RollTray.prefill`.
+
 **The action survives the roll.** Entries of one action share a `group` GUID — a GUID because the
 lines are written independently and each may be rewritten by an amendment, so nothing may depend on
 their order or count. A lone roll carries none: one line already says it, and the log is capped.

@@ -7,7 +7,7 @@
  * The builder half used to live here as loose fields (`dice`, `rollMod`, `rollAdvantage`) plus a
  * `pendingDamage` queue that the tray could neither show nor edit — which is UBUG-21. It is now one
  * `RollerOrgan`: a test line and, when there IS damage, a damage line, both made of the same
- * editable pills. `prefill` / `queueDamage` keep their names and their callers.
+ * editable pills, built from ONE `RollSpec` — a roll site says what it wants rolled once.
  */
 import {
 	ADVANTAGE_MODE,

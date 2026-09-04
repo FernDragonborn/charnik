@@ -92,7 +92,7 @@ const ROUTES = [
 					p
 						.getByText('Greataxe', { exact: true })
 						.first()
-						.click({ modifiers: ['Alt'] }),
+						.click({ modifiers: ['Shift'] }),
 				ready: '.roller-line:nth-of-type(2)',
 			},
 		],

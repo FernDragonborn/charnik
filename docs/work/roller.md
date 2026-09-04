@@ -56,10 +56,11 @@
         roll: being one line already says it, and the log is a capped file every roll pays into.
         `actionRuns` reads it back into the actions the log recorded, and the log draws a run as one
         bracketed `×N` block while each throw keeps its own row and its own live controls.
-  - [ ] **The roller takes `RollSpec` itself** — one request carrying the label, the type and the
-        damage parts, not just the dice. Half of this shipped (`rollPool(dice, RollPoolOptions)`
-        killed the positional `−1 | 0 | +1`); the rest waited for the result to be facts, which it
-        now is.
+  - [x] **The roller takes `RollSpec` itself** — one request carrying the label, the test half, the
+        damage parts, the note and the instance count. `prefillDamage` and `queueDamage` are gone:
+        an absent `test` is what makes a roll a quantity, and an attack no longer arrives in two
+        calls whose second label was dropped. `times` moved to the ACTION, so a damage-only spell
+        can be prefilled as a volley — it could not be before.
   - [x] **A token typed WITHOUT spaces parses as one raw fragment and blocks the roll** (`2d6+3`).
         `addToken` splits a compound token into its signed terms first, so every path that builds a
         line — typing, a paste, a prefill retyped — gets it from one seam. It splits only when EVERY
