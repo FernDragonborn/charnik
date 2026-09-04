@@ -5,6 +5,7 @@ import {
 	rollFormula,
 	parseDicePool,
 	parseFlatModifier,
+	parseFormula,
 	parseDiceTerm,
 	DIE_ROLE,
 	CRIT_METHOD,
@@ -69,6 +70,39 @@ describe('parseFlatModifier (shared by the roller and the damage-segment parser)
 	it('never mistakes a die count for a modifier', () => {
 		expect(parseFlatModifier('1d10')).toBe(0);
 		expect(parseFlatModifier('2d6+10d4')).toBe(0);
+	});
+});
+
+describe('parseFormula (what the parse could not account for)', () => {
+	const issues = (formula: string) => parseFormula(formula).issues;
+
+	it('reports a number the roll did not include', () => {
+		expect(issues('1d20 vs AC 15')).toEqual(['15']);
+		expect(issues('3d6 fire and 2')).toEqual(['2']);
+	});
+	it('reports an operator whose operand was never found', () => {
+		expect(issues('1d6+')).toEqual(['+']);
+		expect(issues('+d4?')).toEqual(['?']);
+		expect(issues('2d')).toEqual(['2d']);
+	});
+	it('says nothing about a formula it fully accounts for', () => {
+		// every one of these is a shipped content string; the residue walk must be silent on them
+		for (const f of ['8d6', '1d6+3+1d4', '2d6+3', '2d6 − 2', '10d6 + 40 force', '1d4 +4'])
+			expect(issues(f)).toEqual([]);
+	});
+	it('says nothing about a WORD, which can never make a total smaller', () => {
+		expect(issues('1d10 piercing; 2d6 cold')).toEqual([]);
+		expect(issues("1d4 dm's luck")).toEqual([]);
+	});
+	it('says nothing about a leading bare number, counted or deliberately ignored', () => {
+		expect(issues('70')).toEqual([]); // Heal — counted
+		expect(issues('1 piercing')).toEqual([]);
+		expect(issues('12 (2d6 + 5)')).toEqual([]); // the statblock average — ignored on purpose
+	});
+	it('answers with the same pool and modifier rollFormula rolls', () => {
+		const parsed = parseFormula('2d6+1d4-1');
+		expect(parsed.dice).toEqual(parseDicePool('2d6+1d4-1'));
+		expect(parsed.mod).toBe(parseFlatModifier('2d6+1d4-1'));
 	});
 });
 

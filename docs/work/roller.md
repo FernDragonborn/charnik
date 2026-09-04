@@ -24,15 +24,17 @@
   recorded dice, and the persisted record is the in-session record. **The design, the rejected
   alternatives and the conventions are `docs/internals/roller.md`**; only what is still open lives
   here:
-  - [ ] **`{roll, issues}` — a formula the parser could not fully account for must SURFACE.** Today
-        an unrecognised fragment is ignored and the understood part rolls, which is the same failure
-        class as UBUG-22 and worse in one place: `plugins.md` makes the formula string the plugin
-        API, so a sandboxed plugin miscomputes and cannot tell. **Shape: a `parseFormula(str) →
-        {terms, issues}`, with `rollFormula` staying sugar over it** — a smaller diff than changing
-        every call site's return type, and the sites that do not want issues do not change. Inside
-        the roller the existing "an arithmetic-looking fragment blocks the roll" behaviour is the
-        surfacing; for a formula that came from CONTENT or a plugin it is a `deriveIssue`, because
-        that is a data defect and must be visible outside the moment of the roll.
+  - [x] **`{roll, issues}` — a formula the parser could not fully account for SURFACES.**
+        `parseFormula(str) → {dice, mod, issues}` is the whole parse: `parseDicePool` and
+        `parseFlatModifier` each answer for their own half, and `issues` is every fragment NEITHER of
+        them took. `rollFormula` stays sugar over it and drops the issues, so no call site had to
+        change. **What is deliberately not an issue:** a bare WORD (it can never make a total
+        smaller) and a LEADING bare number, which is accounted for either way — counted when the
+        segment has no dice, ignored on purpose in the statblock average form `12 (2d6 + 5)`.
+        Two surfaces, because a data defect must be visible outside the moment of the roll: a weapon
+        or spell damage string carries `DamagePart.issues` to the attack row's note, and every
+        instant-roll affordance goes through `rollFormulaEntry`, which puts them in the roll's own
+        note. Inside the roller the raw pill was already the surfacing.
   - [ ] **Amendments are STRUCTURE, not a sentence.** `amendedNote` composes English prose that a
         reader then has to match back out; one regex for it has already eaten an upcast's provenance
         and grown the note a lap. Want `amendments: [{kind, from, to}]`. **This gates the i18n

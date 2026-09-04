@@ -5,7 +5,8 @@
  * the affordance already works. Rewriting/expanding the tray means implementing this contract, not
  * touching callers.
  */
-import { rollFormula, type DieMods } from '$lib/rules/dice';
+import type { DieMods } from '$lib/rules/dice';
+import { rollFormulaEntry } from '$lib/combat/roll';
 import { toastRoll } from './roll-toast';
 
 /** A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage). */
@@ -60,5 +61,5 @@ export function openDiceTray(request: DiceTrayRequest): void {
 		registry.handler(request);
 		return;
 	}
-	toastRoll({ label: request.label, ...rollFormula(request.formula) });
+	toastRoll(rollFormulaEntry(request.label, request.formula));
 }

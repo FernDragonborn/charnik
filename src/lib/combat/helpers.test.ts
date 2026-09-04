@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { amendedNote } from './roll';
+import { amendedNote, rollFormulaEntry } from './roll';
 import {
 	ADVANTAGE_MODE,
 	DIE_ROLE,
@@ -604,6 +604,11 @@ describe('parseDamageParts — typed dice pool + flat mod (A7: a bonus die is no
 		]);
 	});
 
+	it('carries what it could NOT read, and nothing when it read the whole segment', () => {
+		expect(parseDamageParts('1d8 ++ slashing')[0]?.issues).toEqual(['++']);
+		expect(parseDamageParts('1d8 +3 slashing')[0]).not.toHaveProperty('issues');
+	});
+
 	it('round-trips back to a display string via formatDamageParts', () => {
 		expect(formatDamageParts(parseDamageParts('1d6 slashing; 1d4 radiant'))).toBe(
 			'1d6 slashing + 1d4 radiant',
@@ -677,6 +682,20 @@ describe('standardActions — edition-aware terms (D5)', () => {
  * the provenance the roll already carried untouched. It used to leave a "· kept 19 over 7" fragment
  * behind on every lap, because the pattern could only eat as far as the next separator.
  */
+describe('rollFormulaEntry (a CONTENT formula, and what it could not read)', () => {
+	const rng = () => 0.5;
+
+	it('rolls the part it understood and SAYS what it ignored', () => {
+		const entry = rollFormulaEntry('HP rolled', '2d6 ++ 3', rng);
+		expect(entry.note).toContain('“+”');
+		expect(entry.total).toBe(2 * 4 + 3);
+	});
+
+	it('leaves a clean formula noteless', () => {
+		expect(rollFormulaEntry('HP rolled', '2d6 + 3', rng)).not.toHaveProperty('note');
+	});
+});
+
 describe('amendedNote', () => {
 	const d20 = (value: number): RolledDie => ({
 		sides: 20,

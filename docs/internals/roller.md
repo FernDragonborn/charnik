@@ -172,5 +172,8 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
 - **An attack deals damage on dice OR on a flat value.** Unarmed Strike is `1 + STR` and rolled
   nothing while the gate asked for dice.
 - **The formula string is a plugin-facing trust boundary.** `plugins.md` makes randomness the host's:
-  a plugin returns formulas and Charnik's single dice path rolls them. A formula the parser cannot
-  fully account for must therefore SURFACE rather than roll the part it understood.
+  a plugin returns formulas and Charnik's single dice path rolls them. So a formula the parser cannot
+  fully account for SURFACES rather than rolling the part it understood: `parseFormula` answers with
+  the pool, the modifier, and every fragment neither of them took, and `rollFormula` is sugar over it
+  for the callers that have nowhere to show them. A word is never a fragment — it cannot make a total
+  smaller — and neither is a leading bare number, which the rule above already accounts for.

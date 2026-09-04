@@ -8,7 +8,7 @@ import { resolveItem } from '$lib/content/resolved-item';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { parseDicePool, parseFlatModifier, formatDicePool } from '$lib/rules/dice';
+import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
@@ -20,6 +20,10 @@ export interface DamagePart {
 	pool: Record<number, number>;
 	mod: number;
 	type: string;
+	/** Fragments of the segment that neither the pool nor the modifier accounted for — a content
+	 *  defect, so it is carried to the sheet as a note rather than discovered at the roll. Omitted
+	 *  when the segment reads cleanly, which is every shipped row. */
+	issues?: string[];
 }
 
 /** The one id a bare-fisted attack answers to — it has no content row, and an action that says
@@ -73,11 +77,15 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 		.split(';')
 		.map((s) => s.trim())
 		.filter(Boolean)
-		.map((seg) => ({
-			pool: parseDicePool(seg),
-			mod: parseFlatModifier(seg),
-			type: segmentType(seg),
-		}));
+		.map((seg) => {
+			const { dice, mod, issues } = parseFormula(seg);
+			return {
+				pool: dice,
+				mod,
+				type: segmentType(seg),
+				...(issues.length ? { issues } : {}),
+			};
+		});
 }
 
 /** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4
@@ -219,12 +227,19 @@ export function computeAttacks(
 		// looks complete and silently rolls a bare ability modifier.
 		const templateNote =
 			item.tags.size === 0 && !item.damage ? 'Base weapon not set — roll its own dice' : undefined;
-		const note =
-			[w.note, scoped.note, notProfNote, templateNote].filter(Boolean).join('; ') || undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
 		const parts = parseDamageParts(item.damage);
+		// a damage string the parse could not fully read is a CONTENT defect, and it must be visible
+		// on the sheet rather than at the moment the number comes out one short
+		const unread = parts.flatMap((p) => p.issues ?? []);
+		const damageNote = unread.length
+			? `Damage not fully read — ${unread.map((u) => `“${u}”`).join(', ')} ignored`
+			: undefined;
+		const note =
+			[w.note, scoped.note, notProfNote, templateNote, damageNote].filter(Boolean).join('; ') ||
+			undefined;
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
 			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p,
 		);

@@ -8,11 +8,13 @@ import {
 	droppedD20s,
 	keptD20,
 	parseDiceTerm,
+	parseFormula,
 	rehydrateRoll,
 	rollPool,
 	type BonusDie,
 	type CritMethod,
 	type DieMods,
+	type Rng,
 	type Rolled,
 	type StoredRoll,
 } from '$lib/rules/dice';
@@ -124,6 +126,23 @@ export function amendedNote(previous: string | undefined, revised: Rolled): stri
 				`advantage cleared (the second d20, ${dropped.value}, does not count)`
 			: `${revised.advantage} after the roll (kept ${keptD20(revised)?.value} over ${dropped.value})`;
 	return [kept, amendment].filter(Boolean).join(' · ');
+}
+
+/**
+ * A formula that came from CONTENT (a monster's HP, a spell's damage) → the entry that rolls it,
+ * carrying anything the parse could not account for as its own note. Every instant-roll affordance
+ * goes through here, so an unread fragment surfaces the same way wherever it is rolled instead of
+ * making the total quietly smaller (docs/internals/roller.md ▸ Conventions).
+ */
+export function rollFormulaEntry(label: string, formula: string, rng?: Rng): RollLogEntry {
+	const { dice, mod, issues } = parseFormula(formula);
+	return {
+		label,
+		...rollPool(dice, { mod, ...(rng ? { rng } : {}) }),
+		...(issues.length
+			? { note: `formula not fully read — ${issues.map((i) => `“${i}”`).join(', ')} ignored` }
+			: {}),
+	};
 }
 
 /** Combined total across every typed damage part. */

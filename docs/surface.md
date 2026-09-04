@@ -686,6 +686,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `function amendedNote` — A roll's note after it has been re-read at a different advantage: whatever the note already said, * minus any previou…
+- `function rollFormulaEntry` — * A formula that came from CONTENT (a monster's HP, a spell's damage) → the entry that rolls it, * carrying anything …
 - `const damageTotal` — Combined total across every typed damage part.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
 - `const ACTION_SLOT_LABEL` — What a slot is called in a sentence — "bonus" alone is not the name of anything at the table.
@@ -1325,6 +1326,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't * one.
 - `function parseDicePool` — Parse every dice term in a string into a pool ({sides: count}).
 - `function parseFlatModifier` — * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die, * summed.
+- `interface ParsedFormula` — A formula, fully accounted for: the pool, the flat modifier, and every fragment that is NEITHER.
+- `function parseFormula` — * Parse a formula into what it rolls plus what it could not account for.
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
 - `function rollPool` — * Roll a dice pool + flat mod.
@@ -1524,4 +1527,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 59 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 900 exports across 125 modules · 59 duplicate suspects._

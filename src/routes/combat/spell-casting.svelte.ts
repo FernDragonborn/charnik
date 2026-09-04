@@ -343,10 +343,20 @@ export class SpellCasting {
 		const deltas = this.upcastDamageParts(r, slotLevel);
 		// item 4: a fuller provenance line for the roll log — the boosted dice split into base + upcast,
 		// so a bigger total is explained ("8d6 fire base + 2d6 fire @ slot 5"), not just tagged with the slot.
+		// a damage string the parse could not fully read is a CONTENT defect, and it rides the same
+		// provenance line rather than waiting to be noticed as a total that came out short
+		const unread = r.damageParts.flatMap((p) => p.issues ?? []);
 		const note =
-			deltas.length && r.damageParts.length
-				? `${formatDamageParts(r.damageParts)} base + ${formatDamageParts(deltas)} @ slot ${slotLevel}`
-				: undefined;
+			[
+				deltas.length && r.damageParts.length
+					? `${formatDamageParts(r.damageParts)} base + ${formatDamageParts(deltas)} @ slot ${slotLevel}`
+					: '',
+				unread.length
+					? `damage not fully read — ${unread.map((u) => `“${u}”`).join(', ')} ignored`
+					: '',
+			]
+				.filter(Boolean)
+				.join(' · ') || undefined;
 		const up: UpcastCast = {
 			deltas,
 			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : '',

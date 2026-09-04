@@ -244,6 +244,10 @@ export function parseDicePool(s: string): Record<number, number> {
 	return out;
 }
 
+/** A signed flat term, the shape `parseFlatModifier` sums. Named because the residue walk in
+ *  `parseFormula` has to remove exactly what that sum consumed, or it reports a term twice. */
+const SIGNED_NUMBER = /([+\-−])\s*(\d+)/g;
+
 /**
  * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die,
  * summed. The dice come out first, so a die's count can never be misread as a modifier
@@ -259,8 +263,58 @@ export function parseDicePool(s: string): Record<number, number> {
 export function parseFlatModifier(s: string): number {
 	const rest = s.replace(DICE_TERM, ' ');
 	let mod = rest === s ? Number(/^\s*(\d+)\b/.exec(rest)?.[1] ?? 0) : 0;
-	for (const m of rest.matchAll(/([+\-−])\s*(\d+)/g)) mod += (m[1] === '+' ? 1 : -1) * Number(m[2]);
+	for (const m of rest.matchAll(SIGNED_NUMBER)) mod += (m[1] === '+' ? 1 : -1) * Number(m[2]);
 	return mod;
+}
+
+/** A dice term together with the sign that binds it. `DICE_TERM` alone leaves the `+` of `+1d4`
+ *  behind, and a dangling operator is precisely what the residue walk treats as unaccounted. */
+const SIGNED_DICE_TERM = /[+\-−]?\s*\d*d\d+/gi;
+
+/** Punctuation a formula may carry around its terms — the statblock form's parentheses, the `;`
+ *  between damage segments. It separates, it never contributes, so it is not residue. */
+const FORMULA_PUNCTUATION = /[(),;.:]/g;
+
+/** A bare word: a damage type, a label, the prose a content string carries beside its dice. A word
+ *  can never make a total quietly smaller, which is the whole test for what may be reported. */
+const PLAIN_WORD = /^\p{L}[\p{L}\p{M}'’-]*$/u;
+
+/** A formula, fully accounted for: the pool, the flat modifier, and every fragment that is NEITHER.
+ *  `parseDicePool` and `parseFlatModifier` each answer for their own half and silently drop the
+ *  rest, which is the UBUG-22 failure class one layer up — and `plugins.md` makes the formula string
+ *  a plugin's public API, so a sandboxed plugin whose formula half-parsed cannot otherwise tell. */
+export interface ParsedFormula {
+	dice: Record<number, number>;
+	mod: number;
+	/** What neither half accounted for, verbatim, in reading order. Empty for every shipped content
+	 *  string. A number here is one the roll did NOT include; a `+` is an operator whose operand was
+	 *  never found. */
+	issues: string[];
+}
+
+/**
+ * Parse a formula into what it rolls plus what it could not account for. `rollFormula` is sugar over
+ * this — call it directly when the formula came from CONTENT or a plugin, where an unaccounted
+ * fragment is a data defect that has to be visible outside the moment of the roll.
+ *
+ * What is deliberately NOT an issue: a bare WORD (a damage type, prose beside the dice) contributes
+ * nothing and never could, and a LEADING bare number is accounted for either way — counted when the
+ * segment carries no dice ("70"), deliberately ignored when it does, because that is the statblock
+ * average form the shipped monsters use ("12 (2d6 + 5)" rolls 2d6+5, never 2d6+17).
+ */
+export function parseFormula(formula: string): ParsedFormula {
+	const residue = formula
+		.replace(SIGNED_DICE_TERM, ' ')
+		.replace(SIGNED_NUMBER, ' ')
+		.replace(/^\s*\d+\b/, ' ');
+	return {
+		dice: parseDicePool(formula),
+		mod: parseFlatModifier(formula),
+		issues: residue
+			.split(/\s+/)
+			.map((fragment) => fragment.replace(FORMULA_PUNCTUATION, ''))
+			.filter((fragment) => fragment && !PLAIN_WORD.test(fragment)),
+	};
 }
 
 /** Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first. Inverse of
@@ -602,7 +656,11 @@ export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): 
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then
  *  `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first) and counts every
- *  flat term, wherever it sits (UBUG-22 — it used to read only the tail). */
+ *  flat term, wherever it sits (UBUG-22 — it used to read only the tail).
+ *
+ *  Sugar over `parseFormula`, and it DROPS that parse's issues: a site that has somewhere to surface
+ *  them calls `parseFormula` itself and rolls the pool it answers with. */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {
-	return rollPool(parseDicePool(formula), { mod: parseFlatModifier(formula), rng });
+	const { dice, mod } = parseFormula(formula);
+	return rollPool(dice, { mod, rng });
 }
