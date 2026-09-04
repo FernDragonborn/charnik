@@ -79,6 +79,16 @@ export type RollLogEntry = Rolled & {
 	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
 	 *  rewrite its own line. Absent only on a view-model literal that is toasted but never logged. */
 	at?: number;
+	/** The ACTION this roll belonged to, when one action fired several — a volley's beams, Extra
+	 *  Attack's strikes. A GUID rather than a counter (AGENTS.md ▸ Taste): the lines are written
+	 *  independently and each may be rewritten by an amendment, so nothing may depend on their order
+	 *  or on how many were written. Absent on a lone roll: one instance is fully described by being
+	 *  one line, and the roll log is a capped file that pays for every field on every roll.
+	 *
+	 *  Without it "one action fires N instances" — the thing the two-level model exists to state —
+	 *  survived only until the page reloaded, and three Eldritch Blast beams came back as three
+	 *  unrelated rolls. */
+	group?: string;
 };
 
 /** A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only
@@ -87,6 +97,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	label: string;
 	note?: string;
 	at?: number;
+	group?: string;
 	damage?: (StoredRoll & { type: string })[];
 };
 
@@ -103,8 +114,25 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	label: e.label,
 	...(e.note !== undefined ? { note: e.note } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
+	...(e.group !== undefined ? { group: e.group } : {}),
 	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),
 });
+
+/** The roll log as the ACTIONS it recorded: consecutive entries sharing a `group` are one action's
+ *  throws, and everything else is an action of one. Consecutive is the whole rule — the log is
+ *  written in order and an amendment rewrites a line in place, so an action's throws are never
+ *  separated by another roll.
+ *
+ *  Pure and exported because the fact belongs to the record, not to the one menu that draws it. */
+export function actionRuns(entries: RollLogEntry[]): RollLogEntry[][] {
+	const runs: RollLogEntry[][] = [];
+	for (const e of entries) {
+		const last = runs.at(-1);
+		if (last && e.group !== undefined && last[0]?.group === e.group) last.push(e);
+		else runs.push([e]);
+	}
+	return runs;
+}
 
 /** The amendment sentence a roll's note carries, matched so re-amending REPLACES it rather than
  *  stacking, and so undoing removes it without eating a note the roll already had (an upcast's

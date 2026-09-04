@@ -49,13 +49,11 @@
         bytes. A `note` pill carries no number, so it never belonged in the fold: `rollerNotes`
         takes the player's own words to the roll's note. Per-die bounds stay a knowing loss, marked
         `ponytail:` in place, because no 5e mechanic writes two floors in one line.
-  - [ ] **A volley stops being a volley the moment it is rolled.** `RollerOrgan.roll()` returns N
-        entries that differ only by `at + i`, and `RollLogEntry` has no field saying they were one
-        action. So "one action fires N instances" — the thing ROLLER-N exists to model — is the one
-        fact the record does not keep: after a reload, three Eldritch Blast beams are three unrelated
-        lines, and nothing can total them or show them as one card again. Wants a group identity on
-        the entry, **a GUID rather than a counter** (AGENTS.md ▸ Taste), since it is shared between
-        lines that are written independently.
+  - [x] **A volley stays a volley after it is rolled.** `RollLogEntry.group` — a GUID, stamped in
+        `recordRolls`, the one seam every multi-instance action passes through. Absent on a lone
+        roll: being one line already says it, and the log is a capped file every roll pays into.
+        `actionRuns` reads it back into the actions the log recorded, and the log draws a run as one
+        bracketed `×N` block while each throw keeps its own row and its own live controls.
   - [ ] **The roller takes `RollSpec` itself** — one request carrying the label, the type and the
         damage parts, not just the dice. Half of this shipped (`rollPool(dice, RollPoolOptions)`
         killed the positional `−1 | 0 | +1`); the rest waited for the result to be facts, which it

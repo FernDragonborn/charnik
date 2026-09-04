@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { amendedNote, rollFormulaEntry } from './roll';
+import { actionRuns, amendedNote, rollFormulaEntry, type RollLogEntry } from './roll';
 import {
 	ADVANTAGE_MODE,
 	DIE_ROLE,
@@ -693,6 +693,29 @@ describe('rollFormulaEntry (a CONTENT formula, and what it could not read)', () 
 
 	it('leaves a clean formula noteless', () => {
 		expect(rollFormulaEntry('HP rolled', '2d6 + 3', rng)).not.toHaveProperty('note');
+	});
+});
+
+describe('actionRuns — the log as the actions it recorded', () => {
+	const entry = (at: number, group?: string): RollLogEntry => ({
+		label: 'Eldritch Blast',
+		expr: '',
+		dice: [],
+		d20s: [],
+		advantage: ADVANTAGE_MODE.neither,
+		mod: 0,
+		total: at,
+		at,
+		...(group ? { group } : {}),
+	});
+
+	it('gathers a volley into one run and leaves lone rolls alone', () => {
+		const runs = actionRuns([entry(1), entry(2, 'g'), entry(3, 'g'), entry(4, 'g'), entry(5)]);
+		expect(runs.map((r) => r.length)).toEqual([1, 3, 1]);
+	});
+
+	it('never joins two actions that happen to sit side by side', () => {
+		expect(actionRuns([entry(1, 'a'), entry(2, 'b')]).map((r) => r.length)).toEqual([1, 1]);
 	});
 });
 

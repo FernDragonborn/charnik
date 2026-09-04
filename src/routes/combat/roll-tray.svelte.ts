@@ -205,12 +205,18 @@ export class RollTray {
 
 	/** Record rolls that one ACTION resolved — a volley's N instances. Each gets its own log line
 	 *  (they are separate rolls, and each carries its own `at` so an amendment can rewrite the right
-	 *  one), and they share ONE toast, because one action happened. */
+	 *  one), and they share ONE toast and ONE `group`, because one action happened.
+	 *
+	 *  The group is stamped HERE because this is the one seam every multi-instance action passes
+	 *  through — the organ's Roll button and `pushVolley` alike — so a volley cannot be recorded
+	 *  anywhere without it. A single roll is left ungrouped: being one line already says it. */
 	recordRolls = (entries: RollLogEntry[]): void => {
 		if (!entries.length) return;
-		this.log = [...entries, ...this.log].slice(0, ROLL_LOG_MAX);
-		for (const entry of entries) this.persist?.(entry);
-		toastRoll(entries);
+		const group = entries.length > 1 ? crypto.randomUUID() : undefined;
+		const action = group ? entries.map((e) => ({ ...e, group })) : entries;
+		this.log = [...action, ...this.log].slice(0, ROLL_LOG_MAX);
+		for (const entry of action) this.persist?.(entry);
+		toastRoll(action);
 	};
 
 	/** Replace an existing log entry (identity match) with a revised copy — used by the Savage Attacker

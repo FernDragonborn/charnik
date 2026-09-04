@@ -114,6 +114,43 @@ describe('recordRolls', () => {
 		expect(toastRoll.mock.calls[0]?.[0]).toHaveLength(2);
 	});
 
+	it('stamps one action id across the lines, so a reload still knows it was one action', () => {
+		const persisted: { group?: string }[] = [];
+		const grouping = new RollTray((e) => persisted.push(e));
+		const line = (at: number) => ({
+			label: 'Ray',
+			expr: '',
+			dice: [],
+			d20s: [],
+			advantage: ADVANTAGE_MODE.neither,
+			mod: 0,
+			total: 5,
+			at,
+		});
+		grouping.recordRolls([line(1), line(2), line(3)]);
+		const groups = grouping.log.map((e) => e.group);
+		expect(new Set(groups).size).toBe(1);
+		expect(groups[0]).toBeTypeOf('string');
+		// what was persisted must carry it too, or the fact dies with the session
+		expect(persisted.every((e) => e.group === groups[0])).toBe(true);
+	});
+
+	it('leaves a lone roll ungrouped — being one line already says it', () => {
+		tray.recordRolls([
+			{
+				label: 'Save',
+				expr: '',
+				dice: [],
+				d20s: [],
+				advantage: ADVANTAGE_MODE.neither,
+				mod: 0,
+				total: 5,
+				at: 1,
+			},
+		]);
+		expect(tray.log[0]?.group).toBeUndefined();
+	});
+
 	it('does nothing at all when the roll was refused', () => {
 		tray.recordRolls([]);
 		expect(tray.log).toHaveLength(0);

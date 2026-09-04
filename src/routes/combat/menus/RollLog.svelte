@@ -5,36 +5,46 @@
 	// Each entry is the SAME `RollRow` the toast mounts, not a lookalike (UBUG-20): the log used to
 	// print the roller's internal `expr` plus a dimmed "drop d20(N)" line, so the surface you go to
 	// precisely to re-read a roll was the worst rendering of the four. One entry = one row = always
-	// the full-detail, single-attack model — the toast is what groups a volley, the log never does,
-	// so there is no grouping key and no second code path here.
+	// the full-detail, single-attack model, because every row carries its OWN live controls (amend
+	// this d20, reroll this damage) and merging a volley into one card would take them away.
+	//
+	// A volley is still shown as ONE action: its rows share a bracket instead of each sitting under
+	// its own rule. That is the whole use of the group id here — the fact survives a reload, and it
+	// costs no second rendering path, because each throw is still its own ordinary row.
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
+	import { actionRuns } from '$lib/combat/roll';
 	import RollRow from '$lib/components/RollRow.svelte';
 
-	const log = $derived(combat.tray.log);
+	const actions = $derived(actionRuns(combat.tray.log));
 </script>
 
 <div class="log-head"><span class="menu-title eyebrow">Roll log · history</span></div>
 <div class="log-scroll">
-	{#each log as l, i (i)}
-		<div class="log-row">
-			<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
+	{#each actions as run, i (i)}
+		<div class="log-row" class:one-action={run.length > 1}>
+			<!-- how many throws one action made. The bracket alone is too quiet to carry it at this
+			     contrast, and "×3" is what a player says out loud about a volley anyway. -->
+			{#if run.length > 1}<span class="action-count eyebrow">×{run.length}</span>{/if}
+			{#each run as l, j (j)}
+				<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
 			     d20 to apply advantage after the fact, tap a damage pill marked with the reroll icon to reroll it. N2 Savage
 			     Attacker's offer is one of those pills — the label comes from the granting feature
 			     (combat.savageLabel), never hardcoded — instead of the bar that used to sit under the row,
 			     which could not say WHICH damage it meant once a roll has several parts. -->
-			<RollRow
-				model={rollToastModel(l)}
-				onAdvantage={() => combat.tray.amendAdvantage(l)}
-				rerollDamage={combat.savageLabel && l === combat.savagePendingEntry
-					? {
-							attack: 0,
-							part: 0,
-							label: `${combat.savageLabel} — reroll damage, keep the higher`,
-							run: combat.savageReroll,
-						}
-					: undefined}
-			/>
+				<RollRow
+					model={rollToastModel(l)}
+					onAdvantage={() => combat.tray.amendAdvantage(l)}
+					rerollDamage={combat.savageLabel && l === combat.savagePendingEntry
+						? {
+								attack: 0,
+								part: 0,
+								label: `${combat.savageLabel} — reroll damage, keep the higher`,
+								run: combat.savageReroll,
+							}
+						: undefined}
+				/>
+			{/each}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
 			No rolls yet — tap a stat, skill, save, or attack.
@@ -62,6 +72,22 @@
 	}
 	.log-row:first-child {
 		border-top: 0;
+	}
+	/* one action, several throws (a volley's beams, Extra Attack's strikes). The bracket is what says
+	   they happened together — without it a reloaded volley reads as N unrelated rolls, which is the
+	   one fact the two-level model exists to state. */
+	.log-row.one-action {
+		position: relative;
+		border-inline-start: 2px solid var(--color-border-strong);
+		padding-inline-start: var(--space-2-5);
+		margin-inline-start: var(--space-1);
+	}
+	.action-count {
+		position: absolute;
+		inset-inline-start: var(--space-1);
+		top: var(--space-1);
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
 	}
 	.note {
 		font-size: var(--font-size-xs);

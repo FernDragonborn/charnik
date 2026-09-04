@@ -90,6 +90,12 @@ One action fires N instances of those lines — `RollerOrgan.roll()` answers wit
 each logged on its own line and toasted as one card. `RollToastAttack[]` is the toast's VIEW model,
 which is all it should ever have been.
 
+**The action survives the roll.** Entries of one action share a `group` GUID — a GUID because the
+lines are written independently and each may be rewritten by an amendment, so nothing may depend on
+their order or count. A lone roll carries none: one line already says it, and the log is capped.
+`actionRuns` reads the log back as the actions it recorded; the log draws a run as one bracketed
+`×N` block, one row per throw, so every throw keeps the live controls that belong to it.
+
 **Two levels, not a tree.** Action → instances → parts. The pull toward arbitrary depth is refused:
 nobody has asked for a third level. A volley rolls the same set N times — that is what a volley IS —
 so a per-instance target and a per-instance advantage do not exist.
