@@ -206,6 +206,9 @@ class CombatVM {
 	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
 	attackRoll = (...a: Parameters<SheetRolls['attackRoll']>) => this.rolls.attackRoll(...a);
+	/** What the dice tray hands its completed rolls to — the log, plus the weapon-attack reroll offer. */
+	recordTrayRolls = (...a: Parameters<SheetRolls['recordTrayRolls']>) =>
+		this.rolls.recordTrayRolls(...a);
 	savageReroll = () => this.rolls.savageReroll();
 	get savageLabel() {
 		return this.rolls.savageLabel;

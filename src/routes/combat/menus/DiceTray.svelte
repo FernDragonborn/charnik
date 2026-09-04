@@ -39,7 +39,7 @@
 </script>
 
 <div class="tray">
-	<Roller {organ} onroll={combat.tray.recordRolls} />
+	<Roller {organ} onroll={combat.recordTrayRolls} />
 	<!-- the tray's own result readout: the same RollRow the toast and the log mount, so the roll you
 	     just built reads identically to the roll you re-read later (UBUG-20) -->
 	{#if log[0]}

@@ -43,6 +43,8 @@ async function graphOf(): Promise<ContentGraph> {
 }
 
 const noModifiers = { shiftKey: false } as unknown as Event;
+/** A Shift-click: what `wantsTray` reads to open the roll tray instead of rolling instantly. */
+const wantsTray = { shiftKey: true } as unknown as Event;
 
 describe('CombatVM · concentration (CVM-bug1)', () => {
 	let graph: ContentGraph;
@@ -871,6 +873,37 @@ describe('CombatVM · S2 split net', () => {
 		character.play.turn.action = 0;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.savageLabel).toBe('Savage Attacker');
+	});
+
+	it('SAVAGE-TAIL: a Shift-click attack arms the same reroll, and a spell in the same tray does not', () => {
+		character.play.inCombat = true;
+		// its OWN round, as above: `savageUsedRound` outlives the character the beforeEach replaces
+		character.play.round = 12;
+		character.play.turn.action = 0;
+		combat.effects.addEffect({
+			label: 'Savage Attacker',
+			tokens: ['damage_reroll'],
+			positive: true,
+		});
+
+		// Shift-click rolls nothing yet — the tray does, later, and the offer has to arm from THERE
+		combat.attackRoll(combat.attacks[0]!, wantsTray);
+		combat.recordTrayRolls(combat.tray.organ.roll());
+		expect(combat.savageLabel).toBe('Savage Attacker');
+		expect(combat.savagePendingEntry).toBe(combat.tray.log[0]);
+		const keptBefore = combat.savagePendingEntry!.damage![0]!.total;
+		combat.savageReroll();
+		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore);
+
+		// the use is free again, and the SAME tray now holds a spell: Savage Attacker rerolls a
+		// weapon's dice, so a Fire Bolt sent through the tray must not inherit the offer
+		combat.economy.nextTurn();
+		combat.tray.prefill({
+			label: 'Fire Bolt',
+			damage: [{ dice: { 10: 1 }, mod: 0, type: 'fire' }],
+		});
+		combat.recordTrayRolls(combat.tray.organ.roll());
+		expect(combat.savageLabel).toBeNull();
 	});
 
 	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel

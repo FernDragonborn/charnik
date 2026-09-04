@@ -70,6 +70,10 @@ export interface RollSpec {
 	/** How many instances the action fires — a volley (Eldritch Blast's beams at level 5). Absent or 1
 	 *  is the ordinary single roll. */
 	times?: number;
+	/** Is this a WEAPON attack? Only a weapon's damage qualifies for a once-per-turn reroll (Savage
+	 *  Attacker), so the tray has to know which kind of action it is holding — a Fire Bolt and a bare
+	 *  tray roll go through the same organ and must not be offered it. */
+	weapon?: boolean;
 }
 
 /** One completed roll as a log line. Shared by the single push and the volley so a beam of a volley
@@ -125,8 +129,16 @@ export class RollTray {
 		this.log = entries.slice(0, ROLL_LOG_MAX);
 	};
 
+	/** Is the roll the organ currently holds a weapon attack? Read by the surface that records the
+	 *  tray's rolls to decide whether to arm the weapon-damage reroll. Every way of filling the tray
+	 *  passes through `prefill` or `reset`, so it cannot go stale behind a spell or a custom roll. */
+	weaponAttack = false;
+
 	/** Clear the organ to an empty test line (opening the dice menu fresh). */
-	reset = () => this.organ.reset();
+	reset = () => {
+		this.weaponAttack = false;
+		this.organ.reset();
+	};
 
 	/** Prefill the roller for one whole action, so the player can pick advantage then Roll. The organ
 	 *  takes the request as it stands; the only translation left is the advantage axis, numeric on the
@@ -134,6 +146,7 @@ export class RollTray {
 	 *  ride the POOL's dice, so a Great Weapon Fighting reroll never reaches a Bless die that lands in
 	 *  the same line. */
 	prefill = (spec: RollSpec) => {
+		this.weaponAttack = spec.weapon === true;
 		this.organ.prefill({
 			label: spec.label,
 			...(spec.labelKey ? { labelKey: spec.labelKey } : {}),

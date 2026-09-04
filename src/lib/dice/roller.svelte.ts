@@ -565,6 +565,17 @@ export class RollerOrgan {
 		this.drafts = this.lines.map((_, i) => this.drafts[i] ?? '');
 	};
 
+	/** The damage the lines currently describe, as the specs `roll()` throws. Exposed because a
+	 *  surface may have to roll ONE of them again (Savage Attacker rerolls the weapon's part), and
+	 *  reproducing it from the recorded dice would lose the part's crit method and its die mods. */
+	get damageSpecs(): DamagePartSpec[] {
+		return this.lines
+			.filter((l) => l.role === ROLLER_ROLE.damage)
+			.flatMap((line) =>
+				damageParts(line).map((p) => (line.crit ? { ...p, crit: this.critMethod } : p)),
+			);
+	}
+
 	/**
 	 * Roll it. Answers with the completed entries — one per instance of a volley — and records
 	 * nothing itself: what to do with a roll (log it, toast it, persist it) belongs to the surface
@@ -578,11 +589,7 @@ export class RollerOrgan {
 		if (!this.rollable) return [];
 		const test = this.lines.find((l) => l.role === ROLLER_ROLE.test && l.pills.length);
 		const spec = test ? testRoll(test) : null;
-		const parts = this.lines
-			.filter((l) => l.role === ROLLER_ROLE.damage)
-			.flatMap((line) =>
-				damageParts(line).map((p) => (line.crit ? { ...p, crit: this.critMethod } : p)),
-			);
+		const parts = this.damageSpecs;
 		// a volley is a count on ANY line, not only the test one: a damage-only spell can fire N times
 		// too, and reading it off the test line alone would silently drop that
 		const times = Math.max(1, ...this.lines.map(volleyOf));

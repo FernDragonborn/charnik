@@ -42,6 +42,7 @@ export class MenuOverlay {
 	overlay = $state<OpenOverlay | null>(null);
 
 	openMenu = (kind: MenuKind, e: Event) => {
+		if (typeof window === 'undefined') return; // no DOM to anchor against (SSR, node tests)
 		const anchor = e.currentTarget as HTMLElement;
 		// the trigger is a TOGGLE: with no backdrop swallowing the click, the button gets it back, and
 		// a menu that only ever opened would be one you can't put away with the control you opened it by

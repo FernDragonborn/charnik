@@ -174,6 +174,7 @@ export class SheetRolls {
 						mods: dieModsOf(fx),
 					},
 					...(hasDmg ? { damage: parts } : {}),
+					weapon: true,
 				},
 				e,
 			);
@@ -198,11 +199,28 @@ export class SheetRolls {
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
-		// (The Shift-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
+		// (The Shift-click tray path arms the same offer, from `recordTrayRolls`.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
 		const entry = this.host().tray.pushRoll({ text: label }, toHit, dmgRolls);
 		if (savage && entry.at !== undefined)
 			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
+	};
+
+	/**
+	 * Record the rolls the TRAY made and, when they were a weapon attack, arm the same once-per-turn
+	 * reroll a tapped attack offers. The damage a tray roll throws is built by the organ (the player
+	 * may have edited it, and the crit toggle lives there), so the part to reroll comes from the organ
+	 * rather than from the attack the tray was prefilled with.
+	 *
+	 * A volley arms on its FIRST instance — the one the log and the Playbar show on top, and the one
+	 * the offer's pill is drawn on.
+	 */
+	recordTrayRolls = (entries: RollLogEntry[]) => {
+		this.host().tray.recordRolls(entries);
+		const entry = entries[0];
+		if (!this.host().tray.weaponAttack || !entry || entry.at === undefined) return;
+		const savage = this.savageOffer(this.host().tray.organ.damageSpecs[0], entry.damage);
+		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};
 
 	/** The effects and damage parts an attack rolls with — shared by the tap, the tray and the action
