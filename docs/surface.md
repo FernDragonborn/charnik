@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (58)
+## Duplicate suspects (59)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -37,6 +37,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
+- `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `closeOnOutside` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
@@ -1523,4 +1524,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 59 duplicate suspects._

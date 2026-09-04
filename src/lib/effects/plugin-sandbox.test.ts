@@ -4,6 +4,7 @@
  * gone, infinite loop + ReDoS interrupted, memory bomb limited, malformed output rejected,
  * happy paths from docs/internals/plugins.md §9, and the memo read-tracking flag.
  */
+import { pluginCtx } from '../../test-support/plugin-fixtures';
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { createSandboxEvaluator } from './plugin-sandbox';
 import {
@@ -17,32 +18,7 @@ import {
 } from './plugin-registry';
 import type { ActiveEffect, EffectIssue } from './token-parser';
 
-const ctx = (over?: Partial<PluginCtx['play']>): PluginCtx => ({
-	api: 1,
-	build: {
-		system: '5e',
-		level: 7,
-		classLevels: { fighter: 5 },
-		proficiencyBonus: 3,
-		abilities: {
-			str: { score: 16, mod: 3 },
-			dex: { score: 14, mod: 2 },
-			con: { score: 14, mod: 2 },
-			int: { score: 10, mod: 0 },
-			wis: { score: 15, mod: 2 },
-			cha: { score: 8, mod: -1 },
-		},
-	},
-	play: {
-		hp: 41,
-		hpMax: 58,
-		tempHp: 0,
-		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
-		conditions: [],
-		resources: { grit: 2 },
-		...over,
-	},
-});
+const ctx = (play?: Partial<PluginCtx['play']>) => pluginCtx(play);
 
 const token = (raw: string): PluginTokenRef => {
 	const [, namespace = '', handlerName = '', ...rest] = raw.split(':');

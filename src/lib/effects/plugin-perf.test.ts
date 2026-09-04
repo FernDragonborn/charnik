@@ -5,6 +5,7 @@
  * (the CALL_BUDGET) purely as a "not pathologically slow" floor. Numbers-for-eyeballing live in
  * plugin.bench.ts (run with `pnpm exec vitest bench`).
  */
+import { pluginCtx, carrier } from '../../test-support/plugin-fixtures';
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { createSandboxEvaluator } from './plugin-sandbox';
 import {
@@ -12,43 +13,11 @@ import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
 	clearPluginMemo,
-	type PluginCtx,
 	type PluginEvaluator,
 	type PluginTokenRef,
 } from './plugin-registry';
-import type { ActiveEffect } from './token-parser';
 
-const ctx = (hp = 41): PluginCtx => ({
-	api: 1,
-	build: {
-		system: '5e',
-		level: 7,
-		classLevels: { fighter: 5 },
-		proficiencyBonus: 3,
-		abilities: {
-			str: { score: 16, mod: 3 },
-			dex: { score: 14, mod: 2 },
-			con: { score: 14, mod: 2 },
-			int: { score: 10, mod: 0 },
-			wis: { score: 12, mod: 1 },
-			cha: { score: 8, mod: -1 },
-		},
-	},
-	play: {
-		hp,
-		hpMax: 58,
-		tempHp: 0,
-		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
-		conditions: [],
-		resources: { grit: 2 },
-	},
-});
-
-const carrier = (token: string, source = 'Ring'): ActiveEffect => ({
-	source,
-	layer: 'item',
-	tokens: [token],
-});
+const ctx = (hp = 41) => pluginCtx({ hp });
 
 /** A minimal counting evaluator — records how many times `has`/`call` actually ran. */
 function counting(

@@ -3,8 +3,9 @@
  * (zero sandbox: proves the token grammar, host-side validation caps, memo economics, fail-closed
  * counter, and attribution rules from docs/internals/plugins.md §4 with no QuickJS in sight).
  */
+import { pluginCtx, carrier } from '../../test-support/plugin-fixtures';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
+import { parseToken, EFFECT_KIND, type EffectIssue } from './token-parser';
 import { applyEffects, collectFacts, mergeFacts } from './apply';
 import { computed } from '../rules/pipeline';
 import {
@@ -12,42 +13,11 @@ import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
 	clearPluginMemo,
-	type PluginCtx,
 	type PluginEvaluator,
 	type PluginTokenRef,
 } from './plugin-registry';
 
-const ctx = (over?: { hp?: number }): PluginCtx => ({
-	api: 1,
-	build: {
-		system: '5e',
-		level: 7,
-		classLevels: { fighter: 5, rogue: 2 },
-		proficiencyBonus: 3,
-		abilities: {
-			str: { score: 16, mod: 3 },
-			dex: { score: 14, mod: 2 },
-			con: { score: 14, mod: 2 },
-			int: { score: 10, mod: 0 },
-			wis: { score: 12, mod: 1 },
-			cha: { score: 8, mod: -1 },
-		},
-	},
-	play: {
-		hp: over?.hp ?? 41,
-		hpMax: 58,
-		tempHp: 0,
-		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
-		conditions: [],
-		resources: { grit: 2 },
-	},
-});
-
-const carrier = (token: string, source = 'Ring of Testing'): ActiveEffect => ({
-	source,
-	layer: 'item',
-	tokens: [token],
-});
+const ctx = (over?: { hp?: number }) => pluginCtx(over?.hp === undefined ? {} : { hp: over.hp });
 
 /** A fake evaluator: handlers keyed `namespace:handlerName`, returning the raw result object (JSON-ified here —
  *  the same single-string boundary the sandbox uses). Records every real call for memo asserts. */
