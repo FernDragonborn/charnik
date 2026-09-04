@@ -32,6 +32,13 @@ people read. Last, and still worth fixing, is shipped work listed as owed.
 `docs/plan.md` is the tracker: it states what is **open**, with the outcome and constraints each item
 must satisfy. A status box is `[ ]` open, `[~]` decided or in flight, `[x]` done.
 
+**The box is the only status marker.** A settled call is written into the item's own body, in the
+present tense, as what the thing IS — never stamped `(DECIDED 2026-07-15)` beside it. The box already
+says how far along the work is, git already says when the call was taken, and a stamp inside the
+prose only invites a second, contradicting one later. What this buys is the reason the convention
+exists: an agent opening a `[ ]` finds the constraints, the rejected alternatives and the acceptance
+in one block, and can start writing code without asking anything.
+
 **A box turns `[x]` only when the change is in code and verified.** A fix may be proposed, designed,
 and fully written up while its box stays open — readers trust `[x]` as "handled in the codebase", and
 a premature tick hides real remaining work.

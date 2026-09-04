@@ -33,7 +33,7 @@ Core intent:
   commercial-ok; attribute). Default data = SRD only; excluded stuff (Beholder,
   Artificer, Aasimar…) not shipped — users add their own. WotC Fan Content Policy bans
   apps but is irrelevant (we use the CC route). Show attribution in the UI (About).
-- **Three-layer repo licensing** (DECIDED): **code = MIT** (root `LICENSE`; keep the
+- **Three-layer repo licensing**: **code = MIT** (root `LICENSE`; keep the
   copyright notice, nothing else — AGPL-3.0-or-later up to 0.5.0, dropped because we don't
   oblige reusers to publish their code; no SPDX header per file, the root licence is the
   declaration) · **bundled data = CC-BY-4.0** (`content/LICENSE`
@@ -45,7 +45,7 @@ Core intent:
 
 ---
 
-## Effects & modifier engine (the core auto-calc) — DECIDED
+## Effects & modifier engine (the core auto-calc)
 
 The pivotal design. Goal: **derived stats update automatically from effects** (species
 traits, class features, feats, equipped items, conditions), and the user can see and
@@ -62,21 +62,21 @@ trust what happened.
   `resist_immune`/`apply_condition`/`grant_resource`/…). Anything outside the vocab =
   **free text + an optional manual modifier** the user toggles. No Turing-complete DSL
   (avoids Aurora's swamp; stays testable).
-- **Expressiveness = three layers, never code-in-CSV** (DECIDED; see security.md #4):
+- **Expressiveness = three layers, never code-in-CSV** (see security.md #4):
   **L1** the bounded vocab above (data; ~95%); **L2** safe value-expressions (`1d4`,
   `prof*2`, `ceil(level/2)`) via OUR dice+arithmetic parser — non-Turing-complete,
-  whitelisted vars, no `eval`; **L3** plugins for the long tail. **Ordering DECIDED
-  (2026-07-15): L2 ships BEFORE L3.** L2 over a rich (conditional) ctx covers the great
+  whitelisted vars, no `eval`; **L3** plugins for the long tail. **Ordering: L2
+  ships BEFORE L3.** L2 over a rich (conditional) ctx covers the great
   majority of the tail with ZERO sandbox/attack surface, so it must land first; L3's sandbox
   is only justified once L2 is exhausted and `onUse`/`onEvent` (core-owned, deferred) demand
   it. Concretely: an L2 phase precedes PLG-2 (the sandbox) — a `passive`-only `api: 1` sandbox
-  must NOT ship ahead of L2. **DSL naming convention (DECIDED + applied 2026-07-15): the effect
+  must NOT ship ahead of L2. **DSL naming convention: the effect
   token DSL is `snake_case`, with `.` for namespacing** — kinds `flat_bonus`/`set_override`/
   `grant_resource`/`apply_condition`/`grant_proficiency`/`resist_immune`, target `hp_max`,
   vars `wis_mod`/`base_speed`/`class_level.monk`/`is_bloodied`. Renamed from the old kebab
   kinds because L2 makes `-` the subtraction operator, so any identifier that can appear inside an
   expression (kind, target, variable, resource/condition id) MUST avoid `-`; snake also matches
-  the CSV-column convention (`hit_die`, `name_en`). **Extended (DECIDED 2026-07-16): content IDs
+  the CSV-column convention (`hit_die`, `name_en`). **Extended: content IDs
   migrate to snake_case EVERYWHERE** — shipped SRD ids are still kebab (`acid-splash`,
   `animal-handling`), which collides with `-`-as-minus the moment an id appears in an L2
   expression (`class_level.blood-hunter`). Scope: `idField` grammar, SRD regeneration via the
@@ -88,7 +88,7 @@ trust what happened.
   `{value, trace}`, hard time/memory limits, no DOM/Tauri/fs/network. **Design the plugin
   registry seam early** (cheap). **UPDATE: the sandbox is now BUILT** (PLG-1..3, 2026-07-19 —
   see the "PLG · Plugin sandbox" section below); this "deferred until demand" note is historical.
-  Seam prep (decided 2026-07-15, doc-only — no dead code, knip is a hard gate): the token
+  Seam prep (doc-only — no dead code, knip is a hard gate): the token
   namespace **`plugin:<ns>:<rest>` is RESERVED** (today such tokens parse as `unknown` → inert
   text note, which is exactly the safe default); the handler contract is pinned as a pure
   `(parsedToken, context) → Contribution[] | notes` returning the same `{value, trace}` shapes,
@@ -199,7 +199,7 @@ than designing it once). Split cleanly into **data (CSV)**, **rules (pure TS)**,
 **play-state**; the fiddly logic honestly stays in code — CSV holds the tables, not the rules
 that consume them.
 
-**Resolved forks (decided with the user):**
+**Resolved forks:**
 1. **Unify slot = resource.** ONE "castable pools" engine: a slot *is* a recharge-typed
    resource tagged with a spell level {id, spellLevel?, max, recharge, castsSpell?}. Class slots
    = resources keyed by level (recharge long); pact = recharge short; item/arcanum = own
@@ -393,7 +393,7 @@ items. Each may carry **effects** (bounded vocab).
   - **3D physics dice — DEFERRED, not dropped.** An off-the-shelf overlay
     (`@3d-dice/dice-box` — WebGL/BabylonJS + wasm physics, themeable, returns per-die results) on the
     roller's seam, **off by default** and especially gated on the web demo, because the bundle is
-    heavy (WebGL + wasm + textures). **Decided — variant A: the physics engine owns the rolled
+    heavy (WebGL + wasm + textures). **Variant A: the physics engine owns the rolled
     number** (maintainer: *"нам не треба детермінізм"*), which drops the hard part of forcing a 3D
     roll to land on a pre-computed RNG value. **What that must not break:** `rules/dice.rollFormula`
     is not deleted — a roll resolves through a result *provider* (`dice3d` when the toggle is on,
@@ -564,7 +564,7 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
 
-### Column or tag — where a fact lives (DECIDED 2026-08-27)
+### Column or tag — where a fact lives
 The rule for every future schema change, and the one that shapes ITEM-TAGS below.
 
 > **A column when its emptiness is a hole. A tag when its absence means "does not apply."**
@@ -961,7 +961,7 @@ resource cost, applied tokens, duration, roll), (3) choice groups (`choice_group
 columns; generalizes the builder's slotFeats pattern; chosen rows then behave as 1/2).
 Level scaling stays formula-free: per-level `class_features` rows re-grant (monk die d6→d12,
 superiority d8→d12) — the table is already keyed by level; L2 expressions not needed for ~90%
-of PHB. **Acceptance (decided 2026-07-15): FULL PHB integration — every feature of every PHB
+of PHB. **Acceptance: FULL PHB integration — every feature of every PHB
 class must be expressible via one of the three shapes (or explicitly marked manual-text
 fallback) — PLUS the tier-1 homebrew set** (researched 2026-07-15): Blood Hunter (Mercer;
 D&D-Beyond-hosted, the most-played homebrew), Gunslinger (Mercer), Pugilist (Ben Hoffman),
@@ -984,7 +984,7 @@ stay semi-manual.
   - **Money is its OWN thing (→ N6), never an inventory row.**
   - **Adding an item stays in the builder.** The panel is the four verbs play needs; adding is a
     search through hundreds of rows, which is what the builder's equipment pane is for.
-  - **MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work now**; the schema may
+  - **MIGRATIONS: 0 users yet, so NO migration work now**; the schema may
     change freely (breaking) until release, and the schemaVersion machinery stays for post-release.
   - Still open here: **item charges** live in RECHARGE-3, not in this panel.
 - [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
@@ -1049,13 +1049,13 @@ stay semi-manual.
   divergence is exactly why the spec-sheet gate below exists). Model: `play.form =
   {monsterRef, formHp} | null`; deriveSheet branches — physical scores/AC/attacks/speed from
   the (already-typed!) monster row, mental stays own; isolated removable seam like effects;
-  2014/2024 diverge (2024 = temp HP, known-forms list). **Gate (decided 2026-07-15):
+  2014/2024 diverge (2024 = temp HP, known-forms list). **Gate:
   implement ONLY against a written per-edition spec sheet taken verbatim from PHB'14 +
   PHB'24 — 100% RAW fidelity in both editions is a hard requirement here** (HP pool vs temp
   HP, CR/movement limits per level, what's kept vs replaced, revert-at-0 carryover,
   equipment handling, casting rules).
   Superiority dice: extend the grammar —
-  `grant_resource:superiority-dice:4:d8:short` (decided 2026-07-14: die BEFORE recharge —
+  `grant_resource:superiority-dice:4:d8:short` (die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
@@ -1082,7 +1082,7 @@ stay semi-manual.
   blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
   built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
   "the picker contract". Choice groups (N2 shape 3) render here when N2 lands. Open tails:
-  - [ ] **The guided ("walk me through it") second mode.** **Decided: not this release** — it needs
+  - [ ] **The guided ("walk me through it") second mode.** **Not this release** — it needs
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
@@ -1126,7 +1126,7 @@ stay semi-manual.
   - [ ] **A shared provenance popover — repo-wide, not builder-only.** `ui.md` ▸ UX pattern contract
         rule 3 requires every auto-calculated value to explain itself on hover **or focus**; today
         provenance rides `title`, which is mouse-only, and making the tiles focusable does not help
-        because no browser shows a `title` on keyboard focus. **Decided: a small affordance that
+        because no browser shows a `title` on keyboard focus. **The shape: a small affordance that
         appears on hover AND focus and is itself a button**, so the keyboard path exists without a
         new gesture. A modifier key is not available — a click on a spell or action row already
         means *roll*, `Ctrl` is the builder's undo chord, and `Alt`+click is the tray-damage path.
@@ -1155,14 +1155,14 @@ stay semi-manual.
   sheet** — a character can't READ their own features/traits anywhere; read-only prose list,
   cheapest big win, zero prereqs. (2) **DONE** — concentration check prompt on damage (CON save DC
   max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
-  (4) Ammunition as consumable — decided 2026-07-15: tracking OFF by default (a toggle
+  (4) Ammunition as consumable — tracking OFF by default (a toggle
   that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
   hit-dice UI (→ UBUG-1/B2). (6) **DONE** — the builder pickers carry search, and the two big ones
   carry the level/category sections and the school/concentration/ritual facets that keep a long list
   navigable (the picker contract, `docs/internals/ui.md`). (7) Multiclass: combat preparedCap reads
   classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
   toggle first, automation later.
-- [ ] **N6 · Currency (decided 2026-07-15: separate design, not an inventory row).** Support
+- [ ] **N6 · Currency — separate design, not an inventory row.** Support
   ONLY the base PHB coins (cp / sp / ep / gp / pp — 5 in the PHB; settings invent their own,
   those stay out of scope), with per-character HIDING of denominations the player doesn't
   use (electrum first candidate). An exchange-rate reference sits right next to the tracker
@@ -1271,7 +1271,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   `ARMOR CLASS` and `INITIATIVE` sit on buttons that roll `'AC (touch)'` and `'Initiative'`, so
   translating the tile alone puts a Ukrainian tile above an English toast. Same for the ability
   grid, the skills list and every panel body that rolls. All of that rides with W2, as one change.
-  **Genuinely free of W2, and therefore next:** VM toasts (decided: `get(_)` inside a function — a
+  **Genuinely free of W2, and therefore next:** VM toasts (`get(_)` inside a function — a
   toast is fire-and-forget, so the one-shot store read is correct and needs no plumbing; never at
   module top level, where it would freeze at the load-time locale), and the section headers that
   name no roll (`Passive senses`, `Defenses`, `Resources`, `Pin skills`).
@@ -2387,7 +2387,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   trapped:** `CommandPalette` (it restores focus itself — a second restorer fights it) and the
   combat popovers, which are anchored menus rather than modals.
 - [ ] **REL-2 · Package-repo distribution channels.** Beyond GitHub Releases, ship Charnik through
-  the platform package managers so users install/update the native way. Target set (decided):
+  the platform package managers so users install/update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
     `aur.archlinux.org`, no review, cheapest channel.
   - **Flathub** (Linux) — Flatpak manifest; widest cross-distro reach, one channel for all Linux.
@@ -2428,7 +2428,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     host with an autoindex", the answer is still NOT a `pack.json` (docs/internals/content.md ▸ No manifests), and
     deciding what to do about a host with neither is part of this item rather than a surprise inside
     it.
-  - **REL-5a · Pack AUTHENTICITY — DECIDED: no signing (raised 2026-08-12, closed 2026-08-14).**
+  - **REL-5a · Pack AUTHENTICITY — no signing.**
     Downloaded bytes are verified against the git blob SHA the tree listing published. That is
     INTEGRITY against a truncated or swapped transfer; it says nothing about the publisher, so a
     typo-squatted URL or an account takeover passes every check. That remains the posture, stated in
@@ -2501,7 +2501,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
 - [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
   `docs/internals/security.md`.
-**Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
+**Data versioning (design below):**
 - **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5; task 6 closed 2026-08-14).**
   Design-of-record: a
   `#content-<key>:` directive header block (leading comment lines before the CSV column row) carries
@@ -2712,7 +2712,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   single-pane notice) fires on compendium load when the cache holds drafts from another
   `CONTENT_SCHEMA_VERSION`; store `findStaleDrafts`/`discardDrafts`. Verified live.
   **DRAFT-CACHE is COMPLETE — no open tails.**
-  **SURFACE DECIDED 2026-07-10** (mocks: `design-preview/drafts-surface.html`, `orphan-popup.html`):
+  **The surface** (mocks: `design-preview/drafts-surface.html`, `orphan-popup.html`):
   - **Drafts list = full-width pane that replaces the editing block** (compendium right column, where
     WikiDetail/EditContentForm render) — opened via a **4th "Drafts" entry** in the "✎ Edit compendium"
     picker, with a live count badge. Lists **every** draft (all types+kinds), grouped ⚑Needs-attention /
@@ -2839,7 +2839,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   the stale ones (by filename — there is nothing readable inside to label them with) and discards both
   on one click. Browser test + store test cover it.
 
-**Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
+**Sequencing:** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
 clean code; the view split follows. **TYPE-2 and LINT-1 are both closed (2026-08-21); WD-1 → WD-2 are
 what remains of the sequence.**
@@ -2852,7 +2852,7 @@ rather than bespoke editable heads — so every `fieldsFor` widget + zod validat
 same-id row, preserve columns beyond the schema so localized prose survives). A **read-only shipped
 SRD row FORKS to homebrew** (same id, `source=Homebrew`); a homebrew row edits its own file. The SRD
 file stays untouched (survives a future SRD update, keeps CC-BY attribution).
-**Override = SORT, not hide (DECIDED 2026-07-10 by the user):** a homebrew row floats ABOVE the SRD
+**Override = SORT, not hide:** a homebrew row floats ABOVE the SRD
 original in every compendium group (`grouping.compareRows`/`homebrewFirst`, stable so shipped order is
 otherwise untouched — 0px on the SRD-only set). Both coexist (honours the source-namespaced-identity
 invariant); the full keep-one/keep-all UI stays a later `collisions.json` feature.
@@ -2891,7 +2891,7 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    store/`$derived` wiring for live switches. (UX pattern contract → `internals/ui.md`;
    live component inventory → generated `docs/surface.md`. `FRONTEND.md` retired 2026-08-04, its
    living contract folded into internals/ui.md, its inventory superseded by surface.md.)
-   **Layout model = modular panels + preset views (HYBRID, decided P1).** The UI is built
+   **Layout model = modular panels + preset views (HYBRID).** The UI is built
    from discrete **panels** (HP, combat stats, abilities, skills, attacks, spells,
    actions/maneuvers, conditions/effects, inventory, notes, …). It ships **named views** —
    **Profile · Combat · Inventory · Build** — each a **preset arrangement** of panels.

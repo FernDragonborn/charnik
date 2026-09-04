@@ -40,7 +40,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    - **L2 safe value-expressions** (`1d4`, `prof*2`, `ceil(level/2)`): OUR dice+arithmetic
      parser, non-Turing-complete, whitelisted variables, **no `eval`**, no host access.
    - **L3 plugins** (long tail): first-party/signed handlers registered on the engine seam
-     are trusted/easy; **community plugins run in a QuickJS-in-WASM sandbox** (DECIDED) —
+     are trusted/easy; **community plugins run in a QuickJS-in-WASM sandbox** —
      `quickjs-emscripten`, a narrow host API that only takes effect-context and returns
      `{value, trace, notes}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
      no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
@@ -100,7 +100,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
    > arrive pre-authorised), never a wildcard on its own.
    >
-   > **Authenticity is left unsolved on purpose — PLAN ▸ REL-5a, decided 2026-08-14.** Pack signing
+   > **Authenticity is left unsolved on purpose — PLAN ▸ REL-5a.** Pack signing
    > was designed and dropped: a multi-author pack has nobody to sign it, the key lands in CI where
    > "signed" restates who can push, and the one thing that executes is already pinned byte-for-byte
    > by plugin consent. Revisit only if Charnik ever becomes a central distributor.
@@ -113,7 +113,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > that is what per-source licence display, the plugin consent hash, and "applying is your click"
    > are for.
    >
-   > **Packs DO carry plugins** (decided 2026-08-11, reversing "no plugins in v1"): code and the
+   > **Packs DO carry plugins**, reversing an earlier "no plugins in v1": code and the
    > data it serves ship as one unit, in `content/<pack>/plugins/<namespace>/`, because a plugin
    > with no distribution channel is a feature nobody can use. The v1 ban was guarding a hole the
    > consent model (§4, PLUGINS §6) already closes: consent is per-plugin, pinned to a SHA-256 of
