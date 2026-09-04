@@ -51,7 +51,9 @@ one by hand. That distinguishes "computed" from "overridden" without a second fl
 
 ## Versioning and migration
 
-Every save carries a **`schemaVersion`**, and old saves are migrated forward.
+Every save carries a **`schemaVersion`**, and old saves are migrated forward. **Before release
+there are no users and therefore no migrations**: the schema may change breaking, and the machinery
+exists for afterwards.
 
 The default save holds **id references only**. A **bundle export** additionally embeds the content
 rows it references, so a character survives being sent to someone who does not have the packs.
@@ -72,6 +74,12 @@ The partial maps (`abilityBoosts`, `spellSlotsSpent`, `hitDiceSpent`, `resources
 is `V | undefined`. That is the **honest** type. Branding the key to a finite union would make the
 type claim a value is defined when the runtime slot is absent, for a near-zero gain and a migration.
 This is a carve-out, not debt to fix later.
+
+**Concentration is a REF, not a clock.** `play.concentration` names a spell, and its timer lives on
+an ordinary carrier effect in `play.effects` — so editing that effect's `durationRounds` IS editing
+the concentration, and expiry, display and removal are the paths that already exist. A concentration
+spell always gets a carrier even when it has no tokens, which is what gives Hold Person and Web a
+timer at all. Giving concentration its own clock needs a display proxy and a second expiry path.
 
 ## A tracker surfaces, it never decides
 

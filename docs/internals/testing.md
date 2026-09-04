@@ -170,7 +170,8 @@ so tests are repeatable; all derived stats otherwise deterministic.
 Tests exercise the real data shape from two places. `src/test-support/real-content.ts` loads the
 shipped CSVs through `tools/content-repo.mjs` — twelve suites read it, the data gates
 (`items_content`, `conditions_content`, `resources_content`, `content_stamps`, `effects_catalog`,
-`spell_slots`, `class_features_content`) among them. `tests/fixtures/content/` holds the hand-authored
+`spell_slots`, `class_features_content`) among them; `loadPacks(...packs)` there loads a named subset
+when a suite wants one edition or one pack rather than everything. `tests/fixtures/content/` holds the hand-authored
 edge cases shipped data cannot carry, such as the underfilled homebrew pack `meta.test.ts` reads.
 
 Everything else is built over `MemoryStorage` through **`src/test-support/fixtures.ts`**:

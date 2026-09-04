@@ -157,6 +157,13 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   rather than rolling something plausible. Changing the draw ORDER breaks every seeded expectation, so
   it is one deliberate commit, never a drift across changes; `rngSequence`'s over-draw throw is what
   catches an accidental extra draw.
+- **A bare number in a formula counts only as a LEADING value in a segment with no dice.** "70" and
+  "1 bludgeoning" are values; `12 (2d6 + 5)` is the statblock average form the shipped monsters use
+  and must roll 2d6+5, never 2d6+17. Prose numbers ("1d20 vs AC 15") are ignored for the same reason:
+  a missing number beats a wrong one. One `DICE_TERM` regex is shared by both parsers, because what
+  one skips the other must not read as a number.
+- **An attack deals damage on dice OR on a flat value.** Unarmed Strike is `1 + STR` and rolled
+  nothing while the gate asked for dice.
 - **The formula string is a plugin-facing trust boundary.** `plugins.md` makes randomness the host's:
   a plugin returns formulas and Charnik's single dice path rolls them. A formula the parser cannot
   fully account for must therefore SURFACE rather than roll the part it understood.

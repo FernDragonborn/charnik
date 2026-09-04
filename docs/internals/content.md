@@ -31,6 +31,11 @@ making that one authoritative over the others.
 **Source filtering is two-dimensional.** A row is active only if its **file** is enabled *and* its
 **`source` tag** is enabled. The two toggles are independent and both are managed in the UI.
 
+**Read a row's display name through `rowName(row)`.** On the `LoadedRow` union even `name_en` is
+`string | undefined`, because the lookup tables (spell slots, XP thresholds) have no such column at
+all — so `String(row.data.name_en)` renders the literal "undefined" for exactly those rows. The
+accessor falls back to the id. Narrowed rows, where the column is simply present, read it directly.
+
 ## Locales are discovered, never listed
 
 The loader pulls `name_<code>` / `text_<code>` columns off each CSV and derives the available content

@@ -105,6 +105,13 @@ Core rules (owned HERE, restated for authors in plugins.md):
 - **`apply_condition` in an action is self-only** — there is no TARGET model, so an on-enemy effect
   (Stunning Strike's condition on the target) degrades to `note:` + the DC, not an applied condition.
 
+**What a resource chip DOES depends on how many spend options the pool has.** With exactly ONE,
+using the resource IS that action, so the chip runs `activateResourceOption`: validate → spend →
+charge the turn slot → run the token. With several options or none it only decrements — there is no
+single action to infer, and that doubles as the honest escape hatch for spending a resource on
+something unmodelled. An L2 `available` guard is enforced INSIDE `activateResourceOption`, never as
+a `disabled` attribute, so no caller can route around it.
+
 ## 3. The event vocabulary (pinned)
 
 `turnStart` · `turnEnd` · `attackMade` · `damageTaken` · `rest` · `wentUnconscious` ·

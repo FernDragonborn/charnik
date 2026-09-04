@@ -469,8 +469,7 @@ items. Each may carry **effects** (bounded vocab).
 ### Content loader (P4, IMPLEMENTED — `src/lib/content/loader.ts`)
 `loadContent(storage, roots)` → a `ContentGraph`. **Storage-agnostic** (Tauri fs / node-fs /
 in-memory / read-only fetch — serves desktop AND web). Per root: reads each file's own
-`#content-*` header (there is no pack manifest — see REL-4 "Manifest-free by design" and
-docs/internals/content.md ▸ No manifests),
+`#content-*` header (there is no pack manifest — docs/internals/content.md ▸ No manifests),
 lists `*.csv`, infers type from `<filebase>_*.csv`, parses (papaparse) + validates
 (`parseRow`/zod). Builds `byType`, `byEffectiveId` (`type:source:id`), and **`articles`**
 (`type:id` → all editions/sources, powering the 5e↔5.5e toggle). Discovers **locales** from
@@ -562,8 +561,8 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **File-level metadata, NOT a pack manifest.** `schemaVersion, source, license, attribution,
   systems` are declared per FILE in its `#content-*` header (DATA-VER-1), so rows don't repeat
   license/version and files from different sources still merge. **This replaced a proposed
-  `_pack.json` sidecar** — see REL-4 "Manifest-free by design" for why (it is also the case that
-  produced the general rule, docs/internals/content.md ▸ No manifests). A stray `_pack.json` left over from that layout
+  `_pack.json` sidecar** — docs/internals/content.md ▸ No manifests has the reasoning, and this is the
+  case that produced it. A stray `_pack.json` left over from that layout
   is inert: it isn't read, and the pack differ knows not to propose deleting it.
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
@@ -982,16 +981,11 @@ shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki 
 die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
 stay semi-manual.
 
-- [x] **N1 · Inventory view — the combat panel is built** (`pid: 'inventory'`): qty stepper,
-  equip / attune (cap 3 — Strict blocks with a toast, Free allows and the count says so), "use" on
-  a consumable, and B7's weight → carrying-capacity bar, which is the first time that computed
-  number has been rendered anywhere. What must survive the tick:
-  - **Money is its OWN thing (→ N6), never an inventory row.**
-  - **Adding an item stays in the builder.** The panel is the four verbs play needs; adding is a
-    search through hundreds of rows, which is what the builder's equipment pane is for.
-  - **MIGRATIONS: 0 users yet, so NO migration work now**; the schema may
-    change freely (breaking) until release, and the schemaVersion machinery stays for post-release.
-  - Still open here: **item charges** live in RECHARGE-3, not in this panel.
+- [x] **N1 · Inventory view.** The combat panel (`pid: 'inventory'`): qty stepper, equip / attune
+  (cap 3 — Strict blocks, Free allows and says so), "use" on a consumable, and the weight →
+  carrying-capacity bar. **What must survive:** money is its OWN thing (N6), never an inventory row;
+  ADDING an item stays in the builder, because that is a search through hundreds of rows while the
+  panel is the four verbs play needs; item charges live in RECHARGE-3, not here.
 - [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
   surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,
@@ -1038,7 +1032,7 @@ stay semi-manual.
   charges/activated procedures (RECHARGE-3), GM-chosen variants (Ring/Armor of Resistance),
   weapon-scoped bonuses (the open §A `damage:<qualifier>` gap) and the generic +1/+2/+3 rows that need
   one row per tier.
-- [x] **DEMO-1 · Showcase demo character — DONE 2026-08-04.** **Karroth the Red**, id `karroth` —
+- [x] **DEMO-1 · Showcase demo character.** **Karroth the Red**, id `karroth` —
   Tiefling · Soldier · **Warlock 5 (Fiend) × Barbarian 3 (Berserker)**, SRD-only, derives clean
   against the real shipped SRD 5.2.1 graph. It seeds first-run on web AND desktop, so it IS the first
   impression of the system's scope — keep it deriving clean. `recreateDemoCharacter()` restores it;
@@ -1286,13 +1280,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`
   zeroes the min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per
   the recipe in `Turnbar.svelte` when a locale is added.
-- [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
-  see UBUG-20 for what shipped.** The problem was that `Alt/Ctrl-click` opened the roll tray, on an app
-  explicitly used on a phone where modifiers do not exist. The answer: don't bind a gesture to opening
-  a configurator at all — roll, and if it turns out to have been advantaged, tap the d20. RAW-exact
-  (the rule says roll a second d20 and take the higher; rolling it late changes nothing) and identical
-  on mouse and finger. Full survey + the three findings behind it:
-  [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
+- [x] **UX-3 · retroactive advantage instead of a pre-roll gesture.** Roll, and if it turns out to
+  have been advantaged, tap the d20 — RAW-exact and identical on mouse and finger, where
+  `Alt/Ctrl-click` does not exist. Survey: `docs/research/roll-surfaces.md`.
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework, the features panel,
   the provenance popover), and onboarding written against a surface that is still changing has to be
@@ -1323,45 +1313,10 @@ holds the done-work log; these are the OPEN tails it carried):**
   zero files under `src/routes/combat/`, and en.json has no `combat.*` namespace at all (see ARCH-1
   above). Onboarding would add on the order of ten strings; localizing combat is hundreds. Constraint
   (b) — tutorials repel — stands on its own and is the real reason.
-- [x] **UX-1 · Error copy pass — DONE 2026-08-21** (maintainer request 2026-08-09). Every message the
-  app shows when something goes wrong was written from the ENGINE's point of view, at a user whose
-  whole relationship with the app is "I own my data as plain CSV". **The standard applied:** each
-  message answers *what happened*, *what it means for their sheet*, *what to do next* — and the exact
-  technical particular (token, column, id, the validator's own complaint) is **demoted to a second
-  line, never deleted**, because the content-health panel is ALSO the homebrew author's debugger.
-  **The shape that carries it:** `ContentIssue` and `EffectIssue` each gained a `detail` field, and
-  the panel renders it as a quiet mono line under the sentence. Everything the old messages said is
-  still on screen; what changed is which half is the sentence. The loader's copy was lifted out to
-  **`content/issue-text.ts`** — it had pushed `loader.ts` past the 400-line lint, and gathering it is
-  what makes ARCH-1's localization a file to hand over rather than a grep.
-  **What a sentence could afford that a fragment couldn't:** a misspelled `#content-type:` now gets
-  `didYouMean` over the known types and an unresolved `spell_lists` join gets it over the real ids
-  (`util/suggest.ts` — moved out of `effects/`, which never imported it, so `content/` could);
-  a duplicate id NAMES the file the surviving copy is in; the schema warning splits by direction
-  (a file from a newer build is a different problem, with a different fix, than one from an older
-  one — read off the versions, never off the thrown text).
-  **Plugin failures collapsed to ONE sentence** at the `degrade` seam: a dozen internal reasons
-  (over budget, result too large, bad target key, handler not registered…) are the same fact to the
-  reader and have the same next step, so they became one sentence with the exact fault underneath.
-  **Play-side:** a resource is named by its NAME (`resourceName()` — the same lookup was written four
-  times, and the two places that skipped it were the two that printed the id); `ACTION_SLOT_LABEL`
-  because "bonus" is not the name of anything at the table; the slot blocks speak in table language
-  ("No 3rd-level spell slots left — cast it from a higher slot, or rest"); the homebrew form names
-  the FIELD and what it accepts, read off the same `kindOf`/`optionsOf` the inputs are built from, so
-  it can't drift from what the widget allows; the drift dialog says "fingerprint", not "hash".
-  **Left as-is, deliberately:** the effect-token authoring lints stay terse — their audience IS the
-  author, and the panel now says so above them. The derive row's `source · token` header keeps the
-  token as its muted secondary identifier: it is what identifies the failing row.
-  **New `/dev/health` route + shot state:** on the shipped SRD the panel is always "all clear", so
-  none of this copy had any visual coverage; the route feeds deliberately broken CSVs through the
-  REAL loader. (shot.mjs pixel-diffs the first viewport only — `body` never scrolls — so the groups
-  below the fold are eyeballed, as on every long route.)
-  **Tests moved off the prose onto `detail`**: the identifier is the durable fact, the sentence is
-  copy (docs/internals/testing.md). Ties docs/internals/characters.md ▸ A tracker surfaces, it never decides (a message the
-  player can't act on is the same failure as a silent one) and AGENTS.md ▸ Taste (errors surface).
-  **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
-  OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
-  already on disk can't be localised afterwards), so ARCH-1 still waits on W2, not on this.
+- [x] **UX-1 · Error copy pass.** Every failure message rewritten for the person whose data it is,
+  with the technical particular demoted to a `detail` line rather than deleted. The standard, the
+  `detail` contract and where the copy lives are `docs/internals/ui.md` ▸ Error copy; tests assert
+  the identifier, never the sentence.
 - [ ] **CONDEFF · one content type for conditions and effects.** From the roller: "I can't add
   Poisoned to an attack roll". Poisoned IS disadvantage on the attack the same
   way Bless is +1d4 on it; that they are two content TYPES is an authoring accident the player is
@@ -1411,67 +1366,17 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
-- [x] **UBUG-23 · A stacked toast was resized to the front toast's height instead of just sitting
-  behind it — clipped when taller, stretched when shorter — FIXED 2026-08-24.** `svelte-sonner` forces
-  `height: var(--front-toast-height)` on every collapsed background toast and makes that harmless by
-  fading their content out — but only for `data-styled='true'`, and a custom-component toast is
-  `styled='false'`. Ours size to their content, so a taller one behind the front card spilled out of
-  the forced height. Fix in `routes/+layout.svelte`: the library's own content-fade, extended to the
-  unstyled toasts it skips (plus `pointer-events: none`, so an invisible card is not a click target).
-  `data-expanded='false'` keeps hover-expand, where a background toast is meant to be seen at its own
-  size — verified both states in `/dev/rolltoast`.
-- [x] **UBUG-22 · `rollFormula` silently dropped a flat modifier that wasn't at the end of the formula
-  — FIXED 2026-08-21.** `rollFormula('1d6+3+1d4')` totalled **10, not 13**: `parseDicePool` collected
-  every dice group, but the modifier was read by a TAIL regex, so any `+N` with a dice term after it
-  was lost — reachable from CONTENT (a homebrew `heal:1d8+2+1d4` healed quietly less) and from the
-  plugin API, which is what made it worth doing ahead of the roller rewrite.
-  **What shipped:** one `DICE_TERM` regex both parsers share + `parseFlatModifier` — strip the dice,
-  then sum EVERY signed term. Sharing the regex is the actual fix: what one parser skips, the other
-  must not read as a number. `attacks.ts`'s `segmentMod` + `segmentFlatBase` were the same parser
-  written twice and are gone; damage segments and roll formulas can no longer disagree about what
-  `+2` means. Two more silent drops fell out with it — a bare `d8` (no count) rolled nothing, and a
-  dice-less `70` in a formula rolled 0.
-  **The rule an UNSIGNED number obeys, and why:** it counts only as a leading value in a segment with
-  NO dice ("70", "1 bludgeoning"). With dice present it is ignored — that is the statblock average
-  form the shipped monsters use (`12 (2d6 + 5)` must roll 2d6+5, never 2d6+17), which the first draft
-  of this fix broke and the pre-commit self-check caught against real content. Same reason prose
-  ("1d20 vs AC 15") is ignored: a missing number beats a wrong one. 17 new assertions.
-- [x] **UBUG-21 · CLOSED 2026-08-24 with `ROLLER-N`'s organ: the damage is the second LINE, made of
-  the same editable pills as the to-hit, so a `+1d6` typed for a damage rider lands on the damage.
-  Two silently-wrong numbers went with it — a prefilled roll dropped an effect's dice entirely (alt-
-  clicking under Bless rolled a d4 short of the same roll tapped normally), and reroll/bound facts
-  now ride the pool's own dice so a GWF reroll can't reach a Bless die beside them.**
-  The report, kept because it names the failure class: **the dice tray edits the TO-HIT while
-  claiming to be the attack — dice and modifier
-  you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
-  `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**
-  Shift-clicking an attack prefills the tray from `attackRoll`'s tray branch: `dice: {20:1}`,
-  `mod: at.toHit + fx.flat`, and the damage goes to `queueDamage`, where it is INVISIBLE and
-  unadjustable — `doRoll` rolls the shown pool, then rolls the queued parts from their fixed specs.
-  So everything the tray shows, and everything it lets you change, belongs to the to-hit, under a
-  heading that says "Greataxe".
-  **Why this is worse than a missing control:** the pool is editable, so a player adding "+1d6" for a
-  damage rider gets it summed into the ATTACK roll — the card reads `Roll 1d20 + 1d6 +6` and resolves
-  `13 · 5 · 20(dropped) · +6 = 24`. A silently-wrong number, which is exactly the failure mode item 9
-  exists to prevent, not merely an absent feature. The `− mod +6 +` stepper is the same problem one
-  step quieter: it is the ATTACK bonus, and the damage modifier cannot be reached at all.
-  **A spec gap, not an open design question — the roadmap already describes the right shape** (§9:
-  "opens the roll builder in **attack mode**: (1) to-hit (d20 + attack bonus, adv/dis) vs AC, then
-  (2) damage (weapon/spell dice + mod) with a **Crit toggle**"). Only stage 1 was ever built. The tray
-  needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
-  separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
-  (`docs/internals/roller.md`). Building it here first would build it twice.
-  **Interim honesty — TAKEN 2026-08-21, because the roller did slip.** The tray's heading now reads
-  "Greataxe · to hit" and carries the queued damage as a read-only line ("then 1d12 +3 slashing —
-  rolled with it, not from this pool"), so the pool can no longer be read as the whole attack. It is
-  still true that the damage cannot be adjusted; it is no longer true that a player has no way to
-  know. `RollTray.queuedDamage` is a getter over the same `pendingDamage` the roll already used
-  (`$state` so the panel tracks it), and `poolExpr` in `combat/roll.ts` is now the ONE pool
-  formatter — the tray's own `rollExpr` was a second copy of it, and a read-only damage line that
-  described a pool differently from the pool above it would be its own small lie.
-  New shot state `combat-dice-attack` pins it: the prefilled tray had no visual coverage at all,
-  which is part of why this survived so long. **The real fix is still ROLLER-N** — this changes no
-  structure and buys none of it.
+- [x] **UBUG-23 · a stacked toast was resized to the front toast's height.** `svelte-sonner` forces
+  `height: var(--front-toast-height)` on collapsed background toasts and makes it harmless by fading
+  their content — but only for `data-styled='true'`, which a custom-component toast is not. The
+  fix extends the library's own content-fade to the unstyled toasts it skips.
+- [x] **UBUG-22 · `rollFormula` dropped a flat modifier that was not at the end of the formula.**
+  `1d6+3+1d4` totalled 10, not 13 — reachable from content and from the plugin API. One shared
+  `DICE_TERM` regex plus `parseFlatModifier`; `roller.md` ▸ Conventions carries the rule about what
+  an unsigned number means.
+- [x] **UBUG-21 · the dice tray edited the to-hit while claiming to be the attack.** Damage is the
+  second LINE now, made of the same editable pills, so a `+1d6` typed for a rider lands on the
+  damage. Closed with ROLLER-N — same seam, pointless to build twice.
 - [x] **ROLLER-N · one roller that fires N independent sub-rolls.** One action fires N instances of
   two-level lines, each logged on its own line and toasted as one card; crits landed with it. The
   roller answers with structured dice instead of a formatted string, advantage is a mode over
@@ -1533,56 +1438,14 @@ holds the done-work log; these are the OPEN tails it carried):**
   - [ ] **Deliberately unbuilt, with the reason:** Elven Accuracy (now merely a third element in
         `d20s`, not a modelling question), a per-instance target, and a per-instance advantage — a
         volley rolls the same set N times, which is what the two-level model decided a volley IS.
-- [x] **RES-NAME · a resource pool has a NAME of its own — DONE 2026-08-21** (maintainer's call on
-  the hunch filed the same day: "ім'я у ресурсу має бути окремим, а не виводитись із айді").
-  **What was wrong.** A pool's `id` is identity — the key in `play.resourcesSpent` on disk, what
-  `resource_option.resource_id` joins to, what `grant_resource:<id>:…` writes. It had no name at all:
-  `ResourceDef.name` was `titleCase(id)`, computed in the engine. That is silently plausible for most
-  pools and WRONG for the ones that matter — 2024's monk pool is granted as `focus` by the feature
-  "Monk's Focus" and the rules call it **Focus Points**; 2014's is `ki` and the text says **Ki
-  Points**. Neither is derivable from the key, and neither could ever be translated, because the name
-  was invented inside the engine after content had stopped having a say.
-  And it was spelled FOUR ways: `titleCase(id)` in the engine, `def?.name ?? id` in the tracker, a
-  second `titleCase(r.id)` in the initiative-regain toast, and `resourceId.replace(/_/g,' ')` in the
-  actions panel — AGENTS.md ▸ Taste (one name per fact) broken four times over.
-  **The shape chosen, and why not the alternatives.** A new `resource` content type: id + the base
-  name/text columns, nothing else. NOT a slot on the `grant_resource` token (display text inside an L1
-  token can never be localised, and the grammar is a `compatibility.md` chokepoint), and NOT a column
-  on the granting feature — `bardic_inspiration` is granted by TWO features (Bardic Inspiration, Font
-  of Inspiration), so no feature can own the name. Putting it on the POOL also dissolves the "whose
-  name wins when two grants merge" question: the name never belonged to the grant.
-  Not browsable (like `resource_option`): it carries a display name, its rules text stays on the
-  feature. `resource-names.ts` resolves id→name ONCE per derive and both the pools and their
-  spend-options read that one map, so the two can't disagree. The engine keeps `titleCase(id)` as the
-  fallback, so a homebrew pool with no row still displays — content ADDS a name, it is not required.
-  **Content:** `resources_srd.csv` in both editions (7 pools in 5.5e, 5 in 5e), every name read off
-  that edition's own shipped text (content repo `17fb092`). A test asserts every granted pool id has a
-  row, so a converter re-run that drops the file fails loudly instead of reverting to `titleCase`.
-  **Fresh-eyes pass, same day — three holes found and closed, one left open on purpose.**
-  (1) `grantedPoolIds` called `parseToken` on the RAW token, and a guarded grant
-  (`is_raging ? grant_resource:…`) parses to `unknown` — so a pool granted under a condition looked
-  ungranted and its perfectly good option would have been reported as broken. `splitGuard` first,
-  like the token lint does; a test pins it. A checker that cries wolf is worse than no checker.
-  (2) A pool's name is content prose, and the Translate view could not reach it: its type list was
-  filtered by `isBrowsable`, and neither `resource` nor `resource_option` is an article. Translation
-  wants PROSE, not articles — `hasProse(type)` asks the schema whether it declares `name_en`, so
-  `resource_option` (Flurry of Blows' own name and description!) became translatable too, having
-  never been.
-  (3) The tracker's fallback for a pool nothing grants any more printed the RAW id, while the
-  engine's printed `titleCase(id)` — two fallbacks for one fact. Both are `titleCase` now.
-  **Left open, deliberately** (needs a UI decision, not a patch): a `resource` row cannot be AUTHORED
-  from the app — the compendium's add/edit flow is keyed to the browsable types, so homebrew must
-  hand-write `resources_hb.csv`. That is the "everything is doable from the UI" invariant unmet for
-  this type, and it is unmet for `resource_option` in exactly the same way, since before this.
-  **What shipping it taught, the same day** (maintainer pulled content, kept the installed app, and
-  got two "unknown content type" warnings): a new content TYPE is **not** a backwards-compatible
-  content change, and the two-repo split guarantees older builds will meet it. Nothing broke — the
-  file is skipped and names fall back — but `CONTENT_SEED_VERSION` had not been bumped either, so the
-  file would never have arrived on the next app update. Bumped to **3**, both unknown-type messages
-  now name "content newer than the app" as a cause (it is no longer likelier to be a typo), and the
-  rule is written down as **docs/internals/content.md ▸ A new content TYPE** — including that a file of a NEW type should not
-  declare `#content-type:`, because an older build then reports an ERROR where it would otherwise
-  report a warning.
+- [x] **RES-NAME · a resource pool has a NAME of its own.** `ResourceDef.name` was `titleCase(id)`,
+  which is wrong for exactly the pools that matter (2024 `focus` is "Focus Points", 2014 `ki` is "Ki
+  Points") and could never be translated. A `resource` content type carries it; `resource-names.ts`
+  resolves id→name once per derive so pools and their spend-options cannot disagree; the engine
+  keeps `titleCase` as the fallback, so a name is something content ADDS. **The name never belonged
+  to the grant** — `bardic_inspiration` is granted by two features — so it is not a token segment
+  and not a column on the granting feature. Translation reaches it because the Translate view asks
+  `hasProse(type)`, not `isBrowsable`.
 - [ ] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The two axes the
   `recharge` enum cannot express and that a rest policy should not be bent into. Nothing tracks item
   charges as a resource today — no column, no consumer — which is exactly why the generic model waits
@@ -1661,19 +1524,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   add on top is `size` on `FileEntry` (still absent, `storage/types.ts`) plus a cap in every storage
   impl — guarding a file the USER put in their own dataDir, which is not a trust boundary and is
   precisely where a cap rejects legitimately-large homebrew. Recorded, not queued.
-- [x] **B24 · granular per-file watcher reparse — MEASURED, then answered the cheap way
-  (2026-08-14).** A full reload of both shipped packs (read, hash, parse, validate, index, resolve)
-  is **~90 ms for 2866 rows**, so reparsing only the changed file would save under a tenth of a
-  second on an action a human performs by hand — in exchange for rebuilding `articles`,
-  `byEffectiveId`, locale discovery and `resolveRefs` incrementally, every one of which spans files.
-  **Incremental parsing is therefore a won't-do, with the number behind it.**
-  What the watcher genuinely got wrong is now fixed: it rebuilt on ANY path under `content/`, so an
-  editor's temp and lock files (`~$…`, `.goutputstream-…`, `spells.csv~`, vim's `4913`) each cost a
-  full rebuild plus a full re-render, several times per save. It now filters on the SAME predicate
-  that decides what a pack ships (`isPackFile`), so the watcher and the pack differ cannot disagree
-  about what counts as content; a path with no extension still passes, because on some platforms
-  removing a folder emits only the folder's own path and a hand-deleted pack must not linger
-  on screen until the next launch.
+- [x] **B24 · granular per-file watcher reparse — measured, then answered the cheap way.** A full
+  reload of both shipped packs is ~90 ms for 2866 rows, so incremental parsing is a **won't-do**:
+  it would rebuild `articles`, `byEffectiveId`, locale discovery and `resolveRefs` incrementally,
+  every one of which spans files. What was genuinely wrong is fixed — the watcher filters on
+  `isPackFile`, the same predicate that decides what a pack ships, so an editor's temp files no
+  longer cost a full rebuild and the watcher cannot disagree with the pack differ.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
   the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
@@ -1769,14 +1625,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
     slot. v1 ships the picker + an on-select `castPreview` only; a hover tooltip over the whole ladder is
     the nicety left.
-- [x] **CONCENTRATION · Timer + end-points — DONE (was `docs/CONCENTRATION-PLAN.md`).** **Model C**
-  is the load-bearing decision: `play.concentration` is a `string | null` REF, and the timer lives on
-  a carrier effect in `play.effects` — concentration is "a ref to its own timer-effect", not a
-  separate clock. That reuses the existing expiry + duration UI (editing the carrier's
-  `durationRounds` IS editing the concentration) and cost ~1 line, where giving concentration its own
-  clock needed a display proxy and a second expiry path. A concentration spell ALWAYS gets a carrier,
-  even token-less, which is what gave Hold Person and Web a timer. The CON save on damage is a toast
-  REMINDER, never an auto-drop (docs/internals/characters.md ▸ A tracker surfaces, it never decides). Duration canon = rounds.
+- [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is
+  `docs/internals/characters.md` ▸ Concentration is a REF, not a clock. The CON save on damage is a
+  toast REMINDER, never an auto-drop. Duration canon is rounds.
 - [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
 - [x] **UBUG-8 · Resources are used like spells** — the name is a "use one" button, the pips stay
   for manual restore. Action economy is deliberately not wired here (resources carry no action-cost
@@ -1814,13 +1665,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   `Attack` grew an `id` (its display name never was an identity). **What is left is CONTENT, in
   `charnik-content-srd`:** the `resource_options` rows that still say `note:` — Flurry of Blows becomes
   `attack:unarmed_strike:2` — hand-edited in both editions and `pnpm restamp`ed, never re-converted.
-- [x] **UBUG-12 · Roll feedback is hard to read — the toast became a component (2026-08-09, design
-  5A from `design-preview/toast-update/`).** Superseded by UBUG-20, which made that component the ONE
-  renderer for all four roll surfaces. Two rules from it are still load-bearing and both live in code:
-  a natural 20 is labelled "nat 20" and never "crit", because the same 20 is a crit on an attack and
-  just a 20 on a check and the tracker surfaces rather than rules (`dice/roll-toast.ts`); and an
-  attack "deals damage" on **dice OR a flat value**, since Unarmed Strike's flat `1 + STR` silently
-  rolled nothing while the gate asked for dice (`dealsDamage`, `combat/roll.ts`).
+- [x] **UBUG-12 · roll feedback is hard to read.** The toast became a component, then UBUG-20 made
+  that component the one renderer for all four roll surfaces. Both rules it left live in `roller.md`.
 - [x] **UBUG-13 · Level-up re-offered an ASI and double-applied it.** Root cause worth remembering:
   only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping, so a
   restored slot could re-derive its boost a second time.
@@ -1841,600 +1687,35 @@ holds the done-work log; these are the OPEN tails it carried):**
     input only at 0 HP, default off: the Damage button has no attack behind it to read crit-ness
     from, and asking in one checkbox beats inferring wrong. Surfacing, not deciding — the failure is
     applied because RAW is unconditional here, and the count stays hand-editable as it is today.
-- [x] **UBUG-16 · Abilities now cost their action / bonus action.** The rule, since it decides what
-  a resource chip DOES: with exactly ONE spend option, using the resource IS that action, so the chip
-  runs it through `activateResourceOption` (validate → spend → charge the turn slot → run the
-  token). With several options or none it only decrements — there is no single action to infer, and
-  that doubles as the honest escape hatch for spending a resource on something unmodelled. An L2
-  `available` guard is enforced INSIDE `activateResourceOption`, not in a `disabled` attribute, so no
-  caller can route around it.
-  - [x] **Tail, pre-existing — FIXED 2026-08-21.** `gain_action` REFUNDED a spent action
-    (`turn.action − 1`), so using Action Surge before you had acted burnt a use for nothing. It now
-    raises the per-turn max: `play.turn.grantedActions`, added to `slotMax.action` and reset with the
-    turn, so the extra pip shows in the turnbar and `canSpend` honours it. Play-state rather than a
-    `flat_bonus:action+1` effect on purpose — `slotMax` only folds effect facts when auto-calc is ON,
-    and a feature the player activated by hand must not silently do nothing with effects off.
+- [x] **UBUG-16 · abilities cost their action or bonus action.** What a resource chip does with
+  one spend option versus several is `docs/internals/actions.md` ▸ §2. `gain_action` raises the
+  per-turn MAX (`play.turn.grantedActions`) rather than refunding a spent action — play-state on
+  purpose, because `slotMax` only folds effect facts when auto-calc is on and a feature the player
+  activated by hand must not silently do nothing.
 - [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
   in that bar signals it the same way (hover + pointer + the global focus ring).
 - [x] **UBUG-18 · Abilities block used a different background** than the panels around it.
-- [x] **UBUG-19 · Icons are DRAWN, never typed — DONE 2026-08-21.** Every font glyph doing an icon's
-  job across the app is now an SVG. **What shipped:** `src/lib/components/Icon.svelte` — one component
-  over Lucide (ISC, `@lucide/svelte`), `<Icon name="x" size={13} />`, keys spelled exactly as Lucide
-  spells them so an icon is findable without a translation table. A DEP rather than hand-copied path
-  data on purpose: ~40 glyphs of path data transcribed by hand is 40 chances to draw something subtly
-  wrong, and the package is the same art the existing `DamageIcon` already borrowed. `DamageIcon` and
-  `EyeIcon` stay hand-drawn — a d20-with-a-d4 and an open/closed eye pair that no icon set has.
-  **Beyond the census:** a glyph inside an i18n string (`🐞 Found a bug?`) or a status map
-  (`translate`'s `○ ⚙ ◐ ✓`, `DraftsPane`'s `⇄ ＋ ✎`, the theme pickers' `☾ ☀`) can't hold a component,
-  so those became `IconName` values with the glyph out of the string — worth knowing, because it means
-  **a locale catalog no longer carries UI iconography** and a translator can't break the icon.
-  `DialogShell`'s `badge` prop went from a glyph string to an `IconName` for the same reason.
-  **A11y:** an icon-only button used to have the glyph as its accessible name, so `Icon` takes an
-  optional `label` (sets `aria-label` + `role="img"`; unset → Lucide's `aria-hidden`, right for
-  decoration) and every icon-only control now names itself.
-  **Left as text on purpose (the rule below):** `−`, `×`, `∞`, `½` INSIDE a sentence or a value
-  (`Expertise (×2)`, `12 (2d6 + 5)`, `d6(1↻5)` in a roll breakdown) — text set at text size. The
-  stepper `−`/`+` PAIRS did become icons: half a pair as an icon and half as text is worse than
-  either. The roll card's advantage cues stay CSS geometry.
-  Gate: svelte-check 0, 1324 tests, `shot.mjs` 20/20 re-baselined after eyeballing every state.
-  _(Original filing + rationale, kept because it is the WHY:)_ It was filed as "three emoji to swap": the
-  speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
-  otherwise — roughly a hundred glyph-as-icon uses across `src/**/*.svelte`, led by `↻` (14), `∞` (13),
-  `✕` (11), `⚠` (8), `🎲` (7), `☾` (7), `▾`/`▸` (12), `★`/`☆` (9), `⚑` (5), `✓` (4), `✎` (4), `✦` (4),
-  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution (docs/internals/ui.md ▸ Icons are drawn, never typed) — no
-  emoji, no icon-font dep.
-  **Why it is a correctness issue and not taste — three distinct failure modes, two of them hit for
-  real while building the roll card (2026-08-10):** (1) **rasterisation** — a small filled glyph with
-  no vertical stem has nothing to hint against, so `◆` at cue size came out a rounded blob; (2) **font
-  fallback** — a glyph absent from the app's fonts is substituted from whatever the OS has, with
-  different metrics, which is why `⇈` drew its two arrows at different heights; (3) **presentation
-  drift** — codepoints like `⚠`, `☀`, `✦` render as colour emoji on one platform and monochrome on
-  another, so the same UI is not the same UI. All three get worse as the display gets smaller or the
-  page is zoomed out, which is exactly where a tracker gets used.
-  **The rule (see docs/internals/ui.md ▸ Icons are drawn, never typed):** a character that is TEXT stays text — `−`, `≥`, `∞` inside a
-  sentence are set at text size and the font was designed for them. A character standing in for an
-  ICON is drawn instead: an inline SVG, or CSS geometry when the shape is trivial. The roll card's
-  advantage cues are the worked example — three `clip-path` polygons in `currentColor`, exact
-  geometry at a size we choose, no font in the path at all.
-- [x] **UBUG-20 + UX-3 · One roll card everywhere, and its live controls — DONE 2026-08-10.** One
-  `RollRow` is mounted by the toast, the Playbar, the roll log and the dice tray; the d20 pill cycles
-  advantage → disadvantage → neither after the fact, and the damage pill rerolls.
-  **Constraints later work must not undo** — each is stated at its own seam in code, listed here so
-  nobody has to rediscover them: controls live in the Playbar and the log and NEVER in the toast (a
-  toast expires mid-decision and click-anywhere dismisses it — `RollToast.svelte`); the reroll
-  affordance is the damage PILL, not a bar or a row-click, because neither can say WHICH damage it
-  means once a card has several (`RollLog.svelte`); and `onAdvantage` deliberately takes no attack
-  index, so a per-attack chooser cannot ship before something actually rolls more than one attack
-  (`RollRow.svelte`). Survey evidence: [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
-  **Open tails:** an inert ↻ MARKER on the toast's pill (a cue, not a capability — the always-visible
-  Playbar carries the live control on the same roll); the toast has no labelled close control, which
-  is its own a11y nit since the card IS a labelled dismiss button today; the volley chooser waits on
-  `ROLLER-N`. That an amendment reaches the append-only `log.jsonl` was the roller's own fix, not a
-  tail of this item.
+- [x] **UBUG-19 · Icons are DRAWN, never typed.** `Icon.svelte` over Lucide; the rule, its three
+  failure modes and what stays text are `docs/internals/ui.md` ▸ Icons are drawn, never typed. One
+  consequence to keep: a locale catalog no longer carries UI iconography, so a translator cannot
+  break an icon.
+- [x] **UBUG-20 · one roll card everywhere, and its live controls.** One `RollRow` mounted by the
+  toast, the Playbar, the roll log and the dice tray; the d20 pill cycles advantage after the fact
+  and the damage pill rerolls. The constraints later work must not undo are stated at their own
+  seams in code (controls never in the toast; the reroll affordance is the PILL; `onAdvantage` takes
+  no attack index).
+  **Open tails:** an inert ↻ marker on the toast pill, and the toast has no labelled close control —
+  an a11y nit, since the card itself IS the dismiss button today.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing.** Fixed end-to-end via a persisted
   `ui.spellsHidden`; pins likewise persist in `ui.spellsPinned` (D3), no demo hardcode.
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
-- [x] **REL-4 · Content packs from a URL — update content independently of the app. FEATURE CLOSED
-  2026-08-11; hardening closed 2026-08-12** (maintainer 2026-08-10; slices 0–11 built and verified
-  against the real GitHub, then audited architecturally, and that audit's own list closed the same
-  day — `0cf0c4c`). Reaching a NON-GitHub host was carved out to **ANY-HOST-PACKAGE-DISTRIBUTION** as a separate, much-later
-  feature. A second read-only pass (2026-08-12) found seven more, all fixed the same day (`001a9dc`,
-  `9f28d52`..`54d0bb6` — see "the second pass" below). **A third pass the same day asked the question
-  as a SECURITY one and found twelve; all are fixed and live-verified (24/24 on real Windows) — see
-  "the third pass". Nothing on this item is open.**
-  **The ask:** a Settings field where you paste
-  a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
-  unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
-  updated without shipping an app release.
-
-  **Slice 1 SHIPPED 2026-08-10 — a pack is a folder, roots are discovered, not declared.** The
-  hardcoded `CONTENT_ROOTS = ['content/srd-2024','content/srd-2014']` is gone: `discoverContentRoots`
-  scans `content/` for folders (excluding the writable homebrew root), so the bundled SRD is simply
-  the pack we ship and a folder dropped in beside it loads with no code change. Desktop scans the real
-  directory; the web build's `FetchStorage.list` now reports the manifest's roots as SUBdirectories
-  (it previously could not see a directory at all, so a `list('content')` came back empty);
-  `tools/build-static-content.mjs` scans instead of listing roots too. `graph.packRoots` carries the
-  discovered set so homebrew authoring still knows which files are pack-managed (it read the constant
-  before). **Two findings worth keeping:**
-  - **Root ORDER was load-bearing by accident — now it is not, and must stay that way.** The
-    compendium never deduped an article across editions and `groupRows` sorts stably, so whichever
-    root loaded first headed every list; changing the scan order silently flipped the whole
-    compendium from 5.5e to 5e. Caught by `tools/visual/shot.mjs`, NOT by the 1084 unit tests — so
-    anything touching load order or layout has to be DRIVEN, not just unit-tested. **Fixed properly
-    in `5177cf7`:** the browse lists sort by displayed name themselves (`byDisplayName`, newest
-    edition first within an article), so `discoverContentRoots` is back to a plain deterministic sort
-    and **no consumer may read meaning into pack order** — installing a pack must never be able to
-    reorder someone's compendium.
-  - Deleting a bundled pack still re-seeds it on next launch (`copyMissingRoots`), which is the
-    "deleting or downgrading the SRD pack needs an answer" item below, now reachable from the UI-side.
-
-  **Manifest-free by design** (the case that produced the general rule — **docs/internals/content.md ▸ No manifests**, "no
-  manifests or index files: discover by scanning, describe in-band"). A sidecar `pack.json` was proposed
-  and REJECTED: the project deliberately
-  keeps data in CSV, and every `#content-*` header already carries what a manifest would —
-  `#content-source` (pack identity, and the namespacing key), `#content-license` + `#content-url`
-  (attribution), `#content-id` (a GUID), `#content-updated_at`, `#content-hash`, `#content-systems`.
-  Consequences worth stating because they are BETTER than the manifest version, not merely equal:
-  - **A pack is a FOLDER.** The one thing headers can't give is the file list; a folder listing filtered
-    to files that parse as content gives it, with no new format. (Folder-per-pack also makes uninstall a
-    delete, keeps the file × `source` two-dimensional filtering intact, and never mixes with homebrew.)
-  - **Match remote↔local by `#content-id`, not by filename** — a pack that renames a file is still the
-    same file, so a rename can't produce a duplicate.
-  - **There is no pack version and none is needed.** `#content-hash` answers "did THIS file change",
-    which is finer-grained than a pack semver AND lines up exactly with the per-file hand-edit check.
-
-  **Network channel: Rust, not the webview.** `security.md` §5 states "No remote content loading" and
-  the CSP governs the webview's network. The precedent to copy is §1's updater: an outbound HTTP
-  *client* in Rust (`plugin-updater`), never webview `fetch`. Host allowlist in capabilities. Doing this
-  via webview fetch would require relaxing a shipped security invariant — don't.
-
-  **Applying is always a user action** (`security.md` §7, "never silent overwrite"). Content is rules;
-  changing them mid-campaign unasked is the worst thing a tracker can do.
-
-  **Hand-edited files: the rule already exists and is unit-tested — reuse REL-3.** This was flagged as
-  the biggest risk in the design conversation and turns out to be solved: `seedShippedContent` rewrites
-  each shipped file EXCEPT one whose body no longer matches its own `#content-hash` (drift ⇒ the user
-  edited it ⇒ preserve, and HashDrift surfaces it). The pack updater must reuse that rule, ideally the
-  same code path, not reinvent a merge strategy.
-
-  **Other correctness items:**
-  - **SRD keeps a bundled floor.** A fresh install with no network must still have content, so SRD ships
-    in the bundle at `CONTENT_SEED_VERSION` (REL-3) and packs update *above* that floor. Deleting or
-    downgrading the SRD pack needs an answer — the demo character depends on it.
-  - **Removals break characters, additions don't.** Before applying, list the rows that disappear and
-    which characters reference them. "Render what's possible + flag it" already exists, but the warning
-    belongs BEFORE the update, not after.
-  - **`#content-source` must be stable.** Identity is `source:id`; a pack that changes its source tag
-    re-namespaces everything and breaks every character reference at once. Treat a changed source as a
-    NEW pack, never an update.
-  - **Atomicity + the watcher.** Per-file temp→rename exists, but a 12-file update that dies on file 7
-    leaves an unresolvable root — needs pack-level all-or-nothing (or resumability), and the watcher must
-    ignore the app's own writes (existing invariant) or a bulk update triggers a reload storm.
-  - **Plugins DO ride in packs — `content/<pack>/plugins/<ns>/` (maintainer, 2026-08-11, reversing
-    "no plugins in v1").** The objection that overturned it: packs are how a user installs anything,
-    so banning plugins from them leaves the whole L3 layer with no distribution channel. On review
-    the ban was guarding a hole the consent model already closes — consent is per-plugin, pinned to
-    `sha256(main.js ‖ plugin.json)` and stored OUTSIDE the dataDir, so a plugin **cannot arrive
-    pre-enabled** however it got onto disk (PLUGINS §6.3 already argues exactly this for a restored
-    campaign backup), and changed bytes ⇒ changed hash ⇒ disabled until re-consented, so even
-    auto-download can't swap code silently. **One unit, one folder:** code and the data it serves
-    install and uninstall together, which also deleted the "removing a pack must hunt down its
-    plugins" problem the split-roots version created. BUILT end to end: discovery (`plugin-host.ts`
-    scans `plugins/` ∪ `content/*/plugins/*`) and the installer's disclosure — the discover step
-    names the plugins a pack carries before you install it, and an update distinguishes "this pack
-    contains plugins" from "this update CHANGES their bytes", which is the sentence that matters
-    (`PackUpdatesSettings.svelte`).
-    - **`namespace` stays globally unique — do NOT key the registry by `pack:namespace`.** That was
-      proposed and is wrong: `plugin:<namespace>:<handler>` is a token in CSV content and a token
-      cannot name a pack, so two providers of one namespace leave the dispatch ambiguous no matter
-      how the registry is keyed. A second claimant is reported as a broken entry (hand-placed wins,
-      then packs by name). Consent keys are unchanged, so nothing migrates.
-    - **Provenance needs no new field, and the data format does NOT change.** A plugin's pack is
-      known structurally (it sits inside it); after a folder rename it is recoverable from that
-      pack's CSV headers (`#content-source`, per-file `#content-id`); for a plugins-only pack the
-      manifest's own `url`/`author` answer it — and the manifest is inside the consent hash, so they
-      can't be swapped post-consent. (Checked when a pack-level GUID was proposed: `#content-id` is
-      per FILE — `spells_srd.csv` and `items_srd.csv` in one pack carry different UUIDs.)
-  - **No built-in pack directory.** "Paste a URL" is a tool; "browse popular packs" is a piracy index —
-    PHB-as-CSV would appear in week one. Show `#content-license`, never host, mirror or aggregate a list.
-
-  **A REPO is not a PACK — one repo carries one or MORE (maintainer asked 2026-08-11, and the design
-  had never said).** A pack is a folder; a repo is a place several folders live. The shipped SRD is
-  already TWO packs, not one — `srd-2014` and `srd-2024` are separate folders with different
-  `#content-source` values (`SRD 5.1` / `SRD 5.2.1`), which by this item's own identity rule makes
-  them distinct packs. They ship from ONE repo (`charnik-content-srd`).
-  The rest of the design already assumed this without saying it: the throttle is "one request per
-  REPO per day" and the GitHub tree call returns the whole tree in one request, so repo is the unit
-  of CHECKING while pack is the unit of INSTALLING. Two repos would cost two requests for content
-  that is regenerated by a single converter run.
-  **The rule is therefore the same on both sides:** scan the top level for folders that contain
-  content CSVs — locally that is `discoverContentRoots`, remotely it is the same test against the
-  tree listing. No new concept, and a third-party author can publish one repo holding several packs
-  (`classes/`, `monsters/`) instead of one repo each. Users still enable or disable each edition
-  independently, because the two-dimensional file × `source` filtering does not care where a file
-  came from.
-
-  **Slices, and where the work stands (2026-08-10).**
-  0. `[x]` **Split the SRD into its own repo — TWO INDEPENDENT REPOS (maintainer, 2026-08-11).**
-     SHIPPED. [`charnik-content-srd`](https://github.com/FernDragonborn/charnik-content-srd) holds
-     `srd-2014/` + `srd-2024/` at its root, split with `git subtree split -P content` so all 72
-     content commits kept their history, and is cloned SEPARATELY beside the app repo. **Not a
-     submodule** — the footguns land on the one person operating this: a clone without `--recursive`
-     gives empty content and confusing test failures, the working copy sits on a detached HEAD by
-     default, and committing needs a push in the inner repo BEFORE the pointer bump in the outer one,
-     which fails silently and breaks everyone else's clone. Two plain repos have none of that.
-     - **ONE resolver seam: `tools/content-repo.mjs`.** Resolution order is `$CHARNIK_CONTENT` →
-       `charnik.dev.json`'s `contentRepo` → the sibling `../charnik-content-srd`, so the
-       side-by-side layout needs NO config. Its three consumers are exactly the three places that
-       used to hardcode `content/srd-*`: the vendoring step (`tools/build-static-content.mjs`), the
-       SRD converters (they live in the app repo but now WRITE into the content clone), and the
-       content tests via `src/test-support/real-content.ts`. Nothing in `src/lib` changed — the
-       runtime still reads `content/<pack>` out of the built assets / dataDir, because vendoring
-       puts them there. **Add any future content path to that seam, never inline.**
-     - **The env var exists because CI cannot use a sibling:** `actions/checkout` refuses a path
-       outside the workspace, so all three workflows check the content out into `.content-srd/` and
-       set `CHARNIK_CONTENT`. Both are gitignored.
-     - **Missing content is LOUD at BUILD time, not run time** (the one deviation from the original
-       wording, which said the app would say so and offer to write the config): the content is
-       vendored into `static/content/` by `predev`/`prebuild`, so by the time the app runs the
-       question is already settled. `requireContentRepo()` fails with the clone command and both
-       config routes, and `pnpm build` exits non-zero — a release can't ship an app with no rules.
-       An interactive "shall I write the config?" prompt was rejected: a prebuild step that blocks
-       on stdin hangs CI.
-     - **The test helper is `loadPacks(...packs)`**, which replaced two copy-pasted
-       `readdirSync(process.cwd() + '/content/srd-2024')` loaders (`class_features_content.test.ts`,
-       `combat.test.ts`) and reads packs straight off disk through `NodeStorage`. Only
-       `loader.test.ts`'s real-content case is conditional (`hasContentRepo`); every other content
-       test now fails with the actionable message rather than skipping silently.
-     - Bundled-data licence + attribution moved WITH the data (they describe it); `COPYING.md` and
-       `README.md` point at the content repo for them.
-     - Nothing below is blocked on this: slices 1–3 build against the local folders and any URL.
-  1. `[x]` **A pack is a FOLDER, discovered by scanning** (`ccd247c`) **+ the installed-pack
-     REGISTRY** (`content/packs.svelte.ts`): the `contentPacks` SECTION of `charnik.config.json` in
-     the data root, holding the update mode, `packs` (folder → repo + pin) and `repos` (url →
-     `ETag` + `lastCheckedAt`). Persistence goes through `storage/json-config.ts` so the other
-     sections of that file survive a write, and a corrupt config degrades to "nothing installed,
-     never check" rather than throwing at startup.
-     **The repo/pack split is load-bearing and is now in the types:** the repo is the unit of
-     CHECKING (one throttle, one `ETag` — two SRD packs from one repo cost ONE request) and the
-     pack is the unit of INSTALLING (one pin, one uninstall). `reposDueForCheck` also skips a repo
-     whose every pack is pinned: a request whose answer we'd refuse to use.
-  2. `[x]` **The fetcher, in Rust** — `tauri-plugin-http` behind a `RemoteFetcher` seam
-     (`content/remote/`), never webview `fetch` (security.md §5). GitHub is a HOST ADAPTER over a
-     plain HTTPS fetcher, not the model: `checkRepo` sends `If-None-Match` and a `304` means the
-     whole check cost nothing. **Finding worth keeping: a static capability allowlist and "paste any
-     URL" are mutually exclusive** — a capability is compiled in and cannot be widened at runtime —
-     so v1 allows the two GitHub hosts, and an arbitrary self-hosted URL is a decision deferred to
-     whoever needs it (security.md §7 states the two options). **Desktop only.**
-  3. `[x]` **check → diff → apply.** `diffPack` compares by GIT BLOB SHA (what a tree listing
-     gives), so "did this change?" needs no download; `isUserModified` is reused verbatim for the
-     hand-edit rule, so a file you edited is `preserved`, never overwritten. Applying is
-     **pack-level all-or-nothing**: every byte is fetched before anything is written, so a download
-     that dies half-way leaves the disk untouched. Removals are listed BEFORE applying together
-     with `rowsRemovedBy` + `charactersReferencing` ("2 entries would DISAPPEAR · characters that
-     use them: karroth") and are only deleted when explicitly asked for.
-  4. `[x]` **The shipped SRD becomes a pack** sitting above the bundled floor: after the desktop
-     seed, `adoptShippedPacks` registers each bundled root against the content repo, so the SRD
-     updates through the SAME path as any third-party pack. Its repo is a constant, not a
-     `#content-*` header — `#content-url` already means "where the DATA came from" (Wizards), and a
-     file stating which repository publishes it is a self-reference to keep in sync.
-  5. `[x]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
-     because a pack is the container of exactly those files; four tabs on one concept was the
-     smell. Network dropdown (*don't check* / *notify* / *pre-download*), a manual check that
-     deliberately bypasses the throttle (global and per-pack), pins, and the pre-apply summary
-     (files to write · files preserved · rows that would DISAPPEAR + the characters that use them ·
-     plugins the pack carries). Dev preview at **`/dev/packs`** (the panel is desktop-gated, so
-     this is how it gets driven). The startup check is fire-and-forget AFTER content load, gated on
-     the mode + throttle. GitHub-only is stated in the description, not just in a failure.
-
-  6. `[x]` **Install / uninstall a pack from a pasted URL** (the headline ask). Two steps on
-     purpose — `discoverPacks(url)` only LOOKS (nothing written, nothing registered) and lists what
-     the repo holds with the code it carries, then `installPack` commits one. Install runs the SAME
-     diff+apply path as an update, which is what makes a folder that already exists behave
-     correctly (hand-edits preserved, a re-tagged source refused) instead of being blindly
-     overwritten. The registry entry is written only AFTER the files land, so a failed install
-     leaves no trace. `uninstallPack` deletes the folder — taking the pack's plugins with it, since
-     they live inside it — and forgets the entry.
-  7. `[x]` **`#content-source` is checked before applying — the correctness hole, closed.** A pack
-     that re-tags its source is a NEW pack, never an update: identity is `source:id`, so applying it
-     would rename every row at once and every character reference into that pack would resolve to
-     nothing. **It can only be checked at apply time** — the diff compares blob SHAs precisely so it
-     does not download, so the remote's header is unknown until the bytes are in hand. That is still
-     before anything is written, so the refusal costs nothing and the disk is untouched.
-  8. `[x]` **Accepting a removal is its own button** ("Apply, including deletions"), separate from
-     the ordinary apply, and only shown when the diff actually has removals. Default stays "keep",
-     because a deleted row can orphan a reference inside a character mid-campaign.
-
-  9. `[x]` **"Check and pre-download" actually pre-downloads** — the mode existed in the dropdown
-     and did nothing, which is worse than not offering it. Staging is a **content-addressed cache**
-     (`.pack-cache/<git blob sha>`, outside `content/` because every folder in there is a pack):
-     the file NAME is the SHA, so there is no invalidation rule to get wrong, two packs shipping one
-     file cost one entry, and a truncated entry is caught by re-hashing rather than trusted for
-     existing. A staged update applies **offline**. `pruneCache` runs once a check has finished,
-     when the pending set is complete and therefore authoritative about what is still wanted.
-     - **Every downloaded byte is verified against the SHA the diff was computed from**, cached or
-       fresh. It costs one hash of data already in hand and closes a failure that would otherwise be
-       invisible: `raw.githubusercontent.com` serving a different revision than the tree listing
-       named, which writes content whose SHA still differs — an update that reappears at every
-       check and can never be cleared. Refused with `contentMoved`, disk untouched.
-  10. `[x]` **The bundled SRD is a pack like any other, INCLUDING deletion (maintainer, 2026-08-11,
-     overruling the tombstone proposal).** Uninstall used to be undone by the next launch, because
-     `copyMissingRoots` re-seeded any missing root. That function is **deleted**: a fresh data dir
-     (no `.seed-version`) gets every bundled pack, and after that the bundle only ever REFRESHES
-     packs that are still installed. So deleting sticks, an app update can't put it back, and
-     re-installing is the same paste-a-URL flow as any pack — the repo is public.
-     **No new state was added to achieve it** (that was the objection to a tombstone file: machinery
-     that exists only for bundled packs is exactly what makes them not-like-other-packs). The
-     existing seed marker already distinguishes "fresh data dir" from "this is yours now".
-     `adoptShippedPacks` is likewise called with the packs that are ON DISK, so an uninstalled one
-     doesn't reappear in the list as an offer.
-     - **Warned, not prevented** (maintainer: "we can and probably should warn that nothing will
-       work without them"). The confirm step says how many of the entries you currently have come
-       from this pack — quantified from the loaded graph, so it needs no special case to say
-       "without this there are no rules" — plus which characters lose what, and where to get it back.
-     - **And if it IS gone, that is said at launch, once.** A bundled pack missing from disk raises an
-       un-dismissable prompt (`MissingContentModal`, `DialogShell` with no `onDismiss` — a stray click
-       must not close the only offer to put your rules back) with exactly two answers: put it back, or
-       "I meant to — don't ask again", which persists as `dismissedMissing` in the pack config. That
-       flag silences the PROMPT only: **Settings always lists a deleted bundled pack with a one-click
-       restore**, because an answer is not a door that locks behind you. Restore re-copies from the
-       bundle, so it needs no network, and it clears the flag — deleting it again asks again.
-       - The copy is deliberately conditional ("if nothing has taken its place…"): we do NOT check
-         whether another installed pack covers the same ground, so the prompt must not claim it.
-       - This is the ONE piece of persisted state the tombstone proposal would have added — but it
-         is the user's own answer to a question, not seed machinery, and it changes nothing about
-         what gets seeded. `restoreBundledPacks` is the deleted `copyMissingRoots`, brought back as
-         a BUTTON: the same copy step, asked for instead of happening behind the user's back.
-  11. `[x]` **Verified against the real thing, on both sides of the seam.**
-      - `tests/live-github.test.ts` — opt-in (`CHARNIK_LIVE_NETWORK=1`), because a suite that fails
-        when the wifi drops is a suite people learn to ignore. It proves what no fake can: the tree
-        call returns `srd-2014` + `srd-2024` as two packs, the `ETag` really does come back `304`,
-        and **the tree's blob SHA equals `gitBlobSha` of the bytes `raw` serves** — the assumption
-        the entire download-free diff rests on.
-      - `/dev/packs-live` — the same path through the RUST client and the capability allowlist,
-        which only exist inside the desktop app. Read-only; writes its report to
-        `packs-live-probe.txt` in the data dir so a run can be read after the window closes.
-      - **It paid for itself on the first run, with two bugs no unit test could have seen** — both
-        invisible to a fake fetcher because both live in what the REAL world does to the bytes:
-        - **`core.autocrlf` silently broke the entire diff.** The converters write LF (`srd/lib.mjs`;
-          `restamp.ts` says so out loud), but a Windows checkout of the content repo rewrites every
-          LF to CRLF, so the vendored → seeded copy could never equal the published blob and **all 15
-          files of a pack reported as changed, forever, against a repo where nothing had moved.**
-          Fixed at the source with `* -text` in `charnik-content-srd` (+ `CONTENT_SEED_VERSION` 2 to
-          re-seed the mangled copies; the `#content-hash` is EOL-normalised, so no hand-edit is
-          mistaken for one). **Any repo publishing packs needs that `.gitattributes`** — comparison is
-          by blob SHA, so a byte the checkout invents is a change the user can never apply away.
-        - **The removal scan proposed deleting files that were not the pack's.** It listed everything
-          in the folder and called anything the remote didn't list `removed` — a README, a leftover
-          `_pack.json` from an older layout, notes a user keeps beside their data. Now the local walk
-          applies the same `isPackFile` test as the remote one, so only files the pack format covers
-          can ever be deleted.
-
-  **ARCHITECTURAL AUDIT of the whole module (2026-08-11, `681771f`..`4537ea4` + content-repo
-  `560139b`).** REL-4 read finished from the outside; a pass over the call CHAINS rather than the
-  files found where it wasn't. What the audit fixed, each with the reason it mattered:
-  - `[x]` **The registry could be wiped by a listing failure.** `discoverContentRoots` caught every
-    error into `[]`, and the next line reconciles the registry against that list — so one transient
-    failure read as "the user uninstalled everything" and took pins and repo URLs with it. Absent is
-    still empty (fresh install); present-but-unreadable now throws into the error screen.
-  - `[x]` **Reserved pack names.** "A pack is a folder" had no exceptions, so a repo shipping a
-    folder called `homebrew` installed straight into the user's own authoring root — and
-    "uninstall that pack" then deleted everything they had ever written.
-  - `[x]` **An update found today was invisible tomorrow.** The `ETag` was recorded when the repo
-    answered, but the pending set lived only in memory: after a relaunch the check got its `304` and
-    returned before looking at any pack, and nothing brought the offer back — not even the manual
-    button. The remote file list is now persisted and the panel is rebuilt at launch with no network.
-  - `[x]` **"Check and notify" had nowhere to notify.** `updates.pending` was read by one panel three
-    clicks deep in Settings. Now a chip in the header + a badge on the tab.
-  - `[x]` **Uninstall left the plugin permission behind**, so re-installing the same pack silently
-    started running its code again; and the preview said "this pack contains plugins" whether or not
-    the update touched them — the sentence that matters is that new bytes STOP a running plugin.
-  - `[x]` **"I cannot verify this file" was treated as "overwrite it."** `isHashDrift` answered a
-    three-state question with a boolean and gave the drift panel its default, so the overwrite guard
-    silently overwrote anything unstamped. `HASH_STATE` + `isProtectedFromOverwrite`, with `plugins/`
-    excluded by path (code can't carry a hash, and consent-hashing already covers tampering).
-  - `[x]` **The content hash left `#content-source` outside it** — the identity half of `source:id`,
-    and the value the re-tag guard compares. It now covers the whole file minus its own stamp and
-    `updated_at` (excluding the date is what keeps the converters idempotent), written FIRST.
-  - `[x]` **"All-or-nothing" was true of the network only.** The write was a per-file loop. Now the
-    pack is rebuilt beside the live folder and swapped in by rename, the replaced folder is kept one
-    generation as `<pack>.prev` (the undo an applied update never had), and an interrupted swap is
-    settled at startup from the folders themselves — no journal.
-  - `[x]` **The diff was acted on minutes after it was read.** Each change now records the disk state
-    it was computed against, re-checked immediately before the swap; anything moved refuses the whole
-    update rather than overwriting an edit made in between.
-  - `[x]` **The impact preview only saw whole FILES.** Upstream almost never deletes a CSV; it deletes
-    a row inside one, which arrives looking like any other changed file — so the warning that
-    justifies the flow was silent in exactly its case. Row-level diffing now runs at apply (the first
-    moment the bytes exist), stops, and names the rows plus the characters that use them.
-  - `[x]` **`charnik.config.json` had one writer that owned the whole file**, so the first other
-    section to land there would have been erased by the next pin. Sections via
-    `storage/json-config.ts`; the dev-only content pointer moved to `charnik.dev.json`.
-
-  **THE AUDIT'S OPEN LIST, CLOSED (2026-08-11, `59ffc26`..`0cf0c4c`).** Every item below is done.
-  The audit's tenth entry — a generic, non-GitHub HTTPS host — was never a defect in this work and is
-  not a tail of it: it is a separate feature with its own security surface, moved out to **ANY-HOST-PACKAGE-DISTRIBUTION** on
-  the maintainer's instruction (2026-08-11) so REL-4 closes clean instead of carrying a permanent
-  open box. GitHub stays the fast path AND the only path, said in the description rather than in a
-  failure.
-  - `[x]` **A bundled pack can carry plugins** (`e8f5bd6`). The vendoring step, the desktop seed and
-    the restore button all listed ONE level while the pack differ walked the folder recursively — so
-    the half that writes a bundled pack and the half that compares it disagreed about what was in it.
-    One recursive walk now, in `storage/walk.ts` rather than in the differ that happened to need it
-    first (`Storage.list` is non-recursive on purpose — every impl can answer "immediate children"
-    honestly, including the read-only web one). The vendoring step applies the same `isPackFile` test
-    as the remote side and emits one manifest key per DIRECTORY, which is what lets `FetchStorage`
-    synthesise the levels down to `plugins/<ns>/`. `contentPacks()` now counts a `plugins/` subtree as
-    a pack too, so a code-only pack is shippable and not merely installable.
-    - **Known limitation, deliberate:** on the WEB build `discoverPlugins` reads the user store, so a
-      bundled pack's plugins are not discovered there. Desktop seeds them to disk and finds them; web
-      would need discovery across two storages, which is a feature rather than this fix.
-  - `[x]` **File-count and byte caps, read off the tree before the first request** (`2901754`).
-    `MAX_REMOTE_BYTES` bounds one RESPONSE, so fifty thousand small files cleared it fifty thousand
-    times over — on the one path (`download` mode) that runs unattended. **200 files / 50 MB per pack**
-    (maintainer), about thirty times the SRD pack, in `remote/types.ts`. Enforced at `describeUpdate`
-    (which covers both a check and an offer restored after a restart) and at `discoverPacks` (install).
-    Sizes ride through as an OPTIONAL field: a remembered listing carries only what identifies a file,
-    and a future non-GitHub adapter may have no sizes — refusing on absent metadata would break the
-    adapter the host split exists to allow.
-  - `[x]` **`installPack` clears `dismissedMissing`** (`59ffc26`) — "I meant to delete it" was an
-    answer about a pack that is now back.
-  - `[x]` **Two repos can both publish `srd-2024`, and both get installed** (`bdac8ed`). NOT keyed
-    `repo#pack`, which was the proposal: on disk the folder is one folder either way, so the fix is a
-    local folder that may differ from the repo's name for it. **The folder name is the pack's identity
-    here** — it is what `content/` scanning finds, what a character's rows are attributed to and what a
-    pin names — and `PackEntry.remotePack` records what to ask the repo for, absent whenever the two
-    agree (so nothing migrates). `localPathIn(localPack, repoRelative)` is the one mapping, removals
-    included; a check looks its pack up by `(repo, remote name)`.
-    **Resolve, don't forbid** (maintainer): a collision is offered `srd-2024-2`, said out loud, with
-    the name editable before installing; a folder already on disk counts as taken even with no
-    registry entry, and typing somebody else's name is refused rather than merged. `renamePack` moves
-    the folder, its `.prev` undo copy, the entry and any pending offer together.
-    - **A BUNDLED pack cannot be renamed**, which this exposed rather than created: it is identified
-      by the folder the app ships it under and nothing else (the seed refreshes `content/<name>`,
-      "missing" means the bundle has it and the disk doesn't, restore copies it back there). Moving
-      one would leave the app calling its own content deleted while it sat right there, and offering a
-      restore that would then load every row twice. `bundledPacks` is the state that says which those
-      are.
-  - `[x]` **`pruneCache` runs even when nothing is due** (`59ffc26`) — the prune sat behind the "no
-    repos due" return, which is the one branch it was needed on.
-  - `[x]` **The impact preview sees drafts** (`b411190`). Matched by TARGET, not by scanning the file
-    the way a character save is: a draft's target is a structured field naming the row, while its data
-    holds edited cells that reference content by bare id, never by the composite `type:source:id` the
-    quoted-string scan looks for — so the scan would have found nothing and said so honestly.
-    `findOrphanDrafts` already asked almost this question, so both run through one predicate now.
-  - `[x]` **`checkNow` has a lock** (`59ffc26`) — serialised, not deduplicated, because the manual
-    check may name a repo the automatic one skipped. Apply shares the queue: it prunes the same cache
-    for the same reason.
-  - `[x]` **One config write per content reload** (`59ffc26`). Fixed at the seam rather than at the
-    caller that was noticed: `writeConfigSection` coalesces calls made before its queued flush starts.
-    The value is read at execution time, so those writes already produced identical bytes.
-  - `[x]` **The apply path is verified live on desktop** (`/dev/packs-write`, run in the Tauri window
-    2026-08-11 — 18/18 assertions passed, report in `packs-write-probe.txt`). It writes inside a
-    throwaway `.probe-pack` (leading dot ⇒ pack discovery ignores it) and deletes it after, and never
-    touches the network: the fetcher is local bytes because the DISK is what a fake cannot speak for.
-    Confirmed on the real filesystem: the swap goes all-old to all-new, a README and a plugin two
-    levels down are carried across, `.prev` holds the old bytes, rollback restores them and leaves
-    nothing to roll back to, a file edited after the diff was computed refuses the whole update, and
-    each of the three interrupted states is settled correctly from the folders alone.
-    - **The Windows trap is real, and the code already handles it: renaming a directory onto an
-      existing one is REFUSED by the OS.** `Storage.rename` never promised to overwrite and the apply
-      removes the target first — but the guarantee was untested, and a `MemoryStorage` that happily
-      overwrites would never have said otherwise. That line of the probe exists to keep it that way.
-    - **The probe found a REAL bug, and not in the pack code: the file watcher had never worked on
-      desktop.** Counting watcher events during an apply reported zero — and the Rust log said why:
-      `Unknown Error: Command watch not found`. `fs:allow-watch` was in the capability, but
-      `tauri-plugin-fs`'s `watch`/`unwatch` commands are behind a CARGO FEATURE, so the permission
-      granted access to a command that was never compiled in. `startContentWatcher` is built, wired
-      and correct; every call it made rejected as an unhandled promise nobody sees. **So "CSV edits
-      made directly on disk are picked up in real time" (CLAUDE.md) had never once happened**, on any
-      build, and no unit test could say so — a `MemoryStorage` watch works fine. Fixed by enabling the
-      feature (`features = ["watch"]`); the permission was already there.
-      **A permission is not a feature** — anything else gated this way will fail exactly as quietly.
-    - Also worth keeping: `watch` returns its unsubscribe synchronously but ATTACHES asynchronously,
-      so a probe that writes immediately measures nothing and reports a reassuring zero for the wrong
-      reason. The app attaches at startup, long before any apply; the probe now waits.
-    - `/dev` had no link from anywhere, so both live probes were unreachable from inside the desktop
-      app (there is no address bar). The dev index lists them now.
-
-  **THE SECOND PASS, CLOSED (2026-08-12, `001a9dc` + `9f28d52`..`54d0bb6`).** A read of the module
-  from the outside once it had shipped, over the call chains again. Seven findings; five are in
-  `001a9dc` (that commit is their record). The two that needed structure, plus the tail:
-  - `[x]` **A pack between two renames is not a pack the user deleted** (`9f28d52`). Every pack
-    write makes its folder briefly absent — the two renames of a swap, a rollback, the gap between
-    `rename` and `renamePackEntry`, an uninstall — and the watcher reloads throughout.
-    `forgetUninstalledPacks` read that listing as "uninstalled" and dropped the registry entry: repo
-    URL, pin, `remotePack`. Invisible with the shipped SRD (a bundled pack re-adopts itself), silent
-    data loss for a third-party one. The flag recovery already used is now raised by every pack
-    WRITE (`isPackWriteInFlight` + `duringPackWrite`), and the guard sits INSIDE the destructive
-    function so a second caller cannot reintroduce it.
-  - `[x]` **`provider ↔ remote/*` import cycle** (`cefab1e`). `provider.ts` was both low-level file
-    policy and the orchestration above it, so the remote half had to import the module that imports
-    it. The policy moved to a leaf (`content/disk.ts`); `madge --circular src` joins `pnpm lint` as
-    the back-stop (docs/internals/tooling.md).
-  - `[x]` **The tail** (`54d0bb6`): a cap on the number of packs in a REPO (the per-pack caps let a
-    thousand tiny folders through); a pack refused for size no longer buried by the ETag recorded
-    beside it (`recordCheck(…, null)` drops the stored one, so the next check re-lists and refuses
-    again); `isPackFile` now matches only `plugins/<ns>/{main.js,plugin.json}` — anywhere else it
-    was installing executable code no screen in the app would ever mention.
-  - **Left undone on purpose:** `diffPack` still hashes every local file of a pack on each check and
-    at each launch. The double READ is gone (one `readBytes` answers both the blob SHA and the
-    hash-state check), which was the half worth having. Removing the rest means a cache keyed on
-    mtime — a staleness footgun in exchange for ~10 ms on the shipped pack (15 files, 2 MB). Revisit
-    only if a real pack near the 50 MB ceiling turns up: key on `path|mtime|size`, invalidate from
-    the watcher.
-
-  **THE THIRD PASS, CLOSED (2026-08-12, `20b38ad` + `d6ada03` + `c65c039` + `980b457` + `5b819c0`;
-  probe `dcd5530`).** The first two passes read the module for correctness. This one followed the
-  whole chain — capability → fetcher → adapter → diff → swap-in → loader → prose render → plugins —
-  asking what a hostile pack can do to a user who is not reading the code. **Twelve findings, all
-  fixed.** The transport and the plugin model held; the gaps were IDENTITY and the FOLDER/STAGING
-  model on a real filesystem. Its ledger is retired (§8.7); what has to outlive it:
-
-  - **A pack declares its own `#content-source`, and that was the ONLY provenance the UI showed.** A
-    third-party pack stamping `SRD 5.2.1` rendered as "D&D 5.5e" beside the shipped SRD, shared its
-    source toggle and collided ids with it. Now: installing under a tag another pack already
-    publishes under stops and asks for an explicit second click (**warn, not refuse** — a fork of the
-    SRD repo legitimately carries the SRD's tag, maintainer 2026-08-12), and the PACK — a folder on
-    disk, the one thing here the app knows rather than believes — is named in the article's
-    attribution line and heads its group in the source filter, with its own switch built on the
-    existing FILE dimension.
-  - **A lone `<pack>.prev` is not an interrupted apply.** Both writers keep the replacement tree
-    until the very last rename, so at the only moment the pack is missing BOTH staging folders
-    exist. Recovery read a lone `.prev` as a dead swap and renamed it back — resurrecting a pack the
-    user had deleted, plugin code included. The rule is in `recoverInterruptedApply`'s doc comment;
-    do not "fix" it back.
-  - **Folder names are compared case-INSENSITIVELY** (`claimedPackName`), because NTFS and APFS fold
-    case and an exact compare installed one pack over another. Two consequences worth keeping: a
-    case-only rename is exempted from the taken-checks, and `freeLocalPackName` must sanitise before
-    it suffixes `-2`, `-3`… or a name unusable for its CHARACTERS spins forever.
-  - **A failing apply settles the disk before the throw escapes**, while the in-flight flag is up:
-    once it drops, a missing folder reads as an uninstall and takes the repo URL and the pin with it.
-  - **Bounds that were missing:** a streaming size cap (the old one buffered the body, then refused
-    it), a total request timeout (every pack operation shares one queue, so one hung request wedged
-    all of them), and an aggregate pre-download budget per check (the per-pack and per-repo caps say
-    nothing about the total, and `download` mode fetches unasked).
-  - **A registry write that fails now reaches the user.** Config writes are fire-and-forget, which is
-    right for a theme preference and wrong for a pin: everything in this section is a promise.
-  - **Checked and found fine — do not re-audit:** path traversal from the remote side, the
-    content-addressed `.pack-cache` (re-hashed on read), the whole plugin consent/sandbox chain,
-    every parser bound (L2 512/depth 32, CSV 20 MB, pack 200 files/50 MB, repo 50 packs, tree
-    `truncated`), the CSP, "applying is always a click", git-tree symlink blobs, and the four narrow
-    Rust commands. `NodeStorage` validates differently from the shared guard but contains just as
-    well (security.md §3).
-  - **Verified live**, not only in tests: `/dev/packs-write` extended with the new invariants and run
-    inside the Tauri app on Windows — 24/24, and it reports that this filesystem folds case. Note the
-    probe had been asserting the OLD, wrong state machine and passing; a probe is only as good as the
-    rule it encodes.
-
-  **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
-  listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature
-  it constrains — **ANY-HOST-PACKAGE-DISTRIBUTION** — rather than here, since it is the thing to decide when that is built.
-
-  **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
-  *check and notify* / *check and pre-download* — plus a manual button (global **and** per-pack, since
-  "I want to test this one" is the real use) that deliberately bypasses the throttle. Config text states
-  it plainly: **at most one update request per repo per day.** Naming matters: *download ≠ apply*;
-  applying stays a click. If auto-apply is ever wanted it should be **per-pack**, for a pack the user
-  explicitly trusts, never a global toggle. **Pins:** "don't update this pack" — a campaign in progress
-  must not have its rules shift under it.
-
-  **Rate limits are a non-issue if done right.** GitHub unauthenticated = **60 req/hr per IP**, but a
-  `304` from `If-None-Match` **does not count against it** — so steady state (nothing changed) costs
-  **zero quota for any number of packs**. One API call per repo
-  (`GET /repos/{o}/{r}/git/trees/{branch}?recursive=1`) returns every path with its blob SHA, so one
-  request says what changed; the CSVs themselves come from `raw.githubusercontent.com`, which is not the
-  REST API and not on that budget. GraphQL could batch several repos into one request but **requires a
-  token** — a dead end for an unauthenticated desktop app; don't re-propose it.
-  The residual costs are NOT quota: a shared IP (office / CGNAT) burns first-run checks for everyone
-  behind it; the check must never block startup or first paint; offline must fail **silently** after the
-  first failure (no toasts — see UX-1: an error the user can't act on shouldn't jump at them); and
-  **privacy** — pinging a third party on every launch contradicts the offline-first, no-account posture.
-  **Privacy, not quota, is why the default is manual.** `ETag` / `lastCheckedAt` are local state and do
-  NOT belong in the CSVs.
-
-  **Don't build a GitHub client — build a fetcher for an HTTPS URL.** Self-hosting is a stated project
-  value, and coupling the model to one forge breaks it for nothing. GitHub is then a convenience case:
-  recognise `github.com/owner/repo`, derive the raw URLs, use the tree API as a per-host *optimisation*.
-  The semantics stay in the CSV headers, so a plain static file server works too.
-
-  **Interaction with the (still unbuilt) bundle export.** Bundle export is designed but NOT implemented
-  (P7 `TODO`; the `character/schema.ts` comment says "a bundle export (later) embeds the rows") — so
-  shape it already knowing about packs:
-  - **A bundle that embeds rows redistributes third-party content, invisibly inside a JSON.** Worse than
-    a pack directory because nobody sees it. `#content-license` makes the right behaviour automatic PER
-    SOURCE: CC-BY / CC0 → embed, attribution preserved; unknown / all-rights-reserved / author-owned →
-    record a *reference* to the pack instead and tell the user why. The sharer's own homebrew is theirs
-    and gets embedded knowingly.
-  - **Reference-mode bundles can pin `#content-hash`**, so import can report "built against SRD 5.2.1 @
-    `abc`, you have `def`, 3 referenced rows differ". Real reproducibility, free, because the hashes are
-    already there.
-  - **Open question, decide when building:** do embedded rows on import become a real content source
-    (colliding with the user's own packs through `source:id`) or a character-scoped overlay? Leaning
-    overlay plus an explicit "add to my content" action — silently injecting foreign rows into the shared
-    pool is a surprise.
+- [x] **REL-4 · Content packs from a URL.** Paste a repo URL, install its packs, update them without
+  an app build — and the shipped SRD is one of those packs, which is what took rules data out of the
+  release cycle. Design of record: `docs/internals/packs.md`, with `plugins.md` for the plugins that
+  ride along and `security.md` §5/§7 for the network and consent boundaries. Code comments name
+  slices; git holds what each one did.
 - [x] **REL-1 · Linux release build** — `release.yml` matrix (ubuntu + windows, `max-parallel: 1`
   so the legs merge into one release). AppImage is the auto-updatable target, `.deb` a plain
   installer; rpm omitted (no `rpmbuild` on the runners), macOS deferred on notarization.
@@ -2522,36 +1803,9 @@ holds the done-work log; these are the OPEN tails it carried):**
     updater already carries a minisign public key (`tauri.conf.json` ▸ `plugins.updater.pubkey`) and
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
-- [x] **UBUG-4 · Tauri .msi install has no content folders — FIXED, and verified on a real install
-  (2026-08-22).**
-  The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
-  no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
-  shipped CSVs into `<dataDir>/content/…` on first run (`seedShippedContent`, which preserves a file
-  the user hand-edited — hash drift ⇒ theirs) and then loads the graph FROM that writable folder via
-  TauriStorage; web still reads the bundle over fetch. No capability change needed (`$APPDATA/**` is
-  already scoped; `writeBytes` mkdirs recursively). Seed logic unit-tested over MemoryStorage.
-  (The `copyMissingRoots` this entry used to name is GONE — REL-4 slice 10 deleted it so that
-  uninstalling a bundled pack sticks; a fresh data dir still gets everything, and putting a deleted
-  one back is `restoreBundledPacks`, a button rather than something that happens behind your back.)
-  The two follow-ups this item used to name have since shipped: the file watcher
-  (`storage/tauri.ts` ▸ `watch`, which a live desktop run then proved had never actually fired — the
-  capability was granted but the Cargo feature was never compiled in) and `charnik.config.json` for
-  custom roots (`storage/json-config.ts`, read by `content/packs.svelte.ts`).
-
-  **The reported bug is CONFIRMED FIXED on a real install (maintainer, 2026-08-22): reinstalling
-  works** — the content folder is there and the app runs off it, which is the whole of what UBUG-4
-  reported (no `content/`, so no data). Steps 1–2 below are what that covers.
-  1. `%USERPROFILE%\Documents\charnik\content\` exists after the first launch and holds `srd-2014/`
-     + `srd-2024/` with their CSVs (the first run asks WHERE first — that dialog is part of the test).
-  2. The app shows rules: the compendium lists spells, and Settings ▸ Content health says the loaded
-     content is healthy rather than empty.
-  3. **The one look still worth taking, and it is no longer this item's bug:** edit one CSV in that
-     folder with Notepad/Excel and save — the app should update WITHOUT a restart (the watcher) and
-     then offer the drift dialog, whose "update" button re-stamps the file (DATA-VER-1 task 6). The
-     watcher itself was live-verified on real Windows in REL-4's third pass — after that run found it
-     had never once fired (the capability was granted; the Cargo feature was never compiled in) — but
-     not from an installed build, which is the only reason this line survives.
-  Original report:
+- [x] **UBUG-4 · a desktop install had no content folders.** Desktop now seeds the shipped CSVs
+  into `<dataDir>/content/` on first run and loads from there; web still reads the bundle over
+  fetch. Hand-edited files survive seeding by hash drift. Verified on a real install.
 - **UBUG-4b · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
   dataDir + seed the shipped SRD content (the `static/content` bundle) into it (Tauri fs). Wire the
@@ -2592,7 +1846,8 @@ holds the done-work log; these are the OPEN tails it carried):**
     one stamped from the UI are byte-identical and the load-time check agrees with both.
   - **The original BOM + EOL survive byte-for-byte.** A pack diff compares git blob SHAs, so
     rewriting 2000 line endings to fix one header line would report the whole file as changed
-    against a repo where nothing moved — the `core.autocrlf` bug of REL-4 slice 11, re-created by us.
+    against a repo where nothing moved — the same trap `core.autocrlf` sets (content.md ▸ The content
+    repo), re-created from inside the app.
   - **"Don't ask again" is content-editing mode**, a persisted setting (`app.contentEditingMode`)
     that adopts a hand-edit instead of asking AND mutes both prompts — and is reachable again in
     Settings ▸ Content health, because an answer must not be a door that locks behind you (the same
@@ -2700,33 +1955,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   Pages deploy recovery still open.
 
 **Code quality:**
-- [x] **The fixture helpers `testing.md` specified and nobody had built — DONE.**
-  `makeTempContentRoot(files)` and `buildCharacter(overrides)` live in `src/test-support/fixtures.ts`,
-  `rngSequence` in `src/test-support/rng.ts`. Seven suites stopped hand-rolling
-  `new MemoryStorage()` -> `st.write('c/<table>_srd.csv', ...)` -> `loadContent`. The third name the
-  doc asked for, `seedRng(seed)`, was deliberately not built: this suite asserts hand-derived faces,
-  so an explicit sequence of draws is the right shape and a seeded PRNG would hide every expected
-  number.
 - [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
   the `source` value itself stays exact for attribution (AGENTS.md ▸ A small glossary (source)).
-- [x] **CSS class-naming rename pass — DONE 2026-08-21.** Renamed to verbose, self-evident,
-  kebab-case names with a feature prefix, across 12 files, gated by `shot.mjs` (20/20, 0 px) +
-  svelte-check. **Most of the names this item listed had already gone** with the file carves — of
-  `.ae/.aedot/.mcell/.sk/.atk/.an/.ah/.ad/.am/.hpadj/.hpbtn/.combatsw` only `.combatsw` was left. What
-  remained was the roll card's whole `rt-*` family (`rt-tot`, `rt-idx`, `rt-sub`, `rt-cap`, `rt-div`
-  …) → `roll-total` / `roll-attack-index` / `roll-to-hit-total` / `roll-caption` /
-  `roll-die-divider`; the colour-named nat markers `.gold`/`.bad` → `.nat-20`/`.nat-1` (the class now
-  says the rule, not the shade); and the per-file leftovers `.advdis`, `.respips`, `.aereset`,
-  `.castcls/.castline/.castsep`, `.cardhead2`, `.logscroll`, `.gridhint`, `.poolchip`, `.rollbtn`,
-  `.noroll/.lastroll`, `.deathroll`, `.divlite`, `.popup-h`, `.pinwrap`, `.hd-*`.
-  **Left alone on purpose:** short words that are already self-evident in their component (`.pip`,
-  `.move`, `.rest`, `.dice`, `.gauge`, `.filled`), and the `class:strip` / `class:multi` shorthands —
-  renaming those means expanding the directive, and the reading gain is nil. Any name whose value is
-  produced in the script (`tone()` → `max`/`min`, `cueShape()` → `up`/`down`/`none`) also stays: a
-  rename there is a JS change, not a class change, and `.roll-die.max` reads fine.
-  Tooling used, worth reusing: `tools/visual/css-classes.mjs cryptic` for the census and
-  `tools/visual/rename-class.mjs <file> old:new …`, which renames a class ONLY where it is a class.
-
+- [x] **CSS class-naming rename pass.** Verbose, self-evident, kebab-case names with a feature
+  prefix, gated by `shot.mjs` at 0px. **What stays short on purpose:** a word already self-evident
+  inside its component (`.pip`, `.move`, `.dice`, `.filled`), the `class:strip` shorthands, and any
+  name produced in the script (`tone()` → `max`/`min`) — renaming those is a JS change, not a class
+  change. The census and rename tools are in `tooling.md`.
 **Refactoring debt (self-flagged — patterns that drifted from "this is TypeScript, model it"):**
 - [x] **R1–R5 · Typing/extraction refactors.** `EditContext` for edit/level-up state; typed
   `overlay.kind`; a named action-economy slot type; effect-token parsing centralised on the bounded
@@ -2753,22 +1988,10 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   `WikiDetail` renders the `actions` snippet once under the head, outside the per-type branch, so it
   is type-independent — the generic-branch-only version it warned about is already gone.
 - [x] **WD-2 · Extract `RollButton`** — the shared roll affordance.
-- [x] **TYPE-2 · Typed `LoadedRow` — SHIPPED 2026-07-09 (`84ac428`); this entry was stale until
-  2026-08-21.** `LoadedRow` is a discriminated union on `type` (`LoadedRowOf<T>` with
-  `data: RowData<T>` = the zod-inferred model + the re-attached prose-locale / loc-status columns),
-  and the generic is threaded through `graph.list<T>(type)` (`LoadedRowByType<T>`) and
-  `featuresForClass`. `row.data.level` is a `number`.
-  **The two frictions the plan predicted are real, and they are the SHAPE of what's left, not a
-  to-do:** (1) the prose-locale template-literal index makes a dynamic `data[\`name_${loc}\`]` read
-  `string | undefined` — correct, since a locale column may be absent; (2) on the UNION, even
-  `data.name_en` is `string | undefined`, because the lookup tables (spell slots, XP thresholds) have
-  no such column at all. That second one was being papered over by `String(row.data.name_en)` at ~15
-  sites, which renders the literal **"undefined"** for exactly those rows.
-  **Closed 2026-08-21 with `rowName(row)`** — one accessor beside `tokensOf`, falling back to the id;
-  the coercion is gone from every narrowed-row site (where the column is simply there) and every union
-  site now goes through the accessor. Deliberately still `Record<string, unknown>`: `homebrew`'s
-  generic column walk and `translationCoverage`, which iterate columns by name and have no static type
-  to want.
+- [x] **TYPE-2 · Typed `LoadedRow`.** A discriminated union on `type`, threaded through
+  `graph.list<T>` and `featuresForClass`. Reading a display name goes through `rowName(row)` —
+  `content.md` says why. `data` stays `Record<string, unknown>` for the generic column walks
+  (homebrew, translation coverage) that have no static type to want.
 - [~] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
   DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
   content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
@@ -2838,77 +2061,14 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
 - [x] **LOC-STATUS · Tracked per-locale localization status.** `loc_status_<loc>` column, an open
   enum (`not_started|machine|started|reviewed`) whose members drive the marker + control
   automatically — add a member and it appears (`content/schemas.ts`).
-- [x] **LINT-1 · Ban type-escape hatches — DONE 2026-08-21** (the `no-unsafe-*` tail, the last open
-  half, was measured and answered the same day — see below). tsconfig was already max-strict
-  (`strict` + `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole was lint.
-  **Shipped:** `no-non-null-assertion` (was already on) + `consistent-type-assertions`
-  (`objectLiteralTypeAssertions: 'never'`), which took out eight `{} as Record<K, V>` seeds — a claim
-  that every key exists before any does — in favour of `recordOf(keys, valueFor)` (`util/records.ts`).
-  Tests keep both rules OFF, same reason the `!` exemption already existed: a fixture is deliberately
-  partial. One documented exception survives (`resolver.ts`'s progressively-filled `abilities`).
-  **Type-aware rules are CI-only, and the reason is a measurement:** the syntax pass is **26s**, the
-  type-aware pass **7m48s** — a fixed cost to build the TS program that neither `--cache` nor scoping
-  to `src/**` shrinks (8m40 → 7m48). So `eslint.config.js` (fast) runs on pre-commit and pre-push,
-  `config/eslint.typed.config.js` runs as `pnpm lint:typed` in CI. It covers `.svelte` as well as `.ts` on
-  purpose — most floating promises live in components.
-  **Enabled rule by rule, not via `recommendedTypeChecked`.** The five that name a bug are on and
-  their 63 findings are fixed: `no-floating-promises` (16 — every one a `void`-or-await decision),
-  `no-base-to-string` (13 — `String(unknown)` at JSON/CSV boundaries, i.e. latent "[object Object]"
-  in the UI; now `asText`/`errText`), `no-unnecessary-type-assertion` (26 dead casts — one of them,
-  `status: 'idle' as UpdateStatus`, turned out to be load-bearing and became an annotation instead),
-  `no-redundant-type-constituents` (3 — `'all' | string`, `Size | string`, and `string | null |
-  'blocked'`, where the literal was swallowed by `string`; the last became a typed `SlotReservation`),
-  `await-thenable` (2). **Left OFF with measured counts:** the `no-unsafe-*` family (58) and
-  `require-await` (47 — style, and several are deliberate async interfaces).
-  **The `no-unsafe-*` 58, WALKED 2026-08-21 — and the guess about them was wrong.** They are not
-  "where `any` enters from papaparse / `JSON.parse`": **19 are in test files** (which keep the
-  escape-hatch rules off for the same reason `!` is exempt there — a fixture is deliberately partial),
-  and **most of the rest are the rule failing to see through a generic `.svelte` component**. Passing
-  a fully-typed `{label, entries: Entry<LoadedRow>[]}[]` into `EntryList` (`generics="T"`) makes the
-  rule call the callback's `e` an `any`, and `ClassPicker`'s `onChange: (value: string) => void` gets
-  the same treatment — while `svelte-check`, which is the actual type gate, reports zero errors on
-  both. Turning the family on would mean 30-odd suppressions for a tool's blind spot. **It stays off,
-  and this is now a measurement rather than a suspicion.**
-  **The two REAL ones were in `.ts`, and both are fixed:** `BrowserStorage` opened IndexedDB with no
-  schema, so every `get` was a `Promise<any>` and every key list an `any[]` — the one boundary where
-  the browser hands back whatever it stored was also the one place nothing was checked. It now
-  declares `DBSchema`, which deleted a cast AND immediately caught a real bug: `rename()` wrote the
-  `undefined` from a key that had gone missing between the listing and the read, planting an entry
-  every later read treats as a file. And `schemas.ts`'s effects column used `Array.isArray` on an
-  `unknown`, which narrows to `any[]` — a TS quirk that re-opens the value that parse boundary exists
-  to close; a local guard keeps the elements `unknown`.
-  Policy unchanged: new code fully typed; avoid the `undefined` TYPE (model absence deliberately).
-- [x] **NULL-1 · Audit the returned `null` — DONE 2026-08-21** (maintainer, 2026-08-21). All 64
-  `T | null` returns under `src/` read, each judged against one question: is absence a VALUE here, or
-  is the signature dodging a decision? **The great majority are values and stay** — `graph.get` on a
-  missing ref (the render-what-you-can invariant depends on it), every parser and lookup, the
-  storage/draft reads, `checkFileMeta` (null = the file is fine). Two KINDS of finding came out.
-  **1. `null` that means the OPPOSITE of "nothing" — converted to a named state.** `gatherProfGrants`
-  answered `null` for "no declared proficiencies", which the whole module treats as *proficient with
-  everything* — a reader of `isArmorProficient(grants, …)` would read it exactly backwards. Now
-  `ProfGrants = Set<string> | UNCONSTRAINED`. Same shape in `derive-targets`: `null` meant "this
-  effect kind has an OPEN vocabulary, every target passes", now `OPEN_VOCAB`. Neither is a type
-  change so much as a naming one — the type was already honest, the spelling wasn't.
-  **2. `null` that swallowed a REFUSAL — converted to a reported result.** `applyUpdate` and
-  `installPack` each answered `null` for several unrelated situations, and some of those never
-  reached the panel's error list at all: a click on an offer that had just gone away, and a repo link
-  that no longer parses, both did nothing and said nothing (§2.7's exact failure). Both now always
-  return an `ApplyResult`; `refuse()` (beside `fail`/`applyFailed`) reports on BOTH channels at once,
-  which is what they had been disagreeing about. Three new strings, EN + UA. The caller's `res?.`
-  optional chains went with the null.
-  **Deliberately kept, with the reason recorded here so it isn't re-litigated:** the advantage family
-  (`amendWithAdvantage`/`flipAdvantage`/`cycleAdvantage` → `T | null`) — null means "this roll cannot
-  take that change", which is a real answer and the callers act on it; `expandPluginEffects` → null is
-  a documented fast path for the no-plugin build (an empty expansion would make every non-plugin
-  derive walk the merge), and it carries the removability invariant.
-  **The one thing the audit found that needed a surface, not a signature — also done.** `parseDraft`
-  dropped a corrupt draft file silently, so an unfinished translation whose JSON got mangled vanished
-  with no word. It needed no new channel: the stale-schema dialog already exists to say "unfinished
-  work you cannot get back", and a damaged file is that same news with a different cause. `scanDrafts`
-  now returns both halves, `findUnreadableDrafts` names the files, and the dialog lists them beside
-  the stale ones (by filename — there is nothing readable inside to label them with) and discards both
-  on one click. Browser test + store test cover it.
-
+- [x] **LINT-1 · Ban type-escape hatches.** `no-non-null-assertion` + `consistent-type-assertions`
+  on, five type-aware rules on in CI, `no-unsafe-*` and `require-await` off with the measurement
+  behind it. `tooling.md` ▸ the lint gate has the timings and why a type-aware count is not a defect
+  count.
+- [x] **NULL-1 · Audit the returned `null`.** All 64 read; most are values and stayed. Two shapes
+  were not: a `null` meaning the OPPOSITE of nothing became a named state (`UNCONSTRAINED`,
+  `OPEN_VOCAB`), and a `null` swallowing a REFUSAL became a reported `ApplyResult`. Both patterns
+  are the thing to look for next time.
 **Sequencing:** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
 clean code; the view split follows. **TYPE-2 and LINT-1 are both closed (2026-08-21); WD-1 → WD-2 are
