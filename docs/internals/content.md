@@ -189,6 +189,15 @@ The shipped SRD content is a separate repository, `charnik-content-srd`, so rule
 corrected and released without an app build. `tools/content-repo.mjs` is the one seam that resolves
 where it is; the vendoring step, the converters, and the content tests all go through it.
 
+**Committing here is ordinary work, under this repo's rules.** A data fix belongs in the content
+repo the same way a code fix belongs in this one: commit at a verified checkpoint, straight to
+`main`, no feature branch. `git push` is the one action needing explicit permission in the current
+turn, in either repo. The content-specific traps are the whole difference: rows come from a real
+CC-BY source through `tools/srd/`, never from memory; a hand-edit is followed by `pnpm restamp
+<file>`, never by a converter re-run; and a change to shipped rows lands together with an assert in
+the APP repo pinning the count or the value, so a later converter run that drops it fails loudly
+instead of silently reverting.
+
 **A pack repo must carry `.gitattributes` with `* -text`.** The updater answers "did this file
 change?" from the git blob SHA in a tree listing, without downloading anything, and that only holds
 while the blob bytes are the disk bytes. Under `core.autocrlf` a Windows checkout rewrites every LF
