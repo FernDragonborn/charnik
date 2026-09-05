@@ -78,6 +78,12 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
+  **A label the PLAYER can rename is written in their language, not kept as a key.** The custom
+  modifier's default name ("+1 to AC") is their own effect's title and editable the moment it exists,
+  so `modTargetLabel` composes it through `translator()` — the live catalog handed to a pure
+  formatter from outside a component, which reads the store per call and so survives a switch. That
+  is the opposite call from a roll's name, which the log re-reads long afterwards and therefore keeps
+  as a key; the difference is who owns the string after it is written.
   **An ability's short name is `abilityShortLabel`, and nowhere else.** The builder printed the id
   (`{ab}` under `text-transform: uppercase`, `ab.toUpperCase()`) in a dozen places, so a Ukrainian
   sheet said STR where the play sheet said СИЛ. One helper in `util/format.ts` owns the catalog name

@@ -8,7 +8,7 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
+import { t, translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
@@ -317,7 +317,7 @@ class CombatVM {
 		const token = `flat_bonus:${this.customModTarget}${this.customModSign}${amount}`;
 		const label =
 			this.customEffectLabel.trim() ||
-			`${this.customModSign}${amount} ${modTargetLabel(this.customModTarget)}`;
+			`${this.customModSign}${amount} ${modTargetLabel(this.customModTarget, translator())}`;
 		this.effects.addEffect({ label, tokens: [token], positive: this.customModSign === '+' });
 		this.customEffectLabel = '';
 		this.customModAmount = 1;

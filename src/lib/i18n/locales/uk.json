@@ -614,6 +614,17 @@
 			"upcastTitle": "Створити {name} · з якої комірки",
 			"whichActions": "Які дії показувати"
 		},
+		"modTarget": {
+			"ac": "КЗ",
+			"groupCombat": "Бій",
+			"groupSaves": "Рятівні кидки",
+			"groupSkills": "Навички",
+			"initiative": "Ініціатива",
+			"saves": "Усі рятівні кидки",
+			"skills": "Усі навички",
+			"speed": "Швидкість (фт)",
+			"to": "до {target}"
+		},
 		"notice": {
 			"notAvailable": "{name} — зараз недоступно",
 			"notEnoughResource": "Бракує «{resource}» для «{name}»",

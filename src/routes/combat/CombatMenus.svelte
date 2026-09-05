@@ -10,7 +10,7 @@
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { titleCase, ABIL, MOD_TARGETS } from '$lib/combat/helpers';
+	import { titleCase, ABIL, MOD_TARGETS, modTargetKey } from '$lib/combat/helpers';
 	import { sanitizeHtml } from '$lib/content/markdown';
 
 	const overlay = $derived(combat.overlay);
@@ -201,9 +201,11 @@
 						bind:value={combat.customModTarget}
 						aria-label={$_('combat.menu.modifierTarget')}
 					>
-						{#each MOD_TARGETS as g (g.group)}
-							<optgroup label={g.group}>
-								{#each g.opts as o (o.v)}<option value={o.v}>{o.l}</option>{/each}
+						{#each MOD_TARGETS as g (g.groupKey)}
+							<optgroup label={$_(g.groupKey)}>
+								{#each g.targets as target (target)}<option value={target}
+										>{$_(modTargetKey(target))}</option
+									>{/each}
 							</optgroup>
 						{/each}
 					</select>

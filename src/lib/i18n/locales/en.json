@@ -614,6 +614,17 @@
 			"upcastTitle": "Cast {name} · at which slot",
 			"whichActions": "Which actions appear"
 		},
+		"modTarget": {
+			"ac": "AC",
+			"groupCombat": "Combat",
+			"groupSaves": "Saves",
+			"groupSkills": "Skills",
+			"initiative": "Initiative",
+			"saves": "All saves",
+			"skills": "All skills",
+			"speed": "Speed (ft)",
+			"to": "to {target}"
+		},
 		"notice": {
 			"notAvailable": "{name} — not available right now",
 			"notEnoughResource": "Not enough {resource} for {name}",

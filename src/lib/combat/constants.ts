@@ -5,6 +5,7 @@
  */
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
 import { titleCase } from '$lib/util/format';
+import type { Translate } from '$lib/i18n';
 import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 import type { DeathCause } from '$lib/character/schema';
 
@@ -38,44 +39,52 @@ export const ABIL: readonly Ability[] = ABILITY_IDS;
 // are `skill.animal_handling` (a stale kebab list here silently produced unmatched targets).
 const SKILL_IDS = Object.keys(SKILL_ABILITY) as SkillId[];
 
-/** Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
- *  Values are the exact keys the effects engine matches (`ac`, `save.dex`, `skill.stealth`,
- *  the `saves`/`skills` groups). */
-export const MOD_TARGETS: { group: string; opts: { v: string; l: string }[] }[] = [
+/** Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups. The
+ *  values are the exact keys the effects engine matches (`ac`, `save.dex`, `skill.stealth`, and the
+ *  `saves`/`skills` groups); what each is CALLED comes from `modTargetKey`, since this module has no
+ *  locale and the component reading it has one. */
+export const MOD_TARGETS: { groupKey: string; targets: string[] }[] = [
 	{
-		group: 'Combat',
-		opts: [
-			{ v: 'ac', l: 'AC' },
-			{ v: 'initiative', l: 'Initiative' },
-			{ v: 'speed', l: 'Speed (ft)' },
-		],
+		groupKey: 'combat.modTarget.groupCombat',
+		targets: ['ac', 'initiative', 'speed'],
 	},
 	{
-		group: 'Saves',
-		opts: [
-			{ v: 'saves', l: 'All saves' },
-			...(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map((a) => ({
-				v: `save.${a}`,
-				l: `${a.toUpperCase()} save`,
-			})),
-		],
+		groupKey: 'combat.modTarget.groupSaves',
+		targets: ['saves', ...ABILITY_IDS.map((a) => `save.${a}`)],
 	},
 	{
-		group: 'Skills',
-		opts: [
-			{ v: 'skills', l: 'All skills' },
-			...SKILL_IDS.map((s) => ({ v: `skill.${s}`, l: titleCase(s) })),
-		],
+		groupKey: 'combat.modTarget.groupSkills',
+		targets: ['skills', ...SKILL_IDS.map((s) => `skill.${s}`)],
 	},
 ];
 
-/** Human label for a custom-modifier target key (for the auto effect name). Pure. */
-export function modTargetLabel(t: string): string {
-	if (t === 'saves') return 'to all saves';
-	if (t === 'skills') return 'to all skills';
-	if (t.startsWith('save.')) return `to ${t.slice(5).toUpperCase()} save`;
-	if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6))}`;
-	return `to ${t.toUpperCase()}`;
+/** The catalog key naming ONE modifier target. A save and a skill read the catalogs that already
+ *  name them — one word per fact — and the handful left is this control's own little vocabulary. */
+export function modTargetKey(target: string): string {
+	if (target.startsWith('save.')) return `combat.roll.save.${target.slice(5)}`;
+	if (target.startsWith('skill.')) return `skillName.${target.slice(6)}`;
+	return `combat.modTarget.${target}`;
+}
+
+/** What a custom modifier is called when the player names it nothing: "+1 to AC", "+1 до КЗ". The
+ *  label is theirs to edit afterwards, so it is written in the language they wrote it in — unlike a
+ *  roll's name, which the log re-reads later and therefore keeps as a key. */
+export function modTargetLabel(target: string, translate?: Translate): string {
+	const named = translate
+		? translate(modTargetKey(target), { default: fallbackTargetLabel(target) })
+		: fallbackTargetLabel(target);
+	return translate
+		? translate('combat.modTarget.to', { values: { target: named } })
+		: `to ${named}`;
+}
+
+/** The English a caller with no locale reads — a node test, or a label written before i18n starts. */
+function fallbackTargetLabel(target: string): string {
+	if (target === 'saves') return 'all saves';
+	if (target === 'skills') return 'all skills';
+	if (target.startsWith('save.')) return `${target.slice(5).toUpperCase()} save`;
+	if (target.startsWith('skill.')) return titleCase(target.slice(6));
+	return target.toUpperCase();
 }
 
 /** Feet → "N m" (metric in parentheses next to imperial). */

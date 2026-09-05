@@ -81,4 +81,13 @@ export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promis
 export const t = (key: string, values?: Record<string, string | number>): string =>
 	get(locale) == null ? key : get(_)(key, values ? { values } : undefined);
 
+/**
+ * The live catalog as a `Translate`, for handing to a pure formatter from outside a component.
+ *
+ * Read it at CALL time, never at module scope: the returned function looks the locale up on every
+ * call, so a view-model that captures one still follows a language switch.
+ */
+export const translator = (): Translate => (key, options) =>
+	get(locale) == null ? (options?.default ?? key) : get(_)(key, options);
+
 export { locale, waitLocale, json, _ };

@@ -72,3 +72,14 @@ describe('i18n catalogs', () => {
 		}
 	});
 });
+
+describe('translator — the live catalog handed to a pure formatter', () => {
+	it('follows a locale switch, because it reads the store on every call', async () => {
+		const { startI18n, translator, locale } = await import('./index');
+		await startI18n('en');
+		const t = translator(); // captured ONCE, on purpose — the capture must not freeze the language
+		expect(t('abilityShort.str')).toBe('STR');
+		locale.set('uk');
+		expect(t('abilityShort.str')).toBe('СИЛ');
+	});
+});

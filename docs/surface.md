@@ -665,7 +665,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one key per `play.death.cause`.
 - `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
-- `function modTargetLabel` — Human label for a custom-modifier target key (for the auto effect name).
+- `function modTargetKey` — The catalog key naming ONE modifier target.
+- `function modTargetLabel` — What a custom modifier is called when the player names it nothing: "+1 to AC", "+1 до КЗ".
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
 
@@ -1304,6 +1305,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function dirFor` — Text direction for a locale id (independent of svelte-i18n, which doesn't track it).
 - `function startI18n` — * Initialize the catalogs.
 - `const t` — as literals in `combat ` and `build `.
+- `const translator` — * The live catalog as a `Translate`, for handing to a pure formatter from outside a component.
 - `re-export locale`
 - `re-export waitLocale`
 - `re-export json`
@@ -1572,4 +1574,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 932 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 934 exports across 127 modules · 62 duplicate suspects._
