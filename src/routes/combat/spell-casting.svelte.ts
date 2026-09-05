@@ -12,6 +12,13 @@ import { sayText, type SaidText } from '$lib/util/say';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool } from '$lib/rules/dice';
 import { NOTE_KEY, type RollName } from '$lib/combat/roll';
+import {
+	SPELL_OUTCOME,
+	saidNote,
+	spellRollName,
+	upcastPreview,
+	type SpellOutcomeKind,
+} from './spell-roll-name';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
@@ -28,7 +35,6 @@ import {
 	rollDamageParts,
 	dealsDamage,
 	dieModsOf,
-	metres,
 	type DamagePart,
 	type DamagePartSpec,
 	type SpellRow,
@@ -42,33 +48,8 @@ import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { evalUpcast, combinePools } from '$lib/effects/upcast';
 
 /** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
- *  `damage:cold:…` routes to the cold part), a provenance label suffix ("(slot 5 · +2d6)"), and — when
- *  the cast actually adds dice — a fuller roll-log `note` ("8d6 base + 2d6 @ slot 5", item 4). */
-/** What a non-attack cast produces. A named member because it selects the roll's NAME, and a bare
- *  string would let a typo pick a key that does not exist. */
-const SPELL_OUTCOME = { damage: 'damage', healing: 'healing', tempHp: 'tempHp' } as const;
-type SpellOutcomeKind = (typeof SPELL_OUTCOME)[keyof typeof SPELL_OUTCOME];
-
-/** The roll's name: the spell's own word as a value, the phrase around it as a key. Six keys rather
- *  than a phrase with the slot appended, because "(slot 5)" tacked onto a translated sentence is not
- *  a part a translator can move. */
-const spellRollName = (
-	name: string,
-	kind: SpellOutcomeKind,
-	slot: number | undefined,
-): RollName => {
-	const key = `combat.log.spell.${kind}${slot === undefined ? '' : 'Slot'}`;
-	return {
-		text: t(key, slot === undefined ? { name } : { name, slot }),
-		key,
-		values: slot === undefined ? { name } : { name, slot },
-	};
-};
-
-/** The provenance as one line, for the tray's editable note pill. Empty when there is none. */
-const saidNote = (parts: SaidText[]): string =>
-	parts.map((part) => sayText(part, translator())).join(' · ');
-
+ *  `damage:cold:…` routes to the cold part), the slot it came out of, and the provenance the roll
+ *  records about it (item 4). */
 type UpcastCast = {
 	deltas: DamagePart[];
 	/** The slot it was cast from, when that is ABOVE the spell's own level. Absent at the base slot,
@@ -493,38 +474,10 @@ export class SpellCasting {
 		this.host.overlay = null;
 		this.cast(r, e, { slot });
 	};
-	/** A short human summary of what casting `r` from `slotLevel` yields BEYOND its base — the extra
-	 *  damage/heal dice, the scaled count / area / duration / HP-max (items 1 + 8). Empty at the base
-	 *  slot or a non-scaling spell. Area shows metric next to imperial (H10); the real count-roll is the
-	 *  roller (deferred), so count is a display total for now. */
-	castPreview = (r: SpellRow, slotLevel: number): string => {
-		const bits: string[] = [];
-		for (const res of this.evalUpcastAt(r, slotLevel)) {
-			if ('error' in res) continue;
-			if (res.kind === 'damage' || res.kind === 'heal') {
-				if (Object.keys(res.pool).length === 0 && res.flat === 0) continue;
-				// dice are notation, not words — the same "+2d6" in every language
-				bits.push(
-					`+${formatDamageParts([{ pool: res.pool, mod: res.flat, type: res.type ?? '' }])}`,
-				);
-			} else if (res.kind === 'count') bits.push(t('combat.upcast.count', { n: res.flat }));
-			else if (res.kind === 'area')
-				bits.push(t('combat.upcast.area', { feet: res.flat, metres: metres(res.flat) }));
-			else if (res.kind === 'hp_max' && res.flat)
-				bits.push(t('combat.upcast.hpMax', { n: res.flat }));
-			else if (res.kind === 'temp_hp' && res.flat)
-				bits.push(t('combat.upcast.tempHp', { n: res.flat }));
-			else if (res.kind === 'enhancement' && res.flat)
-				bits.push(t('combat.upcast.enhancement', { n: res.flat }));
-			else if (res.kind === 'duration')
-				bits.push(
-					res.isInfinite
-						? t('combat.upcast.permanent')
-						: t('combat.upcast.rounds', { n: res.flat }),
-				);
-		}
-		return bits.join(' · ');
-	};
+	/** What casting `r` from `slotLevel` yields beyond its base, as one line. Empty at the base slot
+	 *  or a non-scaling spell. The wording is `upcastPreview`'s; this only decides WHAT to preview. */
+	castPreview = (r: SpellRow, slotLevel: number): string =>
+		upcastPreview(this.evalUpcastAt(r, slotLevel));
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.
