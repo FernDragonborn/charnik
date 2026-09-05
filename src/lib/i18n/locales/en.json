@@ -421,6 +421,9 @@
 			"utilize": "Utilize",
 			"utilizeDesc": "use an object"
 		},
+		"actions": {
+			"unavailable": "Not available right now"
+		},
 		"attacks": {
 			"noteAttackBonus": "{amount} attack",
 			"noteDamageBonus": "{amount} damage",
@@ -763,6 +766,12 @@
 			"resources": "Resources",
 			"save": "SAVE",
 			"speed": "Speed"
+		},
+		"skills": {
+			"profNone": "Not proficient",
+			"profHalf": "Half proficiency",
+			"profProficient": "Proficient",
+			"profExpertise": "Expertise (×2)"
 		},
 		"slot": {
 			"action": "action",
@@ -1192,9 +1201,31 @@
 		"editInPlaceNote": "Editing your homebrew entry in place.",
 		"fixFirst": "Fix before saving:",
 		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
+		"info": {
+			"text_en": "The main description. Markdown is supported.",
+			"level": "Spell level 0–9 (0 = cantrip). Levels above 9 have no spell slot in the classic rules.",
+			"school": "e.g. Evocation, Abjuration, Necromancy.",
+			"casting_time": "e.g. 1 action, 1 bonus action, 1 reaction, 1 minute.",
+			"range": "e.g. 60 feet, Self, Touch, Sight.",
+			"components": "Verbal / Somatic / Material, e.g. V S M.",
+			"duration": "e.g. Instantaneous, 1 minute, Concentration up to 1 hour.",
+			"concentration": "On = the spell needs concentration to keep going.",
+			"ritual": "On = can also be cast as a ritual (no slot, +10 min).",
+			"resolution": "How it resolves: save / attack / auto / util — drives the roll widget.",
+			"save": "Ability for the saving throw, e.g. dex, wis, con.",
+			"damage": "Dice + type for the parser, e.g. “8d6 fire” or “2d4 necrotic”. Leave blank if none.",
+			"tags": "What the item is, comma-separated. A word, or word:value. e.g. martial, melee, versatile:1d10, mastery:sap — or armor:heavy, ac:18, dex_cap:0, str_min:15.",
+			"base_item_id": "The id of the ordinary item this one is built from, e.g. “longsword” for a +1 Longsword. Everything left blank here is taken from it.",
+			"material": "Material component text, e.g. “a pinch of sulfur and bat guano”.",
+			"higher_level": "What changes when cast with a higher-level slot.",
+			"effects": "Auto-calc effects, “;”-separated. Format kind:target±amount. e.g. flat_bonus:ac+1; resist_immune:fire; grant_proficiency:skill.stealth. Leave blank if none.",
+			"classes": "Tick the spellcaster classes this spell is available to (below)."
+		},
+		"levelWarning": "No level {level} spell slot in the classic rules (0–9).",
 		"newFilePlaceholder": "name",
 		"ownership": "Homebrew · you own this row (stored as CSV you can edit)",
 		"saveEdit": "Save changes",
+		"saveFailed": "Could not save",
 		"saveNew": "Save homebrew",
 		"saving": "Saving…",
 		"srdWarnAction": "Create my own file",
@@ -1772,6 +1803,8 @@
 		},
 		"pickEntry": "Pick an entry to translate.",
 		"sameLanguage": "The target language is the same as the source ({language}). Pick a different language above to translate.",
+		"save": "Save translation",
+		"saving": "Saving…",
 		"status": {
 			"label": "Status",
 			"not_started": "Not started",

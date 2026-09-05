@@ -195,37 +195,36 @@
 	);
 	const hasClasses = $derived(fields.some((f) => f.name === CLASSES_FIELD));
 
-	// Per-field help shown on an (i) badge (hover) — formats + examples for the non-obvious columns
-	// (the parser-driven `damage`/`effects`, spell fields, …). Missing → no badge.
-	const FIELD_INFO: Record<string, string> = {
-		text_en: 'The main description. Markdown is supported.',
-		level: 'Spell level 0–9 (0 = cantrip). Levels above 9 have no spell slot in the classic rules.',
-		school: 'e.g. Evocation, Abjuration, Necromancy.',
-		casting_time: 'e.g. 1 action, 1 bonus action, 1 reaction, 1 minute.',
-		range: 'e.g. 60 feet, Self, Touch, Sight.',
-		components: 'Verbal / Somatic / Material, e.g. V S M.',
-		duration: 'e.g. Instantaneous, 1 minute, Concentration up to 1 hour.',
-		concentration: 'On = the spell needs concentration to keep going.',
-		ritual: 'On = can also be cast as a ritual (no slot, +10 min).',
-		resolution: 'How it resolves: save / attack / auto / util — drives the roll widget.',
-		save: 'Ability for the saving throw, e.g. dex, wis, con.',
-		damage: 'Dice + type for the parser, e.g. “8d6 fire” or “2d4 necrotic”. Leave blank if none.',
-		tags:
-			'What the item is, comma-separated. A word, or word:value. ' +
-			'e.g. martial, melee, versatile:1d10, mastery:sap — or armor:heavy, ac:18, dex_cap:0, str_min:15.',
-		base_item_id:
-			'The id of the ordinary item this one is built from, e.g. “longsword” for a +1 Longsword. ' +
-			'Everything left blank here is taken from it.',
-		material: 'Material component text, e.g. “a pinch of sulfur and bat guano”.',
-		higher_level: 'What changes when cast with a higher-level slot.',
-		effects:
-			'Auto-calc effects, “;”-separated. Format kind:target±amount. ' +
-			'e.g. flat_bonus:ac+1; resist_immune:fire; grant_proficiency:skill.stealth. Leave blank if none.',
-		classes: 'Tick the spellcaster classes this spell is available to (below).',
-	};
+	// Which columns get an (i) badge (hover) — formats + examples for the non-obvious ones (the
+	// parser-driven `damage`/`effects`, spell fields, …). The SENTENCE lives in the catalogs under
+	// `homebrewForm.info.*`; a column missing there simply gets no badge.
+	const INFO_FIELDS = [
+		'text_en',
+		'level',
+		'school',
+		'casting_time',
+		'range',
+		'components',
+		'duration',
+		'concentration',
+		'ritual',
+		'resolution',
+		'save',
+		'damage',
+		'tags',
+		'base_item_id',
+		'material',
+		'higher_level',
+		'effects',
+		'classes',
+	];
+	const fieldInfo = (name: string): string =>
+		INFO_FIELDS.includes(name) ? $_(`homebrewForm.info.${name}`) : '';
 	// live warning for the level cell: a value above 9 has no slot in the classic rules
 	const levelWarning = $derived(
-		Number(draft.level) > 9 ? `No level ${draft.level} spell slot in the classic rules (0–9).` : '',
+		Number(draft.level) > 9
+			? $_('homebrewForm.levelWarning', { values: { level: String(draft.level) } })
+			: '',
 	);
 	// existing SPELLCASTER classes to tick in the ClassPicker — only classes with a caster type have
 	// spell slots (excludes Barbarian/Fighter/Monk/Rogue); deduped by id (a class exists once per
@@ -256,7 +255,7 @@
 					? await upsertHomebrewRow(getUserStorage(), type, draft, editTarget)
 					: await saveHomebrewRow(getUserStorage(), type, draft, target);
 			if (!res.ok) {
-				issues = res.issues ?? ['Could not save'];
+				issues = res.issues ?? [$_('homebrewForm.saveFailed')];
 				return;
 			}
 			await deleteDraft(getUserStorage(), draftCacheTarget); // saved → drop the cached draft
@@ -270,8 +269,8 @@
 </script>
 
 {#snippet infoBadge(name: string)}
-	{#if FIELD_INFO[name]}
-		<span class="info-badge" title={FIELD_INFO[name]} aria-label={FIELD_INFO[name]}>i</span>
+	{#if fieldInfo(name)}
+		<span class="info-badge" title={fieldInfo(name)} aria-label={fieldInfo(name)}>i</span>
 	{/if}
 {/snippet}
 
@@ -348,7 +347,7 @@
 	{#if hasClasses}
 		<div class="classes-block">
 			<span class="block-label eyebrow"
-				>{fieldLabel('classes', 'Available to')} {@render infoBadge('classes')}</span
+				>{fieldLabel('classes', $_('compendium.availableTo'))} {@render infoBadge('classes')}</span
 			>
 			<ClassPicker
 				value={draft.classes ?? ''}

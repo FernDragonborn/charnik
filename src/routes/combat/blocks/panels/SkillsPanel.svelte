@@ -10,11 +10,12 @@
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
 	// friendly label per proficiency tier (the dot's own hover; the row hover keeps the full why())
+	// catalog KEYS, not words — the dot's hover reads in the player's language
 	const PROF_LABEL = {
-		none: 'Not proficient',
-		half: 'Half proficiency',
-		proficient: 'Proficient',
-		expertise: 'Expertise (×2)',
+		none: 'combat.skills.profNone',
+		half: 'combat.skills.profHalf',
+		proficient: 'combat.skills.profProficient',
+		expertise: 'combat.skills.profExpertise',
 	} as const;
 </script>
 
@@ -43,7 +44,7 @@
 								class:on={sk.prof === 'proficient' || sk.prof === 'expertise'}
 								class:half={sk.prof === 'half'}
 								class:expertise={sk.prof === 'expertise'}
-								title={PROF_LABEL[sk.prof]}
+								title={$_(PROF_LABEL[sk.prof])}
 							></i>
 							<span class="skill-name"
 								>{$_(`skillName.${skill}`, { default: titleCase(skill) })}</span

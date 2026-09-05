@@ -134,7 +134,21 @@
   обладунок", "важка зброя"), so an armour's weight has a catalog of its own (`armorCategory`) rather
   than sharing `itemTag`'s. A shared key would have made one of the two wrong in every locale that
   inflects.
-  **What is left:** the `/dev/*` previews, deliberately. They are dev-build-only harnesses whose copy
+  **What is left, and it is not nothing.** A sweep for literal English in every template, attribute
+  and composed string found three regions the pass above had not reached, two of them now closed:
+  the shared components under `src/lib/components` carried no translator at all, the whole
+  data-folder move/merge flow was English in `StorageSettings`, and the compendium's groupings and
+  bucket headings were words in a pure module. What is still OPEN is one region — **the roll RECORD**:
+  `spell-casting` writes an upcast's provenance ("8d6 base + 2d6 @ slot 5"), a "damage not fully read"
+  fragment and a " (slot 5 · …)" label suffix as English into `log.jsonl`; `rollFormulaEntry` writes
+  "formula not fully read"; `describeAmendments` still turns the facts a roll keeps into an English
+  sentence; and `upcastPreview` composes a vocabulary of its own ("area 20 ft", "permanent", "3 rds").
+  It is deliberately its own change, because a change to what a roll records is a change to
+  `log.jsonl` (`internals/roller.md` ▸ Conventions). Note that a roll's `note` has TWO producers that
+  the field conflates — the player's own words typed into a `note` pill, which are DATA and pass
+  through, and the app's own provenance, which is copy — so the fix separates them rather than
+  keying the field.
+  **Deliberately untranslated:** the `/dev/*` previews. They are dev-build-only harnesses whose copy
   describes the harness ("fixed rolls as a static ladder"), not the app — translating them would add
   a hundred keys nobody reads. A theme's TOKEN names stay untranslated for the same kind of reason:
   the token is the key the user writes in their own theme JSON, so a translated label would name

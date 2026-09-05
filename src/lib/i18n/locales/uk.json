@@ -421,6 +421,9 @@
 			"utilize": "Використання",
 			"utilizeDesc": "скористатися предметом"
 		},
+		"actions": {
+			"unavailable": "Зараз недоступно"
+		},
 		"attacks": {
 			"noteAttackBonus": "{amount} до атаки",
 			"noteDamageBonus": "{amount} до шкоди",
@@ -763,6 +766,12 @@
 			"resources": "Ресурси",
 			"save": "РЯТ",
 			"speed": "Швидкість"
+		},
+		"skills": {
+			"profNone": "Без вправності",
+			"profHalf": "Половина вправності",
+			"profProficient": "Вправність",
+			"profExpertise": "Експертиза (×2)"
 		},
 		"slot": {
 			"action": "дій",
@@ -1192,9 +1201,31 @@
 		"editInPlaceNote": "Редагування вашого homebrew-запису на місці.",
 		"fixFirst": "Виправте перед збереженням:",
 		"idHint": "малими літерами, через дефіс — напр. fire-bolt. Лишіть порожнім — згенерується з назви.",
+		"info": {
+			"text_en": "Основний опис. Підтримується Markdown.",
+			"level": "Рівень закляття 0–9 (0 = замовляння). Для рівнів вище 9 у класичних правилах немає комірок.",
+			"school": "напр. Evocation, Abjuration, Necromancy.",
+			"casting_time": "напр. 1 action, 1 bonus action, 1 reaction, 1 minute.",
+			"range": "напр. 60 feet, Self, Touch, Sight.",
+			"components": "Verbal / Somatic / Material, напр. V S M.",
+			"duration": "напр. Instantaneous, 1 minute, Concentration up to 1 hour.",
+			"concentration": "Увімкнено = закляття потребує концентрації, щоб тривати.",
+			"ritual": "Увімкнено = можна також накласти як ритуал (без комірки, +10 хв).",
+			"resolution": "Як воно розвʼязується: save / attack / auto / util — визначає віджет кидка.",
+			"save": "Характеристика рятівного кидка, напр. dex, wis, con.",
+			"damage": "Кубики + тип для парсера, напр. «8d6 fire» або «2d4 necrotic». Лишіть порожнім, якщо немає.",
+			"tags": "Чим є предмет, через кому. Слово або слово:значення. напр. martial, melee, versatile:1d10, mastery:sap — або armor:heavy, ac:18, dex_cap:0, str_min:15.",
+			"base_item_id": "Id звичайного предмета, на якому цей побудований, напр. «longsword» для +1 Longsword. Усе, що тут лишиться порожнім, береться з нього.",
+			"material": "Текст матеріального компонента, напр. «дрібка сірки та кажанячого гуано».",
+			"higher_level": "Що змінюється при накладанні з комірки вищого рівня.",
+			"effects": "Ефекти автопідрахунку, через «;». Формат kind:target±amount. напр. flat_bonus:ac+1; resist_immune:fire; grant_proficiency:skill.stealth. Лишіть порожнім, якщо немає.",
+			"classes": "Позначте класи-заклиначі, яким доступне це закляття (нижче)."
+		},
+		"levelWarning": "У класичних правилах немає комірки закляття {level} рівня (0–9).",
 		"newFilePlaceholder": "назва",
 		"ownership": "Самвидав · цей рядок ваш (зберігається як CSV, який ви можете редагувати)",
 		"saveEdit": "Зберегти зміни",
+		"saveFailed": "Не вдалося зберегти",
 		"saveNew": "Зберегти самвидав",
 		"saving": "Збереження…",
 		"srdWarnAction": "Створити власний файл",
@@ -1772,6 +1803,8 @@
 		},
 		"pickEntry": "Оберіть запис для перекладу.",
 		"sameLanguage": "Цільова мова збігається з вихідною ({language}). Оберіть іншу мову вище, щоб перекладати.",
+		"save": "Зберегти переклад",
+		"saving": "Збереження…",
 		"status": {
 			"label": "Статус",
 			"not_started": "Не почато",

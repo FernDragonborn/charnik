@@ -322,7 +322,7 @@
 							<p class="demo-note">{$_('demo.readonly')}</p>
 						{:else}
 							<button class="save" onclick={save} disabled={saving}>
-								{saving ? 'Saving…' : 'Save translation'}
+								{saving ? $_('translate.saving') : $_('translate.save')}
 							</button>
 						{/if}
 					</div>

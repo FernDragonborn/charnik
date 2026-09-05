@@ -32,7 +32,7 @@
 	<button
 		class="combat-row"
 		disabled={!o.available || (o.cost !== 'x' && o.left < o.cost)}
-		title={o.available ? o.description : 'Not available right now'}
+		title={o.available ? o.description : $_('combat.actions.unavailable')}
 		onclick={() => combat.activateResourceOption(o)}
 	>
 		<span class="row-name">{o.name}</span>
