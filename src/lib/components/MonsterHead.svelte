@@ -24,7 +24,7 @@
 </script>
 
 <div class="detail-eyebrow">
-	<span>Monster</span>
+	<span>{$_('contentType.monster')}</span>
 	<span
 		><span class="monster-type">{monster.type.map((part) => say(part, $_)).join(' ')}</span> · {monster.edition}</span
 	>
@@ -36,7 +36,7 @@
 {/if}
 <div class="content-cols">
 	<div class="detail-panel">
-		<div class="panel-header eyebrow">Vitals</div>
+		<div class="panel-header eyebrow">{$_('compendium.vitals')}</div>
 		<div class="value-row challenge-rating">
 			<span class="value-key">CR</span><span class="challenge-rating-value"
 				>{monster.cr || '—'}</span
@@ -46,7 +46,9 @@
 				<span class="value-key">AC</span><span>{monster.ac}</span>
 			</div>{/if}
 		{#if monster.initiative}<div class="value-row">
-				<span class="value-key">Initiative</span><span>{monster.initiative}</span>
+				<span class="value-key">{$_('contentField.initiative')}</span><span
+					>{monster.initiative}</span
+				>
 			</div>{/if}
 		{#if monster.hp}
 			<div class="value-row">
@@ -54,20 +56,24 @@
 				<span>
 					{monster.hp}
 					{#if monster.hpFormula}<span class="dim">{monster.hpFormula}</span>
-						<RollButton formula={monster.hpFormula} label="HP rolled" variant="icon" title="Roll HP"
-							><DiceIcon size={14} /></RollButton
+						<RollButton
+							formula={monster.hpFormula}
+							label={$_('compendium.hpRolled')}
+							variant="icon"
+							title={$_('compendium.rollHp')}><DiceIcon size={14} /></RollButton
 						>{/if}
 				</span>
 			</div>
 		{/if}
 		{#if monster.speed}<div class="value-row">
-				<span class="value-key">Speed</span><span>{monster.speed}</span>
+				<span class="value-key">{$_('contentField.speed')}</span><span>{monster.speed}</span>
 			</div>{/if}
 	</div>
 	<div class="detail-panel">
-		<div class="panel-header eyebrow">Abilities</div>
+		<div class="panel-header eyebrow">{$_('combat.section.abilities')}</div>
 		<div class="ability-row head" class:has-save={monster.hasSaves}>
-			<span></span><span>score</span><span>mod</span>{#if monster.hasSaves}<span>save</span>{/if}
+			<span></span><span>{$_('compendium.score')}</span><span>{$_('compendium.mod')}</span
+			>{#if monster.hasSaves}<span>{$_('compendium.save')}</span>{/if}
 		</div>
 		{#each monster.abilities as a (a.ab)}
 			<div class="ability-row" class:has-save={monster.hasSaves}>

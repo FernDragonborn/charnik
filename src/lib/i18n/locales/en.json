@@ -849,10 +849,41 @@
 	},
 	"compendium": {
 		"availableTo": "Available to",
+		"backToBrowse": "Back to compendium",
+		"clearFilters": "Clear filters",
+		"deleteBody": "This removes the entry from your homebrew CSV and can’t be undone.",
+		"deleteConfirm": "Delete",
+		"deleteEntry": "Delete entry",
+		"deleteTitle": "Delete “{name}”?",
+		"editMode": "Edit compendium",
+		"emptyBody": "The content library is empty — the shipped SRD files don’t seem to be present. If this is an installed build, the content bundle may be missing or the data folder points somewhere without content.",
+		"emptyTitle": "No content found",
+		"emptyWhere": "Data folder & content sources live in",
+		"grouping": "Group",
+		"hpRolled": "HP rolled",
 		"levelCantrip": "Cantrip",
 		"levelNth": "Level {level}",
+		"loading": "Loading content…",
+		"mod": "mod",
+		"modeAdd": "Add",
+		"modeAddHint": "author a new {type}",
+		"modeDrafts": "Drafts",
+		"modeDraftsHint": "resume unfinished edits",
+		"modeEditor": "Editor",
+		"modeEditorEmpty": "select an entry first",
+		"modeEditorHint": "edit “{name}” — all fields",
+		"modeTranslate": "Translate",
+		"modeTranslateHint": "side-by-side prose translation",
+		"moveToDrafts": "Move to drafts",
+		"paneCurrent": "Current",
+		"paneEdit": "Your edit",
 		"pickAnEntry": "Select an entry to see its detail.",
-		"sourceLine": "Source: {source} · {pack}"
+		"rollHp": "Roll HP",
+		"save": "save",
+		"score": "score",
+		"settingsData": "Settings → Data",
+		"sourceLine": "Source: {source} · {pack}",
+		"vitals": "Vitals"
 	},
 	"contentDrift": {
 		"title": "Content data changed",
@@ -978,15 +1009,24 @@
 		"writeFailed": "Couldn't update the header of: {files}. The file is still loaded — nothing was lost, but it will be flagged again next time."
 	},
 	"contentType": {
-		"species": "Species",
-		"species_option": "Lineage",
 		"background": "Background",
 		"class": "Class",
-		"subclass": "Subclass",
+		"class_casting": "Casting table",
+		"class_feature": "Class feature",
+		"condition": "Condition",
+		"effect": "Effect",
 		"feat": "Feat",
-		"language": "Language",
 		"item": "Item",
-		"spell": "Spell"
+		"language": "Language",
+		"monster": "Monster",
+		"resource": "Resource",
+		"resource_option": "Resource option",
+		"species": "Species",
+		"species_option": "Lineage",
+		"spell": "Spell",
+		"spell_lists": "Spell lists",
+		"spell_slots": "Spell slots",
+		"subclass": "Subclass"
 	},
 	"contentValue": {
 		"concentrationFor": "Concentration · {duration}",
@@ -1495,9 +1535,23 @@
 		"transmutation": "Transmutation"
 	},
 	"spellbook": {
+		"alwaysPrepared": "always prepared",
+		"cast": "Cast",
+		"detailPrepared": "Prepared",
+		"done": "Done",
+		"filterAll": "All",
+		"filterPinned": "Pinned",
+		"filterPrepared": "Prepared",
+		"known": "spellbook {count}",
+		"loading": "Loading spellbook…",
 		"notice": {
 			"cast": "Cast {name}"
-		}
+		},
+		"pinToBar": "Pin to quick bar",
+		"prepare": "prepare",
+		"search": "Search spellbook…",
+		"showOnSheet": "On sheet",
+		"title": "Manage spells"
 	},
 	"translate": {
 		"status": {

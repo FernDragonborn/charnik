@@ -849,10 +849,41 @@
 	},
 	"compendium": {
 		"availableTo": "Доступне для",
+		"backToBrowse": "Назад до довідника",
+		"clearFilters": "Очистити фільтри",
+		"deleteBody": "Це прибирає запис із вашого CSV із самвидавом, і скасувати це не можна.",
+		"deleteConfirm": "Видалити",
+		"deleteEntry": "Видалити запис",
+		"deleteTitle": "Видалити «{name}»?",
+		"editMode": "Редагувати довідник",
+		"emptyBody": "Бібліотека вмісту порожня — файлів SRD, які йдуть у комплекті, схоже, немає. Якщо це встановлена збірка, можливо, бракує пакунка вмісту або тека даних вказує туди, де вмісту немає.",
+		"emptyTitle": "Вмісту не знайдено",
+		"emptyWhere": "Тека даних і джерела вмісту — у розділі",
+		"grouping": "Групування",
+		"hpRolled": "Кинуто ОЗ",
 		"levelCantrip": "Замовляння",
 		"levelNth": "{level} рівень",
+		"loading": "Завантаження вмісту…",
+		"mod": "мод.",
+		"modeAdd": "Додати",
+		"modeAddHint": "створити новий запис: {type}",
+		"modeDrafts": "Чернетки",
+		"modeDraftsHint": "продовжити незавершені правки",
+		"modeEditor": "Редактор",
+		"modeEditorEmpty": "спершу оберіть запис",
+		"modeEditorHint": "редагувати «{name}» — усі поля",
+		"modeTranslate": "Переклад",
+		"modeTranslateHint": "переклад прози поруч з оригіналом",
+		"moveToDrafts": "Перенести в чернетки",
+		"paneCurrent": "Поточне",
+		"paneEdit": "Ваша правка",
 		"pickAnEntry": "Оберіть запис, щоб побачити подробиці.",
-		"sourceLine": "Джерело: {source} · {pack}"
+		"rollHp": "Кинути ОЗ",
+		"save": "ряткидок",
+		"score": "знач.",
+		"settingsData": "Налаштування → Дані",
+		"sourceLine": "Джерело: {source} · {pack}",
+		"vitals": "Показники"
 	},
 	"contentDrift": {
 		"title": "Дані контенту змінились",
@@ -978,15 +1009,24 @@
 		"writeFailed": "Не вдалося оновити шапку файлів: {files}. Файл усе одно завантажено — нічого не втрачено, але наступного разу він знову буде позначений."
 	},
 	"contentType": {
-		"species": "Раса",
-		"species_option": "Походження",
 		"background": "Бекграунд",
 		"class": "Клас",
-		"subclass": "Підклас",
+		"class_casting": "Таблиця чаклування",
+		"class_feature": "Класова особливість",
+		"condition": "Стан",
+		"effect": "Ефект",
 		"feat": "Фіт",
-		"language": "Мова",
 		"item": "Предмет",
-		"spell": "Закляття"
+		"language": "Мова",
+		"monster": "Монстр",
+		"resource": "Ресурс",
+		"resource_option": "Варіант ресурсу",
+		"species": "Вид",
+		"species_option": "Походження",
+		"spell": "Закляття",
+		"spell_lists": "Списки заклять",
+		"spell_slots": "Комірки заклять",
+		"subclass": "Підклас"
 	},
 	"contentValue": {
 		"concentrationFor": "Концентрація · {duration}",
@@ -1495,9 +1535,23 @@
 		"transmutation": "Перетворення"
 	},
 	"spellbook": {
+		"alwaysPrepared": "завжди підготовлене",
+		"cast": "Створити",
+		"detailPrepared": "Підготовлене",
+		"done": "Готово",
+		"filterAll": "Усі",
+		"filterPinned": "Закріплені",
+		"filterPrepared": "Підготовлені",
+		"known": "у книзі {count}",
+		"loading": "Завантаження книги заклять…",
 		"notice": {
 			"cast": "Створено: {name}"
-		}
+		},
+		"pinToBar": "Закріпити на панелі",
+		"prepare": "підготувати",
+		"search": "Пошук у книзі…",
+		"showOnSheet": "На аркуші",
+		"title": "Керування заклять"
 	},
 	"translate": {
 		"status": {

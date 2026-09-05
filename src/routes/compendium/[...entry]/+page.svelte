@@ -353,30 +353,30 @@
 <svelte:head><title>{$_('nav.compendium')} — Charnik</title></svelte:head>
 
 {#if !graph}
-	<Loading message="Loading content…" error={content.error} />
+	<Loading message={$_('compendium.loading')} error={content.error} />
 {:else if types.length === 0}
 	<div class="loading empty-content">
-		<h2>No content found</h2>
-		<p>
-			The content library is empty — the shipped SRD files don't seem to be present. If this is an
-			installed build, the content bundle may be missing or the data folder points somewhere without
-			content.
+		<h2>{$_('compendium.emptyTitle')}</h2>
+		<p>{$_('compendium.emptyBody')}</p>
+		<!-- the section's name is bold, so it stays its own element rather than markup inside a key -->
+		<p class="muted">
+			{$_('compendium.emptyWhere')} <b>{$_('compendium.settingsData')}</b>.
 		</p>
-		<p class="muted">Data folder &amp; content sources live in <b>Settings → Data</b>.</p>
 	</div>
 {:else}
 	<div class="page">
 		<nav class="types">
 			{#each types as t (t)}
 				<Chip active={t === selectedType} onclick={() => pick(t)}>
-					{t.replace(/_/g, ' ')} <span class="count">{graph.list(t).length}</span>
+					{$_(`contentType.${t}`, { default: t.replace(/_/g, ' ') })}
+					<span class="count">{graph.list(t).length}</span>
 				</Chip>
 			{/each}
 		</nav>
 
 		<div class="controls">
 			<details class="disclosure" bind:open={groupOpen} use:autoClose>
-				<summary class="pill-btn">Group · <b>{groupLabel}</b></summary>
+				<summary class="pill-btn">{$_('compendium.grouping')} · <b>{groupLabel}</b></summary>
 				<div class="dropdown-menu">
 					{#each groupings as g (g.key)}
 						<button
@@ -396,7 +396,7 @@
 					<summary class="pill-btn">Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
 					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
-							<div class="dropdown-section eyebrow">Source</div>
+							<div class="dropdown-section eyebrow">{$_('contentField.source')}</div>
 							<div class="ddchips">
 								{#each sources as s (s)}
 									<Chip
@@ -423,7 +423,7 @@
 								onclick={() => {
 									sourceFilter = new Set();
 									facetFilter = new Set();
-								}}>Clear filters</button
+								}}>{$_('compendium.clearFilters')}</button
 							>
 						{/if}
 					</div>
@@ -432,18 +432,19 @@
 
 			{#if contentLocales.length > 1}
 				<label class="lang-control">
-					<span class="lang-label eyebrow">Language</span>
+					<span class="lang-label eyebrow">{$_('settings.language')}</span>
 					<LanguagePicker bind:value={contentLocale} locales={contentLocales} />
 				</label>
 			{/if}
 
 			{#if inMode}
 				<button class="back-to-browse pill-btn accent" onclick={exitMode}
-					><Icon name="arrow-left" size={13} /> Back to compendium</button
+					><Icon name="arrow-left" size={13} /> {$_('compendium.backToBrowse')}</button
 				>
 			{:else}
 				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
-					<summary class="pill-btn accent"><Icon name="pencil" size={13} /> Edit compendium</summary
+					<summary class="pill-btn accent"
+						><Icon name="pencil" size={13} /> {$_('compendium.editMode')}</summary
 					>
 					<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
 				     the currently-selected entry (a shipped row forks to homebrew on save). -->
@@ -455,7 +456,9 @@
 								void goto(`${base}/translate`);
 							}}
 						>
-							<b>Translate</b><small>side-by-side prose translation</small>
+							<b>{$_('compendium.modeTranslate')}</b><small
+								>{$_('compendium.modeTranslateHint')}</small
+							>
 						</button>
 						<button
 							class="mode-item"
@@ -467,7 +470,15 @@
 								adding = true;
 							}}
 						>
-							<b>Add</b><small>author a new {selectedType.replace(/_/g, ' ')}</small>
+							<b>{$_('compendium.modeAdd')}</b><small
+								>{$_('compendium.modeAddHint', {
+									values: {
+										type: $_(`contentType.${selectedType}`, {
+											default: selectedType.replace(/_/g, ' '),
+										}),
+									},
+								})}</small
+							>
 						</button>
 						<button
 							class="mode-item"
@@ -477,11 +488,13 @@
 								if (selected) openEditor(selected);
 							}}
 						>
-							<b>Editor</b>
+							<b>{$_('compendium.modeEditor')}</b>
 							<small>
 								{selected
-									? `edit “${selected.data.name_en}” — all fields`
-									: 'select an entry first'}
+									? $_('compendium.modeEditorHint', {
+											values: { name: String(selected.data.name_en) },
+										})
+									: $_('compendium.modeEditorEmpty')}
 							</small>
 						</button>
 						<button
@@ -493,7 +506,7 @@
 								showDrafts = true;
 							}}
 						>
-							<b>Drafts</b><small>resume unfinished edits</small>
+							<b>{$_('compendium.modeDrafts')}</b><small>{$_('compendium.modeDraftsHint')}</small>
 						</button>
 					</div>
 				</details>
@@ -519,11 +532,11 @@
 				{#key editRow.effectiveId}
 					<div class="editor-2pane">
 						<div class="epane before">
-							<div class="epane-label eyebrow">Current</div>
+							<div class="epane-label eyebrow">{$_('compendium.paneCurrent')}</div>
 							<WikiDetail detail={editorBefore} />
 						</div>
 						<div class="epane after">
-							<div class="epane-label eyebrow edit">Your edit</div>
+							<div class="epane-label eyebrow edit">{$_('compendium.paneEdit')}</div>
 							<EditContentForm
 								type={editRow.type}
 								editRow={editRow ?? undefined}
@@ -554,10 +567,10 @@
 							<!-- your own row: manage it from the bottom of its article -->
 							<div class="homebrew-actions">
 								<button class="hb-btn" onclick={() => selected && convertToDraft(selected)}>
-									Move to drafts
+									{$_('compendium.moveToDrafts')}
 								</button>
 								<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
-									Delete entry
+									{$_('compendium.deleteEntry')}
 								</button>
 							</div>
 						{/if}
@@ -569,9 +582,11 @@
 
 	{#if confirmDelete}
 		<ConfirmDialog
-			title="Delete “{confirmDelete.data.name_en}”?"
-			message="This removes the entry from your homebrew CSV and can’t be undone."
-			confirmLabel="Delete"
+			title={$_('compendium.deleteTitle', {
+				values: { name: String(confirmDelete.data.name_en) },
+			})}
+			message={$_('compendium.deleteBody')}
+			confirmLabel={$_('compendium.deleteConfirm')}
 			danger
 			onConfirm={() => confirmDelete && deleteRow(confirmDelete)}
 			onCancel={() => (confirmDelete = null)}

@@ -133,35 +133,47 @@
 {#if loaded && !character}
 	<NoCharacter />
 {:else if !graph || !character}
-	<Loading message="Loading spellbook…" error={content.error} />
+	<Loading message={$_('spellbook.loading')} error={content.error} />
 {:else}
 	<div class="mgrhead">
-		<h1>Manage spells</h1>
+		<h1>{$_('spellbook.title')}</h1>
 		<span class="prepared-count"
-			><PreparedCaps tallies={preparedTallies} /> · spellbook {resolved.length}</span
+			><PreparedCaps tallies={preparedTallies} /> · {$_('spellbook.known', {
+				values: { count: resolved.length },
+			})}</span
 		>
 		<span class="spacer"></span>
-		<button class="cta" onclick={() => goto(`${base}/combat`)}>Done</button>
+		<button class="cta" onclick={() => goto(`${base}/combat`)}>{$_('spellbook.done')}</button>
 	</div>
 
 	<div class="two-column">
 		<EntryList
 			{groups}
 			bind:searchValue={query}
-			searchPlaceholder="Search spellbook…"
+			searchPlaceholder={$_('spellbook.search')}
 			selectedId={selected?.effectiveId ?? null}
 			onselect={(e) => (selected = e.row)}
 		>
 			{#snippet filters()}
-				<Chip active={filter === 'all'} onclick={() => (filter = 'all')}>All</Chip>
-				<Chip active={filter === 'prepared'} onclick={() => (filter = 'prepared')}>Prepared</Chip>
-				<Chip active={filter === 'pinned'} onclick={() => (filter = 'pinned')}>Pinned</Chip>
+				<Chip active={filter === 'all'} onclick={() => (filter = 'all')}
+					>{$_('spellbook.filterAll')}</Chip
+				>
+				<Chip active={filter === 'prepared'} onclick={() => (filter = 'prepared')}
+					>{$_('spellbook.filterPrepared')}</Chip
+				>
+				<Chip active={filter === 'pinned'} onclick={() => (filter = 'pinned')}
+					>{$_('spellbook.filterPinned')}</Chip
+				>
 			{/snippet}
 			{#snippet leading(e)}
-				<EyeToggle on={!isHidden(e.id)} title="Show on sheet" onclick={() => toggleHidden(e.id)} />
+				<EyeToggle
+					on={!isHidden(e.id)}
+					title={$_('spellbook.showOnSheet')}
+					onclick={() => toggleHidden(e.id)}
+				/>
 				<Pin
 					on={pinned.has(e.id)}
-					title="Pin to quick bar"
+					title={$_('spellbook.pinToBar')}
 					onclick={() => (pinned = toggleSet(pinned, e.id))}
 				/>
 			{/snippet}
@@ -170,7 +182,7 @@
 				<Switch
 					on={en ? isPrepared(en) : false}
 					lock={en?.alwaysPrepared ?? false}
-					title={en?.alwaysPrepared ? 'always prepared' : 'prepare'}
+					title={$_(en?.alwaysPrepared ? 'spellbook.alwaysPrepared' : 'spellbook.prepare')}
 					onclick={() => togglePrepare(e.id)}
 				/>
 			{/snippet}
@@ -178,9 +190,9 @@
 
 		<WikiDetail {detail}>
 			{#snippet actions()}
-				<button class="cta" onclick={cast}><DiceIcon size={14} /> Cast</button>
+				<button class="cta" onclick={cast}><DiceIcon size={14} /> {$_('spellbook.cast')}</button>
 				<span class="detail-toggle">
-					Prepared
+					{$_('spellbook.detailPrepared')}
 					<Switch
 						on={selEntry ? isPrepared(selEntry) : false}
 						lock={selEntry?.alwaysPrepared ?? false}
@@ -188,14 +200,14 @@
 					/>
 				</span>
 				<span class="detail-toggle">
-					On sheet
+					{$_('spellbook.showOnSheet')}
 					<Switch
 						on={selected ? !isHidden(selected.effectiveId) : false}
 						onclick={() => selected && toggleHidden(selected.effectiveId)}
 					/>
 				</span>
 				<span class="detail-toggle">
-					Pinned
+					{$_('spellbook.filterPinned')}
 					<Switch
 						on={selected ? pinned.has(selected.effectiveId) : false}
 						onclick={() => selected && (pinned = toggleSet(pinned, selected.effectiveId))}
