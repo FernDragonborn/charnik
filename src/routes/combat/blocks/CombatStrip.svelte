@@ -6,6 +6,7 @@
 	// Reads the `combat` view-model; the derived sheet comes in as a prop.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { damageTypeLabel } from '$lib/combat/attacks';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
@@ -67,7 +68,9 @@
 		>
 			<div class="tile-key">{$_('combat.roll.initiative')}</div>
 			<div class="tile-value">{signed(s.initiative.value)}</div>
-			<div class="tile-text">{$_('abilityShort.dex')} <b>{signed(s.abilities.dex.mod)}</b></div>
+			<div class="tile-text">
+				{abilityShortLabel('dex', $_)} <b>{signed(s.abilities.dex.mod)}</b>
+			</div>
 		</button>
 		<div class="tile" use:provenance={why(s.speed, $_)}>
 			<div class="tile-key">{$_('combat.section.speed')}</div>

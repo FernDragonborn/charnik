@@ -7,6 +7,7 @@
 	// origin feat. The questions a feat asks do not depend on how it arrived, and written twice they
 	// drift: the origin feat's copy did not exist at all, so Skilled granted nothing.
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
 	import { SKILL_ABILITY } from '$lib/character/skills';
@@ -30,7 +31,7 @@
 				<button
 					class="pick-chip"
 					class:on={b.draft.slotFeatAbility[choiceKey] === ab}
-					onclick={() => b.feats.setSlotFeatAbility(choiceKey, ab)}>{ab.toUpperCase()}</button
+					onclick={() => b.feats.setSlotFeatAbility(choiceKey, ab)}>{abilityShortLabel(ab, $_)}</button
 				>
 			{/each}
 		</div>

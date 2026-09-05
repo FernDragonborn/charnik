@@ -5,6 +5,7 @@ import { newCharacter, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { diffSheets } from './sheet-diff';
 import { socialBars } from './social';
+import { ABILITY_IDS } from '../rules/core';
 import { SKILL_ABILITY } from '../character/skills';
 import { DAMAGE_TYPES } from '../components/damage-glyphs';
 import en from '../i18n/locales/en.json';
@@ -72,7 +73,7 @@ describe('diffSheets', () => {
 		const rows = diffSheets(before, deriveSheet(stronger, g));
 
 		expect(rows.find((r) => r.id === 'con')).toMatchObject({
-			label: { text: 'CON' },
+			label: { key: 'abilityShort.con' },
 			from: { text: '14' },
 			to: { text: '16' },
 			better: true,
@@ -118,7 +119,8 @@ describe('diffSheets', () => {
 		const keys = [
 			...Object.keys(SKILL_ABILITY).map((id) => `skillName.${id}`),
 			...['none', 'half', 'proficient', 'expertise'].map((r) => `build.diff.rank.${r}`),
-			'build.diff.save',
+			...ABILITY_IDS.map((ab) => `abilityShort.${ab}`),
+			...ABILITY_IDS.map((ab) => `combat.roll.save.${ab}`),
 			'build.diff.speed',
 			'build.diff.proficiency',
 			'build.diff.carryCapacity',

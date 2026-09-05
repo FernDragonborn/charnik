@@ -348,7 +348,6 @@
 			"spellDcFor": "{class} spell save DC",
 			"spellAttackFor": "{class} spell attack",
 			"carryCapacity": "Carry capacity",
-			"save": "{ability} save",
 			"resistant": "Resistant",
 			"immune": "Immune",
 			"vulnerable": "Vulnerable",

@@ -6,7 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
-	import { signed } from '$lib/util/format';
+	import { abilityShortLabel, signed } from '$lib/util/format';
 	import { POINT_BUY_BUDGET, type StatMethod } from '$lib/build/rules';
 	import { abilityProvenanceText } from '../ability-allocation.svelte';
 	const b = build;
@@ -41,11 +41,11 @@
 	{#each ABILITIES as ab (ab)}
 		{@const block = b.sheet?.abilities[ab]}
 		<div class="arow">
-			<span class="code">{ab}</span>
+			<span class="code">{abilityShortLabel(ab, $_)}</span>
 			{#if b.draft.method === 'standard_array'}
 				<select
 					class="bare"
-					aria-label={$_('build.abilities.scoreLabel', { values: { ability: ab.toUpperCase() } })}
+					aria-label={$_('build.abilities.scoreLabel', { values: { ability: abilityShortLabel(ab, $_) } })}
 					value={b.draft.arrayPick[ab] ?? ''}
 					onchange={(e) =>
 						b.abilities.assignArray(ab, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}
@@ -56,9 +56,9 @@
 				</select>
 			{:else}
 				<span class="stepper">
-					<button aria-label={$_('build.abilities.lower', { values: { ability: ab.toUpperCase() } })} onclick={() => b.abilities.bumpAbility(ab, -1)}><Icon name="minus" size={12} /></button>
+					<button aria-label={$_('build.abilities.lower', { values: { ability: abilityShortLabel(ab, $_) } })} onclick={() => b.abilities.bumpAbility(ab, -1)}><Icon name="minus" size={12} /></button>
 					<span class="base">{b.draft.abilities[ab]}</span>
-					<button aria-label={$_('build.abilities.raise', { values: { ability: ab.toUpperCase() } })} onclick={() => b.abilities.bumpAbility(ab, 1)}><Icon name="plus" size={12} /></button>
+					<button aria-label={$_('build.abilities.raise', { values: { ability: abilityShortLabel(ab, $_) } })} onclick={() => b.abilities.bumpAbility(ab, 1)}><Icon name="plus" size={12} /></button>
 				</span>
 			{/if}
 			<span class="note">{abilityProvenanceText(b.abilities.provenance(ab, block?.score.value), $_)}</span>
@@ -82,7 +82,7 @@
 		<div class="chips">
 			{#each b.abilities.backgroundBoostChoices as ab (ab)}
 				<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.abilities.toggleBoostPick(ab)}>
-					{ab.toUpperCase()}{#if b.abilities.backgroundBoosts[ab]}<span class="gold"> +{b.abilities.backgroundBoosts[ab]}</span>{/if}
+					{abilityShortLabel(ab, $_)}{#if b.abilities.backgroundBoosts[ab]}<span class="gold"> +{b.abilities.backgroundBoosts[ab]}</span>{/if}
 				</button>
 			{/each}
 		</div>
@@ -103,7 +103,7 @@
 			<div class="chips">
 				{#each b.abilities.speciesBoostAbilities as ab (ab)}
 					<button class="pick-chip" class:on={b.draft.speciesBoostPicks.includes(ab)} onclick={() => b.abilities.toggleSpeciesBoostPick(ab)}>
-						{ab.toUpperCase()}
+						{abilityShortLabel(ab, $_)}
 					</button>
 				{/each}
 			</div>

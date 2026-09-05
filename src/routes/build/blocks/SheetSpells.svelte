@@ -3,6 +3,7 @@
 	// grouped by level. Slots that a higher level will open are shown too, dimmed — a character built
 	// straight to level 5 should be able to see what level 9 is holding.
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	const b = build;
 
@@ -40,7 +41,7 @@
 					>{$_('build.spells.casterMeta', {
 						values: {
 							class: c.className,
-							ability: c.ability.toUpperCase(),
+							ability: abilityShortLabel(c.ability, $_),
 							style: $_(
 								c.prepareStyle === 'known'
 									? 'build.spells.styleKnown'

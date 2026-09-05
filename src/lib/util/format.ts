@@ -1,3 +1,5 @@
+import type { Translate } from '$lib/i18n';
+
 /** 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists). */
 export const ordinal = (n: number): string =>
 	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
@@ -32,3 +34,12 @@ export const asText = (v: unknown, fallback = ''): string =>
 /** A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no
  *  sign — the sheet's convention for abilities/skills/saves). Real minus glyph. One formatter (F2). */
 export const signed = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
+
+/** What an ability is CALLED, short: `dex` → "DEX", "СПР". The catalog holds the word and the id's
+ *  own upper case is the fallback, which is what a node test and a caller with no locale read. Takes
+ *  the translator rather than reaching for one, so this module stays a leaf — the ONE place the
+ *  `abilityShort` catalog is named (docs/internals/ui.md ▸ Strings live in the catalogs). */
+export const abilityShortLabel = (ability: string, translate?: Translate): string =>
+	translate
+		? translate(`abilityShort.${ability}`, { default: ability.toUpperCase() })
+		: ability.toUpperCase();

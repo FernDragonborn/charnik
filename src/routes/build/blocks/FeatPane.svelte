@@ -5,6 +5,7 @@
 	// skill-granting feat's picks) open right under it.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { build, ASI } from '../build-view-model.svelte';
 	import type { Inspector } from '../inspector.svelte';
 	import { ABILITIES } from '$lib/character/schema';
@@ -57,7 +58,7 @@
 					class:on={asi.picks.includes(ab)}
 					onclick={() => b.feats.toggleAsiPick(slotKey, ab)}
 				>
-					{ab.toUpperCase()}{#if amount}<span class="gold"> +{amount}</span>{/if}
+					{abilityShortLabel(ab, $_)}{#if amount}<span class="gold"> +{amount}</span>{/if}
 				</button>
 			{/each}
 		</div>

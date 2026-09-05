@@ -3,6 +3,7 @@
 	// Clicking any of them opens the one allocator — they are never edited six different ways.
 	// A score raised above what you rolled/bought reads in crimson, so a boost is visible at a glance.
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { build } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
@@ -29,7 +30,7 @@
 				: abilityProvenanceText(b.abilities.provenance(ab, score), $_)}
 			onclick={open}
 		>
-			<small>{ab}</small>
+			<small>{abilityShortLabel(ab, $_)}</small>
 			<b>{score}</b>
 			<span class="mod">{block ? signed(block.mod) : ''}</span>
 			{#if block?.saveProficient}<span class="save" title={$_('build.vitals.saveProficient')}

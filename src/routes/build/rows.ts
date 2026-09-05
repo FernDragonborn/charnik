@@ -17,7 +17,7 @@ import type { Translate } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { splitList, type ContentType } from '$lib/content/schemas';
 
-import { titleCase } from '$lib/util/format';
+import { abilityShortLabel, titleCase } from '$lib/util/format';
 import { metres } from '$lib/combat/constants';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 
@@ -93,7 +93,7 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 	 *  columns is an open enum whose values are content, not code. */
 	const label = (catalog: string, value: string | undefined) => contentLabel(catalog, value, t);
 	if (row.type === 'class')
-		return [row.data.hit_die, savesLabel(row.data.saves)].filter(Boolean).join(' · ');
+		return [row.data.hit_die, savesLabel(row.data.saves, t)].filter(Boolean).join(' · ');
 	// the same sentence the sheet's own origin card prints, so a species reads identically in both
 	if (row.type === 'species')
 		return t('build.origin.speciesMeta', {
@@ -115,10 +115,10 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 	return entryMeta(row, t);
 }
 
-/** The saving throws a class grants, as a person reads them ("STR, CON"). A column, not a string:
- *  `String(csvList)` is `Array.prototype.toString` and prints "STR,CON" with no space. */
-export const savesLabel = (saves: readonly string[]): string =>
-	saves.map((s) => s.toUpperCase()).join(', ');
+/** The saving throws a class grants, as a person reads them ("STR, CON" / "СИЛ, СТА"). A column, not
+ *  a string: `String(csvList)` is `Array.prototype.toString` and prints "STR,CON" with no space. */
+export const savesLabel = (saves: readonly string[], t?: Translate): string =>
+	saves.map((s) => abilityShortLabel(s, t)).join(', ');
 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */
 export const ASI = '__asi__';

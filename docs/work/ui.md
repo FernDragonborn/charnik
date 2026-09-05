@@ -78,6 +78,11 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
+  **An ability's short name is `abilityShortLabel`, and nowhere else.** The builder printed the id
+  (`{ab}` under `text-transform: uppercase`, `ab.toUpperCase()`) in a dozen places, so a Ukrainian
+  sheet said STR where the play sheet said СИЛ. One helper in `util/format.ts` owns the catalog name
+  and the upper-cased id as its fallback; the sheet diff's labels travel as `abilityShort.<ab>` and
+  `combat.roll.save.<ab>` keys rather than as English text.
   **A trace's engine-written labels are keys; a content row's name is not.** `Contribution` carries
   `key`/`noteKey`/`params` beside its English, and `sourceText` words them where the translator is —
   the same split `formatNote` makes. "Cloak of Protection" carries none and passes through, because no
@@ -102,7 +107,7 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left:** the builder's remaining body copy,
+  **What is left:**
   and the CONTENT-HEALTH copy — every `issues[].reason` in `derive.ts` and the loader is an English
   sentence built where the fault is found, which is its own domain and its own pass. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the

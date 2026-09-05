@@ -12,7 +12,7 @@ import {
 	type Contribution,
 	type Translate,
 } from '$lib/rules/pipeline';
-import { titleCase, signed } from '$lib/util/format';
+import { abilityShortLabel, titleCase, signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
 import type { EffectInstance } from '$lib/character/schema';
@@ -88,7 +88,7 @@ function say(
 function targetLabel(t: string, translate?: Translate): string {
 	const known = TARGET[t];
 	if (known) return say(translate, known.key, known.en);
-	const ability = (id: string) => say(translate, `abilityShort.${id}`, id.toUpperCase());
+	const ability = (id: string) => abilityShortLabel(id, translate);
 	const skill = (id: string) => say(translate, `skillName.${id}`, titleCase(id));
 	if (t.startsWith('save.')) {
 		const ab = ability(t.slice(5));

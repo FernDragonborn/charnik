@@ -3,6 +3,7 @@
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { toast } from 'svelte-sonner';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
@@ -116,7 +117,7 @@
 						{#if r.resolution}<span class="resolution-tag {r.resolution}"
 								>{$_(r.resolutionLabelKey, {
 									...(r.resolutionAbility
-										? { values: { ability: $_(`abilityShort.${r.resolutionAbility}`) } }
+										? { values: { ability: abilityShortLabel(r.resolutionAbility, $_) } }
 										: {}),
 								})}</span
 							>{:else}<span></span>{/if}

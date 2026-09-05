@@ -1546,6 +1546,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
 - `const asText` — * A value of UNKNOWN shape → the text to show, or `fallback` when it isn't text.
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
+- `const abilityShortLabel` — What an ability is CALLED, short: `dex` → "DEX", "СПР".
 
 ### `src/lib/util/links.ts`
 
@@ -1571,4 +1572,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 931 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 932 exports across 127 modules · 62 duplicate suspects._

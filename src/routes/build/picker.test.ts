@@ -12,6 +12,8 @@ import { makeTempContentRoot } from '../../test-support/fixtures';
 const S = 'SRD 5.2.1';
 /** Stands in for `$_`: renders the key plus its values, so a test can see WHICH string was asked for
  *  without depending on the English wording. */
+// the stand-in catalog: a key echoes itself with its values, so an assertion can see WHICH catalog a
+// value was spelled in — the point of every expectation below
 const t = (key: string, options?: { values?: Record<string, string | number> }) =>
 	`${key}(${Object.values(options?.values ?? {}).join('|')})`;
 
@@ -40,7 +42,8 @@ describe('pickerMeta · every value comes from a declared column', () => {
 			return pickerMeta(row, t);
 		};
 
-		expect(meta('wizard')).toBe('d6 · INT, WIS');
+		// the saves name the `abilityShort` catalog too: "STR" is not the word every locale uses
+		expect(meta('wizard')).toBe('d6 · abilityShort.int(), abilityShort.wis()');
 		// the sheet's own origin sentence, so a species reads the same in both places
 		// …including its metric conversion, which is the shared helper's and not a local 0.3
 		expect(meta('dwarf')).toBe('build.origin.speciesMeta(creatureSize.medium()|30|9.1 m)');

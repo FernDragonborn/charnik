@@ -3,6 +3,7 @@
 	// per ASI/feat level. A character built straight to level 12 owes four of these, so each is its own
 	// row — an unfilled one reads crimson and is a click into the inspector, never a silent gap.
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { rowText } from '../rows';
 	import { ABILITIES } from '$lib/character/schema';
@@ -11,7 +12,7 @@
 	/** What a filled slot did, in one line — an ASI names the abilities it raised. */
 	function asiSummary(key: string): string {
 		const boost = b.feats.asiBoostFor(key);
-		const parts = ABILITIES.filter((a) => boost[a]).map((a) => `${a.toUpperCase()} +${boost[a]}`);
+		const parts = ABILITIES.filter((a) => boost[a]).map((a) => `${abilityShortLabel(a, $_)} +${boost[a]}`);
 		return parts.length ? parts.join(' · ') : $_('build.feats.asiNothing');
 	}
 </script>

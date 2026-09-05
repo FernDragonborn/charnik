@@ -6,7 +6,7 @@
 	import { build, rowName } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
 	import { splitList } from '$lib/content/schemas';
-	import { titleCase } from '$lib/util/format';
+	import { abilityShortLabel, titleCase } from '$lib/util/format';
 	import { metres } from '$lib/combat/constants';
 	import type { InspectorTarget } from '../inspector.svelte';
 	const b = build;
@@ -17,7 +17,7 @@
 
 	const bgSkills = $derived(splitList(background?.data.skills).map((s) => skillLabel(s, $_)));
 	const bgTools = $derived(splitList(background?.data.tools).map((t) => titleCase(t)));
-	const bgBoosts = $derived(splitList(background?.data.ability_choices).map((a) => a.toUpperCase()));
+	const bgBoosts = $derived(splitList(background?.data.ability_choices).map((a) => abilityShortLabel(a, $_)));
 
 	const open = (target: InspectorTarget) => b.inspector.toggle(target);
 </script>

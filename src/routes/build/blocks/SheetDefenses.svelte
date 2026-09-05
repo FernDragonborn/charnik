@@ -9,7 +9,7 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
-	import { signed, titleCase } from '$lib/util/format';
+	import { abilityShortLabel, signed, titleCase } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
 	import { provenance } from '$lib/actions/provenance';
 	import { damageTypeLabel } from '$lib/combat/attacks';
@@ -58,7 +58,7 @@
 				<span class="spacer"></span>
 				<span class="trail"
 					>{ABILITIES.filter((a) => s.abilities[a].saveProficient)
-						.map((a) => a.toUpperCase())
+						.map((a) => abilityShortLabel(a, $_))
 						.join(' · ') || $_('build.defenses.noneProficient')}</span
 				>
 			</div>
@@ -66,7 +66,7 @@
 				{#each ABILITIES as ab (ab)}
 					{@const block = s.abilities[ab]}
 					<div class="save" class:is-taken={block.saveProficient} use:provenance={why(block.save, $_)}>
-						<span class="code">{ab}</span>
+						<span class="code">{abilityShortLabel(ab, $_)}</span>
 						<b>{signed(block.save.value)}</b>
 					</div>
 				{/each}

@@ -7,6 +7,7 @@
 	import { why, signed, ABIL } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
+	import { abilityShortLabel } from '$lib/util/format';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const collapsed = $derived(combat.layout.collapsed);
@@ -37,7 +38,7 @@
 						roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)}
 				>
 					<span class="ability-name">
-						<b>{$_(`abilityShort.${ab}`)}</b> · {a.score.value}
+						<b>{abilityShortLabel(ab, $_)}</b> · {a.score.value}
 					</span>
 					<span class="ability-mod">{signed(a.mod)}</span>
 				</button>

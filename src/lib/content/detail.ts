@@ -4,7 +4,7 @@
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { asText, ordinal, signed, titleCase } from '$lib/util/format';
+import { abilityShortLabel, asText, ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
@@ -416,9 +416,7 @@ export function entryMeta(row: LoadedRow, t: Translate): string {
 						// the ability's short name is a catalog entry, so a save reads "ряткидок МУД" rather
 						// than an upper-cased English id — the same resolution the spell panel's chip makes
 						values: {
-							ability: t(`abilityShort.${String(d.save_ability).toLowerCase()}`, {
-								default: String(d.save_ability).toUpperCase(),
-							}),
+							ability: abilityShortLabel(String(d.save_ability).toLowerCase(), t),
 						},
 					})
 				: '',

@@ -85,7 +85,7 @@
 						? $_('build.classes.classMeta', {
 								values: {
 									die: String(clsRow.data.hit_die),
-									saves: savesLabel(clsRow.data.saves)
+									saves: savesLabel(clsRow.data.saves, $_)
 								}
 							})
 						: $_('build.classes.classHint')}</small

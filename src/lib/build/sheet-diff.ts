@@ -82,12 +82,12 @@ function numericChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 	for (const ab of ABILITIES) {
 		const from = before.abilities[ab].score.value;
 		const to = after.abilities[ab].score.value;
-		// the abbreviation is the whole label, and it is the same six letters in every locale the app
-		// already passes them to (`build.abilities.scoreLabel`)
+		// the abbreviation is the whole label — and it is NOT the same six letters in every locale, so
+		// it reads from the catalog like every other one (STR / СИЛ)
 		if (from !== to)
 			out.push({
 				id: ab,
-				label: { text: ab.toUpperCase() },
+				label: { key: `abilityShort.${ab}` },
 				from: num(from),
 				to: num(to),
 				better: to > from,
@@ -99,7 +99,9 @@ function numericChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 		if (saveFrom !== saveTo)
 			out.push({
 				id: `${ab}-save`,
-				label: { key: 'build.diff.save', values: { ability: ab.toUpperCase() } },
+				// the save's own name, the one the roll log says — one key for one fact, even though this
+				// module is build-side and that key is spelled under `combat`
+				label: { key: `combat.roll.save.${ab}` },
 				from: num(saveFrom, true),
 				to: num(saveTo, true),
 				better: saveTo > saveFrom,
