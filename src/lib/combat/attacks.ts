@@ -3,7 +3,7 @@
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
 import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
-import { weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
+import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { resolveItem } from '$lib/content/resolved-item';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -80,7 +80,9 @@ export interface Attack {
 	/** The structured damage the roll path rolls — one entry per damage type, each rolled + shown
 	 *  separately (BUG-DMG-1). The ability/magic mod is folded into the first (primary) part only. */
 	damageParts: DamagePart[];
-	meta: string;
+	/** The tags behind the row's kind line — worded by `attackMeta`, because what a tag is CALLED is a
+	 *  catalog entry and this row is built with no locale. */
+	meta: AttackMeta;
 	/** §A/§B the weapon's tag NAMES, which the roll path matches a scoped effect against — Archery
 	 *  (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
 	scopes: string[];
@@ -200,16 +202,34 @@ export function weaponBonus(tokens: string[]): {
 	};
 }
 
-/** The sub-line under an attack row: what kind of weapon it is, then the first thing it can do
- *  ("martial melee · versatile 1d10"). The kind tags lead in a fixed order so two weapons of the
- *  same kind never read differently because their CSV cells were written in another order. */
-function attackMeta(tags: ItemTags): string {
-	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
-	const kind = kindOrder.filter((t) => tags.has(t));
-	const first = [...tags].find(([name]) => !kind.includes(name));
-	return [kind.join(' '), first ? [first[0], first[1]].filter(Boolean).join(' ') : '']
+/** What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can
+ *  do ("martial melee · versatile 1d10"). */
+export interface AttackMeta {
+	/** The kind tags, in a fixed order, so two weapons of the same kind never read differently
+	 *  because their CSV cells were written in another order. */
+	kinds: string[];
+	/** The weapon's first property, name and value (`['versatile', '1d10']`). */
+	property?: [name: string, value: string];
+}
+
+/** An attack row's sub-line, in the reader's language. A tag's NAME is a vocabulary and reads from
+ *  the catalog; its VALUE is data (`versatile 1d10`, `thrown 20/60`) and passes through untranslated. */
+export function attackMeta({ meta }: Attack, translate?: Translate): string {
+	const property = meta.property;
+	return [
+		meta.kinds.map((t) => itemTagLabel(t, translate)).join(' '),
+		property ? [itemTagLabel(property[0], translate), property[1]].filter(Boolean).join(' ') : '',
+	]
 		.filter(Boolean)
 		.join(' · ');
+}
+
+/** The tags an attack row's sub-line reads, gathered off the weapon. */
+function metaTags(tags: ItemTags): AttackMeta {
+	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
+	const kinds = kindOrder.filter((t) => tags.has(t));
+	const property = [...tags].find(([name]) => !kinds.includes(name));
+	return { kinds, ...(property ? { property } : {}) };
 }
 
 /** §A: sum the character-level weapon-scoped `flat_bonus:attack:<category>` bonuses (Archery
@@ -322,7 +342,7 @@ export function computeAttacks(
 			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
 			damageParts,
-			meta: attackMeta(item.tags),
+			meta: metaTags(item.tags),
 			scopes: [...scopeSet],
 			...(notes.length ? { notes } : {}),
 		});
@@ -340,7 +360,7 @@ export function computeAttacks(
 		toHit: strMod + prof + unarmedScoped.attack,
 		scopes: [...unarmedScopes],
 		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
-		meta: 'melee',
+		meta: { kinds: [ITEM_TAG.melee] },
 		...(unarmedScoped.notes.length ? { notes: unarmedScoped.notes } : {}),
 	});
 	return out;

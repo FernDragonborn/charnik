@@ -40,6 +40,7 @@ import {
 	standardActions,
 	effectiveHpMax,
 	weaponBonus,
+	attackMeta,
 	attackNotes,
 	enhancementTokens,
 	describeDerivedEffects,
@@ -260,7 +261,7 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 			name: 'X',
 			toHit: 0,
 			damageParts: [],
-			meta: '',
+			meta: { kinds: [] },
 			scopes: [],
 			notes: [
 				{ text: '+1 attack', key: 'combat.attacks.noteAttackBonus', params: { amount: '+1' } },
@@ -276,6 +277,27 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 					: (o?.default ?? key);
 		expect(attackNotes(attack)).toBe('+1 attack; Damage +1d6');
 		expect(attackNotes(attack, uk)).toBe('+1 до атаки; Шкода +1d6');
+	});
+
+	it('attackMeta words the tag NAMES and passes a tag VALUE through as data', () => {
+		const greatsword = {
+			id: 'g',
+			name: 'G',
+			toHit: 0,
+			damageParts: [],
+			scopes: [],
+			meta: { kinds: ['martial', 'melee'], property: ['versatile', '1d10'] as [string, string] },
+		};
+		const uk: Translate = (key, o) =>
+			({
+				'itemTag.martial': 'військова',
+				'itemTag.melee': 'ближня',
+				'itemTag.versatile': 'універсальна',
+			})[key] ??
+			o?.default ??
+			key;
+		expect(attackMeta(greatsword)).toBe('martial melee · versatile 1d10');
+		expect(attackMeta(greatsword, uk)).toBe('військова ближня · універсальна 1d10');
 	});
 
 	it('D9-tail · a TYPED dice bonus (flaming) becomes its own extra damage part', () => {

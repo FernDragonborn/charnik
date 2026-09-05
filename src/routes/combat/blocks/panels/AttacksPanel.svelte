@@ -4,7 +4,7 @@
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { signed } from '$lib/combat/helpers';
-	import { attackName, attackNotes, formatDamageParts } from '$lib/combat/attacks';
+	import { attackMeta, attackName, attackNotes, formatDamageParts } from '$lib/combat/attacks';
 	const attacks = $derived(combat.attacks);
 </script>
 
@@ -19,7 +19,7 @@
 			>{signed(at.toHit)}</span
 		>
 		<span class="combat-row-desc">{formatDamageParts(at.damageParts, $_)}</span><span
-			class="combat-row-marker">{at.meta}</span
+			class="combat-row-marker">{attackMeta(at, $_)}</span
 		>
 	</button>
 {/each}

@@ -655,6 +655,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const damageTypeLabel` — What a damage type is CALLED.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
+- `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
+- `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 
 ### `src/lib/combat/constants.ts`
@@ -834,6 +836,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type WeaponCategory`
 - `type ArmorCategory`
 - `const NUMERIC_TAGS` — Tags whose value must be a whole number.
+- `const itemTagLabel` — What a tag is CALLED.
 - `function parseItemTags` — Parse a `tags` cell into name → value.
 - `function tagInt` — A numeric tag's value, or `null` when the tag is absent or not a number.
 - `function armorWeightOf` — The armor weight an `armor:<weight>` tag names, or undefined when it names nothing known.
@@ -1563,4 +1566,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 923 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 926 exports across 127 modules · 62 duplicate suspects._

@@ -78,6 +78,11 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
+  **An item tag's word lives in the catalog, not in a table in code.** `itemTagLabel` is a lookup with
+  the raw tag name as its default, so the app-known vocabulary (`two_handed` → "two-handed", "дворучна")
+  is 22 catalog entries and a homebrew tag still reads exactly as its author wrote it. An attack row
+  carries its `AttackMeta` tags and `attackMeta` words them; a tag's VALUE (`versatile 1d10`,
+  `thrown 20/60`) is data and passes through.
   **An attack row's notes are FACTS, not a sentence.** Each is a `Note` — the same `{text, key, params}`
   the engine's own rule notes carry — and `attackNotes` words them at the panel, where `$_` is. The one
   thing that could not be a key is an effect token the build cannot fold: it travels whole
@@ -92,8 +97,10 @@
   **What is left:** the AUTO-OUTCOME marker — `logMarker` takes a `RollName` now and every other
   marker carries its key, but this one's sentence names a ROLL whose own name is a key, and an entry
   holds one. Making it read in the reader's language wants the outcome as a FACT on the entry (the
-  shape amendments already have) rather than a word baked into its label. Then the ATTACK META — a
-  weapon's kind line ("martial melee · versatile 1d10") is still assembled from tag ids. Then the builder's remaining body copy,
+  shape amendments already have) rather than a word baked into its label. Then a computed value's TRACE:
+  `Contribution.source` is a human label the rules core writes in English ("Armor", "DEX mod",
+  "Proficiency"), so every provenance line under a stat mixes translated notes with English sources.
+  Then the builder's remaining body copy,
   and the CONTENT-HEALTH copy — every `issues[].reason` in `derive.ts` and the loader is an English
   sentence built where the fault is found, which is its own domain and its own pass. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the

@@ -18,6 +18,7 @@
  * `resolved-item.ts` on top of this.
  */
 import { splitList } from './schemas';
+import type { Translate } from '$lib/i18n';
 
 /** Tag name → its value (`''` for a bare tag like `finesse`). */
 export type ItemTags = ReadonlyMap<string, string>;
@@ -50,6 +51,13 @@ export type ArmorCategory = ArmorWeight | 'shield';
  *  it — `ac: optInt` rejected `"eleven"` by column name, `ac:eleven` inside a list is just a string —
  *  so these are re-checked at load and a bad one becomes a content-health issue, never a silent 0. */
 export const NUMERIC_TAGS: readonly string[] = [ITEM_TAG.ac, ITEM_TAG.dexCap, ITEM_TAG.strMin];
+
+/** What a tag is CALLED. The name is an id (`two_handed`) and the catalog holds the word for it, so
+ *  the vocabulary lives in the message files rather than as a second table in code; a tag nobody has
+ *  a word for reads as its author wrote it. Takes the translator, like every other label in a pure
+ *  module (docs/internals/ui.md ▸ Strings live in the catalogs). */
+export const itemTagLabel = (name: string, translate?: Translate): string =>
+	translate ? translate(`itemTag.${name}`, { default: name }) : name;
 
 /** Parse a `tags` cell into name → value. Whitespace anywhere is harmless (`mastery: Nick` is
  *  `mastery:nick`); a repeated name keeps the last one. */
