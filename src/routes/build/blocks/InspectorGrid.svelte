@@ -36,7 +36,7 @@
 		options={ins.options}
 		bind:query={ins.query}
 		previewId={ins.previewId}
-		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
+		takenId={ins.pick.currentId}
 		onpreview={(id) => (ins.previewId = id)}
 		ontake={ins.take}
 		detail={ins.detail}

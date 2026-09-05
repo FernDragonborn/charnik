@@ -208,9 +208,29 @@ is depends on the target, and `Inspector.bodyScrolls` decides.
 
 **The caret stays in the search box.** An option is a real button, so it can be tabbed to — and a
 walk started from there hands focus back to the search box rather than leaving a ring on one option
-while Enter takes another. That is why the search box is a `combobox` naming the highlight through
+while Enter takes another. That is why the search box is a `searchbox` naming the highlight through
 `aria-activedescendant`: with focus that never moves, it is the only thing a screen reader has to go
 on. Enter is the search box's to interpret; on a focused option the browser's own Enter is right.
+
+**Not a `combobox`, and the big list is not a `listbox`.** APG's combobox is single-select with
+selection following focus; these walks are multi-select and deliberately commit nothing, so the role
+promised a behaviour the pickers refuse to have. `CommandPalette` is the one place the
+combobox/listbox pair is right — single-select, selection follows the highlight, a transient popup —
+which is why it keeps both while the builder's pickers do not.
+
+`SectionedPicker` is a one-column **`grid`**: a row there carries two independent controls (take, and
+read), `option` is Children-Presentational, so a take toggle inside one flattens to text an AT user
+cannot reach — `listbox` structurally cannot express rule 6. A section header is a `row` carrying
+`aria-expanded` around one `gridcell`; an option is a `row[aria-selected]` around one `gridcell`
+holding both buttons, and that **gridcell is what `aria-activedescendant` names** (NVDA leaves forms
+mode when it names anything else in a grid, nvaccess/nvda#16414). One column, so there is no
+Left/Right walk to define and nothing to mirror in RTL. Its tab stops **rove**: the highlighted row
+holds them, the first row when nothing is highlighted, so an open spell list is two stops rather than
+1316. Section headers keep their own — the jump rail only ever expands, so a header that cannot be
+reached is a section that cannot be collapsed.
+
+`OptionGrid` stays a single-select `listbox` (its one taken row is its `aria-selected` one) and
+`LanguagesPane` a multi-select one that says `aria-multiselectable`.
 
 `PickerCard` is also what the **sheet's** clamped prose opens — a class feature is two lines and an
 ellipsis on `SheetClasses`, and two lines with no way past them is the same defect as picking blind.

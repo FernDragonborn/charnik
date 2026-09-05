@@ -3,9 +3,11 @@
 	// left. One component rather than one per picker — the grid and the sectioned list ask the same
 	// question of the same lists, and two copies of a search box drift.
 	//
-	// It is a COMBOBOX over its picker's list, the same shape the command palette uses: the caret
-	// never leaves this box, so the highlighted option is announced through `aria-activedescendant`
-	// rather than by moving focus. Without it a screen reader hears the arrows do nothing.
+	// It is a SEARCHBOX naming its picker's highlight through `aria-activedescendant`: the caret never
+	// leaves this box, so that is the only way a screen reader hears the arrows do anything. Not a
+	// combobox — APG's is single-select with selection following focus, and these pickers are
+	// multi-select walks that deliberately commit nothing (`option-walk.ts`). The command palette IS
+	// a combobox, and says why it differs: `docs/internals/ui.md` ▸ the picker contract.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 
@@ -35,8 +37,8 @@
 
 <div class="lsearch">
 	<span class="search-icon"><Icon name="search" size={13} /></span>
-	<!-- A placeholder is not a name: it is gone the moment anything is typed, and a `combobox` owes
-	     one at all times. The house pattern is the visually-hidden label. -->
+	<!-- A placeholder is not a name: it is gone the moment anything is typed, and this box owes one at
+	     all times. The house pattern is the visually-hidden label. -->
 	<label class="visually-hidden" for={inputId}>{$_('build.picker.searchLabel')}</label>
 	<input
 		id={inputId}
@@ -44,8 +46,7 @@
 		{placeholder}
 		bind:value={query}
 		{onkeydown}
-		role="combobox"
-		aria-expanded={count > 0}
+		role="searchbox"
 		aria-controls={listId}
 		aria-activedescendant={activeId}
 		autocomplete="off"

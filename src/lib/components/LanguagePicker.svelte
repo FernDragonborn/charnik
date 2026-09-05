@@ -54,20 +54,16 @@
 </script>
 
 <div class="lang-picker" use:root>
-	<button
-		class="trigger"
-		class:accent
-		aria-haspopup="listbox"
-		aria-expanded={open}
-		onclick={() => (open = !open)}
-	>
+	<button class="trigger" class:accent aria-expanded={open} onclick={() => (open = !open)}>
 		<span class="name">{languageName(value)}</span>
 		<span class="code">{value.toUpperCase()}</span>
 		<span class="caret"><Icon name="chevron-down" size={12} /></span>
 	</button>
 
 	{#if open}
-		<div class="menu" role="listbox">
+		<!-- a panel of buttons with a search box in it, and no role that claims otherwise: it held
+		     `listbox` while containing an input, section headings and not one `option` -->
+		<div class="menu">
 			<input
 				class="search"
 				placeholder={$_('languagePicker.search')}

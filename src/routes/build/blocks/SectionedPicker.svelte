@@ -69,6 +69,19 @@
 	const allOpen = $derived(shown.length > 0 && shown.every((s) => openKeys.includes(s.key)));
 	/** The rows the keyboard can reach — only what is actually rendered. */
 	const walkable = $derived(shown.filter((s) => isOpen(s.key)).flatMap((s) => s.rows));
+	/**
+	 * The ONE row whose controls are tab stops (roving tabindex).
+	 *
+	 * Every rendered row used to be two of them, so Tab through an open spell picker was 1316 stops
+	 * before the pane after it. The highlighted row holds them instead, and with no highlight the
+	 * first row does — a grid nothing can be tabbed into is the other way to make the take toggle
+	 * unreachable.
+	 */
+	const tabRowId = $derived(
+		(previewId && walkable.some((r) => r.effectiveId === previewId)
+			? previewId
+			: walkable[0]?.effectiveId) ?? null,
+	);
 	const peekRow = $derived(walkable.find((r) => r.effectiveId === peeking));
 	const previewRow = $derived(
 		sections.flatMap((s) => s.rows).find((r) => r.effectiveId === previewId),
@@ -171,10 +184,15 @@
 	</button>
 </div>
 
+<!-- A GRID, not a listbox: a row here carries TWO independent controls (take, and read), and an
+     `option` is Children-Presentational — moving the take toggle inside one would flatten it to text
+     no AT user can reach. One column, so there is no Left/Right walk to define and nothing to mirror
+     in RTL. `docs/internals/ui.md` ▸ the picker contract. -->
 <div
 	class="rows scrolly"
 	id={picker.listId}
-	role="listbox"
+	role="grid"
+	aria-multiselectable="true"
 	tabindex="-1"
 	aria-label={$_('build.inspector.options')}
 	bind:this={list}
@@ -184,70 +202,75 @@
 	{#each shown as section (section.key)}
 		{@const open = isOpen(section.key)}
 		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
-		<button
-			class="sect"
-			class:shut={!open}
-			data-section={section.key}
-			aria-expanded={open}
-			onclick={() => toggleSection(section.key)}
-		>
-			<Icon name={open ? 'chevron-down' : 'chevron-right'} size={12} />
-			<span class="sname">{section.label}</span>
-			<span class="sof">
-				{#if got}<span class="gold">{$_('build.picker.sectionTaken', { values: { count: got } })}</span> ·
-				{/if}{section.rows.length}
-			</span>
-		</button>
+		<div class="sect-row" role="row" aria-expanded={open}>
+			<div class="sect-cell" role="gridcell">
+				<button class="sect" class:shut={!open} data-section={section.key} onclick={() => toggleSection(section.key)}>
+					<Icon name={open ? 'chevron-down' : 'chevron-right'} size={12} />
+					<span class="sname">{section.label}</span>
+					<span class="sof">
+						{#if got}<span class="gold">{$_('build.picker.sectionTaken', { values: { count: got } })}</span> ·
+						{/if}{section.rows.length}
+					</span>
+				</button>
+			</div>
+		</div>
 		{#if open}
 			{#each section.rows as row (row.effectiveId)}
 				{@const id = row.effectiveId}
 				{@const on = taken.has(id)}
 				{@const name = rowName(row)}
-				<!-- presentational: a listbox's children are options, and this is the row's layout box -->
-					<div
-						class="srow"
-						role="presentation"
-						class:is-taken={on}
-						class:is-active={id === previewId}
-						data-entry={id}
-					>
-					<button
-						class="addbtn"
-						class:on
-						aria-pressed={on}
-						aria-label={$_(on ? 'build.picker.removeRow' : 'build.picker.takeRow', {
-							values: { name },
-						})}
-						onclick={() => ontake(id)}
-					>
-						<Icon name="check" size={12} />
-					</button>
-					<!-- a double-click is the shortcut to the toggle beside it: the hand is already on the
-					     row, and the ✓ is a small target to travel to for something you do dozens of
-					     times. It commits nothing a single click does, so reading stays free. -->
-					<button
-						class="sbody"
-						id={picker.optionId(id)}
-						role="option"
-						aria-selected={on}
-						onclick={(event) => event.detail < 2 && picker.read(id)}
-						ondblclick={() => {
-							ontake(id);
-							picker.close();
-						}}
-						onmouseenter={() => (peeking = id)}
-						onmouseleave={() => (peeking = null)}
-						onfocus={() => (peeking = id)}
-						onblur={() => (peeking = null)}
-					>
-						<b>{name}</b>
-						<span class="smeta">{pickerMeta(row, $_)}</span>
-					</button>
+				<div
+					class="srow"
+					role="row"
+					aria-selected={on}
+					class:is-taken={on}
+					class:is-active={id === previewId}
+					data-entry={id}
+				>
+					<!-- the cell is what `aria-activedescendant` names: NVDA drops out of forms mode when it
+					     is pointed at anything else in a grid (nvaccess/nvda#16414) -->
+					<div class="scell" role="gridcell" id={picker.optionId(id)}>
+						<button
+							class="addbtn"
+							class:on
+							tabindex={id === tabRowId ? 0 : -1}
+							aria-pressed={on}
+							aria-label={$_(on ? 'build.picker.removeRow' : 'build.picker.takeRow', {
+								values: { name },
+							})}
+							onclick={() => ontake(id)}
+						>
+							<Icon name="check" size={12} />
+						</button>
+						<!-- a double-click is the shortcut to the toggle beside it: the hand is already on the
+						     row, and the ✓ is a small target to travel to for something you do dozens of
+						     times. It commits nothing a single click does, so reading stays free. -->
+						<button
+							class="sbody"
+							tabindex={id === tabRowId ? 0 : -1}
+							onclick={(event) => event.detail < 2 && picker.read(id)}
+							ondblclick={() => {
+								ontake(id);
+								picker.close();
+							}}
+							onmouseenter={() => (peeking = id)}
+							onmouseleave={() => (peeking = null)}
+							onfocus={() => (peeking = id)}
+							onblur={() => (peeking = null)}
+						>
+							<b>{name}</b>
+							<span class="smeta">{pickerMeta(row, $_)}</span>
+						</button>
+					</div>
 				</div>
 			{/each}
 		{/if}
 	{:else}
-		<p class="subtext nomatch">{$_('build.inspector.noMatch', { values: { query } })}</p>
+		<div role="row">
+			<div role="gridcell">
+				<p class="subtext nomatch">{$_('build.inspector.noMatch', { values: { query } })}</p>
+			</div>
+		</div>
 	{/each}
 </div>
 
@@ -337,27 +360,31 @@
 		margin: var(--space-1) var(--space-2);
 	}
 
-	.sect {
-		all: unset;
-		box-sizing: border-box;
+	/* the header ROW is what sticks: the button is a grid cell inside it now, and a sticky child of a
+	   non-sticky wrapper travels no further than the wrapper does */
+	.sect-row {
 		position: sticky;
 		top: -8px;
 		z-index: 3;
+		margin: var(--space-1-5) 0 2px;
+	}
+	.sect-row:first-child {
+		margin-top: 0;
+	}
+	.sect {
+		all: unset;
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
 		width: 100%;
 		padding: var(--space-1-5) var(--space-2-5);
-		margin: var(--space-1-5) 0 2px;
 		border-radius: var(--radius);
 		cursor: pointer;
 		background: var(--color-bg);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-	}
-	.sect:first-child {
-		margin-top: 0;
 	}
 	.sect:hover {
 		background: var(--color-surface-2);
@@ -382,9 +409,6 @@
 	/* a row is TWO controls: the state toggle on the left, the body that reads. The wrapper carries
 	   the state so both halves are inside the same lit box. */
 	.srow {
-		display: flex;
-		align-items: stretch;
-		gap: var(--space-1);
 		margin: 0 var(--space-1-5);
 		border: 1px solid transparent;
 		border-radius: var(--radius);
@@ -394,6 +418,13 @@
 	.srow:hover {
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
+	}
+	/* one cell per row (the grid is one column), so the cell is where the row's two controls sit side
+	   by side — the layout the row itself carried while it was a plain box */
+	.scell {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-1);
 	}
 	/* the control itself is `.addbtn` in build.css — shared with the feat pane's ASI row, which asks
 	   the same question. Where it sits in THIS row is what stays here. */

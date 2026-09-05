@@ -180,7 +180,21 @@ const ROUTES = [
 	},
 	// every inspector target at once over one level-8 caster draft — the only place the sectioned
 	// spell and equipment pickers, and the panes that scroll as plain content, are all in one frame
-	{ path: '/dev/inspector', wait: '.col', states: [{ name: 'dev-inspector', settle: 600 }] },
+	{
+		path: '/dev/inspector',
+		wait: '.col',
+		states: [
+			{ name: 'dev-inspector', settle: 600 },
+			// with a section open: everything is collapsed at rest, so the picker's ROWS — the take
+			// toggle, the body, the state fills — are on screen in no other state
+			{
+				name: 'dev-inspector-picker-open',
+				prep: (p) => p.locator('.sect').first().click(),
+				ready: '[data-entry]',
+				settle: 300,
+			},
+		],
+	},
 	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share

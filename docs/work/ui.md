@@ -11,47 +11,6 @@
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
-  - [ ] **The sectioned picker's ARIA shape — a ONE-COLUMN `grid`, and `combobox` comes off.**
-        The section-header `<button>` is the least of it. `role="presentation"` on `.srow` does not
-        hide its descendants (ARIA 1.2 §presentation exposes non-presentational children), so the
-        listbox's illegal children are not 8–14 headers but **658/773 `.addbtn` take toggles** — and
-        the escape hatch is shut, because `option` is Children-Presentational, so moving the toggle
-        inside the option flattens it to text an AT user cannot reach. ⇒ **`listbox` structurally
-        cannot express two independent controls per row**, which `ui.md` ▸ picker contract rule 6
-        ("reading and taking are separate controls") makes non-negotiable. That, not the header, is
-        why the role has to change.
-        `role="combobox"` is wrong for a second, independent reason: APG defines a combobox as
-        **single-select with selection following focus**, and this picker is multi-select whose
-        arrows deliberately never commit (`option-walk.ts`). `aria-activedescendant` is what was
-        actually needed, and MDN names `searchbox` alongside `combobox` as a valid holder of it — so
-        the role goes and nothing is lost.
-        **Shape: one cell per row.** `role="grid"` + `aria-multiselectable`; a header is a `row`
-        carrying `aria-expanded` (which `row` supports natively) around one `gridcell` holding the
-        real button; an option is a `row[aria-selected]` around one `gridcell` holding both buttons.
-        One column means no `aria-colspan`, no Left/Right walk to define, nothing to mirror in RTL,
-        and no "column 1 of 2" for any screen reader to say — the two-column shape imports exactly
-        the verbosity this was worried about, for a split carrying no information. **No `subgrid`**:
-        `.rows` is a flex column, not a shared grid, so a plain wrapper is already zero pixels.
-        Keep `aria-activedescendant` naming the **gridcell** and never a header — NVDA #16414 drops
-        out of forms mode when it names a non-gridcell, and `walkable` already excludes headers, so
-        this is an invariant to assert in a test rather than a change.
-        Rejected: one listbox per section (does not fix `.addbtn` at all, and `aria-activedescendant`
-        is defined against ONE controlled element); a non-interactive header (same, plus its stated
-        fallback does not exist — `jumpTo` only ever ADDS to `openKeys`, so the rail cannot collapse
-        one section, which would make this a one-way door); `role="tree"` (`treeitem`'s superclass is
-        `option`, so `.addbtn` is unsafe there too).
-        **Hand-test when it lands** (interaction, so it is confirmed in the running app): the sticky
-        header is the likeliest silent regression — `position: sticky` must move onto the new row
-        wrapper or the header can no longer travel; a collapsed section must still not hide a search
-        match; Home/End stays as it is (already APG-correct); no first-letter type-ahead (printable
-        keys belong to the search box); Enter-Enter still takes; RTL; and `Inspector.svelte`'s
-        `OPERABLE` list mentions `[role="option"]`, which disappears.
-        **`ui.md` ▸ picker contract says the search box is a `combobox`** — true of the code today,
-        and it must be rewritten in the same commit that changes it.
-  - [ ] **Keyboard navigation past the double-Enter take.** The walk moves the highlight and takes,
-        but does not reach the take toggle, the jump rail or the card's own controls without `Tab`.
-        Roving tabindex inside the row; **the jump rail stays its own tab stop** rather than joining
-        the arrow cycle, so the arrows keep meaning one thing.
 - [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **DONE** — the Features panel. A character
   can read their own class features, species traits, background and feats on the play sheet, as
   separate sections and never one blob. It reads `character/features.ts`, NOT the sheet's effect
@@ -119,15 +78,6 @@
   at PICK time** (longest side ~512px): the picker hands over whatever a phone camera produced, and a
   12 MB JPEG in a folder the user is told they own is a worse gift than a resized one. Losing the
   photo when an unsaved build is abandoned is how every other draft field already behaves.
-- [ ] **A11Y-LISTBOX · three more listboxes claiming something they are not.** Found by the same rule
-  that condemned the sectioned picker, so they belong in that change rather than in three visits.
-  `SectionedPicker` and `OptionGrid` set `aria-selected` per row independently while declaring a
-  listbox with **no `aria-multiselectable`** — a single-select list reporting twenty selected options.
-  `LanguagesPane` already gets this right, so the house has one name for the fact and two of three
-  call sites ignore it. Worse, **`LanguagePicker` is a `role="listbox"` containing an `<input>`,
-  section headers and bare `<button>`s with no `role="option"` anywhere** — a listbox with zero
-  options. `CommandPalette` is the one place the combobox/listbox pair IS correct (single-select,
-  selection follows the highlight, transient popup); `ui.md` should say why it differs.
 - [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
 - [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
   in that bar signals it the same way (hover + pointer + the global focus ring).

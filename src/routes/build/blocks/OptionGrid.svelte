@@ -23,7 +23,7 @@
 		options,
 		query = $bindable(''),
 		previewId,
-		takenIds,
+		takenId,
 		onpreview,
 		ontake,
 		detail,
@@ -35,8 +35,10 @@
 		query?: string;
 		/** The highlighted option — what the diff below the grid, and any open card, are about. */
 		previewId: string | null;
-		/** Already chosen. A list because the same control serves a one-of pick and a many-of one. */
-		takenIds: string[];
+		/** The one already chosen, or nothing. Singular because this grid IS a one-of pick — the
+		 *  listbox it declares says single-select, and a second `aria-selected` row would make that a
+		 *  lie. Many-of surfaces have their own controls (`SectionedPicker`, `LanguagesPane`). */
+		takenId: string | null;
 		/** Highlight. Never commits anything. */
 		onpreview: (id: string) => void;
 		/** Commit, from the card's own take button — reading and taking are separate acts (ui.md §6). */
@@ -54,7 +56,7 @@
 		below?: Snippet;
 	} = $props();
 
-	const taken = $derived(new Set(takenIds));
+	const isTaken = (id: string) => id === takenId;
 	let grid = $state<HTMLElement | null>(null);
 	const previewRow = $derived(options.find((o) => o.effectiveId === previewId));
 
@@ -101,11 +103,11 @@
 				id={picker.optionId(row.effectiveId)}
 				data-entry={row.effectiveId}
 				role="option"
-				aria-selected={taken.has(row.effectiveId)}
+				aria-selected={isTaken(row.effectiveId)}
 				aria-disabled={why ? true : undefined}
 				title={why}
 				class:is-active={row.effectiveId === previewId}
-				class:is-taken={taken.has(row.effectiveId)}
+				class:is-taken={isTaken(row.effectiveId)}
 				class:is-blocked={!!why}
 				onclick={(event) => event.detail < 2 && picker.read(row.effectiveId)}
 				ondblclick={() => {
@@ -130,7 +132,7 @@
 		entryId={previewId}
 		title={rowName(previewRow)}
 		{detail}
-		taken={taken.has(previewId)}
+		taken={isTaken(previewId)}
 		ontake={() => ontake(previewId)}
 		onclose={picker.close}
 	/>

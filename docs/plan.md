@@ -249,10 +249,6 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **The a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
-  one-column `grid`) + keyboard navigation past the double-Enter take. It is the same ruling applied
-  in four places; split up, it gets re-derived four times, and the picker's shape is already decided
-  down to why `aria-activedescendant` names the gridcell.
 - **"Everything is doable from the UI", where it is not.** Edit and delete existing homebrew,
   the generic grid for spell and monster, the UI type-assign form, and authoring a `resource` /
   `resource_option` row at all. A shipped invariant currently unmet, not a feature.
