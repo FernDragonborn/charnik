@@ -169,16 +169,17 @@ together, so there is nothing to save by trimming it. A subset is a false green:
 type-checks but does not catch build and prerender failures, `pnpm build` type-checks *nothing*
 (vite transpiles with esbuild), and `pnpm test` runs the browser project too.
 
-**Run it in the BACKGROUND and keep working.** The gate is a minute of waiting per commit, and there
-is always the next file to read while it runs — start it detached, survey what you are about to touch,
+**Anything you would SIT AND WAIT for goes in the background.** The trigger is the waiting, not the
+command — the gate, `pnpm dev`, `shot.mjs`, `lint:typed:changed`, a converter run, all of it. There is
+always the next file to read while it runs, so start it detached, survey what you are about to touch,
 and read its result before you commit. Two rules make that safe: never edit a file while a run that
 reads it is in flight (vitest and eslint read as they go, so a mid-run edit is a result about nothing),
-and never commit on a run you have not read. The same goes for `shot.mjs` and a long `pnpm dev`.
+and never commit on a run you have not read.
 
 The type-aware rules are the one gate too slow to run whole. Run **`pnpm lint:typed:changed`** (~15 s,
 same rules, only the files you touched) as you work, and full `pnpm lint:typed` before a release —
-over eleven minutes, so start it in the background early. The scoped pass cannot replace it: widen a return
-type to `Promise<T>` and the floating promise lands in a caller you did not edit.
+over eleven minutes. The scoped pass cannot replace it: widen a return type to `Promise<T>` and the
+floating promise lands in a caller you did not edit.
 
 ## Verifying
 
