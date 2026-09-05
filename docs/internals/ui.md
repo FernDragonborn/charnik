@@ -334,6 +334,43 @@ method, and a writing prompt are each a fixed id list in code and a set of catal
 "Lineage" — passes through as an ICU *value*, because no UI catalog can know what a user's pack calls
 its columns.
 
+**A phrase is ONE key, never a noun substituted into a frame.** "Перевірка СИЛ" is not what
+`{ability} check` produces in any inflected language, so the twelve flat roll labels are twelve keys
+and a translator sees the whole sentence. Where the wording branches — a count, a mode, a
+suggestion being close enough — it is a whole key or a whole ICU branch per case, never a sentence
+glued from halves. The same rule is why a *grammatical gender* gets its own catalog: `heavy` describes
+an armour and a weapon with one English word and two Ukrainian ones, so `armorCategory` exists rather
+than sharing `itemTag`'s.
+
+**A label the PLAYER can rename is written in their language, not kept as a key.** A custom
+modifier's default name ("+1 to AC") is their own effect's title and editable the moment it exists, so
+`modTargetLabel` composes it through `translator()`. That is the opposite call from a roll's name,
+which the log re-reads long afterwards and therefore keeps as a key — the difference is who owns the
+string after it is written.
+
+**One name per fact, one home per catalog.** An ability's short name is `abilityShortLabel` and
+nowhere else; an item tag's word is `itemTagLabel`, a lookup whose default is the raw tag, so the
+app-known vocabulary reads as a catalog entry and a homebrew tag reads exactly as its author wrote it.
+A tag's VALUE (`versatile 1d10`) is data and passes through.
+
+**A pure producer upstream of a component hands over FACTS, not a rendered line.** An attack row's
+notes are `Note`s, a detail view's cells are `SaidText`, a compendium heading is a key plus the
+value in it. Threading a translator into the producer instead freezes the language: the view-models
+here derive off `app.activeLocale`, which the layout pushes into `svelte-i18n` in an EFFECT, so a
+translator read at derive time is one locale behind and never re-read. Where a helper genuinely
+composes text it takes the translator as a PARAMETER and is called from the view.
+
+**Deliberately untranslated, so it is not re-proposed:** the `/dev/*` previews, whose copy describes
+the harness and not the app; a theme's TOKEN names, because the token is the key the user types into
+their own theme JSON and a translated label would name something they cannot find in the file. A VM
+toast reads the store one-shot inside a function (`get(_)`) — a toast is fire-and-forget, so that is
+correct; at module top level it would freeze at the load-time locale.
+
+**A locale is not free of layout consequences.** The turn bar's container-query thresholds are the MAX
+over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type` zeroes the
+min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per the recipe in
+`Turnbar.svelte` when a locale is added.
+
 **The catalogs are loaded at RUNTIME, and the locale list is discovered.** A user drops a JSON file
 in and switches to it live — a locale is never a release we plan or a list we hardcode. A missing key
 falls back to English rather than showing the key; sorting goes through `Intl.Collator` for the

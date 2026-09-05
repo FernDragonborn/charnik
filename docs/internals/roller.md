@@ -195,16 +195,24 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   legacy reader is the seam for that, not a migration. The persisted entry and the in-session entry
   are the SAME shape (`logLineFor` is the one builder an append and a revision share), and an
   amendment REWRITES its own line rather than appending a second record of one roll.
+- **A roll's NAME is a catalog key plus the word that is data.** `labelKey`/`labelValues` carry which
+  sentence and what goes into it; `label` stays beside them as the English fallback, which is also all
+  a custom roll or a homebrew spell's name ever has. A content row's own word passes through — no
+  catalog knows what a user's pack calls its spell — while the phrase around it is the app's, and a
+  slot picks a different key rather than being appended to the phrase it produced. A forced outcome is
+  the same shape one field over: `outcome` is a FACT on the entry and `RollRow` says "{label} —
+  auto-fail" around it, because a marker holds one key and the sentence could not have been one.
+
 - **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
   SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled
   nothing; `amendments: RollAmendment[]` says what was changed after the roll — advantage re-read, a
   damage part rerolled. `rollToastModel` and `describeAmendments` are the two places that turn them
   into words, both taking the translator. `note` is the PLAYER's own words from a `note` pill, which
   are data and pass through; a row written before 2026-09-05 also carries the app's prose there, and
-  that still renders — it is the legacy seam, and nothing writes it any more. Prose composed into `note` had to be matched back out with a
-  regex, which ate an upcast's provenance once and grew the note a lap; prose already written into
-  `log.jsonl` also cannot be localised afterwards, which is why this precedes the i18n sweep. Only
-  what cannot be derived is stored: an advantage amendment carries the two MODES, never the dice,
+  that still renders — it is the legacy seam, and nothing writes it any more. Prose composed into
+  `note` had to be matched back out with a regex, which ate an upcast's provenance once and grew the
+  note a lap; prose already written into `log.jsonl` also cannot be localised afterwards, which is the
+  whole reason the record keeps facts. Only what cannot be derived is stored: an advantage amendment carries the two MODES, never the dice,
   because the roll's own `d20s` are the record of those. The pre-2026-09-04 sentence is stripped by
   `withoutLegacyAmendment` the first time such a roll is amended — the `parseLegacyExpr` seam again.
 - **Never a silently-wrong number.** Where the roller cannot express a mechanic it surfaces a reminder

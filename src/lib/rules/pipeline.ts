@@ -101,7 +101,7 @@ const asNote = (
 /** i18n keys for the labels the ENGINE writes into a trace — the ONE owner, like `NOTE_KEY` for its
  *  rule notes. Per-ability families are flat (`abilityMod.str`), because "мод. СИЛ" is a phrase a
  *  translator has to see whole rather than an ability substituted into an English frame
- *  (docs/work/ui.md ▸ ARCH-1). */
+ *  (docs/internals/ui.md ▸ Strings live in the catalogs). */
 export const SOURCE_KEY = {
 	abilityMod: (ability: string) => `provenance.source.abilityMod.${ability}`,
 	abilityScore: (ability: string) => `provenance.source.abilityScore.${ability}`,

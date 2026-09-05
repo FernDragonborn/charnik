@@ -249,11 +249,6 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **The i18n sweep · ARCH-1.** Both prerequisites are clear: UX-1 settled the copy, and the roller
-  records facts rather than prose — an amendment is `{kind, from, to}` and one function turns it into
-  words, so there is a single target to localise instead of sentences already written into
-  `log.jsonl`. Damage types take catalog names in the same pass: the 13 SRD types are a closed rules
-  vocabulary, while an invented homebrew type stays data and passes through.
 - **The cheap surface wins, which depend on nothing.** UPCAST-PREVIEW-TOOLTIP.
 - **The a11y set, as ONE change.** A11Y-LISTBOX + N3's sectioned picker (`listbox` → a
   one-column `grid`) + keyboard navigation past the double-Enter take. It is the same ruling applied

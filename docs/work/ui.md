@@ -67,100 +67,16 @@
   navigable (the picker contract, `docs/internals/ui.md`). (7) Multiclass: combat preparedCap reads
   classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
   toggle first, automation later.
-- [~] **ARCH-1 / B8 · i18n sweep of combat + build.** `build.*` is done (270 keys). `combat.*` covers
-  the page chrome, the section headers, the ability grid, the skills list, the defenses strip and
-  every damage type.
-  **A roll's NAME travels as a catalog key, not as a translated sentence.** `RollLogEntry.labelKey`
-  carries it and `RollRow` is the one place it becomes a word — the same ruling amendments got, and
-  for the same reason: `logLineFor` writes the entry verbatim into `log.jsonl`, so a localized label
-  would freeze that roll in whatever language it was made in and switching the UI afterwards could
-  never reach it. Translating display and label together — the plan this item used to carry — would
-  have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
-  English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
-  row's own word is DATA and passes through untranslated.
-  **A problem found with no locale travels as `SaidText`.** The loader, the derive, the resolver and
-  the plugin host all find faults in pure code, and the panel showing them is re-read after a
-  language switch — so an issue carries `{key, values}` and `sayText` (`util/say.ts`, the leaf both
-  sides share) says it where the translator is. `issue-text.ts` keeps the CHOICE of sentence for
-  content; `ISSUE_KEY` does the same for the derive. Three values are not literals and `sayText`
-  resolves them: a content TYPE or an armour weight reads through its own catalog, and the
-  "did you mean" candidates need the reader's own quotation marks and its word for "or". Where the
-  wording branched on a suggestion being close enough, it is two whole keys, not a sentence glued
-  from halves. `detail` is never translated — the column, the token, the validator's own complaint
-  are for whoever wrote the row.
-  **A label the PLAYER can rename is written in their language, not kept as a key.** The custom
-  modifier's default name ("+1 to AC") is their own effect's title and editable the moment it exists,
-  so `modTargetLabel` composes it through `translator()` — the live catalog handed to a pure
-  formatter from outside a component, which reads the store per call and so survives a switch. That
-  is the opposite call from a roll's name, which the log re-reads long afterwards and therefore keeps
-  as a key; the difference is who owns the string after it is written.
-  **An ability's short name is `abilityShortLabel`, and nowhere else.** The builder printed the id
-  (`{ab}` under `text-transform: uppercase`, `ab.toUpperCase()`) in a dozen places, so a Ukrainian
-  sheet said STR where the play sheet said СИЛ. One helper in `util/format.ts` owns the catalog name
-  and the upper-cased id as its fallback; the sheet diff's labels travel as `abilityShort.<ab>` and
-  `combat.roll.save.<ab>` keys rather than as English text.
-  **A trace's engine-written labels are keys; a content row's name is not.** `Contribution` carries
-  `key`/`noteKey`/`params` beside its English, and `sourceText` words them where the translator is —
-  the same split `formatNote` makes. "Cloak of Protection" carries none and passes through, because no
-  catalog knows a user's own row. The ruling is in `docs/internals/rules-core.md`.
-  **A forced outcome is a fact on the entry, not a word in its label.** `RollLogEntry.outcome` carries
-  it and `RollRow` says "{label} — auto-fail" around the name the label key already produces — a
-  marker holds ONE key, so the sentence could not have been one. It also has no total: a marker threw
-  nothing, and the number column now stays empty instead of printing the record's `NaN`.
-  **An item tag's word lives in the catalog, not in a table in code.** `itemTagLabel` is a lookup with
-  the raw tag name as its default, so the app-known vocabulary (`two_handed` → "two-handed", "дворучна")
-  is 22 catalog entries and a homebrew tag still reads exactly as its author wrote it. An attack row
-  carries its `AttackMeta` tags and `attackMeta` words them; a tag's VALUE (`versatile 1d10`,
-  `thrown 20/60`) is data and passes through.
-  **An attack row's notes are FACTS, not a sentence.** Each is a `Note` — the same `{text, key, params}`
-  the engine's own rule notes carry — and `attackNotes` words them at the panel, where `$_` is. The one
-  thing that could not be a key is an effect token the build cannot fold: it travels whole
-  (`{token}`) and becomes a tag through `effectTag` in the same place. Threading a translator into
-  `computeAttacks` instead would have frozen the language: the view-model derives the attack list off
-  `app.activeLocale`, which the layout pushes into `svelte-i18n` in an EFFECT — so a translator read
-  there is one locale behind, and never re-read.
-  **A roll label is one whole phrase per key, never `{ability} check`.** Interpolating a noun into a
-  phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
-  substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
-  the sentence.
-  **A detail view says WHICH WORD, not the word.** `DetailModel` carries `SaidText` parts — the
-  eyebrow, every meta cell's label, and the values that are the app's own vocabulary — and the heads
-  say them with `$_`. It could not take a translator instead: `rowDetail` is called from the build
-  inspector's `$derived`, the same trap the attack list has. A column's heading reads from
-  `contentField`, the catalog the homebrew FORM already labels its inputs from, with the column's own
-  name title-cased as the fallback, so a homebrew column reads as its author wrote it.
-  **A grammatical gender is a fact about the noun, not about the word.** `heavy` describing an
-  armour and `heavy` describing a weapon are one word in English and two in Ukrainian ("важкий
-  обладунок", "важка зброя"), so an armour's weight has a catalog of its own (`armorCategory`) rather
-  than sharing `itemTag`'s. A shared key would have made one of the two wrong in every locale that
-  inflects.
-  **What is left, and it is not nothing.** A sweep for literal English in every template, attribute
-  and composed string found three regions the pass above had not reached, two of them now closed:
-  the shared components under `src/lib/components` carried no translator at all, the whole
-  data-folder move/merge flow was English in `StorageSettings`, and the compendium's groupings and
-  bucket headings were words in a pure module.
-  The third was **the roll RECORD**, and it took a change to `log.jsonl` of its own: the field the
-  provenance rode conflated the player's own words typed into a `note` pill (data) with the app's own
-  sentence (copy), so the two are separated rather than the field keyed — `noteParts` carries the
-  facts, `note` stays the player's. `describeAmendments` and `rollToastModel` take the translator; the
-  upcast's slot rides the roll's NAME (six keys, because "(slot 5)" appended to a translated phrase is
-  not a part a translator can move) and what the slot ADDED rides the note beside it.
-  **The one thing left after all of it:** an attack's roll name is still resolved to TEXT at the
-  producer (`attackName`), so an Unarmed Strike — the one attack that is a key rather than a content
-  row's own word — freezes in the language it was rolled in, and `action-executor` composes
-  "{name} i/N" around it. It needs a `labelValues` that can hold a catalog word, which `SaidValue`
-  already models and `RollLogEntry` does not.
-  **Deliberately untranslated:** the `/dev/*` previews. They are dev-build-only harnesses whose copy
-  describes the harness ("fixed rolls as a static ladder"), not the app — translating them would add
-  a hundred keys nobody reads. A theme's TOKEN names stay untranslated for the same kind of reason:
-  the token is the key the user writes in their own theme JSON, so a translated label would name
-  something they cannot find in the file they hand-edit. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
-  fire-and-forget, so that is correct — never at module top level, where it would freeze at the
-  load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
-  **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
-  MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`
-  zeroes the min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per
-  the recipe in `Turnbar.svelte` when a locale is added.
+- [x] **ARCH-1 / B8 · the UI reads in the player's language, everywhere.** Every user-facing string
+  is a catalog key, in the components and in everything upstream of them. The rulings the sweep
+  settled live in [`../internals/ui.md`](../internals/ui.md) ▸ Strings live in the catalogs, and what
+  a ROLL keeps in [`../internals/roller.md`](../internals/roller.md) ▸ Conventions — that is where
+  the next person needs them, not behind a ticked box. What is left is one item, `ROLL-NAME-KEY` in
+  [`roller.md`](roller.md).
+  **The lesson worth keeping:** a scan for literal English is a hint, not the check. Three of the
+  regions it missed were found by driving the app in Ukrainian and reading the screen, and the last
+  three strings hid behind a scan rule that excluded a text run followed by `{`.
+
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
   written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects
@@ -185,11 +101,9 @@
   4. **The demo character already does much of this job** and is a shipped asset: it seeds first-run on
      web and desktop and "IS the first impression of the system's scope" (DEMO-1 above). A pre-built
      sheet you can immediately poke beats a walkthrough describing one. Build on it rather than beside it.
-  **Factual correction to the translation argument:** text volume is not the binding reason to prefer
-  interactive. The whole combat/play surface is currently **un-localized** — `$_(` appears in exactly
-  zero files under `src/routes/combat/`, and en.json has no `combat.*` namespace at all (see ARCH-1
-  above). Onboarding would add on the order of ten strings; localizing combat is hundreds. Constraint
-  (b) — tutorials repel — stands on its own and is the real reason.
+  **Text volume is not the binding reason to prefer interactive** — onboarding would add on the order
+  of ten strings, which is nothing beside what the app already carries. Constraint (b) — tutorials
+  repel — stands on its own and is the real reason.
 - [x] **UX-1 · Error copy pass.** Every failure message rewritten for the person whose data it is,
   with the technical particular demoted to a `detail` line rather than deleted. The standard, the
   `detail` contract and where the copy lives are `docs/internals/ui.md` ▸ Error copy; tests assert

@@ -33,7 +33,7 @@
 	</div>
 	{#if combat.armorBlock}
 		<!-- the `title` stays the rules note verbatim: it is the same sentence Content health shows for
-		     this block, and that copy is its own i18n domain (docs/work/ui.md ▸ ARCH-1) -->
+		     this block, and that copy is its own i18n domain (docs/internals/ui.md ▸ Error copy) -->
 		<div
 			class="armor-block"
 			title={$_('combat.spells.armorBlockNote', {
