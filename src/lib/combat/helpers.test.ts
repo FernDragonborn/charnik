@@ -40,6 +40,7 @@ import {
 	standardActions,
 	effectiveHpMax,
 	weaponBonus,
+	attackNotes,
 	enhancementTokens,
 	describeDerivedEffects,
 	casterForSpell,
@@ -48,7 +49,7 @@ import {
 	type EffectInstance,
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
-import { computed } from '$lib/rules/pipeline';
+import { computed, type Translate } from '$lib/rules/pipeline';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
 
@@ -235,8 +236,10 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 	it('folds a literal +1 into both attack and damage with a provenance note', () => {
 		const w = weaponBonus(['flat_bonus:attack+1', 'flat_bonus:damage+1']);
 		expect(w).toMatchObject({ attack: 1, damage: 1 });
-		expect(w.note).toMatch(/\+1 attack/);
-		expect(w.note).toMatch(/\+1 damage/);
+		expect(w.notes?.map((n) => ('token' in n ? n.token : n.text))).toEqual([
+			'+1 attack',
+			'+1 damage',
+		]);
 	});
 
 	it('a plain weapon (no effect tokens) yields a zero bonus and no note', () => {
@@ -247,7 +250,32 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 		const w = weaponBonus(['flat_bonus:damage+1d6']); // no type slot → nowhere to put the part
 		expect(w.damage).toBe(0);
 		expect(w.extraParts).toBeUndefined();
-		expect(w.note).toBeTruthy();
+		// the token travels whole, so the tag it becomes is worded where the translator is
+		expect(w.notes).toEqual([{ token: 'flat_bonus:damage+1d6' }]);
+	});
+
+	it('attackNotes words every note in the READER’s language, the deferred token included', () => {
+		const attack = {
+			id: 'x',
+			name: 'X',
+			toHit: 0,
+			damageParts: [],
+			meta: '',
+			scopes: [],
+			notes: [
+				{ text: '+1 attack', key: 'combat.attacks.noteAttackBonus', params: { amount: '+1' } },
+				{ token: 'flat_bonus:damage+1d6' },
+			],
+		};
+		// a stand-in catalog: the keys say what they are, the token becomes a tag through effectTag
+		const uk: Translate = (key, o) =>
+			key === 'combat.attacks.noteAttackBonus'
+				? `${String(o?.values?.amount)} до атаки`
+				: key === 'combat.tag.damage'
+					? 'Шкода'
+					: (o?.default ?? key);
+		expect(attackNotes(attack)).toBe('+1 attack; Damage +1d6');
+		expect(attackNotes(attack, uk)).toBe('+1 до атаки; Шкода +1d6');
 	});
 
 	it('D9-tail · a TYPED dice bonus (flaming) becomes its own extra damage part', () => {

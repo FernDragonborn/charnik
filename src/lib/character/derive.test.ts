@@ -3,7 +3,7 @@ import { type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
-import { computeAttacks, rollEffectsFor } from '../combat/helpers';
+import { attackNotes, computeAttacks, formatDamageParts, rollEffectsFor } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
@@ -165,7 +165,7 @@ describe('deriveSheet aggregator', () => {
 		// prof bonus at L3 = +2. Dagger (proficient): STR+2 + prof+2 = +4. Greataxe (not): STR+2 only.
 		expect(dagger.toHit).toBe(4);
 		expect(greataxe.toHit).toBe(2);
-		expect(greataxe.note).toContain('Not proficient');
+		expect(attackNotes(greataxe)).toContain('Not proficient');
 	});
 
 	it('§A: Archery (`flat_bonus:attack:ranged+2`) folds into ranged weapons only, not melee', () => {
@@ -183,10 +183,10 @@ describe('deriveSheet aggregator', () => {
 		const dagger = atks.find((a) => a.name === 'Dagger')!;
 		// prof +2. Longbow (ranged, DEX+2): 2 + prof 2 + archery 2 = +6, note shows the bonus.
 		expect(longbow.toHit).toBe(6);
-		expect(longbow.note).toContain('+2 attack');
+		expect(attackNotes(longbow)).toContain('+2 attack');
 		// dagger is melee → archery does NOT apply: STR+2 + prof 2 = +4, no scoped note.
 		expect(dagger.toHit).toBe(4);
-		expect(dagger.note).toBeUndefined();
+		expect(dagger.notes).toBeUndefined();
 	});
 
 	it('§B: Great Weapon Fighting floors the damage dice of a two-handed melee weapon only', () => {
@@ -220,7 +220,7 @@ describe('deriveSheet aggregator', () => {
 			{ pool: { 6: 1 }, mod: 2, type: 'slashing' },
 			{ pool: { 4: 1 }, mod: 0, type: 'radiant' },
 		]);
-		expect(sunblade.dmg).toBe('1d6 +2 slashing + 1d4 radiant');
+		expect(formatDamageParts(sunblade.damageParts)).toBe('1d6 +2 slashing + 1d4 radiant');
 	});
 
 	it('piece 3: resolves spend-options for a GRANTED resource; int + `x` costs; drops others', () => {

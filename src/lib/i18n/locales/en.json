@@ -410,6 +410,12 @@
 			"utilizeDesc": "use an object"
 		},
 		"attacks": {
+			"noteAttackBonus": "{amount} attack",
+			"noteDamageBonus": "{amount} damage",
+			"noteDamageUnread": "Damage not fully read — {fragments} ignored",
+			"noteNoBaseWeapon": "Base weapon not set — roll its own dice",
+			"noteNotProficient": "Not proficient — no proficiency bonus",
+			"noteScopedAttack": "{amount} attack ({source})",
 			"unarmedStrike": "Unarmed Strike"
 		},
 		"controls": {

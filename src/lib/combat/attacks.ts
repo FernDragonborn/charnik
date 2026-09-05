@@ -13,6 +13,7 @@ import { signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
+import { formatNote, type Note } from '$lib/rules/pipeline';
 import type { Translate } from '$lib/i18n';
 
 /** One typed slice of a weapon's damage: its dice pool, flat mod, and damage type. A plain weapon is
@@ -31,6 +32,38 @@ export interface DamagePart {
  *  "make two Unarmed Strikes" has to be able to name it. */
 export const UNARMED_STRIKE_ID = 'unarmed_strike';
 
+/** Catalog keys for the notes an attack row carries — the ONE owner, so the producers below and the
+ *  message catalogs never drift on a bare string (like `NOTE_KEY` for the engine's rule notes). */
+const ATTACK_NOTE = {
+	attackBonus: 'combat.attacks.noteAttackBonus',
+	damageBonus: 'combat.attacks.noteDamageBonus',
+	scopedAttack: 'combat.attacks.noteScopedAttack',
+	notProficient: 'combat.attacks.noteNotProficient',
+	noBaseWeapon: 'combat.attacks.noteNoBaseWeapon',
+	damageUnread: 'combat.attacks.noteDamageUnread',
+} as const;
+
+/** One line of provenance under an attack row. A rule `Note` carries its catalog key beside the
+ *  English it reads as, exactly like the engine's own notes do; a `{token}` is an effect this build
+ *  could not fold, and becomes a tag only where the translator is. Built here, worded by
+ *  `attackNotes` — the row is composed once per render, but it is composed with no locale, so the
+ *  language it reads in is the one the panel is looking at rather than the one it was built in. */
+export type AttackNote = Note | { token: string };
+
+/** Say one attack note, without a translator saying its English. */
+const attackNote = (key: string, text: string, params?: Record<string, string | number>): Note => ({
+	text,
+	key,
+	...(params ? { params } : {}),
+});
+
+/** An attack row's notes as one line, in the reader's language. */
+export function attackNotes(attack: Attack, translate?: Translate): string {
+	return (attack.notes ?? [])
+		.map((n) => ('token' in n ? effectTag(n.token, translate) : formatNote(n, translate)))
+		.join('; ');
+}
+
 /** A weapon/unarmed attack row. */
 export interface Attack {
 	/** The BARE content id of the weapon behind it (`UNARMED_STRIKE_ID` for fists) — what an action
@@ -44,8 +77,6 @@ export interface Attack {
 	 *  `attackName`, which is the only place that has to know about the pair. */
 	nameKey?: string;
 	toHit: number;
-	/** Human-readable damage (built from `damageParts`); shown in the panel. */
-	dmg: string;
 	/** The structured damage the roll path rolls — one entry per damage type, each rolled + shown
 	 *  separately (BUG-DMG-1). The ability/magic mod is folded into the first (primary) part only. */
 	damageParts: DamagePart[];
@@ -54,8 +85,9 @@ export interface Attack {
 	 *  (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
 	scopes: string[];
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
-	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). */
-	note?: string;
+	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). Read through
+	 *  `attackNotes`. Omitted when the row has nothing to explain. */
+	notes?: AttackNote[];
 }
 
 /** What to print for an attack. A weapon carries its row's localized name; the unarmed strike is not
@@ -126,12 +158,12 @@ export function weaponBonus(tokens: string[]): {
 	 *  `flat_bonus:damage:fire+1d6`. Rolled + shown separately, never given the ability mod. Omitted
 	 *  (undefined) when there are none, so a plain weapon's return stays `{attack, damage}`. */
 	extraParts?: DamagePart[];
-	note?: string;
+	notes?: AttackNote[];
 } {
 	let attack = 0;
 	let damage = 0;
 	const extraParts: DamagePart[] = [];
-	const deferred: string[] = [];
+	const deferred: AttackNote[] = [];
 	for (const tok of tokens) {
 		const p = parseToken(tok);
 		if (p.kind !== EFFECT_KIND.flatBonus || (p.target !== 'attack' && p.target !== 'damage'))
@@ -142,24 +174,29 @@ export function weaponBonus(tokens: string[]): {
 			if (p.dice) extraParts.push({ pool: parseDicePool(p.dice), mod: 0, type: p.damageType });
 			else if (p.amount !== undefined)
 				extraParts.push({ pool: {}, mod: p.amount, type: p.damageType });
-			else deferred.push(effectTag(tok)); // expression-valued typed bonus needs a ctx → note
+			else deferred.push({ token: tok }); // expression-valued typed bonus needs a ctx → note
 			continue;
 		}
 		if (p.amount !== undefined) {
 			if (p.target === 'attack') attack += p.amount;
 			else damage += p.amount;
-		} else deferred.push(effectTag(tok)); // untyped dice / expression → visible degrade
+		} else deferred.push({ token: tok }); // untyped dice / expression → visible degrade
 	}
-	const parts: string[] = [];
-	if (attack) parts.push(`${signed(attack)} attack`);
-	if (damage) parts.push(`${signed(damage)} damage`);
-	parts.push(...deferred);
-	const note = parts.length ? parts.join(', ') : undefined;
+	const notes: AttackNote[] = [];
+	if (attack)
+		notes.push(
+			attackNote(ATTACK_NOTE.attackBonus, `${signed(attack)} attack`, { amount: signed(attack) }),
+		);
+	if (damage)
+		notes.push(
+			attackNote(ATTACK_NOTE.damageBonus, `${signed(damage)} damage`, { amount: signed(damage) }),
+		);
+	notes.push(...deferred);
 	return {
 		attack,
 		damage,
 		...(extraParts.length ? { extraParts } : {}),
-		...(note ? { note } : {}),
+		...(notes.length ? { notes } : {}),
 	};
 }
 
@@ -183,17 +220,22 @@ function scopedAttackBonus(
 	scopes: Set<string>,
 ): {
 	attack: number;
-	note?: string;
+	notes: AttackNote[];
 } {
 	let attack = 0;
-	const tags: string[] = [];
+	const notes: AttackNote[] = [];
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || f.target !== 'attack' || !f.weaponScope) continue;
 		if (!scopes.has(f.weaponScope) || f.amount === undefined) continue;
 		attack += f.amount;
-		tags.push(`${signed(f.amount)} attack (${f.source})`);
+		notes.push(
+			attackNote(ATTACK_NOTE.scopedAttack, `${signed(f.amount)} attack (${f.source})`, {
+				amount: signed(f.amount),
+				source: f.source,
+			}),
+		);
 	}
-	return { attack, ...(tags.length ? { note: tags.join(', ') } : {}) };
+	return { attack, notes };
 }
 
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
@@ -239,12 +281,16 @@ export function computeAttacks(
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
 		const scopeSet = new Set(item.tags.keys());
 		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
-		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
+		const notProfNote = proficient
+			? undefined
+			: attackNote(ATTACK_NOTE.notProficient, 'Not proficient — no proficiency bonus');
 		// A "Weapon (any melee weapon)" template names no base, so there is nothing to inherit: no
 		// dice, no category, no scopes. Say so on the row — the alternative is an attack line that
 		// looks complete and silently rolls a bare ability modifier.
 		const templateNote =
-			item.tags.size === 0 && !item.damage ? 'Base weapon not set — roll its own dice' : undefined;
+			item.tags.size === 0 && !item.damage
+				? attackNote(ATTACK_NOTE.noBaseWeapon, 'Base weapon not set — roll its own dice')
+				: undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
@@ -252,12 +298,19 @@ export function computeAttacks(
 		// a damage string the parse could not fully read is a CONTENT defect, and it must be visible
 		// on the sheet rather than at the moment the number comes out one short
 		const unread = parts.flatMap((p) => p.issues ?? []);
+		const unreadList = unread.map((u) => `“${u}”`).join(', ');
 		const damageNote = unread.length
-			? `Damage not fully read — ${unread.map((u) => `“${u}”`).join(', ')} ignored`
+			? attackNote(ATTACK_NOTE.damageUnread, `Damage not fully read — ${unreadList} ignored`, {
+					fragments: unreadList,
+				})
 			: undefined;
-		const note =
-			[w.note, scoped.note, notProfNote, templateNote, damageNote].filter(Boolean).join('; ') ||
-			undefined;
+		const notes = [
+			...(w.notes ?? []),
+			...scoped.notes,
+			notProfNote,
+			templateNote,
+			damageNote,
+		].filter((n) => n !== undefined);
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
 			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p,
 		);
@@ -268,11 +321,10 @@ export function computeAttacks(
 			// the same name the compendium and every other row on the sheet print
 			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
-			dmg: formatDamageParts(damageParts),
 			damageParts,
 			meta: attackMeta(item.tags),
 			scopes: [...scopeSet],
-			...(note ? { note } : {}),
+			...(notes.length ? { notes } : {}),
 		});
 	}
 	// an unarmed strike is a melee attack, but carries no weapon properties. It reads the SAME
@@ -287,10 +339,9 @@ export function computeAttacks(
 		nameKey: 'combat.attacks.unarmedStrike',
 		toHit: strMod + prof + unarmedScoped.attack,
 		scopes: [...unarmedScopes],
-		dmg: `${1 + strMod} bludgeoning`,
 		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
 		meta: 'melee',
-		...(unarmedScoped.note ? { note: unarmedScoped.note } : {}),
+		...(unarmedScoped.notes.length ? { notes: unarmedScoped.notes } : {}),
 	});
 	return out;
 }

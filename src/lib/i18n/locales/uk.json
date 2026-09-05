@@ -410,6 +410,12 @@
 			"utilizeDesc": "скористатися предметом"
 		},
 		"attacks": {
+			"noteAttackBonus": "{amount} до атаки",
+			"noteDamageBonus": "{amount} до шкоди",
+			"noteDamageUnread": "Шкоду прочитано не повністю — {fragments} проігноровано",
+			"noteNoBaseWeapon": "Базову зброю не вказано — кидайте її власні кубики",
+			"noteNotProficient": "Немає володіння — бонус майстерності не додається",
+			"noteScopedAttack": "{amount} до атаки ({source})",
 			"unarmedStrike": "Удар без зброї"
 		},
 		"controls": {

@@ -78,6 +78,13 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
+  **An attack row's notes are FACTS, not a sentence.** Each is a `Note` — the same `{text, key, params}`
+  the engine's own rule notes carry — and `attackNotes` words them at the panel, where `$_` is. The one
+  thing that could not be a key is an effect token the build cannot fold: it travels whole
+  (`{token}`) and becomes a tag through `effectTag` in the same place. Threading a translator into
+  `computeAttacks` instead would have frozen the language: the view-model derives the attack list off
+  `app.activeLocale`, which the layout pushes into `svelte-i18n` in an EFFECT — so a translator read
+  there is one locale behind, and never re-read.
   **A roll label is one whole phrase per key, never `{ability} check`.** Interpolating a noun into a
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
@@ -85,10 +92,8 @@
   **What is left:** the AUTO-OUTCOME marker — `logMarker` takes a `RollName` now and every other
   marker carries its key, but this one's sentence names a ROLL whose own name is a key, and an entry
   holds one. Making it read in the reader's language wants the outcome as a FACT on the entry (the
-  shape amendments already have) rather than a word baked into its label. Then `attacks.ts`'s
-  DEFERRED NOTES — the effect tags take an injected `Translate` now, but the attack builder calls
-  `effectTag` with none, so a bonus it cannot fold reads in English on the Attacks panel; giving it
-  one means threading a translator through the attack build. Then the builder's remaining body copy,
+  shape amendments already have) rather than a word baked into its label. Then the ATTACK META — a
+  weapon's kind line ("martial melee · versatile 1d10") is still assembled from tag ids. Then the builder's remaining body copy,
   and the CONTENT-HEALTH copy — every `issues[].reason` in `derive.ts` and the loader is an English
   sentence built where the fault is found, which is its own domain and its own pass. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the

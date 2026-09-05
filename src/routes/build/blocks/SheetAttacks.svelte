@@ -5,7 +5,7 @@
 	// here rather than after the character exists.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { attackName, computeAttacks, formatDamageParts } from '$lib/combat/attacks';
+	import { attackName, attackNotes, computeAttacks, formatDamageParts } from '$lib/combat/attacks';
 	import { app } from '$lib/stores/app.svelte';
 	import { signed } from '$lib/util/format';
 	const b = build;
@@ -48,7 +48,7 @@
 					<b class="aname" role="cell">{attackName(a, $_)}</b>
 					<span class="hit" role="cell">{signed(a.toHit)}</span>
 					<span class="dmg" role="cell">{formatDamageParts(a.damageParts, $_)}</span>
-					<span class="ameta" role="cell">{[a.meta, a.note].filter(Boolean).join(' · ')}</span>
+					<span class="ameta" role="cell">{[a.meta, attackNotes(a, $_)].filter(Boolean).join(' · ')}</span>
 				</div>
 			{/each}
 		</div>
