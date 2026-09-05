@@ -3,6 +3,7 @@
 	// SOURCE tag is enabled. Lists every loaded source with its files + row counts; each has an
 	// independent toggle. Config is persisted + live (isRowActive re-filters the compendium with no
 	// reload). Disabling never drops data — re-enabling brings rows straight back.
+	import { _ } from '$lib/i18n';
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
 	import Icon from '$lib/components/Icon.svelte';
@@ -66,16 +67,12 @@
 
 <section>
 	<header class="sec-head">
-		<h2>Content sources</h2>
-		<p class="sec-note">
-			Turn whole sources or individual files on and off. A row shows only when both its source and
-			its file are enabled. This just hides them from browsing and creation — nothing is deleted,
-			and flipping a switch back brings everything straight back.
-		</p>
+		<h2>{$_('settings.sources.title')}</h2>
+		<p class="sec-note">{$_('settings.sources.blurb')}</p>
 	</header>
 
 	{#if !graph}
-		<p class="muted">Loading…</p>
+		<p class="muted">{$_('settings.health.loading')}</p>
 	{:else}
 		{#each groups as g (g.key)}
 			<div class="source" class:off={sourceOff(g.source) || groupOff(g.files)}>
@@ -87,7 +84,7 @@
 						class:on={!groupOff(g.files)}
 						role="switch"
 						aria-checked={!groupOff(g.files)}
-						aria-label="Toggle pack {g.pack}"
+						aria-label={$_('settings.sources.togglePack', { values: { pack: g.pack } })}
 						disabled={sourceOff(g.source)}
 						onclick={() =>
 							setFilesEnabled(
@@ -107,14 +104,19 @@
 					>
 					<button
 						class="source-tag as-toggle"
-						title="Turn “{g.source}” off everywhere it appears"
+						title={$_('settings.sources.turnOff', { values: { source: g.source } })}
 						aria-pressed={sourceOff(g.source)}
 						onclick={() => toggleSource(g.source)}
 					>
 						{sourceLabel(g.source)}
 					</button>
 					<span class="source-count"
-						>{g.files.filter((f) => !fileOff(f.path)).length} / {g.files.length} files</span
+						>{$_('settings.sources.fileCount', {
+							values: {
+								on: g.files.filter((f) => !fileOff(f.path)).length,
+								total: g.files.length,
+							},
+						})}</span
 					>
 				</div>
 				{#if open[g.key]}
@@ -126,7 +128,7 @@
 									class:on={!fileOff(f.path)}
 									role="switch"
 									aria-checked={!fileOff(f.path)}
-									aria-label="Toggle file {f.path}"
+									aria-label={$_('settings.sources.toggleFile', { values: { file: f.path } })}
 									disabled={sourceOff(g.source)}
 									onclick={() => toggleFile(f.path)}
 								>

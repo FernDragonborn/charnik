@@ -280,7 +280,7 @@
 		{type.replace(/_/g, ' ')} · {editing ? 'edit' : 'new homebrew'}{#if editShipped}
 			· fork to homebrew{/if}
 	</div>
-	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
+	<input class="titlein" placeholder={$_('contentField.name')} bind:value={draft.name_en} />
 	<div class="id-row">
 		<span class="id-label">id</span>
 		{#if editing}
@@ -297,7 +297,7 @@
 	<p class="id-hint">{editing ? $_('homebrewForm.editIdHint') : $_('homebrewForm.idHint')}</p>
 
 	<div class="systems-row">
-		<span class="systems-label eyebrow">Editions</span>
+		<span class="systems-label eyebrow">{$_('contentField.systems')}</span>
 		{#each SYSTEMS as sys (sys)}
 			<button
 				type="button"
@@ -428,7 +428,7 @@
 
 	{#if issues.length}
 		<div class="issues">
-			<b>Fix before saving:</b>
+			<b>{$_('homebrewForm.fixFirst')}</b>
 			<ul>
 				{#each issues as msg (msg)}<li>{msg}</li>{/each}
 			</ul>
@@ -442,14 +442,18 @@
 			onclick={save}
 			disabled={saving || (!editing && targetShipped)}
 		>
-			{saving ? 'Saving…' : editing ? 'Save changes' : 'Save homebrew'}
+			{$_(
+				saving ? 'homebrewForm.saving' : editing ? 'homebrewForm.saveEdit' : 'homebrewForm.saveNew',
+			)}
 		</button>
-		<button type="button" class="cancel" onclick={oncancel}>Cancel</button>
+		<button type="button" class="cancel" onclick={oncancel}>{$_('homebrewForm.cancel')}</button>
 		{#if editRow?.source === HOMEBREW_SOURCE && ondelete}
-			<button type="button" class="delete-entry" onclick={ondelete}>Delete entry</button>
+			<button type="button" class="delete-entry" onclick={ondelete}
+				>{$_('compendium.deleteEntry')}</button
+			>
 		{/if}
 	</div>
-	<div class="source-line">Homebrew · you own this row (stored as CSV you can edit)</div>
+	<div class="source-line">{$_('homebrewForm.ownership')}</div>
 </article>
 
 <style>

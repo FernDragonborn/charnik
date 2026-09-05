@@ -138,6 +138,8 @@
 			activate(id);
 		}
 	}
+	// the TOKEN's own name, deliberately untranslated: it is the key the user writes in their theme
+	// JSON, so a translated label would name something they cannot find in the file they hand-edit
 	const label = (token: ThemeableToken) => token.replace(/^color-/, '').replace(/-/g, ' ');
 
 	// dark/light are the only truly built-in themes (from tokens.css) — always present, not deletable.
@@ -151,18 +153,14 @@
 </script>
 
 <section class="sec-head">
-	<h2>Themes</h2>
-	<p class="sec-note">
-		Build your own colour theme by overriding the design tokens. Clone Dark or Light, tweak the
-		swatches, and it applies live. Each theme is a JSON file (in your data folder) you can share or
-		hand-edit.
-	</p>
+	<h2>{$_('settings.themes.title')}</h2>
+	<p class="sec-note">{$_('settings.themes.blurb')}</p>
 </section>
 
 {#if mode.view === 'list'}
 	<div class="themes-toolbar">
 		<button class="btn ghost" onclick={() => fileInput?.click()}
-			><Icon name="upload" size={13} /> Import theme…</button
+			><Icon name="upload" size={13} /> {$_('settings.themes.import')}</button
 		>
 		<input
 			bind:this={fileInput}
@@ -185,7 +183,7 @@
 			>
 				<div class="theme-pick">
 					<span class="theme-name"><Icon name={b.icon} size={13} /> {b.name}</span>
-					<span class="theme-tag eyebrow">built-in</span>
+					<span class="theme-tag eyebrow">{$_('settings.themes.builtIn')}</span>
 				</div>
 				<div class="theme-actions">
 					<button
@@ -193,7 +191,7 @@
 						onclick={(e) => {
 							e.stopPropagation();
 							cloneTheme(b.id, b.clean);
-						}}>Clone</button
+						}}>{$_('settings.themes.clone')}</button
 					>
 				</div>
 			</div>
@@ -223,28 +221,28 @@
 						onclick={(e) => {
 							e.stopPropagation();
 							mode = { view: 'edit', id: t.id };
-						}}>Edit</button
+						}}>{$_('settings.themes.edit')}</button
 					>
 					<button
 						class="btn ghost"
 						onclick={(e) => {
 							e.stopPropagation();
 							duplicate(t);
-						}}>Duplicate</button
+						}}>{$_('settings.themes.duplicate')}</button
 					>
 					<button
 						class="btn ghost"
 						onclick={(e) => {
 							e.stopPropagation();
 							exportTheme(t);
-						}}>Export</button
+						}}>{$_('settings.themes.export')}</button
 					>
 					<button
 						class="btn ghost danger"
 						onclick={(e) => {
 							e.stopPropagation();
 							remove(t.id);
-						}}>Delete</button
+						}}>{$_('settings.themes.delete')}</button
 					>
 				</div>
 			</div>
@@ -254,20 +252,21 @@
 	<!-- editor -->
 	<div class="editor-head">
 		<button class="btn ghost" onclick={() => (mode = { view: 'list' })}
-			><Icon name="arrow-left" size={13} /> Back</button
+			><Icon name="arrow-left" size={13} /> {$_('settings.themes.back')}</button
 		>
 		<input
 			class="text-field name-input"
 			value={editing.name}
 			oninput={(e) => setName(editing.id, e.currentTarget.value)}
-			placeholder="Theme name"
+			placeholder={$_('settings.themes.namePlaceholder')}
 		/>
 		<button
 			class="btn primary"
 			class:active={app.theme === editing.id}
 			onclick={() => activate(editing.id)}
 		>
-			{#if app.theme === editing.id}<Icon name="check" size={13} /> Active{:else}Activate & preview{/if}
+			{#if app.theme === editing.id}<Icon name="check" size={13} />
+				{$_('settings.themes.active')}{:else}{$_('settings.themes.activate')}{/if}
 		</button>
 	</div>
 

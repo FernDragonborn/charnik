@@ -2,6 +2,7 @@
 	// Full-view loading screen shown while the sheet/content is being loaded (the derive can take a
 	// beat). If `error` is set the load FAILED — show the reason instead of spinning forever, so a
 	// broken content bundle on an installed app is diagnosable rather than an endless "Loading…".
+	import { _ } from '$lib/i18n';
 	import { base } from '$app/paths';
 	let {
 		message = 'Crunching the numbers…',
@@ -11,16 +12,16 @@
 
 {#if error}
 	<div class="loadscreen" role="alert">
-		<p class="loadbig err">Couldn't load content</p>
-		<p class="loadsub">Something went wrong reading the content files. The error was:</p>
+		<p class="loadbig err">{$_('loading.failedTitle')}</p>
+		<p class="loadsub">{$_('loading.failedBody')}</p>
 		<pre class="errbox">{error}</pre>
-		<p class="loadsub">Please report this with the message above.</p>
+		<p class="loadsub">{$_('loading.failedReport')}</p>
 	</div>
 {:else}
 	<div class="loadscreen" role="status" aria-live="polite">
 		<img class="loadgif" src="{base}/loading-dice.gif" alt="" width="220" height="244" />
 		<p class="loadbig">{message}</p>
-		<p class="loadsub">This can take up to <b>10 seconds</b> — please wait.</p>
+		<p class="loadsub">{$_('loading.patience')}</p>
 	</div>
 {/if}
 
@@ -69,8 +70,5 @@
 		font-size: var(--font-size-md);
 		color: var(--color-text-muted);
 		margin: 0;
-	}
-	.loadsub b {
-		color: var(--color-accent-bright);
 	}
 </style>

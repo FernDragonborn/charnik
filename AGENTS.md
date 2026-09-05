@@ -169,6 +169,12 @@ together, so there is nothing to save by trimming it. A subset is a false green:
 type-checks but does not catch build and prerender failures, `pnpm build` type-checks *nothing*
 (vite transpiles with esbuild), and `pnpm test` runs the browser project too.
 
+**Run it in the BACKGROUND and keep working.** The gate is a minute of waiting per commit, and there
+is always the next file to read while it runs — start it detached, survey what you are about to touch,
+and read its result before you commit. Two rules make that safe: never edit a file while a run that
+reads it is in flight (vitest and eslint read as they go, so a mid-run edit is a result about nothing),
+and never commit on a run you have not read. The same goes for `shot.mjs` and a long `pnpm dev`.
+
 The type-aware rules are the one gate too slow to run whole. Run **`pnpm lint:typed:changed`** (~15 s,
 same rules, only the files you touched) as you work, and full `pnpm lint:typed` before a release —
 over eleven minutes, so start it in the background early. The scoped pass cannot replace it: widen a return
@@ -185,6 +191,15 @@ pass `BASE`. One red run is not evidence: round-dependent chips drift on their o
 that lived through a file rename serves a stale graph — re-run before believing it. For a state the
 harness does not cover, write a one-off Playwright script *inside the repo* so `playwright` resolves,
 drive to the state, screenshot, look at the PNG, delete the script.
+
+**Do not MULTIPLY dev servers, and prefer text to pixels.** Reuse the `pnpm dev` that is already
+running instead of starting another: each one costs its boot, leaves a process behind, and takes a NEW
+PORT (vite walks 5173→5174→5175 past whatever is bound), which is how a screenshot ends up taken
+against a server that is not the one you changed. Check for one before starting one, and pass its port
+as `BASE`. Same for chromium: put every state you want to look at into ONE script rather than
+launching per question, and read the answer as TEXT (`allInnerTexts`, `getAttribute`) whenever the
+question is "what does it say" — a screenshot is for a question about LOOK, and every PNG you open
+stays in the context you pay for afterwards. 
 
 **Filesystem and network work is verified on the real desktop app.** A `MemoryStorage` test proves
 nothing: fakes overwrite happily, while Windows refuses to rename a directory onto an existing one,

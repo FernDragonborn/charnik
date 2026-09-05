@@ -1064,6 +1064,29 @@
 		"download": "⬇ Download the desktop app",
 		"readonly": "Editing isn't available in the demo. Download the desktop app to save changes."
 	},
+	"drafts": {
+		"agoDays": "{count} d ago",
+		"agoHours": "{count} h ago",
+		"agoMinutes": "{count} min ago",
+		"agoNow": "just now",
+		"count": "{count} unfinished · autosaved locally",
+		"delete": "Delete",
+		"empty": "No drafts. Unsaved translations and new entries show up here.",
+		"fragmentEditAll": "· edit all fields",
+		"fragmentNew": "· new {type}",
+		"fragmentNewUnsaved": "· unsaved new {type}",
+		"groupAdded": "New entries",
+		"groupEditor": "Editor",
+		"groupOrphans": "Needs attention",
+		"groupTranslations": "Translations",
+		"hint": "Resume picks up exactly where you left off. Deleting a draft is permanent.",
+		"loading": "loading…",
+		"orphanReason": "target entry not found (deleted or source disabled)",
+		"orphanTag": "orphan",
+		"resolve": "Resolve…",
+		"resume": "Resume",
+		"title": "Drafts"
+	},
 	"effectIssue": {
 		"armorBlocksCasting": "Not proficient with {category} armour — spellcasting blocked.",
 		"dependencyCycle": "This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.",
@@ -1127,18 +1150,24 @@
 		"save": "Save here"
 	},
 	"homebrewForm": {
-		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
-		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
+		"cancel": "Cancel",
 		"editForkNote": "This entry ships with Charnik, so your edit is saved as a homebrew copy (the original stays untouched and your version sorts above it).",
+		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
 		"editInPlaceNote": "Editing your homebrew entry in place.",
-		"targetLabel": "Save to file",
-		"targetHomebrew": "My homebrew (recommended)",
-		"targetNewFile": "New file…",
-		"targetShippedTag": "ships with app",
+		"fixFirst": "Fix before saving:",
+		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
 		"newFilePlaceholder": "name",
-		"srdWarnTitle": "This file ships with Charnik",
+		"ownership": "Homebrew · you own this row (stored as CSV you can edit)",
+		"saveEdit": "Save changes",
+		"saveNew": "Save homebrew",
+		"saving": "Saving…",
+		"srdWarnAction": "Create my own file",
 		"srdWarnBody": "Saving here works now, but a Charnik update can overwrite this file and your entry would be lost. Add it to your own file instead.",
-		"srdWarnAction": "Create my own file"
+		"srdWarnTitle": "This file ships with Charnik",
+		"targetHomebrew": "My homebrew (recommended)",
+		"targetLabel": "Save to file",
+		"targetNewFile": "New file…",
+		"targetShippedTag": "ships with app"
 	},
 	"itemCategory": {
 		"weapon": "Weapon",
@@ -1188,6 +1217,12 @@
 		"two_handed": "two-handed",
 		"versatile": "versatile"
 	},
+	"loading": {
+		"failedBody": "Something went wrong reading the content files. The error was:",
+		"failedReport": "Please report this with the message above.",
+		"failedTitle": "Couldn’t load content",
+		"patience": "This can take up to 10 seconds — please wait."
+	},
 	"missingContent": {
 		"title": "There are no rules on disk",
 		"subtitle": "Gone: {packs}",
@@ -1217,6 +1252,29 @@
 		"body": "There's no character open on this page. Create one to start playing — or bring back the demo.",
 		"create": "+ Create character",
 		"restoreDemo": "Restore demo character"
+	},
+	"orphan": {
+		"back": "Back",
+		"blurb": "A saved draft points at content that no longer exists (deleted, renamed, or its source is disabled). Reassign it to an existing entry, keep it as a new entry, or delete it.",
+		"conflictLead": "That entry already has a draft. Keep which? Both are shown so you don’t lose work.",
+		"counter": "{index} of {total}",
+		"deleteDraft": "Delete draft",
+		"keepExisting": "Keep the existing one",
+		"keepMine": "Keep this one",
+		"noMatches": "No matching entries.",
+		"noName": "(no name)",
+		"noNameYet": "(no name yet)",
+		"paneYours": "Orphaned draft · your work",
+		"preview": "Preview · target",
+		"reassign": "Reassign",
+		"reassignNamed": "Reassign to “{name}”",
+		"reassignTo": "Reassign to…",
+		"search": "Search entries…",
+		"skip": "Skip",
+		"theirs": "Existing draft at that entry",
+		"title": "Orphaned draft",
+		"was": "was: {id}",
+		"yours": "Your orphan draft"
 	},
 	"provenance": {
 		"advantage": "{source}: advantage on {target}",
@@ -1335,11 +1393,56 @@
 		"discardDraft": "Discard this draft"
 	},
 	"settings": {
+		"collisions": {
+			"allClear": "No collisions — every entry’s id is unambiguous in its edition.",
+			"blurb": "Entries that share the same id across more than one source and overlap an edition. Keep them all (they coexist — your homebrew sorts above the original) or pick a single source to show.",
+			"keepAll": "Keep all ({count})",
+			"only": "Only {source}",
+			"title": "Collisions"
+		},
+		"conflict": {
+			"blurb": "An automatic move needs an empty folder. If you’ve already copied your data across, choose “{repoint}”. To combine both folders choose “{merge}” — on a name clash the newer file (highlighted) is kept.",
+			"chosen": "Chosen",
+			"colChosen": "Chosen folder",
+			"colCurrent": "Current folder",
+			"colFile": "File",
+			"counts": "{files, plural, one {# file} other {# files}} · {clashes, plural, one {# name clash} other {# name clashes}}",
+			"current": "Current",
+			"merge": "Merge — keep newer",
+			"mergeShort": "Merge",
+			"newer": "newer",
+			"pickAnother": "Choose another folder",
+			"repoint": "Only change read path",
+			"title": "That folder already has files"
+		},
 		"data": {
 			"title": "Data folder",
 			"desc": "Charnik keeps your characters and content here as plain files you can open, edit, and back up.",
 			"open": "Open content folder",
 			"change": "Change folder…"
+		},
+		"demo": {
+			"blurb": "Charnik ships with a demo character (Karroth the Red) to show the sheet at a glance. Restoring rebuilds it to its original state — this wipes any changes you made to it (HP, spells, layout). Your other characters aren’t touched.",
+			"confirmAction": "Restore demo",
+			"confirmBody": "This rebuilds Karroth the Red to the original demo and discards any edits you made to it. Your other characters aren’t affected.",
+			"confirmTitle": "Restore the demo character?",
+			"restore": "Restore demo character",
+			"title": "Demo character"
+		},
+		"general": {
+			"blurb": "Theme, language, and which rules edition the compendium shows. Saved on this device and restored next time you open Charnik.",
+			"crit": "Critical hits",
+			"critHint": {
+				"classic": "By the book — roll the damage dice twice",
+				"loyal": "One set rolled, one set at its maximum"
+			},
+			"critName": {
+				"classic": "Classic",
+				"loyal": "Loyal"
+			},
+			"critNote": "Either way the flat modifier is never doubled. A single roll can be switched to the other method in the roller, where a table usually rules on it.",
+			"editions": "Shown editions",
+			"title": "Appearance & language"
 		},
 		"health": {
 			"allClear": "All loaded content is healthy — no problems found.",
@@ -1489,10 +1592,50 @@
 				"accept": "Enable plugin"
 			}
 		},
+		"sources": {
+			"blurb": "Turn whole sources or individual files on and off. A row shows only when both its source and its file are enabled. This just hides them from browsing and creation — nothing is deleted, and flipping a switch back brings everything straight back.",
+			"fileCount": "{on} / {total} files",
+			"title": "Content sources",
+			"toggleFile": "Toggle file {file}",
+			"togglePack": "Toggle pack {pack}",
+			"turnOff": "Turn “{source}” off everywhere it appears"
+		},
+		"storage": {
+			"blurb": "Where Charnik keeps your characters and content on this device. Moving copies everything to the new folder, checks every file arrived, and only then removes the old one.",
+			"change": "Change folder…",
+			"folder": "Folder",
+			"open": "Open folder",
+			"title": "Data location",
+			"webNote": "On the web version your data lives in this browser’s storage — there’s no folder to move. Use Export to take a copy with you."
+		},
 		"system": "Game system",
+		"tab": {
+			"collisions": "Collisions",
+			"data": "Data",
+			"general": "General",
+			"health": "Content health",
+			"plugins": "Plugins",
+			"sources": "Content",
+			"themes": "Themes"
+		},
 		"theme": "Theme",
 		"themeDark": "Dark",
-		"themeLight": "Light"
+		"themeLight": "Light",
+		"themes": {
+			"activate": "Activate & preview",
+			"active": "Active",
+			"back": "Back",
+			"blurb": "Build your own colour theme by overriding the design tokens. Clone Dark or Light, tweak the swatches, and it applies live. Each theme is a JSON file (in your data folder) you can share or hand-edit.",
+			"builtIn": "built-in",
+			"clone": "Clone",
+			"delete": "Delete",
+			"duplicate": "Duplicate",
+			"edit": "Edit",
+			"export": "Export",
+			"import": "Import theme…",
+			"namePlaceholder": "Theme name",
+			"title": "Themes"
+		}
 	},
 	"skillName": {
 		"acrobatics": "Acrobatics",
@@ -1554,16 +1697,20 @@
 		"title": "Manage spells"
 	},
 	"translate": {
+		"from": "Translate from",
+		"into": "Into",
+		"notice": {
+			"saved": "Translation saved",
+			"notSaved": "Your translation was not saved"
+		},
+		"pickEntry": "Pick an entry to translate.",
+		"sameLanguage": "The target language is the same as the source ({language}). Pick a different language above to translate.",
 		"status": {
 			"label": "Status",
 			"not_started": "Not started",
 			"machine": "Machine translation",
 			"started": "Started",
 			"reviewed": "Reviewed"
-		},
-		"notice": {
-			"saved": "Translation saved",
-			"notSaved": "Your translation was not saved"
 		}
 	},
 	"update": {

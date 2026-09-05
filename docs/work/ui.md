@@ -134,8 +134,11 @@
   обладунок", "важка зброя"), so an armour's weight has a catalog of its own (`armorCategory`) rather
   than sharing `itemTag`'s. A shared key would have made one of the two wrong in every locale that
   inflects.
-  **What is left:** the remaining dialogs and the spellbook's own chrome — a handful of literals
-  each, none of them a ruling. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  **What is left:** the `/dev/*` previews, deliberately. They are dev-build-only harnesses whose copy
+  describes the harness ("fixed rolls as a static ladder"), not the app — translating them would add
+  a hundred keys nobody reads. A theme's TOKEN names stay untranslated for the same kind of reason:
+  the token is the key the user writes in their own theme JSON, so a translated label would name
+  something they cannot find in the file they hand-edit. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the

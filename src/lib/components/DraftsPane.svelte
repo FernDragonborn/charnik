@@ -4,6 +4,7 @@
 	// add / editor), grouped, each resumable or deletable. Orphans (a draft whose target row is gone) sit
 	// up top with a Resolve action that opens the reassign dialog. Presentation + local list state only;
 	// the draft IO lives in $lib/drafts/store (thin-component rule).
+	import { _ } from '$lib/i18n';
 	import { asText, contentTypeLabel } from '$lib/util/format';
 	import { onMount } from 'svelte';
 	import Icon, { type IconName } from './Icon.svelte';
@@ -53,18 +54,20 @@
 		editor: 'pencil',
 	} as const satisfies Record<string, IconName>;
 
+	/** How long ago a draft was saved, in the reader's units. Read at RENDER (`$derived` below), so a
+	 *  language switch re-words it like everything else. */
 	function ago(iso: string): string {
 		const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-		if (min < 1) return 'just now';
-		if (min < 60) return `${min} min ago`;
+		if (min < 1) return $_('drafts.agoNow');
+		if (min < 60) return $_('drafts.agoMinutes', { values: { count: min } });
 		const hr = Math.floor(min / 60);
-		if (hr < 24) return `${hr} h ago`;
-		return `${Math.floor(hr / 24)} d ago`;
+		if (hr < 24) return $_('drafts.agoHours', { values: { count: hr } });
+		return $_('drafts.agoDays', { values: { count: Math.floor(hr / 24) } });
 	}
 
 	function toRow(env: DraftEnvelope): DraftRow {
 		const t = env.target;
-		const typeLabel = contentTypeLabel(t.type);
+		const typeLabel = $_(`contentType.${t.type}`, { default: contentTypeLabel(t.type) });
 		if (t.kind === 'add') {
 			const name = asText(env.data.name_en).trim();
 			return {
@@ -72,7 +75,9 @@
 				kind: 'add',
 				icon: ICON.add,
 				title: name || 'Untitled',
-				fragment: name ? `· new ${typeLabel}` : `· unsaved new ${typeLabel}`,
+				fragment: $_(name ? 'drafts.fragmentNew' : 'drafts.fragmentNewUnsaved', {
+					values: { type: typeLabel },
+				}),
 				typeLabel,
 				isOrphan: false,
 				age: ago(env.savedAt),
@@ -86,7 +91,8 @@
 			kind: t.kind,
 			icon: ICON[t.kind],
 			title,
-			fragment: t.kind === 'translate' ? `→ ${t.locale.toUpperCase()}` : '· edit all fields',
+			fragment:
+				t.kind === 'translate' ? `→ ${t.locale.toUpperCase()}` : $_('drafts.fragmentEditAll'),
 			typeLabel,
 			isOrphan: !row,
 			age: ago(env.savedAt),
@@ -108,15 +114,17 @@
 
 <div class="drafts-pane">
 	<div class="dp-head">
-		<h2 class="dp-title">Drafts</h2>
+		<h2 class="dp-title">{$_('drafts.title')}</h2>
 		<span class="dp-sub">
-			{#if loading}loading…{:else}{drafts.length} unfinished · autosaved locally{/if}
+			{#if loading}{$_('drafts.loading')}{:else}{$_('drafts.count', {
+					values: { count: drafts.length },
+				})}{/if}
 		</span>
 	</div>
-	<p class="dp-hint">Resume picks up exactly where you left off. Deleting a draft is permanent.</p>
+	<p class="dp-hint">{$_('drafts.hint')}</p>
 
 	{#if !loading && drafts.length === 0}
-		<p class="dp-empty">No drafts. Unsaved translations and new entries show up here.</p>
+		<p class="dp-empty">{$_('drafts.empty')}</p>
 	{/if}
 
 	{#snippet group(label: string, items: DraftRow[], resolvable: boolean)}
@@ -129,8 +137,8 @@
 						<div class="dtitle">{r.title} <span class="frag">{r.fragment}</span></div>
 						<div class="dsub">
 							{#if r.isOrphan}
-								<span class="tag orphan">orphan</span>
-								<span>target entry not found (deleted or source disabled)</span>
+								<span class="tag orphan">{$_('drafts.orphanTag')}</span>
+								<span>{$_('drafts.orphanReason')}</span>
 							{:else}
 								<span class="tag {r.kind}">{r.kind}</span>
 								<span>{r.typeLabel}</span>
@@ -141,22 +149,24 @@
 					<div class="dactions">
 						{#if resolvable}
 							<button class="btn warn" onclick={() => onResolveOrphans(orphanEnvs, r.env)}>
-								Resolve…
+								{$_('drafts.resolve')}
 							</button>
 						{:else}
-							<button class="btn primary" onclick={() => onResume(r.env)}>Resume</button>
+							<button class="btn primary" onclick={() => onResume(r.env)}
+								>{$_('drafts.resume')}</button
+							>
 						{/if}
-						<button class="btn danger" onclick={() => remove(r.env)}>Delete</button>
+						<button class="btn danger" onclick={() => remove(r.env)}>{$_('drafts.delete')}</button>
 					</div>
 				</div>
 			{/each}
 		{/if}
 	{/snippet}
 
-	{@render group('Needs attention', orphanRows, true)}
-	{@render group('Translations', translateRows, false)}
-	{@render group('New entries', addRows, false)}
-	{@render group('Editor', editorRows, false)}
+	{@render group($_('drafts.groupOrphans'), orphanRows, true)}
+	{@render group($_('drafts.groupTranslations'), translateRows, false)}
+	{@render group($_('drafts.groupAdded'), addRows, false)}
+	{@render group($_('drafts.groupEditor'), editorRows, false)}
 </div>
 
 <style>

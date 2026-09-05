@@ -8,17 +8,16 @@
 	import Icon, { type IconName } from '../Icon.svelte';
 	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
 	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
-	import { LOCALES } from '$lib/i18n';
+	import { LOCALES, _ } from '$lib/i18n';
 	import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 
-	const CRIT_METHODS: { id: CritMethod; label: string; hint: string }[] = [
-		{ id: CRIT_METHOD.classic, label: 'Classic', hint: 'By the book — roll the damage dice twice' },
-		{ id: CRIT_METHOD.loyal, label: 'Loyal', hint: 'One set rolled, one set at its maximum' },
-	];
+	// a closed vocabulary: the id is the fact, and its name and hint are catalog entries derived from
+	// it, so a method is spelled in exactly one place (docs/internals/ui.md ▸ Strings live in the catalogs)
+	const CRIT_METHODS: CritMethod[] = [CRIT_METHOD.classic, CRIT_METHOD.loyal];
 
-	const THEMES: { id: ThemeId; label: string; icon: IconName }[] = [
-		{ id: 'dark', label: 'Dark', icon: 'moon' },
-		{ id: 'light', label: 'Light', icon: 'sun' },
+	const THEMES: { id: ThemeId; icon: IconName }[] = [
+		{ id: 'dark', icon: 'moon' },
+		{ id: 'light', icon: 'sun' },
 	];
 
 	// An edition may be toggled off to hide it from the compendium/search, but never the last one
@@ -33,26 +32,24 @@
 </script>
 
 <section class="sec-head">
-	<h2>Appearance & language</h2>
-	<p class="sec-note">
-		Theme, language, and which rules edition the compendium shows. Saved on this device and restored
-		next time you open Charnik.
-	</p>
+	<h2>{$_('settings.general.title')}</h2>
+	<p class="sec-note">{$_('settings.general.blurb')}</p>
 </section>
 
 <div class="setting-row">
-	<span class="setting-label">Theme</span>
+	<span class="setting-label">{$_('settings.theme')}</span>
 	<div class="setting-options">
 		{#each THEMES as t (t.id)}
 			<button class="pill-btn" class:accent={app.theme === t.id} onclick={() => (app.theme = t.id)}
-				><Icon name={t.icon} size={13} /> {t.label}</button
+				><Icon name={t.icon} size={13} />
+				{$_(`settings.theme${t.id === 'dark' ? 'Dark' : 'Light'}`)}</button
 			>
 		{/each}
 	</div>
 </div>
 
 <div class="setting-row">
-	<span class="setting-label">Language</span>
+	<span class="setting-label">{$_('settings.language')}</span>
 	<div class="setting-options">
 		{#each LOCALES as l (l.id)}
 			<button
@@ -65,7 +62,7 @@
 </div>
 
 <div class="setting-row">
-	<span class="setting-label">Shown editions</span>
+	<span class="setting-label">{$_('settings.general.editions')}</span>
 	<div class="setting-options">
 		{#each SYSTEMS as sys (sys)}
 			<button
@@ -78,22 +75,20 @@
 </div>
 
 <div class="setting-row">
-	<span class="setting-label">Critical hits</span>
+	<span class="setting-label">{$_('settings.general.crit')}</span>
 	<div class="setting-options">
-		{#each CRIT_METHODS as m (m.id)}
+		{#each CRIT_METHODS as method (method)}
 			<button
 				class="pill-btn"
-				class:accent={app.critMethod === m.id}
-				title={m.hint}
-				onclick={() => (app.critMethod = m.id)}>{m.label}</button
+				class:accent={app.critMethod === method}
+				title={$_(`settings.general.critHint.${method}`)}
+				onclick={() => (app.critMethod = method)}
+				>{$_(`settings.general.critName.${method}`)}</button
 			>
 		{/each}
 	</div>
 </div>
-<p class="sec-note crit-note">
-	Either way the flat modifier is never doubled. A single roll can be switched to the other method
-	in the roller, where a table usually rules on it.
-</p>
+<p class="sec-note crit-note">{$_('settings.general.critNote')}</p>
 
 <style>
 	/* rows use the global .setting-row / .setting-label / .setting-options (components.css) */

@@ -248,12 +248,13 @@
 <svelte:head><title>{$_('nav.translate')} — Charnik</title></svelte:head>
 
 {#if !graph}
-	<Loading message="Loading…" error={content.error} />
+	<Loading message={$_('compendium.loading')} error={content.error} />
 {:else}
 	<div class="page">
 		<div class="subbar">
 			<button class="pill-btn accent" onclick={() => goto(`${base}/compendium`)}>
-				<Icon name="arrow-left" size={13} /> Back to compendium
+				<Icon name="arrow-left" size={13} />
+				{$_('compendium.backToBrowse')}
 			</button>
 			<span class="sep"></span>
 			<select class="type-sel" bind:value={selectedType}>
@@ -280,7 +281,7 @@
 
 			<div class="pane source">
 				<div class="pane-head">
-					<span class="panelabel eyebrow">Translate from</span>
+					<span class="panelabel eyebrow">{$_('translate.from')}</span>
 					<LanguagePicker bind:value={sourceLocale} {locales} />
 				</div>
 				<WikiDetail detail={sourceDetail} />
@@ -288,13 +289,14 @@
 
 			<div class="pane target">
 				<div class="pane-head">
-					<span class="panelabel eyebrow target-label">Into</span>
+					<span class="panelabel eyebrow target-label">{$_('translate.into')}</span>
 					<LanguagePicker bind:value={targetLocale} {locales} allowAdd accent />
 				</div>
 				{#if targetLocale === sourceLocale}
 					<p class="pick">
-						The target language is the same as the source ({sourceLocale.toUpperCase()}). Pick a
-						different language above to translate.
+						{$_('translate.sameLanguage', {
+							values: { language: sourceLocale.toUpperCase() },
+						})}
 					</p>
 				{:else if selected}
 					{@const st = locStatus(selected.data, selected.sourceLang, targetLocale)}
@@ -325,7 +327,7 @@
 						{/if}
 					</div>
 				{:else}
-					<p class="pick">Pick an entry to translate.</p>
+					<p class="pick">{$_('translate.pickEntry')}</p>
 				{/if}
 			</div>
 		</div>

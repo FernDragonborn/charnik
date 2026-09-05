@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { _ } from '$lib/i18n';
 	import { asText } from '$lib/util/format';
 	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
@@ -158,52 +159,49 @@
 	<header class="dialog-head">
 		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="orphan-title" class="dialog-title">
-			Orphaned draft{#if total > 1}<span class="count-pill">{index + 1} of {total}</span>{/if}
+			{$_('orphan.title')}{#if total > 1}<span class="count-pill"
+					>{$_('orphan.counter', { values: { index: index + 1, total } })}</span
+				>{/if}
 		</h2>
-		<p class="dialog-subtitle">
-			A saved draft points at content that no longer exists (deleted, renamed, or its source is
-			disabled). Reassign it to an existing entry, keep it as a new entry, or delete it.
-		</p>
+		<p class="dialog-subtitle">{$_('orphan.blurb')}</p>
 	</header>
 
 	{#if conflict}
 		<!-- CONFLICT: the chosen entry already has a draft — show both, user keeps one (no lost work) -->
 		<div class="conflict">
-			<p class="conflict-lead">
-				That entry already has a draft. Keep which? Both are shown so you don't lose work.
-			</p>
+			<p class="conflict-lead">{$_('orphan.conflictLead')}</p>
 			<div class="cf-panes">
 				<div class="cf-pane">
-					<div class="cf-label eyebrow">Your orphan draft</div>
-					<div class="cf-name">{draftName || '(no name)'}</div>
+					<div class="cf-label eyebrow">{$_('orphan.yours')}</div>
+					<div class="cf-name">{draftName || $_('orphan.noName')}</div>
 					<div class="cf-body">{draftText}</div>
-					<button class="btn primary" onclick={keepIncoming}>Keep this one</button>
+					<button class="btn primary" onclick={keepIncoming}>{$_('orphan.keepMine')}</button>
 				</div>
 				<div class="cf-pane">
-					<div class="cf-label eyebrow">Existing draft at that entry</div>
-					<div class="cf-name">{asText(conflict.existing.data.name, '(no name)')}</div>
+					<div class="cf-label eyebrow">{$_('orphan.theirs')}</div>
+					<div class="cf-name">{asText(conflict.existing.data.name, $_('orphan.noName'))}</div>
 					<div class="cf-body">{asText(conflict.existing.data.text)}</div>
-					<button class="btn" onclick={keepExisting}>Keep the existing one</button>
+					<button class="btn" onclick={keepExisting}>{$_('orphan.keepExisting')}</button>
 				</div>
 			</div>
 			<button class="btn ghost cf-back" onclick={() => (conflict = null)}
-				><Icon name="arrow-left" size={13} /> Back</button
+				><Icon name="arrow-left" size={13} /> {$_('orphan.back')}</button
 			>
 		</div>
 	{:else}
 		<div class="panes">
 			<!-- LEFT: the orphan draft, read-only -->
 			<div class="pane">
-				<div class="panelabel eyebrow">Orphaned draft · your work</div>
-				<div class="d-title">{draftName || '(no name yet)'}</div>
-				<div class="d-id">was: {oldId}</div>
+				<div class="panelabel eyebrow">{$_('orphan.paneYours')}</div>
+				<div class="d-title">{draftName || $_('orphan.noNameYet')}</div>
+				<div class="d-id">{$_('orphan.was', { values: { id: oldId } })}</div>
 				<div class="d-prose">{draftText}</div>
 			</div>
 
 			<!-- RIGHT: searchable reassign picker + preview -->
 			<div class="pane target">
-				<div class="panelabel eyebrow t">Reassign to…</div>
-				<input class="search" placeholder="Search entries…" bind:value={query} />
+				<div class="panelabel eyebrow t">{$_('orphan.reassignTo')}</div>
+				<input class="search" placeholder={$_('orphan.search')} bind:value={query} />
 				<div class="results">
 					{#each candidates as row (row.effectiveId)}
 						<button
@@ -215,12 +213,12 @@
 							<span class="src">{row.source}</span>
 						</button>
 					{:else}
-						<p class="no-res">No matching entries.</p>
+						<p class="no-res">{$_('orphan.noMatches')}</p>
 					{/each}
 				</div>
 				{#if preview}
 					<div class="preview">
-						<div class="pv-label eyebrow">Preview · target</div>
+						<div class="pv-label eyebrow">{$_('orphan.preview')}</div>
 						<div class="pv-title">{preview.title}</div>
 						<div class="pv-sub">{preview.sub}</div>
 						<div class="pv-body">{preview.body}…</div>
@@ -230,11 +228,15 @@
 		</div>
 
 		<footer class="dialog-foot">
-			<button class="btn danger" onclick={deleteCurrent}>Delete draft</button>
+			<button class="btn danger" onclick={deleteCurrent}>{$_('orphan.deleteDraft')}</button>
 			<span class="dialog-spacer"></span>
-			<button class="btn ghost" onclick={advance}>Skip</button>
+			<button class="btn ghost" onclick={advance}>{$_('orphan.skip')}</button>
 			<button class="btn primary" disabled={!selectedRow} onclick={() => reassign(true)}>
-				{selectedRow ? `Reassign to “${selectedRow.data.name_en}”` : 'Reassign'}
+				{selectedRow
+					? $_('orphan.reassignNamed', {
+							values: { name: String(selectedRow.data.name_en) },
+						})
+					: $_('orphan.reassign')}
 			</button>
 		</footer>
 	{/if}

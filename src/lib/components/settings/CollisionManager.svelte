@@ -3,6 +3,7 @@
 	// in several sources (source-namespaced identity). When two overlap an edition — e.g. your homebrew
 	// fork of an SRD spell, both active in 5e — this lets you keep ALL of them (they coexist, homebrew
 	// sorts on top) or keep just ONE source. Live + persisted via sourceConfig; no reload.
+	import { _ } from '$lib/i18n';
 	import Icon from '../Icon.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
@@ -20,25 +21,25 @@
 
 <section>
 	<header class="sec-head">
-		<h2>Collisions</h2>
-		<p class="sec-note">
-			Entries that share the same id across more than one source and overlap an edition. Keep them
-			all (they coexist — your homebrew sorts above the original) or pick a single source to show.
-		</p>
+		<h2>{$_('settings.collisions.title')}</h2>
+		<p class="sec-note">{$_('settings.collisions.blurb')}</p>
 	</header>
 
 	{#if !graph}
-		<p class="muted">Loading…</p>
+		<p class="muted">{$_('settings.health.loading')}</p>
 	{:else if collisions.length === 0}
 		<div class="all-clear">
-			<Icon name="check" size={13} /> No collisions — every entry’s id is unambiguous in its edition.
+			<Icon name="check" size={13} />
+			{$_('settings.collisions.allClear')}
 		</div>
 	{:else}
 		{#each collisions as c (c.key)}
 			<div class="collision">
 				<div class="c-head">
 					<span class="c-name">{c.name}</span>
-					<span class="c-type">{c.type.replace(/_/g, ' ')}</span>
+					<span class="c-type"
+						>{$_(`contentType.${c.type}`, { default: c.type.replace(/_/g, ' ') })}</span
+					>
 					<span class="c-id">{c.id}</span>
 				</div>
 				<div class="choices">
@@ -47,7 +48,7 @@
 						class:sel={choiceOf(c.key) === KEEP_ALL}
 						onclick={() => setCollision(c.key, KEEP_ALL)}
 					>
-						Keep all ({c.sources.length})
+						{$_('settings.collisions.keepAll', { values: { count: c.sources.length } })}
 					</button>
 					{#each c.sources as src (src)}
 						<button
@@ -55,7 +56,7 @@
 							class:sel={choiceOf(c.key) === src}
 							onclick={() => setCollision(c.key, src)}
 						>
-							Only {sourceLabel(src)}
+							{$_('settings.collisions.only', { values: { source: sourceLabel(src) } })}
 						</button>
 					{/each}
 				</div>

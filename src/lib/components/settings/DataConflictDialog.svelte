@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { _ } from '$lib/i18n';
 	import Icon from '../Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
@@ -47,27 +48,38 @@
 >
 	<header class="dialog-head">
 		<span class="dialog-badge warn"><Icon name="triangle-alert" size={17} /></span>
-		<h2 id="cf-title" class="dialog-title">That folder already has files</h2>
+		<h2 id="cf-title" class="dialog-title">{$_('settings.conflict.title')}</h2>
+		<!-- the two choices are named as the buttons name them, so the sentence and the footer cannot
+		     drift apart in any language -->
 		<p class="dialog-subtitle">
-			An automatic move needs an empty folder. If you've already copied your data across, choose
-			<b>Only change read path</b>. To combine both folders choose <b>Merge</b> — on a name clash the
-			newer file (highlighted) is kept.
+			{$_('settings.conflict.blurb', {
+				values: {
+					repoint: $_('settings.conflict.repoint'),
+					merge: $_('settings.conflict.mergeShort'),
+				},
+			})}
 		</p>
 	</header>
 
 	<div class="body">
 		<div class="paths">
-			<span><em>Current</em> <code title={currentPath}>{currentPath}</code></span>
-			<span><em>Chosen</em> <code title={targetPath}>{targetPath}</code></span>
+			<span
+				><em>{$_('settings.conflict.current')}</em>
+				<code title={currentPath}>{currentPath}</code></span
+			>
+			<span
+				><em>{$_('settings.conflict.chosen')}</em>
+				<code title={targetPath}>{targetPath}</code></span
+			>
 		</div>
 
 		<div class="tablewrap">
 			<table>
 				<thead>
 					<tr>
-						<th>File</th>
-						<th>Current folder</th>
-						<th>Chosen folder</th>
+						<th>{$_('settings.conflict.colFile')}</th>
+						<th>{$_('settings.conflict.colCurrent')}</th>
+						<th>{$_('settings.conflict.colChosen')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -76,11 +88,13 @@
 							<td class="fname">{r.path}</td>
 							<td class="when" class:newer={r.newer === 'source'} class:absent={!r.source}>
 								{fmt(r.source?.mtime)}
-								{#if r.newer === 'source'}<span class="tag">newer</span>{/if}
+								{#if r.newer === 'source'}<span class="tag">{$_('settings.conflict.newer')}</span
+									>{/if}
 							</td>
 							<td class="when" class:newer={r.newer === 'target'} class:absent={!r.target}>
 								{fmt(r.target?.mtime)}
-								{#if r.newer === 'target'}<span class="tag">newer</span>{/if}
+								{#if r.newer === 'target'}<span class="tag">{$_('settings.conflict.newer')}</span
+									>{/if}
 							</td>
 						</tr>
 					{/each}
@@ -88,15 +102,19 @@
 			</table>
 		</div>
 		<p class="count">
-			{rows.length} file(s) · {collisions} name clash{collisions === 1 ? '' : 'es'}
+			{$_('settings.conflict.counts', {
+				values: { files: rows.length, clashes: collisions },
+			})}
 		</p>
 	</div>
 
 	<footer class="dialog-foot">
-		<button class="btn" bind:this={safeBtn} onclick={onPickAnother}>Choose another folder</button>
+		<button class="btn" bind:this={safeBtn} onclick={onPickAnother}
+			>{$_('settings.conflict.pickAnother')}</button
+		>
 		<span class="dialog-spacer"></span>
-		<button class="btn" onclick={onRepoint}>Only change read path</button>
-		<button class="btn primary" onclick={onMerge}>Merge — keep newer</button>
+		<button class="btn" onclick={onRepoint}>{$_('settings.conflict.repoint')}</button>
+		<button class="btn primary" onclick={onMerge}>{$_('settings.conflict.merge')}</button>
 	</footer>
 </div>
 

@@ -205,52 +205,48 @@
 </script>
 
 <section class="sec-head">
-	<h2>Data location</h2>
-	<p class="sec-note">
-		Where Charnik keeps your characters and content on this device. Moving copies everything to the
-		new folder, checks every file arrived, and only then removes the old one.
-	</p>
+	<h2>{$_('settings.storage.title')}</h2>
+	<p class="sec-note">{$_('settings.storage.blurb')}</p>
 </section>
 
 {#if isDesktop}
 	<div class="setting-row">
-		<span class="setting-label">Folder</span>
+		<span class="setting-label">{$_('settings.storage.folder')}</span>
 		<code class="mono-path" title={path}>{path}</code>
 	</div>
 	<div class="setting-row">
 		<span class="setting-label"></span>
 		<div class="setting-options">
-			<button class="pill-btn" onclick={openDataDir} disabled={busy}>Open folder</button>
-			<button class="pill-btn" onclick={changeFolder} disabled={busy}>Change folder…</button>
+			<button class="pill-btn" onclick={openDataDir} disabled={busy}
+				>{$_('settings.storage.open')}</button
+			>
+			<button class="pill-btn" onclick={changeFolder} disabled={busy}
+				>{$_('settings.storage.change')}</button
+			>
 		</div>
 	</div>
 {:else}
-	<p class="sec-note">
-		On the web version your data lives in this browser's storage — there's no folder to move. Use
-		Export to take a copy with you.
-	</p>
+	<p class="sec-note">{$_('settings.storage.webNote')}</p>
 {/if}
 
 <section class="sec-head">
-	<h2>Demo character</h2>
-	<p class="sec-note">
-		Charnik ships with a demo character (Karroth the Red) to show the sheet at a glance. Restoring
-		rebuilds it to its original state — this wipes any changes you made to it (HP, spells, layout).
-		Your other characters aren't touched.
-	</p>
+	<h2>{$_('settings.demo.title')}</h2>
+	<p class="sec-note">{$_('settings.demo.blurb')}</p>
 </section>
 <div class="setting-row">
 	<span class="setting-label"></span>
 	<div class="setting-options">
-		<button class="pill-btn" onclick={() => (confirmRestore = true)}>Restore demo character</button>
+		<button class="pill-btn" onclick={() => (confirmRestore = true)}
+			>{$_('settings.demo.restore')}</button
+		>
 	</div>
 </div>
 
 {#if confirmRestore}
 	<ConfirmDialog
-		title="Restore the demo character?"
-		message="This rebuilds Karroth the Red to the original demo and discards any edits you made to it. Your other characters aren't affected."
-		confirmLabel="Restore demo"
+		title={$_('settings.demo.confirmTitle')}
+		message={$_('settings.demo.confirmBody')}
+		confirmLabel={$_('settings.demo.confirmAction')}
 		danger
 		onConfirm={restoreDemo}
 		onCancel={() => (confirmRestore = false)}

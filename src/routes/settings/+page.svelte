@@ -50,15 +50,16 @@
 	);
 	const collisionCount = $derived(graph ? detectCollisions(graph).length : 0);
 
-	const TABS: { id: Tab; label: string; badge?: () => number }[] = [
-		{ id: 'general', label: 'General' },
-		{ id: 'themes', label: 'Themes' },
-		{ id: 'data', label: 'Data' },
-		{ id: 'health', label: 'Content health', badge: () => issueCount },
+	// a tab's NAME derives from its id (`settings.tab.<id>`), so a tab is spelled in one place
+	const TABS: { id: Tab; badge?: () => number }[] = [
+		{ id: 'general' },
+		{ id: 'themes' },
+		{ id: 'data' },
+		{ id: 'health', badge: () => issueCount },
 		// the pack panel lives in this tab, so a waiting update is a reason to open it
-		{ id: 'sources', label: 'Content', badge: () => Object.keys(updates.pending).length },
-		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount },
-		{ id: 'plugins', label: 'Plugins' },
+		{ id: 'sources', badge: () => Object.keys(updates.pending).length },
+		{ id: 'collisions', badge: () => collisionCount },
+		{ id: 'plugins' },
 	];
 </script>
 
@@ -69,7 +70,7 @@
 	<div class="tabs">
 		{#each TABS as t (t.id)}
 			<button class="tab" class:active={tab === t.id} onclick={() => (tab = t.id)}>
-				{t.label}
+				{$_(`settings.tab.${t.id}`)}
 				{#if t.badge && t.badge() > 0}<span class="badge">{t.badge()}</span>{/if}
 			</button>
 		{/each}
