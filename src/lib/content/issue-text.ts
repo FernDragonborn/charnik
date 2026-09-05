@@ -34,6 +34,16 @@ const suggestion = (
 	return options.length ? { options } : undefined;
 };
 
+/** The issues a file fixes by being TOLD its content type — no directive and an unrecognised name, or
+ *  a directive naming a type this build does not have. Both are answered by writing `#content-type:`,
+ *  which is why content health offers the picker on exactly these two and nowhere else. */
+export const TYPE_ASSIGNABLE_KEYS: readonly string[] = [
+	key('unknownFileType'),
+	key('unknownDeclaredType'),
+	// the same fault said with a guess attached — the wording branches, the repair does not
+	key('unknownDeclaredTypeSuggested'),
+];
+
 export const issueText = {
 	/** `#content-type:` names a type this build has never heard of → the whole file is skipped. */
 	unknownDeclaredType: (declared: string, known: Iterable<string>): IssueText => {

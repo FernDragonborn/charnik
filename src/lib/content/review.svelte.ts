@@ -11,6 +11,7 @@
 import { app } from '$lib/stores/app.svelte';
 import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 import type { FilledMeta } from './meta';
+import type { ContentType } from './schemas';
 import { isPackWriteInFlight } from './remote/install';
 import { restampFiles, type RestampFailure } from './restamp';
 import { content, reloadContent } from './store.svelte';
@@ -59,6 +60,19 @@ export async function fillMissingMeta(fills: FilledMeta): Promise<RestampFailure
 		Object.values(fills[file] ?? {}).some((v) => v !== undefined && v !== ''),
 	);
 	const failures = await restampFiles(getUserStorage(), filled, fills);
+	await reloadContent();
+	return failures;
+}
+
+/**
+ * Tell a file what content type it holds: write `#content-type:` into its header and reload.
+ *
+ * The one fix for a file the loader could not place — a hand-named CSV, or one naming a type this
+ * build does not know — and the reason it belongs in the app at all is that the alternative is
+ * "open the file and add a line", which is the thing Charnik promises you never have to do.
+ */
+export async function assignFileType(file: string, type: ContentType): Promise<RestampFailure[]> {
+	const failures = await restampFiles(getUserStorage(), [file], { [file]: { type } });
 	await reloadContent();
 	return failures;
 }

@@ -3,6 +3,7 @@ import { fileHashState } from './hash';
 import { HASH_STATE, parseContentDirectives } from './meta';
 import { restampFiles, restampText } from './restamp';
 import { MemoryStorage } from '$lib/storage/memory';
+import { loadContent } from './loader';
 
 const LF_BODY = 'id,name_en\nfireball,Fireball\nshield,Shield';
 const lf = (...header: string[]) => `${header.join('\n')}\n${LF_BODY}`;
@@ -15,6 +16,32 @@ const STAMPED = lf(
 	'#content-license: CC-BY-4.0',
 	'#content-updated_at: 2020-01-01',
 );
+
+/* Assigning a type is the content-health panel's one repair action, and what makes "a file the app
+   could not place" fixable without opening the file. It is `restampText` with one key, so what is
+   worth proving is that the loader then PLACES the file. */
+describe('assigning a content type', () => {
+	const UNNAMED = 'id,name_en\nblinded,Blinded';
+
+	it('writes the directive, and the loader reads the file as that type', async () => {
+		const stamped = await restampText(UNNAMED, { type: 'condition', source: 'My Pack' });
+		expect(stamped).toContain('#content-type: condition');
+
+		const storage = new MemoryStorage();
+		await storage.write('content/mystuff.csv', stamped);
+		const graph = await loadContent(storage, ['content']);
+		expect(graph.issues.filter((i) => i.level === 'error')).toEqual([]);
+		expect(graph.list('condition').map((r) => r.id)).toEqual(['blinded']);
+	});
+
+	it('leaves the file unplaced while nothing declares the type', async () => {
+		const storage = new MemoryStorage();
+		await storage.write('content/mystuff.csv', UNNAMED);
+		const graph = await loadContent(storage, ['content']);
+		expect(graph.issues.map((i) => i.key)).toContain('contentIssue.unknownFileType');
+		expect(graph.rows).toEqual([]);
+	});
+});
 
 describe('restampText', () => {
 	it('makes a drifted file verify again', async () => {

@@ -82,6 +82,15 @@ const csvList = <T extends z.ZodTypeAny>(schema: T, map: (s: string) => unknown 
 const boolDefault = (d: boolean) =>
 	z.preprocess((v) => (v === '' || v == null ? d : v), bool).default(d);
 
+/** An enum cell that defaults to `d` when the cell is blank/missing — `boolDefault`'s sibling.
+ *
+ *  A bare `.default()` fires only for a MISSING key, and a CSV has no missing keys: every column of
+ *  every row exists, saying "not provided" with an empty cell. So a defaulted enum without this
+ *  rejects the blank cell it was given a default for, which is how the authoring form — which fills
+ *  every column of a new row with `''` — could not save a row at all. */
+const enumDefault = <V extends string>(schema: z.ZodType<V>, d: V) =>
+	z.preprocess((v) => (v === '' || v == null ? d : v), schema).default(d);
+
 /** `id` is a local slug; effective identity is `source:id`, built by the loader. */
 const idField = z
 	.string()
@@ -227,7 +236,7 @@ const speciesSchema = baseRow.extend({
 export const SPECIES_OPTION_KINDS = ['subrace', 'lineage', 'legacy', 'ancestry'] as const;
 const speciesOptionSchema = baseRow.extend({
 	species_id: reqStr,
-	kind: z.enum(SPECIES_OPTION_KINDS).default('subrace'),
+	kind: enumDefault(z.enum(SPECIES_OPTION_KINDS), 'subrace'),
 	option_label: optStr,
 	/** Like `species.boost_choice` — a "+N to M of your choice" ASI carried by the sub-option. */
 	boost_choice: optStr,
@@ -240,7 +249,7 @@ const classSchema = baseRow.extend({
 	// Every SRD class has exactly 2 save proficiencies, but the schema allows 1..6 so a homebrew
 	// class with a different count isn't rejected (E6 — additive, SRD data still validates).
 	saves: csvList(z.array(Ability).min(1).max(6)),
-	caster: CasterType.default('none'),
+	caster: enumDefault(CasterType, 'none'),
 	/** Multiclass share (defaults follow `caster` if blank — resolved in the rules layer). */
 	caster_share: z.preprocess(blankToUndef, CasterShare.optional()),
 	/** Spellcasting shape: prepared (choose from a set each rest) vs known (fixed learned list). */
@@ -313,7 +322,7 @@ const backgroundSchema = baseRow.extend({
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */
 const featSchema = baseRow.extend({
-	category: z.enum(FEAT_CATEGORIES).default('general'),
+	category: enumDefault(z.enum(FEAT_CATEGORIES), 'general'),
 	prereq: optStr,
 	repeatable: boolDefault(false),
 	/** Half-feat ability choice (curated from SRD): the abilities this feat's +1 may go to, as a
@@ -339,7 +348,7 @@ const spellSchema = baseRow.extend({
 	concentration: bool,
 	ritual: bool,
 	classes: optStr, // comma list of class ids that can learn it
-	resolution: Resolution.default('none'),
+	resolution: enumDefault(Resolution, 'none'),
 	save_ability: z.preprocess(blankToUndef, Ability.optional()),
 	damage: optStr, // "8d6 fire" base damage/effect summary
 	higher_level: optStr, // upcast / cantrip-scaling PROSE (the fallback for non-scalar upcasts)
@@ -371,7 +380,7 @@ const itemSchema = baseRow.extend({
  *  Standard / Exotic; 2024 (SRD 5.2.1) reorganized into Standard / Rare — both vocabularies are
  *  allowed so each edition renders its own RAW grouping. */
 const languageSchema = baseRow.extend({
-	category: z.enum(['standard', 'exotic', 'rare']).default('standard'),
+	category: enumDefault(z.enum(['standard', 'exotic', 'rare']), 'standard'),
 	speakers: optStr, // typical speakers (2014 only; 2024 dropped this)
 	script: optStr, // per-language script (2014 only; 2024 dropped this)
 });
@@ -502,7 +511,7 @@ const resourceOptionSchema = namedRow.extend({
 	resource_id: reqStr,
 	cost: optStr,
 	action: optStr,
-	action_type: z.enum(ACTION_TYPES).default('action'),
+	action_type: enumDefault(z.enum(ACTION_TYPES), 'action'),
 	// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
 	// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
 	available: optStr,

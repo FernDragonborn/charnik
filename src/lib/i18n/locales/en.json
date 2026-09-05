@@ -1558,6 +1558,8 @@
 		},
 		"health": {
 			"allClear": "All loaded content is healthy — no problems found.",
+			"assignType": "Assign type",
+			"assignTypeLabel": "This file holds",
 			"blurb": "What Charnik noticed while reading your content files. The app keeps working either way — but anything listed here is missing from the app, or isn’t doing what its file says it should. Each entry names the file to open and what to change in it.",
 			"countDrift": "{count} edited outside the app",
 			"countErrors": "{count} errors",

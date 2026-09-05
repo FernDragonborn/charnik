@@ -13,6 +13,9 @@
 	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
 	import { resourceJoinIssues } from '$lib/content/resource-joins';
+	import { TYPE_ASSIGNABLE_KEYS } from '$lib/content/issue-text';
+	import { CONTENT_TYPES, type ContentType } from '$lib/content/schemas';
+	import { assignFileType } from '$lib/content/review.svelte';
 	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
 	import { app } from '$lib/stores/app.svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
@@ -59,6 +62,27 @@
 	);
 
 	const fileLabel = (root: string, file?: string) => (file ? `${root}/${file}` : root);
+
+	// A file the loader could not place is the one problem here the user can FIX from this panel: it
+	// needs a `#content-type:` line and nothing else. The picker is per file, so two unplaced files do
+	// not share one choice; the write goes through the same re-stamp path as every other header fix.
+	const CONTENT_TYPE_NAMES = Object.keys(CONTENT_TYPES).sort() as ContentType[];
+	const isTypeAssignable = (key: string) => TYPE_ASSIGNABLE_KEYS.includes(key);
+	let typeChoice = $state<Record<string, ContentType | ''>>({});
+	let assigning = $state<string | null>(null);
+	let assignError = $state<Record<string, string>>({});
+	async function assignType(file: string) {
+		const type = typeChoice[file];
+		if (!type || assigning) return;
+		assigning = file;
+		try {
+			const failures = await assignFileType(file, type);
+			const failure = failures[0];
+			if (failure) assignError = { ...assignError, [file]: failure.error };
+		} finally {
+			assigning = null;
+		}
+	}
 	// The setting lives HERE, next to the drift list it governs — and it exists at all so the drift
 	// dialog's "don't ask again" can be undone. Desktop-only: the web build cannot write content back.
 	const canEditContent = detectPlatform() === Platform.Desktop;
@@ -111,12 +135,34 @@
 			{#if rows.length}
 				<div class="group-label eyebrow {cls}">{label}</div>
 				{#each rows as it, i (fileLabel(it.root, it.file) + i)}
+					{@const file = fileLabel(it.root, it.file)}
 					<div class="row {cls}">
 						<div class="row-file">
-							{fileLabel(it.root, it.file)}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
+							{file}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
 						</div>
 						<div class="row-msg">{sayText(it, $_)}</div>
 						{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
+						{#if canEditContent && isTypeAssignable(it.key)}
+							<div class="assign-type">
+								<label class="assign-label" for="assign-{file}"
+									>{$_('settings.health.assignTypeLabel')}</label
+								>
+								<select id="assign-{file}" bind:value={typeChoice[file]}>
+									<option value="">—</option>
+									{#each CONTENT_TYPE_NAMES as name (name)}
+										<option value={name}
+											>{$_(`contentType.${name}`, { default: name.replace(/_/g, ' ') })}</option
+										>
+									{/each}
+								</select>
+								<button
+									class="retry-btn"
+									disabled={!typeChoice[file] || assigning === file}
+									onclick={() => assignType(file)}>{$_('settings.health.assignType')}</button
+								>
+							</div>
+							{#if assignError[file]}<div class="row-detail">{assignError[file]}</div>{/if}
+						{/if}
 					</div>
 				{/each}
 			{/if}
@@ -262,6 +308,19 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
+	}
+	/* the one place this panel does something instead of reporting: the file needs a type and a type
+	   is a choice from a list */
+	.assign-type {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-top: var(--space-1-5);
+		flex-wrap: wrap;
+	}
+	.assign-label {
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
 	}
 	.retry-btn {
 		font-family: var(--font-mono);

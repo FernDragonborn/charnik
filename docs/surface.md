@@ -343,6 +343,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function pendingDriftItems` — Drifted files needing a date/hash bump.
 - `function adoptDriftedFiles` — Re-stamp the chosen drifted files and rebuild the graph.
 - `function fillMissingMeta` — Write the metadata the user supplied into each file's header.
+- `function assignFileType` — * Tell a file what content type it holds: write `#content-type:` into its header and reload.
 - `function autoAdoptDrift` — * Content-editing mode: the author is editing CSVs on disk right now and does not want a dialog on * every reload, so…
 
 ### `src/lib/content/sources.svelte.ts`
@@ -831,6 +832,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/issue-text.ts`
 
 - `interface IssueText` — The said half of a content issue: which sentence, and the particulars under it.
+- `const TYPE_ASSIGNABLE_KEYS` — The issues a file fixes by being TOLD its content type — no directive and an unrecognised name, or * a directive nami…
 - `const issueText`
 
 ### `src/lib/content/item-tags.ts`
@@ -1585,4 +1587,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 942 exports across 128 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 944 exports across 128 modules · 62 duplicate suspects._

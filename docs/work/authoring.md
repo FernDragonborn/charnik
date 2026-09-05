@@ -3,15 +3,15 @@
 > Tracker. The compendium editor, homebrew, drafts and translation — the surfaces that make
 > "everything is doable from the UI" true. The ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [~] **Content-type identification** — loader `#content-type: <type>` header directive DONE
-  (freely-named files declare their type; explicit wins over filename; unknown type → error).
-  Remaining: **UI type-assign** (a form that writes the directive) — folds into homebrew authoring.
-- [~] **Homebrew content from the UI** — DONE for all browsable types via an editable-article form
+- [~] **Homebrew content from the UI** — DONE for every listed type via an editable-article form
   (mirrors the compendium article; schema-driven fields → validated row → atomic BOM/CRLF write into
   `content/homebrew/<type>_hb.csv` in user storage; merged into the graph as an extra content root;
-  new row opens in the compendium). Remaining: **spell/monster get the generic grid** (their fancy
-  read layouts aren't editable yet), **edit/delete existing homebrew**, and linked-table authoring
-  (a subclass's `class_features` rows) — so homebrew subclasses are only half-covered.
+  new row opens in the compendium). Remaining: **linked-table authoring** (a subclass's
+  `class_features` rows) — so homebrew subclasses are only half-covered. Nothing else about a single
+  row is: a spell and a monster edit through the same generic form as everything else, a homebrew row
+  deletes from the editor, and a `resource` / `resource_option` is listed and authored like any
+  other type (`docs/internals/content.md` ▸ a type that has a NAME is listed).
+
 ## The compendium-editor refactor set
 
 A coordinated set: split the wiki detail into components, type the loader properly, and harden

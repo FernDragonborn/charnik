@@ -9,7 +9,7 @@
 	import { base } from '$app/paths';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import type { LoadedRow } from '$lib/content/loader';
-	import { isBrowsable, type ContentType } from '$lib/content/schemas';
+	import { hasProse, type ContentType } from '$lib/content/schemas';
 	import {
 		buildDetail,
 		sourceLabel,
@@ -56,7 +56,12 @@
 
 	// shared reactive store → a live content refresh re-renders every derived list below, no reload
 	const graph = $derived(content.graph);
-	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
+	// Every type that carries a NAME, which is one more than the article types: `resource` and
+	// `resource_option` are data tables rather than articles, but authoring one is only possible where
+	// its rows are listed, and "everything is doable from the UI" is a shipped invariant. Translate
+	// already lists exactly this set. The pure lookup tables (slot matrices, join rows) have no name
+	// to show and stay out. Search is still article-only, so the palette does not surface a spend row.
+	const types = $derived(graph ? [...graph.byType.keys()].filter(hasProse).sort() : []);
 
 	// CONTENT language — independent of the app UI language: a picker over the locales that actually
 	// exist in the CSVs (graph.locales). Persisted; defaults to the UI locale on first run, then sticks.

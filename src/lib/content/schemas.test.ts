@@ -25,6 +25,38 @@ describe('content schemas — unit', () => {
 		}
 	});
 
+	it('reads a blank defaulted-enum cell as the default, not as a bad value', () => {
+		// a CSV has no missing keys — every column of every row exists, and says "not provided" by
+		// being empty. A bare `.default()` fires only for a MISSING key, so without `enumDefault`
+		// nothing the authoring form writes (it fills every column) could be saved at all.
+		const option = parseRow('resource_option', {
+			id: 'whirlwind_kick',
+			systems: '5.5e',
+			name_en: 'Whirlwind Kick',
+			resource_id: 'ki',
+			action_type: '',
+		});
+		expect(option.success).toBe(true);
+		if (option.success) expect(option.data.action_type).toBe('action');
+
+		const spell = parseRow('spell', {
+			id: 'gust',
+			systems: '5.5e',
+			name_en: 'Gust',
+			level: '0',
+			school: 'transmutation',
+			casting_time: 'action',
+			range: '30 ft',
+			components: 'V S',
+			duration: 'Instantaneous',
+			concentration: '',
+			ritual: '',
+			resolution: '',
+		});
+		expect(spell.success).toBe(true);
+		if (spell.success) expect(spell.data.resolution).toBe('none');
+	});
+
 	it('rejects a bad id slug', () => {
 		const r = parseRow('species', {
 			id: 'Half Elf',

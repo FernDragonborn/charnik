@@ -19,6 +19,13 @@ file, a missing cell falling back to English.
 Nested data uses **linked tables**, not JSON in a cell: `class_features.csv` is keyed by `class_id`
 plus `level`. JSON-in-a-cell appears only where nothing else works.
 
+**A type that has a NAME is listed, even when it is not an article.** `resource` and
+`resource_option` are data tables — a pool's name, a spend option — with no prose to read, and the
+compendium and translate both list them anyway (`hasProse`), because authoring or translating a row
+is only possible where its rows are listed, and "everything is doable from the UI" is a shipped
+invariant. The pure lookup tables (slot matrices, join rows) carry no name and stay out of both.
+SEARCH is article-only (`isBrowsable`), so the palette never answers a spell query with a spend row.
+
 ## Identity
 
 A row's effective identity is **`type:source:id`**, so the same `id` from two different sources
@@ -81,6 +88,13 @@ column with a bug; the second was never column-shaped.
   by `splitList`. No nesting, no ordering, no third separator. `-` is banned because it is the L2
   minus operator, and `name:value` is the shape every effect token already uses — so a tag name and
   an effect scope are the same string (`two_handed`).
+
+**An empty cell means "not provided", including where the column has a default.** A CSV has no
+missing keys — every column of every row exists — so a bare zod `.default()`, which fires only for a
+MISSING key, rejects the blank cell it was given a default for. `boolDefault` and `enumDefault`
+(`content/schemas.ts`) are what a defaulted column is declared with, and the reason both exist is the
+authoring form: it writes every column of a new row, so a column that cannot take a blank cell is a
+row nobody can save.
 
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/item-tags.ts ▸ resolveItem`).

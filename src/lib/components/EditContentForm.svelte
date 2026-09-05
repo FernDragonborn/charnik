@@ -429,7 +429,9 @@
 		<div class="issues">
 			<b>{$_('homebrewForm.fixFirst')}</b>
 			<ul>
-				{#each issues as msg (msg)}<li>{msg}</li>{/each}
+				<!-- keyed by POSITION: two empty required fields say the same sentence, and keying a
+				     repeating list by its own text takes the page down instead of listing it -->
+				{#each issues as msg, i (i)}<li>{msg}</li>{/each}
 			</ul>
 		</div>
 	{/if}
