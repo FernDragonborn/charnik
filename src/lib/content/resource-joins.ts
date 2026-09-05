@@ -14,18 +14,17 @@
  * regex that would drift from the grammar.
  */
 import { parseToken, splitGuard } from '$lib/effects/token-parser';
-import { didYouMean } from '$lib/util/suggest';
+import { issueText, type IssueText } from './issue-text';
 import type { ContentGraph, LoadedRow } from './loader';
 import { tokensOf } from './loader';
 
-/** One unresolved reference, in the shape the content-health panel renders. */
-export interface JoinIssue {
+/** One unresolved reference, in the shape the content-health panel renders: where it is, and what
+ *  to say about it — the sentence as a catalog key, like every other content issue. */
+export type JoinIssue = IssueText & {
 	/** `root/file` of the row that points at nothing. */
 	file: string;
 	id: string;
-	message: string;
-	detail: string;
-}
+};
 
 /** Every pool id something in this edition actually GRANTS. */
 export function grantedPoolIds(graph: ContentGraph, system: string): Set<string> {
@@ -59,15 +58,12 @@ export function resourceJoinIssues(graph: ContentGraph, system: string): JoinIss
 		if (row.type !== 'resource_option' && row.type !== 'resource') continue;
 		const referenced = row.type === 'resource_option' ? String(row.data.resource_id) : row.id;
 		if (granted.has(referenced)) continue;
-		const hint = didYouMean(referenced, granted);
 		out.push({
 			file: where(row),
 			id: row.id,
-			message:
-				row.type === 'resource_option'
-					? `This option spends a resource nothing gives the character, so it never appears${hint || '. Check the id against the feature that grants the pool.'}`
-					: `This names a resource nothing gives the character, so the name is never used${hint || '. Check the id against the feature that grants the pool.'}`,
-			detail: `${row.type === 'resource_option' ? 'resource_id' : 'id'} "${referenced}"`,
+			...(row.type === 'resource_option'
+				? issueText.resourceOptionUngranted(referenced, granted)
+				: issueText.resourceUngranted(referenced, granted)),
 		});
 	}
 	return out;

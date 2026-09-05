@@ -360,10 +360,14 @@ explanation at all to anyone else.
 Name things as the UI names them: a resource by its name, an edition via `SYSTEM_LABELS`, a source
 via `sourceLabel`, a form field by its own label, a route by the path the user clicks. Say the
 consequence in the same sentence — *skipped*, *changes nothing*, *not offered*, *nothing was changed*.
-Where a closed vocabulary was mistyped, add `didYouMean`. Where a dozen internal reasons share one
+Where a closed vocabulary was mistyped, offer the nearest candidates — as the candidates, in a key of
+its own, so the guess and the plain wording are two whole sentences rather than one composed of
+halves. Where a dozen internal reasons share one
 meaning and one fix (every plugin failure), collapse them to one sentence at the seam and keep the
-reason in `detail`. Copy for content issues lives in `content/issue-text.ts`, not inline at the
-`push()`. Tests assert the durable fact — the identifier in `detail`, the level, the file — never the
+reason in `detail`. Copy for content issues lives in the catalogs under `contentIssue.*`; `content/issue-text.ts` holds
+the CHOICE of sentence and its values, and nothing is written inline at the `push()`. The loader has
+no locale, so an issue travels as `{key, values, detail}` and `issueMessage` says it where the
+translator is — a panel re-read after a language switch has to change with it. Tests assert the durable fact — the identifier in `detail`, the level, the file — never the
 sentence, which is copy and will be rewritten.
 
 ## Accessibility

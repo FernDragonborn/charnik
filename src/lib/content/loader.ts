@@ -33,7 +33,7 @@ import {
 import { fileHashState } from './hash';
 import { declaredSchema, migrateRows } from './migrations';
 import { CONTENT_SCHEMA_VERSION } from '../schema/version';
-import { issueText } from './issue-text';
+import { issueText, type IssueValue } from './issue-text';
 import { parseItemTags, NUMERIC_TAGS } from './item-tags';
 
 /** Identity + provenance a loaded row carries regardless of its content type. */
@@ -102,9 +102,12 @@ interface ContentIssue {
 	root: string;
 	file?: string;
 	id?: string;
-	/** What happened / what it means / what to change, in the reader's words — the wording lives in
-	 *  `issue-text.ts`, and the exact token, column or id goes in `detail`, never in here (UX-1). */
-	message: string;
+	/** What happened / what it means / what to change, in the reader's words — as the catalog KEY and
+	 *  its values, because the loader has no locale and the panel is re-read in whichever language the
+	 *  app is switched to. Which sentence a fault gets is `issue-text.ts`; the exact token, column or
+	 *  id goes in `detail`, never in the sentence (UX-1). Say it with `issueMessage`. */
+	key: string;
+	values?: Record<string, IssueValue>;
 	/** The particulars, rendered demoted under the sentence — the panel is the author's debugger too. */
 	detail?: string;
 }

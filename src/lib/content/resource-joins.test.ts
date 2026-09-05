@@ -58,7 +58,9 @@ describe('resource joins', () => {
 		const issues = resourceJoinIssues(g, '5.5e');
 		expect(issues.map((i) => i.id)).toEqual(['ghost']); // the resolving one is not reported
 		expect(issues[0]?.detail).toBe('resource_id "focuss"');
-		expect(issues[0]?.message).toMatch(/did you mean "focus"\?/); // the vocabulary is closed
+		// the vocabulary is closed, so the suggestion travels as the candidate to offer
+		expect(issues[0]?.key).toBe('contentIssue.resourceOptionUngrantedSuggested');
+		expect(issues[0]?.values?.options).toEqual({ options: ['focus'] });
 	});
 
 	it('flags a NAME for a pool nothing grants, and stays quiet for one that resolves', async () => {

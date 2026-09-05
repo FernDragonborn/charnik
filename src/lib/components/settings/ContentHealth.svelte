@@ -6,6 +6,8 @@
 	// Two effect-token layers merge in (SPEC10): static authoring lint over every loaded row's
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import Icon from '../Icon.svelte';
+	import { _ } from '$lib/i18n';
+	import { issueMessage } from '$lib/content/issue-text';
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { lintEffectTokens } from '$lib/effects/apply';
@@ -64,46 +66,44 @@
 
 <section class="health">
 	<header class="sec-head">
-		<h2>Content health</h2>
-		<p class="sec-note">
-			What Charnik noticed while reading your content files. The app keeps working either way — but
-			anything listed here is missing from the app, or isn’t doing what its file says it should.
-			Each entry names the file to open and what to change in it.
-		</p>
+		<h2>{$_('settings.health.title')}</h2>
+		<p class="sec-note">{$_('settings.health.blurb')}</p>
 	</header>
 
 	{#if canEditContent}
 		<div class="editing-mode">
 			<Switch
 				on={app.contentEditingMode}
-				title="Content-editing mode"
+				title={$_('settings.health.editingMode')}
 				onclick={() => (app.contentEditingMode = !app.contentEditingMode)}
 			/>
 			<span class="editing-text">
-				<strong>Content-editing mode</strong>
-				<span class="sec-note">
-					While this is on, a CSV you edit on disk has its hash re-stamped automatically and neither
-					startup prompt appears. Turn it off and Charnik asks before touching a file again.
-				</span>
+				<strong>{$_('settings.health.editingMode')}</strong>
+				<span class="sec-note">{$_('settings.health.editingModeBlurb')}</span>
 			</span>
 		</div>
 	{/if}
 
 	{#if !graph}
-		<p class="muted">Loading…</p>
+		<p class="muted">{$_('settings.health.loading')}</p>
 	{:else if total === 0}
 		<div class="all-clear">
-			<Icon name="check" size={13} /> All loaded content is healthy — no problems found.
+			<Icon name="check" size={13} />
+			{$_('settings.health.allClear')}
 		</div>
 	{:else}
 		<div class="counts">
-			<span class="count err" class:zero={errors.length === 0}>{errors.length} errors</span>
-			<span class="count warn" class:zero={warnings.length === 0}>{warnings.length} warnings</span>
+			<span class="count err" class:zero={errors.length === 0}
+				>{$_('settings.health.countErrors', { values: { count: errors.length } })}</span
+			>
+			<span class="count warn" class:zero={warnings.length === 0}
+				>{$_('settings.health.countWarnings', { values: { count: warnings.length } })}</span
+			>
 			<span class="count meta" class:zero={metaIssues.length === 0}
-				>{metaIssues.length} missing metadata</span
+				>{$_('settings.health.countMeta', { values: { count: metaIssues.length } })}</span
 			>
 			<span class="count drift" class:zero={driftItems.length === 0}
-				>{driftItems.length} edited outside the app</span
+				>{$_('settings.health.countDrift', { values: { count: driftItems.length } })}</span
 			>
 		</div>
 
@@ -115,68 +115,63 @@
 						<div class="row-file">
 							{fileLabel(it.root, it.file)}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
 						</div>
-						<div class="row-msg">{it.message}</div>
+						<div class="row-msg">{issueMessage(it, $_)}</div>
 						{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
 					</div>
 				{/each}
 			{/if}
 		{/snippet}
 
-		{@render issueGroup('Did not load — this content is missing from the app', errors, 'err')}
-		{@render issueGroup('Loaded, but something in it is off', warnings, 'warn')}
+		{@render issueGroup($_('settings.health.groupErrors'), errors, 'err')}
+		{@render issueGroup($_('settings.health.groupWarnings'), warnings, 'warn')}
 
 		{#if metaIssues.length}
-			<div class="group-label eyebrow meta">Files that don’t say where they came from</div>
-			<p class="sec-note group-note">
-				These files load and work normally — but without a source and a licence, Charnik can’t
-				credit their author or tell you what you may share. It offers to fill this in when it
-				starts, or you can add the two lines yourself at the top of the file.
-			</p>
+			<div class="group-label eyebrow meta">{$_('settings.health.groupMeta')}</div>
+			<p class="sec-note group-note">{$_('settings.health.groupMetaBlurb')}</p>
 			{#each metaIssues as m (m.file)}
 				<div class="row meta">
 					<div class="row-file">{m.file}</div>
 					<div class="row-detail">
-						missing: {m.missingHuman.map((k) => `#content-${k}`).join(', ')}
+						{$_('settings.health.missingDirectives', {
+							values: { directives: m.missingHuman.map((k) => `#content-${k}`).join(', ') },
+						})}
 					</div>
 				</div>
 			{/each}
 		{/if}
 
 		{#if driftItems.length}
-			<div class="group-label eyebrow drift">Files edited outside Charnik</div>
-			<p class="sec-note group-note">
-				Their contents no longer match the fingerprint recorded inside them. Nothing is broken and
-				your edits are being used — but until the fingerprint is re-stamped, Charnik leaves these
-				files alone rather than replacing them when their content pack updates.
-			</p>
+			<div class="group-label eyebrow drift">{$_('settings.health.groupDrift')}</div>
+			<p class="sec-note group-note">{$_('settings.health.groupDriftBlurb')}</p>
 			{#each driftItems as d (d.file)}
 				<div class="row drift">
 					<div class="row-file">{d.file}</div>
 					<div class="row-detail">
-						changed {d.changedAt ?? 'unknown'} · fingerprint dated {d.declaredDate ?? '—'}
+						{$_('settings.health.driftDates', {
+							values: {
+								changed: d.changedAt ?? $_('settings.health.unknownDate'),
+								stamped: d.declaredDate ?? '—',
+							},
+						})}
 					</div>
 				</div>
 			{/each}
 		{/if}
 
 		{#if joinIssues.length}
-			<div class="group-label eyebrow warn">Points at a resource that doesn’t exist</div>
+			<div class="group-label eyebrow warn">{$_('settings.health.groupJoins')}</div>
 			{#each joinIssues as j (j.file + j.id)}
 				<div class="row warn">
 					<div class="row-file">{j.file}<span class="row-id"> · {j.id}</span></div>
-					<div class="row-msg">{j.message}</div>
+					<div class="row-msg">{issueMessage(j, $_)}</div>
 					<div class="row-detail">{j.detail}</div>
 				</div>
 			{/each}
 		{/if}
 
 		{#if tokenLints.length}
-			<div class="group-label eyebrow warn">Effects that look like a slip of the pen</div>
-			<p class="sec-note group-note">
-				These work — Charnik is only pointing out things that are usually a typo, like a d7 or two
-				branches of one formula that return different kinds of value. Written for whoever authored
-				the row.
-			</p>
+			<div class="group-label eyebrow warn">{$_('settings.health.groupLints')}</div>
+			<p class="sec-note group-note">{$_('settings.health.groupLintsBlurb')}</p>
 			{#each tokenLints as l, i (l.id + i)}
 				<div class="row warn">
 					<div class="row-file">{l.id}</div>
@@ -189,9 +184,15 @@
 			<div class="group-label eyebrow warn plugin-retry-row">
 				<!-- not only EFFECT problems any more: a missing per-system data row (e.g. no class_casting
 			     for the active edition) is reported through the same channel -->
-				<span>Things that didn’t work out on “{deriveHealth.characterName}” (this sheet only)</span>
+				<span
+					>{$_('settings.health.groupDerive', {
+						values: { name: deriveHealth.characterName },
+					})}</span
+				>
 				{#if hasPluginIssue}
-					<button class="retry-btn" onclick={retryPlugins}>Retry plugins</button>
+					<button class="retry-btn" onclick={retryPlugins}
+						>{$_('settings.health.retryPlugins')}</button
+					>
 				{/if}
 			</div>
 			{#each deriveIssues as it, i (it.token + i)}

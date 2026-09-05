@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (62)
+## Duplicate suspects (63)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -52,6 +52,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `id` ×2 — src/lib/content/homebrew.ts · src/routes/combat/action-executor.svelte.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
+- `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -828,7 +829,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/issue-text.ts`
 
-- `interface IssueText` — The said half of a content issue: the sentence + the particulars under it.
+- `type IssueValue` — One value inside an issue's sentence: a literal (an id, a column, a count), another catalog word, * or the "did you m…
+- `interface IssueText` — The said half of a content issue: which sentence, the values in it, and the particulars under.
+- `function issueMessage` — An issue's sentence in the reader's language.
 - `const issueText`
 
 ### `src/lib/content/item-tags.ts`
@@ -986,7 +989,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/resource-joins.ts`
 
-- `interface JoinIssue` — One unresolved reference, in the shape the content-health panel renders.
+- `type JoinIssue` — One unresolved reference, in the shape the content-health panel renders: where it is, and what * to say about it — th…
 - `function grantedPoolIds` — Every pool id something in this edition actually GRANTS.
 - `function resourceJoinIssues` — * Rows that name a resource pool nothing grants.
 
@@ -1574,4 +1577,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 934 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 936 exports across 127 modules · 63 duplicate suspects._

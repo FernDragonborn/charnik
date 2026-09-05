@@ -34,7 +34,11 @@ export async function makeTempContentRoot(files: ContentFiles): Promise<ContentG
 	const graph = await loadContent(await makeTempContentStorage(files), [TEST_CONTENT_ROOT]);
 	const errors = graph.issues.filter((i) => i.level === 'error');
 	if (errors.length > 0) {
-		throw new Error(`fixture content failed to load:\n${errors.map((e) => e.message).join('\n')}`);
+		// the key + its particulars: the sentence lives in the catalogs, and a fixture's author is
+		// after the identifier anyway
+		throw new Error(
+			`fixture content failed to load:\n${errors.map((e) => `${e.key} ${e.detail ?? ''}`).join('\n')}`,
+		);
 	}
 	return graph;
 }
