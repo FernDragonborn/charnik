@@ -115,7 +115,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (77)
+## Global CSS classes (78)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -134,7 +134,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.chevron` | components.css |  |
 | `.chip` | components.css | A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so it reads as an of… |
 | `.combat-bar` | components.css | NEVER wraps: a status strip that grew a second row moved every control below it and read as two unrelated bars. |
-| `.combat-row` | components.css | --- combat action/attack row: the two-line list row shared by the Attacks + Actions panels (name + right-aligned hint… |
+| `.combat-row` | components.css |  |
 | `.combat-row-desc` | components.css |  |
 | `.combat-row-hint` | components.css |  |
 | `.combat-row-marker` | components.css |  |
@@ -164,6 +164,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
+| `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. |
 | `.is-open` | components.css |  |
 | `.loading` | components.css | --- full-view loading / empty state --- |
 | `.lucide` | components.css | --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so no consumer's scope… |
@@ -1613,4 +1614,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 961 exports across 131 modules · 62 duplicate suspects._
+_47 tokens · 78 global classes · 50 components · 961 exports across 131 modules · 62 duplicate suspects._

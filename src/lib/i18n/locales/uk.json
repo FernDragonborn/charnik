@@ -436,7 +436,8 @@
 			"utilizeDesc": "скористатися предметом"
 		},
 		"actions": {
-			"unavailable": "Зараз недоступно"
+			"unavailable": "Зараз недоступно",
+			"cantAfford": "Недостатньо: {resource}"
 		},
 		"attacks": {
 			"noteAttackBonus": "{amount} до атаки",
@@ -730,7 +731,8 @@
 			"preparedFull": "Ліміт підготовлених заклять вичерпано ({cap}) — спершу приберіть одне.",
 			"recharged": "{name} · повернуто {count}",
 			"rechargedAll": "{name} відновлено повністю",
-			"nothingRecharged": "Тоді ніщо не відновлюється"
+			"nothingRecharged": "Тоді ніщо не відновлюється",
+			"windowOpen": "{name} можна використати зараз"
 		},
 		"panel": {
 			"actions": "Дії",
@@ -916,6 +918,12 @@
 		},
 		"resource": {
 			"useOneTitle": "Витратити один {name} · {recharge} ({source})"
+		},
+		"actionType": {
+			"action": "дія",
+			"bonus_action": "бонусна дія",
+			"reaction": "реакція",
+			"free": "вільна"
 		}
 	},
 	"command": {

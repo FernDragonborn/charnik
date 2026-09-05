@@ -5,7 +5,14 @@
  */
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
+
+/** What was toasted, in order. A notice is the deliverable for a few of these behaviours (a window
+ *  opening, a resource restored), so the test has to be able to read what the player was told. */
+const toasts: string[] = [];
+vi.mock('svelte-sonner', () => ({
+	toast: Object.assign((message: string) => toasts.push(message), { custom: () => {} }),
+}));
 import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
@@ -1700,6 +1707,27 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 		combat.useResourceOrEnter('persistent_rage', 1);
 		expect(combat.resources.resourceSpent('rage')).toBe(1); // nothing was restored
 		expect(combat.resources.resourceSpent('persistent_rage')).toBe(0); // and nothing was charged
+	});
+
+	it('says so when a conditional ability window OPENS, and not on the first look', () => {
+		character.build.classes = [{ class: `class:${S}:barbarian`, level: 15 }];
+		const opened = () =>
+			(combat.sheet?.resourceOptions ?? []).find((o) => o.resourceId === 'persistent_rage')
+				?.available === true;
+
+		toasts.length = 0;
+		combat.resources.noticeOpenedWindows(); // first pass RECORDS — opening the sheet announces nothing
+		expect(opened()).toBe(false);
+		expect(toasts.length).toBe(0);
+
+		combat.economy.toggleCombat(); // combat start is the window
+		expect(opened()).toBe(true);
+		combat.resources.noticeOpenedWindows();
+		expect(toasts.some((m) => m.includes('Persistent Rage'))).toBe(true);
+
+		const said = toasts.length;
+		combat.resources.noticeOpenedWindows(); // still open, still the same fact — said once
+		expect(toasts.length).toBe(said);
 	});
 
 	it('a pool with SEVERAL actions stays a manual counter — the player picks in Actions', () => {

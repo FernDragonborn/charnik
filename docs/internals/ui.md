@@ -135,7 +135,10 @@ good", so they are pinned here and every component follows them.
     rather than a silence. It is blocked with `aria-disabled` and a `title`, never `disabled`: a
     disabled control takes neither hover nor focus, so the reason it carries can never be read. The
     refusal itself belongs in the view-model, where every caller meets it (`.is-blocked` in
-    `build.css` is what dimmed looks like).
+    `components.css` is what dimmed looks like, shared by the builder and the play sheet). The same
+    rule covers a play-sheet ability whose window is shut: it stays clickable and says why, and when
+    the window OPENS the sheet says that too — a greyed row nobody is told about is a feature a
+    player never notices.
 
 11. **A row's own state sits on the LEFT; a modifier on that state sits on the right.** The
     spellbook puts `EyeToggle`/`Pin` before the name and the "prepared" `Switch` after it;

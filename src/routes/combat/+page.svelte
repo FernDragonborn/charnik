@@ -48,6 +48,12 @@
 		combat.clampCurrentHp();
 	});
 
+	// A conditional ability's window opening is a thing that HAPPENS, and the sheet is where it is
+	// noticed — the panel already greys a closed one, but nothing said when it stopped being closed.
+	$effect(() => {
+		combat.resources.noticeOpenedWindows();
+	});
+
 	// CONCENTRATION-PLAN §7: reactively end concentration the instant HP hits 0 or an incapacitating
 	// condition lands (RAW). Reads hp + economy.incapacitated → re-runs when either changes.
 	$effect(() => {

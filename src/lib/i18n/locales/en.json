@@ -436,7 +436,8 @@
 			"utilizeDesc": "use an object"
 		},
 		"actions": {
-			"unavailable": "Not available right now"
+			"unavailable": "Not available right now",
+			"cantAfford": "Not enough {resource}"
 		},
 		"attacks": {
 			"noteAttackBonus": "{amount} attack",
@@ -730,7 +731,8 @@
 			"preparedFull": "Prepared spells full ({cap}) — unprepare one first.",
 			"recharged": "{name} · {count} back",
 			"rechargedAll": "{name} fully restored",
-			"nothingRecharged": "Nothing recharges then"
+			"nothingRecharged": "Nothing recharges then",
+			"windowOpen": "{name} can be used now"
 		},
 		"panel": {
 			"actions": "Actions",
@@ -916,6 +918,12 @@
 		},
 		"resource": {
 			"useOneTitle": "Use one {name} · {recharge} ({source})"
+		},
+		"actionType": {
+			"action": "action",
+			"bonus_action": "bonus action",
+			"reaction": "reaction",
+			"free": "free"
 		}
 	},
 	"command": {

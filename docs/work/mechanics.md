@@ -216,12 +216,6 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   - [ ] **2014 long rest recovers HALF your Hit Dice and the app picks them largest-first**; RAW lets
         the player choose which. Visible on a multiclass d12+d6 pool. A picker if anyone asks — 2024
         recovers all and is unaffected.
-  - [ ] **Highlight a conditional ability the moment its window opens.** `ActionsPanel` greys an
-        unavailable option and gives it a `title`, which is the "never hidden" half; the "highlighted
-        with a notice when it opens" half is the reason a player notices Persistent Rage at all, and
-        it does not exist. `characters.md` ▸ "A tracker surfaces, it never decides" is the contract.
-        While in there: that `title` is a hardcoded English `'Not available right now'`, which
-        `ui.md` ▸ "Strings live in the catalogs" forbids.
 - [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved

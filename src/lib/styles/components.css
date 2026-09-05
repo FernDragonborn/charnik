@@ -388,6 +388,15 @@ svg.lucide {
    (like `.combat-bar` above), so it lives global instead of duplicated across the two panel
    components split out of PanelCard. `.row-name` here is scoped by the `.combat-row` ancestor, so it
    never touches the spell/effect panels' own `.row-name`. --- */
+/* BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. Shown rather than
+   removed or `disabled`, because an absence is a silence and a disabled control cannot be asked
+   (docs/internals/ui.md ▸ the UX pattern contract, rule 10). Doubled for specificity over the
+   state fills that also colour these rows. */
+.is-blocked.is-blocked {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
 .combat-row {
 	display: grid;
 	grid-template-columns: 1fr auto;

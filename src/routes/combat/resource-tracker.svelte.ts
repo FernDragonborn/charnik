@@ -170,6 +170,28 @@ export class ResourceTracker {
 		return def.max - newSpent;
 	};
 
+	/** What each spend-option's `available` guard said last time we looked. Plain, not `$state`: it is
+	 *  read and written by the same call, and a reactive field there is a loop. */
+	private windowWas = new Map<string, boolean>();
+	/**
+	 * Say so when a conditional ability's window OPENS — Persistent Rage at combat start, Uncanny
+	 * Metabolism on the first initiative. The panel greys a closed one, which is the "never hidden"
+	 * half; nothing announced the moment it stopped being closed, which is the half a player needs to
+	 * notice it at all (`docs/internals/characters.md` ▸ a tracker surfaces, it never decides).
+	 *
+	 * It notices, and stops there: no spend, no pre-selection. The first pass only records — otherwise
+	 * opening the sheet would announce every ability the character has.
+	 */
+	noticeOpenedWindows = () => {
+		const seeded = this.windowWas.size > 0;
+		for (const o of this.getSheet()?.resourceOptions ?? []) {
+			const was = this.windowWas.get(o.id);
+			this.windowWas.set(o.id, o.available);
+			if (seeded && was === false && o.available)
+				toast(t('combat.notice.windowOpen', { name: o.name }));
+		}
+	};
+
 	/**
 	 * A boundary that is not a rest: dawn, or dusk. Everything whose recharge fires there comes back —
 	 * a wand's "regains 1d6+1 charges daily at dawn" is rolled here, because that is when the table

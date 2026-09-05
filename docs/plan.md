@@ -249,10 +249,11 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **Item charges and what spends them** · RECHARGE-3 (item charges) → D16 choice-UI
-  (→ `magic_initiate`) → SCOPED-BONUS. Item charges want an inventory, which N1 built.
-  SCOPED-BONUS is an L1 grammar change and a `docs/internals/compatibility.md` chokepoint, so it
-  stays its own piece rather than riding another wave.
+- **The choice a feature asks for** · D16's last piece, Magic Initiate's spell picks. It is the one
+  place a granted feature still asks a question the app cannot take an answer to, and the same
+  "player choice at a slot" block that already handles half-feats and Skilled is where it lands.
+  It needs a CONTENT shape for the question (which lists, how many, at which levels), so it sits
+  next to the content-shaped work rather than ahead of it.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.

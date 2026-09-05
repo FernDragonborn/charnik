@@ -84,12 +84,6 @@
 	border-color: var(--color-accent);
 	background: var(--color-accent-soft);
 }
-/* BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. Shown rather than
-   removed or `disabled`, because an absence is a silence and a disabled control cannot be asked. */
-.build-page .is-blocked.is-blocked {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
 /* an EMPTY required slot — crimson, because it is what is standing between here and a character */
 .build-page .slot.empty {
 	border: 1px dashed var(--color-accent);
