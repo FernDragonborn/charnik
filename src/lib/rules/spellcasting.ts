@@ -14,15 +14,12 @@ import { ordinal } from '../util/format';
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
-/** How a limited pool refills: fully on a `short` rest, fully on a `long` rest, `short_one` = regain
- *  ONE use per short rest + all on a long rest (2024 Second Wind), `consumable` = a one-use / N-charge
- *  item whose charges are CONSUMED and never come back on a rest (a potion; self-documents "one-use"
- *  where bare `other` didn't), or `other` = never auto but not a consumable (a manual/special-recharge
- *  pool the player resets themselves). An OPEN enum on purpose — add a policy member, never a boolean
- *  flag, so a new recharge rule extends the vocabulary instead of forking the model (see
- *  docs/internals/rules-core.md). The ONE owner of this vocabulary (D11) — the effects layer imports it,
- *  never redefines it. */
-export type Recharge = 'short' | 'long' | 'short_one' | 'consumable' | 'other';
+/** The one-word recharge policies, whose single owner is `rules/recharge` — a slot pool says one of
+ *  them too, and two spellings of one vocabulary is how the two would drift. The two-axis model
+ *  behind the words (`{trigger, amount}`, so a wand can say "1d6+1 at dawn") lives there as well. */
+export type { Recharge } from './recharge';
+
+import type { Recharge } from './recharge';
 
 /** A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots). */
 export type SlotTable = ReadonlyMap<number, readonly number[]>;

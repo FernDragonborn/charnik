@@ -102,7 +102,7 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('grant_resource:rage:3:long').resource).toEqual({
 			id: 'rage',
 			max: 3,
-			recharge: 'long',
+			recharge: { trigger: 'long', amount: 'all' },
 		});
 		expect(parseToken('grant_resource:ki').resource).toBeUndefined();
 	});
@@ -110,7 +110,7 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('grant_resource:angelic_slumber:1:consumable').resource).toEqual({
 			id: 'angelic_slumber',
 			max: 1,
-			recharge: 'consumable',
+			recharge: { trigger: 'consumable', amount: 'all' },
 		});
 	});
 	it('flags unknown / malformed tokens instead of dropping them', () => {

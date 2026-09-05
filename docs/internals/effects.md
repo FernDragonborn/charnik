@@ -37,7 +37,7 @@ play-state action model lives in [`actions.md`](actions.md), and the threat mode
 
 | File                                                                                     | Role                                                                                                                                                           |
 | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `token-parser.ts`                                                                        | **L1** — `parseToken` (string→`ParsedEffect`), `EFFECT_KIND` vocab, `matchesTarget`, `splitGuard`, the `Recharge`/`Defense` types.                             |
+| `token-parser.ts`                                                                        | **L1** — `parseToken` (string→`ParsedEffect`), `EFFECT_KIND` vocab, `matchesTarget`, `splitGuard`, the `RechargePolicy`/`Defense` types (the model itself is `rules/recharge.ts`).                             |
 | `apply.ts`                                                                               | The fold seam — `collectFacts` (tokens→typed `EffectFacts`), `applyEffects` (fold a stat), `matchesTarget` group fan-out, `mergeFacts`, the `TargetValidator`. |
 | `expression-parser.ts`                                                                   | **L2** — formula string → AST.                                                                                                                                 |
 | `expression-evaluator.ts`                                                                | **L2** — AST → value (integer OR dice term), over an `EffectCtx`.                                                                                              |
@@ -94,7 +94,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `reroll`                     | `reroll:<target>:<threshold>`                           | Reroll a die landing ≤ threshold once (GWF ≤2).                                                                                                                                                         |
 | `min_die`                    | `min_die:<target>:<floor>`                              | Treat a die below floor AS floor (Reliable Talent d20→10).                                                                                                                                              |
 | `grant_proficiency`          | `grant_proficiency:[expertise:]<target>`                | Grant proficiency/expertise as ONE ladder level (`none/half/proficient/expertise`).                                                                                                                     |
-| `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day…), `recharge ∈ short/long/short_one/other` (`short_one` = regain ONE use per short rest + all on a long rest, the 2024 pattern). `max` is cost-capped (`MAX_RESOURCE_MAX`). Recharge is an OPEN enum — see §Recharge-model roadmap below. |
+| `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day/an item's charges), `recharge` = a trigger, optionally with an amount: `short` · `long` · `short_one` · `consumable` · `other` · `dawn(1d6+1)` · `long(2)`. `max` is cost-capped (`MAX_RESOURCE_MAX`). See §How a pool comes back below. |
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `resist_immune`              | `resist_immune:<type>` (+ resist/immune/vulnerable)     | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
@@ -218,34 +218,43 @@ is_raging ? flat_bonus:damage+cha_mod                          Zealot: CHA to da
 div-by-zero degrades the token to inert text + optional manual modifier, WITH the parse detail in
 content-health (reason + offending token), never a bare "invalid".
 
-### Recharge-model roadmap (recharge is an OPEN enum, extend by member)
+### How a pool comes back: `{trigger, amount}`
 
-`recharge` currently covers the rest-based policies: `short` (full on any rest), `long` (full on a
-long rest), `short_one` (regain ONE per short rest + all on long — the recurring 2024 pattern:
-verified in SRD for Rage, Second Wind, Channel Divinity Cleric/Paladin, Wild Shape), `other` (manual).
-A new *rest*-policy = one more enum member (cheap, TS re-checks every `switch`), NEVER a boolean flag
-(AGENTS.md ▸ Taste (open enums, never booleans)).
+Two axes, and the words on disk are sugar over them (`rules/recharge.ts`). **Trigger** is the
+boundary it comes back at — `short` · `long` · `dawn` · `dusk` · `consumable` (used up for good) ·
+`other` (the player restores it by hand). **Amount** is `all` or an L2 expression, resolved when the
+boundary is crossed so a die is rolled at the moment the charges are regained.
 
-Three patterns the current enum can't express — **planned, not rejected** (the "when" for each):
+The cell is the trigger, optionally carrying the amount in parentheses: `short` · `long(2)` ·
+`dawn(1d6+1)`. Parentheses rather than another `:` because a token's segments are colon-separated
+and an amount is an expression with its own punctuation.
 
-1. **Partial-on-long** — Hit Dice regain HALF your level (round down) on a long rest. **When:** rides
-   the dedicated **hit-dice subsystem** (PLAN B2 short-rest HP), NOT the generic resource enum — its
-   spend/restore math is its own.
-2. **Formula recharge at a non-rest trigger** — magic items "regain 1d6+1 charges at **dawn**",
-   "recharge 5 (1d6) on a short rest". Needs a two-axis model `{trigger: dawn|dusk|short|long, amount:
-   full|<formula>}`, with `short`/`long`/`short_one` becoming sugar over it. **When:** the moment we
-   model **item charges as resources** (no consumer exists today → building it now is YAGNI).
-3. **Event-based regain** — 2024 "when you roll Initiative, regain … until you have N" (Monk Perfect
-   Focus, Bard Superior Inspiration). This is **`onEvent`, not a recharge policy**. **BUILT 2026-08-05**
-   for the NO-CHOICE case as the bounded L1 token **`regain_on_initiative:<resource>:<n>`** (restore the
-   pool up to N when you roll Initiative): a fact the combat layer AUTO-APPLIES on combat-enter + toasts
-   (the maintainer's call — auto + notify, not a player click). The token lives on the FEATURE, so
-   presence needs no gate. Perfect Focus (Focus → 4) shipped. The *player-choice* initiative-regain
-   (Persistent Rage, Uncanny Metabolism) stays an onUse resource-option, NOT this token. Arbitrary
-   event-triggered LOGIC (read state, branch) is L3 plugin `onEvent`, never a wider L1 token.
+`short` = `short(all)`, `long` = `long(all)`, and **`short_one` = `short(1)`** — the third "rest
+policy" invented for 2024's regain-one pattern turned out to be an amount, which is what made the
+second axis necessary rather than convenient. Nothing on disk changed.
 
-Do the enum-member path for each new rest policy now; introduce `{trigger, amount}` only when axis 2
-(item charges) lands, and keep axes 1 and 3 in their own subsystems.
+**A long rest fills anything a rest fills, in full**: it is the bigger boundary, so `short(1)`
+regains one use on a short rest and the whole pool on a long one — exactly what `short_one` did.
+**Dawn and dusk are not rests.** RAW ties a wand to the hour, and eight hours from noon is not dawn,
+so sleeping never refills one; the player presses **Dawn** (or **Dusk**) in the pass-time bar, which
+is shown only when this character HAS such a pool. The app has no clock, and inventing one to decide
+when a day turned would be the tracker deciding rather than surfacing.
+
+**Item charges are an ordinary pool, not a second counter.** A charged item says
+`grant_resource:<id>:<charges>:<trigger(amount)>` in its own `effects` cell, and an equipped or
+attuned item's effects are already gathered — so charges get the pips, the spend path, the chip and
+the rest handling that every other resource has. There is deliberately **no `charges` column**: the
+same fact spelled in two places is the drift this vocabulary exists to avoid.
+
+Two patterns still living in their own subsystems, on purpose:
+
+1. **Partial-on-long** — Hit Dice regain HALF your level on a long rest. It rides the hit-dice
+   subsystem, not this model: its spend/restore math is its own.
+2. **Event-based regain** — 2024's "when you roll Initiative, regain … until you have N" is
+   **`onEvent`, not a recharge policy**. Built for the no-choice case as the bounded L1 token
+   `regain_on_initiative:<resource>:<n>`, auto-applied on combat-enter with a toast. The
+   player-CHOICE version (Persistent Rage, Uncanny Metabolism) is an onUse resource-option, and
+   arbitrary event-triggered logic is L3 plugin `onEvent` — never a wider L1 token.
 
 **Displaying an expression:** auto-generating prose from a formula is rejected as unreliable. The
 player sees the **resolved value + the effect's name** ("+4 · Sneak Attack"); an optional

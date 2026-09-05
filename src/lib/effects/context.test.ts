@@ -206,7 +206,11 @@ describe('collectFacts · resource pools with expression max (Ki = monk level)',
 		];
 		const res = collectFacts(effects, monkCtx).resources;
 		expect(res).toHaveLength(1);
-		expect(res[0]).toMatchObject({ id: 'ki', max: 6, recharge: 'short' });
+		expect(res[0]).toMatchObject({
+			id: 'ki',
+			max: 6,
+			recharge: { trigger: 'short', amount: 'all' },
+		});
 	});
 
 	it('keeps a literal-max pool working (backward compatible)', () => {
@@ -216,7 +220,7 @@ describe('collectFacts · resource pools with expression max (Ki = monk level)',
 		expect(collectFacts(effects, ctx).resources[0]).toMatchObject({
 			id: 'rage',
 			max: 3,
-			recharge: 'long',
+			recharge: { trigger: 'long', amount: 'all' },
 		});
 	});
 });

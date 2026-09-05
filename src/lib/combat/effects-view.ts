@@ -13,9 +13,11 @@ import {
 	type Translate,
 } from '$lib/rules/pipeline';
 import { abilityShortLabel, titleCase, signed } from '$lib/util/format';
-import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
+import { parseToken, EFFECT_KIND, type RechargePolicy } from '$lib/effects/token-parser';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
 import type { EffectInstance } from '$lib/character/schema';
+import type { SaidText } from '$lib/util/say';
+import { RECHARGE_ALL } from '$lib/rules/recharge';
 
 /** A runtime effect instance — the character-schema type, re-exported for the combat views. */
 export type { EffectInstance } from '$lib/character/schema';
@@ -270,7 +272,7 @@ export interface ResourceView {
 	name: string;
 	id: string;
 	max: number;
-	recharge: Recharge;
+	recharge: RechargePolicy;
 }
 
 /** If an effect grants a fully-specified resource pool, resolve it — else null. The effect's Resources
@@ -311,17 +313,14 @@ export function groupEffects(effects: EffectInstance[]): {
 	return { buffs, debuffs, resources };
 }
 
-/** Recharge id → the label shown on a resource's recharge chip. A `Record<Recharge, …>` so adding a
- *  recharge policy is a compile error here until it gets a label (no silent 'special' fallthrough). */
-const RECHARGE_LABEL: Record<Recharge, string> = {
-	long: 'combat.recharge.long',
-	short: 'combat.recharge.short',
-	short_one: 'combat.recharge.shortOne',
-	consumable: 'combat.recharge.consumable',
-	other: 'combat.recharge.other',
-};
-/** The catalog KEY for a recharge policy — the caller translates, as it does for a death cause. */
-export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'combat.recharge.other';
+/** What a recharge chip SAYS: the boundary, plus the amount when it is not the whole pool. One key
+ *  per shape rather than a composed sentence — "(+1d6+1)" is a parenthetical a translator has to be
+ *  able to move, and a partial refill reads differently in different languages. The amount is dice
+ *  NOTATION or a number, so it passes through untranslated. */
+export const rechargeLabel = (policy: RechargePolicy): SaidText =>
+	policy.amount === RECHARGE_ALL
+		? { key: `combat.recharge.${policy.trigger}` }
+		: { key: `combat.recharge.${policy.trigger}Amount`, values: { amount: policy.amount } };
 
 /** Rounds an effect has left at the given round counter (null = indefinite, floor 0). */
 export const remainingRounds = (e: EffectInstance, round: number): number | null =>

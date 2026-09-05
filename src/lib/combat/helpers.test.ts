@@ -581,7 +581,11 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 	});
 	it('routes grant_resource effects to resources regardless of the positive flag', () => {
 		expect(g.resources).toHaveLength(1);
-		expect(g.resources[0]).toMatchObject({ id: 'arcane_recovery', max: 1, recharge: 'long' });
+		expect(g.resources[0]).toMatchObject({
+			id: 'arcane_recovery',
+			max: 1,
+			recharge: { trigger: 'long', amount: 'all' },
+		});
 	});
 });
 
@@ -598,7 +602,7 @@ describe('parseResourceEffect + rechargeLabel', () => {
 			name: 'Channel Divinity',
 			id: 'channel_divinity',
 			max: 2,
-			recharge: 'short',
+			recharge: { trigger: 'short', amount: 'all' },
 		});
 	});
 	it('returns null for a non-resource effect', () => {
@@ -608,10 +612,22 @@ describe('parseResourceEffect + rechargeLabel', () => {
 	});
 	// the KEY, not the word: a recharge chip reads in the player's language, so the catalog owns the
 	// wording and this only guards that every policy has a key of its own
-	it('names a catalog key per recharge policy', () => {
-		expect(rechargeLabel('long')).toBe('combat.recharge.long');
-		expect(rechargeLabel('short')).toBe('combat.recharge.short');
-		expect(rechargeLabel('short_one')).toBe('combat.recharge.shortOne');
+	it('names a catalog key per recharge policy, and says a partial amount', () => {
+		expect(rechargeLabel({ trigger: 'long', amount: 'all' })).toEqual({
+			key: 'combat.recharge.long',
+		});
+		expect(rechargeLabel({ trigger: 'short', amount: 'all' })).toEqual({
+			key: 'combat.recharge.short',
+		});
+		// `short_one` on disk IS short + one use back, and the chip says so with the amount in it
+		expect(rechargeLabel({ trigger: 'short', amount: '1' })).toEqual({
+			key: 'combat.recharge.shortAmount',
+			values: { amount: '1' },
+		});
+		expect(rechargeLabel({ trigger: 'dawn', amount: '1d6+1' })).toEqual({
+			key: 'combat.recharge.dawnAmount',
+			values: { amount: '1d6+1' },
+		});
 	});
 });
 

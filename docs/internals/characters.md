@@ -70,7 +70,10 @@ A play-state column expressing a policy or a kind is an **open enum**, never a b
 grow a third case: resource `recharge` looked binary (`short` / `long`) until 2024's Second Wind
 turned out to be "regain one use on a short rest, all on a long rest" — a third policy. Because
 `Recharge` was already an enum, that was one member (`short_one`) and one branch in `rest()`, not a
-new `partialRecharge` boolean and an exploding combination of flags.
+new `partialRecharge` boolean and an exploding combination of flags. The sequel proves the same
+point twice: a wand regaining `1d6+1` charges at dawn showed that the enum was two facts in a
+trenchcoat, and it became `{trigger, amount}` with every word kept as sugar
+(`docs/internals/effects.md` ▸ How a pool comes back) — nothing on disk moved.
 
 The partial maps (`abilityBoosts`, `spellSlotsSpent`, `hitDiceSpent`, `resourcesSpent`,
 `panelColumns`) deliberately stay `z.record(z.string())` under `noUncheckedIndexedAccess`, so a read

@@ -727,7 +727,10 @@
 			"incapacitated": "Incapacitated",
 			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions.",
 			"cantripsAlwaysKnown": "Cantrips are always known — you never prepare them.",
-			"preparedFull": "Prepared spells full ({cap}) — unprepare one first."
+			"preparedFull": "Prepared spells full ({cap}) — unprepare one first.",
+			"recharged": "{name} · {count} back",
+			"rechargedAll": "{name} fully restored",
+			"nothingRecharged": "Nothing recharges then"
 		},
 		"panel": {
 			"actions": "Actions",
@@ -751,7 +754,12 @@
 			"long": "long rest",
 			"other": "special",
 			"short": "short rest",
-			"shortOne": "short rest (+1)"
+			"dawn": "dawn",
+			"dusk": "dusk",
+			"shortAmount": "short rest (+{amount})",
+			"longAmount": "long rest (+{amount})",
+			"dawnAmount": "dawn (+{amount})",
+			"duskAmount": "dusk (+{amount})"
 		},
 		"restKind": {
 			"short": "Short",
@@ -875,7 +883,11 @@
 			"round": "+1 rd",
 			"minute": "+1 min",
 			"tenMinutes": "+10 min",
-			"hour": "+1 hr"
+			"hour": "+1 hr",
+			"newDay": "Dawn",
+			"newDayHint": "A new day begins: everything that recharges at dawn comes back.",
+			"nightfall": "Dusk",
+			"nightfallHint": "Night falls: everything that recharges at dusk comes back."
 		},
 		"turn": {
 			"round": "Round",
@@ -901,6 +913,9 @@
 			"enhancement": "+{n} attack & damage",
 			"permanent": "permanent",
 			"rounds": "{n} rds"
+		},
+		"resource": {
+			"useOneTitle": "Use one {name} · {recharge} ({source})"
 		}
 	},
 	"command": {

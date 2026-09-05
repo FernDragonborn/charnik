@@ -108,7 +108,7 @@
 	<div class="statusrow">
 		{#if c.play.inCombat}
 			<Turnbar {c} />
-		{:else if combat.hasTimedEffects}
+		{:else if combat.showTimeBar}
 			<TimeSkip />
 		{/if}
 		<Playbar />

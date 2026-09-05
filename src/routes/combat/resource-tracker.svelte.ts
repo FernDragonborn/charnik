@@ -15,6 +15,8 @@ import {
 } from '$lib/combat/helpers';
 import { hitDiceRecoveredOnLongRest } from '$lib/rules/core';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
+import { rechargeCount } from '$lib/effects/recharge-amount';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 
@@ -168,6 +170,47 @@ export class ResourceTracker {
 		return def.max - newSpent;
 	};
 
+	/**
+	 * A boundary that is not a rest: dawn, or dusk. Everything whose recharge fires there comes back —
+	 * a wand's "regains 1d6+1 charges daily at dawn" is rolled here, because that is when the table
+	 * rolls it.
+	 *
+	 * A CONTROL the player presses, never a clock the app runs: nothing here knows the hour, and a
+	 * long rest is eight hours from whenever it started, which is not dawn.
+	 */
+	passBoundary = (trigger: 'dawn' | 'dusk') => {
+		const c = this.getCharacter();
+		const sheet = this.getSheet();
+		if (!c || !sheet) return;
+		const spent = { ...c.play.resourcesSpent };
+		const said: string[] = [];
+		for (const r of sheet.resources) {
+			if (r.recharge.trigger !== trigger) continue;
+			const before = spent[r.id] ?? 0;
+			if (before === 0) continue; // nothing spent to give back — say nothing about it
+			if (r.recharge.amount === RECHARGE_ALL) {
+				spent[r.id] = 0;
+				said.push(t('combat.notice.rechargedAll', { name: r.name }));
+			} else {
+				const n = rechargeCount(r.recharge.amount, sheet.castCtx);
+				if (n === null) continue;
+				const left = Math.max(0, before - n);
+				spent[r.id] = left;
+				said.push(t('combat.notice.recharged', { name: r.name, count: before - left }));
+			}
+		}
+		c.play.resourcesSpent = spent;
+		void saveCharacterToStore(c);
+		toast(t(`combat.timeSkip.${trigger === 'dawn' ? 'newDay' : 'nightfall'}`), {
+			description: said.length ? said.join(' · ') : t('combat.notice.nothingRecharged'),
+		});
+	};
+
+	/** Does this character have anything that comes back at that boundary? The control for it is shown
+	 *  only then — a button that can never do anything is a worse answer than no button. */
+	hasBoundaryPool = (trigger: 'dawn' | 'dusk'): boolean =>
+		(this.getSheet()?.resources ?? []).some((r) => r.recharge.trigger === trigger);
+
 	/** The long-rest-only half of `rest`: slots, HP, concentration, Hit Dice and Exhaustion. Split out
 	 *  because it's the only branch that touches five subsystems, and inlining it pushed `rest` past the
 	 *  complexity budget. */
@@ -211,14 +254,15 @@ export class ResourceTracker {
 		const exhaustionBefore = c.play.exhaustion;
 		const spent = { ...c.play.resourcesSpent };
 		for (const r of sheet.resources) {
-			// full recharge: a `short` pool refills on ANY rest; a long rest refills everything EXCEPT the
-			// two never-auto policies — manual-only `other` and one-use `consumable` (a spent potion charge
-			// stays spent). `short_one` only regains ONE use per short rest (2024 Second Wind).
-			const neverAuto = r.recharge === 'other' || r.recharge === 'consumable';
-			const full = r.recharge === 'short' || (kind === 'long' && !neverAuto);
-			if (full) spent[r.id] = 0;
-			else if (kind === 'short' && r.recharge === 'short_one')
-				spent[r.id] = Math.max(0, (spent[r.id] ?? 0) - 1);
+			// what this rest gives the pool back is the recharge model's call, not this loop's:
+			// `null` nothing, `'all'` the whole pool, otherwise an amount to roll or read
+			const back = restRecharge(r.recharge, kind);
+			if (back === null) continue;
+			if (back === RECHARGE_ALL) spent[r.id] = 0;
+			else {
+				const n = rechargeCount(back, sheet.castCtx);
+				if (n !== null) spent[r.id] = Math.max(0, (spent[r.id] ?? 0) - n);
+			}
 		}
 		c.play.resourcesSpent = spent;
 		if (kind === 'long') {

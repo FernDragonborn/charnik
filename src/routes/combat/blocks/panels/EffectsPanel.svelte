@@ -20,6 +20,7 @@
 		range,
 		type EffectInstance,
 	} from '$lib/combat/helpers';
+	import { sayText } from '$lib/util/say';
 	import EffectDurationMenu from '../EffectDurationMenu.svelte';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
@@ -222,7 +223,7 @@
 						<!-- unlimited pool (`inf` max): no pips, count = uses since recharge -->
 						<span class="resource-count">{spent} · ∞</span>
 					{/if}
-					<span class="recharge-chip">{$_(rechargeLabel(r.recharge))}</span>
+					<span class="recharge-chip">{sayText(rechargeLabel(r.recharge), $_)}</span>
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<span
 						class="icon-button effect-remove"

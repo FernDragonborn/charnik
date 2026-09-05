@@ -593,8 +593,16 @@ describe('deriveSheet aggregator', () => {
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const byId = Object.fromEntries(s.resources.map((r) => [r.id, r]));
-		expect(byId.rage).toMatchObject({ name: 'Rage', max: 3, recharge: 'long' });
-		expect(byId.ki).toMatchObject({ name: 'Ki', max: 5, recharge: 'short' });
+		expect(byId.rage).toMatchObject({
+			name: 'Rage',
+			max: 3,
+			recharge: { trigger: 'long', amount: 'all' },
+		});
+		expect(byId.ki).toMatchObject({
+			name: 'Ki',
+			max: 5,
+			recharge: { trigger: 'short', amount: 'all' },
+		});
 	});
 
 	it('auto-calc off drops the effect layers (base values only)', () => {

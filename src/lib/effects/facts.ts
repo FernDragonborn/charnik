@@ -6,7 +6,7 @@
  * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts.
  */
 import type { Layer } from '../rules/pipeline';
-import type { Defense, Recharge } from './token-parser';
+import type { Defense, RechargePolicy } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`/`ability_checks`→`skill.*` (the ability checks the sheet models —
@@ -103,7 +103,7 @@ export interface ResourceDef {
 	id: string;
 	name: string; // display label (title-cased from id)
 	max: number;
-	recharge: Recharge;
+	recharge: RechargePolicy;
 	source: string; // the granting effect/feature
 }
 

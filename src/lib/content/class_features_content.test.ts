@@ -62,9 +62,16 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 		const rechargeOf = (g: ContentGraph, source: string, system: '5e' | '5.5e') =>
 			deriveSheet(barbarian(source, system, 3), g).resources.find((r) => r.id === 'rage')?.recharge;
 		// SRD 5.2.1: "regain one expended use when you finish a Short Rest, all on a Long Rest"
-		expect(rechargeOf(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e')).toBe('short_one');
+		// `short_one` on disk IS "short rest, one use back" in the model (rules/recharge.ts)
+		expect(rechargeOf(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e')).toEqual({
+			trigger: 'short',
+			amount: '1',
+		});
 		// SRD 5.1: "must finish a long rest before you can rage again"
-		expect(rechargeOf(await loadEdition('srd-2014'), 'SRD 5.1', '5e')).toBe('long');
+		expect(rechargeOf(await loadEdition('srd-2014'), 'SRD 5.1', '5e')).toEqual({
+			trigger: 'long',
+			amount: 'all',
+		});
 	});
 });
 
@@ -76,7 +83,7 @@ describe('shipped class features · Persistent Rage regain at combat start', () 
 		// the "once per Long Rest" gate resource
 		const gate = out.resources.find((r) => r.id === 'persistent_rage');
 		expect(gate?.max).toBe(1);
-		expect(gate?.recharge).toBe('long');
+		expect(gate?.recharge).toEqual({ trigger: 'long', amount: 'all' });
 		// the regain option restores ALL rage, spends the gate, and is greyed OUTSIDE combat
 		const opt = out.resourceOptions.find((o) => o.id === 'barbarian_persistent_rage_regain');
 		expect(opt?.resourceId).toBe('persistent_rage');
@@ -105,7 +112,7 @@ describe('shipped class feature · Uncanny Metabolism MULTI-action regain at com
 		const out = deriveSheet(c, g);
 		const gate = out.resources.find((r) => r.id === 'uncanny_metabolism');
 		expect(gate?.max).toBe(1);
-		expect(gate?.recharge).toBe('long');
+		expect(gate?.recharge).toEqual({ trigger: 'long', amount: 'all' });
 		// the MULTI-action: `;`-separated → regain all focus THEN heal Martial-Arts-die (d6 @ L2) + level
 		const opt = out.resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
 		expect(opt?.resourceId).toBe('uncanny_metabolism');
@@ -219,7 +226,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 		it(`${system}: uses = CHA modifier, on a LONG rest before Font of Inspiration`, async () => {
 			const s = deriveSheet(bard(source, system, 4, 16), await loadEdition(dir));
 			expect(pool(s)?.max).toBe(3); // CHA 16 → +3
-			expect(pool(s)?.recharge).toBe('long');
+			expect(pool(s)?.recharge).toEqual({ trigger: 'long', amount: 'all' });
 		});
 
 		it(`${system}: minimum ONE use even with a negative CHA modifier`, async () => {
@@ -230,7 +237,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 		it(`${system}: Font of Inspiration (level 5) flips the recharge to SHORT at the same max`, async () => {
 			const s = deriveSheet(bard(source, system, 5, 16), await loadEdition(dir));
 			expect(pool(s)?.max).toBe(3); // unchanged — the feature only changes recovery
-			expect(pool(s)?.recharge).toBe('short');
+			expect(pool(s)?.recharge).toEqual({ trigger: 'short', amount: 'all' });
 		});
 	}
 

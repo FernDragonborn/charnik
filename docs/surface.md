@@ -419,7 +419,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (114 modules)
+## Library functions & types (116 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -691,7 +691,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResourceView` — A grant_resource effect, resolved for the Resources section (name + charges + recharge).
 - `function parseResourceEffect` — If an effect grants a fully-specified resource pool, resolve it — else null.
 - `function groupEffects` — Split active effects into the three panel sections.
-- `const rechargeLabel` — The catalog KEY for a recharge policy — the caller translates, as it does for a death cause.
+- `const rechargeLabel` — What a recharge chip SAYS: the boundary, plus the amount when it is not the whole pool.
 - `const remainingRounds` — Rounds an effect has left at the given round counter (null = indefinite, floor 0).
 - `function endConcentrationCarriedBy` — * An effect leaving the sheet takes its concentration WITH it.
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
@@ -1267,6 +1267,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SandboxPluginSpec`
 - `function createSandboxEvaluator` — * Build the `PluginEvaluator` for a set of consented, enabled plugins.
 
+### `src/lib/effects/recharge-amount.ts`
+
+- `function rechargeCount` — * The number of uses an amount gives back, or `null` when there is no number to give: the amount is * {@link RECHARGE…
+
 ### `src/lib/effects/resolver.ts`
 
 - `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
@@ -1276,7 +1280,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
 - `type EffectKind`
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
-- `re-export Recharge` — Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep importing it from the e…
+- `re-export RechargePolicy` — The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep importing it from the…
 - `type Defense`
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
@@ -1423,10 +1427,22 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function isWeaponProficient` — Is the character proficient with this weapon?
 - `function isArmorProficient` — Is the character proficient with this armor/shield?
 
+### `src/lib/rules/recharge.ts`
+
+- `const RECHARGE_TRIGGERS` — * The boundaries a pool can come back at.
+- `type RechargeTrigger`
+- `const RECHARGE_ALL` — The whole pool, said as a cell.
+- `type RechargeAmount` — How much comes back at that boundary: {@link RECHARGE_ALL}, or an L2 expression (`1d6+1`, `2`) * resolved when the bo…
+- `interface RechargePolicy`
+- `type Recharge` — The one-word policies an `effects` cell may still say, and what each one means in the model.
+- `function parseRecharge` — Read a recharge cell into the model.
+- `function restRecharge` — * What a rest gives this pool back: `'all'`, an amount expression, or `null` for nothing.
+- `function rechargeRank` — How GENEROUS a policy is, for the equal-max tie-break when two features grant the same pool: how * often it comes rou…
+
 ### `src/lib/rules/spellcasting.ts`
 
 - `type CasterShare` — Multiclass caster-level contribution + rounding (data value `caster_share`).
-- `type Recharge` — How a limited pool refills: fully on a `short` rest, fully on a `long` rest, `short_one` = regain * ONE use per short…
+- `re-export Recharge` — The one-word recharge policies, whose single owner is `rules/recharge` — a slot pool says one of * them too, and two …
 - `type SlotTable` — A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots).
 - `interface CastPool` — A castable pool — a slot group (has `spellLevel`) or a generic/limited resource.
 - `const PACT_SLOT_KEY` — The `spellSlotsSpent` key for the Warlock Pact Magic pool.
@@ -1597,4 +1613,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 951 exports across 129 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 961 exports across 131 modules · 62 duplicate suspects._

@@ -182,25 +182,21 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   ability with each tool. So the ability comes from a column where that edition's SRD states one, and
   from the player at roll time where it does not — never guessed.
   Unblocks Skilled's tool half in D16.
-- [ ] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The two axes the
-  `recharge` enum cannot express and that a rest policy should not be bent into. Nothing tracks item
-  charges as a resource today — no column, no consumer — which is exactly why the generic model waits
-  for this rather than being pre-built; the reasoning is `docs/internals/effects.md` ▸ Recharge-model
-  roadmap, axis 2. N1's inventory, which it needs, is built.
-  - [ ] **Item-charge data:** a `charges` (max) + `recharge` spec on the item schema; an owned or
-        attuned charged item GRANTS an ordinary resource pool, reusing `grant_resource` and the whole
-        resource subsystem rather than inventing a parallel counter.
-  - [ ] **Generalize recharge → `{trigger, amount}`:** trigger ∈ `short|long|dawn|dusk`, amount ∈
-        `all|<N>|<formula>`, with the existing `short`/`long`/`short_one`/`consumable` members
-        becoming sugar over it so nothing on disk breaks. A formula amount resolves through the L2
-        evaluator at rest/dawn time.
-  - [ ] **Wire `dawn`/`dusk`** to the out-of-combat "pass time" control (`advanceTime`) — a day
-        boundary fires the dawn recharge.
-  - [ ] **A shipped SRD charged item or two as the first consumer**, converter-sourced.
+- [~] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The model is
+  BUILT (`rules/recharge.ts`, `docs/internals/effects.md` ▸ How a pool comes back): triggers
+  `short|long|dawn|dusk|consumable|other` with an optional amount (`dawn(1d6+1)`), the one-word
+  policies as sugar over it (`short_one` = `short(1)`), the rest path reading the model instead of
+  branching on words, and a **Dawn / Dusk** control in the pass-time bar shown only when this
+  character has such a pool. **No `charges` column**: a charged item says
+  `grant_resource:<id>:<charges>:<trigger(amount)>` in its own `effects` cell and gets the whole
+  resource subsystem — pips, spend, chip, rest — for nothing.
+  - [ ] **A shipped SRD charged item or two as the first consumer**, converter-sourced — a commit in
+        `charnik-content-srd` with an assert here. Everything the app half needs is in place; what is
+        missing is the row, and a row is never authored from memory.
 - [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
   small, each fires on an existing path, and none blocks the others.
   - [ ] **Champion Heroic Rally — a turn-start heal.** It is the SECOND declarative event-action after
-        `regain_on_initiative`, which is the condition `effects.md` ▸ Recharge-model roadmap set for
+        `regain_on_initiative`, which is the condition `effects.md` ▸ How a pool comes back set for
         generalizing the trigger dimension. **So generalize it now** (`on_event:<event>:<action>` over
         a bounded event set × the bounded action verbs) rather than adding a third narrow token and
         waiting again. Arbitrary event LOGIC stays L3 plugin `onEvent` — widening L1 past a bounded

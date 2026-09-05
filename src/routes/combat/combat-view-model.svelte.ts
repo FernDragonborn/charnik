@@ -238,6 +238,12 @@ class CombatVM {
 	hasTimedEffects = $derived(
 		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null),
 	);
+	/** Pools that come back at dawn / at dusk — each gates its own control in the time bar, so a
+	 *  character with no such pool never sees a button that would do nothing. */
+	hasDawnPool = $derived(this.resources.hasBoundaryPool('dawn'));
+	hasDuskPool = $derived(this.resources.hasBoundaryPool('dusk'));
+	/** Is there anything out of combat that the passage of time DOES something to? */
+	showTimeBar = $derived(this.hasTimedEffects || this.hasDawnPool || this.hasDuskPool);
 	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
 	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
 	pinned = $derived<Record<string, boolean>>(

@@ -19,14 +19,37 @@
 
 <section class="combat-bar">
 	<span class="bar-label"><Icon name="timer" size={13} /> {$_('combat.timeSkip.title')}</span>
-	{#each STEPS as [key, rounds] (key)}
+	{#if combat.hasTimedEffects}
+		{#each STEPS as [key, rounds] (key)}
+			<button
+				type="button"
+				class="step"
+				onclick={() => combat.economy.advanceTime(rounds)}
+				title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
+			>
+		{/each}
+	{/if}
+	<!-- Dawn and dusk are BOUNDARIES, not durations: a wand recharges at dawn, and the app has no
+	     clock to know when that is, so the player says so. Shown only when something comes back
+	     there — a button that could never do anything says the wrong thing about the sheet. -->
+	{#if combat.hasDawnPool}
 		<button
 			type="button"
-			class="step"
-			onclick={() => combat.economy.advanceTime(rounds)}
-			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
+			class="step boundary"
+			onclick={() => combat.resources.passBoundary('dawn')}
+			title={$_('combat.timeSkip.newDayHint')}
+			><Icon name="sun" size={12} /> {$_('combat.timeSkip.newDay')}</button
 		>
-	{/each}
+	{/if}
+	{#if combat.hasDuskPool}
+		<button
+			type="button"
+			class="step boundary"
+			onclick={() => combat.resources.passBoundary('dusk')}
+			title={$_('combat.timeSkip.nightfallHint')}
+			><Icon name="moon" size={12} /> {$_('combat.timeSkip.nightfall')}</button
+		>
+	{/if}
 </section>
 
 <style>
@@ -41,6 +64,14 @@
 		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 		color: var(--color-text-muted);
+	}
+	/* a boundary is a different KIND of press than "skip ten minutes": it fires a recharge */
+	.step.boundary {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		border-color: var(--color-border-strong);
+		color: var(--color-text);
 	}
 	.step:hover {
 		border-color: var(--color-border-strong);

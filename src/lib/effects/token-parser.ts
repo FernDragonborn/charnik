@@ -13,7 +13,7 @@
  */
 import type { SaidText } from '$lib/util/say';
 import type { Layer } from '../rules/pipeline';
-import type { Recharge } from '../rules/spellcasting';
+import { parseRecharge, type RechargePolicy } from '../rules/recharge';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
@@ -81,9 +81,9 @@ export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
  *  other kind bare (`flat_bonus` with no target) stays malformed → `unknown`. */
 const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KIND.damageReroll]);
 
-// Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep
+// The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep
 // importing it from the effects surface they already use.
-export type { Recharge };
+export type { RechargePolicy };
 export type Defense = 'resist' | 'immune' | 'vulnerable';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
@@ -127,7 +127,7 @@ export interface ParsedEffect {
 	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). `max`
 	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
 	 *  derive time — exactly one of the two is set. */
-	resource?: { id: string; max?: number; maxExpr?: string; recharge: Recharge };
+	resource?: { id: string; max?: number; maxExpr?: string; recharge: RechargePolicy };
 	/** plugin: the parsed handler reference. `args` is OPAQUE, hostile text the handler must parse
 	 *  defensively (docs/internals/plugins.md §1) — never interpreted here. */
 	plugin?: { namespace: string; handlerName: string; args: string };
@@ -250,13 +250,14 @@ const parseGrantResource: KindParser = (rest, raw, kind) => {
 	// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
 	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
 	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
-	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short_one|short|long|consumable|other))?$/i.exec(
-		rest.trim(),
-	);
+	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):([a-z_]+(?:\([^:]*\))?))?$/i.exec(rest.trim());
 	if (!m?.[1]) return { kind: 'unknown', raw };
 	const id = m[1].toLowerCase();
 	const maxSlot = m[2]?.trim();
-	const recharge = m[3]?.toLowerCase() as Recharge | undefined;
+	// the recharge word (or `trigger(amount)`) anchors the end; an unknown one leaves the token
+	// unparsed rather than defaulting to a policy the author did not write
+	const recharge = m[3] ? parseRecharge(m[3]) : undefined;
+	if (maxSlot && m[3] && !recharge) return { kind: 'unknown', raw };
 	if (maxSlot && recharge) {
 		const resource = /^\d+$/.test(maxSlot)
 			? { id, max: Math.min(Number(maxSlot), MAX_RESOURCE_MAX), recharge }

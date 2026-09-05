@@ -24,6 +24,7 @@ import {
 	type EffectIssue,
 	type ParsedEffect,
 } from './token-parser';
+import { rechargeRank } from '../rules/recharge';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
 	EffectFacts,
@@ -36,18 +37,6 @@ import type {
 // re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
 export { matchesTarget };
 export type { EffectFacts, NumericFact, TargetValidator, TargetCheck, ResourceDef } from './facts';
-
-/** How GENEROUS a recharge policy is, for the equal-max tie-break in `pushResource`. Ordered by how
- *  often the pool comes back: every short rest (full) → one use per short rest → every long rest →
- *  never automatically. A new `Recharge` member must be ranked here, or it ties with `other`. */
-const RECHARGE_RANK: Record<string, number> = {
-	short: 4,
-	short_one: 3,
-	long: 2,
-	other: 1,
-	consumable: 0,
-};
-const rechargeRank = (d: ResourceDef): number => RECHARGE_RANK[d.recharge] ?? 1;
 
 /**
  * Builds the typed-facts object (D7) in ONE pass over the resolved effect list. State (the facts +
@@ -305,7 +294,7 @@ class FactsCollector {
 		if (
 			!prev ||
 			def.max > prev.max ||
-			(def.max === prev.max && rechargeRank(def) > rechargeRank(prev))
+			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
 		)
 			this.pools.set(def.id, def);
 	}

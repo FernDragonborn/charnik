@@ -11,6 +11,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
+	import { sayText } from '$lib/util/say';
 	import { provenance } from '$lib/actions/provenance';
 	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
 
@@ -94,7 +95,13 @@
 						<button
 							type="button"
 							class="resource"
-							title="Use one {r.name} · {rechargeLabel(r.recharge)} ({r.source})"
+							title={$_('combat.resource.useOneTitle', {
+								values: {
+									name: r.name,
+									recharge: sayText(rechargeLabel(r.recharge), $_),
+									source: r.source,
+								},
+							})}
 							onclick={() => combat.useResourceOrEnter(r.id, r.max)}
 						>
 							{r.name}

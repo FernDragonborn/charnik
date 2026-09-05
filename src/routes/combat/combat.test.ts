@@ -797,6 +797,31 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.inventory.coinOf('ep')).toBe(7);
 	});
 
+	it('a dawn pool comes back at dawn and NOT because the character slept', () => {
+		// a charged item, as content says it: a pool that regains a rolled amount daily at dawn
+		character.play.effects = [
+			{
+				iid: 'wand',
+				label: 'Wand of the War Mage',
+				effects: ['grant_resource:wand_charges:7:dawn(1d6+1)'],
+				positive: true,
+			},
+		];
+		character.play.resourcesSpent = { wand_charges: 7 };
+		expect(combat.sheet?.resources.find((r) => r.id === 'wand_charges')?.recharge).toEqual({
+			trigger: 'dawn',
+			amount: '1d6+1',
+		});
+
+		combat.resources.rest('long'); // sleeping is not dawn — RAW ties the wand to the hour
+		expect(character.play.resourcesSpent.wand_charges).toBe(7);
+
+		combat.resources.passBoundary('dawn'); // 1d6+1 → between 2 and 7 charges back
+		const back = 7 - (character.play.resourcesSpent.wand_charges ?? 0);
+		expect(back).toBeGreaterThanOrEqual(2);
+		expect(back).toBeLessThanOrEqual(7);
+	});
+
 	it('rests: a long rest clears spent slots and restores HP to max', () => {
 		character.play.spellSlotsSpent = { '1': 2 };
 		character.play.hp = { current: 3, max: 20, temp: 4 };
@@ -1047,7 +1072,15 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 			play: { resourcesSpent: { ki: spent } as Record<string, number> },
 		} as unknown as Character;
 		const sheet = {
-			resources: [{ id: 'ki', name: 'Ki', max, recharge: 'short', source: 'Monk' }],
+			resources: [
+				{
+					id: 'ki',
+					name: 'Ki',
+					max,
+					recharge: { trigger: 'short', amount: 'all' },
+					source: 'Monk',
+				},
+			],
 		} as unknown as CharacterSheet;
 		return {
 			t: new ResourceTracker(
@@ -1464,7 +1497,10 @@ describe('ResourceTracker · short_one partial recharge', () => {
 		character.play.resourcesSpent = { second_wind: 3 }; // all three uses expended
 		combat.graph = graph;
 		combat.character = character;
-		expect(combat.sheet?.resources.find((r) => r.id === 'second_wind')?.recharge).toBe('short_one');
+		expect(combat.sheet?.resources.find((r) => r.id === 'second_wind')?.recharge).toEqual({
+			trigger: 'short',
+			amount: '1',
+		});
 
 		combat.resources.rest('short');
 		expect(combat.resources.resourceSpent('second_wind')).toBe(2); // regained ONE, not all
