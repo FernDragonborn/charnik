@@ -37,6 +37,25 @@
 	<p class="note">{$_('combat.inventory.overCapacity')}</p>
 {/if}
 
+<!-- The purse. Money is play-state, not an inventory row (`rules/currency.ts` says why), so it sits
+     above the items with its own line — and the exchange reference sits with it, because "is 12 sp
+     enough" is a question you have while looking at the coins, not one worth a trip elsewhere. -->
+<div class="purse">
+	{#each inv.shownCoins as coin (coin.id)}
+		<label class="coin">
+			<span class="coin-name">{$_(`coinName.${coin.id}`)}</span>
+			<input
+				type="number"
+				min="0"
+				value={inv.coinOf(coin.id)}
+				oninput={(e) => inv.setCoin(coin.id, Number(e.currentTarget.value))}
+				aria-label={$_(`coinNameLong.${coin.id}`)}
+			/>
+		</label>
+	{/each}
+</div>
+<p class="note rates">{$_('combat.inventory.exchange')}</p>
+
 <div class="items">
 	{#each rows as row (row.entry.item)}
 		<div class="inv-row">
@@ -136,6 +155,45 @@
 		color: var(--color-text-muted);
 		line-height: 1.5;
 	}
+	.purse {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1-5);
+		margin-top: var(--space-2);
+	}
+	.coin {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+		padding: 2px var(--space-1-5);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface-2);
+	}
+	.coin-name {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+	.coin input {
+		width: 4.5ch;
+		border: 0;
+		background: transparent;
+		color: var(--color-text);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		text-align: end;
+		padding: 2px 0;
+	}
+	.coin input:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: 2px;
+	}
+	.rates {
+		margin-top: var(--space-1);
+	}
+
 	.items {
 		display: flex;
 		flex-direction: column;

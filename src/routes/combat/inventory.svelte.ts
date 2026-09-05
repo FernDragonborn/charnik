@@ -23,6 +23,7 @@ import {
 	useOne,
 	type InventoryEntry,
 } from '$lib/character/inventory';
+import { COINS, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 import { rowName, type ContentGraph } from '$lib/content/loader';
 import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
@@ -84,8 +85,44 @@ export class InventoryTracker {
 		});
 	});
 
-	carriedLb = $derived.by(() =>
-		carriedWeight(this.list, (ref) => Number(this.resolve(ref)?.row.data.weight_lb ?? 0)),
+	/** The purse, and the coins the sheet shows of it. Hiding electrum is a view choice, so a hidden
+	 *  coin keeps whatever is in it — and keeps weighing, if this character weighs coins at all. */
+	get purse(): Purse {
+		return this.getCharacter()?.play.currency ?? {};
+	}
+	shownCoins = $derived.by(() => {
+		const hidden = new Set(this.getCharacter()?.ui.coinsHidden ?? []);
+		return COINS.filter((coin) => !hidden.has(coin.id));
+	});
+	isCoinShown = (id: string): boolean => !(this.getCharacter()?.ui.coinsHidden ?? []).includes(id);
+	/** Show/hide one denomination for this character. */
+	toggleCoin = (id: string) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		const hidden = c.ui.coinsHidden;
+		c.ui.coinsHidden = hidden.includes(id) ? hidden.filter((x) => x !== id) : [...hidden, id];
+	};
+	setCoin = (id: string, count: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		c.play.currency = { ...c.play.currency, [id]: Math.max(0, Math.floor(count)) };
+	};
+	coinOf = (id: string): number => this.purse[id] ?? 0;
+
+	/** Whether this character's load counts their money (`ui.coinWeight`, off by default). */
+	get weighsCoins(): boolean {
+		return this.getCharacter()?.ui.coinWeight ?? false;
+	}
+	toggleCoinWeight = () => {
+		const c = this.getCharacter();
+		if (c) c.ui.coinWeight = !c.ui.coinWeight;
+	};
+	/** What the purse adds to the load — zero unless this character weighs coins. */
+	coinsLb = $derived(this.weighsCoins ? purseWeightLb(this.purse) : 0);
+
+	carriedLb = $derived(
+		carriedWeight(this.list, (ref) => Number(this.resolve(ref)?.row.data.weight_lb ?? 0)) +
+			this.coinsLb,
 	);
 	capacityLb = $derived.by(() => this.getSheet()?.carryingCapacity.value ?? 0);
 	/** 0…1 for the load meter; 0 when nothing has told us a capacity yet. */

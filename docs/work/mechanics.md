@@ -107,13 +107,6 @@ stay semi-manual.
   a faded `half` dot (color-mix on `--color-resource`, scaffolding until a half-prof producer
   lands per (c)) — and a friendly per-tier tooltip on the dot. Combat baseline 0px (reachable
   tiers render identically; the `on` split is behaviour-identical for none/proficient/expertise).
-- [ ] **N6 · Currency — separate design, not an inventory row.** Support
-  ONLY the base PHB coins (cp / sp / ep / gp / pp — 5 in the PHB; settings invent their own,
-  those stay out of scope), with per-character HIDING of denominations the player doesn't
-  use (electrum first candidate). An exchange-rate reference sits right next to the tracker
-  (1 gp = 10 sp = 100 cp; 1 ep = 5 sp; 1 pp = 10 gp). Coin WEIGHT (50 coins = 1 lb) is
-  optional and OFF by default — many tables don't track it; when on, folds into N1's
-  capacity bar. Lives in play-state; no migration concerns pre-release (see N1 note).
 
 ### EXPR · L2 value-expression layer — BUILT (design → docs/internals/effects.md §3)
 

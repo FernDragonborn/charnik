@@ -22,6 +22,7 @@ export type MenuKind =
 	| 'condition'
 	| 'upcast'
 	| 'restshort'
+	| 'coins'
 	| 'manage';
 
 /** Why the character died — the dead banner's subtitle, one key per `play.death.cause`. Catalog

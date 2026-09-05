@@ -780,6 +780,23 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.turn.action).toBe(0);
 	});
 
+	it('coins: the purse only weighs anything when this character weighs coins', () => {
+		character.play.currency = { gp: 100 };
+		const items = combat.inventory.carriedLb; // the dagger, and nothing of the purse
+		expect(combat.inventory.coinsLb).toBe(0);
+
+		character.ui.coinWeight = true;
+		expect(combat.inventory.coinsLb).toBe(2); // 100 coins, 50 to the pound
+		expect(combat.inventory.carriedLb).toBe(items + 2);
+	});
+
+	it('coins: hiding a denomination hides it and keeps what is in it', () => {
+		character.play.currency = { ep: 7 };
+		combat.inventory.toggleCoin('ep');
+		expect(combat.inventory.shownCoins.map((c) => c.id)).toEqual(['cp', 'sp', 'gp', 'pp']);
+		expect(combat.inventory.coinOf('ep')).toBe(7);
+	});
+
 	it('rests: a long rest clears spent slots and restores HP to max', () => {
 		character.play.spellSlotsSpent = { '1': 2 };
 		character.play.hp = { current: 3, max: 20, temp: 4 };

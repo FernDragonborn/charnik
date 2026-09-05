@@ -419,7 +419,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (113 modules)
+## Library functions & types (114 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1347,6 +1347,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
 - `function carryingCapacity` — Carrying capacity in pounds = STR × 15.
 
+### `src/lib/rules/currency.ts`
+
+- `interface Coin` — One denomination: its id (the key in `play.currency`) and what it is worth in copper.
+- `const COINS` — The five PHB coins, smallest first: the order they are shown in, and the order a conversion * walks.
+- `const COINS_PER_POUND` — Coins to the pound, RAW in both editions ("fifty coins weigh a pound"), regardless of metal.
+- `type Purse` — A purse as it is stored: coin id → how many.
+- `const coinCount` — How many coins in total, of every denomination — what the weight is computed from.
+- `const purseWeightLb` — What the purse weighs, in pounds.
+- `const purseInCopper` — The purse's total value in copper — what "can I afford this" is answered with, and what an * exchange reference is wr…
+
 ### `src/lib/rules/dice.ts`
 
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
@@ -1587,4 +1597,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 944 exports across 128 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 951 exports across 129 modules · 62 duplicate suspects._

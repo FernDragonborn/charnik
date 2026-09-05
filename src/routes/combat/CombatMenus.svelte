@@ -12,6 +12,8 @@
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import { titleCase, ABIL, MOD_TARGETS, modTargetKey } from '$lib/combat/helpers';
 	import { sanitizeHtml } from '$lib/content/markdown';
+	import Switch from '$lib/components/Switch.svelte';
+	import { COINS } from '$lib/rules/currency';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
@@ -335,6 +337,25 @@
 				{/each}
 				<p class="note" style="padding: 6px 13px 2px">{$_('combat.menu.upcastNote')}</p>
 			{/if}
+		{:else if overlay.kind === 'coins'}
+			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.coinsTitle')}</div>
+			{#each COINS as coin (coin.id)}
+				<button class="menu-row" onclick={() => combat.inventory.toggleCoin(coin.id)}>
+					<span class="passive-eye" class:on={combat.inventory.isCoinShown(coin.id)}
+						><EyeIcon on={combat.inventory.isCoinShown(coin.id)} /></span
+					><span class="main">{$_(`coinNameLong.${coin.id}`)}</span>
+					<span class="meta">{$_(`coinName.${coin.id}`)}</span>
+				</button>
+			{/each}
+			<div class="coin-weight">
+				<Switch
+					on={combat.inventory.weighsCoins}
+					title={$_('combat.menu.coinWeight')}
+					onclick={combat.inventory.toggleCoinWeight}
+				/>
+				<span class="main">{$_('combat.menu.coinWeight')}</span>
+			</div>
+			<p class="note" style="padding: 2px 13px 6px">{$_('combat.menu.coinWeightNote')}</p>
 		{:else if overlay.kind === 'restshort'}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
 			{#if combat.hitDice.length}
@@ -492,6 +513,13 @@
 	}
 	.menu-row .effect-icon.negative {
 		color: var(--color-accent-bright);
+	}
+	/* the coin-weight switch sits in the same row shape the menu's buttons use, minus the button */
+	.coin-weight {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-1-5) var(--space-3);
 	}
 	/* visibility = open/closed eye (shared EyeIcon glyph in currentColor), teal when shown */
 	.passive-eye {

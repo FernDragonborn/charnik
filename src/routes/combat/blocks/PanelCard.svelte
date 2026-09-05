@@ -46,6 +46,10 @@
 				><Icon name="plus" size={13} /> {$_('combat.panel.addEffect')}</button
 			>
 		</span>
+	{:else if pid === 'inventory'}
+		<button class="pill-btn" onclick={(e) => openMenu('coins', e)}
+			><Icon name="coins" size={13} /> {$_('combat.panel.coins')}</button
+		>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
 		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}

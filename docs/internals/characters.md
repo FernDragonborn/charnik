@@ -35,7 +35,10 @@ happens at the table: name, species and its sub-option, background, classes with
 six ability scores, skills, expertise, feats.
 
 **`play` is what is true right now** — current and temporary HP, hit dice spent, spell slots spent,
-resource uses spent, active effects and conditions, what they are concentrating on.
+resource uses spent, active effects and conditions, what they are concentrating on, and the coins in
+their purse. Money is play-state and not an inventory row: a stack of arrows answers "how many do I
+carry", a purse answers "what can I afford", and the only thing the two share is weight — which a
+character counts only if their table does (`ui.coinWeight`, off by default).
 
 **`ui` is neither** — which panels are shown, in what order, and the per-character build mode. It
 survives a reset of play, because resetting the game should not destroy a layout someone arranged.

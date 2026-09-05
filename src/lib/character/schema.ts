@@ -159,6 +159,10 @@ const playSchema = z.object({
 	spellSlotsSpent: z.record(z.string(), z.number().int().min(0)).default({}),
 	/** Class/feature resource uses spent, keyed by resource id (rage, ki…). */
 	resourcesSpent: z.record(z.string(), z.number().int().min(0)).default({}),
+	/** The purse, keyed by coin id (`cp`…`pp`). Play-state, not an inventory row: money is spent and
+	 *  earned every session and answers a different question than a stack of arrows
+	 *  (`rules/currency.ts`). Absent key = none of that coin. */
+	currency: z.record(z.string(), z.number().int().min(0)).default({}),
 	effects: z.array(effectInstance).default([]),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
@@ -234,8 +238,22 @@ const uiSchema = z
 		 *  the short-rest popover); `half` = the popular non-book variant (heal ½ max HP, no dice — the
 		 *  Baldur's Gate 3 model). Default `dice` (ship SRD-faithful); old saves without it migrate there. */
 		shortRestMode: z.enum(SHORT_REST_MODES).default('dice'),
+		/** Coin denominations this character does not use, hidden from the purse (electrum is why this
+		 *  exists). A view preference, so hiding a coin never touches what is in it. */
+		coinsHidden: z.array(z.string()).default([]),
+		/** Does this character's carried weight count their coins (50 to the pound)? A per-character
+		 *  rules variant like `shortRestMode`, OFF by default: most tables do not weigh money, and a
+		 *  purse that silently encumbers you is a rule nobody asked for. */
+		coinWeight: z.boolean().default(false),
 	})
-	.default({ strict: true, spellsHidden: [], spellsPinned: [], shortRestMode: 'dice' });
+	.default({
+		strict: true,
+		spellsHidden: [],
+		spellsPinned: [],
+		shortRestMode: 'dice',
+		coinsHidden: [],
+		coinWeight: false,
+	});
 
 // --- character ----------------------------------------------------------------
 

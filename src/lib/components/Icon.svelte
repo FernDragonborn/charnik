@@ -22,6 +22,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import Circle from '@lucide/svelte/icons/circle';
+	import Coins from '@lucide/svelte/icons/coins';
 	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
 	import CircleDot from '@lucide/svelte/icons/circle-dot';
 	import CircleX from '@lucide/svelte/icons/circle-x';
@@ -71,6 +72,7 @@
 		'circle-dashed': CircleDashed,
 		'circle-dot': CircleDot,
 		'circle-x': CircleX,
+		coins: Coins,
 		'corner-down-left': CornerDownLeft,
 		download: Download,
 		flag: Flag,

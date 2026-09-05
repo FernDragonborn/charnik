@@ -249,7 +249,7 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **Currency and item charges** · N6 currency → RECHARGE-3 (item charges) → D16 choice-UI
+- **Item charges and what spends them** · RECHARGE-3 (item charges) → D16 choice-UI
   (→ `magic_initiate`) → SCOPED-BONUS. Item charges want an inventory, which N1 built.
   SCOPED-BONUS is an L1 grammar change and a `docs/internals/compatibility.md` chokepoint, so it
   stays its own piece rather than riding another wave.
