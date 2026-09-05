@@ -420,6 +420,23 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(combat.tray.log[0]?.noteParts).toBeUndefined();
 	});
 
+	it('SCOPED-BONUS: a bonus naming ONE spell reaches that spell and no other', () => {
+		// what Agonizing Blast needs and L1 could not say: +N on this spell's damage, nothing else's
+		character.play.effects = [
+			{
+				iid: 'agonizing',
+				label: 'Agonizing Orb',
+				effects: [`flat_bonus:damage.chromatic_orb+3`],
+				positive: true,
+			},
+		];
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.expr).toContain('+3');
+		combat.cast(spellRow(graph, `spell:${S}:ice_knife`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.expr ?? '').not.toContain('+3');
+		expect(dmgPartOf('cold')?.expr ?? '').not.toContain('+3');
+	});
+
 	it('castPreview: a damage upcast shows the extra dice at a slot, nothing at base (items 1/8)', () => {
 		const r = spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!;
 		expect(combat.castPreview(r, 1)).toBe(''); // base slot → no upcast

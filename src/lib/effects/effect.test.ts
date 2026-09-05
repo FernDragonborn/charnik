@@ -55,18 +55,42 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('flat_bonus:damage+1d6').damageType).toBeUndefined();
 		expect(parseToken('flat_bonus:ac+2').damageType).toBeUndefined();
 	});
-	it('§A: an attack `:category` slot is a weaponScope, not a damageType (Archery)', () => {
+	it('§A: an attack `:category` slot is a scope, not a damageType (Archery)', () => {
 		expect(parseToken('flat_bonus:attack:ranged+2')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'attack',
 			amount: 2,
-			weaponScope: 'ranged',
+			scope: 'ranged',
 		});
 		expect(parseToken('flat_bonus:attack:ranged+2').damageType).toBeUndefined();
-		expect(parseToken('flat_bonus:attack:Two_Handed+1').weaponScope).toBe('two_handed'); // normalized
+		expect(parseToken('flat_bonus:attack:Two_Handed+1').scope).toBe('two_handed'); // normalized
 		// a damage qualifier stays a damageType (scope collision resolved by TARGET, GWF deferred)
-		expect(parseToken('flat_bonus:damage:fire+1d6').weaponScope).toBeUndefined();
-		expect(parseToken('flat_bonus:attack+1').weaponScope).toBeUndefined();
+		expect(parseToken('flat_bonus:damage:fire+1d6').scope).toBeUndefined();
+		expect(parseToken('flat_bonus:attack+1').scope).toBeUndefined();
+	});
+	it('SCOPED-BONUS: a dotted attack/damage target is a SCOPE, and every other dot is a target', () => {
+		// what the qualifier slot could never say: a damage bonus for melee only (Dueling, Rage)
+		expect(parseToken('flat_bonus:damage.melee+2')).toMatchObject({
+			kind: 'flat_bonus',
+			target: 'damage',
+			amount: 2,
+			scope: 'melee',
+		});
+		// …a bonus naming ONE weapon, and one naming ONE spell (Agonizing Blast)
+		expect(parseToken('flat_bonus:damage.longsword+1').scope).toBe('longsword');
+		expect(parseToken('flat_bonus:damage.eldritch_blast+cha_mod')).toMatchObject({
+			target: 'damage',
+			scope: 'eldritch_blast',
+			valueExpr: 'cha_mod',
+		});
+		// the older spelling means the same thing and lands in the same field
+		expect(parseToken('flat_bonus:attack.ranged+2').scope).toBe('ranged');
+		// a dotted target that IS a target keeps its whole name
+		expect(parseToken('flat_bonus:speed.fly+10')).toMatchObject({
+			target: 'speed.fly',
+			amount: 10,
+		});
+		expect(parseToken('flat_bonus:save.str+1').scope).toBeUndefined();
 	});
 	it('parses the non-numeric kinds', () => {
 		expect(parseToken('resist_immune:poison')).toMatchObject({
@@ -122,22 +146,22 @@ describe('parseToken (bounded vocabulary)', () => {
 			kind: 'min_die',
 			target: 'damage',
 			amount: 3,
-			weaponScope: 'two_handed,melee',
+			scope: 'two_handed,melee',
 		});
 		expect(parseToken('reroll:damage:versatile,melee:2')).toMatchObject({
 			kind: 'reroll',
 			target: 'damage',
 			amount: 2,
-			weaponScope: 'versatile,melee',
+			scope: 'versatile,melee',
 		});
 		// unscoped forms unchanged: a group target and a dotted key both keep the 2-segment grammar
 		expect(parseToken('reroll:d20_tests:2')).toMatchObject({ target: 'd20_tests', amount: 2 });
-		expect(parseToken('reroll:d20_tests:2').weaponScope).toBeUndefined();
+		expect(parseToken('reroll:d20_tests:2').scope).toBeUndefined();
 		expect(parseToken('min_die:skill.stealth:10')).toMatchObject({
 			target: 'skill.stealth',
 			amount: 10,
 		});
-		expect(parseToken('min_die:skill.stealth:10').weaponScope).toBeUndefined();
+		expect(parseToken('min_die:skill.stealth:10').scope).toBeUndefined();
 	});
 	it('parses disadvantage like advantage (its own kind + target)', () => {
 		expect(parseToken('disadvantage:skill.stealth')).toMatchObject({

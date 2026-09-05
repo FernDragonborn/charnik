@@ -208,6 +208,32 @@ describe('deriveSheet aggregator', () => {
 		expect(rollEffectsFor(s.facts, 'damage', new Set(longbow.scopes)).minDie).toBeUndefined(); // ranged
 	});
 
+	it('SCOPED-BONUS: a scoped damage bonus reaches the weapons it names and nothing else', () => {
+		const c = newCharacter('greta', 'Greta', '5.5e');
+		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.abilities = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // melee
+			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }, // ranged
+		];
+		// the two things the qualifier slot could never say: a whole CATEGORY, and ONE weapon
+		c.play.effects = [
+			{ iid: 'rage', label: 'Rage', effects: ['flat_bonus:damage.melee+2'], positive: true },
+			{ iid: 'axe', label: 'Axe Song', effects: ['flat_bonus:damage.greataxe+1'], positive: true },
+		];
+		const parsed = characterSchema.parse(c);
+		const s = deriveSheet(parsed, graph);
+		const atks = computeAttacks(parsed, s, graph);
+		const greataxe = atks.find((a) => a.name === 'Greataxe')!;
+		const longbow = atks.find((a) => a.name === 'Longbow')!;
+
+		// the axe is melee AND is the named weapon → both bonuses; the bow is neither
+		expect(rollEffectsFor(s.facts, 'damage', new Set(greataxe.scopes)).flat).toBe(3);
+		expect(rollEffectsFor(s.facts, 'damage', new Set(longbow.scopes)).flat).toBe(0);
+		// and a roll that names no scope at all — a save, a skill, an unscoped spell — picks up none
+		expect(rollEffectsFor(s.facts, 'damage').flat).toBe(0);
+	});
+
 	it('BUG-DMG-1: a multi-type weapon yields one damage part per type; the ability mod folds into the primary part only', () => {
 		const c = wizard();
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2

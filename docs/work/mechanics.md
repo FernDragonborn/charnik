@@ -222,32 +222,22 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         it does not exist. `characters.md` ▸ "A tracker surfaces, it never decides" is the contract.
         While in there: that `title` is a hardcoded English `'Not available right now'`, which
         `ui.md` ▸ "Strings live in the catalogs" forbids.
-- [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
-  this spell / only on this instance", so: **Magic Weapon** buffs ALL the caster's weapons (and leaks
-  into spell rolls), and **Agonizing Blast** (+CHA per beam) / **Eldritch Spear** can't be expressed at
-  all. Both need the same thing — a scope key on the bonus. `attacks.ts` §A/§B already scopes by weapon
-  CATEGORY; the extension is a general scope (`weapon_id` / `spell_id` / per-instance), NOT a feat
-  enumeration — every invocation is then just "a scoped effect on a spell". **This is an L1 grammar
-  change and a `docs/internals/compatibility.md` chokepoint** (effect-token grammar), and it is
-  SETTLED: the scope goes in the TARGET namespace — `flat_bonus:damage.melee+2`,
-  `damage.<weapon_id>`, `damage.<spell_id>`. `compatibility.md` §4 says so too, in the same change
-  that builds this. The per-beam case is visible now that a volley rolls N beams. Also the mechanical half of DEMO-1 gap 4 / N2
-  invocations.
-  **Two constraints the grammar decision must respect, and one shape that satisfies both.**
-  (1) The qualifier slot is ALREADY spoken for and routes by TARGET: `parseQualifier`
-  (`effects/token-parser.ts`) reads `flat_bonus:attack:<q>` as a weapon scope and any other target's
-  `:<q>` as a damage TYPE — so Dueling written the obvious way, `flat_bonus:damage:melee+2`, parses
-  `melee` as a damage type and folds silently wrong. (`min_die` gets away with a scope there only
-  because its trailing integer anchors the end; a signed value cannot.) (2)
-  `docs/internals/compatibility.md` §4 **reserves the 4th token segment for a bonus TYPE** (family B
-  stacks by type, not by layer), so spending it on a 5e-only scope is exactly the foot-gun that doc
-  exists to prevent. ⇒ **Put the scope in the TARGET namespace, where dotted sub-targets already
-  live** (`speed.fly`, `save.str`, `skill.<id>`, `passive.<skill>`): `flat_bonus:damage.melee+2`.
-  It consumes no new segment, keeps the weapon-category vocabulary out of L1 (the target is validated
-  downstream as it already is), and scales to what this item actually wants —
-  `damage.<weapon_id>` / `damage.<spell_id>` — because a namespace is not an enum.
-  Rage's broad damage fold plus a note is the live consequence: RAW-faithful STR-melee scoping waits
-  on this.
+- [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
+  is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
+  `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved
+  for a bonus TYPE, `docs/internals/compatibility.md` §4) and keeps the weapon vocabulary out of L1.
+  A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
+  scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
+  field, so there is one shape downstream. What is left is the two CONSUMERS:
+  - [ ] **Rage's damage, RAW.** The shipped token is a broad `flat_bonus:damage+2` plus a note.
+        `damage.melee` is now sayable, but RAW is "a melee weapon attack using **Strength**", and the
+        sheet has no scope for which ability an attack used — a finesse weapon swung with DEX would
+        take the bonus it should not. Decide that (a scope for the attack's ability, or accept
+        melee-only) before the content edit.
+  - [ ] **Magic Weapon, and Agonizing Blast.** Magic Weapon buffs every weapon because the cast
+        spawns an unscoped `flat_bonus:attack/damage+N` — RAW it names ONE weapon you touch, so the
+        fix is not grammar any more, it is a cast-time CHOICE of which weapon (D16's shape).
+        Agonizing Blast needs only the content row that says `damage.eldritch_blast+cha_mod`.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
   the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented

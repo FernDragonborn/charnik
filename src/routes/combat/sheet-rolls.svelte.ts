@@ -82,11 +82,11 @@ export class SheetRolls {
 	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
 	 *  effects (gated on the effects-auto toggle). Reads the sheet's typed-facts object (D7: guards
 	 *  evaluated, conditions expanded, expression values resolved — B21), not raw `play.effects`. */
-	effectsFor(key: string, weaponScopes?: Set<string>): RollEffects {
+	effectsFor(key: string, scopes?: Set<string>): RollEffects {
 		const c = this.host().character;
 		const sheet = this.host().sheet;
 		if (!c || !c.play.autoCalc || !sheet) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(sheet.facts, key, weaponScopes);
+		return rollEffectsFor(sheet.facts, key, scopes);
 	}
 
 	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the

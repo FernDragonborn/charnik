@@ -76,11 +76,16 @@ export interface CastingHost {
 	economy: TurnEconomy;
 	cantConcentrate: boolean;
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
-	effectsFor(key: string, weaponScopes?: Set<string>): RollEffects;
+	effectsFor(key: string, scopes?: Set<string>): RollEffects;
 	removeLinkedEffect(ref: string): void;
 	openRoll(spec: RollSpec, e: Event): void;
 	openMenu(kind: MenuKind, e: Event): void;
 }
+
+/** What a cast is IN SCOPE of, so a bonus can name one spell (`flat_bonus:damage.eldritch_blast+3`,
+ *  Agonizing Blast) instead of every roll the character makes. The spell's own id — the same
+ *  vocabulary a weapon's id and its tags use, because a scope is a name, not an enum. */
+const spellScopes = (r: SpellRow): Set<string> => new Set([r.id]);
 
 export class SpellCasting {
 	constructor(private host: CastingHost) {}
@@ -287,8 +292,9 @@ export class SpellCasting {
 		cast: { up: UpcastCast; times: number },
 	): void {
 		const { up, times } = cast;
-		const fx = this.host.effectsFor('attack');
-		const dmgFx = this.host.effectsFor('damage');
+		const scopes = spellScopes(r);
+		const fx = this.host.effectsFor('attack', scopes);
+		const dmgFx = this.host.effectsFor('damage', scopes);
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
 		const hasDmg = dealsDamage(parts);
@@ -349,7 +355,9 @@ export class SpellCasting {
 		const healMod =
 			heal && healDice && caster ? (this.host.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
 		const primaryFx: RollEffects =
-			heal || temp ? { ...NO_ROLL_EFFECTS, flat: healMod } : this.host.effectsFor('damage');
+			heal || temp
+				? { ...NO_ROLL_EFFECTS, flat: healMod }
+				: this.host.effectsFor('damage', spellScopes(r));
 		const tempDelta = temp ? this.upcastFlatDelta(r, slotLevel, 'temp_hp') : 0;
 		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
 		return {

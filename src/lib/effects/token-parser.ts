@@ -106,12 +106,19 @@ export interface ParsedEffect {
 	 *  `flat_bonus:damage:fire+1d6` carries `damageType: 'fire'`; a weapon folds it into its OWN
 	 *  extra typed damage part (rolled + shown separately), never onto the base type. */
 	damageType?: string;
-	/** §A weapon-category scope on `flat_bonus:attack:<category>` (Archery `attack:ranged+2`): the
-	 *  bonus applies only to weapons whose `tags` column carries this name (ranged / melee /
-	 *  two_handed / finesse). The `:type`-vs-`:category` slot collision is resolved
-	 *  by TARGET — an `attack` bonus is never damage-typed, so its qualifier is always a scope; a
-	 *  `damage` qualifier stays a damageType (the scoped-damage case — GWF/Dueling — is deferred). */
-	weaponScope?: string;
+	/**
+	 * The ONE thing this bonus applies to, when it does not apply to everything: a weapon category
+	 * (`melee`, `two_handed`), a weapon id, or a spell id. Written in the TARGET namespace —
+	 * `flat_bonus:damage.melee+2`, `flat_bonus:damage.eldritch_blast+3` — where the dotted
+	 * sub-targets already live (`speed.fly`, `save.str`), because the `:<qualifier>` slot routes by
+	 * target (a `damage` qualifier is a damage TYPE) and the 4th token segment is reserved for a
+	 * bonus type (`docs/internals/compatibility.md` §4).
+	 *
+	 * `flat_bonus:attack:<category>` (Archery, shipped) says the same thing in the older qualifier
+	 * slot and normalizes to this field, so there is one shape downstream and one meaning.
+	 * Comma-separated means ALL of them (GWF `two_handed,melee`).
+	 */
+	scope?: string;
 	/** set_override comparison mode (A9): `floor` = "unless already higher" (Headband → INT ≥ 19),
 	 *  `cap` = "unless already lower". Absent = a plain absolute set. */
 	setMode?: 'floor' | 'cap';
@@ -172,12 +179,32 @@ function parseTokenUncached(token: string): ParsedEffect {
 type KindParser = (rest: string, raw: string, kind: EffectKind) => ParsedEffect;
 
 /** The `:<qualifier>` slot of a flat_bonus, routed by TARGET (the §A collision resolver): an
- *  `attack` bonus is never damage-typed → the qualifier is a weapon-category `weaponScope`; any
+ *  `attack` bonus is never damage-typed → the qualifier is a weapon-category `scope`; any
  *  other target keeps the qualifier as a `damageType` (flaming-weapon extra part). Absent → {}. */
 function qualifierSlot(target: string, slot: string | undefined): Partial<ParsedEffect> {
 	if (!slot) return {};
 	const q = slot.toLowerCase();
-	return target.toLowerCase() === 'attack' ? { weaponScope: q } : { damageType: q };
+	return baseTarget(target) === 'attack' ? { scope: q } : { damageType: q };
+}
+
+/** The targets a dotted sub-name SCOPES rather than names: `damage.melee` is a damage bonus for
+ *  melee things, while `speed.fly` is its own stat. Two families, one dot — so the split is a list,
+ *  not a guess. */
+const SCOPABLE_TARGETS: readonly string[] = ['attack', 'damage'];
+
+const baseTarget = (target: string): string => target.toLowerCase().split('.')[0] ?? '';
+
+/** Split a scoped target into what it hits and what it applies to: `damage.longsword` →
+ *  `{target: 'damage', scope: 'longsword'}`. Every other dotted target is left whole, because it IS
+ *  a target (`save.str`, `passive.perception`). */
+function scopedTarget(target: string): { target: string; scope?: string } {
+	const lower = target.toLowerCase();
+	const dot = lower.indexOf('.');
+	if (dot < 0) return { target: lower };
+	const base = lower.slice(0, dot);
+	if (!SCOPABLE_TARGETS.includes(base)) return { target: lower };
+	const scope = lower.slice(dot + 1);
+	return scope ? { target: base, scope } : { target: base };
 }
 
 const parseFlatBonus: KindParser = (rest, raw, kind) => {
@@ -190,8 +217,8 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 			rest,
 		);
 	if (lit) {
-		const target = lit[1] ?? '';
-		const qual = qualifierSlot(target, lit[2]);
+		const { target, scope } = scopedTarget(lit[1] ?? '');
+		const qual = { ...(scope ? { scope } : {}), ...qualifierSlot(target, lit[2]) };
 		const sign = lit[3] ?? '';
 		const amount = lit[4] ?? '';
 		if (/d/i.test(amount))
@@ -203,9 +230,10 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 		rest,
 	);
 	if (!ex) return { kind: 'unknown', raw };
-	const qual = qualifierSlot(ex[1] ?? '', ex[2]);
+	const { target, scope } = scopedTarget(ex[1] ?? '');
+	const qual = { ...(scope ? { scope } : {}), ...qualifierSlot(target, ex[2]) };
 	const valueExpr = ex[3] === '-' ? `-(${(ex[4] ?? '').trim()})` : (ex[4] ?? '').trim();
-	return { kind, target: ex[1] ?? '', valueExpr, raw, ...qual };
+	return { kind, target, valueExpr, raw, ...qual };
 };
 
 const parseSetOverride: KindParser = (rest, raw, kind) => {
@@ -302,7 +330,7 @@ const parseRollMod: KindParser = (rest, raw, kind) => {
 		target: m[1].trim(),
 		amount: Number(m[3]),
 		raw,
-		...(scope ? { weaponScope: scope } : {}),
+		...(scope ? { scope: scope } : {}),
 	};
 };
 

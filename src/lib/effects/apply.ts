@@ -125,7 +125,7 @@ class FactsCollector {
 		const op: NumericFact['op'] = p.kind === EFFECT_KIND.flatBonus ? 'add' : (p.setMode ?? 'set');
 		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
-		if (p.weaponScope) fact.weaponScope = p.weaponScope; // §A: scoped per-weapon in computeAttacks
+		if (p.scope) fact.scope = p.scope; // §A: scoped per-weapon in computeAttacks
 		if (v.amount !== undefined) fact.amount = v.amount;
 		else if (v.diceFormula && op === 'add') fact.diceFormula = v.diceFormula;
 		else if (v.diceFormula) fact.error = 'an override cannot be a dice value';
@@ -167,7 +167,7 @@ class FactsCollector {
 			list.push({
 				target: p.target,
 				value: p.amount,
-				...(p.weaponScope ? { weaponScope: p.weaponScope } : {}), // §B per-weapon scope (GWF)
+				...(p.scope ? { scope: p.scope } : {}), // §B per-weapon scope (GWF)
 			});
 		return true;
 	}

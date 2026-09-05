@@ -114,6 +114,16 @@ plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets
 - `d20_tests` → every d20-based roll (saves, skills, `attack`, `initiative`) — the 2024
   exhaustion penalty rides this one group.
 
+**A SCOPED bonus** applies to one thing rather than everything, and says so in the target namespace:
+`flat_bonus:damage.melee+2` (a category), `damage.<weapon_id>` (one weapon), `damage.<spell_id>` (one
+spell — Agonizing Blast). Only `attack` and `damage` take a scope; every other dotted target IS a
+target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
+thing and normalizes to the same field. A scope matches when EVERY comma-separated part is one of the
+rolling thing's scopes — a weapon's tags plus its own id, or the cast spell's id — so a roll that
+names no scopes (a save, a skill) picks up no scoped bonus at all. Attack scopes fold once, in
+`computeAttacks`, because that is where the weapon is known; damage scopes fold at the roll.
+`docs/internals/compatibility.md` §4 says why the scope is a target and not a fourth segment.
+
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
 `unknown target "<t>" for <kind>` content-health issue (with a `suggest.ts` "did you mean?"),
 never folded onto nothing.

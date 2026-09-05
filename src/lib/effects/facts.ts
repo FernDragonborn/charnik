@@ -49,7 +49,7 @@ export interface RollMod {
 	/** §B weapon-category scope (comma list, ALL required) from a scoped `reroll`/`min_die` — GWF's
 	 *  `two_handed,melee`. The roll path applies the fact only for a weapon carrying every tag; a
 	 *  non-weapon roll (no scope set supplied) skips scoped facts entirely. */
-	weaponScope?: string;
+	scope?: string;
 }
 
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated
@@ -70,7 +70,7 @@ export interface NumericFact {
 	/** §A: weapon-category scope from `flat_bonus:attack:<category>` (Archery). A scoped fact folds
 	 *  per-weapon in `computeAttacks` (matched against a weapon's category tags), NOT into the generic
 	 *  `attack` roll path — so the roll path skips it to avoid double-counting. */
-	weaponScope?: string;
+	scope?: string;
 	/** The value failed to resolve — the token degrades to a note (the inert-fallback contract). */
 	error?: string;
 }

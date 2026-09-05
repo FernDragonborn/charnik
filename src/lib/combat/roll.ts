@@ -330,28 +330,28 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	flat: 0,
 	bonusDice: [],
 };
-export function rollEffectsFor(
-	facts: EffectFacts,
-	key: string,
-	weaponScopes?: Set<string>,
-): RollEffects {
+export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<string>): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key));
 	out.disadvantage = facts.disadvantage.some((d) => matchesTarget(d.target, key));
+	// a SCOPED fact applies only to something the scope names — every comma-separated part must be in
+	// the rolling thing's scopes (GWF `two_handed,melee`), and a roll that names no scopes at all
+	// (a save, a skill) picks up none of them
+	const inScope = (scope: string | undefined): boolean =>
+		!scope || (scopes ? scope.split(',').every((t) => scopes.has(t)) : false);
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || !matchesTarget(f.target, key)) continue;
-		if (f.weaponScope) continue; // §A: weapon-scoped bonus folds per-weapon in computeAttacks
+		// §A: an ATTACK-scoped bonus is already in the row's to-hit (computeAttacks folds it there,
+		// where the weapon is known), so picking it up again here would count it twice
+		if (f.scope && (key === 'attack' || !inScope(f.scope))) continue;
 		if (f.amount !== undefined) out.flat += f.amount;
 		else if (f.diceFormula) {
 			const die = parseDiceTerm(f.diceFormula);
 			if (die) out.bonusDice.push(die);
 		}
 	}
-	// §B: a weapon-scoped roll-manip (GWF `two_handed,melee`) applies only when the rolling weapon
-	// carries EVERY tag; a non-weapon roll (no scope set) skips scoped facts. Unscoped facts always apply.
-	const scopeOk = (mod: RollMod): boolean =>
-		!mod.weaponScope ||
-		(weaponScopes ? mod.weaponScope.split(',').every((t) => weaponScopes.has(t)) : false);
+	// §B: the same rule for a roll-MANIP (a scoped reroll / min-die).
+	const scopeOk = (mod: RollMod): boolean => inScope(mod.scope);
 	// several sources → the most generous single value applies (they don't stack — one reroll pass)
 	for (const r of facts.rerolls)
 		if (matchesTarget(r.target, key) && scopeOk(r)) out.reroll = Math.max(out.reroll ?? 0, r.value);

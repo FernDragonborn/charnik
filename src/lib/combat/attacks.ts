@@ -245,8 +245,8 @@ function scopedAttackBonus(
 	let attack = 0;
 	const notes: AttackNote[] = [];
 	for (const f of facts.numeric) {
-		if (f.op !== 'add' || f.target !== 'attack' || !f.weaponScope) continue;
-		if (!scopes.has(f.weaponScope) || f.amount === undefined) continue;
+		if (f.op !== 'add' || f.target !== 'attack' || !f.scope) continue;
+		if (!scopes.has(f.scope) || f.amount === undefined) continue;
 		attack += f.amount;
 		notes.push(
 			attackNote(ATTACK_NOTE.scopedAttack, `${signed(f.amount)} attack (${f.source})`, {
@@ -299,7 +299,9 @@ export function computeAttacks(
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
-		const scopeSet = new Set(item.tags.keys());
+		// …and so is the weapon's own id, which is what lets a bonus name ONE weapon
+		// (`flat_bonus:damage.longsword+1`) rather than a whole category.
+		const scopeSet = new Set([...item.tags.keys(), row.id]);
 		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
 		const notProfNote = proficient
 			? undefined
@@ -351,7 +353,7 @@ export function computeAttacks(
 	// melee-scoped attack bonuses a weapon does — it is one of the attacks that scope names, and
 	// leaving it out made a character's fists the one melee attack a melee bonus skipped. Its damage
 	// is `1 + STR` by the book; effects (a Rage +2) fold in at the roll, as they do for every weapon.
-	const unarmedScopes = new Set(['melee']);
+	const unarmedScopes = new Set(['melee', UNARMED_STRIKE_ID]);
 	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
 	out.push({
 		id: UNARMED_STRIKE_ID,
