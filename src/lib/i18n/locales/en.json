@@ -19,6 +19,12 @@
 		"name": "Charnik",
 		"tagline": "Own your characters."
 	},
+	"armorCategory": {
+		"heavy": "heavy",
+		"light": "light",
+		"medium": "medium",
+		"shield": "shield"
+	},
 	"build": {
 		"titleNew": "New character",
 		"titleLevelUp": "Level up",
@@ -842,7 +848,11 @@
 		"close": "Close"
 	},
 	"compendium": {
-		"pickAnEntry": "Select an entry to see its detail."
+		"availableTo": "Available to",
+		"levelCantrip": "Cantrip",
+		"levelNth": "Level {level}",
+		"pickAnEntry": "Select an entry to see its detail.",
+		"sourceLine": "Source: {source} · {pack}"
 	},
 	"contentDrift": {
 		"title": "Content data changed",
@@ -855,25 +865,54 @@
 		"neverAsk": "Don't ask again (content-editing mode)"
 	},
 	"contentField": {
-		"name": "Name",
-		"text": "Description",
-		"hit_die": "Hit die",
-		"primary_ability": "Primary ability",
-		"spell_ability": "Spellcasting ability",
-		"save_ability": "Save",
-		"tags": "Tags",
+		"ac": "AC",
 		"base_item_id": "Base item",
-		"weight_lb": "Weight (lb)",
+		"caster_from_level": "Casting from level",
+		"caster_share": "Caster share (multiclass)",
 		"casting_time": "Casting time",
-		"higher_level": "At higher levels",
-		"material": "Material",
+		"category": "Category",
+		"class_id": "Class",
+		"components": "Components",
+		"cost": "Cost",
+		"cr": "CR",
 		"creature_type": "Creature type",
+		"damage": "Damage",
+		"duration": "Duration",
+		"gear": "Gear",
+		"higher_level": "At higher levels",
+		"hit_die": "Hit die",
+		"hp": "HP",
+		"hp_formula": "HP formula",
+		"immunities": "Immunities",
+		"initiative": "Initiative",
+		"languages": "Languages",
+		"level": "Level",
+		"material": "Material",
+		"name": "Name",
+		"prepare_style": "Prepare style",
+		"primary_ability": "Primary ability",
+		"properties": "Properties",
+		"range": "Range",
+		"rarity": "Rarity",
+		"recharge": "Recharge",
+		"resistances": "Resistances",
+		"resource_id": "Resource",
+		"save_ability": "Save",
+		"school": "School",
+		"senses": "Senses",
+		"size": "Size",
+		"skills": "Skills",
 		"skills_choose": "Skill choices",
 		"skills_from": "Skill list",
+		"source": "Source",
+		"speed": "Speed",
+		"spell_ability": "Spellcasting ability",
 		"subclass_level": "Subclass at level",
-		"caster_share": "Caster share (multiclass)",
-		"caster_from_level": "Casting from level",
-		"prepare_style": "Prepare style"
+		"systems": "Editions",
+		"tags": "Tags",
+		"text": "Description",
+		"vulnerabilities": "Vulnerabilities",
+		"weight_lb": "Weight (lb)"
 	},
 	"contentIssue": {
 		"badRowAnyColumn": "This row was skipped because one of its columns holds something a “{type}” row can’t use. Correct the cell and save the file — the rest of the file loaded normally.",
@@ -948,6 +987,12 @@
 		"language": "Language",
 		"item": "Item",
 		"spell": "Spell"
+	},
+	"contentValue": {
+		"concentrationFor": "Concentration · {duration}",
+		"disadvantage": "Disadvantage",
+		"required": "Required",
+		"yes": "Yes"
 	},
 	"creatureSize": {
 		"tiny": "Tiny",
@@ -1092,14 +1137,12 @@
 		"loading": "loading",
 		"martial": "martial",
 		"mastery": "mastery",
-		"medium": "medium",
 		"melee": "melee",
 		"ranged": "ranged",
 		"reach": "reach",
-		"shield": "shield",
 		"simple": "simple",
 		"special": "special",
-		"stealth_disadvantage": "stealth disadvantage",
+		"stealth_disadvantage": "Stealth",
 		"str_min": "STR min",
 		"thrown": "thrown",
 		"two_handed": "two-handed",
@@ -1435,6 +1478,11 @@
 		"cantrip": "cantrip",
 		"cantrips": "Cantrips",
 		"nth": "{level, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+	},
+	"spellResolution": {
+		"attack": "Attack roll",
+		"auto": "Automatic",
+		"utility": "Utility"
 	},
 	"spellSchool": {
 		"abjuration": "Abjuration",

@@ -123,11 +123,19 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left: the COMPENDIUM.** Its detail views are the last surface built from English
-  fragments — a spell's resolution line ("Attack roll", "Automatic", "Utility"), a monster's stat
-  block, and the meta grid, which title-cases a column NAME into a heading and prints "Yes" for a
-  bare tag. It is one screen's worth of the same work, and the `contentField` catalog is already
-  there to hold half of it. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  **A detail view says WHICH WORD, not the word.** `DetailModel` carries `SaidText` parts — the
+  eyebrow, every meta cell's label, and the values that are the app's own vocabulary — and the heads
+  say them with `$_`. It could not take a translator instead: `rowDetail` is called from the build
+  inspector's `$derived`, the same trap the attack list has. A column's heading reads from
+  `contentField`, the catalog the homebrew FORM already labels its inputs from, with the column's own
+  name title-cased as the fallback, so a homebrew column reads as its author wrote it.
+  **A grammatical gender is a fact about the noun, not about the word.** `heavy` describing an
+  armour and `heavy` describing a weapon are one word in English and two in Ukrainian ("важкий
+  обладунок", "важка зброя"), so an armour's weight has a catalog of its own (`armorCategory`) rather
+  than sharing `itemTag`'s. A shared key would have made one of the two wrong in every locale that
+  inflects.
+  **What is left:** the remaining dialogs and the spellbook's own chrome — a handful of literals
+  each, none of them a ruling. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the

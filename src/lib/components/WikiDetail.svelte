@@ -4,6 +4,7 @@
 	// play-mode `actions` snippet (Spellbook) renders once under the head, type-independent — so it
 	// shows on spells too (it used to only render in the generic branch). Read-only by default;
 	// `editable` (translate) makes the title + prose editable via the bound `draft`.
+	import { sayText } from '$lib/util/say';
 	import type { Snippet } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import type { DetailModel } from '$lib/content/detail';
@@ -55,7 +56,7 @@
 
 		<ArticleProse bodyMarkdown={detail.bodyHtml} {higherLevel} {material} {editable} {draft} />
 		<div class="source-line">
-			{detail.source}{#if detail.license}
+			{sayText(detail.source, $_)}{#if detail.license}
 				· {detail.license}{/if}
 		</div>
 		{#if footer}{@render footer()}{/if}

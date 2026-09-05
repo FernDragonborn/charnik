@@ -3,6 +3,9 @@
 	// title, an optional ability grid, and the generic key/value meta grid. Only the title is editable
 	// (translate); the meta cells are read-only. Play-mode `actions` (Spellbook) render in the
 	// dispatcher below the title, not here.
+	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '$lib/i18n';
+	import { say, sayText } from '$lib/util/say';
 	import type { DetailModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
 	import EditableTitle from './EditableTitle.svelte';
@@ -18,7 +21,7 @@
 	} = $props();
 </script>
 
-<div class="deyebrow">{detail.eyebrow}</div>
+<div class="deyebrow">{detail.eyebrow.map((part) => say(part, $_)).join(' · ')}</div>
 {#if editable && draft}
 	<EditableTitle bind:value={draft.name} placeholder={detail.title} />
 {:else}
@@ -28,7 +31,7 @@
 	<div class="abilities">
 		{#each detail.abilities as a (a.ab)}
 			<div class="ability-block">
-				<span class="ability-code">{a.ab}</span>
+				<span class="ability-code">{abilityShortLabel(a.ab, $_)}</span>
 				<span class="ability-score">{a.score}</span>
 				<span class="markdown">{a.mod}</span>
 			</div>
@@ -37,10 +40,10 @@
 {/if}
 {#if detail.meta.length}
 	<div class="detail-meta">
-		{#each detail.meta as [k, v] (k)}
+		{#each detail.meta as [k, v] (k.key)}
 			<div class="meta-cell">
-				<div class="meta-key eyebrow">{k}</div>
-				<div class="meta-value">{v}</div>
+				<div class="meta-key eyebrow">{sayText(k, $_)}</div>
+				<div class="meta-value">{say(v, $_)}</div>
 			</div>
 		{/each}
 	</div>

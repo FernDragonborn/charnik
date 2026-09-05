@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { say, type Said } from '$lib/util/say';
 import { sourceLabel, editionLabel, buildDetail, entryMeta } from './detail';
 import { row } from './test-utils';
 
@@ -18,31 +19,40 @@ describe('editionLabel', () => {
 	});
 });
 
+/** What a said part reads as with no catalog — its own English fallback, which is what these
+ *  assertions are about: the CHOICE of word, not the translation of it. */
+const said = (parts: Said[]): string[] => parts.map((part) => say(part));
+
 describe('buildDetail', () => {
 	it('spell: eyebrow is Cantrip / Level + school; carries a spell model + friendly source', () => {
 		const cantrip = buildDetail(
 			row({ name_en: 'Fire Bolt', level: '0', school: 'evocation' }),
 			'spell',
 		);
-		expect(cantrip.eyebrow).toBe('Cantrip · Evocation');
+		// the eyebrow travels as its parts: the level is the app's word, the school a catalog entry
+		expect(said(cantrip.eyebrow)).toEqual(['Cantrip', 'Evocation']);
 		expect(cantrip.title).toBe('Fire Bolt');
 		expect(cantrip.spell).toBeDefined();
 		// the PACK is named beside the tag: a pack declares its own `#content-source`, so the tag
 		// alone cannot say where a row came from
-		expect(cantrip.source).toBe('Source: D&D 5.5e · test');
+		expect(cantrip.source.values).toEqual({ source: 'D&D 5.5e', pack: 'test' });
 
 		const leveled = buildDetail(
 			row({ name_en: 'Fireball', level: '3', school: 'evocation' }),
 			'spell',
 		);
-		expect(leveled.eyebrow).toBe('Level 3 · Evocation');
+		expect(said(leveled.eyebrow)).toEqual(['Level 3', 'Evocation']);
+		expect(leveled.eyebrow[0]).toMatchObject({ values: { level: 3 } });
 	});
 
 	it('generic type: eyebrow is the capitalized type and meta lists non-common fields', () => {
 		const detail = buildDetail(row({ name_en: 'Alert', category: 'origin' }, 'feat'), 'feat');
-		expect(detail.eyebrow).toBe('Feat');
+		expect(said(detail.eyebrow)).toEqual(['Feat']);
 		expect(detail.title).toBe('Alert');
-		expect(detail.meta).toContainEqual(['Category', 'origin']);
+		expect(detail.meta.map(([k, v]) => [k.key, v])).toContainEqual([
+			'contentField.category',
+			'origin',
+		]);
 	});
 
 	it('locale-aware: prose reads <base>_<loc>, falls back to _en, then a bare column', () => {
@@ -77,8 +87,8 @@ describe('buildDetail', () => {
 			'uk',
 		);
 		expect(detail.title).toBe('Пильність');
-		expect(detail.meta.map(([k]) => k)).not.toContain('Name Uk');
-		expect(detail.meta.map(([k]) => k)).not.toContain('Text Uk');
+		expect(detail.meta.map(([k]) => k.key)).not.toContain('contentField.name_uk');
+		expect(detail.meta.map(([k]) => k.key)).not.toContain('contentField.text_uk');
 	});
 });
 

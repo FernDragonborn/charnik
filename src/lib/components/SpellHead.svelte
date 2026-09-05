@@ -2,6 +2,8 @@
 	// The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration
 	// chips), and the effect/casting strip. Structural stats are read-only; only the title is editable
 	// (translate). Prose lives BELOW in ArticleProse; the dispatcher (WikiDetail) stacks them.
+	import { _ } from '$lib/i18n';
+	import { say, sayText } from '$lib/util/say';
 	import type { DetailModel, SpellModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
 	import DiceIcon from './DiceIcon.svelte';
@@ -27,7 +29,7 @@
 </script>
 
 <div class="detail-eyebrow">
-	<span class="monster-type">{detail.eyebrow}</span>
+	<span class="monster-type">{detail.eyebrow.map((part) => say(part, $_)).join(' · ')}</span>
 	<span>{spell.edition}</span>
 </div>
 <div class="stat-title">
@@ -36,14 +38,14 @@
 	{:else}
 		<h1>{detail.title}</h1>
 	{/if}
-	{#if !rolls}<span class="stat-chip {spell.resChip}">{spell.resLabel}</span>{/if}
+	{#if !rolls}<span class="stat-chip {spell.resChip}">{sayText(spell.resLabel, $_)}</span>{/if}
 	{#if spell.ritual}<span class="stat-chip util">Ritual</span>{/if}
 	{#if spell.concentration}<span class="stat-chip save">Concentration</span>{/if}
 </div>
 <div class="strip" class:norolls={!rolls}>
 	{#if rolls}
 		<div class="spell-effect {spell.resChip}">
-			<span class="stat-chip {spell.resChip}">{spell.resLabel}</span>
+			<span class="stat-chip {spell.resChip}">{sayText(spell.resLabel, $_)}</span>
 			{#if spell.dice}
 				<span class="spell-effect-value">{spell.dice}</span>
 				{#if spell.dmgType}<span class="spell-effect-sub">{spell.dmgType}</span>{/if}
@@ -63,15 +65,15 @@
 		</div>
 	{/if}
 	<div class="stat-cells">
-		{#each spell.cells as [k, v] (k)}
+		{#each spell.cells as [k, v] (k.key)}
 			<div class="stat-cell">
-				<div class="stat-key eyebrow">{k}</div>
-				<div class="stat-value">{v}</div>
+				<div class="stat-key eyebrow">{sayText(k, $_)}</div>
+				<div class="stat-value">{say(v, $_)}</div>
 			</div>
 		{/each}
 		{#if spell.availableTo?.length}
 			<div class="stat-cell">
-				<div class="stat-key eyebrow">Available to</div>
+				<div class="stat-key eyebrow">{$_('compendium.availableTo')}</div>
 				<div class="stat-value">
 					{#each spell.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
 								class="homebrew-mark"
@@ -81,7 +83,7 @@
 			</div>
 		{:else if spell.classes}
 			<div class="stat-cell">
-				<div class="stat-key eyebrow">Available to</div>
+				<div class="stat-key eyebrow">{$_('compendium.availableTo')}</div>
 				<div class="stat-value">{spell.classes}</div>
 			</div>
 		{/if}

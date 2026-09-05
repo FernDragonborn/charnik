@@ -1,6 +1,9 @@
 <script lang="ts">
 	// The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the
 	// senses/defenses band. Structural stats are read-only; only the title is editable (translate).
+	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '$lib/i18n';
+	import { say, sayText } from '$lib/util/say';
 	import type { DetailModel, MonsterModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
 	import DiceIcon from './DiceIcon.svelte';
@@ -22,7 +25,9 @@
 
 <div class="detail-eyebrow">
 	<span>Monster</span>
-	<span><span class="monster-type">{monster.type}</span> · {monster.edition}</span>
+	<span
+		><span class="monster-type">{monster.type.map((part) => say(part, $_)).join(' ')}</span> · {monster.edition}</span
+	>
 </div>
 {#if editable && draft}
 	<EditableTitle bind:value={draft.name} placeholder={detail.title} />
@@ -66,7 +71,7 @@
 		</div>
 		{#each monster.abilities as a (a.ab)}
 			<div class="ability-row" class:has-save={monster.hasSaves}>
-				<span class="ab-n">{a.ab}</span>
+				<span class="ab-n">{abilityShortLabel(a.ab, $_)}</span>
 				<span>{a.score}</span>
 				<span class="amod">{a.mod}</span>
 				{#if monster.hasSaves}<span class="ability-save">{a.save ?? a.mod}</span>{/if}
@@ -76,14 +81,14 @@
 </div>
 {#if monster.band.length || monster.defenses.length}
 	<div class="band">
-		{#each monster.band as [k, v] (k)}
+		{#each monster.band as [k, v] (k.key)}
 			<div class="band-row">
-				<span class="band-key">{k}</span><span class="band-value">{v}</span>
+				<span class="band-key">{sayText(k, $_)}</span><span class="band-value">{say(v, $_)}</span>
 			</div>
 		{/each}
-		{#each monster.defenses as [k, v] (k)}
+		{#each monster.defenses as [k, v] (k.key)}
 			<div class="band-row defenses">
-				<span class="band-key">{k}</span><span class="band-value">{v}</span>
+				<span class="band-key">{sayText(k, $_)}</span><span class="band-value">{say(v, $_)}</span>
 			</div>
 		{/each}
 	</div>

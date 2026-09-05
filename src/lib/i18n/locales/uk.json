@@ -19,6 +19,12 @@
 		"name": "Charnik",
 		"tagline": "Ваші персонажі — ваші."
 	},
+	"armorCategory": {
+		"heavy": "важкий",
+		"light": "легкий",
+		"medium": "середній",
+		"shield": "щит"
+	},
 	"build": {
 		"titleNew": "Новий персонаж",
 		"titleLevelUp": "Підвищення рівня",
@@ -842,7 +848,11 @@
 		"close": "Закрити"
 	},
 	"compendium": {
-		"pickAnEntry": "Оберіть запис, щоб побачити подробиці."
+		"availableTo": "Доступне для",
+		"levelCantrip": "Замовляння",
+		"levelNth": "{level} рівень",
+		"pickAnEntry": "Оберіть запис, щоб побачити подробиці.",
+		"sourceLine": "Джерело: {source} · {pack}"
 	},
 	"contentDrift": {
 		"title": "Дані контенту змінились",
@@ -855,25 +865,54 @@
 		"neverAsk": "Більше не питати (режим редагування контенту)"
 	},
 	"contentField": {
-		"name": "Назва",
-		"text": "Опис",
-		"hit_die": "Кістка здоровʼя",
-		"primary_ability": "Основна характеристика",
-		"spell_ability": "Характеристика заклять",
-		"save_ability": "Рятунок",
-		"tags": "Теги",
+		"ac": "КЗ",
 		"base_item_id": "Базовий предмет",
-		"weight_lb": "Вага (фунт)",
+		"caster_from_level": "Закляття з рівня",
+		"caster_share": "Частка закляттяра (мультиклас)",
 		"casting_time": "Час створення",
-		"higher_level": "На вищих рівнях",
-		"material": "Матеріальний компонент",
+		"category": "Категорія",
+		"class_id": "Клас",
+		"components": "Компоненти",
+		"cost": "Вартість",
+		"cr": "РН",
 		"creature_type": "Тип істоти",
+		"damage": "Шкода",
+		"duration": "Тривалість",
+		"gear": "Спорядження",
+		"higher_level": "На вищих рівнях",
+		"hit_die": "Кістка здоровʼя",
+		"hp": "ОЗ",
+		"hp_formula": "Формула ОЗ",
+		"immunities": "Імунітет",
+		"initiative": "Ініціатива",
+		"languages": "Мови",
+		"level": "Рівень",
+		"material": "Матеріальний компонент",
+		"name": "Назва",
+		"prepare_style": "Стиль підготовки",
+		"primary_ability": "Основна характеристика",
+		"properties": "Властивості",
+		"range": "Дистанція",
+		"rarity": "Рідкісність",
+		"recharge": "Відновлення",
+		"resistances": "Опір",
+		"resource_id": "Ресурс",
+		"save_ability": "Рятунок",
+		"school": "Школа",
+		"senses": "Чуття",
+		"size": "Розмір",
+		"skills": "Навички",
 		"skills_choose": "Вибір навичок",
 		"skills_from": "Список навичок",
+		"source": "Джерело",
+		"speed": "Швидкість",
+		"spell_ability": "Характеристика заклять",
 		"subclass_level": "Підклас на рівні",
-		"caster_share": "Частка закляттяра (мультиклас)",
-		"caster_from_level": "Закляття з рівня",
-		"prepare_style": "Стиль підготовки"
+		"systems": "Видання",
+		"tags": "Теги",
+		"text": "Опис",
+		"vulnerabilities": "Вразливість",
+		"weight_lb": "Вага (фунт)"
 	},
 	"contentIssue": {
 		"badRowAnyColumn": "Цей рядок пропущено, бо одна з його колонок містить те, чого рядок типу «{type}» не приймає. Виправте комірку й збережіть файл — решта файлу завантажилася нормально.",
@@ -948,6 +987,12 @@
 		"language": "Мова",
 		"item": "Предмет",
 		"spell": "Закляття"
+	},
+	"contentValue": {
+		"concentrationFor": "Концентрація · {duration}",
+		"disadvantage": "Перешкода",
+		"required": "Потрібне",
+		"yes": "Так"
 	},
 	"creatureSize": {
 		"tiny": "Крихітний",
@@ -1092,14 +1137,12 @@
 		"loading": "перезарядка",
 		"martial": "військова",
 		"mastery": "прийом",
-		"medium": "середній",
 		"melee": "ближня",
 		"ranged": "дальня",
 		"reach": "досяжна",
-		"shield": "щит",
 		"simple": "проста",
 		"special": "особлива",
-		"stealth_disadvantage": "перешкода на непомітність",
+		"stealth_disadvantage": "Непомітність",
 		"str_min": "мін. СИЛ",
 		"thrown": "метальна",
 		"two_handed": "дворучна",
@@ -1435,6 +1478,11 @@
 		"cantrip": "замовляння",
 		"cantrips": "Замовляння",
 		"nth": "{level, selectordinal, other {#-й}}"
+	},
+	"spellResolution": {
+		"attack": "Кидок атаки",
+		"auto": "Автоматично",
+		"utility": "Допоміжне"
 	},
 	"spellSchool": {
 		"abjuration": "Огородження",

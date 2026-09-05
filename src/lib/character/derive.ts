@@ -205,7 +205,7 @@ function applyArmorSpellBlock({
 		source,
 		token: 'armor_proficiency',
 		key: ISSUE_KEY.armorBlocksCasting,
-		values: { category: { catalog: 'itemTag', id: cat } },
+		values: { category: { catalog: 'armorCategory', id: cat } },
 	});
 }
 

@@ -8,8 +8,9 @@ import { abilityShortLabel, asText, ordinal, signed, titleCase } from '$lib/util
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
+import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
-import { parseItemTags } from './item-tags';
+import { ITEM_TAG, parseItemTags } from './item-tags';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -24,50 +25,62 @@ const COMMON = new Set([
 	'higher_level',
 ]);
 
-// nicer meta-cell labels than the auto Title-Case of the raw column name
-const LABELS: Record<string, string> = {
-	weight_lb: 'Weight (lb)',
-	base_item_id: 'Base item',
-	ac: 'AC',
-	hp_formula: 'HP formula',
-	save_ability: 'Save',
-	casting_time: 'Casting time',
-	higher_level: 'At higher levels',
-	creature_type: 'Type',
-	class_id: 'Class',
-};
-const cap = (s: string) => LABELS[s] ?? titleCase(s);
+/** What a COLUMN is called, as a meta-cell heading: the `contentField` catalog, with the column's
+ *  own name title-cased as the fallback — a homebrew column reads as its author wrote it rather than
+ *  as a missing key. The same catalog the homebrew form labels its inputs from. */
+const fieldLabel = (column: string): SaidText => ({
+	key: `contentField.${column}`,
+	fallback: titleCase(column),
+});
 
-/** Tags that keep the label the column they replaced had, so folding eight item columns into one
- *  did not cost the detail view its vocabulary — an armour still says "Str min 15", not a word
- *  buried in a list. Everything else joins one "Properties" cell. */
-const TAG_LABELS: Record<string, string> = {
-	ac: 'AC',
-	dex_cap: 'Dex cap',
-	str_min: 'Str min',
-	armor: 'Armor',
-	mastery: 'Mastery',
-	range: 'Range',
-	ammo: 'Ammunition',
-	stealth_disadvantage: 'Stealth',
-	attunement: 'Attunement',
-};
+/** Tags that keep a cell of their own, so folding eight item columns into one did not cost the
+ *  detail view its vocabulary — an armour still says "STR min 15", not a word buried in a list.
+ *  Everything else joins one "Properties" cell. The words come from `itemTag`, the one catalog that
+ *  names a tag (`content/item-tags.ts`). */
+const CELL_TAGS = new Set([
+	'ac',
+	'dex_cap',
+	'str_min',
+	'armor',
+	'mastery',
+	'range',
+	'ammo',
+	'stealth_disadvantage',
+	'attunement',
+]);
 /** What a labelled tag with no value says, where plain "Yes" would be less than the column said. */
-const BARE_TAG_TEXT: Record<string, string> = {
-	stealth_disadvantage: 'Disadvantage',
-	attunement: 'Required',
+const BARE_TAG_VALUE: Record<string, string> = {
+	stealth_disadvantage: 'contentValue.disadvantage',
+	attunement: 'contentValue.required',
 };
 
-/** An item's `tags` cell → meta cells. */
-function tagCells(raw: unknown): [string, string][] {
-	const labelled: [string, string][] = [];
+/** A tag's own word: the `itemTag` catalog, with the raw name as the fallback — the same lookup the
+ *  attack row's kind line makes, so a tag reads identically in both places. */
+const tagWord = (name: string): SaidText => ({ key: `itemTag.${name}`, fallback: name });
+
+/** An item's `tags` cell → meta cells. A tag's VALUE is data unless it is itself a tag word
+ *  (`armor:heavy`), which the same lookup covers: `mastery:nick` finds no entry and reads "nick". */
+function tagCells(raw: unknown): MetaCell[] {
+	const labelled: MetaCell[] = [];
 	const properties: string[] = [];
 	for (const [name, value] of parseItemTags(raw)) {
-		const label = TAG_LABELS[name];
-		if (label) labelled.push([label, value ? titleCase(value) : (BARE_TAG_TEXT[name] ?? 'Yes')]);
+		if (CELL_TAGS.has(name))
+			labelled.push([
+				tagWord(name),
+				value
+					? {
+							// an armour's WEIGHT is its own word: "heavy" agrees with a different noun than a
+							// heavy weapon's does, and only one of the two can win a shared key
+							key: name === ITEM_TAG.armor ? `armorCategory.${value}` : `itemTag.${value}`,
+							fallback: titleCase(value),
+						}
+					: { key: BARE_TAG_VALUE[name] ?? 'contentValue.yes', fallback: 'Yes' },
+			]);
 		else properties.push(value ? `${titleCase(name)} (${value})` : titleCase(name));
 	}
-	return properties.length ? [['Properties', properties.join(', ')], ...labelled] : labelled;
+	return properties.length
+		? [[fieldLabel('properties'), properties.join(', ')], ...labelled]
+		: labelled;
 }
 /** A meta cell's text: a list column joins, anything else goes through the shared `asText` (so an
  *  object from a homebrew cell renders empty rather than "[object Object]"). */
@@ -108,8 +121,13 @@ export const plainProse = (row: LoadedRow, locale: string): string =>
 
 const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
+/** One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when
+ *  the word is the app's own vocabulary, the row's own text when it is data. */
+export type MetaCell = [label: SaidText, value: Said];
+
 interface AbilityScore {
-	ab: string; // "STR"
+	/** The ability id (`str`) — `abilityShortLabel` gives it the reader's word for it. */
+	ab: string;
 	score: number;
 	mod: string; // "+5" / "−1"
 	save?: string; // "+6" (monster saving throw), when present
@@ -117,7 +135,7 @@ interface AbilityScore {
 
 /** A monster stat block (the two-table "C" layout), built when type === 'monster'. */
 export interface MonsterModel {
-	type: string; // eyebrow, e.g. "Huge Dragon (metallic)"
+	type: Said[]; // eyebrow, e.g. "Huge" + "Dragon (metallic)"
 	edition: string; // "5.5e"
 	cr: string;
 	ac: string;
@@ -127,8 +145,8 @@ export interface MonsterModel {
 	speed: string;
 	abilities: AbilityScore[];
 	hasSaves: boolean; // any save differs from its mod → show the save column
-	band: [string, string][]; // Senses / Skills / Languages / Gear
-	defenses: [string, string][]; // Resistances / Immunities / Vulnerabilities (accent)
+	band: MetaCell[]; // Senses / Skills / Languages / Gear
+	defenses: MetaCell[]; // Resistances / Immunities / Vulnerabilities (accent)
 }
 
 /** A spell article (the "strip" layout: fixed-size effect block + casting cells). */
@@ -137,10 +155,10 @@ export interface SpellModel {
 	ritual: boolean;
 	concentration: boolean;
 	resChip: 'hit' | 'save' | 'auto' | 'util'; // reuse the spell-list resolution pill colours
-	resLabel: string; // "DEX save" | "Attack roll" | "Automatic" | "Utility"
+	resLabel: SaidText; // "DEX save" | "Attack roll" | "Automatic" | "Utility"
 	dice: string; // "8d6" | "2d4" | "" (utility → grey "No roll")
 	dmgType: string; // "fire" | "healing" | ""
-	cells: [string, string][]; // Casting / Range / Duration / Components
+	cells: MetaCell[]; // Casting / Range / Duration / Components
 	classes: string; // raw `classes` column (fallback when the access index isn't supplied)
 	/** Classes that can take the spell, from the reverse UNION access index (inline ∪ spell_lists),
 	 *  with provenance — `homebrew` = granted class-side (via spell_lists), not on the spell row. */
@@ -165,12 +183,10 @@ const RES_CHIP: Record<string, SpellModel['resChip']> = {
 	auto: 'auto',
 };
 
-/** resolution → the full label; a save shows its ability. */
-function resolutionLabel(res: string, saveAbility: string): string {
-	if (res === 'attack') return 'Attack roll';
-	if (res === 'save') return `${saveAbility.toUpperCase()} save`;
-	if (res === 'auto') return 'Automatic';
-	return 'Utility';
+/** resolution → the full label; a save shows its ability, through the key that already names it. */
+function resolutionLabel(res: string, saveAbility: string): SaidText {
+	if (res === 'save') return { key: `combat.roll.save.${saveAbility.toLowerCase()}` };
+	return { key: `spellResolution.${res === 'attack' || res === 'auto' ? res : 'utility'}` };
 }
 
 /** A spell's damage/heal dice + type, from the `damage` column ("8d6 fire") and nowhere else. Empty
@@ -200,20 +216,27 @@ function buildSpell(
 		resLabel: resolutionLabel(res, d.save_ability ?? ''),
 		dice,
 		dmgType,
-		cells: [
-			['Casting', d.casting_time ?? ''],
-			['Range', withMetric(d.range ?? '')],
+		cells: (
 			[
-				'Duration',
-				conc && !/concentration/i.test(d.duration ?? '')
-					? `Concentration · ${d.duration}`
-					: (d.duration ?? ''),
-			],
-			['Components', components],
-		].filter(([, v]) => v) as [string, string][],
+				[fieldLabel('casting_time'), d.casting_time ?? ''],
+				[fieldLabel('range'), withMetric(d.range ?? '')],
+				[
+					fieldLabel('duration'),
+					conc && !/concentration/i.test(d.duration ?? '')
+						? {
+								key: 'contentValue.concentrationFor',
+								values: { duration: String(d.duration) },
+								fallback: `Concentration · ${String(d.duration)}`,
+							}
+						: (d.duration ?? ''),
+				],
+				[fieldLabel('components'), components],
+			] as MetaCell[]
+		).filter(([, v]) => v),
+		// the raw `classes` column: ids a pack wrote, so they are its words, not the app's
 		classes: (d.classes ?? '')
 			.split(',')
-			.map((c) => cap(c.trim()))
+			.map((c) => titleCase(c.trim()))
 			.filter(Boolean)
 			.join(', '),
 		...(availableTo ? { availableTo } : {}),
@@ -264,13 +287,13 @@ export function editionLabel(systems: unknown): string {
 }
 
 export interface DetailModel {
-	eyebrow: string; // "Level 3 · Evocation" (spell) or the type name
+	eyebrow: Said[]; // "Level 3" + "Evocation" (spell), or the type name — joined by the view
 	title: string;
 	abilities: AbilityScore[]; // monster STR..CHA block (empty otherwise)
-	meta: [string, string][]; // k/v cells (Casting time, Range, Components, Duration, …)
+	meta: MetaCell[]; // k/v cells (Casting time, Range, Components, Duration, …)
 	bodyHtml: string; // text_en — rendered as HTML (content may contain markup)
 	higherLevel: string; // higher_level, if any
-	source: string; // attribution line
+	source: SaidText; // attribution line
 	license: string; // the file's #content-license (e.g. CC-BY-4.0), '' when the file declares none
 	monster?: MonsterModel; // present for type === 'monster' → dedicated stat-block layout
 	spell?: SpellModel; // present for type === 'spell' → dedicated spell layout
@@ -285,7 +308,7 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		const raw = d[`${a}_save`];
 		const save = raw == null ? undefined : Number(raw);
 		return {
-			ab: a.toUpperCase(),
+			ab: a,
 			score,
 			mod: signed(abilityModifier(score)),
 			...(save == null ? {} : { save: signed(save) }),
@@ -295,12 +318,14 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		const raw = d[`${a}_save`];
 		return raw != null && Number(raw) !== Math.floor((Number(d[a]) - 10) / 2);
 	});
-	const pair = (label: string, key: RowColumn<'monster'>): [string, string][] =>
-		meaningful(d[key]) ? [[label, cellText(d[key])]] : [];
+	const pair = (key: RowColumn<'monster'>): MetaCell[] =>
+		meaningful(d[key]) ? [[fieldLabel(key), cellText(d[key])]] : [];
 	return {
-		type: [d.size ? cap(String(d.size)) : '', d.creature_type ? cap(String(d.creature_type)) : '']
-			.filter(Boolean)
-			.join(' '),
+		// a size is a closed vocabulary the app already names; a creature type is the row's own word
+		type: [
+			d.size ? { key: `creatureSize.${String(d.size)}`, fallback: titleCase(String(d.size)) } : '',
+			d.creature_type ? titleCase(String(d.creature_type)) : '',
+		].filter(Boolean) as Said[],
 		edition: (Array.isArray(d.systems) ? d.systems : [d.systems]).filter(Boolean).join('/'),
 		cr: s('cr'),
 		ac: s('ac'),
@@ -310,17 +335,8 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		speed: s('speed'),
 		abilities,
 		hasSaves,
-		band: [
-			...pair('Senses', 'senses'),
-			...pair('Skills', 'skills'),
-			...pair('Languages', 'languages'),
-			...pair('Gear', 'gear'),
-		],
-		defenses: [
-			...pair('Resistances', 'resistances'),
-			...pair('Immunities', 'immunities'),
-			...pair('Vulnerabilities', 'vulnerabilities'),
-		],
+		band: [...pair('senses'), ...pair('skills'), ...pair('languages'), ...pair('gear')],
+		defenses: [...pair('resistances'), ...pair('immunities'), ...pair('vulnerabilities')],
 	};
 }
 
@@ -342,21 +358,36 @@ export function buildDetail(
 		// The PACK is named beside the source tag, because the tag is not proof of anything: a pack
 		// declares its own `#content-source`, so one stamping `SRD 5.2.1` renders as "D&D 5.5e" exactly
 		// like the shipped SRD does. The folder it came from is the fact the app actually knows.
-		source: `Source: ${sourceLabel(row.source)} · ${packNameOf(row.root)}`,
+		source: {
+			key: 'compendium.sourceLine',
+			values: { source: sourceLabel(row.source), pack: packNameOf(row.root) },
+			fallback: `Source: ${sourceLabel(row.source)} · ${packNameOf(row.root)}`,
+		},
 		license: row.license ?? '',
 	};
 	if (row.type === 'monster')
-		return { ...common, eyebrow: '', meta: [], higherLevel: '', monster: buildMonster(row) };
+		return { ...common, eyebrow: [], meta: [], higherLevel: '', monster: buildMonster(row) };
 	if (row.type === 'spell') {
 		const spell = row.data;
 		return {
 			...common,
 			eyebrow: [
-				Number(spell.level) === 0 ? 'Cantrip' : `Level ${spell.level}`,
-				spell.school ? cap(String(spell.school)) : '',
-			]
-				.filter(Boolean)
-				.join(' · '),
+				Number(spell.level) === 0
+					? { key: 'compendium.levelCantrip', fallback: 'Cantrip' }
+					: {
+							key: 'compendium.levelNth',
+							values: { level: Number(spell.level) },
+							fallback: `Level ${String(spell.level)}`,
+						},
+				...(spell.school
+					? [
+							{
+								key: `spellSchool.${String(spell.school).toLowerCase()}`,
+								fallback: titleCase(String(spell.school)),
+							},
+						]
+					: []),
+			],
 			meta: [],
 			higherLevel: localized(d, 'higher_level', locale),
 			spell: buildSpell(row, availableTo, locale),
@@ -367,12 +398,19 @@ export function buildDetail(
 	const skip = new Set(COMMON);
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
-		.flatMap(([k, v]): [string, string][] =>
-			k === 'tags' ? tagCells(v) : [[cap(k), asText(v) === 'true' ? 'Yes' : cellText(v)]],
+		.flatMap(([k, v]): MetaCell[] =>
+			k === 'tags'
+				? tagCells(v)
+				: [
+						[
+							fieldLabel(k),
+							asText(v) === 'true' ? { key: 'contentValue.yes', fallback: 'Yes' } : cellText(v),
+						],
+					],
 		);
 	return {
 		...common,
-		eyebrow: cap(String(type)),
+		eyebrow: [{ key: `contentType.${type}`, fallback: titleCase(type) }],
 		meta,
 		higherLevel: localized(d, 'higher_level', locale),
 	};

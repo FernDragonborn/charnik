@@ -65,7 +65,7 @@
 				{$_('build.spells.armorBlock', {
 					values: {
 						note: $_('combat.spells.armorBlockNote', {
-							values: { category: $_(`itemTag.${casting.armorBlock.category}`) }
+							values: { category: $_(`armorCategory.${casting.armorBlock.category}`) }
 						}),
 						source: casting.armorBlock.source
 					}

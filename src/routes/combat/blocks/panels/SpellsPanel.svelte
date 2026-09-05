@@ -37,7 +37,7 @@
 		<div
 			class="armor-block"
 			title={$_('combat.spells.armorBlockNote', {
-				values: { category: $_(`itemTag.${combat.armorBlock.category}`) },
+				values: { category: $_(`armorCategory.${combat.armorBlock.category}`) },
 			})}
 		>
 			<Icon name="triangle-alert" size={13} />
