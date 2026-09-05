@@ -3,7 +3,8 @@
  * fault gets, and the values that go into it — plus the two values that are not literals.
  */
 import { describe, it, expect } from 'vitest';
-import { issueText, issueMessage } from './issue-text';
+import { issueText } from './issue-text';
+import { sayText } from '../util/say';
 import en from '../i18n/locales/en.json';
 
 /** A stand-in catalog over the real English messages, so a key that does not exist shows up here. */
@@ -19,24 +20,24 @@ const t = (key: string, o?: { values?: Record<string, string | number>; default?
 describe('issueText — the sentence a fault gets', () => {
 	it('offers a guess only when one is close enough, and says the plain thing otherwise', () => {
 		const near = issueText.unresolvedBaseItem('longswrd', ['longsword']);
-		expect(issueMessage(near, t)).toContain('Did you mean “longsword”?');
+		expect(sayText(near, t)).toContain('Did you mean “longsword”?');
 		const far = issueText.unresolvedBaseItem('zzzzzzzz', ['longsword']);
-		expect(issueMessage(far, t)).toContain('Check the id for a typo');
+		expect(sayText(far, t)).toContain('Check the id for a typo');
 	});
 
 	it('reads a content TYPE through its own catalog, not as the raw id', () => {
 		const text = issueText.badRow(['systems'], 'spell', 'expected one of "5e"');
-		expect(issueMessage(text, t)).toContain('a “Spell” row');
+		expect(sayText(text, t)).toContain('a “Spell” row');
 		// the particulars stay verbatim: the panel is the author's debugger too
 		expect(text.detail).toBe('expected one of "5e"');
 	});
 
 	it('joins two candidates with the reader’s own word for "or"', () => {
 		const text = issueText.unknownDeclaredType('spel', ['spell', 'spells']);
-		expect(issueMessage(text, t)).toContain('did you mean “spell” or “spells”?');
+		expect(sayText(text, t)).toContain('did you mean “spell” or “spells”?');
 	});
 
 	it('says the KEY with no translator — a node test never sees half a sentence', () => {
-		expect(issueMessage(issueText.unknownFileType())).toBe('contentIssue.unknownFileType');
+		expect(sayText(issueText.unknownFileType())).toBe('contentIssue.unknownFileType');
 	});
 });

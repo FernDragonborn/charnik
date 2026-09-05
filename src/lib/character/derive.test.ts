@@ -3,6 +3,7 @@ import { type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
+import { ISSUE_KEY } from '../effects/token-parser';
 import { attackNotes, computeAttacks, formatDamageParts, rollEffectsFor } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
@@ -142,7 +143,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.spellcasting.armorBlock?.source).toBe('Plate Armor');
-		expect(s.spellcasting.armorBlock?.note).toContain('heavy');
+		expect(s.spellcasting.armorBlock?.category).toBe('heavy');
 		expect(s.deriveIssues.some((i) => i.token === 'armor_proficiency')).toBe(true);
 	});
 
@@ -416,7 +417,12 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.play.effects = [{ iid: 'x', label: 'Typo', effects: ['flat_bonus:attak+1'], positive: true }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.deriveIssues.some((i) => /did you mean "attack"\?/.test(i.reason))).toBe(true);
+		expect(
+			s.deriveIssues.some(
+				(i) =>
+					i.key === ISSUE_KEY.unknownTargetSuggested && JSON.stringify(i.values).includes('attack'),
+			),
+		).toBe(true);
 	});
 
 	it('B13: the action-economy targets (action/bonus/reaction) are recognized, not flagged', () => {
@@ -450,7 +456,8 @@ describe('deriveSheet aggregator', () => {
 		expect(
 			s.deriveIssues.some(
 				(i) =>
-					/did you mean "frightened"\?/.test(i.reason) &&
+					i.key === ISSUE_KEY.unknownConditionSuggested &&
+					JSON.stringify(i.values).includes('frightened') &&
 					/unknown condition "frightend"/.test(i.detail ?? ''),
 			),
 		).toBe(true);

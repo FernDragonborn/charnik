@@ -14,35 +14,11 @@
  */
 import { languageName } from '../i18n/languages';
 import { suggestClosest } from '../util/suggest';
-import type { Translate } from '../i18n';
+import type { SaidText } from '../util/say';
 
-/** One value inside an issue's sentence: a literal (an id, a column, a count), another catalog word,
- *  or the "did you mean" candidates, which need the reader's own "or" between them. */
-export type IssueValue =
-	string | number | { catalog: string; id: string } | { options: readonly string[] };
-
-/** The said half of a content issue: which sentence, the values in it, and the particulars under. */
-export interface IssueText {
-	key: string;
-	values?: Record<string, IssueValue>;
+/** The said half of a content issue: which sentence, and the particulars under it. */
+export interface IssueText extends SaidText {
 	detail?: string;
-}
-
-/** An issue's sentence in the reader's language. Without a translator the KEY is returned, which is
- *  what a node test sees — the copy has one home, and it is not this file. */
-export function issueMessage(text: IssueText, translate?: Translate): string {
-	if (!translate) return text.key;
-	const values: Record<string, string | number> = {};
-	for (const [name, value] of Object.entries(text.values ?? {}))
-		values[name] =
-			typeof value === 'object'
-				? 'options' in value
-					? value.options
-							.map((o) => `“${o}”`)
-							.join(translate('contentIssue.or', { default: ' or ' }))
-					: translate(`${value.catalog}.${value.id}`, { default: value.id })
-				: value;
-	return translate(text.key, { values });
 }
 
 /** `contentIssue.<name>`, so a key is spelled once and reads as one word at the call site. */

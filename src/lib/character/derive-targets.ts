@@ -6,7 +6,7 @@
 import { ABILITIES } from './schema';
 import { SKILL_ABILITY } from './skills';
 import { EFFECT_KIND } from '../effects/token-parser';
-import { didYouMean } from '../util/suggest';
+import { suggestClosest } from '../util/suggest';
 import type { TargetCheck } from '../effects/apply';
 
 // The target keys the sheet actually consumes, per kind. Kept here (not in the effects module) because
@@ -97,5 +97,6 @@ const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
 export const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
 	const candidates = targetCandidatesFor(kind);
 	if (candidates === OPEN_VOCAB || candidates.has(target)) return { supported: true };
-	return { supported: false, suggestion: didYouMean(target, candidates) };
+	const options = suggestClosest(target, candidates);
+	return { supported: false, ...(options.length ? { options } : {}) };
 };

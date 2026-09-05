@@ -34,7 +34,12 @@
 	{#if combat.armorBlock}
 		<!-- the `title` stays the rules note verbatim: it is the same sentence Content health shows for
 		     this block, and that copy is its own i18n domain (docs/work/ui.md ▸ ARCH-1) -->
-		<div class="armor-block" title={combat.armorBlock.note}>
+		<div
+			class="armor-block"
+			title={$_('combat.spells.armorBlockNote', {
+				values: { category: $_(`itemTag.${combat.armorBlock.category}`) },
+			})}
+		>
 			<Icon name="triangle-alert" size={13} />
 			{$_('combat.spells.castingBlocked', { values: { armor: combat.armorBlock.source } })}
 		</div>

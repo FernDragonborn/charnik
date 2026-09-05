@@ -63,7 +63,12 @@
 		{#if casting.armorBlock}
 			<p class="subtext warn">
 				{$_('build.spells.armorBlock', {
-					values: { note: casting.armorBlock.note, source: casting.armorBlock.source }
+					values: {
+						note: $_('combat.spells.armorBlockNote', {
+							values: { category: $_(`itemTag.${casting.armorBlock.category}`) }
+						}),
+						source: casting.armorBlock.source
+					}
 				})}
 			</p>
 		{/if}

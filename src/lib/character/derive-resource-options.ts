@@ -7,6 +7,7 @@
  * malformed formula surfaces as a deriveIssue on the sheet instead of failing at the moment the
  * player clicks the button.
  */
+import { ISSUE_KEY } from '$lib/effects/token-parser';
 import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { EffectIssue } from '../effects/token-parser';
 import { evalExpression, diceToFormula, type ExprContext } from '../effects/expression-evaluator';
@@ -87,8 +88,7 @@ function resolveOneActionFormula(
 		issues.push({
 			source: name,
 			token: action,
-			reason:
-				'Charnik could not work out what this option heals or rolls, so it is offered with the formula exactly as written.',
+			key: ISSUE_KEY.unreadableOptionEffect,
 			detail: r.error,
 		});
 		return action;
@@ -114,8 +114,7 @@ function resolveAvailable(
 	issues.push({
 		source: name,
 		token: `available:${src}`,
-		reason:
-			'Charnik cannot tell when this option is meant to be available, so it is always offered. Check the condition on the row.',
+		key: ISSUE_KEY.unreadableOptionCondition,
 		detail: r.ok ? `"${src}" is not a yes/no condition` : r.error,
 	});
 	return true;
@@ -144,8 +143,7 @@ export function resolveResourceOptions({
 			issues.push({
 				source: row.data.name_en,
 				token: `cost:${raw}`,
-				reason:
-					'This option does not say how much it costs in a way Charnik understands, so it is not offered. The cost has to be a whole number, or "x" for "you choose how many".',
+				key: ISSUE_KEY.unreadableOptionCost,
 				detail: `cost: "${raw}"`,
 			});
 			continue;

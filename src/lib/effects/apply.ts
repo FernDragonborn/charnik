@@ -8,6 +8,7 @@
  * re-scan of raw tokens. The one resolve stage that produces the effect list lives in
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
+import { ISSUE_KEY } from './token-parser';
 import { computed, NOTE_KEY, type Computed, type Contribution, type Note } from '../rules/pipeline';
 import { titleCase } from '../util/format';
 import { evalExpression, lintExpression } from './expression-evaluator';
@@ -92,7 +93,8 @@ class FactsCollector {
 		this.issues?.push({
 			source,
 			token,
-			reason: `Nothing on the sheet is called "${target}", so this effect changes nothing${check.suggestion ?? ' — check the spelling in the row’s effects column.'}`,
+			key: check.options ? ISSUE_KEY.unknownTargetSuggested : ISSUE_KEY.unknownTarget,
+			values: { target, ...(check.options ? { options: { options: check.options } } : {}) },
 			detail: `${kind}: unknown target "${target}"`,
 		});
 		return true;
@@ -247,8 +249,7 @@ class FactsCollector {
 			this.issues?.push({
 				source: eff.source,
 				token,
-				reason:
-					'This should offer something to roll, but its formula does not work out to dice or a number — so no roll is offered.',
+				key: ISSUE_KEY.unrollableValue,
 				detail: rv.error ?? 'the value expression resolved to nothing',
 			});
 			return;
@@ -280,8 +281,7 @@ class FactsCollector {
 				this.issues?.push({
 					source: eff.source,
 					token,
-					reason:
-						'Charnik could not work out how many uses this gives, so it is not shown in the resource tracker. Correct the count in the row and it will appear.',
+					key: ISSUE_KEY.unreadableResourceMax,
 					detail: r.ok ? 'the max expression is not a number' : r.error,
 				});
 		}

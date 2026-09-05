@@ -13,6 +13,8 @@
  *
  * Every field is a `Computed` ({value, trace, notes}), so the UI explains any number.
  */
+import type { SaidText } from '$lib/util/say';
+import { ISSUE_KEY } from '$lib/effects/token-parser';
 import { recordOf } from '../util/records';
 import { tokensOf, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
 import type { Character } from './schema';
@@ -63,7 +65,7 @@ import {
 } from '../effects/token-parser';
 import type { ExprContext } from '../effects/expression-evaluator';
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
-import { didYouMean } from '../util/suggest';
+import { suggestClosest } from '../util/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
 import { makeEffectCtxFactory, baseResolveState } from './derive-context';
@@ -136,6 +138,16 @@ function applyStealthDisadvantage(
 		facts.disadvantage.push({ target: 'skill.stealth', source });
 }
 
+/** The unknown-condition sentence and its values: a guess when one is close, the plain wording when
+ *  none is. */
+function conditionSaid(id: string, known: Iterable<string>): SaidText {
+	const options = suggestClosest(id, known);
+	return {
+		key: options.length ? ISSUE_KEY.unknownConditionSuggested : ISSUE_KEY.unknownCondition,
+		values: { id, ...(options.length ? { options: { options } } : {}) },
+	};
+}
+
 /** A16: an `apply_condition:<id>` whose condition has no row in the active edition would set a
  *  PHANTOM flag silently (a typo'd id matches nothing). Surface it as a content-health issue with a
  *  did-you-mean. A real edition-matched condition with an empty effects column is legitimate. */
@@ -152,7 +164,7 @@ function flagPhantomConditions(
 				source: 'apply_condition',
 				token: `apply_condition:${id}`,
 				// PLG-9
-				reason: `Something tried to apply a condition called "${id}", but this edition has no such condition — so nothing was applied${didYouMean(id, conditionIds) || '. Add it to a conditions CSV, or correct the name.'}`,
+				...conditionSaid(id, conditionIds),
 				detail: `apply_condition: unknown condition "${id}"`,
 			});
 }
@@ -181,16 +193,20 @@ function applyArmorSpellBlock({
 			return r?.type === 'class' ? r.data.armor_profs : undefined;
 		}),
 	);
-	// cat is read once — isArmorProficient returns true (no block) on an unclassifiable armor, so by
-	// the time the note is built it is always defined.
+	// an unclassifiable armor never blocks (isArmorProficient says true), so past this line the weight
+	// class is always known — the guard is what narrows it, not a comment
 	const cat = armorCategoryOf(equippedArmor);
-	if (isArmorProficient(armorGrants, cat)) return;
+	if (cat === undefined || isArmorProficient(armorGrants, cat)) return;
 	const source = equippedArmor.row.data.name_en;
-	spellcasting.armorBlock = {
+	// the armor's WEIGHT, not a sentence about it: the two panels that say so and the issue below all
+	// word it themselves, in the reader's language
+	spellcasting.armorBlock = { source, category: cat };
+	issues.push({
 		source,
-		note: `Not proficient with ${cat} armor — spellcasting blocked`,
-	};
-	issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
+		token: 'armor_proficiency',
+		key: ISSUE_KEY.armorBlocksCasting,
+		values: { category: { catalog: 'itemTag', id: cat } },
+	});
 }
 
 // Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM. The

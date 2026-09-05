@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import { ISSUE_KEY } from '../effects/token-parser';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { deriveSheet } from './derive';
@@ -214,7 +215,9 @@ describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls
 		const issue = sheet.deriveIssues.find((i) => i.token.startsWith('class_casting:'));
 		expect(issue?.token).toBe('class_casting:bard');
 		expect(issue?.detail).toMatch(/class_casting:bard — no prepared\/known count at level 3/);
-		expect(issue?.reason).toMatch(/level 3 in D&D 5\.5e \(2024\)/); // the edition, in the user's words
+		// the level and the edition travel as VALUES — the sentence is the catalog's
+		expect(issue?.key).toBe(ISSUE_KEY.noPreparedCount);
+		expect(issue?.values).toMatchObject({ level: 3, system: 'D&D 5.5e (2024)' });
 	});
 
 	it('a class that DOES declare the table is untouched', () => {

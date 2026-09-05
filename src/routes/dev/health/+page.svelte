@@ -5,6 +5,7 @@
 	// the REAL loader (not hand-made issue objects), so what you see is what a user would see.
 	// shot.mjs pixel-diffs the first viewport only — `body` never scrolls, so the groups below the
 	// fold are eyeballed here rather than diffed, the same as on every long route.
+	import { ISSUE_KEY } from '$lib/effects/token-parser';
 	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
 	import { MemoryStorage } from '$lib/storage/memory';
 	import { loadContent } from '$lib/content/loader';
@@ -70,15 +71,14 @@
 			{
 				source: 'Cloak of Protection',
 				token: 'flat_bonus:armorclass+1',
-				reason:
-					'Nothing on the sheet is called "armorclass", so this effect changes nothing — did you mean "ac"?',
+				key: ISSUE_KEY.unknownTargetSuggested,
+				values: { target: 'armorclass', options: { options: ['ac'] } },
 				detail: 'flat_bonus: unknown target "armorclass"',
 			},
 			{
 				source: 'Rage',
 				token: 'plugin:brutal:damage',
-				reason:
-					'This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.',
+				key: ISSUE_KEY.pluginFailed,
 				detail: 'plugin budget for this computation exhausted',
 			},
 		]);

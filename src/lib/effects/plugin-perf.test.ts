@@ -5,6 +5,7 @@
  * (the CALL_BUDGET) purely as a "not pathologically slow" floor. Numbers-for-eyeballing live in
  * plugin.bench.ts (run with `pnpm exec vitest bench`).
  */
+import type { EffectIssue } from './token-parser';
 import { pluginCtx, carrier } from '../../test-support/plugin-fixtures';
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { createSandboxEvaluator } from './plugin-sandbox';
@@ -73,7 +74,7 @@ describe('L3 hot-path cost guarantees (work-count, not wall-clock)', () => {
 		};
 		registerPluginEvaluator(ev);
 		const carriers = Array.from({ length: 50 }, (_, i) => carrier(`plugin:ns1:h${i}`));
-		const issues: { source: string; token: string; reason: string }[] = [];
+		const issues: EffectIssue[] = [];
 		expandPluginEffects(carriers, ctx(), issues, 's');
 		expect(calls).toBeLessThanOrEqual(6); // ~20ms / 6ms → a handful, never all 50
 		expect(issues.length).toBeGreaterThan(40); // the remainder degraded, sheet unbroken

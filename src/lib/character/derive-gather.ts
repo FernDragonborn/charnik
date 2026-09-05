@@ -7,6 +7,7 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
+import { ISSUE_KEY } from '$lib/effects/token-parser';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
@@ -122,8 +123,7 @@ class EffectGatherer {
 			this.issues.push({
 				source: rowName(f),
 				token: `class_feature:${f.data.id}`,
-				reason:
-					'Two content packs both provide this class feature. Charnik applied it once, not twice — pick which copy you want in Settings ▸ Content to make the choice explicit.',
+				key: ISSUE_KEY.duplicateClassFeature,
 				detail: 'duplicate class feature across sources',
 			});
 			return;

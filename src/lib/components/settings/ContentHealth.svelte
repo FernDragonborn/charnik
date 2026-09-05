@@ -7,7 +7,7 @@
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import Icon from '../Icon.svelte';
 	import { _ } from '$lib/i18n';
-	import { issueMessage } from '$lib/content/issue-text';
+	import { sayText } from '$lib/util/say';
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { lintEffectTokens } from '$lib/effects/apply';
@@ -115,7 +115,7 @@
 						<div class="row-file">
 							{fileLabel(it.root, it.file)}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
 						</div>
-						<div class="row-msg">{issueMessage(it, $_)}</div>
+						<div class="row-msg">{sayText(it, $_)}</div>
 						{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
 					</div>
 				{/each}
@@ -163,7 +163,7 @@
 			{#each joinIssues as j (j.file + j.id)}
 				<div class="row warn">
 					<div class="row-file">{j.file}<span class="row-id"> · {j.id}</span></div>
-					<div class="row-msg">{issueMessage(j, $_)}</div>
+					<div class="row-msg">{sayText(j, $_)}</div>
 					<div class="row-detail">{j.detail}</div>
 				</div>
 			{/each}
@@ -198,7 +198,7 @@
 			{#each deriveIssues as it, i (it.token + i)}
 				<div class="row warn">
 					<div class="row-file">{it.source} · <span class="row-id">{it.token}</span></div>
-					<div class="row-msg">{it.reason}</div>
+					<div class="row-msg">{sayText(it, $_)}</div>
 					{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
 				</div>
 			{/each}

@@ -11,6 +11,7 @@
  * derive issue, and its writers degrade to inert notes — never an iterate-to-fixpoint loop
  * (plugins.md §8.4, PLAN "State model").
  */
+import { ISSUE_KEY } from './token-parser';
 import { recordOf } from '../util/records';
 import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
@@ -223,8 +224,7 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason:
-					'This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.',
+				key: ISSUE_KEY.dependencyCycle,
 				detail: `dependency cycle on ${inst.writeKey}`,
 			});
 		}
@@ -260,8 +260,7 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason:
-					'Charnik cannot tell whether the condition in front of this effect is met, so the effect is not applied.',
+				key: ISSUE_KEY.unreadableGuard,
 				detail: r.ok
 					? `the guard "${inst.guard}" is not a yes/no condition`
 					: `bad guard: ${r.error}`,
@@ -284,9 +283,7 @@ class Resolver {
 				this.issues.push({
 					source: sourceOf(w),
 					token: w.raw,
-					reason: rolled
-						? 'An ability score changes by a fixed amount, never by a roll, so this effect was left out.'
-						: 'Charnik could not work out how much this changes the ability score by, so it was left out.',
+					key: rolled ? ISSUE_KEY.rolledAbilityScore : ISSUE_KEY.unreadableAbilityChange,
 					detail: rolled
 						? `dice value "${v.diceFormula}" on an ability score`
 						: (v.error ?? 'the value expression resolved to nothing'),

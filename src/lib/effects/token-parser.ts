@@ -11,6 +11,7 @@
  * after which it is an "effect" (`ParsedEffect`). `resolveEffectValue` bridges to L2 — it
  * evaluates a token's value expression. The fold seam that consumes these lives in apply.ts.
  */
+import type { SaidText } from '$lib/util/say';
 import type { Layer } from '../rules/pipeline';
 import type { Recharge } from '../rules/spellcasting';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
@@ -412,14 +413,37 @@ export function splitGuard(raw: string): GuardedToken {
 	return { guard: raw.slice(0, q).trim(), token: raw.slice(q + 1).trim() };
 }
 
+/** Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule
+ *  notes, so the producers below and the message catalogs never drift on a bare string. */
+export const ISSUE_KEY = {
+	unknownTarget: 'effectIssue.unknownTarget',
+	unknownTargetSuggested: 'effectIssue.unknownTargetSuggested',
+	unknownCondition: 'effectIssue.unknownCondition',
+	unknownConditionSuggested: 'effectIssue.unknownConditionSuggested',
+	armorBlocksCasting: 'effectIssue.armorBlocksCasting',
+	duplicateClassFeature: 'effectIssue.duplicateClassFeature',
+	unreadableOptionEffect: 'effectIssue.unreadableOptionEffect',
+	unreadableOptionCondition: 'effectIssue.unreadableOptionCondition',
+	unreadableOptionCost: 'effectIssue.unreadableOptionCost',
+	unrollableValue: 'effectIssue.unrollableValue',
+	unreadableResourceMax: 'effectIssue.unreadableResourceMax',
+	pluginFailed: 'effectIssue.pluginFailed',
+	dependencyCycle: 'effectIssue.dependencyCycle',
+	unreadableGuard: 'effectIssue.unreadableGuard',
+	rolledAbilityScore: 'effectIssue.rolledAbilityScore',
+	unreadableAbilityChange: 'effectIssue.unreadableAbilityChange',
+	noPreparedCount: 'effectIssue.noPreparedCount',
+} as const;
+
 /** A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source)
  *  content-health merges with loader issues. */
-export interface EffectIssue {
+export interface EffectIssue extends SaidText {
 	source: string;
 	token: string;
-	/** What went wrong and what it means for the sheet, in the words of whoever wrote the CSV row —
-	 *  the parser's own phrasing belongs in `detail` (UX-1). */
-	reason: string;
+	/** What went wrong and what it means for the sheet, in the words of whoever wrote the CSV row, as
+	 *  the catalog KEY and its values (`SaidText`) — the derive has no locale and the panel showing it
+	 *  is re-read after a language switch. The parser's own phrasing belongs in `detail` (UX-1). */
+	key: string;
 	/** The technical particulars (the parser's complaint, a plugin's error) — shown demoted, so the
 	 *  homebrew author still gets the exact fault the sentence summarizes. */
 	detail?: string;

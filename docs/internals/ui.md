@@ -364,10 +364,11 @@ Where a closed vocabulary was mistyped, offer the nearest candidates — as the 
 its own, so the guess and the plain wording are two whole sentences rather than one composed of
 halves. Where a dozen internal reasons share one
 meaning and one fix (every plugin failure), collapse them to one sentence at the seam and keep the
-reason in `detail`. Copy for content issues lives in the catalogs under `contentIssue.*`; `content/issue-text.ts` holds
-the CHOICE of sentence and its values, and nothing is written inline at the `push()`. The loader has
-no locale, so an issue travels as `{key, values, detail}` and `issueMessage` says it where the
-translator is — a panel re-read after a language switch has to change with it. Tests assert the durable fact — the identifier in `detail`, the level, the file — never the
+reason in `detail`. Copy for content issues lives in the catalogs under `contentIssue.*` and for derive-time ones under
+`effectIssue.*`; `content/issue-text.ts` and `ISSUE_KEY` hold the CHOICE of sentence and its values,
+and nothing is written inline at the `push()`. Neither producer has a locale, so an issue travels as
+`{key, values, detail}` (`SaidText`) and `sayText` says it where the translator is — a panel re-read
+after a language switch has to change with it. Tests assert the durable fact — the identifier in `detail`, the level, the file — never the
 sentence, which is copy and will be rewritten.
 
 ## Accessibility

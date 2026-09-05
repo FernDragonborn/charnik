@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (63)
+## Duplicate suspects (64)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -77,6 +77,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `SKILLS` ×2 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
+- `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -419,7 +420,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (112 modules)
+## Library functions & types (113 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -829,9 +830,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/issue-text.ts`
 
-- `type IssueValue` — One value inside an issue's sentence: a literal (an id, a column, a count), another catalog word, * or the "did you m…
-- `interface IssueText` — The said half of a content issue: which sentence, the values in it, and the particulars under.
-- `function issueMessage` — An issue's sentence in the reader's language.
+- `interface IssueText` — The said half of a content issue: which sentence, and the particulars under it.
 - `const issueText`
 
 ### `src/lib/content/item-tags.ts`
@@ -1287,6 +1286,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ctxOf`
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
+- `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
 ### `src/lib/effects/upcast.ts`
@@ -1567,6 +1567,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const recordOf` — * Build a `Record<K, V>` that has EVERY key in `keys`, computing each value from its key.
 
+### `src/lib/util/say.ts`
+
+- `type SaidValue` — One value inside a said sentence: a literal (an id, a column, a count), another catalog word, or * a list of candidat…
+- `interface SaidText` — Which sentence, and what goes into it.
+- `function sayText` — A said sentence in the reader's language.
+
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
@@ -1577,4 +1583,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 936 exports across 127 modules · 63 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 938 exports across 128 modules · 64 duplicate suspects._

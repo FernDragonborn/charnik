@@ -30,8 +30,9 @@ export function matchesTarget(effTarget: string | undefined, key: string): boole
  *  optional "did you mean X?" suffix (PLG-9) when it's unsupported but near a known key. */
 export interface TargetCheck {
 	supported: boolean;
-	/** Ready-to-append suffix like ` — did you mean "ac"?`, or absent. */
-	suggestion?: string;
+	/** The nearest known keys, when there are any — the candidates themselves, because the sentence
+	 *  offering them is a catalog entry and this module has no locale. */
+	options?: string[];
 }
 
 /** Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?

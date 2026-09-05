@@ -13,6 +13,7 @@
  * Memoization: results memoized on (raw token, ctx-hash), the build/play ctx halves hashed
  * separately — a handler that never reads `ctx.play` stays cache-hot across HP ticks (§4.2).
  */
+import { ISSUE_KEY } from './token-parser';
 import { z } from 'zod';
 import type { Ability } from '../rules/core';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
@@ -258,8 +259,7 @@ export function expandPluginEffects(
 		issues.push({
 			source: eff.source,
 			token,
-			reason:
-				'This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.',
+			key: ISSUE_KEY.pluginFailed,
 			detail: reason,
 		});
 	};

@@ -78,12 +78,16 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
-  **A content issue's sentence is a catalog key, chosen in `issue-text.ts`.** The loader has no
-  locale and the panel is re-read after a language switch, so the copy cannot be composed where the
-  fault is found. Two values are not literals and `issueMessage` resolves them: a content TYPE reads
-  through its own catalog, and the "did you mean" candidates need the reader's own word for "or".
-  Where the wording branched on a suggestion being close enough, it is two whole keys, not a sentence
-  glued from halves.
+  **A problem found with no locale travels as `SaidText`.** The loader, the derive, the resolver and
+  the plugin host all find faults in pure code, and the panel showing them is re-read after a
+  language switch — so an issue carries `{key, values}` and `sayText` (`util/say.ts`, the leaf both
+  sides share) says it where the translator is. `issue-text.ts` keeps the CHOICE of sentence for
+  content; `ISSUE_KEY` does the same for the derive. Three values are not literals and `sayText`
+  resolves them: a content TYPE or an armour weight reads through its own catalog, and the
+  "did you mean" candidates need the reader's own quotation marks and its word for "or". Where the
+  wording branched on a suggestion being close enough, it is two whole keys, not a sentence glued
+  from halves. `detail` is never translated — the column, the token, the validator's own complaint
+  are for whoever wrote the row.
   **A label the PLAYER can rename is written in their language, not kept as a key.** The custom
   modifier's default name ("+1 to AC") is their own effect's title and editable the moment it exists,
   so `modTargetLabel` composes it through `translator()` — the live catalog handed to a pure
@@ -119,9 +123,11 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left:** the DERIVE-TIME issues — every `issues[].reason` in `derive.ts`, `apply.ts` and the
-  plugin host is still an English sentence built where the fault is found. The content half is done
-  and is the pattern to copy: an issue travels as `{key, values, detail}`. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
+  **What is left: the COMPENDIUM.** Its detail views are the last surface built from English
+  fragments — a spell's resolution line ("Attack roll", "Automatic", "Utility"), a monster's stat
+  block, and the meta grid, which title-cases a column NAME into a heading and prints "Yes" for a
+  bare tag. It is one screen's worth of the same work, and the `contentField` catalog is already
+  there to hold half of it. VM toasts read the store one-shot inside a function (`get(_)`): a toast is
   fire-and-forget, so that is correct — never at module top level, where it would freeze at the
   load-time locale. UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the

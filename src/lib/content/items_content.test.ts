@@ -79,7 +79,7 @@ describe('shipped magic items · effects column is engine-valid', () => {
 						positive: true,
 					}));
 				const issues = deriveSheet(characterSchema.parse(c), g).deriveIssues;
-				expect(issues.filter((i) => /unknown target/.test(i.reason))).toEqual([]);
+				expect(issues.filter((i) => /unknown target/.test(i.detail ?? ''))).toEqual([]);
 			});
 
 			it("the Robe of the Archmagi's base AC is a GUARDED set, so armour still wins", async () => {

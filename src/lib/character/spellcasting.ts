@@ -9,6 +9,8 @@
  * highest spell level a class can LEARN is its own single-class table's max (a Wizard 1 can't
  * prepare 3rd-level spells even if a Cleric multiclass grants 3rd-level slots).
  */
+import type { ArmorCategory } from '$lib/content/item-tags';
+import { ISSUE_KEY } from '$lib/effects/token-parser';
 import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
@@ -78,7 +80,8 @@ export interface Spellcasting {
 	/** B9: set when the character wears armor they lack proficiency with — RAW you can't cast
 	 *  spells while doing so. The UI shows this as a rule-based block (the PLAN's canonical
 	 *  "why is casting blocked" hover). Absent = not blocked. */
-	armorBlock?: { source: string; note: string };
+	/** The worn armor and its WEIGHT class — the sentence about it is the view's to say. */
+	armorBlock?: { source: string; category: ArmorCategory };
 }
 
 /** Does this class row cast spells at all? The ONE place the `caster !== 'none'` sentinel is compared,
@@ -272,7 +275,12 @@ export function deriveSpellcasting({
 		issues?.push({
 			source: p.className,
 			token: `class_casting:${p.ownerId}`,
-			reason: `Charnik doesn't know how many spells ${p.className} prepares at level ${p.level} in ${SYSTEM_LABELS[character.system]}, so it shows none — this edition gives no formula to work it out from. Add the count for that level to the class's casting table in your content.`,
+			key: ISSUE_KEY.noPreparedCount,
+			values: {
+				class: p.className,
+				level: p.level,
+				system: SYSTEM_LABELS[character.system],
+			},
 			detail: `class_casting:${p.ownerId} — no prepared/known count at level ${p.level}`,
 		});
 		return 0;
