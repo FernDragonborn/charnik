@@ -7,7 +7,8 @@
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
 import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
+import { t, translator } from '$lib/i18n';
+import { sayText } from '$lib/util/say';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
@@ -521,7 +522,7 @@ export class SpellCasting {
 			isCantrip: r.level === 0,
 		});
 		if (!res.ok) {
-			if (res.message) toast(res.message);
+			if (res.message) toast(sayText(res.message, translator()));
 			return;
 		}
 		if (sp) sp.prepared = !sp.prepared;

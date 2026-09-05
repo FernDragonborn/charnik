@@ -60,8 +60,7 @@
 
 	// The original folder is never deleted or overwritten on a failed move — say so, so the user knows
 	// their data is safe and where it still is.
-	const ORIGINAL_SAFE =
-		"Your original folder is untouched — we didn't delete or overwrite any files there.";
+	const originalSafe = () => $_('settings.migrate.originalSafe');
 
 	// When the chosen folder isn't empty an automatic move is impossible, so we open the conflict
 	// dialog with a file-by-file table instead — the user picks another folder, repoints, or merges.
@@ -73,19 +72,26 @@
 		if (isDesktop) path = await currentDataDir();
 	});
 
-	// Turn a failed migrate outcome into a one-sentence "what happened".
+	// Turn a failed migrate outcome into a one-sentence "what happened". The fs reason (`outcome.error`)
+	// is the technical particular and passes through untranslated — it is what the OS said.
 	function moveDetail(outcome: MigrateOutcome): string {
 		switch (outcome.stage) {
 			case 'target_inside_source':
-				return "The chosen folder is inside the current data folder, so it can't be the move target.";
+				return $_('settings.migrate.detailTargetInside');
 			case 'copy':
-				return `Copying the files failed: ${outcome.error ?? 'unknown error'}.`;
+				return $_('settings.migrate.detailCopy', {
+					values: { error: outcome.error ?? $_('settings.migrate.unknownError') },
+				});
 			case 'verify':
-				return `${outcome.failures.length} file(s) didn't copy correctly (${outcome.failures
-					.slice(0, 3)
-					.join(', ')}${outcome.failures.length > 3 ? '…' : ''}).`;
+				return $_('settings.migrate.detailVerify', {
+					values: {
+						count: outcome.failures.length,
+						files:
+							outcome.failures.slice(0, 3).join(', ') + (outcome.failures.length > 3 ? '…' : ''),
+					},
+				});
 			default:
-				return outcome.error ?? 'Unknown error.';
+				return outcome.error ?? $_('settings.migrate.detailUnknown');
 		}
 	}
 
@@ -100,16 +106,18 @@
 				tone: 'error',
 				title: failTitle,
 				detail: moveDetail(outcome),
-				note: ORIGINAL_SAFE,
+				note: originalSafe(),
 			};
 			return;
 		}
 		if (outcome.stage === 'cleanup') {
 			notice = {
 				tone: 'warning',
-				title: "Data moved, but old folder wasn't deleted",
-				detail: `Your data was copied and verified in the new folder, but the old folder couldn't be removed: ${outcome.error ?? 'unknown error'}.`,
-				note: 'Nothing was lost — you can delete the old folder yourself.',
+				title: $_('settings.migrate.cleanupTitle'),
+				detail: $_('settings.migrate.cleanupDetail', {
+					values: { error: outcome.error ?? $_('settings.migrate.unknownError') },
+				}),
+				note: $_('settings.migrate.cleanupNote'),
 				then: () => void reloadApp(),
 			};
 			return;
@@ -132,10 +140,9 @@
 			if (isSameOrInside(target, from) && isSameOrInside(from, target)) {
 				notice = {
 					tone: 'error',
-					title: "That's already your data folder",
-					detail:
-						"You can't move your data into the folder it already lives in — pick a different one.",
-					note: 'Nothing was changed.',
+					title: $_('settings.migrate.sameTitle'),
+					detail: $_('settings.migrate.sameDetail'),
+					note: $_('settings.migrate.nothingChanged'),
 				};
 				return;
 			}
@@ -147,12 +154,17 @@
 			stopContentWatcher();
 			await applyOutcome(
 				await migrateDataDir(from, target, true),
-				'Move failed',
-				'Data moved successfully',
+				$_('settings.migrate.moveFailed'),
+				$_('settings.migrate.moved'),
 			);
 		} catch (e) {
 			startContentWatcher();
-			notice = { tone: 'error', title: 'Move failed', detail: errText(e), note: ORIGINAL_SAFE };
+			notice = {
+				tone: 'error',
+				title: $_('settings.migrate.moveFailed'),
+				detail: errText(e),
+				note: originalSafe(),
+			};
 		} finally {
 			busy = false;
 		}
@@ -172,12 +184,17 @@
 			stopContentWatcher();
 			await applyOutcome(
 				await mergeDataDir(from, target, true),
-				'Merge failed',
-				'Data merged successfully',
+				$_('settings.migrate.mergeFailed'),
+				$_('settings.migrate.merged'),
 			);
 		} catch (e) {
 			startContentWatcher();
-			notice = { tone: 'error', title: 'Merge failed', detail: errText(e), note: ORIGINAL_SAFE };
+			notice = {
+				tone: 'error',
+				title: $_('settings.migrate.mergeFailed'),
+				detail: errText(e),
+				note: originalSafe(),
+			};
 		} finally {
 			busy = false;
 		}
@@ -189,14 +206,14 @@
 		busy = true;
 		try {
 			await repointDataDir(target);
-			flashAfterReload('Now reading from the new folder');
+			flashAfterReload($_('settings.migrate.repointed'));
 			await reloadApp();
 		} catch (e) {
 			notice = {
 				tone: 'error',
-				title: "Couldn't change the read path",
+				title: $_('settings.migrate.repointFailed'),
 				detail: errText(e),
-				note: 'Nothing was changed.',
+				note: $_('settings.migrate.nothingChanged'),
 			};
 		} finally {
 			busy = false;

@@ -693,7 +693,9 @@
 			"noConcentrationBody": "A Rage (or a similar state) ends Concentration.",
 			"effectExpired": "{label} — expired",
 			"incapacitated": "Incapacitated",
-			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions."
+			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions.",
+			"cantripsAlwaysKnown": "Cantrips are always known — you never prepare them.",
+			"preparedFull": "Prepared spells full ({cap}) — unprepare one first."
 		},
 		"panel": {
 			"actions": "Actions",
@@ -871,6 +873,7 @@
 		"groupByAZ": "A–Z",
 		"groupBySpecies": "Species",
 		"groupByType": "Type",
+		"groupCR": "CR {cr}",
 		"grouping": "Group",
 		"hpRolled": "HP rolled",
 		"levelCantrip": "Cantrip",
@@ -1513,6 +1516,26 @@
 			"unknownDate": "unknown"
 		},
 		"language": "Language",
+		"migrate": {
+			"originalSafe": "Your original folder is untouched — we didn’t delete or overwrite any files there.",
+			"nothingChanged": "Nothing was changed.",
+			"unknownError": "unknown error",
+			"detailTargetInside": "The chosen folder is inside the current data folder, so it can’t be the move target.",
+			"detailCopy": "Copying the files failed: {error}.",
+			"detailVerify": "{count, plural, one {# file didn’t copy correctly} other {# files didn’t copy correctly}} ({files}).",
+			"detailUnknown": "Unknown error.",
+			"moveFailed": "Move failed",
+			"moved": "Data moved successfully",
+			"mergeFailed": "Merge failed",
+			"merged": "Data merged successfully",
+			"cleanupTitle": "Data moved, but the old folder wasn’t deleted",
+			"cleanupDetail": "Your data was copied and verified in the new folder, but the old folder couldn’t be removed: {error}.",
+			"cleanupNote": "Nothing was lost — you can delete the old folder yourself.",
+			"sameTitle": "That’s already your data folder",
+			"sameDetail": "You can’t move your data into the folder it already lives in — pick a different one.",
+			"repointed": "Now reading from the new folder",
+			"repointFailed": "Couldn’t change the read path"
+		},
 		"notice": {
 			"demoRestored": "Demo character restored — {name}",
 			"themeNotReadable": "That file isn’t a theme Charnik can read",
@@ -1703,6 +1726,7 @@
 	"spellLevel": {
 		"cantrip": "cantrip",
 		"cantrips": "Cantrips",
+		"group": "{level, selectordinal, one {#st level} two {#nd level} few {#rd level} other {#th level}}",
 		"nth": "{level, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
 	},
 	"spellResolution": {

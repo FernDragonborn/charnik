@@ -188,7 +188,8 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 			isCantrip: false,
 		});
 		expect(wiz.ok).toBe(false);
-		expect(wiz.ok === false && wiz.message).toContain('full');
+		// the refusal is a catalog KEY, not a sentence — the toast says it where the translator is
+		expect(wiz.ok === false && wiz.message?.key).toBe('combat.notice.preparedFull');
 		// …but a Cleric spell still toggles (its own cap has room) — the classes[0] bug would block it
 		expect(
 			canTogglePreparedFor({

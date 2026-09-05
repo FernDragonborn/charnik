@@ -5,7 +5,8 @@
  * the page just drives these.
  */
 import { rowName, type LoadedRow } from './loader';
-import { ordinal, titleCase } from '$lib/util/format';
+import { titleCase } from '$lib/util/format';
+import type { Translate } from '$lib/i18n';
 import { SYSTEMS, type ContentType } from './schemas';
 import { sourceLabel } from './detail';
 import { HOMEBREW_SOURCE } from './homebrew';
@@ -47,40 +48,44 @@ export const byDisplayName =
 
 export interface Grouping {
 	key: string;
-	label: string;
+	/** The catalog key for the label. A grouping is named by what it groups BY, which is the app's own
+	 *  vocabulary — and this module is pure and has no locale, so the view says the word. Most read
+	 *  from `contentField`, the same catalog the homebrew form labels its inputs from; the three that
+	 *  do not are display choices rather than column names (an item's `category` reads as "Type"). */
+	labelKey: string;
 }
 
 /** Type-specific groupings (Source + A–Z are appended for every type). */
 const GROUPINGS: Partial<Record<ContentType, Grouping[]>> = {
 	spell: [
-		{ key: 'level', label: 'Level' },
-		{ key: 'school', label: 'School' },
+		{ key: 'level', labelKey: 'contentField.level' },
+		{ key: 'school', labelKey: 'contentField.school' },
 	],
 	monster: [
-		{ key: 'cr', label: 'CR' },
-		{ key: 'creature_type', label: 'Type' },
+		{ key: 'cr', labelKey: 'contentField.cr' },
+		{ key: 'creature_type', labelKey: 'compendium.groupByType' },
 	],
 	item: [
 		// `category` carries the kind since ITEM-TAGS folded `item_type` away — and it groups better
 		// than that column ever did, which had 54 distinct values because magic rows held prose in it.
-		{ key: 'category', label: 'Type' },
-		{ key: 'rarity', label: 'Rarity' },
+		{ key: 'category', labelKey: 'compendium.groupByType' },
+		{ key: 'rarity', labelKey: 'contentField.rarity' },
 	],
-	class_feature: [{ key: 'class_id', label: 'Class' }],
-	feat: [{ key: 'category', label: 'Category' }],
-	background: [{ key: 'source', label: 'Source' }],
-	species: [{ key: 'source', label: 'Source' }],
-	species_option: [{ key: 'species_id', label: 'Species' }],
-	language: [{ key: 'category', label: 'Category' }],
+	class_feature: [{ key: 'class_id', labelKey: 'contentField.class_id' }],
+	feat: [{ key: 'category', labelKey: 'contentField.category' }],
+	background: [{ key: 'source', labelKey: 'contentField.source' }],
+	species: [{ key: 'source', labelKey: 'contentField.source' }],
+	species_option: [{ key: 'species_id', labelKey: 'compendium.groupBySpecies' }],
+	language: [{ key: 'category', labelKey: 'contentField.category' }],
 };
 
 /** The primary filter facet for a type (Source is always offered on top of this). */
 const FACET: Partial<Record<ContentType, Grouping>> = {
-	spell: { key: 'school', label: 'School' },
-	monster: { key: 'creature_type', label: 'Type' },
-	item: { key: 'rarity', label: 'Rarity' },
-	feat: { key: 'category', label: 'Category' },
-	class_feature: { key: 'class_id', label: 'Class' },
+	spell: { key: 'school', labelKey: 'contentField.school' },
+	monster: { key: 'creature_type', labelKey: 'compendium.groupByType' },
+	item: { key: 'rarity', labelKey: 'contentField.rarity' },
+	feat: { key: 'category', labelKey: 'contentField.category' },
+	class_feature: { key: 'class_id', labelKey: 'contentField.class_id' },
 };
 
 const cap = (s: string) => titleCase(s);
@@ -88,8 +93,9 @@ const cap = (s: string) => titleCase(s);
 export function groupingsFor(type: ContentType): Grouping[] {
 	const base = GROUPINGS[type] ?? [];
 	const out = [...base];
-	if (!out.some((g) => g.key === 'source')) out.push({ key: 'source', label: 'Source' });
-	out.push({ key: 'none', label: 'A–Z' });
+	if (!out.some((g) => g.key === 'source'))
+		out.push({ key: 'source', labelKey: 'contentField.source' });
+	out.push({ key: 'none', labelKey: 'compendium.groupByAZ' });
 	return out;
 }
 
@@ -120,11 +126,16 @@ export function distinctValues(rows: LoadedRow[], key: string): string[] {
 const crValue = (s: string) =>
 	s.includes('/') ? Number(s.split('/')[0]) / Number(s.split('/')[1]) : Number(s);
 
-/** Group rows by the chosen key into labelled buckets, ordered sensibly. */
+/** Group rows by the chosen key into labelled buckets, ordered sensibly.
+ *
+ *  Takes the translator rather than answering with keys: a heading is a WORD composed with a value
+ *  (a spell level, a CR) as often as it is the bucket's own data, and a caller that got back
+ *  `{key, values} | string` would have to re-decide which of the two it was holding. */
 export function groupRows(
 	rows: LoadedRow[],
 	key: string,
 	type: ContentType,
+	t: Translate,
 ): { label: string; rows: LoadedRow[] }[] {
 	if (key === 'none') {
 		return [{ label: '', rows: [...rows].sort(compareRows) }];
@@ -144,9 +155,12 @@ export function groupRows(
 
 	const label = (k: string) => {
 		if (type === 'spell' && key === 'level')
-			return k === '0' ? 'Cantrips' : `${ordinal(Number(k))} level`;
-		if (type === 'monster' && key === 'cr') return `CR ${k}`;
+			return k === '0'
+				? t('spellLevel.cantrips')
+				: t('spellLevel.group', { values: { level: Number(k) } });
+		if (type === 'monster' && key === 'cr') return t('compendium.groupCR', { values: { cr: k } });
 		if (key === 'source') return sourceLabel(k);
+		// a bucket's own value is DATA — a homebrew school reads exactly as its author wrote it
 		return cap(k);
 	};
 	return keys.map((k) => ({ label: label(k), rows: homebrewFirst(buckets.get(k) ?? []) }));

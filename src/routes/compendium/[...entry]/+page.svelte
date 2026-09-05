@@ -234,7 +234,7 @@
 	});
 
 	const groups = $derived(
-		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName, $_),
+		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType, $_), localName, $_),
 	);
 	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
 	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.
@@ -305,7 +305,7 @@
 		showDrafts = false;
 		resumeAdd = undefined;
 	}
-	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
+	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.labelKey ?? '');
 	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 
 	function pick(type: ContentType) {
@@ -376,7 +376,9 @@
 
 		<div class="controls">
 			<details class="disclosure" bind:open={groupOpen} use:autoClose>
-				<summary class="pill-btn">{$_('compendium.grouping')} · <b>{groupLabel}</b></summary>
+				<summary class="pill-btn"
+					>{$_('compendium.grouping')} · <b>{groupLabel ? $_(groupLabel) : ''}</b></summary
+				>
 				<div class="dropdown-menu">
 					{#each groupings as g (g.key)}
 						<button
@@ -385,7 +387,7 @@
 							onclick={() => {
 								groupBy = g.key;
 								groupOpen = false;
-							}}>{g.label}</button
+							}}>{$_(g.labelKey)}</button
 						>
 					{/each}
 				</div>
@@ -407,7 +409,7 @@
 							</div>
 						{/if}
 						{#if facet && facetValues.length}
-							<div class="dropdown-section eyebrow">{facet.label}</div>
+							<div class="dropdown-section eyebrow">{$_(facet.labelKey)}</div>
 							<div class="ddchips scroll">
 								{#each facetValues as v (v)}
 									<Chip

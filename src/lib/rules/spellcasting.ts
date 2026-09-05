@@ -8,6 +8,7 @@
  * SUM of caster contributions into ONE full table (not the senior class); warlock Pact Magic is a
  * separate pool and contributes NOTHING to the shared caster level.
  */
+import type { SaidText } from '$lib/util/say';
 import type { System } from './pipeline';
 import { ordinal } from '../util/format';
 
@@ -277,8 +278,11 @@ export function preparedLeveledCount(spells: readonly PreparableSpell[]): number
 }
 
 /** Outcome of trying to flip a spell's `prepared` flag. `message` (when present) is the toast to show
- *  on refusal; a silent refusal (`ok:false` with no message) means "nothing to do". */
-export type PrepareAttempt = { ok: true } | { ok: false; message?: string };
+ *  on refusal; a silent refusal (`ok:false` with no message) means "nothing to do".
+ *
+ *  It is a `SaidText` and not a sentence: this module is pure and has no locale, and the caller that
+ *  toasts it does (docs/internals/ui.md ▸ Strings live in the catalogs). */
+export type PrepareAttempt = { ok: true } | { ok: false; message?: SaidText };
 
 /** Whether a spell's `prepared` flag may flip, enforcing the leveled cap. Cantrips are always known
  *  and always-prepared spells are fixed, so neither can be toggled. Pure — the caller flips on `ok`.
@@ -289,10 +293,9 @@ export function canTogglePrepared(
 	cap: number,
 	count: number,
 ): PrepareAttempt {
-	if (isCantrip)
-		return { ok: false, message: 'Cantrips are always known — you never prepare them.' };
+	if (isCantrip) return { ok: false, message: { key: 'combat.notice.cantripsAlwaysKnown' } };
 	if (!entry || entry.alwaysPrepared) return { ok: false };
 	if (!entry.prepared && count >= cap)
-		return { ok: false, message: `Prepared spells full (${cap}) — unprepare one first.` };
+		return { ok: false, message: { key: 'combat.notice.preparedFull', values: { cap } } };
 	return { ok: true };
 }

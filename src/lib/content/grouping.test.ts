@@ -11,7 +11,7 @@ describe('groupingsFor', () => {
 
 describe('facetFor', () => {
 	it('returns the primary facet or null', () => {
-		expect(facetFor('spell')).toEqual({ key: 'school', label: 'School' });
+		expect(facetFor('spell')).toEqual({ key: 'school', labelKey: 'contentField.school' });
 		expect(facetFor('language')).toBeNull();
 	});
 });
@@ -28,9 +28,14 @@ describe('distinctValues', () => {
 	});
 });
 
+/** A catalog that answers every key with it, so these assert WHICH sentence a bucket asks for
+ *  rather than the English in it. */
+const t = (key: string, o?: { values?: Record<string, string | number> }) =>
+	`«${key.split('.').pop()}${o?.values ? `:${Object.values(o.values).join(',')}` : ''}»`;
+
 describe('groupRows', () => {
 	it('A–Z (key "none") is one bucket sorted by name', () => {
-		const g = groupRows([row({ name_en: 'Bless' }), row({ name_en: 'Aid' })], 'none', 'spell');
+		const g = groupRows([row({ name_en: 'Bless' }), row({ name_en: 'Aid' })], 'none', 'spell', t);
 		expect(g).toHaveLength(1);
 		expect(g[0]!.rows.map((r) => r.data.name_en)).toEqual(['Aid', 'Bless']);
 	});
@@ -44,8 +49,9 @@ describe('groupRows', () => {
 			],
 			'level',
 			'spell',
+			t,
 		);
-		expect(g.map((x) => x.label)).toEqual(['Cantrips', '1st level', '3rd level']);
+		expect(g.map((x) => x.label)).toEqual(['«cantrips»', '«group:1»', '«group:3»']);
 	});
 
 	it('monster CR sorts fractional before whole', () => {
@@ -57,8 +63,9 @@ describe('groupRows', () => {
 			],
 			'cr',
 			'monster',
+			t,
 		);
-		expect(g.map((x) => x.label)).toEqual(['CR 1/4', 'CR 1/2', 'CR 2']);
+		expect(g.map((x) => x.label)).toEqual(['«groupCR:1/4»', '«groupCR:1/2»', '«groupCR:2»']);
 	});
 
 	it('groups by source tag when key = source', () => {
@@ -66,6 +73,7 @@ describe('groupRows', () => {
 			[row({ name_en: 'A' }, 'spell', 'Homebrew'), row({ name_en: 'B' }, 'spell', 'SRD 5.2.1')],
 			'source',
 			'spell',
+			t,
 		);
 		expect(g.map((x) => x.rows.length)).toEqual([1, 1]);
 	});

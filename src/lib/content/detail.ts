@@ -4,7 +4,7 @@
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { abilityShortLabel, asText, ordinal, signed, titleCase } from '$lib/util/format';
+import { abilityShortLabel, asText, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
@@ -325,7 +325,7 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		type: [
 			d.size ? { key: `creatureSize.${String(d.size)}`, fallback: titleCase(String(d.size)) } : '',
 			d.creature_type ? titleCase(String(d.creature_type)) : '',
-		].filter(Boolean) as Said[],
+		].filter(Boolean),
 		edition: (Array.isArray(d.systems) ? d.systems : [d.systems]).filter(Boolean).join('/'),
 		cr: s('cr'),
 		ac: s('ac'),
@@ -504,6 +504,7 @@ export function toEntryGroups(
 export function groupEntries(
 	rows: LoadedRow[],
 	type: ContentType,
+	t: Translate,
 ): { label: string; rows: LoadedRow[] }[] {
 	if (type !== 'spell') return [{ label: '', rows }];
 	const byLevel = new Map<number, LoadedRow[]>();
@@ -516,7 +517,7 @@ export function groupEntries(
 	return [...byLevel.keys()]
 		.sort((a, b) => a - b)
 		.map((level) => ({
-			label: level === 0 ? 'Cantrips' : `${ordinal(level)} level`,
+			label: level === 0 ? t('spellLevel.cantrips') : t('spellLevel.group', { values: { level } }),
 			rows: byLevel.get(level) ?? [],
 		}));
 }

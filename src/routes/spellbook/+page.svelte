@@ -9,6 +9,7 @@
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { _ } from '$lib/i18n';
+	import { sayText } from '$lib/util/say';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
@@ -86,7 +87,7 @@
 				return true;
 			})
 			.map((x) => x.row);
-		return toEntryGroups(groupEntries(rows, 'spell'), (r) => rowName(r), $_);
+		return toEntryGroups(groupEntries(rows, 'spell', $_), (r) => rowName(r), $_);
 	});
 
 	const detail = $derived(
@@ -111,7 +112,7 @@
 			isCantrip,
 		});
 		if (!res.ok) {
-			if (res.message) toast(res.message);
+			if (res.message) toast(sayText(res.message, $_));
 			return;
 		}
 		if (e) e.prepared = !e.prepared;
