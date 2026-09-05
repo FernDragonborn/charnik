@@ -16,6 +16,7 @@ import {
 	wantsTray,
 	rollEffectsFor,
 	autoOutcome,
+	AUTO_OUTCOME,
 	netAdvantage,
 	NO_ROLL_EFFECTS,
 	rollDamageParts,
@@ -113,14 +114,16 @@ export class SheetRolls {
 		// is decided by the condition, not the roll; logged as a no-roll marker so it's still visible
 		const forced = key ? this.autoOutcomeFor(key) : null;
 		if (forced) {
-			// no key yet: the sentence names a ROLL whose own name is a catalog key, and a marker holds
-			// one key. Making this read in the reader's language wants the outcome as a fact on the
-			// entry rather than a word inside its label (docs/work/ui.md ▸ ARCH-1).
-			this.host().tray.logMarker({ text: `${label} — auto-${forced}` });
+			// the outcome rides the entry as a FACT and the roll keeps its own name, so the line reads in
+			// the language the log is READ in rather than the one the save was forced in
+			this.host().tray.logMarker(name, forced);
 			toast(
-				t(forced === 'fail' ? 'combat.notice.automaticFailure' : 'combat.notice.automaticSuccess', {
-					label,
-				}),
+				t(
+					forced === AUTO_OUTCOME.fail
+						? 'combat.notice.automaticFailure'
+						: 'combat.notice.automaticSuccess',
+					{ label: name.key ? t(name.key, name.values) : label },
+				),
 			);
 			return;
 		}

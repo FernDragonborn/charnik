@@ -21,6 +21,7 @@ import {
 import {
 	AMENDMENT_KIND,
 	damageTotal,
+	type AutoOutcome,
 	type RollAmendment,
 	type RollLogEntry,
 	type TypedRoll,
@@ -85,6 +86,8 @@ export interface RollToastModel {
 	labelKey?: string;
 	/** ICU values for `labelKey`. */
 	labelValues?: Record<string, string | number>;
+	/** A condition decided this one instead of the die — `RollRow` says so beside the name. */
+	outcome?: AutoOutcome;
 	attacks: RollToastAttack[];
 	/** True once anything was damaged: the damage column and the per-type footer hang off this. */
 	damaging: boolean;
@@ -180,6 +183,7 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
 		label: first?.label ?? '',
 		...(first?.labelKey ? { labelKey: first.labelKey } : {}),
 		...(first?.labelValues ? { labelValues: first.labelValues } : {}),
+		...(first?.outcome ? { outcome: first.outcome } : {}),
 		attacks,
 		damaging,
 		tested: attacks.some((a) => a.chips.length > 0 || a.mod !== 0),

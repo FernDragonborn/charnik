@@ -29,6 +29,7 @@
 	import { signed } from '$lib/util/format';
 	import { _ } from '$lib/i18n';
 	import { damageTypeLabel } from '$lib/combat/attacks';
+	import { AUTO_OUTCOME } from '$lib/combat/roll';
 
 	let {
 		model,
@@ -55,6 +56,28 @@
 
 	/** The one place the layout is compared; everything below reads this. */
 	const strip = $derived(layout === ROLL_LAYOUT.strip);
+
+	/** What the row is called: the catalog key when the roll has one, its English otherwise. A roll a
+	 *  condition decided instead of the die says so around that name — the outcome is a fact on the
+	 *  record, so the phrase is the translator's to arrange rather than one baked into the label. */
+	const rollLabel = $derived.by(() => {
+		const named = model.labelKey
+			? $_(model.labelKey, {
+					default: model.label,
+					...(model.labelValues ? { values: model.labelValues } : {}),
+				})
+			: model.label;
+		return model.outcome
+			? $_(
+					model.outcome === AUTO_OUTCOME.fail ? 'combat.roll.autoFail' : 'combat.roll.autoSucceed',
+					{ values: { label: named } },
+				)
+			: named;
+	});
+
+	/** A marker — a rest, a no-roll cast, a save a condition decided — threw nothing, so its total is
+	 *  `NaN` on the record and the number column stays empty rather than printing that. */
+	const shown = (n: number) => (Number.isFinite(n) ? n : '');
 
 	const attacks = $derived(model.attacks);
 	const multi = $derived(attacks.length > 1 && model.damaging);
@@ -198,14 +221,7 @@
 <div class="roll-row" class:strip title={strip && model.note ? model.note : undefined}>
 	<!-- the key when the roll has one, so a roll made under one language still reads in the language
 	     the log is being READ in; `label` is the English fallback every custom roll has -->
-	<span class="roll-label"
-		>{model.labelKey
-			? $_(model.labelKey, {
-					default: model.label,
-					...(model.labelValues ? { values: model.labelValues } : {}),
-				})
-			: model.label}</span
-	>
+	<span class="roll-label">{rollLabel}</span>
 	{#if strip && multi}
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
@@ -220,7 +236,7 @@
 					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 				</span>
 			{/each}
-			<span class="roll-total big-total">{model.total}</span>
+			<span class="roll-total big-total">{shown(model.total)}</span>
 		</span>
 	{:else}
 		<span
@@ -263,7 +279,7 @@
 					class:nat-20={a.natural === 20}
 					class:nat-1={a.natural === 1}
 				>
-					{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="roll-miss"
+					{#if !model.damaging}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
 							>{$_('roller.miss')}</span
 						>{:else}{a.damageTotal}{/if}
 				</span>
@@ -276,7 +292,7 @@
 						</span>
 					{/each}
 				</span>
-				<span class="roll-total big-total grand-total">{model.total}</span>
+				<span class="roll-total big-total grand-total">{shown(model.total)}</span>
 			{/if}
 		</span>
 	{/if}

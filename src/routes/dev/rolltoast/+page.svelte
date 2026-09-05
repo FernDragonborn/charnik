@@ -9,7 +9,12 @@
 	import { cycleAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
-	import { amendedAdvantage, rehydrateLogEntry, type StoredRollLogEntry } from '$lib/combat/roll';
+	import {
+		amendedAdvantage,
+		rehydrateLogEntry,
+		AUTO_OUTCOME,
+		type StoredRollLogEntry,
+	} from '$lib/combat/roll';
 
 	// a live entry the controls actually act on, so the preview exercises the real amend path
 	let live = $state<RollLogEntry>(
@@ -147,6 +152,16 @@
 				advantageRoll: { kept: 9, dropped: 14 },
 				natural: 9,
 				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }],
+			},
+		},
+		{
+			title: 'a save a condition decided — no die at all, the outcome said beside the name',
+			entry: {
+				label: 'DEX save',
+				labelKey: 'combat.roll.save.dex',
+				expr: '',
+				total: NaN,
+				outcome: AUTO_OUTCOME.fail,
 			},
 		},
 		{

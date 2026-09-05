@@ -23,6 +23,7 @@ import { RollerOrgan } from '$lib/dice/roller.svelte';
 import {
 	amendedAdvantage,
 	withoutLegacyAmendment,
+	type AutoOutcome,
 	type RollLogEntry,
 	type RollName,
 	type TypedRoll,
@@ -295,15 +296,17 @@ export class RollTray {
 	 * A no-roll cast (buff/utility): a bare log marker, not a rolled total. Takes the same `RollName`
 	 * a rolled entry does, so a marker carries its catalog key and reads in the language the log is
 	 * being READ in — `log.jsonl` keeps the line verbatim, and a finished sentence written into it
-	 * would be frozen in whatever language the marker happened in.
+	 * would be frozen in whatever language the marker happened in. `outcome` is the same fact for the
+	 * marker a forced save leaves: the condition decided it, so there is no die to show.
 	 */
-	logMarker = (name: RollName) => {
+	logMarker = (name: RollName, outcome?: AutoOutcome) => {
 		const { text: label, key: labelKey, values: labelValues } = name;
 		this.log = [
 			{
 				label,
 				...(labelKey ? { labelKey } : {}),
 				...(labelValues ? { labelValues } : {}),
+				...(outcome ? { outcome } : {}),
 				expr: '',
 				dice: [],
 				d20s: [],

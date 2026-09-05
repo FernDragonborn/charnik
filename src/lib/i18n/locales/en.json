@@ -700,6 +700,9 @@
 			"long": "Long"
 		},
 		"roll": {
+			"acTouch": "AC (touch)",
+			"autoFail": "{label} — auto-fail",
+			"autoSucceed": "{label} — auto-succeed",
 			"check": {
 				"str": "STR check",
 				"dex": "DEX check",
@@ -708,6 +711,11 @@
 				"wis": "WIS check",
 				"cha": "CHA check"
 			},
+			"concentration": "Concentration save",
+			"deathSave": "Death save",
+			"hitDie": "Hit Die {die}",
+			"initiative": "Initiative",
+			"rerollDamage": "{name} — reroll damage, keep the higher",
 			"save": {
 				"str": "STR save",
 				"dex": "DEX save",
@@ -715,13 +723,7 @@
 				"int": "INT save",
 				"wis": "WIS save",
 				"cha": "CHA save"
-			},
-			"initiative": "Initiative",
-			"acTouch": "AC (touch)",
-			"concentration": "Concentration save",
-			"deathSave": "Death save",
-			"hitDie": "Hit Die {die}",
-			"rerollDamage": "{name} — reroll damage, keep the higher"
+			}
 		},
 		"section": {
 			"abilities": "Abilities",

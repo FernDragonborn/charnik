@@ -78,6 +78,10 @@
   have reintroduced exactly the defect it was ordered to avoid. `label` stays beside the key as the
   English fallback, which is also all a custom roll or a homebrew spell name ever has: a content
   row's own word is DATA and passes through untranslated.
+  **A forced outcome is a fact on the entry, not a word in its label.** `RollLogEntry.outcome` carries
+  it and `RollRow` says "{label} — auto-fail" around the name the label key already produces — a
+  marker holds ONE key, so the sentence could not have been one. It also has no total: a marker threw
+  nothing, and the number column now stays empty instead of printing the record's `NaN`.
   **An item tag's word lives in the catalog, not in a table in code.** `itemTagLabel` is a lookup with
   the raw tag name as its default, so the app-known vocabulary (`two_handed` → "two-handed", "дворучна")
   is 22 catalog entries and a homebrew tag still reads exactly as its author wrote it. An attack row
@@ -94,10 +98,7 @@
   phrase is what breaks in an inflected language — Ukrainian needs "Перевірка СИЛ", which no
   substitution into an English frame produces. Twelve flat keys cost nothing and let a translator see
   the sentence.
-  **What is left:** the AUTO-OUTCOME marker — `logMarker` takes a `RollName` now and every other
-  marker carries its key, but this one's sentence names a ROLL whose own name is a key, and an entry
-  holds one. Making it read in the reader's language wants the outcome as a FACT on the entry (the
-  shape amendments already have) rather than a word baked into its label. Then a computed value's TRACE:
+  **What is left:** a computed value's TRACE:
   `Contribution.source` is a human label the rules core writes in English ("Armor", "DEX mod",
   "Proficiency"), so every provenance line under a stat mixes translated notes with English sources.
   Then the builder's remaining body copy,

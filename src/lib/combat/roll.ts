@@ -104,6 +104,11 @@ export type RollLogEntry = Rolled & {
 	at?: number;
 	/** What was changed about this roll after it landed, as facts rather than as a sentence. */
 	amendments?: RollAmendment[];
+	/** A condition decided this one instead of the die (paralyzed → auto-fail its STR/DEX save), so no
+	 *  die was thrown. A FACT beside the roll's name rather than a word inside it: the name is already
+	 *  a catalog key, an entry holds one, and "Save — auto-fail" written into `log.jsonl` would freeze
+	 *  the line in the language it happened in. `RollRow` says it. */
+	outcome?: AutoOutcome;
 	/** The ACTION this roll belonged to, when one action fired several — a volley's beams, Extra
 	 *  Attack's strikes. A GUID rather than a counter (AGENTS.md ▸ Taste): the lines are written
 	 *  independently and each may be rewritten by an amendment, so nothing may depend on their order
@@ -126,6 +131,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	at?: number;
 	group?: string;
 	amendments?: RollAmendment[];
+	outcome?: AutoOutcome;
 	damage?: (StoredRoll & { type: string })[];
 };
 
@@ -146,6 +152,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),
 	...(e.amendments ? { amendments: e.amendments } : {}),
+	...(e.outcome ? { outcome: e.outcome } : {}),
 	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),
 });
 
@@ -338,13 +345,18 @@ export const dieModsOf = (fx: RollEffects): DieMods => ({
 	...(fx.maxDie !== undefined ? { maxDie: fx.maxDie } : {}),
 });
 
+/** The two outcomes a condition can force in place of a roll. Named, because they are recorded on
+ *  the log entry and compared there — never as bare strings (AGENTS.md ▸ Taste). */
+export const AUTO_OUTCOME = { fail: 'fail', succeed: 'succeed' } as const;
+export type AutoOutcome = (typeof AUTO_OUTCOME)[keyof typeof AUTO_OUTCOME];
+
 /** A forced roll outcome for `key`, or null to roll normally. `auto_fail`/`auto_succeed` effects
  *  (paralyzed → STR/DEX saves) override the RESULT, not the die — so a matched save doesn't roll at
  *  all. Auto-fail wins a contradictory pair (the debuff bias: conditions that force outcomes are
  *  debilitating, and a fail-closed default is safer than silently succeeding). */
-export function autoOutcome(facts: EffectFacts, key: string): 'fail' | 'succeed' | null {
-	if (facts.autoFail.some((a) => matchesTarget(a.target, key))) return 'fail';
-	if (facts.autoSucceed.some((a) => matchesTarget(a.target, key))) return 'succeed';
+export function autoOutcome(facts: EffectFacts, key: string): AutoOutcome | null {
+	if (facts.autoFail.some((a) => matchesTarget(a.target, key))) return AUTO_OUTCOME.fail;
+	if (facts.autoSucceed.some((a) => matchesTarget(a.target, key))) return AUTO_OUTCOME.succeed;
 	return null;
 }
 
