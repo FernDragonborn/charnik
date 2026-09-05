@@ -5,6 +5,7 @@
 	// language, so a new target language is one click away. Picking an "add" language just sets the
 	// value to that code — translating + saving then creates its columns (no separate schema step).
 	import Icon from './Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { languageName, languageSearchText, addableLanguages } from '$lib/i18n/languages';
 
 	let {
@@ -69,12 +70,12 @@
 		<div class="menu" role="listbox">
 			<input
 				class="search"
-				placeholder="Search language…"
+				placeholder={$_('languagePicker.search')}
 				bind:value={query}
 				onkeydown={(e) => e.key === 'Escape' && (open = false)}
 			/>
 			{#if current.length}
-				<div class="section eyebrow">Loaded</div>
+				<div class="section eyebrow">{$_('languagePicker.loaded')}</div>
 				{#each current as o (o.code)}
 					<button class="opt" class:sel={o.code === value} onclick={() => choose(o.code)}>
 						<span class="opt-name">{o.name}</span><span class="opt-code">{o.code}</span>
@@ -82,7 +83,7 @@
 				{/each}
 			{/if}
 			{#if addable.length}
-				<div class="section eyebrow">Add a language</div>
+				<div class="section eyebrow">{$_('languagePicker.addLanguage')}</div>
 				{#each addable as o (o.code)}
 					<button class="opt add" onclick={() => choose(o.code)}>
 						<span class="opt-name">{o.name}</span><span class="opt-code"
@@ -92,7 +93,7 @@
 				{/each}
 			{/if}
 			{#if current.length === 0 && addable.length === 0}
-				<p class="empty">No language matches “{query}”.</p>
+				<p class="empty">{$_('languagePicker.empty', { values: { query } })}</p>
 			{/if}
 		</div>
 	{/if}

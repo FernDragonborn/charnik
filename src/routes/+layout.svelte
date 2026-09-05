@@ -298,7 +298,7 @@
 
 <header class="topbar">
 	<a class="wordmark" href={link('/')}>Char<span>nik</span></a>
-	<nav class="nav" aria-label="Primary">
+	<nav class="nav" aria-label={$_('nav.primary')}>
 		{#each nav as item (item.href)}
 			<a href={link(item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
 				{$_(item.key)}

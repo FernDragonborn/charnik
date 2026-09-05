@@ -39,8 +39,8 @@
 		<h1>{detail.title}</h1>
 	{/if}
 	{#if !rolls}<span class="stat-chip {spell.resChip}">{sayText(spell.resLabel, $_)}</span>{/if}
-	{#if spell.ritual}<span class="stat-chip util">Ritual</span>{/if}
-	{#if spell.concentration}<span class="stat-chip save">Concentration</span>{/if}
+	{#if spell.ritual}<span class="stat-chip util">{$_('compendium.ritual')}</span>{/if}
+	{#if spell.concentration}<span class="stat-chip save">{$_('compendium.concentration')}</span>{/if}
 </div>
 <div class="strip" class:norolls={!rolls}>
 	{#if rolls}
@@ -52,13 +52,18 @@
 			{/if}
 			<div class="spell-effect-rolls">
 				{#if spell.resChip === 'hit'}
-					<RollButton formula="1d20" label={`${detail.title} — to hit`}
+					<RollButton
+						formula="1d20"
+						label={$_('compendium.rollToHit', { values: { name: detail.title } })}
 						><DiceIcon size={14} /> d20</RollButton
 					>
 				{/if}
 				{#if spell.dice}
 					<RollButton formula={spell.dice} label={detail.title}
-						><DiceIcon size={14} /> {spell.resChip === 'auto' ? 'Heal' : 'Dmg'}</RollButton
+						><DiceIcon size={14} />
+						{$_(
+							spell.resChip === 'auto' ? 'compendium.rollHeal' : 'compendium.rollDamage',
+						)}</RollButton
 					>
 				{/if}
 			</div>
@@ -77,7 +82,7 @@
 				<div class="stat-value">
 					{#each spell.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
 								class="homebrew-mark"
-								title="granted class-side (not on the spell)">+</span
+								title={$_('compendium.grantedClassSide')}>+</span
 							>{/if}{/each}
 				</div>
 			</div>

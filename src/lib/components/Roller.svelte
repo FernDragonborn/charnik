@@ -54,7 +54,7 @@
 				type="button"
 				class="roller-die-btn ghost"
 				title={$_('roller.addModifier')}
-				onclick={diceTray.addMod}>±mod</button
+				onclick={diceTray.addMod}>{$_('roller.modButton')}</button
 			>
 		</div>
 
@@ -70,7 +70,7 @@
 			{#if !hasDamage}
 				<div class="roller-extras">
 					<button type="button" class="roller-extra" onclick={diceTray.addDamageLine}
-						>+ damage line</button
+						>{$_('roller.damageLine')}</button
 					>
 				</div>
 			{/if}

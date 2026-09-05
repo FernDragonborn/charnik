@@ -69,7 +69,7 @@
 				<span class="val">{m.author}</span>
 			{/if}
 			{#if m?.url}
-				<span class="dialog-label">URL</span>
+				<span class="dialog-label">{$_('settings.plugins.consent.url')}</span>
 				<span class="val mono">{m.url}</span>
 			{/if}
 			{#if m?.description}

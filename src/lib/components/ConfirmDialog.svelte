@@ -2,19 +2,21 @@
 	// Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template),
 	// for a destructive/irreversible action that needs an explicit yes. Shared `.dialog` shell.
 	import Icon from './Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 
 	let {
 		title,
 		message,
-		confirmLabel = 'Confirm',
+		confirmLabel,
 		danger = false,
 		onConfirm,
 		onCancel,
 	}: {
 		title: string;
 		message: string;
+		/** Defaults to the shared “Confirm” — a caller names the ACTION where a verb reads better. */
 		confirmLabel?: string;
 		/** style the confirm button as destructive. */
 		danger?: boolean;
@@ -41,8 +43,10 @@
 	</header>
 	<footer class="dialog-foot">
 		<span class="dialog-spacer"></span>
-		<button class="btn ghost" onclick={onCancel}>Cancel</button>
-		<button class="btn primary" class:danger onclick={onConfirm}>{confirmLabel}</button>
+		<button class="btn ghost" onclick={onCancel}>{$_('app.cancel')}</button>
+		<button class="btn primary" class:danger onclick={onConfirm}
+			>{confirmLabel ?? $_('app.confirm')}</button
+		>
 	</footer>
 </div>
 

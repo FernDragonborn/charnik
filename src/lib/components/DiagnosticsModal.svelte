@@ -87,7 +87,7 @@
 		<p class="diag-count">
 			{$_('feedback.diag.logLines', { values: { count: bundle.log.length } })}
 		</p>
-		<pre class="diag-preview" aria-label="diagnostics">{bundleText}</pre>
+		<pre class="diag-preview" aria-label={$_('feedback.diag.previewAria')}>{bundleText}</pre>
 	</div>
 
 	<footer class="dialog-foot">

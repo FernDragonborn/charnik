@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
+	import { _ } from '$lib/i18n';
 	// Multi-select for a spell's `classes` column: tick which EXISTING classes (pulled from the loaded
 	// content) it's available to, and/or add a class that isn't in the CSVs by name. Existing classes are
 	// stored by their id (so they resolve); a custom one is stored by its raw name (it won't resolve by
@@ -69,8 +70,11 @@
 			{#each customTokens as t (t)}
 				<span class="custom-chip">
 					{t}
-					<button type="button" class="rm" aria-label="Remove {t}" onclick={() => removeToken(t)}
-						><Icon name="x" size={11} /></button
+					<button
+						type="button"
+						class="rm"
+						aria-label={$_('app.remove', { values: { name: t } })}
+						onclick={() => removeToken(t)}><Icon name="x" size={11} /></button
 					>
 				</span>
 			{/each}
@@ -80,15 +84,15 @@
 	<div class="add-row">
 		<input
 			class="add-input"
-			placeholder="Add a class not in the list…"
+			placeholder={$_('homebrewForm.classPlaceholder')}
 			bind:value={custom}
 			onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustom())}
 		/>
-		<button type="button" class="add-btn" disabled={!custom.trim()} onclick={addCustom}>Add</button>
+		<button type="button" class="add-btn" disabled={!custom.trim()} onclick={addCustom}
+			>{$_('app.add')}</button
+		>
 	</div>
-	<p class="hint">
-		Ticked classes resolve by id; a custom class is stored by name (won't link to a class row).
-	</p>
+	<p class="hint">{$_('homebrewForm.classHint')}</p>
 </div>
 
 <style>

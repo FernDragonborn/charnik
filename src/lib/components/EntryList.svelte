@@ -3,6 +3,7 @@
 	// Each row shows a name + meta sub-line; `leading`/`trailing` snippets add per-row controls
 	// (Spellbook: eye/pin + prepare toggle). Compendium passes none → a plain browsable list.
 	import Icon from './Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
 	import type { Entry } from '$lib/content/detail';
 
@@ -11,7 +12,7 @@
 		selectedId = null,
 		onselect,
 		searchValue = $bindable(''),
-		searchPlaceholder = 'Search…',
+		searchPlaceholder,
 		showEdition = false,
 		filters,
 		leading,
@@ -21,6 +22,7 @@
 		selectedId?: string | null;
 		onselect: (e: Entry<T>) => void;
 		searchValue?: string;
+		/** Defaults to the shared “Search…” — a list names what it searches where that helps. */
 		searchPlaceholder?: string;
 		showEdition?: boolean;
 		filters?: Snippet;
@@ -32,7 +34,7 @@
 <div class="list">
 	<div class="lsearch">
 		<span class="search-icon"><Icon name="search" size={13} /></span><input
-			placeholder={searchPlaceholder}
+			placeholder={searchPlaceholder ?? $_('app.search')}
 			bind:value={searchValue}
 		/>
 	</div>
@@ -57,7 +59,7 @@
 					{#if trailing}{@render trailing(e)}{/if}
 				</div>
 			{:else}
-				<div class="section eyebrow"><span>No matches.</span></div>
+				<div class="section eyebrow"><span>{$_('app.noMatches')}</span></div>
 			{/each}
 		{/each}
 	</div>

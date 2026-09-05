@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { asText } from '$lib/util/format';
 	import Icon from './Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Schema-discard warning — the house attention-dialog template
@@ -29,16 +30,24 @@
 
 	const total = $derived(drafts.length + unreadable.length);
 
+	/** A draft's two lines. The content TYPE is the app's own vocabulary and reads from `contentType`;
+	 *  the entry's id and the target locale are data and pass through. */
 	function draftLabel(env: DraftEnvelope): { title: string; sub: string } {
 		const t = env.target;
+		const type = $_(`contentType.${t.type}`, { default: t.type.replace(/_/g, ' ') });
 		if (t.kind === 'add')
 			return {
-				title: asText(env.data.name_en, 'Untitled'),
-				sub: `new ${t.type.replace(/_/g, ' ')}`,
+				title: asText(env.data.name_en, $_('drafts.discard.untitled')),
+				sub: $_('drafts.discard.subNew', { values: { type } }),
 			};
 		if (t.kind === 'translate')
-			return { title: t.id, sub: `${t.type.replace(/_/g, ' ')} → ${t.locale.toUpperCase()}` };
-		return { title: t.id, sub: `${t.type.replace(/_/g, ' ')} · edit` };
+			return {
+				title: t.id,
+				sub: $_('drafts.discard.subTranslate', {
+					values: { type, locale: t.locale.toUpperCase() },
+				}),
+			};
+		return { title: t.id, sub: $_('drafts.discard.subEdit', { values: { type } }) };
 	}
 </script>
 
@@ -56,19 +65,17 @@
 	<header class="dialog-head">
 		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="discard-title" class="dialog-title">
-			Some drafts can’t be restored{#if total > 1}<span class="count-pill">{total}</span>{/if}
+			{$_('drafts.discard.title')}{#if total > 1}<span class="count-pill">{total}</span>{/if}
 		</h2>
+		<!-- each count is a WHOLE sentence per plural branch, never a phrase glued to a number: a
+		     language with more than two branches (Ukrainian has three) cannot be served by picking
+		     between two English fragments and appending the rest. -->
 		<p class="dialog-subtitle">
-			{#if drafts.length}{drafts.length === 1
-					? 'An unfinished edit was'
-					: `${drafts.length} unfinished edits were`} saved under an older content schema and can’t be
-				migrated forward.{/if}
-			{#if unreadable.length}{unreadable.length === 1
-					? 'One draft file'
-					: `${unreadable.length} draft files`} can no longer be read at all — the contents are damaged,
-				so there is nothing left in them to restore.{/if}
-			Discarding them frees the space; keeping them leaves the files on disk (still ignored) in case a
-			future version can read them.
+			{#if drafts.length}{$_('drafts.discard.stale', { values: { count: drafts.length } })}{/if}
+			{#if unreadable.length}{$_('drafts.discard.unreadable', {
+					values: { count: unreadable.length },
+				})}{/if}
+			{$_('drafts.discard.tail')}
 		</p>
 	</header>
 
@@ -80,14 +87,16 @@
 					<div class="title">{l.title}</div>
 					<div class="sub">{l.sub}</div>
 				</div>
-				<div class="ver">schema v{env.schemaVersion}</div>
+				<div class="ver">
+					{$_('drafts.discard.schemaVersion', { values: { version: env.schemaVersion } })}
+				</div>
 			</div>
 		{/each}
 		{#each unreadable as path (path)}
 			<div class="dialog-card row">
 				<div class="meta">
 					<div class="title">{path.slice(path.lastIndexOf('/') + 1)}</div>
-					<div class="sub">unreadable file</div>
+					<div class="sub">{$_('drafts.discard.unreadableFile')}</div>
 				</div>
 			</div>
 		{/each}
@@ -95,11 +104,10 @@
 
 	<footer class="dialog-foot">
 		<span class="dialog-spacer"></span>
-		<button class="btn ghost" onclick={onKeep}>Keep for now</button>
-		<button class="btn primary" onclick={onDiscard}>
-			Discard {total}
-			{total === 1 ? 'draft' : 'drafts'}
-		</button>
+		<button class="btn ghost" onclick={onKeep}>{$_('drafts.discard.keep')}</button>
+		<button class="btn primary" onclick={onDiscard}
+			>{$_('drafts.discard.action', { values: { count: total } })}</button
+		>
 	</footer>
 </div>
 

@@ -5,6 +5,7 @@
 	// shell (styles/components.css); this only sets its width.
 	import Icon from '../Icon.svelte';
 	import { trapFocus } from '$lib/actions/trapFocus';
+	import { _ } from '$lib/i18n';
 
 	let {
 		tone,
@@ -68,7 +69,7 @@
 
 	<footer class="dialog-foot">
 		<span class="dialog-spacer"></span>
-		<button class="btn primary" bind:this={closeBtn} onclick={onclose}>Close</button>
+		<button class="btn primary" bind:this={closeBtn} onclick={onclose}>{$_('app.close')}</button>
 	</footer>
 </div>
 

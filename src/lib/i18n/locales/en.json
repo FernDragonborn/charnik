@@ -16,7 +16,14 @@
 		"cha": "CHA"
 	},
 	"app": {
+		"add": "Add",
+		"cancel": "Cancel",
+		"close": "Close",
+		"confirm": "Confirm",
 		"name": "Charnik",
+		"noMatches": "No matches.",
+		"remove": "Remove {name}",
+		"search": "Search…",
 		"tagline": "Own your characters."
 	},
 	"armorCategory": {
@@ -851,6 +858,7 @@
 		"availableTo": "Available to",
 		"backToBrowse": "Back to compendium",
 		"clearFilters": "Clear filters",
+		"concentration": "Concentration",
 		"deleteBody": "This removes the entry from your homebrew CSV and can’t be undone.",
 		"deleteConfirm": "Delete",
 		"deleteEntry": "Delete entry",
@@ -859,6 +867,10 @@
 		"emptyBody": "The content library is empty — the shipped SRD files don’t seem to be present. If this is an installed build, the content bundle may be missing or the data folder points somewhere without content.",
 		"emptyTitle": "No content found",
 		"emptyWhere": "Data folder & content sources live in",
+		"grantedClassSide": "granted class-side (not on the spell)",
+		"groupByAZ": "A–Z",
+		"groupBySpecies": "Species",
+		"groupByType": "Type",
 		"grouping": "Group",
 		"hpRolled": "HP rolled",
 		"levelCantrip": "Cantrip",
@@ -878,7 +890,11 @@
 		"paneCurrent": "Current",
 		"paneEdit": "Your edit",
 		"pickAnEntry": "Select an entry to see its detail.",
+		"ritual": "Ritual",
+		"rollDamage": "Dmg",
+		"rollHeal": "Heal",
 		"rollHp": "Roll HP",
+		"rollToHit": "{name} — to hit",
 		"save": "save",
 		"score": "score",
 		"settingsData": "Settings → Data",
@@ -1071,6 +1087,20 @@
 		"agoNow": "just now",
 		"count": "{count} unfinished · autosaved locally",
 		"delete": "Delete",
+		"discard": {
+			"action": "{count, plural, one {Discard # draft} other {Discard # drafts}}",
+			"keep": "Keep for now",
+			"schemaVersion": "schema v{version}",
+			"stale": "{count, plural, one {An unfinished edit was saved under an older content schema and can’t be migrated forward.} other {# unfinished edits were saved under an older content schema and can’t be migrated forward.}}",
+			"subEdit": "{type} · edit",
+			"subNew": "new {type}",
+			"subTranslate": "{type} → {locale}",
+			"tail": "Discarding them frees the space; keeping them leaves the files on disk (still ignored) in case a future version can read them.",
+			"title": "Some drafts can’t be restored",
+			"unreadable": "{count, plural, one {One draft file can no longer be read at all — the contents are damaged, so there is nothing left in them to restore.} other {# draft files can no longer be read at all — the contents are damaged, so there is nothing left in them to restore.}}",
+			"unreadableFile": "unreadable file",
+			"untitled": "Untitled"
+		},
 		"empty": "No drafts. Unsaved translations and new entries show up here.",
 		"fragmentEditAll": "· edit all fields",
 		"fragmentNew": "· new {type}",
@@ -1120,8 +1150,6 @@
 		"general_2014": "General"
 	},
 	"feedback": {
-		"link": "Found a bug?",
-		"title": "Report a bug or leave feedback on GitHub",
 		"diag": {
 			"title": "Report a bug",
 			"subtitle": "Copy this diagnostics snapshot and paste it into your GitHub issue. It carries no names, notes, or personal text — only version, platform, and a short technical log.",
@@ -1138,8 +1166,11 @@
 			"copyFailed": "Couldn’t copy to clipboard",
 			"openIssue": "Open GitHub issue ↗",
 			"openLogFolder": "Open log folder",
-			"close": "Close"
-		}
+			"close": "Close",
+			"previewAria": "Diagnostics snapshot"
+		},
+		"link": "Found a bug?",
+		"title": "Report a bug or leave feedback on GitHub"
 	},
 	"firstRun": {
 		"title": "Choose where Charnik keeps your data",
@@ -1151,6 +1182,8 @@
 	},
 	"homebrewForm": {
 		"cancel": "Cancel",
+		"classHint": "Ticked classes resolve by id; a custom class is stored by name (it won’t link to a class row).",
+		"classPlaceholder": "Add a class not in the list…",
 		"editForkNote": "This entry ships with Charnik, so your edit is saved as a homebrew copy (the original stays untouched and your version sorts above it).",
 		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
 		"editInPlaceNote": "Editing your homebrew entry in place.",
@@ -1217,6 +1250,12 @@
 		"two_handed": "two-handed",
 		"versatile": "versatile"
 	},
+	"languagePicker": {
+		"search": "Search language…",
+		"loaded": "Loaded",
+		"addLanguage": "Add a language",
+		"empty": "No language matches “{query}”."
+	},
 	"loading": {
 		"failedBody": "Something went wrong reading the content files. The error was:",
 		"failedReport": "Please report this with the message above.",
@@ -1245,7 +1284,8 @@
 		"spellbook": "Spellbook",
 		"translate": "Translate",
 		"skipToContent": "Skip to content",
-		"openCommandPalette": "Open command palette"
+		"openCommandPalette": "Open command palette",
+		"primary": "Primary"
 	},
 	"noCharacter": {
 		"title": "No character here yet",
@@ -1348,6 +1388,7 @@
 		},
 		"customRoll": "Custom roll",
 		"damage": "damage",
+		"damageLine": "+ damage line",
 		"damageRoll": "damage roll",
 		"droppedD20": "dropped d20",
 		"hit": {
@@ -1363,6 +1404,7 @@
 		},
 		"keepThisOne": "keep this one",
 		"miss": "miss",
+		"modButton": "±mod",
 		"mode": {
 			"advantage": "advantage",
 			"disadvantage": "disadvantage",
@@ -1589,7 +1631,8 @@
 				"codeHash": "Code hash",
 				"warning": "Only enable plugins from authors you trust.",
 				"cancel": "Cancel",
-				"accept": "Enable plugin"
+				"accept": "Enable plugin",
+				"url": "URL"
 			}
 		},
 		"sources": {
