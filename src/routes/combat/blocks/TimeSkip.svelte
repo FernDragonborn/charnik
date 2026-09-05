@@ -7,23 +7,24 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '$lib/i18n';
 
-	// label → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd)
+	// key → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd). The step is the
+	// app's own vocabulary, and its abbreviation is not "rd" in every language
 	const STEPS = [
-		['+1 rd', 1],
-		['+1 min', 10],
-		['+10 min', 100],
-		['+1 hr', 600],
+		['combat.timeSkip.round', 1],
+		['combat.timeSkip.minute', 10],
+		['combat.timeSkip.tenMinutes', 100],
+		['combat.timeSkip.hour', 600],
 	] as const;
 </script>
 
 <section class="combat-bar">
 	<span class="bar-label"><Icon name="timer" size={13} /> {$_('combat.timeSkip.title')}</span>
-	{#each STEPS as [label, rounds] (label)}
+	{#each STEPS as [key, rounds] (key)}
 		<button
 			type="button"
 			class="step"
 			onclick={() => combat.economy.advanceTime(rounds)}
-			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{label}</button
+			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
 		>
 	{/each}
 </section>

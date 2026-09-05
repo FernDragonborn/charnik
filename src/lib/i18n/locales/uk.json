@@ -539,6 +539,8 @@
 			"keepConcentratingAria": "Сховати, концентрація триває",
 			"roll": "Кидок",
 			"rollDeathSave": "Кинути рятівний кидок від смерті",
+			"saveFailed": "Рятунок провалено",
+			"spellEnds": "{spell} завершується",
 			"success": "Успіх",
 			"successN": "Успіх {n}",
 			"temp": "тимч.",
@@ -850,7 +852,11 @@
 		},
 		"timeSkip": {
 			"title": "Промотати час",
-			"hint": "Просунути на {rounds, plural, one {# раунд} few {# раунди} many {# раундів} other {# раунду}} і згасити те, чий час вийшов"
+			"hint": "Просунути на {rounds, plural, one {# раунд} few {# раунди} many {# раундів} other {# раунду}} і згасити те, чий час вийшов",
+			"round": "+1 рд",
+			"minute": "+1 хв",
+			"tenMinutes": "+10 хв",
+			"hour": "+1 год"
 		},
 		"turn": {
 			"round": "Раунд",
@@ -896,6 +902,7 @@
 		"emptyBody": "Бібліотека вмісту порожня — файлів SRD, які йдуть у комплекті, схоже, немає. Якщо це встановлена збірка, можливо, бракує пакунка вмісту або тека даних вказує туди, де вмісту немає.",
 		"emptyTitle": "Вмісту не знайдено",
 		"emptyWhere": "Тека даних і джерела вмісту — у розділі",
+		"filter": "Фільтр",
 		"grantedClassSide": "надано з боку класу (не в самому заклятті)",
 		"groupByAZ": "А–Я",
 		"groupBySpecies": "Рід",
@@ -1431,7 +1438,7 @@
 		"addModifier": "додати модифікатор до рядка, де стоїть каретка",
 		"advantageCycle": "перевага → перешкода → без них",
 		"amendment": {
-			"advantage": "{mode, select, advantage {перевага, після кидка (лишено {kept} замість {dropped})} disadvantage {завада, після кидка (лишено {kept} замість {dropped})} other {без переваги після кидка (лишено {kept} замість {dropped})}}",
+			"advantage": "{mode, select, advantage {перевага після кидка (лишено {kept} замість {dropped})} disadvantage {завада після кидка (лишено {kept} замість {dropped})} other {без переваги після кидка (лишено {kept} замість {dropped})}}",
 			"damageReroll": "{source}: лишено {kept} (інший кидок {other})"
 		},
 		"attacks": "атак: {count}",

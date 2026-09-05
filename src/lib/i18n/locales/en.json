@@ -539,6 +539,8 @@
 			"keepConcentratingAria": "Dismiss, keep concentrating",
 			"roll": "Roll",
 			"rollDeathSave": "Roll a death save",
+			"saveFailed": "Save failed",
+			"spellEnds": "{spell} ends",
 			"success": "Success",
 			"successN": "Success {n}",
 			"temp": "temp",
@@ -850,7 +852,11 @@
 		},
 		"timeSkip": {
 			"title": "Pass time",
-			"hint": "Advance {rounds, plural, one {# round} other {# rounds}} and expire what times out"
+			"hint": "Advance {rounds, plural, one {# round} other {# rounds}} and expire what times out",
+			"round": "+1 rd",
+			"minute": "+1 min",
+			"tenMinutes": "+10 min",
+			"hour": "+1 hr"
 		},
 		"turn": {
 			"round": "Round",
@@ -896,6 +902,7 @@
 		"emptyBody": "The content library is empty — the shipped SRD files don’t seem to be present. If this is an installed build, the content bundle may be missing or the data folder points somewhere without content.",
 		"emptyTitle": "No content found",
 		"emptyWhere": "Data folder & content sources live in",
+		"filter": "Filter",
 		"grantedClassSide": "granted class-side (not on the spell)",
 		"groupByAZ": "A–Z",
 		"groupBySpecies": "Species",

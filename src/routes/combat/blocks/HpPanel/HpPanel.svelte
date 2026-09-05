@@ -79,8 +79,12 @@
 		{@const pend = combat.pendingConcentrationSave}
 		<div class="conc-banner" class:failed={pend.failed} role="status">
 			{#if pend.failed}
-				<span class="conc-warn"><Icon name="circle-x" size={13} /> Save failed</span>
-				<span class="conc-detail">{combat.conc.label} ends</span>
+				<span class="conc-warn"
+					><Icon name="circle-x" size={13} /> {$_('combat.hp.saveFailed')}</span
+				>
+				<span class="conc-detail">
+					{$_('combat.hp.spellEnds', { values: { spell: combat.conc.label } })}
+				</span>
 			{:else}
 				<span class="conc-warn"
 					><Icon name="triangle-alert" size={13} /> {$_('combat.hp.concentrationCheck')}</span

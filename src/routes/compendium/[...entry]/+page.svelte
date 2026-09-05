@@ -395,7 +395,9 @@
 
 			{#if sources.length > 1 || facetValues.length}
 				<details class="disclosure" use:autoClose>
-					<summary class="pill-btn">Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
+					<summary class="pill-btn"
+						>{$_('compendium.filter')}{activeFilters ? ` · ${activeFilters}` : ''}</summary
+					>
 					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
 							<div class="dropdown-section eyebrow">{$_('contentField.source')}</div>

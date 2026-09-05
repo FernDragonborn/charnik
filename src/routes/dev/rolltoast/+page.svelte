@@ -171,6 +171,18 @@
 				label: 'Fireball',
 				expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
 				total: 32,
+				noteParts: [
+					{ key: 'roller.note.upcast', values: { base: '8d6 fire', added: '1d6', slot: 4 } },
+				],
+			},
+		},
+		{
+			// the legacy seam: a row written before the provenance became facts still renders its prose
+			title: 'a pre-2026-09-05 row, whose note is English on disk',
+			entry: {
+				label: 'Fireball',
+				expr: 'd6(4) + d6(6)',
+				total: 10,
 				note: '8d6 base + 1d6 @ slot 4',
 			},
 		},
