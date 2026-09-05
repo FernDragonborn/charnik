@@ -19,6 +19,7 @@ import {
 	type StoredRoll,
 } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
+import type { SaidText } from '$lib/util/say';
 import type { RollMod } from '$lib/effects/facts';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
@@ -96,7 +97,17 @@ export type RollLogEntry = Rolled & {
 	/** ICU values for `labelKey` — see `RollName.values`. */
 	labelValues?: Record<string, string | number>;
 	damage?: TypedRoll[];
+	/** The PLAYER's own words for this roll — what they typed into a `note` pill. Data: it is their
+	 *  sentence and passes through untranslated, and no catalog knows it.
+	 *
+	 *  A row written before 2026-09-05 also carries the APP's provenance here as English prose; that
+	 *  is the legacy seam and still renders, but nothing writes it any more. */
 	note?: string;
+	/** The app's own provenance, as facts rather than as a sentence — an upcast's extra dice, a
+	 *  formula fragment the parser could not account for. Said by `rollToastModel`, for the same
+	 *  reason an amendment is facts: prose written into `log.jsonl` freezes that roll in whatever
+	 *  language it was made in, and switching the UI afterwards cannot reach it. */
+	noteParts?: SaidText[];
 	/** When it was rolled (epoch ms), stamped by `pushRoll` — so it belongs to the ROLL rather than to
 	 *  how it happens to be stored. The persisted line used to invent its own timestamp at write time,
 	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
@@ -128,6 +139,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	labelKey?: string;
 	labelValues?: Record<string, string | number>;
 	note?: string;
+	noteParts?: SaidText[];
 	at?: number;
 	group?: string;
 	amendments?: RollAmendment[];
@@ -149,6 +161,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.labelKey !== undefined ? { labelKey: e.labelKey } : {}),
 	...(e.labelValues !== undefined ? { labelValues: e.labelValues } : {}),
 	...(e.note !== undefined ? { note: e.note } : {}),
+	...(e.noteParts !== undefined ? { noteParts: e.noteParts } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),
 	...(e.amendments ? { amendments: e.amendments } : {}),
@@ -171,6 +184,19 @@ export function actionRuns(entries: RollLogEntry[]): RollLogEntry[][] {
 	}
 	return runs;
 }
+
+/** The catalog keys a roll's own provenance is recorded under — compared against a named constant
+ *  rather than a bare string, so a new note kind has one home (AGENTS.md ▸ Taste). */
+export const NOTE_KEY = {
+	/** A fragment of the typed formula that is neither dice nor a modifier, so it rolled nothing. */
+	formulaUnread: 'roller.note.formulaUnread',
+	/** What an upcast added on top of the spell's base dice, and out of which slot. */
+	upcast: 'roller.note.upcast',
+	/** A fragment of a spell's damage column the parser could not account for. */
+	damageUnread: 'roller.note.damageUnread',
+	/** What the slot above the spell's own level scales, beyond its dice — area, count, duration. */
+	upcastPreview: 'roller.note.upcastPreview',
+} as const;
 
 /** What KIND of change was made to a roll after it landed. A named member, so a third kind has to be
  *  handled everywhere rather than falling through as an unrecognised string. */
@@ -242,7 +268,7 @@ export function rollFormulaEntry(label: string, formula: string, rng?: Rng): Rol
 		label,
 		...rollPool(dice, { mod, ...(rng ? { rng } : {}) }),
 		...(issues.length
-			? { note: `formula not fully read — ${issues.map((i) => `“${i}”`).join(', ')} ignored` }
+			? { noteParts: [{ key: NOTE_KEY.formulaUnread, values: { fragments: { list: issues } } }] }
 			: {}),
 	};
 }

@@ -27,6 +27,8 @@ import {
 	type TypedRoll,
 } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
+import { sayText } from '$lib/util/say';
+import { translator, type Translate } from '$lib/i18n';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
  *  ONE pill, divided), the flat mod folded in, and what the part came to. */
@@ -113,11 +115,20 @@ export interface RollToastModel {
 export function describeAmendments(
 	roll: Rolled,
 	amendments: RollAmendment[] | undefined,
+	t: Translate,
 ): string[] {
 	return (amendments ?? []).map((a) =>
 		a.kind === AMENDMENT_KIND.advantage
-			? `${a.to} after the roll (kept ${keptD20(roll)?.value} over ${droppedD20s(roll)[0]?.value})`
-			: `${a.source}: kept ${a.to} (other roll ${a.from})`,
+			? t('roller.amendment.advantage', {
+					values: {
+						mode: a.to,
+						kept: keptD20(roll)?.value ?? 0,
+						dropped: droppedD20s(roll)[0]?.value ?? 0,
+					},
+				})
+			: t('roller.amendment.damageReroll', {
+					values: { source: a.source, kept: a.to, other: a.from },
+				}),
 	);
 }
 
@@ -168,15 +179,25 @@ function sumByType(attacks: RollToastAttack[]): { type: string; total: number }[
  * several attacks resolved as one action (Extra Attack / Flurry of Blows): they share one card, one
  * line each, and a per-type footer under them. The label comes from the first roll.
  */
-export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToastModel {
+export function rollToastModel(
+	rolled: RollLogEntry | RollLogEntry[],
+	t: Translate,
+): RollToastModel {
 	const entries = Array.isArray(rolled) ? rolled : [rolled];
 	const attacks = entries.map((e) => attackLine(e, e.damage ?? []));
 	const damaging = attacks.some((a) => a.damage.length > 0);
 	// the roll's own provenance first, then what was changed about it afterwards — one line, because
-	// that is the one line the card has for a record
-	const noted = entries.find((e) => e.note ?? e.amendments?.length);
+	// that is the one line the card has for a record. The player's own words lead: they are theirs,
+	// and the app's provenance is a footnote to them.
+	const noted = entries.find((e) => e.note ?? e.noteParts?.length ?? e.amendments?.length);
 	const note = noted
-		? [noted.note, ...describeAmendments(noted, noted.amendments)].filter(Boolean).join(' · ')
+		? [
+				noted.note,
+				...(noted.noteParts ?? []).map((part) => sayText(part, t)),
+				...describeAmendments(noted, noted.amendments, t),
+			]
+				.filter(Boolean)
+				.join(' · ')
 		: undefined;
 	const first = entries[0];
 	return {
@@ -204,5 +225,7 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
  *  `RollRow` in each, so they arrive in both for free. With no decision to hold open, a roll toast has
  *  no reason to outlive the normal duration either. */
 export function toastRoll(rolled: RollLogEntry | RollLogEntry[]): void {
-	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled) } });
+	// the catalog is read HERE, at the moment the toast is made — a toast is fire-and-forget, so it
+	// says its sentence once and never re-reads it
+	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled, translator()) } });
 }

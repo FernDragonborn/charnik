@@ -6,6 +6,11 @@ import { describe, it, expect } from 'vitest';
 import { rollToastModel } from './roll-toast';
 import { rehydrateLogEntry, type RollLogEntry } from '$lib/combat/roll';
 
+/** A catalog that answers every key with it, so the model is asserted on WHICH sentence it asks for
+ *  rather than on the English in it. */
+const t = (key: string, o?: { values?: Record<string, string | number> }) =>
+	`«${key.split('.').pop()}${o?.values ? `:${Object.values(o.values).join(',')}` : ''}»`;
+
 const check: RollLogEntry = rehydrateLogEntry({
 	label: 'Perception',
 	expr: 'd20(14) +4',
@@ -24,7 +29,7 @@ const hit = (natural: number, dmg = 9): RollLogEntry =>
 
 describe('rollToastModel', () => {
 	it('a roll with no damage has no damage half, and the big number is the roll', () => {
-		const m = rollToastModel(check);
+		const m = rollToastModel(check, t);
 		expect(m.damaging).toBe(false);
 		expect(m.total).toBe(18);
 		expect(m.attacks).toHaveLength(1);
@@ -39,6 +44,7 @@ describe('rollToastModel', () => {
 				total: 19,
 				advantageRoll: { kept: 14, dropped: 7 },
 			}),
+			t,
 		);
 		expect(m.attacks[0]?.chips[0]).toMatchObject({ sides: 20, value: 14 });
 		expect(m.attacks[0]?.dropped).toBe(7);
@@ -46,34 +52,34 @@ describe('rollToastModel', () => {
 	});
 
 	it('an attack shows its damage as the big number, not the to-hit', () => {
-		const m = rollToastModel(hit(14));
+		const m = rollToastModel(hit(14), t);
 		expect(m.damaging).toBe(true);
 		expect(m.attacks[0]?.subtotal).toBe(21);
 		expect(m.total).toBe(9);
 	});
 
 	it('splits a damage part into its dice and the flat mod folded in', () => {
-		const part = rollToastModel(hit(14)).attacks[0]?.damage[0];
+		const part = rollToastModel(hit(14), t).attacks[0]?.damage[0];
 		expect(part?.type).toBe('slashing');
 		expect(part?.chips.map((c) => c.value)).toEqual([6]);
 		expect(part?.mod).toBe(3);
 	});
 
 	it('a nat 1 misses — its damage is left out of the total', () => {
-		const m = rollToastModel(hit(1));
+		const m = rollToastModel(hit(1), t);
 		expect(m.attacks[0]?.natural).toBe(1);
 		expect(m.total).toBe(0);
 	});
 
 	it('a volley gets a line each, per-type sums, and one grand total', () => {
-		const m = rollToastModel([hit(13, 9), hit(20, 12), hit(4, 7)]);
+		const m = rollToastModel([hit(13, 9), hit(20, 12), hit(4, 7)], t);
 		expect(m.attacks).toHaveLength(3);
 		expect(m.byType).toEqual([{ type: 'slashing', total: 28 }]);
 		expect(m.total).toBe(28);
 	});
 
 	it('a missed attack drops out of the volley’s per-type sums too', () => {
-		const m = rollToastModel([hit(13, 9), hit(1, 12)]);
+		const m = rollToastModel([hit(13, 9), hit(1, 12)], t);
 		expect(m.byType).toEqual([{ type: 'slashing', total: 9 }]);
 		expect(m.total).toBe(9);
 	});
@@ -98,11 +104,11 @@ describe('rollToastModel', () => {
 				damage: [{ type: 'radiant', expr: 'd4(2)', total: 2 }],
 			},
 		].map(rehydrateLogEntry);
-		expect(rollToastModel(volley).byType.map((t) => t.type)).toEqual(['bludgeoning', 'radiant']);
+		expect(rollToastModel(volley, t).byType.map((t) => t.type)).toEqual(['bludgeoning', 'radiant']);
 	});
 
 	it('a single roll gets no footer — the big number already is the sum', () => {
-		expect(rollToastModel(hit(14)).byType).toEqual([]);
+		expect(rollToastModel(hit(14), t).byType).toEqual([]);
 	});
 
 	// a line from before `Rolled` carried its dice stores them nowhere but the rendered string — for
@@ -117,6 +123,7 @@ describe('rollToastModel', () => {
 				natural: 14,
 				damage: [{ type: 'slashing', expr: 'd12(7) +3', total: 10 }],
 			}),
+			t,
 		);
 		expect(m.attacks[0]?.chips.map((c) => c.sides)).toEqual([20]);
 		expect(m.attacks[0]?.damage[0]?.chips.map((c) => c.value)).toEqual([7]);
@@ -133,6 +140,7 @@ describe('rollToastModel', () => {
 				total: 0,
 				damage: [{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }],
 			}),
+			t,
 		);
 		expect(fireball.tested).toBe(false);
 		expect(fireball.damaging).toBe(true);
@@ -145,6 +153,7 @@ describe('rollToastModel', () => {
 				total: 21,
 				damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }],
 			}),
+			t,
 		);
 		expect(attack.tested).toBe(true);
 	});

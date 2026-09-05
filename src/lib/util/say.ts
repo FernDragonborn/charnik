@@ -8,10 +8,15 @@
  */
 import type { Translate } from '$lib/i18n';
 
-/** One value inside a said sentence: a literal (an id, a column, a count), another catalog word, or
- *  a list of candidates, which needs the reader's own "or" between them. */
+/** One value inside a said sentence: a literal (an id, a column, a count), another catalog word, a
+ *  list of candidates, which needs the reader's own "or" between them, or a plain `list` of quoted
+ *  items, which needs the reader's own quotation marks but no word between them. */
 export type SaidValue =
-	string | number | { catalog: string; id: string } | { options: readonly string[] };
+	| string
+	| number
+	| { catalog: string; id: string }
+	| { options: readonly string[] }
+	| { list: readonly string[] };
 
 /** Which sentence, and what goes into it. */
 export interface SaidText {
@@ -33,6 +38,7 @@ export type Said = string | SaidText;
  *  module's both reach for them. */
 const OR_KEY = 'contentIssue.or';
 const OPTION_KEY = 'contentIssue.option';
+const LIST_SEPARATOR_KEY = 'contentIssue.listSeparator';
 
 /** A said sentence in the reader's language. Without a translator the KEY comes back, which is what
  *  a node test sees: the copy has exactly one home, and it is not the module that found the fault. */
@@ -49,12 +55,14 @@ export const say = (word: Said, translate?: Translate): string =>
 	typeof word === 'string' ? word : sayText(word, translate);
 
 function sayValue(
-	value: { catalog: string; id: string } | { options: readonly string[] },
+	value:
+		{ catalog: string; id: string } | { options: readonly string[] } | { list: readonly string[] },
 	translate: Translate,
 ): string {
-	return 'options' in value
-		? value.options
-				.map((option) => translate(OPTION_KEY, { values: { option }, default: `“${option}”` }))
-				.join(translate(OR_KEY, { default: ' or ' }))
-		: translate(`${value.catalog}.${value.id}`, { default: value.id });
+	const quoted = (items: readonly string[]) =>
+		items.map((option) => translate(OPTION_KEY, { values: { option }, default: `“${option}”` }));
+	if ('options' in value) return quoted(value.options).join(translate(OR_KEY, { default: ' or ' }));
+	if ('list' in value)
+		return quoted(value.list).join(translate(LIST_SEPARATOR_KEY, { default: ', ' }));
+	return translate(`${value.catalog}.${value.id}`, { default: value.id });
 }

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (61)
+## Duplicate suspects (62)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -58,6 +58,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
+- `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
@@ -712,6 +713,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `function actionRuns` — The roll log as the ACTIONS it recorded: consecutive entries sharing a `group` are one action's * throws, and everyth…
+- `const NOTE_KEY` — The catalog keys a roll's own provenance is recorded under — compared against a named constant * rather than a bare s…
 - `const AMENDMENT_KIND` — What KIND of change was made to a roll after it landed.
 - `type AmendmentKind`
 - `type RollAmendment` — * One change made to a roll after it landed, as FACTS.
@@ -1567,7 +1569,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/util/say.ts`
 
-- `type SaidValue` — One value inside a said sentence: a literal (an id, a column, a count), another catalog word, or * a list of candidat…
+- `type SaidValue` — One value inside a said sentence: a literal (an id, a column, a count), another catalog word, a * list of candidates,…
 - `interface SaidText` — Which sentence, and what goes into it.
 - `type Said` — A word that may be the app's own vocabulary or the row's own text.
 - `function sayText` — A said sentence in the reader's language.
@@ -1583,4 +1585,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 941 exports across 128 modules · 61 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 942 exports across 128 modules · 62 duplicate suspects._

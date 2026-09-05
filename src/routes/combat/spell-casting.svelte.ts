@@ -8,9 +8,10 @@
  */
 import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
-import { sayText } from '$lib/util/say';
+import { sayText, type SaidText } from '$lib/util/say';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool } from '$lib/rules/dice';
+import { NOTE_KEY, type RollName } from '$lib/combat/roll';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
@@ -43,7 +44,40 @@ import { evalUpcast, combinePools } from '$lib/effects/upcast';
 /** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
  *  `damage:cold:…` routes to the cold part), a provenance label suffix ("(slot 5 · +2d6)"), and — when
  *  the cast actually adds dice — a fuller roll-log `note` ("8d6 base + 2d6 @ slot 5", item 4). */
-type UpcastCast = { deltas: DamagePart[]; suffix: string; note?: string };
+/** What a non-attack cast produces. A named member because it selects the roll's NAME, and a bare
+ *  string would let a typo pick a key that does not exist. */
+const SPELL_OUTCOME = { damage: 'damage', healing: 'healing', tempHp: 'tempHp' } as const;
+type SpellOutcomeKind = (typeof SPELL_OUTCOME)[keyof typeof SPELL_OUTCOME];
+
+/** The roll's name: the spell's own word as a value, the phrase around it as a key. Six keys rather
+ *  than a phrase with the slot appended, because "(slot 5)" tacked onto a translated sentence is not
+ *  a part a translator can move. */
+const spellRollName = (
+	name: string,
+	kind: SpellOutcomeKind,
+	slot: number | undefined,
+): RollName => {
+	const key = `combat.log.spell.${kind}${slot === undefined ? '' : 'Slot'}`;
+	return {
+		text: t(key, slot === undefined ? { name } : { name, slot }),
+		key,
+		values: slot === undefined ? { name } : { name, slot },
+	};
+};
+
+/** The provenance as one line, for the tray's editable note pill. Empty when there is none. */
+const saidNote = (parts: SaidText[]): string =>
+	parts.map((part) => sayText(part, translator())).join(' · ');
+
+type UpcastCast = {
+	deltas: DamagePart[];
+	/** The slot it was cast from, when that is ABOVE the spell's own level. Absent at the base slot,
+	 *  which is what decides whether the roll's name carries a "(slot N)" at all. */
+	upcastSlot?: number;
+	/** The roll's provenance as FACTS — said at the card, never written into `log.jsonl` as English
+	 *  (`internals/roller.md` ▸ Conventions). */
+	noteParts: SaidText[];
+};
 
 /** The outcome of reserving a spell slot: the slot key to spend (`null` = nothing to spend), or
  *  blocked because none remain. Two SHAPES rather than a `'blocked'` string beside the key, so a
@@ -277,11 +311,15 @@ export class SpellCasting {
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
 		const hasDmg = dealsDamage(parts);
-		const label = `${r.name} (spell attack)`;
+		const label = {
+			text: `${r.name} (spell attack)`,
+			key: 'combat.log.spellAttack',
+			values: { name: r.name },
+		};
 		if (wantsTray(e)) {
 			this.host.openRoll(
 				{
-					label,
+					label: t(label.key, label.values),
 					test: {
 						dice: { 20: 1 },
 						mod: toHit,
@@ -290,7 +328,9 @@ export class SpellCasting {
 						mods: dieModsOf(fx),
 					},
 					...(hasDmg ? { damage: parts } : {}),
-					...(up.note ? { note: up.note } : {}),
+					// the tray's note is an editable PILL — the moment provenance lands there it is the
+					// player's own text, so it is said once here rather than carried as facts
+					...(saidNote(up.noteParts) ? { note: saidNote(up.noteParts) } : {}),
 					...(times > 1 ? { times } : {}),
 				},
 				e,
@@ -305,7 +345,7 @@ export class SpellCasting {
 					r: rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
 					...(hasDmg ? { damage: rollDamageParts(parts) } : {}),
 				}),
-				up.note,
+				up.noteParts,
 			);
 		}
 	}
@@ -321,7 +361,7 @@ export class SpellCasting {
 		caster: SpellcastingClass | undefined,
 		up: UpcastCast,
 		slotLevel: number,
-	): { parts: DamagePartSpec[]; kind: string } {
+	): { parts: DamagePartSpec[]; kind: SpellOutcomeKind } {
 		const heal = r.resolution === 'auto';
 		const temp = r.resolution === 'temp';
 		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
@@ -333,7 +373,7 @@ export class SpellCasting {
 		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
 		return {
 			parts: this.spellDamageParts(r, primaryFx, deltas),
-			kind: temp ? 'temp HP' : heal ? 'healing' : 'damage',
+			kind: temp ? SPELL_OUTCOME.tempHp : heal ? SPELL_OUTCOME.healing : SPELL_OUTCOME.damage,
 		};
 	}
 
@@ -350,21 +390,28 @@ export class SpellCasting {
 		// a damage string the parse could not fully read is a CONTENT defect, and it rides the same
 		// provenance line rather than waiting to be noticed as a total that came out short
 		const unread = r.damageParts.flatMap((p) => p.issues ?? []);
-		const note =
-			[
-				deltas.length && r.damageParts.length
-					? `${formatDamageParts(r.damageParts)} base + ${formatDamageParts(deltas)} @ slot ${slotLevel}`
-					: '',
-				unread.length
-					? `damage not fully read — ${unread.map((u) => `“${u}”`).join(', ')} ignored`
-					: '',
-			]
-				.filter(Boolean)
-				.join(' · ') || undefined;
+		const noteParts: SaidText[] = [
+			...(deltas.length && r.damageParts.length
+				? [
+						{
+							key: NOTE_KEY.upcast,
+							values: {
+								base: formatDamageParts(r.damageParts),
+								added: formatDamageParts(deltas),
+								slot: slotLevel,
+							},
+						},
+					]
+				: []),
+			...(preview ? [{ key: NOTE_KEY.upcastPreview, values: { preview } }] : []),
+			...(unread.length
+				? [{ key: NOTE_KEY.damageUnread, values: { fragments: { list: unread } } }]
+				: []),
+		];
 		const up: UpcastCast = {
 			deltas,
-			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : '',
-			...(note ? { note } : {}),
+			...(slotLevel > r.level ? { upcastSlot: slotLevel } : {}),
+			noteParts,
 		};
 		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, { up, times: this.volleyOf(r, slotLevel) });
@@ -372,7 +419,7 @@ export class SpellCasting {
 		}
 		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
 		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
-			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, up.note);
+			this.rollDamageEntry(spellRollName(r.name, kind, up.upcastSlot), parts, e, up.noteParts);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total. The spell's own
 			// name is DATA and rides as a value; whether it was a ritual picks the whole phrase, because
@@ -391,26 +438,33 @@ export class SpellCasting {
 	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). A tray
 	 *  intent (`wantsTray(e)` — Shift-click) opens the prefilled tray instead of rolling instantly
 	 *  (queuing the rest as its follow-up). */
-	private rollDamageEntry(label: string, parts: DamagePartSpec[], e: Event, note?: string): void {
+	private rollDamageEntry(
+		name: RollName,
+		parts: DamagePartSpec[],
+		e: Event,
+		noteParts: SaidText[],
+	): void {
 		const [primary, ...rest] = parts;
 		if (!primary) return;
+		const label = name.text;
 		if (wantsTray(e)) {
 			// EVERY part is damage — there is no d20 here. The tray used to put the primary part on the
 			// pool it built the to-hit from, which under the roller's line model would give a Fireball an
 			// advantage toggle and a to-hit total.
+			const note = saidNote(noteParts);
 			this.host.tray.prefill({ label, damage: parts, ...(note ? { note } : {}) });
 			this.host.openMenu('dice', e);
 		} else {
 			this.host.tray.pushRoll(
-				// a spell's name is DATA — a content row's own word, never a UI catalog key
-				{ text: label },
+				// a spell's NAME is DATA — a content row's own word; the phrase around it is a key
+				name,
 				rollPool(primary.dice, {
 					...(primary.mods ?? {}),
 					mod: primary.mod,
 					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
 				}),
 				rest.length ? rollDamageParts(rest) : undefined,
-				note,
+				noteParts,
 			);
 		}
 	}
@@ -449,15 +503,25 @@ export class SpellCasting {
 			if ('error' in res) continue;
 			if (res.kind === 'damage' || res.kind === 'heal') {
 				if (Object.keys(res.pool).length === 0 && res.flat === 0) continue;
+				// dice are notation, not words — the same "+2d6" in every language
 				bits.push(
 					`+${formatDamageParts([{ pool: res.pool, mod: res.flat, type: res.type ?? '' }])}`,
 				);
-			} else if (res.kind === 'count') bits.push(`${res.flat}×`);
-			else if (res.kind === 'area') bits.push(`area ${res.flat} ft (${metres(res.flat)})`);
-			else if (res.kind === 'hp_max' && res.flat) bits.push(`+${res.flat} HP max`);
-			else if (res.kind === 'temp_hp' && res.flat) bits.push(`+${res.flat} temp HP`);
-			else if (res.kind === 'enhancement' && res.flat) bits.push(`+${res.flat} attack & damage`);
-			else if (res.kind === 'duration') bits.push(res.isInfinite ? 'permanent' : `${res.flat} rds`);
+			} else if (res.kind === 'count') bits.push(t('combat.upcast.count', { n: res.flat }));
+			else if (res.kind === 'area')
+				bits.push(t('combat.upcast.area', { feet: res.flat, metres: metres(res.flat) }));
+			else if (res.kind === 'hp_max' && res.flat)
+				bits.push(t('combat.upcast.hpMax', { n: res.flat }));
+			else if (res.kind === 'temp_hp' && res.flat)
+				bits.push(t('combat.upcast.tempHp', { n: res.flat }));
+			else if (res.kind === 'enhancement' && res.flat)
+				bits.push(t('combat.upcast.enhancement', { n: res.flat }));
+			else if (res.kind === 'duration')
+				bits.push(
+					res.isInfinite
+						? t('combat.upcast.permanent')
+						: t('combat.upcast.rounds', { n: res.flat }),
+				);
 		}
 		return bits.join(' · ');
 	};

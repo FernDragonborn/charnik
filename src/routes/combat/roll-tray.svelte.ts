@@ -20,6 +20,7 @@ import {
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import { DiceTray } from '$lib/dice/dice-tray.svelte';
+import type { SaidText } from '$lib/util/say';
 import {
 	amendedAdvantage,
 	withoutLegacyAmendment,
@@ -86,7 +87,7 @@ const entryOf = ({
 	r,
 	at,
 	damage,
-	note,
+	noteParts,
 }: {
 	label: string;
 	labelKey?: string;
@@ -94,14 +95,14 @@ const entryOf = ({
 	r: Rolled;
 	at: number;
 	damage?: TypedRoll[];
-	note?: string;
+	noteParts?: SaidText[];
 }): RollLogEntry => ({
 	label,
 	...(labelKey ? { labelKey } : {}),
 	...(labelValues ? { labelValues } : {}),
 	...r,
 	...(damage ? { damage } : {}),
-	...(note ? { note } : {}),
+	...(noteParts?.length ? { noteParts } : {}),
 	at,
 });
 
@@ -186,7 +187,12 @@ export class RollTray {
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
-	pushRoll = (name: RollName, r: Rolled, damage?: TypedRoll[], note?: string): RollLogEntry => {
+	pushRoll = (
+		name: RollName,
+		r: Rolled,
+		damage?: TypedRoll[],
+		noteParts?: SaidText[],
+	): RollLogEntry => {
 		const { text: label, key: labelKey, values: labelValues } = name;
 		// spread rather than passed straight through: `damage: undefined` is not the same as "no damage"
 		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
@@ -197,7 +203,7 @@ export class RollTray {
 			...(labelKey ? { labelKey } : {}),
 			...(labelValues ? { labelValues } : {}),
 			...(damage ? { damage } : {}),
-			...(note ? { note } : {}),
+			...(noteParts ? { noteParts } : {}),
 		});
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
@@ -213,11 +219,12 @@ export class RollTray {
 	 *  per instance because each is its own throw; the tray's `roll()` builds its volley the same way,
 	 *  which is why an instant cast and one sent through the tray come out identical. */
 	pushVolley = (
-		label: string,
+		name: RollName,
 		times: number,
 		roll: () => { r: Rolled; damage?: TypedRoll[] },
-		note?: string,
+		noteParts?: SaidText[],
 	): void => {
+		const { text: label, key: labelKey, values: labelValues } = name;
 		const at = Date.now();
 		this.recordRolls(
 			// `at + i` so an amendment rewrites ITS beam, not a sibling that shared the millisecond
@@ -225,10 +232,12 @@ export class RollTray {
 				const { r, damage } = roll();
 				return entryOf({
 					label,
+					...(labelKey ? { labelKey } : {}),
+					...(labelValues ? { labelValues } : {}),
 					r,
 					at: at + i,
 					...(damage ? { damage } : {}),
-					...(note ? { note } : {}),
+					...(noteParts ? { noteParts } : {}),
 				});
 			}),
 		);

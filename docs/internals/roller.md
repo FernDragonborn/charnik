@@ -195,9 +195,13 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   legacy reader is the seam for that, not a migration. The persisted entry and the in-session entry
   are the SAME shape (`logLineFor` is the one builder an append and a revision share), and an
   amendment REWRITES its own line rather than appending a second record of one roll.
-- **An amendment is FACTS, never a sentence.** `amendments: RollAmendment[]` says what was changed —
-  advantage re-read after the roll, a damage part rerolled — and `describeAmendments` is the one
-  place that turns them into words. Prose composed into `note` had to be matched back out with a
+- **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
+  SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled
+  nothing; `amendments: RollAmendment[]` says what was changed after the roll — advantage re-read, a
+  damage part rerolled. `rollToastModel` and `describeAmendments` are the two places that turn them
+  into words, both taking the translator. `note` is the PLAYER's own words from a `note` pill, which
+  are data and pass through; a row written before 2026-09-05 also carries the app's prose there, and
+  that still renders — it is the legacy seam, and nothing writes it any more. Prose composed into `note` had to be matched back out with a
   regex, which ate an upcast's provenance once and grew the note a lap; prose already written into
   `log.jsonl` also cannot be localised afterwards, which is why this precedes the i18n sweep. Only
   what cannot be derived is stored: an advantage amendment carries the two MODES, never the dice,

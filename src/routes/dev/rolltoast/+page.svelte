@@ -4,6 +4,7 @@
 	// three) is rendered here from fixed rolls as a static ladder, plus buttons that fire the real
 	// thing through toastRoll. Not linked from the app; gated to dev builds by /dev/+layout.
 	import RollToast from '$lib/components/RollToast.svelte';
+	import { _ } from '$lib/i18n';
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel, toastRoll, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import { cycleAdvantage } from '$lib/rules/dice';
@@ -197,7 +198,7 @@
 			it.
 		</div>
 		<div class="slot live">
-			<RollRow model={rollToastModel(live)} {onAdvantage} {rerollDamage} />
+			<RollRow model={rollToastModel(live, $_)} {onAdvantage} {rerollDamage} />
 		</div>
 	</div>
 
@@ -211,7 +212,7 @@
 		<div class="strips">
 			{#each cases as c, i (i)}
 				<div class="strip">
-					<RollRow model={rollToastModel(c.entry)} layout={ROLL_LAYOUT.strip} />
+					<RollRow model={rollToastModel(c.entry, $_)} layout={ROLL_LAYOUT.strip} />
 				</div>
 			{/each}
 		</div>
@@ -221,7 +222,7 @@
 		{#each cases as c, i (i)}
 			<div class="case">
 				<div class="cap">{c.title}</div>
-				<div class="slot"><RollToast model={rollToastModel(c.entry)} /></div>
+				<div class="slot"><RollToast model={rollToastModel(c.entry, $_)} /></div>
 				<button class="action" onclick={() => toastRoll(c.entry)}>Fire it →</button>
 			</div>
 		{/each}

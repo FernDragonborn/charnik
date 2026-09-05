@@ -5,6 +5,7 @@
 	// this file is the mount and the wiring: give the roller what the sheet knows it can be told by
 	// name, and hand its completed rolls to the log.
 	import Roller from '$lib/components/Roller.svelte';
+	import { _ } from '$lib/i18n';
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
 	import { rollerSources } from '$lib/dice/roller-sources';
@@ -43,7 +44,7 @@
 	<!-- the tray's own result readout: the same RollRow the toast and the log mount, so the roll you
 	     just built reads identically to the roll you re-read later (UBUG-20) -->
 	{#if log[0]}
-		<div class="roll-history"><RollRow model={rollToastModel(log[0])} /></div>
+		<div class="roll-history"><RollRow model={rollToastModel(log[0], $_)} /></div>
 	{/if}
 </div>
 

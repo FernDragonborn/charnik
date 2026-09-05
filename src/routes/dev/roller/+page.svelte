@@ -5,6 +5,7 @@
 	// is a starting state; the roller itself is the same one the dice tray mounts.
 	// Not linked from the app; gated to dev builds by /dev/+layout.
 	import Roller from '$lib/components/Roller.svelte';
+	import { _ } from '$lib/i18n';
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
 	import { DiceTray } from '$lib/dice/dice-tray.svelte';
@@ -138,7 +139,7 @@
 	<Roller {diceTray} onroll={(entries) => (rolled = entries)} />
 
 	{#if rolled}
-		<div class="result"><RollRow model={rollToastModel(rolled)} /></div>
+		<div class="result"><RollRow model={rollToastModel(rolled, $_)} /></div>
 	{/if}
 </div>
 

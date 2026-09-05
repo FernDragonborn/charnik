@@ -5,7 +5,7 @@
  */
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
@@ -14,6 +14,7 @@ import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
+import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
 import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
@@ -46,6 +47,14 @@ async function graphOf(): Promise<ContentGraph> {
 const noModifiers = { shiftKey: false } as unknown as Event;
 /** A Shift-click: what `wantsTray` reads to open the roll tray instead of rolling instantly. */
 const wantsTray = { shiftKey: true } as unknown as Event;
+
+// the cast layer composes its roll NAMES and its upcast preview through the catalog, so a node test
+// with no locale would see keys instead of the composition it is asserting on
+beforeAll(async () => {
+	await startI18n('en');
+	void locale.set('en');
+	await waitLocale();
+});
 
 describe('CombatVM · concentration (CVM-bug1)', () => {
 	let graph: ContentGraph;
@@ -373,6 +382,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('False Life: temp HP rolls its dice + upcast delta, NO spellcasting mod (item 3)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers); // base slot 1
 		expect(combat.tray.log[0]?.label).toContain('temp HP');
+		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.spell.tempHp');
 		expect(combat.tray.log[0]?.expr).toContain('+4'); // 1d4 + 4 base, int mod NOT added
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +5 delta
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers);
@@ -397,12 +407,17 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('an upcast damage roll records a base+delta provenance note; a base-slot cast records none (item 4)', () => {
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +1d8 delta
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.note).toBe('3d8 fire base + 1d8 @ slot 2'); // untyped delta merges into the fire pool
+		// FACTS, not a sentence: the record keeps what was added and out of which slot (untyped delta
+		// merges into the fire pool), and `rollToastModel` is the one place that turns it into words
+		expect(combat.tray.log[0]?.noteParts?.[0]).toEqual({
+			key: 'roller.note.upcast',
+			values: { base: '3d8 fire', added: '1d8', slot: 2 },
+		});
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers); // still a level-2 slot → +1d8
-		expect(combat.tray.log[0]?.note).toContain('@ slot 2');
+		expect(combat.tray.log[0]?.noteParts?.[0]?.values?.slot).toBe(2);
 		character.play.spellSlotsSpent = {}; // a base-slot cast has no upcast → no provenance note
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.note).toBeUndefined();
+		expect(combat.tray.log[0]?.noteParts).toBeUndefined();
 	});
 
 	it('castPreview: a damage upcast shows the extra dice at a slot, nothing at base (items 1/8)', () => {
@@ -427,8 +442,14 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('the upcast roll label names the slot AND what it added (B8 provenance, item 4)', () => {
 		character.play.spellSlotsSpent = { '1': 4, '2': 3 }; // spill to slot 3
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.label).toContain('slot 3');
-		expect(combat.tray.log[0]?.label).toContain('+2d8'); // the delta is named, not just the slot
+		// the slot rides the NAME (it survives the strip layout, where the note is hidden); what the
+		// slot ADDED rides the note beside it
+		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.spell.damageSlot');
+		expect(combat.tray.log[0]?.labelValues?.slot).toBe(3);
+		expect(combat.tray.log[0]?.noteParts?.[1]).toEqual({
+			key: 'roller.note.upcastPreview',
+			values: { preview: '+2d8' },
+		});
 	});
 
 	it('the picker casts at the chosen slot via castAtSlot (item 1)', () => {
@@ -1703,9 +1724,9 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}` }));
 		expect(combat.tray.log.length - before).toBe(1);
-		// unnumbered when there is only one. The label is the catalog KEY here: node has no catalog
-		// loaded, and the point of the assertion is the numbering, not the word.
-		expect(combat.tray.log[0]?.label).toBe('combat.attacks.unarmedStrike');
+		// unnumbered when there is only one — the numbering is the fact under test, so it is asserted
+		// as the ABSENCE of an "i/N" rather than on the strike's word
+		expect(combat.tray.log[0]?.label).not.toMatch(/\d+\/\d+/);
 
 		character.play.turn.bonus = 0; // fresh turn for the second activation
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}:500` }));

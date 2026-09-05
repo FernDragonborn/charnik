@@ -41,7 +41,7 @@
 	<div class="last-roll" class:empty={!last}>
 		{#if last}
 			<RollRow
-				model={rollToastModel(last)}
+				model={rollToastModel(last, $_)}
 				onAdvantage={() => combat.tray.amendAdvantage(last)}
 				{rerollDamage}
 				layout={ROLL_LAYOUT.strip}

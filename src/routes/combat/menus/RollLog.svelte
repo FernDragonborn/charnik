@@ -34,7 +34,7 @@
 			     (combat.savageLabel), never hardcoded — instead of the bar that used to sit under the row,
 			     which could not say WHICH damage it meant once a roll has several parts. -->
 				<RollRow
-					model={rollToastModel(l)}
+					model={rollToastModel(l, $_)}
 					onAdvantage={() => combat.tray.amendAdvantage(l)}
 					rerollDamage={combat.savageLabel && l === combat.savagePendingEntry
 						? {

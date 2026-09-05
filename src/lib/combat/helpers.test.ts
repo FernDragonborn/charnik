@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	AMENDMENT_KIND,
+	NOTE_KEY,
 	actionRuns,
 	amendedAdvantage,
 	rollFormulaEntry,
@@ -811,14 +812,16 @@ describe('standardActions — edition-aware terms (D5)', () => {
 describe('rollFormulaEntry (a CONTENT formula, and what it could not read)', () => {
 	const rng = () => 0.5;
 
-	it('rolls the part it understood and SAYS what it ignored', () => {
+	it('rolls the part it understood and RECORDS what it ignored, as facts', () => {
 		const entry = rollFormulaEntry('HP rolled', '2d6 ++ 3', rng);
-		expect(entry.note).toContain('“+”');
+		expect(entry.noteParts).toEqual([
+			{ key: NOTE_KEY.formulaUnread, values: { fragments: { list: ['+'] } } },
+		]);
 		expect(entry.total).toBe(2 * 4 + 3);
 	});
 
 	it('leaves a clean formula noteless', () => {
-		expect(rollFormulaEntry('HP rolled', '2d6 + 3', rng)).not.toHaveProperty('note');
+		expect(rollFormulaEntry('HP rolled', '2d6 + 3', rng)).not.toHaveProperty('noteParts');
 	});
 });
 
@@ -863,6 +866,10 @@ describe('actionRuns — the log as the actions it recorded', () => {
 });
 
 describe('amendments are facts, and exactly one place turns them into words', () => {
+	/** A catalog that answers every key with it: what is asserted is WHICH sentence a fact asks for
+	 *  and what goes into it, never the English, which is copy and will be rewritten. */
+	const t = (key: string, o?: { values?: Record<string, string | number> }) =>
+		`«${key.split('.').pop()}${o?.values ? `:${Object.values(o.values).join(',')}` : ''}»`;
 	const d20 = (value: number): RolledDie => ({
 		sides: 20,
 		value,
@@ -943,23 +950,29 @@ describe('amendments are facts, and exactly one place turns them into words', ()
 	it('reads the dice off the ROLL when it puts an amendment into words', () => {
 		const revised = roll(ADVANTAGE_MODE.advantage);
 		expect(
-			describeAmendments(revised, amendedAdvantage(entry(ADVANTAGE_MODE.neither), revised)),
-		).toEqual(['advantage after the roll (kept 19 over 7)']);
+			describeAmendments(revised, amendedAdvantage(entry(ADVANTAGE_MODE.neither), revised), t),
+		).toEqual(['«advantage:advantage,19,7»']);
 		expect(
-			describeAmendments(revised, [
-				{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker', from: 4, to: 9 },
-			]),
-		).toEqual(['Savage Attacker: kept 9 (other roll 4)']);
+			describeAmendments(
+				revised,
+				[{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker', from: 4, to: 9 }],
+				t,
+			),
+		).toEqual(['«damageReroll:Savage Attacker,9,4»']);
 	});
 
-	it('composes the card note from the roll own note AND its amendments, in that order', () => {
-		const model = rollToastModel({
-			...roll(ADVANTAGE_MODE.advantage),
-			label: 'Fire Bolt',
-			note: '8d6 base + 1d6 @ slot 4',
-			amendments: amendedAdvantage(entry(ADVANTAGE_MODE.neither), roll(ADVANTAGE_MODE.advantage)),
-		});
-		expect(model.note).toBe('8d6 base + 1d6 @ slot 4 · advantage after the roll (kept 19 over 7)');
+	it('composes the card note from the player’s own words, then the app’s provenance, then the amendments', () => {
+		const model = rollToastModel(
+			{
+				...roll(ADVANTAGE_MODE.advantage),
+				label: 'Fire Bolt',
+				note: 'for the bridge',
+				noteParts: [{ key: NOTE_KEY.upcast, values: { base: '8d6', added: '1d6', slot: 4 } }],
+				amendments: amendedAdvantage(entry(ADVANTAGE_MODE.neither), roll(ADVANTAGE_MODE.advantage)),
+			},
+			t,
+		);
+		expect(model.note).toBe('for the bridge · «upcast:8d6,1d6,4» · «advantage:advantage,19,7»');
 	});
 
 	it('strips a prose amendment written before amendments were structured, and nothing else', () => {
