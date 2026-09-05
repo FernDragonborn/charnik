@@ -426,6 +426,18 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(combat.castPreview(r, 3)).toContain('+2d8'); // 2 slots up → +2d8
 	});
 
+	it('upcastLadder: one line per slot that adds something, base slot omitted', () => {
+		const r = spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!;
+		// the caller's own lookup, said back as key + values so the assertion reads the FACTS
+		const say = (key: string, o?: { values?: Record<string, string | number> }) =>
+			`${key}|${o?.values?.slot}|${o?.values?.preview}`;
+		const lines = combat.upcastLadder(r, say).split('\n');
+		expect(lines[0]).toBe('roller.note.upcastPreview|2|+1d8'); // slot 1 adds nothing → not a rung
+		expect(lines.at(-1)).toBe(
+			`roller.note.upcastPreview|${combat.castableSlots(r).at(-1)}|+${(combat.castableSlots(r).at(-1) ?? 0) - 1}d8`,
+		);
+	});
+
 	it('castPreview: a count spell shows its scaled total (Scorching Ray-style, item 8)', () => {
 		const r = spellRow(graph, `spell:${S}:scorch`, 'on')!;
 		expect(combat.castPreview(r, 2)).toContain('3'); // count:slot+1 at slot 2 = 3

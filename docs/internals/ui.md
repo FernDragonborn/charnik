@@ -109,6 +109,9 @@ good", so they are pinned here and every component follows them.
    implementation, and **`title` is not it** — no browser shows a native tooltip on keyboard focus,
    so half the rule was unreachable. **The VALUE is the trigger**: the action makes it focusable and
    describes it, rather than adding an affordance to two dozen unrelated layouts to say one thing.
+   The same action carries any other hover-and-focus explanation, so there is one popover on the
+   sheet rather than two lookalikes — the upcast ⇡ hands it the whole slot ladder, which is why the
+   popover renders one line per newline (`white-space: pre-line`).
 4. **Any value is click-to-edit** — a manual override is available at any time, independent of
    whether auto-calculation is on.
 5. **Lists are keyboard-navigable**: ↑/↓ move a highlight, **Enter is identical to a left click**,

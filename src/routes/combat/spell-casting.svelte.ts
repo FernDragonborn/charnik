@@ -7,7 +7,7 @@
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
 import { toast } from 'svelte-sonner';
-import { t, translator } from '$lib/i18n';
+import { t, translator, type Translate } from '$lib/i18n';
 import { sayText, type SaidText } from '$lib/util/say';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool } from '$lib/rules/dice';
@@ -478,6 +478,16 @@ export class SpellCasting {
 	 *  or a non-scaling spell. The wording is `upcastPreview`'s; this only decides WHAT to preview. */
 	castPreview = (r: SpellRow, slotLevel: number): string =>
 		upcastPreview(this.evalUpcastAt(r, slotLevel));
+
+	/** The whole ladder — every castable slot that adds something, one line each — so a player reads
+	 *  what upcasting buys BEFORE opening the picker. `translate` is the caller's own lookup, which is
+	 *  also what makes the tooltip follow a locale switch. Empty when no slot adds anything. */
+	upcastLadder = (r: SpellRow, translate: Translate): string =>
+		this.castableSlots(r)
+			.map((slot) => ({ slot, preview: this.castPreview(r, slot) }))
+			.filter(({ preview }) => preview)
+			.map(({ slot, preview }) => translate(NOTE_KEY.upcastPreview, { values: { slot, preview } }))
+			.join('\n');
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.

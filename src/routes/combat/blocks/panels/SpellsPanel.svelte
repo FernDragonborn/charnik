@@ -152,12 +152,21 @@
 										name={r.castTimeIcon === 'react' ? 'corner-down-left' : 'zap'}
 										size={12}
 									/></i
-								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><!-- svelte-ignore a11y_click_events_have_key_events --><span
+								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><span
 									class="upcast-btn"
 									role="button"
-									tabindex="-1"
-									title={$_('combat.spells.castUpcast')}
+									tabindex="0"
+									aria-label={$_('combat.spells.castUpcast')}
+									use:provenance={[$_('combat.spells.castUpcast'), combat.upcastLadder(r, $_)]
+										.filter(Boolean)
+										.join('\n')}
 									onclick={(e) => {
+										e.stopPropagation();
+										combat.openUpcast(r, e);
+									}}
+									onkeydown={(e) => {
+										if (e.code !== 'Enter' && e.code !== 'Space') return;
+										e.preventDefault();
 										e.stopPropagation();
 										combat.openUpcast(r, e);
 									}}><Icon name="arrow-up" size={12} /></span

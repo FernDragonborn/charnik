@@ -322,9 +322,6 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
     `duration`; anything else stays the raw field.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
-  - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
-    slot. v1 ships the picker + an on-select `castPreview` only; a hover tooltip over the whole ladder is
-    the nicety left.
 - [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is
   `docs/internals/characters.md` ▸ Concentration is a REF, not a clock. The CON save on damage is a
   toast REMINDER, never an auto-drop. Duration canon is rounds.

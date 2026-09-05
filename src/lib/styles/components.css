@@ -702,6 +702,9 @@ svg.lucide {
 	box-shadow: var(--shadow-2);
 	font-size: var(--font-size-xs);
 	line-height: 1.45;
+	/* a breakdown is one line; a LADDER (the upcast preview per slot) is one line per rung, and
+	   nothing else in the string relies on runs of whitespace */
+	white-space: pre-line;
 	/* it explains the thing under the pointer; taking the pointer would make it fight its own value */
 	pointer-events: none;
 }
