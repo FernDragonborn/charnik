@@ -11,6 +11,7 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
+	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);
@@ -50,7 +51,7 @@
 			<div class="tile-key">{$_('combat.section.armorClass')}</div>
 			<div class="tile-value">{s.ac.value}</div>
 			<div class="tile-text">
-				{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}
+				{s.ac.trace.map((x) => `${sourceText(x, $_)} ${signed(x.amount)}`).join(' ')}
 			</div>
 		</button>
 		<button
@@ -129,18 +130,17 @@
 			<span class="bar-label eyebrow">{$_('combat.section.passiveSenses')}</span>
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="separator-dot">·</span>{/if}
+				<!-- matched on the contribution's KEY, not on the English word it reads as -->
 				{@const advDis = p.comp.trace.find(
-					(t) => t.source === 'Advantage' || t.source === 'Disadvantage',
+					(t) => t.key === SOURCE_KEY.advantage || t.key === SOURCE_KEY.disadvantage,
 				)}
+				{@const isAdv = advDis?.key === SOURCE_KEY.advantage}
 				<span class="ability-save" use:provenance={why(p.comp, $_)}>
 					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
-							class:disadvantage={advDis.source === 'Disadvantage'}
-							title={advDis.source}
-							><Icon
-								name={advDis.source === 'Advantage' ? 'chevron-up' : 'chevron-down'}
-								size={12}
-							/></span
+							class:disadvantage={!isAdv}
+							title={sourceText(advDis, $_)}
+							><Icon name={isAdv ? 'chevron-up' : 'chevron-down'} size={12} /></span
 						>{/if}
 				</span>
 			{:else}

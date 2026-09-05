@@ -344,6 +344,40 @@ describe('why — a rule note reads through the translator the caller passes', (
 	});
 });
 
+describe('why — a contribution the ENGINE wrote reads through the translator too', () => {
+	// the shape `abilityContribution` produces: the English beside the keys, and one values bag
+	const computed = {
+		value: 3,
+		trace: [
+			{
+				source: 'DEX mod',
+				layer: 'ability' as const,
+				op: 'add' as const,
+				amount: 3,
+				note: 'DEX 16',
+				key: 'provenance.source.abilityMod.dex',
+				noteKey: 'provenance.source.abilityScore.dex',
+				params: { score: 16 },
+			},
+			// a magic item's own name is DATA: no key, so it passes through in any language
+			{ source: 'Cloak of Protection', layer: 'item' as const, op: 'add' as const, amount: 1 },
+		],
+	};
+
+	it('says the English with no translator, source and detail alike', () => {
+		expect(why(computed)).toBe('DEX mod +3 (DEX 16), Cloak of Protection +1');
+	});
+
+	it('translates the keyed source and its detail, and leaves the content row alone', () => {
+		const t = (key: string, o?: { values?: Record<string, string | number> }) =>
+			({
+				'provenance.source.abilityMod.dex': 'мод. СПР',
+				'provenance.source.abilityScore.dex': `СПР ${String(o?.values?.score)}`,
+			})[key] ?? key;
+		expect(why(computed, t)).toBe('мод. СПР +3 (СПР 16), Cloak of Protection +1');
+	});
+});
+
 describe('B14 · describeDerivedEffects (content-borne facts for the panel)', () => {
 	it('groups item/feature numeric facts by source and formats from FACT FIELDS (not the token)', () => {
 		const facts = collectFacts([

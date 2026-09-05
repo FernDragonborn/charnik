@@ -4,7 +4,14 @@
  * debuffs / resources, and duration math. Pure. Split out of the old combat/helpers.ts junk-drawer.
  */
 import { ABILITY_IDS } from '$lib/rules/core';
-import { formatNote, type Computed, type Contribution, type Translate } from '$lib/rules/pipeline';
+import {
+	formatNote,
+	sourceNoteText,
+	sourceText,
+	type Computed,
+	type Contribution,
+	type Translate,
+} from '$lib/rules/pipeline';
 import { titleCase, signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
@@ -30,7 +37,10 @@ export function why(c: Computed, translate?: Translate): string {
 	const parts = c.trace
 		// a comparison op says something even at 0; a plain addend of 0 says nothing
 		.filter((t) => t.amount !== 0 || OP_SYMBOL[t.op] !== '')
-		.map((t) => `${t.source} ${opSym(t.op)}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`);
+		.map((t) => {
+			const detail = sourceNoteText(t, translate);
+			return `${sourceText(t, translate)} ${opSym(t.op)}${signed(t.amount)}${detail ? ` (${detail})` : ''}`;
+		});
 	return (
 		(parts.join(', ') || '—') +
 		(c.notes?.length ? ' · ' + c.notes.map((n) => formatNote(n, translate)).join(' · ') : '')

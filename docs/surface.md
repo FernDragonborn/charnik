@@ -1390,6 +1390,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
 - `type Translate` — * svelte-i18n's `$format`, taken as a parameter so the rules core and every pure view helper stay * locale-free — the…
 - `function formatNote`
+- `const sourceText` — A contribution's SOURCE as a person reads it.
+- `const sourceNoteText` — A contribution's extra detail ("DEX 16"), or '' when it carries none.
+- `const SOURCE_KEY` — i18n keys for the labels the ENGINE writes into a trace — the ONE owner, like `NOTE_KEY` for its * rule notes.
 - `const NOTE_KEY` — i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline / * apply / core and the …
 - `interface Computed`
 - `interface Clamp`
@@ -1568,4 +1571,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 77 global classes · 50 components · 928 exports across 127 modules · 62 duplicate suspects._
+_47 tokens · 77 global classes · 50 components · 931 exports across 127 modules · 62 duplicate suspects._

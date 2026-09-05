@@ -10,6 +10,7 @@
 import {
 	computed,
 	NOTE_KEY,
+	SOURCE_KEY,
 	type Computed,
 	type Contribution,
 	type Note,
@@ -48,15 +49,19 @@ const abilityContribution = (ability: Ability, score: number): Contribution => (
 	op: 'add',
 	amount: abilityModifier(score),
 	note: `${ability.toUpperCase()} ${score}`,
+	key: SOURCE_KEY.abilityMod(ability),
+	noteKey: SOURCE_KEY.abilityScore(ability),
+	params: { score },
 });
 
 /** A proficiency-layer contribution (Proficiency / Expertise / Jack of All Trades — the source names
  *  the flavour, the amount is the already-computed bonus). The one shape every prof-granting stat pushes. */
-const profContribution = (source: string, amount: number): Contribution => ({
+const profContribution = (source: string, key: string, amount: number): Contribution => ({
 	source,
 	layer: 'proficiency',
 	op: 'add',
 	amount,
+	key,
 });
 
 /** The flat base-layer contribution a stat starts from (DC base 8, unarmored/armor base 10/…). */
@@ -65,6 +70,7 @@ const baseContribution = (amount: number): Contribution => ({
 	layer: 'base',
 	op: 'add',
 	amount,
+	key: SOURCE_KEY.base,
 });
 
 /** A saving throw: ability mod + proficiency (if proficient in that save). */
@@ -75,7 +81,8 @@ export function savingThrow(args: {
 	proficient: boolean;
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
-	if (args.proficient) c.push(profContribution('Proficiency', proficiencyBonus(args.level)));
+	if (args.proficient)
+		c.push(profContribution('Proficiency', SOURCE_KEY.proficiency, proficiencyBonus(args.level)));
 	return computed(c);
 }
 
@@ -91,18 +98,26 @@ export function skillCheck(args: {
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
 	const prof = proficiencyBonus(args.level);
-	if (args.expertise) c.push(profContribution('Expertise', prof * 2));
-	else if (args.proficient) c.push(profContribution('Proficiency', prof));
+	if (args.expertise) c.push(profContribution('Expertise', SOURCE_KEY.expertise, prof * 2));
+	else if (args.proficient) c.push(profContribution('Proficiency', SOURCE_KEY.proficiency, prof));
 	else if (args.halfProficient)
-		c.push(profContribution('Jack of All Trades', Math.floor(prof / 2)));
+		c.push(
+			profContribution('Jack of All Trades', SOURCE_KEY.jackOfAllTrades, Math.floor(prof / 2)),
+		);
 	return computed(c);
 }
 
 /** Passive score = 10 + the check bonus (no roll). Advantage/disadvantage (±5) are effects. */
 export function passiveScore(check: Computed): Computed {
 	return computed([
-		{ source: 'Passive base', layer: 'base', op: 'add', amount: 10 },
-		{ source: 'Skill bonus', layer: 'ability', op: 'add', amount: check.value },
+		{ source: 'Passive base', layer: 'base', op: 'add', amount: 10, key: SOURCE_KEY.passiveBase },
+		{
+			source: 'Skill bonus',
+			layer: 'ability',
+			op: 'add',
+			amount: check.value,
+			key: SOURCE_KEY.skillBonus,
+		},
 	]);
 }
 
@@ -115,7 +130,7 @@ export function initiative(args: { dexScore: number }): Computed {
 export function spellSaveDC(args: { ability: Ability; score: number; level: number }): Computed {
 	return computed([
 		baseContribution(8),
-		profContribution('Proficiency', proficiencyBonus(args.level)),
+		profContribution('Proficiency', SOURCE_KEY.proficiency, proficiencyBonus(args.level)),
 		abilityContribution(args.ability, args.score),
 	]);
 }
@@ -127,7 +142,7 @@ export function spellAttackBonus(args: {
 	level: number;
 }): Computed {
 	return computed([
-		profContribution('Proficiency', proficiencyBonus(args.level)),
+		profContribution('Proficiency', SOURCE_KEY.proficiency, proficiencyBonus(args.level)),
 		abilityContribution(args.ability, args.score),
 	]);
 }
@@ -155,18 +170,35 @@ export function armoredAC(args: {
 }): Computed {
 	const dexMod = abilityModifier(args.dexScore);
 	const applied = dexModUnderArmor(dexMod, args.dexCap);
+	// the DEX line says which of the three armor cases applied, so a capped or ignored modifier is
+	// read off the trace rather than inferred from a number that is smaller than the sheet's
+	const dexKey =
+		args.dexCap === 0
+			? SOURCE_KEY.dexIgnored
+			: args.dexCap !== null
+				? SOURCE_KEY.dexCapped
+				: SOURCE_KEY.dexUnderArmor;
 	const dexLabel =
 		args.dexCap === 0
 			? 'DEX (heavy: ignored)'
 			: `DEX${args.dexCap !== null ? ` (max ${args.dexCap})` : ''}`;
 	return computed([
-		{ source: 'Armor', layer: 'item', op: 'add', amount: args.armorBaseAc },
+		{
+			source: 'Armor',
+			layer: 'item',
+			op: 'add',
+			amount: args.armorBaseAc,
+			key: SOURCE_KEY.armor,
+		},
 		{
 			source: dexLabel,
 			layer: 'ability',
 			op: 'add',
 			amount: applied,
 			note: `DEX ${args.dexScore}`,
+			key: dexKey,
+			noteKey: SOURCE_KEY.abilityScore('dex'),
+			params: { score: args.dexScore, ...(args.dexCap !== null ? { cap: args.dexCap } : {}) },
 		},
 	]);
 }
@@ -206,7 +238,14 @@ export function maxHpForClass(args: {
 	const c: Contribution[] = [];
 	if (args.includesCharacterLevel1) {
 		// this class holds the character's 1st level → that level is the die MAX, the rest are avg
-		c.push({ source: `${args.hitDie} (level 1)`, layer: 'base', op: 'add', amount: max });
+		c.push({
+			source: `${args.hitDie} (level 1)`,
+			layer: 'base',
+			op: 'add',
+			amount: max,
+			key: SOURCE_KEY.hitDieFirst,
+			params: { die: args.hitDie },
+		});
 		const laterLevels = Math.max(0, args.level - 1);
 		if (laterLevels > 0) {
 			c.push({
@@ -214,6 +253,8 @@ export function maxHpForClass(args: {
 				layer: 'base',
 				op: 'add',
 				amount: avgUp * laterLevels,
+				key: SOURCE_KEY.hitDieAverage,
+				params: { average: avgUp, levels: laterLevels },
 			});
 		}
 	} else if (args.level > 0) {
@@ -223,6 +264,8 @@ export function maxHpForClass(args: {
 			layer: 'base',
 			op: 'add',
 			amount: avgUp * args.level,
+			key: SOURCE_KEY.hitDieAverage,
+			params: { average: avgUp, levels: args.level },
 		});
 	}
 	c.push({
@@ -231,6 +274,9 @@ export function maxHpForClass(args: {
 		op: 'add',
 		amount: conMod * args.level,
 		note: `CON ${args.conScore}`,
+		key: SOURCE_KEY.conPerLevel,
+		noteKey: SOURCE_KEY.abilityScore('con'),
+		params: { levels: args.level, score: args.conScore },
 	});
 	return computed(c, { min: 1 });
 }
@@ -275,6 +321,9 @@ export function carryingCapacity(args: { strScore: number; system: System }): Co
 				op: 'add',
 				amount: args.strScore * 15,
 				note: `STR ${args.strScore}`,
+				key: SOURCE_KEY.carryCapacity,
+				noteKey: SOURCE_KEY.abilityScore('str'),
+				params: { score: args.strScore },
 			},
 		],
 		undefined,

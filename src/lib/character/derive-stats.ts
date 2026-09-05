@@ -18,7 +18,7 @@ import { ABILITIES } from './schema';
 import type { Character } from './schema';
 import { SKILL_ABILITY, type SkillId } from './skills';
 import { applyEffects, matchesTarget, type EffectFacts } from '../effects/apply';
-import { computed, type Computed, type Contribution } from '../rules/pipeline';
+import { computed, SOURCE_KEY, type Computed, type Contribution } from '../rules/pipeline';
 import { rowName, type ContentGraph, type LoadedRow } from '../content/loader';
 import { tagInt, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
@@ -172,7 +172,10 @@ export function deriveAc(
 		acBase = {
 			...acBase,
 			value: acBase.value + 2,
-			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }],
+			trace: [
+				...acBase.trace,
+				{ source: 'Shield', layer: 'item', op: 'add', amount: 2, key: SOURCE_KEY.shield },
+			],
 		};
 	return applyEffects('ac', acBase, facts);
 }
@@ -187,10 +190,12 @@ export function deriveSpeed(
 ): Computed {
 	const speedBase: Contribution[] = [
 		{
+			// a species' own name is DATA and passes through; only the "no species yet" fallback is ours
 			source: speciesRow ? rowName(speciesRow) : 'Default',
 			layer: 'base',
 			op: 'add',
 			amount: baseSpeed,
+			...(speciesRow ? {} : { key: SOURCE_KEY.speciesDefault }),
 		},
 	];
 	const armorStrMin = equippedArmor ? (tagInt(equippedArmor.tags, ITEM_TAG.strMin) ?? 0) : 0;
@@ -201,6 +206,14 @@ export function deriveSpeed(
 			op: 'add',
 			amount: -10,
 			note: `STR ${scores.str} < ${armorStrMin}`,
+			key: SOURCE_KEY.armorTooHeavy,
+			noteKey: SOURCE_KEY.armorStrShort,
+			// the armor's own name is DATA — the catalog holds the frame around it, never the word
+			params: {
+				armor: equippedArmor ? rowName(equippedArmor.row) : 'Armor',
+				required: armorStrMin,
+				score: scores.str,
+			},
 		});
 	return applyEffects('speed', computed(speedBase, { min: 0 }), facts);
 }
@@ -227,6 +240,7 @@ export function derivePassives(
 						layer: 'condition',
 						op: 'add',
 						amount: adv ? 5 : -5,
+						key: adv ? SOURCE_KEY.advantage : SOURCE_KEY.disadvantage,
 					},
 				],
 			};

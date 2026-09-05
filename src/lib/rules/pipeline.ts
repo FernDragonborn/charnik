@@ -35,13 +35,21 @@ export type Layer =
 type Op = 'add' | 'set' | 'mult' | 'floor' | 'cap';
 
 export interface Contribution {
-	/** Human label, e.g. "DEX mod", "Proficiency", "Ring of Protection". */
+	/** Human label, e.g. "DEX mod", "Proficiency", "Ring of Protection". Always the English, so a
+	 *  caller with no translator — a node test, a core path — reads a sentence rather than a key. */
 	source: string;
 	layer: Layer;
 	op: Op;
 	amount: number;
 	/** Optional extra detail for the tooltip, e.g. "DEX 16". */
 	note?: string;
+	/** i18n keys for a contribution the ENGINE wrote, with the values both of them read. A
+	 *  contribution whose source is a content row's own name — a species, a magic item — carries
+	 *  neither: that word is DATA and passes through untranslated. Rendered by `sourceText` /
+	 *  `sourceNoteText`, the same split `formatNote` makes for a rule note. */
+	key?: string;
+	noteKey?: string;
+	params?: Record<string, string | number>;
 }
 
 /**
@@ -75,6 +83,51 @@ export function formatNote(note: Note, translate?: Translate): string {
 	if (!translate || !note.key) return note.text;
 	return translate(note.key, note.params ? { values: note.params } : {});
 }
+
+/** A contribution's SOURCE as a person reads it. */
+export const sourceText = (c: Contribution, translate?: Translate): string =>
+	formatNote(asNote(c.source, c.key, c.params), translate);
+
+/** A contribution's extra detail ("DEX 16"), or '' when it carries none. */
+export const sourceNoteText = (c: Contribution, translate?: Translate): string =>
+	c.note ? formatNote(asNote(c.note, c.noteKey, c.params), translate) : '';
+
+const asNote = (
+	text: string,
+	key: string | undefined,
+	params: Record<string, string | number> | undefined,
+): Note => ({ text, ...(key ? { key } : {}), ...(params ? { params } : {}) });
+
+/** i18n keys for the labels the ENGINE writes into a trace — the ONE owner, like `NOTE_KEY` for its
+ *  rule notes. Per-ability families are flat (`abilityMod.str`), because "мод. СИЛ" is a phrase a
+ *  translator has to see whole rather than an ability substituted into an English frame
+ *  (docs/work/ui.md ▸ ARCH-1). */
+export const SOURCE_KEY = {
+	abilityMod: (ability: string) => `provenance.source.abilityMod.${ability}`,
+	abilityScore: (ability: string) => `provenance.source.abilityScore.${ability}`,
+	base: 'provenance.source.base',
+	baseScore: 'provenance.source.baseScore',
+	abilityBoosts: 'provenance.source.abilityBoosts',
+	proficiency: 'provenance.source.proficiency',
+	expertise: 'provenance.source.expertise',
+	jackOfAllTrades: 'provenance.source.jackOfAllTrades',
+	passiveBase: 'provenance.source.passiveBase',
+	skillBonus: 'provenance.source.skillBonus',
+	armor: 'provenance.source.armor',
+	shield: 'provenance.source.shield',
+	dexUnderArmor: 'provenance.source.dexUnderArmor',
+	dexIgnored: 'provenance.source.dexIgnored',
+	dexCapped: 'provenance.source.dexCapped',
+	hitDieFirst: 'provenance.source.hitDieFirst',
+	hitDieAverage: 'provenance.source.hitDieAverage',
+	conPerLevel: 'provenance.source.conPerLevel',
+	carryCapacity: 'provenance.source.carryCapacity',
+	speciesDefault: 'provenance.source.speciesDefault',
+	armorTooHeavy: 'provenance.source.armorTooHeavy',
+	armorStrShort: 'provenance.source.armorStrShort',
+	advantage: 'provenance.source.advantage',
+	disadvantage: 'provenance.source.disadvantage',
+} as const;
 
 /** i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline /
  *  apply / core and the message catalogs never drift on a bare string (AGENTS.md ▸ Taste (one name per fact)). */

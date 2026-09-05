@@ -23,6 +23,14 @@ pre-build an abstraction nobody needs yet.
 The core returns **a value plus a trace**, never a bare number: each `{source, op, amount}`
 contribution, plus rule notes and blocks. That is what lets the UI explain any stat on hover.
 
+A contribution the ENGINE names ("DEX mod", "Proficiency", "Armor") carries its catalog `key` — and a
+`noteKey` for its detail — beside the English, so the trace reads in the player's language; render it
+through `sourceText` / `sourceNoteText`, and compare a contribution by its key rather than by the
+English word it happens to read as. One a CONTENT row names — a species, a magic item — carries no
+key at all: that word is data, and no UI catalog knows it. Per-ability labels are flat keys
+(`abilityMod.str`), because a phrase a translator has to see whole beats an ability substituted into
+an English frame.
+
 Blocks matter as much as bonuses. "Spellcasting is blocked by worn armor you are not proficient in"
 is a rule-based fact the trace carries, not a silently missing number.
 

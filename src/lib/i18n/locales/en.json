@@ -1078,19 +1078,59 @@
 		"restoreDemo": "Restore demo character"
 	},
 	"provenance": {
+		"advantage": "{source}: advantage on {target}",
 		"alreadyAtLeast": "{source}: already ≥ {amount}",
 		"alreadyAtMost": "{source}: already ≤ {amount}",
-		"overriddenSet": "{source}: set {amount} — overridden by {winner}",
-		"bonusBlocked": "{blocker}: +{amount} to {target} blocked ({source})",
-		"diceBonus": "{source}: {amount} to {target}",
-		"unresolved": "{source}: unresolved \"{token}\" ({error})",
-		"advantage": "{source}: advantage on {target}",
-		"disadvantage": "{source}: disadvantage on {target}",
 		"autoFail": "{source}: auto-fail on {target}",
 		"autoSucceed": "{source}: auto-succeed on {target}",
+		"bonusBlocked": "{blocker}: +{amount} to {target} blocked ({source})",
+		"diceBonus": "{source}: {amount} to {target}",
+		"disadvantage": "{source}: disadvantage on {target}",
 		"encumbered": "Encumbered at {lb} lb (−10 ft)",
 		"heavilyEncumbered": "Heavily encumbered at {lb} lb (−20 ft)",
-		"overCapacity": "Over capacity → speed 5 ft"
+		"overCapacity": "Over capacity → speed 5 ft",
+		"overriddenSet": "{source}: set {amount} — overridden by {winner}",
+		"source": {
+			"abilityBoosts": "Ability boosts",
+			"abilityMod": {
+				"str": "STR mod",
+				"dex": "DEX mod",
+				"con": "CON mod",
+				"int": "INT mod",
+				"wis": "WIS mod",
+				"cha": "CHA mod"
+			},
+			"abilityScore": {
+				"str": "STR {score}",
+				"dex": "DEX {score}",
+				"con": "CON {score}",
+				"int": "INT {score}",
+				"wis": "WIS {score}",
+				"cha": "CHA {score}"
+			},
+			"advantage": "Advantage",
+			"armor": "Armor",
+			"armorStrShort": "STR {score} < {required}",
+			"armorTooHeavy": "{armor} (STR {required})",
+			"base": "Base",
+			"baseScore": "Base score",
+			"carryCapacity": "STR × 15",
+			"conPerLevel": "CON × {levels}",
+			"dexCapped": "DEX (max {cap})",
+			"dexIgnored": "DEX (heavy: ignored)",
+			"dexUnderArmor": "DEX",
+			"disadvantage": "Disadvantage",
+			"expertise": "Expertise",
+			"hitDieAverage": "avg {average} × {levels}",
+			"hitDieFirst": "{die} (level 1)",
+			"jackOfAllTrades": "Jack of All Trades",
+			"passiveBase": "Passive base",
+			"proficiency": "Proficiency",
+			"shield": "Shield",
+			"skillBonus": "Skill bonus",
+			"speciesDefault": "Default"
+		},
+		"unresolved": "{source}: unresolved \"{token}\" ({error})"
 	},
 	"refresh": {
 		"title": "Refresh data (re-read from disk)"

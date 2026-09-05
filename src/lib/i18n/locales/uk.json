@@ -1078,19 +1078,59 @@
 		"restoreDemo": "Відновити демо-персонажа"
 	},
 	"provenance": {
+		"advantage": "{source}: перевага на {target}",
 		"alreadyAtLeast": "{source}: вже ≥ {amount}",
 		"alreadyAtMost": "{source}: вже ≤ {amount}",
-		"overriddenSet": "{source}: встановлено {amount} — перекрито значенням {winner}",
-		"bonusBlocked": "{blocker}: +{amount} до {target} заблоковано ({source})",
-		"diceBonus": "{source}: {amount} до {target}",
-		"unresolved": "{source}: не вдалося обчислити \"{token}\" ({error})",
-		"advantage": "{source}: перевага на {target}",
-		"disadvantage": "{source}: перешкода на {target}",
 		"autoFail": "{source}: автопровал на {target}",
 		"autoSucceed": "{source}: автоуспіх на {target}",
+		"bonusBlocked": "{blocker}: +{amount} до {target} заблоковано ({source})",
+		"diceBonus": "{source}: {amount} до {target}",
+		"disadvantage": "{source}: перешкода на {target}",
 		"encumbered": "Обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−10 фт)",
 		"heavilyEncumbered": "Сильне обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−20 фт)",
-		"overCapacity": "Понад ліміт → швидкість 5 фт"
+		"overCapacity": "Понад ліміт → швидкість 5 фт",
+		"overriddenSet": "{source}: встановлено {amount} — перекрито значенням {winner}",
+		"source": {
+			"abilityBoosts": "Приріст характеристик",
+			"abilityMod": {
+				"str": "мод. СИЛ",
+				"dex": "мод. СПР",
+				"con": "мод. СТА",
+				"int": "мод. ІНТ",
+				"wis": "мод. МУД",
+				"cha": "мод. ХАР"
+			},
+			"abilityScore": {
+				"str": "СИЛ {score}",
+				"dex": "СПР {score}",
+				"con": "СТА {score}",
+				"int": "ІНТ {score}",
+				"wis": "МУД {score}",
+				"cha": "ХАР {score}"
+			},
+			"advantage": "Перевага",
+			"armor": "Обладунок",
+			"armorStrShort": "СИЛ {score} < {required}",
+			"armorTooHeavy": "{armor} (СИЛ {required})",
+			"base": "База",
+			"baseScore": "Базове значення",
+			"carryCapacity": "СИЛ × 15",
+			"conPerLevel": "СТА × {levels}",
+			"dexCapped": "СПР (максимум {cap})",
+			"dexIgnored": "СПР (важкий: не враховано)",
+			"dexUnderArmor": "СПР",
+			"disadvantage": "Перешкода",
+			"expertise": "Компетентність",
+			"hitDieAverage": "сер. {average} × {levels}",
+			"hitDieFirst": "{die} (1-й рівень)",
+			"jackOfAllTrades": "Майстер на всі руки",
+			"passiveBase": "Пасивна база",
+			"proficiency": "Володіння",
+			"shield": "Щит",
+			"skillBonus": "Бонус навички",
+			"speciesDefault": "Типово"
+		},
+		"unresolved": "{source}: не вдалося обчислити \"{token}\" ({error})"
 	},
 	"refresh": {
 		"title": "Оновити дані (перечитати з диска)"

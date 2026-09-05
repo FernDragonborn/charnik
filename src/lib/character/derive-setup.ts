@@ -10,16 +10,29 @@ import { recordOf } from '../util/records';
 import type { ContentGraph } from '../content/loader';
 import { ABILITIES, type Character } from './schema';
 import { DIE_MAX, type Ability } from '../rules/core';
-import type { Contribution } from '../rules/pipeline';
+import { SOURCE_KEY, type Contribution } from '../rules/pipeline';
 
 /** A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions. */
 export function seedAbilityBase(build: Character['build']): Record<Ability, Contribution[]> {
 	return recordOf(ABILITIES, (ab) => {
 		const contribs: Contribution[] = [
-			{ source: 'Base score', layer: 'base', op: 'add', amount: build.abilities[ab] },
+			{
+				source: 'Base score',
+				layer: 'base',
+				op: 'add',
+				amount: build.abilities[ab],
+				key: SOURCE_KEY.baseScore,
+			},
 		];
 		const boost = build.abilityBoosts?.[ab] ?? 0;
-		if (boost) contribs.push({ source: 'Ability boosts', layer: 'base', op: 'add', amount: boost });
+		if (boost)
+			contribs.push({
+				source: 'Ability boosts',
+				layer: 'base',
+				op: 'add',
+				amount: boost,
+				key: SOURCE_KEY.abilityBoosts,
+			});
 		return contribs;
 	});
 }
