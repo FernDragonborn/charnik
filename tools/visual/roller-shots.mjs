@@ -1,5 +1,5 @@
 /*
- * One-off: photograph the roller organ's preview states so the design can be LOOKED at rather than
+ * One-off: photograph the dice tray's preview states so the design can be LOOKED at rather than
  * reasoned about. Not part of the regression harness (shot.mjs owns that) — this walks the /dev/roller
  * preset list and drops a PNG per case into design-preview/.
  *

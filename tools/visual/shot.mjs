@@ -185,7 +185,7 @@ const ROUTES = [
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share
 	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] },
-	// the roller organ's own gallery. Two states, because the second is the one no static markup can
+	// the dice tray's own gallery. Two states, because the second is the one no static markup can
 	// show: the suggestion menu open under a half-typed token, which is where most of the design is.
 	{
 		path: '/dev/roller',

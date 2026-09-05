@@ -1,11 +1,11 @@
 /*
- * The roller ORGAN's live state: the lines, where the caret is, what is half-typed, which suggestion
+ * The dice tray's live state: the lines, where the caret is, what is half-typed, which suggestion
  * is selected, and what pressing Roll does. The UI (`Roller.svelte`) binds to this and holds no state
  * of its own; the rules of the model live in `roller.ts`, which is pure.
  *
  * It knows nothing about the content graph or the active locale: the host hands it `candidates`
  * (built by `roller-vocabulary.ts`) and reads back the completed rolls. That is what lets the dev
- * preview drive the real organ with a fixture vocabulary, and it is why the same organ can be an
+ * preview drive the real tray with a fixture vocabulary, and it is why the same tray can be an
  * ad-hoc roll (an empty body) and a prefilled attack without a mode flag telling them apart.
  */
 import { app } from '$lib/stores/app.svelte';
@@ -48,13 +48,13 @@ import {
 	type RollerCandidate,
 } from './roller-vocabulary';
 
-/** What a caller hands the organ to build a roll it already knows about (an attack row, a spell).
+/** What a caller hands the tray to build a roll it already knows about (an attack row, a spell).
  *  Both halves are optional and independent: a check is a test with no damage, a Fireball is damage
  *  with no test — the target saves, not you (§3). */
 export interface RollerPrefill {
 	label: string;
 	/** The catalog key for `label`, carried straight through to the entries `roll()` answers with —
-	 *  the organ has no locale and never turns it into a word. */
+	 *  the dice tray has no locale and never turns it into a word. */
 	labelKey?: string;
 	test?: {
 		dice: Record<number, number>;
@@ -97,7 +97,7 @@ const IN_LINE = -1;
  *  `caretAt` clamps it down to the real length on read. */
 const AT_END = Number.MAX_SAFE_INTEGER;
 
-export class RollerOrgan {
+export class DiceTray {
 	/** What the roll is for ("Greataxe"). Empty for an ad-hoc roll. */
 	label = $state('');
 	labelKey = $state('');
@@ -112,7 +112,7 @@ export class RollerOrgan {
 	focus = $state(0);
 	/** `IN_LINE`, or the index of the selected suggestion row. */
 	selected = $state(IN_LINE);
-	/** What the lines can be told by name. The host owns this; the organ only reads it. */
+	/** What the lines can be told by name. The host owns this; the dice tray only reads it. */
 	candidates = $state<RollerCandidate[]>([]);
 
 	/** Where the caret sits IN each line, as the index of the pill it stands in front of. A line is a
@@ -144,7 +144,7 @@ export class RollerOrgan {
 
 	draft = $derived(this.drafts[this.focus] ?? '');
 	/** How a crit doubles. A table's house rule, not a per-roll choice — it is set once in Settings,
-	 *  so the organ reads it and offers no switch of its own. */
+	 *  so the dice tray reads it and offers no switch of its own. */
 	critMethod = $derived(app.critMethod);
 
 	/** Every damage type there is, as menu rows — the list a clicked type pill offers. Nothing is
@@ -251,7 +251,7 @@ export class RollerOrgan {
 	};
 	/** `←` / `→` in a menu laid out in COLUMNS: one column over is `stride` rows along a column-first
 	 *  list. The stride is the view's to know — how many columns the picker draws is a layout fact, and
-	 *  the organ only ever sees a flat list. Clamped rather than wrapping: the top row is where `↑`
+	 *  the tray only ever sees a flat list. Clamped rather than wrapping: the top row is where `↑`
 	 *  leaves for the line, and a sideways key that could also leave would be two exits. */
 	selectAcross = (stride: number): void => {
 		if (!this.menu.length) return;
@@ -506,7 +506,7 @@ export class RollerOrgan {
 		this.retyping = null;
 	};
 
-	/** Build the organ for a roll the app already knows about. The second line exists only when there
+	/** Build the tray for a roll the app already knows about. The second line exists only when there
 	 *  IS damage — which is the whole rule for when a roller has two lines (§3). */
 	prefill = (spec: RollerPrefill): void => {
 		this.reset();
@@ -528,7 +528,7 @@ export class RollerOrgan {
 		this.carets = [];
 		this.focus = 0;
 		if (spec.damage?.length) this.setDamage(spec.damage);
-		// neither half — an ad-hoc roll is still this organ, with an empty line to type into. The
+		// neither half — an ad-hoc roll is still this dice tray, with an empty line to type into. The
 		// fallback runs AFTER the damage, or a damage-only roll would be given a test line it has no
 		// use for (an advantage toggle and a to-hit total on a Fireball).
 		if (!this.lines.length) {
@@ -541,7 +541,7 @@ export class RollerOrgan {
 	};
 
 	/**
-	 * Give the organ its damage half — the second line, built from the parts a roll site already
+	 * Give the dice tray its damage half — the second line, built from the parts a roll site already
 	 * knows. Separate from `prefill` because an attack arrives in two calls (the to-hit opens the
 	 * tray, the damage is queued right after), and because THIS is what closes UBUG-21: the damage
 	 * used to be queued out of sight and unadjustable, so a "+1d6" typed for a damage rider landed on
@@ -579,7 +579,7 @@ export class RollerOrgan {
 	/**
 	 * Roll it. Answers with the completed entries — one per instance of a volley — and records
 	 * nothing itself: what to do with a roll (log it, toast it, persist it) belongs to the surface
-	 * the organ is mounted on, not to the organ.
+	 * the dice tray is mounted on, not to the dice tray.
 	 *
 	 * Half-typed text is committed first, so pressing Roll can never quietly leave a token out of the
 	 * roll it was typed into. Empty when the lines are unrollable, which the button already shows.

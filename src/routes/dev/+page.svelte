@@ -44,7 +44,7 @@
 			<li><a href={dev('firstrun')}>First-run flow</a></li>
 			<li><a href={dev('deathsaves')}>Death saves</a></li>
 			<li><a href={dev('rolltoast')}>Roll toast</a></li>
-			<li><a href={dev('roller')}>Roller organ (the dice tray)</a></li>
+			<li><a href={dev('roller')}>Dice tray</a></li>
 			<li><a href={dev('plugins')}>Plugins</a></li>
 			<li><a href={dev('storage')}>Storage</a></li>
 			<li><a href={dev('packs')}>Content packs (fixture)</a></li>

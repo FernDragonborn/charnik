@@ -909,7 +909,7 @@ describe('CombatVM · S2 split net', () => {
 
 		// Shift-click rolls nothing yet — the tray does, later, and the offer has to arm from THERE
 		combat.attackRoll(combat.attacks[0]!, wantsTray);
-		combat.recordTrayRolls(combat.tray.organ.roll());
+		combat.recordTrayRolls(combat.tray.diceTray.roll());
 		expect(combat.savageLabel).toBe('Savage Attacker');
 		expect(combat.savagePendingEntry).toBe(combat.tray.log[0]);
 		const keptBefore = combat.savagePendingEntry!.damage![0]!.total;
@@ -923,7 +923,7 @@ describe('CombatVM · S2 split net', () => {
 			label: 'Fire Bolt',
 			damage: [{ dice: { 10: 1 }, mod: 0, type: 'fire' }],
 		});
-		combat.recordTrayRolls(combat.tray.organ.roll());
+		combat.recordTrayRolls(combat.tray.diceTray.roll());
 		expect(combat.savageLabel).toBeNull();
 	});
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	// ONE line of the roller organ: the role stripe, the pills, the caret, the suggestion menu that
+	// ONE line of the dice tray: the role stripe, the pills, the caret, the suggestion menu that
 	// grows out of the line, and the state toggle that belongs to this line's role (advantage for a
-	// test, a crit for damage). All state lives on the organ — this component owns none.
+	// test, a crit for damage). All state lives on the dice tray — this component owns none.
 	//
 	// Two things here are load-bearing and easy to undo by accident:
 	//  · colour lives in the TEXT, never in a pill's fill. Every pill is the same surface + border;
@@ -24,37 +24,37 @@
 		type RollerLine,
 		type RollerPill,
 	} from '$lib/dice/roller';
-	import type { RollerOrgan } from '$lib/dice/roller.svelte';
+	import type { DiceTray } from '$lib/dice/dice-tray.svelte';
 	import type { RollerCandidate } from '$lib/dice/roller-vocabulary';
 	import { ADVANTAGE_CUE, ADVANTAGE_MODE } from '$lib/rules/dice';
 	import { signed } from '$lib/util/format';
 
 	let {
-		organ,
+		diceTray,
 		index,
 		line,
 		roll,
-	}: { organ: RollerOrgan; index: number; line: RollerLine; roll: () => void } = $props();
+	}: { diceTray: DiceTray; index: number; line: RollerLine; roll: () => void } = $props();
 
 	/** How many columns the type picker lays out in. Here rather than only in the CSS because the
 	 *  markup has to say how many rows go in each column for a column-first fill — and because ←/→
 	 *  cross a column by stepping exactly that many rows along the flat list. */
 	const TYPE_COLUMNS = 2;
-	const typeRows = $derived(Math.ceil(organ.menu.length / TYPE_COLUMNS));
+	const typeRows = $derived(Math.ceil(diceTray.menu.length / TYPE_COLUMNS));
 
 	const isTest = $derived(line.role === ROLLER_ROLE.test);
-	const focused = $derived(organ.focus === index);
+	const focused = $derived(diceTray.focus === index);
 	/** The menu hangs off the line it belongs to — the one being typed in, or, when a type pill opened
 	 *  it, the one that pill is in (the caret may well still be in the other line). */
 	const menuOpen = $derived(
-		organ.menu.length > 0 && (organ.retyping ? organ.retyping.line === index : focused),
+		diceTray.menu.length > 0 && (diceTray.retyping ? diceTray.retyping.line === index : focused),
 	);
 	/** The line's state doubles this die — and WHICH dice differs by role: advantage draws a second
 	 *  d20 and touches nothing else, while a crit doubles every damage die in the line. */
 	const doubles = (p: DicePill): boolean =>
 		isTest ? p.sides === 20 && line.advantage !== ADVANTAGE_MODE.neither : line.crit;
 	/** Where the caret stands in this line — the pill index it is in front of. */
-	const caret = $derived(organ.caretAt(index));
+	const caret = $derived(diceTray.caretAt(index));
 
 	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. A group that
 	 *  does NOT end in a type is damage with no type — underlined, never blocked: a type is not
@@ -114,7 +114,7 @@
 	async function step(left: boolean, atEnd = left): Promise<void> {
 		// a step that went nowhere leaves the text caret alone: re-placing it is what threw you to the
 		// end of the token you were already in when there was nothing to step into
-		if (!(left ? organ.caretLeft(index) : organ.caretRight(index))) return;
+		if (!(left ? diceTray.caretLeft(index) : diceTray.caretRight(index))) return;
 		await tick();
 		// the caret MOVED in the markup, so this is a different input element than the one the key was
 		// pressed in — it has to be re-focused or the walk drops focus on its first step
@@ -124,7 +124,7 @@
 	}
 
 	/** Put the caret in ANOTHER line of this same roller. The input lives in that line's component, so
-	 *  the only handle on it is the DOM — scoped to this organ's panel, since a page may mount more
+	 *  the only handle on it is the DOM — scoped to this tray's panel, since a page may mount more
 	 *  than one. Out of range is a no-op: the first line's ↑ and the last line's ↓ do nothing. */
 	function focusLine(at: number): void {
 		const inputs = input
@@ -170,9 +170,9 @@
 			return;
 		}
 		// Tab with no menu open is still Tab — the roller must not trap focus
-		if (event.key === 'Enter' || (event.key === 'Tab' && organ.menu.length)) {
+		if (event.key === 'Enter' || (event.key === 'Tab' && diceTray.menu.length)) {
 			event.preventDefault();
-			organ.commit(index);
+			diceTray.commit(index);
 			return;
 		}
 		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -180,20 +180,20 @@
 			const down = event.key === 'ArrowDown';
 			// with a menu open the arrows walk IT; with none open there is nothing else vertical in a
 			// roller but its lines, so they step between test and damage
-			if (organ.menu.length) {
-				if (down) organ.selectDown();
-				else organ.selectUp();
+			if (diceTray.menu.length) {
+				if (down) diceTray.selectDown();
+				else diceTray.selectUp();
 			} else focusLine(index + (down ? 1 : -1));
 			return;
 		}
-		if (event.key === 'Escape' && organ.menu.length) {
+		if (event.key === 'Escape' && diceTray.menu.length) {
 			// the suggestion menu is a hint, not a layer to dismiss on its own: Escape closes the tray
 			// around us in the same press (the tray keeps what you built, so nothing is lost). Only the
 			// menu state is cleaned up here, so re-opening doesn't come back onto a stale list.
-			organ.dismissMenu();
+			diceTray.dismissMenu();
 			return;
 		}
-		if (event.key === 'Backspace' && !(organ.drafts[index] ?? '')) {
+		if (event.key === 'Backspace' && !(diceTray.drafts[index] ?? '')) {
 			event.preventDefault();
 			void step(true);
 		}
@@ -205,16 +205,16 @@
 	 *  Clicking a menu row does NOT reach this: that row preventDefaults its mousedown and the caret
 	 *  never leaves. */
 	function onblur(): void {
-		organ.commit(index);
+		diceTray.commit(index);
 	}
 
-	const picking = $derived(organ.retyping?.line === index ? organ.retyping.pill : -1);
+	const picking = $derived(diceTray.retyping?.line === index ? diceTray.retyping.pill : -1);
 
 	/** Take a menu row. The caret goes back into the line either way — after picking from a PILL's
 	 *  menu the pill would otherwise keep the focus ring, still reading as selected when the thing it
 	 *  was selected for is over. */
 	function pickRow(candidate: RollerCandidate): void {
-		organ.pick(index, candidate);
+		diceTray.pick(index, candidate);
 		input?.focus();
 	}
 
@@ -222,14 +222,14 @@
 	 *  the selection. While the pill's own type menu is open the arrows and Enter belong to THAT, so a
 	 *  picker opened by a click is still finishable without the mouse. */
 	function onPillKey(event: KeyboardEvent, at: number): void {
-		const row = picking === at ? organ.menu[organ.highlight] : undefined;
-		if (picking === at && event.key === 'ArrowDown') organ.selectDown();
-		else if (picking === at && event.key === 'ArrowUp') organ.selectUp();
+		const row = picking === at ? diceTray.menu[diceTray.highlight] : undefined;
+		if (picking === at && event.key === 'ArrowDown') diceTray.selectDown();
+		else if (picking === at && event.key === 'ArrowUp') diceTray.selectUp();
 		// the picker is two columns, so it is walked in two directions: ↓↑ down a column, ←→ across to
 		// the next one — a whole column's worth of rows along the list
-		else if (picking === at && event.key === 'ArrowRight') organ.selectAcross(typeRows);
-		else if (picking === at && event.key === 'ArrowLeft') organ.selectAcross(-typeRows);
-		else if (picking === at && event.key === 'Escape') organ.dismissMenu();
+		else if (picking === at && event.key === 'ArrowRight') diceTray.selectAcross(typeRows);
+		else if (picking === at && event.key === 'ArrowLeft') diceTray.selectAcross(-typeRows);
+		else if (picking === at && event.key === 'Escape') diceTray.dismissMenu();
 		else if (row && event.key === 'Enter') pickRow(row.candidate);
 		else return onPillEdit(event, at);
 		event.preventDefault();
@@ -238,8 +238,8 @@
 	/** Delete/Backspace removes the pill, Enter unfolds it back to text (the same act as a
 	 *  double-click), and the caret goes back into the line either way so typing continues. */
 	function onPillEdit(event: KeyboardEvent, at: number): void {
-		if (event.key === 'Delete' || event.key === 'Backspace') organ.removePill(index, at);
-		else if (event.key === 'Enter') organ.unfold(index, at);
+		if (event.key === 'Delete' || event.key === 'Backspace') diceTray.removePill(index, at);
+		else if (event.key === 'Enter') diceTray.unfold(index, at);
 		else return;
 		event.preventDefault();
 		input?.focus();
@@ -250,7 +250,7 @@
 		const moved = event.dataTransfer?.getData('text/roller-pill');
 		const [from, pill] = (moved ?? '').split(':').map(Number);
 		if (from === undefined || pill === undefined || Number.isNaN(from)) return;
-		organ.movePill(from, pill, index);
+		diceTray.movePill(from, pill, index);
 	}
 </script>
 
@@ -281,9 +281,9 @@
 				e.currentTarget.focus();
 				// a type pill has no caret to click into, so clicking it opens the type menu; clicking any
 				// other pill is what closes that menu again
-				organ.retype(index, at);
+				diceTray.retype(index, at);
 			}}
-			ondblclick={() => organ.unfold(index, at)}
+			ondblclick={() => diceTray.unfold(index, at)}
 			onkeydown={(e) => onPillKey(e, at)}
 		>
 			{#if pill.kind === PILL_KIND.dice}
@@ -318,12 +318,12 @@
 					<button
 						type="button"
 						aria-label={$_('roller.oneLess')}
-						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, -1))}
+						onclick={(e) => (e.stopPropagation(), diceTray.bumpPill(index, at, -1))}
 						ondblclick={(e) => e.stopPropagation()}><Icon name="minus" size={9} /></button
 					><button
 						type="button"
 						aria-label={$_('roller.oneMore')}
-						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, 1))}
+						onclick={(e) => (e.stopPropagation(), diceTray.bumpPill(index, at, 1))}
 						ondblclick={(e) => e.stopPropagation()}><Icon name="plus" size={9} /></button
 					>
 				</span>
@@ -356,19 +356,19 @@
 			bind:this={input}
 			class="roller-input"
 			type="text"
-			size={(organ.drafts[index] ?? '').length + 1}
-			value={organ.drafts[index] ?? ''}
+			size={(diceTray.drafts[index] ?? '').length + 1}
+			value={diceTray.drafts[index] ?? ''}
 			aria-label={$_(isTest ? 'roller.testRoll' : 'roller.damageRoll')}
-			oninput={(e) => organ.type(index, e.currentTarget.value)}
+			oninput={(e) => diceTray.type(index, e.currentTarget.value)}
 			onfocus={() => {
-				organ.focus = index;
+				diceTray.focus = index;
 				// back at the caret: the menu belongs to what is typed again, not to a pill
-				organ.retyping = null;
+				diceTray.retyping = null;
 			}}
 			{onblur}
 			onkeydown={onKeydown}
 		/>
-		{#if focused && organ.ghost}<span class="roller-ghost">{organ.ghost}</span>{/if}
+		{#if focused && diceTray.ghost}<span class="roller-ghost">{diceTray.ghost}</span>{/if}
 	</span>
 {/snippet}
 
@@ -400,7 +400,7 @@
 					aria-label={$_('roller.typeIntoLine')}
 					onclick={() => {
 						// the empty rest of the row is past every token, so clicking it means "type at the end"
-						organ.caretToEnd(index);
+						diceTray.caretToEnd(index);
 						input?.focus();
 					}}
 				></button>
@@ -414,11 +414,11 @@
 				     each), so the next row in the list is the next row on screen: ↓ walks straight down a
 				     column instead of hopping left–right–down through a row-major grid. -->
 				<div class="roller-menu-rows" style:--type-rows={typeRows}>
-					{#each organ.menu as hit, row (hit.candidate.key)}
+					{#each diceTray.menu as hit, row (hit.candidate.key)}
 						<button
 							type="button"
 							class="roller-menu-row"
-							class:on={row === organ.highlight}
+							class:on={row === diceTray.highlight}
 							onmousedown={(e) => {
 								e.preventDefault();
 								pickRow(hit.candidate);
@@ -450,7 +450,7 @@
 							{#if !isDamageType(hit.candidate)}
 								<span class="roller-menu-dot" class:active={hit.candidate.active}></span>
 							{/if}
-							{#if row === organ.highlight}<span class="roller-menu-key"
+							{#if row === diceTray.highlight}<span class="roller-menu-key"
 									>{picking >= 0 ? '↵' : 'Tab'}</span
 								>{/if}
 						</button>
@@ -474,7 +474,7 @@
 			type="button"
 			class="roller-state advantage {cue}"
 			title={$_('roller.advantageCycle')}
-			onclick={() => organ.cycleAdvantage(index)}
+			onclick={() => diceTray.cycleAdvantage(index)}
 		>
 			<span class="advantage-cue advantage-cue-{cue}"></span>
 		</button>
@@ -484,7 +484,7 @@
 			class="roller-state crit"
 			class:on={line.crit}
 			title={$_('roller.critHint')}
-			onclick={() => organ.toggleCrit(index)}>×2</button
+			onclick={() => diceTray.toggleCrit(index)}>×2</button
 		>
 	{/if}
 </div>

@@ -28,3 +28,11 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   were not: a `null` meaning the OPPOSITE of nothing became a named state (`UNCONSTRAINED`,
   `OPEN_VOCAB`), and a `null` swallowing a REFUSAL became a reported `ApplyResult`. Both patterns
   are the thing to look for next time.
+
+- [ ] **ROLLTRAY-NAME · `RollTray` is the third thing called a tray.** The dice tray is `DiceTray`
+  (the live state) mounted in `menus/DiceTray.svelte` (the overlay); `RollTray` is neither — it is the
+  Combat view-model's roll subsystem (the tray, the log, the roll-execution methods), and naming it
+  after the tray is what makes the access path read `combat.tray.diceTray`. Rename the class and
+  `combat.tray` after what it holds (`combat.rolls`), leaving `dice tray` to mean exactly one thing.
+  ~80 mentions across `src/routes/combat`; mechanical, and the `dice/tray.svelte.ts` open-the-tray
+  seam is NOT part of it — that one is correctly named.

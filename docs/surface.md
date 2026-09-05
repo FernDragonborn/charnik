@@ -242,8 +242,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/plugins.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **Roller** | `organ`, `onroll` | The roller ORGAN — the whole of what a roll looks like while you are building it, and the app's |
-| **RollerLine** | `organ`, `index`, `line`, `roll` | ONE line of the roller organ: the role stripe, the pills, the caret, the suggestion menu that |
+| **Roller** | `diceTray`, `onroll` | The dice tray — the whole of what a roll looks like while you are building it, and the app's |
+| **RollerLine** | `diceTray`, `index`, `line`, `roll` | ONE line of the dice tray: the role stripe, the pills, the caret, the suggestion menu that |
 | **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
@@ -368,10 +368,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function loadContentStore` — Load the graph once into the store (no-op if already loaded).
 - `function reloadContent` — Drop the cache, reload, and rotate the guid → all derived state recomputes with no page reload.
 
-### `src/lib/dice/roller.svelte.ts`
+### `src/lib/dice/dice-tray.svelte.ts`
 
-- `interface RollerPrefill` — What a caller hands the organ to build a roll it already knows about (an attack row, a spell).
-- `class RollerOrgan`
+- `interface RollerPrefill` — What a caller hands the tray to build a roll it already knows about (an attack row, a spell).
+- `class DiceTray`
 
 ### `src/lib/dice/tray.svelte.ts`
 

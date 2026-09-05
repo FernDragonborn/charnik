@@ -1,7 +1,7 @@
 /*
  * What a roller line can be told BY NAME — the suggestion menu's contents and the resolver behind a
  * submitted word. Pure: it takes plain projections of the character's active effects, the effect
- * catalog and the known damage types; the organ does the graph reading.
+ * catalog and the known damage types; the dice tray does the graph reading.
  *
  * The one rule the whole module exists for: **the language you TYPE in is not the language the UI is
  * in.** A match runs against EVERY localized name a row carries and against the key itself, so
@@ -145,7 +145,7 @@ export function rollerCandidates(sources: NamedRollSource[], locale: string): Ro
 
 /** Whether a row inserts a damage TYPE rather than dice. Read off the insert instead of carried as a
  *  flag: the type is already what the row does, and a second field saying so is a second thing to
- *  keep true. The organ uses it to decide which rows a LINE may be told at all. */
+ *  keep true. The dice tray uses it to decide which rows a LINE may be told at all. */
 export const isDamageType = (candidate: RollerCandidate): boolean =>
 	candidate.insert.kind === TOKEN_KIND.pill && candidate.insert.pill.kind === PILL_KIND.damageType;
 
@@ -174,7 +174,7 @@ export interface RollerMatch {
  * known, each group by relevance and then alphabetically. No group headings — the spec marks activity
  * with a dot instead, because a heading over a one-row group costs more than it explains.
  *
- * Types lead because the only line they are ever OFFERED on is a damage line (the organ hands this
+ * Types lead because the only line they are ever OFFERED on is a damage line (the tray hands this
  * the vocabulary that line may be told), and on a damage line the type is the thing you are missing —
  * the dice are already there. On a test line the list is effects, because there is nothing else in it.
  *

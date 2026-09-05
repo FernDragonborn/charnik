@@ -434,7 +434,7 @@
 	.popup.wide {
 		width: min(360px, calc(100vw - 1.5rem));
 	}
-	/* the roller is a two-line organ with a header of dice buttons — at 300px the header wrapped onto
+	/* the roller is a two-line tray with a header of dice buttons — at 300px the header wrapped onto
 	   three rows and a damage line with two types had nowhere to go. Same reasoning as the log above:
 	   the content is the fixed thing, the menu is what gives. */
 	.popup.dice-tray {

@@ -1,7 +1,7 @@
 /*
- * The ROLLER ORGAN's model — what a roller LINE is, and how a typed token becomes a pill.
- * Pure: no Svelte, no content graph, no locale. The organ's reactive state (`roller.svelte.ts`) and
- * its UI (`Roller.svelte`) are built on this; every rule here is unit-testable on its own.
+ * The DICE TRAY's model — what a roller LINE is, and how a typed token becomes a pill.
+ * Pure: no Svelte, no content graph, no locale. The tray's reactive state (`dice-tray.svelte.ts`)
+ * and its UI (`Roller.svelte`) are built on this; every rule here is unit-testable on its own.
  *
  * The shape follows the spec's one structural claim: an attack roll and a damage roll are not two
  * instances of "a roll", they are DIFFERENT KINDS of thing. A d20 test is a VERDICT — one die decides
@@ -242,8 +242,8 @@ export function parseRollerToken(raw: string, resolve: RollerResolver): ParsedRo
 /**
  * A dice pool + modifier (+ its damage type, its roll-manipulation facts, its effect dice) → the
  * pills that describe it. The ONE adapter every prefill goes through, so a roll arriving from an
- * attack row is the same kind of thing as one typed by hand — which is the point of the organ: there
- * is no "prefilled mode" it can be stuck in.
+ * attack row is the same kind of thing as one typed by hand — which is the point of the tray:
+ * there is no "prefilled mode" it can be stuck in.
  *
  * `mods` land on the POOL's dice only, which is what keeps a Great Weapon Fighting reroll off a
  * Bless die sitting in the same line (RAW, and the reason those facts belong to a die rather than to

@@ -1,12 +1,12 @@
 /*
- * The dice-roll subsystem of the Combat view-model: the roller ORGAN the tray mounts, the roll log,
+ * The dice-roll subsystem of the Combat view-model: the dice tray the overlay mounts, the roll log,
  * and the roll-execution methods. Split out of CombatVM so the roll concern is one cohesive unit;
  * CombatVM composes it as `combat.tray` and the higher-level actions (attack/cast/action) call into
- * it. Pure dice math lives in $lib/rules/dice, and the organ's own model in $lib/dice/roller.
+ * it. Pure dice math lives in $lib/rules/dice, and the tray's own model in $lib/dice/roller.
  *
  * The builder half used to live here as loose fields (`dice`, `rollMod`, `rollAdvantage`) plus a
  * `pendingDamage` queue that the tray could neither show nor edit — which is UBUG-21. It is now one
- * `RollerOrgan`: a test line and, when there IS damage, a damage line, both made of the same
+ * `DiceTray`: a test line and, when there IS damage, a damage line, both made of the same
  * editable pills, built from ONE `RollSpec` — a roll site says what it wants rolled once.
  */
 import {
@@ -19,7 +19,7 @@ import {
 	type Rolled,
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
-import { RollerOrgan } from '$lib/dice/roller.svelte';
+import { DiceTray } from '$lib/dice/dice-tray.svelte';
 import {
 	amendedAdvantage,
 	withoutLegacyAmendment,
@@ -73,7 +73,7 @@ export interface RollSpec {
 	times?: number;
 	/** Is this a WEAPON attack? Only a weapon's damage qualifies for a once-per-turn reroll (Savage
 	 *  Attacker), so the tray has to know which kind of action it is holding — a Fire Bolt and a bare
-	 *  tray roll go through the same organ and must not be offered it. */
+	 *  tray roll go through the same tray and must not be offered it. */
 	weapon?: boolean;
 }
 
@@ -106,9 +106,9 @@ const entryOf = ({
 });
 
 export class RollTray {
-	/** The roll being built — the organ the dice tray mounts. Its lines, pills and state toggles ARE
+	/** The roll being built — the dice tray this subsystem mounts. Its lines, pills and toggles ARE
 	 *  the builder; nothing about the roll under construction lives beside it. */
-	organ = new RollerOrgan();
+	diceTray = new DiceTray();
 	log = $state<RollLogEntry[]>([]);
 
 	/**
@@ -130,25 +130,25 @@ export class RollTray {
 		this.log = entries.slice(0, ROLL_LOG_MAX);
 	};
 
-	/** Is the roll the organ currently holds a weapon attack? Read by the surface that records the
+	/** Is the roll the tray currently holds a weapon attack? Read by the surface that records the
 	 *  tray's rolls to decide whether to arm the weapon-damage reroll. Every way of filling the tray
 	 *  passes through `prefill` or `reset`, so it cannot go stale behind a spell or a custom roll. */
 	weaponAttack = false;
 
-	/** Clear the organ to an empty test line (opening the dice menu fresh). */
+	/** Clear the tray to an empty test line (opening the dice menu fresh). */
 	reset = () => {
 		this.weaponAttack = false;
-		this.organ.reset();
+		this.diceTray.reset();
 	};
 
-	/** Prefill the roller for one whole action, so the player can pick advantage then Roll. The organ
+	/** Prefill the roller for one whole action, so the player can pick advantage then Roll. The tray
 	 *  takes the request as it stands; the only translation left is the advantage axis, numeric on the
 	 *  way in and named inside the roller. `test.mods` = the roll's reroll/min_die effect facts; they
 	 *  ride the POOL's dice, so a Great Weapon Fighting reroll never reaches a Bless die that lands in
 	 *  the same line. */
 	prefill = (spec: RollSpec) => {
 		this.weaponAttack = spec.weapon === true;
-		this.organ.prefill({
+		this.diceTray.prefill({
 			label: spec.label,
 			...(spec.labelKey ? { labelKey: spec.labelKey } : {}),
 			...(spec.test
@@ -210,7 +210,7 @@ export class RollTray {
 	};
 
 	/** Roll the same thing N times as ONE action — a volley (Eldritch Blast's beams). `roll` is called
-	 *  per instance because each is its own throw; the organ's `roll()` builds its volley the same way,
+	 *  per instance because each is its own throw; the tray's `roll()` builds its volley the same way,
 	 *  which is why an instant cast and one sent through the tray come out identical. */
 	pushVolley = (
 		label: string,
@@ -239,7 +239,7 @@ export class RollTray {
 	 *  one), and they share ONE toast and ONE `group`, because one action happened.
 	 *
 	 *  The group is stamped HERE because this is the one seam every multi-instance action passes
-	 *  through — the organ's Roll button and `pushVolley` alike — so a volley cannot be recorded
+	 *  through — the tray's Roll button and `pushVolley` alike — so a volley cannot be recorded
 	 *  anywhere without it. A single roll is left ungrouped: being one line already says it. */
 	recordRolls = (entries: RollLogEntry[]): void => {
 		if (!entries.length) return;

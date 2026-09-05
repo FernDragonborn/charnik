@@ -27,7 +27,7 @@ Open the one whose subject you are about to touch, before the recommendation and
   and the picker contract, i18n keys, icons, error copy
 - [Effects](internals/effects.md) — the token vocabulary, expressions, the derive pipeline; with
   [plugins](internals/plugins.md) and [actions](internals/actions.md) (play-state mutation)
-- [The roller](internals/roller.md) — dice, the record a roll leaves, crits, the roller organ
+- [The roller](internals/roller.md) — dice, the record a roll leaves, crits, the dice tray
 - [Testing](internals/testing.md) · [Security](internals/security.md)
 - [Multi-system compatibility](internals/compatibility.md) — the chokepoints a 5e-only assumption
   would block later; read before touching the fold, the effect grammar, or a schema

@@ -2,7 +2,7 @@
  * Roll semantics: what a tap on a stat, a save, a skill or an attack actually rolls — which effects
  * it picks up, whether the outcome is forced, and the once-per-turn weapon-damage reroll.
  *
- * These functions are what the roller organ calls, and the host interface below is the contract it
+ * These functions are what the dice tray calls, and the host interface below is the contract it
  * satisfies (docs/internals/roller.md).
  */
 import { toast } from 'svelte-sonner';
@@ -214,8 +214,8 @@ export class SheetRolls {
 
 	/**
 	 * Record the rolls the TRAY made and, when they were a weapon attack, arm the same once-per-turn
-	 * reroll a tapped attack offers. The damage a tray roll throws is built by the organ (the player
-	 * may have edited it, and the crit toggle lives there), so the part to reroll comes from the organ
+	 * reroll a tapped attack offers. The damage a tray roll throws is built by the tray (the player
+	 * may have edited it, and the crit toggle lives there), so the part to reroll comes from the tray
 	 * rather than from the attack the tray was prefilled with.
 	 *
 	 * A volley arms on its FIRST instance — the one the log and the Playbar show on top, and the one
@@ -225,7 +225,7 @@ export class SheetRolls {
 		this.host().tray.recordRolls(entries);
 		const entry = entries[0];
 		if (!this.host().tray.weaponAttack || !entry || entry.at === undefined) return;
-		const savage = this.savageOffer(this.host().tray.organ.damageSpecs[0], entry.damage);
+		const savage = this.savageOffer(this.host().tray.diceTray.damageSpecs[0], entry.damage);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};
 

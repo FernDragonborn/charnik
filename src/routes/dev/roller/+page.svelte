@@ -1,13 +1,13 @@
 <script lang="ts">
-	// DEV-ONLY preview of the roller organ (docs/internals/roller.md).
-	// The organ is a live thing — typing, a menu, a caret — so the preview drives the REAL
-	// `RollerOrgan` with a fixture vocabulary rather than rendering fixed markup. Every button below
+	// DEV-ONLY preview of the dice tray (docs/internals/roller.md).
+	// The dice tray is a live thing — typing, a menu, a caret — so the preview drives the REAL
+	// `DiceTray` with a fixture vocabulary rather than rendering fixed markup. Every button below
 	// is a starting state; the roller itself is the same one the dice tray mounts.
 	// Not linked from the app; gated to dev builds by /dev/+layout.
 	import Roller from '$lib/components/Roller.svelte';
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
-	import { RollerOrgan } from '$lib/dice/roller.svelte';
+	import { DiceTray } from '$lib/dice/dice-tray.svelte';
 	import { rollerCandidates, type NamedRollSource } from '$lib/dice/roller-vocabulary';
 	import { rollerSources } from '$lib/dice/roller-sources';
 	import { ROLLER_ROLE, addToken, emptyLine } from '$lib/dice/roller';
@@ -52,9 +52,9 @@
 		...rollerSources(null, undefined, []),
 	];
 
-	const organ = new RollerOrgan();
-	organ.candidates = rollerCandidates(FIXTURE, 'en');
-	const resolve = candidateResolver(organ.candidates);
+	const diceTray = new DiceTray();
+	diceTray.candidates = rollerCandidates(FIXTURE, 'en');
+	const resolve = candidateResolver(diceTray.candidates);
 
 	let rolled = $state<RollLogEntry[] | null>(null);
 
@@ -63,16 +63,16 @@
 		tokens.reduce((l, t) => addToken(l, t, resolve), emptyLine(role));
 
 	function preset(label: string, ...lines: ReturnType<typeof line>[]): void {
-		organ.reset();
-		organ.label = label;
-		organ.lines = lines;
-		organ.drafts = lines.map(() => '');
-		organ.focus = 0;
+		diceTray.reset();
+		diceTray.label = label;
+		diceTray.lines = lines;
+		diceTray.drafts = lines.map(() => '');
+		diceTray.focus = 0;
 		rolled = null;
 	}
 
 	const CASES: { title: string; run: () => void }[] = [
-		{ title: 'ad hoc — the same organ with an empty body', run: () => organ.reset() },
+		{ title: 'ad hoc — the same dice tray with an empty body', run: () => diceTray.reset() },
 		{
 			title: 'a check — one line, no damage half at all',
 			run: () => preset('Perception', line(ROLLER_ROLE.test, 'd20', '+4')),
@@ -123,10 +123,10 @@
 </script>
 
 <div class="page">
-	<h1>Roller organ</h1>
+	<h1>Dice tray</h1>
 	<p class="hint">
-		The live organ with a fixture vocabulary. Type into a line: a space parses the token, a letter
-		opens the menu, <code>Tab</code> completes, <code>Ctrl</code>+<code>Enter</code> rolls.
+		The live dice tray with a fixture vocabulary. Type into a line: a space parses the token, a
+		letter opens the menu, <code>Tab</code> completes, <code>Ctrl</code>+<code>Enter</code> rolls.
 	</p>
 
 	<div class="cases">
@@ -135,7 +135,7 @@
 		{/each}
 	</div>
 
-	<Roller {organ} onroll={(entries) => (rolled = entries)} />
+	<Roller {diceTray} onroll={(entries) => (rolled = entries)} />
 
 	{#if rolled}
 		<div class="result"><RollRow model={rollToastModel(rolled)} /></div>

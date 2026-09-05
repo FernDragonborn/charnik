@@ -210,7 +210,7 @@ export interface DieMods {
 	/** Treat a die below this AS this — Reliable Talent's d20 → 10. */
 	minDie?: number;
 	/** Treat a die above this AS this — the ceiling to `minDie`'s floor. Nothing in 5e needs it today;
-	 *  it exists because the roller organ takes `<10` in the same field as `>10`, and a bound that has
+	 *  it exists because the dice tray takes `<10` in the same field as `>10`, and a bound that has
 	 *  no home here would have to arrive later as a mechanism of its own. */
 	maxDie?: number;
 }
@@ -229,7 +229,7 @@ const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);
 const formatModifier = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
 /** Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't
- *  one. Used for effect bonus dice (Bless/Bane) where the sign matters, and by the roller organ for
+ *  one. Used for effect bonus dice (Bless/Bane) where the sign matters, and by the dice tray for
  *  a typed dice token.
  *
  *  The count is optional, exactly as in `DICE_TERM`: "d4" is one d4 wherever it is written, and the

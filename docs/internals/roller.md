@@ -1,7 +1,9 @@
 # The roller
 
-> For maintainers. The pure dice engine, the record a roll leaves behind, and the roller organ the
-> player types into. What is still OPEN lives in [`work/roller.md`](../work/roller.md).
+> For maintainers. The pure dice engine, the record a roll leaves behind, and the dice tray the
+> player types into. The ROLLER is the pure engine and its UI (`roller.ts`, `Roller.svelte`); the
+> DICE TRAY is the live state the player edits and the popover it is mounted in. What is still
+> OPEN lives in [`work/roller.md`](../work/roller.md).
 
 ## A roll answers with what happened, not with how to show it
 
@@ -86,7 +88,7 @@ A roll is built as LINES, and a line's `ROLLER_ROLE` decides what it is for:
 The role drives the stripe colour, which state toggle the line gets, and the line's vocabulary: a
 damage type is neither offered nor resolved on a `test` line.
 
-One action fires N instances of those lines — `RollerOrgan.roll()` answers with `RollLogEntry[]`,
+One action fires N instances of those lines — `DiceTray.roll()` answers with `RollLogEntry[]`,
 each logged on its own line and toasted as one card. `RollToastAttack[]` is the toast's VIEW model,
 which is all it should ever have been.
 
@@ -107,11 +109,11 @@ their order or count. A lone roll carries none: one line already says it, and th
 nobody has asked for a third level. A volley rolls the same set N times — that is what a volley IS —
 so a per-instance target and a per-instance advantage do not exist.
 
-## The organ
+## The dice tray
 
 `dice/roller.ts` (pure model) · `dice/roller-vocabulary.ts` (the suggestion menu, pure) ·
-`dice/roller-sources.ts` (the one file that reads the content graph) · `dice/roller.svelte.ts` (live
-state) · `components/Roller.svelte` + `RollerLine.svelte`.
+`dice/roller-sources.ts` (the one file that reads the content graph) ·
+`dice/dice-tray.svelte.ts` (live state) · `components/Roller.svelte` + `RollerLine.svelte`.
 
 - **The app never knows AC or DC, so no threshold is ever shown.** "Hit" is the player's call. The one
   outcome the app may name by itself is a natural 1.
@@ -142,8 +144,8 @@ state) · `components/Roller.svelte` + `RollerLine.svelte`.
   `name_*` a row carries and against the key; the menu SHOWS the interface locale's name; the pill and
   the log keep the key. An exact name two candidates share stays unresolved rather than guessed.
 
-**Where the organ lives:** a popover anchored to whatever launched it. Inline-in-the-Playbar and a
-two-mode panel were both weighed and are not built.
+**Where the dice tray lives:** a popover anchored to whatever launched it. Inline-in-the-Playbar and
+a two-mode panel were both weighed and are not built.
 
 **Deliberately unbuilt, with the reason:** Elven Accuracy — merely a third element in `d20s`, not a
 modelling question; a per-instance target; and a per-instance advantage. A volley rolls the same set

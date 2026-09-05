@@ -1,41 +1,41 @@
 <script lang="ts">
-	// The roller ORGAN — the whole of what a roll looks like while you are building it, and the app's
+	// The dice tray — the whole of what a roll looks like while you are building it, and the app's
 	// dice tray. Three parts and no more: a header of dice buttons, a body of lines, and the action.
 	//
 	// The action is a TAB that hangs out of the bottom edge on the right, past the panel's outline.
 	// That is deliberate: it costs no row inside the panel and no space in the header, and the
-	// irregular silhouette it leaves is fine. An ad-hoc roll is this same organ with an empty body —
+	// irregular silhouette it leaves is fine. An ad-hoc roll is this same tray with an empty body —
 	// not a second screen, and not a mode.
 	import RollerLine from './RollerLine.svelte';
 	import { DICE } from '$lib/combat/helpers';
 	import { _ } from '$lib/i18n';
 	import type { RollLogEntry } from '$lib/combat/roll';
 	import { ROLLER_ROLE } from '$lib/dice/roller';
-	import type { RollerOrgan } from '$lib/dice/roller.svelte';
+	import type { DiceTray } from '$lib/dice/dice-tray.svelte';
 
 	let {
-		organ,
+		diceTray,
 		onroll,
 	}: {
-		organ: RollerOrgan;
+		diceTray: DiceTray;
 		/** The completed rolls — one per instance of a volley. What to DO with them (log, toast,
-		 *  persist) belongs to the surface the organ is mounted on, never to the organ. */
+		 *  persist) belongs to the surface the dice tray is mounted on, never to the dice tray. */
 		onroll: (entries: RollLogEntry[]) => void;
 	} = $props();
 
-	const hasDamage = $derived(organ.lines.some((l) => l.role === ROLLER_ROLE.damage));
-	const blocking = $derived(organ.issues.filter((i) => i.blocking));
+	const hasDamage = $derived(diceTray.lines.some((l) => l.role === ROLLER_ROLE.damage));
+	const blocking = $derived(diceTray.issues.filter((i) => i.blocking));
 	/** The band says the FIRST thing wrong, blocking first. A warning gets it only when nothing is
 	 *  blocking — otherwise the reason you can't roll would be pushed under a note about a type. */
-	const issue = $derived(blocking[0] ?? organ.issues[0]);
+	const issue = $derived(blocking[0] ?? diceTray.issues[0]);
 
 	function fire(): void {
-		const rolled = organ.roll();
+		const rolled = diceTray.roll();
 		if (rolled.length) onroll(rolled);
 	}
 </script>
 
-<!-- Ctrl+Enter has to fire from anywhere in the organ, including a die button in the header, and
+<!-- Ctrl+Enter has to fire from anywhere in the tray, including a die button in the header, and
      the panel is the only element that sees all of it. The rule below is about a div STANDING IN for
      a control; this is a shortcut over a container, and everything inside it is already focusable. -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -46,7 +46,7 @@
 		     there are always more of them than would fit. -->
 		<div class="roller-header">
 			{#each DICE as sides (sides)}
-				<button type="button" class="roller-die-btn" onclick={() => organ.addDie(sides)}
+				<button type="button" class="roller-die-btn" onclick={() => diceTray.addDie(sides)}
 					>d{sides}</button
 				>
 			{/each}
@@ -54,22 +54,22 @@
 				type="button"
 				class="roller-die-btn ghost"
 				title={$_('roller.addModifier')}
-				onclick={organ.addMod}>±mod</button
+				onclick={diceTray.addMod}>±mod</button
 			>
 		</div>
 
-		{#if organ.label}<div class="roller-label">{organ.label}</div>{/if}
+		{#if diceTray.label}<div class="roller-label">{diceTray.label}</div>{/if}
 
 		<div class="roller-body">
-			{#each organ.lines as line, index (index)}
-				<RollerLine {organ} {index} {line} roll={fire} />
+			{#each diceTray.lines as line, index (index)}
+				<RollerLine {diceTray} {index} {line} roll={fire} />
 			{/each}
 			<!-- what belongs to the LINES rather than to the dice: a second line exists only when there
 			     IS damage (§3). How a crit DOUBLES is not here — it is a table's house rule, set once in
 			     Settings ▸ General, not something anyone clicks back and forth mid-roll. -->
 			{#if !hasDamage}
 				<div class="roller-extras">
-					<button type="button" class="roller-extra" onclick={organ.addDamageLine}
+					<button type="button" class="roller-extra" onclick={diceTray.addDamageLine}
 						>+ damage line</button
 					>
 				</div>
@@ -94,21 +94,21 @@
 		<button
 			type="button"
 			class="roller-roll"
-			class:muted={!organ.rollable}
-			disabled={!organ.rollable}
-			title={$_(organ.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
+			class:muted={!diceTray.rollable}
+			disabled={!diceTray.rollable}
+			title={$_(diceTray.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
 			onclick={fire}>{$_('roller.roll')}</button
 		>
 	</div>
 </div>
 
 <style>
-	/* the tab hangs below the panel, so the organ reserves the room for it rather than overlapping
+	/* the tab hangs below the panel, so the tray reserves the room for it rather than overlapping
 	   whatever comes next */
 	.roller {
 		margin-bottom: 42px;
 	}
-	/* the organ is its OWN card, and the surface it is mounted on draws nothing: two frames around one
+	/* the tray is its OWN card, and the surface it is mounted on draws nothing: two frames around one
 	   set of dice is one line too many, and of the two this is the one that has to stay — the Roll tab
 	   hangs off its bottom edge, and with no edge to hang from the button floats. */
 	.roller-panel {
