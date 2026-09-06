@@ -250,19 +250,20 @@ named after what it does rather than numbered — the order is this list's order
 closes leaves the list and nothing else is renamed. The SEQUENCING REASONS matter more than the
 position and are given per wave, because most of them were learned the hard way.
 
-- **BEFORE 0.7.0 SHIPS — first priority, everything else waits.** The test is not feature count:
-  it is that **no number on a default character is one we know to be wrong**. Five items fail that
-  test today, and three of them are this cycle's own debt — a mechanism built and never given its
-  first consumer, which is the worst kind of done: the suite is green and the player sees nothing.
-  Done, in order: **EXTRA-ATTACK** (a level-5 martial attacked once — the most-played tier in the
-  game) · **RAGE-SCOPE** (rage damage paid out on a crossbow) · **RECHARGE-3**'s first charged items
-  (the two-axis model and its Dawn/Dusk control shipped with nothing that used them). Left:
-  **2014 casting counts** — every 2014 caster still reads 0 cantrips.
-  **SCOPED-BONUS's remaining consumers left this gate**: Agonizing Blast turned out not to be one
-  content row — no pack has a row per invocation, in either edition — so it needs the rows AND N2's
-  chooser, and Magic Weapon needs D16's cast-time choice. Neither is a wrong NUMBER on a sheet;
-  both are features that are absent, and the gate is about numbers we know to be wrong.
-  If a release goes out before the last one lands, the changelog says plainly what is still missing.
+- **THE 0.7.0 GATE — cleared.** The test was not feature count: **no number on a default character
+  may be one we know to be wrong**. Four items failed it, three of them this cycle's own debt — a
+  mechanism built and never given its first consumer, which is the worst kind of done, because the
+  suite is green and the player sees nothing. All four are closed: **EXTRA-ATTACK** (a level-5
+  martial attacked once, at the tier most games are played at) · **RAGE-SCOPE** (rage damage paid
+  out on a crossbow) · **RECHARGE-3**'s first charged items (the two-axis model and its Dawn/Dusk
+  control shipped with nothing that used them) · **2014 casting counts** (every 2014 caster read 0
+  cantrips).
+  A fifth was listed and then **removed from the gate, not done**: Agonizing Blast was written down
+  as one content row, and is not — no pack carries a row per Eldritch Invocation, in either edition,
+  so it needs those rows AND N2's chooser, and its sibling Magic Weapon needs D16's cast-time choice.
+  An absent feature is not a wrong number, and this gate was about wrong numbers.
+  **Keep the rule for the next release**: what blocks a version is a number we know to be wrong, and
+  a release that ships with one says so in the changelog rather than letting a player hunt for it.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

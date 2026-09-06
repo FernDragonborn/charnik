@@ -176,9 +176,7 @@
   in content health, but a dialog whose only button cannot work is worse than no dialog. Git holds
   the full design log (per-key rules, fill-classes, drift copy).
 
-- [~] **2014 casting data · BLOCKS 0.7.0, first priority.** Every 2014 caster reads 0 cantrips
-  today, which is a wrong number on a default character rather than a missing feature. 2014
-  **spell_slots** now emitted (the full/half/pact matrices are
+- [x] **2014 casting data.** 2014 **spell_slots** emitted (the full/half/pact matrices are
   edition-identical — spell_slots.test asserts `full`==core — so re-tagged 5e). 2014 casters
   (caster=full/half/pact → the derive's `slot_table ?? caster` lookup) now get their slots.
   Remaining: 2014 **class_casting** counts — **scoped 2026-08-09, and it's smaller than written.** The
@@ -187,13 +185,18 @@
   missing is purely DATA: `content/srd-2014/class_casting_srd.csv` **doesn't exist**, so every 2014 caster
   reports **cantripCap 0**, and known-casters (bard/sorcerer/warlock/ranger) get the prepared FORMULA
   instead of their table's "Spells Known" (a 2014 bard 1 should read 2 cantrips / 4 known, not 0 / CHA+1).
-  Fix = the rows, in the same shape 2024 already ships. **The converter route is open**: the source
-  `convert-2014.mjs` reads is the HTML, where every class progression table is a real `<table>` of
-  `<td>` cells (the space-aligned form is the `.txt` beside it, which nothing reads), and the
-  converter already keeps tables verbatim. The header row is dirty — a column reads `4 t h` — so
-  columns are taken by POSITION, never by matching a header string. Whichever route: the numbers land
-  with a per-class assert against the SRD text, because this is the failure class that passes every
-  other gate.
+  **DONE** — `tools/srd/convert-2014-casting.mjs` emits all 140 rows (seven casters × 20 levels;
+  paladin has neither column in 2014). The converter route was the right one after all: the source is
+  HTML, where every class table is a real `<table>` of `<td>` cells — the space-aligned form is the
+  `.txt` beside it, which nothing reads.
+  **The trap was the header, not the numbers.** Four of the seven classes split "Cantrips Known"
+  across two header rows ("Cantrips" above, a bare "Known" below) while the rest keep it whole, and
+  the warlock table carries a THIRD Known column — Invocations Known — that is not a spell count. So
+  a column is found by the whole spelling where it exists and by position otherwise, never by
+  trusting one header string, and each run prints every ladder for a human to read against the book.
+  The numbers are pinned literally in `class_features_content.test.ts`: a bard 1 reads 2 cantrips /
+  4 known, a sorcerer 20 reads 6 / 15. Prepared casters get only the cantrip half — 2014 has no
+  prepared-spells column, that is a 2024 invention, so the formula still owns the rest.
 
 - [ ] **BEAST-DATA · a beast row cannot fight, and the 2014 pack has almost no beasts.** Two
   holes, both found writing [`../research/wild-shape.md`](../research/wild-shape.md), both blocking

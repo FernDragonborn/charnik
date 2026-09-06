@@ -577,3 +577,43 @@ describe('shipped Extra Attack · the Attack action makes more than one (EXTRA-A
 		expect(attacksOf(g, 'SRD 5.2.1', '5.5e', 'wizard', 20)).toBe(1);
 	});
 });
+
+describe("shipped 2014 casting counts · read off that edition's own class tables", () => {
+	// The numbers come from the SRD 5.1 class tables, so they are asserted LITERALLY here: this is
+	// the failure class that passes every other gate — a parser that slips one column produces a
+	// plausible ladder, and nothing but a per-class assert against the book catches it.
+	const capsOf = async (classId: string, level: number) => {
+		const sheet = deriveSheet(
+			charOf('SRD 5.1', '5e', classId, level),
+			await loadEdition('srd-2014'),
+		);
+		const c = sheet.spellcasting.classes[0];
+		return { cantrips: c?.cantripCap, prepared: c?.preparedCap };
+	};
+
+	it('a bard reads its own table, not zero and not a formula', async () => {
+		expect(await capsOf('bard', 1)).toEqual({ cantrips: 2, prepared: 4 });
+		expect(await capsOf('bard', 10)).toEqual({ cantrips: 4, prepared: 14 });
+		expect(await capsOf('bard', 20)).toEqual({ cantrips: 4, prepared: 22 });
+	});
+
+	it('the other known-casters carry both counts', async () => {
+		expect(await capsOf('sorcerer', 1)).toEqual({ cantrips: 4, prepared: 2 });
+		expect(await capsOf('sorcerer', 20)).toEqual({ cantrips: 6, prepared: 15 });
+		expect(await capsOf('warlock', 1)).toEqual({ cantrips: 2, prepared: 2 });
+		expect(await capsOf('warlock', 20)).toEqual({ cantrips: 4, prepared: 15 });
+		// a ranger has no cantrips at all, and no spells until level 2
+		expect((await capsOf('ranger', 5)).cantrips).toBe(0);
+		expect((await capsOf('ranger', 5)).prepared).toBe(4);
+	});
+
+	it('a prepared caster takes its cantrips from the table and its prepared count from the formula', async () => {
+		// 2014 has no "prepared spells" column — that is a 2024 invention — so the formula still owns
+		// the second half, and only the cantrip cap changes here.
+		expect((await capsOf('cleric', 1)).cantrips).toBe(3);
+		expect((await capsOf('cleric', 10)).cantrips).toBe(5);
+		expect((await capsOf('druid', 1)).cantrips).toBe(2);
+		expect((await capsOf('wizard', 1)).cantrips).toBe(3);
+		expect((await capsOf('wizard', 20)).cantrips).toBe(5);
+	});
+});
