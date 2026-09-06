@@ -100,6 +100,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
 | `hp_max`                     | `flat_bonus:hp_max+<value>`                             | Max-HP contribution (Toughness/Aid), re-folded on a manual base.                                                                                                                                        |
 | `note`                       | `note:<free text>`                                      | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
+| `on_event`                   | `on_event:<event>:<action>`                             | When `<event>` happens to this character, run `<action>` — one of the bounded executor verbs (`actions.md` §2), so the trigger and the effect are two closed vocabularies crossed rather than a token per feature. The event set holds only what the app actually FIRES (`turn_start` today: the Next-turn button and entering combat, whose round 1 is the first turn); an unfired name would parse and then never happen. "Only while Bloodied" is the ordinary L2 guard: `is_bloodied ? on_event:turn_start:heal:5+con_mod`. |
 | `plugin`                     | `plugin:<namespace>:<handlerName>[:<args>]`             | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (plugins.md).                                                                                                   |
 
 ### Targets
@@ -260,11 +261,13 @@ Two patterns still living in their own subsystems, on purpose:
 
 1. **Partial-on-long** — Hit Dice regain HALF your level on a long rest. It rides the hit-dice
    subsystem, not this model: its spend/restore math is its own.
-2. **Event-based regain** — 2024's "when you roll Initiative, regain … until you have N" is
-   **`onEvent`, not a recharge policy**. Built for the no-choice case as the bounded L1 token
-   `regain_on_initiative:<resource>:<n>`, auto-applied on combat-enter with a toast. The
-   player-CHOICE version (Persistent Rage, Uncanny Metabolism) is an onUse resource-option, and
-   arbitrary event-triggered logic is L3 plugin `onEvent` — never a wider L1 token.
+2. **Event-based regain** — 2024's "when you roll Initiative, regain … until you have N" is an
+   EVENT, not a recharge policy. It keeps its own token, `regain_on_initiative:<resource>:<n>`,
+   auto-applied on combat-enter with a toast: "top up TO n" is not one of the executor verbs, and
+   inventing a verb used nowhere else would be worse than the second token. Anything else an event
+   should DO is `on_event` above. The player-CHOICE version (Persistent Rage, Uncanny Metabolism) is
+   an onUse resource-option, and arbitrary event-triggered LOGIC is L3 plugin `onEvent` — never a
+   wider L1 token.
 
 **Displaying an expression:** auto-generating prose from a formula is rejected as unreliable. The
 player sees the **resolved value + the effect's name** ("+4 · Sneak Attack"); an optional

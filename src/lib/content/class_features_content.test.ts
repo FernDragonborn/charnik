@@ -206,6 +206,43 @@ describe('shipped class feature · Perfect Focus auto-regain on initiative (rega
 });
 
 /*
+ * Survivor's Heroic Rally is the shipped `on_event` hook: a turn-start heal that only exists while
+ * the character is Bloodied and standing. Both halves are content — the trigger and the guard — so a
+ * wiped token or a reworded guard fails HERE rather than in a fight.
+ */
+describe('shipped class feature · Survivor / Heroic Rally (on_event turn-start heal)', () => {
+	const champion = (source: string, system: '5e' | '5.5e', hp: number): Character => {
+		const c = charOf(source, system, 'fighter', 18);
+		const [only] = c.build.classes;
+		if (only) only.subclass = `subclass:${source}:champion`;
+		c.build.abilities = { str: 10, dex: 10, con: 16, int: 10, wis: 10, cha: 10 };
+		c.play.hp = { current: hp, max: 100, temp: 0 };
+		return c;
+	};
+	const hook = async (system: '5e' | '5.5e', pack: string, source: string, hp: number) =>
+		deriveSheet(champion(source, system, hp), await loadEdition(pack)).facts.onEvent;
+
+	it('5.5e: bloodied and standing → a turn-start heal of 5 + CON mod', async () => {
+		expect(await hook('5.5e', 'srd-2024', 'SRD 5.2.1', 20)).toContainEqual({
+			event: 'turn_start',
+			action: 'heal:8',
+			source: 'Survivor',
+		});
+	});
+	it('5e: the same feature, same shape — the 2014 wording says half HP, which IS bloodied', async () => {
+		expect(await hook('5e', 'srd-2014', 'SRD 5.1', 20)).toContainEqual({
+			event: 'turn_start',
+			action: 'heal:8',
+			source: 'Survivor',
+		});
+	});
+	it('above half HP, or down at 0, the hook is not there at all — the guard, not the executor, decides', async () => {
+		expect(await hook('5.5e', 'srd-2024', 'SRD 5.2.1', 90)).toEqual([]);
+		expect(await hook('5.5e', 'srd-2024', 'SRD 5.2.1', 0)).toEqual([]);
+	});
+});
+
+/*
  * Bardic Inspiration is BOTH a die (grant_roll) and a uses-POOL (grant_resource) — the pool was the
  * gap that blocked Superior Inspiration. Font of Inspiration re-grants the SAME max with a faster
  * recharge, which only lands because pushResource breaks an equal-max tie on recharge generosity.

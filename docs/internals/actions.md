@@ -115,7 +115,10 @@ a `disabled` attribute, so no caller can route around it.
 ## 3. The event vocabulary (pinned)
 
 `turnStart` · `turnEnd` · `attackMade` · `damageTaken` · `rest` · `wentUnconscious` ·
-`effectGained` · `effectLost`. The last two map onto the existing `play.effects` add/expire path —
+`effectGained` · `effectLost`. **This is the vocabulary a plugin `onEvent` handler grows towards;
+what the app fires TODAY is the smaller `PLAY_EVENT` set in `token-parser.ts`** (`turn_start`), which
+L1's `on_event:<event>:<action>` hooks — an event name the app does not fire would parse cleanly and
+then never happen, so a new trigger is a name there plus the one call site that fires it. The last two map onto the existing `play.effects` add/expire path —
 a condition IS an effect, so "gained poisoned" and "gained rage" are the same event, carrying
 `{ effect: { id, source, positive, durationRounds? } }`. Guards (pinned with the vocabulary):
 post-hoc not veto (`effectGained` fires AFTER application); no recursive cascade (an intent

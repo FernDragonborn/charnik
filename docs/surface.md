@@ -423,7 +423,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (116 modules)
+## Library functions & types (117 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1176,6 +1176,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function findStaleDrafts` — Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it * will be discarded.
 - `function discardDrafts` — Delete the given stale drafts (called after the user acknowledges the discard warning).
 
+### `src/lib/effects/action-token.ts`
+
+- `function resolveActionFormula` — Resolve the L2 values inside an action token.
+
 ### `src/lib/effects/apply.ts`
 
 - `re-export matchesTarget` — re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
@@ -1294,6 +1298,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
+- `const PLAY_EVENT` — * The play events an `on_event` token may hook — and the only ones the app fires.
+- `type PlayEvent`
+- `const isPlayEvent` — Is this string one of the fired events?
 - `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
 - `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
 - `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
@@ -1622,4 +1629,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 51 components · 966 exports across 131 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 51 components · 970 exports across 132 modules · 64 duplicate suspects._

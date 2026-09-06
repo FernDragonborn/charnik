@@ -6,7 +6,7 @@
  * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts.
  */
 import type { Layer } from '../rules/pipeline';
-import type { Defense, RechargePolicy } from './token-parser';
+import type { Defense, PlayEvent, RechargePolicy } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`/`ability_checks`→`skill.*` (the ability checks the sheet models —
@@ -147,6 +147,11 @@ export interface EffectFacts {
 	 *  combat layer restores `id` up to `upTo` uses and NOTIFIES (auto-apply + toast, the maintainer's
 	 *  call for these no-choice features). `source` = the feature name, for the notice. Empty = none. */
 	initiativeRegain: { id: string; upTo: number; source: string }[];
+	/** `on_event` hooks (2024 Champion's Heroic Rally): when `event` fires, the combat layer runs
+	 *  `action` — a resolved executor verb (actions.md §2) — and NOTIFIES, labelled from `source`, the
+	 *  feature's name. A hook whose L2 guard is false right now was never gathered, which is how
+	 *  "if you are Bloodied" is said: `is_bloodied ? on_event:turn_start:heal:5+con_mod`. */
+	onEvent: { event: PlayEvent; action: string; source: string }[];
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
@@ -171,6 +176,7 @@ export const emptyFacts = (): EffectFacts => ({
 	breaksConcentration: false,
 	damageReroll: [],
 	initiativeRegain: [],
+	onEvent: [],
 	rerolls: [],
 	minDie: [],
 	unknown: [],

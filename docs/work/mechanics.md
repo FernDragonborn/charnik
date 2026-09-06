@@ -195,12 +195,15 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         missing is the row, and a row is never authored from memory.
 - [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
   small, each fires on an existing path, and none blocks the others.
-  - [ ] **Champion Heroic Rally — a turn-start heal.** It is the SECOND declarative event-action after
-        `regain_on_initiative`, which is the condition `effects.md` ▸ How a pool comes back set for
-        generalizing the trigger dimension. **So generalize it now** (`on_event:<event>:<action>` over
-        a bounded event set × the bounded action verbs) rather than adding a third narrow token and
-        waiting again. Arbitrary event LOGIC stays L3 plugin `onEvent` — widening L1 past a bounded
-        vocabulary is a security property, not a style choice.
+  - [x] **Champion Heroic Rally — a turn-start heal**, and the trigger dimension generalized with it:
+        `on_event:<event>:<action>` crosses a closed event set with the executor verbs, so the third
+        trigger costs a name and a fire site rather than a token. The event set holds only what the app
+        FIRES (`turn_start`: Next turn, and entering combat — round 1 is the first turn); an unfired
+        name would parse and then never happen. "Only while Bloodied" needed no condition slot of its
+        own — it is the ordinary L2 guard, and the shipped row says
+        `is_bloodied and hp>=1 ? on_event:turn_start:heal:5+con_mod` in both editions. Arbitrary event
+        LOGIC stays L3 plugin `onEvent`: widening L1 past a bounded vocabulary is a security property.
+        `regain_on_initiative` keeps its own token — "top up TO n" is not one of the verbs.
   - [ ] **Concentration: several saves for one lump of EQUAL projectiles** (Magic Missile, Scorching
         Ray) — a segmented `1 · 2 · 3` control choosing HOW MANY saves, all at the same flat DC 10,
         never dividing the entered damage. Different SOURCES already work with no new UI: they are

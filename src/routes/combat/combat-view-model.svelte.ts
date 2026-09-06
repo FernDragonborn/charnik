@@ -347,15 +347,15 @@ class CombatVM {
 		})),
 	);
 
-	/** The N2 action executor (spend-options, action verbs, entering combat) — see executor.svelte.ts. */
+	/** The N2 action executor — spend-options, action verbs, and the two event boundaries. */
 	executor = new ActionExecutor(() => this);
-	/* These three stay ON the view-model: they read as SHEET verbs, not as a subsystem's API, and
-	   they are what the panels and the behavioural tests call (§6.1). */
+	/* These stay ON the view-model — SHEET verbs, not a subsystem's API; panels and tests call them. */
 	activateResourceOption = (...args: Parameters<ActionExecutor['activateResourceOption']>) =>
 		this.executor.activateResourceOption(...args);
 	useResourceOrEnter = (...args: Parameters<ActionExecutor['useResourceOrEnter']>) =>
 		this.executor.useResourceOrEnter(...args);
 	toggleCombat = () => this.executor.toggleCombat();
+	nextTurn = () => this.executor.nextTurn();
 	/** The catalog KEY for how the spell list is grouped — the panel header words it. */
 	groupByLabel = $derived(`combat.spells.groupBy.${this.spellGroupBy}`);
 	cycleGroupBy = () =>

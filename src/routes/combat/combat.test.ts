@@ -1503,6 +1503,56 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 	});
 });
 
+describe('CombatVM · on_event hooks (Champion Heroic Rally)', () => {
+	const wounded = (): Character => {
+		const c = newCharacter('brand', 'Brand', '5.5e');
+		c.play.autoCalc = true;
+		c.play.hp = { current: 5, max: 40, temp: 0 };
+		c.play.effects = [
+			{
+				iid: '1',
+				label: 'Survivor',
+				effects: ['on_event:turn_start:heal:5'],
+				positive: true,
+			},
+		];
+		return c;
+	};
+
+	it('runs the hooked action at a turn start — the Next-turn button, not the economy underneath it', async () => {
+		const graph = await graphOf();
+		const character = wounded();
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.nextTurn();
+		expect(character.play.hp.current).toBe(10);
+		combat.nextTurn();
+		expect(character.play.hp.current).toBe(15); // every turn, not once
+	});
+
+	it('fires on ENTERING combat too — round 1 is the first turn, and it must not be skipped', async () => {
+		const graph = await graphOf();
+		const character = wounded();
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.toggleCombat();
+		expect(character.play.hp.current).toBe(10);
+	});
+
+	it('does not fire with auto-calc off — the player is managing the sheet by hand', async () => {
+		const graph = await graphOf();
+		const character = wounded();
+		character.play.autoCalc = false;
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.nextTurn();
+		expect(character.play.hp.current).toBe(5);
+	});
+});
+
 /*
  * Hit Dice — spend on a short rest to heal (roll die + CON, min 1); regain on a long rest, EDITION-
  * divergent (2014 half / 2024 all). The class ref isn't in this fixture graph, so the die defaults to

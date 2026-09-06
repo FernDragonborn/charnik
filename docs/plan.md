@@ -260,8 +260,7 @@ position and are given per wave, because most of them were learned the hard way.
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
 - **Ready, unscheduled, and app-only** — what is left in the trackers that needs no content commit and
   no design session, so a session with app time can take any of them without re-deriving that they
-  exist: RECHARGE-TAIL's `on_event` generalization (Champion Heroic Rally is its second consumer)
-  and N5's ammunition toggle.
+  exist: N5's ammunition toggle.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).

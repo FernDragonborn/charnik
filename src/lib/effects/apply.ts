@@ -23,7 +23,9 @@ import {
 	type EffectCtx,
 	type EffectIssue,
 	type ParsedEffect,
+	isPlayEvent,
 } from './token-parser';
+import { resolveActionFormula } from './action-token';
 import { rechargeRank } from '../rules/recharge';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
@@ -215,6 +217,9 @@ class FactsCollector {
 						source: eff.source,
 					});
 				break;
+			case EFFECT_KIND.onEvent:
+				this.pushEventHook(p, eff);
+				break;
 			case EFFECT_KIND.grantResource:
 				this.pushResource(p, eff, token);
 				break;
@@ -226,6 +231,17 @@ class FactsCollector {
 				this.facts.unknown.push({ source: eff.source, token });
 				break;
 		}
+	}
+
+	/** An event hook: the event (target) + the executor verb to run when it fires, its L2 resolved
+	 *  here exactly as a resource-option's action is, so the combat layer only runs what it is handed. */
+	private pushEventHook(p: ParsedEffect, eff: ActiveEffect): void {
+		if (!p.target || !p.action || !isPlayEvent(p.target)) return;
+		this.facts.onEvent.push({
+			event: p.target,
+			action: resolveActionFormula(p.action, ctxOf(this.ctx, eff), eff.source, this.issues),
+			source: eff.source,
+		});
 	}
 
 	private pushRoll(p: ParsedEffect, eff: ActiveEffect, token: string): void {
@@ -340,6 +356,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.breaksConcentration ||= extra.breaksConcentration;
 	base.damageReroll.push(...extra.damageReroll);
 	base.initiativeRegain.push(...extra.initiativeRegain);
+	base.onEvent.push(...extra.onEvent);
 	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);

@@ -594,6 +594,7 @@
 			"cast": "Cast {name}",
 			"castRitual": "Cast {name} (ritual)",
 			"dismiss": "Dismiss",
+			"heal": "{name} — healing",
 			"logCue": "log",
 			"noRolls": "Tap any check · save · attack · spell to roll it.",
 			"rollAria": "{label} — {total}",

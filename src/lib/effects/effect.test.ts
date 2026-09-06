@@ -485,6 +485,50 @@ describe('collectFacts', () => {
 	});
 });
 
+describe('on_event · a bounded event crossed with the bounded action verbs', () => {
+	const ctx = makeExprContext({
+		level: 18,
+		proficiencyBonus: 6,
+		abilityMods: { str: 0, dex: 0, con: 3, int: 0, wis: 0, cha: 0 },
+		abilityScores: { str: 10, dex: 10, con: 16, int: 10, wis: 10, cha: 10 },
+		classLevels: { fighter: 18 },
+		spellcastingMod: 0,
+		baseSpeed: 30,
+	});
+
+	it('keeps the action token whole — only the FIRST colon is structural', () => {
+		expect(parseToken('on_event:turn_start:heal:5+con_mod')).toMatchObject({
+			kind: 'on_event',
+			target: 'turn_start',
+			action: 'heal:5+con_mod',
+		});
+		expect(parseToken('on_event:turn_start:attack:unarmed_strike:2')).toMatchObject({
+			action: 'attack:unarmed_strike:2',
+		});
+	});
+
+	it('resolves the action L2 at derive, so the executor only rolls what it is handed', () => {
+		const facts = collectFacts(
+			[{ source: 'Survivor', layer: 'feature', tokens: ['on_event:turn_start:heal:5+con_mod'] }],
+			ctx,
+		);
+		expect(facts.onEvent).toEqual([{ event: 'turn_start', action: 'heal:8', source: 'Survivor' }]);
+	});
+
+	it('says "only while Bloodied" with the ordinary L2 guard, not a condition slot of its own', () => {
+		const token = 'is_bloodied ? on_event:turn_start:heal:5+con_mod';
+		expect(splitGuard(token)).toEqual({
+			guard: 'is_bloodied',
+			token: 'on_event:turn_start:heal:5+con_mod',
+		});
+	});
+
+	it('degrades an event nobody fires to an inert note — a hook that never runs must not look fine', () => {
+		expect(parseToken('on_event:full_moon:heal:1d4')).toMatchObject({ kind: 'unknown' });
+		expect(parseToken('on_event:turn_start')).toMatchObject({ kind: 'unknown' });
+	});
+});
+
 /* ─────────────────────────── L1 boundary · raw token first-contact (unfiltered input) ─────────────────────────── */
 
 describe('parseToken · set_override value slot (literal vs expression vs dice)', () => {

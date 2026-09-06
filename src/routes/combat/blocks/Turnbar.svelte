@@ -86,7 +86,7 @@
 	<button
 		type="button"
 		class="nextturn"
-		onclick={combat.economy.nextTurn}
+		onclick={combat.nextTurn}
 		aria-label={$_('combat.turn.nextTurn')}
 		title={$_('combat.turn.nextTurn')}
 		><span class="slot-label">{$_('combat.turn.nextTurn')}</span>

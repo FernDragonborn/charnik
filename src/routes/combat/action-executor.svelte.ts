@@ -5,15 +5,16 @@
  * matters most is that every verb lands on an EXISTING system rather than opening a new mutation
  * path into play-state.
  *
- * Entering combat lives here too, because "roll Initiative" is the event that fires
- * `regain_on_initiative` features — the tracker's one auto-mutation, and it belongs beside the
- * other things that spend and restore.
+ * Entering combat and advancing a turn live here too, because both are EVENTS that fire features —
+ * `regain_on_initiative` at initiative, `on_event` hooks at a turn start — and the tracker's
+ * automatic mutations belong beside the other things that spend and restore.
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
+import { PLAY_EVENT, type PlayEvent } from '$lib/effects/token-parser';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import { attackRollName, numberedAttackRollName, type Attack } from '$lib/combat/attacks';
 import type { RollJournal } from './roll-journal.svelte';
@@ -85,7 +86,7 @@ export class ActionExecutor {
 		}
 		if (slot) this.host().economy.trySpend(slot); // both spends succeed — validated above
 		this.host().resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
-		this.runActionToken(opt);
+		this.runAction(opt.name, opt.action);
 	};
 
 	/** The resource CHIP's primary "use one" gesture. When the pool has exactly ONE action-option, using
@@ -104,11 +105,42 @@ export class ActionExecutor {
 	};
 
 	/** Enter/leave combat. Wraps `economy.toggleCombat` (which flips `inCombat` + resets the round) so
-	 *  that ENTERING combat = "rolling Initiative" also fires the auto event features. */
+	 *  that ENTERING combat = "rolling Initiative" also fires the auto event features. Round 1 IS the
+	 *  character's first turn, so `turn_start` fires here too — otherwise a turn-start feature would
+	 *  silently skip the first turn of every fight. */
 	toggleCombat = () => {
 		this.host().economy.toggleCombat();
-		if (this.host().character?.play.inCombat) this.fireInitiativeRegen();
+		if (this.host().character?.play.inCombat) {
+			this.fireInitiativeRegen();
+			this.fireEventHooks(PLAY_EVENT.turnStart);
+		}
 	};
+
+	/** Advance to your next turn. Wraps `economy.nextTurn` (which resets the pips, advances the round
+	 *  and expires timed effects) so the turn boundary is ONE call: whoever ends a turn also starts the
+	 *  next one, and a `turn_start` feature cannot be missed by a caller that forgot to fire it. */
+	nextTurn = () => {
+		this.host().economy.nextTurn();
+		this.fireEventHooks(PLAY_EVENT.turnStart);
+	};
+
+	/**
+	 * Run every `on_event` hook listening for `event` (2024 Champion's Heroic Rally at a turn start).
+	 * Both halves were settled at derive: the action's L2 formula is already resolved, and the hook's
+	 * L2 guard decided whether it is in this list at all — which is how "if you are Bloodied" is said
+	 * (`is_bloodied ? on_event:turn_start:heal:5+con_mod`), with no condition language of its own here.
+	 *
+	 * Auto-apply, the same call `regain_on_initiative` made: RAW these happen TO you, and a prompt at
+	 * every turn start would be worse than the tracker doing it. Gated on auto-calc like every other
+	 * automatic mutation. The verbs that change something visible announce it themselves (a `heal:`
+	 * toasts its roll), so there is no second notice layered on top; a hook whose verb is silent needs
+	 * that VERB to say something, which is a fix in one place rather than in every caller.
+	 */
+	private fireEventHooks(event: PlayEvent) {
+		if (!this.host().character?.play.autoCalc) return;
+		for (const hook of this.host().sheet?.facts.onEvent ?? [])
+			if (hook.event === event) this.runAction(hook.source, hook.action);
+	}
 
 	/** AUTO event on combat start ("when you roll Initiative"): every `regain_on_initiative` feature
 	 *  restores its pool up to N and NOTIFIES what happened — auto-apply + toast, the maintainer's call
@@ -142,12 +174,12 @@ export class ActionExecutor {
 	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
 	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
 	 *  Metabolism), `note:` → the spendOption toast. */
-	private runActionToken(opt: ResourceOption) {
+	private runAction(name: string, action: string) {
 		// a `;`-separated action is a MULTI-action (Uncanny Metabolism = restore focus AND heal): run each
 		// sub-token in order on the ONE activation (cost + turn slot were validated once, up front).
-		for (const token of opt.action.split(';')) {
+		for (const token of action.split(';')) {
 			const t = token.trim();
-			if (t) this.runOneAction(opt, t);
+			if (t) this.runOneAction(name, t);
 		}
 	}
 
@@ -158,27 +190,30 @@ export class ActionExecutor {
 	 * anybody reads in one go. An entry that needs an argument checks for it; a verb whose argument
 	 * is missing does nothing, which is the same silence the ladder gave.
 	 */
-	private readonly VERBS: Record<string, (opt: ResourceOption, arg: string) => void> = {
-		heal: (opt, arg) => {
+	private readonly VERBS: Record<string, (name: string, arg: string) => void> = {
+		heal: (name, arg) => {
 			const p = this.host().character?.play;
 			if (!p || !arg) return;
 			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.host().hpMax, p.hp.current + Math.max(0, r.total));
-			this.host().journal.pushRoll({ text: `${opt.name} — heal` }, r);
+			this.host().journal.pushRoll(
+				{ text: `${name} — heal`, key: 'combat.log.heal', values: { name } },
+				r,
+			);
 		},
-		roll: (opt, arg) => {
-			if (arg) this.host().journal.pushRoll({ text: opt.name }, rollFormula(arg));
+		roll: (name, arg) => {
+			if (arg) this.host().journal.pushRoll({ text: name }, rollFormula(arg));
 		},
-		apply_condition: (opt, arg) => {
+		apply_condition: (name, arg) => {
 			if (arg)
 				this.host().effects.addEffect({
-					label: opt.name,
+					label: name,
 					tokens: [`apply_condition:${arg}`],
 					positive: false,
 				});
 		},
-		apply_effect: (opt, arg) => {
-			if (arg) this.applyCatalogEffect(opt, arg);
+		apply_effect: (name, arg) => {
+			if (arg) this.applyCatalogEffect(name, arg);
 		},
 		gain_action: () => {
 			// RAW: an ADDITIONAL action, i.e. one more pip this turn — not a refund of a spent one. It
@@ -186,31 +221,31 @@ export class ActionExecutor {
 			const p = this.host().character?.play;
 			if (p) p.turn.grantedActions += 1;
 		},
-		attack: (opt, arg) => {
-			if (arg) this.makeAttacks(opt, arg);
+		attack: (name, arg) => {
+			if (arg) this.makeAttacks(name, arg);
 		},
-		restore_resource: (_opt, arg) => {
+		restore_resource: (_name, arg) => {
 			// regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
 			if (arg) this.host().resources.restoreAll(arg);
 		},
-		rest: (opt, arg) => {
+		rest: (name, arg) => {
 			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
 			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
 			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
 			// refund its own charge (see actions.md §2).
 			if (arg !== 'short' && arg !== 'long') return;
 			this.host().resources.rest(arg);
-			toast(t('combat.notice.restTakenFor', { name: opt.name, kind: t(`combat.restKind.${arg}`) }));
+			toast(t('combat.notice.restTakenFor', { name, kind: t(`combat.restKind.${arg}`) }));
 		},
 	};
 
-	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`). */
-	private runOneAction(opt: ResourceOption, action: string) {
+	/** Run ONE resolved action verb (an action may hold several, `;`-joined — see `runAction`). */
+	private runOneAction(name: string, action: string) {
 		if (!this.host().character) return;
 		const sep = action.indexOf(':');
 		const verb = sep === -1 ? action : action.slice(0, sep);
 		const arg = sep === -1 ? '' : action.slice(sep + 1);
-		this.VERBS[verb]?.(opt, arg);
+		this.VERBS[verb]?.(name, arg);
 	}
 
 	/**
@@ -223,7 +258,7 @@ export class ActionExecutor {
 	 * translated sheet. An id the character isn't carrying is SURFACED: an action that silently rolls
 	 * nothing is the bug this verb exists to fix, so it must not become a quieter version of itself.
 	 */
-	private makeAttacks(opt: ResourceOption, arg: string) {
+	private makeAttacks(name: string, arg: string) {
 		const sep = arg.lastIndexOf(':');
 		const hasCount = sep > 0 && /^\d+$/.test(arg.slice(sep + 1));
 		const id = (hasCount ? arg.slice(0, sep) : arg).trim().toLowerCase();
@@ -231,7 +266,7 @@ export class ActionExecutor {
 		const count = Math.min(Math.max(1, asked), MAX_ATTACKS_PER_ACTION);
 		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
 		if (!at) {
-			toast(t('combat.notice.nothingToAttack', { name: opt.name }), {
+			toast(t('combat.notice.nothingToAttack', { name }), {
 				description: t('combat.notice.nothingToAttackBody', { id }),
 			});
 			return;
@@ -249,12 +284,12 @@ export class ActionExecutor {
 	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets
 	 *  buff/debuff, `duration_rounds` gives the timer (round-counter auto-expires it). Missing id →
 	 *  surface, not a silent no-op. Split out of `runOneAction` to keep its verb-dispatch under budget. */
-	private applyCatalogEffect(opt: ResourceOption, arg: string) {
+	private applyCatalogEffect(name: string, arg: string) {
 		const p = this.host().character?.play;
 		if (!p) return;
 		const cat = this.host().effects.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
 		if (!cat) {
-			toast(t('combat.notice.effectMissing', { name: opt.name }), {
+			toast(t('combat.notice.effectMissing', { name }), {
 				description: t('combat.notice.effectMissingBody', { id: arg }),
 			});
 			return;

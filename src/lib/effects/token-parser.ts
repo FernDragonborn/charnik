@@ -66,9 +66,16 @@ export const EFFECT_KIND = {
 	// Superior Inspiration → Bardic Inspiration 2, Evergreen Wild Shape → 1). Same `kind:target:int`
 	// shape as `reroll`/`min_die`. Surfaced as a fact the combat layer AUTO-APPLIES on entering combat +
 	// notifies (the maintainer's call: auto + notification, not a player click — these are automatic in
-	// RAW). Fully data-driven; the notice is labelled from the feature's own name. First event trigger —
-	// the seam for future ones (turn-start regen, etc.) is a new token, not a general event bus (YAGNI).
+	// RAW). Fully data-driven; the notice is labelled from the feature's own name. Kept beside `on_event`
+	// rather than folded into it: "top up TO n" is not one of the executor verbs, and spelling it as one
+	// would mean a verb that only ever appears here.
 	regainOnInitiative: 'regain_on_initiative',
+	// EVENT HOOK (`on_event:<event>:<action>`): when <event> happens to this character, run <action> —
+	// one of the bounded executor verbs (docs/internals/actions.md §2), the same set a resource-option
+	// spends into. Two bounded vocabularies crossed, so a third trigger costs a name in `PLAY_EVENT`
+	// and a fire site, not a new token. Arbitrary event LOGIC stays an L3 plugin `onEvent` handler:
+	// widening L1 past a bounded vocabulary is a security property, not a style choice.
+	onEvent: 'on_event',
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
 	// pointer; the derive pre-pass resolves it through the plugin registry (docs/internals/plugins.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
@@ -138,6 +145,9 @@ export interface ParsedEffect {
 	/** plugin: the parsed handler reference. `args` is OPAQUE, hostile text the handler must parse
 	 *  defensively (docs/internals/plugins.md §1) — never interpreted here. */
 	plugin?: { namespace: string; handlerName: string; args: string };
+	/** on_event: the executor action token to run when `target`'s event fires, verbatim (it carries its
+	 *  own `:` and may hold an L2 formula — `heal:5+con_mod` — resolved at derive like every other). */
+	action?: string;
 	raw: string;
 }
 
@@ -334,6 +344,31 @@ const parseRollMod: KindParser = (rest, raw, kind) => {
 	};
 };
 
+/**
+ * The play events an `on_event` token may hook — and the only ones the app fires. Closed on purpose:
+ * an event name nobody fires would parse cleanly and then never happen, which is exactly the silent
+ * no-op this vocabulary exists to prevent. A new trigger is a name here plus the one call site that
+ * fires it (the plugin-facing vocabulary in docs/internals/actions.md §3 is the superset it grows
+ * towards). `turn_start` fires on Next turn AND on entering combat, because the tracker's round 1 is
+ * the character's first turn and dropping the feature's first use there would be a rules bug.
+ */
+export const PLAY_EVENT = { turnStart: 'turn_start' } as const;
+export type PlayEvent = (typeof PLAY_EVENT)[keyof typeof PLAY_EVENT];
+const PLAY_EVENTS = new Set<string>(Object.values(PLAY_EVENT));
+/** Is this string one of the fired events? The parser rejects anything else, but a consumer reading
+ *  `target` back off a ParsedEffect narrows through here rather than asserting the type. */
+export const isPlayEvent = (s: string): s is PlayEvent => PLAY_EVENTS.has(s);
+
+const parseOnEvent: KindParser = (rest, raw, kind) => {
+	// `on_event:<event>:<action>` — only the FIRST separator is structural: the action is itself a verb
+	// token (`heal:5+con_mod`, `attack:unarmed_strike:2`) and keeps every colon it came with.
+	const sep = rest.indexOf(':');
+	const event = sep === -1 ? '' : rest.slice(0, sep).toLowerCase();
+	const action = sep === -1 ? '' : rest.slice(sep + 1).trim();
+	if (!PLAY_EVENTS.has(event) || !action) return { kind: 'unknown', raw };
+	return { kind, target: event, action, raw };
+};
+
 /** Body parsers keyed by kind. A kind with no entry (advantage / disadvantage / apply_condition /
  *  auto_fail / auto_succeed / note) takes the bare-target fallback in `classifyToken`. */
 const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
@@ -351,6 +386,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	// `regain_on_initiative:<resource>:<n>` is the same `kind:target:int` shape (resource + the floor
 	// to top up to), so it reuses the roll-mod parser — no scope segment is ever present.
 	[EFFECT_KIND.regainOnInitiative]: parseRollMod,
+	[EFFECT_KIND.onEvent]: parseOnEvent,
 };
 
 /** Kinds whose body ENDS in free-form prose (a `note:`'s display text, a plugin's argument): the
