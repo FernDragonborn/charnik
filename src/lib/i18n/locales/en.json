@@ -1308,7 +1308,15 @@
 		"targetHomebrew": "My homebrew (recommended)",
 		"targetLabel": "Save to file",
 		"targetNewFile": "New file…",
-		"targetShippedTag": "ships with app"
+		"targetShippedTag": "ships with app",
+		"upcastBuild": "Build a rule",
+		"upcastKind": "What scales",
+		"upcastShape": "How it scales",
+		"upcastShape_perSlot": "per slot above the spell’s level",
+		"upcastShape_total": "total = slot + this",
+		"upcastAmount": "1d6",
+		"upcastAdd": "Add",
+		"upcastRefused": "Charnik cannot read that — check the amount"
 	},
 	"itemCategory": {
 		"weapon": "Weapon",
@@ -1840,6 +1848,16 @@
 		"sleight_of_hand": "Sleight of Hand",
 		"stealth": "Stealth",
 		"survival": "Survival"
+	},
+	"upcastKind": {
+		"damage": "damage",
+		"heal": "healing",
+		"hp_max": "max HP",
+		"temp_hp": "temp HP",
+		"count": "how many",
+		"area": "area (ft)",
+		"duration": "duration (rounds)",
+		"enhancement": "enhancement bonus"
 	},
 	"spellLevel": {
 		"cantrip": "cantrip",

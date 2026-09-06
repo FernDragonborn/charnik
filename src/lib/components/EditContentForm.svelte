@@ -4,6 +4,7 @@
 	// page you were just reading. Binds a flat draft, validates + writes via the homebrew pipeline
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
 	import Icon from './Icon.svelte';
+	import UpcastBuilder from './UpcastBuilder.svelte';
 	import { onMount } from 'svelte';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { resetContentGraph } from '$lib/content/provider';
@@ -170,7 +171,7 @@
 		/^(name|text)_(?!en$)[a-z][a-z-]*$/.test(name) ||
 		/^(material|higher_level)_[a-z][a-z-]*$/.test(name);
 	// material + higher_level render at the BOTTOM (below the body), mirroring the compendium article.
-	const BOTTOM_FIELDS = ['higher_level', 'material'];
+	const BOTTOM_FIELDS = ['higher_level', 'material', 'upcast'];
 	const CLASSES_FIELD = 'classes';
 
 	const fields = $derived(fieldsFor(type).filter((f) => !isLocaleVariant(f.name)));
@@ -385,6 +386,9 @@
 				>
 				<input type="text" bind:value={draft[f.name]} />
 			</label>
+			<!-- the upcast cell is a GRAMMAR, so it gets a builder under its raw field rather than a
+			     placeholder telling an author to learn one (UPCAST-AUTHORING) -->
+			{#if f.name === 'upcast'}<UpcastBuilder bind:value={draft[f.name]} />{/if}
 		{/if}
 	{/each}
 

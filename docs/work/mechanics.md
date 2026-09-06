@@ -284,15 +284,13 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   that toggle gates effect-MODIFIER layers, not a spell's own mechanic. (4) Conjure* tables and
   meta-rules (Dispel Magic, Globe) stay prose `higher_level` — a permanent exclusion, not a gap.
   **Open tails that had no other home:**
-  - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
-    so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
-    ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
-    **The form WRITES the token; it does not rename anything.** What lands in the CSV is the same
-    `upcast` string an author could type by hand, so the file and the UI never hold two names for one
-    fact — the fields are input widgets over the grammar, labelled from the catalogs like every other
-    label. Build them off the same `kindOf`/`optionsOf` the homebrew form already derives from the
-    schema, so the widget cannot offer what the grammar rejects. v1 covers `per_slot`, `count` and
-    `duration`; anything else stays the raw field.
+  - [x] **UPCAST-AUTHORING (was N8) · the upcast cell is BUILT, not typed.** `UpcastBuilder` under the
+        raw field in `EditContentForm`: pick what scales, how it scales, and the amount, and the token
+        it will write is shown before it is added — seeing `damage:per_slot(1d6)` is what teaches the
+        grammar the raw field still accepts. The composed token is read back through the LOADER's own
+        parser, so the form cannot offer what the app would refuse. The raw field stays: a `step()`
+        ladder, a typed sub-slot and a guard are all wider than the two shapes here, and prose
+        `higher_level` is still the fallback for a spell whose scaling is not a formula at all.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
 - [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (62)
+## Duplicate suspects (64)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -35,9 +35,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `add` ×2 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
+- `cell` ×2 — src/lib/components/UpcastBuilder.svelte · src/lib/content/migrations.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
 - `closeOnOutside` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
@@ -200,7 +202,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (50)
+## Shared components (51)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -253,6 +255,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
 | **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
+| **UpcastBuilder** | `value` | The `upcast` cell, built rather than typed. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
 ## Stores & reactive state (15 modules)
@@ -1303,6 +1306,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/upcast.ts`
 
+- `const UPCAST_KINDS` — The upcast kinds (§8).
 - `interface ParsedUpcastToken` — One parsed upcast token — grammar only, not yet evaluated.
 - `interface UpcastParseError` — A parse failure for one token (surfaced as prose fallback + content-health, H11).
 - `function parseUpcast` — Parse a whole `upcast` cell into its tokens (`;`-separated).
@@ -1618,4 +1622,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 50 components · 965 exports across 131 modules · 62 duplicate suspects._
+_47 tokens · 78 global classes · 51 components · 966 exports across 131 modules · 64 duplicate suspects._

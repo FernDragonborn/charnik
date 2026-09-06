@@ -1308,7 +1308,15 @@
 		"targetHomebrew": "Мій хоумбрю (рекомендовано)",
 		"targetLabel": "Зберегти у файл",
 		"targetNewFile": "Новий файл…",
-		"targetShippedTag": "у складі програми"
+		"targetShippedTag": "у складі програми",
+		"upcastBuild": "Скласти правило",
+		"upcastKind": "Що зростає",
+		"upcastShape": "Як зростає",
+		"upcastShape_perSlot": "за кожну комірку понад рівень закляття",
+		"upcastShape_total": "усього = комірка + це",
+		"upcastAmount": "1d6",
+		"upcastAdd": "Додати",
+		"upcastRefused": "Charnik не може це прочитати — перевірте значення"
 	},
 	"itemCategory": {
 		"weapon": "Зброя",
@@ -1840,6 +1848,16 @@
 		"sleight_of_hand": "Спритність рук",
 		"stealth": "Непомітність",
 		"survival": "Виживання"
+	},
+	"upcastKind": {
+		"damage": "шкода",
+		"heal": "зцілення",
+		"hp_max": "максимум ХП",
+		"temp_hp": "тимчасові ХП",
+		"count": "кількість",
+		"area": "площа (фт)",
+		"duration": "тривалість (раунди)",
+		"enhancement": "бонус посилення"
 	},
 	"spellLevel": {
 		"cantrip": "замовляння",

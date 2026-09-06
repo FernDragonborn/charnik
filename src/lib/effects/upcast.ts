@@ -16,7 +16,7 @@ import { evalExpression, type ExprContext, type ExprValue } from './expression-e
 import { splitGuard } from './token-parser';
 
 /** The upcast kinds (§8). Which combine + which cast route each takes is decided by the two sets below. */
-const UPCAST_KINDS = [
+export const UPCAST_KINDS = [
 	'damage',
 	'heal',
 	'hp_max',
