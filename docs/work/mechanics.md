@@ -230,6 +230,23 @@ stay semi-manual.
   a faded `half` dot (color-mix on `--color-resource`, scaffolding until a half-prof producer
   lands per (c)) — and a friendly per-tier tooltip on the dot. Combat baseline 0px (reachable
   tiers render identically; the `on` split is behaviour-identical for none/proficient/expertise).
+  **(b)+(c) DONE — the rung has a producer, and the builder reads the ladder.** The rung is an
+  optional LEADING word (`grant_proficiency:[half|proficient|expertise:]<target>`) rather than the
+  third segment this item once planned: the `expertise:` prefix already shipped, so extending it
+  keeps ONE shape and every token written before the rung existed still parses as `proficient`.
+  **Jack of All Trades is a content row** in both editions — `grant_proficiency:half:skills`, where
+  `skills` is a group target fanned out in the one place that reads the facts. RAW's "that doesn't
+  already include your proficiency bonus" needs no second rule: the rungs combine by MAX, so a skill
+  already proficient keeps proficiency and the half rung simply loses.
+  **The builder shows the ladder, not just the pick.** A skill the sheet says is proficient that the
+  draft never picked and no background gave is locked on and says "Granted by a feature" — the
+  alternative is a row that looks pickable, un-picks to nothing, and reads as a bug. `half` is
+  deliberately NOT a lock: it grants nothing to un-pick and the skill stays yours to train. The faded
+  half dot is the play sheet's own, so one tier looks like one tier in both views.
+  **Screenshot-verified on a level-2 bard** (every skill −1 → 0, every passive 9 → 10,
+  `design-preview/joat-half-proficiency.png`) and on a 2014 elf, whose Keen Senses locks Perception.
+  **Residual: the expertise CAP UI is still not screenshot-verified in a Rogue state** — the
+  behaviour is unit- and content-tested; only the on-screen `expertise N/M` counter is unseen.
 
 ### EXPR · L2 value-expression layer — BUILT (design → docs/internals/effects.md §3)
 
