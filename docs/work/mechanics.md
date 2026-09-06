@@ -102,24 +102,28 @@ stay semi-manual.
   to reach them is the design half of this item. Do the saves first: they need no new targets, and
   they turn the token from a promise into something a shipped row proves.
 
-- [ ] **EXTRA-ATTACK · a level-5 martial attacks once. BLOCKS 0.7.0, first priority.** Five
-  classes in both editions grant it, at the tier most games are played at, and nothing in the app
-  models how many attacks an Attack action makes. Shape (settled in N2): `flat_bonus:attacks+N` on
-  the feature row, a fold target for it, and the Attacks panel showing ×N per weapon row. Watch the
-  ladder — 2024 Fighter gets two more at 11 and three at 17, so the token is per-row and additive,
-  not a set. The roller already takes an instance count (`times` belongs to the action), so the
-  volley path this rides is built.
-- [ ] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
+- [x] **EXTRA-ATTACK · a level-5 martial attacks twice.** `attacksPerAction` is a folded value
+  like every other number: base one from the rules core, raised by `set_override:attacks:<n>:floor`
+  on the feature row, with its trace. **A SET with a floor, not an add** — RAW lists Extra Attack
+  among the features with special multiclassing rules, so a fighter 5 / barbarian 5 attacks twice
+  and two additive tokens would have quietly made it three. The 2014 fighter carries its whole
+  ladder in one row (`step(class_level.fighter, 5->2, 11->3, 20->4)`), 2024 splits it across three
+  rows that each raise the floor. The builder had been showing this number from its own sum over raw
+  facts, which bypassed the fold; both views read the one value now. The 2014 paladin had no Extra
+  Attack ROW at all — its SRD heading reads "Extra A ttack", an OCR artifact, so the converter's
+  name lookup never matched — and the row is transcribed in.
+- [x] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
   It ships as a broad `flat_bonus:damage+2`, so it pays out on any attack. RAW is narrower and the
   two editions are NOT the same sentence: 2014 is "when you make a melee weapon attack usingStrength",
   2024 is "When you make an attack using Strength—with either a weapon or an Unarmed Strike" (no
   melee, and unarmed named). So this is two tokens, not one shared one. Player consensus is
   unanimous and matches RAW — a finesse weapon swung with Dexterity gets nothing — so there is no
   table choice to offer here, unlike most RAW/RAI splits.
-  Blocked on SCOPED-BONUS growing a scope for "attacks resolved from Strength": the qualifier
-  namespace holds weapon categories and ids, and the ability an attack used is not one of them. The
-  VALUE it needs already exists — `computeAttacks` resolves the ability per attack
-  (`combat/attacks.ts`: ranged is DEX, finesse the better of the two, everything else STR).
+  Shipped as `damage.melee,str` (2014) and `damage.str` (2024). It needed two grammar pieces that
+  did not exist: an attack now carries the ABILITY it resolved from among its scopes (`attackAbility`
+  in `combat/attacks.ts`, extracted so the rule has one home), and a scope may be a comma-separated
+  list the roll path requires ALL of — which it already matched that way, only the parser refused to
+  accept one.
 - [ ] **FINESSE-ABILITY · a finesse weapon asks which ability it swings with. NEEDS A MAINTAINER'S
   EYES ON THE FEEL, not just a green test.** RAW hands the player the choice — "you use your choice
   of your Strength or Dexterity modifier" — and the app takes it silently: `Math.max(strMod, dexMod)`.
