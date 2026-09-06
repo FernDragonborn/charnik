@@ -770,3 +770,29 @@ describe('shipped species options · the 2024 in-species choices', () => {
 				expect(parseToken(raw).kind, `${row.id}: "${raw}"`).not.toBe('unknown');
 	});
 });
+
+describe('shipped Reliable Talent · a rogue stops rolling under 10 where it counts', () => {
+	it.each([
+		['srd-2014', 'SRD 5.1', '5e' as const],
+		['srd-2024', 'SRD 5.2.1', '5.5e' as const],
+	])('%s: the floor applies to a proficient check and to no other', async (dir, src, sys) => {
+		const graph = await loadEdition(dir);
+		const c = newCharacter('vax', 'Vax', sys);
+		c.build.classes = [{ class: `class:${src}:rogue`, level: 11 }];
+		c.build.skills = ['stealth'];
+		const sheet = deriveSheet(characterSchema.parse(c), graph);
+		// the scope the roll site passes is "this check adds your proficiency bonus"
+		const floorOn = (skill: string, prof: boolean) =>
+			rollEffectsFor(sheet.facts, `skill.${skill}`, new Set(prof ? ['proficient'] : [])).minDie;
+		expect(floorOn('stealth', true)).toBe(10);
+		expect(floorOn('arcana', false)).toBeUndefined(); // untrained — RAW gives it nothing
+		// and it is the ROGUE's, not everyone's
+		const bard = newCharacter('scanlan', 'Scanlan', sys);
+		bard.build.classes = [{ class: `class:${src}:bard`, level: 11 }];
+		bard.build.skills = ['stealth'];
+		const bardSheet = deriveSheet(characterSchema.parse(bard), graph);
+		expect(
+			rollEffectsFor(bardSheet.facts, 'skill.stealth', new Set(['proficient'])).minDie,
+		).toBeUndefined();
+	});
+});

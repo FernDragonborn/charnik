@@ -145,6 +145,27 @@ stay semi-manual.
   **The open question is not whether it computes right — it is whether a player reads it without
   being told.** That verdict is the maintainer's, from the running app; it lands in the manual-check
   report when built, not closed on a passing test.
+- [x] **RELIABLE-TALENT · a rogue stops rolling under 10 where the rule says so.** `min_die` was
+  built with Reliable Talent as its named example and shipped with no d20 consumer at all: the rows
+  said "you can treat a d20 roll of 9 or lower as a 10" in both editions and an 11th-level rogue
+  rolling a 3 kept the 3. Found by a maintainer mixing it up with Jack of All Trades, which is the
+  cheapest kind of find and the reason to say what a feature does out loud.
+
+  **What it needed was one fact the roll did not carry.** RAW keys off "an ability check that lets you
+  add your proficiency bonus", and a skill roll passed no scopes, so `min_die:skills:10` would have
+  floored every check including the untrained ones — over-granting, which is the failure this whole
+  gate is about. The skill roll now passes ONE scope, `proficient`, meaning exactly that sentence, and
+  the shipped token is `min_die:skills:proficient:10`. Expertise carries the scope too; Jack of All
+  Trades' `partial` rung does not — 2024 says "uses one of your skill proficiencies", and a skill you
+  are untrained in is not one.
+
+  **`roll`'s key and its scopes became one argument** (`RollTarget`), because they answer one question
+  and because a fifth positional parameter is a type. A bare string still works, so every other call
+  site reads as it did.
+
+  **Not covered, and stated rather than implied:** 2024's Reliable Talent also names TOOL
+  proficiencies, which `TOOLS` has not modelled yet, so the tool half waits there.
+
 - [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",

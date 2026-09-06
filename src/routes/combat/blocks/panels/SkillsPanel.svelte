@@ -17,6 +17,13 @@
 		proficient: 'combat.skills.profProficient',
 		expertise: 'combat.skills.profExpertise',
 	} as const;
+
+	/** What a skill check IS, for effects that only apply to some checks. `proficient` here means
+	 *  "this check adds your proficiency bonus" — RAW's own wording for Reliable Talent — so expertise
+	 *  carries it too and Jack of All Trades' partial rung does not: 2024 says "uses one of your skill
+	 *  proficiencies", which a skill you are untrained in is not. */
+	const scopesOf = (prof: CharacterSheet['skills'][SkillId]['prof']): Set<string> =>
+		new Set(prof === 'proficient' || prof === 'expertise' ? ['proficient'] : []);
 </script>
 
 <div class="sklgrid">
@@ -32,12 +39,10 @@
 							class="skill-row"
 							use:provenance={why(sk, $_)}
 							onclick={(e) =>
-								roll(
-									{ text: titleCase(skill), key: `skillName.${skill}` },
-									sk.value,
-									e,
-									`skill.${skill}`,
-								)}
+								roll({ text: titleCase(skill), key: `skillName.${skill}` }, sk.value, e, {
+									key: `skill.${skill}`,
+									scopes: scopesOf(sk.prof),
+								})}
 						>
 							<i
 								class="prof-dot"

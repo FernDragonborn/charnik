@@ -83,6 +83,9 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   with a blank description — the Vorpal Sword, the Rod of Alertness, Dragon Scale Mail and eighty-six
   more — because the importer was throwing away the paragraph the description lives in. They read
   fully now, and that is what let their numbers be filled in at all.
+- **An 11th-level rogue stops rolling under 10.** Reliable Talent did nothing at all — the feature
+  said its rule and the die kept whatever it landed on. It applies where the rule says it does: on a
+  check you add your proficiency bonus to, and not on one you are untrained in.
 - **A bard is a Jack of All Trades.** Half your proficiency bonus on every check you are not
   trained in — the tier the sheet has been able to draw since August with nothing able to grant it.
   A skill you already train keeps its full bonus, which is the rule.

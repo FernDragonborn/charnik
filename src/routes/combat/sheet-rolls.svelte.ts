@@ -46,6 +46,11 @@ export interface SheetRollsHost {
 	openMenu(kind: MenuKind, e: Event): void;
 }
 
+/** WHICH effects a roll picks up: its effect key (`save.dex`, `skill.stealth`, `attack`), and the
+ *  scopes that narrow which of the matching ones apply. A bare string is the common case — a key with
+ *  nothing to narrow — so most call sites read exactly as they did before scopes existed. */
+export type RollTarget = string | { key: string; scopes?: Set<string> };
+
 export class SheetRolls {
 	/* Accessor, not an object — a $derived field initialiser runs before a constructor parameter
 	   property is assigned (same shape as the other subsystems). */
@@ -110,7 +115,12 @@ export class SheetRolls {
 	// log is not frozen in one language). `key` (e.g. "save.dex", "skill.stealth", "attack") is a
 	// different thing: it lets the roll pick up matching EFFECTS. NB the flat part is IGNORED for
 	// save/skill keys — it's already folded into the sheet value `mod`.
-	roll = (name: RollName, mod: number, e: Event, key?: string) => {
+	// The two travel together as one argument because they answer one question — WHICH effects this
+	// roll picks up — and because a fifth positional parameter is a type (AGENTS ▸ Taste). `scopes`
+	// narrows the key the way a weapon's tags narrow an attack: a skill check says whether it adds
+	// your proficiency bonus, which is the only thing RAW's Reliable Talent keys off.
+	roll = (name: RollName, mod: number, e: Event, target?: RollTarget) => {
+		const { key, scopes } = typeof target === 'string' ? { key: target } : (target ?? {});
 		const label = name.text;
 		// a forced outcome (paralyzed → auto-fail its STR/DEX save) skips the die entirely — the result
 		// is decided by the condition, not the roll; logged as a no-roll marker so it's still visible
@@ -129,7 +139,7 @@ export class SheetRolls {
 			);
 			return;
 		}
-		const fx = key ? this.effectsFor(key) : null;
+		const fx = key ? this.effectsFor(key, scopes) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
 		if (wantsTray(e))
 			// the effect DICE ride too: the tray used to drop them, so Shift-clicking a roll under Bless
