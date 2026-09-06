@@ -254,13 +254,15 @@ position and are given per wave, because most of them were learned the hard way.
   it is that **no number on a default character is one we know to be wrong**. Five items fail that
   test today, and three of them are this cycle's own debt — a mechanism built and never given its
   first consumer, which is the worst kind of done: the suite is green and the player sees nothing.
-  In order: **EXTRA-ATTACK** (a fighter, barbarian, monk, ranger or paladin at level 5 attacks
-  ONCE — the most-played tier in the game) · **RAGE-SCOPE** (rage damage pays out on a crossbow
-  today) · **SCOPED-BONUS**'s remaining consumers (Agonizing Blast is one content row; Magic Weapon
-  waits on D16's cast-time choice) · **RECHARGE-3**'s first charged item (the whole two-axis model
-  and its Dawn/Dusk control ship with nothing that uses them) · **2014 casting counts** (every 2014
-  caster reads 0 cantrips). If a release goes out before these land, the changelog says plainly
-  which of them is still missing — a user must not go hunting for Extra Attack.
+  Done, in order: **EXTRA-ATTACK** (a level-5 martial attacked once — the most-played tier in the
+  game) · **RAGE-SCOPE** (rage damage paid out on a crossbow) · **RECHARGE-3**'s first charged items
+  (the two-axis model and its Dawn/Dusk control shipped with nothing that used them). Left:
+  **2014 casting counts** — every 2014 caster still reads 0 cantrips.
+  **SCOPED-BONUS's remaining consumers left this gate**: Agonizing Blast turned out not to be one
+  content row — no pack has a row per invocation, in either edition — so it needs the rows AND N2's
+  chooser, and Magic Weapon needs D16's cast-time choice. Neither is a wrong NUMBER on a sheet;
+  both are features that are absent, and the gate is about numbers we know to be wrong.
+  If a release goes out before the last one lands, the changelog says plainly what is still missing.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

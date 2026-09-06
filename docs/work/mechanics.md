@@ -279,10 +279,15 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   character has such a pool. **No `charges` column**: a charged item says
   `grant_resource:<id>:<charges>:<trigger(amount)>` in its own `effects` cell and gets the whole
   resource subsystem — pips, spend, chip, rest — for nothing.
-  - [ ] **A shipped SRD charged item or two as the first consumer**, converter-sourced — a commit in
-        `charnik-content-srd` with an assert here. Everything the app half needs is in place; what is
-        missing is the row, and a row is never authored from memory. **BLOCKS 0.7.0**: without it the
-        two-axis model and the Dawn/Dusk control ship with nothing a user can reach.
+  - [x] **Shipped charged items as the first consumers.** Eyes of Charming, Pipes of Haunting and
+        Gem of Seeing in both editions, Mace of Terror in 2024, each saying its pool in its own
+        `effects` cell — `grant_resource:<id>:3:dawn(1d3)`, or a bare `dawn` for the one that
+        regains all of them. Authored by asserting each row's own prose states both the count and the
+        recharge sentence before writing the token, so a converter re-run that changes the text fails
+        the authoring script instead of leaving a token that outlived its item.
+        2014's **Mace of Terror is skipped**: its shipped text begins mid-item ("The mace regains 1d3
+        expended charges…") with the charge count truncated away — the same 2014 truncation family as
+        MONK-MOVEMENT, and not a number to guess at.
 - [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
   small, each fires on an existing path, and none blocks the others.
   - [x] **Champion Heroic Rally — a turn-start heal**, and the trigger dimension generalized with it:
@@ -318,8 +323,12 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   field, so there is one shape downstream. What is left is the two CONSUMERS:
   - [ ] **Rage's damage, RAW** — the whole of it is RAGE-SCOPE above, including the two editions'
         different sentences and where the ability an attack used already lives. BLOCKS 0.7.0.
-  - [ ] **Magic Weapon, and Agonizing Blast.** Agonizing Blast is one content row and BLOCKS
-        0.7.0; Magic Weapon does not, because its fix is a cast-time choice, not this grammar.
+  - [ ] **Magic Weapon, and Agonizing Blast.** Neither blocks 0.7.0, and Agonizing Blast is NOT
+        the one content row it was billed as: the packs carry a single `warlock_eldritch_invocations`
+        row and no row per invocation, in either edition, so there is nothing to hang
+        `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the invocation rows (the 2014 source
+        names Agonizing Blast exactly once, under a heading the converter does not emit) and the
+        chooser that picks two of them, which is N2 shape 3.
         Magic Weapon buffs every weapon because the cast
         spawns an unscoped `flat_bonus:attack/damage+N` — RAW it names ONE weapon you touch, so the
         fix is not grammar any more, it is a cast-time CHOICE of which weapon (D16's shape).

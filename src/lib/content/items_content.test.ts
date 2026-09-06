@@ -114,3 +114,41 @@ describe('shipped magic items · effects column is engine-valid', () => {
 		});
 	}
 });
+
+describe('shipped charged items · the first consumers of the two-axis recharge (RECHARGE-3)', () => {
+	// A charged item says its pool in its OWN effects cell — no `charges` column — so it inherits the
+	// whole resource subsystem: pips, spend, the chip, and a rest that knows dawn is not a rest.
+	const poolOf = async (dir: string, source: string, system: '5e' | '5.5e', id: string) => {
+		const graph = await loadPacks(dir);
+		const c = newCharacter('vex', 'Vex', system);
+		c.build.inventory = [{ item: `item:${source}:${id}`, qty: 1, equipped: true, attuned: true }];
+		const sheet = deriveSheet(characterSchema.parse(c), graph);
+		return sheet.resources.find((r) => r.id === id);
+	};
+
+	it.each([
+		['srd-2024', 'SRD 5.2.1', '5.5e'],
+		['srd-2014', 'SRD 5.1', '5e'],
+	] as const)(
+		'%s: a Gem of Seeing carries 3 charges that come back 1d3 at dawn',
+		async (d, s, y) => {
+			expect(await poolOf(d, s, y, 'gem_of_seeing')).toMatchObject({
+				max: 3,
+				recharge: { trigger: 'dawn', amount: '1d3' },
+			});
+		},
+	);
+
+	it('an item that regains ALL of them says so as a bare trigger, not as an amount', async () => {
+		expect(await poolOf('srd-2024', 'SRD 5.2.1', '5.5e', 'eyes_of_charming')).toMatchObject({
+			max: 3,
+			recharge: { trigger: 'dawn' },
+		});
+	});
+
+	it("a pool only exists while the item is carried — it is the ITEM's pool, not the character's", async () => {
+		const graph = await loadPacks('srd-2024');
+		const bare = deriveSheet(characterSchema.parse(newCharacter('vex', 'Vex', '5.5e')), graph);
+		expect(bare.resources.find((r) => r.id === 'gem_of_seeing')).toBeUndefined();
+	});
+});
