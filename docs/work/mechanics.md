@@ -305,7 +305,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   ability with each tool. So the ability comes from a column where that edition's SRD states one, and
   from the player at roll time where it does not — never guessed.
   Unblocks Skilled's tool half in D16.
-- [~] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The model is
+- [x] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The model is
   BUILT (`rules/recharge.ts`, `docs/internals/effects.md` ▸ How a pool comes back): triggers
   `short|long|dawn|dusk|consumable|other` with an optional amount (`dawn(1d6+1)`), the one-word
   policies as sugar over it (`short_one` = `short(1)`), the rest path reading the model instead of
@@ -319,9 +319,15 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         regains all of them. Authored by asserting each row's own prose states both the count and the
         recharge sentence before writing the token, so a converter re-run that changes the text fails
         the authoring script instead of leaving a token that outlived its item.
-        2014's **Mace of Terror is skipped**: its shipped text begins mid-item ("The mace regains 1d3
-        expended charges…") with the charge count truncated away — the same 2014 truncation family as
-        MONK-MOVEMENT, and not a number to guess at.
+        2014's **Mace of Terror was skipped and is no longer**: its text began mid-item ("The mace
+        regains 1d3 expended charges…") with the count truncated away, which ITEM-TEXT-2014 turned out
+        to be — the extractor dropping the paragraph, not the source lacking it. The row reads whole
+        and carries its pool.
+  - [x] **Every charged item that states a pool now says it** — 54 rows across the two packs (every
+        wand, most staves, the rings, the trident), generated from the sentence stating the count and
+        the recharge and read back one by one against it. A RANDOM starting pool ("1d8 + 1 charges")
+        is deliberately not matched — the vocabulary takes a literal max — and an item with no
+        recharge in its text says `consumable` rather than borrowing a dawn nobody wrote.
 - [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
   small, each fires on an existing path, and none blocks the others.
   - [x] **Champion Heroic Rally — a turn-start heal**, and the trigger dimension generalized with it:

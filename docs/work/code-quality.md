@@ -9,7 +9,7 @@
 - [x] **R1–R5 · Typing/extraction refactors.** `EditContext` for edit/level-up state; typed
   `overlay.kind`; a named action-economy slot type; effect-token parsing centralised on the bounded
   vocab; the click-to-set pip helper extracted (`pipClick`).
-- [~] **R6 · Source-tag constants** — mostly MOOT. App code already uses consts (`HOMEBREW_SOURCE`,
+- [x] **R6 · Source-tag constants — MOOT, decided.** App code already uses consts (`HOMEBREW_SOURCE`,
   `SOURCE_LABELS` keys, a local `S` in demo/sheet); the raw `'SRD 5.x'` strings that remain live in the
   edition-SCOPED converters (each `.mjs` emits one edition, declared once) + per-file test `S` consts,
   where a shared TS const can't reach cleanly. Low value; leave.

@@ -43,7 +43,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   `graph.list<T>` and `featuresForClass`. Reading a display name goes through `rowName(row)` —
   `content.md` says why. `data` stays `Record<string, unknown>` for the generic column walks
   (homebrew, translation coverage) that have no static type to want.
-- [~] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
+- [x] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
   DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
   content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
   e2e-verified) + add wired (per-GUID, resume newest-of-type on mount, clear on save).
