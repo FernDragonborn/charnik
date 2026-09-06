@@ -5,6 +5,7 @@
 	// here is what only a toast has: the card is the dismiss target and sonner needs its own sizing.
 	// It mounts RollRow with NO action props, so every pill is inert: a toast announces, the Playbar
 	// and the log control (UX-3) — which is also why it no longer has to stay open indefinitely.
+	import { rollNameOf, sayRollName } from '$lib/combat/roll';
 	import type { RollToastModel } from '$lib/dice/roll-toast';
 	import { _ } from '$lib/i18n';
 	import { ADVANTAGE_MODE } from '$lib/rules/dice';
@@ -23,14 +24,7 @@
 	// The card IS the labelled dismiss control — deliberately, because no control may live INSIDE it
 	// (it is itself the dismiss target). So the label has to carry both what the roll was and what a
 	// click does; a screen reader gets one button that says both, not an unnamed region plus an ✕.
-	const rollLabel = $derived(
-		model.labelKey
-			? $_(model.labelKey, {
-					default: model.label,
-					...(model.labelValues ? { values: model.labelValues } : {}),
-				})
-			: model.label,
-	);
+	const rollLabel = $derived(sayRollName(rollNameOf(model), $_));
 	const cardLabel = $derived(
 		$_(closeToast ? 'combat.log.rollAriaDismiss' : 'combat.log.rollAria', {
 			values: { label: rollLabel, total: model.total },

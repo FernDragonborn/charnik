@@ -29,7 +29,7 @@
 	import { signed } from '$lib/util/format';
 	import { _ } from '$lib/i18n';
 	import { damageTypeLabel } from '$lib/combat/attacks';
-	import { AUTO_OUTCOME } from '$lib/combat/roll';
+	import { AUTO_OUTCOME, rollNameOf, sayRollName } from '$lib/combat/roll';
 
 	let {
 		model,
@@ -61,12 +61,7 @@
 	 *  condition decided instead of the die says so around that name — the outcome is a fact on the
 	 *  record, so the phrase is the translator's to arrange rather than one baked into the label. */
 	const rollLabel = $derived.by(() => {
-		const named = model.labelKey
-			? $_(model.labelKey, {
-					default: model.label,
-					...(model.labelValues ? { values: model.labelValues } : {}),
-				})
-			: model.label;
+		const named = sayRollName(rollNameOf(model), $_);
 		return model.outcome
 			? $_(
 					model.outcome === AUTO_OUTCOME.fail ? 'combat.roll.autoFail' : 'combat.roll.autoSucceed',

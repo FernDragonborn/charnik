@@ -20,7 +20,7 @@ import {
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import { DiceTray } from '$lib/dice/dice-tray.svelte';
-import type { SaidText } from '$lib/util/say';
+import type { SaidText, SaidValue } from '$lib/util/say';
 import {
 	amendedAdvantage,
 	withoutLegacyAmendment,
@@ -50,6 +50,9 @@ export interface RollSpec {
 	/** The catalog key for `label` when the roll's name is a closed vocabulary (a skill, an ability
 	 *  check or save). Travels to the record so the log is not frozen in one language. */
 	labelKey?: string;
+	/** ICU values for `labelKey`, including a value that is itself a catalog word (a numbered strike).
+	 *  Travels to the record for the same reason the key does. */
+	labelValues?: Record<string, SaidValue>;
 	/** The d20 half. ABSENT means the roll is a QUANTITY and not a verdict: a Fireball has damage and
 	 *  no test, because the target saves rather than you rolling to hit. The roller then builds no
 	 *  test line at all, so there is no advantage toggle and no to-hit total to explain away. */
@@ -91,7 +94,7 @@ const entryOf = ({
 }: {
 	label: string;
 	labelKey?: string;
-	labelValues?: Record<string, string | number>;
+	labelValues?: Record<string, SaidValue>;
 	r: Rolled;
 	at: number;
 	damage?: TypedRoll[];

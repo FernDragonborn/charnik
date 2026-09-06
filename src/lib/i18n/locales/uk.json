@@ -608,7 +608,8 @@
 				"tempHp": "{name} — тимч. ОЖ",
 				"tempHpSlot": "{name} — тимч. ОЖ (комірка {slot})"
 			},
-			"spellAttack": "{name} (атака закляттям)"
+			"spellAttack": "{name} (атака закляттям)",
+			"attackNumbered": "{name} {index}/{count}"
 		},
 		"menu": {
 			"add": "Додати",

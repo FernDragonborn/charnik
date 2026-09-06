@@ -15,7 +15,7 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
-import { attackName, type Attack } from '$lib/combat/attacks';
+import { attackRollName, numberedAttackRollName, type Attack } from '$lib/combat/attacks';
 import type { RollTray } from './roll-tray.svelte';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
@@ -241,7 +241,7 @@ export class ActionExecutor {
 		for (let i = 0; i < count; i++)
 			this.host().rolls.rollAttackNow(
 				at,
-				count > 1 ? `${attackName(at, t)} ${i + 1}/${count}` : attackName(at, t),
+				count > 1 ? numberedAttackRollName(at, t, i + 1, count) : attackRollName(at, t),
 			);
 	}
 

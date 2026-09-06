@@ -14,16 +14,6 @@
   `note:` — Flurry of Blows becomes `attack:unarmed_strike:2` — hand-edited in both editions and
   `pnpm restamp`ed, never re-converted.
 
-- [ ] **ROLL-NAME-KEY · an attack's roll name freezes in the language it was rolled in.** Every other
-  roll records a catalog key beside its word (`RollLogEntry.labelKey`), but an attack's name is
-  resolved to TEXT at the producer — `attackName(at, t)` — so the one attack that IS a key rather
-  than a content row's own word, the Unarmed Strike, is written into `log.jsonl` as whatever language
-  was active, and `action-executor` composes "{name} i/N" around it for a multi-strike action.
-  A weapon's name is DATA and correctly passes through; only the app-named one is wrong.
-  **What it needs:** `labelValues` that can hold a catalog word rather than only `string | number` —
-  `SaidValue`'s `{catalog, id}` already models exactly that, and `sayText` already resolves it, so
-  the change is the record's type plus the one place `RollRow` says the label.
-
 - [ ] **INSPIRATION-REROLL · Heroic Inspiration is a flag nothing reads.** The Combat control toggles
   `play.inspiration` and persists it, and that is the whole feature: no roll offers to use it, nothing
   spends it, and the log never mentions it. RAW (5.5e) it lets you reroll ANY d20 and keep the new

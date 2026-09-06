@@ -24,7 +24,7 @@ import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
-import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
+import { UNARMED_STRIKE_ID, numberedAttackRollName } from '$lib/combat/attacks';
 
 const S = 'SRD 5.2.1';
 
@@ -790,6 +790,34 @@ describe('CombatVM · S2 split net', () => {
 		combat.hpAmount = 100;
 		combat.heal(); // clamps to max
 		expect(character.play.hp.current).toBe(20);
+	});
+
+	it('ROLL-NAME-KEY: the app-named attack is logged as a KEY, in one strike and in a volley', () => {
+		const unarmed = combat.attacks.find((a) => a.id === UNARMED_STRIKE_ID)!;
+		combat.rolls.rollAttackNow(unarmed);
+		// the one attack that is not a content row keeps its catalog key, so a log read in another
+		// language reads in THAT language rather than the one it was rolled in
+		expect(combat.tray.log[0]?.labelKey).toBe('combat.attacks.unarmedStrike');
+
+		combat.rolls.rollAttackNow(
+			unarmed,
+			numberedAttackRollName(unarmed, (k) => k, 2, 3),
+		);
+		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.attackNumbered');
+		expect(combat.tray.log[0]?.labelValues).toEqual({
+			// the NAME rides as a catalog word, not as text — that is what keeps a numbered strike honest
+			name: { catalog: 'combat.attacks', id: 'unarmedStrike' },
+			index: 2,
+			count: 3,
+		});
+
+		// a weapon's name is DATA and passes through: no key, the row's own word
+		const dagger = combat.attacks.find((a) => a.name === 'Dagger');
+		if (dagger) {
+			combat.rolls.rollAttackNow(dagger);
+			expect(combat.tray.log[0]?.labelKey).toBeUndefined();
+			expect(combat.tray.log[0]?.label).toBe('Dagger');
+		}
 	});
 
 	it('damage at 0 HP is a death-save failure, and two when the hit was a critical', () => {

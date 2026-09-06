@@ -608,7 +608,8 @@
 				"tempHp": "{name} temp HP",
 				"tempHpSlot": "{name} temp HP (slot {slot})"
 			},
-			"spellAttack": "{name} (spell attack)"
+			"spellAttack": "{name} (spell attack)",
+			"attackNumbered": "{name} {index}/{count}"
 		},
 		"menu": {
 			"add": "Add",

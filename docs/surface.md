@@ -653,6 +653,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function attackNotes` — An attack row's notes as one line, in the reader's language.
 - `interface Attack` — A weapon/unarmed attack row.
 - `const attackName` — What to print for an attack.
+- `const attackRollName` — The attack's name as a ROLL records it: the key when this attack is one of the app's own (the * Unarmed Strike), the …
+- `const numberedAttackRollName` — The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
 - `const damageTypeLabel` — What a damage type is CALLED.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
@@ -711,6 +713,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const dealsDamage` — Does this set of parts actually deal damage?
 - `function rollDamageParts` — Roll each damage part into a `TypedRoll`, preserving order (primary part first).
 - `interface RollName` — What a roll is CALLED: the English text, and the catalog key for it when the roll's name comes * from a closed vocabu…
+- `const sayRollName` — * What a roll is CALLED, in the language it is being READ in: the catalog key when it has one, its * recorded text ot…
+- `const nameFields` — A roll NAME as the fields a spec or a record carries — {@link rollNameOf}'s inverse, so the two * shapes convert in o…
+- `const rollNameOf` — A recorded row read back as a roll NAME, so a stored line says itself the same way a live one does.
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
@@ -1612,4 +1617,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 50 components · 959 exports across 131 modules · 62 duplicate suspects._
+_47 tokens · 78 global classes · 50 components · 964 exports across 131 modules · 62 duplicate suspects._

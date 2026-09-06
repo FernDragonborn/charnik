@@ -6,8 +6,8 @@
  * satisfies (docs/internals/roller.md).
  */
 import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
-import { attackName } from '$lib/combat/attacks';
+import { t, translator } from '$lib/i18n';
+import { attackRollName } from '$lib/combat/attacks';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
@@ -30,6 +30,8 @@ import {
 	type MenuKind,
 	type RollLogEntry,
 	type RollName,
+	sayRollName,
+	nameFields,
 } from '$lib/combat/helpers';
 import type { RollSpec, RollTray } from './roll-tray.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
@@ -122,7 +124,7 @@ export class SheetRolls {
 					forced === AUTO_OUTCOME.fail
 						? 'combat.notice.automaticFailure'
 						: 'combat.notice.automaticSuccess',
-					{ label: name.key ? t(name.key, name.values) : label },
+					{ label: sayRollName(name, translator()) },
 				),
 			);
 			return;
@@ -171,7 +173,7 @@ export class SheetRolls {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
 				{
-					label: attackName(at, t),
+					...nameFields(attackRollName(at, t)),
 					test: {
 						dice: { 20: 1 },
 						mod: at.toHit + fx.flat,
@@ -194,7 +196,7 @@ export class SheetRolls {
 	 * attacks calls (UBUG-11) — a Flurry of Blows already paid one bonus action for the pair, so each
 	 * strike inside it must not try to pay again. `label` distinguishes the strikes in the log.
 	 */
-	rollAttackNow = (at: Attack, label = attackName(at, t)) => {
+	rollAttackNow = (at: Attack, name: RollName = attackRollName(at, t)) => {
 		const { parts, fx, hasDmg } = this.attackSpec(at);
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool(
@@ -207,7 +209,7 @@ export class SheetRolls {
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
 		// (The Shift-click tray path arms the same offer, from `recordTrayRolls`.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.host().tray.pushRoll({ text: label }, toHit, dmgRolls);
+		const entry = this.host().tray.pushRoll(name, toHit, dmgRolls);
 		if (savage && entry.at !== undefined)
 			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};

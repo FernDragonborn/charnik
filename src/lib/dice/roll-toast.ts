@@ -27,7 +27,7 @@ import {
 	type TypedRoll,
 } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
-import { sayText } from '$lib/util/say';
+import { sayText, type SaidValue } from '$lib/util/say';
 import { translator, type Translate } from '$lib/i18n';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
@@ -87,7 +87,7 @@ export interface RollToastModel {
 	 *  no locale and must not acquire one (docs/internals/ui.md ▸ Strings live in the catalogs). */
 	labelKey?: string;
 	/** ICU values for `labelKey`. */
-	labelValues?: Record<string, string | number>;
+	labelValues?: Record<string, SaidValue>;
 	/** A condition decided this one instead of the die — `RollRow` says so beside the name. */
 	outcome?: AutoOutcome;
 	attacks: RollToastAttack[];

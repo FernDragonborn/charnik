@@ -202,6 +202,11 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   slot picks a different key rather than being appended to the phrase it produced. A forced outcome is
   the same shape one field over: `outcome` is a FACT on the entry and `RollRow` says "{label} —
   auto-fail" around it, because a marker holds one key and the sentence could not have been one.
+  A VALUE may itself be a catalog word (`{catalog, id}`), which is what lets a numbered strike keep
+  its name a key — "Unarmed Strike 2/3" is the app's word in a numbering frame, and the one attack
+  that is not a content row would otherwise be frozen into whatever language rolled it. Saying a
+  recorded name is `sayRollName`, in one place, because the log row, the toast card and the
+  forced-outcome notice all ask the same question.
 
 - **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
   SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled

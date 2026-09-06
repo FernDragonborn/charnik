@@ -19,7 +19,8 @@ import {
 	type StoredRoll,
 } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
-import type { SaidText } from '$lib/util/say';
+import { sayText, type SaidText, type SaidValue } from '$lib/util/say';
+import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
@@ -74,11 +75,51 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 export interface RollName {
 	text: string;
 	key?: string;
-	/** ICU values for `key`. Only ever a SYMBOL or a number — a die size, a count. A noun belongs in
-	 *  its own whole-phrase key instead: interpolating one into a frame is what breaks in an inflected
-	 *  language, where "Перевірка СИЛ" is not "{ability} перевірка". */
-	values?: Record<string, string | number>;
+	/** ICU values for `key`. A symbol, a number — a die size, a count — or a `{catalog, id}` word the
+	 *  READER's catalog resolves, which is how a numbered strike keeps its name a key ("Unarmed Strike
+	 *  1/2"). Never a translated NOUN in a frame: interpolating one is what breaks in an inflected
+	 *  language, where "Перевірка СИЛ" is not "{ability} перевірка", so a phrase that inflects gets a
+	 *  whole key of its own. */
+	values?: Record<string, SaidValue>;
 }
+
+/**
+ * What a roll is CALLED, in the language it is being READ in: the catalog key when it has one, its
+ * recorded text otherwise — and a value that is itself a catalog word (a numbered Unarmed Strike)
+ * resolves too, which is the whole reason `labelValues` is not just strings.
+ *
+ * One implementation because three surfaces say the same name — the log row, the toast card, and the
+ * forced-outcome notice — and three copies of "key or text" drift the moment one of them learns
+ * something the others do not.
+ */
+export const sayRollName = (name: RollName, translate?: Translate): string =>
+	name.key
+		? sayText(
+				{ key: name.key, ...(name.values ? { values: name.values } : {}), fallback: name.text },
+				translate,
+			)
+		: name.text;
+
+/** A roll NAME as the fields a spec or a record carries — {@link rollNameOf}'s inverse, so the two
+ *  shapes convert in one place instead of at every roll site. */
+export const nameFields = (
+	name: RollName,
+): { label: string; labelKey?: string; labelValues?: Record<string, SaidValue> } => ({
+	label: name.text,
+	...(name.key ? { labelKey: name.key } : {}),
+	...(name.values ? { labelValues: name.values } : {}),
+});
+
+/** A recorded row read back as a roll NAME, so a stored line says itself the same way a live one does. */
+export const rollNameOf = (row: {
+	label: string;
+	labelKey?: string;
+	labelValues?: Record<string, SaidValue>;
+}): RollName => ({
+	text: row.label,
+	...(row.labelKey ? { key: row.labelKey } : {}),
+	...(row.labelValues ? { values: row.labelValues } : {}),
+});
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the per-type damage rolls that follow it. Rendered as the roll, the dropped adv die, then one line
@@ -95,7 +136,7 @@ export type RollLogEntry = Rolled & {
 	 *  a homebrew spell name ever has. */
 	labelKey?: string;
 	/** ICU values for `labelKey` — see `RollName.values`. */
-	labelValues?: Record<string, string | number>;
+	labelValues?: Record<string, SaidValue>;
 	damage?: TypedRoll[];
 	/** The PLAYER's own words for this roll — what they typed into a `note` pill. Data: it is their
 	 *  sentence and passes through untranslated, and no catalog knows it.
@@ -137,7 +178,7 @@ export type RollLogEntry = Rolled & {
 export type StoredRollLogEntry = StoredRoll & {
 	label: string;
 	labelKey?: string;
-	labelValues?: Record<string, string | number>;
+	labelValues?: Record<string, SaidValue>;
 	note?: string;
 	noteParts?: SaidText[];
 	at?: number;

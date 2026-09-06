@@ -10,6 +10,8 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
+import type { RollName } from './roll';
+import type { SaidValue } from '$lib/util/say';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
@@ -97,6 +99,41 @@ export interface Attack {
  *  Takes the translator rather than importing one, like `skillLabel`. */
 export const attackName = (attack: Attack, t: (key: string) => string): string =>
 	attack.nameKey ? t(attack.nameKey) : attack.name;
+
+/** The attack's name as a ROLL records it: the key when this attack is one of the app's own (the
+ *  Unarmed Strike), the row's word when it is content. Text stays beside the key as the fallback, so
+ *  a log written today still reads on a build that has lost the catalog entry.
+ *
+ *  Why a key at all: `log.jsonl` outlives the language it was written in, and the one attack whose
+ *  name is not data was frozen into whatever language rolled it. */
+export const attackRollName = (attack: Attack, t: (key: string) => string): RollName =>
+	attack.nameKey ? { text: t(attack.nameKey), key: attack.nameKey } : { text: attack.name };
+
+/** The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
+ *  The NUMBER goes in the frame and the name rides as a value, so the name is still resolved when the
+ *  line is read — and the frame is a numbering, not a grammatical composition. */
+export const numberedAttackRollName = (
+	attack: Attack,
+	t: (key: string) => string,
+	index: number,
+	count: number,
+): RollName => ({
+	text: `${attackName(attack, t)} ${index}/${count}`,
+	key: NUMBERED_ATTACK_KEY,
+	values: {
+		name: attack.nameKey ? catalogWord(attack.nameKey) : attack.name,
+		index,
+		count,
+	},
+});
+
+/** A catalog key as a `SaidValue` — `{catalog, id}` is `catalog.id`, so a key splits at its last dot. */
+const catalogWord = (key: string): SaidValue => {
+	const dot = key.lastIndexOf('.');
+	return { catalog: key.slice(0, dot), id: key.slice(dot + 1) };
+};
+
+const NUMBERED_ATTACK_KEY = 'combat.log.attackNumbered';
 
 /** The trailing damage-type word(s) of a segment ("1d8 +3 slashing" → "slashing"), or "" if none. */
 function segmentType(segment: string): string {
