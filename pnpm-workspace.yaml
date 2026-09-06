@@ -16,7 +16,7 @@ overrides:
   nanoid@<3.3.17: '>=3.3.17'
   js-yaml@<4.3.1: '>=4.3.1'
   brace-expansion@<5.0.9: '>=5.0.9'
-  fast-uri@<3.1.5: '>=3.1.5'
+  fast-uri@<4.1.3: '>=4.1.3'
 
 # Approve install/postinstall build scripts (pnpm 11 blocks the rest by default for
 # supply-chain safety). esbuild builds its native binary, simple-git-hooks installs the

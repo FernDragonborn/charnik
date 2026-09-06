@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.6.2"
+version = "0.7.0"
 description = "A D&D 5e (2014) + 5.5e (2024) character tracking system — build, play, and browse, over content you own as plain CSV."
 authors = ["Fern Dragonborn <48766349+FernDragonborn@users.noreply.github.com>"]
 license = "MIT"

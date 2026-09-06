@@ -97,4 +97,8 @@
 - [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides; **re-audited 2026-08-09**
   (it had drifted to 9 findings): dompurify + @sveltejs/kit bumped, five more transitive dev-only
   packages pinned the same way → `pnpm audit` clean again. Re-check it periodically; it drifts silently.
+  **Re-audited 2026-09-07** before the 0.7.0 tag: four HIGH findings, all `fast-uri` reached through
+  `stylelint > table > ajv`. The existing override still read `fast-uri@<3.1.5`, so the advisory's own
+  4.x range walked straight past it — a pin narrower than the next advisory is a pin that expires
+  silently. Widened to `<4.1.3` and clean again.
   Pages deploy recovery still open.

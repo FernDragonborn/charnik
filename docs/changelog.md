@@ -2,7 +2,7 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..9f7f5d8`. To extend it, read the commits after that one.
+> Written from `v0.6.2..7d5b358`. To extend it, read the commits after that one.
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
