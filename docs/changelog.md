@@ -2,7 +2,7 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..7d5b358`. To extend it, read the commits after that one.
+> Written from `v0.6.2..e184b08`. To extend it, read the commits after that one.
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
@@ -70,12 +70,19 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   Mace of Terror carry their pool, so charges spend, show as pips, and come back at dawn — 1d3 of
   them, or all of them, as each item says.
 - **Your magic items change your numbers.** The +N weapons had none of their bonus: a Sun Blade,
-  a Defender, a Dragon Slayer or any of the four staves rolled exactly like the mundane version.
-  Each now raises its OWN to-hit and damage and no other weapon's, armour and shields carry their
-  AC, and the Staff of Power pays out on all five stats its text names. Around eighty rows across the
-  two editions. What an item's text says but the engine cannot express — a damage type your GM picks,
-  a bonus set by the item's rarity, a helm that still has a ruby in it — is written on the item as a
+  a Vorpal Sword, a Dragon Slayer or any of the staves rolled exactly like the mundane version. Each
+  now raises its OWN to-hit and damage and no other weapon's, armour and shields carry their AC, and
+  the Staff of Power pays out on all five stats its text names. 176 more rows across the two
+  editions, taking the shipped total from 63 to 239. What an item's text says but the engine cannot express — a damage type your GM picks, a
+  bonus set by the item's rarity, a helm that still has a ruby in it — is written on the item as a
   note instead of leaving the row blank.
+- **A wand tracks its charges.** Every wand, most staves, several rings and the Trident of Fish
+  Command say how many charges they hold and how many come back at dawn, so they spend as pips like
+  any other resource. The two that never recharge say so instead of quietly refilling overnight.
+- **The 2014 items have their descriptions back.** Eighty-nine magic items in the 5e pack shipped
+  with a blank description — the Vorpal Sword, the Rod of Alertness, Dragon Scale Mail and eighty-six
+  more — because the importer was throwing away the paragraph the description lives in. They read
+  fully now, and that is what let their numbers be filled in at all.
 - **The features that grant a proficiency grant it.** A 14th-level monk is proficient with every
   saving throw, a 15th-level rogue with Wisdom saves (and Charisma too, in 2024), a Life Domain
   cleric with heavy armour — so plate stops blocking their spells. A dwarf is proficient with the
@@ -95,6 +102,8 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **A resource says when it comes back and how much of it**, separately — so "one use back on a
   short rest, all of them on a long rest" is finally sayable, and so is a wand that regains
   1d6+1 charges at dawn. A pool that refills at dawn or dusk gets a button for it in the play bar.
+- **Casting at a higher level shows the whole ladder first.** The ⇡ next to a spell says what each
+  slot you could spend would actually do, before you commit one.
 - **A hit at 0 HP costs a death save**, RAW, and a critical hit costs two.
 - **An ability you cannot use yet says why, and when you can.** A conditional feature (Persistent
   Rage and its kind) explains its own gate instead of being absent.
