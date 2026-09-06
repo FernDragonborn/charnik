@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (64)
+## Duplicate suspects (65)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -67,6 +67,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `probe` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
+- `rather` ×2 — src/lib/dice/dice-tray.svelte.ts · src/lib/rules/proficiency.ts
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `REPORT` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
@@ -535,6 +536,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface AbilityBlock`
 - `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).
 - `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
+- `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
 - `function resolveClassSaves` — Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves.
 - `function deriveAbilityBlocks`
 - `function deriveSkills` — Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the * effect-granted level…
@@ -865,6 +867,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type ArmorWeight`
 - `type WeaponCategory`
 - `type ArmorCategory`
+- `const ARMOR_CATEGORIES` — The proficiency CATEGORIES a class column or a `grant_proficiency` token may name.
+- `const WEAPON_CATEGORIES`
 - `const NUMERIC_TAGS` — Tags whose value must be a whole number.
 - `const itemTagLabel` — What a tag is CALLED.
 - `function parseItemTags` — Parse a `tags` cell into name → value.
@@ -1457,6 +1461,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const UNCONSTRAINED` — * What a character is proficient with — either the declared set, or `UNCONSTRAINED`.
 - `type ProfGrants`
 - `function gatherProfGrants` — * Union the prof grants across a character's classes.
+- `function withGrantedProfs` — * Fold in the categories or weapon ids a FEATURE granted (`grant_proficiency:armor.heavy`) on top of * what the class…
 - `function isWeaponProficient` — Is the character proficient with this weapon?
 - `function isArmorProficient` — Is the character proficient with this armor/shield?
 
@@ -1644,4 +1649,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 981 exports across 133 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 985 exports across 133 modules · 65 duplicate suspects._

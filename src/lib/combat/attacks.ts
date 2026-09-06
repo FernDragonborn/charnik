@@ -3,12 +3,13 @@
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
 import type { Ability } from '$lib/rules/core';
-import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
+import { gatherProfGrants, isWeaponProficient, withGrantedProfs } from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import { grantedEquipmentProfs } from '$lib/character/derive-stats';
 import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { RollName } from './roll';
@@ -325,11 +326,14 @@ export function computeAttacks(
 	// A7: weapon proficiency gate. A weapon you're not proficient with omits the proficiency bonus
 	// from its to-hit (RAW). Grants come from the character's classes; lenient — a class (or set of
 	// classes) that declares no weapon_profs stays proficient with everything.
-	const weaponGrants = gatherProfGrants(
-		character.build.classes.map((c) => {
-			const r = graph.get(c.class);
-			return r?.type === 'class' ? r.data.weapon_profs : undefined;
-		}),
+	const weaponGrants = withGrantedProfs(
+		gatherProfGrants(
+			character.build.classes.map((c) => {
+				const r = graph.get(c.class);
+				return r?.type === 'class' ? r.data.weapon_profs : undefined;
+			}),
+		),
+		grantedEquipmentProfs(sheet.facts).weapons,
 	);
 	const out: Attack[] = [];
 	for (const inv of character.build.inventory) {

@@ -51,6 +51,17 @@ export function gatherProfGrants(rawList: (string | undefined)[]): ProfGrants {
 	return union;
 }
 
+/**
+ * Fold in the categories or weapon ids a FEATURE granted (`grant_proficiency:armor.heavy`) on top of
+ * what the classes declare. Adding to an UNCONSTRAINED character grants nothing — they are already
+ * proficient with everything — and must never turn them constrained, which is the whole reason this
+ * is a function rather than one more entry in `gatherProfGrants`'s raw list.
+ */
+export function withGrantedProfs(grants: ProfGrants, granted: readonly string[]): ProfGrants {
+	if (grants === UNCONSTRAINED || !granted.length) return grants;
+	return new Set([...grants, ...granted.map((g) => g.trim().toLowerCase()).filter(Boolean)]);
+}
+
 /** Is the character proficient with this weapon? Category grant (simple/martial) OR a specific
  *  weapon-id grant. UNCONSTRAINED grants or an unclassifiable weapon → proficient. */
 export function isWeaponProficient(

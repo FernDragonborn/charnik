@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { type ContentGraph } from './loader';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, characterSchema, type Character } from '../character/schema';
+import { ABILITIES, newCharacter, characterSchema, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { rollEffectsFor } from '../combat/roll';
+import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 
 /*
@@ -615,5 +616,82 @@ describe("shipped 2014 casting counts · read off that edition's own class table
 		expect((await capsOf('druid', 1)).cantrips).toBe(2);
 		expect((await capsOf('wizard', 1)).cantrips).toBe(3);
 		expect((await capsOf('wizard', 20)).cantrips).toBe(5);
+	});
+});
+
+describe('shipped proficiency grants · PROF-GRANT', () => {
+	/** A single-class character of that level, with the species/subrace refs a species grant needs. */
+	const sheetOf = async (
+		dir: string,
+		src: string,
+		sys: '5e' | '5.5e',
+		classId: string,
+		level: number,
+	) => deriveSheet(charOf(src, sys, classId, level), await loadEdition(dir));
+
+	it.each([
+		['srd-2014', 'SRD 5.1', '5e' as const, 'monk_diamond_soul'],
+		['srd-2024', 'SRD 5.2.1', '5.5e' as const, 'monk_disciplined_survivor'],
+	])('%s: a level-14 monk is proficient with EVERY save (%s)', async (dir, src, sys) => {
+		const before = await sheetOf(dir, src, sys, 'monk', 13);
+		const after = await sheetOf(dir, src, sys, 'monk', 14);
+		// the monk's own two (str/dex) are proficient at 1 — the point is the other four turning on
+		expect(ABILITIES.filter((a) => before.abilities[a].saveProficient)).toEqual(['str', 'dex']);
+		expect(ABILITIES.every((a) => after.abilities[a].saveProficient)).toBe(true);
+	});
+
+	it('2014 Slippery Mind grants Wisdom saves; 2024 grants Wisdom AND Charisma', async () => {
+		const s14 = await sheetOf('srd-2014', 'SRD 5.1', '5e', 'rogue', 15);
+		expect(s14.abilities.wis.saveProficient).toBe(true);
+		expect(s14.abilities.cha.saveProficient).toBe(false);
+		const s24 = await sheetOf('srd-2024', 'SRD 5.2.1', '5.5e', 'rogue', 15);
+		expect(s24.abilities.wis.saveProficient).toBe(true);
+		expect(s24.abilities.cha.saveProficient).toBe(true);
+	});
+
+	it('2014 Life Domain grants heavy armour, so plate stops blocking a cleric from casting', async () => {
+		const g = await loadEdition('srd-2014');
+		const cleric = (subclass?: string) => {
+			const c = newCharacter('pike', 'Pike', '5e');
+			c.build.classes = [
+				{ class: 'class:SRD 5.1:cleric', level: 1, ...(subclass ? { subclass } : {}) },
+			];
+			c.build.inventory = [{ item: 'item:SRD 5.1:plate', qty: 1, equipped: true, attuned: false }];
+			return deriveSheet(characterSchema.parse(c), g).spellcasting.armorBlock;
+		};
+		// non-vacuous: the same plate on a domainless cleric still blocks (cleric = light/medium)
+		expect(cleric()?.category).toBe('heavy');
+		expect(cleric('subclass:SRD 5.1:lifedomain')).toBeUndefined();
+	});
+
+	it('2014 Dwarven Combat Training makes a warhammer proficient for any class', async () => {
+		const g = await loadEdition('srd-2014');
+		const notesFor = (speciesId: string) => {
+			const c = newCharacter('grog', 'Grog', '5e');
+			c.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 1 }]; // no martial weapons
+			c.build.species = `species:SRD 5.1:${speciesId}`;
+			c.build.inventory = [
+				{ item: 'item:SRD 5.1:warhammer', qty: 1, equipped: true, attuned: false },
+			];
+			const parsed = characterSchema.parse(c);
+			const warhammer = computeAttacks(parsed, deriveSheet(parsed, g), g).find(
+				(a) => a.name === 'Warhammer',
+			);
+			return attackNotes(warhammer!);
+		};
+		expect(notesFor('human')).toContain('Not proficient'); // non-vacuous: the weapon IS gated
+		expect(notesFor('dwarf')).not.toContain('Not proficient');
+	});
+
+	it('2014 Keen Senses and Menacing put the skill on the sheet', async () => {
+		const g = await loadEdition('srd-2014');
+		const of = (speciesId: string, skill: 'perception' | 'intimidation') => {
+			const c = newCharacter('vax', 'Vax', '5e');
+			c.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 1 }];
+			c.build.species = `species:SRD 5.1:${speciesId}`;
+			return deriveSheet(characterSchema.parse(c), g).skills[skill].prof;
+		};
+		expect(of('elf', 'perception')).toBe('proficient');
+		expect(of('half_orc', 'intimidation')).toBe('proficient');
 	});
 });

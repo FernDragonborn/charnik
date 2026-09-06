@@ -39,13 +39,18 @@ export const ITEM_TAG = {
 	attunement: 'attunement',
 } as const;
 
-/** Armor weight classes an `armor:<weight>` tag may name. Not exported — `armorWeightOf` is the one
- *  reader, and a caller wanting the vocabulary wants that function, not the list. */
+/** Armor weight classes an `armor:<weight>` tag may name. */
 const ARMOR_WEIGHTS = ['light', 'medium', 'heavy'] as const;
 export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number];
 
 export type WeaponCategory = 'simple' | 'martial';
 export type ArmorCategory = ArmorWeight | 'shield';
+
+/** The proficiency CATEGORIES a class column or a `grant_proficiency` token may name. Shields are a
+ *  category you can be proficient with but not a weight an armor row wears, which is why the two
+ *  lists differ by exactly that entry. */
+export const ARMOR_CATEGORIES: readonly ArmorCategory[] = [...ARMOR_WEIGHTS, 'shield'];
+export const WEAPON_CATEGORIES: readonly WeaponCategory[] = ['simple', 'martial'];
 
 /** Tags whose value must be a whole number. Folding a column into a list costs zod's validation of
  *  it — `ac: optInt` rejected `"eleven"` by column name, `ac:eleven` inside a list is just a string —

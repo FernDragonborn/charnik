@@ -13,7 +13,8 @@
 	import { why } from '$lib/combat/effects-view';
 	import { provenance } from '$lib/actions/provenance';
 	import { damageTypeLabel } from '$lib/combat/attacks';
-	import { gatherProfGrants, UNCONSTRAINED } from '$lib/rules/proficiency';
+	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
+	import { grantedEquipmentProfs } from '$lib/character/derive-stats';
 	import { splitList } from '$lib/content/schemas';
 	const b = build;
 
@@ -24,18 +25,21 @@
 
 
 	/** "all · shields" reads better than a list of category words, and an undeclared class means
-	 *  proficient with everything (the lenient default the rules layer already uses). */
+	 *  proficient with everything (the lenient default the rules layer already uses). A feature's own
+	 *  grant (Life Domain's heavy armour) is folded in here too, or the card would contradict the
+	 *  attack rows that already honour it. */
 	const DASH = '—';
-	function profText(raw: (string | undefined)[]): string {
+	function profText(raw: (string | undefined)[], granted: string[]): string {
 		if (!classRows.length) return DASH;
-		const grants = gatherProfGrants(raw);
+		const grants = withGrantedProfs(gatherProfGrants(raw), granted);
 		if (grants === UNCONSTRAINED) return $_('build.defenses.all');
 		if (!grants.size) return $_('build.defenses.none');
 		return [...grants].map((g) => titleCase(g)).join(' · ');
 	}
 
-	const armor = $derived(profText(classRows.map((r) => r.data.armor_profs)));
-	const weapons = $derived(profText(classRows.map((r) => r.data.weapon_profs)));
+	const granted = $derived(s ? grantedEquipmentProfs(s.facts) : { armor: [], weapons: [] });
+	const armor = $derived(profText(classRows.map((r) => r.data.armor_profs), granted.armor));
+	const weapons = $derived(profText(classRows.map((r) => r.data.weapon_profs), granted.weapons));
 	const tools = $derived(
 		splitList(b.backgroundRow?.data.tools)
 			.map((t) => titleCase(t))

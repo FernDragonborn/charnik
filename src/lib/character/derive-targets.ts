@@ -6,6 +6,7 @@
 import { ABILITIES } from './schema';
 import { SKILL_ABILITY } from './skills';
 import { EFFECT_KIND } from '../effects/token-parser';
+import { ARMOR_CATEGORIES, WEAPON_CATEGORIES } from '../content/item-tags';
 import { suggestClosest } from '../util/suggest';
 import type { TargetCheck } from '../effects/apply';
 
@@ -52,11 +53,16 @@ const ROLL_TARGETS = new Set<string>([
 	...SKILL_TARGETS,
 ]);
 // grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep
-// `save.`; a bare ability grants that save).
+// `save.`; a bare ability grants that save). Equipment carries its own prefix, because "heavy" and
+// "martial" are only unambiguous next to the thing they are a category OF.
+const WEAPON_PREFIX = 'weapon.';
 const PROFICIENCY_TARGETS = new Set<string>([
 	...ABILITIES,
+	'saves', // the group: proficiency in ALL saving throws (Diamond Soul)
 	...ABILITIES.map((a) => `save.${a}`),
 	...Object.keys(SKILL_ABILITY),
+	...ARMOR_CATEGORIES.map((c) => `armor.${c}`),
+	...WEAPON_CATEGORIES.map((c) => `${WEAPON_PREFIX}${c}`),
 ]);
 
 /** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
@@ -68,7 +74,7 @@ const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
 const OPEN_VOCAB = 'open-vocab';
 
 /** The candidate target set a kind is checked against, or OPEN_VOCAB when it has no closed set. */
-const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
+const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof OPEN_VOCAB => {
 	switch (kind) {
 		// block_bonus blocks bonuses to a stat target (grappled → speed) — same closed vocab as sets.
 		case EFFECT_KIND.flatBonus:
@@ -86,7 +92,11 @@ const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
 		case EFFECT_KIND.minDie:
 			return ROLL_TARGETS;
 		case EFFECT_KIND.grantProficiency:
-			return PROFICIENCY_TARGETS;
+			// a SPECIFIC weapon (`weapon.warhammer` — Dwarven Combat Training) names a content id, and
+			// this module holds no graph to check ids against, so the whole `weapon.` namespace is open
+			// like a damage type. A mistyped category is indistinguishable from an id here — armour,
+			// which has no ids, stays closed and spell-checked.
+			return target.startsWith(WEAPON_PREFIX) ? OPEN_VOCAB : PROFICIENCY_TARGETS;
 		default:
 			return OPEN_VOCAB;
 	}
@@ -96,7 +106,7 @@ const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
  *  Open-vocab kinds (damage_sensitivity, grant_resource, apply_condition) are always supported —
  *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */
 export const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
-	const candidates = targetCandidatesFor(kind);
+	const candidates = targetCandidatesFor(kind, target);
 	if (candidates === OPEN_VOCAB || candidates.has(target)) return { supported: true };
 	const options = suggestClosest(target, candidates);
 	return { supported: false, ...(options.length ? { options } : {}) };

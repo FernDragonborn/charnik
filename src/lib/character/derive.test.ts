@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ContentGraph } from '../content/loader';
-import { characterSchema, newCharacter, type Character } from './schema';
+import { ABILITIES, characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
 import { ISSUE_KEY } from '../effects/token-parser';
@@ -158,6 +158,57 @@ describe('deriveSheet aggregator', () => {
 		expect(deriveSheet(wizard(), graph).spellcasting.armorBlock).toBeUndefined();
 	});
 
+	it('PROF-GRANT: grant_proficiency:armor.heavy lifts the block a class column would keep', () => {
+		const c = wizard(); // wizard declares armor_profs=light
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.play.effects = [
+			{
+				iid: 'd',
+				label: 'Life Domain',
+				effects: ['grant_proficiency:armor.heavy'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.spellcasting.armorBlock).toBeUndefined();
+		expect(s.deriveIssues.some((i) => i.token === 'armor_proficiency')).toBe(false);
+		// and it is NOT mistaken for a skill on the way past
+		expect(Object.keys(s.skills)).not.toContain('armor.heavy');
+	});
+
+	it('PROF-GRANT: an equipment target never reaches the skill or save buckets', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'd',
+				label: 'Dwarven Combat Training',
+				effects: ['grant_proficiency:weapon.warhammer', 'grant_proficiency:armor.shield'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// an unconsumed target is what B13 reports; a supported one leaves the sheet clean
+		expect(s.deriveIssues.filter((i) => i.token.startsWith('grant_proficiency'))).toEqual([]);
+	});
+
+	it('PROF-GRANT: grant_proficiency:saves makes every save proficient', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'ds', label: 'Diamond Soul', effects: ['grant_proficiency:saves'], positive: true },
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(ABILITIES.every((a) => s.abilities[a].saveProficient)).toBe(true);
+	});
+
+	it('PROF-GRANT: an unknown equipment CATEGORY is still caught (armor.plate is not a category)', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'x', label: 'Homebrew', effects: ['grant_proficiency:armor.plate'], positive: true },
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.deriveIssues.some((i) => i.token === 'grant_proficiency:armor.plate')).toBe(true);
+	});
+
 	it('ITEM-TEMPLATES: a template weapon says it needs a base, and IS that base once told', () => {
 		const c = wizard();
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 };
@@ -242,6 +293,27 @@ describe('deriveSheet aggregator', () => {
 		expect(dagger.toHit).toBe(4);
 		expect(greataxe.toHit).toBe(2);
 		expect(attackNotes(greataxe)).toContain('Not proficient');
+	});
+
+	it('PROF-GRANT: a granted weapon proficiency puts the bonus back on that weapon only', () => {
+		const c = wizard(); // weapon_profs="dagger,quarterstaff" — no martial/greataxe
+		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
+		c.build.inventory = [
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
+			{ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false },
+		];
+		c.play.effects = [
+			{
+				iid: 'g',
+				label: 'Training',
+				effects: ['grant_proficiency:weapon.greataxe'],
+				positive: true,
+			},
+		];
+		const parsed = characterSchema.parse(c);
+		const atks = computeAttacks(parsed, deriveSheet(parsed, graph), graph);
+		expect(atks.find((a) => a.name === 'Greataxe')!.toHit).toBe(4); // STR +2 + prof +2
+		expect(atks.find((a) => a.name === 'Sun Blade')!.toHit).toBe(2); // martial too, still not proficient
 	});
 
 	it('§A: Archery (`flat_bonus:attack:ranged+2`) folds into ranged weapons only, not melee', () => {

@@ -65,9 +65,17 @@ export interface StatInputs {
 	facts: EffectFacts;
 }
 
+/** The prefixes that make a `grant_proficiency` target EQUIPMENT rather than a save or a skill —
+ *  `armor.heavy` (Life Domain), `weapon.martial`, `weapon.warhammer` (Dwarven Combat Training). */
+const EQUIPMENT_PREFIX = { armor: 'armor.', weapon: 'weapon.' } as const;
+
+/** The group target that means every saving throw at once. */
+const ALL_SAVES = 'saves';
+
 /** Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
  *  `grant_proficiency:[expertise:]<target>` — the parser already stripped any `skill.` prefix; a
- *  save target is `con` / `save.con`; expertise on a save just means proficient (doesn't apply). */
+ *  save target is `con` / `save.con`; expertise on a save just means proficient (doesn't apply).
+ *  Equipment targets are NOT skills and are picked off first — `grantedEquipmentProfs` reads them. */
 export function gatherGrantedProficiencies(facts: EffectFacts): {
 	grantedSaves: Set<Ability>;
 	grantedSkills: Map<string, SkillProficiency>;
@@ -75,11 +83,37 @@ export function gatherGrantedProficiencies(facts: EffectFacts): {
 	const grantedSaves = new Set<Ability>();
 	const grantedSkills = new Map<string, SkillProficiency>();
 	for (const p of facts.proficiencies) {
+		if (isEquipmentTarget(p.target)) continue;
+		// "proficiency in ALL saving throws" (Diamond Soul) is one statement in the rules, so it is one
+		// token here rather than six — spelling out the six would be data the source does not have.
+		if (p.target === ALL_SAVES) {
+			for (const a of ABILITIES) grantedSaves.add(a);
+			continue;
+		}
 		const tgt = p.target.replace(/^save\./, '');
 		if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
 		else grantedSkills.set(p.target, maxProf(grantedSkills.get(p.target) ?? 'none', p.level));
 	}
 	return { grantedSaves, grantedSkills };
+}
+
+const isEquipmentTarget = (target: string): boolean =>
+	target.startsWith(EQUIPMENT_PREFIX.armor) || target.startsWith(EQUIPMENT_PREFIX.weapon);
+
+/** Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids
+ *  `rules/proficiency` matches equipment against. Binary, not a ladder: there is no expertise in
+ *  wearing plate. Read straight off the facts, so the sheet, the attacks panel and the builder's
+ *  read-out all answer from the same list. */
+export function grantedEquipmentProfs(facts: EffectFacts): { armor: string[]; weapons: string[] } {
+	const armor: string[] = [];
+	const weapons: string[] = [];
+	for (const p of facts.proficiencies) {
+		if (p.target.startsWith(EQUIPMENT_PREFIX.armor))
+			armor.push(p.target.slice(EQUIPMENT_PREFIX.armor.length));
+		else if (p.target.startsWith(EQUIPMENT_PREFIX.weapon))
+			weapons.push(p.target.slice(EQUIPMENT_PREFIX.weapon.length));
+	}
+	return { armor, weapons };
 }
 
 /** Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves. Multiclass

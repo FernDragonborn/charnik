@@ -130,6 +130,17 @@ names no scopes (a save, a skill) picks up no scoped bonus at all. Attack scopes
 Unarmed Strike) — the same sentence each edition prints, said in scopes.
 `docs/internals/compatibility.md` §4 says why the scope is a target and not a fourth segment.
 
+**`grant_proficiency` has its own target namespace**, because what you can be proficient WITH is not
+what a bonus can land on: a bare ability or `save.<ability>` (and the `saves` group — "proficiency in
+all saving throws" is one statement in the rules, so it is one token), a skill (`skill.<id>`, which
+canonicalizes to the bare id), `armor.<light|medium|heavy|shield>`, and `weapon.<simple|martial>` or
+`weapon.<item_id>` for a feature that names specific weapons (Dwarven Combat Training). Equipment
+grants are BINARY — there is no expertise in wearing plate — and they fold on top of what the classes
+declare, so a grant never turns a lenient (undeclared) character into a constrained one. The whole
+`weapon.` namespace is open vocabulary, like a damage type: `derive-targets.ts` holds no content graph
+to check an id against, and a mistyped category is indistinguishable from an id it has never heard of.
+Armour has no ids, so it stays closed and spell-checked.
+
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
 `unknown target "<t>" for <kind>` content-health issue (with a `suggest.ts` "did you mean?"),
 never folded onto nothing.

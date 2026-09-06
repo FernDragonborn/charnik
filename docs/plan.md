@@ -276,10 +276,8 @@ position and are given per wave, because most of them were learned the hard way.
     (2014) and ~210 (2024) magic items still carry prose and no effect, so a Cloak of Protection
     equipped and attuned changes nothing on the sheet. That is a wrong number by the original test,
     at scale.
-  - **PROF-GRANT** (`work/mechanics.md`) — `grant_proficiency` is the only way to say "this feature
-    grants THIS proficiency, no choice involved", and no shipped row says it: Diamond Soul, Disciplined
-    Survivor and Slippery Mind all carry prose where a token belongs. Armour and weapon categories are
-    not targets yet, which is the design half.
+  - ~~**PROF-GRANT**~~ — DONE. The token now says saves, skills, armour categories and specific
+    weapons, and eleven shipped rows say it instead of only printing it.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

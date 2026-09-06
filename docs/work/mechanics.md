@@ -80,27 +80,35 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [ ] **PROF-GRANT · `grant_proficiency` has a job and no data. BLOCKS 0.7.0.** Counted over both
-  packs, three kinds have no shipped user: `plugin` (user-authored by definition), `auto_succeed`
-  (RAW almost never auto-SUCCEEDS — `auto_fail` has 16 users, all conditions), and this one. The
-  first two are answered by their nature; this one is a gap.
+- [x] **PROF-GRANT · `grant_proficiency` has data, and its target namespace reaches equipment.**
+  The token could only ever say a save or a skill, and no shipped row said even that. Both halves
+  shipped together, because the saves alone would have left the design question open.
 
-  **It is not a duplicate of the columns.** Proficiency reaches the sheet by three live routes, and
-  all three are about a CHOICE or a class's fixed list: the class/background/species columns
-  (`skills_from`/`skills_choose`, `saves`, `weapon_profs`, `armor_profs`), the player's own picks
-  (`build.skills`, `build.expertise`), and a feat's `skill_choice` count, which the builder turns
-  into a "pick N" picker landing in `build.featSkills`. None of them can say **a feature grants this
-  specific proficiency, no choice involved** — which is exactly what the token is for, and there are
-  shipped rows that need it and carry prose instead:
-  - 2014 `monk_diamond_soul` and 2024 `monk_disciplined_survivor` — proficiency in ALL saving throws.
-  - `rogue_slippery_mind` — Wisdom saves in 2014, Wisdom and Charisma in 2024.
+  **The namespace it grants in is its own** (`docs/internals/effects.md` ▸ Targets): abilities and
+  `save.<ability>` plus the `saves` GROUP, skills, `armor.<category>` and `weapon.<category|item_id>`.
+  Equipment is binary — there is no expertise in wearing plate — and it folds ON TOP of the class
+  columns via `withGrantedProfs`, which leaves an UNCONSTRAINED character unconstrained: a lenient
+  (undeclared) class must never be turned constrained by a grant. A specific weapon id is open
+  vocabulary for the same reason a damage type is — `derive-targets.ts` has no graph to check an id
+  against, and a mistyped category cannot be told from an id it has never heard of. Armour has no ids,
+  so it stays closed and spell-checked.
 
-  **One of them exposes a real limit**, and it is the reason this is an item and not a content
-  commit: `PROFICIENCY_TARGETS` holds abilities, `save.<ability>` and skills — no armour or weapon
-  CATEGORIES. So 2014 `lifedomain_bonus_proficiency` (heavy armour) and 2024's Divine Order and
-  Primal Order (Martial weapons + armour training) still cannot be said, and widening the target set
-  to reach them is the design half of this item. Do the saves first: they need no new targets, and
-  they turn the token from a promise into something a shipped row proves.
+  **`grant_proficiency:saves` is one token, not six.** "Proficiency in all saving throws" is one
+  sentence in the rules; six tokens would be data the source does not have.
+
+  **Shipped rows that now say it rather than only printing it:** 2014 Diamond Soul + 2024 Disciplined
+  Survivor (`saves`) · Slippery Mind (2014 Wisdom, 2024 Wisdom AND Charisma — the editions differ) ·
+  2014 Life Domain's Bonus Proficiency (`armor.heavy`, so plate stops blocking the cleric's spells) ·
+  2014 Dwarven Combat Training and High Elf's Elf Weapon Training (four weapon ids each — the elf's
+  belong to `high_elf`, since the base `elf` row's text blob merely reprints the subrace section) ·
+  2014 Keen Senses and Menacing (Perception / Intimidation). `class_features_content.test.ts` asserts
+  each, non-vacuously — the negative case is asserted beside the positive one.
+
+  **Still prose, deliberately:** every grant that is a CHOICE (2024 Divine Order and Primal Order,
+  College of Lore, the 2024 elf's one-of-three Keen Senses) waits on the chooser, not on this token.
+  Qualified grants stay text — Stonecunning's doubled bonus applies only to stonework-origin History
+  checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the 2024 Sun
+  Blade's grant is conditional on already being proficient with longswords.
 
 - [x] **EXTRA-ATTACK · a level-5 martial attacks twice.** `attacksPerAction` is a folded value
   like every other number: base one from the rules core, raised by `set_override:attacks:<n>:floor`

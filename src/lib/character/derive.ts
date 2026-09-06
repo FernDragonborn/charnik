@@ -33,6 +33,7 @@ import { applyPluginPrePass } from './derive-plugins';
 import {
 	num,
 	gatherGrantedProficiencies,
+	grantedEquipmentProfs,
 	resolveClassSaves,
 	deriveAbilityBlocks,
 	deriveSkills,
@@ -54,7 +55,7 @@ import {
 	ABILITY_SCORE_CLAMP,
 	type Ability,
 } from '../rules/core';
-import { gatherProfGrants, isArmorProficient } from '../rules/proficiency';
+import { gatherProfGrants, isArmorProficient, withGrantedProfs } from '../rules/proficiency';
 import { ITEM_TAG } from '../content/item-tags';
 import { armorCategoryOf, resolveItem, type ResolvedItem } from '../content/resolved-item';
 import { resourceNames, namedResources } from './resource-names';
@@ -178,24 +179,30 @@ interface ArmorSpellBlockInput {
 	equippedArmor: ResolvedItem | undefined;
 	build: Character['build'];
 	graph: ContentGraph;
+	facts: EffectFacts;
 	issues: EffectIssue[];
 }
 
 /** B9: worn armor you lack proficiency with blocks spellcasting (RAW canonical rule-block). Grants
- *  come from the character's classes; lenient — undeclared classes stay proficient with all armor. */
+ *  come from the character's classes plus any feature that granted one; lenient — undeclared classes
+ *  stay proficient with all armor. */
 function applyArmorSpellBlock({
 	spellcasting,
 	equippedArmor,
 	build,
 	graph,
+	facts,
 	issues,
 }: ArmorSpellBlockInput): void {
 	if (!equippedArmor) return;
-	const armorGrants = gatherProfGrants(
-		build.classes.map((c) => {
-			const r = graph.get(c.class);
-			return r?.type === 'class' ? r.data.armor_profs : undefined;
-		}),
+	const armorGrants = withGrantedProfs(
+		gatherProfGrants(
+			build.classes.map((c) => {
+				const r = graph.get(c.class);
+				return r?.type === 'class' ? r.data.armor_profs : undefined;
+			}),
+		),
+		grantedEquipmentProfs(facts).armor,
 	);
 	// an unclassifiable armor never blocks (isArmorProficient says true), so past this line the weight
 	// class is always known — the guard is what narrows it, not a comment
@@ -363,7 +370,7 @@ export function deriveSheet(
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
 	const spellcasting = deriveSpellcasting({ character, graph, scores, facts, issues });
 
-	applyArmorSpellBlock({ spellcasting, equippedArmor, build, graph, issues }); // B9
+	applyArmorSpellBlock({ spellcasting, equippedArmor, build, graph, facts, issues }); // B9
 
 	// stat phases — each reads the shared computed inputs (build/scores/level/facts); see the pure
 	// helpers above. Grouped so deriveSheet stays an orchestrator, not a 300-line body.
