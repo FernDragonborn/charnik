@@ -41,8 +41,9 @@
   is a catalog key, in the components and in everything upstream of them. The rulings the sweep
   settled live in [`../internals/ui.md`](../internals/ui.md) ▸ Strings live in the catalogs, and what
   a ROLL keeps in [`../internals/roller.md`](../internals/roller.md) ▸ Conventions — that is where
-  the next person needs them, not behind a ticked box. What is left is one item, `ROLL-NAME-KEY` in
-  [`roller.md`](roller.md).
+  the next person needs them, not behind a ticked box. The last of it was the roll NAME: an attack's
+  label used to be resolved to text at the producer, so the one attack that is a catalog key rather
+  than a content row's own word froze in whatever language rolled it.
   **The lesson worth keeping:** a scan for literal English is a hint, not the check. Three of the
   regions it missed were found by driving the app in Ukrainian and reading the screen, and the last
   three strings hid behind a scan rule that excluded a text run followed by `{`.

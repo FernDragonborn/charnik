@@ -4,12 +4,12 @@
 > [`../internals/roller.md`](../internals/roller.md); the ORDER these are done in is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **UBUG-11 · a class-granted action must DO its mechanical effect, not just toast a note.** A
-  Monk's Flurry of Blows toasts "Make two Unarmed Strikes" and rolls nothing, which is meaningless
-  when the app can roll attacks. **The app half is built:** `attack:<weapon id>[:<count>]` is an
-  executor verb (`docs/internals/actions.md` §2), firing the ordinary attack path so a strike inside
-  an action carries exactly what a tap on the Attacks panel does and charges no turn slot of its
-  own; the weapon is named by bare content id, which is why `Attack` carries an `id`.
-  **What is left is CONTENT, in `charnik-content-srd`:** the `resource_options` rows that still say
-  `note:` — Flurry of Blows becomes `attack:unarmed_strike:2` — hand-edited in both editions and
-  `pnpm restamp`ed, never re-converted.
+- [x] **UBUG-11 · a class-granted action DOES its mechanical effect.** `attack:<weapon id>[:<count>]`
+  is an executor verb (`docs/internals/actions.md` §2), and the shipped rows use it: Flurry of Blows
+  is `attack:unarmed_strike:2` in both editions, firing the ordinary attack path so a strike inside an
+  action carries exactly what a tap on the Attacks panel does and charges no turn slot of its own.
+  **What stays a `note:` on purpose:** Patient Defense and Step of the Wind grant the Dodge, Disengage
+  and Dash ACTIONS, and the app models none of the three — a verb for them would be a play-state
+  channel invented for one row, not an action that lands on an existing system.
+
+_(Nothing open here. The roller's design of record is `../internals/roller.md`.)_

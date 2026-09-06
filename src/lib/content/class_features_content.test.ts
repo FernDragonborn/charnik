@@ -330,6 +330,9 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 				'step_of_the_wind',
 			]);
 			expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
+			// UBUG-11: the option MAKES the two strikes through the ordinary attack path. A `note:` here
+			// would be the shipped row describing what the app can do rather than doing it.
+			expect(opts.find((o) => o.id === 'flurry_of_blows')?.action).toBe('attack:unarmed_strike:2');
 		},
 	);
 });
