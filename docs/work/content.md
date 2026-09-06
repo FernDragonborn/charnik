@@ -185,13 +185,12 @@
   missing is purely DATA: `content/srd-2014/class_casting_srd.csv` **doesn't exist**, so every 2014 caster
   reports **cantripCap 0**, and known-casters (bard/sorcerer/warlock/ranger) get the prepared FORMULA
   instead of their table's "Spells Known" (a 2014 bard 1 should read 2 cantrips / 4 known, not 0 / CHA+1).
-  Fix = the rows, in the same shape 2024 already ships. **A converter is no longer assumed to be the
-  route** — the 2014 tables are space-aligned text where a parser slips a column and the numbers go
-  wrong SILENTLY, and the remaining 2014 gaps (these counts, the tables `convert-2014.mjs` drops, the
-  truncated feature prose) are small enough to author by hand against the source and cheaper to
-  verify than to parse. Whichever route: the numbers land with a per-class assert against the SRD
-  text, because this is the failure class that passes every other gate.
-  Also still open: backfilling the truncated 2014 class-feature prose, and the tables lost with it
-  (N2b names the same bug).
+  Fix = the rows, in the same shape 2024 already ships. **The converter route is open**: the source
+  `convert-2014.mjs` reads is the HTML, where every class progression table is a real `<table>` of
+  `<td>` cells (the space-aligned form is the `.txt` beside it, which nothing reads), and the
+  converter already keeps tables verbatim. The header row is dirty — a column reads `4 t h` — so
+  columns are taken by POSITION, never by matching a header string. Whichever route: the numbers land
+  with a per-class assert against the SRD text, because this is the failure class that passes every
+  other gate.
 
 - [x] **Tauri fs Storage** impl + platform factory.

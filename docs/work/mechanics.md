@@ -80,13 +80,8 @@ stay semi-manual.
   from memory and not from the PHB, which we have no licence to read into the app. Wild Shape is in
   both SRDs, so the text exists: HP pool vs temp HP, the CR/movement limits per level, what is kept
   vs replaced, revert-at-0 carryover, equipment, casting.
-  **The converter bug that blocked it is fixed** (2026-09-06): `convert-2014.mjs` kept only `<p>`
-  elements and started a new entry at every sub-heading, so a feature was cut exactly where its table
-  began. It now carries tables in document order and folds a sub-section into the feature above it,
-  bounded by the next h2 — so `druid_wild_shape` is 3364 chars with the Beast Shapes table (was 458),
-  Fighting Style lists its styles, Metamagic its options, and the twelve rows that shipped with an
-  EMPTY text cell have their tables. **Both spec sheets are writable now**; what is left here is the
-  design work, not the source.
+  **Both spec sheets are writable**: `druid_wild_shape` ships whole in both editions, Beast Shapes
+  table included, so what is left here is the design work, not the source.
   - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
         `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
         restore, so it waits on the model above rather than on the mechanism, which is shipped.
