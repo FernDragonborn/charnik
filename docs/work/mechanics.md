@@ -476,16 +476,29 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   purpose, because `slotMax` only folds effect facts when auto-calc is on and a feature the player
   activated by hand must not silently do nothing.
 ## Builder and character
-- [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
+- [x] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
   `kind: subrace|lineage|legacy|ancestry`, `option_label`, effects) + 2014 converter emitting the 4
   SRD subraces (Hill Dwarf/High Elf/Lightfoot/Rock Gnome, each with its own ASI) + loader
   longest-filebase fix so `species_options_*` isn't mis-read as `species`. P2 DONE: builder 2nd
   picker (shown when the chosen species has options, per-edition label from `option_label`) +
-  `build.speciesOption` gathered in derive (effects cascade like the species'). P3 DONE (partial):
-  2024 Elf **Elven Lineages** (Drow/High Elf/Wood Elf) + Tiefling **Fiendish Legacies** (Abyssal/
-  Chthonic/Infernal) parsed from character-origins.md tables. Remaining: 2024 **Dragonborn draconic
-  ancestry** (paired damage-type table) + **Gnome/Goliath** (prose-list choices), and encoding the
-  lineage benefits as effects (currently text-only — fine, since 2024 species carry no ASI).
+  `build.speciesOption` gathered in derive (effects cascade like the species'). P3 DONE:
+  every 2024 species that asks which branch you belong to now has its rows, and the converter reads
+  the THREE SHAPES the SRD writes them in rather than flattening them: a 4-column table (Elf, Tiefling),
+  a PAIRED table read across (Dragonborn's Dragon · Damage Type), and a `**Name.**` prose list (Gnome,
+  Goliath). 24 rows.
+  **The benefits are effects where the source states one.** A Draconic Ancestor resists the damage
+  type its own table COLUMN names — the species' Damage Resistance trait says "you have Resistance to
+  the damage type determined by your Draconic Ancestry", so the token is the source's own statement
+  and the shape hands it over rather than mining a sentence this converter just wrote. Each Giant
+  Ancestry benefit is `grant_resource:<id>:proficiency_bonus:long`, which is what its trait's lead-in
+  says once for all six. The Gnomish Lineages stay prose: both grant cantrips and a prepared spell,
+  and there is no token for either.
+  **The count assert earned its keep** — Giant Ancestry has six options, not the eight the first pass
+  guessed, and `assertCount` refused to write the file.
+  **A live bug fell out of the re-run:** `effectsFromTraits` still emitted `resist_immune:`, the name
+  retired in the `damage_sensitivity` rename. Nothing had re-run the converter since, so the next
+  regeneration would have silently swapped three tiefling resistances for a token the engine no
+  longer knows. Renamed at the source.
 - [x] **Half-Elf +1/+1 choice** (5e) — data-driven, no class-name branching.
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,

@@ -185,7 +185,7 @@ function effectsFromTraits(text) {
 		const type = m[2].toLowerCase();
 		if (!DAMAGE_TYPES.has(type)) continue;
 		const bucket = { Resistance: 'resist', Immunity: 'immune', Vulnerability: 'vulnerable' }[m[1]];
-		tokens.push(`resist_immune:${bucket}:${type}`);
+		tokens.push(`damage_sensitivity:${bucket}:${type}`);
 	}
 	// "Your Speed increases to 35 feet" — a set, not a bonus, exactly as the sentence says
 	for (const m of text.matchAll(/Your Speed increases to (\d+) feet/g))
@@ -239,16 +239,22 @@ function convertSpecies() {
 	assertCount('species', rows.length, all.length);
 }
 
-// --- species options (2024 in-species lineages / legacies) -------------------
-// 2024 species with a table-based choice: each is a 4-column table (Name · level-1 benefit ·
-// spell · spell). We take the name + level-1 benefit text, and whatever `effectsFromTraits` can read
-// out of it — a legacy's resistance, Wood Elf's speed. 2024 species carry no ASI, so nothing here is
-// a stat change beyond what the benefit says in so many words. The cantrip each of these also grants
-// has no token in the vocabulary yet, so it stays prose. Dragonborn draconic ancestry (a paired
-// damage-type table) and Gnome/Goliath (prose lists) are deferred.
+// --- species options (2024 in-species choices) -------------------------------
+// Three SHAPES, because the SRD writes these three ways and flattening them would mean guessing:
+//  · a 4-column table (Name · level-1 benefit · spell · spell) — Elf, Tiefling. Name + benefit text,
+//    plus whatever `effectsFromTraits` reads out of it (a legacy's resistance, Wood Elf's speed).
+//  · a PAIRED 2-column table read across (Dragon · Damage Type, twice per row) — Dragonborn. The
+//    species' own Damage Resistance trait says "you have Resistance to the damage type determined by
+//    your Draconic Ancestry", so the resistance is the row's, stated by the source and not inferred.
+//  · a prose list of `**Name.**` headings — Gnome, Goliath.
+// 2024 species carry no ASI, so nothing here is a stat change beyond what the benefit says outright.
+// A cantrip or a prepared spell has no token in the vocabulary, so those stay prose.
 const SPECIES_CHOICE_2024 = {
-	Elf: { kind: 'lineage', label: 'Elven Lineage' },
-	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy' },
+	Elf: { kind: 'lineage', label: 'Elven Lineage', shape: 'table4' },
+	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy', shape: 'table4' },
+	Dragonborn: { kind: 'ancestry', label: 'Draconic Ancestry', shape: 'pairedTable' },
+	Gnome: { kind: 'lineage', label: 'Gnomish Lineage', shape: 'proseList' },
+	Goliath: { kind: 'ancestry', label: 'Giant Ancestry', shape: 'proseList' },
 };
 const stripHtml = (s) =>
 	s
@@ -261,32 +267,72 @@ function firstTableTds(body) {
 	const t = /<table>([\s\S]*?)<\/table>/i.exec(body.join('\n'));
 	return t ? [...t[1].matchAll(/<td>([\s\S]*?)<\/td>/gi)].map((m) => stripHtml(m[1])) : [];
 }
+/** `[name, benefitText, effects?]` for one species' choice, per the shape its SRD entry is written
+ *  in. A shape that reads the mechanic from a COLUMN hands the token over; the prose shapes leave it
+ *  to `effectsFromTraits`, which reads the sentence rather than a sentence this file wrote. */
+function speciesChoiceOptions(shape, body) {
+	const text = stripHtml(body.join(' '));
+	if (shape === 'proseList') {
+		// `**Cloud's Jaunt (Cloud Giant).** As a Bonus Action, …` — the heading is the option's name,
+		// the sentence after it is the benefit, and the next heading ends it.
+		const out = [];
+		const re = /\*\*([^*]+?)\.\*\*\s*([\s\S]*?)(?=\*\*[^*]+?\.\*\*|$)/g;
+		for (const m of text.matchAll(re)) out.push([m[1].trim(), m[2].trim()]);
+		return out;
+	}
+	const tds = firstTableTds(body);
+	if (shape === 'pairedTable') {
+		// Dragon · Damage Type, twice across each row — so every EVEN cell is a name and the cell
+		// after it is its damage type. The species' Damage Resistance trait is what makes it an effect.
+		const out = [];
+		for (let i = 0; i + 1 < tds.length; i += 2)
+			if (tds[i])
+				out.push([
+					tds[i],
+					`Your Breath Weapon and Damage Resistance are ${tds[i + 1]}.`,
+					`damage_sensitivity:resist:${tds[i + 1].toLowerCase()}`,
+				]);
+		return out;
+	}
+	const out = [];
+	for (let i = 0; i + 1 < tds.length; i += 4) if (tds[i]) out.push([tds[i], tds[i + 1] || '']);
+	return out;
+}
+
+/** A Giant Ancestry benefit is usable "a number of times equal to your Proficiency Bonus, and you
+ *  regain all expended uses when you finish a Long Rest" — one shape, stated once for all eight in
+ *  the trait's own lead-in, so the pool is the row's rather than something read out of each line. */
+const giantAncestryPool = (id) => `grant_resource:${id}:proficiency_bonus:long`;
+
 function convertSpeciesOptions() {
 	const all = blocks(src('character-origins.md')).filter((b) => b.h3 === 'Species Descriptions');
 	const rows = [];
 	for (const b of all) {
 		const ch = SPECIES_CHOICE_2024[b.name];
 		if (!ch) continue;
-		const tds = firstTableTds(b.body);
-		for (let i = 0; i + 1 < tds.length; i += 4) {
-			const name = tds[i];
-			if (!name) continue;
+		for (const [name, benefit, tokens] of speciesChoiceOptions(ch.shape, b.body)) {
+			const id = slug(`${b.name}-${name}`);
 			rows.push({
-				id: slug(`${b.name}-${name}`),
+				id,
 				systems: '5.5e',
 				source: 'SRD 5.2.1',
 				name_en: name,
 				name_uk: '',
-				text_en: tds[i + 1] || '', // the level-1 benefit
+				text_en: benefit,
 				text_uk: '',
-				effects: effectsFromTraits(tds[i + 1] || ''),
+				// a shape that KNOWS its token (the ancestry table's damage-type column) states it; the
+				// Giant benefits share one pool sentence; everything else is read out of its own prose
+				effects:
+					tokens ??
+					(ch.label === 'Giant Ancestry' ? giantAncestryPool(id) : effectsFromTraits(benefit)),
 				species_id: slug(b.name),
 				kind: ch.kind,
 				option_label: ch.label,
 			});
 		}
 	}
-	assertCount('species_options', rows.length, 6); // 3 Elven Lineages + 3 Fiendish Legacies
+	// 3 Elven Lineages + 3 Fiendish Legacies + 10 Draconic Ancestors + 2 Gnomish + 6 Giant
+	assertCount('species_options', rows.length, 24);
 	writeCsv(
 		out('species_options_srd.csv'),
 		[

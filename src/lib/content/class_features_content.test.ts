@@ -6,6 +6,7 @@ import { deriveSheet } from '../character/derive';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
+import { parseToken } from '../effects/token-parser';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -727,5 +728,45 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		};
 		expect(of('elf', 'perception')).toBe('proficient');
 		expect(of('half_orc', 'intimidation')).toBe('proficient');
+	});
+});
+
+describe('shipped species options · the 2024 in-species choices', () => {
+	/** A character of that species with that option chosen. */
+	const sheetOf = async (speciesId: string, optionId: string) => {
+		const graph = await loadPacks('srd-2024');
+		const c = newCharacter('kaz', 'Kaz', '5.5e');
+		c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 1 }];
+		c.build.species = `species:SRD 5.2.1:${speciesId}`;
+		c.build.speciesOption = `species_option:SRD 5.2.1:${optionId}`;
+		return deriveSheet(characterSchema.parse(c), graph);
+	};
+
+	it('a draconic ancestry resists the damage type its own table column names', async () => {
+		expect((await sheetOf('dragonborn', 'dragonborn_silver')).damageSensitivities.resist).toContain(
+			'cold',
+		);
+		expect((await sheetOf('dragonborn', 'dragonborn_green')).damageSensitivities.resist).toContain(
+			'poison',
+		);
+		// non-vacuous: a different ancestry does NOT bring the other one along
+		expect(
+			(await sheetOf('dragonborn', 'dragonborn_green')).damageSensitivities.resist,
+		).not.toContain('cold');
+	});
+
+	it('a Giant Ancestry benefit is a pool of Proficiency-Bonus uses, back on a long rest', async () => {
+		const sheet = await sheetOf('goliath', 'goliath_stones_endurance');
+		expect(sheet.resources.find((r) => r.id === 'goliath_stones_endurance')).toMatchObject({
+			max: 2, // PB at level 1
+			recharge: { trigger: 'long' },
+		});
+	});
+
+	it('every shipped species option that names a mechanic carries a KNOWN token', async () => {
+		const graph = await loadPacks('srd-2024');
+		for (const row of graph.list('species_option'))
+			for (const raw of row.data.effects ?? [])
+				expect(parseToken(raw).kind, `${row.id}: "${raw}"`).not.toBe('unknown');
 	});
 });
