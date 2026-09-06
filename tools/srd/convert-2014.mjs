@@ -52,7 +52,14 @@ const strip = (s) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
-/** Walk the HTML into entries: {level, id, name, paras[]} (paras = raw inner-HTML of <p>). */
+/**
+ * Walk the HTML into entries: {level, id, name, paras[], parts[]}.
+ *
+ * `paras` is the raw inner-HTML of each <p>, which is what the field readers want. `parts` is the
+ * same paragraphs as TEXT with the entry's tables among them, in document order — a <table> is
+ * prose here (the Beast Shapes table IS most of what Wild Shape says), and a reader that wants the
+ * whole section needs it where it sat. A second list, so no existing consumer's output moves.
+ */
 function htmlEntries(html) {
 	const lines = html.split(/\r?\n/);
 	const entries = [];
@@ -61,15 +68,25 @@ function htmlEntries(html) {
 		const h = /<h([234])[^>]*?(?:id='([^']*)')?[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>/i.exec(line);
 		if (h) {
 			if (cur) entries.push(cur);
-			cur = { level: Number(h[1]), id: h[2] || '', name: strip(h[3]), paras: [] };
+			cur = { level: Number(h[1]), id: h[2] || '', name: strip(h[3]), paras: [], parts: [] };
 			continue;
 		}
+		// every table in this source opens and closes on one line
+		const t = /<table>[\s\S]*?<\/table>/i.exec(line);
+		if (t && cur) cur.parts.push(t[0]);
 		const p = /<p>([\s\S]*?)<\/p>/i.exec(line);
-		if (p && cur) cur.paras.push(p[1]);
+		if (p && cur) {
+			cur.paras.push(p[1]);
+			cur.parts.push(strip(p[1]));
+		}
 	}
 	if (cur) entries.push(cur);
 	return entries;
 }
+
+/** One entry's prose as a row stores it: paragraphs as text, tables verbatim (they are markup the
+ *  article view renders, exactly as the 2024 pack carries them). */
+const entryText = (e) => e.parts.filter(Boolean).join('\n');
 
 /** Read a `<b>Label: </b>value` paragraph. */
 const bField = (paras, label) => {
@@ -901,18 +918,39 @@ function convertClasses() {
 			asi_levels: asiLevels.join(','),
 		});
 
-		// feature descriptions = h3/h4 headings with a level found in the progression table
-		for (const e of headings) {
+		// Feature descriptions = h3/h4 headings with a level found in the progression table. A heading
+		// with NO level that sits UNDER one (Wild Shape ▸ Beast Shapes, Spellcasting ▸ Cantrips) is a
+		// SUB-SECTION of that feature rather than a feature of its own, and its prose is appended to the
+		// parent: dropping it truncated the feature exactly where its table began. A heading of the same
+		// or higher rank ends the feature instead — and so does an h2, which starts a new CHAPTER: the
+		// Eldritch Invocations list sits after the last warlock feature under one of those, and without
+		// that boundary every invocation was appended to Eldritch Master.
+		let openFeature = null;
+		let openRank = 0;
+		// `headings` are the h3/h4 that CAN be features; the h2s are here only to close one
+		for (const e of htmlEntries(block).filter((s) => s.level >= 2 && s.level <= 4)) {
+			if (e.level === 2) {
+				openFeature = null;
+				continue;
+			}
 			const lvl = levelOf.get(norm(e.name));
-			if (!lvl) continue; // archetype/uncharted headings without a base-table level
+			if (!lvl) {
+				if (openFeature && e.level > openRank)
+					openFeature.text_en = [openFeature.text_en, `_${e.name}_`, entryText(e)]
+						.filter(Boolean)
+						.join('\n');
+				else openFeature = null; // an archetype heading, not a sub-section
+				continue;
+			}
 			const fid = `${id}_${slug(e.name)}`;
-			featureRows.push({
+			openRank = e.level;
+			openFeature = {
 				id: fid,
 				systems: '5e',
 				source: 'SRD 5.1',
 				name_en: e.name,
 				name_uk: '',
-				text_en: e.paras.map(strip).filter(Boolean).join('\n'),
+				text_en: entryText(e),
 				text_uk: '',
 				effects: authoredFeatures.get(fid) ?? '', // preserve tokens authored post-conversion
 				class_id: id,
@@ -920,7 +958,8 @@ function convertClasses() {
 				resource: '',
 				subclass_id: '',
 				expertise_slots: authoredExpertise.get(fid) ?? '', // N4a grants (Rogue L1+L6, Bard L3+L10)
-			});
+			};
+			featureRows.push(openFeature);
 		}
 	}
 	// --- subclasses (one per class in SRD 5.1) + their features ---
@@ -959,22 +998,27 @@ function convertClasses() {
 			class_id: classId,
 		});
 		for (const e of htmlEntries(block).filter((e) => e.level === 4)) {
-			const ftext = e.paras.map(strip).filter(Boolean).join('\n');
-			const lm = /(\d+)(?:st|nd|rd|th) level/i.exec(ftext);
+			// a subclass feature whose whole content is a TABLE (Life Domain Spells, the seven Circle
+			// Spells lands) used to become a row with an empty text cell — the table was the row.
+			const ftext = entryText(e);
+			// the level is read from the PROSE: a spell table carries level words of its own
+			const prose = e.paras.map(strip).filter(Boolean).join('\n');
+			const lm = /(\d+)(?:st|nd|rd|th) level/i.exec(prose);
+			const fid = `${subId}_${slug(e.name)}`;
 			featureRows.push({
-				id: `${subId}_${slug(e.name)}`,
+				id: fid,
 				systems: '5e',
 				source: 'SRD 5.1',
 				name_en: e.name,
 				name_uk: '',
 				text_en: ftext,
 				text_uk: '',
-				effects: '',
+				effects: authoredFeatures.get(fid) ?? '', // preserve tokens authored post-conversion
 				class_id: classId,
 				level: lm ? Number(lm[1]) : SUBCLASS_LEVEL_2014[classId],
 				resource: '',
 				subclass_id: subId,
-				expertise_slots: authoredExpertise.get(`${subId}_${slug(e.name)}`) ?? '',
+				expertise_slots: authoredExpertise.get(fid) ?? '',
 			});
 		}
 	}

@@ -262,3 +262,12 @@ read the report. `/dev/packs-write` is the worked example.
 `tools/srd/*` are the SRD converters, `tools/build-static-content.mjs` vendors content on predev and
 prebuild, `tools/restamp.ts` is `pnpm restamp`, and `tools/content-repo.mjs` resolves where the
 content repo is.
+
+**A converter run rewrites its WHOLE edition, and the packs have moved on since the last one.** Each
+converter re-emits every file it owns, so a run to fix one file also reverts every column the packs
+grew afterwards: `conditions_srd.csv`'s `max_level`, `spells_srd.csv`'s `upcast` — that one is not
+theoretical, the 2014 converter still emits the pre-`upcast` column set. The `effects` column is the
+exception, preserved by id (`existingEffectsById`), and so are the `expertise_slots` grants.
+So: run the converter, then `git checkout` in the CONTENT repo every file you did not mean to
+change, and read the diff of the one you did before committing it. `pnpm restamp` is for a hand-edit;
+a converter run is for a real content change.
