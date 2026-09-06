@@ -16,7 +16,7 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import { attackRollName, numberedAttackRollName, type Attack } from '$lib/combat/attacks';
-import type { RollTray } from './roll-tray.svelte';
+import type { RollJournal } from './roll-journal.svelte';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
@@ -35,7 +35,7 @@ export interface ExecutorHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
 	hpMax: number;
-	tray: RollTray;
+	journal: RollJournal;
 	economy: TurnEconomy;
 	resources: ResourceTracker;
 	effects: EffectsEditor;
@@ -164,10 +164,10 @@ export class ActionExecutor {
 			if (!p || !arg) return;
 			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.host().hpMax, p.hp.current + Math.max(0, r.total));
-			this.host().tray.pushRoll({ text: `${opt.name} — heal` }, r);
+			this.host().journal.pushRoll({ text: `${opt.name} — heal` }, r);
 		},
 		roll: (opt, arg) => {
-			if (arg) this.host().tray.pushRoll({ text: opt.name }, rollFormula(arg));
+			if (arg) this.host().journal.pushRoll({ text: opt.name }, rollFormula(arg));
 		},
 		apply_condition: (opt, arg) => {
 			if (arg)

@@ -97,7 +97,7 @@ damage parts, the note and how many instances fire; an absent `test` is what mak
 QUANTITY (a Fireball's target saves, so it has no to-hit half). An attack used to arrive in two
 calls whose second label was dropped on the floor. `times` belongs to the ACTION and not to its
 test half, so a damage-only spell can fire N times too. The advantage axis is numeric in the
-request — arithmetic over effects — and becomes the named mode at one seam, `RollTray.prefill`.
+request — arithmetic over effects — and becomes the named mode at one seam, `RollJournal.prefill`.
 
 **The action survives the roll.** Entries of one action share a `group` GUID — a GUID because the
 lines are written independently and each may be rewritten by an amendment, so nothing may depend on
@@ -178,7 +178,7 @@ which exists because three copies had already drifted.
 
 The `−1 · 0 · +1` axis on `rollPool`'s `advantage` and on `netAdvantage(fx)` stays numeric: that is
 arithmetic over effects which sums and clamps, a different fact from "how this roll was decided",
-which is the named member. The two meet at exactly one seam, `advantageMode()` in `roll-tray.svelte.ts`.
+which is the named member. The two meet at exactly one seam, `advantageMode()` in `roll-journal.svelte.ts`.
 
 ## Conventions
 

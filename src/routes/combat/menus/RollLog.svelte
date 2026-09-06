@@ -1,6 +1,6 @@
 <script lang="ts">
 	// The roll-log history menu (overlay.kind === 'log'). Reads the shared combat view-model's roll
-	// subsystem (combat.tray.log).
+	// subsystem (combat.journal.log).
 	//
 	// Each entry is the SAME `RollRow` the toast mounts, not a lookalike (UBUG-20): the log used to
 	// print the roller's internal `expr` plus a dimmed "drop d20(N)" line, so the surface you go to
@@ -17,7 +17,7 @@
 	import { _ } from '$lib/i18n';
 	import RollRow from '$lib/components/RollRow.svelte';
 
-	const actions = $derived(actionRuns(combat.tray.log));
+	const actions = $derived(actionRuns(combat.journal.log));
 </script>
 
 <div class="log-head"><span class="menu-title eyebrow">{$_('combat.log.rollLog')}</span></div>
@@ -35,7 +35,7 @@
 			     which could not say WHICH damage it meant once a roll has several parts. -->
 				<RollRow
 					model={rollToastModel(l, $_)}
-					onAdvantage={() => combat.tray.amendAdvantage(l)}
+					onAdvantage={() => combat.journal.amendAdvantage(l)}
 					useInspiration={combat.rolls.inspirationEntry === l
 						? { label: $_(combat.rolls.inspirationKey), run: combat.rolls.useInspiration }
 						: undefined}

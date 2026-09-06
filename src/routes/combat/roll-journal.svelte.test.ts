@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 /*
- * The tray seam: what a roll site asks for, and what the dice tray becomes. These are the paths
+ * The journal seam: what a roll site asks for, and what the dice tray becomes. These are the paths
  * UBUG-21 was about — a prefilled attack's damage used to be a queue the tray could neither show nor
  * edit — plus the routing that decides whether a request is a d20 TEST or a QUANTITY at all.
  * The toast is mocked because recording a roll must not need a DOM.
@@ -9,97 +9,107 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const toastRoll = vi.fn();
 vi.mock('$lib/dice/roll-toast', () => ({ toastRoll }));
 
-const { RollTray } = await import('./roll-tray.svelte');
+const { RollJournal } = await import('./roll-journal.svelte');
 const { MenuOverlay } = await import('./menu-overlay.svelte');
 const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('$lib/dice/roller');
 const { ADVANTAGE_MODE } = await import('$lib/rules/dice');
 
-let tray: InstanceType<typeof RollTray>;
+let journal: InstanceType<typeof RollJournal>;
 beforeEach(() => {
 	toastRoll.mockClear();
-	tray = new RollTray();
+	journal = new RollJournal();
 });
 
 describe('prefill', () => {
 	it('gives an attack a test line AND an editable damage line (UBUG-21)', () => {
 		// ONE request carries the whole action: the to-hit, the damage and what it is called
-		tray.prefill({
+		journal.prefill({
 			label: 'Greataxe',
 			test: { dice: { 20: 1 }, mod: 6, advantage: -1 },
 			damage: [{ dice: { 12: 1 }, mod: 3, type: 'slashing' }],
 		});
 
-		const lines = tray.diceTray.lines;
+		const lines = journal.diceTray.lines;
 		expect(lines.map((l) => l.role)).toEqual([ROLLER_ROLE.test, ROLLER_ROLE.damage]);
 		expect(lines[0]?.advantage).toBe(ADVANTAGE_MODE.disadvantage);
 		// a die added to the damage line goes to the DAMAGE, which is the whole of the bug
-		tray.diceTray.focus = 1;
-		tray.diceTray.addDie(6);
+		journal.diceTray.focus = 1;
+		journal.diceTray.addDie(6);
 		expect(testRoll(lines[0]!).dice).toEqual({ 20: 1 });
-		expect(damageParts(tray.diceTray.lines[1]!).map((p) => p.dice)).toEqual([{ 12: 1 }, { 6: 1 }]);
+		expect(damageParts(journal.diceTray.lines[1]!).map((p) => p.dice)).toEqual([
+			{ 12: 1 },
+			{ 6: 1 },
+		]);
 	});
 
 	it('carries an effect die into the line as a pill of its own, sign kept', () => {
-		tray.prefill({
+		journal.prefill({
 			label: 'Athletics',
 			test: { dice: { 20: 1 }, mod: 5, bonusDice: [{ sides: 4, count: 1, sign: 1 }] },
 		});
 		// it stays an EFFECT die (not folded into the pool), so a pool reroll can never reach it
-		expect(testRoll(tray.diceTray.lines[0]!).bonusDice).toEqual([{ sides: 4, count: 1, sign: 1 }]);
-		expect(testRoll(tray.diceTray.lines[0]!).dice).toEqual({ 20: 1 });
+		expect(testRoll(journal.diceTray.lines[0]!).bonusDice).toEqual([
+			{ sides: 4, count: 1, sign: 1 },
+		]);
+		expect(testRoll(journal.diceTray.lines[0]!).dice).toEqual({ 20: 1 });
 	});
 
 	it('puts the pool’s reroll/floor on the pool’s own dice', () => {
-		tray.prefill({
+		journal.prefill({
 			label: 'Stealth',
 			test: { dice: { 20: 1 }, mod: 11, mods: { minDie: 10, reroll: 1 } },
 		});
-		expect(testRoll(tray.diceTray.lines[0]!).mods).toEqual({ minDie: 10, reroll: 1 });
+		expect(testRoll(journal.diceTray.lines[0]!).mods).toEqual({ minDie: 10, reroll: 1 });
 	});
 
 	it('gives a DAMAGE-only action its volley count — it belongs to the action, not to a to-hit', () => {
-		tray.prefill({
+		journal.prefill({
 			label: 'Scorching Ray',
 			damage: [{ dice: { 6: 2 }, mod: 0, type: 'fire' }],
 			times: 3,
 		});
-		expect(tray.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
-		expect(volleyOf(tray.diceTray.lines[0]!)).toBe(3);
+		expect(journal.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
+		expect(volleyOf(journal.diceTray.lines[0]!)).toBe(3);
 	});
 
 	it('a request with no test half builds NO test line — Fireball has no to-hit', () => {
-		tray.prefill({
+		journal.prefill({
 			label: 'Fireball',
 			damage: [{ dice: { 6: 8 }, mod: 0, type: 'fire' }],
 			note: '8d6 base',
 		});
-		expect(tray.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
-		expect(damageParts(tray.diceTray.lines[0]!)).toMatchObject([{ dice: { 6: 8 }, type: 'fire' }]);
-		expect(tray.diceTray.note).toBe('8d6 base');
+		expect(journal.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
+		expect(damageParts(journal.diceTray.lines[0]!)).toMatchObject([
+			{ dice: { 6: 8 }, type: 'fire' },
+		]);
+		expect(journal.diceTray.note).toBe('8d6 base');
 	});
 });
 
 describe('the generic dice-tray seam', () => {
 	/** The overlay only needs somewhere to put a roll; the page geometry is not what is under test. */
-	const overlayFor = (t: InstanceType<typeof RollTray>) => new MenuOverlay(() => ({ tray: t }));
+	const overlayFor = (t: InstanceType<typeof RollJournal>) =>
+		new MenuOverlay(() => ({ journal: t }));
 
 	it('routes a formula with a d20 to the TEST line', () => {
-		overlayFor(tray).handleTrayRequest({ label: 'Initiative', formula: '1d20 +4' });
-		expect(tray.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.test]);
-		expect(testRoll(tray.diceTray.lines[0]!)).toMatchObject({ dice: { 20: 1 }, mod: 4 });
+		overlayFor(journal).handleTrayRequest({ label: 'Initiative', formula: '1d20 +4' });
+		expect(journal.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.test]);
+		expect(testRoll(journal.diceTray.lines[0]!)).toMatchObject({ dice: { 20: 1 }, mod: 4 });
 	});
 
 	it('routes a formula with no d20 to the DAMAGE line — a compendium "8d6 fire" is a quantity', () => {
-		overlayFor(tray).handleTrayRequest({ label: 'Fireball', formula: '8d6 fire' });
-		expect(tray.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
-		expect(damageParts(tray.diceTray.lines[0]!)).toMatchObject([{ dice: { 6: 8 }, type: 'fire' }]);
+		overlayFor(journal).handleTrayRequest({ label: 'Fireball', formula: '8d6 fire' });
+		expect(journal.diceTray.lines.map((l) => l.role)).toEqual([ROLLER_ROLE.damage]);
+		expect(damageParts(journal.diceTray.lines[0]!)).toMatchObject([
+			{ dice: { 6: 8 }, type: 'fire' },
+		]);
 	});
 });
 
 describe('recordRolls', () => {
 	it('logs a volley line by line and toasts it as ONE card — it was one action', () => {
 		const at = Date.now();
-		tray.recordRolls([
+		journal.recordRolls([
 			{
 				label: 'Ray',
 				expr: '',
@@ -121,14 +131,14 @@ describe('recordRolls', () => {
 				at: at + 1,
 			},
 		]);
-		expect(tray.log).toHaveLength(2);
+		expect(journal.log).toHaveLength(2);
 		expect(toastRoll).toHaveBeenCalledTimes(1);
 		expect(toastRoll.mock.calls[0]?.[0]).toHaveLength(2);
 	});
 
 	it('stamps one action id across the lines, so a reload still knows it was one action', () => {
 		const persisted: { group?: string }[] = [];
-		const grouping = new RollTray((e) => persisted.push(e));
+		const grouping = new RollJournal((e) => persisted.push(e));
 		const line = (at: number) => ({
 			label: 'Ray',
 			expr: '',
@@ -148,7 +158,7 @@ describe('recordRolls', () => {
 	});
 
 	it('leaves a lone roll ungrouped — being one line already says it', () => {
-		tray.recordRolls([
+		journal.recordRolls([
 			{
 				label: 'Save',
 				expr: '',
@@ -160,12 +170,12 @@ describe('recordRolls', () => {
 				at: 1,
 			},
 		]);
-		expect(tray.log[0]?.group).toBeUndefined();
+		expect(journal.log[0]?.group).toBeUndefined();
 	});
 
 	it('does nothing at all when the roll was refused', () => {
-		tray.recordRolls([]);
-		expect(tray.log).toHaveLength(0);
+		journal.recordRolls([]);
+		expect(journal.log).toHaveLength(0);
 		expect(toastRoll).not.toHaveBeenCalled();
 	});
 });

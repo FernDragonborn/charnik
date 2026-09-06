@@ -14,8 +14,8 @@
 	import { content } from '$lib/content/store.svelte';
 	import { combat } from '../combat-view-model.svelte';
 
-	const diceTray = combat.tray.diceTray;
-	const log = $derived(combat.tray.log);
+	const diceTray = combat.journal.diceTray;
+	const log = $derived(combat.journal.log);
 
 	// the tray keeps the roll it was building between openings, but not a MENU that was open when it
 	// closed — reopening onto a half-open type picker is a state nobody asked for

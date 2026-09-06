@@ -14,7 +14,7 @@ import { shortRestHalfHeal } from '$lib/rules/core';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { MenuKind } from '$lib/combat/helpers';
-import type { RollTray } from './roll-tray.svelte';
+import type { RollJournal } from './roll-journal.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
@@ -24,7 +24,7 @@ export interface RestControlsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
 	hpMax: number;
-	tray: RollTray;
+	journal: RollJournal;
 	resources: ResourceTracker;
 	overlay: OpenOverlay | null;
 	openMenu(kind: MenuKind, e: Event): void;
@@ -65,7 +65,7 @@ export class RestControls {
 			...c.play.hitDiceSpent,
 			[die]: this.host().resources.hitDiceSpent(die) + 1,
 		};
-		this.host().tray.pushRoll(
+		this.host().journal.pushRoll(
 			{ text: `Hit Die ${die}`, key: 'combat.roll.hitDie', values: { die } },
 			r,
 		);
@@ -102,7 +102,7 @@ export class RestControls {
 		this.host().resources.rest('short');
 		const heal = shortRestHalfHeal(this.host().hpMax);
 		p.hp.current = Math.min(this.host().hpMax, p.hp.current + heal);
-		this.host().tray.logMarker({
+		this.host().journal.logMarker({
 			text: `Short rest — +${heal} HP (½ max)`,
 			key: 'combat.log.shortRestHalf',
 			values: { hp: heal },

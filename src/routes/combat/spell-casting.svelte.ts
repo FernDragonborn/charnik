@@ -40,7 +40,7 @@ import {
 	type SpellRow,
 	type MenuKind,
 } from '$lib/combat/helpers';
-import type { RollSpec, RollTray } from './roll-tray.svelte';
+import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
@@ -72,7 +72,7 @@ export interface CastingHost {
 	sheet: CharacterSheet | null;
 	graph: ContentGraph | null;
 	round: number;
-	tray: RollTray;
+	journal: RollJournal;
 	economy: TurnEconomy;
 	cantConcentrate: boolean;
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
@@ -325,7 +325,7 @@ export class SpellCasting {
 		} else {
 			// N beams = N separate attacks, each with its own to-hit and its own damage — one action, so
 			// one toast, N log lines. This used to roll ONE and ask the player to roll the rest by hand.
-			this.host.tray.pushVolley(
+			this.host.journal.pushVolley(
 				label,
 				times,
 				() => ({
@@ -414,7 +414,7 @@ export class SpellCasting {
 			// name is DATA and rides as a value; whether it was a ritual picks the whole phrase, because
 			// a parenthetical tacked onto a translated sentence is not one a translator can move.
 			const suffix = ritual ? ' (ritual)' : '';
-			this.host.tray.logMarker({
+			this.host.journal.logMarker({
 				text: `Cast ${r.name}${suffix}`,
 				key: ritual ? 'combat.log.castRitual' : 'combat.log.cast',
 				values: { name: r.name },
@@ -441,10 +441,10 @@ export class SpellCasting {
 			// pool it built the to-hit from, which under the roller's line model would give a Fireball an
 			// advantage toggle and a to-hit total.
 			const note = saidNote(noteParts);
-			this.host.tray.prefill({ label, damage: parts, ...(note ? { note } : {}) });
+			this.host.journal.prefill({ label, damage: parts, ...(note ? { note } : {}) });
 			this.host.openMenu('dice', e);
 		} else {
-			this.host.tray.pushRoll(
+			this.host.journal.pushRoll(
 				// a spell's NAME is DATA — a content row's own word; the phrase around it is a key
 				name,
 				rollPool(primary.dice, {

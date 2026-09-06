@@ -16,7 +16,7 @@ import { naturalOf, rollPool } from '$lib/rules/dice';
 import { applyDefense, effectiveHpMax, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import type { RollTray } from './roll-tray.svelte';
+import type { RollJournal } from './roll-journal.svelte';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
@@ -24,7 +24,7 @@ import type { OpenOverlay } from './menu-overlay.svelte';
 export interface HitPointsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
-	tray: RollTray;
+	journal: RollJournal;
 	rolls: SheetRolls;
 	overlay: OpenOverlay | null;
 	/** Stop concentrating — a failed save's confirmed Drop takes the spell's own effect down with it. */
@@ -144,7 +144,10 @@ export class HitPoints {
 				advantage: netAdvantage(fx),
 			},
 		);
-		this.host().tray.pushRoll({ text: 'Concentration save', key: 'combat.roll.concentration' }, r);
+		this.host().journal.pushRoll(
+			{ text: 'Concentration save', key: 'combat.roll.concentration' },
+			r,
+		);
 		if (r.total >= pend.dc) {
 			toast(t('combat.notice.concentrationHeld', { total: r.total, dc: pend.dc }));
 			this.pendingConcentrationSave = null;
@@ -180,7 +183,7 @@ export class HitPoints {
 		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
 		// (advantage/effects already fold via `fx`), so there's no reason to offer the tray here.
 		const r = rollPool({ 20: 1 }, { ...fx, mod: fx.flat, advantage: netAdvantage(fx) });
-		this.host().tray.pushRoll({ text: 'Death save', key: 'combat.roll.deathSave' }, r);
+		this.host().journal.pushRoll({ text: 'Death save', key: 'combat.roll.deathSave' }, r);
 		const ds = c.play.deathSaves;
 		const natural = naturalOf(r);
 		if (natural === 20) {

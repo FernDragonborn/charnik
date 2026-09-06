@@ -72,7 +72,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `REPORT` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
-- `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-tray.svelte.ts
+- `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×2 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte

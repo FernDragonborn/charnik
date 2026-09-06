@@ -1,7 +1,7 @@
 /*
  * The dice-roll subsystem of the Combat view-model: the dice tray the overlay mounts, the roll log,
  * and the roll-execution methods. Split out of CombatVM so the roll concern is one cohesive unit;
- * CombatVM composes it as `combat.tray` and the higher-level actions (attack/cast/action) call into
+ * CombatVM composes it as `combat.journal` and the higher-level actions (attack/cast/action) call into
  * it. Pure dice math lives in $lib/rules/dice, and the tray's own model in $lib/dice/roller.
  *
  * The builder half used to live here as loose fields (`dice`, `rollMod`, `rollAdvantage`) plus a
@@ -111,7 +111,7 @@ const entryOf = ({
 	at,
 });
 
-export class RollTray {
+export class RollJournal {
 	/** The roll being built — the dice tray this subsystem mounts. Its lines, pills and toggles ARE
 	 *  the builder; nothing about the roll under construction lives beside it. */
 	diceTray = new DiceTray();

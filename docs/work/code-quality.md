@@ -29,13 +29,8 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   `OPEN_VOCAB`), and a `null` swallowing a REFUSAL became a reported `ApplyResult`. Both patterns
   are the thing to look for next time.
 
-- [ ] **ROLLTRAY-NAME · `RollTray` is the third thing called a tray.** The dice tray is `DiceTray`
-  (the live state) mounted in `menus/DiceTray.svelte` (the overlay); `RollTray` is neither — it is the
-  Combat view-model's roll subsystem (the tray, the log, the roll-execution methods), and naming it
-  after the tray is what makes the access path read `combat.tray.diceTray`. Rename the class and
-  `combat.tray` after what it holds, leaving `dice tray` to mean exactly one thing. **The name this
-  item first proposed is taken**: `combat.rolls` is `SheetRolls`, the roll-EXECUTION subsystem, and
-  what is left in `RollTray` is the RECORD — the log, entry revision, the dice-tray seam. The rename
-  still wants doing; it needs a name for that.
-  ~80 mentions across `src/routes/combat`; mechanical, and the `dice/tray.svelte.ts` open-the-tray
-  seam is NOT part of it — that one is correctly named.
+- [x] **ROLLTRAY-NAME · `dice tray` means exactly one thing again.** The Combat view-model's roll
+  subsystem is `RollJournal`, reached as `combat.journal`: it holds the RECORD — the log, entry
+  revision, and the dice tray a roll is built in. `DiceTray` (the live tray state) and
+  `menus/DiceTray.svelte` (its overlay) keep the name, and the `dice/tray.svelte.ts` open-the-tray
+  seam was never part of it.

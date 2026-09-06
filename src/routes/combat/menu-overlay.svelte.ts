@@ -15,11 +15,11 @@
  */
 import { parseDamageParts, type MenuKind } from '$lib/combat/helpers';
 import { registerDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
-import type { RollTray } from './roll-tray.svelte';
+import type { RollJournal } from './roll-journal.svelte';
 
 /** What the menus need from the sheet around them: somewhere to put a prefilled roll. */
 export interface MenuOverlayHost {
-	tray: RollTray;
+	journal: RollJournal;
 }
 
 /** An open dropdown: which menu, and where it sits in VIEWPORT coordinates — the placement it opened
@@ -62,7 +62,7 @@ export class MenuOverlay {
 	};
 
 	openDice = (e: Event) => {
-		this.host().tray.reset();
+		this.host().journal.reset();
 		this.openMenu('dice', e);
 	};
 
@@ -90,14 +90,14 @@ export class MenuOverlay {
 		// test line would give it an advantage toggle and a to-hit total. Every caller that means a
 		// test has a d20 in its pool, so the pool IS the signal — no extra field on the seam.
 		if (!pool[20]) {
-			this.host().tray.prefill({
+			this.host().journal.prefill({
 				label: req.label,
 				damage: [{ dice: pool, mod, type: parsed?.type ?? '' }],
 			});
 			this.openMenuCentered('dice');
 			return;
 		}
-		this.host().tray.prefill({
+		this.host().journal.prefill({
 			label: req.label,
 			test: { dice: pool, mod, advantage: req.advantage ?? 0, mods: req.mods ?? {} },
 			...(req.queuedDamage

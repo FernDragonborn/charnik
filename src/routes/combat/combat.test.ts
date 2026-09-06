@@ -289,7 +289,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	let character: Character;
 	/** Number of `dN(` dice of a given size in the newest roll-log entry's expr. */
 	const diceOf = (sides: number) =>
-		(combat.tray.log[0]?.expr.match(new RegExp(`d${sides}\\(`, 'g')) ?? []).length;
+		(combat.journal.log[0]?.expr.match(new RegExp(`d${sides}\\(`, 'g')) ?? []).length;
 
 	beforeEach(async () => {
 		graph = await casterGraphOf();
@@ -324,7 +324,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		character.play.spellSlotsSpent = { '1': 4 };
 		combat.cast(spellRow(graph, `spell:${S}:cure_wounds`, 'on')!, noModifiers);
 		expect(diceOf(8)).toBe(2); // 1d8 base + 1d8 upcast
-		expect(combat.tray.log[0]?.expr).toContain('+3'); // spellcasting mod still added
+		expect(combat.journal.log[0]?.expr).toContain('+3'); // spellcasting mod still added
 	});
 
 	it('a broken upcast formula degrades to base dice, never silently-wrong dice (H11)', () => {
@@ -344,7 +344,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	});
 
 	/** The typed damage part of a given type in the newest roll's damage lines, or undefined. */
-	const dmgPartOf = (type: string) => combat.tray.log[0]?.damage?.find((p) => p.type === type);
+	const dmgPartOf = (type: string) => combat.journal.log[0]?.damage?.find((p) => p.type === type);
 	/** Count of `dN(` dice in a specific damage-part's expr (the multi-type breakdown). */
 	const partDiceOf = (type: string, sides: number) =>
 		(dmgPartOf(type)?.expr.match(new RegExp(`d${sides}\\(`, 'g')) ?? []).length;
@@ -360,7 +360,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('Ice Knife at the base slot keeps both types unscaled (no phantom empty part)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:ice_knife`, 'on')!, noModifiers);
 		expect(partDiceOf('cold', 6)).toBe(2); // base 2d6 cold, no delta
-		expect((combat.tray.log[0]?.damage ?? []).map((p) => p.type).sort()).toEqual([
+		expect((combat.journal.log[0]?.damage ?? []).map((p) => p.type).sort()).toEqual([
 			'cold',
 			'piercing',
 		]);
@@ -369,12 +369,12 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('a FLAT heal (Heal 70) applies its base + upcast delta with NO spellcasting mod (item 6)', () => {
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to a level-2 slot → +10
 		combat.cast(spellRow(graph, `spell:${S}:flat_heal`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.total).toBe(80); // 70 base + 10 upcast, NOT + int mod
+		expect(combat.journal.log[0]?.total).toBe(80); // 70 base + 10 upcast, NOT + int mod
 	});
 
 	it('a flat heal at the base slot heals exactly its flat value (70)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:flat_heal`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.total).toBe(70);
+		expect(combat.journal.log[0]?.total).toBe(70);
 	});
 
 	it('Aid: the hp_max upcast adds ANOTHER fold token to the carrier per slot above base (item 3)', () => {
@@ -388,12 +388,12 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 
 	it('False Life: temp HP rolls its dice + upcast delta, NO spellcasting mod (item 3)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers); // base slot 1
-		expect(combat.tray.log[0]?.label).toContain('temp HP');
-		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.spell.tempHp');
-		expect(combat.tray.log[0]?.expr).toContain('+4'); // 1d4 + 4 base, int mod NOT added
+		expect(combat.journal.log[0]?.label).toContain('temp HP');
+		expect(combat.journal.log[0]?.labelKey).toBe('combat.log.spell.tempHp');
+		expect(combat.journal.log[0]?.expr).toContain('+4'); // 1d4 + 4 base, int mod NOT added
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +5 delta
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
+		expect(combat.journal.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
 	});
 
 	it('Magic Weapon: casting at the base slot spawns +1 attack&damage effect tokens (item 7)', () => {
@@ -416,15 +416,15 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
 		// FACTS, not a sentence: the record keeps what was added and out of which slot (untyped delta
 		// merges into the fire pool), and `rollToastModel` is the one place that turns it into words
-		expect(combat.tray.log[0]?.noteParts?.[0]).toEqual({
+		expect(combat.journal.log[0]?.noteParts?.[0]).toEqual({
 			key: 'roller.note.upcast',
 			values: { base: '3d8 fire', added: '1d8', slot: 2 },
 		});
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers); // still a level-2 slot → +1d8
-		expect(combat.tray.log[0]?.noteParts?.[0]?.values?.slot).toBe(2);
+		expect(combat.journal.log[0]?.noteParts?.[0]?.values?.slot).toBe(2);
 		character.play.spellSlotsSpent = {}; // a base-slot cast has no upcast → no provenance note
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.noteParts).toBeUndefined();
+		expect(combat.journal.log[0]?.noteParts).toBeUndefined();
 	});
 
 	it('SCOPED-BONUS: a bonus naming ONE spell reaches that spell and no other', () => {
@@ -438,9 +438,9 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 			},
 		];
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.expr).toContain('+3');
+		expect(combat.journal.log[0]?.expr).toContain('+3');
 		combat.cast(spellRow(graph, `spell:${S}:ice_knife`, 'on')!, noModifiers);
-		expect(combat.tray.log[0]?.expr ?? '').not.toContain('+3');
+		expect(combat.journal.log[0]?.expr ?? '').not.toContain('+3');
 		expect(dmgPartOf('cold')?.expr ?? '').not.toContain('+3');
 	});
 
@@ -480,9 +480,9 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
 		// the slot rides the NAME (it survives the strip layout, where the note is hidden); what the
 		// slot ADDED rides the note beside it
-		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.spell.damageSlot');
-		expect(combat.tray.log[0]?.labelValues?.slot).toBe(3);
-		expect(combat.tray.log[0]?.noteParts?.[1]).toEqual({
+		expect(combat.journal.log[0]?.labelKey).toBe('combat.log.spell.damageSlot');
+		expect(combat.journal.log[0]?.labelValues?.slot).toBe(3);
+		expect(combat.journal.log[0]?.noteParts?.[1]).toEqual({
 			key: 'roller.note.upcastPreview',
 			values: { preview: '+2d8' },
 		});
@@ -774,11 +774,11 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('roll/log: rollDiceNow prepends a labelled entry with a numeric total', () => {
-		const before = combat.tray.log.length;
-		combat.tray.rollDiceNow({ label: 'Stealth', test: { dice: { 20: 1 }, mod: 5 } });
-		expect(combat.tray.log.length).toBe(before + 1);
-		expect(combat.tray.log[0]!.label).toBe('Stealth');
-		expect(typeof combat.tray.log[0]!.total).toBe('number');
+		const before = combat.journal.log.length;
+		combat.journal.rollDiceNow({ label: 'Stealth', test: { dice: { 20: 1 }, mod: 5 } });
+		expect(combat.journal.log.length).toBe(before + 1);
+		expect(combat.journal.log[0]!.label).toBe('Stealth');
+		expect(typeof combat.journal.log[0]!.total).toBe('number');
 	});
 
 	it('HP: damage soaks temp HP first, then current; heal clamps to max', () => {
@@ -807,11 +807,11 @@ describe('CombatVM · S2 split net', () => {
 	it('INSPIRATION: 2024 rerolls the d20 and keeps the NEW one, spending the flag once', () => {
 		character.play.inspiration = true;
 		combat.roll({ text: 'Stealth' }, 3, noModifiers, 'skill.stealth');
-		const before = combat.tray.log[0]!;
+		const before = combat.journal.log[0]!;
 		expect(combat.rolls.inspirationEntry).toBe(before); // a d20 landed and the flag is up
 
 		combat.rolls.useInspiration();
-		const after = combat.tray.log[0]!;
+		const after = combat.journal.log[0]!;
 		expect(after.d20s.length).toBe(1); // "use the new roll" — not a pair to pick the better from
 		const amendment = after.amendments?.at(-1);
 		expect(amendment?.kind).toBe('d20Reroll');
@@ -826,7 +826,7 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.rolls.inspirationKey).toBe('combat.roll.inspirationAdvantage');
 
 		combat.rolls.useInspiration();
-		const after = combat.tray.log[0]!;
+		const after = combat.journal.log[0]!;
 		expect(after.d20s.length).toBe(2); // a second die joined the first
 		expect(after.advantage).toBe('advantage');
 		expect(character.play.inspiration).toBe(false);
@@ -837,14 +837,14 @@ describe('CombatVM · S2 split net', () => {
 		combat.rolls.rollAttackNow(unarmed);
 		// the one attack that is not a content row keeps its catalog key, so a log read in another
 		// language reads in THAT language rather than the one it was rolled in
-		expect(combat.tray.log[0]?.labelKey).toBe('combat.attacks.unarmedStrike');
+		expect(combat.journal.log[0]?.labelKey).toBe('combat.attacks.unarmedStrike');
 
 		combat.rolls.rollAttackNow(
 			unarmed,
 			numberedAttackRollName(unarmed, (k) => k, 2, 3),
 		);
-		expect(combat.tray.log[0]?.labelKey).toBe('combat.log.attackNumbered');
-		expect(combat.tray.log[0]?.labelValues).toEqual({
+		expect(combat.journal.log[0]?.labelKey).toBe('combat.log.attackNumbered');
+		expect(combat.journal.log[0]?.labelValues).toEqual({
 			// the NAME rides as a catalog word, not as text — that is what keeps a numbered strike honest
 			name: { catalog: 'combat.attacks', id: 'unarmedStrike' },
 			index: 2,
@@ -855,8 +855,8 @@ describe('CombatVM · S2 split net', () => {
 		const dagger = combat.attacks.find((a) => a.name === 'Dagger');
 		if (dagger) {
 			combat.rolls.rollAttackNow(dagger);
-			expect(combat.tray.log[0]?.labelKey).toBeUndefined();
-			expect(combat.tray.log[0]?.label).toBe('Dagger');
+			expect(combat.journal.log[0]?.labelKey).toBeUndefined();
+			expect(combat.journal.log[0]?.label).toBe('Dagger');
 		}
 	});
 
@@ -958,7 +958,7 @@ describe('CombatVM · S2 split net', () => {
 		character.ui.shortRestMode = 'half';
 		character.play.hp = { current: 1, max: 40, temp: 0 };
 		combat.startShortRest(noModifiers);
-		expect(combat.tray.log[0]).toMatchObject({
+		expect(combat.journal.log[0]).toMatchObject({
 			labelKey: 'combat.log.shortRestHalf',
 			labelValues: { hp: 20 },
 		});
@@ -999,9 +999,9 @@ describe('CombatVM · S2 split net', () => {
 		const ids = combat.attacks.map((a) => a.id);
 		expect(ids).toContain('dagger');
 		expect(ids).toContain(UNARMED_STRIKE_ID);
-		const before = combat.tray.log.length;
+		const before = combat.journal.log.length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
-		expect(combat.tray.log.length).toBe(before + 1);
+		expect(combat.journal.log.length).toBe(before + 1);
 	});
 
 	it('Savage Attacker rerolls the WEAPON dice and leaves an effect die alone', () => {
@@ -1029,7 +1029,7 @@ describe('CombatVM · S2 split net', () => {
 		expect(effectBefore.length).toBeGreaterThan(0);
 
 		combat.savageReroll();
-		const after = combat.tray.log[0]!.damage![0]!;
+		const after = combat.journal.log[0]!.damage![0]!;
 		const effectAfter = after.dice.filter((d) => d.role === DIE_ROLE.bonus);
 		// the same effect dice, face for face, on the other side of the reroll
 		expect(effectAfter.map((d) => d.value)).toEqual(effectBefore.map((d) => d.value));
@@ -1052,21 +1052,21 @@ describe('CombatVM · S2 split net', () => {
 		combat.attackRoll(combat.attacks[0]!, noModifiers); // Dagger (1d4) — rolls damage dice
 		expect(combat.savageLabel).toBe('Savage Attacker');
 		const entry = combat.savagePendingEntry!;
-		expect(entry).toBe(combat.tray.log[0]);
+		expect(entry).toBe(combat.journal.log[0]);
 
 		// re-reading the d20 REPLACES the log element; the offer names its roll by `at`, so it must
 		// still be on that row rather than silently withdrawing itself
-		combat.tray.amendAdvantage(entry);
-		expect(combat.savagePendingEntry).toBe(combat.tray.log[0]);
+		combat.journal.amendAdvantage(entry);
+		expect(combat.savagePendingEntry).toBe(combat.journal.log[0]);
 		expect(combat.savagePendingEntry).not.toBe(entry);
 		expect(combat.savageLabel).toBe('Savage Attacker');
 		const keptBefore = combat.savagePendingEntry!.damage![0]!.total;
 
 		combat.savageReroll();
-		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
+		expect(combat.journal.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
 		// the reroll is an AMENDMENT, so it cannot overwrite provenance the roll already had — and it
 		// lands BESIDE the advantage amendment above rather than replacing it
-		expect(combat.tray.log[0]!.amendments).toMatchObject([
+		expect(combat.journal.log[0]!.amendments).toMatchObject([
 			{ kind: AMENDMENT_KIND.advantage },
 			{ kind: AMENDMENT_KIND.damageReroll, source: 'Savage Attacker' },
 		]);
@@ -1097,21 +1097,21 @@ describe('CombatVM · S2 split net', () => {
 
 		// Shift-click rolls nothing yet — the tray does, later, and the offer has to arm from THERE
 		combat.attackRoll(combat.attacks[0]!, wantsTray);
-		combat.recordTrayRolls(combat.tray.diceTray.roll());
+		combat.recordTrayRolls(combat.journal.diceTray.roll());
 		expect(combat.savageLabel).toBe('Savage Attacker');
-		expect(combat.savagePendingEntry).toBe(combat.tray.log[0]);
+		expect(combat.savagePendingEntry).toBe(combat.journal.log[0]);
 		const keptBefore = combat.savagePendingEntry!.damage![0]!.total;
 		combat.savageReroll();
-		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore);
+		expect(combat.journal.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore);
 
 		// the use is free again, and the SAME tray now holds a spell: Savage Attacker rerolls a
 		// weapon's dice, so a Fire Bolt sent through the tray must not inherit the offer
 		combat.economy.nextTurn();
-		combat.tray.prefill({
+		combat.journal.prefill({
 			label: 'Fire Bolt',
 			damage: [{ dice: { 10: 1 }, mod: 0, type: 'fire' }],
 		});
-		combat.recordTrayRolls(combat.tray.diceTray.roll());
+		combat.recordTrayRolls(combat.journal.diceTray.roll());
 		expect(combat.savageLabel).toBeNull();
 	});
 
@@ -1887,16 +1887,16 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		const character = monk();
 		combat.graph = graph;
 		combat.character = character;
-		const before = combat.tray.log.length;
+		const before = combat.journal.log.length;
 
 		combat.activateResourceOption(flurry());
 
-		expect(combat.tray.log.length - before).toBe(2); // two strikes, two log entries
+		expect(combat.journal.log.length - before).toBe(2); // two strikes, two log entries
 		expect(character.play.turn.bonus).toBe(1); // ONE bonus action, not one per strike
 		expect(combat.resources.resourceSpent('focus')).toBe(1);
 		// numbered, so the log says WHICH strike each line was
-		expect(combat.tray.log[0]?.label).toMatch(/2\/2$/);
-		expect(combat.tray.log[1]?.label).toMatch(/1\/2$/);
+		expect(combat.journal.log[0]?.label).toMatch(/2\/2$/);
+		expect(combat.journal.log[1]?.label).toMatch(/1\/2$/);
 	});
 
 	it('a weapon the character has not got is surfaced, not silently skipped', async () => {
@@ -1904,11 +1904,11 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		const character = monk();
 		combat.graph = graph;
 		combat.character = character;
-		const before = combat.tray.log.length;
+		const before = combat.journal.log.length;
 
 		combat.activateResourceOption(flurry({ action: 'attack:greatsword_we_do_not_carry:2' }));
 
-		expect(combat.tray.log.length).toBe(before); // nothing rolled…
+		expect(combat.journal.log.length).toBe(before); // nothing rolled…
 		expect(character.play.turn.bonus).toBe(1); // …though the action was still spent (all-or-nothing
 		expect(combat.resources.resourceSpent('focus')).toBe(1); // validates the COST, not the content)
 	});
@@ -1919,17 +1919,17 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		combat.graph = graph;
 		combat.character = character;
 
-		const before = combat.tray.log.length; // the tray is a singleton, so count the DELTA
+		const before = combat.journal.log.length; // the tray is a singleton, so count the DELTA
 
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}` }));
-		expect(combat.tray.log.length - before).toBe(1);
+		expect(combat.journal.log.length - before).toBe(1);
 		// unnumbered when there is only one — the numbering is the fact under test, so it is asserted
 		// as the ABSENCE of an "i/N" rather than on the strike's word
-		expect(combat.tray.log[0]?.label).not.toMatch(/\d+\/\d+/);
+		expect(combat.journal.log[0]?.label).not.toMatch(/\d+\/\d+/);
 
 		character.play.turn.bonus = 0; // fresh turn for the second activation
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}:500` }));
-		expect(combat.tray.log.length - before).toBe(1 + 12); // capped, not five hundred log lines
+		expect(combat.journal.log.length - before).toBe(1 + 12); // capped, not five hundred log lines
 	});
 });
 
@@ -1952,9 +1952,9 @@ describe.each([
 		const flurry = combat.sheet?.resourceOptions.find((o) => o.id.endsWith('flurry_of_blows'));
 		expect(flurry?.action).toBe(`attack:${UNARMED_STRIKE_ID}:2`);
 		if (!flurry) return;
-		const before = combat.tray.log.length;
+		const before = combat.journal.log.length;
 		combat.activateResourceOption(flurry);
-		expect(combat.tray.log.length - before).toBe(2);
+		expect(combat.journal.log.length - before).toBe(2);
 		expect(character.play.turn.bonus).toBe(1); // one Bonus Action for the pair
 	});
 });

@@ -40,7 +40,7 @@ import {
 	sayRollName,
 	nameFields,
 } from '$lib/combat/helpers';
-import type { RollSpec, RollTray } from './roll-tray.svelte';
+import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 
 /** What roll semantics need from the sheet around them. */
@@ -48,7 +48,7 @@ export interface SheetRollsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
 	round: number;
-	tray: RollTray;
+	journal: RollJournal;
 	economy: TurnEconomy;
 	openMenu(kind: MenuKind, e: Event): void;
 }
@@ -85,7 +85,7 @@ export class SheetRolls {
 	get savagePendingEntry(): RollLogEntry | null {
 		const at = this.savagePending?.at;
 		if (at === undefined) return null;
-		return this.host().tray.log.find((e) => e.at === at) ?? null;
+		return this.host().journal.log.find((e) => e.at === at) ?? null;
 	}
 
 	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
@@ -109,7 +109,7 @@ export class SheetRolls {
 
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
 	openRoll = (spec: RollSpec, e: Event) => {
-		this.host().tray.prefill(spec);
+		this.host().journal.prefill(spec);
 		this.host().openMenu('dice', e);
 	};
 	// EVERY roll site: normal tap rolls instantly; Shift-click opens the prefilled tray. `name` is
@@ -125,7 +125,7 @@ export class SheetRolls {
 		if (forced) {
 			// the outcome rides the entry as a FACT and the roll keeps its own name, so the line reads in
 			// the language the log is READ in rather than the one the save was forced in
-			this.host().tray.logMarker(name, forced);
+			this.host().journal.logMarker(name, forced);
 			toast(
 				t(
 					forced === AUTO_OUTCOME.fail
@@ -157,7 +157,7 @@ export class SheetRolls {
 				e,
 			);
 		else
-			this.host().tray.rollDiceNow({
+			this.host().journal.rollDiceNow({
 				label,
 				...(name.key ? { labelKey: name.key } : {}),
 				test: {
@@ -216,7 +216,7 @@ export class SheetRolls {
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
 		// (The Shift-click tray path arms the same offer, from `recordTrayRolls`.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.host().tray.pushRoll(name, toHit, dmgRolls);
+		const entry = this.host().journal.pushRoll(name, toHit, dmgRolls);
 		if (savage && entry.at !== undefined)
 			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};
@@ -231,10 +231,10 @@ export class SheetRolls {
 	 * the offer's pill is drawn on.
 	 */
 	recordTrayRolls = (entries: RollLogEntry[]) => {
-		this.host().tray.recordRolls(entries);
+		this.host().journal.recordRolls(entries);
 		const entry = entries[0];
-		if (!this.host().tray.weaponAttack || !entry || entry.at === undefined) return;
-		const savage = this.savageOffer(this.host().tray.diceTray.damageSpecs[0], entry.damage);
+		if (!this.host().journal.weaponAttack || !entry || entry.at === undefined) return;
+		const savage = this.savageOffer(this.host().journal.diceTray.damageSpecs[0], entry.damage);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
 	};
 
@@ -270,7 +270,7 @@ export class SheetRolls {
 	get inspirationEntry(): RollLogEntry | null {
 		const c = this.host().character;
 		if (!c?.play.inspiration) return null;
-		const last = this.host().tray.log[0];
+		const last = this.host().journal.log[0];
 		if (!last?.d20s.length) return null;
 		// 2014 buys advantage, so an entry already read at advantage has nothing left to buy
 		if (c.system === '5e' && last.advantage === ADVANTAGE_MODE.advantage) return null;
@@ -293,12 +293,12 @@ export class SheetRolls {
 		const entry = this.inspirationEntry;
 		if (!c || !entry) return;
 		if (c.system === '5e') {
-			this.host().tray.amendAdvantage(entry, ADVANTAGE_MODE.advantage);
+			this.host().journal.amendAdvantage(entry, ADVANTAGE_MODE.advantage);
 		} else {
 			const rerolled = rerollKeptD20(entry);
 			if (!rerolled) return;
 			const { note: _note, amendments: _prior, ...rest } = rerolled.roll;
-			this.host().tray.reviseEntry(entry, {
+			this.host().journal.reviseEntry(entry, {
 				...rest,
 				...(entry.note ? { note: entry.note } : {}),
 				amendments: [
@@ -389,7 +389,7 @@ export class SheetRolls {
 				},
 			],
 		};
-		this.host().tray.reviseEntry(entry, revised);
+		this.host().journal.reviseEntry(entry, revised);
 		this.savageUsedRound = this.host().round;
 		this.savagePending = null;
 		// re-toast the REVISED roll, not a summary line: the reroll changed the damage, so the player

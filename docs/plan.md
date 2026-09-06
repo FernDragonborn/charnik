@@ -154,12 +154,13 @@ everything — old homebrew is never wrong-downward.
     themes as swatched cards; clone a built-in → editable custom theme; pick / duplicate / delete.
   - [x] **Editor** — token→value form over `THEMEABLE_TOKENS`, seeded self-contained from the base
     via `snapshotBaseTokens` (a custom `[data-theme]` cannot inherit another theme by cascade).
-  - [ ] **Persistence + portability** — themes live in `localStorage` (app-store) today; move to a
-    user-owned `themes.json` in the data dir via the `Storage` seam so a theme is
-    shareable/importable like content packs; export/import one theme. A theme is user-owned data and
-    belongs on their disk like everything else they own, not in browser storage the app happens to
-    have.
-  - [ ] **Theme scope is COLOURS ONLY.** Density, roundness and type stay app-owned even though
+  - [x] **Persistence + portability** — a theme is a file: one tagged JSON per theme under `themes/`
+    in the data dir through the `Storage` seam (`styles/themeFiles.ts`), which is what makes it
+    copyable, hand-editable and shareable like a content pack, plus export/import of a single theme
+    in the Themes tab. Files are the source of truth at startup; every load re-sanitizes, because a
+    file on disk is untrusted input. The app-store copy stays as the live array the injector reads
+    and as the one-time migration source for themes written before this.
+  - **Theme scope is COLOURS ONLY.** Density, roundness and type stay app-owned even though
     font-size/radius/tracking are tokenized and could be exposed. A theme that can move spacing turns
     every layout into N layouts nobody screenshots, and nobody has asked. This is also why the px
     spacing guard is not worth building: with colours-only themes an off-scale `14px` breaks nothing.
@@ -259,9 +260,8 @@ position and are given per wave, because most of them were learned the hard way.
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
 - **Ready, unscheduled, and app-only** — what is left in the trackers that needs no content commit and
   no design session, so a session with app time can take any of them without re-deriving that they
-  exist: RECHARGE-TAIL's `on_event` generalization (Champion Heroic Rally is its second consumer),
-  N5's ammunition toggle and Sneak Attack's once-per-turn marker, ROLLTRAY-NAME (which now needs a
-  name for the RECORD, see its item), and the themes' move to a user-owned `themes.json`.
+  exist: RECHARGE-TAIL's `on_event` generalization (Champion Heroic Rally is its second consumer)
+  and N5's ammunition toggle.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).

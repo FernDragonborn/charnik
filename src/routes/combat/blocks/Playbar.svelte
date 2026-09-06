@@ -19,7 +19,7 @@
 	import RollRow from '$lib/components/RollRow.svelte';
 
 	const { openMenu } = combat;
-	const log = $derived(combat.tray.log);
+	const log = $derived(combat.journal.log);
 	const last = $derived(log[0]);
 
 	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
@@ -49,7 +49,7 @@
 		{#if last}
 			<RollRow
 				model={rollToastModel(last, $_)}
-				onAdvantage={() => combat.tray.amendAdvantage(last)}
+				onAdvantage={() => combat.journal.amendAdvantage(last)}
 				{rerollDamage}
 				{useInspiration}
 				layout={ROLL_LAYOUT.strip}

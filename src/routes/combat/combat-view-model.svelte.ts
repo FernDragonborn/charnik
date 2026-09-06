@@ -28,7 +28,7 @@ import {
 	type Attack,
 	type StandardAction,
 } from '$lib/combat/helpers';
-import { RollTray } from './roll-tray.svelte';
+import { RollJournal } from './roll-journal.svelte';
 import {
 	appendLog,
 	reviseLog,
@@ -77,9 +77,9 @@ const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insig
  */
 
 class CombatVM {
-	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
+	/** The roll RECORD: the log, its revisions, and the dice tray a roll is built in. Each completed
 	 *  roll is also persisted to the active character's `log.jsonl` (B4). */
-	tray = new RollTray(
+	journal = new RollJournal(
 		(e) => this.persistRoll(e),
 		(e) => this.persistRevision(e),
 	);
@@ -289,7 +289,7 @@ class CombatVM {
 		// the flattened summary, which is all there ever was in it. Either way
 		// it goes through `rehydrateRoll`, which fills the per-die record from the rendered `expr` when
 		// the line predates it — the one place the legacy string is still read.
-		this.tray.seed(
+		this.journal.seed(
 			hist.map((le) =>
 				rehydrateLogEntry(
 					le.roll ?? { label: le.label, expr: le.detail ?? '', total: le.result ?? NaN, at: le.t },
