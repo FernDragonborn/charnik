@@ -80,6 +80,16 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
+- [ ] **VOCAB-UNUSED · three effect kinds no shipped row uses. Decide each. BLOCKS 0.7.0.** Counted
+  over both packs: `grant_proficiency` 0, `auto_succeed` 0, `plugin` 0. The last two are answered
+  already — a plugin token is user-authored by definition, and RAW almost never auto-SUCCEEDS a save
+  (auto_fail has 16 users, all conditions), so both stay as surface with nothing to ship. The open
+  one is **`grant_proficiency`**: proficiencies reach the sheet through the class and background
+  COLUMNS instead, so the token is exercised by tests and by nothing else. Either it is the way a
+  homebrew feat grants a skill — in which case one shipped row should prove it, and the effects spec
+  should say so — or it is a second way to say what the columns already say, and it goes. A
+  vocabulary entry nothing exercises is a promise we have not tested.
+
 - [ ] **EXTRA-ATTACK · a level-5 martial attacks once. BLOCKS 0.7.0, first priority.** Five
   classes in both editions grant it, at the tier most games are played at, and nothing in the app
   models how many attacks an Attack action makes. Shape (settled in N2): `flat_bonus:attacks+N` on

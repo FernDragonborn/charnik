@@ -31,7 +31,8 @@
   `subclass_level` carries the 2014 value. Wants a per-system override column rather than a second
   row.
 
-- [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
+- [~] **MAGIC-ITEM-EFX · BLOCKS 0.7.0 — an equipped magic item that changes no number is a wrong
+  number, and most of them still do not. Tokenize the shipped SRD magic-item effects (GLOBAL content task,
   surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,
   equipped/attuned rows flowing through `gatherEffects`); every magic-item row simply shipped EMPTY.

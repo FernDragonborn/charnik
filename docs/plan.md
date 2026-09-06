@@ -264,6 +264,20 @@ position and are given per wave, because most of them were learned the hard way.
   An absent feature is not a wrong number, and this gate was about wrong numbers.
   **Keep the rule for the next release**: what blocks a version is a number we know to be wrong, and
   a release that ships with one says so in the changelog rather than letting a player hunt for it.
+
+  **ROUND TWO — also before 0.7.0, first priority.** Found by auditing for half-done work rather than
+  by reading checkboxes, so the test widens by one clause: a version is also blocked by **a path a
+  user can start and cannot finish**, and by **shipped content that visibly does nothing**.
+  - **HOMEBREW-LINKED** (`work/authoring.md`) — a homebrew subclass can be created and then cannot be
+    given its features: authoring a linked table (`class_features` rows belonging to a row you just
+    wrote) is the missing half. Creating something the app then refuses to complete is the worst
+    shape of unfinished, because the user finds it after doing work.
+  - **MAGIC-ITEM-EFX** (`work/content.md`) — the first tranche tokenized 14 items per edition; ~204
+    (2014) and ~210 (2024) magic items still carry prose and no effect, so a Cloak of Protection
+    equipped and attuned changes nothing on the sheet. That is a wrong number by the original test,
+    at scale.
+  - **VOCAB-UNUSED** (`work/mechanics.md`) — decide `grant_proficiency`: no shipped row uses it, and
+    a vocabulary entry nothing exercises either earns its keep for homebrew or goes.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

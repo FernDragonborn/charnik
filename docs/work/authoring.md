@@ -3,7 +3,7 @@
 > Tracker. The compendium editor, homebrew, drafts and translation — the surfaces that make
 > "everything is doable from the UI" true. The ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [~] **Homebrew content from the UI** — DONE for every listed type via an editable-article form
+- [~] **HOMEBREW-LINKED · homebrew content from the UI. The linked-table half BLOCKS 0.7.0.** — DONE for every listed type via an editable-article form
   (mirrors the compendium article; schema-driven fields → validated row → atomic BOM/CRLF write into
   `content/homebrew/<type>_hb.csv` in user storage; merged into the graph as an extra content root;
   new row opens in the compendium). Remaining: **linked-table authoring** (a subclass's
