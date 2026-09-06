@@ -72,6 +72,30 @@ stay semi-manual.
   `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
+  It ships as a broad `flat_bonus:damage+2`, so it pays out on any attack. RAW is narrower and the
+  two editions are NOT the same sentence: 2014 is "when you make a melee weapon attack usingStrength",
+  2024 is "When you make an attack using Strength—with either a weapon or an Unarmed Strike" (no
+  melee, and unarmed named). So this is two tokens, not one shared one. Player consensus is
+  unanimous and matches RAW — a finesse weapon swung with Dexterity gets nothing — so there is no
+  table choice to offer here, unlike most RAW/RAI splits.
+  Blocked on SCOPED-BONUS growing a scope for "attacks resolved from Strength": the qualifier
+  namespace holds weapon categories and ids, and the ability an attack used is not one of them. The
+  VALUE it needs already exists — `computeAttacks` resolves the ability per attack
+  (`combat/attacks.ts`: ranged is DEX, finesse the better of the two, everything else STR).
+- [ ] **FINESSE-ABILITY · a finesse weapon asks which ability it swings with. NEEDS A MAINTAINER'S
+  EYES ON THE FEEL, not just a green test.** RAW hands the player the choice — "you use your choice
+  of your Strength or Dexterity modifier" — and the app takes it silently: `Math.max(strMod, dexMod)`.
+  That was invisible while the bigger modifier was strictly better. RAGE-SCOPE makes it visible and
+  sometimes wrong: at STR 14 / DEX 16 the auto-pick takes Dexterity (+3/+3) while Strength gives
+  +2/+2 **plus** rage damage, which is more damage on the same swing. The same shape will recur for
+  any feature that keys off an ability rather than a weapon.
+  Shape: a two-state control on the attack row of a finesse weapon only (everything else has no
+  choice to make), defaulting to the higher modifier, remembered per weapon, and visible in the
+  attack's trace so the number still explains itself.
+  **The open question is not whether it computes right — it is whether a player reads it without
+  being told.** That verdict is the maintainer's, from the running app; it lands in the manual-check
+  report when built, not closed on a passing test.
 - [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",
@@ -114,12 +138,28 @@ stay semi-manual.
   Model: `play.form = {monsterRef, formHp} | null`; deriveSheet branches — physical
   scores/AC/attacks/speed from the (already-typed) monster row, mental stays own; an isolated
   removable seam like effects; the editions diverge (2024 = temp HP + a known-forms list).
-  **The gate is a written per-edition spec sheet — from that edition's own SHIPPED SRD text**, never
-  from memory and not from the PHB, which we have no licence to read into the app. Wild Shape is in
-  both SRDs, so the text exists: HP pool vs temp HP, the CR/movement limits per level, what is kept
-  vs replaced, revert-at-0 carryover, equipment, casting.
-  **Both spec sheets are writable**: `druid_wild_shape` ships whole in both editions, Beast Shapes
-  table included, so what is left here is the design work, not the source.
+  **The per-edition spec is written and lives in [`../research/wild-shape.md`](../research/wild-shape.md)**,
+  every statement quoted from that edition's own shipped SRD text. Read it before modelling: the two
+  editions diverge more than the shared name suggests. 2014 REPLACES your hit points with the beast's
+  pool and carries excess damage over; 2024 leaves your HP alone and grants temporary HP equal to your
+  druid level — so `formHp` is a 2014-only field, not a shared one. 2014 gates forms by CR and by
+  "no flying or SWIMMING speed"; 2024 has no swim gate at all and keeps a Known Forms list you swap on
+  a long rest. Shaping costs an Action in 2014 and a Bonus Action in 2024.
+
+  **Writing the spec turned up four CONTENT blockers, and they are what actually holds this up:**
+  - `monsters_srd.csv` has no attacks column in EITHER edition — a stat block's attacks are prose. A
+    form that cannot attack is not a form. This also blocks Primal Strike.
+  - The 2014 pack ships **four** beasts (stirge CR 1/8 flying, plesiosaurus CR 2, triceratops CR 5,
+    T-rex CR 8), so a 2014 druid has **zero legal forms at levels 2-7**. The wolf, crocodile and giant
+    eagle its own table names are not in the file. 2024 ships 69 beasts at CR ≤ 1.
+  - No `wild_shape` row exists in either `resources_srd.csv`, and `druid_wild_shape` carries neither
+    a `resource` nor an `effects` value — there is no pool to spend.
+  - The 2024 uses-per-level ladder lives in the Druid Features table, which is shipped nowhere; two is
+    the only number the content supports, and inventing the rest is the failure AGENTS.md names first.
+    2014 needs no ladder (flat two until 20).
+  - A grammar gap, smaller: `grant_resource:<id>:<max>:<recharge>` cannot say 2024's split recharge
+    (one back on a short rest, all on a long) — RECHARGE-3's `{trigger, amount}` model is where that
+    lands.
   - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
         `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
         restore, so it waits on the model above rather than on the mechanism, which is shipped.

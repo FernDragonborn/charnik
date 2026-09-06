@@ -256,11 +256,13 @@ position and are given per wave, because most of them were learned the hard way.
   It needs a CONTENT shape for the question (which lists, how many, at which levels), so it sits
   next to the content-shaped work rather than ahead of it.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
-  three shapes, the 2014 casting counts, and N5's ammunition (the same converter, and the 2024
+  three shapes, then N2b's beast data (an attacks column, and the CR ≤ 1 beasts a 2014 druid can
+  actually turn into), the 2014 casting counts, and N5's ammunition (the same converter, and the 2024
   ammunition table). Each lands as a commit in `charnik-content-srd` with an assert in this repo.
-- **Ready, unscheduled, and app-only** — N2b. Its source gate is met: the 2014 converter carries a
-  feature's tables, so both editions' Wild Shape text ships whole and the per-edition spec sheet is
-  writable from it. What is left is the model and the derive branch, in this repo.
+- **Ready, unscheduled, and app-only** — _(empty. N2b looked ready once its converter blocker went
+  away, and writing the spec — [`research/wild-shape.md`](research/wild-shape.md) — proved otherwise:
+  beasts carry no attacks column and the 2014 pack ships four beasts, so the app work would land on
+  content that cannot feed it. It sits in the content-shaped wave with the rest.)_
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).

@@ -35,4 +35,6 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
 
-Design research sits in [research/](research/).
+Design research sits in [research/](research/) — including
+[Wild Shape](research/wild-shape.md), the per-edition spec N2b is built from, every line quoted from
+the shipped SRD text.
