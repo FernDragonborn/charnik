@@ -118,7 +118,7 @@ describe('diffSheets', () => {
 
 		const keys = [
 			...Object.keys(SKILL_ABILITY).map((id) => `skillName.${id}`),
-			...['none', 'half', 'proficient', 'expertise'].map((r) => `build.diff.rank.${r}`),
+			...['none', 'partial', 'proficient', 'expertise'].map((r) => `build.diff.rank.${r}`),
 			...ABILITY_IDS.map((ab) => `abilityShort.${ab}`),
 			...ABILITY_IDS.map((ab) => `combat.roll.save.${ab}`),
 			'build.diff.speed',

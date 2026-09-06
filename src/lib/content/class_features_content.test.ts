@@ -412,7 +412,7 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 		expect(ex3.speed.value).toBe(base.speed.value - 15);
 	});
 
-	it('5e (SRD 5.1): cumulative ladder — L1 disadv on ability checks, L2 speed halved, L5 speed 0', async () => {
+	it('5e (SRD 5.1): cumulative ladder — L1 disadv on ability checks, L2 speed partial, L5 speed 0', async () => {
 		const g = await loadEdition('srd-2014');
 		const at = (level: number) => {
 			const c = charOf('SRD 5.1', '5e', 'barbarian', 5);
@@ -423,7 +423,7 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 		// L1: disadvantage on ability checks → the passive form of a skill drops 5 (RAW ±5), speed intact
 		expect(at(1).passives.athletics.value).toBe(base.passives.athletics.value - 5);
 		expect(at(1).speed.value).toBe(base.speed.value); // halve is L2, not yet
-		// L2: speed halved (30 → 15)
+		// L2: speed partial (30 → 15)
 		expect(at(2).speed.value).toBe(Math.floor(base.speed.value / 2));
 		// L5: speed reduced to 0 (set_override beats the L2 halve)
 		expect(at(5).speed.value).toBe(0);
@@ -694,14 +694,14 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		['srd-2014', 'SRD 5.1', '5e' as const],
 		['srd-2024', 'SRD 5.2.1', '5.5e' as const],
 	])(
-		'%s: Jack of All Trades is half proficiency on every skill you lack',
+		'%s: Jack of All Trades halves your proficiency onto every skill you lack',
 		async (dir, src, sys) => {
 			const g = await loadEdition(dir);
 			const bard = (level: number) => deriveSheet(charOf(src, sys, 'bard', level), g);
 			const before = bard(1);
 			const after = bard(2); // Jack of All Trades arrives at 2 in both editions
 			// a skill the bard has no proficiency in: none at 1, half at 2
-			expect([before.skills.arcana.prof, after.skills.arcana.prof]).toEqual(['none', 'half']);
+			expect([before.skills.arcana.prof, after.skills.arcana.prof]).toEqual(['none', 'partial']);
 			// PB is +2 at these levels, so half is +1 on the check — and the trace names the feature
 			expect(after.skills.arcana.value - before.skills.arcana.value).toBe(1);
 			expect(after.skills.arcana.trace.some((t) => t.source === 'Jack of All Trades')).toBe(true);
@@ -713,7 +713,7 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 			const sheet = deriveSheet(characterSchema.parse(picked), g);
 			expect([sheet.skills.athletics.prof, sheet.skills.arcana.prof]).toEqual([
 				'proficient',
-				'half',
+				'partial',
 			]);
 		},
 	);

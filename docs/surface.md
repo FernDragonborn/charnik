@@ -534,7 +534,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/derive-stats.ts`
 
 - `const num` — Coerce a CSV-derived cell to a number (already-number passes through), else the default.
-- `type SkillProficiency` — Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) → * proficient → expertise (×2).
+- `type SkillProficiency` — Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) → * proficient → expertise (×2).
 - `const PROF_ORDER` — The ladder as a number, so two proficiencies can be compared — shared with the builder's diff, * which reads a change…
 - `interface AbilityBlock`
 - `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).

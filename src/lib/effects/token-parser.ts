@@ -24,7 +24,7 @@ export const EFFECT_KIND = {
 	// restrained block ALL speed bonuses). A fact matched by target; drops effect-borne positive adds.
 	blockBonus: 'block_bonus',
 	// `halve:<target>` — a ×½ multiply (G4). The ONE RAW case for a non-integer factor (2014
-	// exhaustion L2 = speed halved, L4 = hp-max halved); a dedicated kind, NOT a generic multiply,
+	// exhaustion L2 = speed partial, L4 = hp-max partial); a dedicated kind, NOT a generic multiply,
 	// because token value slots lex integers only and a `1/2` expr floors to 0. Targets: speed, hp_max.
 	halve: 'halve',
 	advantage: 'advantage',
@@ -144,8 +144,8 @@ export interface ParsedEffect {
 	sensitivity?: DamageSensitivity;
 	/** grant_proficiency: the LEVEL granted — one ladder value, not a set of booleans, so "expertise
 	 *  without proficiency" is unrepresentable (the rungs are ordered, and sources combine by max).
-	 *  `half` is Jack of All Trades' rung; the sheet's own ladder carries a `none` below these. */
-	proficiency?: 'half' | 'proficient' | 'expertise';
+	 *  `partial` is Jack of All Trades' rung; the sheet's own ladder carries a `none` below these. */
+	proficiency?: 'partial' | 'proficient' | 'expertise';
 	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). `max`
 	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
 	 *  derive time — exactly one of the two is set. */
@@ -323,16 +323,18 @@ const parseGrantResource: KindParser = (rest, raw, kind) => {
 
 const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 	// `grant_proficiency:[<level>:]<target>` — the LADDER RUNG is an optional leading word, defaulting
-	// to `proficient` so every token written before the rung existed keeps parsing. `half` is Jack of
-	// All Trades (half the proficiency bonus on a check you are NOT proficient in); the rungs combine
+	// to `proficient` so every token written before the rung existed keeps parsing. `partial` is Jack
+	// of All Trades: a lesser rung, half the proficiency bonus on a check you are NOT proficient in.
+	// NOT `half` — a rung is written BEFORE its target, so `half:skills` reads as "half the skills",
+	// and "half" reads as a reduction when this rung is a GAIN. The rungs combine
 	// by max, so a skill you are already proficient in keeps proficiency — which is RAW's "that
 	// doesn't already include your proficiency bonus", for free.
 	// The target is canonicalized here (the ONE place): a `skill.` prefix strips to the bare skill id
 	// (skills are bare in this vocab; only saves carry their `save.` prefix), so authors can write
 	// either form without it silently dropping.
-	const m = /^(?:(half|proficient|expertise):)?(?:skill\.)?(.+)$/i.exec(rest);
+	const m = /^(?:(partial|proficient|expertise):)?(?:skill\.)?(.+)$/i.exec(rest);
 	if (!m?.[2]) return { kind: 'unknown', raw };
-	const level = m[1]?.toLowerCase() as 'half' | 'proficient' | 'expertise' | undefined;
+	const level = m[1]?.toLowerCase() as 'partial' | 'proficient' | 'expertise' | undefined;
 	return { kind, target: m[2].trim(), proficiency: level ?? 'proficient', raw };
 };
 

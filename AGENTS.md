@@ -43,6 +43,13 @@ choice, offer both instead of picking. Charnik is a tool, not an enforcer.
 
 A proven library beats hand-rolled code. Do not ration dependencies and never argue from dep count.
 
+**The question is never WHETHER, only WHEN.** A rule the game has, Charnik will have. So a tracker
+item says what it costs and where it sits in the order — it does not argue that a mechanic might not
+be worth having, and "only one row needs it" is a scheduling fact, not a reason to leave a number
+wrong. When something looks too expensive to build, SIZE it before saying so: read the code and count
+the lines. An estimate from memory that talks a feature out of existence is the failure this rule
+exists to stop.
+
 Treat what follows as good defaults rather than law. If a rule here fights the task in front of you,
 say so out loud and get a human sign-off instead of quietly breaking it.
 

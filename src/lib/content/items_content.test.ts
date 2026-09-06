@@ -199,16 +199,26 @@ describe('shipped magic items · the third tranche (the +N families)', () => {
 		]);
 	});
 
-	it('an item whose RAW ceiling the vocabulary cannot say folds what it can and SAYS the rest', async () => {
-		const graph = await loadPacks('srd-2024');
-		const row = graph.list('item').find((r) => r.id === 'belt_of_dwarvenkind');
-		// the +2 folds; "to a maximum of 20" has no token (a cap folds BEFORE adds, by design), so it
-		// is stated rather than silently applied — and never authored as a set that drags 20 down
-		expect(row?.data.effects?.[0]).toBe('flat_bonus:con+2');
-		expect(row?.data.effects?.[1]).toMatch(
-			/^note:The increase cannot take your Constitution above 20/,
-		);
-	});
+	it.each([
+		['srd-2024', 'SRD 5.2.1', '5.5e' as const],
+		['srd-2014', 'SRD 5.1', '5e' as const],
+	])(
+		'%s: the Belt of Dwarvenkind adds 2 Constitution, to a maximum of 20',
+		async (dir, src, sys) => {
+			const graph = await loadPacks(dir);
+			const conWith = (score: number) => {
+				const c = newCharacter('grog', 'Grog', sys);
+				c.build.classes = [{ class: `class:${src}:fighter`, level: 1 }];
+				c.build.abilities = { str: 10, dex: 10, con: score, int: 10, wis: 10, cha: 10 };
+				c.build.inventory = [
+					{ item: `item:${src}:belt_of_dwarvenkind`, qty: 1, equipped: true, attuned: true },
+				];
+				return deriveSheet(characterSchema.parse(c), graph).abilities.con.score.value;
+			};
+			// RAW is an add and THEN a ceiling — which is exactly what `cap` folding last buys
+			expect([conWith(14), conWith(19), conWith(20)]).toEqual([16, 20, 20]);
+		},
+	);
 
 	it.each([
 		['srd-2024', 'SRD 5.2.1', '5.5e'],

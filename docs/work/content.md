@@ -170,24 +170,41 @@
      the id scheme already tolerates it) or the same per-instance answer as (2) — decide once, because
      the same decision covers both.
 
-  4. **A speed or a sense the vocabulary lacks** (~16 rows). There is `speed.fly` and `speed.swim` and
-     no `speed.climb` (Slippers of Spider Climbing, Gloves of Swimming and Climbing); "a Fly Speed
-     equal to your Speed" wants an expression over ANOTHER speed (Winged Boots, Wings of Flying);
-     darkvision and truesight at a range have no target at all (Goggles of Night, Eyes of Minute
-     Seeing, Crystal Ball of True Seeing). `speed.climb` is nearly free. The senses are not a token
-     problem but a SHEET problem — there is nowhere for them to land, and inventing a row for them is
-     the actual decision.
+  4. **A climb speed** (2 rows). There is `speed.fly` and `speed.swim` and no `speed.climb`
+     (Slippers of Spider Climbing, Gloves of Swimming and Climbing). **Sized: ~8 lines and two catalog
+     strings** — one entry in `NUMERIC_TARGETS`, one field on `CharacterSheet` fed by the existing
+     `movementOf`, a third chip beside the two already in `SheetDefenses`. No decision in it; the
+     shape exists three times.
+     **One tail that is NOT that shape:** both items say "a Climb Speed equal to your Speed", an
+     expression over another speed. The ctx exposes `base_speed`, which is the species' base BEFORE
+     effects — close, but a character under Longstrider or in heavy armour would read wrong. Either
+     the ctx grows the effective speed, or these two keep a note while `speed.climb` serves the
+     literal-value items.
 
-  5. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
-     dice YOU roll; nothing models a die rolled at you. **Named as a decision, not as a gap** — a
-     single-character sheet may simply not be the place for it, and if that is the answer, these rows
-     keep their note forever and that is correct.
+  5. **Senses — two questions for the design session, and they are yours** (~14 rows: Goggles of
+     Night, Eyes of Minute Seeing, Crystal Ball of True Seeing, the Belt of Dwarvenkind's darkvision,
+     nine species). `darkvision`, `truesight`, `blindsight` and `tremorsense` appear NOWHERE in
+     `src/` today — not a target, not a sheet field, not a catalog string. So the token is the easy
+     half and the answer to these two is what decides its shape:
+     - **Q1 · Where does a sense live on the sheet?** The Defenses card is the natural host — its own
+       comment already calls it "what is true of your body", and it is where fly/swim speed and the
+       damage sensitivities went. But a sense is a NAME plus a RANGE ("darkvision 60 ft"), not a chip
+       like "resists Cold", and a character can hold three at once. So: another chip row that happens
+       to carry a number, a small labelled list, or a line next to the passive senses that already sit
+       in the skill list?
+     - **Q2 · Is a sense a mechanic here at all, or is it prose?** In a tracker for ONE character a
+       sense changes no number — it changes what the GM tells you. A token that folds onto nothing is
+       exactly what `note:` is for, and every species and item that grants darkvision already says so
+       in its own text. If the answer is "prose", these rows are already correct and this item loses
+       its largest group.
+     Both are the maintainer's calls, not the agent's; nothing here is blocked on code.
 
-  6. **An add with a RAW ceiling** (Belt of Dwarvenkind, both editions). "Your Constitution increases
-     by 2, to a maximum of 20": within a layer the fold order is set → floor → cap → mult → add, so a
-     `set_override:con:20:cap` fires BEFORE the add and does nothing, and a self-referencing
-     `min(con_score+2,20)` is correctly refused as a dependency cycle. One row per edition buys no
-     machinery; if a second case arrives the answer is a per-contribution ceiling, not a new kind.
+  6. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
+     dice YOU roll: `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has
+     none of them. So this wants a second, small fact channel — "what an attacker rolling at me gets"
+     — that the sheet displays and the roller never folds, since we do not roll the monster's dice.
+     Cheapest first cut is display: the sheet says "attack rolls against you have disadvantage" where
+     it already says what is true of your body, and no roll changes.
 
   **What will never fold, and should stop being counted as missing:** consumables (potions, oils —
   drinking is not a modelled event), objects with their own stat block (Mirror of Life Trapping,

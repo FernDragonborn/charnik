@@ -187,11 +187,11 @@ describe('parseToken (bounded vocabulary)', () => {
 		});
 		// saves keep their prefix (derive tells them apart by it)
 		expect(parseToken('grant_proficiency:save.con')).toMatchObject({ target: 'save.con' });
-		// the rung is an optional leading word; `half` is Jack of All Trades, and a token written
+		// the rung is an optional leading word; `partial` is Jack of All Trades, and a token written
 		// before the rung existed still reads as `proficient`
-		expect(parseToken('grant_proficiency:half:skills')).toMatchObject({
+		expect(parseToken('grant_proficiency:partial:skills')).toMatchObject({
 			target: 'skills',
-			proficiency: 'half',
+			proficiency: 'partial',
 		});
 		expect(parseToken('grant_proficiency:proficient:stealth')).toMatchObject({
 			target: 'stealth',
@@ -350,6 +350,29 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const r = applyEffects('ac', base, [noop]);
 		expect(r.value).toBe(12);
 		expect(r.notes?.some((n) => /already ≥ 9/.test(n.text))).toBe(true);
+	});
+
+	it('a cap is a CEILING on the finished value — it folds after every add, not inside its layer', () => {
+		// "your Constitution increases by 2, to a maximum of 20" (Belt of Dwarvenkind) is +2 and THEN a
+		// ceiling. Folded inside the layer, the cap would fire first and the +2 would sail past it.
+		const belt: ActiveEffect = {
+			source: 'Belt of Dwarvenkind',
+			layer: 'item',
+			tokens: ['flat_bonus:con+2', 'set_override:con:20:cap'],
+		};
+		const scoreOf = (n: number) =>
+			applyEffects('con', computed([{ source: 'Base', layer: 'base', op: 'set', amount: n }]), [
+				belt,
+			]).value;
+		expect(scoreOf(14)).toBe(16); // the ceiling is nowhere near — the +2 lands whole
+		expect(scoreOf(19)).toBe(20); // +2 would be 21; the ceiling takes it to 20
+		expect(scoreOf(20)).toBe(20); // already there, so the belt changes nothing
+		// and a ceiling that never bit says so, rather than folding silently
+		expect(
+			applyEffects('con', computed([{ source: 'Base', layer: 'base', op: 'set', amount: 10 }]), [
+				belt,
+			]).notes?.some((n) => /already ≤ 20/.test(n.text)),
+		).toBe(true);
 	});
 
 	it('block_bonus drops effect-borne positive speed bonuses but not the base', () => {

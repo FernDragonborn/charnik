@@ -33,7 +33,7 @@
 				<!-- A FEATURE granted this one (Diamond Soul's kin, an item, a species trait): the sheet
 				     says a rung the draft never picked and no background gave, so the row is locked on
 				     and says why — the alternative is a skill that looks pickable, un-picks to no
-				     effect, and reads as a bug. `half` (Jack of All Trades) is NOT a lock: it grants
+				     effect, and reads as a bug. `partial` (Jack of All Trades) is NOT a lock: it grants
 				     nothing to un-pick and the skill stays yours to train. -->
 				{@const granted =
 					!auto && !picked && (comp?.prof === 'proficient' || comp?.prof === 'expertise')}
@@ -52,7 +52,7 @@
 								: ''}
 						onclick={() => b.skillPicks.toggleSkill(skill)}
 					>
-						<i class="dot" class:prof={on} class:expert class:half={comp?.prof === 'half'}></i>
+						<i class="dot" class:prof={on} class:expert class:partial={comp?.prof === 'partial'}></i>
 						<span>{skillLabel(skill, $_)}</span>
 					</button>
 					{#if b.skillPicks.expertiseOffered(skill)}
@@ -130,9 +130,9 @@
 		border-color: var(--color-resource);
 		background: var(--color-resource);
 	}
-	/* half proficiency (Jack of All Trades) = a faded fill, between empty and proficient — the same
+	/* partial proficiency (Jack of All Trades) = a faded fill, between empty and proficient — the same
 	   reading as the play sheet's own dot, so one tier looks like one tier in both views */
-	.dot.half {
+	.dot.partial {
 		background: color-mix(in srgb, var(--color-resource) 45%, transparent);
 		border-color: var(--color-resource);
 	}

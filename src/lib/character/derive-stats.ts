@@ -27,14 +27,16 @@ import type { ResolvedItem } from '../content/resolved-item';
  *  the stat helpers + deriveSheet's base-speed read. */
 export const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
 
-/** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
- *  proficient → expertise (×2). */
-export type SkillProficiency = 'none' | 'half' | 'proficient' | 'expertise';
+/** Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) →
+ *  proficient → expertise (×2). `partial` rather than `half`: a rung is written BEFORE its target in
+ *  a token, so `half:skills` reads as "half the skills", and "half" reads as a reduction when this
+ *  rung is a GAIN — a lesser proficiency, not a cut-down one. */
+export type SkillProficiency = 'none' | 'partial' | 'proficient' | 'expertise';
 /** The ladder as a number, so two proficiencies can be compared — shared with the builder's diff,
  *  which reads a change in rank as better or worse. */
 export const PROF_ORDER: Record<SkillProficiency, number> = {
 	none: 0,
-	half: 1,
+	partial: 1,
 	proficient: 2,
 	expertise: 3,
 };
@@ -187,7 +189,7 @@ export function deriveSkills(
 			level,
 			proficient: profLevel === 'proficient',
 			expertise: profLevel === 'expertise',
-			halfProficient: profLevel === 'half',
+			partialProficiency: profLevel === 'partial',
 		});
 		return { ...applyEffects(`skill.${skill}`, base, facts), prof: profLevel };
 	});

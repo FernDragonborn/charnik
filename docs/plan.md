@@ -302,10 +302,17 @@ position and are given per wave, because most of them were learned the hard way.
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
   party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, `speed.climb`
-  and the senses, and two decisions that may honestly end in "no" (attacks rolled AGAINST you, an add
-  with a RAW ceiling). It is deliberately NOT in 0.7.0: every one of these rows already says what it
-  does as a note, so nothing is silently wrong — the work is grammar, and grammar wants a release of
-  its own.
+  (sized: ~8 lines), the senses, and attack rolls made AGAINST you. It is not in 0.7.0 because every
+  one of those rows already SAYS what it does as a note, so nothing is silently wrong — the work is
+  grammar, and grammar wants a release of its own.
+
+  **Waiting on a design session, not on code — two questions, the maintainer's to answer**
+  (`work/content.md` ▸ MAGIC-ITEM-VOCAB §5): **Q1 — where does a sense live on the sheet?** A sense is
+  a name plus a range and a character can hold three; the Defenses card is the natural host but its
+  vocabulary is chips. **Q2 — is a sense a mechanic here at all, or is it prose?** In a tracker for one
+  character a sense changes no number, and a token that folds onto nothing is what `note:` is for. If
+  the answer is "prose", those rows are already correct today. Everything else in the item can proceed
+  without these two.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).

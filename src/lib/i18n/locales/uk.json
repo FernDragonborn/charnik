@@ -376,7 +376,7 @@
 			"vulnerable": "Вразливість",
 			"rank": {
 				"none": "немає",
-				"half": "половина",
+				"partial": "часткова",
 				"proficient": "вправність",
 				"expertise": "експертиза"
 			}
@@ -828,7 +828,7 @@
 		},
 		"skills": {
 			"profNone": "Без вправності",
-			"profHalf": "Половина вправності",
+			"profPartial": "Часткова вправність",
 			"profProficient": "Вправність",
 			"profExpertise": "Експертиза (×2)"
 		},

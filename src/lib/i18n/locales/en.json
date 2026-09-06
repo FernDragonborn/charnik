@@ -376,7 +376,7 @@
 			"vulnerable": "Vulnerable",
 			"rank": {
 				"none": "none",
-				"half": "half",
+				"partial": "partial",
 				"proficient": "proficient",
 				"expertise": "expertise"
 			}
@@ -828,7 +828,7 @@
 		},
 		"skills": {
 			"profNone": "Not proficient",
-			"profHalf": "Half proficiency",
+			"profPartial": "Partial proficiency",
 			"profProficient": "Proficient",
 			"profExpertise": "Expertise (×2)"
 		},

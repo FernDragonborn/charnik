@@ -57,7 +57,9 @@ describe('system-agnostic formulas', () => {
 	it('skill: expertise doubles proficiency, half-prof adds floor(prof/2)', () => {
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5, proficient: true }).value).toBe(6);
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5, expertise: true }).value).toBe(9);
-		expect(skillCheck({ ability: 'dex', score: 16, level: 5, halfProficient: true }).value).toBe(4);
+		expect(
+			skillCheck({ ability: 'dex', score: 16, level: 5, partialProficiency: true }).value,
+		).toBe(4);
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5 }).value).toBe(3);
 	});
 

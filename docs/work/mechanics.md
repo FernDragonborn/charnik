@@ -220,9 +220,9 @@ stay semi-manual.
   (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
   restriction, so encoding it would over-permit. Unit + real-content tests both editions. **UI not
   screenshot-verified in a Rogue state** (needs a build-flow drive). (b)+(c) are ONE grammar step: the L1
-  vocab grows a proficiency LEVEL in the third segment — `grant_proficiency:skill.<id>:half` and
+  vocab grows a proficiency LEVEL in the third segment — `grant_proficiency:skill.<id>:partial` and
   `:expertise`, defaulting to `proficient` when absent, so every existing token keeps parsing. That
-  makes Jack of All Trades a content row (the `half` type and `skillCheck(halfProficient)` already
+  makes Jack of All Trades a content row (the partial type and `skillCheck`'s partial argument already
   exist and nothing calls them) and lets the builder show an effect-granted skill as locked-on
   instead of silently proficient. The same third segment is what `TOOLS` reuses;
   (d) **DONE (2026-08-02):** the combat SkillsPanel already showed the proficient/expertise
@@ -234,7 +234,7 @@ stay semi-manual.
   optional LEADING word (`grant_proficiency:[half|proficient|expertise:]<target>`) rather than the
   third segment this item once planned: the `expertise:` prefix already shipped, so extending it
   keeps ONE shape and every token written before the rung existed still parses as `proficient`.
-  **Jack of All Trades is a content row** in both editions — `grant_proficiency:half:skills`, where
+  **Jack of All Trades is a content row** in both editions — `grant_proficiency:partial:skills`, where
   `skills` is a group target fanned out in the one place that reads the facts. RAW's "that doesn't
   already include your proficiency bonus" needs no second rule: the rungs combine by MAX, so a skill
   already proficient keeps proficiency and the half rung simply loses.
@@ -242,7 +242,12 @@ stay semi-manual.
   draft never picked and no background gave is locked on and says "Granted by a feature" — the
   alternative is a row that looks pickable, un-picks to nothing, and reads as a bug. `half` is
   deliberately NOT a lock: it grants nothing to un-pick and the skill stays yours to train. The faded
-  half dot is the play sheet's own, so one tier looks like one tier in both views.
+  partial dot is the play sheet's own, so one tier looks like one tier in both views.
+  **The rung is `partial`, not `half`.** A rung sits BEFORE its target, so `half:skills` reads as
+  "proficiency in half the skills"; and "half" reads as a REDUCTION, while this rung is a GAIN — a
+  lesser proficiency, never a cut-down one. `halved` was tried and rejected for the same reason.
+  Renamed through the ladder type, `PROF_ORDER`, `skillCheck`'s argument, both dots' CSS and the two
+  catalog keys, because it is one fact and one fact has one name.
   **Screenshot-verified on a level-2 bard** (every skill −1 → 0, every passive 9 → 10,
   `design-preview/joat-half-proficiency.png`) and on a 2014 elf, whose Keen Senses locks Perception.
   **Residual: the expertise CAP UI is still not screenshot-verified in a Rogue state** — the

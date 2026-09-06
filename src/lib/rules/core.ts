@@ -94,13 +94,13 @@ export function skillCheck(args: {
 	level: number;
 	proficient?: boolean;
 	expertise?: boolean;
-	halfProficient?: boolean;
+	partialProficiency?: boolean;
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
 	const prof = proficiencyBonus(args.level);
 	if (args.expertise) c.push(profContribution('Expertise', SOURCE_KEY.expertise, prof * 2));
 	else if (args.proficient) c.push(profContribution('Proficiency', SOURCE_KEY.proficiency, prof));
-	else if (args.halfProficient)
+	else if (args.partialProficiency)
 		c.push(
 			profContribution('Jack of All Trades', SOURCE_KEY.jackOfAllTrades, Math.floor(prof / 2)),
 		);

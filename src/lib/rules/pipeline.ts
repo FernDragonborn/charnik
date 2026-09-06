@@ -180,13 +180,19 @@ const LAYER_SEQUENCE: Layer[] = [
  * contributions were gathered — so two effects that both `set` the same key (two items, or two
  * community plugins) can never get a different result from file-scan / namespace-sort luck.
  *
- * Within a layer the ops fold in a fixed sub-order — set → floor → cap → mult → add (A9):
+ * Within a layer the ops fold in a fixed sub-order — set → floor → mult → add (A9):
  * `set` follows D&D's "Combining Game Effects" rule (same-target effects don't stack — the most
  * potent, i.e. HIGHEST, applies; identical in 5e and 5.5e); `floor` raises the running value to at
- * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `cap` lowers it to
- * at most its amount (fold = min); floor-before-cap is fixed (a floor+cap conflict is pathological
- * content); `mult` folds as one product then floors once; `add` accumulates. Across layers the
- * fixed base→…→override order still holds, so an override-layer `set` beats an item-layer one.
+ * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `mult` folds as one
+ * product then floors once; `add` accumulates. Across layers the fixed base→…→override order still
+ * holds, so an override-layer `set` beats an item-layer one.
+ *
+ * `cap` is the exception and folds LAST, across every layer and after every add, because RAW's caps
+ * are ceilings on the finished value rather than on a running total: "your Constitution increases by
+ * 2, to a maximum of 20" (Belt of Dwarvenkind) is +2 and THEN a ceiling. A cap inside its own layer
+ * could only clamp what happened to be counted so far, which no rule ever means. `floor` stays in
+ * the layer because it is the opposite kind of statement — "this source sets it to at least N" —
+ * and competes with the other sources at its own layer.
  *
  * `ineffectiveNotes` (if given) collects an explanation for any floor/cap that did NOT change the
  * value ("already ≥ N") — the explainability invariant: nothing folds silently.
@@ -208,19 +214,21 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]
 					params: { source: f.source, amount: f.amount },
 				});
 		}
-		// caps lower (min), lowest-first
-		for (const c of here.filter((c) => c.op === 'cap').sort((a, b) => a.amount - b.amount)) {
-			if (c.amount < value) value = c.amount;
-			else
-				ineffectiveNotes?.push({
-					text: `${c.source}: already ≤ ${c.amount}`,
-					key: NOTE_KEY.alreadyAtMost,
-					params: { source: c.source, amount: c.amount },
-				});
-		}
 		const product = here.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
 		if (product !== 1) value = Math.floor(value * product);
 		value += here.filter((c) => c.op === 'add').reduce((sum, c) => sum + c.amount, 0);
+	}
+	// caps last, across ALL layers and after every add — a cap is a CEILING on the finished value
+	// ("to a maximum of 20"), not a clamp on whatever the running total happened to be at its own
+	// layer. Lowest-first, so the tightest wins and the rest are noted "already ≤".
+	for (const c of contribs.filter((c) => c.op === 'cap').sort((a, b) => a.amount - b.amount)) {
+		if (c.amount < value) value = c.amount;
+		else
+			ineffectiveNotes?.push({
+				text: `${c.source}: already ≤ ${c.amount}`,
+				key: NOTE_KEY.alreadyAtMost,
+				params: { source: c.source, amount: c.amount },
+			});
 	}
 	if (clamp) {
 		if (clamp.min !== undefined) value = Math.max(clamp.min, value);

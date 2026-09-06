@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
-	// and shows proficiency tier (none / half / proficient / expertise) + provenance on hover.
+	// and shows proficiency tier (none / partial / proficient / expertise) + provenance on hover.
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
@@ -13,7 +13,7 @@
 	// catalog KEYS, not words — the dot's hover reads in the player's language
 	const PROF_LABEL = {
 		none: 'combat.skills.profNone',
-		half: 'combat.skills.profHalf',
+		partial: 'combat.skills.profPartial',
 		proficient: 'combat.skills.profProficient',
 		expertise: 'combat.skills.profExpertise',
 	} as const;
@@ -42,7 +42,7 @@
 							<i
 								class="prof-dot"
 								class:on={sk.prof === 'proficient' || sk.prof === 'expertise'}
-								class:half={sk.prof === 'half'}
+								class:partial={sk.prof === 'partial'}
 								class:expertise={sk.prof === 'expertise'}
 								title={$_(PROF_LABEL[sk.prof])}
 							></i>
@@ -105,8 +105,8 @@
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
-	/* half proficiency (Jack of All Trades) = a faded fill, between empty and proficient */
-	.skill-row .prof-dot.half {
+	/* partial proficiency (Jack of All Trades) = a faded fill, between empty and proficient */
+	.skill-row .prof-dot.partial {
 		background: color-mix(in srgb, var(--color-resource) 45%, transparent);
 		border-color: var(--color-resource);
 	}
