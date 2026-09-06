@@ -2,7 +2,7 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..8a70bef`. To extend it, read the commits after that one.
+> Written from `v0.6.2..9f7f5d8`. To extend it, read the commits after that one.
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
@@ -50,6 +50,29 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **A character can have a face.** Pick a portrait in the builder's header; it is downscaled on
   pick, stored beside the character as a file, and shown on the play sheet.
 
+
+### Rules that were simply missing
+
+- **A level-5 fighter, barbarian, monk, ranger or paladin attacks twice.** Extra Attack was not
+  modelled at all, at the tier most games are played at. It raises the count rather than adding to
+  it, so a multiclassed fighter 5 / barbarian 5 still attacks twice — which is the rule — and the
+  2024 fighter's ladder to three at 11 and four at 20 comes along. The sheet and the builder now
+  read the same number instead of computing it twice.
+- **Rage damage is Strength's.** It used to pay out on anything you attacked with, including a
+  crossbow, with a note asking you to remember the rule. Each edition now says its own sentence:
+  in 2014 a melee attack made with Strength, in 2024 any attack made with Strength including an
+  Unarmed Strike. A finesse weapon swung with Dexterity gets nothing, which is what the rule says.
+- **Every 2014 caster showed 0 cantrips.** The per-level counts were not shipped at all, so a bard
+  read zero cantrips and got the prepared-caster formula instead of its own Spells Known column — a
+  2014 bard 1 said 0 where the book says 2 cantrips and 4 spells. All seven casters carry their own
+  table now.
+- **Magic items with charges track them.** Eyes of Charming, Pipes of Haunting, Gem of Seeing and
+  Mace of Terror carry their pool, so charges spend, show as pips, and come back at dawn — 1d3 of
+  them, or all of them, as each item says.
+- **The Heroic Inspiration control is gone.** Spending it did one of two things the roller already
+  does to any d20 — reroll it, or re-read it at advantage — so it was a second gesture for the same
+  act, plus a flag to remember first. The rules it implements are still there; the extra button is
+  not.
 
 ### Playing
 
