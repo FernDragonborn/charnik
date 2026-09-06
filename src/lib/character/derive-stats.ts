@@ -69,8 +69,9 @@ export interface StatInputs {
  *  `armor.heavy` (Life Domain), `weapon.martial`, `weapon.warhammer` (Dwarven Combat Training). */
 const EQUIPMENT_PREFIX = { armor: 'armor.', weapon: 'weapon.' } as const;
 
-/** The group target that means every saving throw at once. */
+/** The group targets that mean every save, or every skill, at once. */
 const ALL_SAVES = 'saves';
+const ALL_SKILLS = 'skills';
 
 /** Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
  *  `grant_proficiency:[expertise:]<target>` — the parser already stripped any `skill.` prefix; a
@@ -90,9 +91,15 @@ export function gatherGrantedProficiencies(facts: EffectFacts): {
 			for (const a of ABILITIES) grantedSaves.add(a);
 			continue;
 		}
-		const tgt = p.target.replace(/^save\./, '');
-		if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-		else grantedSkills.set(p.target, maxProf(grantedSkills.get(p.target) ?? 'none', p.level));
+		// "a rung on every skill" (Jack of All Trades' half) is ONE token; the rungs combine by max
+		// below, so a skill already proficient keeps proficiency — RAW's "that doesn't already
+		// include your proficiency bonus", without a second rule to say it.
+		const targets =
+			p.target === ALL_SKILLS ? Object.keys(SKILL_ABILITY) : [p.target.replace(/^save\./, '')];
+		for (const tgt of targets) {
+			if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
+			else grantedSkills.set(tgt, maxProf(grantedSkills.get(tgt) ?? 'none', p.level));
+		}
 	}
 	return { grantedSaves, grantedSkills };
 }

@@ -266,9 +266,7 @@ describe('shipped magic items · every one of them has its description', () => {
 		const graph = await loadPacks(dir);
 		const blank = graph
 			.list('item')
-			.filter(
-				(r) => r.data.rarity && r.data.rarity !== 'none' && !String(r.data.text_en ?? '').trim(),
-			)
+			.filter((r) => r.data.rarity && !String(r.data.text_en ?? '').trim())
 			.map((r) => r.id);
 		expect(blank).toEqual([]);
 	});

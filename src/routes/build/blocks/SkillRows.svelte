@@ -28,19 +28,31 @@
 			<div class="sectlab"><span>{g.ab}</span></div>
 			{#each g.skills as skill (skill)}
 				{@const auto = b.skillPicks.autoSkills.includes(skill)}
-				{@const on = auto || b.draft.skills.includes(skill)}
+				{@const picked = b.draft.skills.includes(skill)}
+				{@const comp = b.sheet?.skills[skill]}
+				<!-- A FEATURE granted this one (Diamond Soul's kin, an item, a species trait): the sheet
+				     says a rung the draft never picked and no background gave, so the row is locked on
+				     and says why — the alternative is a skill that looks pickable, un-picks to no
+				     effect, and reads as a bug. `half` (Jack of All Trades) is NOT a lock: it grants
+				     nothing to un-pick and the skill stays yours to train. -->
+				{@const granted =
+					!auto && !picked && (comp?.prof === 'proficient' || comp?.prof === 'expertise')}
+				{@const on = auto || granted || picked}
 				{@const pickable = b.skillPicks.pickable(skill)}
 				{@const expert = b.draft.expertise.includes(skill)}
-				{@const comp = b.sheet?.skills[skill]}
 				{@const pas = b.sheet?.passives[skill]}
 				<div class="skill" class:on class:dim={!on && !pickable}>
 					<button
 						class="name"
-						disabled={auto || (!on && !pickable)}
-						title={auto ? $_('build.skills.fromBackgroundHint') : ''}
+						disabled={auto || granted || (!on && !pickable)}
+						title={auto
+							? $_('build.skills.fromBackgroundHint')
+							: granted
+								? $_('build.skills.fromFeatureHint')
+								: ''}
 						onclick={() => b.skillPicks.toggleSkill(skill)}
 					>
-						<i class="dot" class:prof={on} class:expert></i>
+						<i class="dot" class:prof={on} class:expert class:half={comp?.prof === 'half'}></i>
 						<span>{skillLabel(skill, $_)}</span>
 					</button>
 					{#if b.skillPicks.expertiseOffered(skill)}
@@ -117,6 +129,12 @@
 	.dot.prof {
 		border-color: var(--color-resource);
 		background: var(--color-resource);
+	}
+	/* half proficiency (Jack of All Trades) = a faded fill, between empty and proficient — the same
+	   reading as the play sheet's own dot, so one tier looks like one tier in both views */
+	.dot.half {
+		background: color-mix(in srgb, var(--color-resource) 45%, transparent);
+		border-color: var(--color-resource);
 	}
 	.dot.expert {
 		box-shadow: 0 0 0 2px var(--color-resource-soft);

@@ -93,7 +93,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `auto_fail` / `auto_succeed` | `auto_fail:<target>`                                    | Force a roll OUTCOME (paralyzed/stunned auto-fail STR & DEX saves) — not a die modifier.                                                                                                                |
 | `reroll`                     | `reroll:<target>:<threshold>`                           | Reroll a die landing ≤ threshold once (GWF ≤2).                                                                                                                                                         |
 | `min_die`                    | `min_die:<target>:<floor>`                              | Treat a die below floor AS floor (Reliable Talent d20→10).                                                                                                                                              |
-| `grant_proficiency`          | `grant_proficiency:[expertise:]<target>`                | Grant proficiency/expertise as ONE ladder level (`none/half/proficient/expertise`).                                                                                                                     |
+| `grant_proficiency`          | `grant_proficiency:[<rung>:]<target>`                   | Grant a rung of the proficiency ladder — `half` (Jack of All Trades) · `proficient` (the default when the word is absent) · `expertise`. Sources combine by MAX, so "expertise without proficiency" is unrepresentable and a rung never lowers one already held. |
 | `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day/an item's charges), `recharge` = a trigger, optionally with an amount: `short` · `long` · `short_one` · `consumable` · `other` · `dawn(1d6+1)` · `long(2)`. `max` is cost-capped (`MAX_RESOURCE_MAX`). See §How a pool comes back below. |
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
@@ -133,13 +133,20 @@ Unarmed Strike) — the same sentence each edition prints, said in scopes.
 **`grant_proficiency` has its own target namespace**, because what you can be proficient WITH is not
 what a bonus can land on: a bare ability or `save.<ability>` (and the `saves` group — "proficiency in
 all saving throws" is one statement in the rules, so it is one token), a skill (`skill.<id>`, which
-canonicalizes to the bare id), `armor.<light|medium|heavy|shield>`, and `weapon.<simple|martial>` or
+canonicalizes to the bare id, plus the `skills` group for a rung on every skill at once),
+`armor.<light|medium|heavy|shield>`, and `weapon.<simple|martial>` or
 `weapon.<item_id>` for a feature that names specific weapons (Dwarven Combat Training). Equipment
 grants are BINARY — there is no expertise in wearing plate — and they fold on top of what the classes
 declare, so a grant never turns a lenient (undeclared) character into a constrained one. The whole
 `weapon.` namespace is open vocabulary, like a damage type: `derive-targets.ts` holds no content graph
 to check an id against, and a mistyped category is indistinguishable from an id it has never heard of.
 Armour has no ids, so it stays closed and spell-checked.
+
+**The ladder does RAW's own de-duplication.** Jack of All Trades is `grant_proficiency:half:skills`,
+one token for "half your proficiency bonus on any check that doesn't already include it" — because the
+rungs combine by max, a skill the character is already proficient in keeps proficiency and the half
+rung simply loses. The rule needs no second sentence in the engine, and the `half` contribution is
+named after the feature in the trace.
 
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
 `unknown target "<t>" for <kind>` content-health issue (with a `suggest.ts` "did you mean?"),

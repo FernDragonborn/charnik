@@ -182,6 +182,7 @@
 			"whichCanITake": "Which can I take?",
 			"expertiseHint": "Expertise — double your proficiency bonus",
 			"fromBackgroundHint": "Granted by your background",
+			"fromFeatureHint": "Granted by a feature",
 			"classList": "Your class list: {skills}",
 			"classListFree": "Your class list — Free mode lets you take anything: {skills}",
 			"noRestriction": "This class doesn't restrict which skills you may train.",

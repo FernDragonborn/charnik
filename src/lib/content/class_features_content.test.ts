@@ -689,6 +689,34 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		expect(notesFor('dwarf')).not.toContain('Not proficient');
 	});
 
+	it.each([
+		['srd-2014', 'SRD 5.1', '5e' as const],
+		['srd-2024', 'SRD 5.2.1', '5.5e' as const],
+	])(
+		'%s: Jack of All Trades is half proficiency on every skill you lack',
+		async (dir, src, sys) => {
+			const g = await loadEdition(dir);
+			const bard = (level: number) => deriveSheet(charOf(src, sys, 'bard', level), g);
+			const before = bard(1);
+			const after = bard(2); // Jack of All Trades arrives at 2 in both editions
+			// a skill the bard has no proficiency in: none at 1, half at 2
+			expect([before.skills.arcana.prof, after.skills.arcana.prof]).toEqual(['none', 'half']);
+			// PB is +2 at these levels, so half is +1 on the check — and the trace names the feature
+			expect(after.skills.arcana.value - before.skills.arcana.value).toBe(1);
+			expect(after.skills.arcana.trace.some((t) => t.source === 'Jack of All Trades')).toBe(true);
+			// and RAW's "that doesn't already include your proficiency bonus" is the ladder's MAX, not a
+			// second rule: a skill the player picked stays proficient rather than being dragged to half
+			const picked = newCharacter('scanlan', 'Scanlan', sys);
+			picked.build.classes = [{ class: `class:${src}:bard`, level: 2 }];
+			picked.build.skills = ['athletics'];
+			const sheet = deriveSheet(characterSchema.parse(picked), g);
+			expect([sheet.skills.athletics.prof, sheet.skills.arcana.prof]).toEqual([
+				'proficient',
+				'half',
+			]);
+		},
+	);
+
 	it('2014 Keen Senses and Menacing put the skill on the sheet', async () => {
 		const g = await loadEdition('srd-2014');
 		const of = (speciesId: string, skill: 'perception' | 'intimidation') => {

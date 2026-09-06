@@ -59,6 +59,7 @@ const WEAPON_PREFIX = 'weapon.';
 const PROFICIENCY_TARGETS = new Set<string>([
 	...ABILITIES,
 	'saves', // the group: proficiency in ALL saving throws (Diamond Soul)
+	'skills', // the group: a rung on EVERY skill at once (Jack of All Trades' half)
 	...ABILITIES.map((a) => `save.${a}`),
 	...Object.keys(SKILL_ABILITY),
 	...ARMOR_CATEGORIES.map((c) => `armor.${c}`),

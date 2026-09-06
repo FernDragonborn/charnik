@@ -187,6 +187,22 @@ describe('parseToken (bounded vocabulary)', () => {
 		});
 		// saves keep their prefix (derive tells them apart by it)
 		expect(parseToken('grant_proficiency:save.con')).toMatchObject({ target: 'save.con' });
+		// the rung is an optional leading word; `half` is Jack of All Trades, and a token written
+		// before the rung existed still reads as `proficient`
+		expect(parseToken('grant_proficiency:half:skills')).toMatchObject({
+			target: 'skills',
+			proficiency: 'half',
+		});
+		expect(parseToken('grant_proficiency:proficient:stealth')).toMatchObject({
+			target: 'stealth',
+			proficiency: 'proficient',
+		});
+		expect(parseToken('grant_proficiency:stealth')).toMatchObject({ proficiency: 'proficient' });
+		// a word that is NOT a rung stays part of the target, so it fails loudly as an unknown target
+		// rather than being silently eaten as a rung nobody wrote
+		expect(parseToken('grant_proficiency:mastery:stealth')).toMatchObject({
+			target: 'mastery:stealth',
+		});
 	});
 });
 

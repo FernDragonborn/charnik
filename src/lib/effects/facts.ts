@@ -81,7 +81,9 @@ export interface FactRef {
 }
 interface ProficiencyFact {
 	target: string;
-	level: 'proficient' | 'expertise';
+	/** The ladder RUNG granted. `half` is Jack of All Trades'; the sheet's own ladder carries a
+	 *  `none` below these, which no token can grant (a grant only ever raises). */
+	level: 'half' | 'proficient' | 'expertise';
 	source: string;
 }
 /** A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression
