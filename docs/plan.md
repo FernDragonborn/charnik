@@ -257,6 +257,11 @@ position and are given per wave, because most of them were learned the hard way.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
   casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
+- **Ready, unscheduled, and app-only** — what is left in the trackers that needs no content commit and
+  no design session, so a session with app time can take any of them without re-deriving that they
+  exist: RECHARGE-TAIL's `on_event` generalization (Champion Heroic Rally is its second consumer),
+  N5's ammunition toggle and Sneak Attack's once-per-turn marker, ROLLTRAY-NAME (which now needs a
+  name for the RECORD, see its item), and the themes' move to a user-owned `themes.json`.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).
