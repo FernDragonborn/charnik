@@ -23,8 +23,11 @@ Every state transition in play maps to exactly one channel:
 
 `passive` is implemented (the derive pipeline: DAG resolve → facts → fold; the L3 plugin
 `passive` hook rides it as a pre-pass). `onUse` is implemented for the native first slice (N2:
-`activateResourceOption` + `runActionToken`); `onEvent` (and both plugin hooks) remain the deferred
-write half.
+`activateResourceOption` + `runActionToken`). `onEvent` is implemented for L1: an
+`on_event:<event>:<action>` token runs one of the executor verbs when a fired event happens
+(`turn_start` is the only member of the vocabulary, and it fires). The L3 PLUGIN `onEvent` hook —
+arbitrary handler logic on an event — remains deferred to `api: 2`, and that is the deferred write
+half this table's last row still describes.
 
 ## 2. The declarative intent — the ONE play-state mutation language
 

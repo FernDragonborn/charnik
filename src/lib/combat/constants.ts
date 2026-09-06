@@ -13,7 +13,6 @@ import type { DeathCause } from '$lib/character/schema';
 export type MenuKind =
 	| 'dice'
 	| 'temphp'
-	| 'levelup'
 	| 'addeffect'
 	| 'customeffect'
 	| 'log'
@@ -22,8 +21,7 @@ export type MenuKind =
 	| 'condition'
 	| 'upcast'
 	| 'restshort'
-	| 'coins'
-	| 'manage';
+	| 'coins';
 
 /** Why the character died — the dead banner's subtitle, one key per `play.death.cause`. Catalog
  *  keys rather than phrases: this module has no locale, and both consumers can read one. */

@@ -321,8 +321,9 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
   scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
   field, so there is one shape downstream. What is left is the two CONSUMERS:
-  - [ ] **Rage's damage, RAW** — the whole of it is RAGE-SCOPE above, including the two editions'
-        different sentences and where the ability an attack used already lives. BLOCKS 0.7.0.
+  - [x] **Rage's damage, RAW** — done as RAGE-SCOPE above: 2014 `damage.melee,str`, 2024
+        `damage.str`, and the two grammar pieces it needed (an attack carries the ability it
+        resolved from; a scope may be a comma-separated list).
   - [ ] **Magic Weapon, and Agonizing Blast.** Neither blocks 0.7.0, and Agonizing Blast is NOT
         the one content row it was billed as: the packs carry a single `warlock_eldritch_invocations`
         row and no row per invocation, in either edition, so there is nothing to hang
@@ -433,11 +434,14 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
   combat shows a ringed dot. (Strict cap by class-feature count still TODO.)
 - [x] **Languages** — a `language` content type (16 SRD rows), granted by species/background.
-- [~] **Level-up flow** — minimal DONE: a "▲ Level up" control on the combat sheet advances a chosen
-  class by +1 on the open character and saves; the reactive sheet recomputes HP / proficiency / spell
-  slots / features live. Remaining: **guided choices at the new level** (ASI/feat pick, new spells,
-  subclass at its level) — needs the builder to hydrate from an existing character (edit mode), also
-  the prereq for full editing. Add-a-class-while-levelling also via the builder.
+- [~] **Level-up flow** — the sheet's "▲ Level up" control NAVIGATES to the builder in level-up
+  mode (`?levelup=<slug>`), which hydrates the draft from the saved character; the sheet only decides
+  whether to offer the control. The in-place "+1 and a toast telling you to open the builder" path it
+  replaced is deleted, along with the popup nothing opened any more. **The prerequisite this item
+  used to name — "needs the builder to hydrate from an existing character" — is BUILT.** What is
+  actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
+  are picked in the builder like any other build choice rather than being walked through, and adding
+  a class while levelling goes through the builder too.
 - [x] **Inventory/equipment at build** — an Inventory card on the build page.
 ## Effects vocabulary
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·

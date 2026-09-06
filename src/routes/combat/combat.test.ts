@@ -959,10 +959,10 @@ describe('CombatVM · S2 split net', () => {
 		expect(rowNames()).toContain('Bless'); // others unaffected
 	});
 
-	it('level-up: advances the chosen class by one and stays under the cap', () => {
+	it('level-up: the sheet says WHETHER you can, and the builder does the levelling', () => {
+		// the control navigates to the builder in level-up mode (Hero.svelte); the sheet only decides
+		// whether to offer it, because the new level asks questions only the builder can take answers to
 		expect(combat.canLevelUp).toBe(true);
-		combat.levelUp(0);
-		expect(character.build.classes[0]!.level).toBe(4);
 	});
 
 	it('attacks: an equipped weapon + Unarmed Strike are offered; attackRoll logs a roll', () => {

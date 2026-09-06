@@ -643,9 +643,6 @@
 			"hitDiceNote": "Each die heals its roll <b>+ CON</b> (min 1). Rolls show in the log.",
 			"labelOptional": "Label (optional)…",
 			"legendShown": " = shown",
-			"levelUpDelta": "+1 level",
-			"levelUpNote": "HP, proficiency, spell slots & features update automatically. Pick any new ASI / feat / spells in the builder.",
-			"levelUpTitle": "Level up · which class",
 			"modifierTarget": "Modifier target",
 			"noHitDiceNote": "No Hit Dice — a short rest still refreshes pools.",
 			"passiveSenses": "Passive senses · ",
@@ -657,8 +654,6 @@
 			"shortRestTitle": "Short rest · spend Hit Dice",
 			"slotLevel": "Level {level}",
 			"slotLevelBase": "Level {level} · base",
-			"spellbook": "Spellbook",
-			"spellbookNote": "Full spellbook manager arrives with the spell-manager view (d-spellmgr).",
 			"takeShortRest": "Take short rest",
 			"takeShortRestSpend": "Take short rest · spend {count}",
 			"tempHpNote": "Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.",
@@ -702,8 +697,6 @@
 			"castingTime": "Casting time: {when}",
 			"castingReaction": "reaction",
 			"castingBonus": "bonus action",
-			"levelUp": "Level up — {class} {level}",
-			"levelUpBody": "HP & slots updated. Set any new ASI/feat/spells in the builder.",
 			"actionUsed": "{name} — action used",
 			"concentrationHeld": "Concentration held — {total} ≥ DC {dc}",
 			"concentrationFailed": "Concentration save failed — {total} < DC {dc}",
@@ -1593,12 +1586,6 @@
 			"pickAnother": "Choose another folder",
 			"repoint": "Only change read path",
 			"title": "That folder already has files"
-		},
-		"data": {
-			"title": "Data folder",
-			"desc": "Charnik keeps your characters and content here as plain files you can open, edit, and back up.",
-			"open": "Open content folder",
-			"change": "Change folder…"
 		},
 		"demo": {
 			"blurb": "Charnik ships with a demo character (Karroth the Red) to show the sheet at a glance. Restoring rebuilds it to its original state — this wipes any changes you made to it (HP, spells, layout). Your other characters aren’t touched.",

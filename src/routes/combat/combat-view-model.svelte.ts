@@ -457,28 +457,6 @@ class CombatVM {
 			name: this.graph ? String(this.graph.get(c.class)?.data.name_en ?? 'Class') : 'Class',
 		})),
 	);
-	/** Add one level to a class and persist (the sheet re-derives HP/prof/slots/features live).
-	 *  New choices at this level — ASI/feat/spells — are picked in the builder; here we advance the
-	 *  mechanical level (lenient), flag the rest. */
-	levelUp = (classIndex: number) => {
-		const c = this.character;
-		if (!c || !this.canLevelUp) return;
-		c.build.classes = c.build.classes.map((cl, i) =>
-			i === classIndex ? { ...cl, level: cl.level + 1 } : cl,
-		);
-		void saveCharacterToStore(c);
-		this.overlay = null;
-		const cls = c.build.classes[classIndex];
-		if (cls)
-			toast(
-				t('combat.notice.levelUp', {
-					class: this.graph?.get(cls.class)?.data.name_en ?? '',
-					level: cls.level,
-				}),
-				{ description: t('combat.notice.levelUpBody') },
-			);
-	};
-
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
 	actionClick = (a: StandardAction, e: Event) => {

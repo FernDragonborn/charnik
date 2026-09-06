@@ -113,15 +113,6 @@
 				</div>
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>
 			</div>
-		{:else if overlay.kind === 'levelup'}
-			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.levelUpTitle')}</div>
-			{#each combat.levelUpClasses as cl (cl.index)}
-				<button class="menu-row" onclick={() => combat.levelUp(cl.index)}>
-					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
-					<span class="meta">{$_('combat.menu.levelUpDelta')}</span>
-				</button>
-			{/each}
-			<p class="note">{$_('combat.menu.levelUpNote')}</p>
 		{:else if overlay.kind === 'addeffect'}
 			<div class="search">
 				<span class="search-icon"><Icon name="search" size={13} /></span><input
@@ -398,15 +389,6 @@
 					>
 				</div>
 			{/if}
-		{:else if overlay.kind === 'manage'}
-			<div class="popup-heading eyebrow">
-				{$_('combat.menu.spellbook')}<button
-					class="icon-button"
-					onclick={() => (combat.overlay = null)}
-					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
-				>
-			</div>
-			<p class="note" style="padding: 11px 13px">{$_('combat.menu.spellbookNote')}</p>
 		{:else if overlay.kind === 'condition'}
 			<div class="popup-heading eyebrow">
 				{$_('combat.menu.conditionsTitle')}<button
@@ -620,9 +602,6 @@
 	   keeps its emphasis inside the string, where a translator can move it, and scoped styles do not
 	   reach markup Svelte never compiled. */
 	.note :global(b) {
-		color: var(--color-resource);
-	}
-	.gold {
 		color: var(--color-resource);
 	}
 	.modifier-row {
