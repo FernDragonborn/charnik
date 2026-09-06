@@ -34,7 +34,12 @@ export const EFFECT_KIND = {
 	// Inspiration die). The expr is an L2 value expression (composes with `step()`/`d`); derive
 	// resolves it to a dice formula string for a rollable chip → the DiceTrayRequest seam (EFX-ROLL).
 	grantRoll: 'grant_roll',
-	resistImmune: 'resist_immune',
+	// `damage_sensitivity:<relation>:<type>` — how this character RELATES to one damage type. One
+	// kind rather than three, because the three relations are one axis (a damage multiplier: x0, x1/2,
+	// x2), so "immunity outranks vulnerability outranks resistance" stays a comparison inside a kind.
+	// The relation is REQUIRED: it is a closed keyword set, and anchoring it at the front leaves the
+	// type slot free-form, which it must be (a pack may name its own damage type).
+	damageSensitivity: 'damage_sensitivity',
 	applyCondition: 'apply_condition',
 	grantResource: 'grant_resource',
 	// L1 roll-manipulation (the bounded, known set — NOT L3): the roll path consumes these facts.
@@ -91,7 +96,7 @@ const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KI
 // The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep
 // importing it from the effects surface they already use.
 export type { RechargePolicy };
-export type Defense = 'resist' | 'immune' | 'vulnerable';
+export type DamageSensitivity = 'resist' | 'immune' | 'vulnerable';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
  *  a bonus/override is only STORED and rendered as a scalar → a generous finite guard is enough (a
@@ -133,8 +138,8 @@ export interface ParsedEffect {
 	 *  literal — resolved against a ctx at derive time by `resolveEffectValue`, not here. Present on
 	 *  `flat_bonus` / `set_override` (the stat value) and mirrored by `resource.max` below. */
 	valueExpr?: string;
-	/** resist_immune: which bucket (defaults to 'resist' when the token omits it). */
-	defense?: Defense;
+	/** damage_sensitivity: which relation the token declares to `target`'s damage type. */
+	sensitivity?: DamageSensitivity;
 	/** grant_proficiency: the LEVEL granted — one ladder value, not two booleans, so "expertise
 	 *  without proficiency" is unrepresentable (expertise sits above proficient on the ladder). */
 	proficiency?: 'proficient' | 'expertise';
@@ -174,7 +179,7 @@ export function parseToken(token: string): ParsedEffect {
 function parseTokenUncached(token: string): ParsedEffect {
 	const p = classifyToken(token);
 	// Targets/ids are lowercase snake by convention (E3). Normalize the target HERE (the one parse
-	// chokepoint) so an author who types `flat_bonus:AC+2` or `resist_immune:Fire` matches the
+	// chokepoint) so an author who types `flat_bonus:AC+2` or `damage_sensitivity:resist:Fire` matches
 	// case-sensitive derive keys instead of silently folding onto nothing (a parsed-but-never-applied
 	// no-op — the worst failure for an untrusted CSV). `valueExpr` is untouched (the L2 grammar is
 	// already lowercase) and `raw` keeps the author's casing for the inert-note display. `note` is
@@ -275,12 +280,13 @@ const parseGrantRoll: KindParser = (rest, raw, kind) => {
 	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
 };
 
-const parseResistImmune: KindParser = (rest, raw, kind) => {
-	// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
-	const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);
+const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
+	// `damage_sensitivity:<relation>:<type>`. A missing relation is malformed, not a default: an
+	// author who meant immunity and typed one segment gets an inert note they can see, rather than a
+	// silent downgrade to resistance.
+	const m = /^(resist|immune|vulnerable):(.+)$/i.exec(rest);
 	if (!m?.[2]) return { kind: 'unknown', raw };
-	const defense = (m[1]?.toLowerCase() ?? 'resist') as Defense;
-	return { kind, defense, target: m[2].trim(), raw };
+	return { kind, sensitivity: m[1].toLowerCase() as DamageSensitivity, target: m[2].trim(), raw };
 };
 
 const parseGrantResource: KindParser = (rest, raw, kind) => {
@@ -377,7 +383,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.blockBonus]: parseTargetOnly,
 	[EFFECT_KIND.halve]: parseTargetOnly,
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
-	[EFFECT_KIND.resistImmune]: parseResistImmune,
+	[EFFECT_KIND.damageSensitivity]: parseDamageSensitivity,
 	[EFFECT_KIND.grantResource]: parseGrantResource,
 	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,
 	[EFFECT_KIND.plugin]: parsePlugin,
@@ -401,6 +407,22 @@ function tightenDelimiters(kind: EffectKind, body: string): string {
 	return FREE_TEXT_BODY.has(kind) ? body.trim() : body.replace(/\s*([:,])\s*/g, '$1').trim();
 }
 
+/** Kind spellings a rename retired, mapped to the canonical kind (and, where the old grammar was
+ *  looser, to the body the canonical parser expects). Content on disk outlives our vocabulary: a
+ *  pack written against the old name must keep meaning what it meant instead of decaying into an
+ *  inert note. `resist_immune:<type>` meant resistance when the relation was omitted. */
+const RETIRED_KINDS: ReadonlyMap<string, { kind: EffectKind; body: (rest: string) => string }> =
+	new Map([
+		[
+			'resist_immune',
+			{
+				kind: EFFECT_KIND.damageSensitivity as EffectKind,
+				body: (rest: string) =>
+					/^(resist|immune|vulnerable):/i.test(rest) ? rest : `resist:${rest}`,
+			},
+		],
+	]);
+
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -408,9 +430,11 @@ function classifyToken(token: string): ParsedEffect {
 	// every other kind bare (`flat_bonus`) is malformed → unknown.
 	if (sep === -1)
 		return MARKER_KINDS.has(raw) ? { kind: raw as EffectKind, raw } : { kind: 'unknown', raw };
-	const kind = raw.slice(0, sep) as EffectKind;
+	const retired = RETIRED_KINDS.get(raw.slice(0, sep));
+	const kind = retired?.kind ?? (raw.slice(0, sep) as EffectKind);
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
-	const rest = tightenDelimiters(kind, raw.slice(sep + 1));
+	const body = tightenDelimiters(kind, raw.slice(sep + 1));
+	const rest = retired ? retired.body(body) : body;
 	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
 	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
 	return (KIND_PARSERS[kind] ?? ((r, rw) => ({ kind, target: r, raw: rw })))(rest, raw, kind);

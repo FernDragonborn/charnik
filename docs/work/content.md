@@ -39,7 +39,7 @@
   (`ability_checks`+`saves`), Amulet of Health / Headband of Intellect / Gauntlets of Ogre Power
   (**`set_override:<abil>:19:floor`** — the FLOOR mode matters: RAW "no effect if already 19 or higher",
   and a plain set would drag a 20 down), Ring of Swimming (`set_override:speed.swim:40`), Boots of the
-  Winterlands (`resist_immune:resist:cold`), Boots/Cloak of Elvenkind + Eyes of the Eagle (Stealth /
+  Winterlands (`damage_sensitivity:resist:cold`), Boots/Cloak of Elvenkind + Eyes of the Eagle (Stealth /
   Perception advantage), Bracers of Defense (the guard `not is_wearing_armor and not is_wearing_shield ?
   flat_bonus:ac+2`), Mantle of Spell Resistance + Ring of Spell Turning (`note:` — the vocabulary has no
   "against spells" save qualifier, so they stay text rather than fold too broadly). **Edition
@@ -51,7 +51,7 @@
   converters had each copied is now one export in `tools/srd/lib.mjs`. Hashes re-stamped;
   `items_content.test.ts` pins the values + drift.
   **SECOND TRANCHE DONE 2026-08-21 — 23 items in 2024, 12 in 2014**, again read off each edition's own
-  shipped text. Named damage types fold (`resist_immune:resist:<type>` — Staff of Fire/Frost, Brooch of
+  shipped text. Named damage types fold (`damage_sensitivity:resist:<type>` — Staff of Fire/Frost, Brooch of
   Shielding, Cloak of Arachnida, Periapt of Proof against Poison, Armor of Invulnerability's b/p/s);
   UNQUALIFIED advantage on a named roll folds (Sentinel Shield + Rod of Alertness →
   `advantage:initiative;advantage:skill.perception`, Cloak of the Bat → stealth, Quarterstaff of the

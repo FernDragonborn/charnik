@@ -93,8 +93,8 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('flat_bonus:save.str+1').scope).toBeUndefined();
 	});
 	it('parses the non-numeric kinds', () => {
-		expect(parseToken('resist_immune:poison')).toMatchObject({
-			kind: 'resist_immune',
+		expect(parseToken('damage_sensitivity:immune:poison')).toMatchObject({
+			kind: 'damage_sensitivity',
 			target: 'poison',
 		});
 		expect(parseToken('apply_condition:paralyzed')).toMatchObject({
@@ -111,14 +111,19 @@ describe('parseToken (bounded vocabulary)', () => {
 			amount: 18,
 		});
 	});
-	it('structures resist_immune into a defense bucket + type (bare defaults to resist)', () => {
-		expect(parseToken('resist_immune:fire')).toMatchObject({ defense: 'resist', target: 'fire' });
-		expect(parseToken('resist_immune:immune:poison')).toMatchObject({
-			defense: 'immune',
+	it('structures damage_sensitivity into a relation + type, and REQUIRES the relation', () => {
+		expect(parseToken('damage_sensitivity:resist:fire')).toMatchObject({
+			sensitivity: 'resist',
+			target: 'fire',
+		});
+		// one segment is malformed, not an implied resistance — the author sees an inert note
+		expect(parseToken('damage_sensitivity:fire').kind).toBe('unknown');
+		expect(parseToken('damage_sensitivity:immune:poison')).toMatchObject({
+			sensitivity: 'immune',
 			target: 'poison',
 		});
-		expect(parseToken('resist_immune:vulnerable:cold')).toMatchObject({
-			defense: 'vulnerable',
+		expect(parseToken('damage_sensitivity:vulnerable:cold')).toMatchObject({
+			sensitivity: 'vulnerable',
 			target: 'cold',
 		});
 	});
@@ -462,7 +467,7 @@ describe('collectFacts', () => {
 			{
 				source: 'Rage',
 				layer: 'feature',
-				tokens: ['grant_resource:rage', 'resist_immune:bludgeoning'],
+				tokens: ['grant_resource:rage', 'damage_sensitivity:resist:bludgeoning'],
 			},
 			{ source: 'Hold Person', layer: 'condition', tokens: ['apply_condition:paralyzed'] },
 			{ source: 'Weird', layer: 'feature', tokens: ['teleport:far'] },
@@ -570,7 +575,7 @@ describe('parseToken · malformed tokens degrade to `unknown` (never throw, neve
 	// every one of these is a plausible author slip typed into a CSV cell; each must parse to a
 	// visible inert note, not silently vanish and not crash the derive
 	const unknowns = [
-		'resist_immune:', // empty type
+		'damage_sensitivity:resist:', // empty type
 		'grant_resource:', // empty id
 		'grant_proficiency:', // empty target
 		'flat_bonus:ac+', // sign but no value
@@ -591,7 +596,10 @@ describe('parseToken · malformed tokens degrade to `unknown` (never throw, neve
 	});
 	it('normalizes an uppercase TARGET to lowercase so it actually applies (no silent no-op)', () => {
 		expect(parseToken('flat_bonus:AC+2')).toMatchObject({ target: 'ac', amount: 2 });
-		expect(parseToken('resist_immune:Fire')).toMatchObject({ defense: 'resist', target: 'fire' });
+		expect(parseToken('damage_sensitivity:resist:Fire')).toMatchObject({
+			sensitivity: 'resist',
+			target: 'fire',
+		});
 		expect(parseToken('apply_condition:Frightened')).toMatchObject({ target: 'frightened' });
 		// the raw form keeps the author's casing for the inert-note / provenance display
 		expect(parseToken('flat_bonus:AC+2').raw).toBe('flat_bonus:AC+2');

@@ -541,7 +541,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deriveAc` — AC: equipped armor (dex-capped) + a raised shield's +2 (the play-state flag, the single source * for it — not the inv…
 - `function deriveSpeed` — Speed from species base; A3: armor whose `str_min` exceeds the wearer's STR drops it 10 ft (RAW, * both editions), tr…
 - `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
-- `function deriveDefenses` — Damage defenses collected from `resist_immune` facts, deduped per bucket.
+- `function deriveDefenses` — Damage defenses collected from `damage_sensitivity` facts, deduped per bucket.
 
 ### `src/lib/character/derive-targets.ts`
 
@@ -692,7 +692,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/defense.ts`
 
-- `interface Defenses` — The sheet's damage defenses (from `resist_immune` effects) — the three buckets by damage type.
+- `interface Defenses` — The sheet's damage defenses (from `damage_sensitivity` effects) — the three buckets by damage type.
 - `type DefenseBucket` — Which bucket, if any, a damage type hits.
 - `function applyDefense` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
 - `function effectiveHpMax`
@@ -1308,7 +1308,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type EffectKind`
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
 - `re-export RechargePolicy` — The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep importing it from the…
-- `type Defense`
+- `type DamageSensitivity`
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…

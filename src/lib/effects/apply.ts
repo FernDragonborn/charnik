@@ -174,7 +174,7 @@ class FactsCollector {
 		return true;
 	}
 
-	/** The remaining kinds: grant_proficiency / grant_roll / resist_immune / apply_condition /
+	/** The remaining kinds: grant_proficiency / grant_roll / damage_sensitivity / apply_condition /
 	 *  grant_resource / plugin (resolved by the pre-pass) / unknown. */
 	private collectOtherFact(p: ParsedEffect, eff: ActiveEffect, token: string): void {
 		switch (p.kind) {
@@ -189,10 +189,10 @@ class FactsCollector {
 			case EFFECT_KIND.grantRoll:
 				this.pushRoll(p, eff, token);
 				break;
-			case EFFECT_KIND.resistImmune:
-				if (p.target)
+			case EFFECT_KIND.damageSensitivity:
+				if (p.target && p.sensitivity)
 					this.facts.defenses.push({
-						bucket: p.defense ?? 'resist',
+						bucket: p.sensitivity,
 						type: p.target.trim(),
 						source: eff.source,
 					});

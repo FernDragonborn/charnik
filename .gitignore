@@ -60,3 +60,6 @@ coverage/
 tools/visual/baseline/
 tools/visual/current/
 
+
+# dated QA reports are working checklists, never history
+docs/report-*.md

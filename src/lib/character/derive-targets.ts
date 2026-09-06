@@ -61,7 +61,7 @@ const PROFICIENCY_TARGETS = new Set<string>([
 /** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
 const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
 
-/** A kind whose targets are NOT a closed set (resist_immune's damage types, grant_resource's ids):
+/** A kind whose targets are NOT a closed set (damage_sensitivity's types, grant_resource's ids):
  *  there is nothing to check against, so every target passes. Named rather than `null` (NULL-1) —
  *  "no candidate set" and "no valid targets" are opposite answers and must not share a spelling. */
 const OPEN_VOCAB = 'open-vocab';
@@ -92,7 +92,7 @@ const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
 };
 
 /** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
- *  Open-vocab kinds (resist_immune, grant_resource, apply_condition) are always supported —
+ *  Open-vocab kinds (damage_sensitivity, grant_resource, apply_condition) are always supported —
  *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */
 export const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
 	const candidates = targetCandidatesFor(kind);

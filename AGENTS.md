@@ -79,8 +79,10 @@ a human reads in a diff. `prose-is-not-data.test.ts` guards the usual shape; `do
 has the rule.
 
 **Pushing.** Commit whenever you have a meaningful, verified checkpoint — straight to `main`, this
-project does not use feature branches. Pushing is the one git action that needs explicit permission
-in the current turn, and a single "push" authorizes that turn only.
+project does not use feature branches. That covers BOTH repos: a content change is a commit you make
+in `charnik-content-srd` yourself, never a question and never something you leave dirty for us to
+find. Pushing is the one git action that needs explicit permission in the current turn, and a single
+"push" authorizes that turn only.
 
 **Skipping a re-stamp.** After hand-editing a content CSV, run `pnpm restamp <file>`. The
 `#content-hash` is not decoration: a file whose body no longer matches its stamp is treated as the

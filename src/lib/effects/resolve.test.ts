@@ -77,7 +77,7 @@ describe('resolveActiveEffects · guards', () => {
 		{
 			source: 'Rage',
 			layer: 'condition',
-			tokens: ['is_raging ? advantage:attack', 'is_raging ? resist_immune:bludgeoning'],
+			tokens: ['is_raging ? advantage:attack', 'is_raging ? damage_sensitivity:resist:bludgeoning'],
 		},
 		{ source: 'Base', layer: 'feature', tokens: ['flat_bonus:ac+1'] },
 	];
@@ -89,7 +89,7 @@ describe('resolveActiveEffects · guards', () => {
 		);
 		const tokens = raging.effects.flatMap((e) => e.tokens);
 		expect(tokens).toContain('advantage:attack'); // stripped of the guard
-		expect(tokens).toContain('resist_immune:bludgeoning');
+		expect(tokens).toContain('damage_sensitivity:resist:bludgeoning');
 		expect(tokens).toContain('flat_bonus:ac+1');
 		expect(raging.issues).toEqual([]);
 	});

@@ -101,7 +101,7 @@ describe('content schemas — unit', () => {
 			name_en: 'Dwarf',
 			size: 'medium',
 			speed: '25',
-			effects: 'flat_bonus:con+2; resist_immune:poison',
+			effects: 'flat_bonus:con+2; damage_sensitivity:immune:poison',
 		});
 		expect(ok.success).toBe(true);
 		if (ok.success) expect(ok.data.effects.length).toBe(2);

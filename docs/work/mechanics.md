@@ -72,6 +72,44 @@ stay semi-manual.
   `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
+  is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
+  declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",
+  "score a critical hit on"). Every row below carries no token today. Grouped by what it is waiting
+  on, because only the first group is pure content:
+
+  - **Writable the moment the fold gathers feature tokens** — the target already exists.
+    `danger_sense` (`advantage:save.dex`) · `fast_movement`, 2024 `roving`, `unarmored_movement`
+    (`flat_bonus:speed+10`, each guarded by its own armour condition) · `feral_instinct` and 2024
+    `champion_remarkable_athlete` (`advantage:initiative`) · 2024 `superior_defense` (resist all but
+    force) · 2014 `ki_empowered_strikes` and `pact_boon` (strikes count as magical — a `note`,
+    there is no attack-magic target and no enemy to test it against).
+  - **Blocked on a defense bucket that is not damage.** Immunity to a CONDITION or to disease has no
+    target at all — the fold's defense buckets hold damage types only. 2014 `purity_of_body`,
+    `divine_health`, `circleoftheland_natures_ward`; 2024 `aura_of_courage` (Frightened),
+    `path_of_the_berserker_mindless_rage` (Charmed + Frightened), `oath_of_devotion_aura_of_devotion`
+    (Charmed), `circle_of_the_land_natures_ward` (Poisoned). Same shape as CONDEFF's merge — a
+    condition is content, so immunity to one is a reference to a row, not a new vocabulary.
+  - **Blocked on a fold target that does not exist yet.** `extra_attack` (barbarian/fighter/monk/
+    ranger/paladin, both editions) needs attacks-per-action, which N2 already spells
+    `flat_bonus:attacks+N` · `unarmored_defense` (barbarian, monk) and 2014
+    `draconicbloodline_draconic_ancestry` need an AC FORMULA, not a bonus — "AC equals 10 + DEX +
+    CON" is a base the pipeline has no way to say · `champion_improved_critical` /
+    `champion_superior_critical` need a crit-threshold target · `reliable_talent` needs
+    `min_die` to accept an ability-check target.
+  - **Blocked on SCOPED-BONUS reaching spells.** "Add your <ability> modifier to the damage of X":
+    2024 `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
+    (evocation spells), `oath_of_devotion_sacred_weapon` and 2014 `oathofdevotion_channel_divinity`
+    (one weapon, attack roll), 2014 `foe_slayer` (attack OR damage, player's pick).
+  - **Situational by nature — these stay `note`, and that is the answer, not a gap.** Advantage that
+    depends on what you are fighting or what you did last turn: `favored_enemy`, `countercharm`,
+    `lands_stride`, `hunter_defensive_tactics`, `holy_nimbus`, `thief_supreme_sneak`, 2024
+    `studied_attacks`, `precise_hunter`, `innate_sorcery`. The app has no enemy and no turn history
+    to test the condition against; surfacing the text is the honest behaviour.
+  - **A choice, so it waits on `choose_n`** (N2 shape 3): `fiendish_resilience` and 2024
+    `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
+    change.
+
 - [ ] **N2b · Wild Shape = stat-block replacement.** A druid has no working Wild Shape at all.
   Model: `play.form = {monsterRef, formHp} | null`; deriveSheet branches — physical
   scores/AC/attacks/speed from the (already-typed) monster row, mental stays own; an isolated

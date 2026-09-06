@@ -6,7 +6,7 @@
  * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts.
  */
 import type { Layer } from '../rules/pipeline';
-import type { Defense, PlayEvent, RechargePolicy } from './token-parser';
+import type { DamageSensitivity, PlayEvent, RechargePolicy } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`/`ability_checks`→`skill.*` (the ability checks the sheet models —
@@ -37,7 +37,7 @@ export interface TargetCheck {
 
 /** Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
  *  Only CLOSED-vocab targets are checked (stat/roll/proficiency keys); open-vocab kinds
- *  (resist_immune types, grant_resource / apply_condition ids) are validated elsewhere or unbounded,
+ *  (damage_sensitivity types, grant_resource / apply_condition ids) are validated elsewhere or unbounded,
  *  so the validator returns `supported: true` for them. `kind` is an `EFFECT_KIND` value. */
 export type TargetValidator = (kind: string, target: string) => TargetCheck;
 
@@ -93,7 +93,7 @@ interface RollFact {
 	formula: string;
 }
 interface DefenseFact {
-	bucket: Defense;
+	bucket: DamageSensitivity;
 	type: string;
 	source: string;
 }

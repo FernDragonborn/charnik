@@ -98,8 +98,8 @@ describe('shipped magic items · effects column is engine-valid', () => {
 				const byId = (id: string) => g.list('item').find((r) => r.id === id)?.data.effects;
 				// the type is NAMED, so it folds; 2014's Armor of Invulnerability says "nonmagical
 				// damage", which is not a type the vocabulary can name — it stays a note (see PLAN).
-				expect(byId('staff_of_fire')).toEqual(['resist_immune:resist:fire']);
-				expect(byId('cloak_of_arachnida')?.[0]).toBe('resist_immune:resist:poison');
+				expect(byId('staff_of_fire')).toEqual(['damage_sensitivity:resist:fire']);
+				expect(byId('cloak_of_arachnida')?.[0]).toBe('damage_sensitivity:resist:poison');
 				expect(byId('robe_of_eyes')?.[0]).toBe('advantage:skill.perception');
 			});
 

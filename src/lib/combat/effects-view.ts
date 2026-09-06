@@ -129,10 +129,11 @@ const TAG_FORMATTERS: Partial<
 		say(tr, 'combat.tag.halve', `${targetLabel(p.target)} ×½`, {
 			target: targetLabel(p.target, tr),
 		}),
-	[EFFECT_KIND.resistImmune]: (p, tr) =>
+	[EFFECT_KIND.damageSensitivity]: (p, tr) =>
 		p.target &&
-		say(tr, 'combat.tag.defense', `${p.defense ?? 'resist'} · ${p.target}`, {
-			defense: say(tr, `combat.defense.${p.defense ?? 'resist'}`, p.defense ?? 'resist'),
+		p.sensitivity &&
+		say(tr, 'combat.tag.defense', `${p.sensitivity} · ${p.target}`, {
+			defense: say(tr, `combat.defense.${p.sensitivity}`, p.sensitivity),
 			target: say(tr, `damageType.${p.target}`, p.target),
 		}),
 	[EFFECT_KIND.advantage]: (p, tr) => p.target && prefixed(tr, 'advantage', p.target),
@@ -174,7 +175,7 @@ function prefixed(tr: Translate | undefined, kind: keyof typeof PREFIX_EN, targe
 }
 
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
- *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; resist_immune → "resist · fire";
+ *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; damage_sensitivity → "resist · fire";
  *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
  *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
 export function effectTag(token: string, translate?: Translate): string {

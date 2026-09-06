@@ -662,16 +662,16 @@ describe('deriveSheet aggregator', () => {
 		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2 (L3)
 	});
 
-	it('collects damage defenses from resist_immune effects (mode + bare default)', () => {
+	it('collects damage defenses from damage_sensitivity effects, one bucket per relation', () => {
 		const c = wizard();
 		c.play.effects = [
 			{
 				iid: 'd',
 				label: 'Wards',
 				effects: [
-					'resist_immune:resist:fire',
-					'resist_immune:immune:poison',
-					'resist_immune:cold', // bare → defaults to resistance
+					'damage_sensitivity:resist:fire',
+					'damage_sensitivity:immune:poison',
+					'resist_immune:cold', // the retired spelling still means resistance
 				],
 				positive: true,
 			},

@@ -4,7 +4,7 @@
  */
 import { computed, type Computed, type Contribution, type Layer } from '$lib/rules/pipeline';
 
-/** The sheet's damage defenses (from `resist_immune` effects) — the three buckets by damage type. */
+/** The sheet's damage defenses (from `damage_sensitivity` effects) — the three buckets by damage type. */
 export interface Defenses {
 	resist: string[];
 	immune: string[];

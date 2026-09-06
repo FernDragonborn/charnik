@@ -248,7 +248,7 @@ export function derivePassives(
 	});
 }
 
-/** Damage defenses collected from `resist_immune` facts, deduped per bucket. */
+/** Damage defenses collected from `damage_sensitivity` facts, deduped per bucket. */
 export function deriveDefenses(facts: EffectFacts): {
 	resist: string[];
 	immune: string[];

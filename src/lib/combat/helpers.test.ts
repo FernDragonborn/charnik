@@ -315,7 +315,7 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 	});
 
 	it('ignores tokens that are not attack/damage flat bonuses', () => {
-		expect(weaponBonus(['resist_immune:fire', 'grant_resource:ki'])).toEqual({
+		expect(weaponBonus(['damage_sensitivity:resist:fire', 'grant_resource:ki'])).toEqual({
 			attack: 0,
 			damage: 0,
 		});
@@ -541,7 +541,7 @@ describe('effectTag — readable tags for the effects panel', () => {
 	});
 	it('short-forms the other vocab kinds', () => {
 		expect(effectTag('set_override:ac:13')).toBe('AC = 13');
-		expect(effectTag('resist_immune:resist:fire')).toBe('resist · fire');
+		expect(effectTag('damage_sensitivity:resist:fire')).toBe('resist · fire');
 		expect(effectTag('apply_condition:poisoned')).toBe('Poisoned');
 	});
 });
