@@ -1262,8 +1262,13 @@ function convertItems() {
 			irow({
 				id,
 				name_en: e.name,
+				// The description usually shares the paragraph with the italic type line, so DROPPING
+				// every `<em>` paragraph dropped the whole entry for most items — 89 magic rows shipped
+				// with an empty text. Strip the meta span out of its OWN paragraph and keep what follows;
+				// every other paragraph is body, italics inside it included (a spell name is italicised,
+				// and that is not a reason to lose the sentence around it).
 				text_en: e.paras
-					.filter((p) => !/<em>/i.test(p))
+					.map((p) => (p === metaP ? p.replace(/<em>[\s\S]*?<\/em>/i, '') : p))
 					.map(strip)
 					.filter(Boolean)
 					.join('\n'),

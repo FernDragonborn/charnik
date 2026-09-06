@@ -100,25 +100,40 @@
   and its note states the ceiling, which the player applies with the manual override every value
   already has. One row per edition needs this, so it buys no machinery.
 
-  **Still not authorable: the 89 magic rows in the 2014 pack that ship with an EMPTY `text_en`**
-  (`vorpal_sword`, `gloves_of_thievery`, `weapon_of_warning`, `mithral_armor`, `winged_boots`…). There
-  is nothing to read them off, and nothing here is written from memory — which is also why the 2024
-  pack got more than twice as many rows in this pass. Extracting that text is a CONVERTER job, not an
-  authoring one; it is filed as its own item below.
-- [ ] **ITEM-TEXT-2014 · 89 magic items in the 2014 pack ship with an EMPTY `text_en`.** The row
-  exists, with its category, rarity and cost — and no description at all: `vorpal_sword`,
-  `rod_of_alertness`, `gloves_of_thievery`, `weapon_of_warning`, `mithral_armor`, `winged_boots`,
-  `dragon_scale_mail`, `boots_of_striding_and_springing`, `talisman_of_pure_good` and eighty more.
-  A few others (`frost_brand`, `brooch_of_shielding`) are truncated mid-sentence.
+  **FIFTH AND SIXTH PASSES — the 2014 half catches up.** The pass above stopped where the 2014 pack
+  ran out of readable text; ITEM-TEXT-2014 (below) fixed the extractor, and the rows it unlocked were
+  then authored against their own SRD 5.1 text: Vorpal Sword, Dragon Slayer, Giant Slayer, Dwarven
+  Thrower, Mace of Smiting, Luck Blade and Staff of Striking take their +N, Dwarven Plate and Dragon
+  Scale Mail their AC, Frost Brand its cold rider and fire resistance, the Rod of Alertness its two
+  advantages. Each lands on the token its 2024 twin already carried — the asymmetry WAS the missing
+  text, not an edition divergence.
 
-  **It is a CONVERTER job, not an authoring one.** SRD 5.1 has the text; the 2014 extractor did not
-  pick it up — the same class of miss as the "Extra A ttack" OCR artifact that cost the 2014 paladin
-  its Extra Attack row. Writing the descriptions by hand is exactly the invented-data failure
-  `AGENTS.md` names, so it waits for the extractor rather than for a patient afternoon.
+  **54 charged items now say their pool** rather than describing it — every wand, most staves, the
+  rings, the trident — generated from the sentence that states the count and the dawn recharge, then
+  read back one by one against that sentence. A random starting pool ("1d8 + 1 charges") is
+  deliberately not matched: the vocabulary takes a literal max. Two items with no recharge in their
+  text say `consumable` rather than borrowing a dawn nobody wrote.
 
-  **What it currently blocks:** every one of those rows is unauthorable for MAGIC-ITEM-EFX, which is
-  why the 2024 pack got more than twice as many tokenized rows in the same pass. Closing this reopens
-  a fifth of the 2014 magic items for tokens.
+  **Coverage: 2014 went 54 → 113 rows with effects, 2024 96 → 126.** What remains is consumables
+  (potions, oils), objects with their own stat block (a mirror, a fortress, an iron flask) and
+  benefits the vocabulary cannot name — none of them a passive benefit while worn, wielded or attuned.
+- [x] **ITEM-TEXT-2014 · the 2014 pack has its item descriptions back.** 89 magic rows shipped with
+  an EMPTY `text_en` and two more were cut mid-sentence, so a fifth of the pack could never be given
+  effects — there was nothing to read them off.
+
+  **The extractor was dropping them, and the source had them all along.** `convert-2014.mjs` built
+  `text_en` from the paragraphs that do NOT contain an `<em>`, because the italic type line lives in
+  one. In SRD 5.1 the description usually shares that paragraph with the type line, so the filter took
+  the entry with it — and a body paragraph that merely italicises a spell name went the same way. The
+  fix strips the meta span out of its own paragraph and keeps everything else.
+
+  **Re-running the converter needed the documented care** (`AGENTS.md` ▸ Re-running a converter):
+  it rewrote eleven files it had no business changing, `conditions_srd.csv`'s `max_level` among them,
+  so every file but `items_srd.csv` was checked out again. `existingEffectsById` did its job — all 54
+  previously authored `effects` cells survived the regeneration untouched.
+
+  **Guarded by a COUNT, not a sample:** `items_content.test.ts` demands that no magic item in either
+  pack ships with an empty description. The failure was silent and wholesale, so the assert has to be.
 
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)

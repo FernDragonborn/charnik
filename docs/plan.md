@@ -272,9 +272,10 @@ position and are given per wave, because most of them were learned the hard way.
     more with the joins already filled. Four links ship (class, subclass, species, resource); a fifth
     is one row in `LINKED_TABLES`.
   - **MAGIC-ITEM-EFX** — every shipped magic item whose text states a passive benefit while worn,
-    wielded or attuned now folds it, the +N weapons included. What stayed prose is what the vocabulary
-    cannot NAME, and it says so as a note rather than staying blank. The 2014 rows that ship with no
-    text at all became their own item, **ITEM-TEXT-2014** — a converter job, not an authoring one.
+    wielded or attuned now folds it, the +N weapons and 54 charged pools included. What stayed prose is
+    what the vocabulary cannot NAME, and it says so as a note rather than staying blank. **ITEM-TEXT-2014**
+    fell out of it and closed too: the 2014 extractor was dropping the description of 89 magic rows, so
+    a fifth of that pack was unauthorable — the source had the text all along.
   - **PROF-GRANT** — the token says saves, skills, armour categories and specific weapons, and eleven
     shipped rows say it instead of only printing it.
 

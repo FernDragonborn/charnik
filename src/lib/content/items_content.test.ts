@@ -253,3 +253,42 @@ describe('shipped magic items · the third tranche (the +N families)', () => {
 		}
 	});
 });
+
+describe('shipped magic items · every one of them has its description', () => {
+	// ITEM-TEXT-2014: the 2014 extractor dropped every paragraph containing an `<em>`, and in SRD 5.1
+	// the description usually shares the paragraph with the italic type line — so 89 magic rows shipped
+	// with an empty text and could never be tokenized. This is the guard that a converter re-run keeps
+	// them: a count, not a sample, because the failure was silent and wholesale.
+	it.each([
+		['srd-2024', 'SRD 5.2.1'],
+		['srd-2014', 'SRD 5.1'],
+	])('%s: no magic item ships with an empty description', async (dir) => {
+		const graph = await loadPacks(dir);
+		const blank = graph
+			.list('item')
+			.filter(
+				(r) => r.data.rarity && r.data.rarity !== 'none' && !String(r.data.text_en ?? '').trim(),
+			)
+			.map((r) => r.id);
+		expect(blank).toEqual([]);
+	});
+
+	it('a charged wand carries the pool its text states, and it comes back at dawn', async () => {
+		const graph = await loadPacks('srd-2014');
+		const c = newCharacter('vex', 'Vex', '5e');
+		c.build.inventory = [
+			{ item: 'item:SRD 5.1:wand_of_fireballs', qty: 1, equipped: true, attuned: true },
+		];
+		expect(
+			deriveSheet(characterSchema.parse(c), graph).resources.find(
+				(r) => r.id === 'wand_of_fireballs',
+			),
+		).toMatchObject({ max: 7, recharge: { trigger: 'dawn', amount: '1d6+1' } });
+	});
+
+	it('a pool with no recharge in its text is CONSUMABLE, never a silent dawn', async () => {
+		const graph = await loadPacks('srd-2024');
+		const row = graph.list('item').find((r) => r.id === 'ring_of_three_wishes');
+		expect(row?.data.effects?.[0]).toBe('grant_resource:ring_of_three_wishes:3:consumable');
+	});
+});
