@@ -735,7 +735,8 @@
 			"rechargedAll": "{name} fully restored",
 			"nothingRecharged": "Nothing recharges then",
 			"windowOpen": "{name} can be used now",
-			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)"
+			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)",
+			"inspirationSpent": "Inspiration spent"
 		},
 		"panel": {
 			"actions": "Actions",
@@ -794,7 +795,9 @@
 				"int": "INT save",
 				"wis": "WIS save",
 				"cha": "CHA save"
-			}
+			},
+			"inspirationReroll": "Heroic Inspiration",
+			"inspirationAdvantage": "Inspiration → advantage"
 		},
 		"section": {
 			"abilities": "Abilities",
@@ -1484,7 +1487,8 @@
 		"advantageCycle": "advantage → disadvantage → neither",
 		"amendment": {
 			"advantage": "{mode, select, advantage {advantage after the roll (kept {kept} over {dropped})} disadvantage {disadvantage after the roll (kept {kept} over {dropped})} other {no advantage after the roll (kept {kept} over {dropped})}}",
-			"damageReroll": "{source}: kept {kept} (other roll {other})"
+			"damageReroll": "{source}: kept {kept} (other roll {other})",
+			"d20Reroll": "{source}: {was} rerolled → {now}"
 		},
 		"attacks": "{count} attacks",
 		"backToLine": "back to the line",

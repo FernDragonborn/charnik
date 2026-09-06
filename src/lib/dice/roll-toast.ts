@@ -27,7 +27,7 @@ import {
 	type TypedRoll,
 } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
-import { sayText, type SaidValue } from '$lib/util/say';
+import { say, sayText, type SaidValue } from '$lib/util/say';
 import { translator, type Translate } from '$lib/i18n';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
@@ -117,19 +117,25 @@ export function describeAmendments(
 	amendments: RollAmendment[] | undefined,
 	t: Translate,
 ): string[] {
-	return (amendments ?? []).map((a) =>
-		a.kind === AMENDMENT_KIND.advantage
-			? t('roller.amendment.advantage', {
-					values: {
-						mode: a.to,
-						kept: keptD20(roll)?.value ?? 0,
-						dropped: droppedD20s(roll)[0]?.value ?? 0,
-					},
-				})
-			: t('roller.amendment.damageReroll', {
-					values: { source: a.source, kept: a.to, other: a.from },
-				}),
-	);
+	return (amendments ?? []).map((a) => {
+		if (a.kind === AMENDMENT_KIND.advantage)
+			return t('roller.amendment.advantage', {
+				values: {
+					mode: a.to,
+					kept: keptD20(roll)?.value ?? 0,
+					dropped: droppedD20s(roll)[0]?.value ?? 0,
+				},
+			});
+		// the d20 reroll says which die REPLACED which, not which was better: the new one stands
+		// whatever it shows, and a line reading "kept 4" after a 17 is the point of the rule
+		if (a.kind === AMENDMENT_KIND.d20Reroll)
+			return t('roller.amendment.d20Reroll', {
+				values: { source: say(a.source, t), was: a.from, now: a.to },
+			});
+		return t('roller.amendment.damageReroll', {
+			values: { source: say(a.source, t), kept: a.to, other: a.from },
+		});
+	});
 }
 
 /** A nat 1 is the ONE miss the app can call without knowing the target's AC — so its damage is shown

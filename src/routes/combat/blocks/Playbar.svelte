@@ -25,6 +25,13 @@
 	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
 	// toast expires mid-decision and click-anywhere dismisses it, so it announces and these two act.
 	// `savagePendingEntry` is the one roll whose weapon damage can still be rerolled this turn.
+	// Heroic Inspiration, offered on the roll it can still change — the same "announce in the toast,
+	// act here" split the damage reroll uses.
+	const useInspiration = $derived(
+		last && combat.rolls.inspirationEntry === last
+			? { label: $_(combat.rolls.inspirationKey), run: combat.rolls.useInspiration }
+			: undefined,
+	);
 	const rerollDamage = $derived(
 		last && combat.savageLabel && last === combat.savagePendingEntry
 			? {
@@ -44,6 +51,7 @@
 				model={rollToastModel(last, $_)}
 				onAdvantage={() => combat.tray.amendAdvantage(last)}
 				{rerollDamage}
+				{useInspiration}
 				layout={ROLL_LAYOUT.strip}
 			/>
 		{:else}

@@ -36,6 +36,9 @@
 				<RollRow
 					model={rollToastModel(l, $_)}
 					onAdvantage={() => combat.tray.amendAdvantage(l)}
+					useInspiration={combat.rolls.inspirationEntry === l
+						? { label: $_(combat.rolls.inspirationKey), run: combat.rolls.useInspiration }
+						: undefined}
 					rerollDamage={combat.savageLabel && l === combat.savagePendingEntry
 						? {
 								attack: 0,

@@ -35,6 +35,7 @@
 		model,
 		onAdvantage,
 		rerollDamage,
+		useInspiration,
 		layout = ROLL_LAYOUT.card,
 	}: {
 		model: RollToastModel;
@@ -48,6 +49,10 @@
 		 *  by position because that is the RAW unit — "reroll the weapon's damage dice" is one damage
 		 *  part is one pill — rather than a bar under a row that can't say which row it means. */
 		rerollDamage?: { attack: number; part: number; label: string; run: () => void } | undefined;
+		/** An offer that acts on the ROLL rather than on one of its pills — spending Heroic Inspiration
+		 *  on the d20 that decided it. Its own control, because the d20 pill is already the advantage
+		 *  toggle and a second gesture on one target is a coin toss for whoever taps it. */
+		useInspiration?: { label: string; run: () => void } | undefined;
 		/** Card (every die, captions, a row per attack) or strip (one line, bounded content). See
 		 *  ROLL_LAYOUT — the strip is not a smaller card, it answers a different question, so the two
 		 *  differ in what they show and not only in how it is arranged. */
@@ -217,6 +222,12 @@
 	<!-- the key when the roll has one, so a roll made under one language still reads in the language
 	     the log is being READ in; `label` is the English fallback every custom roll has -->
 	<span class="roll-label">{rollLabel}</span>
+	{#if useInspiration}
+		<button type="button" class="inspire-btn" onclick={() => useInspiration.run()}>
+			<Icon name="sparkles" size={11} />
+			{useInspiration.label}
+		</button>
+	{/if}
 	{#if strip && multi}
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
@@ -301,6 +312,25 @@
 </div>
 
 <style>
+	/* the roll's own offer: a chip beside the name, in the gold the sheet already uses for a thing
+	   the character HAS and can spend */
+	.inspire-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		margin-inline-start: var(--space-2);
+		padding: 0 var(--space-1-5);
+		border: 1px solid var(--color-resource);
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--color-resource);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		cursor: pointer;
+	}
+	.inspire-btn:hover {
+		background: color-mix(in srgb, var(--color-resource) 15%, transparent);
+	}
 	/* the roll owns its own stacking now — a mounting surface just gives it a box, it doesn't have to
 	   know that a roll is three sibling spans */
 	.roll-row {

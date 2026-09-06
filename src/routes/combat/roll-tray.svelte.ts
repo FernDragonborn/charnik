@@ -13,6 +13,8 @@ import {
 	ADVANTAGE_MODE,
 	advantageFromSign,
 	cycleAdvantage,
+	setAdvantage,
+	type AdvantageMode,
 	rollPool,
 	type BonusDie,
 	type DieMods,
@@ -288,8 +290,11 @@ export class RollTray {
 	 * The record stays truthful: the amended entry says it was changed after the fact and names the
 	 * die that lost, the same shape the Savage Attacker reroll writes.
 	 */
-	amendAdvantage = (entry: RollLogEntry) => {
-		const revised = cycleAdvantage(entry);
+	/** Re-read a landed roll's d20 (UX-3). With no `mode` it CYCLES (the d20 pill's one tap);
+	 *  with one it sets that mode outright, which is what spending 2014 Inspiration for advantage
+	 *  does — the same amendment, arrived at deliberately rather than by tapping around the cycle. */
+	amendAdvantage = (entry: RollLogEntry, mode?: AdvantageMode) => {
+		const revised = mode ? setAdvantage(entry, mode) : cycleAdvantage(entry);
 		if (!revised) return;
 		const amendments = amendedAdvantage(entry, revised);
 		// the roll's own note stays; only a legacy prose amendment is stripped, so an entry written

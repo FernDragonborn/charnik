@@ -19,7 +19,7 @@ import {
 	type StoredRoll,
 } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
-import { sayText, type SaidText, type SaidValue } from '$lib/util/say';
+import { sayText, type Said, type SaidText, type SaidValue } from '$lib/util/say';
 import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
 
@@ -246,6 +246,8 @@ export const AMENDMENT_KIND = {
 	advantage: 'advantage',
 	/** A damage part rolled again with the better kept (Savage Attacker). */
 	damageReroll: 'damageReroll',
+	/** The deciding d20 thrown again with the NEW one kept (Heroic Inspiration). */
+	d20Reroll: 'd20Reroll',
 } as const;
 export type AmendmentKind = (typeof AMENDMENT_KIND)[keyof typeof AMENDMENT_KIND];
 
@@ -260,7 +262,10 @@ export type AmendmentKind = (typeof AMENDMENT_KIND)[keyof typeof AMENDMENT_KIND]
  */
 export type RollAmendment =
 	| { kind: typeof AMENDMENT_KIND.advantage; from: AdvantageMode; to: AdvantageMode }
-	| { kind: typeof AMENDMENT_KIND.damageReroll; source: string; from: number; to: number };
+	| { kind: typeof AMENDMENT_KIND.damageReroll; source: Said; from: number; to: number }
+	/** `source` is a `Said`: a feature's NAME is data and passes through, while the app's own word
+	 *  (Heroic Inspiration) is a key, so a log line written under one language reads under another. */
+	| { kind: typeof AMENDMENT_KIND.d20Reroll; source: Said; from: number; to: number };
 
 /** The amendments a roll carries once it has been re-read at a different advantage. The advantage
  *  amendment is REPLACED rather than stacked — a roll was decided one way however many times the

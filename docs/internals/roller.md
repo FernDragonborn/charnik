@@ -208,11 +208,20 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   recorded name is `sayRollName`, in one place, because the log row, the toast card and the
   forced-outcome notice all ask the same question.
 
+- **A d20 can be thrown again, and the new one stands.** `rerollKeptD20` replaces the deciding die
+  and the pair a re-read advantage may have drawn goes with it: "use the new roll" and "keep the
+  better of two" are different rules, and leaving the twin standing would let Heroic Inspiration buy
+  nothing while the line said it was spent. It is offered per EDITION, because the editions differ in
+  when the choice is made: 2024 rerolls after the roll, 2014 spends before it and so re-reads the roll
+  at advantage — the same amendment the d20 pill makes, with the flag spent.
+
 - **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
   SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled
   nothing; `amendments: RollAmendment[]` says what was changed after the roll — advantage re-read, a
-  damage part rerolled. `rollToastModel` and `describeAmendments` are the two places that turn them
-  into words, both taking the translator. `note` is the PLAYER's own words from a `note` pill, which
+  damage part rerolled, a d20 thrown again. `rollToastModel` and `describeAmendments` are the two
+  places that turn them into words, both taking the translator — and an amendment's `source` is a
+  `Said`, so a feature's own NAME passes through while the app's own word (Inspiration) stays a key
+  the reader's catalog resolves. `note` is the PLAYER's own words from a `note` pill, which
   are data and pass through; a row written before 2026-09-05 also carries the app's prose there, and
   that still renders — it is the legacy seam, and nothing writes it any more. Prose composed into
   `note` had to be matched back out with a regex, which ate an upcast's provenance once and grew the

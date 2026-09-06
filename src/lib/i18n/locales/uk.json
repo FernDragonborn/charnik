@@ -735,7 +735,8 @@
 			"rechargedAll": "{name} відновлено повністю",
 			"nothingRecharged": "Тоді ніщо не відновлюється",
 			"windowOpen": "{name} можна використати зараз",
-			"deathFailureFromDamage": "Удар на 0 ХП — провалів рятівних кидків: {count}"
+			"deathFailureFromDamage": "Удар на 0 ХП — провалів рятівних кидків: {count}",
+			"inspirationSpent": "Натхнення витрачено"
 		},
 		"panel": {
 			"actions": "Дії",
@@ -794,7 +795,9 @@
 				"int": "Рятівний кидок ІНТ",
 				"wis": "Рятівний кидок МУД",
 				"cha": "Рятівний кидок ХАР"
-			}
+			},
+			"inspirationReroll": "Героїчне натхнення",
+			"inspirationAdvantage": "Натхнення → перевага"
 		},
 		"section": {
 			"abilities": "Характеристики",
@@ -1484,7 +1487,8 @@
 		"advantageCycle": "перевага → перешкода → без них",
 		"amendment": {
 			"advantage": "{mode, select, advantage {перевага після кидка (лишено {kept} замість {dropped})} disadvantage {завада після кидка (лишено {kept} замість {dropped})} other {без переваги після кидка (лишено {kept} замість {dropped})}}",
-			"damageReroll": "{source}: лишено {kept} (інший кидок {other})"
+			"damageReroll": "{source}: лишено {kept} (інший кидок {other})",
+			"d20Reroll": "{source}: {was} перекинуто → {now}"
 		},
 		"attacks": "атак: {count}",
 		"backToLine": "назад до рядка",

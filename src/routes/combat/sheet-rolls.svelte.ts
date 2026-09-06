@@ -10,7 +10,14 @@ import { t, translator } from '$lib/i18n';
 import { attackRollName } from '$lib/combat/attacks';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
+import {
+	ADVANTAGE_MODE,
+	DIE_ROLE,
+	rerollKeptD20,
+	rollPool,
+	totalOf,
+	type RolledDie,
+} from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
 	wantsTray,
@@ -250,6 +257,65 @@ export class SheetRolls {
 		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
 		return { fx, parts, hasDmg: dealsDamage(parts) };
 	}
+
+	/**
+	 * Heroic Inspiration, as an offer on the roll that just landed: the flag is on, the character has
+	 * it, and that roll was decided by a d20. Null when there is nothing to spend it on.
+	 *
+	 * The two editions differ in WHEN the choice is made, so they differ in what the offer does:
+	 * 2024 rerolls the die and keeps the new result; 2014 spends it BEFORE the roll for advantage,
+	 * which the roller already expresses as re-reading a landed roll at advantage (UX-3). Offering the
+	 * edition's own rule beats picking one and being wrong at half the tables.
+	 */
+	get inspirationEntry(): RollLogEntry | null {
+		const c = this.host().character;
+		if (!c?.play.inspiration) return null;
+		const last = this.host().tray.log[0];
+		if (!last?.d20s.length) return null;
+		// 2014 buys advantage, so an entry already read at advantage has nothing left to buy
+		if (c.system === '5e' && last.advantage === ADVANTAGE_MODE.advantage) return null;
+		return last;
+	}
+	/** The catalog key for what taking the offer DOES, per edition — the button's word. */
+	get inspirationKey(): string {
+		return this.host().character?.system === '5e'
+			? 'combat.roll.inspirationAdvantage'
+			: 'combat.roll.inspirationReroll';
+	}
+	/**
+	 * Spend it. 2024: the deciding d20 is thrown again and the new one stands, recorded as an
+	 * amendment so the line says what it cost and what it bought. 2014: the roll is re-read at
+	 * advantage, which is the same amendment the d20 pill makes — the difference is that this one
+	 * spends the flag.
+	 */
+	useInspiration = () => {
+		const c = this.host().character;
+		const entry = this.inspirationEntry;
+		if (!c || !entry) return;
+		if (c.system === '5e') {
+			this.host().tray.amendAdvantage(entry, ADVANTAGE_MODE.advantage);
+		} else {
+			const rerolled = rerollKeptD20(entry);
+			if (!rerolled) return;
+			const { note: _note, amendments: _prior, ...rest } = rerolled.roll;
+			this.host().tray.reviseEntry(entry, {
+				...rest,
+				...(entry.note ? { note: entry.note } : {}),
+				amendments: [
+					...(entry.amendments ?? []),
+					{
+						kind: AMENDMENT_KIND.d20Reroll,
+						// a KEY, not the word: the log outlives the language it was written in
+						source: { key: 'combat.controls.inspiration' },
+						from: rerolled.from,
+						to: rerolled.to,
+					},
+				],
+			});
+		}
+		c.play.inspiration = false; // spent, both editions
+		toast(t('combat.notice.inspirationSpent'));
+	};
 
 	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature
 	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.
