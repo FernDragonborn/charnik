@@ -487,7 +487,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
   amount) → `flat_bonus` token, applied live via the reactive sheet.
 - [x] **The rest of the L1 vocab is mechanically applied** — see `docs/internals/effects.md`.
-- [~] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
+- [x] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
   rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
   re-run, like class_features); **Alert (2024)** encoded faithfully =
   `flat_bonus:initiative+proficiency_bonus` (real-content test). **The honest remainder is BLOCKED,
@@ -498,17 +498,24 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
     `abilityBoosts`. Epic Boons reach 30 for free — the derive already clamps ability scores at 30
     (A10), so no bespoke cap-override was needed (regular ASI is equally un-20-capped in this lenient
     model). Live-verified (Grappler L4 → STR/DEX picker). Grappler's grapple mechanics stay text.
-  - **Needs vocab the L1 grammar lacks** → left as text (engine already surfaces it): weapon-type-
-    conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
-    once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
-    Initiate), the tool half of a CHOICE grant (Skilled — its skill half has its picker, under a slot
-    and under the origin feat alike; tools are not modelled).
+  - **The vocabulary caught up with most of that list.** Weapon-type-conditional bonuses are
+    SCOPED-BONUS (`archery` ships `flat_bonus:attack:ranged+2`), armour-gated ones are the ordinary L2
+    guard (`defense` ships `armor_type != none ? flat_bonus:ac+1`), and once-per-turn damage rerolls
+    are their own marker plus `min_die` (`savage_attacker` → `damage_reroll`,
+    `great_weapon_fighting` → two `min_die:damage:<scope>:3`). All four are shipped rows.
+  - **What is genuinely left is two OTHER items' work, not this one's:** Magic Initiate's spell grants
+    are D16's last piece, and Skilled's tool half is TOOLS. Nothing about a feat's stat or skill bonus
+    is open any more.
 - [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/plugins.md`.
 ## Spellcasting
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
   into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
   item N/day are one shape); `sheet.resources`; combat "Resources" strip with click-to-spend pips +
   Short/Long **rest** buttons (recharge by type; long resets slots+HP, short returns pact slots).
-  Remaining: **encode class resources from SRD tables** (converter — rage/ki/superiority counts),
-  **`grant_slot:<level>`** (Mystic Arcanum extra slot into the pools), and **Action-Surge/Haste
-  extra action pips** (feed the action-economy `slotMax` from effects).
+  **Class resources are encoded** — the shipped rows carry `rage`, `focus` (2024's ki), `second_wind`,
+  `action_surge`, `bardic_inspiration`, `persistent_rage` and `uncanny_metabolism`, each as a
+  `grant_resource` on its own feature row with the count as an L2 `step(...)` over class level. Haste
+  and Action Surge feed the action-economy pips through `flat_bonus:action` (the `effects_srd` Haste
+  row does exactly that).
+  Remaining: **`grant_slot:<level>`** — Mystic Arcanum puts an extra SLOT into the pools rather than a
+  resource, and no token says that. One consumer, so it waits for a second.

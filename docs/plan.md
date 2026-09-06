@@ -298,6 +298,14 @@ position and are given per wave, because most of them were learned the hard way.
   away, and writing the spec — [`research/wild-shape.md`](research/wild-shape.md) — proved otherwise:
   beasts carry no attacks column and the 2014 pack ships four beasts, so the app work would land on
   content that cannot feed it. It sits in the content-shaped wave with the rest.)_
+- **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
+  each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
+  attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
+  party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, `speed.climb`
+  and the senses, and two decisions that may honestly end in "no" (attacks rolled AGAINST you, an add
+  with a RAW ceiling). It is deliberately NOT in 0.7.0: every one of these rows already says what it
+  does as a note, so nothing is silently wrong — the work is grammar, and grammar wants a release of
+  its own.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).

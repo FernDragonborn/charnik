@@ -135,6 +135,65 @@
   **Guarded by a COUNT, not a sample:** `items_content.test.ts` demands that no magic item in either
   pack ships with an empty description. The failure was silent and wholesale, so the assert has to be.
 
+- [ ] **MAGIC-ITEM-VOCAB · the magic items that are still prose, and the vocabulary each one wants —
+  0.8.0.** MAGIC-ITEM-EFX folded everything the bounded vocabulary can already SAY (239 rows). What is
+  left is not unauthored: it is items whose text states a real, passive, mechanical benefit that the
+  vocabulary has no way to name. Each carries a `note:` today, so the sheet says the thing and the
+  player applies it by hand. Grouped by the gap, because the gap is the work — the rows follow for
+  free once it closes.
+
+  1. **A QUALIFIER on a defence** (~12 rows, both editions). "Advantage on saving throws against
+     spells" (Mantle of Spell Resistance, Ring of Spell Turning, Spellguard Shield, 2014's Scarab of
+     Protection), "+2 AC against ranged attack rolls" (Arrow-Catching Shield), "resistance to damage
+     from Ranged weapon attacks" (Shield of Missile Attraction), "advantage on saves to avoid the
+     Poisoned condition" (Necklace of Adaptation, Periapt of Health). A bare `advantage:saves` folds
+     far too broadly, which is exactly why these stayed text.
+     **Shape: reuse SCOPED-BONUS's decision** — the qualifier lives in the TARGET namespace, not in a
+     new segment (`advantage:saves.spell`, `flat_bonus:ac.ranged+2`,
+     `damage_sensitivity:resist:ranged_weapon`), over a CLOSED qualifier set (spell · magical ·
+     ranged_weapon · poison · breath). The roll path already matches scopes; what it lacks is a scope
+     for the thing coming AT you, which is the design half.
+
+  2. **A choice the ITEM asks, answered per instance** (~8 rows). Ring of Resistance, Armor of
+     Resistance and Potion of Resistance name a damage type the GM picks; Armor of Vulnerability picks
+     one of three; Dragon Scale Mail's resistance follows the dragon; Ring of Elemental Command follows
+     the plane.
+     **Shape: D16's "player choice at a slot", pointed at an inventory row rather than a build slot.**
+     The answer belongs on `build.inventory[]`, NOT on the content row — two Rings of Resistance in one
+     party are different rings, and the content row is shared. Nothing stores a per-instance answer
+     yet; that is the whole of this piece.
+
+  3. **A bonus set by the row's own RARITY** (10 rows). `weapon_1_2_or_3`, `armor_1_2_or_3`,
+     `shield_1_2_or_3`, `ammunition_1_2_or_3` and `wand_of_the_war_mage_1_2_or_3`, in both editions —
+     one row standing for three bonuses. **These are the most-used magic items at a real table**, which
+     is what earns them a place here over rarer rows that fold. Either three rows per item (data, and
+     the id scheme already tolerates it) or the same per-instance answer as (2) — decide once, because
+     the same decision covers both.
+
+  4. **A speed or a sense the vocabulary lacks** (~16 rows). There is `speed.fly` and `speed.swim` and
+     no `speed.climb` (Slippers of Spider Climbing, Gloves of Swimming and Climbing); "a Fly Speed
+     equal to your Speed" wants an expression over ANOTHER speed (Winged Boots, Wings of Flying);
+     darkvision and truesight at a range have no target at all (Goggles of Night, Eyes of Minute
+     Seeing, Crystal Ball of True Seeing). `speed.climb` is nearly free. The senses are not a token
+     problem but a SHEET problem — there is nowhere for them to land, and inventing a row for them is
+     the actual decision.
+
+  5. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
+     dice YOU roll; nothing models a die rolled at you. **Named as a decision, not as a gap** — a
+     single-character sheet may simply not be the place for it, and if that is the answer, these rows
+     keep their note forever and that is correct.
+
+  6. **An add with a RAW ceiling** (Belt of Dwarvenkind, both editions). "Your Constitution increases
+     by 2, to a maximum of 20": within a layer the fold order is set → floor → cap → mult → add, so a
+     `set_override:con:20:cap` fires BEFORE the add and does nothing, and a self-referencing
+     `min(con_score+2,20)` is correctly refused as a dependency cycle. One row per edition buys no
+     machinery; if a second case arrives the answer is a per-contribution ceiling, not a new kind.
+
+  **What will never fold, and should stop being counted as missing:** consumables (potions, oils —
+  drinking is not a modelled event), objects with their own stat block (Mirror of Life Trapping,
+  Instant Fortress, Apparatus of the Crab, Iron Flask), and summon items (Horn of Valhalla, Deck of
+  Many Things). These are complete as prose.
+
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
