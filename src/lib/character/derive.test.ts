@@ -42,6 +42,8 @@ async function graphOf(): Promise<ContentGraph> {
 			`flame_tongue,5.5e,${S},Flame Tongue,flat_bonus:damage+2,weapon,attunement,`,
 			// …and its opposite: a real weapon that happens to do no damage
 			`net,5.5e,${S},Net,,weapon,"martial, ranged, thrown",`,
+			// an ARMOUR template: "Armor (Medium or Heavy)" states no weight class and no AC
+			`adamantine_armor,5.5e,${S},Adamantine Armor,,armor,attunement,`,
 		].join('\n'),
 		'feats_srd.csv': [
 			'id,systems,source,name_en,effects,category',
@@ -183,6 +185,38 @@ describe('deriveSheet aggregator', () => {
 		expect(armed.damageParts[0]?.pool).toEqual({ 12: 1 }); // the greataxe's die, not a bare modifier
 		expect(armed.scopes).toContain('two_handed'); // …and its tags, which scoped effects read
 		expect(armed.name).toBe('Flame Tongue'); // still the magic item, not renamed to its base
+	});
+
+	it('ITEM-TEMPLATES: a chosen base gives an ARMOUR template its AC, not only a weapon its dice', () => {
+		const c = wizard();
+		c.build.inventory = [
+			{
+				item: `item:${S}:adamantine_armor`,
+				qty: 1,
+				equipped: true,
+				attuned: false,
+				base: `item:${S}:plate_armor`,
+			},
+		];
+		// the template with a base chosen wears exactly as well as the base itself; without the base it
+		// states no `ac` at all and the character stands there unarmoured
+		const worn = deriveSheet(characterSchema.parse(c), graph).ac.value;
+		const plate = {
+			...c,
+			build: {
+				...c.build,
+				inventory: [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }],
+			},
+		};
+		expect(worn).toBe(deriveSheet(characterSchema.parse(plate), graph).ac.value);
+		const unchosen = {
+			...c,
+			build: {
+				...c.build,
+				inventory: [{ item: `item:${S}:adamantine_armor`, qty: 1, equipped: true, attuned: false }],
+			},
+		};
+		expect(deriveSheet(characterSchema.parse(unchosen), graph).ac.value).toBeLessThan(worn);
 	});
 
 	it('ITEM-TEMPLATES: a weapon that does no damage is NOT a template — a net is still a net', () => {

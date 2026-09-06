@@ -16,7 +16,7 @@
 import type { SaidText } from '$lib/util/say';
 import { ISSUE_KEY } from '$lib/effects/token-parser';
 import { recordOf } from '../util/records';
-import { tokensOf, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
+import { tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import { gatherEffects } from './derive-gather';
 import { resolveResourceOptions, type ResourceOption } from './derive-resource-options';
@@ -255,12 +255,18 @@ export function deriveSheet(
 	};
 
 	// equipped armor — shared by the AC math below and the `armor_type`/`is_wearing_armor` guards.
-	// RESOLVED once (tags, plus whatever it inherits from its `base_item_id`), because five readers
-	// downstream ask it what it is and they must not each answer differently.
-	const equippedArmorRow = build.inventory
-		.map((i) => (i.equipped ? graph.get(i.item) : undefined))
-		.find((r): r is LoadedRowOf<'item'> => r?.type === 'item' && r.data.category === 'armor');
-	const equippedArmor = equippedArmorRow ? resolveItem(graph, equippedArmorRow) : undefined;
+	// RESOLVED once (tags, plus whatever it inherits from its `base_item_id` or from the base the
+	// player chose for a template), because five readers downstream ask it what it is and they must
+	// not each answer differently.
+	const equippedArmorEntry = build.inventory.find((i) => {
+		const row = i.equipped ? graph.get(i.item) : undefined;
+		return row?.type === 'item' && row.data.category === 'armor';
+	});
+	const equippedArmorRow = equippedArmorEntry ? graph.get(equippedArmorEntry.item) : undefined;
+	const equippedArmor =
+		equippedArmorRow?.type === 'item'
+			? resolveItem(graph, equippedArmorRow, equippedArmorEntry?.base)
+			: undefined;
 
 	// casting ability per caster class + the primary caster (highest caster class level) — the
 	// cheap slice the resolve ctx needs; full spellcasting derives AFTER the final scores exist.
