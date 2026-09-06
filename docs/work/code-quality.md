@@ -33,6 +33,9 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   (the live state) mounted in `menus/DiceTray.svelte` (the overlay); `RollTray` is neither — it is the
   Combat view-model's roll subsystem (the tray, the log, the roll-execution methods), and naming it
   after the tray is what makes the access path read `combat.tray.diceTray`. Rename the class and
-  `combat.tray` after what it holds (`combat.rolls`), leaving `dice tray` to mean exactly one thing.
+  `combat.tray` after what it holds, leaving `dice tray` to mean exactly one thing. **The name this
+  item first proposed is taken**: `combat.rolls` is `SheetRolls`, the roll-EXECUTION subsystem, and
+  what is left in `RollTray` is the RECORD — the log, entry revision, the dice-tray seam. The rename
+  still wants doing; it needs a name for that.
   ~80 mentions across `src/routes/combat`; mechanical, and the `dice/tray.svelte.ts` open-the-tray
   seam is NOT part of it — that one is correctly named.

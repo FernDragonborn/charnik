@@ -23,8 +23,10 @@
   that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
   hit-dice UI (→ UBUG-1/B2). (6) **DONE** — the builder pickers carry search, and the two big ones
   carry the level/category sections and the school/concentration/ritual facets that keep a long list
-  navigable (the picker contract, `docs/internals/ui.md`). (7) Multiclass: combat preparedCap reads
-  classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
+  navigable (the picker contract, `docs/internals/ui.md`). (7) **DONE** — the combat prepared cap is per CLASS
+  (A18-tail): a prepared spell is attributed to the class that grants it and counted against that
+  class's cap; `classes[0]` survives only as the documented fallback for a spell no class claims,
+  which is the fallback `casterForSpell` already makes. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
   toggle first, automation later.
 - [x] **ARCH-1 / B8 · the UI reads in the player's language, everywhere.** Every user-facing string
   is a catalog key, in the components and in everything upstream of them. The rulings the sweep
