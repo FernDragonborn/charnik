@@ -19,8 +19,15 @@
   read-only list needs. `activeClassFeatures` moved there too, so the builder and the play sheet
   share one gate instead of two that drift. (2) **DONE** — concentration check prompt on damage (CON save DC
   max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
-  (4) Ammunition as consumable — tracking OFF by default (a toggle
-  that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
+  (4) Ammunition as consumable — tracking OFF by default (a toggle that exists but is never enforced;
+  ~99% of tables don't track ammo). **CONTENT-blocked, not app-blocked**, and the two editions are
+  blocked differently: 2024 weapons carry the ammo KIND as a tag (`ammo:arrow`, `ammo:bolt`) but the
+  pack has no ammunition ITEM to spend — the Arrows/Bolts/Bullets rows live inside an HTML table in
+  the `ammunition` gear row's prose, which is not somewhere `src/` may read a value from; 2014 ships
+  an `arrows` item but its weapons say only `ammunition:80/320`, because `convert-2014.mjs` drops the
+  parenthetical ammo type the SRD table gives. So a decrement built today matches nothing on either
+  edition. The content fix is both halves — the 2024 ammunition table extracted into item rows, and
+  the 2014 converter keeping the type — and it belongs with the other converter work. (5) Short-rest
   hit-dice UI (→ UBUG-1/B2). (6) **DONE** — the builder pickers carry search, and the two big ones
   carry the level/category sections and the school/concentration/ritual facets that keep a long list
   navigable (the picker contract, `docs/internals/ui.md`). (7) **DONE** — the combat prepared cap is per CLASS

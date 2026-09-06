@@ -256,11 +256,11 @@ position and are given per wave, because most of them were learned the hard way.
   It needs a CONTENT shape for the question (which lists, how many, at which levels), so it sits
   next to the content-shaped work rather than ahead of it.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
-  three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — and the 2014
-  casting counts. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
-- **Ready, unscheduled, and app-only** — what is left in the trackers that needs no content commit and
-  no design session, so a session with app time can take any of them without re-deriving that they
-  exist: N5's ammunition toggle.
+  three shapes, then N2b — blocked on `convert-2014.mjs` dropping embedded tables — the 2014
+  casting counts, and N5's ammunition (the same converter, and the 2024 ammunition table). Each lands as a commit in `charnik-content-srd` with an assert in this repo.
+- **Ready, unscheduled, and app-only** — _(empty. The last one, N5's ammunition toggle, turned out to
+  be content-blocked on both editions when picked up: see its item. What is left in the trackers
+  needs content, a converter run, or a design session.)_
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving) and COMPANION (research first).
