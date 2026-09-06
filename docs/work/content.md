@@ -193,4 +193,27 @@
   with a per-class assert against the SRD text, because this is the failure class that passes every
   other gate.
 
+- [ ] **BEAST-DATA · a beast row cannot fight, and the 2014 pack has almost no beasts.** Two
+  holes, both found writing [`../research/wild-shape.md`](../research/wild-shape.md), both blocking
+  N2b and 2024 Primal Strike:
+  - `monsters_srd.csv` has **no attacks column in either edition** — a stat block's attacks live in
+    `text_en` prose. Every other combat number (ac, hp, the six scores, cr, speed, senses, skills) is
+    a declared column, so this is the one place the monster schema stops being data. Reading them out
+    of the prose in `src/` is the thing AGENTS.md forbids; the column is authored, in both editions.
+  - The 2014 pack ships **four** beasts — stirge (CR 1/8, flying), plesiosaurus (CR 2), triceratops
+    (CR 5), tyrannosaurus (CR 8). A 2014 druid may take CR 1/4 with no flying or swimming speed at
+    level 2, so **no legal form exists at levels 2-7**. The wolf, crocodile and giant eagle its own
+    Beast Shapes table names are not in the file. 2024 ships 69 beasts at CR ≤ 1, so this is a 2014
+    conversion gap, not a licence one.
+  - Related asymmetry worth fixing in the same pass: 2014 monsters carry no `*_save` and no
+    `resistances`/`immunities`/`vulnerabilities` columns, which 2024 does. The 2014 Wild Shape rule
+    "use the creature's bonus if it is higher" has data for skills and none for saves.
+
+- [ ] **MONK-MOVEMENT · Unarmored Movement's ladder is not in the row.** The feature's shipped text
+  says "+10 feet" and then defers to the Monk table for the increase, and that table is not in the
+  cell (nor anywhere else in the pack). So the token is unwritable: a bare `flat_bonus:speed+10`
+  would be silently wrong from level 6 up, which is the failure class that passes every gate. Same
+  shape as the 2014 casting counts above — a class TABLE the pack does not carry — and cheapest to
+  fix in the same pass, since both want the same thing: the per-level class tables as data.
+
 - [x] **Tauri fs Storage** impl + platform factory.

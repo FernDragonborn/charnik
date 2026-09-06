@@ -58,11 +58,12 @@ stay semi-manual.
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
   attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
-  Attacks panel shows ×N. Prereq: the fold must gather these feature tokens; content-schema
-  columns bump + converter updates.
-  **The measurement that sizes shape 3, so it is not re-taken:** across all 428 shipped
-  class-feature rows in both editions, only 21 carry any effect token and none encodes a numeric stat
-  bonus. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
+  Attacks panel shows ×N. The fold ALREADY gathers feature tokens (`derive-gather` ▸
+  `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
+  class-feature row works the day it is written — FEATURE-PASSIVES is written against that. What is
+  still owed here is the content-schema column bump for shapes 2 and 3.
+  **The measurement that sizes shape 3, so it is not re-taken:** of the shipped class-feature rows
+  in both editions, only a handful carry any effect token. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
   Order · Primal Order · Epic Boon have no column a picker could read, and a panel for them today
   would be a lie — they are blocked on the `choice_group` / `choose_n` columns, not on UI.
   Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
@@ -72,6 +73,12 @@ stay semi-manual.
   `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
+  names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
+  damage except Force) degrades to a note. The cheap shape is a subtractive relation
+  (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
+  in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
+  building until a second case appears — record it here so the third one does not re-open the design.
 - [ ] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
   It ships as a broad `flat_bonus:damage+2`, so it pays out on any attack. RAW is narrower and the
   two editions are NOT the same sentence: 2014 is "when you make a melee weapon attack usingStrength",
