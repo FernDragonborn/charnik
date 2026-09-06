@@ -80,15 +80,27 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [ ] **VOCAB-UNUSED · three effect kinds no shipped row uses. Decide each. BLOCKS 0.7.0.** Counted
-  over both packs: `grant_proficiency` 0, `auto_succeed` 0, `plugin` 0. The last two are answered
-  already — a plugin token is user-authored by definition, and RAW almost never auto-SUCCEEDS a save
-  (auto_fail has 16 users, all conditions), so both stay as surface with nothing to ship. The open
-  one is **`grant_proficiency`**: proficiencies reach the sheet through the class and background
-  COLUMNS instead, so the token is exercised by tests and by nothing else. Either it is the way a
-  homebrew feat grants a skill — in which case one shipped row should prove it, and the effects spec
-  should say so — or it is a second way to say what the columns already say, and it goes. A
-  vocabulary entry nothing exercises is a promise we have not tested.
+- [ ] **PROF-GRANT · `grant_proficiency` has a job and no data. BLOCKS 0.7.0.** Counted over both
+  packs, three kinds have no shipped user: `plugin` (user-authored by definition), `auto_succeed`
+  (RAW almost never auto-SUCCEEDS — `auto_fail` has 16 users, all conditions), and this one. The
+  first two are answered by their nature; this one is a gap.
+
+  **It is not a duplicate of the columns.** Proficiency reaches the sheet by three live routes, and
+  all three are about a CHOICE or a class's fixed list: the class/background/species columns
+  (`skills_from`/`skills_choose`, `saves`, `weapon_profs`, `armor_profs`), the player's own picks
+  (`build.skills`, `build.expertise`), and a feat's `skill_choice` count, which the builder turns
+  into a "pick N" picker landing in `build.featSkills`. None of them can say **a feature grants this
+  specific proficiency, no choice involved** — which is exactly what the token is for, and there are
+  shipped rows that need it and carry prose instead:
+  - 2014 `monk_diamond_soul` and 2024 `monk_disciplined_survivor` — proficiency in ALL saving throws.
+  - `rogue_slippery_mind` — Wisdom saves in 2014, Wisdom and Charisma in 2024.
+
+  **One of them exposes a real limit**, and it is the reason this is an item and not a content
+  commit: `PROFICIENCY_TARGETS` holds abilities, `save.<ability>` and skills — no armour or weapon
+  CATEGORIES. So 2014 `lifedomain_bonus_proficiency` (heavy armour) and 2024's Divine Order and
+  Primal Order (Martial weapons + armour training) still cannot be said, and widening the target set
+  to reach them is the design half of this item. Do the saves first: they need no new targets, and
+  they turn the token from a promise into something a shipped row proves.
 
 - [ ] **EXTRA-ATTACK · a level-5 martial attacks once. BLOCKS 0.7.0, first priority.** Five
   classes in both editions grant it, at the tier most games are played at, and nothing in the app
