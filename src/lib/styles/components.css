@@ -153,8 +153,8 @@
 }
 
 /* compendium/detail article bits (WikiDetail + the homebrew EditContentForm) */
-/* the manage button an article footer offers on your own rows (delete, move to drafts, add a
-   linked feature) — shared by the compendium page and LinkedFeatures, so the two read as one row */
+/* the manage button an article footer offers (delete, move to drafts, add a linked row) — shared by
+   the compendium page and LinkedRows, so the two stacked blocks read as one family of controls */
 .hb-btn {
 	display: inline-flex;
 	align-items: center;

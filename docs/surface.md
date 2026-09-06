@@ -165,7 +165,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.ghost` | components.css |  |
 | `.good` | components.css |  |
 | `.has-provenance` | components.css | a plain value that explains itself says so; a CONTROL that also explains itself keeps the cursor its click deserves, … |
-| `.hb-btn` | components.css | the manage button an article footer offers on your own rows (delete, move to drafts, add a linked feature) — shared b… |
+| `.hb-btn` | components.css | the manage button an article footer offers (delete, move to drafts, add a linked row) — shared by the compendium page… |
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
