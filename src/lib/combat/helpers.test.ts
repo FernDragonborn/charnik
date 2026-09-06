@@ -37,7 +37,7 @@ import {
 	parseDamageParts,
 	dealsDamage,
 	formatDamageParts,
-	applyDefense,
+	applyDamageSensitivity,
 	standardActions,
 	effectiveHpMax,
 	weaponBonus,
@@ -785,20 +785,20 @@ describe('dealsDamage — does an attack have damage worth rolling?', () => {
 	});
 });
 
-describe('applyDefense — resist / immune / vulnerable applied to damage (B20)', () => {
+describe('applyDamageSensitivity — resist / immune / vulnerable applied to damage (B20)', () => {
 	const d = { resist: ['fire'], immune: ['poison'], vulnerable: ['cold'] };
 	it('halves (round down) a resisted type', () => {
-		expect(applyDefense(9, 'fire', d)).toEqual({ final: 4, bucket: 'resist' });
+		expect(applyDamageSensitivity(9, 'fire', d)).toEqual({ final: 4, bucket: 'resist' });
 	});
 	it('zeroes an immune type', () => {
-		expect(applyDefense(20, 'poison', d)).toEqual({ final: 0, bucket: 'immune' });
+		expect(applyDamageSensitivity(20, 'poison', d)).toEqual({ final: 0, bucket: 'immune' });
 	});
 	it('doubles a vulnerable type', () => {
-		expect(applyDefense(7, 'cold', d)).toEqual({ final: 14, bucket: 'vulnerable' });
+		expect(applyDamageSensitivity(7, 'cold', d)).toEqual({ final: 14, bucket: 'vulnerable' });
 	});
 	it('leaves an untyped hit or an undefended type unchanged', () => {
-		expect(applyDefense(10, null, d)).toEqual({ final: 10, bucket: null });
-		expect(applyDefense(10, 'radiant', d)).toEqual({ final: 10, bucket: null });
+		expect(applyDamageSensitivity(10, null, d)).toEqual({ final: 10, bucket: null });
+		expect(applyDamageSensitivity(10, 'radiant', d)).toEqual({ final: 10, bucket: null });
 	});
 });
 

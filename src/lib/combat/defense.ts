@@ -5,14 +5,14 @@
 import { computed, type Computed, type Contribution, type Layer } from '$lib/rules/pipeline';
 
 /** The sheet's damage defenses (from `damage_sensitivity` effects) — the three buckets by damage type. */
-export interface Defenses {
+export interface DamageSensitivities {
 	resist: string[];
 	immune: string[];
 	vulnerable: string[];
 }
 
 /** Which bucket, if any, a damage type hits. */
-export type DefenseBucket = 'immune' | 'resist' | 'vulnerable' | null;
+export type SensitivityBucket = 'immune' | 'resist' | 'vulnerable' | null;
 
 /**
  * Apply resist/immune/vulnerable to a raw damage amount given its type (B20). Immune → 0, resist →
@@ -21,11 +21,11 @@ export type DefenseBucket = 'immune' | 'resist' | 'vulnerable' | null;
  * fail-safe to 0). Pure — the resist/vuln math happens BEFORE temp-HP soak at the call site (RAW:
  * modify the damage, then absorb).
  */
-export function applyDefense(
+export function applyDamageSensitivity(
 	amount: number,
 	type: string | null,
-	defenses: Defenses,
-): { final: number; bucket: DefenseBucket } {
+	defenses: DamageSensitivities,
+): { final: number; bucket: SensitivityBucket } {
 	if (!type) return { final: amount, bucket: null };
 	if (defenses.immune.includes(type)) return { final: 0, bucket: 'immune' };
 	if (defenses.vulnerable.includes(type)) return { final: amount * 2, bucket: 'vulnerable' };

@@ -176,7 +176,7 @@ function spellcastingChanges(before: CharacterSheet, after: CharacterSheet): She
 	});
 }
 
-/** Defenses are lists, so they diff as "what got added" rather than "from → to". */
+/** DamageSensitivities are lists, so they diff as "what got added" rather than "from → to". */
 function defenseChanges(before: CharacterSheet, after: CharacterSheet): SheetChange[] {
 	const kinds = ['resist', 'immune', 'vulnerable'] as const;
 	const key = {
@@ -185,8 +185,8 @@ function defenseChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 		vulnerable: 'build.diff.vulnerable',
 	};
 	return kinds.flatMap((kind) => {
-		const had = new Set(before.defenses[kind]);
-		const gained = after.defenses[kind].filter((d) => !had.has(d));
+		const had = new Set(before.damageSensitivities[kind]);
+		const gained = after.damageSensitivities[kind].filter((d) => !had.has(d));
 		if (!gained.length) return [];
 		return [
 			{

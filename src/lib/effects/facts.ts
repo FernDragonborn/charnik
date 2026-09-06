@@ -92,7 +92,7 @@ interface RollFact {
 	label: string;
 	formula: string;
 }
-interface DefenseFact {
+interface DamageSensitivityFact {
 	bucket: DamageSensitivity;
 	type: string;
 	source: string;
@@ -126,7 +126,7 @@ export interface EffectFacts {
 	autoFail: FactRef[];
 	autoSucceed: FactRef[];
 	proficiencies: ProficiencyFact[];
-	defenses: DefenseFact[];
+	damageSensitivities: DamageSensitivityFact[];
 	/** Feature-granted named rollables (`grant_roll`), expr resolved to a dice formula (EFX-ROLL). */
 	rolls: RollFact[];
 	/** Fully-specified resource pools (id:max:recharge), expression maxes resolved. */
@@ -168,7 +168,7 @@ export const emptyFacts = (): EffectFacts => ({
 	autoFail: [],
 	autoSucceed: [],
 	proficiencies: [],
-	defenses: [],
+	damageSensitivities: [],
 	rolls: [],
 	resources: [],
 	resourceIds: [],

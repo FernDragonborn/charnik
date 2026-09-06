@@ -162,7 +162,11 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 		'%s: raging grants b/p/s resistance + advantage on Strength saves',
 		async (dir, source, system) => {
 			const s = raging(await loadEdition(dir), source, system, 1);
-			expect([...s.defenses.resist].sort()).toEqual(['bludgeoning', 'piercing', 'slashing']);
+			expect([...s.damageSensitivities.resist].sort()).toEqual([
+				'bludgeoning',
+				'piercing',
+				'slashing',
+			]);
 			expect(s.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 		},
 	);

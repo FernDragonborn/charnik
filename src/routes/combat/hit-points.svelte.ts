@@ -13,7 +13,12 @@
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { naturalOf, rollPool } from '$lib/rules/dice';
-import { applyDefense, effectiveHpMax, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
+import {
+	applyDamageSensitivity,
+	effectiveHpMax,
+	netAdvantage,
+	DEATH_CAUSE_LABEL,
+} from '$lib/combat/helpers';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { RollJournal } from './roll-journal.svelte';
@@ -72,7 +77,7 @@ export class HitPoints {
 	/** The damage types the character has ANY defense for — the only ones worth offering in the
 	 *  type picker (any other type resolves identically to untyped). Empty → no picker shown. */
 	get damageTypeOptions(): string[] {
-		const d = this.host().sheet?.defenses;
+		const d = this.host().sheet?.damageSensitivities;
 		if (!d) return [];
 		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
 	}
@@ -87,8 +92,12 @@ export class HitPoints {
 		if (!p) return;
 		const raw = Math.max(0, Math.round(this.hpAmount));
 		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
-		const defenses = this.host().sheet?.defenses ?? { resist: [], immune: [], vulnerable: [] };
-		const taken = applyDefense(raw, this.damageType, defenses).final;
+		const defenses = this.host().sheet?.damageSensitivities ?? {
+			resist: [],
+			immune: [],
+			vulnerable: [],
+		};
+		const taken = applyDamageSensitivity(raw, this.damageType, defenses).final;
 		let n = taken;
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;

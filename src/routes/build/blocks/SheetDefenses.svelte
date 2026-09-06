@@ -44,7 +44,7 @@
 	const languages = $derived(
 		b.draft.selectedLanguages.map((ref) => rowName(b.row(ref))).filter(Boolean).join(' · ')
 	);
-	const defenses = $derived(s?.defenses ?? { resist: [], immune: [], vulnerable: [] });
+	const defenses = $derived(s?.damageSensitivities ?? { resist: [], immune: [], vulnerable: [] });
 	const hasDefenses = $derived(
 		defenses.resist.length + defenses.immune.length + defenses.vulnerable.length > 0
 	);

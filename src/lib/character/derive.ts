@@ -39,7 +39,7 @@ import {
 	deriveAc,
 	deriveSpeed,
 	derivePassives,
-	deriveDefenses,
+	deriveDamageSensitivities,
 	type SkillProficiency,
 	type AbilityBlock,
 	type StatInputs,
@@ -99,7 +99,7 @@ export interface CharacterSheet {
 	passives: Record<SkillId, Computed>;
 	carryingCapacity: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
-	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
+	damageSensitivities: { resist: string[]; immune: string[]; vulnerable: string[] };
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
 	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), resolved from the
@@ -379,7 +379,7 @@ export function deriveSheet(
 	const movementOf = (key: 'speed.fly' | 'speed.swim') =>
 		applyEffects(key, computed([], { min: 0 }), facts);
 
-	const defenses = deriveDefenses(facts);
+	const damageSensitivities = deriveDamageSensitivities(facts);
 
 	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
 	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
@@ -401,7 +401,7 @@ export function deriveSheet(
 		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
-		defenses,
+		damageSensitivities,
 		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({
 			graph,

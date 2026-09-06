@@ -474,7 +474,7 @@ describe('collectFacts', () => {
 		];
 		const facts = collectFacts(effects);
 		expect(facts.resourceIds).toContain('rage');
-		expect(facts.defenses).toContainEqual({
+		expect(facts.damageSensitivities).toContainEqual({
 			bucket: 'resist',
 			type: 'bludgeoning',
 			source: 'Rage',

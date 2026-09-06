@@ -671,15 +671,15 @@ describe('deriveSheet aggregator', () => {
 				effects: [
 					'damage_sensitivity:resist:fire',
 					'damage_sensitivity:immune:poison',
-					'resist_immune:cold', // the retired spelling still means resistance
+					'damage_sensitivity:resist:cold',
 				],
 				positive: true,
 			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.defenses.resist).toEqual(['fire', 'cold']);
-		expect(s.defenses.immune).toEqual(['poison']);
-		expect(s.defenses.vulnerable).toEqual([]);
+		expect(s.damageSensitivities.resist).toEqual(['fire', 'cold']);
+		expect(s.damageSensitivities.immune).toEqual(['poison']);
+		expect(s.damageSensitivities.vulnerable).toEqual([]);
 	});
 
 	it('collects trackable resources from grant_resource effects', () => {

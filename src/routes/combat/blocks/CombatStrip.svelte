@@ -25,13 +25,13 @@
 	// render) — past the cap we show a numeric counter instead of pips (B10).
 	const PIP_CAP = 20;
 
-	// Defenses as chip groups (resist / immune / vulnerable), only the non-empty ones — rendered as
+	// DamageSensitivities as chip groups (resist / immune / vulnerable), only the non-empty ones — rendered as
 	// per-type pills instead of a bold run-on list.
 	const defenseGroups = $derived(
 		[
-			{ bucket: 'resist', types: s.defenses.resist },
-			{ bucket: 'immune', types: s.defenses.immune },
-			{ bucket: 'vulnerable', types: s.defenses.vulnerable },
+			{ bucket: 'resist', types: s.damageSensitivities.resist },
+			{ bucket: 'immune', types: s.damageSensitivities.immune },
+			{ bucket: 'vulnerable', types: s.damageSensitivities.vulnerable },
 		].filter((g) => g.types.length),
 	);
 </script>
@@ -162,11 +162,11 @@
 		</div>
 
 		{#if defenseGroups.length}
-			<div class="senses-strip defenses-strip">
-				<span class="bar-label eyebrow">{$_('combat.section.defenses')}</span>
+			<div class="senses-strip sensitivities-strip">
+				<span class="bar-label eyebrow">{$_('combat.section.sensitivities')}</span>
 				{#each defenseGroups as g (g.bucket)}
 					<span class="def-group">
-						<span class="def-label">{$_(`combat.defense.${g.bucket}`)}</span>
+						<span class="def-label">{$_(`combat.sensitivity.${g.bucket}`)}</span>
 						{#each g.types as t (t)}<span class="def-chip def-chip--{g.bucket}"
 								>{damageTypeLabel(t, $_)}</span
 							>{/each}
@@ -201,7 +201,7 @@
 	.combat-grid.has-resources .senses-strip {
 		grid-column: 1 / 4;
 	}
-	.combat-grid.has-resources .defenses-strip {
+	.combat-grid.has-resources .sensitivities-strip {
 		grid-column: 1 / -1;
 	}
 
@@ -374,20 +374,20 @@
 		border-color: var(--color-border-strong);
 		background: var(--color-surface-2);
 	}
-	/* Defenses: per-type PILLS, not a bold run-on list. One group per bucket (a muted label + its
+	/* DamageSensitivities: per-type PILLS, not a bold run-on list. One group per bucket (a muted label + its
 	   chips); the chip colour encodes protection — resist (teal outline) → immune (teal filled) →
 	   vulnerable (danger). Regular weight, semantic tokens only (theme-safe). */
-	.defenses-strip .def-group {
+	.sensitivities-strip .def-group {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-1-5);
 	}
-	.defenses-strip .def-label {
+	.sensitivities-strip .def-label {
 		font-family: var(--font-body);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
-	.defenses-strip .def-chip {
+	.sensitivities-strip .def-chip {
 		font-family: var(--font-body);
 		font-weight: 400;
 		font-size: var(--font-size-xs);
@@ -398,16 +398,16 @@
 		color: var(--color-text);
 		text-transform: capitalize;
 	}
-	.defenses-strip .def-chip--resist {
+	.sensitivities-strip .def-chip--resist {
 		border-color: var(--color-good-line);
 		color: var(--color-good);
 	}
-	.defenses-strip .def-chip--immune {
+	.sensitivities-strip .def-chip--immune {
 		border-color: var(--color-good-line);
 		background: var(--color-good-soft);
 		color: var(--color-good);
 	}
-	.defenses-strip .def-chip--vulnerable {
+	.sensitivities-strip .def-chip--vulnerable {
 		border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
 		color: var(--color-danger);
 	}

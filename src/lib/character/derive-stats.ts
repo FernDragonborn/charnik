@@ -2,7 +2,7 @@
  * Per-stat DERIVATION — the pure stat-phase helpers of deriveSheet, split out of derive.ts. Each
  * takes the shared computed inputs (build / effective scores / level / typed facts) and returns a
  * `Computed` (or a small record) for one facet of the sheet: saves, skills, AC, speed, passives,
- * defenses. No reactivity, no effects gathering — the effect list is already resolved into `facts`.
+ * damage sensitivities. No reactivity, no effects gathering — the effect list is already resolved into `facts`.
  */
 import { recordOf } from '../util/records';
 import {
@@ -249,13 +249,17 @@ export function derivePassives(
 }
 
 /** Damage defenses collected from `damage_sensitivity` facts, deduped per bucket. */
-export function deriveDefenses(facts: EffectFacts): {
+export function deriveDamageSensitivities(facts: EffectFacts): {
 	resist: string[];
 	immune: string[];
 	vulnerable: string[];
 } {
-	const defenses = { resist: [] as string[], immune: [] as string[], vulnerable: [] as string[] };
-	for (const d of facts.defenses)
-		if (!defenses[d.bucket].includes(d.type)) defenses[d.bucket].push(d.type);
-	return defenses;
+	const sensitivities = {
+		resist: [] as string[],
+		immune: [] as string[],
+		vulnerable: [] as string[],
+	};
+	for (const d of facts.damageSensitivities)
+		if (!sensitivities[d.bucket].includes(d.type)) sensitivities[d.bucket].push(d.type);
+	return sensitivities;
 }

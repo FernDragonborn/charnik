@@ -191,7 +191,7 @@ class FactsCollector {
 				break;
 			case EFFECT_KIND.damageSensitivity:
 				if (p.target && p.sensitivity)
-					this.facts.defenses.push({
+					this.facts.damageSensitivities.push({
 						bucket: p.sensitivity,
 						type: p.target.trim(),
 						source: eff.source,
@@ -345,7 +345,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.autoFail.push(...extra.autoFail);
 	base.autoSucceed.push(...extra.autoSucceed);
 	base.proficiencies.push(...extra.proficiencies);
-	base.defenses.push(...extra.defenses);
+	base.damageSensitivities.push(...extra.damageSensitivities);
 	for (const r of extra.rolls)
 		if (!base.rolls.some((b) => b.id === r.id && b.source === r.source)) base.rolls.push(r);
 	base.rerolls.push(...extra.rerolls);

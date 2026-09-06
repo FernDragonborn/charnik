@@ -407,22 +407,6 @@ function tightenDelimiters(kind: EffectKind, body: string): string {
 	return FREE_TEXT_BODY.has(kind) ? body.trim() : body.replace(/\s*([:,])\s*/g, '$1').trim();
 }
 
-/** Kind spellings a rename retired, mapped to the canonical kind (and, where the old grammar was
- *  looser, to the body the canonical parser expects). Content on disk outlives our vocabulary: a
- *  pack written against the old name must keep meaning what it meant instead of decaying into an
- *  inert note. `resist_immune:<type>` meant resistance when the relation was omitted. */
-const RETIRED_KINDS: ReadonlyMap<string, { kind: EffectKind; body: (rest: string) => string }> =
-	new Map([
-		[
-			'resist_immune',
-			{
-				kind: EFFECT_KIND.damageSensitivity as EffectKind,
-				body: (rest: string) =>
-					/^(resist|immune|vulnerable):/i.test(rest) ? rest : `resist:${rest}`,
-			},
-		],
-	]);
-
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -430,11 +414,9 @@ function classifyToken(token: string): ParsedEffect {
 	// every other kind bare (`flat_bonus`) is malformed → unknown.
 	if (sep === -1)
 		return MARKER_KINDS.has(raw) ? { kind: raw as EffectKind, raw } : { kind: 'unknown', raw };
-	const retired = RETIRED_KINDS.get(raw.slice(0, sep));
-	const kind = retired?.kind ?? (raw.slice(0, sep) as EffectKind);
+	const kind = raw.slice(0, sep) as EffectKind;
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
-	const body = tightenDelimiters(kind, raw.slice(sep + 1));
-	const rest = retired ? retired.body(body) : body;
+	const rest = tightenDelimiters(kind, raw.slice(sep + 1));
 	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
 	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
 	return (KIND_PARSERS[kind] ?? ((r, rw) => ({ kind, target: r, raw: rw })))(rest, raw, kind);

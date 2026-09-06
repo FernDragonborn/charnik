@@ -132,8 +132,8 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.damageSensitivity]: (p, tr) =>
 		p.target &&
 		p.sensitivity &&
-		say(tr, 'combat.tag.defense', `${p.sensitivity} · ${p.target}`, {
-			defense: say(tr, `combat.defense.${p.sensitivity}`, p.sensitivity),
+		say(tr, 'combat.tag.sensitivity', `${p.sensitivity} · ${p.target}`, {
+			sensitivity: say(tr, `combat.sensitivity.${p.sensitivity}`, p.sensitivity),
 			target: say(tr, `damageType.${p.target}`, p.target),
 		}),
 	[EFFECT_KIND.advantage]: (p, tr) => p.target && prefixed(tr, 'advantage', p.target),
