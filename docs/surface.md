@@ -248,7 +248,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **Roller** | `diceTray`, `onroll` | The dice tray — the whole of what a roll looks like while you are building it, and the app's |
 | **RollerLine** | `diceTray`, `index`, `line`, `roll` | ONE line of the dice tray: the role stripe, the pills, the caret, the suggestion menu that |
-| **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `useInspiration`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
+| **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
@@ -1429,7 +1429,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type StoredRoll` — A roll as it may come back off disk: everything a `Rolled` has, except that the parts added since * it was written ma…
 - `function rehydrateRoll` — * A stored roll → a roll in the shape the roller produces today: per-die record, d20 candidates, * advantage as a mode.
 - `function setAdvantage` — * Read a roll that ALREADY happened at a different advantage.
-- `function rerollKeptD20` — * Throw the deciding d20 again and KEEP THE NEW ONE — 2024 Heroic Inspiration, which says to reroll * the die and use…
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then * `rollPool`.
 
@@ -1644,4 +1643,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 981 exports across 133 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 980 exports across 133 modules · 64 duplicate suspects._

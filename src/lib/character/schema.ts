@@ -170,7 +170,6 @@ const playSchema = z.object({
 	effects: z.array(effectInstance).default([]),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
-	inspiration: z.boolean().default(false),
 	/** Shield raised (don/doff in one tap) → +2 AC live. The single source of truth for the
 	 *  shield's AC contribution (not the inventory equipped flag). */
 	shieldRaised: z.boolean().default(false),

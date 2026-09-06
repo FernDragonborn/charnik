@@ -2,6 +2,8 @@
 
 ## 0.7.0
 
+> Written from `v0.6.2..8a70bef`. To extend it, read the commits after that one.
+
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
 **the builder became a live sheet you edit rather than a form you fill**. Under all of it, a play
@@ -15,8 +17,9 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   homebrew form's errors, page titles, the empty states. Switching language changes them all, live.
 - **A roll in the log is not frozen in the language it was rolled in.** A roll's name and its
   provenance travel as facts, so yesterday's log reads in whatever language you open it in today.
-- **A mirrored interface actually mirrors.** Every box side is a logical one, so an RTL locale
-  reverses instead of overlapping.
+- **A language that reads right-to-left lays the app out right-to-left.** Panels, labels and
+  spacing follow the direction of the text rather than being pinned to the left, so adding such a
+  language is a translation job and not a redesign.
 
 ### The roller
 
@@ -31,8 +34,8 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   cannot finish now says so on the attack row and in the roll, instead of quietly rolling less.
 - **An amendment is a fact.** Changing a roll's advantage after the fact records what it changed
   from, sticks across a reload, and disappears cleanly when you put it back.
-- **Heroic Inspiration is something you spend**, Savage Attacker rerolls the weapon's dice and not
-  everything riding along with them, and a granted roll can be marked spent for this turn.
+- **Savage Attacker rerolls the weapon's dice** and not everything riding along with them, and a
+  granted roll can be marked spent for this turn.
 
 ### The builder
 
@@ -50,10 +53,12 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 
 ### Playing
 
-- **A purse.** Coins are money, not inventory: cp/sp/ep/gp/pp with optional coin weight, so a
-  hoard can matter to your capacity without pretending to be a stack of arrows.
-- **A resource says WHEN it comes back and HOW MUCH**, as two independent axes — so "one use on a
-  short rest, all of them on a long" is expressible, and dawn and dusk are triggers like any rest.
+- **A purse.** Copper through platinum, counted as money rather than as items in your pack.
+  Coin weight is a toggle: leave it off and gold is weightless, turn it on and a big haul starts
+  counting against what you can carry.
+- **A resource says when it comes back and how much of it**, separately — so "one use back on a
+  short rest, all of them on a long rest" is finally sayable, and so is a wand that regains
+  1d6+1 charges at dawn. A pool that refills at dawn or dusk gets a button for it in the play bar.
 - **A hit at 0 HP costs a death save**, RAW, and a critical hit costs two.
 - **An ability you cannot use yet says why, and when you can.** A conditional feature (Persistent
   Rage and its kind) explains its own gate instead of being absent.

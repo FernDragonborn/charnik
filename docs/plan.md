@@ -109,7 +109,10 @@ grammar, the derive pipeline, the state model, and the reasons behind each — i
 Identity: name, player, species, class(es)+levels, subclass, background, alignment,
 XP/level, **size**, **photo**. Abilities + mods + saving throws; skills w/
 prof/expertise; AC, **shield**, initiative, speed (ft+m); HP/temp/max, hit dice,
-death saves; **proficiency bonus**; **Heroic Inspiration**; passive senses; conditions.
+death saves; **proficiency bonus**; passive senses; conditions. **Heroic Inspiration is
+deliberately NOT tracked**: the roller already lets a player amend any landed d20, which is the whole
+of what spending it does, and a flag whose only effect is to unlock a second way to do that is a
+control that earns nothing.
 Attacks: name, atk/save bonus, damage & type, **mastery (Прийоми)**. Spellcasting:
 ability mod, save DC, attack; slots (lvl 1-9, total/used); spells table (level, name,
 casting time, **concentration/ritual/material К/Р/М**, notes, prepared/known). Inventory

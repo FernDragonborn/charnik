@@ -246,7 +246,9 @@ export const AMENDMENT_KIND = {
 	advantage: 'advantage',
 	/** A damage part rolled again with the better kept (Savage Attacker). */
 	damageReroll: 'damageReroll',
-	/** The deciding d20 thrown again with the NEW one kept (Heroic Inspiration). */
+	/** The deciding d20 thrown again with the NEW one kept. Nothing PRODUCES this any more — the
+	 *  Heroic Inspiration control that did is gone — but a `log.jsonl` written before that still
+	 *  carries it, and a log must stay readable. */
 	d20Reroll: 'd20Reroll',
 } as const;
 export type AmendmentKind = (typeof AMENDMENT_KIND)[keyof typeof AMENDMENT_KIND];

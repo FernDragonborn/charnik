@@ -105,7 +105,6 @@ export function demoCharacter(): Character {
 	c.play.spellSlotsSpent = { [PACT_SLOT_KEY]: 1 }; // one of the two 3rd-level pact slots spent
 	c.play.resourcesSpent = { rage: 1 }; // one of three rages used (barbarian_rage grants 3 at level 3)
 	c.play.concentration = `spell:${S}:hex`;
-	c.play.inspiration = true;
 	c.play.effects = DEMO_EFFECTS;
 	return characterSchema.parse(c);
 }

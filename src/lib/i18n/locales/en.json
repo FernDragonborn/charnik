@@ -470,7 +470,6 @@
 			"shield": "Shield",
 			"concentration": "Concentration",
 			"concentrationHint": "Tap to stop concentrating",
-			"inspiration": "Inspiration",
 			"short": "Short",
 			"shortHintDice": "Short rest — spend Hit Dice to heal",
 			"shortHintHalf": "Short rest — heal half your max HP",
@@ -749,8 +748,7 @@
 			"rechargedAll": "{name} fully restored",
 			"nothingRecharged": "Nothing recharges then",
 			"windowOpen": "{name} can be used now",
-			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)",
-			"inspirationSpent": "Inspiration spent"
+			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)"
 		},
 		"panel": {
 			"actions": "Actions",
@@ -813,9 +811,7 @@
 				"int": "INT save",
 				"wis": "WIS save",
 				"cha": "CHA save"
-			},
-			"inspirationReroll": "Heroic Inspiration",
-			"inspirationAdvantage": "Inspiration → advantage"
+			}
 		},
 		"section": {
 			"abilities": "Abilities",

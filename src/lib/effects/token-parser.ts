@@ -285,8 +285,14 @@ const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
 	// author who meant immunity and typed one segment gets an inert note they can see, rather than a
 	// silent downgrade to resistance.
 	const m = /^(resist|immune|vulnerable):(.+)$/i.exec(rest);
-	if (!m?.[2]) return { kind: 'unknown', raw };
-	return { kind, sensitivity: m[1].toLowerCase() as DamageSensitivity, target: m[2].trim(), raw };
+	const [, relation, type] = m ?? [];
+	if (!relation || !type) return { kind: 'unknown', raw };
+	return {
+		kind,
+		sensitivity: relation.toLowerCase() as DamageSensitivity,
+		target: type.trim(),
+		raw,
+	};
 };
 
 const parseGrantResource: KindParser = (rest, raw, kind) => {

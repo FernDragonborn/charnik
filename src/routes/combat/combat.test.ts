@@ -804,34 +804,6 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.economy.isRollUsed('sneak_attack')).toBe(false); // a turn-scoped mark dies with the turn
 	});
 
-	it('INSPIRATION: 2024 rerolls the d20 and keeps the NEW one, spending the flag once', () => {
-		character.play.inspiration = true;
-		combat.roll({ text: 'Stealth' }, 3, noModifiers, 'skill.stealth');
-		const before = combat.journal.log[0]!;
-		expect(combat.rolls.inspirationEntry).toBe(before); // a d20 landed and the flag is up
-
-		combat.rolls.useInspiration();
-		const after = combat.journal.log[0]!;
-		expect(after.d20s.length).toBe(1); // "use the new roll" — not a pair to pick the better from
-		const amendment = after.amendments?.at(-1);
-		expect(amendment?.kind).toBe('d20Reroll');
-		expect(character.play.inspiration).toBe(false); // spent
-		expect(combat.rolls.inspirationEntry).toBeNull(); // …and offered no more
-	});
-
-	it('INSPIRATION: 2014 buys ADVANTAGE instead, because that is when its edition spends it', () => {
-		character.system = '5e';
-		character.play.inspiration = true;
-		combat.roll({ text: 'Stealth' }, 3, noModifiers, 'skill.stealth');
-		expect(combat.rolls.inspirationKey).toBe('combat.roll.inspirationAdvantage');
-
-		combat.rolls.useInspiration();
-		const after = combat.journal.log[0]!;
-		expect(after.d20s.length).toBe(2); // a second die joined the first
-		expect(after.advantage).toBe('advantage');
-		expect(character.play.inspiration).toBe(false);
-	});
-
 	it('ROLL-NAME-KEY: the app-named attack is logged as a KEY, in one strike and in a volley', () => {
 		const unarmed = combat.attacks.find((a) => a.id === UNARMED_STRIKE_ID)!;
 		combat.rolls.rollAttackNow(unarmed);

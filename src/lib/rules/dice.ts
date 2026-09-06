@@ -669,32 +669,6 @@ export function setAdvantage<T extends Rolled>(
 }
 
 /**
- * Throw the deciding d20 again and KEEP THE NEW ONE — 2024 Heroic Inspiration, which says to reroll
- * the die and use the new roll. Returns the revised roll and the two faces, or null when no d20
- * decided this roll (a damage roll has nothing to reroll).
- *
- * The pair a re-read advantage may have drawn is REPLACED by the single new die: "use the new roll"
- * and "keep the better of two" are different rules, and leaving the twin standing would let the
- * inspiration buy nothing while the row still said it was spent. The amendment carries both faces,
- * so what the reroll cost and what it bought are both on the record.
- */
-export function rerollKeptD20<T extends Rolled>(
-	roll: T,
-	rng: Rng = Math.random,
-): { roll: T; from: number; to: number } | null {
-	const kept = keptD20(roll);
-	if (!kept) return null;
-	const fresh = plainD20(rollDie(20, rng));
-	const next = {
-		...roll,
-		d20s: [fresh],
-		advantage: ADVANTAGE_MODE.neither,
-		total: roll.total - kept.value + fresh.value,
-	};
-	return { roll: { ...next, expr: formatExpr(next) }, from: kept.value, to: fresh.value };
-}
-
-/**
  * One tap on the d20, cycling **advantage → disadvantage → neither**. The first tap rolls a second
  * die and keeps the better; the next picks the other die of that pair; the third puts the roll back
  * the way it landed. Only the first tap draws a die — the rest reinterpret two that are already on

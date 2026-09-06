@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Combat toolbar: the play-state toggles (Combat / Shield / Concentration / Inspiration),
+	// Combat toolbar: the play-state toggles (Combat / Shield / Concentration),
 	// the rest buttons, Auto-calc, and the Dice-tray opener. Reads the `combat` view-model
 	// singleton; the non-null character comes in as a prop so the markup stays terse.
 	import Icon from '$lib/components/Icon.svelte';
@@ -41,14 +41,6 @@
 			{$_('combat.controls.concentration')}
 			<span class="toggle-state">{conc.label}</span></button
 		>{/if}
-	<button
-		class="toggle"
-		class:on={c.play.inspiration}
-		onclick={() => (c.play.inspiration = !c.play.inspiration)}
-		><Icon name="sparkles" />
-		{$_('combat.controls.inspiration')}
-		<span class="toggle-state">{state(c.play.inspiration)}</span></button
-	>
 	<span class="spacer"></span>
 	<button
 		class="toggle rest"
