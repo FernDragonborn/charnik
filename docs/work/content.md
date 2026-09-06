@@ -176,7 +176,9 @@
   in content health, but a dialog whose only button cannot work is worse than no dialog. Git holds
   the full design log (per-key rules, fill-classes, drift copy).
 
-- [~] **2014 casting data** — 2014 **spell_slots** now emitted (the full/half/pact matrices are
+- [~] **2014 casting data · BLOCKS 0.7.0, first priority.** Every 2014 caster reads 0 cantrips
+  today, which is a wrong number on a default character rather than a missing feature. 2014
+  **spell_slots** now emitted (the full/half/pact matrices are
   edition-identical — spell_slots.test asserts `full`==core — so re-tagged 5e). 2014 casters
   (caster=full/half/pact → the derive's `slot_table ?? caster` lookup) now get their slots.
   Remaining: 2014 **class_casting** counts — **scoped 2026-08-09, and it's smaller than written.** The

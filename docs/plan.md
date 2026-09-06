@@ -247,6 +247,17 @@ named after what it does rather than numbered — the order is this list's order
 closes leaves the list and nothing else is renamed. The SEQUENCING REASONS matter more than the
 position and are given per wave, because most of them were learned the hard way.
 
+- **BEFORE 0.7.0 SHIPS — first priority, everything else waits.** The test is not feature count:
+  it is that **no number on a default character is one we know to be wrong**. Five items fail that
+  test today, and three of them are this cycle's own debt — a mechanism built and never given its
+  first consumer, which is the worst kind of done: the suite is green and the player sees nothing.
+  In order: **EXTRA-ATTACK** (a fighter, barbarian, monk, ranger or paladin at level 5 attacks
+  ONCE — the most-played tier in the game) · **RAGE-SCOPE** (rage damage pays out on a crossbow
+  today) · **SCOPED-BONUS**'s remaining consumers (Agonizing Blast is one content row; Magic Weapon
+  waits on D16's cast-time choice) · **RECHARGE-3**'s first charged item (the whole two-axis model
+  and its Dawn/Dusk control ship with nothing that uses them) · **2014 casting counts** (every 2014
+  caster reads 0 cantrips). If a release goes out before these land, the changelog says plainly
+  which of them is still missing — a user must not go hunting for Extra Attack.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
@@ -257,8 +268,8 @@ position and are given per wave, because most of them were learned the hard way.
   next to the content-shaped work rather than ahead of it.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b's beast data (an attacks column, and the CR ≤ 1 beasts a 2014 druid can
-  actually turn into), the 2014 casting counts, and N5's ammunition (the same converter, and the 2024
-  ammunition table). Each lands as a commit in `charnik-content-srd` with an assert in this repo.
+  actually turn into) and N5's ammunition (the same converter, and the 2024 ammunition table). The
+  2014 casting counts left this wave for the 0.7.0 one above. Each lands as a commit in `charnik-content-srd` with an assert in this repo.
 - **Ready, unscheduled, and app-only** — _(empty. N2b looked ready once its converter blocker went
   away, and writing the spec — [`research/wild-shape.md`](research/wild-shape.md) — proved otherwise:
   beasts carry no attacks column and the 2014 pack ships four beasts, so the app work would land on

@@ -58,7 +58,8 @@ stay semi-manual.
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
   attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
-  Attacks panel shows ×N. The fold ALREADY gathers feature tokens (`derive-gather` ▸
+  Attacks panel shows ×N — carved out as EXTRA-ATTACK below, because it blocks 0.7.0 and the rest
+  of N2 does not. The fold ALREADY gathers feature tokens (`derive-gather` ▸
   `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
   class-feature row works the day it is written — FEATURE-PASSIVES is written against that. What is
   still owed here is the content-schema column bump for shapes 2 and 3.
@@ -79,6 +80,13 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
+- [ ] **EXTRA-ATTACK · a level-5 martial attacks once. BLOCKS 0.7.0, first priority.** Five
+  classes in both editions grant it, at the tier most games are played at, and nothing in the app
+  models how many attacks an Attack action makes. Shape (settled in N2): `flat_bonus:attacks+N` on
+  the feature row, a fold target for it, and the Attacks panel showing ×N per weapon row. Watch the
+  ladder — 2024 Fighter gets two more at 11 and three at 17, so the token is per-row and additive,
+  not a set. The roller already takes an instance count (`times` belongs to the action), so the
+  volley path this rides is built.
 - [ ] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
   It ships as a broad `flat_bonus:damage+2`, so it pays out on any attack. RAW is narrower and the
   two editions are NOT the same sentence: 2014 is "when you make a melee weapon attack usingStrength",
@@ -273,7 +281,8 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   resource subsystem — pips, spend, chip, rest — for nothing.
   - [ ] **A shipped SRD charged item or two as the first consumer**, converter-sourced — a commit in
         `charnik-content-srd` with an assert here. Everything the app half needs is in place; what is
-        missing is the row, and a row is never authored from memory.
+        missing is the row, and a row is never authored from memory. **BLOCKS 0.7.0**: without it the
+        two-axis model and the Dawn/Dusk control ship with nothing a user can reach.
 - [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
   small, each fires on an existing path, and none blocks the others.
   - [x] **Champion Heroic Rally — a turn-start heal**, and the trigger dimension generalized with it:
@@ -307,12 +316,11 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
   scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
   field, so there is one shape downstream. What is left is the two CONSUMERS:
-  - [ ] **Rage's damage, RAW.** The shipped token is a broad `flat_bonus:damage+2` plus a note.
-        `damage.melee` is now sayable, but RAW is "a melee weapon attack using **Strength**", and the
-        sheet has no scope for which ability an attack used — a finesse weapon swung with DEX would
-        take the bonus it should not. Decide that (a scope for the attack's ability, or accept
-        melee-only) before the content edit.
-  - [ ] **Magic Weapon, and Agonizing Blast.** Magic Weapon buffs every weapon because the cast
+  - [ ] **Rage's damage, RAW** — the whole of it is RAGE-SCOPE above, including the two editions'
+        different sentences and where the ability an attack used already lives. BLOCKS 0.7.0.
+  - [ ] **Magic Weapon, and Agonizing Blast.** Agonizing Blast is one content row and BLOCKS
+        0.7.0; Magic Weapon does not, because its fix is a cast-time choice, not this grammar.
+        Magic Weapon buffs every weapon because the cast
         spawns an unscoped `flat_bonus:attack/damage+N` — RAW it names ONE weapon you touch, so the
         fix is not grammar any more, it is a cast-time CHOICE of which weapon (D16's shape).
         Agonizing Blast needs only the content row that says `damage.eldritch_blast+cha_mod`.
