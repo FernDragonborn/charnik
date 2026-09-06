@@ -265,17 +265,22 @@ position and are given per wave, because most of them were learned the hard way.
   **Keep the rule for the next release**: what blocks a version is a number we know to be wrong, and
   a release that ships with one says so in the changelog rather than letting a player hunt for it.
 
-  **ROUND TWO — also before 0.7.0, first priority.** Found by auditing for half-done work rather than
-  by reading checkboxes, so the test widens by one clause: a version is also blocked by **a path a
-  user can start and cannot finish**, and by **shipped content that visibly does nothing**.
-  - ~~**HOMEBREW-LINKED**~~ — DONE. An article that owns a linked table lists its rows and offers to
-    write one more with the joins filled; four links ship, and a fifth is a row in `LINKED_TABLES`.
-  - **MAGIC-ITEM-EFX** (`work/content.md`) — the first tranche tokenized 14 items per edition; ~204
-    (2014) and ~210 (2024) magic items still carry prose and no effect, so a Cloak of Protection
-    equipped and attuned changes nothing on the sheet. That is a wrong number by the original test,
-    at scale.
-  - ~~**PROF-GRANT**~~ — DONE. The token now says saves, skills, armour categories and specific
-    weapons, and eleven shipped rows say it instead of only printing it.
+  **ROUND TWO — cleared.** Found by auditing for half-done work rather than by reading checkboxes, so
+  the test widened by one clause: a version is also blocked by **a path a user can start and cannot
+  finish**, and by **shipped content that visibly does nothing**. All three are closed.
+  - **HOMEBREW-LINKED** — an article that owns a linked table lists its rows and offers to write one
+    more with the joins already filled. Four links ship (class, subclass, species, resource); a fifth
+    is one row in `LINKED_TABLES`.
+  - **MAGIC-ITEM-EFX** — every shipped magic item whose text states a passive benefit while worn,
+    wielded or attuned now folds it, the +N weapons included. What stayed prose is what the vocabulary
+    cannot NAME, and it says so as a note rather than staying blank. The 2014 rows that ship with no
+    text at all became their own item, **ITEM-TEXT-2014** — a converter job, not an authoring one.
+  - **PROF-GRANT** — the token says saves, skills, armour categories and specific weapons, and eleven
+    shipped rows say it instead of only printing it.
+
+  **Keep both clauses for the next release.** A version is blocked by a number we know to be wrong, by
+  a path a user can start and cannot finish, and by shipped content that visibly does nothing.
+
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

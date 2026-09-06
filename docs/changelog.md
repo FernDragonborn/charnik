@@ -69,6 +69,19 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **Magic items with charges track them.** Eyes of Charming, Pipes of Haunting, Gem of Seeing and
   Mace of Terror carry their pool, so charges spend, show as pips, and come back at dawn — 1d3 of
   them, or all of them, as each item says.
+- **Your magic items change your numbers.** The +N weapons had none of their bonus: a Sun Blade,
+  a Defender, a Dragon Slayer or any of the four staves rolled exactly like the mundane version.
+  Each now raises its OWN to-hit and damage and no other weapon's, armour and shields carry their
+  AC, and the Staff of Power pays out on all five stats its text names. Around eighty rows across the
+  two editions. What an item's text says but the engine cannot express — a damage type your GM picks,
+  a bonus set by the item's rarity, a helm that still has a ruby in it — is written on the item as a
+  note instead of leaving the row blank.
+- **The features that grant a proficiency grant it.** A 14th-level monk is proficient with every
+  saving throw, a 15th-level rogue with Wisdom saves (and Charisma too, in 2024), a Life Domain
+  cleric with heavy armour — so plate stops blocking their spells. A dwarf is proficient with the
+  battleaxe, handaxe, light hammer and warhammer whatever their class, a high elf with the four
+  weapons their training names, and an elf's Keen Senses and a half-orc's Menacing put Perception and
+  Intimidation on the sheet. Every one of these used to be a paragraph the app read past.
 - **The Heroic Inspiration control is gone.** Spending it did one of two things the roller already
   does to any d20 — reroll it, or re-read it at advantage — so it was a second gesture for the same
   act, plus a flag to remember first. The rules it implements are still there; the extra button is
@@ -98,6 +111,10 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **An item says what it is in one tags column**, which is what lets a magic item that is "any
   melee weapon" ask which weapon you meant — Flame Tongue and its twenty-odd siblings per edition
   now carry the base you chose, armour included.
+- **A homebrew subclass can be given its features.** A class, a subclass, a species and a resource
+  each keep their real content in a second table, and there was no way in: you could write the
+  subclass and then never write a feature for it, because the form asked for an id nobody can guess.
+  Those articles now list what belongs to them and offer to add one more, with the joins filled in.
 - **The upcast cell is built, not typed**, a resource row can be authored at all, and a file can be
   told its content type from inside the app.
 - **The 2014 rules text is whole.** The converter used to cut a class feature at the first

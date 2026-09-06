@@ -31,9 +31,9 @@
   `subclass_level` carries the 2014 value. Wants a per-system override column rather than a second
   row.
 
-- [~] **MAGIC-ITEM-EFX · BLOCKS 0.7.0 — an equipped magic item that changes no number is a wrong
-  number, and most of them still do not. Tokenize the shipped SRD magic-item effects (GLOBAL content task,
-  surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
+- [x] **MAGIC-ITEM-EFX · every shipped magic item that changes a number says which one.** An
+  equipped magic item that changes no number is a wrong number, and most of them used to change
+  none. (GLOBAL content task, surfaced by DEMO-1 gap 2, 2026-08-04.) **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,
   equipped/attuned rows flowing through `gatherEffects`); every magic-item row simply shipped EMPTY.
   Authored: Cloak/Ring of Protection (`flat_bonus:ac+1;flat_bonus:saves+1`), Stone of Good Luck
@@ -74,10 +74,52 @@
   onto nothing, which the "known kind" check alone never caught.
   **App-verified (first tranche):** demo Karroth's attuned Cloak now
   reads AC 14 → **15** with "Cloak of Protection +1" in the trace, and every save +1
-  (`design-preview/magic-item-efx.png`). **REMAINING (the `[~]`):** the other ~240 magic items — mostly
-  charges/activated procedures (RECHARGE-3), GM-chosen variants (Ring/Armor of Resistance),
-  weapon-scoped bonuses (the open §A `damage:<qualifier>` gap) and the generic +1/+2/+3 rows that need
-  one row per tier.
+  (`design-preview/magic-item-efx.png`).
+
+  **THIRD AND FOURTH PASSES DONE — 24 rows in 2014, 55 in 2024, and the item closes.** The largest
+  family had been skipped entirely: the **+N weapons**, which fold through the D9 per-weapon path, so
+  a +2 sword raises its OWN to-hit and damage and no other weapon's (asserted against a plain longsword
+  in the same hand). Sun Blade, Defender, Dragon Slayer, Giant Slayer, Dwarven Thrower, Nine Lives
+  Stealer, Scimitar of Speed, Dagger of Venom, Luck Blade, Mace of Smiting, the four staves and the Rod
+  of Lordly Might. Armour and shields gained their AC, the Staff of Power pays out on all five stats its
+  text names, and the **Bracers of Archery are the first user of the widened `grant_proficiency`** —
+  longbow and shortbow proficiency plus a `damage.<weapon_id>`-scoped +2 that the dagger in the other
+  hand does not pick up.
+
+  **Where the line falls now, and why it is the right place to stop:** every remaining untokenized row
+  either states no passive benefit at all (a potion, a rope, an item with its own stat block), or names
+  one the vocabulary cannot NAME — a GM-chosen damage type, "+2 AC against ranged attacks", a bonus set
+  by the row's own rarity — or one gated on a state the app does not hold (a helm that still has a ruby,
+  a sworn enemy, a linked Elemental Plane). Those carry a `note:` instead, so the sheet says the thing
+  rather than staying blank.
+
+  **One RAW shape the engine cannot say, recorded rather than fudged:** "your Constitution increases by
+  2, to a maximum of 20" (Belt of Dwarvenkind). Within a layer the fold order is set → floor → cap →
+  mult → add, so a `set_override:con:20:cap` fires BEFORE the `+2` and does nothing; a self-referencing
+  expression (`min(con_score+2,20)`) is correctly refused as a dependency cycle. The belt folds its +2
+  and its note states the ceiling, which the player applies with the manual override every value
+  already has. One row per edition needs this, so it buys no machinery.
+
+  **Still not authorable: the 89 magic rows in the 2014 pack that ship with an EMPTY `text_en`**
+  (`vorpal_sword`, `gloves_of_thievery`, `weapon_of_warning`, `mithral_armor`, `winged_boots`…). There
+  is nothing to read them off, and nothing here is written from memory — which is also why the 2024
+  pack got more than twice as many rows in this pass. Extracting that text is a CONVERTER job, not an
+  authoring one; it is filed as its own item below.
+- [ ] **ITEM-TEXT-2014 · 89 magic items in the 2014 pack ship with an EMPTY `text_en`.** The row
+  exists, with its category, rarity and cost — and no description at all: `vorpal_sword`,
+  `rod_of_alertness`, `gloves_of_thievery`, `weapon_of_warning`, `mithral_armor`, `winged_boots`,
+  `dragon_scale_mail`, `boots_of_striding_and_springing`, `talisman_of_pure_good` and eighty more.
+  A few others (`frost_brand`, `brooch_of_shielding`) are truncated mid-sentence.
+
+  **It is a CONVERTER job, not an authoring one.** SRD 5.1 has the text; the 2014 extractor did not
+  pick it up — the same class of miss as the "Extra A ttack" OCR artifact that cost the 2014 paladin
+  its Extra Attack row. Writing the descriptions by hand is exactly the invented-data failure
+  `AGENTS.md` names, so it waits for the extractor rather than for a patient afternoon.
+
+  **What it currently blocks:** every one of those rows is unauthorable for MAGIC-ITEM-EFX, which is
+  why the 2024 pack got more than twice as many tokenized rows in the same pass. Closing this reopens
+  a fifth of the 2014 magic items for tokens.
+
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.

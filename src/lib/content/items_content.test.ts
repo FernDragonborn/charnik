@@ -5,6 +5,7 @@ import { parseToken, splitGuard } from '../effects/token-parser';
 import { readPackFile, loadPacks } from '../../test-support/real-content';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
+import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 
 /*
  * Guards the SHIPPED magic-item data (MAGIC-ITEM-EFX authoring): the `effects` tokens we filled must
@@ -150,5 +151,105 @@ describe('shipped charged items · the first consumers of the two-axis recharge 
 		const graph = await loadPacks('srd-2024');
 		const bare = deriveSheet(characterSchema.parse(newCharacter('vex', 'Vex', '5.5e')), graph);
 		expect(bare.resources.find((r) => r.id === 'gem_of_seeing')).toBeUndefined();
+	});
+});
+
+describe('shipped magic items · the third tranche (the +N families)', () => {
+	/** One equipped/attuned item on an otherwise plain level-5 fighter (STR 16 → +3, PB +3). */
+	const withItem = async (dir: string, source: string, system: '5e' | '5.5e', ids: string[]) => {
+		const graph = await loadPacks(dir);
+		const c = newCharacter('vax', 'Vax', system);
+		c.build.classes = [{ class: `class:${source}:fighter`, level: 5 }];
+		c.build.abilities = { str: 16, dex: 10, con: 12, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = ids.map((id) => ({
+			item: `item:${source}:${id}`,
+			qty: 1,
+			equipped: true,
+			attuned: true,
+		}));
+		const parsed = characterSchema.parse(c);
+		const sheet = deriveSheet(parsed, graph);
+		return { sheet, attacks: computeAttacks(parsed, sheet, graph) };
+	};
+
+	it.each([
+		['srd-2024', 'SRD 5.2.1', '5.5e'],
+		['srd-2014', 'SRD 5.1', '5e'],
+	] as const)(
+		'%s: a +2 weapon adds 2 to ITS to-hit and damage, and to no other weapon',
+		async (d, src, sys) => {
+			const { attacks } = await withItem(d, src, sys, ['sun_blade', 'longsword']);
+			const sun = attacks.find((a) => a.name === 'Sun Blade');
+			const plain = attacks.find((a) => a.name === 'Longsword');
+			// STR +3, PB +3 → a plain longsword is +6; the Sun Blade is +8 and its damage mod is 5, not 3
+			expect([plain?.toHit, sun?.toHit]).toEqual([6, 8]);
+			expect(sun?.damageParts[0]?.mod).toBe(5);
+			expect(plain?.damageParts[0]?.mod).toBe(3);
+		},
+	);
+
+	it('a Staff of Power pays out on every stat its text names, not only the weapon half', async () => {
+		const bare = await withItem('srd-2024', 'SRD 5.2.1', '5.5e', []);
+		const staff = await withItem('srd-2024', 'SRD 5.2.1', '5.5e', ['staff_of_power']);
+		// "+2 bonus to Armor Class, saving throws, and spell attack rolls" — three targets, one row
+		expect([bare.sheet.ac.value, staff.sheet.ac.value]).toEqual([10, 12]);
+		// CON +1 and a fighter's CON save proficiency (+3) make 4; the staff makes it 6
+		expect([bare.sheet.abilities.con.save.value, staff.sheet.abilities.con.save.value]).toEqual([
+			4, 6,
+		]);
+	});
+
+	it('an item whose RAW ceiling the vocabulary cannot say folds what it can and SAYS the rest', async () => {
+		const graph = await loadPacks('srd-2024');
+		const row = graph.list('item').find((r) => r.id === 'belt_of_dwarvenkind');
+		// the +2 folds; "to a maximum of 20" has no token (a cap folds BEFORE adds, by design), so it
+		// is stated rather than silently applied — and never authored as a set that drags 20 down
+		expect(row?.data.effects?.[0]).toBe('flat_bonus:con+2');
+		expect(row?.data.effects?.[1]).toMatch(
+			/^note:The increase cannot take your Constitution above 20/,
+		);
+	});
+
+	it.each([
+		['srd-2024', 'SRD 5.2.1', '5.5e'],
+		['srd-2014', 'SRD 5.1', '5e'],
+	] as const)(
+		'%s: Bracers of Archery make a longbow proficient and pay their +2 on it alone',
+		async (d, src, sys) => {
+			const graph = await loadPacks(d);
+			const c = newCharacter('vex', 'Vex', sys);
+			c.build.classes = [{ class: `class:${src}:wizard`, level: 5 }]; // no martial weapons
+			c.build.abilities = { str: 10, dex: 16, con: 12, int: 16, wis: 10, cha: 10 };
+			c.build.inventory = [
+				{ item: `item:${src}:bracers_of_archery`, qty: 1, equipped: true, attuned: true },
+				{ item: `item:${src}:longbow`, qty: 1, equipped: true, attuned: false },
+				{ item: `item:${src}:dagger`, qty: 1, equipped: true, attuned: false },
+			];
+			const parsed = characterSchema.parse(c);
+			const sheet = deriveSheet(parsed, graph);
+			const attacks = computeAttacks(parsed, sheet, graph);
+			// the grant is what makes a wizard proficient with a longbow at all: DEX +3 + PB +3
+			expect(attacks.find((a) => a.name === 'Longbow')?.toHit).toBe(6);
+			// and the +2 damage is SCOPED to those two weapons — it folds at the roll, so it is read
+			// there rather than off the attack row, and the dagger must not pick it up
+			const dmgOf = (name: string) => {
+				const at = attacks.find((a) => a.name === name)!;
+				return rollEffectsFor(sheet.facts, 'damage', new Set(at.scopes)).flat;
+			};
+			expect([dmgOf('Longbow'), dmgOf('Dagger')]).toEqual([2, 0]);
+		},
+	);
+
+	it('every +N weapon in both packs carries BOTH halves of its bonus', async () => {
+		for (const dir of ['srd-2024', 'srd-2014']) {
+			const graph = await loadPacks(dir);
+			for (const row of graph.list('item')) {
+				const fx = row.data.effects ?? [];
+				const attack = fx.find((t) => t.startsWith('flat_bonus:attack+'));
+				if (!attack) continue;
+				const n = attack.slice('flat_bonus:attack+'.length);
+				expect(fx, `${dir}/${row.id}`).toContain(`flat_bonus:damage+${n}`);
+			}
+		}
 	});
 });
