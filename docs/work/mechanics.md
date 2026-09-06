@@ -357,7 +357,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 - [x] **UBUG-6 · Casting spends a slot.** Lowest available leveled slot, blocked with a toast when
   none remain, in and out of combat; cantrips spend nothing and a RITUAL cast spends none (gated on
   the class's ritual-casting eligibility). Warlock pact slots are their own pool + pip strip.
-- [x] **UPCAST · Structured spell-upcasting engine — DONE (was `docs/UPCAST-PLAN.md`).** One
+- [x] **UPCAST · Structured spell-upcasting engine.** One
   `upcast` column on `spells.csv`, `kind:formula` tokens parsed by the existing effect grammar.
   **Locked decisions, kept because later work could undo them by accident:** (1) combining is a
   DELTA for structured kinds (`base+delta`, base is the single source) and ABSOLUTE for

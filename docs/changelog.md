@@ -1,5 +1,98 @@
 # Changelog
 
+## 0.7.0
+
+The release where the app stops speaking only English and stops guessing what you meant. Three big
+things: **every screen reads in your language**, **the roller became a thing you can steer**, and
+**the builder became a live sheet you edit rather than a form you fill**. Under all of it, a play
+layer that now tracks money, recharges, events and the reasons behind each number.
+
+### The app speaks your language — all of it
+
+- **Every screen, panel, dialog and notice reads from the language catalog.** Not the chrome only:
+  attack notes, a roll's name, damage types, the effects panel's mechanical tags, provenance
+  popovers, rule blocks, content-health findings, the compendium's groupings and detail views, the
+  homebrew form's errors, page titles, the empty states. Switching language changes them all, live.
+- **A roll in the log is not frozen in the language it was rolled in.** A roll's name and its
+  provenance travel as facts, so yesterday's log reads in whatever language you open it in today.
+- **A mirrored interface actually mirrors.** Every box side is a logical one, so an RTL locale
+  reverses instead of overlapping.
+
+### The roller
+
+- **A roll is one action, not two calls.** An attack arrives as its name, its d20 test, its damage
+  parts and how many instances — so the to-hit and the damage stay one thing, keep their label, and
+  a volley of beams stays one block of N rather than N unrelated lines, including after a reload.
+- **A formula is a line of pills you can steer**, not a string you retype: advantage is a mode,
+  each die and modifier remembers where it came from (a Bless d4 is distinguishable from a die you
+  typed), a compound term splits into the terms a person wrote, and a note without a number stays a
+  note instead of joining the sum.
+- **The formula says what it could not read.** A homebrew weapon with a damage string the parser
+  cannot finish now says so on the attack row and in the roll, instead of quietly rolling less.
+- **An amendment is a fact.** Changing a roll's advantage after the fact records what it changed
+  from, sticks across a reload, and disappears cleanly when you put it back.
+- **Heroic Inspiration is something you spend**, Savage Attacker rerolls the weapon's dice and not
+  everything riding along with them, and a granted roll can be marked spent for this turn.
+
+### The builder
+
+- **It is a live sheet with an inspector, not a form.** Picking an option is the click — no
+  confirm step — and the inspector says what a choice would do to your numbers before you take it.
+  Double-click takes a row; Ctrl+Z takes it back.
+- **An unfinished character waits for you.** Drafts persist and are parsed back off disk rather
+  than assumed; trying a different class no longer costs you the one you had; a level-up applies a
+  level instead of rewriting the character.
+- **A blocked option is shown and explained** instead of quietly missing, switching edition says
+  what it will cost you first, and the feat a background hands you asks its own questions.
+- **A character can have a face.** Pick a portrait in the builder's header; it is downscaled on
+  pick, stored beside the character as a file, and shown on the play sheet.
+- **Sixty-six defects found by reading the builder end to end** are fixed — among them picks that
+  survived their row, an expertise slot you could not reach, a spell cap enforced by the wrong rule,
+  a removed class row handing its feats to the row behind it, and several ways a build lost work.
+
+### Playing
+
+- **A purse.** Coins are money, not inventory: cp/sp/ep/gp/pp with optional coin weight, so a
+  hoard can matter to your capacity without pretending to be a stack of arrows.
+- **A resource says WHEN it comes back and HOW MUCH**, as two independent axes — so "one use on a
+  short rest, all of them on a long" is expressible, and dawn and dusk are triggers like any rest.
+- **A hit at 0 HP costs a death save**, RAW, and a critical hit costs two.
+- **An ability you cannot use yet says why, and when you can.** A conditional feature (Persistent
+  Rage and its kind) explains its own gate instead of being absent.
+- **A feature can react to an event.** A bounded set of play events can run any of the executor's
+  verbs, which is how a Champion's Survivor heals you at the start of your turn instead of
+  describing that it would.
+- **A features panel**, so a character can read what they have; the action pips took Baldur's Gate
+  3's shapes; every auto-calculated value explains itself on focus, not only on hover.
+- **A bonus can name one thing.** "+2 to two-handed melee damage" is expressible, so a fighting
+  style stops paying out on everything you own.
+
+### Content and authoring
+
+- **An item says what it is in one tags column**, which is what lets a magic item that is "any
+  melee weapon" ask which weapon you meant — Flame Tongue and its twenty-odd siblings per edition
+  now carry the base you chose, armour included.
+- **The upcast cell is built, not typed**, a resource row can be authored at all, and a file can be
+  told its content type from inside the app.
+- **The 2014 rules text is whole.** The converter used to cut a class feature at the first
+  sub-heading, which is exactly where most of them keep their table: Wild Shape lost its Beast
+  Shapes table, Fighting Style listed no styles, Metamagic no options, and twelve rows shipped with
+  an empty text cell. All of them read fully now.
+- **Passive class features compute instead of reading well.** Unarmored Defense (both classes, with
+  the barbarian's shield allowance and the monk's lack of one), Danger Sense, Fast Movement, Roving,
+  Feral Instinct, Remarkable Athlete and both draconic scales now move your numbers.
+- **Prose is rendered, never mined.** A spell's higher-levels line is parsed as the prose it is, and
+  nothing in the app reads a value out of a paragraph.
+
+### Renamed, once, on purpose
+
+- **`resist_immune` is `damage_sensitivity`, and it always says which relation.** The old name
+  listed two of its three relations, so writing a vulnerability was possible but invisible; the
+  relation used to be optional and defaulted to resistance, which meant a one-segment typo silently
+  became a resistance nobody wrote. It is now `damage_sensitivity:<resist|immune|vulnerable>:<type>`,
+  and a missing relation is a visible inert note. **Homebrew written against the old spelling must be
+  updated** — there is no alias.
+
 ## 0.6.2
 
 A bugfix release, and the fix that names it: **your resource pools have names now.** Alongside it,
