@@ -17,7 +17,16 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import type { Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
-import { uniqueCharacterId } from '$lib/character/repository';
+import {
+	removeCharacterPhotos,
+	uniqueCharacterId,
+	writeCharacterPhoto,
+} from '$lib/character/repository';
+import {
+	downscalePhoto,
+	type PickedPhoto,
+	type PortraitSource,
+} from '$lib/character/photo';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import {
@@ -323,6 +332,9 @@ export class BuildVM {
 	assembled = $derived.by<Character>(() => {
 		const build = {
 			name: this.draft.name || t('build.unnamed'),
+			// the file, not the bytes: a portrait picked this session is written when the character gets
+			// a folder, and `save` puts its name here (and on the draft) once it has one
+			photo: this.draft.photo ?? undefined,
 			species: this.draft.speciesId ?? undefined,
 			// only persist the sub-option if it's valid for the chosen species (guards a stale pick)
 			speciesOption: this.speciesOptions.some((o) => o.effectiveId === this.draft.speciesOptionId)
@@ -480,6 +492,52 @@ export class BuildVM {
 	blocking = $derived(this.todos.filter((t) => t.required));
 	canCreate = $derived(this.blocking.length === 0);
 
+	/** A portrait the player picked but has not saved: downscaled bytes with nowhere to land yet,
+	 *  because a character has no folder until it is created. Cleared once written. */
+	pickedPhoto = $state<PickedPhoto | null>(null);
+
+	/** What the sheet's portrait shows: the unsaved pick if there is one, else the file an EDITED
+	 *  character already has. A new build has neither until it is saved. */
+	portraitSource = $derived.by<PortraitSource | null>(() => {
+		if (this.pickedPhoto) return { kind: 'picked', photo: this.pickedPhoto };
+		const name = this.draft.photo;
+		return this.edit && name ? { kind: 'stored', id: this.edit.id, name } : null;
+	});
+
+	/** Take the file the picker handed over: downscale it now (a phone photo is megabytes, and the
+	 *  sheet shows a thumbnail), then hold the bytes until the character has somewhere to keep them.
+	 *  Returns false when the file is not an image this webview can decode — the caller says so. */
+	setPhoto = async (file: Blob): Promise<boolean> => {
+		try {
+			this.pickedPhoto = await downscalePhoto(file);
+			return true;
+		} catch {
+			return false;
+		}
+	};
+
+	/** The way out of having a portrait. The file (if any) goes at the next save, so removing one and
+	 *  then abandoning the edit leaves the saved character untouched. */
+	clearPhoto = () => {
+		this.pickedPhoto = null;
+		this.draft.photo = null;
+	};
+
+	/** Write the portrait alongside the character being saved, and put its NAME in the save. Both
+	 *  branches touch the folder, never the JSON only: a picked photo replaces whatever is there, and
+	 *  a cleared one removes the file, so the folder never keeps a portrait nothing references. */
+	private async persistPhoto(character: Character): Promise<void> {
+		const storage = getUserStorage();
+		if (this.pickedPhoto) {
+			const name = await writeCharacterPhoto(storage, character.id, this.pickedPhoto);
+			character.build.photo = name;
+			this.draft.photo = name;
+			this.pickedPhoto = null;
+		} else if (!this.draft.photo) {
+			await removeCharacterPhotos(storage, character.id);
+		}
+	}
+
 	save = async (): Promise<string | null> => {
 		if (!this.canCreate) return null;
 		this.saving = true;
@@ -492,6 +550,7 @@ export class BuildVM {
 				character.id = await uniqueCharacterId(getUserStorage(), slugify(this.draft.name) || FALLBACK_SLUG);
 				character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			}
+			await this.persistPhoto(character);
 			await saveCharacterToStore(character);
 			// the draft became a character, so the unfinished copy has nothing left to be
 			await this.drafts.discard();

@@ -156,12 +156,17 @@ export interface DraftState {
 	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
 	/** Free prose for the table — bonds, flaws, a debt. One bullet per line; affects nothing. */
 	notes: string;
+	/** The portrait file already SAVED beside this character (`photo.webp`), or null. A portrait
+	 *  picked during a build is not here — it is bytes with nowhere to land until the character has a
+	 *  folder, so it waits in the view-model and this becomes its name at the first save. */
+	photo: string | null;
 }
 
 /** A blank new-character draft. The one source of default choices (reset + the initial state). */
 export function blankDraft(): DraftState {
 	return {
 		name: '',
+		photo: null,
 		// newest ruleset by default; the build page's edition switcher changes it before saving
 		system: DEFAULT_SYSTEM,
 		strict: true,
@@ -217,6 +222,7 @@ export const slotMapSchemas = {
 
 const draftStateSchema: z.ZodType<DraftState> = z.object({
 	name: z.string().catch(''),
+	photo: z.string().nullable().catch(null),
 	system: z.enum(SYSTEMS).catch(DEFAULT_SYSTEM),
 	strict: z.boolean().catch(true),
 	shortRestMode: z.enum(SHORT_REST_MODES).catch('half'),
@@ -306,6 +312,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		slotFeatAbility: { ...char.build.slotPicks.featAbility },
 		slotFeatSkills: { ...char.build.slotPicks.featSkills },
 		notes: char.build.notes,
+		photo: char.build.photo ?? null,
 		inventory: char.build.inventory.map((i) => ({
 			item: i.item,
 			qty: i.qty,

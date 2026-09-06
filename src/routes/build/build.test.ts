@@ -9,6 +9,7 @@ import 'fake-indexeddb/auto'; // the draft session writes through the real Stora
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
+import { loadCharacter, readCharacterPhoto } from '$lib/character/repository';
 import { type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
@@ -305,6 +306,38 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.classRows.setClass(0, `class:${S}:fighter`);
 		expect(build.draft.classes[0]?.level).toBe(3); // the level Valen has, not the stash's 7
 		expect(build.draft.skills).not.toContain('athletics');
+	});
+
+	it('writes a picked portrait into the character folder on save, and names it in the save (PORTRAIT)', async () => {
+		const storage = getUserStorage();
+		build.reset();
+		build.graph = graph;
+		build.hydrate(savedCharacter());
+		// the DECODE is a webview API (covered in photo.browser.test.ts); what is under test here is
+		// where the bytes go and what the save says about them
+		build.pickedPhoto = { bytes: new Uint8Array([3, 1, 4]), ext: 'webp', mime: 'image/webp' };
+		// creating is gated on the blocking todos, and this fixture character has two open ones
+		build.draft.backgroundId = `background:${S}:prodigy`;
+		build.draft.selectedSpells = [];
+		build.feats.setSlotFeatAbility(ORIGIN_SLOT_KEY, 'dex'); // the background's half-feat pick
+		expect(build.canCreate).toBe(true);
+
+		await build.save();
+		expect(Array.from(await readCharacterPhoto(storage, 'valen', 'photo.webp'))).toEqual([3, 1, 4]);
+		expect((await loadCharacter(storage, 'valen')).character?.build.photo).toBe('photo.webp');
+		expect(build.pickedPhoto).toBeNull(); // written, so no longer pending
+
+		// re-saving without picking again keeps the portrait — the draft carries its NAME
+		await build.save();
+		expect((await loadCharacter(storage, 'valen')).character?.build.photo).toBe('photo.webp');
+
+		// …and the way out takes the file with it, not just the reference
+		build.clearPhoto();
+		await build.save();
+		expect((await loadCharacter(storage, 'valen')).character?.build.photo).toBeUndefined();
+		expect((await storage.list('characters/valen')).some((e) => e.name.startsWith('photo.'))).toBe(
+			false,
+		);
 	});
 
 	it('closes the inspector when the draft under it is replaced (B17)', () => {

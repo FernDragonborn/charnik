@@ -6,7 +6,13 @@
 ## JSON, not CSV
 
 A character lives at `characters/<slug>/character.json`. A photo is a **sibling file** referenced by
-name, never base64 inside the JSON. An optional append-only `log.jsonl` sits beside it, deliberately
+name, never base64 inside the JSON — `photo.<ext>`, one per character, written through `Storage`
+alongside the save. It is **downscaled when it is picked** (longest edge 512px, `character/photo.ts`)
+and re-encoded, so the extension always matches the bytes and a 12 MB phone photo never lands in a
+folder the user is told they own. A build in progress has no folder yet, so the bytes wait in the
+build view-model and are written at the first save; picking a second portrait replaces the first,
+including one stored under another extension, and removing one deletes the file rather than only the
+reference. An optional append-only `log.jsonl` sits beside it, deliberately
 **out** of `character.json` so a long campaign cannot bloat the save.
 
 There is no database. Writes are atomic — temp file, then rename — with a debounced autosave and

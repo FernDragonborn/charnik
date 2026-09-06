@@ -6,6 +6,8 @@
 	// There is deliberately no "guided vs full sheet" switch: only the full sheet exists (see
 	// docs/work/ui.md ▸ N3). A guided flow becomes a second entry point onto this view-model.
 	import Icon from '$lib/components/Icon.svelte';
+	import Portrait from '$lib/components/Portrait.svelte';
+	import { toast } from 'svelte-sonner';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import { SYSTEMS } from '$lib/rules/pipeline';
@@ -13,6 +15,21 @@
 	import EditionSwitchDialog from './EditionSwitchDialog.svelte';
 	import type { SystemId } from '$lib/stores/app.svelte';
 	const b = build;
+
+	let photoInput = $state<HTMLInputElement | null>(null);
+
+	/** Take the picked file, or say why nothing happened. The input is cleared either way so picking
+	 *  the SAME file again still fires a change event. */
+	async function onPhotoPicked(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+		if (!(await b.setPhoto(file)))
+			toast($_('build.portrait.notReadable'), {
+				description: $_('build.portrait.notReadableBody'),
+			});
+	}
 
 	/** The edition the user asked for, while they confirm what it costs. */
 	let pendingSystem = $state<SystemId | null>(null);
@@ -29,6 +46,32 @@
 
 <header class="head">
 	<h1>{b.edit ? $_('build.titleLevelUp') : $_('build.titleNew')}</h1>
+	<div class="portrait-slot">
+		<button
+			class="portrait-button"
+			title={b.portraitSource ? $_('build.portrait.replace') : $_('build.portrait.add')}
+			aria-label={b.portraitSource ? $_('build.portrait.replace') : $_('build.portrait.add')}
+			onclick={() => photoInput?.click()}
+		>
+			<Portrait source={b.portraitSource} size={38} alt="" />
+		</button>
+		{#if b.portraitSource}
+			<button
+				class="portrait-clear"
+				title={$_('build.portrait.remove')}
+				aria-label={$_('build.portrait.remove')}
+				onclick={b.clearPhoto}><Icon name="x" size={11} /></button
+			>
+		{/if}
+		<input
+			bind:this={photoInput}
+			type="file"
+			accept="image/*"
+			class="hidden-file"
+			onchange={onPhotoPicked}
+		/>
+	</div>
+
 	<label class="namewrap">
 		<span class="visually-hidden">{$_('build.nameLabel')}</span>
 		<input class="nameinput" placeholder={$_('build.namePlaceholder')} bind:value={b.draft.name} />
@@ -132,6 +175,40 @@
 		font-size: var(--font-size-lg);
 		margin: 0;
 		white-space: nowrap;
+	}
+	/* the button IS the portrait: no frame of its own, so the picture is not a picture inside a box */
+	.portrait-slot {
+		position: relative;
+		display: flex;
+		line-height: 0;
+	}
+	.portrait-button {
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		border-radius: var(--radius-md);
+	}
+	.portrait-clear {
+		position: absolute;
+		inset-block-start: -5px;
+		inset-inline-end: -5px;
+		display: grid;
+		place-items: center;
+		inline-size: 17px;
+		block-size: 17px;
+		padding: 0;
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-full);
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		cursor: pointer;
+	}
+	.portrait-clear:hover {
+		color: var(--color-danger);
+	}
+	.hidden-file {
+		display: none;
 	}
 	.namewrap {
 		flex: 1;

@@ -78,17 +78,15 @@
   with the technical particular demoted to a `detail` line rather than deleted. The standard, the
   `detail` contract and where the copy lives are `docs/internals/ui.md` ▸ Error copy; tests assert
   the identifier, never the sentence.
-- [ ] **PORTRAIT · a character has `build.photo` in the schema and no way to set one.** Nothing under
-  `src/routes/build/` writes it. Its own piece because of an ordering problem, not a UI one: the file
-  write goes through `Storage` and a character has no folder until it is saved, so a portrait chosen
-  during the build has nowhere to land yet. `characters.md` already says a photo is a SIBLING file
-  referenced by name, never base64 in the JSON — so the answer is where the bytes wait, not how they
-  are stored.
-  **The bytes wait in memory**, as one downscaled blob on the draft, previewed through an object URL,
-  and land in the character's folder in a single `Storage` write when it is first saved. **Downscale
-  at PICK time** (longest side ~512px): the picker hands over whatever a phone camera produced, and a
-  12 MB JPEG in a folder the user is told they own is a worse gift than a resized one. Losing the
-  photo when an unsaved build is abandoned is how every other draft field already behaves.
+- [x] **PORTRAIT · a character has a face.** The picker sits in the builder's masthead (the portrait IS
+  the button; an × beside it is the way out), and the sheet shows it beside the name — only when the
+  character has one, because an empty placeholder on every sheet is a permanent nag. The ordering
+  problem the item was really about is solved where it was proposed: the bytes wait in the view-model
+  as one downscaled blob, and land in the character's folder in a single `Storage` write when it is
+  first saved. `characters.md` ▸ JSON, not CSV has the rules that outlive this entry.
+  **What the tests hold:** the decode/downscale/re-encode is a webview API, so it is a browser test
+  against real chromium (`photo.browser.test.ts`); where the bytes go, and that clearing takes the
+  FILE and not just the reference, are node tests.
 - [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
 - [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
   in that bar signals it the same way (hover + pointer + the global focus ring).

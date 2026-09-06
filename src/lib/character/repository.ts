@@ -16,6 +16,7 @@ import {
 	type Versioned,
 } from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
+import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
 // TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
 // the roll lives. Erased at build — no runtime edge from the character layer into combat.
@@ -207,6 +208,53 @@ export async function saveCharacter(storage: Storage, character: Character): Pro
 	}
 	await storage.mkdir(dirOf(character.id));
 	await storage.write(fileOf(character.id), JSON.stringify(res.data, null, 2));
+}
+
+/** The portrait's file name inside a character folder — one per character, so picking a new one
+ *  REPLACES the old rather than leaving a folder of orphans the user has to recognise. */
+const photoNameOf = (ext: string) => `photo.${ext}`;
+
+/** Write a character's portrait and return the name to store in `build.photo`. Any portrait already
+ *  in the folder is removed first, including one with a different extension — the name is the only
+ *  reference, so a leftover file would be invisible and permanent. */
+export async function writeCharacterPhoto(
+	storage: Storage,
+	id: string,
+	photo: PickedPhoto,
+): Promise<string> {
+	await storage.mkdir(dirOf(id));
+	await removeCharacterPhotos(storage, id);
+	const name = photoNameOf(photo.ext);
+	await storage.writeBytes(`${dirOf(id)}/${name}`, photo.bytes);
+	return name;
+}
+
+/** Read a stored portrait's bytes. Throws like any other missing file — a character whose photo was
+ *  deleted from the folder renders without one, which is the caller's decision to make. */
+export function readCharacterPhoto(
+	storage: Storage,
+	id: string,
+	name: string,
+): Promise<Uint8Array> {
+	return storage.readBytes(`${dirOf(id)}/${name}`);
+}
+
+/** Remove every portrait file in a character's folder (the way OUT of having one). Best-effort per
+ *  file: a folder that cannot be listed simply has nothing to remove. */
+export async function removeCharacterPhotos(storage: Storage, id: string): Promise<void> {
+	let entries: FileEntry[];
+	try {
+		entries = await storage.list(dirOf(id));
+	} catch {
+		return;
+	}
+	for (const e of entries)
+		if (!e.isDir && e.name.startsWith('photo.'))
+			try {
+				await storage.remove(e.path);
+			} catch {
+				/* best-effort — a portrait we cannot delete is not a reason to fail the save */
+			}
 }
 
 /** A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried

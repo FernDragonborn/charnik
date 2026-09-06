@@ -32,10 +32,20 @@
 		"medium": "medium",
 		"shield": "shield"
 	},
+	"character": {
+		"portraitOf": "Portrait of {name}"
+	},
 	"build": {
 		"titleNew": "New character",
 		"titleLevelUp": "Level up",
 		"namePlaceholder": "Name your character…",
+		"portrait": {
+			"add": "Add a portrait",
+			"replace": "Change the portrait",
+			"remove": "Remove the portrait",
+			"notReadable": "That file could not be read as a picture",
+			"notReadableBody": "Pick a PNG, JPEG or WebP image."
+		},
 		"nameLabel": "Character name",
 		"levelTotal": "Total level across every class",
 		"levelMeta": "level · prof {bonus}",

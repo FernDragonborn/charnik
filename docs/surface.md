@@ -202,7 +202,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (51)
+## Shared components (52)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -243,6 +243,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/plugins.md §6): discovered plugin list |
+| **Portrait** | `source`, `size`, `alt` | A character's face, wherever a character is shown. |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **Roller** | `diceTray`, `onroll` | The dice tray — the whole of what a roll looks like while you are building it, and the app's |
@@ -423,7 +424,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (117 modules)
+## Library functions & types (118 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -588,6 +589,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
 - `const useOne` — Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which * would read as "car…
 
+### `src/lib/character/photo.ts`
+
+- `const PHOTO_MAX_EDGE` — Longest edge of a stored portrait.
+- `interface PickedPhoto` — A picked, downscaled portrait waiting to be written — the bytes plus the extension they earned.
+- `type PortraitSource` — Where a rendered portrait's pixels come from: a file already in a character's folder, or one the * player just picked…
+- `function fitWithin` — Fit `(w, h)` inside a `max`-edge square, never scaling UP — a small portrait stays as it is.
+- `function downscalePhoto` — Decode → downscale → re-encode one picked image.
+- `function photoMime` — The media type a stored portrait's NAME implies — what an object URL needs to render it.
+
 ### `src/lib/character/repository.ts`
 
 - `interface LoadResult`
@@ -595,6 +605,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function backupCharacter` — Snapshot the CURRENT `character.json` into the rotating ring for `tier`, then prune to the newest * N.
 - `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
 - `function saveCharacter` — Write a character (validates first; refuses to persist an invalid one).
+- `function writeCharacterPhoto` — Write a character's portrait and return the name to store in `build.photo`.
+- `function readCharacterPhoto` — Read a stored portrait's bytes.
+- `function removeCharacterPhotos` — Remove every portrait file in a character's folder (the way OUT of having one).
 - `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
 - `function readCharacterFiles` — * Every saved character as RAW json, keyed by slug.
@@ -1629,4 +1642,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 51 components · 970 exports across 132 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 979 exports across 133 modules · 64 duplicate suspects._

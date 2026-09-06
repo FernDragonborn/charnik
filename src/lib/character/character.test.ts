@@ -16,6 +16,9 @@ import {
 	readLog,
 	backupCharacter,
 	uniqueCharacterId,
+	writeCharacterPhoto,
+	readCharacterPhoto,
+	removeCharacterPhotos,
 } from './repository';
 import { attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
@@ -211,6 +214,49 @@ describe('character repository (in-memory)', () => {
 		await deleteCharacter(s, 'mirt');
 		expect((await loadCharacter(s, 'mirt')).ok).toBe(false);
 		expect(await listCharacters(s)).toEqual([]);
+	});
+});
+
+describe('the portrait file beside the character (PORTRAIT)', () => {
+	const photoOf = (ext: string, mime: string, byte: number) => ({
+		bytes: new Uint8Array([byte]),
+		ext,
+		mime,
+	});
+
+	it('writes the portrait into the character folder and reads it back', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		const name = await writeCharacterPhoto(s, 'mirt', photoOf('webp', 'image/webp', 7));
+		expect(name).toBe('photo.webp');
+		expect(Array.from(await readCharacterPhoto(s, 'mirt', name))).toEqual([7]);
+	});
+
+	it('a second portrait REPLACES the first, even under another extension', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		await writeCharacterPhoto(s, 'mirt', photoOf('webp', 'image/webp', 7));
+		const name = await writeCharacterPhoto(s, 'mirt', photoOf('png', 'image/png', 9));
+		// the save names ONE file, so a leftover under the old extension would be invisible + permanent
+		const files = (await s.list('characters/mirt'))
+			.map((e) => e.name)
+			.filter((n) => n.startsWith('photo.'));
+		expect(files).toEqual([name]);
+		expect(Array.from(await readCharacterPhoto(s, 'mirt', name))).toEqual([9]);
+	});
+
+	it('removing takes the file with it — the way out leaves nothing behind', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		await writeCharacterPhoto(s, 'mirt', photoOf('jpg', 'image/jpeg', 1));
+		await removeCharacterPhotos(s, 'mirt');
+		expect((await s.list('characters/mirt')).some((e) => e.name.startsWith('photo.'))).toBe(false);
+		// the character itself is untouched
+		expect((await loadCharacter(s, 'mirt')).ok).toBe(true);
+	});
+
+	it('a character with no folder at all is not an error to clear', async () => {
+		await expect(removeCharacterPhotos(new MemoryStorage(), 'nobody')).resolves.toBeUndefined();
 	});
 });
 

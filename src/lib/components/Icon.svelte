@@ -55,6 +55,7 @@
 	import Timer from '@lucide/svelte/icons/timer';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Upload from '@lucide/svelte/icons/upload';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import X from '@lucide/svelte/icons/x';
 	import Zap from '@lucide/svelte/icons/zap';
 
@@ -104,6 +105,7 @@
 		timer: Timer,
 		'triangle-alert': TriangleAlert,
 		upload: Upload,
+		'user-round': UserRound,
 		x: X,
 		zap: Zap,
 	};

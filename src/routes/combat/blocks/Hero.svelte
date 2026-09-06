@@ -3,6 +3,7 @@
 	// the Level-up button, and the HP panel alongside. Reads the `combat` view-model; character +
 	// sheet come in as props.
 	import Icon from '$lib/components/Icon.svelte';
+	import Portrait from '$lib/components/Portrait.svelte';
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import type { Character } from '$lib/character/schema';
@@ -20,23 +21,34 @@
 </script>
 
 <section class="hero">
-	<div>
-		<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
-		<h1>{c.build.name}</h1>
-		<div class="subline">
-			{$_('combat.hero.level')}
-			<b>{s.level}</b>
-			· <span class="system-badge">{c.system}</span> · {$_('combat.hero.proficiency')}
-			<b>{signed(s.proficiencyBonus)}</b>
-			{#if combat.canLevelUp}
-				<button
-					class="levelup"
-					onclick={async () => {
-						await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
-						void goto(`${base}/build?levelup=${c.id}`);
-					}}><Icon name="arrow-up" size={13} /> {$_('combat.hero.levelUp')}</button
-				>
-			{/if}
+	<div class="who">
+		<!-- shown only when this character HAS one: an empty placeholder on every sheet would be a
+		     permanent nag for the many players who never add a picture -->
+		{#if c.build.photo}
+			<Portrait
+				source={{ kind: 'stored', id: c.id, name: c.build.photo }}
+				size={72}
+				alt={$_('character.portraitOf', { values: { name: c.build.name } })}
+			/>
+		{/if}
+		<div>
+			<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
+			<h1>{c.build.name}</h1>
+			<div class="subline">
+				{$_('combat.hero.level')}
+				<b>{s.level}</b>
+				· <span class="system-badge">{c.system}</span> · {$_('combat.hero.proficiency')}
+				<b>{signed(s.proficiencyBonus)}</b>
+				{#if combat.canLevelUp}
+					<button
+						class="levelup"
+						onclick={async () => {
+							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
+							void goto(`${base}/build?levelup=${c.id}`);
+						}}><Icon name="arrow-up" size={13} /> {$_('combat.hero.levelUp')}</button
+					>
+				{/if}
+			</div>
 		</div>
 	</div>
 	<div class="hp-col">
@@ -60,6 +72,11 @@
 		flex-wrap: wrap;
 		gap: var(--space-3);
 		align-items: stretch;
+	}
+	.who {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
 	}
 	.eyebrow {
 		font-family: var(--font-mono);

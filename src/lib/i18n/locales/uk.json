@@ -32,10 +32,20 @@
 		"medium": "середній",
 		"shield": "щит"
 	},
+	"character": {
+		"portraitOf": "Портрет: {name}"
+	},
 	"build": {
 		"titleNew": "Новий персонаж",
 		"titleLevelUp": "Підвищення рівня",
 		"namePlaceholder": "Назвіть свого персонажа…",
+		"portrait": {
+			"add": "Додати портрет",
+			"replace": "Змінити портрет",
+			"remove": "Прибрати портрет",
+			"notReadable": "Цей файл не вдалося прочитати як зображення",
+			"notReadableBody": "Оберіть зображення PNG, JPEG або WebP."
+		},
 		"nameLabel": "Імʼя персонажа",
 		"levelTotal": "Сумарний рівень за всіма класами",
 		"levelMeta": "рівень · володіння {bonus}",
