@@ -97,7 +97,14 @@ authoring form: it writes every column of a new row, so a column that cannot tak
 row nobody can save.
 
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
-underneath, the item's own win by name, resolved in one place (`content/item-tags.ts ▸ resolveItem`).
+underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸
+resolveItem`).
+
+A **template** row names no base because the SRD does not: "Weapon (Any Melee Weapon)" is answered by
+whoever finds the thing, so the base lives on the player's inventory entry and merges through the same
+function. A row is a template when it carries no category-defining tag — no `simple`/`martial` for a
+weapon, no `armor:<weight>`/`ac` for armour (`needsBaseItem`). Do not test this by an EMPTY tag list:
+every shipped template carries `attunement`, and a net carries tags while doing no damage.
 
 ## One article, two editions
 

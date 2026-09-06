@@ -55,6 +55,10 @@ const inventoryEntry = z.object({
 	qty: z.number().int().min(1).default(1),
 	equipped: z.boolean().default(false),
 	attuned: z.boolean().default(false),
+	/** The mundane item a TEMPLATE magic item is — a Flame Tongue is "any Simple or Martial weapon",
+	 *  so which weapon it is belongs to the player who found it, not to the content row. Absent for
+	 *  every item that states its own dice or names its own `base_item_id`. */
+	base: ref.optional(),
 });
 
 const spellEntry = z.object({

@@ -58,13 +58,31 @@
 
 <div class="items">
 	{#each rows as row (row.entry.item)}
-		<div class="inv-row">
+		<div class="inv-row" class:asks-base={row.isTemplate}>
 			<span class="nm">{row.name}</span>
 			{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
 			<span class="meta">{row.meta}</span>
 			{#if row.weightLb}<span class="wt"
 					>{$_('combat.inventory.pounds', { values: { lb: row.weightLb } })}</span
 				>{/if}
+			<!-- A template item ("any Simple or Martial weapon") is not a content gap to report — it is a
+			     question only the player can answer, so it is asked here, where the item is. -->
+			{#if row.isTemplate}
+				<label class="base-pick">
+					<span class="visually-hidden"
+						>{$_('combat.inventory.baseItem', { values: { name: row.name } })}</span
+					>
+					<select
+						value={row.entry.base ?? ''}
+						onchange={(e) => inv.setBase(row.entry.item, e.currentTarget.value)}
+					>
+						<option value="">{$_('combat.inventory.baseItemNone')}</option>
+						{#each inv.baseOptionsFor(row.entry.item) as opt (opt.ref)}
+							<option value={opt.ref}>{opt.name}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
 			<span class="acts">
 				<span class="stepper">
 					<button
@@ -121,6 +139,24 @@
 </div>
 
 <style>
+	/* the chooser gets its OWN line: it is a sentence-long question in a row of one-word controls, and
+	   squeezing it in beside them collapses the item's kind line to an ellipsis. Only the few rows
+	   that ASK wrap — every other row keeps the single-line shape it has always had. */
+	.asks-base {
+		flex-wrap: wrap;
+	}
+	.base-pick {
+		flex-basis: 100%;
+	}
+	.base-pick select {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+		background: var(--color-surface-2);
+		border: 1px dashed var(--color-border-strong);
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1);
+		max-inline-size: 220px;
+	}
 	.load {
 		display: flex;
 		align-items: baseline;

@@ -4,7 +4,7 @@
  */
 import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
-import { resolveItem } from '$lib/content/resolved-item';
+import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -321,7 +321,7 @@ export function computeAttacks(
 		if (row?.type !== 'item' || row.data.category !== 'weapon') continue;
 		// a magic weapon carries only what it adds; the rest — category, properties, base damage —
 		// comes from the mundane row its `base_item_id` names
-		const item = resolveItem(graph, row);
+		const item = resolveItem(graph, row, inv.base);
 		const ranged = item.tags.has(ITEM_TAG.ranged);
 		// ranged is DEX, finesse is the better of the two, everything else is STR
 		let mod = strMod;
@@ -343,13 +343,12 @@ export function computeAttacks(
 		const notProfNote = proficient
 			? undefined
 			: attackNote(ATTACK_NOTE.notProficient, 'Not proficient — no proficiency bonus');
-		// A "Weapon (any melee weapon)" template names no base, so there is nothing to inherit: no
-		// dice, no category, no scopes. Say so on the row — the alternative is an attack line that
-		// looks complete and silently rolls a bare ability modifier.
-		const templateNote =
-			item.tags.size === 0 && !item.damage
-				? attackNote(ATTACK_NOTE.noBaseWeapon, 'Base weapon not set — roll its own dice')
-				: undefined;
+		// A "Weapon (any melee weapon)" template names no base, so until the player says which weapon it
+		// is there is nothing to inherit: no dice, no category, no scopes. Say so on the row — the
+		// alternative is an attack line that looks complete and silently rolls a bare ability modifier.
+		const templateNote = needsBaseItem(item)
+			? attackNote(ATTACK_NOTE.noBaseWeapon, 'Base weapon not set — roll its own dice')
+			: undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.

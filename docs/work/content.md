@@ -4,10 +4,14 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **ITEM-TEMPLATES · "any melee weapon" magic items have no base.** Flame Tongue is not a
-  `base_item_id` case: the base is the PLAYER's choice at equip time, so it needs
-  `inventoryEntry.base` in the character schema and a UI for it. Until then the attack row says
-  "Base weapon not set" rather than rolling a bare modifier and looking complete.
+- [x] **ITEM-TEMPLATES · a magic item that is "any melee weapon" gets told which one.**
+  `inventoryEntry.base` holds the player's answer, `resolveItem` merges it exactly as an authored
+  `base_item_id` merges, and the Inventory panel asks the question on the row itself — the chooser
+  stays after a pick, because the base is theirs to change. **The tell is the category-defining tag,
+  not an empty one**: every real weapon row says `simple` or `martial` and every real armour says
+  `armor:<weight>` or `ac`, while a template carries only `attunement` — the old "no tags and no
+  damage" test matched no shipped row at all (they all carry `attunement`) and would have called a
+  net, which does no damage, a template. ~20 rows per edition needed this, Flame Tongue among them.
 - [ ] **MASTERY-HALF · weapon mastery is half-modelled.** The WEAPON half is data and shipped: every
   2024 weapon carries its one mastery property as `mastery:<name>` (5.5e only — 2014 has no such
   rule, so only the 2024 converter writes it). The CHARACTER half does not exist: RAW the property

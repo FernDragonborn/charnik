@@ -38,6 +38,10 @@ async function graphOf(): Promise<ContentGraph> {
 			`greataxe,5.5e,${S},Greataxe,,weapon,"martial, melee, two_handed",1d12 slashing`,
 			`sunblade,5.5e,${S},Sun Blade,,weapon,"martial, melee",1d6 slashing; 1d4 radiant`,
 			`longbow,5.5e,${S},Longbow,,weapon,"martial, ranged, two_handed",1d8 piercing`,
+			// a TEMPLATE: "Weapon (Any Melee Weapon)" says only that it is magical — no category, no dice
+			`flame_tongue,5.5e,${S},Flame Tongue,flat_bonus:damage+2,weapon,attunement,`,
+			// …and its opposite: a real weapon that happens to do no damage
+			`net,5.5e,${S},Net,,weapon,"martial, ranged, thrown",`,
 		].join('\n'),
 		'feats_srd.csv': [
 			'id,systems,source,name_en,effects,category',
@@ -150,6 +154,43 @@ describe('deriveSheet aggregator', () => {
 	it('B9: armor you ARE proficient with casts fine (no block)', () => {
 		// the base wizard wears leather (light) and is proficient with light armor
 		expect(deriveSheet(wizard(), graph).spellcasting.armorBlock).toBeUndefined();
+	});
+
+	it('ITEM-TEMPLATES: a template weapon says it needs a base, and IS that base once told', () => {
+		const c = wizard();
+		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 };
+		c.build.inventory = [
+			{ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: false },
+		];
+		const blank = characterSchema.parse(c);
+		const bare = computeAttacks(blank, deriveSheet(blank, graph), graph)[0]!;
+		// no dice, no category, no scopes — and it SAYS so rather than looking like a working attack
+		expect(attackNotes(bare)).toContain('Base weapon not set');
+
+		// the player says which weapon it is, and the row inherits everything the base states
+		c.build.inventory = [
+			{
+				item: `item:${S}:flame_tongue`,
+				qty: 1,
+				equipped: true,
+				attuned: false,
+				base: `item:${S}:greataxe`,
+			},
+		];
+		const chosen = characterSchema.parse(c);
+		const armed = computeAttacks(chosen, deriveSheet(chosen, graph), graph)[0]!;
+		expect(attackNotes(armed)).not.toContain('Base weapon not set');
+		expect(armed.damageParts[0]?.pool).toEqual({ 12: 1 }); // the greataxe's die, not a bare modifier
+		expect(armed.scopes).toContain('two_handed'); // …and its tags, which scoped effects read
+		expect(armed.name).toBe('Flame Tongue'); // still the magic item, not renamed to its base
+	});
+
+	it('ITEM-TEMPLATES: a weapon that does no damage is NOT a template — a net is still a net', () => {
+		const c = wizard();
+		c.build.inventory = [{ item: `item:${S}:net`, qty: 1, equipped: true, attuned: false }];
+		const parsed = characterSchema.parse(c);
+		const net = computeAttacks(parsed, deriveSheet(parsed, graph), graph)[0]!;
+		expect(attackNotes(net)).not.toContain('Base weapon not set');
 	});
 
 	it('A7: a weapon outside the class grants omits the proficiency bonus from to-hit', () => {

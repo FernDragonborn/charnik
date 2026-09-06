@@ -24,8 +24,9 @@ import {
 	type InventoryEntry,
 } from '$lib/character/inventory';
 import { COINS, purseWeightLb, type Purse } from '$lib/rules/currency';
-import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 import { rowName, type ContentGraph } from '$lib/content/loader';
+import { isRowActive } from '$lib/content/sources.svelte';
 import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -42,6 +43,16 @@ export interface InventoryRow {
 	equippable: boolean;
 	consumable: boolean;
 	attunable: boolean;
+	/** A template item ("Weapon (Any Melee Weapon)") — one whose own row does not say what kind of
+	 *  thing it is. Stays true after a base is picked, because the pick is the player's and they must
+	 *  be able to change it: the row keeps the chooser, with `entry.base` selected in it. */
+	isTemplate: boolean;
+}
+
+/** A mundane item a template can be resolved against, as the picker lists it. */
+export interface BaseItemOption {
+	ref: string;
+	name: string;
 }
 
 export class InventoryTracker {
@@ -51,11 +62,11 @@ export class InventoryTracker {
 		private getSheet: () => CharacterSheet | null,
 	) {}
 
-	private resolve = (ref: string): ResolvedItem | undefined => {
+	private resolve = (ref: string, base?: string): ResolvedItem | undefined => {
 		const graph = this.getGraph();
 		if (!graph) return undefined;
 		const row = graph.get(ref);
-		return row?.type === 'item' ? resolveItem(graph, row) : undefined;
+		return row?.type === 'item' ? resolveItem(graph, row, base) : undefined;
 	};
 
 	private get list(): InventoryEntry[] {
@@ -66,7 +77,10 @@ export class InventoryTracker {
 		const c = this.getCharacter();
 		if (!c) return [];
 		return c.build.inventory.map((entry) => {
-			const item = this.resolve(entry.item);
+			// resolved TWICE only for a template that has a base: once as the row itself is (is there a
+			// question to ask?) and once as the player answered it (what does the sheet show?)
+			const bare = this.resolve(entry.item);
+			const item = entry.base ? this.resolve(entry.item, entry.base) : bare;
 			const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null;
 			return {
 				entry,
@@ -81,6 +95,7 @@ export class InventoryTracker {
 				equippable: isEquippable(item),
 				consumable: isConsumable(item),
 				attunable: needsAttunement(item),
+				isTemplate: !!bare && needsBaseItem(bare),
 			};
 		});
 	});
@@ -164,6 +179,35 @@ export class InventoryTracker {
 	};
 
 	bump = (ref: string, by: number) => this.write(bumpQty(this.list, ref, by));
+
+	/** Every mundane item a template could BE, of the same kind as the template asking: a weapon
+	 *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks
+	 *  an item magical (`content.md`), and a row that states nothing itself is a template too and has
+	 *  nothing to lend. Edition- and source-filtered like every other list the sheet shows. */
+	baseOptionsFor = (ref: string): BaseItemOption[] => {
+		const graph = this.getGraph();
+		const c = this.getCharacter();
+		const template = graph?.get(ref);
+		if (!graph || !c || template?.type !== 'item') return [];
+		const out: BaseItemOption[] = [];
+		for (const row of graph.rows) {
+			if (row.type !== 'item' || !row.systems.includes(c.system) || !isRowActive(row)) continue;
+			if (row.data.category !== template.data.category || row.data.rarity) continue;
+			// a row that would itself need a base has nothing to lend
+			if (needsBaseItem(resolveItem(graph, row))) continue;
+			out.push({ ref: `item:${row.source}:${row.id}`, name: rowName(row) });
+		}
+		return out.sort((a, b) => a.name.localeCompare(b.name));
+	};
+
+	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
+	 *  one rather than silently keeping the last pick. */
+	setBase = (ref: string, base: string) => {
+		const entry = this.getCharacter()?.build.inventory.find((e) => e.item === ref);
+		if (!entry) return;
+		if (base) entry.base = base;
+		else delete entry.base;
+	};
 
 	/** Spend one. The last one leaves the list, so a used-up stack does not linger as a zero row. */
 	use = (ref: string) => {

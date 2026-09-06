@@ -574,6 +574,8 @@
 			"wasCritical": "That hit was a critical"
 		},
 		"inventory": {
+			"baseItem": "What kind of item is {name}?",
+			"baseItemNone": "Base item not set",
 			"load": "Load",
 			"weight": "{carried} / {capacity} lb",
 			"attuned": "attuned {count}/{cap}",

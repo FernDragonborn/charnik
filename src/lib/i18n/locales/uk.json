@@ -574,6 +574,8 @@
 			"wasCritical": "Це був критичний удар"
 		},
 		"inventory": {
+			"baseItem": "Що це за річ — {name}?",
+			"baseItemNone": "Основу не обрано",
 			"load": "Навантаження",
 			"weight": "{carried} / {capacity} фунтів",
 			"attuned": "налаштовано {count}/{cap}",

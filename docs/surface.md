@@ -1008,6 +1008,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface ResolvedItem` — An item as the sheet reads it: its row, its tags with a `base_item_id` base merged underneath, * and the damage inher…
 - `function resolveItem` — * Resolve an item against the mundane row its `base_item_id` names — a +1 longsword IS a longsword, * so it inherits …
+- `function needsBaseItem` — * Does this item need the player to say WHAT it is?
 - `function armorCategoryOf` — An armor/shield's proficiency category.
 
 ### `src/lib/content/resource-joins.ts`
@@ -1642,4 +1643,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 979 exports across 133 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 980 exports across 133 modules · 64 duplicate suspects._

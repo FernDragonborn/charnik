@@ -6,7 +6,13 @@
  * is one module doing two jobs — the cycle madge flags.
  */
 import type { ContentGraph, LoadedRowOf } from './loader';
-import { parseItemTags, armorWeightOf, type ArmorCategory, type ItemTags } from './item-tags';
+import {
+	parseItemTags,
+	armorWeightOf,
+	ITEM_TAG,
+	type ArmorCategory,
+	type ItemTags,
+} from './item-tags';
 
 /** An item as the sheet reads it: its row, its tags with a `base_item_id` base merged underneath,
  *  and the damage inherited the same way. Built ONCE per equipped item, so the readers that each
@@ -22,19 +28,56 @@ export interface ResolvedItem {
  * so it inherits every tag and the damage it does not state itself. The base's tags go underneath
  * and the item's own win by name, so a magic row adds (`attunement`) without losing (`versatile`).
  *
- * Within the SAME source: a base and its magic version ship together, and resolving across sources
- * would make one pack authoritative over another — the argument that keeps duplicate resolution in
- * `collisions.json` (docs/internals/content.md). A `base_item_id` that resolves to nothing is
- * surfaced at load, not guessed at here.
+ * A TEMPLATE row names no base at all ("Weapon (any Simple or Martial weapon)"): there the base is
+ * `chosenBase`, the player's pick stored on their inventory entry, and it merges exactly the same way.
+ *
+ * Within the SAME source for an authored `base_item_id`: a base and its magic version ship together,
+ * and resolving across sources would make one pack authoritative over another — the argument that
+ * keeps duplicate resolution in `collisions.json` (docs/internals/content.md). A `base_item_id` that
+ * resolves to nothing is surfaced at load, not guessed at here.
  */
-export function resolveItem(graph: ContentGraph, row: LoadedRowOf<'item'>): ResolvedItem {
+export function resolveItem(
+	graph: ContentGraph,
+	row: LoadedRowOf<'item'>,
+	chosenBase?: string,
+): ResolvedItem {
 	const own = parseItemTags(row.data.tags);
 	const baseId = row.data.base_item_id;
-	const base = baseId ? graph.get(`item:${row.source}:${baseId}`) : undefined;
+	// the row's own base wins: content that already says what it is leaves nothing to choose. The
+	// chosen base is a full ref, and CROSSES sources on purpose — it is the player's answer to "which
+	// weapon is this", not one pack claiming authority over another.
+	const base = baseId
+		? graph.get(`item:${row.source}:${baseId}`)
+		: chosenBase
+			? graph.get(chosenBase)
+			: undefined;
 	if (base?.type !== 'item') return { row, tags: own, damage: row.data.damage ?? '' };
 	const tags = new Map(parseItemTags(base.data.tags));
 	for (const [name, value] of own) tags.set(name, value);
 	return { row, tags, damage: row.data.damage || base.data.damage || '' };
+}
+
+/**
+ * Does this item need the player to say WHAT it is? A template row — "Weapon (Any Melee Weapon)",
+ * "Armor (Medium or Heavy)" — states only that it is magical, so until a base is chosen it has no
+ * proficiency category, no dice and no AC, and an attack or armour line built from it looks complete
+ * while doing nothing. The one predicate behind both the attack-row note and the picker that fixes it.
+ *
+ * The tell is the CATEGORY-DEFINING tag, not an empty tag list: every real weapon row says `simple`
+ * or `martial` and every real armour says `armor:<weight>` or `ac`, while a template carries only
+ * `attunement`. A net does no damage and is still a net, which is why "no damage" alone is not it.
+ */
+export function needsBaseItem(item: ResolvedItem): boolean {
+	if (item.row.data.base_item_id) return false;
+	switch (item.row.data.category) {
+		case 'weapon':
+			return !item.tags.has(ITEM_TAG.simple) && !item.tags.has(ITEM_TAG.martial);
+		case 'armor':
+		case 'shield':
+			return !item.tags.has(ITEM_TAG.armor) && !item.tags.has(ITEM_TAG.ac);
+		default:
+			return false;
+	}
 }
 
 /** An armor/shield's proficiency category. The row's `category === 'shield'` is authoritative — a
