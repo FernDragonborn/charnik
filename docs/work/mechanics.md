@@ -313,14 +313,6 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal 6 would kill
   you again on the spot. The dead screen is deliberately **not dismissible by backdrop or Escape** —
   a roster link is the other way out, so a dead character cannot lock the player out.
-  - [ ] **RAW tail: damage taken at 0 HP adds a death-save FAILURE** (two if the hit was a crit).
-    Everything else about dying is modelled — `deathSave()` runs nat 20 → 1 HP, nat 1 → two failures,
-    three successes → stable, three failures → `die()`, and `damage()` already resolves instant
-    death — but `damage()` never touches `play.deathSaves.failures`, so a downed character can be hit
-    all day for free. **Crit-ness comes from a `critical` checkbox** that appears beside the damage
-    input only at 0 HP, default off: the Damage button has no attack behind it to read crit-ness
-    from, and asking in one checkbox beats inferring wrong. Surfacing, not deciding — the failure is
-    applied because RAW is unconditional here, and the count stays hand-editable as it is today.
 - [x] **UBUG-16 · abilities cost their action or bonus action.** What a resource chip does with
   one spend option versus several is `docs/internals/actions.md` ▸ §2. `gain_action` raises the
   per-turn MAX (`play.turn.grantedActions`) rather than refunding a spent action — play-state on

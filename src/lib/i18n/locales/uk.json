@@ -560,7 +560,8 @@
 			"successN": "Успіх {n}",
 			"temp": "тимч.",
 			"tempHp": "Тимч. ОЗ",
-			"untyped": "без типу"
+			"untyped": "без типу",
+			"wasCritical": "Це був критичний удар"
 		},
 		"inventory": {
 			"load": "Навантаження",
@@ -732,7 +733,8 @@
 			"recharged": "{name} · повернуто {count}",
 			"rechargedAll": "{name} відновлено повністю",
 			"nothingRecharged": "Тоді ніщо не відновлюється",
-			"windowOpen": "{name} можна використати зараз"
+			"windowOpen": "{name} можна використати зараз",
+			"deathFailureFromDamage": "Удар на 0 ХП — провалів рятівних кидків: {count}"
 		},
 		"panel": {
 			"actions": "Дії",

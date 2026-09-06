@@ -792,6 +792,27 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.hp.current).toBe(20);
 	});
 
+	it('damage at 0 HP is a death-save failure, and two when the hit was a critical', () => {
+		character.play.hp = { current: 0, max: 20, temp: 0 };
+		combat.hpAmount = 3;
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(1);
+
+		combat.hp.damageWasCrit = true; // the one thing the Damage button cannot read off an attack
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(3);
+		expect(character.play.death?.cause).toBe('death_saves'); // the third failure is the end
+		expect(combat.hp.damageWasCrit).toBe(false); // crit-ness belonged to that hit only
+	});
+
+	it('damage while still standing leaves the death-save track alone', () => {
+		character.play.hp = { current: 12, max: 20, temp: 0 };
+		combat.hpAmount = 5;
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(0);
+		expect(character.play.hp.current).toBe(7);
+	});
+
 	it('action economy: in combat a spell spends its slot and the second cast is blocked', () => {
 		character.play.inCombat = true;
 		character.play.turn.action = 0;

@@ -560,7 +560,8 @@
 			"successN": "Success {n}",
 			"temp": "temp",
 			"tempHp": "Temp HP",
-			"untyped": "untyped"
+			"untyped": "untyped",
+			"wasCritical": "That hit was a critical"
 		},
 		"inventory": {
 			"load": "Load",
@@ -732,7 +733,8 @@
 			"recharged": "{name} · {count} back",
 			"rechargedAll": "{name} fully restored",
 			"nothingRecharged": "Nothing recharges then",
-			"windowOpen": "{name} can be used now"
+			"windowOpen": "{name} can be used now",
+			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)"
 		},
 		"panel": {
 			"actions": "Actions",

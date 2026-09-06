@@ -76,6 +76,12 @@ export class HitPoints {
 		if (!d) return [];
 		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
 	}
+	/** Was the hit that is being entered a CRITICAL? Only asked at 0 HP, where it is the difference
+	 *  between one death-save failure and two — the Damage button has no attack behind it to read
+	 *  crit-ness from, and one checkbox beats inferring it wrong. Default off, and off again after
+	 *  each hit. */
+	damageWasCrit = $state(false);
+
 	damage = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
@@ -96,6 +102,17 @@ export class HitPoints {
 		// carries this rule (it only cross-references it), so both editions run the 5.1 text — the 2024
 		// PHB keeps the same threshold. docs/internals/rules-core.md ▸ RAW, RAI, and saying which
 		if (p.hp.current === 0 && n - before >= this.hpMax) this.die('massive_damage');
+		// RAW, both editions: damage taken while ALREADY at 0 HP is a death-save failure — two if the
+		// hit was a critical. Unconditional in the book, so it is applied rather than offered; the
+		// count stays hand-editable like every other pip. `taken`, not `n`: the text says "any damage",
+		// and temp HP soaking it does not un-hit a dying body.
+		if (before === 0 && taken > 0 && !p.death) {
+			const failures = this.damageWasCrit ? 2 : 1;
+			p.deathSaves.failures = Math.min(3, p.deathSaves.failures + failures);
+			toast(t('combat.notice.deathFailureFromDamage', { count: failures }));
+			this.damageWasCrit = false; // crit-ness belongs to ONE hit, never to the next one
+			if (p.deathSaves.failures >= 3) this.die('death_saves');
+		}
 		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
 		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
 		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.

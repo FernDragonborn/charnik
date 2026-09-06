@@ -1430,8 +1430,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/rules/recharge.ts`
 
-- `const RECHARGE_TRIGGERS` — * The boundaries a pool can come back at.
-- `type RechargeTrigger`
 - `const RECHARGE_ALL` — The whole pool, said as a cell.
 - `type RechargeAmount` — How much comes back at that boundary: {@link RECHARGE_ALL}, or an L2 expression (`1d6+1`, `2`) * resolved when the bo…
 - `interface RechargePolicy`
@@ -1614,4 +1612,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 50 components · 961 exports across 131 modules · 62 duplicate suspects._
+_47 tokens · 78 global classes · 50 components · 959 exports across 131 modules · 62 duplicate suspects._

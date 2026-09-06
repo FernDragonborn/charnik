@@ -19,8 +19,8 @@
  * rather than a `none` because the sheet says which one it is, and a chip reading "consumable" tells
  * a player something "special" does not.
  */
-export const RECHARGE_TRIGGERS = ['short', 'long', 'dawn', 'dusk', 'consumable', 'other'] as const;
-export type RechargeTrigger = (typeof RECHARGE_TRIGGERS)[number];
+const RECHARGE_TRIGGERS = ['short', 'long', 'dawn', 'dusk', 'consumable', 'other'] as const;
+type RechargeTrigger = (typeof RECHARGE_TRIGGERS)[number];
 
 /** The whole pool, said as a cell. Named because a bare `'all'` in a comparison is exactly the
  *  literal that goes wrong when someone types `full`. */

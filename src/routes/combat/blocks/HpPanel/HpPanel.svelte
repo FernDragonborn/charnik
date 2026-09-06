@@ -58,6 +58,15 @@
 			>
 		</div>
 	</div>
+	<!-- At 0 HP the next hit is a death-save failure, and TWO if it was a critical — RAW, and the one
+	     thing the Damage button cannot know, since there is no attack behind it to read. Asked only
+	     here, where it changes something. -->
+	{#if combat.character?.play.hp.current === 0 && !combat.character?.play.death}
+		<label class="crit-ask">
+			<input type="checkbox" bind:checked={combat.hp.damageWasCrit} />
+			{$_('combat.hp.wasCritical')}
+		</label>
+	{/if}
 	{#if combat.damageTypeOptions.length}
 		<!-- B20: only shown when the sheet HAS a defense — picks the incoming damage's type so
 		     resist (½) / immune (0) / vulnerable (×2) apply. Untyped = plain damage. -->
@@ -223,6 +232,17 @@
 	}
 	.temptag:hover {
 		filter: brightness(1.14);
+	}
+	/* the crit question sits under the damage row it qualifies, in the same muted register as the
+	   damage-type select beside it */
+	.crit-ask {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
+		margin-top: var(--space-1-5);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+		cursor: pointer;
 	}
 	.hitpoints .hitpoints-value {
 		font-family: var(--font-display);
