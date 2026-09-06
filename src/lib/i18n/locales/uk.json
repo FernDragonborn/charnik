@@ -753,7 +753,8 @@
 			"showHide": "Показати / сховати",
 			"skills": "Навички",
 			"spells": "Закляття",
-			"coins": "Монети"
+			"coins": "Монети",
+			"usedThisTurn": "використано цього ходу"
 		},
 		"recharge": {
 			"consumable": "витратне",

@@ -753,7 +753,8 @@
 			"showHide": "Show / hide",
 			"skills": "Skills",
 			"spells": "Spells",
-			"coins": "Coins"
+			"coins": "Coins",
+			"usedThisTurn": "used this turn"
 		},
 		"recharge": {
 			"consumable": "consumable",

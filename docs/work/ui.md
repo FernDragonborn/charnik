@@ -26,8 +26,10 @@
   navigable (the picker contract, `docs/internals/ui.md`). (7) **DONE** — the combat prepared cap is per CLASS
   (A18-tail): a prepared spell is attributed to the class that grants it and counted against that
   class's cap; `classes[0]` survives only as the documented fallback for a spell no class claims,
-  which is the fallback `casterForSpell` already makes. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
-  toggle first, automation later.
+  which is the fallback `casterForSpell` already makes. (8) **DONE (manual half)** — a granted roll carries a
+  "used this turn" mark the PLAYER sets, cleared by Next turn (`play.turn.usedRolls`). It is not set
+  by rolling: only some granted rolls are once-per-turn, the content does not say which, and a marker
+  that appeared on its own would invent a limit. Automating it needs the content to say so.
 - [x] **ARCH-1 / B8 · the UI reads in the player's language, everywhere.** Every user-facing string
   is a catalog key, in the components and in everything upstream of them. The rulings the sweep
   settled live in [`../internals/ui.md`](../internals/ui.md) ▸ Strings live in the catalogs, and what

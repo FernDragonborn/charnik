@@ -792,6 +792,18 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.hp.current).toBe(20);
 	});
 
+	it('a granted roll can be marked used for THIS turn, and the turn clears it', () => {
+		character.play.turn.usedRolls = [];
+		combat.economy.toggleRollUsed('sneak_attack');
+		expect(combat.economy.isRollUsed('sneak_attack')).toBe(true);
+		combat.economy.toggleRollUsed('sneak_attack'); // the player's mark, so it comes off the same way
+		expect(combat.economy.isRollUsed('sneak_attack')).toBe(false);
+
+		combat.economy.toggleRollUsed('sneak_attack');
+		combat.economy.nextTurn();
+		expect(combat.economy.isRollUsed('sneak_attack')).toBe(false); // a turn-scoped mark dies with the turn
+	});
+
 	it('INSPIRATION: 2024 rerolls the d20 and keeps the NEW one, spending the flag once', () => {
 		character.play.inspiration = true;
 		combat.roll({ text: 'Stealth' }, 3, noModifiers, 'skill.stealth');

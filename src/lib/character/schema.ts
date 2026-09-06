@@ -206,8 +206,12 @@ const playSchema = z.object({
 			 *  do not un-spend what was used. A one-turn fact rather than an effect, so it survives with
 			 *  effects-auto off and dies with the turn. Absent on saves written before it existed → 0. */
 			grantedActions: z.number().int().min(0).default(0),
+			/** Feature rollables the player has marked as USED this turn (Sneak Attack's once-per-turn).
+			 *  Marked by hand, never by rolling: most granted rolls have no per-turn limit, and a marker
+			 *  that appeared on its own would invent one. Turn-scoped, so `Next turn` clears it. */
+			usedRolls: z.array(z.string()).default([]),
 		})
-		.default({ action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 }),
+		.default({ action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0, usedRolls: [] }),
 });
 
 // --- ui / per-character view preferences --------------------------------------

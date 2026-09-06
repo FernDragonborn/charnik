@@ -99,7 +99,7 @@ export class TurnEconomy {
 	nextTurn = () => {
 		const c = this.getCharacter();
 		if (!c) return;
-		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 };
+		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0, usedRolls: [] };
 		c.play.round += 1;
 		this.expireTimedEffects();
 	};
@@ -114,6 +114,18 @@ export class TurnEconomy {
 		c.play.round += Math.floor(rounds);
 		this.expireTimedEffects();
 	};
+	/** Has the player marked this granted roll as used this turn? Their mark, not the app's: only some
+	 *  of these are once-per-turn (Sneak Attack is, a Bardic Inspiration die is not), and the content
+	 *  does not say which — so the sheet offers the marker and the player decides what it means. */
+	isRollUsed = (id: string): boolean =>
+		(this.getCharacter()?.play.turn.usedRolls ?? []).includes(id);
+	toggleRollUsed = (id: string) => {
+		const turn = this.getCharacter()?.play.turn;
+		if (!turn) return;
+		turn.usedRolls = turn.usedRolls.includes(id)
+			? turn.usedRolls.filter((x) => x !== id)
+			: [...turn.usedRolls, id];
+	};
 	/** Enter/leave combat. Entering resets the turn + round so tracking starts clean; leaving hides the
 	 *  turnbar and lifts action-economy enforcement. */
 	toggleCombat = () => {
@@ -121,7 +133,7 @@ export class TurnEconomy {
 		if (!c) return;
 		c.play.inCombat = !c.play.inCombat;
 		if (c.play.inCombat) {
-			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 };
+			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0, usedRolls: [] };
 			c.play.round = 1;
 		}
 	};
