@@ -677,6 +677,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
+- `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, a finesse weapon takes * the better of the …
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 
 ### `src/lib/combat/constants.ts`
@@ -1643,4 +1644,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 980 exports across 133 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 981 exports across 133 modules · 64 duplicate suspects._

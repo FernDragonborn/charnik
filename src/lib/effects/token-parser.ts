@@ -128,7 +128,9 @@ export interface ParsedEffect {
 	 *
 	 * `flat_bonus:attack:<category>` (Archery, shipped) says the same thing in the older qualifier
 	 * slot and normalizes to this field, so there is one shape downstream and one meaning.
-	 * Comma-separated means ALL of them (GWF `two_handed,melee`).
+	 * Comma-separated means ALL of them — `damage.melee,str` is 2014 Rage: a melee attack, AND one
+	 * that resolved from Strength. The roll path already matched a list this way
+	 * (`scope.split(',').every(...)`); the target grammar admits it too.
 	 */
 	scope?: string;
 	/** set_override comparison mode (A9): `floor` = "unless already higher" (Headband → INT ≥ 19),
@@ -228,7 +230,7 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 	// optional `:<type>` slot between target and sign (D9-tail flaming damage): `damage:fire+1d6`.
 	// `:` is structural (never inside an L2 expression), so this is unambiguous ahead of the `[+-]`.
 	const lit =
-		/^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(
+		/^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+(?:,[a-z0-9_]+)*)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(
 			rest,
 		);
 	if (lit) {
@@ -241,9 +243,10 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 		return { kind, target, amount: clampAmount(Number(sign + amount)), raw, ...qual };
 	}
 	// L2 expression value: `<target>[:<qualifier>]<+|->` then an expression. A `-` sign negates it.
-	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(.+)$/i.exec(
-		rest,
-	);
+	const ex =
+		/^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+(?:,[a-z0-9_]+)*)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(.+)$/i.exec(
+			rest,
+		);
 	if (!ex) return { kind: 'unknown', raw };
 	const { target, scope } = scopedTarget(ex[1] ?? '');
 	const qual = { ...(scope ? { scope } : {}), ...qualifierSlot(target, ex[2]) };
@@ -262,10 +265,10 @@ const parseSetOverride: KindParser = (rest, raw, kind) => {
 		body = rest.slice(0, modeM.index);
 	}
 	const withMode = (p: ParsedEffect): ParsedEffect => (setMode ? { ...p, setMode } : p);
-	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(body);
+	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+(?:,[a-z0-9_]+)*)?):(-?\d+)$/i.exec(body);
 	if (lit)
 		return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
-	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(body);
+	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+(?:,[a-z0-9_]+)*)?):(.+)$/i.exec(body);
 	if (!ex) return { kind: 'unknown', raw };
 	return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
 };

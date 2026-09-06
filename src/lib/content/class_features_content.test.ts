@@ -3,6 +3,7 @@ import { type ContentGraph } from './loader';
 import { loadPacks } from '../../test-support/real-content';
 import { newCharacter, characterSchema, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
+import { rollEffectsFor } from '../combat/roll';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 
 /*
@@ -144,6 +145,47 @@ describe('shipped class feature · Uncanny Metabolism MULTI-action regain at com
 			await loadEdition('srd-2024'),
 		).resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
 		expect(opt?.action).toBe('restore_resource:focus;heal:1d10+11');
+	});
+});
+
+describe('shipped Rage damage is scoped to Strength, per edition (RAGE-SCOPE)', () => {
+	// The bonus rides the ROLL path, matched against the attack's own scopes — a weapon's tags, its
+	// id, and the ability it resolved from. So the assertion is the same one the sheet makes when a
+	// player presses an attack: does this bonus reach THIS attack?
+	const rageDamage = (sheet: ReturnType<typeof deriveSheet>, scopes: string[]) =>
+		rollEffectsFor(sheet.facts, 'damage', new Set(scopes)).flat;
+
+	const raging = (g: ContentGraph, source: string, system: '5e' | '5.5e', level: number) => {
+		const c = barbarian(source, system, level);
+		c.play.effects = [
+			{ iid: 'r1', label: 'Rage', effects: ['apply_condition:rage'], positive: true },
+		];
+		return deriveSheet(characterSchema.parse(c), g);
+	};
+
+	it('2014: "a melee weapon attack using Strength" — both halves, or nothing', async () => {
+		const s = raging(await loadEdition('srd-2014'), 'SRD 5.1', '5e', 1);
+		expect(rageDamage(s, ['melee', 'str', 'greataxe'])).toBe(2); // a greataxe swung with STR
+		expect(rageDamage(s, ['melee', 'dex', 'rapier'])).toBe(0); // finesse taken with DEX
+		expect(rageDamage(s, ['ranged', 'dex', 'shortbow'])).toBe(0); // Crawford: melee only
+		expect(rageDamage(s, ['melee', 'str', 'unarmed_strike'])).toBe(2); // fists are a melee attack
+	});
+
+	it('2024: "an attack using Strength", weapon or Unarmed Strike — no melee half', async () => {
+		const s = raging(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e', 1);
+		expect(rageDamage(s, ['melee', 'str', 'greataxe'])).toBe(2);
+		expect(rageDamage(s, ['melee', 'dex', 'rapier'])).toBe(0);
+		expect(rageDamage(s, ['melee', 'str', 'unarmed_strike'])).toBe(2);
+		// a thrown weapon still resolves from Strength, and 2024 dropped the word "melee"
+		expect(rageDamage(s, ['thrown', 'str', 'handaxe'])).toBe(2);
+	});
+
+	it('scales with barbarian level, and reaches no attack at all when not raging', async () => {
+		const g = await loadEdition('srd-2024');
+		expect(rageDamage(raging(g, 'SRD 5.2.1', '5.5e', 9), ['str'])).toBe(3);
+		expect(rageDamage(raging(g, 'SRD 5.2.1', '5.5e', 16), ['str'])).toBe(4);
+		const calm = deriveSheet(barbarian('SRD 5.2.1', '5.5e', 16), g);
+		expect(rageDamage(calm, ['melee', 'str', 'greataxe'])).toBe(0);
 	});
 });
 

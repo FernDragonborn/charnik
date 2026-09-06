@@ -2,6 +2,7 @@
  * Weapon/unarmed attack rows for the Combat view: parse a damage string, fold a weapon's own magic
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
+import type { Ability } from '$lib/rules/core';
 import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
@@ -295,6 +296,22 @@ function scopedAttackBonus(
 	return { attack, notes };
 }
 
+/**
+ * Which ability an attack resolves from, and its modifier: ranged is DEX, a finesse weapon takes
+ * the better of the two, everything else is STR. The ANSWER is also an effect scope, because RAW
+ * keys some bonuses off the ability rather than off the weapon — Rage pays out on "an attack using
+ * Strength", so the same rapier is or is not eligible depending on this call.
+ */
+export function attackAbility(
+	tags: ItemTags,
+	strMod: number,
+	dexMod: number,
+): { ability: Ability; mod: number } {
+	if (tags.has(ITEM_TAG.ranged)) return { ability: 'dex', mod: dexMod };
+	if (tags.has(ITEM_TAG.finesse) && dexMod > strMod) return { ability: 'dex', mod: dexMod };
+	return { ability: 'str', mod: strMod };
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -322,11 +339,7 @@ export function computeAttacks(
 		// a magic weapon carries only what it adds; the rest — category, properties, base damage —
 		// comes from the mundane row its `base_item_id` names
 		const item = resolveItem(graph, row, inv.base);
-		const ranged = item.tags.has(ITEM_TAG.ranged);
-		// ranged is DEX, finesse is the better of the two, everything else is STR
-		let mod = strMod;
-		if (ranged) mod = dexMod;
-		else if (item.tags.has(ITEM_TAG.finesse)) mod = Math.max(strMod, dexMod);
+		const { ability, mod } = attackAbility(item.tags, strMod, dexMod);
 		const proficient = isWeaponProficient(weaponGrants, weaponCategoryOf(item.tags), row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
@@ -338,7 +351,10 @@ export function computeAttacks(
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
 		// …and so is the weapon's own id, which is what lets a bonus name ONE weapon
 		// (`flat_bonus:damage.longsword+1`) rather than a whole category.
-		const scopeSet = new Set([...item.tags.keys(), row.id]);
+		// …and so is the ABILITY this attack resolved from, because RAW keys some bonuses off it
+		// rather than off the weapon: Rage pays out on "an attack using Strength", so a rapier swung
+		// with Dexterity must not take it while the same rapier swung with Strength does.
+		const scopeSet = new Set([...item.tags.keys(), row.id, ability]);
 		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
 		const notProfNote = proficient
 			? undefined
@@ -389,7 +405,9 @@ export function computeAttacks(
 	// melee-scoped attack bonuses a weapon does — it is one of the attacks that scope names, and
 	// leaving it out made a character's fists the one melee attack a melee bonus skipped. Its damage
 	// is `1 + STR` by the book; effects (a Rage +2) fold in at the roll, as they do for every weapon.
-	const unarmedScopes = new Set(['melee', UNARMED_STRIKE_ID]);
+	// an unarmed strike is always Strength, so it carries that scope like any weapon that resolved
+	// from it — which is what makes 2024's "with either a weapon or an Unarmed Strike" fall out.
+	const unarmedScopes = new Set(['melee', 'str', UNARMED_STRIKE_ID]);
 	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
 	out.push({
 		id: UNARMED_STRIKE_ID,

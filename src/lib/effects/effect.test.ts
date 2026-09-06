@@ -703,3 +703,22 @@ describe('lintEffectTokens · content-health soft-warns over every expression sl
 		expect(lintEffectTokens(['flat_bonus:damage+1d7'])[0]).toContain('flat_bonus:damage+1d7 —');
 	});
 });
+
+describe('a scoped bonus can name SEVERAL scopes, and needs all of them (RAGE-SCOPE)', () => {
+	it('parses a comma-separated scope list in the dotted target', () => {
+		expect(parseToken('flat_bonus:damage.melee,str+2')).toMatchObject({
+			kind: 'flat_bonus',
+			target: 'damage',
+			scope: 'melee,str',
+			amount: 2,
+		});
+	});
+	it('keeps the single-scope and unscoped forms exactly as they were', () => {
+		expect(parseToken('flat_bonus:damage.str+2')).toMatchObject({ target: 'damage', scope: 'str' });
+		expect(parseToken('flat_bonus:damage+2').scope).toBeUndefined();
+	});
+	it('a trailing or doubled comma is malformed, not an empty scope', () => {
+		expect(parseToken('flat_bonus:damage.melee,+2').kind).toBe('unknown');
+		expect(parseToken('flat_bonus:damage.melee,,str+2').kind).toBe('unknown');
+	});
+});

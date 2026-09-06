@@ -122,9 +122,12 @@ plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets
 spell — Agonizing Blast). Only `attack` and `damage` take a scope; every other dotted target IS a
 target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
 thing and normalizes to the same field. A scope matches when EVERY comma-separated part is one of the
-rolling thing's scopes — a weapon's tags plus its own id, or the cast spell's id — so a roll that
+rolling thing's scopes — a weapon's tags, its own id, and the ABILITY the attack resolved from
+(`str`/`dex`), or the cast spell's id — so a roll that
 names no scopes (a save, a skill) picks up no scoped bonus at all. Attack scopes fold once, in
 `computeAttacks`, because that is where the weapon is known; damage scopes fold at the roll.
+2014 Rage is `damage.melee,str` (both halves) and 2024 Rage is `damage.str` (either weapon or
+Unarmed Strike) — the same sentence each edition prints, said in scopes.
 `docs/internals/compatibility.md` §4 says why the scope is a target and not a fourth segment.
 
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
