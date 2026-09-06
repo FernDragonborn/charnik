@@ -21,6 +21,17 @@ function charOf(source: string, system: '5e' | '5.5e', classId: string, level: n
 const barbarian = (source: string, system: '5e' | '5.5e', level: number) =>
 	charOf(source, system, 'barbarian', level);
 
+/** How many attacks one Attack action makes, for a single-class character of that level. */
+function attacksOf(
+	graph: ContentGraph,
+	source: string,
+	system: '5e' | '5.5e',
+	classId: string,
+	level: number,
+): number {
+	return deriveSheet(charOf(source, system, classId, level), graph).attacksPerAction.value;
+}
+
 function rollFormula(
 	graph: ContentGraph,
 	source: string,
@@ -480,5 +491,47 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 			'5.5e',
 		);
 		expect(budget).toBe(8); // Rogue L6 (2+2) + Bard 2024 L10 (2+2)
+	});
+});
+
+describe('shipped Extra Attack · the Attack action makes more than one (EXTRA-ATTACK)', () => {
+	it('srd-2024: the ladder is three rows, and each RAISES the count', async () => {
+		const g = await loadEdition('srd-2024');
+		const fighter = (level: number) => attacksOf(g, 'SRD 5.2.1', '5.5e', 'fighter', level);
+		expect([fighter(4), fighter(5), fighter(10), fighter(11), fighter(19), fighter(20)]).toEqual([
+			1, 2, 2, 3, 3, 4,
+		]);
+	});
+
+	it('srd-2014: the fighter carries its whole ladder in one row', async () => {
+		const g = await loadEdition('srd-2014');
+		const fighter = (level: number) => attacksOf(g, 'SRD 5.1', '5e', 'fighter', level);
+		expect([fighter(4), fighter(5), fighter(11), fighter(20)]).toEqual([1, 2, 3, 4]);
+	});
+
+	it.each([
+		['srd-2024', 'SRD 5.2.1', '5.5e', ['barbarian', 'fighter', 'monk', 'paladin', 'ranger']],
+		['srd-2014', 'SRD 5.1', '5e', ['barbarian', 'fighter', 'monk', 'paladin', 'ranger']],
+	] as const)(
+		'%s: every class that grants it at 5 gets two attacks',
+		async (dir, src, sys, ids) => {
+			const g = await loadEdition(dir);
+			for (const id of ids) expect([id, attacksOf(g, src, sys, id, 5)]).toEqual([id, 2]);
+		},
+	);
+
+	it('does NOT stack across classes — a fighter 5 / barbarian 5 still attacks twice', async () => {
+		const g = await loadEdition('srd-2024');
+		const c = newCharacter('grog', 'Grog', '5.5e');
+		c.build.classes = [
+			{ class: 'class:SRD 5.2.1:fighter', level: 5 },
+			{ class: 'class:SRD 5.2.1:barbarian', level: 5 },
+		];
+		expect(deriveSheet(characterSchema.parse(c), g).attacksPerAction.value).toBe(2);
+	});
+
+	it('a class that never grants it stays at one', async () => {
+		const g = await loadEdition('srd-2024');
+		expect(attacksOf(g, 'SRD 5.2.1', '5.5e', 'wizard', 20)).toBe(1);
 	});
 });

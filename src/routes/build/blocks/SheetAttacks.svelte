@@ -19,15 +19,16 @@
 	const attacks = $derived(
 		b.sheet && b.graph ? computeAttacks(b.assembled, b.sheet, b.graph, app.activeLocale) : []
 	);
-	const extraAttacks = $derived(b.sheet?.facts.numeric.filter((f) => f.target === 'attacks') ?? []);
-	const perTurn = $derived(1 + extraAttacks.reduce((n, f) => n + (f.amount ?? 0), 0));
+	// the sheet's folded value, not a sum over raw facts: Extra Attack RAISES the number and does
+	// not stack across classes, which only the fold's set-with-floor gets right.
+	const perTurn = $derived(b.sheet?.attacksPerAction.value ?? 1);
 </script>
 
 <div class="card">
 	<div class="card-head">
 		<span class="eyebrow">{$_('build.attacks.title')}</span>
 		<span class="spacer"></span>
-		<span class="trail">{$_('build.attacks.perTurn', { values: { count: perTurn } })}</span>
+		<span class="trail">{$_('combat.attacksPerAction', { values: { count: perTurn } })}</span>
 		<button
 			class="pill-btn"
 			class:accent={b.inspector.isOpen({ id: 'inventory' })}

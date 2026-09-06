@@ -135,7 +135,6 @@
 		},
 		"attacks": {
 			"title": "Attacks",
-			"perTurn": "{count, plural, one {# attack} other {# attacks}} per Attack action",
 			"equipment": "Equipment…",
 			"colAttack": "Attack",
 			"colToHit": "To hit",
@@ -449,6 +448,12 @@
 			"unavailable": "Not available right now",
 			"cantAfford": "Not enough {resource}"
 		},
+		"actionType": {
+			"action": "action",
+			"bonus_action": "bonus action",
+			"reaction": "reaction",
+			"free": "free"
+		},
 		"attacks": {
 			"noteAttackBonus": "{amount} attack",
 			"noteDamageBonus": "{amount} damage",
@@ -458,6 +463,7 @@
 			"noteScopedAttack": "{amount} attack ({source})",
 			"unarmedStrike": "Unarmed Strike"
 		},
+		"attacksPerAction": "{count, plural, one {# attack} other {# attacks}} per Attack action",
 		"controls": {
 			"combat": "Combat",
 			"combatHint": "Track the action economy (rounds, action/bonus/reaction)",
@@ -486,11 +492,6 @@
 			"massive_damage": "Massive damage — the leftover met your hit-point maximum",
 			"death_saves": "Three failed death saves",
 			"exhaustion": "The last level of Exhaustion"
-		},
-		"sensitivity": {
-			"resist": "Resist",
-			"immune": "Immune",
-			"vulnerable": "Vulnerable"
 		},
 		"duration": {
 			"custom": "Custom…",
@@ -781,6 +782,9 @@
 			"dawnAmount": "dawn (+{amount})",
 			"duskAmount": "dusk (+{amount})"
 		},
+		"resource": {
+			"useOneTitle": "Use one {name} · {recharge} ({source})"
+		},
 		"restKind": {
 			"short": "Short",
 			"long": "Long"
@@ -826,6 +830,11 @@
 			"resources": "Resources",
 			"save": "SAVE",
 			"speed": "Speed"
+		},
+		"sensitivity": {
+			"resist": "Resist",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable"
 		},
 		"skills": {
 			"profNone": "Not proficient",
@@ -935,15 +944,6 @@
 			"enhancement": "+{n} attack & damage",
 			"permanent": "permanent",
 			"rounds": "{n} rds"
-		},
-		"resource": {
-			"useOneTitle": "Use one {name} · {recharge} ({source})"
-		},
-		"actionType": {
-			"action": "action",
-			"bonus_action": "bonus action",
-			"reaction": "reaction",
-			"free": "free"
 		}
 	},
 	"command": {

@@ -48,6 +48,7 @@ import { ABILITIES } from './schema';
 import {
 	proficiencyBonus,
 	initiative as initiativeOf,
+	attacksPerAction as attacksPerActionBase,
 	maxHpForClass,
 	carryingCapacity,
 	ABILITY_SCORE_CLAMP,
@@ -98,6 +99,9 @@ export interface CharacterSheet {
 	 *  view can pin any skill as a passive sense; the strip highlights perception/investigation/insight. */
 	passives: Record<SkillId, Computed>;
 	carryingCapacity: Computed;
+	/** How many attacks one Attack action makes (Extra Attack and its ladder). One for most
+	 *  characters; the panel only says so when a feature has raised it. */
+	attacksPerAction: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
 	damageSensitivities: { resist: string[]; immune: string[]; vulnerable: string[] };
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
@@ -401,6 +405,7 @@ export function deriveSheet(
 		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
+		attacksPerAction: applyEffects('attacks', attacksPerActionBase(), facts),
 		damageSensitivities,
 		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({

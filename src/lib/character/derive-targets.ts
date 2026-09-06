@@ -27,6 +27,7 @@ const NUMERIC_TARGETS = new Set<string>([
 	'speed.swim',
 	'initiative',
 	'attack',
+	'attacks',
 	'damage',
 	'spell_dc',
 	'spell_attack',

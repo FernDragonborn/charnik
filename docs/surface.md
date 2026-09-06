@@ -1371,6 +1371,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function skillCheck` — A skill (or ability) check bonus.
 - `function passiveScore` — Passive score = 10 + the check bonus (no roll).
 - `function initiative` — Initiative = DEX modifier (feats/effects add more later).
+- `function attacksPerAction` — * How many attacks one Attack action makes.
 - `function spellSaveDC` — Spell save DC = 8 + proficiency + spellcasting-ability modifier.
 - `function spellAttackBonus` — Spell attack bonus = proficiency + spellcasting-ability modifier.
 - `function unarmoredAC` — Unarmored AC = 10 + DEX modifier.
@@ -1643,4 +1644,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 980 exports across 133 modules · 64 duplicate suspects._
+_47 tokens · 78 global classes · 52 components · 981 exports across 133 modules · 64 duplicate suspects._

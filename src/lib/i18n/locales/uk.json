@@ -135,7 +135,6 @@
 		},
 		"attacks": {
 			"title": "Атаки",
-			"perTurn": "{count, plural, one {# атака} few {# атаки} many {# атак} other {# атак}} за дію «Атака»",
 			"equipment": "Спорядження…",
 			"colAttack": "Атака",
 			"colToHit": "Влучання",
@@ -449,6 +448,12 @@
 			"unavailable": "Зараз недоступно",
 			"cantAfford": "Недостатньо: {resource}"
 		},
+		"actionType": {
+			"action": "дія",
+			"bonus_action": "бонусна дія",
+			"reaction": "реакція",
+			"free": "вільна"
+		},
 		"attacks": {
 			"noteAttackBonus": "{amount} до атаки",
 			"noteDamageBonus": "{amount} до шкоди",
@@ -458,6 +463,7 @@
 			"noteScopedAttack": "{amount} до атаки ({source})",
 			"unarmedStrike": "Удар без зброї"
 		},
+		"attacksPerAction": "{count, plural, one {# атака} few {# атаки} many {# атак} other {# атак}} за дію «Атака»",
 		"controls": {
 			"combat": "Бій",
 			"combatHint": "Стежити за економією дій (раунди, дія/бонусна/реакція)",
@@ -486,11 +492,6 @@
 			"massive_damage": "Нищівна шкода — залишок дорівняв ваш максимум здоров’я",
 			"death_saves": "Три провалені рятівні кидки від смерті",
 			"exhaustion": "Останній рівень виснаження"
-		},
-		"sensitivity": {
-			"resist": "Опір",
-			"immune": "Імунітет",
-			"vulnerable": "Вразливість"
 		},
 		"duration": {
 			"custom": "Власна…",
@@ -781,6 +782,9 @@
 			"dawnAmount": "світанок (+{amount})",
 			"duskAmount": "сутінки (+{amount})"
 		},
+		"resource": {
+			"useOneTitle": "Витратити один {name} · {recharge} ({source})"
+		},
 		"restKind": {
 			"short": "Короткий",
 			"long": "Тривалий"
@@ -826,6 +830,11 @@
 			"resources": "Ресурси",
 			"save": "РЯТ",
 			"speed": "Швидкість"
+		},
+		"sensitivity": {
+			"resist": "Опір",
+			"immune": "Імунітет",
+			"vulnerable": "Вразливість"
 		},
 		"skills": {
 			"profNone": "Без вправності",
@@ -935,15 +944,6 @@
 			"enhancement": "+{n} до атаки та шкоди",
 			"permanent": "постійно",
 			"rounds": "{n} рд"
-		},
-		"resource": {
-			"useOneTitle": "Витратити один {name} · {recharge} ({source})"
-		},
-		"actionType": {
-			"action": "дія",
-			"bonus_action": "бонусна дія",
-			"reaction": "реакція",
-			"free": "вільна"
 		}
 	},
 	"command": {

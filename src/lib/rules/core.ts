@@ -126,6 +126,16 @@ export function initiative(args: { dexScore: number }): Computed {
 	return computed([abilityContribution('dex', args.dexScore)]);
 }
 
+/**
+ * How many attacks one Attack action makes. RAW everybody starts at one; Extra Attack and its
+ * ladder RAISE the number rather than adding to it (`set_override:attacks:<n>:floor`), which is
+ * also what keeps a fighter 5 / barbarian 5 at two attacks — RAW, Extra Attack does not stack
+ * across classes, and two additive tokens would silently give three.
+ */
+export function attacksPerAction(): Computed {
+	return computed([baseContribution(1)], { min: 1 });
+}
+
 /** Spell save DC = 8 + proficiency + spellcasting-ability modifier. */
 export function spellSaveDC(args: { ability: Ability; score: number; level: number }): Computed {
 	return computed([

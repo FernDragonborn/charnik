@@ -46,9 +46,7 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   what it will cost you first, and the feat a background hands you asks its own questions.
 - **A character can have a face.** Pick a portrait in the builder's header; it is downscaled on
   pick, stored beside the character as a file, and shown on the play sheet.
-- **Sixty-six defects found by reading the builder end to end** are fixed — among them picks that
-  survived their row, an expertise slot you could not reach, a spell cap enforced by the wrong rule,
-  a removed class row handing its feats to the row behind it, and several ways a build lost work.
+
 
 ### Playing
 
@@ -84,7 +82,7 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **Prose is rendered, never mined.** A spell's higher-levels line is parsed as the prose it is, and
   nothing in the app reads a value out of a paragraph.
 
-### Renamed, once, on purpose
+### Rename
 
 - **`resist_immune` is `damage_sensitivity`, and it always says which relation.** The old name
   listed two of its three relations, so writing a vulnerability was possible but invisible; the
