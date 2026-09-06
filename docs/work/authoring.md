@@ -3,14 +3,30 @@
 > Tracker. The compendium editor, homebrew, drafts and translation — the surfaces that make
 > "everything is doable from the UI" true. The ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [~] **HOMEBREW-LINKED · homebrew content from the UI. The linked-table half BLOCKS 0.7.0.** — DONE for every listed type via an editable-article form
-  (mirrors the compendium article; schema-driven fields → validated row → atomic BOM/CRLF write into
-  `content/homebrew/<type>_hb.csv` in user storage; merged into the graph as an extra content root;
-  new row opens in the compendium). Remaining: **linked-table authoring** (a subclass's
-  `class_features` rows) — so homebrew subclasses are only half-covered. Nothing else about a single
-  row is: a spell and a monster edit through the same generic form as everything else, a homebrew row
-  deletes from the editor, and a `resource` / `resource_option` is listed and authored like any
-  other type (`docs/internals/content.md` ▸ a type that has a NAME is listed).
+- [x] **HOMEBREW-LINKED · homebrew content from the UI, including the linked half.** Every listed
+  type authors through one editable-article form (mirrors the compendium article; schema-driven
+  fields → validated row → atomic BOM/CRLF write into `content/homebrew/<type>_hb.csv` in user
+  storage; merged into the graph as an extra content root; the new row opens in the compendium). A
+  spell and a monster edit through that same generic form, a homebrew row deletes from the editor,
+  and a `resource` / `resource_option` is listed and authored like any other type
+  (`docs/internals/content.md` ▸ a type that has a NAME is listed).
+
+  **The linked half is the article's own section** (`LinkedRows`, over the pure `linked-tables.ts`):
+  a class, a subclass, a species and a resource each say almost nothing on their own row — their
+  mechanical content lives in a second table — so the article lists the rows joined to it and offers
+  to write one more, with the join columns already filled. A foreign key is an id nobody can guess,
+  which is the whole reason the generic "switch type, click add, type `subclass_id` by hand" path did
+  not count as authoring it.
+
+  **Four links, not one:** `class`→`class_feature` (only the rows no subclass claims, or a class
+  article would list every subclass's too), `subclass`→`class_feature` (carrying the parent's
+  `class_id`, since a feature needs both ids), `species`→`species_option`, `resource`→
+  `resource_option`. Adding a fifth is a row in `LINKED_TABLES`. The list is also how a linked row is
+  REACHED to be edited or deleted — those live on its own article, so both directions exist.
+
+  **One real bug fell out of it:** the compendium looked the saved row up under `selectedType`, which
+  the deep-link effect restores from the URL the moment the graph reloads — so a save made while an
+  entry was open found nothing and silently opened no row. The form now hands its own type back.
 
 ## The compendium-editor refactor set
 

@@ -30,6 +30,7 @@
 	import Loading from '$lib/components/Loading.svelte';
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import EditContentForm from '$lib/components/EditContentForm.svelte';
+	import LinkedRows from '$lib/components/LinkedRows.svelte';
 	import DraftsPane from '$lib/components/DraftsPane.svelte';
 	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
 	import SchemaDiscardDialog from '$lib/components/SchemaDiscardDialog.svelte';
@@ -328,15 +329,26 @@
 
 	// homebrew authoring: open a blank editable article for the current type; on save reload the
 	// graph (so the new row is merged in) and open it.
-	async function onSaved(id: string) {
+	async function onSaved(id: string, savedType: ContentType) {
 		adding = false;
 		editRow = null;
 		resumeAdd = undefined;
 		const g = await reloadContent(); // merge the new/edited homebrew row + rotate guid → lists recompute
 		if (!g) return; // load failed — the error surfaces via the content store
-		const row = g.get(`${selectedType}:Homebrew:${id}`);
+		// the TYPE the form saved, not `selectedType`: the deep-link effect re-runs on the new graph
+		// and restores the browsed entry's type, so the picker's type can have moved on by now
+		const row = g.get(`${savedType}:Homebrew:${id}`);
 		if (row) openEntry(row);
 	}
+	// HOMEBREW-LINKED: author a row of the linked table the article being read owns (a subclass's
+	// features, a species' lineages). The join columns are ids nobody can guess, so the form opens
+	// with them filled — without this a homebrew subclass is a row that can never be given a feature.
+	function addLinkedRow(type: ContentType, prefill: Record<string, string>) {
+		pick(type);
+		resumeAdd = { guid: crypto.randomUUID(), data: prefill };
+		adding = true;
+	}
+
 	function toggle(set: Set<string>, v: string) {
 		const next = new Set(set);
 		if (next.has(v)) next.delete(v);
@@ -572,6 +584,15 @@
 			{:else}
 				<WikiDetail {detail}>
 					{#snippet footer()}
+						{#if graph && selected}
+							<LinkedRows
+								parent={selected}
+								{graph}
+								locale={contentLocale}
+								onopen={openEntry}
+								onadd={addLinkedRow}
+							/>
+						{/if}
 						{#if isHomebrew(selected)}
 							<!-- your own row: manage it from the bottom of its article -->
 							<div class="homebrew-actions">
@@ -734,28 +755,6 @@
 		margin-top: 22px;
 		padding-top: var(--space-4);
 		border-top: 1px solid var(--color-border);
-	}
-	.hb-btn {
-		font-family: var(--font-body);
-		font-size: var(--font-size-sm);
-		font-weight: 600;
-		border-radius: var(--radius);
-		padding: var(--space-2) 14px;
-		border: 1px solid var(--color-border-strong);
-		background: var(--color-surface-2);
-		color: var(--color-text);
-		cursor: pointer;
-	}
-	.hb-btn:hover {
-		border-color: var(--color-text-muted);
-	}
-	.hb-btn.danger {
-		color: var(--color-accent-bright);
-		border-color: transparent;
-		background: transparent;
-	}
-	.hb-btn.danger:hover {
-		border-color: var(--color-accent);
 	}
 	.lang-control {
 		display: flex;

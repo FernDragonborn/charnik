@@ -60,7 +60,10 @@
 		ondelete,
 	}: {
 		type: ContentType;
-		onsave: (id: string) => void;
+		/** The saved row's id AND the type it was saved as — the caller's own type state can have
+		 *  moved on (a URL effect restoring the browsed entry), and looking the row up under the
+		 *  wrong type silently finds nothing. */
+		onsave: (id: string, type: ContentType) => void;
 		oncancel: () => void;
 		/** When resuming a pending add-draft: its GUID + saved fields (else a fresh add-session).
 		 *  `| undefined` is deliberate — these are optional passthrough from the parent's optional
@@ -262,7 +265,7 @@
 			await deleteDraft(getUserStorage(), draftCacheTarget); // saved → drop the cached draft
 			baseline = JSON.stringify(draft); // stop the auto-save effect from re-spawning it
 			resetContentGraph();
-			if (res.id) onsave(res.id);
+			if (res.id) onsave(res.id, type);
 		} finally {
 			saving = false;
 		}

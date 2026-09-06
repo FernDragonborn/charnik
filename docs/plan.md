@@ -268,10 +268,8 @@ position and are given per wave, because most of them were learned the hard way.
   **ROUND TWO — also before 0.7.0, first priority.** Found by auditing for half-done work rather than
   by reading checkboxes, so the test widens by one clause: a version is also blocked by **a path a
   user can start and cannot finish**, and by **shipped content that visibly does nothing**.
-  - **HOMEBREW-LINKED** (`work/authoring.md`) — a homebrew subclass can be created and then cannot be
-    given its features: authoring a linked table (`class_features` rows belonging to a row you just
-    wrote) is the missing half. Creating something the app then refuses to complete is the worst
-    shape of unfinished, because the user finds it after doing work.
+  - ~~**HOMEBREW-LINKED**~~ — DONE. An article that owns a linked table lists its rows and offers to
+    write one more with the joins filled; four links ship, and a fifth is a row in `LINKED_TABLES`.
   - **MAGIC-ITEM-EFX** (`work/content.md`) — the first tranche tokenized 14 items per edition; ~204
     (2014) and ~210 (2024) magic items still carry prose and no effect, so a Cloak of Protection
     equipped and attuned changes nothing on the sheet. That is a wrong number by the original test,

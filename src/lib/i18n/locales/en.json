@@ -941,6 +941,7 @@
 		"close": "Close"
 	},
 	"compendium": {
+		"addLinked": "Add {type}",
 		"availableTo": "Available to",
 		"backToBrowse": "Back to compendium",
 		"clearFilters": "Clear filters",
@@ -975,6 +976,7 @@
 		"modeTranslate": "Translate",
 		"modeTranslateHint": "side-by-side prose translation",
 		"moveToDrafts": "Move to drafts",
+		"noLinked": "Nothing here yet.",
 		"paneCurrent": "Current",
 		"paneEdit": "Your edit",
 		"pickAnEntry": "Select an entry to see its detail.",

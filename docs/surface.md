@@ -118,7 +118,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (78)
+## Global CSS classes (80)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -142,10 +142,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.combat-row-hint` | components.css |  |
 | `.combat-row-marker` | components.css |  |
 | `.count-pill` | components.css | The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every multi-item review dial… |
+| `.danger` | components.css |  |
 | `.detail-body` | components.css | An article renders at very different widths — a compendium half-screen, a builder inspector — so its heads size again… |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
 | `.detail-meta` | components.css |  |
-| `.deyebrow` | components.css | compendium/detail article bits (WikiDetail + the homebrew EditContentForm) |
+| `.deyebrow` | components.css |  |
 | `.dialog` | components.css | the centred panel: sized to its CONTENT height (capped at the viewport), never full-height — centring via transform, … |
 | `.dialog-backdrop` | components.css | --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) --- (only the `.dialog` container's WIDTH … |
 | `.dialog-badge` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
@@ -164,6 +165,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.ghost` | components.css |  |
 | `.good` | components.css |  |
 | `.has-provenance` | components.css | a plain value that explains itself says so; a CONTROL that also explains itself keeps the cursor its click deserves, … |
+| `.hb-btn` | components.css | the manage button an article footer offers on your own rows (delete, move to drafts, add a linked feature) — shared b… |
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
@@ -203,7 +205,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (52)
+## Shared components (53)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -234,6 +236,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Icon** | `name`, `size`, `fill`, `label` | The app's icon set: Lucide (ISC), one component so a caller writes `<Icon name="x" />` and never |
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
+| **LinkedRows** | `parent`, `graph`, `locale`, `onopen`, `onadd` | The linked half of an article that owns a second table (`linked-tables.ts` says which): the |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
 | **MissingContentModal** | — | The rules are gone (REL-4). |
 | **MobileWarning** | — |  |
@@ -425,7 +428,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (118 modules)
+## Library functions & types (119 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -875,6 +878,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function tagInt` — A numeric tag's value, or `null` when the tag is absent or not a number.
 - `function armorWeightOf` — The armor weight an `armor:<weight>` tag names, or undefined when it names nothing known.
 - `function weaponCategoryOf` — A weapon's proficiency category.
+
+### `src/lib/content/linked-tables.ts`
+
+- `interface LinkSpec`
+- `const LINKED_TABLES`
+- `const linkOf` — The linked table this row owns, if any.
+- `const linkedLevel` — A linked row's level, when its table has one (class features read in level order); else 0.
+- `function linkedRowsOf` — * The rows of `parent`'s linked table, in reading order.
+- `function linkedPrefill` — The draft a new linked row starts from: the joins the user cannot guess, plus the parent's * editions and whatever th…
 
 ### `src/lib/content/loader.ts`
 
@@ -1649,4 +1661,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 52 components · 985 exports across 133 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 991 exports across 134 modules · 65 duplicate suspects._

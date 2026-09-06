@@ -632,13 +632,19 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 	it.each([
 		['srd-2014', 'SRD 5.1', '5e' as const, 'monk_diamond_soul'],
 		['srd-2024', 'SRD 5.2.1', '5.5e' as const, 'monk_disciplined_survivor'],
-	])('%s: a level-14 monk is proficient with EVERY save (%s)', async (dir, src, sys) => {
-		const before = await sheetOf(dir, src, sys, 'monk', 13);
-		const after = await sheetOf(dir, src, sys, 'monk', 14);
-		// the monk's own two (str/dex) are proficient at 1 — the point is the other four turning on
-		expect(ABILITIES.filter((a) => before.abilities[a].saveProficient)).toEqual(['str', 'dex']);
-		expect(ABILITIES.every((a) => after.abilities[a].saveProficient)).toBe(true);
-	});
+	])(
+		'%s: a level-14 monk is proficient with EVERY save (%s) via %s',
+		async (dir, src, sys, feature) => {
+			// named, so the assert below cannot be satisfied by some OTHER row growing the same token
+			const row = (await loadEdition(dir)).list('class_feature').find((f) => f.id === feature);
+			expect(row?.data.effects).toContain('grant_proficiency:saves');
+			const before = await sheetOf(dir, src, sys, 'monk', 13);
+			const after = await sheetOf(dir, src, sys, 'monk', 14);
+			// the monk's own two (str/dex) are proficient at 1 — the point is the other four turning on
+			expect(ABILITIES.filter((a) => before.abilities[a].saveProficient)).toEqual(['str', 'dex']);
+			expect(ABILITIES.every((a) => after.abilities[a].saveProficient)).toBe(true);
+		},
+	);
 
 	it('2014 Slippery Mind grants Wisdom saves; 2024 grants Wisdom AND Charisma', async () => {
 		const s14 = await sheetOf('srd-2014', 'SRD 5.1', '5e', 'rogue', 15);

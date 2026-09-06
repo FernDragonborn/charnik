@@ -941,6 +941,7 @@
 		"close": "Закрити"
 	},
 	"compendium": {
+		"addLinked": "Додати: {type}",
 		"availableTo": "Доступне для",
 		"backToBrowse": "Назад до довідника",
 		"clearFilters": "Очистити фільтри",
@@ -975,6 +976,7 @@
 		"modeTranslate": "Переклад",
 		"modeTranslateHint": "переклад прози поруч з оригіналом",
 		"moveToDrafts": "Перенести в чернетки",
+		"noLinked": "Тут поки що порожньо.",
 		"paneCurrent": "Поточне",
 		"paneEdit": "Ваша правка",
 		"pickAnEntry": "Оберіть запис, щоб побачити подробиці.",
