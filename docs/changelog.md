@@ -2,7 +2,7 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..e184b08`. To extend it, read the commits after that one.
+> Written from `v0.6.2..914f86d`. To extend it, read the commits after that one.
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
@@ -83,6 +83,12 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   with a blank description — the Vorpal Sword, the Rod of Alertness, Dragon Scale Mail and eighty-six
   more — because the importer was throwing away the paragraph the description lives in. They read
   fully now, and that is what let their numbers be filled in at all.
+- **A bard is a Jack of All Trades.** Half your proficiency bonus on every check you are not
+  trained in — the tier the sheet has been able to draw since August with nothing able to grant it.
+  A skill you already train keeps its full bonus, which is the rule.
+- **A dragonborn is asked which dragon, and resists its damage.** The 2024 species that ask which
+  branch you belong to all offer it now: ten draconic ancestries, six giant ancestries (each a pool
+  of uses that comes back on a long rest), and the two gnomish lineages.
 - **The features that grant a proficiency grant it.** A 14th-level monk is proficient with every
   saving throw, a 15th-level rogue with Wisdom saves (and Charisma too, in 2024), a Life Domain
   cleric with heavy armour — so plate stops blocking their spells. A dwarf is proficient with the
