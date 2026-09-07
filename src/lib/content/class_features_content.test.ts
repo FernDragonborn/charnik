@@ -6,7 +6,7 @@ import { deriveSheet } from '../character/derive';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
-import { parseToken } from '../effects/token-parser';
+import { EFFECT_KIND, parseToken, splitGuard } from '../effects/token-parser';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -794,5 +794,36 @@ describe('shipped Reliable Talent · a rogue stops rolling under 10 where it cou
 		expect(
 			rollEffectsFor(bardSheet.facts, 'skill.stealth', new Set(['proficient'])).minDie,
 		).toBeUndefined();
+	});
+});
+
+describe('the effect vocabulary has consumers · a kind built and never used is a mechanism nobody sees', () => {
+	/** Kinds with no shipped row, and the reason each is legitimately empty. Three times this cycle a
+	 *  kind was built, documented with a named example, and shipped with nothing using it — the suite
+	 *  stayed green and the player saw nothing. Pinning the set turns that from a lucky find into a
+	 *  failing test: gaining a user is a deliberate edit here, and LOSING the last one fails loudly. */
+	const EXPECTED_WITHOUT_USERS = {
+		// L3 handler references are user-authored by definition — the SRD will never carry one
+		plugin: 'user-authored by definition',
+		// RAW almost never auto-SUCCEEDS; its mirror `auto_fail` has 16 users, all conditions
+		auto_succeed: 'RAW forces failure, not success',
+		// its only SRD consumer is 2014 Great Weapon Fighting ("reroll the die and must use the new
+		// roll" — genuinely NOT 2024's `min_die`), and 2014 fighting styles are prose inside one
+		// class-feature row rather than rows of their own, so there is nothing to author it onto
+		reroll: '2014 fighting styles are not rows yet',
+	};
+
+	it('every other kind in the vocabulary has at least one shipped row', async () => {
+		const used = new Set<string>();
+		for (const dir of ['srd-2014', 'srd-2024']) {
+			const graph = await loadPacks(dir);
+			for (const row of graph.rows)
+				for (const raw of (row.data as { effects?: string[] }).effects ?? [])
+					used.add(parseToken(splitGuard(raw).token).kind);
+		}
+		const unused = Object.values(EFFECT_KIND)
+			.filter((k) => !used.has(k))
+			.sort();
+		expect(unused).toEqual(Object.keys(EXPECTED_WITHOUT_USERS).sort());
 	});
 });

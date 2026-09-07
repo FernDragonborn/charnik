@@ -145,6 +145,29 @@ stay semi-manual.
   **The open question is not whether it computes right — it is whether a player reads it without
   being told.** That verdict is the maintainer's, from the running app; it lands in the manual-check
   report when built, not closed on a passing test.
+- [ ] **GWF-2014 · Great Weapon Fighting is a REROLL in 2014 and a floor in 2024, and only one of
+  them ships.** 2024 says "treat any 1 or 2 on a damage die as a 3" and carries
+  `min_die:damage:two_handed,melee:3`. 2014 says "you can reroll the die and **must use the new roll**"
+  — which is not the same number: a reroll can land on a 1 again, a floor cannot. The `reroll` kind was
+  built for exactly this sentence and has no shipped row.
+
+  **What actually blocks it is where 2014 keeps its fighting styles.** They are prose inside ONE
+  `fighter_fighting_style` row, not a row per style, and 2014 ships exactly one feat (Grappler). So
+  there is nothing to author the token onto until the styles are rows the player picks between — N2's
+  chooser, same shape as the 2024 fighting-style feats already have. Once they are, the token is
+  `reroll:damage:two_handed,melee:2` and the edition divergence is said rather than smoothed.
+
+- [x] **VOCAB-CONSUMERS · every effect kind has a shipped row, or a stated reason not to.** Three
+  times this cycle a kind was built, documented with a named example, and shipped with NOTHING using
+  it: `grant_proficiency` (0 rows → 22), the ladder's `partial` rung (built down to the trace label,
+  no producer), and `min_die` on a d20 (Reliable Talent was its documented example and was prose).
+  Each was found by accident — twice by a maintainer asking a question.
+  **So it is a test now**, not a habit: `class_features_content.test.ts` walks every shipped row in
+  both packs and asserts that the set of kinds with no user equals a pinned list, each entry carrying
+  its reason. `plugin` is user-authored by definition, `auto_succeed` has no RAW consumer (its mirror
+  `auto_fail` has 16, all conditions), and `reroll` waits on GWF-2014 above. Gaining a user is now a
+  deliberate edit to that list; losing the last one fails loudly.
+
 - [x] **RELIABLE-TALENT · a rogue stops rolling under 10 where the rule says so.** `min_die` was
   built with Reliable Talent as its named example and shipped with no d20 consumer at all: the rows
   said "you can treat a d20 roll of 9 or lower as a 10" in both editions and an 11th-level rogue

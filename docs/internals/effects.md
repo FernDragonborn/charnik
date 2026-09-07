@@ -86,7 +86,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | Kind                         | Form                                                    | Meaning                                                                                                                                                                                                 |
 | ---------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `flat_bonus`                 | `flat_bonus:<target>[:<type>]+<value>`                  | Additive contribution at the effect's layer (value may be an L2 expr or dice term). Optional `:<type>` on a `damage` target (D9-tail) types an extra damage part on a weapon — `flat_bonus:damage:fire+1d6` (flaming); the typed part rolls + shows separately and never takes the ability mod. |
-| `set_override`               | `set_override:<target>:<value>` (+ `floor`/`cap` modes) | Force a value; same-target sets combine by D&D "most potent wins" (`overriddenSetNotes`), never silent-stomp. `floor` = raise-to-at-least (Headband INT≥19), `cap` = clamp-down.                        |
+| `set_override`               | `set_override:<target>:<value>` (+ `floor`/`cap` modes) | Force a value; same-target sets combine by D&D "most potent wins" (`overriddenSetNotes`), never silent-stomp. `floor` = raise-to-at-least, inside its own layer (Headband INT≥19). `cap` = a CEILING on the finished value: it folds last, across every layer and after every add, because that is what RAW's caps are — "increases by 2, to a maximum of 20" is +2 and THEN a ceiling. |
 | `block_bonus`                | `block_bonus:<target>`                                  | RAW "can't benefit from any bonus to its `<target>`" (grappled/restrained block ALL speed bonuses): drops effect-borne positive adds; base + penalties survive.                                         |
 | `halve`                      | `halve:<target>`                                        | ×½ multiply (the ONE non-integer RAW factor — 2014 exhaustion speed/hp-max). Dedicated kind, not a generic multiply. Targets: `speed`, `hp_max`.                                                        |
 | `advantage` / `disadvantage` | `advantage:<target>`                                    | Roll adv/dis (a fact + a note); `netAdvantage` cancels one-for-one. Passives take ±5.                                                                                                                   |
@@ -122,10 +122,12 @@ plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets
 spell — Agonizing Blast). Only `attack` and `damage` take a scope; every other dotted target IS a
 target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
 thing and normalizes to the same field. A scope matches when EVERY comma-separated part is one of the
-rolling thing's scopes — a weapon's tags, its own id, and the ABILITY the attack resolved from
-(`str`/`dex`), or the cast spell's id — so a roll that
-names no scopes (a save, a skill) picks up no scoped bonus at all. Attack scopes fold once, in
-`computeAttacks`, because that is where the weapon is known; damage scopes fold at the roll.
+rolling thing's scopes, and what those are depends on what is rolling: a weapon names its tags, its
+own id, and the ABILITY the attack resolved from (`str`/`dex`); a cast names the spell's id; a SKILL
+CHECK names `proficient` when it adds your proficiency bonus (expertise included, Jack of All Trades'
+`partial` rung excluded) — which is how Reliable Talent floors the checks RAW says it floors and no
+others. A roll that names nothing (a save) picks up no scoped effect at all. Attack scopes fold once,
+in `computeAttacks`, because that is where the weapon is known; damage scopes fold at the roll.
 2014 Rage is `damage.melee,str` (both halves) and 2024 Rage is `damage.str` (either weapon or
 Unarmed Strike) — the same sentence each edition prints, said in scopes.
 `docs/internals/compatibility.md` §4 says why the scope is a target and not a fourth segment.

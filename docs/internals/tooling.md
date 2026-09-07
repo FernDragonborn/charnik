@@ -263,6 +263,14 @@ read the report. `/dev/packs-write` is the worked example.
 prebuild, `tools/restamp.ts` is `pnpm restamp`, and `tools/content-repo.mjs` resolves where the
 content repo is.
 
+**The dev server serves the VENDORED copy, not the content repo.** `predev` copies the packs into
+`static/content/` once, and vite serves that — so a CSV you just edited in `charnik-content-srd` is
+invisible to the running app until `node tools/build-static-content.mjs` runs again. The failure is
+nasty because it is silent and asymmetric: node tests read the content repo directly and go GREEN,
+while the browser shows the old numbers, so the app looks like it has a bug the tests deny. Re-vendor
+before believing a screenshot of freshly-authored content — the dev server does not need restarting,
+only the copy refreshing.
+
 **A converter run rewrites its WHOLE edition, and the packs have moved on since the last one.** Each
 converter re-emits every file it owns, so a run to fix one file also reverts every column the packs
 grew afterwards: `conditions_srd.csv`'s `max_level`, `spells_srd.csv`'s `upcast` — that one is not
