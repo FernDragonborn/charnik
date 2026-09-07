@@ -195,25 +195,30 @@ stay semi-manual.
   "score a critical hit on"). Every row below carries no token today. Grouped by what it is waiting
   on, because only the first group is pure content:
 
-  - **Writable the moment the fold gathers feature tokens** — the target already exists.
-    `danger_sense` (`advantage:save.dex`) · `fast_movement`, 2024 `roving`, `unarmored_movement`
-    (`flat_bonus:speed+10`, each guarded by its own armour condition) · `feral_instinct` and 2024
-    `champion_remarkable_athlete` (`advantage:initiative`) · 2024 `superior_defense` (resist all but
-    force) · 2014 `ki_empowered_strikes` and `pact_boon` (strikes count as magical — a `note`,
-    there is no attack-magic target and no enemy to test it against).
+  - **Writable against the targets that exist — all shipped.** `danger_sense` (`advantage:save.dex`) ·
+    `fast_movement`, 2024 `roving` and `unarmored_movement` (a speed bonus under each one's own armour
+    guard; the monk's is the `step()` ladder, MONK-MOVEMENT) · `feral_instinct` and 2024
+    `champion_remarkable_athlete` (`advantage:initiative`).
+    Two rows that were listed here are NOT shape 1 and moved: 2024 `superior_defense` spends 3 Focus
+    Points for a minute of resistance, so it is an activated ability with a duration, not a passive;
+    `pact_boon` is a choice of three, so it waits on `choose_n` with the rest of the choices below.
+    2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no target, no
+    enemy to test against, and the Features panel already prints the sentence.
   - **Blocked on a defense bucket that is not damage.** Immunity to a CONDITION or to disease has no
     target at all — the fold's defense buckets hold damage types only. 2014 `purity_of_body`,
     `divine_health`, `circleoftheland_natures_ward`; 2024 `aura_of_courage` (Frightened),
     `path_of_the_berserker_mindless_rage` (Charmed + Frightened), `oath_of_devotion_aura_of_devotion`
     (Charmed), `circle_of_the_land_natures_ward` (Poisoned). Same shape as CONDEFF's merge — a
     condition is content, so immunity to one is a reference to a row, not a new vocabulary.
-  - **Blocked on a fold target that does not exist yet.** `extra_attack` (barbarian/fighter/monk/
-    ranger/paladin, both editions) needs attacks-per-action, which N2 already spells
-    `flat_bonus:attacks+N` · `unarmored_defense` (barbarian, monk) and 2014
-    `draconicbloodline_draconic_ancestry` need an AC FORMULA, not a bonus — "AC equals 10 + DEX +
-    CON" is a base the pipeline has no way to say · `champion_improved_critical` /
-    `champion_superior_critical` need a crit-threshold target · `reliable_talent` needs
-    `min_die` to accept an ability-check target.
+  - **Blocked on a fold target that does not exist yet — down to the crit threshold.** `extra_attack`
+    (EXTRA-ATTACK), `unarmored_defense` and `draconicbloodline_draconic_ancestry` (a `set_override`
+    on `ac` says the formula) and `reliable_talent` (RELIABLE-TALENT) all shipped their tokens; what
+    is left is `champion_improved_critical` / `champion_superior_critical`, which need a
+    CRIT-THRESHOLD target. **That one is not a wrong number, because the app never decides a crit** —
+    `RollResult.crit` is set by the player on purpose ("a natural 20 is not always a crit, and a crit
+    happens without one"), and the roller only HIGHLIGHTS a natural 20 as deciding. So a Champion's
+    19 is a highlight the sheet cannot yet offer, not arithmetic it gets wrong: the work is a
+    `crit_threshold` numeric target plus the four or five places that compare `=== 20`.
   - **Blocked on SCOPED-BONUS reaching spells.** "Add your <ability> modifier to the damage of X":
     2024 `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
     (evocation spells), `oath_of_devotion_sacred_weapon` and 2014 `oathofdevotion_channel_divinity`

@@ -348,11 +348,12 @@
     `resistances`/`immunities`/`vulnerabilities` columns, which 2024 does. The 2014 Wild Shape rule
     "use the creature's bonus if it is higher" has data for skills and none for saves.
 
-- [ ] **MONK-MOVEMENT · Unarmored Movement's ladder is not in the row.** The feature's shipped text
-  says "+10 feet" and then defers to the Monk table for the increase, and that table is not in the
-  cell (nor anywhere else in the pack). So the token is unwritable: a bare `flat_bonus:speed+10`
-  would be silently wrong from level 6 up, which is the failure class that passes every gate. Same
-  shape as the 2014 casting counts above — a class TABLE the pack does not carry — and cheapest to
-  fix in the same pass, since both want the same thing: the per-level class tables as data.
+- [x] **MONK-MOVEMENT · Unarmored Movement's ladder is in the row.** Every monk from level 2 to 20
+  walked at 30 feet: the feature's text says "+10 feet" and then defers to the Monk table, so the row
+  carried no token at all. It needed no class-tables-as-data pass — `step()` IS the table, which
+  `monk_martial_arts` already shows by carrying its die ladder off that same table. Both editions
+  print the same rungs (`step(class_level.monk, 2->10, 6->15, 10->20, 14->25, 18->30)`, read off each
+  edition's own progression table), under the armour guard `monk_unarmored_defense` already uses.
+  `class_features_content.test.ts` pins all eight rungs per edition.
 
 - [x] **Tauri fs Storage** impl + platform factory.

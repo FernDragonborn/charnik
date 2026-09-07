@@ -827,3 +827,33 @@ describe('the effect vocabulary has consumers · a kind built and never used is 
 		expect(unused).toEqual(Object.keys(EXPECTED_WITHOUT_USERS).sort());
 	});
 });
+
+describe('shipped Unarmored Movement · a monk walks at the speed its own table prints', () => {
+	/** The ladder is on the Monk table, not in the feature's sentence — which is why the row shipped
+	 *  with no token and every monk from 2 to 20 read 30 ft. Both editions print the same steps. */
+	const UNARMORED_MOVEMENT: readonly (readonly [level: number, bonus: number])[] = [
+		[1, 0], // the feature starts at 2 — level 1 gets nothing
+		[2, 10],
+		[5, 10],
+		[6, 15],
+		[10, 20],
+		[14, 25],
+		[18, 30],
+		[20, 30],
+	];
+
+	it.each([
+		['srd-2014', 'SRD 5.1', '5e'],
+		['srd-2024', 'SRD 5.2.1', '5.5e'],
+	] as const)(
+		'%s: the bonus steps 2→10, 6→15, 10→20, 14→25, 18→30',
+		async (pack, source, system) => {
+			const g = await loadEdition(pack);
+			const speedAt = (level: number) =>
+				deriveSheet(charOf(source, system, 'monk', level), g).speed.value;
+			const base = speedAt(1);
+			for (const [level, bonus] of UNARMORED_MOVEMENT)
+				expect(speedAt(level), `monk ${level}`).toBe(base + bonus);
+		},
+	);
+});
