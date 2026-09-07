@@ -27,9 +27,11 @@
   `condition_immune`, `legendary_actions` and `proficiency_bonus`, all of which live in `text_en`
   today; and `resource` on class features (rage and ki counts), currently unparsed. Each arrives
   through a `schemaVersion` migration, and each number comes from the converter, never from memory.
-- [ ] **SUBCLASS-LEVEL-2024 · every 2024 subclass unlocks at level 3**, but the seeded
-  `subclass_level` carries the 2014 value. Wants a per-system override column rather than a second
-  row.
+- [x] **SUBCLASS-LEVEL-2024 · every 2024 subclass unlocks at level 3**, and the shipped
+  `subclass_level` says so for all twelve — the cleric, sorcerer, warlock, druid and wizard that
+  carried the 2014 value read 3, against each `#### Level 3: <Class> Subclass` heading in the source.
+  The per-system override column this item wanted turned out to be nothing: the editions are separate
+  packs with separate files, so each simply states its own number.
 
 - [x] **MAGIC-ITEM-EFX · every shipped magic item that changes a number says which one.** An
   equipped magic item that changes no number is a wrong number, and most of them used to change

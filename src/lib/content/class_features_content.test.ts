@@ -7,6 +7,7 @@ import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 import { EFFECT_KIND, parseToken, splitGuard } from '../effects/token-parser';
+import { isEffectTargetSupported } from '../character/derive-targets';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -825,6 +826,24 @@ describe('the effect vocabulary has consumers · a kind built and never used is 
 			.filter((k) => !used.has(k))
 			.sort();
 		expect(unused).toEqual(Object.keys(EXPECTED_WITHOUT_USERS).sort());
+	});
+
+	/** The same failure one level down: the KIND is consumed but the TARGET is not, so the token
+	 *  parses, folds onto nothing, and only content-health mentions it — at runtime, to a user who
+	 *  did not write the row. B13 already answers the question; nothing asked it of OUR data. */
+	it('every shipped token names a target the sheet consumes', async () => {
+		const unconsumed: string[] = [];
+		for (const dir of ['srd-2014', 'srd-2024']) {
+			const graph = await loadPacks(dir);
+			for (const row of graph.rows)
+				for (const raw of (row.data as { effects?: string[] }).effects ?? []) {
+					const parsed = parseToken(splitGuard(raw).token);
+					if (parsed.target === undefined) continue;
+					if (!isEffectTargetSupported(parsed.kind, parsed.target).supported)
+						unconsumed.push(`${dir} ${row.id}: ${raw}`);
+				}
+		}
+		expect(unconsumed).toEqual([]);
 	});
 });
 

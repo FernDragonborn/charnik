@@ -167,6 +167,10 @@ stay semi-manual.
   its reason. `plugin` is user-authored by definition, `auto_succeed` has no RAW consumer (its mirror
   `auto_fail` has 16, all conditions), and `reroll` waits on GWF-2014 above. Gaining a user is now a
   deliberate edit to that list; losing the last one fails loudly.
+  **The same question one level down is asked too:** a kind can be consumed while its TARGET is not,
+  so a token parses, folds onto nothing, and only content-health mentions it — at runtime, to a user
+  who did not write the row. B13's `isEffectTargetSupported` could always answer that; nothing had
+  ever asked it of OUR data. A second assertion walks the same rows and expects an empty list.
 
 - [x] **RELIABLE-TALENT · a rogue stops rolling under 10 where the rule says so.** `min_die` was
   built with Reliable Talent as its named example and shipped with no d20 consumer at all: the rows
@@ -261,14 +265,17 @@ stay semi-manual.
   - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
         `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
         restore, so it waits on the model above rather than on the mechanism, which is shipped.
-- [~] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
+- [x] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
   — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
   progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;
   converter-preserved like `effects`). Build sums the active-feature grants → `expertiseCap`;
-  Strict enforces (Free doesn't), UI shows `expertise N/M` + disables ×2 at cap. Wizard "Scholar"
+  Strict enforces (Free doesn't), and the skills card head reads `expertise N/M`. Wizard "Scholar"
   (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
-  restriction, so encoding it would over-permit. Unit + real-content tests both editions. **UI not
-  screenshot-verified in a Rogue state** (needs a build-flow drive). (b)+(c) are ONE grammar step: the L1
+  restriction, so encoding it would over-permit. Unit + real-content tests both editions.
+  **Screenshot-verified on a Rogue 6 with a background** (`design-preview/rogue-expertise-cap.png`):
+  the counter walks 0/4 to 4/4 and holds there. At the cap the doubling control is NOT disabled —
+  `toggleCapped` REPLACES the oldest pick, the way every other capped picker in the builder behaves,
+  so the count stays 4 and the ring moves. (b)+(c) are ONE grammar step: the L1
   vocab grows a proficiency LEVEL in the third segment — `grant_proficiency:skill.<id>:partial` and
   `:expertise`, defaulting to `proficient` when absent, so every existing token keeps parsing. That
   makes Jack of All Trades a content row (the partial type and `skillCheck`'s partial argument already
@@ -299,8 +306,6 @@ stay semi-manual.
   catalog keys, because it is one fact and one fact has one name.
   **Screenshot-verified on a level-2 bard** (every skill −1 → 0, every passive 9 → 10,
   `design-preview/joat-half-proficiency.png`) and on a 2014 elf, whose Keen Senses locks Perception.
-  **Residual: the expertise CAP UI is still not screenshot-verified in a Rogue state** — the
-  behaviour is unit- and content-tested; only the on-screen `expertise N/M` counter is unseen.
 
 ### EXPR · L2 value-expression layer — BUILT (design → docs/internals/effects.md §3)
 

@@ -282,6 +282,31 @@ position and are given per wave, because most of them were learned the hard way.
   **Keep both clauses for the next release.** A version is blocked by a number we know to be wrong, by
   a path a user can start and cannot finish, and by shipped content that visibly does nothing.
 
+  **ROUND THREE — cleared, and the gate grew a test instead of a habit.** Round two found its items
+  by hand; twice in a row the thing found was "a mechanism with no consumer", so that half of the
+  gate is now two assertions over the shipped packs rather than an audit somebody has to remember to
+  run: **every effect KIND has a shipped row** (with a pinned list of the three that legitimately
+  have none, each carrying its reason), and **every shipped token names a TARGET the sheet consumes**
+  — B13 could always answer that question and nothing had ever asked it of our own data. Losing the
+  last user of a kind now fails loudly.
+  What the hand pass still found, and closed:
+  - **MONK-MOVEMENT** — a wrong number, and the last one: every monk from 2 to 20 walked at 30 feet.
+    The item had been parked behind "the class tables are not data", which its own sibling row
+    disproves — `monk_martial_arts` has carried its die ladder off that same table all along, because
+    `step()` IS a table.
+  - **SUBCLASS-LEVEL-2024** — already correct in the shipped pack; the item outlived the fix and the
+    per-system override column it asked for turned out to be nothing, since each edition is its own
+    file.
+  - **N4's residual** and **FEATURE-PASSIVES** — one was a screenshot nobody had taken (taken; the
+    at-cap behaviour is a REPLACE, not the disable the item claimed), the other a list that had gone
+    stale under its own successes and was describing work already shipped.
+
+  **What is deliberately NOT in 0.7.0, and is not a wrong number.** `versatile:1d10` and
+  `mastery:<name>` are shipped on every weapon and read by nothing (MASTERY-HALF): both are a grip or
+  a feature the player CHOOSES, so each wants play state and a control before it can mean anything —
+  a missing feature, not arithmetic we get wrong. Same for the Champion's crit threshold, which the
+  app cannot get wrong because it never decides a crit at all.
+
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.

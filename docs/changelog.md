@@ -2,7 +2,7 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..914f86d`. To extend it, read the commits after that one.
+> Written from `v0.6.2..HEAD`. To extend it, read the commits after the last one it names.
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
@@ -86,6 +86,16 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **An 11th-level rogue stops rolling under 10.** Reliable Talent did nothing at all — the feature
   said its rule and the die kept whatever it landed on. It applies where the rule says it does: on a
   check you add your proficiency bonus to, and not on one you are untrained in.
+- **A monk gets faster, and by exactly what its own table says.** Unarmored Movement did nothing at
+  all: every monk from level 2 to 20 walked at 30 feet, because the feature's sentence says "+10
+  feet" and then points at the Monk table for the rest of the ladder. The whole ladder is in the row
+  now — +10 at 2, +15 at 6, +20 at 10, +25 at 14, +30 at 18 — while you wear no armour and hold no
+  shield, in both editions.
+- **"To a maximum of 20" is a ceiling, not a clamp.** A cap now folds last, after every bonus from
+  every source, because that is the order the sentence is written in: "increases by 2, to a maximum
+  of 20" is the +2 and *then* the ceiling. So the Belt of Dwarvenkind applies its own rule instead of
+  printing a note asking you to apply it — Constitution 14 becomes 16, 19 becomes 20, and 20 stays
+  20.
 - **A bard is a Jack of All Trades.** Half your proficiency bonus on every check you are not
   trained in — the tier the sheet has been able to draw since August with nothing able to grant it.
   A skill you already train keeps its full bonus, which is the rule.
