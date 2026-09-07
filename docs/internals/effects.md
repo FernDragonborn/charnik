@@ -271,8 +271,12 @@ and an amount is an expression with its own punctuation.
 policy" invented for 2024's regain-one pattern turned out to be an amount, which is what made the
 second axis necessary rather than convenient. Nothing on disk changed.
 
-**A long rest fills anything a rest fills, in full**: it is the bigger boundary, so `short(1)`
-regains one use on a short rest and the whole pool on a long one — exactly what `short_one` did.
+**A long rest fills a SHORT-rest pool in full**: it is the bigger boundary, so `short(1)` regains one
+use on a short rest and the whole pool on a long one — exactly what `short_one` did, and RAW's own
+sentence for Second Wind. That is a statement about the short-rest pool and about nothing else: a
+pool whose OWN boundary is the long rest pays out its authored amount there, because that amount IS
+what its author said a long rest gives back, so `long(2)` regains two and not the pool. Reading the
+amount for one trigger and ignoring it for the other made the example in the line above unwritable.
 **Dawn and dusk are not rests.** RAW ties a wand to the hour, and eight hours from noon is not dawn,
 so sleeping never refills one; the player presses **Dawn** (or **Dusk**) in the pass-time bar, which
 is shown only when this character HAS such a pool. The app has no clock, and inventing one to decide

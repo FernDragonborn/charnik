@@ -6,8 +6,7 @@ and the three grammar changes of the last day. Read for IMPLEMENTATION defects �
 out wrong, a rule the code knows in one place and forgets in another — not for missing features.
 
 Every finding below was reproduced, not inferred: the method is named on each one, and each one
-carries what happened to it. Six of the seven are fixed in the same change as this file; the seventh
-is a semantics question that is the maintainer's to answer.
+carries what happened to it. All seven are fixed.
 
 ## 1 · HIGH · a magic weapon's `+N` rides every attack you make, and its own attack twice
 
@@ -118,9 +117,11 @@ all of them.
 `restRecharge(p, 'long')` → `'all'`. No shipped row uses it — every partial amount in both packs is a
 `dawn(...)` — so this is a trap waiting for a homebrew pack, not a wrong number today.
 
-**OPEN — the maintainer's call, and the only one left.** "A long rest refills everything a short
-rest would" is a deliberate sentence; whether an explicitly authored `long(2)` overrides it is a
-semantics question, not a bug to patch quietly. Nothing ships that hits it.
+**FIXED**, after the semantics were settled rather than assumed: "a long rest refills everything a
+short rest would" is a sentence about the SHORT-rest pool — it is RAW's own wording for Second Wind
+("one expended use on a Short Rest, and all of them on a Long Rest") — and says nothing about a pool
+whose own boundary IS the long rest. There, the authored amount is exactly what a long rest gives
+back. So the amount is read for both triggers instead of one, and `long(2)` hands back two.
 
 ## 6 · LOW · content-health lints three of the four expression slots
 

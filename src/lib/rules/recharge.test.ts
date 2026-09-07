@@ -50,6 +50,15 @@ describe('restRecharge — which rest gives what back', () => {
 		expect(restRecharge({ trigger: 'other', amount: 'all' }, 'long')).toBeNull();
 	});
 
+	it('a LONG-rest pool pays out its own amount there, rather than the whole pool', () => {
+		// "a long rest refills everything a short rest would" is about the SHORT-rest pool. A pool whose
+		// own boundary IS the long rest had its authored amount read for one trigger and ignored for the
+		// other, so `long(2)` handed back all of them.
+		const longTwo = { trigger: 'long', amount: '2' } as const;
+		expect(restRecharge(longTwo, 'long')).toBe('2');
+		expect(restRecharge(longTwo, 'short')).toBeNull();
+	});
+
 	it('does not hand a dawn pool back for sleeping — RAW ties it to the hour', () => {
 		expect(restRecharge({ trigger: 'dawn', amount: '1d6+1' }, 'long')).toBeNull();
 		expect(restRecharge({ trigger: 'dusk', amount: 'all' }, 'long')).toBeNull();

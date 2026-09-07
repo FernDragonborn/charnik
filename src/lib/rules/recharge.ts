@@ -80,10 +80,16 @@ const triggerOnly = (word: string): RechargePolicy | undefined => {
 /**
  * What a rest gives this pool back: `'all'`, an amount expression, or `null` for nothing.
  *
- * A long rest is the bigger boundary — it refills everything a short rest would, in full, which is
- * what makes `short_one` regain one use on a short rest and the whole pool on a long one. A pool
- * that comes back at dawn does NOT come back because you slept: RAW ties it to the hour, and a rest
- * taken at noon is not dawn.
+ * A long rest is the bigger boundary for a SHORT-rest pool — it refills in full what a short rest
+ * refills in part, which is what makes `short_one` regain one use on a short rest and the whole pool
+ * on a long one. That is RAW's own sentence ("you regain one expended use on a Short Rest, and all
+ * of them on a Long Rest"), and it is about the short-rest pool, not about every pool: a pool whose
+ * OWN boundary is the long rest pays out its own amount there, because that amount IS what its
+ * author said a long rest gives back. Saying `long(2)` and getting all of them was the amount being
+ * read for one trigger and ignored for the other.
+ *
+ * A pool that comes back at dawn does NOT come back because you slept: RAW ties it to the hour, and
+ * a rest taken at noon is not dawn.
  */
 export function restRecharge(
 	policy: RechargePolicy,
@@ -91,8 +97,8 @@ export function restRecharge(
 ): RechargeAmount | null {
 	if (policy.trigger === 'consumable' || policy.trigger === 'other') return null;
 	if (policy.trigger === 'dawn' || policy.trigger === 'dusk') return null;
-	if (kind === 'long') return RECHARGE_ALL;
-	return policy.trigger === 'short' ? policy.amount : null;
+	if (policy.trigger === 'short') return kind === 'short' ? policy.amount : RECHARGE_ALL;
+	return kind === 'long' ? policy.amount : null;
 }
 
 /** How GENEROUS a policy is, for the equal-max tie-break when two features grant the same pool: how
