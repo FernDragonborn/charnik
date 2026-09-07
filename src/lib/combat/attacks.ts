@@ -14,7 +14,7 @@ import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { RollName } from './roll';
 import type { SaidValue } from '$lib/util/say';
-import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
+import { parseToken, isWeaponOwnBonus } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
 import { formatNote, type Note } from '$lib/rules/pipeline';
@@ -206,9 +206,10 @@ export function weaponBonus(tokens: string[]): {
 	const extraParts: DamagePart[] = [];
 	const deferred: AttackNote[] = [];
 	for (const tok of tokens) {
+		// the SAME predicate `gatherEffects` drops these by, so a token can never be both kept out of
+		// the global facts and skipped here — which would lose it silently
+		if (!isWeaponOwnBonus(tok)) continue;
 		const p = parseToken(tok);
-		if (p.kind !== EFFECT_KIND.flatBonus || (p.target !== 'attack' && p.target !== 'damage'))
-			continue;
 		// a TYPED damage bonus becomes its own part (the roll path + panel already render multi-type
 		// damage); only an untyped dice/expression bonus still degrades to a note (nowhere to type it)
 		if (p.target === 'damage' && p.damageType) {
@@ -285,7 +286,10 @@ function scopedAttackBonus(
 	const notes: AttackNote[] = [];
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || f.target !== 'attack' || !f.scope) continue;
-		if (!scopes.has(f.scope) || f.amount === undefined) continue;
+		// a scope is a LIST and every part must match (`melee,str`), the same sentence `roll.ts`
+		// applies to a damage scope — this side used to compare the whole string, so a two-part attack
+		// scope matched a set holding both its parts and neither of them together
+		if (!f.scope.split(',').every((part) => scopes.has(part)) || f.amount === undefined) continue;
 		attack += f.amount;
 		notes.push(
 			attackNote(ATTACK_NOTE.scopedAttack, `${signed(f.amount)} attack (${f.source})`, {

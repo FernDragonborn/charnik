@@ -1980,3 +1980,45 @@ describe.each([
 		expect(character.play.turn.bonus).toBe(1); // one Bonus Action for the pair
 	});
 });
+
+describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
+	let character: Character;
+	beforeEach(async () => {
+		combat.graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		combat.character = character;
+		combat.hp.damageWasCrit = false;
+	});
+
+	it('healing out of 0 HP clears it — RAW "reset to zero when you regain any hit points"', () => {
+		character.play.hp = { current: 0, max: 20, temp: 0 };
+		character.play.deathSaves = { successes: 1, failures: 2 };
+		combat.hpAmount = 5;
+		combat.heal();
+		combat.syncDyingState();
+		expect(character.play.hp.current).toBe(5);
+		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
+	});
+
+	it('a "was it a critical?" nobody spent on a hit does not wait for the next one', () => {
+		character.play.hp = { current: 0, max: 20, temp: 0 };
+		combat.hp.damageWasCrit = true; // ticked at 0 HP…
+		combat.hpAmount = 5;
+		combat.heal(); // …and then healed rather than hit, which hides the checkbox
+		combat.syncDyingState();
+		expect(combat.hp.damageWasCrit).toBe(false);
+		// down again: the next ordinary hit costs ONE failure, not the stale crit's two
+		character.play.hp.current = 0;
+		combat.hpAmount = 3;
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(1);
+	});
+
+	it('a dead character keeps their track — one can die at full hit points', () => {
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		character.play.deathSaves = { successes: 0, failures: 3 };
+		character.play.death = { cause: 'death_saves', round: 1 };
+		combat.syncDyingState();
+		expect(character.play.deathSaves.failures).toBe(3);
+	});
+});

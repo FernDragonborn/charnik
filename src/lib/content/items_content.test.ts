@@ -6,6 +6,7 @@ import { readPackFile, loadPacks } from '../../test-support/real-content';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { computeAttacks, rollEffectsFor } from '../combat/helpers';
+import { UNARMED_STRIKE_ID } from '../combat/attacks';
 
 /*
  * Guards the SHIPPED magic-item data (MAGIC-ITEM-EFX authoring): the `effects` tokens we filled must
@@ -298,5 +299,58 @@ describe('shipped magic items · every one of them has its description', () => {
 		const graph = await loadPacks('srd-2024');
 		const row = graph.list('item').find((r) => r.id === 'ring_of_three_wishes');
 		expect(row?.data.effects?.[0]).toBe('grant_resource:ring_of_three_wishes:3:consumable');
+	});
+});
+
+describe('a magic weapon pays out on ITSELF · D9, and the gather keeps it that way', () => {
+	/* The `+N` weapons were authored with empty `effects` cells until this cycle, so nothing had ever
+	 * exercised the invariant `attacks.ts` states: a weapon's own attack/damage bonus is a fact about
+	 * THAT weapon, and riding the global facts made it a fact about the character — the mundane
+	 * longsword beside it, the bare fists, and the magic weapon itself a second time at the roll. */
+	const fighterWith = (inventory: { item: string; equipped: boolean; attuned: boolean }[]) => {
+		const c = newCharacter('f', 'F', '5.5e');
+		c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
+		c.build.inventory = inventory.map((e) => ({ ...e, qty: 1 }));
+		return characterSchema.parse(c);
+	};
+	const ref = (id: string) => `item:SRD 5.2.1:${id}`;
+
+	it('a +1 weapon raises its own row and nothing else, wielded or attuned', async () => {
+		const graph = await loadPacks('srd-2024');
+		const character = fighterWith([
+			{ item: ref('dagger_of_venom'), equipped: true, attuned: false },
+			{ item: ref('longsword'), equipped: true, attuned: false },
+		]);
+		const sheet = deriveSheet(character, graph);
+		// nothing global: the roll adds `fx.flat` on top of a row that already carries the bonus, so a
+		// non-zero here is the same +1 counted twice on the dagger and once on everything else
+		expect(rollEffectsFor(sheet.facts, 'attack').flat).toBe(0);
+		expect(rollEffectsFor(sheet.facts, 'damage').flat).toBe(0);
+		// a fighter 5 with every ability at 10: proficiency +3 and nothing else, so the dagger's own
+		// +1 is the ONLY thing that may separate the two rows — and the fists must stay out of it
+		const rows = computeAttacks(character, sheet, graph);
+		const toHit = (id: string) => rows.find((a) => a.id === id)?.toHit;
+		expect(toHit('longsword')).toBe(3);
+		expect(toHit('dagger_of_venom')).toBe(4);
+		expect(toHit(UNARMED_STRIKE_ID)).toBe(3);
+	});
+
+	it('a sheathed but attuned +3 weapon arms nothing', async () => {
+		const graph = await loadPacks('srd-2024');
+		const character = fighterWith([
+			{ item: ref('defender'), equipped: false, attuned: true },
+			{ item: ref('longsword'), equipped: true, attuned: false },
+		]);
+		const sheet = deriveSheet(character, graph);
+		expect(rollEffectsFor(sheet.facts, 'attack').flat).toBe(0);
+	});
+
+	it('but what the weapon grants its WIELDER still rides globally', async () => {
+		const graph = await loadPacks('srd-2024');
+		// the Luck Blade is +1 to attack and damage (its own) AND +1 to saving throws (the wielder's)
+		const character = fighterWith([{ item: ref('luck_blade'), equipped: true, attuned: true }]);
+		const sheet = deriveSheet(character, graph);
+		expect(rollEffectsFor(sheet.facts, 'attack').flat).toBe(0);
+		expect(sheet.facts.numeric.some((f) => f.target === 'saves' && f.amount === 1)).toBe(true);
 	});
 });

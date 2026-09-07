@@ -155,6 +155,19 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
 - **Prose is rendered, never mined.** A spell's higher-levels line is parsed as the prose it is, and
   nothing in the app reads a value out of a paragraph.
 
+### Caught by a fresh-eyes pass over this release
+
+- **A magic weapon's bonus is that weapon's.** Filling in the `+1`, `+2` and `+3` weapons this
+  release gave them a bonus, and the bonus escaped: it rode every attack you made — the mundane sword
+  in your other hand, your bare fists — and landed on the magic weapon itself twice, once on the
+  sheet and once more when you rolled. Merely attuning one was enough; a Defender you never drew was
+  worth +3 to everything. What the same weapon grants its WIELDER — the Luck Blade's +1 to saves, the
+  Staff of Power's +2 to AC — still applies as it should.
+- **Healing someone up from 0 clears their death saves**, RAW, and takes the "was it a critical?"
+  answer with it. Both used to survive being healed, so old failures were still on the pips the next
+  time you went down — and a tick nobody spent on a hit could cost two failures on a later ordinary
+  one, from a checkbox that is only on screen at 0 HP.
+
 ### Rename
 
 - **`resist_immune` is `damage_sensitivity`, and it always says which relation.** The old name

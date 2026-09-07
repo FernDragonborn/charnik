@@ -48,6 +48,12 @@
 		combat.clampCurrentHp();
 	});
 
+	// …and the state that only means anything at 0 HP goes when HP does: the death-save track and
+	// the "was it a critical?" answer, whichever way the hit points came back.
+	$effect(() => {
+		combat.syncDyingState();
+	});
+
 	// A conditional ability's window opening is a thing that HAPPENS, and the sheet is where it is
 	// noticed — the panel already greys a closed one, but nothing said when it stopped being closed.
 	$effect(() => {

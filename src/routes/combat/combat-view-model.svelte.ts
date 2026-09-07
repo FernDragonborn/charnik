@@ -148,6 +148,7 @@ class CombatVM {
 	heal = () => this.hp.heal();
 	setTempHp = () => this.hp.setTempHp();
 	clampCurrentHp = () => this.hp.clampCurrentHp();
+	syncDyingState = () => this.hp.syncDyingState();
 	rollConcentrationSave = () => this.hp.rollConcentrationSave();
 	dropConcentrationFromSave = () => this.hp.dropConcentrationFromSave();
 	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();

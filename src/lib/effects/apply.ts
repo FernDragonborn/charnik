@@ -26,7 +26,7 @@ import {
 	isPlayEvent,
 } from './token-parser';
 import { resolveActionFormula } from './action-token';
-import { rechargeRank } from '../rules/recharge';
+import { RECHARGE_ALL, rechargeRank } from '../rules/recharge';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
 	EffectFacts,
@@ -463,8 +463,9 @@ export function applyEffects(
 }
 
 /** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression
- *  slot — guard, value, resource max — for the spec-promised soft warns (mixed-type `if()`,
- *  unusual die). Parse ERRORS are not reported here; they surface at derive as issues/inert notes. */
+ *  slot — guard, value, resource max, resource recharge AMOUNT — for the spec-promised soft warns
+ *  (mixed-type `if()`, unusual die). Parse ERRORS are not reported here; they surface at derive as
+ *  issues/inert notes. */
 export function lintEffectTokens(tokens: string[]): string[] {
 	const warns: string[] = [];
 	for (const raw of tokens) {
@@ -477,6 +478,10 @@ export function lintEffectTokens(tokens: string[]): string[] {
 		// common author typo (an unusual die size in the fast-path form) would silently skip the warning
 		if (p.dice) exprs.push(p.dice);
 		if (p.resource?.maxExpr) exprs.push(p.resource.maxExpr);
+		// a wand's `dawn(1d6+1)` is an expression like any other, and the typo that hits it is the same
+		// one — it was the single L2 slot nothing looked at, one segment over from the max that is lit
+		if (p.resource && p.resource.recharge.amount !== RECHARGE_ALL)
+			exprs.push(p.resource.recharge.amount);
 		for (const e of exprs) for (const w of lintExpression(e)) warns.push(`${raw} — ${w}`);
 	}
 	return warns;

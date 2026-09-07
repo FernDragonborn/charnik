@@ -7,7 +7,8 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { ISSUE_KEY } from '$lib/effects/token-parser';
+import { ISSUE_KEY, isWeaponOwnBonus } from '$lib/effects/token-parser';
+import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
@@ -76,11 +77,28 @@ class EffectGatherer {
 		return row;
 	}
 
+	/**
+	 * A row's tokens as the GLOBAL facts should see them.
+	 *
+	 * Everything a row carries is global except one case: a weapon-like item's own attack/damage
+	 * bonus (D9). Letting a `+1` sword's `flat_bonus:attack+1` ride here put its bonus on every
+	 * attack its owner made — fists included, and on the sword itself twice, since the roll adds this
+	 * fold on top of a row `computeAttacks` had already folded it into — and it did so while the
+	 * weapon was merely attuned in the pack. The rest of what a weapon grants while carried stays.
+	 */
+	private static globalTokens(row: LoadedRow): string[] {
+		const tokens = tokensOf(row);
+		if (row.type !== 'item' || !WEAPON_LIKE_ITEM_CATEGORIES.includes(row.data.category))
+			return tokens;
+		return tokens.filter((token) => !isWeaponOwnBonus(token));
+	}
+
 	/** Push a row's tokens as one active effect (skipping token-less rows). `classId` marks
 	 *  class-borne effects so their `spellcasting_mod` reads THAT class's mod (SPEC4). */
 	private pushRow(row: LoadedRow | undefined, layer: Layer, classId?: string): void {
-		const tokens = tokensOf(row);
-		if (!row || !tokens.length) return;
+		if (!row) return;
+		const tokens = EffectGatherer.globalTokens(row);
+		if (!tokens.length) return;
 		this.active.push({
 			source: rowName(row),
 			layer,

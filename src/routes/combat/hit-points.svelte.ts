@@ -83,9 +83,36 @@ export class HitPoints {
 	}
 	/** Was the hit that is being entered a CRITICAL? Only asked at 0 HP, where it is the difference
 	 *  between one death-save failure and two — the Damage button has no attack behind it to read
-	 *  crit-ness from, and one checkbox beats inferring it wrong. Default off, and off again after
-	 *  each hit. */
+	 *  crit-ness from, and one checkbox beats inferring it wrong. Default off, off again after each
+	 *  hit, and off as soon as HP leave 0 (`syncDyingState`) — its control only renders at
+	 *  0 HP, so a flag that outlived that is a flag nobody can see or unset. */
 	damageWasCrit = $state(false);
+
+	/** You are no longer dying: the death-save track resets and the crit answer goes with it. RAW,
+	 *  both editions — "The number of both is reset to zero when you regain any hit points or become
+	 *  stable" — so every way out of dying calls this rather than restating it. */
+	private stopDying(play: Character['play']): void {
+		play.deathSaves = { successes: 0, failures: 0 };
+		this.damageWasCrit = false;
+	}
+
+	/**
+	 * Above 0 hit points nothing about dying is true, so neither the death-save track nor the "was it
+	 * a critical?" answer may survive there. RAW is the reset clause — "when you regain any hit
+	 * points" — and this is where it is enforced, rather than at each of the several ways HP goes up
+	 * (a heal, a long rest, the number field the player types into): the ones that RESTORE hit points
+	 * are open-ended, the state that depends on them is one. The crit answer rides along because its
+	 * checkbox only renders at 0 HP, so a tick nobody spent on a hit would sit invisible and cost two
+	 * failures on some later ordinary one.
+	 *
+	 * A DEAD character is left alone — one can die at full hit points (exhaustion), and their track is
+	 * a record. Reactive + idempotent, like `clampCurrentHp` beside it.
+	 */
+	syncDyingState = () => {
+		const p = this.host().character?.play;
+		if (!p || p.death || p.hp.current <= 0) return;
+		if (p.deathSaves.successes || p.deathSaves.failures || this.damageWasCrit) this.stopDying(p);
+	};
 
 	damage = () => {
 		const p = this.host().character?.play;
@@ -119,9 +146,12 @@ export class HitPoints {
 			const failures = this.damageWasCrit ? 2 : 1;
 			p.deathSaves.failures = Math.min(3, p.deathSaves.failures + failures);
 			toast(t('combat.notice.deathFailureFromDamage', { count: failures }));
-			this.damageWasCrit = false; // crit-ness belongs to ONE hit, never to the next one
 			if (p.deathSaves.failures >= 3) this.die('death_saves');
 		}
+		// crit-ness belongs to ONE hit, never to the next one — and cleared OUTSIDE the branch above,
+		// because its checkbox only renders at 0 HP: ticked and then healed instead of hit, the flag
+		// went invisible while staying set, and cost two failures on some later ordinary hit.
+		this.damageWasCrit = false;
 		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
 		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
 		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
@@ -130,6 +160,8 @@ export class HitPoints {
 			this.pendingConcentrationSave = { dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))) };
 		}
 	};
+	/** Heal by the entered amount. Leaving 0 HP clears the death-save track, but that is not written
+	 *  here — `syncDyingState` owns it for every way hit points come back. */
 	heal = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
@@ -197,7 +229,7 @@ export class HitPoints {
 		const natural = naturalOf(r);
 		if (natural === 20) {
 			c.play.hp.current = 1;
-			c.play.deathSaves = { successes: 0, failures: 0 };
+			this.stopDying(c.play);
 			toast(t('combat.notice.nat20Revive'));
 		} else if (natural === 1) {
 			ds.failures = Math.min(3, ds.failures + 2);
@@ -205,7 +237,7 @@ export class HitPoints {
 		} else if (r.total >= 10) {
 			ds.successes = Math.min(3, ds.successes + 1);
 			if (ds.successes >= 3) {
-				c.play.deathSaves = { successes: 0, failures: 0 };
+				this.stopDying(c.play);
 				toast(t('combat.notice.stabilised'));
 			}
 		} else {
@@ -247,7 +279,7 @@ export class HitPoints {
 		const p = this.host().character?.play;
 		if (!p) return;
 		p.death = null;
-		p.deathSaves = { successes: 0, failures: 0 };
+		this.stopDying(p);
 		p.exhaustion = Math.max(0, p.exhaustion - 1);
 		p.hp = { ...p.hp, current: Math.max(1, p.hp.current) };
 		toast(t('combat.notice.revived'));

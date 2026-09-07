@@ -24,7 +24,7 @@ export const EFFECT_KIND = {
 	// restrained block ALL speed bonuses). A fact matched by target; drops effect-borne positive adds.
 	blockBonus: 'block_bonus',
 	// `halve:<target>` — a ×½ multiply (G4). The ONE RAW case for a non-integer factor (2014
-	// exhaustion L2 = speed partial, L4 = hp-max partial); a dedicated kind, NOT a generic multiply,
+	// exhaustion L2 = speed halved, L4 = hp-max halved); a dedicated kind, NOT a generic multiply,
 	// because token value slots lex integers only and a `1/2` expr floors to 0. Targets: speed, hp_max.
 	halve: 'halve',
 	advantage: 'advantage',
@@ -501,6 +501,21 @@ export function splitGuard(raw: string): GuardedToken {
 	if (q === -1) return { token: raw.trim() };
 	return { guard: raw.slice(0, q).trim(), token: raw.slice(q + 1).trim() };
 }
+
+/**
+ * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item
+ * grants whoever carries it?
+ *
+ * A `+1` sword's `flat_bonus:attack+1` is a fact about that sword: `computeAttacks` folds it into
+ * that one attack row, so the gather must keep it out of the global facts. The Luck Blade's
+ * `flat_bonus:saves+1` and the Staff of Power's `flat_bonus:ac+2` are facts about the WIELDER and
+ * ride globally as any worn item's do — which is why this is a question about the token, never about
+ * the row. The guard is stripped first: a guarded bonus is still the weapon's.
+ */
+export const isWeaponOwnBonus = (token: string): boolean => {
+	const p = parseToken(splitGuard(token).token);
+	return p.kind === EFFECT_KIND.flatBonus && (p.target === 'attack' || p.target === 'damage');
+};
 
 /** Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule
  *  notes, so the producers below and the message catalogs never drift on a bare string. */

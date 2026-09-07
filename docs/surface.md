@@ -1054,6 +1054,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
+- `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
 - `const RARITIES`
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
@@ -1339,6 +1340,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ctxOf`
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
+- `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
@@ -1661,4 +1663,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 991 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 993 exports across 134 modules · 65 duplicate suspects._

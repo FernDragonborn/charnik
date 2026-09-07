@@ -12,6 +12,8 @@ pointer at it, not a second set of rules.
   [release](work/release.md). An item lives in exactly one of these; the reasoning behind it lives in
   the subsystem's own doc below. There is nowhere else open work may hide.
 - [Changelog](changelog.md)
+- [Audit — the work since the roller review](audit-aug-09.md) — a fresh-eyes read of everything
+  between `f41891b` and 0.7.0 for implementation defects, what each one was, and what happened to it.
 
 ## How it works — and which file rules on what
 

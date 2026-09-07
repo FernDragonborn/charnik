@@ -182,6 +182,13 @@ export const ITEM_CATEGORIES = [
 	'scroll',
 	'wondrous',
 ] as const;
+/** The categories whose row IS the thing you swing. A `+N` on one of these names THAT item — RAW says
+ *  "you have a +1 bonus to attack and damage rolls made with this magic weapon", never a bonus to
+ *  every attack its owner makes — so `gatherEffects` keeps those tokens out of the global facts and
+ *  `computeAttacks` pays them out per weapon. Staves and rods are here because RAW they are weapons
+ *  too; the shipped rows do not yet say which base weapon, so their bonus has no attack row to land
+ *  on and applies nowhere, rather than to everything. */
+export const WEAPON_LIKE_ITEM_CATEGORIES: readonly string[] = ['weapon', 'staff', 'rod'];
 export const RARITIES = [
 	'common',
 	'uncommon',
