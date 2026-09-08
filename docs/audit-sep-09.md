@@ -785,8 +785,9 @@ outright: "A phrase is ONE key, never a noun substituted into a frame."
 
 **Evidence:** a scan of every `title=`/`aria-label=`/`placeholder=`/`alt=` literal and every bare
 markup text run across all non-`/dev` `.svelte` files returns exactly these two, plus `"Ctrl K"` at
-`+layout.svelte:362`, a key-cap glyph that is correctly untranslated. The i18n sweep is otherwise
-complete.
+`+layout.svelte:362`, a key-cap glyph that is correctly untranslated. The shape that scan cannot see
+is an English sentence in a `{}` expression handed to a prop, which is what finding 69 found two more
+of — so the census is complete for attributes and markup runs, and open for props.
 
 **Fix:** an ICU key taking `{name}`, and a whole `themes.tokenColorLabel` key taking `{token}`.
 
@@ -1759,6 +1760,509 @@ fan-out rather than justifying it.
 `Abilities.svelte:38` and fold `a.mod` the way `a.save.value` is folded; then add `check` to the
 `ability_checks` and `d20_tests` fan-outs in `matchesTarget`, and correct the parenthetical in the
 docstring above it. Both editions' exhaustion then lands on all three rolls instead of two.
+## Second pass — the roller remainder
+
+`dice-tray.svelte.ts`, `roller.ts`, `RollerLine.svelte`, and the damage seam at `combat/roll.ts`.
+The items *What was not reached* left open: the caret state machine, `movePill` across lines,
+`setDamage`'s `real` filter, `savageReroll`'s tie case and the two-column type picker.
+
+### 56 · MEDIUM · taking a pill out parks the caret one token short of the end, and the next thing typed lands mid-line
+
+`dice-tray.svelte.ts:434` — `removePill` compensates the caret with
+`if (pillIndex < this.caretAt(index)) this.setCaret(index, this.caretAt(index) - 1)`, and `caretAt`
+(`:392`) CLAMPS the `AT_END` sentinel down to the line's length. Read *after* the pill is gone, a
+caret nobody has ever moved therefore reports "in front of the last pill", the guard fires, and
+`AT_END` is materialised one place further left. The sentinel exists precisely so a caret parked at
+the end STAYS there through every edit (`:96`); this is the one writer that reads it through the
+clamp instead of testing the stored value.
+
+**Reproduced** — type `1d20 +3 +5`, take out the first pill with its `×` (or with Delete on the
+focused pill, `RollerLine.svelte:241` — both reach the same method), then type the next token:
+
+```
+before removal   pills ["1d20","+3","+5"]   caret 3 (end)
+after  removal   pills ["+3","+5"]          caret 1   <- not 2
+type "+9"        pills ["+3","+9","+5"]
+```
+
+It is not only order. `addToken` lands a bound on the last die LEFT of the caret, so the same
+sequence turns a Reliable Talent floor into an unaccounted fragment that blocks the roll:
+
+```
+type "1d6 1d20"  pills ["1d6","1d20"]   caret 2
+remove "1d6"     pills ["1d20"]         caret 0
+type ">10"       pills ["raw:>10","dice:1d20"]
+issues           [{"key":"roller.issue.unaccounted","values":{"text":">10"},"blocking":true}]
+rollable         false
+control (no removal): "1d20 >10" -> ["dice:1d20 >10"]
+```
+
+Removing the LAST pill is safe — the guard's `<` is false there — which is why the case survives the
+tray's own suite.
+
+**Fix:** test the stored caret, not the clamped one: read `this.carets[index]` raw and skip the
+adjustment when it is `AT_END`.
+
+### 57 · LOW · a pill dragged across lines keeps no caret, and a damage type may be dropped on a d20 line
+
+`dice-tray.svelte.ts:458` — `movePill` rewrites both lines and touches `carets` in neither, which is
+the opposite of the sibling thirty lines above it (finding 56's guard). It also takes any pill to any
+line: `vocabularyFor` (`:136`) withholds damage-type rows from a test line, and the doc states the
+consequence — "because the same list backs the resolver — typing the name in full can't get past
+what the menu withheld". Drag-and-drop (`RollerLine.svelte:253`) goes through neither.
+
+**Reproduced** — a `fire` pill dragged from the damage line onto the test line:
+
+```
+damage line before  ["dice:2d6","damageType:fire"]
+test line after     ["damageType:fire"]
+testRoll(test)      {"dice":{},"mod":0,"bonusDice":[],"mods":{},"advantage":0}
+issues              [{"key":"roller.issue.untypedDamage","blocking":false}]   <- for the line it LEFT
+```
+
+The type sits on the d20 line as a real pill, contributes nothing to `testRoll`, and is reported by
+nothing; the damage line it left now warns that its damage is untyped. Both halves are what the
+player asked for with the mouse, and neither is a state the model admits from the keyboard.
+
+**Fix:** `movePill` already has both roles in hand — refuse a `damageType` pill onto a `test` line,
+and carry the caret the way `removePill` means to.
+
+### 58 · LOW · a damage part made only of effect dice is not damage at all
+
+`combat/roll.ts:50` — `dealsDamage` is `Object.keys(p.dice).length > 0 || p.mod !== 0`, and
+`dice-tray.svelte.ts:551`'s `real` filter repeats the same predicate verbatim. Neither counts
+`bonusDice`, which is the field that carries an effect's damage DICE. The comment governing the call
+site (`sheet-rolls.svelte.ts:260`) states the intent the pair misses: "asked AFTER the effects fold
+in, so a flat damage effect on a damage-less weapon still counts" — a flat one does, a dice one does
+not.
+
+**Reproduced** — the tray handed one part, dice-less and modifier-less, carrying a `+1d6` effect die:
+
+```
+prefill damage [{dice:{}, mod:0, type:"bludgeoning", bonusDice:[1d6 "Divine Favor"]}]
+lines -> [["test",["1d20","+5"]]]                    <- no damage line at all
+control, the same part with mod 1:
+lines -> [["test",["1d20","+5"]],["damage",["+1d6","+1","bludgeoning"]]]
+```
+
+Reachable wherever the weapon's own damage folds to zero: an Unarmed Strike at Strength 8
+(`attacks.ts:426` gives it `mod: 1 + strMod`), or a Net (`attacks.ts:396` gives a damage-less weapon
+a part carrying the ability modifier alone) at ability modifier 0. No shipped row grants damage
+DICE — every `flat_bonus:damage` in both packs is `+1`, `+2` or `+3` — so this is homebrew- and
+plugin-reachable rather than wrong today, the same footing as finding 9.
+
+**Fix:** one clause in `dealsDamage`, which `real` should then call rather than restate.
+
+### 59 · LOW-MEDIUM · the gate `AGENTS.md` prescribes cannot see a type error, and one reached `main`
+
+`AGENTS.md` ▸ "Run the whole gate before committing" names `pnpm test && pnpm lint && pnpm build` and
+says a subset is a false green. None of the three runs a type-checker: `test` is `vitest run` (oxc
+transpile, no checking), `build` is `vite build` — the same file says it "type-checks *nothing*" —
+and `lint` is prettier, eslint, stylelint, knip, jscpd and madge. `svelte-check` lives only in
+`pnpm check`, which the gate omits, and the pre-commit hook runs surface, prettier and eslint.
+
+**Reproduced** by the repository itself: `combat.test.ts:2020` wrote
+`character.play.death = { cause: 'death_saves', round: 1 }` while `playSchema.death` is `{ cause }`
+alone (`character/schema.ts:186`). An excess property, rejected by `svelte-check`, invisible to every
+gate above, and on `main` from the commit that added it until this pass ran `pnpm check`.
+
+**Fix:** put `pnpm check` in the gate. It is the only one of the five that reads types, and the
+sentence about a subset being a false green is what leaving it out costs.
+
+### Suspected, not reproduced — the roller remainder
+
+- **Blur takes the highlighted suggestion rather than the text that was typed.**
+  `RollerLine.svelte:207`'s `onblur` calls `commit(index)`, and `commit` prefers
+  `this.menu[this.highlight]` whenever the line is the focused one. Tab, Enter and a click on a row
+  are documented as one act (§6); leaving the field is a fourth path into the same branch, so typing
+  `bl` and then clicking a die button in the header inserts Bless. Unmeasured: whether the ghost
+  makes that legible enough to be the intent — the comment at `:202` argues it is.
+- **`savageReroll` spends the use on a tie.** `sheet-rolls.svelte.ts:319` keeps the original when the
+  two sums are equal (`>`), then still records an amendment reading `from: n, to: n` and burns the
+  once-per-turn use. Correct RAW — the feature was used — but the log line says nothing happened.
+- **`setDamage`'s replace branch is unreachable.** `:562` handles an existing damage line, and its
+  only caller is `prefill` (`:530`), which has just `reset()` the lines. The comment above it
+  describes an attack arriving "in two calls" that `grep -rn setDamage src/` says no longer exist.
+
+### Checked and correct — the roller remainder
+
+- **The two-column type picker is consistent end to end.** `TYPE_COLUMNS = 2` and
+  `typeRows = ceil(menu.length / 2)` (`RollerLine.svelte:42`) feed both `--type-rows`
+  (`grid-template-rows: repeat(var(--type-rows), auto)` under `grid-auto-flow: column`, `:722`) and
+  the `selectAcross(±typeRows)` stride, so the arrow keys and the drawn columns are one arithmetic.
+  An odd row count leaves the second column one short and `selectAcross`'s clamp handles it;
+  `menu.length === 0` cannot reach the `repeat(0, …)` that would drop the declaration, because
+  `menuOpen` requires a non-empty menu.
+- **`savageReroll`'s weapon/effect split is right.** `weaponOnly` drops `bonusDice` and the flat
+  modifier and keeps `mods` and `crit`, both candidates are re-totalled through the same `partWith`,
+  and the effect dice keep the faces they rolled. The one hole is its own `ponytail:` comment — a
+  crit twin of an effect die counts with the weapon's dice — and it is marked.
+- **`caretLeft` / `caretRight` are sound.** Both read the caret BEFORE folding the draft, both step
+  over inherited type pills, and both answer whether they actually moved; `commitText` advances the
+  caret by however many pills a compound token became, so `2d6+3` cannot leave the caret inside
+  itself.
+- **The volley identity holds.** `roll()` stamps `at + i`, so the entries of one volley never share
+  the timestamp an amendment matches on — finding 10's fix, verified at this seam.
+- **The tray has no locale of its own, as designed.** An unnamed roll carries `roller.customRoll` as
+  its key and the literal `'Custom roll'` only as `sayRollName`'s no-translator fallback, and the
+  prefill's `labelKey` rides through `roll()` untouched — so the log says the roll's name in the
+  language it is being READ in, not the one it was rolled in.
+
+## Second pass — play and combat, the remainder
+
+`src/routes/combat/inventory.svelte.ts`, `spell-casting.svelte.ts`, `roll-journal.svelte.ts`,
+`effects-editor.svelte.ts`, `resource-tracker.svelte.ts`, `turn-economy.svelte.ts`,
+`CombatMenus.svelte`, `blocks/` and every `blocks/panels/*` except HP and Attacks;
+`src/lib/combat/spells.ts`, `effects-view.ts`, `actions.ts`, `defense.ts`, `constants.ts`.
+Eleven confirmed, each reproduced against the real packs or read out of the markup. A twelfth —
+`logMarker` never persisting a no-roll cast — is finding 14, reproduced a second time here with a
+spy `persist`: in-session log 2, persisted 1.
+### 60 · MEDIUM-HIGH · an item that requires attunement grants its benefits while merely equipped
+
+`src/lib/character/derive-gather.ts:62` — `if (inv.equipped || inv.attuned)` pushes an item's tokens
+on either flag, so the `attunement` tag is never a gate. RAW, both editions: a magic item that
+requires attunement confers no benefit until attuned. `needsAttunement` exists
+(`character/inventory.ts:35`) and has exactly one consumer — `inventory.svelte.ts:97`, which uses it
+to decide whether to draw the Attune button. Nothing reads it as a rule.
+
+It bites only on `armor` / `shield` / `weapon`, which are the categories `isEquippable` covers;
+21 shipped rows in `srd-2014` and 27 in `srd-2024` carry `attunement`, an effects cell and one of
+those categories.
+
+**Reproduced** — real packs, one item, `equipped: true, attuned: false`:
+
+```
+srd-2024 armor_of_invulnerability   equipped only -> resist ["bludgeoning","piercing","slashing"]
+srd-2024 armor_of_invulnerability   carried only  -> resist []
+srd-2014 demon_armor                equipped only -> AC 19
+   trace: Armor +18 · DEX (heavy: ignored) +0 · Demon Armor +1  (flat_bonus:ac+1)
+srd-2014 control, no armor          -> AC 10
+```
+
+**Fix:** one clause in the gather — `inv.attuned || (inv.equipped && !needsAttunement(item))`,
+resolving the row through `resolveItem` as the panel already does, so the tag it reads is the
+merged one.
+
+### 61 · MEDIUM-HIGH · the combat spell row's prepare toggle finds the entry by bare id, and flips the wrong spell
+
+`spell-casting.svelte.ts:548` — `const idOf = (ref: string) => ref.split(':').pop();` then
+`build.spells.find((s) => idOf(s.spell) === r.id)`. `r.id` is the row's **bare** id, so two spells
+sharing an id across sources are indistinguishable and the FIRST entry always wins. The comment two
+lines below claims the gate is "the ONE shared seam … identical in the spellbook, D13" — the
+spellbook keys its entry map by `row.effectiveId` (`routes/spellbook/+page.svelte:77`,
+`togglePrepare(id)` at `:103`), which is the identity AGENTS.md ▸ glossary defines
+(`type:source:id`, "so the same `id` from two sources coexists").
+
+**Reproduced** — a two-row fixture, same id, two sources, both prepared; tap the prep dot on
+**Fireball B**:
+
+```
+before: [{Pack A fireball, prepared:true}, {Pack B fireball, prepared:true}]
+after : [{Pack A fireball, prepared:false}, {Pack B fireball, prepared:true}]
+```
+
+The spell the player did not touch is the one that un-prepares, and the one they tapped keeps its
+dot lit — so the gesture reads as a no-op and the second tap un-prepares nothing again.
+
+**Fix:** `build.spells.find((s) => s.spell === r.ref)`. `SpellRow.ref` is already the effectiveId
+and is already what `hidden` filters on (`spells.ts:282`).
+
+### 62 · MEDIUM · a magic item weighs nothing, and the load meter is the one place capacity is shown
+
+`inventory.svelte.ts:91` (`weightLb`) and `:139` (`carriedLb`) both read
+`row.data.weight_lb` off the item's OWN row. `resolveItem` (`content/resolved-item.ts:57`) merges
+the base row's **tags** and **damage** underneath a magic row — "a +1 longsword IS a longsword" —
+and does not merge `weight_lb`. Every shipped row that names a `base_item_id` leaves its own weight
+blank: 24 of 24 in `srd-2014`, 21 of 21 in `srd-2024`. A template answered through the row's own
+base picker (`setBase`) is the same story.
+
+**Reproduced** — srd-2024, three rows carried:
+
+| row | `weightLb` | `meta` (inherits) |
+| --- | --- | --- |
+| Dagger | 1 | `weapon · 1d4 piercing` |
+| Dagger of Venom (base `dagger`, 1 lb) | **0** | `weapon · 1d4 piercing` |
+| Defender, base set to Longsword (3 lb) | **0** | `weapon · 1d8 slashing` |
+
+```
+carriedLb = 1        <- the mundane dagger, and nothing else
+carriedLb after picking the Defender's base = 1
+```
+
+So the damage line inherits and the weight does not, on the same row, from the same call.
+
+**Fix:** have `resolveItem` carry the resolved weight the way it already carries `damage`
+(`weightLb: row.data.weight_lb ?? base.data.weight_lb`), and read it from the `ResolvedItem` at both
+inventory sites — which also fixes the build sheet's own reduce (`SheetInventory.svelte:16`).
+
+### 63 · MEDIUM · the combat sheet prints content names in English, beside two of its own panels that translate them
+
+`src/lib/combat/spells.ts:365` (`name: d.name_en`) and `inventory.svelte.ts:89`
+(`rowName(item.row)`, which is `name_en ?? id` — `content/loader.ts:80`). `localizedName`
+(`content/detail.ts:102`) is documented as "the one localized-name reader (AUDIT F9)", and the
+Attacks panel and the Features panel use it (`combat/attacks.ts:404`, `FeaturesPanel.svelte:47`).
+The same divergence runs through `combat-view-model.svelte.ts:375` (class line), `:381` (species),
+`:389` (the concentration indicator's spell), `:458` (the level-up menu) and
+`effects-editor.svelte.ts:38` / `:95` (the condition list and the "+" effect catalog).
+
+**Reproduced** — one fixture row carrying `name_uk`, one character carrying that item and that
+spell:
+
+```
+SPELL panel row name        = Bless        <- name_en
+localizedName(spell, 'uk')  = Благословення
+INVENTORY panel row name    = Dagger       <- rowName -> name_en
+ATTACKS panel row name      = Кинджал      <- localizedName(row, locale)
+```
+
+The same dagger is two different words on one screen. The shipped SRD carries no `name_uk`, so
+today this only shows on a translated or homebrew pack — which the in-app `/translate` view writes
+into exactly these columns.
+
+**Fix:** `localizedName(row, locale)` at each of the eight sites; `spellRow` and `InventoryTracker`
+need the locale threaded in the way `computeAttacks` already takes it.
+
+### 64 · MEDIUM · the add-effect menu has a search box that searches nothing
+
+`CombatMenus.svelte:117` — `<input placeholder={$_('combat.menu.searchEffects')} />` with no
+`bind:value`, no `oninput`, and no consumer. The list under it is
+`combat.effects.effectCatalog` (`effects-editor.svelte.ts:87`), a straight `graph.list('effect')`
+map with no filter anywhere in either file. The catalog is user-extendable content, so the box is
+the only way this list would ever be navigable at size, and it is a control that looks live and is
+not — the dead-end shape `ui.md` rule 10 exists to forbid.
+
+**Reproduced** by reading the two files: the only `$state` the menu owns for this overlay is
+`combat.effects.newEffectDuration`; `grep -n "search" src/routes/combat/CombatMenus.svelte
+src/routes/combat/effects-editor.svelte.ts` returns the placeholder and the icon and nothing else.
+
+**Fix:** a local `let effectQuery = $state('')` bound to the input and a
+`.filter((p) => p.label.toLowerCase().includes(effectQuery.trim().toLowerCase()))` on the `{#each}`
+— or delete the input, because an inert one is worse than none.
+
+### 65 · MEDIUM · a condition is switched on with the app's own Switch and cannot be switched off with it
+
+`CombatMenus.svelte:404` — `onclick={() => added ? null : addEffect({…})}`, under a row whose right
+edge is `<span class="toggle-track" class:on={added}>` (`:413`). `.toggle-track` is the class the
+shared `Switch` component renders (`components/Switch.svelte:12`, `styles/components.css:600`), so
+`ui.md` rule 1 — "State on or off is a toggle `Switch` (teal when on)" — is being *used*, and then
+half of it is refused: clicking a lit row does literally nothing, with no notice.
+
+The way out exists, in a different panel (`EffectsPanel.svelte`'s ✕), which is exactly the split
+AGENTS.md ▸ Hit every surface ▸ Reverse states names: "If you added a way in, add the way out and
+the way to see it. A one-way door is a bug."
+
+**Reproduced** from the markup: the ternary's true branch is `null`. The row is a `<button>`, so it
+takes hover and focus and Enter, and every one of them is silent.
+
+**Fix:** `added ? combat.effects.removeEffect(iidOfCondition) : addEffect(…)`, matching on the
+`apply_condition:<id>` token (`conditionIdOf`, `effects-view.ts:262`) rather than on the label — see
+the label-matching note under *Suspected* below.
+
+### 66 · MEDIUM-LOW · the carrying-capacity readout carries no provenance, and the 5e encumbrance tiers live only there
+
+`blocks/panels/InventoryPanel.svelte:20` prints `carried / capacity` as plain text.
+`ui.md` rule 3 lists the values that must carry a provenance popover and names **carrying capacity**
+among them. The builder's own load block does it (`build/blocks/SheetInventory.svelte:83`,
+`use:provenance={why(s.carryingCapacity, $_)}`); the play sheet — the surface a player actually
+loads up on — does not.
+
+The cost is not only the breakdown. `rules/core.ts:310` puts the **5e-only encumbrance tiers**
+(`Encumbered at STR×5 (−10 ft)`, `Heavily encumbered at STR×10 (−20 ft)`) into
+`carryingCapacity`'s `notes`, and `why()` is what renders notes. So on a 2014 character the two
+thresholds that actually change their speed are computed, attached, and unreachable from the combat
+sheet; the panel's only load feedback is `overCapacity`, which is the 5.5e rule.
+
+**Reproduced** by reading the markup — the `<span class="load-figure">` has no `use:provenance`, and
+`grep -n provenance src/routes/combat/blocks/panels/InventoryPanel.svelte` is empty while every
+other combat panel has one.
+
+**Fix:** `use:provenance={why(s.carryingCapacity, $_)}` on the figure. The panel already takes
+nothing but `combat`, so it needs the sheet threaded in the way `SkillsPanel` and `SpellsPanel`
+take it.
+
+### 67 · MEDIUM-LOW · the effect-duration menu is a dialog Escape cannot close
+
+`blocks/EffectDurationMenu.svelte:84` — `role="dialog"` with `place()`, a scroll follower and a
+`pointerdown`-outside closer, and no key handling at all. Its sibling, the combat overlay it opens
+on top of, uses `use:dismissOnEscape` (`CombatMenus.svelte:103`), and
+`actions/dismissOnEscape.ts:4` calls itself "the one home for the `<svelte:window onkeydown>` +
+Escape-check every attention dialog hand-wrote".
+
+The way IN is fully keyboard-reachable — `.duration-select` is a real `<button>`
+(`EffectsPanel.svelte:99`) — so a keyboard user can open a dialog they can only leave with a mouse.
+
+**Reproduced** from the markup: the only listeners the component registers are `scroll`, `resize`
+and `pointerdown`; there is no `onkeydown`, no `svelte:window`, and no `dismissOnEscape` import.
+
+**Fix:** `use:dismissOnEscape={onclose}` on the `.dur-menu` div.
+
+### 68 · LOW-MEDIUM · a spell pin is stored by bare id, so it pins every same-id spell
+
+`combat-view-model.svelte.ts:253` (`togglePin(id)`) writes `ui.spellsPinned` from `r.id`, and `:250`
+reads it back as a bare-id map that `SpellsPanel.svelte:88` indexes with `pinned[r.id]`. The eye in
+the same panel filters on the full ref (`spells.ts:282`, `hidden.includes(x.row.ref)`), so two
+controls one row apart disagree about what a spell IS.
+
+**Reproduced** — two `fireball` rows from two sources, `togglePin('fireball')` once:
+
+```
+ui.spellsPinned    = ["fireball"]
+pinned group rows  = ["Fireball A","Fireball B"]      <- one click, two pins
+after hiding B by ref: ["pinned/Fireball A","3/Fireball A"]   <- the eye is per-ref
+```
+
+The pinned ids also land on disk in `ui.spellsPinned`, so the ambiguity outlives the session.
+
+**Fix:** store and index the ref, as `spellsHidden` does.
+
+### 69 · LOW · the combat page hands the loading screen two English literals
+
+`routes/combat/+page.svelte:32` —
+`content.graph ? 'Computing your character sheet…' : 'Loading content…'`, passed to `<Loading
+message={…}>` at `:110`. Every other route passes a key: `$_('compendium.loading')`,
+`$_('spellbook.loading')`, and `build/+page.svelte` passes nothing at all and takes the component's
+own English default (`components/Loading.svelte:8`, `'Crunching the numbers…'`). The `loading.*`
+namespace already exists with four keys, and the `loading.patience` line renders translated directly
+underneath these two.
+
+Finding 28 states there are **two** literal English user-facing strings in `.svelte` across the
+repo; these are two more, and the component default is a third.
+
+**Reproduced** by rendering the branch mentally against the catalog:
+`grep -n '"loading' src/lib/i18n/locales/en.json` yields `failedBody`, `failedReport`,
+`failedTitle`, `patience` — no message key exists for either sentence.
+
+**Fix:** two keys (`loading.sheet`, `loading.content`), and give `Loading`'s `message` prop a
+key-based default instead of an English one.
+
+### 70 · LOW · the pin-skills menu title-cases skill ids while the skills panel translates them
+
+`CombatMenus.svelte:305` — `<span class="skill-name">{titleCase(skill)}</span>`.
+`SkillsPanel.svelte:55` prints the same eighteen ids as
+`$_('skillName.' + skill, { default: titleCase(skill) })`, and `CombatStrip.svelte` does the same
+for the passive row. The view-model even says so at `combat-view-model.svelte.ts:434`: "the KEY
+only — the word for a skill is `skillName.<id>`, and a view-model has no locale to spend on it".
+
+`titleCase('animal_handling')` also produces `Animal_handling` rather than `Animal Handling` —
+`util/format.ts`'s `titleCase` upper-cases the first letter of each word, and the ids are
+snake-case (`constants.ts:184` records the snake-case migration).
+
+**Reproduced** by reading the two components against `en.json`, which carries all eighteen
+`skillName.*` keys.
+
+**Fix:** `$_(\`skillName.${skill}\`)`, the same call one file over.
+
+### Suspected, not reproduced — play and combat
+
+- **The Resources section names a pool twice, two different ways.** `EffectsPanel.svelte:189`
+  prints `r.name` from `parseResourceEffect` (`effects-view.ts:288`), which is `eff.label` — the
+  runtime effect's label. Every notice about the same pool uses
+  `ResourceTracker.resourceName` (`resource-tracker.svelte.ts:42`), which is the `resource`
+  content row's name per RES-NAME (`character/resource-names.ts`). Not reproduced because no
+  shipped `effects_srd.csv` row in either pack carries a `grant_resource` token, so the section is
+  reachable only through user content. The probe: a homebrew `effects.csv` row granting an id that
+  also has a `resources.csv` row, then compare the row header with the toast the click raises.
+- **The condition menu matches "already applied" on the LABEL.** `CombatMenus.svelte:401` —
+  `play.effects.some((e) => e.label === cn.label)`. A custom modifier the player names "Poisoned"
+  would light the Poisoned row's switch and block the real condition. `conditionIdOf`
+  (`effects-view.ts:262`) is the id-based predicate that already exists. Probe: add a custom effect
+  labelled after a condition, then open the condition menu.
+- **Movement is the one distance printed without metric.** `Turnbar.svelte:74` prints
+  `{moveLeft} / {moveMax}` + a `feet` label; `CombatStrip.svelte:78` prints
+  `{s.speed.value} ft ({metres(...)})` for the same number, and `metres()` is a shared helper. Same
+  for the per-row item weight (`InventoryPanel.svelte:65`, `combat.inventory.pounds`) beside the
+  total, which does carry `kilograms()`. `ui.md` rule 6 is unconditional; the Turnbar's own comment
+  explains dropping *the unit word* at narrow widths, not the conversion, so this may be a
+  deliberate density call. Needs a maintainer ruling rather than a probe.
+- **`effectHint` reads English spell NAMES and returns untranslated English.** `spells.ts:93` —
+  `/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(name)` over
+  `d.name_en`, returning `'utility'`, `'teleport'`, `'negate spell'`, `'set AC 13'`, `'fly 60 ft'`,
+  `'3 duplicates'`. These are the `summary` column of every non-damage spell row on the panel. It is
+  not prose-mining (the name is a declared column), but it is a hardcoded English lookup that a
+  translated or homebrew row cannot match, and its output reaches the user untranslated.
+  `'fly 60 ft'` also violates rule 6. Probe: render the panel at `uk` with a row named
+  `name_uk = "Політ"`.
+- **Removing a resource-granting effect leaves its spend count behind.**
+  `effects-editor.svelte.ts:138` filters `play.effects` and never touches
+  `play.resourcesSpent[id]`. `resourceSpent` clamps to a max of 0 for a pool nothing grants
+  (`resource-tracker.svelte.ts:49`), so it is invisible — until the same id is granted again, when
+  the stale spend reappears. Probe: grant, spend, remove, re-grant.
+- **A ritual cast still spends the turn slot.** `spell-casting.svelte.ts:527` charges
+  `ctSlot(r.castTimeIcon)` before it knows the cast was a ritual; RAW a ritual takes ten minutes
+  longer and is not the spell's own casting time. Reachable only in combat, where nobody rituals.
+- **`CombatStrip.svelte:49`'s "AC (touch)" row rolls a bare d20 with no `RollTarget`** — the same
+  omission as findings 2 and 55, on a control whose modifier is a literal `0`. Whether that row
+  should exist at all is the prior question.
+
+### Checked and correct — play and combat
+
+- **`InventoryTracker`'s four verbs are symmetric.** `equip` and `attune` both call the shared
+  toggles in `character/inventory.ts`; `attune` blocks the fourth item only in Strict and only on
+  the way IN, matching `toggleAttuned`'s own contract, and un-attuning is never gated. `use` removes
+  the last of a stack rather than leaving a zero row (`useOne`), and `bumpQty` floors at 1 so the
+  stepper cannot silently delete an item. `setBase('')` deletes the key rather than keeping the last
+  pick.
+- **The coin surface is complete in both directions.** `toggleCoin` / `isCoinShown` / `shownCoins`
+  and `toggleCoinWeight` all have their control in the `coins` overlay
+  (`CombatMenus.svelte:334`–`:349`), reached from the inventory panel head
+  (`PanelCard.svelte:52`); a hidden denomination keeps its coins and its weight, as
+  `rules/currency.ts` requires.
+- **The autosave covers every play-time write.** `combat/+page.svelte:71` deep-tracks `play`, `ui`
+  *and* `build`, so the inventory verbs (which write `build.inventory`), the pins (`ui`) and the
+  prepared flags (`build.spells`) all schedule a save without each verb calling
+  `saveCharacterToStore` itself; `onBeforeReload` flushes it.
+- **`passBoundary`** recharges only pools whose own `recharge.trigger` matches, skips a pool with
+  nothing spent rather than announcing it, rolls a dice amount through `rechargeCount` with the
+  sheet's `castCtx`, floors at 0, and says what came back per pool. `hasBoundaryPool` gates its two
+  buttons so neither can appear as a no-op. `rest()` correctly ignores dawn/dusk pools via
+  `restRecharge`.
+- **`TurnEconomy`'s `usedRolls` marker.** `toggleCombat` and `nextTurn` both reset it with the rest
+  of `play.turn`, and `ActionsPanel.svelte:31` shows the marker only while a turn is being tracked —
+  which is what clears it — so a stale mark cannot survive into a fight.
+- **`expireTimedEffects` / `advanceTime`.** One partition pass, a toast per expiry (never silent),
+  `endConcentrationCarriedBy` on the expired set, and no action-economy reset out of combat.
+- **`effects-view.ts`'s tag layer.** `numericFactTag` formats from the FACT fields and never
+  re-parses the token (the D7 invariant), `effectTagResolved` prefers a resolved `NumericFact` so an
+  L2-expression value renders as a number instead of a bare "Damage +", `targetLabel` covers the
+  dotted families and falls through to `titleCase` for a homebrew target, and every branch has an
+  English fallback for a caller with no translator.
+- **`durationToRounds`** maps every shape the shipped `duration` column uses — `"1 minute"` → 10,
+  `"Concentration, up to 1 hour"` → 600, `"8 hours"` → 4800, `"Until dispelled"`/`"Instantaneous"` →
+  null (indefinite carrier) — and `carrierRounds` lets an absolute `duration` upcast override it,
+  with `isInfinite` → no timer.
+- **`SpellCasting.cast`'s ordering is all-or-nothing.** The slot is RESERVED (typed
+  `{key}|{blocked}`, not a string sentinel) before the economy is asked, the economy is asked before
+  the slot is spent, and a block at either gate returns with nothing mutated. A ritual reserves no
+  slot; `castSlotLevel` resolves a pact slot to the pool's forced level.
+- **The upcast paths.** `evalUpcastAt` is the single place the ephemeral `{slot, spell_level}` ctx
+  is built, with `spellcasting_mod` re-pointed at the class the spell is cast AS; `upcastDamageParts`
+  drops a zero delta so a base-slot cast adds no phantom part; `spellDamageParts` routes a typed
+  delta onto the part sharing its type and appends a new part when the base has none, and rides the
+  primary fx (or the heal's ability mod) on part 0 only; a broken formula toasts and falls back to
+  base rather than producing a wrong number. `castPreview` and `upcastLadder` read the same
+  evaluation the cast will use.
+- **`RollJournal`'s identity handling.** `pushVolley` stamps `at + i` so an amendment rewrites its
+  own beam; `recordRolls` groups a multi-throw action under one `crypto.randomUUID()` and leaves a
+  single roll ungrouped; `reviseEntry` matches on `at` and falls back to object identity only for an
+  unstamped entry; `pushRoll` returns `this.log[0]` so a caller holds the reactive proxy the
+  `{#each}` iterates. `ROLL_LOG_MAX` matches `LOG_MAX_LINES` on disk.
+- **`spells.ts`'s cantrip scaling.** `castingDice` multiplies dice by `cantripDieMultiplier(level)`
+  only for `level === 0`, and explicitly NOT when the row's `upcast` is a `count:` (Eldritch Blast
+  scales beams, not die size). The scaled string feeds both the row's `summary` and its
+  `damageParts`, so what is shown is what is rolled.
+- **`groupByLevel` / `groupByPrepared` / `groupBySchool` and the pact strip.** The pact pool is
+  excluded from `slotsByLevel` and rendered as its own rowless header keyed by `PACT_SLOT_KEY`;
+  `forcedUpcast` pools never leak into the per-level pip counts; a homebrew school falls back to the
+  row's own word through `labelKey`+`label`.
+- **`applyDamageSensitivity` and `effectiveHpMax`** (`defense.ts`) — immune before vulnerable before
+  resist, resist floors, and the manual max re-folds the item/feature/condition/override layers
+  through the same pipeline rather than re-summing facts.
+- **`standardActions`** filters by system, renames Utilize → "Use an Object" on 5e only, and carries
+  every reader-visible string as a catalog key derived from the row id.
+- **The two anchored-menu placement effects** (`CombatMenus.svelte:71`, `EffectDurationMenu:51`) both
+  clamp on open and follow without clamping on scroll, both listen in the capture phase, and both
+  clean up every listener on teardown.
+
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -1975,12 +2479,19 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `switchSystem`'s drop sweep is **no longer open**: it was suspected of stranding `slotFeatSkills`,
   `slotFeatAbility` and `speciesBoostPicks`, and it does not — `pickSpecies` clears the boost picks,
   and the two slot maps are trimmed downstream by the feat's own count once the feat is gone.
-- **Combat remainder.** `inventory.svelte.ts` (equip, attune, attunement caps), `CombatMenus.svelte`,
-  the panels other than HP and Attacks, `roll-journal.svelte.ts` past line 200, `spells.ts`,
-  `effects-view.ts`, the upcast paths, and `passBoundary`.
-- **Roller remainder.** `savageReroll`'s weapon/effect-die split and its tie case; the caret state
-  machine; `movePill` across lines; `setDamage`'s `real` filter; the roller's locale surface;
-  `RollerLine.svelte`'s two-column type picker.
+- **Combat remainder — covered by findings 60-70.** What is left of it: `CombatStrip.svelte` past
+  line 150 and `blocks/Abilities.svelte`, both read only far enough to place finding 55;
+  `DeathScreen.svelte`, `Hero.svelte` and `PanelCard.svelte` below their markup;
+  `panel-layout.svelte.ts`, `menu-overlay.svelte.ts` and `rest-controls.svelte.ts`, opened only
+  where the view-model forwards into them — which leaves the short-rest hit-dice picker (`hdPickInc`,
+  `commitShortRest`, `shortRestMode`) unread, the one rest that spends a resource the player picks.
+  Nothing in this pass was driven in a browser: the condition switch, the duration dialog's Escape
+  and the inert search box are markup reads, and a Playwright drive over the effects panel would
+  settle all three against the real focus order.
+- **Roller remainder — covered by findings 56-59**, and closed. The locale surface holds: an unnamed
+  roll carries `roller.customRoll` as its KEY and the literal `'Custom roll'` only as the fallback
+  `sayRollName` reaches for when there is no translator, so a log line is not frozen in the language
+  it was rolled in.
 - **UI remainder.** Two of its lines are now closed: all 36 `$effect` sites are scanned and none
   cycles, and the `LangSwitcher` sweep produced finding 54. The unfocusable-clickable census is
   closed too (finding 52). Still open: reverse states beyond finding 25 — pin persistence, source
@@ -2039,12 +2550,13 @@ item below says something is closed, that is the hand pass talking, never the ab
    `draft-repository.ts`, `draft-history.svelte.ts` (undo/redo over draft *and* class picks),
    `draft-session.svelte.ts`, `previewSheet`'s reused trial VM, and the five small builder helpers.
    About 1 600 lines.
-5. **Combat remainder — untouched.** `inventory.svelte.ts`, `spells.ts`, `effects-view.ts`,
-   `CombatMenus.svelte` and the panels other than HP and Attacks, read for reverse states
-   specifically. About 3 300 lines, and the largest block of live code on a path the player uses
-   daily.
-6. **Roller remainder — untouched.** `savageReroll` and its tie case, the caret state machine,
-   `movePill` across lines, `setDamage`'s `real` filter.
+5. **Combat remainder — DONE**, findings 60-70. Two of them are reverse-state defects (a condition
+   the app's own Switch will not switch off, a dialog Escape cannot close) and two are identity
+   defects of the same shape — a bare id where the ref belongs. What is left is listed under *What
+   was not reached*.
+6. **Roller remainder — DONE**, findings 56-59: the caret state machine, `movePill` across lines,
+   `setDamage`'s `real` filter and the two-column picker. `savageReroll`'s split is correct and its
+   tie case is recorded as suspected, not a defect. Nothing of it is left open.
 7. **UI remainder.** Three lines closed by hand: all 36 `$effect` sites scanned (none cycles), the
    `LangSwitcher` sweep done (finding 54), and the unfocusable-clickable census closed (finding 52).
    Left: reverse states beyond finding 25 — pin persistence, source and theme enable-then-disable;

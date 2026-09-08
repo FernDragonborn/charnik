@@ -2017,7 +2017,7 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 	it('a dead character keeps their track — one can die at full hit points', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		character.play.deathSaves = { successes: 0, failures: 3 };
-		character.play.death = { cause: 'death_saves', round: 1 };
+		character.play.death = { cause: 'death_saves' };
 		combat.syncDyingState();
 		expect(character.play.deathSaves.failures).toBe(3);
 	});
