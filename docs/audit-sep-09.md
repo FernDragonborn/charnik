@@ -139,6 +139,52 @@ next damage press adds a failure to a character who is RAW stable.
 
 **Fix:** mirror the failure line — on the third success, `stopDying`.
 
+### Suspected, not reproduced — combat
+
+- ~~A bare ability check is the one d20 roll no effect can reach.~~ **Settled — see finding 55.** It
+  is a defect, not a deliberate gap: the save button six lines below it in the same component passes
+  the target the check omits.
+- **`ActionExecutor`'s `rest:` comment contradicts `actions.md`.** `action-executor.svelte.ts:~236`
+  says a rest-granting consumable "MUST have recharge `other`"; `actions.md` §2 says `consumable`.
+  Comment-only — no code reads it — and not checked against shipped rows.
+- **`restoreUpTo` reads spent unclamped.** `resource-tracker.svelte.ts:~163` uses
+  `c.play.resourcesSpent?.[id] ?? 0` where every sibling uses the clamping `resourceSpent(id)`.
+  Matters only after a pool's max shrinks.
+- **Scoped damage bonuses show on the roll but not on the attack row.** `scopedAttackBonus` folds
+  only `target === 'attack'`; a scoped `flat_bonus:damage…` (2014 Rage) reaches the roll via
+  `attackSpec`'s `effectsFor('damage', scopes)` but never the panel's `formatDamageParts`. May be the
+  intended "row static, roll live" split — not confirmed either way.
+
+### Checked and correct — combat
+
+- **Instant death and damage at 0 HP** (`hit-points.svelte.ts:130`): the temp-HP soak happens after
+  resist/vuln and before the `n - before >= hpMax` threshold, and `taken` rather than `n` drives the
+  death-save failure, per the SRD's "any damage".
+- **`stopDying` coverage.** Every exit from dying — a natural 20, a third rolled success, `revive`,
+  `syncDyingState` — resets the death-save track *and* `damageWasCrit`. The previous audit's findings
+  2 and 3 are genuinely fixed.
+- **`restRecharge` / `parseRecharge`** (`rules/recharge.ts`): `short`→`all` on a long rest, `long(N)`
+  pays its own authored amount, `dawn`/`dusk` ignore rests, `consumable`/`other` return null. The
+  previous audit's finding 5 holds.
+- **`hitDiceRecoveredOnLongRest`** (`core.ts:221`): 5e half-round-down-min-1, 5.5e all; `applyLongRest`
+  spends the recovery largest-die-first and clamps stored spent. (The 5.5e "all" is a maintainer
+  ruling, not a code question — SRD 5.2.1 omits the rest chapter.)
+- **`TurnEconomy`.** `slotMax` (base 1 + `grantedActions` + `flat_bonus:<slot>` facts, zeroed by
+  `incapacitated`), the all-or-nothing `canSpend`/`trySpend` split, `nextTurn`/`toggleCombat`
+  resetting `grantedActions`, and `expireTimedEffects` ending carried concentration.
+- **`gain_action`** grants an extra pip rather than refunding a spent one — the documented earlier bug
+  is fixed.
+- **`ActionExecutor` is all-or-nothing**: available → afford → `canSpend` → then both spends, with no
+  partial path. The `attack:` verb bypasses the economy correctly, the option's `action_type` having
+  already paid.
+- **`rest('short')`** deletes only `PACT_SLOT_KEY`, and the 600-round outlive filter compares
+  *remaining* rounds rather than total.
+- **`rollEffectsFor` scope handling** (`roll.ts:388`): the comma-list rule the previous audit fixed is
+  applied on the roll side and in `scopedAttackBonus` (`attacks.ts:~289`). Advantage facts carry no
+  scope by type, so the unscoped `advantage` lookup is not a hole.
+- **`endConcentrationIfBroken`** covers 0 HP, incapacitated and `blocks_concentration`, and is wired
+  reactively in `combat/+page.svelte:66`.
+
 ## Rules core, character and build
 
 `src/lib/rules`, `src/lib/character`, `src/lib/build`, `src/routes/build`.
@@ -1650,6 +1696,69 @@ brace-matching scan and their bodies read for writes to reactive state. Five wri
 
 No effect writes into anything it reads. Nothing to fix, and recorded so the 35-site list is not
 walked again.
+
+### 55 · HIGH · a bare ability check is the one d20 roll no effect reaches, and its own sibling six lines away does it right
+
+The first pass listed this as suspected, unable to say whether an unmodelled bare ability check was
+deliberate. It is not. The two controls sit on the same tile in the same component:
+
+`Abilities.svelte:38` — the **check** button:
+
+```svelte
+roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)
+```
+
+`Abilities.svelte:52` — the **save** button, six lines below:
+
+```svelte
+roll({ text: `${ab.toUpperCase()} save`, key: `combat.roll.save.${ab}` }, a.save.value, e,
+     `save.${ab}`)
+```
+
+The save passes a `RollTarget` and the check passes nothing. The `key` each carries is an **i18n
+catalog key for the label**, not a roll target — the fourth argument is the target, and only one of
+them has it. The modifiers match that split: `a.save.value` is the folded `Computed`, `a.mod` is the
+raw `abilityModifier` (`derive-stats.ts:161`), never folded.
+
+A complete census of every `roll({…})` entry point in the app — there are five — shows how lopsided
+this is:
+
+| site | rolls | target passed |
+| --- | --- | --- |
+| `Abilities.svelte:52` | a saving throw | `save.<ab>` ✓ |
+| `SkillsPanel.svelte:42` | a skill check | `skill.<id>` ✓ |
+| `Abilities.svelte:38` | a bare ability check | **none** |
+| `combat-view-model.svelte.ts:468` | Hide, Search, Study, Grapple, Shove | **none** — finding 2 |
+| `CombatStrip.svelte:51` | "AC (touch)", a raw d20 | none — no effect target would apply |
+
+**The second half: even passing a key would not help today.** `effects/facts.ts:15` fans a group
+target out to exact prefixes only:
+
+```ts
+if (effTarget === 'saves'  && key.startsWith('save'))  return true;
+if ((effTarget === 'skills' || effTarget === 'ability_checks') && key.startsWith('skill')) return true;
+if (effTarget === 'd20_tests' && (key.startsWith('save') || key.startsWith('skill')
+    || key === 'attack' || key === 'initiative')) return true;
+```
+
+There is no `check.*` or `ability.*` case, so a bare ability check matches nothing under any group.
+
+**What that costs, in both editions, with shipped content.** 2014 exhaustion level 1 is
+`disadvantage:ability_checks`, and `ability_checks` fans out to `skill.*` — so a level-1-exhausted
+character rolls Athletics at disadvantage and a bare STR check straight. 2024 exhaustion is
+`flat_bonus:d20_tests-2*exhaustion`, which the docstring above calls "every d20-based roll" — and it
+reaches the save and the skill and not the check on the same tile. The first pass measured exactly
+that at exhaustion 2: STR save **−2**, Athletics **−4**, STR check tile **0**.
+
+The comment at `facts.ts:12` is what made this look deliberate — "`skills`/`ability_checks`→`skill.*`
+(the ability checks the sheet models)". That parenthetical was true when skills were the only ability
+check on screen. The sheet now renders a button that rolls a bare one, so the comment describes the
+fan-out rather than justifying it.
+
+**Fix, two lines in two files:** pass `` `check.${ab}` `` as the fourth argument at
+`Abilities.svelte:38` and fold `a.mod` the way `a.save.value` is folded; then add `check` to the
+`ability_checks` and `d20_tests` fan-outs in `matchesTarget`, and correct the parenthetical in the
+docstring above it. Both editions' exhaustion then lands on all three rolls instead of two.
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -1933,7 +2042,12 @@ treat all four as untouched, exactly as they were before the attempt.
 ### The suspected items, which are cheap to settle
 
 Each is a short probe away from being a finding or a dismissal, and they are listed with their
-evidence under the *Suspected* headings: `switchClass` wiping picks on the first class; the stale
-origin-slot half-feat ability; whether a bare ability check is meant to be unreachable by effects;
-`restoreUpTo`'s unclamped spent; whether the Roll button eats a click on a half-typed token; whether
-`on_event` / `regain_on_initiative` / `damage_reroll` can actually reach `effectTag`.
+evidence under the *Suspected* headings. Four have since been settled and became findings 48–50 and
+55 — `switchClass` wiping picks on the first class, the orphaned expertise entry, the stale
+half-feat ability, and the unreachable bare ability check — which is the argument for spending the
+probe rather than leaving the suspicion standing: all four turned out to be defects, and three of
+them cost the player something.
+
+Still open and still cheap: `restoreUpTo`'s unclamped spent; whether the Roll button eats a click on
+a half-typed token; whether `on_event` / `regain_on_initiative` / `damage_reroll` can actually reach
+`effectTag`; whether the scoped damage bonus's row-versus-roll split is intended.
