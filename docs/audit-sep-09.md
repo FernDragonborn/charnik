@@ -1510,6 +1510,146 @@ This also settles the first pass's SUSPECTED "stale `slotFeatAbility[ORIGIN_SLOT
 background swap": the origin variant is the same bug reached through a different door, and it is the
 homebrew-only half, since no SRD background grants a half-feat origin feat. The slot variant above is
 the shipped-content half, and one fix covers both.
+
+### 51 · MEDIUM-HIGH · the effective HP max has two callers and four hand-rolled copies, and one of them decides a rules guard
+
+Findings 4 and 40 each name a site that recomputes the effective HP max by hand. They are not two
+bugs; they are two of four. An exhaustive grep settles the shape of it:
+
+| site | what it feeds | uses `effectiveHpMax`? |
+| --- | --- | --- |
+| `hit-points.svelte.ts:68` | the heal/damage clamp | **yes** |
+| `hit-points.svelte.ts:294` | the bar's denominator | **yes** |
+| `resource-tracker.svelte.ts:241` | what a long rest restores to | no — finding 4 |
+| `HpPanel.svelte:34` | the "current / max" readout | no — finding 4, display half |
+| `derive-plugins.ts:53` | the plugin ctx's `hpMax` and `isBloodied` | no — finding 40 |
+| `derive-context.ts:89` | **the L2 variable `is_bloodied`** (`:98`) | no — the one not yet named |
+
+`combat/defense.ts:43` is the single function that knows the rule, and A14 is the change that
+established it: "a manual max no longer silences `hp_max` effects — they re-fold on top of it". Two
+of six sites got the memo.
+
+The fourth row is the one that makes this worse than a display inconsistency. `derive-context.ts:89`
+is `hpMaxLive()`, and `:98` builds the **effect-guard variable** `is_bloodied` out of it. So a
+character with a manual HP max and an `hp_max` effect in play crosses the bloodied threshold at a
+different number for the rules than for the bar beside them: every shipped `is_bloodied ? …` token —
+and both packs ship them — evaluates against a maximum the rest of the app does not use.
+
+**Fix:** the same one-line change at all four sites, since `effectiveHpMax` already takes exactly
+what each of them has in hand — a nullable manual max and the sheet's `Computed`. Fixing them
+together is what keeps the count from drifting back to five sites and three answers; fixing them one
+finding at a time is how it got here.
+
+### 52 · MEDIUM · the click-only resource pip has a second home, which finding 27 does not name
+
+`EffectsPanel.svelte:208` is the same `<span class="resource-pip" role="button" tabindex="-1">` with
+an `onclick` and no keyboard handler, under the same `a11y_click_events_have_key_events`
+suppression, as `CombatStrip.svelte:116`. Finding 27 names only the strip.
+
+This is the shape AGENTS.md warns about under Hit every surface — "a change that works on the path
+you tested and is missing everywhere else". Whoever fixes 27 by giving the strip's pip row a roving
+tabindex will leave this one behind unless both are on the list.
+
+**Evidence** — a brace-aware census of every `tabindex="-1"` element in `src/`, resolving each
+element's real extent so arrow-function bodies do not truncate the tag, gives ten
+`role="button"`-or-click-without-key sites in total:
+
+| site | status |
+| --- | --- |
+| `EntryList.svelte:50` | finding 23 |
+| `CombatStrip.svelte:116` | finding 27 |
+| `EffectsPanel.svelte:231` | finding 25 |
+| `EffectsPanel.svelte:208` | **this finding — not previously named** |
+| `SpellsPanel.svelte:90`, `:112` | finding 26 |
+| `Turnbar.svelte:53` | documented exception — its comment names the pill-based keyboard fallback |
+| `RollerLine.svelte:275` | correct by design — see below |
+| `RollerLine.svelte:399` | correct by design — see below |
+| `PanelCard.svelte:65` | **finding 53** |
+
+So the census is now closed: every unfocusable clickable in the app is either a named finding, a
+documented exception, or explained above. That is the useful half of this entry — the next reader
+does not need to re-run it.
+
+**Fix:** whatever fixes 27, applied here in the same change.
+
+### 53 · LOW-MEDIUM · panel reordering is pointer-only, and its handle claims to be a button
+
+`PanelCard.svelte:62` — `<span class="drag-handle" role="button" tabindex="-1"
+aria-label={…dragToReorder} onpointerdown={…}>`. The only handler is `onpointerdown`. There is no
+keydown, the element is out of the tab order, and no other control anywhere reorders the combat
+panels.
+
+Two separate problems in one element. The `role="button"` is a promise the element does not keep:
+assistive technology announces a button, and pressing it does nothing, because nothing listens for a
+key. And the capability itself — arranging your own combat screen — has no keyboard path at all,
+which is AGENTS.md ▸ Reverse states applied to an affordance rather than to state: the layout can be
+changed only with a pointer, and a keyboard user cannot get back to a layout they did not choose.
+
+Recorded with the caveat the repo itself sets: a drag is explicitly the maintainers' to confirm in
+the running app, so the *drag* is not what is claimed here. What is claimed is the missing keyboard
+alternative and the mislabelled role, both readable from the source.
+
+**Fix, smallest:** make the handle a real `<button>` in the tab order and give it the keyboard
+equivalent the pattern already implies — `ArrowUp`/`ArrowDown` (by `e.code`) moving the card one
+place, which is the same reorder the pointer performs. If reordering is meant to stay pointer-only,
+the honest version is to drop `role="button"` and mark the handle `aria-hidden`, so nothing announces
+an action that is not there.
+
+### 54 · MEDIUM · the "no exceptions" language-switch rule has five exceptions, and a modal is where it matters most
+
+`docs/internals/ui.md:305`: "**Every full-screen dialog, modal, or banner carries `LangSwitcher` in
+its top-right corner. No exceptions.**"
+
+`DialogShell.svelte` bakes it in, so everything built on the shell complies. Five attention dialogs
+are built by hand instead, and none of them carries it:
+
+| component | `LangSwitcher` | via `DialogShell` |
+| --- | --- | --- |
+| `MobileWarning.svelte` | yes | — |
+| `FirstRunModal.svelte` | yes | — |
+| `settings/PluginConsentDialog.svelte` | yes | — |
+| `combat/blocks/DeathScreen.svelte` | — | yes |
+| **`ConfirmDialog.svelte`** | **no** | **no** |
+| **`OrphanDialog.svelte`** | **no** | **no** |
+| **`SchemaDiscardDialog.svelte`** | **no** | **no** |
+| **`settings/DataMigrationDialog.svelte`** | **no** | **no** |
+| **`settings/DataConflictDialog.svelte`** | **no** | **no** |
+
+All five are genuine modals, not inline panels — `ConfirmDialog.svelte:29` and
+`OrphanDialog.svelte:149` each render a `.dialog-backdrop` above a
+`role="dialog" aria-modal="true"` card, and each backdrop's `onclick` dismisses. So while one is
+open the topbar's switcher is not merely covered, it is a dismiss target: reaching for it cancels the
+dialog.
+
+That is what makes the rule a rule rather than a decoration, and these five are the worst places to
+miss it. Their whole job is to ask for a decision that cannot be taken back — a destructive confirm,
+a schema discard, a data-folder migration, a conflict resolution. A reader who cannot follow the
+sentence has no way to change the language without first dismissing the question.
+
+The five also share a lineage: each names the same house template in its header comment
+("the house attention-dialog template, `charnik-dialog-design-template`"), so they were written
+against the visual spec and the `LangSwitcher` clause was missed by all of them equally — the sign
+of a template that carries the look without carrying the contract.
+
+**Fix:** the shell already solves it. Either move these five onto `DialogShell`, or — if their
+bespoke layouts are the point — put the switcher in the shared `.dialog-head` markup they all use,
+so the template carries the contract that its comment claims.
+
+### `$effect` write-back cycles — checked, none
+
+Queue item 7's first line, closed. All 36 `$effect` sites in `src/` were enumerated with a
+brace-matching scan and their bodies read for writes to reactive state. Five write at all:
+
+| site | writes | verdict |
+| --- | --- | --- |
+| `+layout.svelte:114` | `el.dataset.theme`, `el.lang`, `el.dir` | DOM properties, not reactive state — cannot re-trigger |
+| `build/+page.svelte:42` | `ui.fullBleed = true`, cleanup sets it false | reads nothing reactive; its own comment cites the way-in/way-out rule |
+| `compendium/[...entry]/+page.svelte:268` | `ui.fullBleed`, same shape | same |
+| `combat/CombatMenus.svelte:72` | `combat.overlay = null` | written inside a pointer listener, not on the reactive read path; the write makes the effect's own `if (!overlay) return` guard fire, so it settles in one step |
+| `combat/menus/DiceTray.svelte:27` | `diceTray.candidates` | reads `content.graph`, the character's effects and `app.activeLocale`, none of which it writes — and re-deriving on a locale switch is the point, since the menu shows names in the UI language |
+
+No effect writes into anything it reads. Nothing to fix, and recorded so the 35-site list is not
+walked again.
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -1726,11 +1866,12 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
 - **Roller remainder.** `savageReroll`'s weapon/effect-die split and its tie case; the caret state
   machine; `movePill` across lines; `setDamage`'s `real` filter; the roller's locale surface;
   `RollerLine.svelte`'s two-column type picker.
-- **UI remainder.** The 35 `$effect` sites, unread for write-back cycles. Reverse states beyond
-  finding 25 — pin persistence, source enable/disable, theme install/uninstall, pack apply/rollback.
-  Whether the four bespoke full-screen components carry `LangSwitcher` as `ui.md` requires without
-  exception. The 102 duplicated CSS declaration blocks, 100 of them cross-file, the top two repeated
-  ten and nine times. A `:focus-visible` pass. The builder pickers' ARIA driven rather than read.
+- **UI remainder.** Two of its lines are now closed: all 36 `$effect` sites are scanned and none
+  cycles, and the `LangSwitcher` sweep produced finding 54. The unfocusable-clickable census is
+  closed too (finding 52). Still open: reverse states beyond finding 25 — pin persistence, source
+  enable/disable, theme install/uninstall, pack apply/rollback. The 102 duplicated CSS declaration
+  blocks, 100 of them cross-file, the top two repeated ten and nine times. A `:focus-visible` pass.
+  The builder pickers' ARIA driven rather than read.
 - **The both-editions sweep.** Most probes ran on one pack. Extra Attack, the exhaustion fan-out and
   the two 2014 spellcasting probes are the parameterised ones; the rest are not.
 
@@ -1782,8 +1923,9 @@ treat all four as untouched, exactly as they were before the attempt.
    and the panels other than HP and Attacks — read for reverse states specifically.
 6. **Roller remainder.** `savageReroll` and its tie case, the caret state machine, `movePill` across
    lines, `setDamage`'s `real` filter.
-7. **UI remainder.** The 35 `$effect` sites, unread for write-back cycles. Reverse states beyond
-   finding 25. Whether the four bespoke full-screen components carry `LangSwitcher`. The 102
+7. **UI remainder.** The 36 `$effect` sites are now scanned (none cycles) and the `LangSwitcher` sweep is done
+   (finding 54). Left: reverse states beyond finding 25 — pin persistence, source and theme
+   enable-then-disable. The 102
    duplicated CSS blocks. A `:focus-visible` pass. The builder pickers' ARIA, driven rather than read.
 8. **The both-editions sweep.** Most probes ran on one pack. Re-run the build and resource paths on
    `srd-2014`.
