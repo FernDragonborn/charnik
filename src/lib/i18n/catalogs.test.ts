@@ -79,7 +79,7 @@ describe('translator — the live catalog handed to a pure formatter', () => {
 		await startI18n('en');
 		const t = translator(); // captured ONCE, on purpose — the capture must not freeze the language
 		expect(t('abilityShort.str')).toBe('STR');
-		locale.set('uk');
+		await locale.set('uk');
 		expect(t('abilityShort.str')).toBe('СИЛ');
 	});
 });

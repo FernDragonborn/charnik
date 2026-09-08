@@ -7,18 +7,13 @@
 	// about THIS character while taking a card's worth of room — and under the default ½-HP short
 	// rest they are not even spent. They read as one tile in the vitals strip instead.
 	import { _ } from '$lib/i18n';
+	import { rechargeLabel } from '$lib/combat/helpers';
+	import { sayText } from '$lib/util/say';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
 
 	const s = $derived(b.sheet);
 	const resources = $derived(s?.resources ?? []);
-	/** The recharge vocabulary is a closed set in the effects grammar; the words for it are not. */
-	const RECHARGE_KEY: Record<string, string> = {
-		short: 'build.resources.rechargeShort',
-		long: 'build.resources.rechargeLong',
-		other: 'build.resources.rechargeOther'
-	};
-	const rechargeText = (r: string) => $_(RECHARGE_KEY[r] ?? 'build.resources.rechargeOther');
 	/** Above this many, a row of pips stops being countable at a glance and a number reads better. */
 	const PIP_LIMIT = 12;
 </script>
@@ -43,7 +38,7 @@
 					{/if}
 					<small
 							>{$_('build.resources.pool', {
-								values: { max: r.max, recharge: rechargeText(String(r.recharge)), source: r.source }
+								values: { max: r.max, recharge: sayText(rechargeLabel(r.recharge), $_), source: r.source }
 							})}</small
 						>
 				</div>

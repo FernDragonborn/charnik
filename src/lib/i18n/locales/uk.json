@@ -168,10 +168,7 @@
 		"resources": {
 			"title": "Ресурси",
 			"hint": "що дають вам особливості й коли це повертається",
-			"pool": "{max} · {recharge} · {source}",
-			"rechargeShort": "короткий відпочинок",
-			"rechargeLong": "довгий відпочинок",
-			"rechargeOther": "особливо"
+			"pool": "{max} · {recharge} · {source}"
 		},
 		"skills": {
 			"title": "Навички",

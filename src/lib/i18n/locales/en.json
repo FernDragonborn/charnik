@@ -168,10 +168,7 @@
 		"resources": {
 			"title": "Resources",
 			"hint": "what your features hand you, and when it comes back",
-			"pool": "{max} · {recharge} · {source}",
-			"rechargeShort": "short rest",
-			"rechargeLong": "long rest",
-			"rechargeOther": "special"
+			"pool": "{max} · {recharge} · {source}"
 		},
 		"skills": {
 			"title": "Skills",
