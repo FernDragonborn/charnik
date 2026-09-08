@@ -58,8 +58,14 @@ nobody asked for, the RNG consumption of every roll in the app would change, and
 a die that was never in play. It also does not generalise — the same argument demands a pre-rolled
 third die for Elven Accuracy and a doubled set for a possible crit.
 
-Back at `neither` the second die is still SHOWN, struck through and unframed, because it really was
-rolled. Elven Accuracy is a third element in `d20s`, not a new concept.
+Back at `neither` the second die is still SHOWN, struck through, because it really was rolled.
+Elven Accuracy is a third element in `d20s`, not a new concept.
+
+**A roll card says the mode with a BRACKET around the test's dice** — teal for advantage, red for
+disadvantage, quiet otherwise — and that bracket is also the control where the surface passes one.
+One mark around the group is what the pair IS: framing each die on its own read as two unrelated
+values, which is the confusion the bracket replaces. A rule then separates the to-hit half from the
+damage half and nothing else; a total is joined to what it sums by an `=`, not ruled off from it.
 
 **Legacy:** an old `{kept, dropped}` pair converts on read, but without `original` the pair is known
 and its ORDER is not, so such a roll reads either way round and cannot return to `neither`
@@ -213,7 +219,7 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   better of two" are different rules, and leaving the twin standing would let Heroic Inspiration buy
   nothing while the line said it was spent. It is offered per EDITION, because the editions differ in
   when the choice is made: 2024 rerolls after the roll, 2014 spends before it and so re-reads the roll
-  at advantage — the same amendment the d20 pill makes, with the flag spent.
+  at advantage — the same amendment the card's dice bracket makes, with the flag spent.
 
 - **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
   SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled

@@ -142,38 +142,45 @@
 
 {#snippet hitDice(a: RollToastAttack)}
 	{@const hitKey = HIT_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither]}
+	{@const amend = canAmend(a)}
 	<span class="roll-to-hit" title={hitKey ? $_(hitKey) : undefined}>
-		{#each shownChips(a) as c, i (i)}
-			{#if c.sides === 20 && i === 0 && canAmend(a)}
-				<button
-					type="button"
-					class="roll-die d20 tappable {tone(c)}"
-					title={cueTitle(a)}
-					onclick={() => onAdvantage?.()}
-					>{face(c)}<span class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"></span></button
+		<!-- the dice of the test, inside BRACKETS whose colour says how the d20 was read. The bracket
+		     replaces both the per-die pill (two rounded boxes side by side read as two unrelated
+		     values) and the cue-on-the-die: one mark around the group says "these were rolled together
+		     and this is the rule that picked one". The whole group is the advantage control when the
+		     surface passes one, which is why the affordance cue stays for the neutral state. -->
+		<svelte:element
+			this={amend ? 'button' : 'span'}
+			role={amend ? 'button' : undefined}
+			type={amend ? 'button' : undefined}
+			class="roll-dice-group adv-{a.advantageMode ?? ADVANTAGE_MODE.neither}"
+			class:tappable={amend}
+			title={amend ? cueTitle(a) : undefined}
+			onclick={amend ? () => onAdvantage?.() : undefined}
+		>
+			{#each shownChips(a) as c, i (i)}
+				{#if i}<span class="roll-die-divider"></span>{/if}
+				<span class="roll-face {tone(c)}" class:d20={c.sides === 20} title={dieTitle(c)}
+					>{face(c)}</span
 				>
-			{:else}
-				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title={dieTitle(c)}
-					>{face(c)}{#if c.sides === 20 && i === 0 && a.advantageMode}<span
-							class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"
-						></span>{/if}</span
+			{/each}
+			{#if a.dropped !== undefined}
+				<span class="roll-die-divider"></span>
+				<span class="roll-face dropped-die" title={$_('roller.droppedD20')}>{a.dropped}</span>
+			{/if}
+			{#if foldedDice(a)}
+				<span class="roll-face folded-dice" title={a.chips.map((c) => c.detail).join(' + ')}
+					>{foldedDice(a)}</span
 				>
 			{/if}
-		{/each}
-		{#if a.dropped !== undefined}
-			<span class="roll-die dropped-die" title={$_('roller.droppedD20')}>{a.dropped}</span>
-		{/if}
-		{#if foldedDice(a)}
-			<span class="roll-die folded-dice" title={a.chips.map((c) => c.detail).join(' + ')}
-				>{foldedDice(a)}</span
-			>
-		{/if}
+			{#if amend}<span class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"></span>{/if}
+		</svelte:element>
 		{#if a.mod}<span class="roll-modifier" title={modTitle(a.modParts)}>{signed(a.mod)}</span>{/if}
 	</span>
 {/snippet}
 
-<!-- one damage type: glyph, then its dice in a SINGLE pill (a crit's doubled dice share it, divided),
-     then the flat mod. A dice-less part (a fixed "1 bludgeoning") puts its value in the pill. -->
+<!-- one damage type: glyph, then its dice in ONE bracket (a crit's doubled dice share it, divided),
+     then the flat mod. A dice-less part (a fixed "1 bludgeoning") puts its value in the bracket. -->
 {#snippet damagePart(d: RollToastDamage, attack: number, part: number)}
 	{@const re =
 		rerollDamage && rerollDamage.attack === attack && rerollDamage.part === part
@@ -185,7 +192,7 @@
 			this={re ? 'button' : 'span'}
 			role={re ? 'button' : undefined}
 			type={re ? 'button' : undefined}
-			class="roll-die"
+			class="roll-dice-group"
 			class:tappable={re}
 			title={re
 				? re.label
@@ -196,14 +203,14 @@
 				<!-- one line has no room for a die-by-die breakdown, and that breakdown is audit
 				     information: the same rule the design already applies to a volley's rows. The part's
 				     TOTAL is what a player reads here; the log, one tap away, renders every die. -->
-				<span>{d.total}</span>
+				<span class="roll-face">{d.total}</span>
 			{:else if d.chips.length}
 				{#each d.chips as c, i (i)}
 					{#if i}<span class="roll-die-divider"></span>{/if}
-					<span title={dieTitle(c)}>{face(c)}</span>
+					<span class="roll-face" title={dieTitle(c)}>{face(c)}</span>
 				{/each}
 			{:else}
-				<span>{d.total}</span>
+				<span class="roll-face">{d.total}</span>
 			{/if}
 			{#if re}<span class="roll-cue"><Icon name="rotate-ccw" size={9} /></span>{/if}
 		</svelte:element>
@@ -256,7 +263,7 @@
 					<span
 						class="roll-to-hit-total"
 						class:nat-20={a.natural === 20}
-						class:nat-1={a.natural === 1}>{a.subtotal}</span
+						class:nat-1={a.natural === 1}><span class="roll-eq">=</span>{a.subtotal}</span
 					>
 				{/if}
 				{#if model.damaging}
@@ -274,9 +281,10 @@
 					class:nat-20={a.natural === 20}
 					class:nat-1={a.natural === 1}
 				>
-					{#if !model.damaging}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
+					{#if !model.damaging}{#if Number.isFinite(a.subtotal)}<span class="roll-eq">=</span
+							>{/if}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
 							>{$_('roller.miss')}</span
-						>{:else}{a.damageTotal}{/if}
+						>{:else}<span class="roll-eq">=</span>{a.damageTotal}{/if}
 				</span>
 			{/each}
 			{#if multi}
@@ -287,7 +295,9 @@
 						</span>
 					{/each}
 				</span>
-				<span class="roll-total big-total grand-total">{shown(model.total)}</span>
+				<span class="roll-total big-total grand-total"
+					><span class="roll-eq">=</span>{shown(model.total)}</span
+				>
 			{/if}
 		</span>
 	{/if}
@@ -341,6 +351,14 @@
 	.strip .roll-to-hit-total {
 		padding-inline-end: 0;
 	}
+	/* one line has its own separator — a rule before the total — so the equals sign would say the same
+	   thing twice, and the group's card inset has nothing to line up with here */
+	.strip .roll-eq {
+		display: none;
+	}
+	.strip .roll-dice-group {
+		margin-inline-start: 0;
+	}
 	.strip .roll-total,
 	.strip .roll-total.big-total {
 		padding: 0 var(--space-2-5);
@@ -362,24 +380,24 @@
 	   grow past their floor rather than clip (a dropped adv die, a three-digit total). */
 	.roll-grid {
 		display: grid;
-		grid-template-columns: 1fr 58px;
+		grid-template-columns: 1fr 68px;
 		align-items: center;
-		padding: 0 0 var(--space-1-5) var(--space-4);
+		padding: 0 0 var(--space-3) var(--space-4);
 	}
 	.roll-grid.damaging {
-		grid-template-columns: minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
+		grid-template-columns: minmax(58px, max-content) minmax(36px, max-content) 1fr 68px;
 	}
 	.roll-grid.multi {
-		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
+		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 68px;
 		padding-inline-start: 0;
 	}
 	/* damage with no test (Fireball): the damage IS the row, so it leads instead of sitting in a
 	   column ruled off from a to-hit that doesn't exist */
 	.roll-grid.damage-only {
-		grid-template-columns: 1fr 58px;
+		grid-template-columns: 1fr 68px;
 	}
 	.roll-grid.multi.damage-only {
-		grid-template-columns: 26px 1fr 58px;
+		grid-template-columns: 26px 1fr 68px;
 	}
 	.damage-only .roll-damage {
 		justify-content: flex-start;
@@ -422,74 +440,103 @@
 		   default, and on a roll with no damage that column is `1fr`. */
 		justify-self: start;
 	}
-	.roll-die {
+	/* Dice rolled together live inside ONE BRACKET — the test's, and each damage type's. It replaces
+	   the per-die pill, where two rounded boxes side by side read as two unrelated values. On the test
+	   the bracket also carries the colour: teal for advantage, red for disadvantage, quiet otherwise,
+	   which is what makes a cue on the die itself unnecessary. */
+	.roll-dice-group {
 		display: inline-flex;
 		align-items: center;
-		justify-content: center;
 		gap: var(--space-1);
-		min-width: 23px;
-		height: 22px;
-		padding: 0 var(--space-1-5);
+		padding: var(--space-1);
+		font: inherit;
+		background: transparent;
+		border: 0;
 		border-radius: var(--radius-sm);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border-strong);
-		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	/* only the test's group has to line up with the label above it */
+	.roll-to-hit > .roll-dice-group {
+		margin-inline-start: calc(-1 * var(--space-1));
+	}
+	.roll-dice-group::before {
+		content: '[';
+	}
+	.roll-dice-group::after {
+		content: ']';
+	}
+	.roll-dice-group::before,
+	.roll-dice-group::after {
+		font-family: var(--font-display);
+		font-size: var(--font-size-body);
+		font-weight: 400;
+		line-height: 1;
+	}
+	.roll-dice-group.adv-advantage {
+		color: var(--color-good);
+	}
+	.roll-dice-group.adv-disadvantage {
+		color: var(--color-danger);
+	}
+	/* A group is a control where the surface passes one — the test's bracket cycles advantage, a damage
+	   bracket rerolls that part (docs/internals/ui.md ▸ Every interactive element says so). The glyph
+	   riding the bracket is what marks it live, and the hover is a COLOURLESS wash: the bracket's colour
+	   is a fact about the roll and must not be overwritten by a state of the pointer, and the theme's
+	   crimson accent sits a shade away from the red that means disadvantage. What the tap DOES is the
+	   group's title, which survives touch, where there is no hover at all. Inert groups are untouched,
+	   so there is never a false affordance. */
+	.roll-dice-group.tappable {
+		cursor: pointer;
+	}
+	/* the cue is a marker on the GROUP, so it sits past the closing bracket rather than inside it
+	   where it would read as one more die */
+	.roll-dice-group .roll-cue {
+		order: 1;
+	}
+	.roll-dice-group.tappable:hover {
+		background: color-mix(in srgb, var(--color-text) 10%, transparent);
+	}
+	.roll-dice-group.tappable:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+	/* one die face — a number, not a chip. Colour says what it did. */
+	.roll-face {
+		font-size: var(--font-size-sm);
 		font-weight: 600;
 		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
 	}
-	/* several dice of one damage type share a pill — a crit's doubled d8s are one thing, not two */
+	.roll-face.max {
+		color: var(--color-resource);
+	}
+	.roll-face.min {
+		color: var(--color-text-muted);
+	}
+	/* the d20 decides things — its extremes are loud */
+	.roll-face.d20.max {
+		font-weight: 700;
+	}
+	.roll-face.d20.min {
+		color: var(--color-danger);
+		font-weight: 700;
+	}
+	/* the adv/disadv die that lost: struck through and stepped back */
+	.roll-face.dropped-die {
+		color: var(--color-text-muted);
+		font-weight: 500;
+		text-decoration: line-through;
+	}
+	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */
+	.roll-face.folded-dice {
+		color: var(--color-text-muted);
+		font-weight: 500;
+	}
+	/* several dice of one damage type share a bracket — a crit's doubled d8s are one thing, not two */
 	.roll-die-divider {
 		width: 1px;
 		height: 12px;
 		background: var(--color-border-strong);
-	}
-	.roll-die.max {
-		background: var(--color-resource-soft);
-		border-color: var(--color-resource-line);
-		color: var(--color-resource);
-	}
-	.roll-die.min {
-		color: var(--color-text-muted);
-	}
-	/* the d20 decides things — its extremes get the full-strength edge, not just tinted text */
-	.roll-die.d20.max {
-		border-color: var(--color-resource);
-		font-weight: 700;
-	}
-	.roll-die.d20.min {
-		background: var(--color-danger-soft);
-		border-color: var(--color-danger);
-		color: var(--color-danger);
-		font-weight: 700;
-	}
-	/* the adv/disadv die that lost: smaller, struck through, no fill */
-	.roll-die.dropped-die {
-		min-width: 19px;
-		height: 18px;
-		padding: 0 var(--space-1);
-		background: transparent;
-		color: var(--color-text-muted);
-		text-decoration: line-through;
-	}
-	/* An interactive pill must LOOK like one (docs/internals/ui.md ▸ Every interactive element says so): its own edge, a
-	   cursor, a hover, a focus ring and a glyph saying what tapping does. The edge is DASHED rather
-	   than coloured, and the hover is COLOURLESS, because green and red are spoken for — they say how
-	   the d20 was rolled — and the theme's crimson accent sits a shade away from the red that means
-	   disadvantage, so an accent hover read as "this is about to become disadvantage". A hover says
-	   only that the thing is live; what the tap does is the pill's title, which is where the next state
-	   belongs — it survives touch, where there is no hover at all. Inert pills are untouched, so there
-	   is never a false affordance. */
-	.roll-die.tappable {
-		border-style: dashed;
-		border-color: var(--color-border-strong);
-		cursor: pointer;
-	}
-	/* a pill carrying the adv/disadv cue tightens around it — the cue is a marker on the die, not a
-	   second value beside it */
-	.roll-die:has(.roll-cue) {
-		gap: 2px;
-		padding-inline-end: var(--space-1);
 	}
 	/* The SHAPES are the shared `.advantage-cue` (styles/components.css); only the colours are ours.
 	   No third colour: each shape wears the colour of the state it reports — the same teal and red the
@@ -505,25 +552,10 @@
 	.roll-cue.advantage-cue-neither {
 		color: var(--color-text-muted);
 	}
-	.roll-die.tappable:hover {
-		border-color: var(--color-text-muted);
-		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
-	}
-	.roll-die.tappable:focus-visible {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 1px;
-	}
 	.roll-cue {
 		font-size: var(--font-size-micro);
 		line-height: 1;
 		opacity: 0.8;
-	}
-	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */
-	.roll-die.folded-dice {
-		background: transparent;
-		border-style: dashed;
-		color: var(--color-text-muted);
-		font-weight: 500;
 	}
 	.roll-modifier {
 		font-size: var(--font-size-xs);
@@ -533,13 +565,25 @@
 	}
 	/* what the to-hit came to — subordinate to the damage, which is the number being read */
 	.roll-to-hit-total {
-		padding-inline-end: var(--space-3);
-		text-align: end;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--space-1);
+		padding: 0 var(--space-3) 0 var(--space-2);
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
+	}
+	/* the sign that says the number to its right is the SUM of what is to its left. It is the only
+	   thing that separates a total from the dice now — the rule that used to sit there said the total
+	   was a different kind of thing than the damage it adds up. */
+	.roll-eq {
+		font-family: var(--font-body);
+		font-size: var(--font-size-sm);
+		font-weight: 400;
+		color: var(--color-text-muted);
 	}
 	/* the damage half of the row: glyph-led chips, right-aligned against the total's rule, wrapping
 	   onto a second line when a crit doubles the types */
@@ -570,7 +614,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-inline-start: 1px solid var(--color-border);
+		gap: var(--space-1);
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		font-weight: 600;
@@ -579,7 +623,6 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.roll-total.big-total {
-		padding-bottom: var(--space-1-5);
 		font-size: var(--font-size-h2);
 		font-weight: 700;
 		color: var(--color-text);
