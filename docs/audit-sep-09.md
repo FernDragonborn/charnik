@@ -1966,9 +1966,10 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `derive-plugins.ts` and its interaction with `maxHpBase`.
 - **Builder state machines.** `draft-history.svelte.ts` (undo/redo over draft plus class picks),
   `draft-session.svelte.ts` (autosave, adopt, renew), `option-walk.ts`, `picker-reading.svelte.ts`,
-  `card-placement.ts`, `rows.ts`, `draft-inventory.ts`. Also `previewSheet`'s reused trial VM and
-  `switchSystem`'s drop sweep, where `slotFeatSkills`, `slotFeatAbility` and `speciesBoostPicks` have
-  no matching clear.
+  `card-placement.ts`, `rows.ts`, `draft-inventory.ts`. Also `previewSheet`'s reused trial VM.
+  `switchSystem`'s drop sweep is **no longer open**: it was suspected of stranding `slotFeatSkills`,
+  `slotFeatAbility` and `speciesBoostPicks`, and it does not — `pickSpecies` clears the boost picks,
+  and the two slot maps are trimmed downstream by the feat's own count once the feat is gone.
 - **Combat remainder.** `inventory.svelte.ts` (equip, attune, attunement caps), `CombatMenus.svelte`,
   the panels other than HP and Attacks, `roll-journal.svelte.ts` past line 200, `spells.ts`,
   `effects-view.ts`, the upcast paths, and `passBoundary`.
@@ -2021,21 +2022,29 @@ whole surface and came back clean.
    from that pass are worth carrying: read the files **in full** — both readers found their best
    material past the point a skim would have stopped — and verify anything filesystem-shaped against
    a **real** fs, because `MemoryStorage` silently merges a rename that Windows refuses.
-Items 4–7 below were each STARTED by a reader and stopped within minutes, before any file was read
-through. Nothing came of those runs and nothing from them is recorded anywhere in this document —
-treat all four as untouched, exactly as they were before the attempt.
+Items 4–7 were each STARTED by a reader and stopped within minutes, before any file was read through.
+**Nothing from those aborted runs is recorded anywhere in this document.** Findings 48–55 came later
+and from a different source — the editor's own pass, working the same items by hand — so where an
+item below says something is closed, that is the hand pass talking, never the aborted one.
 
-4. **Character persistence and builder state.** `repository.ts`, `schema.ts` migrations,
-   `draft-history.svelte.ts` (undo/redo over draft *and* class picks), `draft-session.svelte.ts`,
-   `switchSystem`'s drop sweep, `previewSheet`'s reused trial VM.
-5. **Combat remainder.** `inventory.svelte.ts`, `spells.ts`, `effects-view.ts`, `CombatMenus.svelte`
-   and the panels other than HP and Attacks — read for reverse states specifically.
-6. **Roller remainder.** `savageReroll` and its tie case, the caret state machine, `movePill` across
-   lines, `setDamage`'s `real` filter.
-7. **UI remainder.** The 36 `$effect` sites are now scanned (none cycles) and the `LangSwitcher` sweep is done
-   (finding 54). Left: reverse states beyond finding 25 — pin persistence, source and theme
-   enable-then-disable. The 102
-   duplicated CSS blocks. A `:focus-visible` pass. The builder pickers' ARIA, driven rather than read.
+4. **Character persistence and builder state.** Partly done by hand: the three suspicions this item
+   carried are settled and became findings 48, 49 and 50, and `switchSystem`'s drop sweep was checked
+   and is correct (`pickSpecies` does clear `speciesBoostPicks`, which was the suspected gap). **The
+   files themselves are still unread** — `repository.ts`, `schema.ts` migrations, `store.svelte.ts`,
+   `draft-repository.ts`, `draft-history.svelte.ts` (undo/redo over draft *and* class picks),
+   `draft-session.svelte.ts`, `previewSheet`'s reused trial VM, and the five small builder helpers.
+   About 1 600 lines.
+5. **Combat remainder — untouched.** `inventory.svelte.ts`, `spells.ts`, `effects-view.ts`,
+   `CombatMenus.svelte` and the panels other than HP and Attacks, read for reverse states
+   specifically. About 3 300 lines, and the largest block of live code on a path the player uses
+   daily.
+6. **Roller remainder — untouched.** `savageReroll` and its tie case, the caret state machine,
+   `movePill` across lines, `setDamage`'s `real` filter.
+7. **UI remainder.** Three lines closed by hand: all 36 `$effect` sites scanned (none cycles), the
+   `LangSwitcher` sweep done (finding 54), and the unfocusable-clickable census closed (finding 52).
+   Left: reverse states beyond finding 25 — pin persistence, source and theme enable-then-disable;
+   the 102 duplicated CSS blocks; a `:focus-visible` pass; the builder pickers' ARIA, driven rather
+   than read.
 8. **The both-editions sweep.** Most probes ran on one pack. Re-run the build and resource paths on
    `srd-2014`.
 
