@@ -520,6 +520,9 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 - [x] **UBUG-13 · Level-up re-offered an ASI and double-applied it.** Root cause worth remembering:
   only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping, so a
   restored slot could re-derive its boost a second time.
+  - [ ] The re-PICK half is still open (`docs/audit-sep-09.md` finding 87): the reconciliation
+    subtracts per ability against the LIVE slots, so moving a saved ASI to another ability grants
+    both, swapping it for a feat keeps its `+2`, and each re-pick compounds into the save.
 - [x] **UBUG-14 · A long rest clears one level of Exhaustion.** SRD-verified; the 2024 text's "has
   also ingested some food and drink" applies unconditionally because rations are not modelled.
 - [x] **UBUG-15 · Death is modelled, and there is a dead screen.** One typed `play.death: {cause}`

@@ -2765,8 +2765,8 @@ diverge. What cannot fold into a static number — bonus dice, `min_die`, `rerol
 ### 83 · MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
 
 `saveCharacterToStore` (`character/store.svelte.ts:107`) has no `catch`, `saveCharacter`
-(`repository.ts:196`) throws on both of its failure modes, and seven of its nine call sites discard
-the promise with `void`:
+(`repository.ts:196`) throws on both of its failure modes, and **not one of its nine call sites has a
+catch either.** Six discard the promise outright:
 
 ```
 combat/+page.svelte:81            setTimeout(() => void saveCharacterToStore(c), 800)   ← the autosave
@@ -2776,10 +2776,17 @@ spellbook/+page.svelte:66, :119
 ```
 
 The autosave one is inside a `setTimeout` callback, so no caller could catch it even if one wanted
-to. This is finding 77's shape (Create says nothing) and finding 30's (`guarded()` missing) on the
-path the player spends the whole session on: HP, slots, resources, conditions, rests, pins, prepared
-spells. `draft-session.svelte.ts:76` states the rule the three of them break — *"a rejection escaping
-here is an unhandled promise rejection nobody sees"*.
+to. The three that DO await it hand the rejection somewhere just as quiet: `build-view-model:554`
+inside `save()`, which is finding 77; `Hero.svelte:46` inside an `onclick`, which then navigates to
+the builder anyway; and `combat/+page.svelte:88`, the `onBeforeReload` flusher — where it is worse
+than quiet, because `flushAll` (`content/reload.ts:23`) is a `Promise.all` and `reloadApp:28` awaits
+it before `location.reload()`. One rejecting flusher means the reload the user pressed simply does
+not happen, and two of the three `reloadApp` callers are `void reloadApp()`.
+
+This is finding 77's shape (Create says nothing) and finding 30's (`guarded()` missing) on the path
+the player spends the whole session on: HP, slots, resources, conditions, rests, pins, prepared
+spells. `draft-session.svelte.ts:76` states the rule they break — *"a rejection escaping here is an
+unhandled promise rejection nobody sees"*.
 
 **Two ways in, and neither is exotic.**
 
@@ -2809,8 +2816,9 @@ not lose the log in *that* scenario, because the same lock fails the write (EPER
 the log" instead of assuming.
 
 **Fix:** a shared `guardedSave` that catches, toasts once with a stable id (the
-`DRAFT_SAVE_FAILED_TOAST` pattern), and is used by all seven sites; `writeLogLine` gates its catch on
-`await storage.exists(logOf(slug))` and rethrows otherwise.
+`DRAFT_SAVE_FAILED_TOAST` pattern), and is used by all six `void` sites; `writeLogLine` gates its
+catch on `await storage.exists(logOf(slug))` and rethrows otherwise. `flushAll` wants
+`Promise.allSettled` instead, so one failed flush cannot swallow the reload.
 
 ### 84 · MEDIUM · the exhaustion stepper clamps to the data cap, the schema caps at 20, and the gap silently bricks saving
 
@@ -2861,6 +2869,103 @@ versatile weapons` becomes `+2 on every versatile weapon` — and `isEffectTarge
 **Fix:** the two slots are one fact, so join them rather than letting one win —
 `scope: [scope, qual.scope].filter(Boolean).join(',')`, which is already the AND-semantics
 `rollEffectsFor:388` and `scopedAttackBonus:292` apply to a comma list.
+
+### 86 · MEDIUM-LOW · a failed RELOAD blanks the builder and is invisible on the other four views
+
+`content/store.svelte.ts:27` assigns `content.graph` only on success, so a failed reload keeps the
+working graph and sets `content.error` beside it. Five routes then read that pair, and one of them
+reads it differently:
+
+| route | gate | what a failed reload does |
+| --- | --- | --- |
+| `build/+page.svelte:115` | `{#if content.error}` | **replaces the whole builder** with the error screen |
+| `combat/+page.svelte:109` | `{:else if !sheet \|\| !character}` | nothing |
+| `compendium/[...entry]/+page.svelte:372` | `{#if !graph}` | nothing |
+| `spellbook/+page.svelte:136` | `{:else if !graph \|\| !character}` | nothing |
+| `translate/+page.svelte:250` | `{#if !graph}` | nothing |
+
+**Reproduced** — the real store with `getContentGraph` rejecting on the second call:
+
+```
+after first load    → graph: {"marker":"the working graph"}  error: null
+after failed reload → graph: {"marker":"the working graph"}  error: "Error: EBUSY: content/ unreadable"
+guid rotated: false
+build/+page.svelte:115  -> renders <Loading error> : true
+combat/+page.svelte:109 -> renders <Loading error> : false
+```
+
+`content.error` is cleared only by a *successful* load, so the builder stays blanked until some later
+reload succeeds — navigating away and back does not clear it, the store is module state.
+
+This is reachable on desktop without anything unusual, and by the workflow the product promises:
+editing a CSV in a text editor is watched (`watcher.ts:55`), and `discoverContentRoots`
+(`disk.ts:44`) throws **by design** when `content/` exists but cannot be listed, so one transient
+listing failure mid-build is enough. The build page's own comment says why the branch is there — *"A
+content-load failure was silent here (empty pickers) — surface it like other views"* — and the fix
+overshot: the other views surface it only when the graph is actually missing.
+
+**Fix:** one rule, in one place. `build/+page.svelte` gates on `!build.graph` like its four siblings
+(it has `build.graph`, `build-view-model.svelte.ts:83`) and keeps passing `content.error` to
+`Loading`. A stale-but-working graph with a failed refresh behind it is a NOTICE, not a screen — and
+if it should be one, it belongs to all five, not to the one page a user is mid-task on.
+
+### 87 · HIGH · moving a saved ASI to another ability grants BOTH, and it compounds with every move
+
+`ability-allocation.svelte.ts:219` reconciles the carried flat boosts against what the restored slots
+re-derive, **per ability**:
+
+```ts
+Math.max((this.host().edit?.boosts[a] ?? 0) - (slots[a] ?? 0), 0)
+```
+
+`edit.boosts` is the loaded character's `build.abilityBoosts` carried verbatim and never recomputed
+(`build-view-model.svelte.ts:172`); `slots` is live off `draft.slotAsi`. So the subtraction only
+cancels while the slot still points at the ability the save recorded. Move the pick and the old
+ability has nothing to subtract against — it survives as "residue" — while the slot adds its full
+amount on the new one.
+
+**Reproduced** — real `srd-2024`, fighter 8, one ASI slot taken as +2 STR, saved through
+`build.assembled` and re-opened, which is the level-up path:
+
+```
+SAVED character   → abilityBoosts {"str":2}   slotPicks.asi {…:4:{"shape":"2","picks":["str"]}}
+re-opened         → slotBoosts {"str":2}   abilityBoosts {"str":2}   STR 17  DEX 14
+move STR → DEX    → slotBoosts {"dex":2}   abilityBoosts {"str":2,"dex":2}   STR 17  DEX 16
+```
+
+STR keeps the boost it just gave up. `assembled` carries `{"str":2,"dex":2}`, so the inflation is
+written to `character.json` — and from there the next open reads it as the new baseline:
+
+```
+save, re-open, move DEX → CON  →  {"str":2,"dex":2,"con":2}     STR 17  DEX 16  CON 15
+save, re-open, move CON → INT  →  {"str":2,"dex":2,"con":2,"int":2}
+total granted by ONE +2 ASI: 8
+```
+
+**The same arithmetic, one door over:** re-open the original save and swap the ASI for a feat.
+
+```
+slotFeats {…:4: "feat:SRD 5.2.1:alert"}   slotBoosts {}   abilityBoosts {"str":2}   STR 17
+```
+
+The ASI is gone, the +2 is not, and the feat is granted as well — a free +2 for taking a feat.
+
+This is the exact defect `docs/work/mechanics.md` ▸ UBUG-13 is ticked as fixed for ("a restored slot
+could re-derive its boost a second time"). Persisting the per-slot mapping fixed the *re-derive*
+half; the *re-pick* half was never covered, and the module's own header says the subtraction is what
+stands between the two.
+
+**Fix:** subtract what the SAVE's own picks granted, not what the LIVE slots grant. The residue is
+`edit.boosts` minus the boosts computed from `edit.loaded.slotAsi` / `edit.loaded.slotFeatAbility` —
+the draft as it was loaded, which `EditContext.loaded` (`draft.ts:414`) already holds — computed once
+and independent of the live picks. The ASI half needs no content graph at all (the picks are in the
+save), so the race the current comment guards against does not apply to it; only the half-feat half
+reads `halfFeatOptionsFor`, and it can subtract lazily by the same rule.
+
+**Watch for the sibling** while fixing: `slotBoosts` folds the half-feat `+1` from
+`draft.slotFeatAbility` through the same `Math.max` at the same line, so the same move-the-pick
+inflation applies to a half-feat's ability by construction. Finding 50 is a *different* bug on that
+same map — there the ability does not move when it should.
 
 ## Independent verification
 
@@ -3057,10 +3162,13 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `mergeCopyList` calls "newer", and `discardFailedCopy`'s empty-target-only claim); the Rust half in
   `src-tauri` (`saved_data_dir`, `set_data_dir`, `pick_data_dir` — the actual sandbox boundary, and
   the whole "Rust refuses a path not chosen through the picker" claim at `tauri.ts:51`);
-  `remote/github.ts` past line 175 (the byte and pack caps, branch fallback, whether `truncated`
-  reaches a refusal on every path); `storage/browser.ts` under real IndexedDB, where `list()` is one
-  `get` per child and `remove`/`rename` scan every key; and `content/store.svelte.ts`'s
-  `reloadContent`, the cache-rotation coordinator, never opened.
+  `remote/github.ts` is now read whole and came back clean — `branchCandidates` costs one request in
+  the ordinary case and only the failing path pays for the rest, the ETag is repo-scoped and survives
+  the branch fallback correctly, `truncated` short-circuits ahead of `MAX_REPO_PACKS`, and
+  `isPackFile`'s `.csv` test matches the loader's byte for byte (`loader.ts:350`), so the two sides of
+  a diff cannot disagree about what a pack file is. What is left of this item: `storage/browser.ts`
+  under real IndexedDB, where `list()` is one `get` per child and `remove`/`rename` scan every key.
+  `content/store.svelte.ts` is read — finding 86.
 - **The SRD converters — deliberately OUT of scope, not merely unread.** Five converter commits in
   the window are unopened and will stay that way: `docs/work/content.md` ▸ CONVERTERS-SUNSET puts the
   block up for possible deletion, and reading 3 500 lines to improve code that may go is the
@@ -3077,9 +3185,10 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `drafts/store.ts`'s content-draft half, `repointDraft`'s conflict path and `findUnreadableDrafts`;
   and in `derive-plugins.ts`, `pluginResources`' own-property guard and a plugin-granted condition
   re-entering `expandCondition`.
-- **Builder state machines — covered by findings 73-81**, and `previewSheet`'s reused trial VM came
-  back clean, including the `$state`-inside-`$derived` question its own docstring raises. Left:
-  `ability-allocation.svelte.ts`'s boost reconciliation (the UBUG-13 subtraction) and, in
+- **Builder state machines — covered by findings 73-81 and 87**, and `previewSheet`'s reused trial VM
+  came back clean, including the `$state`-inside-`$derived` question its own docstring raises.
+  `ability-allocation.svelte.ts`'s boost reconciliation — the UBUG-13 subtraction — is finding 87, and
+  it is the worst thing in this pass. Left: in
   `build-view-model.svelte.ts`, `switchSystem`'s drop sweep, `list()`'s RV3 keep-set and `assembled`'s
   prepared/alwaysPrepared split — all read, none driven across both editions. Every builder probe ran
   on an `srd-2024`-shaped fixture, and no `/dev/` probe was written, so the photo write, the backup
@@ -3107,8 +3216,10 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   reverse-state pairs, of which pack rollback, source toggling and theme removal are complete and the
   spell pin is finding 68, and the builder pickers' ARIA, driven in chromium — finding 72, with the
   contract's own walk confirmed correct once focus reaches it.
-- **The both-editions sweep.** Most probes ran on one pack. Extra Attack, the exhaustion fan-out and
-  the two 2014 spellcasting probes are the parameterised ones; the rest are not.
+- **The both-editions sweep — closed.** See queue item 8 below: 96 class sheets and 811 build-path
+  derives across both packs, zero issues, zero unknown tokens, zero missing refs, with a control that
+  fires. What it does NOT cover is the play loop — a rest, a cast, an action option — which is still
+  mostly one-pack, and findings 82's table is the parameterised part of it.
 
 ## A note on scope
 
@@ -3168,8 +3279,20 @@ item below says something is closed, that is the hand pass talking, never the ab
    tie case is recorded as suspected, not a defect. Nothing of it is left open.
 7. **UI remainder — DONE**, findings 71 and 72. The builder pickers' ARIA was driven rather than
    read, and so were findings 64, 65 and 67: all three reproduce in chromium.
-8. **The both-editions sweep.** Most probes ran on one pack. Re-run the build and resource paths on
-   `srd-2014`.
+8. **The both-editions sweep — DONE, and clean.** Every shipped class in both packs was derived at
+   levels 1 / 5 / 11 / 20 (12 x 4 x 2 = 96 sheets) and every species, background, feat and item in
+   both packs was put through the build path one at a time (811 more), reading `deriveIssues`,
+   `facts.unknown` and `missing` on each. **Zero** of any of the three, and the probe's own control
+   (a bogus `species:Nope:nope` / `feat:Nope:nope` ref) fires `missing=1` in both packs, so the
+   silence is a measurement rather than a broken probe.
+
+   The edition divergences that showed up are all the ones the rules actually have and the code
+   already asserts: fighter Second Wind 1 (2014) versus 2/3/4 (2024), monk `ki` versus
+   `focus`+`uncanny_metabolism`, barbarian `rage/Infinity` at 20 (2014) versus `rage/6` +
+   `persistent_rage` (2024), and the prepared-cap formula versus table. Slot pools are identical
+   across editions at every level and match the SRD table (4,3,3,3,3,2,2,1,1 at 20). The one real
+   divergence is finding 6, visible here as `acc0` on every 2014 caster against `acc109` /
+   `acc218` on the 2024 ones.
 
 ### The suspected items, which are cheap to settle
 
