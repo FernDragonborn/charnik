@@ -795,7 +795,8 @@ outright: "A phrase is ONE key, never a noun substituted into a frame."
 markup text run across all non-`/dev` `.svelte` files returns exactly these two, plus `"Ctrl K"` at
 `+layout.svelte:362`, a key-cap glyph that is correctly untranslated. The shape that scan cannot see
 is an English sentence in a `{}` expression handed to a prop, which is what finding 69 found two more
-of — so the census is complete for attributes and markup runs, and open for props.
+of — so the census is complete for attributes and markup runs. **The prop half is now closed too:
+finding 92**, four more sites.
 
 **Fix:** an ICU key taking `{name}`, and a whole `themes.tokenColorLabel` key taking `{token}`.
 
@@ -2619,19 +2620,35 @@ the save (finding above), which is the one moment they exist for.
 restore is a copy over `character.json` plus a roster reload. Until then the comment at `:119` and
 `characters.md`'s "rotating backups" describe a capability that does not exist.
 
-### 81 · LOW · the roster is the one screen that shows a raw system id
+### 81 · LOW-MEDIUM · four screens show a raw system id, and only one shows the label
 
-`src/routes/+page.svelte:97` and `:115` — `<span class="sysbadge">{d.summary.system}</span>` and
-`{c.system}` render `5e` / `5.5e`. `SYSTEM_LABELS` (`rules/pipeline.ts:19`) exists for exactly this
-and its own comment says so: *"What a system is CALLED to a user — never the raw id in prose."*
-`GeneralSettings.svelte:71` and `spellcasting.ts:282` both go through it; the roster does not, and
-`ui.md` ▸ Error copy names `SYSTEM_LABELS` as the way an edition is said.
+*Widened in the third pass — the original finding said "the roster is the one screen", which is
+wrong. Its census grepped `sysbadge`, a class name, so it could only ever find the roster.*
 
-**Reproduced** — `grep -rn sysbadge src/` returns three lines, two of them the raw reads above and
-one the CSS rule; `grep -rn SYSTEM_LABELS src/` returns four, none in `routes/+page.svelte`.
+`SYSTEM_LABELS` (`rules/pipeline.ts:20`) exists for exactly this and its own comment says so:
+*"What a system is CALLED to a user — never the raw id in prose."* `ui.md` ▸ Error copy names it as
+the way an edition is said. Grepping for the RENDER rather than for one class name
+(`{sys}` / `{c.system}` / `{d.summary.system}` across `src/**/*.svelte`) gives five sites in four
+files, of which exactly one is right:
 
-**Fix:** `{SYSTEM_LABELS[c.system]}` at both sites. If the badge is meant to stay short, the honest
-version is a short-label row added beside `SYSTEM_LABELS`, not a raw id read at the call site.
+| site | renders | |
+| --- | --- | --- |
+| `routes/+page.svelte:97`, `:115` | `{d.summary.system}` / `{c.system}` | the roster — the original finding |
+| `combat/blocks/Hero.svelte:40` | `{c.system}` | the play sheet's hero line, beside a translated proficiency label |
+| `build/blocks/BuildHead.svelte:113` | `{sys}` | the builder's edition switcher |
+| `EditContentForm.svelte:309` | `{sys}` | the homebrew form's system chips |
+| `settings/GeneralSettings.svelte:71` | `{SYSTEM_LABELS[sys]}` | **the only one that is right** |
+
+The builder's is the sharpest, because the comment two lines above it
+(`BuildHead.svelte:107`) is *about* `SYSTEM_LABELS` — *"a third system is a row in SYSTEM_LABELS,
+not a button somebody has to remember to add here"* — and the button it introduces prints `sys`.
+So a user switching editions in the builder reads `5.5e` while the same control in Settings reads
+`D&D 5.5e (2024)`.
+
+**Fix:** `SYSTEM_LABELS[...]` at all five. The badges want something shorter than
+`D&D 5.5e (2024)`, and the honest version of that is a short-label row added beside
+`SYSTEM_LABELS` — not a raw id read at the call site, which is the state that produced four
+different answers to one question.
 
 ### Suspected, not reproduced — persistence and builder state
 
@@ -2967,6 +2984,262 @@ reads `halfFeatOptionsFor`, and it can subtract lazily by the same rule.
 inflation applies to a half-feat's ability by construction. Finding 50 is a *different* bug on that
 same map — there the ability does not move when it should.
 
+### 88 · MEDIUM-LOW · reading a draft destroys the stale one the warning exists to show
+
+`drafts/store.ts:87` — `readDraft` removes the file when `schemaVersion` differs, and returns null.
+`findStaleDrafts:211` exists to list exactly those files *before* they go, and says so: *"Surfaced
+(before removal) so the user is WARNED their unsaved work is being dropped, rather than it vanishing
+silently on the next read"*. Whichever runs first wins, and the read has three call sites the warning
+does not gate:
+
+```
+translate/+page.svelte:165     void readDraft(...) per row opened
+EditContentForm.svelte:163     on the edit form's own restore
+OrphanDialog.svelte:110        the conflict re-check, via repointDraft:152 too
+```
+
+The warning itself runs in one place — `compendium/[...entry]/+page.svelte:108`, `onMount`. So a user
+who opens Translate (or an edit form) before ever landing on the compendium has their stale drafts
+deleted by the visit, and the dialog that would have named them has nothing left to name.
+
+**Reproduced** — real fs (`NodeStorage`, temp dir), one editor draft aged one schema version:
+
+```
+stale drafts BEFORE any read: 1
+readDraft returned:           null
+file still on disk:           false
+stale drafts AFTER the read:  0     <- what the warning would list
+```
+
+**Fix:** make `readDraft` answer the question it was asked. Return null on a version mismatch without
+removing anything; the file is already destined for `discardDrafts`, which is the path that has a
+user behind it. `repointDraft`'s conflict check (`:156`) gets the same benefit for free — today it
+can delete a stale draft at the destination and then report "no conflict" and overwrite the slot.
+
+### 89 · LOW-MEDIUM · one unrecognised `.json` in `drafts/` takes down the whole discard dialog
+
+`parseDraft:221` returns whatever `JSON.parse` produced, unvalidated. Anything parseable but not a
+draft envelope therefore counts as a *readable* draft with `target: undefined`, and since its
+`schemaVersion` is undefined it lands in `findStaleDrafts` rather than in `findUnreadableDrafts`.
+Both consumers then dereference the target:
+
+- `SchemaDiscardDialog.svelte:36` — `const t = env.target;` and `t.type` on the next line, in the
+  label function called for every row. It throws while RENDERING the dialog.
+- `discardDrafts:216` → `deleteDraft` → `draftPath` → `keyString(target)` → `target.kind`. The loop
+  is sequential with no guard, so it stops there, and `discardStale`
+  (`compendium/[...entry]/+page.svelte:113`) has no `catch` — an unhandled rejection, and the
+  `staleDrafts = []` reset two lines down never runs.
+
+**Reproduced** — one genuine stale draft plus a `drafts/stray.json` holding `{"hello":"world"}`:
+
+```
+findStaleDrafts:      2   [{"kind":"add","type":"spell","addGuid":"g1"}, null]
+findUnreadableDrafts: []
+discardDrafts THREW:  TypeError: Cannot read properties of undefined (reading 'kind')
+files left:           ["stray.json"]
+```
+
+`{#each drafts as env (env.target)}` (`:83`) also keys by the target object, so two such files are a
+duplicate-key error as well.
+
+This breaks the module's own opening promise — *"A lost/corrupt file loses only that draft, never the
+set"* (`store.ts:8`) — and the folder is inside the data dir the product invites the user to open.
+
+**Fix:** validate the envelope where it is parsed. `parseDraft` returns null unless `target` and
+`schemaVersion` are present and the target's `kind` is one of the three, which routes every other
+file to `findUnreadableDrafts` — where it is already handled by path, needs no target, and is exactly
+what that list is for.
+
+### 90 · LOW · the draft filename encoding is legal on every OS except for one character
+
+`draftPath:57` calls the encoding *"a valid, collision-free (reversible) filename on every OS — no
+`:` / space hazard"*. `encodeURIComponent` leaves `! ' ( ) * - . _ ~` unescaped, and exactly one of
+those — `*` — is forbidden in a Windows filename.
+
+**Reproduced** — real fs on Windows, `writeDraft` for an `editor` target across a range of sources:
+
+```
+source "SRD 5.2.1"    -> wrote ok, read back: yes
+source "My*Pack"      -> WRITE FAILED: ENOENT
+source "Jane's Pack"  -> wrote ok, read back: yes
+source "a<b>c" "a:b" "a|b" "a?b"  -> all wrote ok      <- the encoding does work for these
+```
+
+Reachable through a pack whose `#content-source` contains `*`; the write fails and the caller sees an
+unhandled rejection, since `writeDraft`'s callers treat it as fire-and-forget.
+
+**Fix:** escape it — `encodeURIComponent(key).replace(/\*/g, '%2A')` keeps the mapping reversible and
+closes the set.
+
+### 91 · LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
+
+`storage/types.ts:36` states the rename contract for every implementation: *"Overwriting an existing
+target is not promised — remove it first."* `browser.ts:118` re-keys every matching entry with `put`,
+so an occupied destination is MERGED rather than refused, and a source that does not exist matches
+nothing and returns successfully.
+
+**Measured** under a real IndexedDB implementation (`fake-indexeddb`, the same one the suite uses):
+
+```
+a/ = {one.txt: "A-one", two.txt: "A-two"}     b/ = {one.txt: "B-one", three.txt: "B-three"}
+rename(a → b)  ->  b = [one.txt, three.txt, two.txt]
+                   b/one.txt   = "A-one"      <- B's file, overwritten
+                   b/three.txt = "B-three"    <- survives a "move" that replaced the folder
+                   a exists: false
+rename('nope', 'elsewhere')  ->  silent no-op (a real fs throws ENOENT)
+```
+
+The second row is the one no sibling shares: `MemoryStorage.rename:104` throws `no such path`, and
+both real filesystems throw `ENOENT`. On the occupied-target half `MemoryStorage` merges too, which
+is the audit's own standing lesson — *"`MemoryStorage` silently merges a rename that Windows
+refuses"* — now shown to hold for the SHIPPED web implementation as well, not only the test double.
+
+**Latent today, and worth fixing before it is not.** Every caller respects the contract by hand:
+`swapInNewTree:303` removes `prev` before renaming onto it, `recoverInterruptedApply:397` does the
+same with `scratch`, and the whole pack lifecycle is desktop-gated
+(`pack-update-state.svelte.ts:77`, `updates.svelte.ts:77`), so nothing reaches the divergence now.
+It becomes live the day pack management reaches the web build, and it will not fail loudly when it
+does — a half-swapped pack folder would look like a successful update.
+
+**Fix:** two guards in `browser.ts`'s `rename`, in the same transaction it already opens — throw when
+nothing matches `src`, and throw when any key under `dst` exists. That makes all four
+implementations agree, and the callers' hand-written removes become belt-and-braces rather than the
+only thing holding the invariant.
+
+**Also measured, since the backlog asked:** `list()` is `getAllKeys` over the whole store plus one
+`get` per child — a 50-entry folder costs 15 ms once the store holds 2 050 keys, and listing a
+2 000-entry folder costs 388 ms. `rename` of a 2 000-key subtree is 189 ms and `remove` 29 ms. On the
+web build IndexedDB holds only homebrew, characters and drafts (content comes from `FetchStorage`),
+so none of this is reachable at a size that matters today.
+
+### 92 · MEDIUM · finding 28's open half, closed: six more English strings, and two raw content-type ids
+
+Finding 28 said its census was "complete for attributes and markup runs, and open for props" — an
+English sentence inside a `{}` expression is the shape its scan could not see. Two scans close it:
+string literals in the MARKUP half of all 117 non-`/dev` `.svelte` files, and then the same over the
+SCRIPT half plus every `*.svelte.ts` view-model, comments stripped first. Six sites survive, and the
+second scan is where the two worst live because a default value never looks like user copy:
+
+| site | what renders | why it is not a key |
+| --- | --- | --- |
+| `Loading.svelte:8` | `message = 'Crunching the numbers…'` | the shared load screen's DEFAULT, and `build/+page.svelte:117` omits `message` — so the builder's loading screen is English in every locale |
+| `OrphanDialog.svelte:57` | `if (t.kind === 'add') return '(new entry)';` | the orphan dialog's id column, for every unsaved new entry |
+| `compendium/[...entry]/+page.svelte:542` | `searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"` | the compendium's own search box — an English verb glued to a **raw type id** |
+| `EditContentForm.svelte:283` | `{type.replace(/_/g, ' ')} · {editing ? 'edit' : 'new homebrew'}` | the authoring form's eyebrow; same raw type id |
+| `EditContentForm.svelte:284` | `· fork to homebrew` | a bare markup run the earlier scan should have caught |
+| `RollerLine.svelte:277` | `` `${pill.type}${pill.inherited ? ' · inherited from the group on its left' : ''}` `` | the damage-type pill's tooltip |
+
+Two of them break the *same* rule twice. `ui.md`: "A phrase is ONE key, never a noun substituted
+into a frame" — `Search {type}…` is exactly that frame — and the substituted noun is
+`selectedType.replace(/_/g, ' ')`, the raw content type. `contentType.*` exists and holds all 18
+types, and finding 70 is the same defect one view over (the pin-skills menu title-cases skill ids
+while the skills panel translates them). A Ukrainian user browsing species options reads
+**«Search species option…»**.
+
+`en.json` carries no `compendium.search*` key and no `roller.*inherited*` key, so all four need new
+ones rather than a re-point.
+
+**Fix:** one ICU key each taking `{type}` / `{name}`, with the type value coming from
+`$_('contentType.' + type)`. The eyebrow's `edit` / `new homebrew` / `fork to homebrew` are three
+states of one label, so they are one key with a `{mode}` value rather than three.
+
+**What the scans RULED OUT is worth as much as what they found.** Every other two-word English
+literal in a view-model is the documented `{text, key, values}` pair, where the English is the
+fallback a translator-less caller reads — `hit-points.svelte.ts:189` and `:227`,
+`rest-controls.svelte.ts:69` and `:106`, `spell-casting.svelte.ts:302`, and `dice-tray.svelte.ts:609`
+(`'Custom roll'`), which the roller pass had already cleared. That pattern is used consistently
+enough that the exceptions above stand out by their absence of a `key`.
+
+**Method note for the next sweep:** each scan is about 40 lines and runs in under a second. The
+markup one is worth re-running as written; the script one is only usable with comments stripped
+first (`/* */`, `<!-- -->` and `//` blanked to spaces, preserving line numbers), because prose in
+comments was ~80% of the raw hits. Neither is worth wiring into the gate as written — the signal is
+"a user-facing string with no sibling `key`", and expressing that as a lint rule is the real fix.
+
+### 93 · LOW-MEDIUM · shipped content nests conditions two deep, and the engine expands one — Unconscious is listed as Prone and is not Prone
+
+`effects.md` states the rule three times — `apply_condition` expands *"a condition row's own tokens
+ONE level"* (`:100`), *"ONE level per id"* (`:331`), *"expands ONE level, no cascade"* (`:339`) — and
+`resolver.ts:204` implements exactly that: `gatherInstances` walks each effect's OWN tokens and calls
+`ensureExpansion` on each `apply_condition`, and the children it appends to `insts` are never walked
+again. The engine is right. The **content** assumes a cascade the engine promised not to do.
+
+**Reproduced** — real `srd-2024`, one condition applied at a time:
+
+```
+unconscious   conditions = ["unconscious","incapacitated","prone"]   disadvantage = []
+prone         conditions = ["prone"]                                 disadvantage = ["attack"]
+stunned       conditions = ["stunned","incapacitated"]               disadvantage = []
+```
+
+`prone` on its own carries `disadvantage:attack`. Applied THROUGH `unconscious` it registers in
+`facts.conditions` — so every `has_condition.prone` guard and every reader of that list sees it — and
+contributes nothing. A condition that is listed and inert is the worst of both readings.
+
+**The whole census, both packs**, by parsing every `conditions_srd.csv` row's `effects` and checking
+what each nested target actually carries:
+
+```
+srd-2014 / srd-2024  (identical)
+  paralyzed  -> incapacitated   (notes only)
+  petrified  -> incapacitated   (notes only)
+  stunned    -> incapacitated   (notes only)
+  unconscious-> incapacitated   (notes only)
+  unconscious-> prone           LOST MECHANICS: ["disadvantage:attack"]
+```
+
+One lost mechanic, in both editions, and nothing else nested carries anything but `note:`. The
+practical bite today is small — an Unconscious creature is not attacking anyway — but the shape is
+not: the four `incapacitated` parents lose their child's three `note:` lines as well, and those are
+the G2 info channel `conditionTokens` exists to deliver (*"the 'attacks against you have advantage',
+concealed, auto-crit parts a single-character sheet can't fold onto any stat still reach the player
+as reference"*). The panel tags the implied condition by NAME and stops there.
+
+**Fix belongs in the content, not the engine.** The one-level rule is a deliberate guard against a
+cascade loop, and widening it would need cycle detection for a case one row needs. Flatten the parent
+instead: `unconscious`'s `effects` gains `disadvantage:attack` beside its `apply_condition:prone`, in
+both packs, and gets re-stamped. That is a `charnik-content-srd` commit.
+
+**Guard it so it cannot come back:** a test that walks every shipped condition row, expands one level
+by hand, and fails when a nested target carries a non-`note:` token the parent does not also carry.
+It is the same shape as the existing "a shipped token that folds onto nothing fails the suite"
+gate (`111ba48`), and it would have caught this row the day it was written.
+
+### Suspected, not reproduced — third pass
+
+- **Typing during the authoring form's initial draft scan is discarded.**
+  `EditContentForm.svelte:145` — `onMount` awaits `listTypeTargets`, then `listDrafts` (which reads
+  every draft file on disk), and then assigns `draft = restored` with **no guard on whether the user
+  has already changed it**. Anything typed inside that window is replaced, and `baseline` is reset to
+  the restored text so the auto-save effect sees no divergence and schedules nothing. The pending
+  600 ms write from before the restore is cancelled by the effect re-running, so the restored draft
+  itself is safe — only the typing is lost, plus an orphan draft file under the discarded fresh
+  `addGuid` if the timer happened to fire first. Read, not driven: reproducing it wants the browser
+  project and a mounted form, and the fix is one condition
+  (`if (JSON.stringify(draft) === baseline)`), so the cost of proving it exceeds the cost of the
+  guard.
+
+### Ruled out — third pass
+
+- **`EditContentForm`'s `editShipped` captured before the graph loads.** `packRoots` is
+  `$derived(content.graph?.packRoots ?? [])` and `editShipped` is computed once at init with
+  `state_referenced_locally` suppressed, so an empty `packRoots` would make a SHIPPED row look like
+  homebrew and `saveTargetFile()` would return the shipped file to write into. The invariant its
+  comment claims does hold: the only two mount sites
+  (`compendium/[...entry]/+page.svelte:561`, `:573`) are both inside the `{:else}` of
+  `{#if !graph}` (`:372`), so the graph is loaded before the component can exist.
+- **`UpcastBuilder.svelte`** — clean. It validates the token it is about to write through
+  `parseUpcast`, the same parser the loader uses, so it cannot offer one the app would refuse; every
+  control is a real `select` / `input` / `button` with an `aria-label`; and the raw field stays
+  editable beside it, which is the way back out of anything the builder cannot express.
+- **`tools/restamp.ts` and `content/restamp.ts`** — read. `matchStyle` decides the whole file's line
+  endings from `original.includes('\r\n')`, so one CRLF inside a quoted cell would flip an LF file to
+  CRLF wholesale; no shipped CSV contains a `\r` at all (measured across all 34 files in both packs),
+  and the hash normalises `\r\n?` either way, so nothing is reachable from it today. The CLI's
+  header claims a terminal-stamped and a UI-stamped file are "byte-identical" — they differ in
+  `#content-updated_at`, which the CLI always moves and the UI leaves alone — but that line is
+  outside the hash by design (`hash.ts:38`), so the material claim holds.
+
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -2995,6 +3268,8 @@ was re-executed here; silence means not re-run, not doubted.
 | finding | reported | measured here |
 | --- | --- | --- |
 | 29 · off-token `border-radius` | 63 places | **62** by `grep -rn "border-radius:[^;]*px"` minus the `999px` pill radii (66 including them). The five radius tokens and the ten distinct literals are exactly as reported, and none of the six non-999 literals matches a token — the substance stands, the count was one out. Corrected in the finding above |
+| 81 · raw system id | "the roster is the ONE screen" | **four screens, five sites.** The reader grepped `sysbadge` — a CSS class — so its census could only return the roster. Grepping the RENDER finds `Hero.svelte:40`, `BuildHead.svelte:113` and `EditContentForm.svelte:309` as well. Corrected and widened in the finding above; severity raised to LOW-MEDIUM |
+| 28 · English literals | "complete for attributes and markup runs, open for props" | the open half is now closed — **finding 92**, six more sites, two of them also printing a raw content-type id, and the two worst found only by also scanning the SCRIPT half (a component's default prop value) |
 
 **Also confirmed, on the audit's own terms.**
 
@@ -3146,16 +3421,29 @@ all name their ceiling. No empty catch blocks — every best-effort swallow says
 The readers were interrupted once by a session limit and resumed for a checkpoint, so each area has a
 remainder. Listed so the next pass is deliberate rather than a re-sweep.
 
-- **Plugins (L3) — covered in the second pass** (findings 38–47); the remainder is the surface, not
-  the engine: `PluginConsentDialog.svelte` unread (what it shows, and whether its `https://`-only
-  `url` goes through the layout's capture-phase opener rather than an in-app navigation); the
-  Settings ▸ Plugins keyboard and focus-trap path undriven, which matters given findings 23–27;
-  `plugin.bench.ts` read but not run; memo eviction above `MEMO_MAX = 512` unmeasured; the
-  load-time microtask queue undriven; `isRaging`'s two sourcings (`facts.conditions` versus
-  `state.conditions`) assumed equal, not proven; and discovery over the real Tauri `Storage` —
-  Windows case-folding against `NAMESPACE_RE`, a plugin folder inside a watched pack directory —
-  which wants a `/dev/` probe. `UpcastBuilder.svelte` and `EditContentForm.svelte`, both new in
-  `b94d791`, were not opened.
+- **Plugins (L3) — covered in the second pass** (findings 38–47), and the SURFACE half is now read
+  and clean. `PluginConsentDialog.svelte` carries `dismissOnEscape` and `trapFocus`, renders every
+  manifest field as plain text, and shows the `url` as text rather than as a link.
+  `PluginsSettings.svelte` is real `<button>`s throughout — the kill switch, refresh and every
+  per-plugin toggle — so none of findings 23–27 repeats here. The manifest caps the spec states are
+  enforced by a strict zod schema (`plugin-host.ts:35`), so no unbounded attacker text reaches the
+  dialog. The namespace-collision path is sound end to end: `discoverPlugins:141` marks the second
+  claimant `ok: false` with a problem, and `pluginStatus:186` returns `broken` before it touches
+  prefs — so the fact that `consent` / `enabled` / `loadErrors` are all keyed by NAMESPACE ALONE,
+  while the list is keyed `origin/namespace` and its own comment says "the namespace alone is no
+  longer unique", cannot be reached by a runnable plugin. Two small things left standing, neither
+  worth a numbered finding: `plugins.md:100` says the `url` *"opens in the OS browser, never
+  in-app"* and nothing opens it anywhere — the consent dialog is its only consumer and shows it as
+  text, so the doc line promises a behaviour that does not exist; and `PluginsSettings.svelte:106`
+  checks `loadErr` ahead of `p.problem` for the status badge only, so a duplicate-namespace loser
+  can be labelled "load failed" while its own row explains the clash.
+
+  What is left of the item is the engine's edges: `plugin.bench.ts` read but not run; memo eviction
+  above `MEMO_MAX = 512` unmeasured; the load-time microtask queue undriven; `isRaging`'s two
+  sourcings (`facts.conditions` versus `state.conditions`) assumed equal, not proven; and discovery
+  over the real Tauri `Storage` — Windows case-folding against `NAMESPACE_RE`, a plugin folder inside
+  a watched pack directory — which wants a `/dev/` probe. `UpcastBuilder.svelte` and
+  `EditContentForm.svelte`, both new in `b94d791`, are still unopened.
 - **Storage and packs — covered in the second pass** (findings 30–37); what is left of it is narrow:
   `storage/tauri.ts`'s data-folder move driven on the real app (`walkTree`'s symlink skip,
   `copyFilesInto`'s Windows-vs-Linux mtime asymmetry at `tauri.ts:157`, which silently changes what
@@ -3166,9 +3454,9 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   the ordinary case and only the failing path pays for the rest, the ETag is repo-scoped and survives
   the branch fallback correctly, `truncated` short-circuits ahead of `MAX_REPO_PACKS`, and
   `isPackFile`'s `.csv` test matches the loader's byte for byte (`loader.ts:350`), so the two sides of
-  a diff cannot disagree about what a pack file is. What is left of this item: `storage/browser.ts`
-  under real IndexedDB, where `list()` is one `get` per child and `remove`/`rename` scan every key.
-  `content/store.svelte.ts` is read — finding 86.
+  a diff cannot disagree about what a pack file is. `storage/browser.ts` is read and measured under a real
+  IndexedDB — finding 91, which carries the scan costs too. `content/store.svelte.ts` is read —
+  finding 86. Nothing of this item is left open.
 - **The SRD converters — deliberately OUT of scope, not merely unread.** Five converter commits in
   the window are unopened and will stay that way: `docs/work/content.md` ▸ CONVERTERS-SUNSET puts the
   block up for possible deletion, and reading 3 500 lines to improve code that may go is the
@@ -3182,9 +3470,14 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   Windows lock (finding 83); `readCharacterFiles` is still unexercised. `schema.ts` was read against
   the play writers this time, which is where finding 84 came from — but only for the bounded fields;
   `store.svelte.ts`'s `seedDemoIfFirstRun` and `recreateDemoCharacter` read, not driven;
-  `drafts/store.ts`'s content-draft half, `repointDraft`'s conflict path and `findUnreadableDrafts`;
-  and in `derive-plugins.ts`, `pluginResources`' own-property guard and a plugin-granted condition
-  re-entering `expandCondition`.
+  `drafts/store.ts` is read in full — findings 88, 89 and 90, all reproduced on a real filesystem,
+  and `findUnreadableDrafts` / `deleteDraftFiles` themselves came back correct (a missing path does
+  not stop the sweep);
+  `derive-plugins.ts` is read: `pluginResources`' own-property guard
+  is correct (`Object.hasOwn` against a prototype key, and `Math.max(0, max - spent)` clamps a stale
+  spent the way its siblings do), and the plugin-granted condition path expands exactly ONE level,
+  the same rule the main resolver applies — see finding 93 for what that rule costs against shipped
+  content.
 - **Builder state machines — covered by findings 73-81 and 87**, and `previewSheet`'s reused trial VM
   came back clean, including the `$state`-inside-`$derived` question its own docstring raises.
   `ability-allocation.svelte.ts`'s boost reconciliation — the UBUG-13 subtraction — is finding 87, and
