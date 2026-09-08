@@ -12,6 +12,31 @@
   `armor:<weight>` or `ac`, while a template carries only `attunement` — the old "no tags and no
   damage" test matched no shipped row at all (they all carry `attunement`) and would have called a
   net, which does no damage, a template. ~20 rows per edition needed this, Flame Tongue among them.
+- [ ] **CONVERTERS-SUNSET · stop maintaining `tools/srd/`, and decide whether it is kept at all.**
+  Two decisions in one item, and the first is not blocked on the second. **Do not audit them** — the
+  fresh-eyes read skips the block deliberately, and any later read should skip it too until the
+  second half here is answered. Reading 3 500 lines to improve code that may be deleted is the
+  expensive kind of thorough.
+
+  The shipped CSVs are the artifact; the converters are how they were produced once, not what the app
+  runs. Eleven files, ~3 500 lines of offline prose extraction, re-run rarely, carrying a documented
+  destructive trap — a re-run regenerates rows and drops `conditions_srd.csv`'s `max_level`
+  (`AGENTS.md` ▸ The ways to hurt yourself) — and holding a second, informal account of what a valid
+  row is, next to the authoritative one in `src/lib/content/schemas.ts`. Deletion over addition
+  applies to tooling as much as to `src/`.
+
+  What has durable value and must survive either decision: the CSV output contract and the
+  `type:source:id` identity, which already live in `schemas.ts`; the stamping discipline, which lives
+  in `restamp.ts`; and the row-count assertion against the source, which is the only thing standing
+  between a silent extraction loss and a shipped pack that is quietly short. That last one has no
+  home outside the converters today — if they go, it needs one, and that is the real work in this
+  item rather than the deletion itself.
+
+  Salvage one thing first, whatever is decided: the slug generator emitted `see_i_nvisibility` into
+  `srd-2014/spells_srd.csv`, an underscore injected mid-word. Ten minutes to find WHICH shape of
+  input breaks it — that class of bug outlives the code that produced it, and the next thing to
+  generate a slug will meet the same input.
+
 - [ ] **MASTERY-HALF · weapon mastery is half-modelled.** The WEAPON half is data and shipped: every
   2024 weapon carries its one mastery property as `mastery:<name>` (5.5e only — 2014 has no such
   rule, so only the 2024 converter writes it). The CHARACTER half does not exist: RAW the property

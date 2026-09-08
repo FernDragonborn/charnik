@@ -1958,9 +1958,14 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   reaches a refusal on every path); `storage/browser.ts` under real IndexedDB, where `list()` is one
   `get` per child and `remove`/`rename` scan every key; and `content/store.svelte.ts`'s
   `reloadContent`, the cache-rotation coordinator, never opened.
-- **The SRD converters.** Five converter commits in the window unopened; their row-count asserts and
-  extraction correctness are unexamined. The `see_i_nvisibility` slug bug probably lives there.
-  `restamp.ts` unread (the hashes are clean, so nothing is mis-stamped today).
+- **The SRD converters — deliberately OUT of scope, not merely unread.** Five converter commits in
+  the window are unopened and will stay that way: `docs/work/content.md` ▸ CONVERTERS-SUNSET puts the
+  block up for possible deletion, and reading 3 500 lines to improve code that may go is the
+  expensive kind of thorough. The one thing worth extracting from it is the `see_i_nvisibility` slug
+  bug, which is a live data defect and whose *shape* outlives whatever produced it.
+  `restamp.ts` is a different matter and stays on the list — it is runtime-adjacent, it is what any
+  future import path leans on, and it is unread (the hashes are clean, so nothing is mis-stamped
+  today).
 - **Character persistence.** `repository.ts` (atomic write, backups, photo siblings),
   `schema.ts` migrations and defaults, `store.svelte.ts`, `draft-repository.ts`,
   `derive-plugins.ts` and its interaction with `maxHpBase`.
