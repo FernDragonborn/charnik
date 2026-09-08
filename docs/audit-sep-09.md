@@ -5,10 +5,12 @@ Covers `v0.6.2 3104f2a 2026-08-22` through `b79d255 2026-09-07`: 254 commits, 39
 knows in one place and forgets in another, a half-finished change whose siblings were left behind —
 not for missing features.
 
-Six readers went over the release in parallel, one per subsystem: rules core and derive, combat and
-play state, the roller, the effects module, content and storage, the UI surfaces. Each finding names
-the method that reproduced it, and the ones that could not be reproduced are kept separate under
-their own heading rather than mixed in.
+Readers go over the release one subsystem at a time, in parallel batches: rules core and derive,
+combat and play state, the roller, the effects module, content and storage, the UI surfaces, the
+plugin layer, storage and the pack lifecycle, character persistence and builder state. Each finding
+names the method that reproduced it, and the ones that could not be reproduced are kept separate
+under their own heading rather than mixed in. The sections headed *second pass* are the later
+batches; they carry the same contract.
 
 Coverage is **partial by construction** and each reader says where it stopped — see *What was not
 reached* at the end. Read that section before concluding a subsystem is clean: "not reported" here
@@ -2263,6 +2265,457 @@ snake-case (`constants.ts:184` records the snake-case migration).
   clamp on open and follow without clamping on scroll, both listen in the capture phase, and both
   clean up every listener on teardown.
 
+## Second pass — the UI remainder
+
+The lines *What was not reached* left open: the duplicated CSS census, a `:focus-visible` pass, and
+the reverse states beyond finding 25 — pin persistence, source enable/disable, theme
+install/uninstall, pack apply/rollback.
+
+### 71 · LOW · the top of the duplicated-CSS census is the shared class being re-typed beside itself
+
+`node tools/visual/css-dups.mjs` — the repo's own survey, and the source of the census this audit
+already carries: **102 duplicated declaration blocks, 100 of them spanning more than one file.** The
+number is not the finding; what the top of the list IS, is. AGENTS.md ▸ Working on it: "A shared
+class lives in exactly one place; a shared control is one component" — and these are not near-misses,
+they are that class re-typed beside itself:
+
+| ×  | the block | where the shared one already lives |
+| --- | --- | --- |
+| 11 | `border-color: var(--color-border-strong); color: var(--color-text)` | `components.css:67` `.pill-btn:hover` and `:611` `.chip:hover` — the other nine are `.cls:hover`, `.syschip:hover`, `.cancel:hover`, `.source-tag.as-toggle:hover`, `.jumpbtn:hover`, `.step:hover`, `.action-economy-reset:hover`, `.action:hover`, `.disclosure[open] summary` |
+| 10 | `color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--font-size-micro)` | the `.eyebrow` family (`components.css:92`), whose own comment calls it "the single most-reused label primitive" |
+| 9 | `border-color: var(--color-accent); color: var(--color-accent-bright)` | the accent-selected state of the same two families |
+| 9 | `color: var(--color-text-muted); font-size: var(--font-size-xs)` | `components.css:92` / `:140` (`.eyebrow`, `.dialog-label`) |
+| 6 | `background: var(--color-accent-soft); border-color: var(--color-accent); color: var(--color-accent-bright)` | the selected chip, five files over |
+
+`pnpm lint` cannot see any of it: `jscpd` runs at `minTokens: 35` (`config/jscpd.json`), and a
+two-declaration hover block is far under that floor.
+
+**Fix:** the five rows above are one hover state, one selected state and one micro-label. Compose
+`.pill-btn` / `.chip` / `.eyebrow` in the markup instead of restating their hover and selected pairs
+— which is what those classes exist for — and re-run `css-dups.mjs` to see what is left.
+`tools/visual/hoist-class.mjs` and `rename-class.mjs` are the mechanical half of that move.
+
+### 72 · MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
+
+Nothing moves focus into the Inspector when a picker opens: `PickerSearch.svelte` has no autofocus,
+`OptionGrid`/`SectionedPicker` have none, and the pane is the last column in the DOM. `ui.md` ▸ the
+picker contract builds everything on the opposite: "The caret stays in the search box … with focus
+that never moves, it is the only thing a screen reader has to go on", and `option-walk.ts:47` says
+outright "The walk happens from the search box". A keyboard user cannot start that walk.
+
+**Reproduced** — chromium against the dev server, `/build`, a fresh character; focus the Species
+card, press Enter to open its picker, then walk forward:
+
+```
+focus right after Enter        button:"Species Not chosen …"   <- the trigger, not the picker
+one Tab                        button:"Background Not chosen"  <- the NEXT card, past the picker
+Tabs to the first control
+inside the open pane           89                              ("Close the inspector")
+```
+
+Everything the contract asks for is there once focus arrives — which is what makes this the one
+missing line rather than a rewrite:
+
+```
+roles present                  searchbox 1 · listbox 1 · option 9, every option a <button> with an id
+ArrowDown from the search box  ad=c1-species:SRD_5.2.1:dragonborn
+ArrowDown again                ad=c1-species:SRD_5.2.1:dwarf   aria-selected="false"  (arrows commit nothing)
+Enter                          opens Dwarf's PickerCard        (Enter = a left click on the highlight)
+```
+
+**Fix:** focus the search box when a picker opens, and return focus to the trigger when it closes —
+the pair `CommandPalette.svelte:125`/`:138` already implements for its own input.
+
+### Checked and correct — the UI remainder
+
+- **The `outline: none` sites all have a replacement, bar one that cannot be reached wrong.** All 13
+  were read against `app.css:35`'s own rule ("never `outline: none` without a replacement"):
+  `ArticleProse`, `EditableTitle` and `ContentMetaModal` swap the outline for an accent border on
+  `:focus`; `PickerSearch` moves it to the wrapper's `:focus-within`; `RollerLine`'s pill swaps in a
+  border plus a fill, and its input is framed by `.roller-field.focused`, which the tray drives from
+  `diceTray.focus`; `+layout.svelte`'s `main` is the skip-link's `tabindex="-1"` scroll region.
+  `CommandPalette.svelte:233` is the one input with no focus style at all, and it is the palette's
+  only focusable element and is focused on open — nothing can be focused elsewhere to make its ring
+  matter.
+- **Theme install and uninstall are symmetric, including the active-theme case.**
+  `ThemesSettings.svelte:82` — `remove` drops the store entry, deletes the file through
+  `removeThemeFile`, re-points `app.theme` at `dark` when the deleted theme was live so `<html>`
+  never names a theme that is gone, and leaves the editor if it was open on it. Import, export,
+  duplicate and clone-from-builtin each have their control on the same card.
+- **Source enable/disable is one toggle in both directions**, at both grains:
+  `SourceManager.svelte:109` `toggleSource` and `:133` `toggleFile`, each an `aria-pressed` switch
+  with a labelled `aria-label`, and the pack-level switch derives its state from its files rather
+  than keeping a third flag.
+- **Pack apply and rollback both have a control and a visible condition.**
+  `PackUpdatesSettings.svelte:405` shows Undo only for a pack `rollbackablePacks()` names, and
+  `provider.ts:108` keeps the `.prev` copy that makes the answer true. A deletion's undo is offered
+  separately (`provider.ts:145`) and a "yes, I meant it" does not take it away (`:257`).
+- **A spell pin persists**: `ui.spellsPinned` is part of the deep-tracked autosave
+  (`combat/+page.svelte:71`), so pinning schedules a save with no verb of its own. What the pin
+  stores is wrong — finding 68 — but it survives a reload.
+- **Findings 64, 65 and 67 are no longer markup reads.** Driven in chromium against the dev server:
+  typing `zzzz` into the add-effect search leaves all 9 rows standing; re-opening the condition menu
+  shows Blinded's switch lit, and a click on it and Enter on it both leave the popup open, the switch
+  on and the condition applied; the duration menu's `role="dialog"` survives Escape and Tab walks
+  straight out of it.
+
+## Second pass — character persistence and builder state
+
+Queue item 4. `src/lib/character/{repository,schema,store.svelte,draft-repository,photo,derive-plugins}.ts`,
+`src/routes/build/{draft,draft-history.svelte,draft-session.svelte,class-picks-cache,class-rows.svelte,option-walk,picker-reading.svelte,card-placement,rows,draft-inventory,inspector.svelte,inspector-specs,build-view-model.svelte}.ts`,
+`src/routes/+page.svelte`, `src/routes/build/+page.svelte`. Nine confirmed.
+### 73 · MEDIUM-HIGH · deleting a character is one unconfirmed click, and it takes the snapshots that would undo it
+
+`src/routes/+page.svelte:125` — `onclick={() => removeCharacter(c.id)}` on the roster's ✕. No dialog,
+no toast, no undo. `removeCharacter` → `deleteCharacter` → `storage.remove(dirOf(slug))`
+(`repository.ts:363`), which is the whole folder: `character.json`, `photo.*`, `log.jsonl`, and every
+`character.bak.save.*` / `character.bak.launch.*` the ring wrote. `:103` is the same bare click on a
+draft card.
+
+The app already owns the control this needs and uses it for far cheaper losses.
+`compendium/[...entry]/+page.svelte:614` puts a homebrew ROW behind `ConfirmDialog`, and
+`settings/StorageSettings.svelte:263` puts "Restore demo" behind one with a comment stating the rule:
+*"It's destructive, so it goes behind a confirm."* A character is the single most expensive thing the
+user owns and it is the one destructive action with no guard — AGENTS.md ▸ Hit every surface
+("Reverse states: if you added a way in, add the way out"), applied to the only action here with no
+way out at all.
+
+**Reproduced** — the delete path read end to end and confirmed against the two sites that do gate:
+
+| button | guard | what it destroys |
+| --- | --- | --- |
+| `+page.svelte:125` roster ✕ | **none** | the character folder: save, photo, roll log, all 5 backups |
+| `+page.svelte:103` draft ✕ | **none** | `character-drafts/<guid>.json` |
+| `compendium/…/+page.svelte:614` delete row | `ConfirmDialog` `danger` | one homebrew CSV row |
+| `StorageSettings.svelte:263` Restore demo | `ConfirmDialog` `danger` | the demo's play-state edits |
+
+`grep -rln ConfirmDialog src/` returns exactly those two files. Predates `v0.6.2` — the button is
+from `32c407e` (2026‑07‑03) and the file was still edited this cycle (+74/−17).
+
+**Fix:** the two roster ✕ buttons take the same `ConfirmDialog danger` the compendium row uses, with
+the character's name in the title.
+
+### 74 · MEDIUM · a picked portrait outlives the build it was picked for, and overwrites the next character's
+
+`build-view-model.svelte.ts:497` — `pickedPhoto` is cleared in exactly two places, `clearPhoto`
+(`:521`) and `persistPhoto` after a successful write (`:535`). None of the three entry points that
+start a *different* build clears it: `reset` (`:112`), `hydrateDraft` (`:139`), `hydrate` (`:152`)
+each reset the draft, the class stash, the session guid, the history and the inspector, and leave the
+bytes behind. The BuildVM is a singleton and `build/+page.svelte:53` runs one of those three on every
+navigation, so the bytes cross from one character to the next.
+
+`portraitSource` (`:501`) prefers the pick over the stored file, so the wrong face is on screen the
+whole time; `persistPhoto` (`:529`) then writes it into whatever folder is being saved, and
+`writeCharacterPhoto` removes the existing portrait first.
+
+**Reproduced** — real `Storage` (fake-indexeddb through `getUserStorage`), a saved character `bevan`
+with `photo.webp` = `[9,9,9,9]` on disk; a new build picks `[1,2,3]`, is abandoned, and the player
+goes to level Bevan up:
+
+```
+after reset(): still holds a picked portrait   true
+after reset(): the blank sheet shows           "picked"
+after hydrate(): still holds it                true
+after hydrate(): Bevan's sheet shows           "picked"   <- someone else's face on Bevan
+blocking                                       []
+saved id                                       "bevan"
+Bevan's portrait bytes on disk                 [1,2,3]    <- his own is gone
+```
+
+`821632e` ("a character can have a face"), this release.
+
+**Fix:** `pickedPhoto = null` in `reset`, `hydrate` and `hydrateDraft` — the three already clear every
+other cross-build carry-over, and this is the one they missed.
+
+### 75 · MEDIUM · the v1 save migration snakes every content ref except the languages
+
+`repository.ts:48` — `for (const key of ['feats', 'skills', 'expertise'] as const)`. The E3 rename
+(`f11fab4`, kebab → snake ids) is what `migrateV1toV2` exists to repair, and it walks `species`,
+`speciesOption`, `background`, `feats`, `skills`, `expertise`, `spells`, `classes`, `inventory`,
+`play.concentration` and `play.effects[].source`. `build.languages` — an array of `language:src:id`
+refs, present in the v1 schema since `274dc14` (2026‑07‑04), twelve days *before* the rename — is not
+in any of those lists. `git show f11fab4~1:src/lib/character/schema.ts` confirms the v1 build schema
+held exactly one ref-carrying field the migration does not touch, and this is it.
+
+**Reproduced** — a v1 save written to a **real** fs (`NodeStorage` in a `mkdtemp` root), loaded
+through `loadCharacter`:
+
+```
+schemaVersion    3
+species          "species:SRD 5.1:half_elf"
+background       "background:SRD 5.1:folk_hero"
+skills           ["sleight_of_hand"]
+expertise        ["sleight_of_hand"]
+feats            ["feat:SRD 5.1:war_caster"]
+inventory        ["item:SRD 5.1:chain_mail"]
+spells           ["spell:SRD 5.1:magic_missile"]
+concentration    "spell:SRD 5.1:magic_missile"
+languages        ["language:SRD 5.1:deep-speech", "language:SRD 5.1:common"]   <- untouched
+```
+
+The stale ref resolves to no row: `f11fab4` renamed `deep-speech` → `deep_speech` in
+`srd-2014/languages_srd.csv`, and the shipped packs today carry `deep_speech` (2014) plus
+`common_sign_language`, `deep_speech`, `thieves_cant` (2024). A v1 save loses those languages
+silently — `characters.md` ▸ Versioning promises the opposite ("old saves are migrated forward").
+Predates `v0.6.2`.
+
+**Fix:** add `'languages'` to the `snakeRefs` list at `:48`. Idempotent on already-snake ids, so
+re-running v2→v3 (which re-invokes the same function) needs no separate change.
+
+### 76 · MEDIUM · a level set before the class locks that class out at 20
+
+`class-rows.svelte.ts:36` — `totalLevel` is `classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1`.
+The `|| 1` is a floor for display, and `levelAfterTaking` (`:83`) subtracts a real held level from it:
+`this.totalLevel - held + (stashed ?? row.level ?? 1)`. With no class held anywhere, `held` is 0 and
+`totalLevel` is the floor rather than 0, so taking the first class is computed as **level + 1**.
+`setClass` (`:75`) refuses anything over 20.
+
+The row's level stepper is rendered for every row including a classless one
+(`blocks/SheetClasses.svelte:116`, no `{#if clsRow}`), and `bumpClassLevel`'s own guard is
+`canRaiseLevel` = `totalLevel < 20`, which the floor keeps at 1 the whole way up. So the stepper
+takes a blank row to 20 and then no class can be put in it. `ui.md` ▸ The builder is a live sheet:
+"a character may be built at ANY starting level".
+
+**Reproduced** — real `BuildVM`, one blank row, the stepper pressed the way the UI presses it:
+
+```
+row level after 25 presses    20
+totalLevel (no class held)     1        <- the floor, not 0
+classId after picking Wizard   null
+toast                          build.notice.levelCapFull
+at row level 19: classId       "class:SRD 5.2.1:wizard"   <- the boundary
+```
+
+The same door opens from `switchSystem` (`build-view-model.svelte.ts`), which clears a class whose
+row the new edition lacks and leaves the row's level where it was: a level‑20 5e Fighter flipped to
+5.5e cannot take any 5.5e class. `797b091`, this release.
+
+**Fix:** drop the floor inside the arithmetic — `levelAfterTaking` should sum the held levels itself
+rather than borrow the display value: `classes.reduce((n, c, j) => n + (c.classId && j !== i ? c.level : 0), 0) + (stashed ?? row.level ?? 1)`.
+
+### 77 · MEDIUM · a storage failure on Create says nothing, to anyone
+
+`build-view-model.svelte.ts:541` — `save()` wraps its four awaited storage calls in `try/finally`
+with no `catch`, and `build/+page.svelte:106` is `const id = await build.save(); if (!id) return;`
+with none either. So a full disk, a renamed data folder, or a permission error during Create leaves
+an unhandled promise rejection, no toast, and a button that goes from "Saving…" back to "Create" as
+if nothing was asked of it.
+
+Its sibling two files over does it right and says why: `draft-session.svelte.ts:76` catches, resets
+`written` so the next change retries, and raises one standing toast — *"a rejection escaping here is
+an unhandled promise rejection nobody sees — the exact loss the autosave exists to prevent."* The
+same reasoning applies with more force to the button that creates the character. AGENTS.md ▸ Taste:
+"Errors are handled or surfaced, never swallowed." This is finding 30's shape (pack writers with no
+`guarded()`) on the builder's one commit button.
+
+**Reproduced** — a creatable draft, `storage.write` stubbed to reject:
+
+```
+outcome                  REJECTED out of save(): disk full
+savingResetByFinally     false
+```
+
+Nothing catches it above `save()`; `create()` returns a rejected promise into an `onclick`.
+
+**Fix:** `catch` in `save()` — toast the failure with the same one-id pattern as
+`DRAFT_SAVE_FAILED_TOAST` and return `null`, which `create()` already treats as "do not navigate".
+
+### 78 · MEDIUM-LOW · the autosave that lands after Create resurrects the draft Create just discarded
+
+`build-view-model.svelte.ts:534` — `persistPhoto` writes `this.draft.photo = name` **during** `save()`.
+That is a draft mutation, and `build/+page.svelte:76` subscribes to the whole draft by deep snapshot,
+so it arms a fresh 600 ms autosave timer at that moment. `save()` then does three more awaited
+storage round-trips (`saveCharacterToStore`, which re-reads the entire roster, then `discard()`, then
+`openCharacter`) before `create()` starts a route transition to `/combat`; the build page's `$effect`
+cleanup — the only thing that cancels the timer — does not run until that transition destroys the
+component. `DraftSession` has nothing that marks a session consumed: `discard()` (`draft-session.svelte.ts:89`)
+deletes the file and leaves `guid` and `written` exactly as they were, so the next `persist()` writes
+the same file back.
+
+**Reproduced** — real `Storage`, a complete draft with a picked portrait, Create, then the pending
+autosave:
+
+```
+drafts before Create                    1
+created id                              kesh-8c9c
+drafts right after Create               0
+drafts after the pending autosave       1
+resurrected under the same guid         true
+roster                                  Karroth the Red, Kesh
+```
+
+The ghost sits in the roster's unfinished section forever, and resuming it and pressing Create again
+mints a **second** character (`uniqueCharacterId` gives it a new id), which is the expensive half.
+Without a portrait the same window opens whenever the last draft edit is within 600 ms of the click —
+there `written` is stale for the ordinary reason.
+
+**Fix:** `renew()` at the end of `save()`, beside `discard()` — a session whose draft became a
+character has no identity left to write under. It costs one line and closes both doors.
+
+### 79 · MEDIUM-LOW · Enter on a focused language chip takes the highlighted one instead
+
+`picker-reading.svelte.ts:108` — `fromOptions` passes the host straight through:
+`walkOptions(event, this.host())`. Its own docstring six lines above says the opposite — *"Enter is
+deliberately left to the browser — the focused button's own click is the right answer there"* — and
+`fromSearch` is the one that supplies `onenter`. But `walkOptions` (`option-walk.ts:50`) fires
+`onenter` whenever the host carries one, and `LanguagesPane.svelte:27` does
+(`onenter: (id) => b.toggleLanguage(id)`, because a language has no article to read). Its chips are
+real `<button role="option">` inside a `tabindex="-1"` container whose `onkeydown` is `fromOptions`
+(`:55`), so a keydown on a focused chip reaches it.
+
+Enter there `preventDefault()`s the browser's own click on the FOCUSED chip and toggles the
+HIGHLIGHTED one, then `fromOptions` moves the caret back to the search box. `ui.md` §5: "Enter is
+identical to a left click."
+
+**Reproduced** — browser project, `LanguagesPane`'s exact host; the walk highlights Elvish from the
+search box, then the player Tabs onto the Common chip and presses Enter:
+
+```
+highlight                  "language:src:elvish"
+defaultPrevented           true                       <- the focused chip's click is cancelled
+toggled                    ["language:src:elvish"]    <- the wrong language
+caretYankedBackToSearch    true
+```
+
+`picker-reading.browser.test.ts:145` covers this case ("leaves Enter to the focused button itself")
+but builds its picker without `onenter`, which is the only configuration where the claim holds.
+`dcfa4d0`, this release.
+
+**Fix:** `fromOptions` drops `onenter` before delegating — destructure it off the host rather than
+spreading it — which is what its docstring already describes.
+
+### 80 · LOW-MEDIUM · the rotating backups have no reader, no restore, and on the web no way to reach them
+
+`repository.ts:118–192` maintains two rings on every save and every launch — `character.bak.save.*`
+(2 deep, 10‑minute throttle) and `character.bak.launch.*` (3 deep) — and the block comment states the
+purpose: *"No DB → recover a clobbered/corrupted save from a sibling snapshot."* `characters.md`
+repeats it ("rotating backups"). Nothing reads one. `listBackups` is module-private and its only
+caller is `backupCharacter` itself; `grep -rn 'bak' src/routes src/lib/components` finds no surface,
+and no item under `docs/work/` schedules one.
+
+On desktop a user who knows the layout can rename the file, which is consistent with "the data
+belongs to the user". On the **web demo** the same code runs against IndexedDB, where there is no
+folder and no file manager — so five snapshots per character are written, pruned, and unreachable by
+any means the app or the browser offers. And on both targets the roster's ✕ deletes them along with
+the save (finding above), which is the one moment they exist for.
+
+**Reproduced** — the census, mechanical:
+
+| question | answer |
+| --- | --- |
+| writers of `character.bak.*` | `backupCharacter` (`:154`), reached from `saveCharacter:205` and `snapshotCharacterOnLaunch:184` |
+| readers | none — `listBackups` (`:130`) is private and used only to prune |
+| UI entry point | none (`grep -rn 'bak\|backup' src/routes src/lib/components` → one comment in `combat-view-model.svelte.ts:283`) |
+| planned work item | none (`grep -rn -i 'restore\|recover' docs/work docs/plan.md`) |
+
+**Fix, smallest:** Settings ▸ Data lists a character's snapshots by their filename timestamp with a
+"Restore" button per row — `loadCharacter` already migrates and validates whatever is read, so the
+restore is a copy over `character.json` plus a roster reload. Until then the comment at `:119` and
+`characters.md`'s "rotating backups" describe a capability that does not exist.
+
+### 81 · LOW · the roster is the one screen that shows a raw system id
+
+`src/routes/+page.svelte:97` and `:115` — `<span class="sysbadge">{d.summary.system}</span>` and
+`{c.system}` render `5e` / `5.5e`. `SYSTEM_LABELS` (`rules/pipeline.ts:19`) exists for exactly this
+and its own comment says so: *"What a system is CALLED to a user — never the raw id in prose."*
+`GeneralSettings.svelte:71` and `spellcasting.ts:282` both go through it; the roster does not, and
+`ui.md` ▸ Error copy names `SYSTEM_LABELS` as the way an edition is said.
+
+**Reproduced** — `grep -rn sysbadge src/` returns three lines, two of them the raw reads above and
+one the CSS rule; `grep -rn SYSTEM_LABELS src/` returns four, none in `routes/+page.svelte`.
+
+**Fix:** `{SYSTEM_LABELS[c.system]}` at both sites. If the badge is meant to stay short, the honest
+version is a short-label row added beside `SYSTEM_LABELS`, not a raw id read at the call site.
+
+### Suspected, not reproduced — persistence and builder state
+
+- **`drafts/store.ts:216` `discardDrafts` throws on a structurally-valid but shapeless draft file.**
+  `parseDraft` (`:221`) returns whatever `JSON.parse` gives with no shape check, so a file holding
+  `{}` or `123` becomes a `DraftEnvelope` with `schemaVersion: undefined`, lands in `findStaleDrafts`,
+  and `deleteDraft(storage, d.target)` → `keyString(undefined)` → `TypeError` reading `.kind`, taking
+  the discard dialog's whole batch with it. The probe: write `drafts/junk.json` containing `{}`
+  through `NodeStorage`, call `findStaleDrafts` then `discardDrafts`. Adjacent to this item rather
+  than in it (content drafts, not character drafts) — left for whoever owns `drafts/store.ts`.
+- **Sorting is locale-blind in the builder's pickers and the roster.**
+  `build-view-model.svelte.ts:195` sorts option lists with `rowName(a).localeCompare(rowName(b))` and
+  `repository.ts:358` sorts the roster the same way, both with no locale argument, while
+  `content/grouping.ts:47` and `content/linked-tables.ts:71` pass one. `ui.md` ▸ Strings: "sorting
+  goes through `Intl.Collator` for the active locale". The probe worth running is whether the host
+  default collator actually reorders any shipped Ukrainian name set — ICU root collation may make the
+  difference nil, which is why this is not filed.
+- **`ensureActiveCharacter` (`store.svelte.ts:68`) prefers the demo over the character the player
+  last opened**, and nothing persists which that was, so every app restart lands on the demo sheet.
+  The comment at `:72` reads as deliberate ("prefer the demo (present on first run / after a
+  Restore)"), so this needs a design ruling before it counts as a defect rather than a missing
+  last-opened key.
+- **`downscalePhoto` (`photo.ts:71`) can name bytes it did not produce.** `PHOTO_TYPES[encoded.type] ? encoded.type : FALLBACK_TYPE`
+  claims `image/png` for any blob type outside the map, and the extension follows the claim, against
+  the module's own "the extension on disk always matches the bytes in it". The HTML spec makes
+  `toBlob` fall back to PNG, so this is only reachable on a webview that returns a third type; a
+  driven-browser probe across the Tauri WebView2 would settle it.
+
+### Checked and correct — persistence and builder state
+
+Recorded so none of it is re-derived.
+
+- **`previewSheet`'s reused trial VM is sound.** It is called from exactly one place,
+  `Inspector.changes` (`inspector.svelte.ts:118`), which is a `$derived.by` — so every preview writes
+  `$state` from inside a derived, which is what Svelte's `state_unsafe_mutation` guard exists to stop
+  and what the method's own docstring says the separate-VM design was chosen to avoid. It does not
+  throw: driven through three successive derived runs (`trial.graph`, `trial.draft`,
+  `trial.classPicks` and the mutate all firing on runs 2 and 3, when the trial's sources are no
+  longer in that run's `current_sources`), all three read `ok`. Isolation holds too — the trial takes
+  a `structuredClone($state.snapshot(...))` of the draft and a deep clone of every stash entry per
+  call, and every `PickSpec.apply` in `inspector-specs.ts` writes through its `host` PARAMETER, never
+  a closed-over `b`, so `classRows.setClass` / `feats.setSlotFeat` / `pickSpecies` all land on the
+  trial. `trial.edit` is shared by reference, and nothing on any apply path writes into it.
+- **`DraftHistory` is correct, including the undo-then-record no-op.** `freeze` clones through
+  `structuredClone($state.snapshot(...))` for the reason its comment gives (outside the browser
+  `$state.snapshot` returns the object itself), `step()` writes a fresh clone into the draft so later
+  edits cannot reach the stack entry, and `present` is left as the restored step — so the autosave's
+  `record()` that follows an undo compares equal and adds no step. `past` is capped at `DEPTH`; the
+  draft and the class stash travel as one `DraftStep`, so an undo cannot leave the cache describing a
+  swap that no longer happened.
+- **`DraftSession.persist` has no read/write interleave.** Everything it reads — `host.draft`,
+  `host.classPicks`, `this.guid`, `this.written` — is read synchronously before the first `await`, so
+  a `renew()` or `adopt()` landing mid-flight cannot make it write one draft's body under another's
+  guid. `written` is set only after the write returns, and cleared in the catch, which is what makes
+  a failed autosave retry.
+- **`adoptRowIds` (`draft.ts:100`) migrates index-keyed slot maps correctly** on both read paths
+  (`parseDraftState` and `draftFromCharacter`), skips a row that already carries an id, and is
+  idempotent. `hydrate` clones the draft BEFORE handing it over so `edit.loaded` and the live draft do
+  not share the freshly-minted ids.
+- **`parseDraftState` and `parseClassPicks` degrade rather than repair.** Every field has a `.catch`
+  whose fallback is a FUNCTION, so no two drafts share a `[]` or `{}`; a stash entry that will not
+  parse is dropped rather than half-restored. `draft-repository.ts` validates nothing by design and
+  drops an unreadable record from the roster, matching `characters.md` ▸ "Nothing here validates".
+- **The `save`-tier backup throttle and both prune rings are arithmetically right.** `listBackups`
+  parses the timestamp out of the filename and sorts newest-first; the prune slices the new entry
+  plus the existing list past `BACKUP_KEEP`, so `save` keeps 2 and `launch` keeps 3, and the
+  `NodeStorage` temp file (`<path>.tmp-<pid>-<ms>`) is excluded by the `.json` suffix test.
+  `snapshotCharacterOnLaunch` is once per id per module load.
+- **`assembleCharacter`'s last-resort fallback is not reachable from content.** The obvious door —
+  `saves: this.classRow?.data.saves ?? []` feeding `z.array(z.enum(ABILITIES))` from a CSV column — is
+  shut upstream: `content/schemas.ts:259` already validates `saves` as `csvList(z.array(Ability))`, so
+  a bad save id is a content issue and never reaches the build. Ability scores are bounded by
+  `MANUAL_SCORE_BOUNDS` / point-buy, class levels by `MAX_CHARACTER_LEVEL`, and `slugify` collapses
+  any non-ASCII name to `''` → `FALLBACK_SLUG`, so no name produces an invalid `id`.
+- **`walkOptions` and `card-placement` behave.** The walk clamps at both ends (`ArrowUp` from no
+  highlight lands on the first option, not the last), handles `NumpadEnter`, and returns whether it
+  consumed the key; `jumpKeys: false` from the search box correctly leaves Home/End to the caret.
+  `entryElement` falls back to the picker itself for a collapsed or filtered row, and `placeCard`
+  reads `getComputedStyle(picker).direction` rather than assuming LTR.
+- **`switchClass`'s row-index guard and `removeClassRow`'s bounds are both live** and do what their
+  comments claim; `removeClass` closes an inspector pane opened on a class or subclass, because the
+  rows behind the removed one shift.
+- **Already recorded, not re-reported:** the builder/derive `featSkills` proficiency split is
+  finding 8 (re-observed here on a fixture Rogue: `expertiseOffered('perception')` false,
+  `assembled.build.expertise` `[]`, while `deriveSheet` with the expertise forced in gives
+  `prof: "expertise"`, +3 instead of +1 — so finding 8's "load-bearing half" is confirmed, and it is
+  homebrew-only on shipped content: `skilled` is the only `skill_choice` feat in either pack, it is
+  category `origin`, and no shipped 2024 background grants it). `derive-plugins.ts:53`'s `preHpMax`
+  and `derive-context.ts:89`'s `hpMaxLive` are two of finding 51's four hand-rolled copies.
+
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -2470,15 +2923,22 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `restamp.ts` is a different matter and stays on the list — it is runtime-adjacent, it is what any
   future import path leans on, and it is unread (the hashes are clean, so nothing is mis-stamped
   today).
-- **Character persistence.** `repository.ts` (atomic write, backups, photo siblings),
-  `schema.ts` migrations and defaults, `store.svelte.ts`, `draft-repository.ts`,
-  `derive-plugins.ts` and its interaction with `maxHpBase`.
-- **Builder state machines.** `draft-history.svelte.ts` (undo/redo over draft plus class picks),
-  `draft-session.svelte.ts` (autosave, adopt, renew), `option-walk.ts`, `picker-reading.svelte.ts`,
-  `card-placement.ts`, `rows.ts`, `draft-inventory.ts`. Also `previewSheet`'s reused trial VM.
-  `switchSystem`'s drop sweep is **no longer open**: it was suspected of stranding `slotFeatSkills`,
-  `slotFeatAbility` and `speciesBoostPicks`, and it does not — `pickSpecies` clears the boost picks,
-  and the two slot maps are trimmed downstream by the feat's own count once the feat is gone.
+- **Character persistence — covered by findings 73-81.** What is left: `repository.ts`'s roll-log
+  half (`appendLog` / `reviseLog` / `readLog`, the per-slug append chain and the 100-line rotation)
+  read but never driven, and `readCharacterFiles` unexercised; `schema.ts` read for the migration
+  question only, so a `play` default's round-trip through `saveCharacter`'s re-parse is unchecked;
+  `store.svelte.ts`'s `seedDemoIfFirstRun` and `recreateDemoCharacter` read, not driven;
+  `drafts/store.ts`'s content-draft half, `repointDraft`'s conflict path and `findUnreadableDrafts`;
+  and in `derive-plugins.ts`, `pluginResources`' own-property guard and a plugin-granted condition
+  re-entering `expandCondition`.
+- **Builder state machines — covered by findings 73-81**, and `previewSheet`'s reused trial VM came
+  back clean, including the `$state`-inside-`$derived` question its own docstring raises. Left:
+  `ability-allocation.svelte.ts`'s boost reconciliation (the UBUG-13 subtraction) and, in
+  `build-view-model.svelte.ts`, `switchSystem`'s drop sweep, `list()`'s RV3 keep-set and `assembled`'s
+  prepared/alwaysPrepared split — all read, none driven across both editions. Every builder probe ran
+  on an `srd-2024`-shaped fixture, and no `/dev/` probe was written, so the photo write, the backup
+  ring under a Windows rename refusal and `deleteCharacter` against an open handle are unproven on a
+  real desktop install. Most of `build/blocks/` is unread.
 - **Combat remainder — covered by findings 60-70.** What is left of it: `CombatStrip.svelte` past
   line 150 and `blocks/Abilities.svelte`, both read only far enough to place finding 55;
   `DeathScreen.svelte`, `Hero.svelte` and `PanelCard.svelte` below their markup;
@@ -2492,12 +2952,12 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   roll carries `roller.customRoll` as its KEY and the literal `'Custom roll'` only as the fallback
   `sayRollName` reaches for when there is no translator, so a log line is not frozen in the language
   it was rolled in.
-- **UI remainder.** Two of its lines are now closed: all 36 `$effect` sites are scanned and none
-  cycles, and the `LangSwitcher` sweep produced finding 54. The unfocusable-clickable census is
-  closed too (finding 52). Still open: reverse states beyond finding 25 — pin persistence, source
-  enable/disable, theme install/uninstall, pack apply/rollback. The 102 duplicated CSS declaration
-  blocks, 100 of them cross-file, the top two repeated ten and nine times. A `:focus-visible` pass.
-  The builder pickers' ARIA driven rather than read.
+- **UI remainder — one line left.** Closed: all 36 `$effect` sites (none cycles), the `LangSwitcher`
+  sweep (finding 54), the unfocusable-clickable census (finding 52), the duplicated-CSS census
+  (finding 71 — 102 blocks, 100 cross-file, by the repo's own `css-dups.mjs`), the `outline: none` pass, and the four
+  reverse-state pairs, of which pack rollback, source toggling and theme removal are complete and the
+  spell pin is finding 68, and the builder pickers' ARIA, driven in chromium — finding 72, with the
+  contract's own walk confirmed correct once focus reaches it.
 - **The both-editions sweep.** Most probes ran on one pack. Extra Attack, the exhaustion fan-out and
   the two 2014 spellcasting probes are the parameterised ones; the rest are not.
 
@@ -2543,13 +3003,13 @@ Items 4–7 were each STARTED by a reader and stopped within minutes, before any
 and from a different source — the editor's own pass, working the same items by hand — so where an
 item below says something is closed, that is the hand pass talking, never the aborted one.
 
-4. **Character persistence and builder state.** Partly done by hand: the three suspicions this item
-   carried are settled and became findings 48, 49 and 50, and `switchSystem`'s drop sweep was checked
-   and is correct (`pickSpecies` does clear `speciesBoostPicks`, which was the suspected gap). **The
-   files themselves are still unread** — `repository.ts`, `schema.ts` migrations, `store.svelte.ts`,
-   `draft-repository.ts`, `draft-history.svelte.ts` (undo/redo over draft *and* class picks),
-   `draft-session.svelte.ts`, `previewSheet`'s reused trial VM, and the five small builder helpers.
-   About 1 600 lines.
+4. **Character persistence and builder state — DONE**, findings 73-81, plus the three suspicions
+   settled by hand earlier. What is left of the item is listed under *What was not reached*, and the
+   sharpest of it is that nothing here ran against a real desktop install.
+
+   The three suspicions this item carried became findings 48, 49 and 50 in the hand pass before it,
+   and `switchSystem`'s drop sweep was checked there and is correct (`pickSpecies` does clear
+   `speciesBoostPicks`, which was the suspected gap).
 5. **Combat remainder — DONE**, findings 60-70. Two of them are reverse-state defects (a condition
    the app's own Switch will not switch off, a dialog Escape cannot close) and two are identity
    defects of the same shape — a bare id where the ref belongs. What is left is listed under *What
@@ -2557,11 +3017,8 @@ item below says something is closed, that is the hand pass talking, never the ab
 6. **Roller remainder — DONE**, findings 56-59: the caret state machine, `movePill` across lines,
    `setDamage`'s `real` filter and the two-column picker. `savageReroll`'s split is correct and its
    tie case is recorded as suspected, not a defect. Nothing of it is left open.
-7. **UI remainder.** Three lines closed by hand: all 36 `$effect` sites scanned (none cycles), the
-   `LangSwitcher` sweep done (finding 54), and the unfocusable-clickable census closed (finding 52).
-   Left: reverse states beyond finding 25 — pin persistence, source and theme enable-then-disable;
-   the 102 duplicated CSS blocks; a `:focus-visible` pass; the builder pickers' ARIA, driven rather
-   than read.
+7. **UI remainder — DONE**, findings 71 and 72. The builder pickers' ARIA was driven rather than
+   read, and so were findings 64, 65 and 67: all three reproduce in chromium.
 8. **The both-editions sweep.** Most probes ran on one pack. Re-run the build and resource paths on
    `srd-2014`.
 
