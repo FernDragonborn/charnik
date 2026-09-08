@@ -9,8 +9,8 @@ Readers go over the release one subsystem at a time, in parallel batches: rules 
 combat and play state, the roller, the effects module, content and storage, the UI surfaces, the
 plugin layer, storage and the pack lifecycle, character persistence and builder state. Each finding
 names the method that reproduced it, and the ones that could not be reproduced are kept separate
-under their own heading rather than mixed in. The sections headed *second pass* are the later
-batches; they carry the same contract.
+under their own heading rather than mixed in. The sections headed *second pass* and *third pass* are
+the later batches; they carry the same contract.
 
 Coverage is **partial by construction** and each reader says where it stopped — see *What was not
 reached* at the end. Read that section before concluding a subsystem is clean: "not reported" here
@@ -149,13 +149,16 @@ next damage press adds a failure to a character who is RAW stable.
 - **`ActionExecutor`'s `rest:` comment contradicts `actions.md`.** `action-executor.svelte.ts:~236`
   says a rest-granting consumable "MUST have recharge `other`"; `actions.md` §2 says `consumable`.
   Comment-only — no code reads it — and not checked against shipped rows.
-- **`restoreUpTo` reads spent unclamped.** `resource-tracker.svelte.ts:~163` uses
-  `c.play.resourcesSpent?.[id] ?? 0` where every sibling uses the clamping `resourceSpent(id)`.
-  Matters only after a pool's max shrinks.
-- **Scoped damage bonuses show on the roll but not on the attack row.** `scopedAttackBonus` folds
-  only `target === 'attack'`; a scoped `flat_bonus:damage…` (2014 Rage) reaches the roll via
-  `attackSpec`'s `effectsFor('damage', scopes)` but never the panel's `formatDamageParts`. May be the
-  intended "row static, roll live" split — not confirmed either way.
+- ~~`restoreUpTo` reads spent unclamped.~~ **Settled — not a defect.** `resource-tracker.svelte.ts:163`
+  does read `c.play.resourcesSpent?.[id] ?? 0` raw, but the very next line is
+  `Math.min(spent, Math.max(0, def.max - upTo))`, and that second term is `≤ def.max` for every
+  `upTo ≥ 0` — so the stored value is clamped no matter how stale it is, and pre-clamping changes
+  nothing. The only input that would slip through is a NEGATIVE stored spent, which
+  `schema.ts:165` (`z.number().int().min(0)`) refuses at load.
+- ~~Scoped damage bonuses show on the roll but not on the attack row.~~ **Settled — see finding 82.**
+  It is not a "row static, roll live" split: the row is live for the attack axis and dead for the
+  damage one, and a raging barbarian's row prints a number two lower than the tap rolls, in both
+  editions.
 
 ### Checked and correct — combat
 
@@ -553,21 +556,24 @@ effects ever called it"); it now lives at `src/lib/util/suggest.ts` and is calle
 
 ### Suspected, not reproduced — effects
 
-- **Are `on_event` / `regain_on_initiative` / `damage_reroll` tokens actually reachable by
-  `effectTag`?** Confirmed only for `blocks_concentration`. The other three ship on class features and
-  feats (`class_features_srd.csv:396`, `:438`, `:80`; `feats_srd.csv:20`), which enter the sheet at
-  layer `feature` rather than as `EffectInstance`s, and `describeDerivedEffects` (`effects-view.ts:231`)
-  emits only numeric facts. Evidence so far says the raw render is probably not reachable for those
-  three today — which makes finding 19 a latent trap for them and a live bug only for
-  `blocks_concentration`.
-- **`flat_bonus:attack.<scope>:<qualifier>` drops the dotted scope.** `token-parser.ts:239` and
-  `:253` spread `qualifierSlot` after `scope`, and `qualifierSlot` (`:202`) returns `{scope: q}` when
-  the base target is `attack` — so a token carrying both slots would have the first overwritten. No
-  shipped row uses both. Read, not run.
-- **`set_override` never runs `scopedTarget`.** `parseSetOverride` (`token-parser.ts:269`) returns
-  the literal target, so `set_override:damage.melee:5` keeps `damage.melee` and gets no scope, unlike
-  `flat_bonus`. It would then be rejected by `isEffectTargetSupported` and surfaced, so it degrades
-  loudly — but the two parsers say different things about the same target grammar.
+- ~~Are `on_event` / `regain_on_initiative` / `damage_reroll` tokens actually reachable by
+  `effectTag`?~~ **Settled — reachable, through user content only.** The panel path is
+  `EffectsPanel.svelte:60` → an `EffectInstance`'s own `effects`, or `conditionTokens(id)`, which
+  returns a condition row's `effects` column **verbatim** with no kind allowlist anywhere on the load
+  path (`lintEffectTokens` is a content-health soft-warn, not a gate). So a homebrew `effects.csv` or
+  `conditions_srd.csv` row carrying any of the three renders raw — `"on_event:turn_start:heal:5"` →
+  `"on_event turn_start heal 5"`, measured. The in-app custom-modifier control cannot reach them (it
+  only ever emits `flat_bonus:<target><sign><amount>`, `combat-view-model.svelte.ts:322`), and no
+  shipped row does. Latent for the three, live for `blocks_concentration`, and finding 19's fix
+  covers all six.
+- ~~`flat_bonus:attack.<scope>:<qualifier>` drops the dotted scope.~~ **Settled — see finding 85.**
+  Run, and it does: the qualifier wins and nothing is surfaced.
+- ~~`set_override` never runs `scopedTarget`.~~ **Settled — the loud half is real, so it is a spec
+  divergence rather than a defect.** Measured: `set_override:damage.melee:5` parses to
+  `{target:"damage.melee"}` and `isEffectTargetSupported` returns `{supported:false}`, same for
+  `attack.melee`. An author who writes a scoped override sees it refused rather than silently
+  mis-applied; what stays wrong is that `effects.md`'s target grammar reads as one grammar while two
+  parsers implement it differently.
 
 ## Content and storage
 
@@ -2716,6 +2722,146 @@ Recorded so none of it is re-derived.
   category `origin`, and no shipped 2024 background grants it). `derive-plugins.ts:53`'s `preHpMax`
   and `derive-context.ts:89`'s `hpMaxLive` are two of finding 51's four hand-rolled copies.
 
+## Third pass — the remainders, and the suspicions settled
+
+The backlog *What was not reached* left, worked item by item. Findings 82-85; the settled suspicions
+are folded back into their own *Suspected* headings above.
+
+### 82 · MEDIUM · the attack row prints a damage number the attack does not roll
+
+`attacks.ts:321` (`computeAttacks`) folds a weapon's own tokens and the character-level **attack**
+bonuses that a scope names (`scopedAttackBonus:278`), and no damage effect at all.
+`sheet-rolls.svelte.ts:246` (`attackSpec`) then adds `effectsFor('damage', scopes).flat` to the
+primary part. So the number `AttacksPanel.svelte:32` prints and the number the same row rolls when
+tapped are two different numbers, with nothing on the row saying so.
+
+**Reproduced** — real packs, barbarian 5, STR 16, greataxe, Rage applied through the shipped
+`effects_srd.csv` row (`apply_condition:rage`):
+
+| pack | row damage | roll adds | what a tap actually rolls | row notes |
+| --- | --- | --- | --- | --- |
+| srd-2014 (5e) | `1d12 +3 slashing` | +2 | `1d12 +5` | `[]` |
+| srd-2024 (5.5e) | `1d12 +3 slashing` | +2 | `1d12 +5` | `[]` |
+
+The token differs per edition (`damage.melee,str` in 2014, `damage.str` in 2024) and the outcome does
+not. Adding an unscoped `flat_bonus:damage+1` on top moves the roll to +3 and the row not at all.
+
+The attack axis is coherent and proves the asymmetry is not a design position but a gap: the row
+folds a scoped attack bonus, and `roll.ts:392` skips exactly those on the roll side so they cannot
+count twice — *"a scoped bonus is already in the row's to-hit … picking it up again here would count
+it twice"*. Measured with `flat_bonus:attack.melee+2`, `attack.ranged+2` and `attack+1` live at once:
+row to-hit 8 (melee folded, ranged correctly excluded), roll flat 1, effective 9. No double count,
+and no note about the +1 either.
+
+AGENTS.md ▸ *Every number can explain itself*. This one cannot: the row carries the ability modifier
+and a magic weapon's own bonus, so it does not read as a base value, and a player quoting their
+damage to the table quotes the wrong one for as long as Rage is up.
+
+**Fix:** fold the flat half of the character-level damage facts in `computeAttacks` the way the
+attack axis already does, and drop `dmgFx.flat` from `attackSpec`'s primary part so the two cannot
+diverge. What cannot fold into a static number — bonus dice, `min_die`, `reroll` — is what
+`AttackNote` is for, and `attackNotes` already renders it on the row's title.
+
+### 83 · MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
+
+`saveCharacterToStore` (`character/store.svelte.ts:107`) has no `catch`, `saveCharacter`
+(`repository.ts:196`) throws on both of its failure modes, and seven of its nine call sites discard
+the promise with `void`:
+
+```
+combat/+page.svelte:81            setTimeout(() => void saveCharacterToStore(c), 800)   ← the autosave
+combat/combat-view-model.svelte.ts:445
+combat/resource-tracker.svelte.ts:225, :306                                             ← every rest
+spellbook/+page.svelte:66, :119
+```
+
+The autosave one is inside a `setTimeout` callback, so no caller could catch it even if one wanted
+to. This is finding 77's shape (Create says nothing) and finding 30's (`guarded()` missing) on the
+path the player spends the whole session on: HP, slots, resources, conditions, rests, pins, prepared
+spells. `draft-session.svelte.ts:76` states the rule the three of them break — *"a rejection escaping
+here is an unhandled promise rejection nobody sees"*.
+
+**Two ways in, and neither is exotic.**
+
+- **The disk.** Measured on a real Windows filesystem: a file another process holds with
+  `FileShare.None` — a sync client, a backup agent, the user's own editor on `character.json` —
+  fails an atomic temp→rename with `EPERM`, and `NodeStorage.writeBytes:40` is exactly that rename.
+
+  ```
+  read:   EBUSY
+  rename onto locked target: FAILED EPERM
+  after unlock: "ORIGINAL"          ← the write never landed
+  ```
+
+- **The schema**, which needs no disk failure at all — see finding 84. `saveCharacter:198` refuses to
+  persist a character that fails `characterSchema`, by throwing, into the same `void`.
+
+Either way the sheet keeps working, every subsequent autosave throws the same way, and the next load
+returns the character as it was before the failure began.
+
+**The roll log has the same shape and one extra hazard.** `persistRoll`
+(`combat-view-model.svelte.ts:307`) is `void appendLog(...)`, and `writeLogLine:434` opens with
+`try { prev = await storage.read(...) } catch { /* first entry */ }` — an unconditional catch that
+names a cause it never checks, and whose recovery is to rewrite the file from one entry. Simulated
+against a 100-line log with the file locked, the read fails and the code would write 1 line. It does
+not lose the log in *that* scenario, because the same lock fails the write (EPERM above) — but the
+`Storage` interface has `exists()`, so the branch can distinguish "no log yet" from "could not read
+the log" instead of assuming.
+
+**Fix:** a shared `guardedSave` that catches, toasts once with a stable id (the
+`DRAFT_SAVE_FAILED_TOAST` pattern), and is used by all seven sites; `writeLogLine` gates its catch on
+`await storage.exists(logOf(slug))` and rethrows otherwise.
+
+### 84 · MEDIUM · the exhaustion stepper clamps to the data cap, the schema caps at 20, and the gap silently bricks saving
+
+`effects-editor.svelte.ts:54` — `setExhaustion` clamps to `this.exhaustionMax`, the exhaustion row's
+own `max_level`, and its comment says why: the ceiling is DATA, *"so a homebrew ladder of a different
+height still kills at its own top"*. `schema.ts:193` bounds the same field at 20, and its comment
+says it is *"only a generous sanity bound so a homebrew ladder taller than 6 still validates (D19)"*.
+Both are deliberate, they were written for the same case, and they disagree above 20.
+
+**Reproduced** — a homebrew `conditions_srd.csv` with `exhaustion,5.5e,Homebrew,Exhaustion,25`:
+
+```
+exhaustionMax from data:                 25
+play.exhaustion after setExhaustion(25): 25
+schema accepts the character:            false
+  issue: play.exhaustion Too big: expected number to be <=20
+toasts: ["combat.notice.died"]
+```
+
+The character is told it died. Nothing is told that it will never be saved again — see finding 83,
+which this is the no-disk-failure door into.
+
+**Fix:** one bound, not two. The schema's is the durable one, so clamp `setExhaustion` to
+`Math.min(dataMax, EXHAUSTION_MAX)` and export that constant from `schema.ts` — or drop the schema
+bound to a positive-int check and let the data own the ceiling outright, which is what the stepper's
+comment already assumes.
+
+### 85 · LOW · a `flat_bonus:attack` carrying both a dotted scope and a qualifier keeps only the qualifier
+
+`token-parser.ts:239` and `:253` build `{...(scope ? {scope} : {}), ...qualifierSlot(target, slot)}`,
+and `qualifierSlot:202` returns `{scope: q}` when the base target is `attack`. Later spread wins, so
+the dotted scope is overwritten rather than combined.
+
+**Reproduced**, real `parseToken`:
+
+```
+flat_bonus:attack.melee+2            -> {target:"attack", scope:"melee"}
+flat_bonus:attack:versatile+2        -> {target:"attack", scope:"versatile"}
+flat_bonus:attack.melee:versatile+2  -> {target:"attack", scope:"versatile"}   <- "melee" is gone
+flat_bonus:damage.melee:fire+1d6     -> {target:"damage", scope:"melee", damageType:"fire"}
+```
+
+The `damage` row is the shape that works, because its qualifier lands in a different slot. On
+`attack` the two slots are the same slot, so the token widens instead of narrowing — `+2 on melee
+versatile weapons` becomes `+2 on every versatile weapon` — and `isEffectTargetSupported` says
+`{supported: true}`, so nothing is surfaced. No shipped row uses both slots; this is latent.
+
+**Fix:** the two slots are one fact, so join them rather than letting one win —
+`scope: [scope, qual.scope].filter(Boolean).join(',')`, which is already the AND-semantics
+`rollEffectsFor:388` and `scopedAttackBonus:292` apply to a comma list.
+
 ## Independent verification
 
 Every finding above was reproduced by the reader that filed it. This section records a **second,
@@ -2923,10 +3069,10 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `restamp.ts` is a different matter and stays on the list — it is runtime-adjacent, it is what any
   future import path leans on, and it is unread (the hashes are clean, so nothing is mis-stamped
   today).
-- **Character persistence — covered by findings 73-81.** What is left: `repository.ts`'s roll-log
-  half (`appendLog` / `reviseLog` / `readLog`, the per-slug append chain and the 100-line rotation)
-  read but never driven, and `readCharacterFiles` unexercised; `schema.ts` read for the migration
-  question only, so a `play` default's round-trip through `saveCharacter`'s re-parse is unchecked;
+- **Character persistence — covered by findings 73-81, and by 83-84 in the third pass.**
+  `repository.ts`'s roll-log half is now read in full and its failure path measured against a real
+  Windows lock (finding 83); `readCharacterFiles` is still unexercised. `schema.ts` was read against
+  the play writers this time, which is where finding 84 came from — but only for the bounded fields;
   `store.svelte.ts`'s `seedDemoIfFirstRun` and `recreateDemoCharacter` read, not driven;
   `drafts/store.ts`'s content-draft half, `repointDraft`'s conflict path and `findUnreadableDrafts`;
   and in `derive-plugins.ts`, `pluginResources`' own-property guard and a plugin-granted condition
@@ -2939,15 +3085,18 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   on an `srd-2024`-shaped fixture, and no `/dev/` probe was written, so the photo write, the backup
   ring under a Windows rename refusal and `deleteCharacter` against an open handle are unproven on a
   real desktop install. Most of `build/blocks/` is unread.
-- **Combat remainder — covered by findings 60-70.** What is left of it: `CombatStrip.svelte` past
-  line 150 and `blocks/Abilities.svelte`, both read only far enough to place finding 55;
-  `DeathScreen.svelte`, `Hero.svelte` and `PanelCard.svelte` below their markup;
-  `panel-layout.svelte.ts`, `menu-overlay.svelte.ts` and `rest-controls.svelte.ts`, opened only
-  where the view-model forwards into them — which leaves the short-rest hit-dice picker (`hdPickInc`,
-  `commitShortRest`, `shortRestMode`) unread, the one rest that spends a resource the player picks.
-  Nothing in this pass was driven in a browser: the condition switch, the duration dialog's Escape
-  and the inert search box are markup reads, and a Playwright drive over the effects panel would
-  settle all three against the real focus order.
+- **Combat remainder — covered by findings 60-70, and the third pass closed the reading tail.**
+  `CombatStrip.svelte`, `blocks/Abilities.svelte`, `DeathScreen.svelte`, `panel-layout.svelte.ts`,
+  `menu-overlay.svelte.ts` and `rest-controls.svelte.ts` are now read in full and came back clean of
+  new defects — the short-rest hit-dice picker steps through real `<button>`s, the combat overlay it
+  opens in carries `dismissOnEscape`, and `panel-layout.restore` reconciles a saved layout in both
+  directions. `provenance` (`actions/provenance.ts:102`) turns any traced value that is not already a
+  control into a tab stop, so the Speed tile being a `<div>` is not the a11y gap it looks like.
+  One thing was noticed and is a maintainer's call rather than a finding: `spendHitDie`
+  (`rest-controls.svelte.ts:63`) heals `Math.max(1, roll + CON)` and calls the floor RAW, and the
+  rest chapter is in no shipped CSV, so nothing in this repo can check the claim. It only bites a
+  character with a negative CON modifier. `Hero.svelte` and `PanelCard.svelte` below their markup are
+  still unread.
 - **Roller remainder — covered by findings 56-59**, and closed. The locale surface holds: an unnamed
   roll carries `roller.customRoll` as its KEY and the literal `'Custom roll'` only as the fallback
   `sayRollName` reaches for when there is no translator, so a log line is not frozen in the language
@@ -3031,6 +3180,11 @@ half-feat ability, and the unreachable bare ability check — which is the argum
 probe rather than leaving the suspicion standing: all four turned out to be defects, and three of
 them cost the player something.
 
-Still open and still cheap: `restoreUpTo`'s unclamped spent; whether the Roll button eats a click on
-a half-typed token; whether `on_event` / `regain_on_initiative` / `damage_reroll` can actually reach
-`effectTag`; whether the scoped damage bonus's row-versus-roll split is intended.
+The third pass spent the remaining probes. Settled there: `restoreUpTo`'s unclamped spent (not a
+defect — the sibling `min` clamps it anyway), the three token kinds' reachability (reachable, through
+user content only), the scoped damage bonus's row-versus-roll split (finding 82), the dotted
+scope-plus-qualifier collision (finding 85) and `set_override`'s divergent target grammar (loud, so a
+spec divergence rather than a defect).
+
+Still open and still cheap: whether the Roll button eats a click on a half-typed token, which is the
+one that needs a browser rather than a node probe.
