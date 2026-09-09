@@ -3172,9 +3172,21 @@ prone         conditions = ["prone"]                                 disadvantag
 stunned       conditions = ["stunned","incapacitated"]               disadvantage = []
 ```
 
-`prone` on its own carries `disadvantage:attack`. Applied THROUGH `unconscious` it registers in
-`facts.conditions` — so every `has_condition.prone` guard and every reader of that list sees it — and
-contributes nothing. A condition that is listed and inert is the worst of both readings.
+`prone` on its own carries `disadvantage:attack`. Applied THROUGH `unconscious` it contributes
+nothing — and it is otherwise fully present. Measured on the other side too, by guarding an
+`flat_bonus:ac+5` on the implied condition and reading the AC:
+
+```
+apply_condition:prone        + has_condition.prone ? +5 AC   ->  AC 15
+apply_condition:unconscious  + has_condition.prone ? +5 AC   ->  AC 15   <- the implied one fires the guard
+apply_condition:unconscious  + has_condition.incapacitated ? +5 AC -> AC 15
+0 ? apply_condition:rage     + is_raging ? +5 AC             ->  AC 10   <- a refused apply registers nothing
+```
+
+So an implied condition is real to every guard, every `is_*` flag and the plugin ctx, and unreal only
+to its own `effects` column. A condition that is listed, queryable and inert is the worst of the
+three readings — and it means a homebrew author can work around the gap with a guard while the
+shipped row cannot.
 
 **The whole census, both packs**, by parsing every `conditions_srd.csv` row's `effects` and checking
 what each nested target actually carries:
@@ -3405,6 +3417,25 @@ away for whoever has the tree to themselves.
   `parseUpcast`, the same parser the loader uses, so it cannot offer one the app would refuse; every
   control is a real `select` / `input` / `button` with an `aria-label`; and the raw field stays
   editable beside it, which is the way back out of anything the builder cannot express.
+- **`isRaging`'s two sourcings are equal** — the backlog assumed it; this proves it. The plugin ctx
+  reads `facts.conditions` (`derive-plugins.ts:71`) and the L2 expression ctx reads the resolver's
+  live `state.conditions` (`context.ts:129` via `derive-context.ts:112`). Driven across five shapes —
+  a direct apply, a guard that refuses the apply, a directly-applied `prone`, and an implied one
+  reached two ways — the two views agree in every case, including that a refused
+  `apply_condition` registers in neither. The measurements are in finding 93, which is the one place
+  the two DO diverge in effect rather than in membership.
+- **`Hero.svelte` and `PanelCard.svelte`** — read in full, and everything they carry is already
+  filed: the hero's raw `{c.system}` badge is finding 81, and `PanelCard`'s `.drag-handle`
+  (`role="button" tabindex="-1"` with only an `onpointerdown`) is finding 53. `PanelCard` is a pure
+  dispatcher otherwise, and every head control on it is a real `<button>` or `<a>`.
+- **`readCharacterFiles` + `charactersReferencing`** — read. The raw substring scan
+  (`diff.ts:234`, `json.includes('"' + key + '"')`) is deliberate and is the right direction to be
+  wrong in: a `notes` field quoting a ref over-reports an affected character, which is a louder
+  warning rather than a missed one. One caveat worth knowing before trusting the update preview:
+  `repository.ts:321` reads each save with `.catch(() => '')` and the empty ones are filtered out, so
+  a character whose file cannot be read at that moment is silently absent from "which characters does
+  this update affect?" — the one direction that under-warns. Same shape as finding 83's log catch,
+  and one `exists()` from being distinguishable.
 - **`tools/restamp.ts` and `content/restamp.ts`** — read. `matchStyle` decides the whole file's line
   endings from `original.includes('\r\n')`, so one CRLF inside a quoted cell would flip an LF file to
   CRLF wholesale; no shipped CSV contains a `\r` at all (measured across all 34 files in both packs),
@@ -3447,10 +3478,12 @@ was re-executed here; silence means not re-run, not doubted.
 **Every `file:line` in this document resolves — checked mechanically, third pass.** All 397
 line-anchored references were extracted and each resolved against `git ls-files` (bare filenames by
 basename, which is how this document mostly writes them) and checked against the file's real length.
-**Three were stale and are corrected above**: `reload.ts:93` → `:22` (`flushAll`),
-`json-config.ts:158` → `:69` (the early return that drops the second `onWrite`), and
-`constants.ts:184` → `:37` (the snake-case note). The substance of all three findings was unaffected;
-the numbers had simply drifted past the end of files that shrank. Three more point outside the app
+**Three were stale and are corrected above** — in `reload.ts` (line 93 → 22, `flushAll`), in
+`json-config.ts` (158 → 69, the early return that drops the second `onWrite`) and in `constants.ts`
+(184 → 37, the snake-case note). The substance of all three findings was unaffected; the numbers had
+simply drifted past the end of files that shrank. *The stale numbers are spelled out in prose here
+rather than as `file:line` so that re-running the check does not flag this paragraph — a verifier
+that trips over its own changelog is one nobody runs twice.* Three more point outside the app
 repo by design — two shipped `conditions_srd.csv` and one crate source — and 14 basenames are
 ambiguous across two files, which is inherent to writing `derive.ts:415` rather than a full path.
 The check is ~40 lines and worth re-running whenever a batch of findings lands; "in range" is weaker
@@ -3623,12 +3656,13 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   checks `loadErr` ahead of `p.problem` for the status badge only, so a duplicate-namespace loser
   can be labelled "load failed" while its own row explains the clash.
 
-  What is left of the item is the engine's edges: `plugin.bench.ts` read but not run; memo eviction
-  above `MEMO_MAX = 512` unmeasured; the load-time microtask queue undriven; `isRaging`'s two
-  sourcings (`facts.conditions` versus `state.conditions`) assumed equal, not proven; and discovery
-  over the real Tauri `Storage` — Windows case-folding against `NAMESPACE_RE`, a plugin folder inside
-  a watched pack directory — which wants a `/dev/` probe. `UpcastBuilder.svelte` and
-  `EditContentForm.svelte`, both new in `b94d791`, are still unopened.
+  `isRaging`'s two sourcings are now PROVEN equal rather than assumed — see *Ruled out — third
+  pass* — and `UpcastBuilder.svelte` and `EditContentForm.svelte` are read (the first clean, the
+  second contributing to findings 92 and the third pass's one suspicion). What is left of the item is
+  the engine's edges: `plugin.bench.ts` read but not run; memo eviction above `MEMO_MAX = 512`
+  unmeasured; the load-time microtask queue undriven; and discovery over the real Tauri `Storage` —
+  Windows case-folding against `NAMESPACE_RE`, a plugin folder inside a watched pack directory —
+  which wants the `/dev/` probe this pass did not run.
 - **Storage and packs — covered in the second pass** (findings 30–37), and the Rust half is now read:
   finding 97, with the trust predicate re-run under real `rustc` and the escape traced through the
   `tauri` and `tauri-plugin-fs` crate sources to the layer that actually stops it.
