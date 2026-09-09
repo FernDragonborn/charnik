@@ -454,14 +454,9 @@ identically-named rows, hence LOW.
 
 ### Suspected, not reproduced — roller
 
-- **The Roll button may be disabled at the moment you click it with a half-typed token.**
-  `Roller.svelte:97` is `disabled={!diceTray.rollable}` while `dice-tray.svelte.ts:588` commits the
-  draft *then* checks `rollable`, and `rollable` reads `canRoll(this.lines)` — the uncommitted draft
-  is not in `lines`. Confirmed in a real chromium drive: after typing `2d6` with no trailing space,
-  `disabled-before-click: true, pills: 0, draft: ["2d6"]`. Not observed: whether the click still
-  lands, since a disabled button swallows the event in Chrome and whether the blur commit fires first
-  is the open question. The keyboard path is safe — Ctrl+Enter goes through the panel handler and is
-  covered by `Roller.browser.test.ts:105`.
+- ~~The Roll button may be disabled at the moment you click it with a half-typed token.~~
+  **Settled — see finding 98.** The open question was whether the click lands or the blur commit
+  fires first; driven in chromium, neither happens, so the button never becomes clickable at all.
 - **The volley cost cap is borrowed from the dice cap.** `roller.ts:216` clamps a `count` pill with
   `MAX_DICE_PER_TERM` (1000). Measured: 500 rolls produced 500 entries in 3 ms with 500 distinct
   `at` — the roll is cheap. Unmeasured is the cost downstream: `recordRolls` calls `persist` once per
@@ -3362,6 +3357,47 @@ driver can reach it. The actual sandbox boundary of the desktop app is documente
 comments inside the file it guards, which is the one place a reader checking the boundary would not
 think to look.
 
+### 98 · LOW-MEDIUM · a finished formula with no trailing space cannot be rolled with the mouse at all
+
+The first pass filed this as a suspicion and named the open question exactly: *"Not observed: whether
+the click still lands, since a disabled button swallows the event in Chrome and whether the blur
+commit fires first is the open question."* Driven in a real chromium, the answer is neither — the
+blur never fires, so the state does not self-correct and the button never becomes clickable.
+
+**Reproduced** — `Roller.svelte` mounted in the browser project, one line, `userEvent` typing:
+
+```
+typed "2d6"  (no trailing space) → pills 0 · rollable false · disabled TRUE
+   one click on Roll            → Playwright TIMED OUT waiting for it to become enabled (14.7 s)
+typed "2d6 " (trailing space)   → pills 1 · rollable true  · disabled false
+   one click on Roll            → onroll called once
+```
+
+A disabled button takes no pointer events and does not move focus, so the `onblur` on the line
+(`RollerLine.svelte:207` → `diceTray.commit(index)`) — the thing that would turn `2d6` into a pill —
+is never reached by clicking Roll. The draft sits uncommitted, `rollable` stays false
+(`dice-tray.svelte.ts:198`, `canRoll(this.lines)`, and the draft is not in `lines`), and the user's
+click does nothing at all. Not a lost first click that a second one fixes: the timeout is the proof
+that no number of clicks helps until they go back to the line and type a space.
+
+What the app says about it is a `title` — *"the formula is not fully accounted for"* — on a
+**disabled** control, so it is mouse-hover-only and reaches nobody on a keyboard, and it describes a
+state the user cannot tell they are in (`2d6` looks finished). The keyboard path is fine, as the
+first pass said: Ctrl+Enter goes through the panel handler and is covered by
+`Roller.browser.test.ts:105`.
+
+**The method the button calls was built for exactly this case.** `DiceTray.roll`
+(`dice-tray.svelte.ts:587`) opens with `this.commit(this.focus)` and its docstring says why: *"Half-typed
+text is committed first, so pressing Roll can never quietly leave a token out of the roll it was typed
+into."* The `disabled` attribute on the button guarantees Roll is never pressed in the one case that
+sentence was written for — and the same docstring's next line, *"Empty when the lines are unrollable,
+which the button already shows"*, is what the two halves lean on each other for.
+
+**Fix:** let `roll` be the one that decides, since it already does. Keep `class:muted` on `rollable`
+for the affordance and drop `disabled`; `roll` commits, re-checks, and returns `[]` if it is still
+unrollable. That also retires the hover-only explanation, because a click can then produce a real
+message instead of a `title` nobody on a keyboard can read.
+
 ### Suspected, not reproduced — third pass
 
 - **Typing during the authoring form's initial draft scan is discarded.**
@@ -3424,6 +3460,25 @@ away for whoever has the tree to themselves.
   reached two ways — the two views agree in every case, including that a refused
   `apply_condition` registers in neither. The measurements are in finding 93, which is the one place
   the two DO diverge in effect rather than in membership.
+- **The plugin memo is bounded and its LRU claim holds** — measured, not read.
+  `plugin-registry.ts:175` evicts one entry before inserting when `map.size >= MEMO_MAX`, and
+  `memoGet:165` re-inserts on a hit so Map order approximates LRU. Driven with a counting evaluator
+  over 600 distinct tokens against `MEMO_MAX = 512`:
+
+  ```
+  600 distinct tokens, cold          -> evaluator called 600 times   (no false hits)
+  token 0 re-run after 600 inserts   -> called 1   (evicted: the cache holds 512 of 600)
+  the 10 NEWEST re-run               -> called 0   (hot)
+  tokens 1..10 (oldest) re-run       -> called 10  (evicted)
+  token 0 again, after being touched -> called 0   (the touch protected it)
+  ```
+
+  The last line is the one that matters: a touched key survives the next eviction wave, so the
+  approximation is real LRU for the get+set pattern the derive uses.
+- **`plugin.bench.ts` runs** (`vitest bench`), in both projects, and reports the two pure-JS hot
+  paths in microseconds — node 304k ops/s fast path and 211k memo hit; chromium 724k and 284k. The
+  fast path is 1.4x (node) / 2.6x (chromium) ahead of a memo hit, which is the shape the file's own
+  header predicts. Nothing here is near the derive's cost.
 - **`Hero.svelte` and `PanelCard.svelte`** — read in full, and everything they carry is already
   filed: the hero's raw `{c.system}` badge is finding 81, and `PanelCard`'s `.drag-handle`
   (`role="button" tabindex="-1"` with only an `onpointerdown`) is finding 53. `PanelCard` is a pure
@@ -3659,8 +3714,7 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   `isRaging`'s two sourcings are now PROVEN equal rather than assumed — see *Ruled out — third
   pass* — and `UpcastBuilder.svelte` and `EditContentForm.svelte` are read (the first clean, the
   second contributing to findings 92 and the third pass's one suspicion). What is left of the item is
-  the engine's edges: `plugin.bench.ts` read but not run; memo eviction above `MEMO_MAX = 512`
-  unmeasured; the load-time microtask queue undriven; and discovery over the real Tauri `Storage` —
+  the engine's edges: the load-time microtask queue undriven, and discovery over the real Tauri `Storage` —
   Windows case-folding against `NAMESPACE_RE`, a plugin folder inside a watched pack directory —
   which wants the `/dev/` probe this pass did not run.
 - **Storage and packs — covered in the second pass** (findings 30–37), and the Rust half is now read:
@@ -3853,5 +3907,5 @@ user content only), the scoped damage bonus's row-versus-roll split (finding 82)
 scope-plus-qualifier collision (finding 85) and `set_override`'s divergent target grammar (loud, so a
 spec divergence rather than a defect).
 
-Still open and still cheap: whether the Roll button eats a click on a half-typed token, which is the
-one that needs a browser rather than a node probe.
+Nothing is left on this list. The last one — whether the Roll button eats a click on a half-typed
+token — needed a browser rather than a node probe, and is finding 98.
