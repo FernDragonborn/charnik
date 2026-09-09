@@ -3294,6 +3294,62 @@ character already had and default only for a newly picked one — the same repai
 the same round-trip test catches both: `character → hydrate → assembled` must deep-equal on
 `build.spells` and `build.inventory` when nothing was clicked.
 
+### 97 · MEDIUM · the data-dir trust check passes `..`, and what stops the escape is a coincidence one layer down
+
+`src-tauri/src/lib.rs:75` — `set_data_dir` decides whether a path is trusted with
+
+```rust
+.any(|g| dir == *g || dir.starts_with(g))
+```
+
+and `Path::starts_with` compares whole COMPONENTS, which is right for the attack it was written
+against and blind to `..`, because `..` is an ordinary component.
+
+**Reproduced** — real `rustc`, the same predicate against one granted directory
+`C:\Users\fern\CharnikData`:
+
+```
+C:\Users\fern\CharnikData                            trusted=true    <- the pick
+C:\Users\fern\CharnikData\charnik                    trusted=true    <- the documented child
+C:\Users\fern\CharnikDataEvil                        trusted=false   <- sibling-prefix, correctly refused
+C:\Windows\System32                                  trusted=false
+C:\Users\fern\CharnikData\..\..\..\Windows\System32  trusted=TRUE
+C:\Users\fern\CharnikData\sub\..\..\Desktop          trusted=TRUE
+```
+
+The file's own comment states the invariant this breaks: *"`set_data_dir` refuses to persist anything
+not already in this set. So malicious page JS can no longer widen the sandbox to an arbitrary
+directory."* The renderer can hand it any path it likes as long as it is spelled as a descent from
+the picked folder.
+
+**It does not currently escape, and the reason is not in this file.** Traced through the crates:
+`allow_directory` (`tauri-2.11.5/src/scope/fs.rs:351`) stores a glob built by `push_pattern:100`,
+which is `path.components().collect()` — Rust's `Components` normalises `.` and duplicate separators
+and **leaves `..` alone**, so the stored pattern literally contains `..`. The matching side does the
+opposite: `is_allowed:420` runs `try_resolve_symlink_and_canonicalize` on every REQUESTED path. A
+canonicalised request can never match a `..`-bearing pattern, so the grant is inert either way round.
+The sandbox holds by an asymmetry between how a pattern is stored and how a path is matched — not by
+the check that exists to hold it, and not by anything either side documents.
+
+**What it does do today** is brick the install. `set_data_dir` persists the raw string into the
+Rust-owned pointer, and `apply_saved_data_dir:98` re-grants it at every launch with no check at all.
+The JS side then uses that string as the storage root, every operation resolves to a real location the
+inert pattern does not cover, and every read and write is refused. There is no UI for the pointer —
+it is deliberately Rust-owned so page JS cannot forge it — so the only way out is deleting
+`<appConfig>/config.json` by hand.
+
+**Fix:** reject the shape rather than rely on the layer below. One guard before the trust test —
+`if dir.components().any(|c| matches!(c, Component::ParentDir)) { return Err(...) }` — or canonicalise
+both sides before comparing, which also closes the symlink variant the check does not consider.
+`allow_directory` should then be receiving only normalised paths, which is what its stored pattern
+already assumes.
+
+**And it should be written down.** `docs/internals/security.md` never mentions the data-dir grant,
+`pick_data_dir`, `set_data_dir` or `GrantedDirs`; `testing.md:53` names the picker only to say no
+driver can reach it. The actual sandbox boundary of the desktop app is documented exclusively in
+comments inside the file it guards, which is the one place a reader checking the boundary would not
+think to look.
+
 ### Suspected, not reproduced — third pass
 
 - **Typing during the authoring form's initial draft scan is discarded.**
@@ -3307,6 +3363,34 @@ the same round-trip test catches both: `character → hydrate → assembled` mus
   project and a mounted form, and the fix is one condition
   (`if (JSON.stringify(draft) === baseline)`), so the cost of proving it exceeds the cost of the
   guard.
+
+### Not attempted, and why — third pass
+
+One method this repo prescribes was available and deliberately not used, so the next session does not
+have to re-derive the decision.
+
+**The `/dev/` probe on the real desktop app.** `AGENTS.md` ▸ Verifying is explicit that filesystem
+and network work is signed off there — write a `/dev/<name>` probe, point `devUrl` at it, run the
+app, read the report. The toolchain is present (`cargo 1.96.0`, a warm `src-tauri/target/debug`), so
+this was a choice, not a blocker:
+
+- **Most of what it would prove was reachable more cheaply, on the same OS.** The behaviours that
+  make the desktop path different from `MemoryStorage` are Windows filesystem semantics, and those
+  were exercised directly with real `node:fs` on this machine: an `EBUSY` read and an `EPERM`
+  rename onto a `FileShare.None`-locked file (finding 83), and the rename contract every
+  implementation is measured against (finding 91). The Rust half was read and its one load-bearing
+  predicate re-run under real `rustc` (finding 97).
+- **What is genuinely left is what a probe still could not reach.** The native folder picker is an
+  OS dialog outside any webview — `testing.md:53` already says so — and `walkTree`'s symlink skip
+  wants a real junction, which is a filesystem fixture rather than an app run.
+- **The tree was shared.** Another session was editing `src/lib/components/RollRow.svelte` and the
+  roller docs during this pass; pointing `devUrl` at a probe route means editing
+  `src-tauri/tauri.conf.json` and reverting it, and a config edit that outlives its window is the
+  kind of leftover that costs somebody an afternoon.
+
+So the honest statement is: **the desktop-only half of storage is READ and reasoned, not RUN.** The
+items it leaves open are named in the storage bullet above, and every one of them is a `/dev/` probe
+away for whoever has the tree to themselves.
 
 ### Ruled out — third pass
 
@@ -3533,19 +3617,25 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   over the real Tauri `Storage` — Windows case-folding against `NAMESPACE_RE`, a plugin folder inside
   a watched pack directory — which wants a `/dev/` probe. `UpcastBuilder.svelte` and
   `EditContentForm.svelte`, both new in `b94d791`, are still unopened.
-- **Storage and packs — covered in the second pass** (findings 30–37); what is left of it is narrow:
-  `storage/tauri.ts`'s data-folder move driven on the real app (`walkTree`'s symlink skip,
-  `copyFilesInto`'s Windows-vs-Linux mtime asymmetry at `tauri.ts:157`, which silently changes what
-  `mergeCopyList` calls "newer", and `discardFailedCopy`'s empty-target-only claim); the Rust half in
-  `src-tauri` (`saved_data_dir`, `set_data_dir`, `pick_data_dir` — the actual sandbox boundary, and
-  the whole "Rust refuses a path not chosen through the picker" claim at `tauri.ts:51`);
+- **Storage and packs — covered in the second pass** (findings 30–37), and the Rust half is now read:
+  finding 97, with the trust predicate re-run under real `rustc` and the escape traced through the
+  `tauri` and `tauri-plugin-fs` crate sources to the layer that actually stops it.
+  `discardFailedCopy`'s empty-target-only claim holds — `migrateDataDir` is the sole caller and
+  `StorageSettings.svelte:149` gates it behind `dirIsEmpty(target)`; the residue is a TOCTOU window
+  (anything that lands in the target between the check and a copy failure is deleted by the recursive
+  sweep), which is inherent to check-then-act on a folder the user just picked.
+  `copyFilesInto`'s mtime asymmetry is documented at the function itself and unchanged.
   `remote/github.ts` is now read whole and came back clean — `branchCandidates` costs one request in
   the ordinary case and only the failing path pays for the rest, the ETag is repo-scoped and survives
   the branch fallback correctly, `truncated` short-circuits ahead of `MAX_REPO_PACKS`, and
   `isPackFile`'s `.csv` test matches the loader's byte for byte (`loader.ts:350`), so the two sides of
   a diff cannot disagree about what a pack file is. `storage/browser.ts` is read and measured under a real
   IndexedDB — finding 91, which carries the scan costs too. `content/store.svelte.ts` is read —
-  finding 86. Nothing of this item is left open.
+  finding 86.
+
+  **What is left of this item needs the real desktop app and was not run** — see *Not attempted, and
+  why* below: the data-folder move driven end to end, `walkTree`'s symlink skip against a real
+  junction, and the native picker, which no driver reaches.
 - **The SRD converters — deliberately OUT of scope, not merely unread.** Five converter commits in
   the window are unopened and will stay that way: `docs/work/content.md` ▸ CONVERTERS-SUNSET puts the
   block up for possible deletion, and reading 3 500 lines to improve code that may go is the
@@ -3639,13 +3729,17 @@ whole surface and came back clean.
 
 ### The queue, highest value first
 
-1–3. **Plugins L3 · Storage · Pack update and rollback — DONE**, findings 30–47. What is left of the
-   three is narrow and listed under *What was not reached*: the consent dialog and the Settings
-   keyboard path, the data-folder move and the Rust half of `tauri.ts`, `github.ts` past line 175,
-   `browser.ts` under real IndexedDB, and `content/store.svelte.ts`'s `reloadContent`. Two lessons
-   from that pass are worth carrying: read the files **in full** — both readers found their best
-   material past the point a skim would have stopped — and verify anything filesystem-shaped against
-   a **real** fs, because `MemoryStorage` silently merges a rename that Windows refuses.
+1–3. **Plugins L3 · Storage · Pack update and rollback — DONE**, findings 30–47, and the third pass
+   closed the tails: the consent dialog and Settings keyboard path (clean), `github.ts` whole
+   (clean), `browser.ts` under real IndexedDB (finding 91), `content/store.svelte.ts` (finding 86)
+   and the Rust half of the data-dir grant (finding 97). The ONLY thing still open across all three
+   is what needs the app running — see *Not attempted, and why*. Two lessons from that pass are
+   worth carrying: read the files **in full** — both readers found their best material past the
+   point a skim would have stopped — and verify anything filesystem-shaped against a **real** fs,
+   because `MemoryStorage` silently merges a rename that Windows refuses. The third pass adds a
+   third: **when the question is about a boundary, read the layer BELOW it too.** Finding 97 looked
+   like an escape until the `tauri` and `tauri-plugin-fs` sources showed what actually blocks it, and
+   the answer changed the finding from "exploit" to "an invariant nothing in this repo enforces".
 Items 4–7 were each STARTED by a reader and stopped within minutes, before any file was read through.
 **Nothing from those aborted runs is recorded anywhere in this document.** Findings 48–55 came later
 and from a different source — the editor's own pass, working the same items by hand — so where an
@@ -3681,6 +3775,22 @@ item below says something is closed, that is the hand pass talking, never the ab
    across editions at every level and match the SRD table (4,3,3,3,3,2,2,1,1 at 20). The one real
    divergence is finding 6, visible here as `acc0` on every 2014 caster against `acc109` /
    `acc218` on the 2024 ones.
+
+9. **The third pass — findings 82-97.** It worked the backlog above rather than a subsystem, so what
+   it leaves is not a subsystem either. Highest value first for whoever picks it up:
+
+   - **Three round-trip losses share one root and one fix** — 87 (a moved ASI grants both abilities
+     and compounds), 94 (a template weapon loses its base) and 96 (every prepared flag is recomputed).
+     All three are the builder rebuilding a play-side field instead of carrying it, and ONE test
+     closes all three: `character → hydrate → assembled` must deep-equal on `build` when nothing was
+     clicked. That test is worth writing before any of the three fixes.
+   - **The silent-failure family now has four members** — 30 (pack writers), 77 (Create), 83 (every
+     play-loop save, plus the roll log and the reload flusher) and the route-load sites named in 83.
+     One `guarded`-shaped helper retires the lot; doing them one at a time will miss the next one.
+   - **Two doc lies with teeth** — 95 (`content.md` names a bare-id link as full-key, and a
+     maintainer "fixing" it breaks every homebrew pack extending an SRD class) and 97's tail (the
+     desktop sandbox boundary is documented only inside the file it guards).
+   - **One content fix** — 93, a `charnik-content-srd` commit plus the gate that stops it returning.
 
 ### The suspected items, which are cheap to settle
 
