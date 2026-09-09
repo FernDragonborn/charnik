@@ -1014,7 +1014,7 @@ must not race the queue — **a data-folder move (which swaps the Storage under 
 
 The move is `StorageSettings.svelte:157` → `migrateDataDir` → `finalizeMove` (`tauri.ts:172`:
 `setDataDirOverride`, then `fsRemove(oldDir, {recursive:true})`) → `reloadApp()`, whose `flushAll()`
-(`reload.ts:93`) drains only the `onBeforeReload` set — the config queue is a separate chain and is
+(`reload.ts:22`) drains only the `onBeforeReload` set — the config queue is a separate chain and is
 not in it. So a `charnik.config.json` write queued moments before the move (a pin, a
 `dismissedMissing`, an ETag) is copied in its pre-write state, and the queued flush then executes
 against a cached `TauriStorage` whose root points at the folder `finalizeMove` just deleted. A narrow
@@ -1113,7 +1113,7 @@ come from the generated manifest, so this is a latent contract violation rather 
   or space, control chars — and `sanitisePackFolderName` provably terminates its `-2`/`-3` loop.
 - **`collisions.json` is genuinely separate** from `charnik.config.json`, as `content.md` requires.
 - **`writeConfigSection`'s coalescing does not drop the registry's failure report.** A second call in
-  the same tick discards its `onWrite` (`json-config.ts:158`), which would violate `packs.md`'s "A
+  the same tick discards its `onWrite` (`json-config.ts:69`), which would violate `packs.md`'s "A
   failed registry write reaches the user" — but `packs.svelte.ts:364` is the file's only tenant and
   every call installs the identical callback. Benign today; a real bug the moment a second section is
   added to `charnik.config.json`.
@@ -2154,7 +2154,7 @@ only — the word for a skill is `skillName.<id>`, and a view-model has no local
 
 `titleCase('animal_handling')` also produces `Animal_handling` rather than `Animal Handling` —
 `util/format.ts`'s `titleCase` upper-cases the first letter of each word, and the ids are
-snake-case (`constants.ts:184` records the snake-case migration).
+snake-case (`constants.ts:37` records the snake-case migration).
 
 **Reproduced** by reading the two components against `en.json`, which carries all eighteen
 `skillName.*` keys.
@@ -3443,6 +3443,18 @@ was re-executed here; silence means not re-run, not doubted.
 | 29 · off-token `border-radius` | 63 places | **62** by `grep -rn "border-radius:[^;]*px"` minus the `999px` pill radii (66 including them). The five radius tokens and the ten distinct literals are exactly as reported, and none of the six non-999 literals matches a token — the substance stands, the count was one out. Corrected in the finding above |
 | 81 · raw system id | "the roster is the ONE screen" | **four screens, five sites.** The reader grepped `sysbadge` — a CSS class — so its census could only return the roster. Grepping the RENDER finds `Hero.svelte:40`, `BuildHead.svelte:113` and `EditContentForm.svelte:309` as well. Corrected and widened in the finding above; severity raised to LOW-MEDIUM |
 | 28 · English literals | "complete for attributes and markup runs, open for props" | the open half is now closed — **finding 92**, six more sites, two of them also printing a raw content-type id, and the two worst found only by also scanning the SCRIPT half (a component's default prop value) |
+
+**Every `file:line` in this document resolves — checked mechanically, third pass.** All 397
+line-anchored references were extracted and each resolved against `git ls-files` (bare filenames by
+basename, which is how this document mostly writes them) and checked against the file's real length.
+**Three were stale and are corrected above**: `reload.ts:93` → `:22` (`flushAll`),
+`json-config.ts:158` → `:69` (the early return that drops the second `onWrite`), and
+`constants.ts:184` → `:37` (the snake-case note). The substance of all three findings was unaffected;
+the numbers had simply drifted past the end of files that shrank. Three more point outside the app
+repo by design — two shipped `conditions_srd.csv` and one crate source — and 14 basenames are
+ambiguous across two files, which is inherent to writing `derive.ts:415` rather than a full path.
+The check is ~40 lines and worth re-running whenever a batch of findings lands; "in range" is weaker
+than "the right line", so it catches drift, not a typo that stays inside the file.
 
 **Also confirmed, on the audit's own terms.**
 
