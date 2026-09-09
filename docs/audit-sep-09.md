@@ -3073,7 +3073,7 @@ closes the set.
 
 ### 91 · LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
 
-`storage/types.ts:36` states the rename contract for every implementation: *"Overwriting an existing
+`storage/types.ts:37` states the rename contract for every implementation: *"Overwriting an existing
 target is not promised — remove it first."* `browser.ts:118` re-keys every matching entry with `put`,
 so an occupied destination is MERGED rather than refused, and a source that does not exist matches
 nothing and returns successfully.
@@ -3204,6 +3204,95 @@ both packs, and gets re-stamped. That is a `charnik-content-srd` commit.
 by hand, and fails when a nested target carries a non-`note:` token the parent does not also carry.
 It is the same shape as the existing "a shipped token that folds onto nothing fails the suite"
 gate (`111ba48`), and it would have caught this row the day it was written.
+
+### 94 · HIGH · a level-up silently strips a template magic item's chosen base weapon
+
+`draft.ts:316` builds the draft's inventory field by field —
+`{ item, qty, equipped, attuned }` — and `base` is not among them. `DraftState.inventory`
+(`:156`) has no such field either, so `assembled` (`build-view-model.svelte.ts:385`) spreads a draft
+entry that no longer carries it. Opening a character in the builder and saving therefore erases
+which weapon a template magic item IS.
+
+**Reproduced** — real `srd-2024`, a Flame Tongue with a longsword chosen as its base, fighter 5,
+STR 16, through `build.hydrate` → `build.assembled`, which is the level-up path:
+
+| | to-hit | damage | notes |
+| --- | --- | --- | --- |
+| saved character | **+6** | `1d8 +3 slashing` | — |
+| after the round trip | **+3** | `+3`, no dice, **no damage type** | "Base weapon not set — roll its own dice" · "Not proficient — no proficiency bonus" |
+
+Three separate losses, because everything the template inherits comes through
+`resolveItem(graph, row, inv.base)` (`attacks.ts:349`): the damage dice, the damage TYPE, and the
+category tags that decide weapon proficiency — so the character also stops being proficient with
+their own sword. It is written straight to `character.json`, and nothing says a word.
+
+**Root cause is a half-finished change inside this window.** `adff707` (2026-09-06, *"a Flame Tongue
+is told which weapon it is"*) added `base` to `schema.ts`, taught `resolved-item.ts`, `attacks.ts`,
+the inventory panel and `inventory.svelte.ts` about it, added tests and both locale catalogs, and
+updated `content.md` — eleven files, and **not `routes/build/draft.ts`**, the one place a character
+is taken apart and put back together. The mapper it missed carries the tell: its sibling line is
+`attuned: i.attuned // preserve attunement through the builder round-trip (D15)`, a comment added
+because the same field-by-field copy had already dropped `attuned` once.
+
+**Fix:** carry it — `base: i.base ?? null` in `draftFromCharacter`, the field on `DraftState.inventory`,
+and back out through `assembled`. The deeper fix is the one D15 already paid for once: this mapper
+enumerates fields by hand, so every new inventory column silently drops until someone notices. A
+round-trip test (`character → draft → assembled` deep-equals on `build.inventory`) would have caught
+both `attuned` and `base`, and is the guard that stops the third one.
+
+### 95 · LOW · `content.md` names class → features as a full-key link; it is deliberately a bare-id one
+
+`content.md:34` — *"Links (class → features, character → content) and the loader's `byEffectiveId`
+all use the full key."* The second half is true; the first is the counter-example.
+`derive-gather.ts:112` states the opposite and says why: features are matched on
+*"class_id + edition, NOT source, so a user's PHB/homebrew feature for an SRD class attaches
+(B26)"*, and the shipped data agrees — `subclasses_srd.csv` rows carry `class_id` values like
+`barbarian`, not `class:SRD 5.2.1:barbarian`. `build-view-model.svelte.ts:213` and `:223` compare the
+same way for subclasses and species options, and `derive.test.ts:208` pins it as intended behaviour.
+
+The cost of the lie is specific: this is the third-party extension point of the whole content model,
+and a maintainer reading the Identity section would "fix" it into a full-key comparison and break
+every homebrew pack that extends an SRD class. That is `work-artifacts.md`'s worst class of doc rot —
+a doc that instructs building what the architecture forbids.
+
+**Fix:** name the exception where the rule is stated. Character → content and `byEffectiveId` use the
+full key; a content-to-content link that must survive re-sourcing (`class_id`, `subclass_id`,
+`species_id`) is a BARE id on purpose, and `content.md` should say so beside the identity rule rather
+than leaving `derive-gather.ts`'s comment as the only place it is written down.
+
+### 96 · MEDIUM-HIGH · a level-up re-prepares every spell the player unprepared, and demotes every always-prepared one
+
+The same shape as finding 94, one field over. `draftFromCharacter:306` reduces the character's spells
+to bare refs — `char.build.spells.map((s) => s.spell)` — and `assembled`
+(`build-view-model.svelte.ts:387`) rebuilds the flags from the spell's LEVEL:
+
+```ts
+return { spell: ref, prepared: lvl > 0, alwaysPrepared: lvl === 0 };
+```
+
+Its comment reads *"cantrips are always-prepared; leveled spells start prepared (tweak in the
+Spellbook)"* — a sensible default for a NEW character, applied unconditionally to an EDIT.
+
+**Reproduced** — real `srd-2024`, cleric 5, through `build.hydrate` → `build.assembled`:
+
+| spell | saved | after the round trip |
+| --- | --- | --- |
+| a cantrip | `prep:false always:true` | `prep:false always:true` ✓ |
+| an ordinary prepared level 1 | `prep:true always:false` | `prep:true always:false` ✓ |
+| one the player **unprepared** | `prep:false always:false` | **`prep:true`** |
+| an **always-prepared** domain spell | `prep:true always:true` | **`always:false`** |
+
+Both wrong rows cost something a rule counts. `spells.ts:130` excludes `alwaysPrepared` from the
+prepared tally, so demoting a domain spell to an ordinary prepared one **raises the count against
+`preparedCap`** — a gate the sheet displays — and makes a spell the class grants unconditionally into
+one the player can switch off. The re-prepared row is the smaller half and still a decision taken on
+the player's behalf, which is the one thing `AGENTS.md` says a tracker never does: *"a play-tracker
+surfaces and suggests; it never auto-applies."*
+
+**Fix:** `assembled` already knows whether it is editing (`this.edit`). Carry the flags for a ref the
+character already had and default only for a newly picked one — the same repair finding 94 needs, and
+the same round-trip test catches both: `character → hydrate → assembled` must deep-equal on
+`build.spells` and `build.inventory` when nothing was clicked.
 
 ### Suspected, not reproduced — third pass
 
@@ -3482,11 +3571,17 @@ remainder. Listed so the next pass is deliberate rather than a re-sweep.
   came back clean, including the `$state`-inside-`$derived` question its own docstring raises.
   `ability-allocation.svelte.ts`'s boost reconciliation — the UBUG-13 subtraction — is finding 87, and
   it is the worst thing in this pass. Left: in
-  `build-view-model.svelte.ts`, `switchSystem`'s drop sweep, `list()`'s RV3 keep-set and `assembled`'s
-  prepared/alwaysPrepared split — all read, none driven across both editions. Every builder probe ran
-  on an `srd-2024`-shaped fixture, and no `/dev/` probe was written, so the photo write, the backup
-  ring under a Windows rename refusal and `deleteCharacter` against an open handle are unproven on a
-  real desktop install. Most of `build/blocks/` is unread.
+  `build-view-model.svelte.ts`, `list()`'s RV3 keep-set is read and complete — `refsHeld`
+  (`draft.ts:370`) covers every ref-holding draft field, checked against `DraftState` line by line.
+  What the same check found instead is finding 94: the inventory mapper beside it drops a field the
+  draft type never had. `build/blocks/` was not read line by line but was swept for this audit's
+  recurring shapes and is CLEAN on them — no `role="button"` and no `onclick` on a `div`/`span`
+  anywhere in its 34 files, one `a11y_no_static_element_interactions` suppression
+  (`Inspector.svelte:62`) which is a background-click clearer whose `onkeydown` correctly reads
+  `e.code`, and no untranslated user string (the finding 92 scans covered it). `assembled`'s prepared/alwaysPrepared split is
+  finding 96. Still open there: no `/dev/` probe was written, so the photo write,
+  the backup ring under a Windows rename refusal and `deleteCharacter` against an open handle are
+  unproven on a real desktop install.
 - **Combat remainder — covered by findings 60-70, and the third pass closed the reading tail.**
   `CombatStrip.svelte`, `blocks/Abilities.svelte`, `DeathScreen.svelte`, `panel-layout.svelte.ts`,
   `menu-overlay.svelte.ts` and `rest-controls.svelte.ts` are now read in full and came back clean of
