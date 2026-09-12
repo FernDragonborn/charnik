@@ -51,6 +51,10 @@ export class SkillPicks {
 				return;
 			}
 			draft.skills = draft.skills.filter((s) => s !== skill);
+			// An expertise entry NAMES a proficiency, so it goes when the last source of it does: an
+			// orphan is invisible to `expertiseUsed` and fully counted by `toggleCapped`'s evictor,
+			// which then drops a live pick to make room for a dead one.
+			if (!this.isProficient(skill)) draft.expertise = draft.expertise.filter((s) => s !== skill);
 			return;
 		}
 		if (!draft.strict) {

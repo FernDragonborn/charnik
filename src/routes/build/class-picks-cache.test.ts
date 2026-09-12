@@ -12,6 +12,7 @@ import {
 	dropRowSlots,
 	restoreClassPicks,
 	removeClassRow,
+	switchClass,
 	type ClassScopedPicks,
 } from './class-picks-cache';
 
@@ -122,5 +123,31 @@ describe('removing a class row', () => {
 		removeClassRow(d, 0, new Map());
 		removeClassRow(d, 9, new Map());
 		expect(d.classes).toHaveLength(3);
+	});
+});
+
+describe('switching the class in a row', () => {
+	it('keeps picks made before there was any class to own them', () => {
+		const d = blankDraft();
+		d.classes = [{ rowId: 'r0', classId: null, subclassId: null, level: 1 }];
+		d.skills = ['acrobatics', 'stealth'];
+		d.expertise = ['stealth'];
+		d.selectedSpells = ['srd:fireball'];
+		switchClass(d, 0, 'srd:rogue', new Map());
+		// nothing was stashed — there was no class to stash it under — so emptying them has no way back
+		expect(d.skills).toEqual(['acrobatics', 'stealth']);
+		expect(d.expertise).toEqual(['stealth']);
+		expect(d.selectedSpells).toEqual(['srd:fireball']);
+	});
+
+	it('empties the shared pools when the one class that could have filled them leaves — and hands them back', () => {
+		const d = wizardish();
+		const cache = new Map<string, ClassScopedPicks>();
+		switchClass(d, 0, 'srd:rogue', cache);
+		expect(d.skills).toEqual([]);
+		expect(d.expertise).toEqual([]);
+		switchClass(d, 0, 'srd:wizard', cache);
+		expect(d.skills).toEqual(['arcana', 'history']);
+		expect(d.expertise).toEqual(['arcana']);
 	});
 });

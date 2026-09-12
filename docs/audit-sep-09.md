@@ -1442,7 +1442,7 @@ re-derives it.
 Queue item 4, started. These two settle SUSPECTED entries from the first pass and, in doing so, turn
 one of them into a data-loss finding rather than the bookkeeping curiosity it looked like.
 
-### 48 · [ ] HIGH · un-picking a skill orphans its expertise, and the orphan then evicts a live one
+### 48 · [x] HIGH · un-picking a skill orphans its expertise, and the orphan then evicts a live one
 
 `skill-picks.svelte.ts:38` (`toggleSkill`) removes a skill from `draft.skills` and touches
 `draft.expertise` not at all. An exhaustive grep of every write to that array — `class-picks-cache.ts:128`
@@ -1483,7 +1483,7 @@ agree again for free because there is no longer anything for them to disagree ab
 assemble (`build-view-model.svelte.ts:367`) already exists and is not enough: it repairs the saved
 character while the builder keeps mis-counting the live one.
 
-### 49 · [ ] MEDIUM · picking your FIRST class empties the skills you already chose, unrecoverably
+### 49 · [x] MEDIUM · picking your FIRST class empties the skills you already chose, unrecoverably
 
 `class-picks-cache.ts:177` — the wipe is guarded on `draft.classes.length === 1`, and its comment
 explains the intent: "the shared pools belong to whoever is in the draft, so they only empty when the
@@ -1516,7 +1516,7 @@ appeared to do nothing at all" — but that guard covers a stale row index, not 
 The restore path below is unaffected: `returning` is keyed on the incoming `classId` and does not
 depend on anything having been stashed this call.
 
-### 50 · [ ] MEDIUM · swapping a half-feat keeps the old ability, which the boost then silently ignores
+### 50 · [x] MEDIUM · swapping a half-feat keeps the old ability, which the boost then silently ignores
 
 `feat-slots.svelte.ts:106` — `if (first) featAb[key] ??= first;`. The `??=` is the defect: on a feat
 swap the slot already holds an ability, so the default never fires and the **previous feat's** choice
@@ -2925,7 +2925,7 @@ overshot: the other views surface it only when the graph is actually missing.
 `Loading`. A stale-but-working graph with a failed refresh behind it is a NOTICE, not a screen — and
 if it should be one, it belongs to all five, not to the one page a user is mid-task on.
 
-### 87 · [ ] HIGH · moving a saved ASI to another ability grants BOTH, and it compounds with every move
+### 87 · [x] HIGH · moving a saved ASI to another ability grants BOTH, and it compounds with every move
 
 `ability-allocation.svelte.ts:219` reconciles the carried flat boosts against what the restored slots
 re-derive, **per ability**:

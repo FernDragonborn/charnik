@@ -4,8 +4,9 @@
  * free-choice, and each ASI / half-feat slot). Split out of the build view-model.
  *
  * `slotBoosts` is deliberately separate from `abilityBoosts` even though one folds into the other: a
- * loaded character's flat boosts already contain it, so `abilityBoosts` subtracts one from the other
- * and a restored slot does not apply its boost a second time (UBUG-13).
+ * loaded character's flat boosts already contain what its slots granted, so `abilityBoosts` subtracts
+ * the slots AS THE SAVE HELD THEM and a restored slot does not apply its boost a second time
+ * (UBUG-13) — nor keep the old ability when the pick moves to another one.
  *
  * Everything reading the host is a getter, never `$derived`: a field initialiser runs before the
  * constructor assigns `host`.
@@ -26,7 +27,7 @@ import {
 	STANDARD_ARRAY,
 	type StatMethod,
 } from '$lib/build/rules';
-import { parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
+import { asiBoost, parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
 import { splitList } from '$lib/content/schemas';
 import { signed } from '$lib/util/format';
 import { toggleCapped, ORIGIN_SLOT_KEY } from './draft';
@@ -186,37 +187,58 @@ export class AbilityAllocation {
 				)
 			: {};
 	}
-	/** Ability boosts derived PURELY from the ASI/feat slots (per-slot +2/+1 ASI + each half-feat's +1).
-	 *  Split out of `abilityBoosts` so `hydrate` can subtract them from the carried flat boosts — a
-	 *  restored slot re-derives its own boost, so carrying it flat too would double-apply (UBUG-13). */
-	get slotBoosts(): Partial<Record<Ability, number>> {
+	/**
+	 * Ability boosts derived PURELY from the ASI/feat slots (per-slot +2/+1 ASI + each half-feat's +1),
+	 * read off ONE set of slot maps — the live draft for what the build grants now, and the draft as it
+	 * was LOADED for the share the save's own flat boosts already carry.
+	 *
+	 * Both walk the LIVE slot list: lowering a class level in Free takes a slot off the sheet without
+	 * taking its pick out of either map, and the save did not count such an orphan either.
+	 */
+	private boostsFromSlots(
+		slots: Pick<DraftState, 'slotFeats' | 'slotAsi' | 'slotFeatAbility'>,
+	): Partial<Record<Ability, number>> {
 		const out: Partial<Record<Ability, number>> = {};
-		const add = (m: Partial<Record<Ability, number>>) => addBoosts(out, m);
-		for (const s of this.host().feats.featSlots) if (this.host().draft.slotFeats[s.key] === ASI) add(this.host().feats.asiBoostFor(s.key));
+		const feats = this.host().feats;
+		for (const s of feats.featSlots)
+			if (slots.slotFeats[s.key] === ASI) addBoosts(out, asiBoost(slots.slotAsi[s.key]));
 		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot, and
-		// of the granted origin feat, which asks the same question without being a slot
-		for (const key of [...this.host().feats.featSlots.map((s) => s.key), ORIGIN_SLOT_KEY]) {
-			const ab = this.host().draft.slotFeatAbility[key];
-			if (ab && this.host().feats.halfFeatOptionsFor(key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
+		// of the granted origin feat, which asks the same question without being a slot. Validated
+		// against the options of the feat THESE maps hold, so a slot whose feat changed is measured by
+		// the feat that granted the +1 rather than by the one sitting there now.
+		for (const key of [...feats.featSlots.map((s) => s.key), ORIGIN_SLOT_KEY]) {
+			const ab = slots.slotFeatAbility[key];
+			const ref = key === ORIGIN_SLOT_KEY ? feats.originFeatRef : (slots.slotFeats[key] ?? null);
+			if (ab && feats.halfFeatOptionsOf(ref).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
 		}
 		return out;
+	}
+	get slotBoosts(): Partial<Record<Ability, number>> {
+		return this.boostsFromSlots(this.host().draft);
 	}
 	/** All ability boosts folded together: 5.5e background choice + species free-choice + every ASI slot. */
 	get abilityBoosts(): Partial<Record<Ability, number>> {
 		const out: Partial<Record<Ability, number>> = {};
 		const add = (m: Partial<Record<Ability, number>>) => addBoosts(out, m);
 		const slots = this.slotBoosts;
+		const edit = this.host().edit;
 		// A loaded character's flat boosts already CONTAIN what its slots granted, and those slots come
 		// back restored and re-derive their own — so only the residue is carried (species / background,
 		// and an old save that stored no slots at all, where nothing subtracts).
 		//
-		// The subtraction lives here rather than in `hydrate` because `slotBoosts` needs the content
-		// graph for the class's ASI levels: a hydrate racing the graph load sees NO slots, subtracts
-		// nothing, and every carried boost is then applied a second time when the graph lands.
+		// What is subtracted is what the SAVE's own picks granted, never what the live ones grant:
+		// against the live picks, moving a pick to another ability leaves the ability it left with
+		// nothing to cancel against, so the old boost survives as residue while the new one is added on
+		// top — and the inflated total is written back, compounding on every move.
+		//
+		// The subtraction lives here rather than in `hydrate` because it walks the slot list, which
+		// needs the content graph for the class's ASI levels: a hydrate racing the graph load sees NO
+		// slots, subtracts nothing, and every carried boost is applied a second time when it lands.
+		const granted = edit ? this.boostsFromSlots(edit.loaded) : {};
 		addBoosts(
 			out,
 			Object.fromEntries(
-				ABILITIES.map((a) => [a, Math.max((this.host().edit?.boosts[a] ?? 0) - (slots[a] ?? 0), 0)]),
+				ABILITIES.map((a) => [a, Math.max((edit?.boosts[a] ?? 0) - (granted[a] ?? 0), 0)]),
 			),
 		);
 		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)

@@ -35,6 +35,11 @@ async function graphOf(): Promise<ContentGraph> {
 			'id,systems,source,name_en,category,ability_choice,skill_choice',
 			`alert,5.5e,${S},Alert,general,,`,
 			`tough,5.5e,${S},Tough,general,,`,
+			// two half-feats with DISJOINT +1 options, and a third overlapping one: what a slot keeps
+			// across a swap is decided by whether the new feat still offers the ability
+			`wide,5.5e,${S},Wide Reader,general,"int,cha",`,
+			`grappler,5.5e,${S},Grappler,general,"str,dex",`,
+			`lore,5.5e,${S},Lore Keeper,general,"cha,wis",`,
 			`skilled,5.5e,${S},Skilled,origin,,3`,
 			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
 			`gifted,5.5e,${S},Gifted,origin,"str,dex",`
@@ -718,6 +723,88 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.classRows.bumpClassLevel(0, -1);
 		expect(build.draft.classes[0]?.level).toBe(1);
 		expect(build.classRows.canLowerLevel(0)).toBe(false); // level 1 is the floor for everyone
+	});
+
+	it('moving a saved ASI to another ability grants the new one ONLY, however often it moves', () => {
+		build.draft.name = 'Mover';
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 8 },
+		];
+		build.draft.abilities = { str: 15, dex: 14, con: 14, int: 10, wis: 10, cha: 8 };
+		const key = build.feats.featSlots[0]?.key ?? '';
+		build.feats.setSlotFeat(key, ASI);
+		build.feats.toggleAsiPick(key, 'str'); // shape '2' → +2 STR
+		let saved = characterSchema.parse(build.assembled);
+		expect(saved.build.abilityBoosts).toEqual({ str: 2 });
+
+		// re-open (the level-up path) and move the pick: the ability it LEFT keeps nothing. The residue
+		// is measured against the picks the SAVE held, so there is nothing for the old one to survive on.
+		for (const [from, to] of [['str', 'dex'], ['dex', 'con'], ['con', 'int']] as const) {
+			build.reset();
+			build.graph = graph;
+			build.hydrate(saved);
+			build.feats.toggleAsiPick(key, from); // un-pick, then take the other — what the picker does
+			build.feats.toggleAsiPick(key, to);
+			expect(build.assembled.build.abilityBoosts).toEqual({ [to]: 2 });
+			saved = characterSchema.parse(build.assembled);
+		}
+
+		// the same arithmetic one door over: swapping the ASI for a feat takes its +2 with it
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+		build.feats.setSlotFeat(key, `feat:${S}:alert`);
+		expect(build.assembled.build.abilityBoosts).toEqual({});
+		expect(build.assembled.build.feats).toContain(`feat:${S}:alert`);
+	});
+
+	it("a half-feat swap keeps a +1 the new feat still offers and re-points one it does not", () => {
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 4 },
+		];
+		build.draft.abilities = { str: 15, dex: 14, con: 14, int: 10, wis: 10, cha: 8 };
+		const key = build.feats.featSlots[0]?.key ?? '';
+
+		build.feats.setSlotFeat(key, `feat:${S}:wide`); // int / cha → defaults to int
+		expect(build.draft.slotFeatAbility[key]).toBe('int');
+		build.feats.setSlotFeatAbility(key, 'cha');
+		expect(build.assembled.build.abilityBoosts).toEqual({ cha: 1 });
+
+		build.feats.setSlotFeat(key, `feat:${S}:lore`); // cha / wis → CHA is still on offer, so it stays
+		expect(build.draft.slotFeatAbility[key]).toBe('cha');
+		expect(build.assembled.build.abilityBoosts).toEqual({ cha: 1 });
+
+		build.feats.setSlotFeat(key, `feat:${S}:grappler`); // str / dex → CHA is not, so the +1 re-points
+		expect(build.draft.slotFeatAbility[key]).toBe('str');
+		expect(build.assembled.build.abilityBoosts).toEqual({ str: 1 });
+
+		// and a moved half-feat +1 does not leave residue behind on a level-up either
+		const saved = characterSchema.parse(build.assembled);
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+		build.feats.setSlotFeatAbility(key, 'dex');
+		expect(build.assembled.build.abilityBoosts).toEqual({ dex: 1 });
+	});
+
+	it('un-picking a skill takes its expertise with it, so the cap stops evicting a live pick', () => {
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
+		];
+		expect(build.skillPicks.expertiseCap).toBe(2);
+		for (const skill of ['acrobatics', 'stealth']) build.skillPicks.toggleSkill(skill);
+		for (const skill of ['acrobatics', 'stealth']) build.skillPicks.toggleExpertise(skill);
+		expect(build.skillPicks.expertiseUsed).toBe(2);
+
+		build.skillPicks.toggleSkill('stealth'); // no longer proficient → no longer expert
+		expect(build.draft.expertise).toEqual(['acrobatics']);
+		expect(build.skillPicks.expertiseUsed).toBe(1);
+
+		// the freed slot really is free: the new pick lands beside the live one instead of evicting it
+		build.skillPicks.toggleSkill('perception');
+		build.skillPicks.toggleExpertise('perception');
+		expect(build.draft.expertise).toEqual(['acrobatics', 'perception']);
+		expect(build.assembled.build.expertise).toEqual(['acrobatics', 'perception']);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

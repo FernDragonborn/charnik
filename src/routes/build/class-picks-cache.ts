@@ -174,8 +174,9 @@ export function switchClass(
 	if (leaving && stashed) cache.set(leaving, stashed);
 	dropRowSlots(draft, draft.classes[row]?.rowId ?? '');
 	// the shared pools belong to whoever is in the draft, so they only empty when the ONE class that
-	// could have filled them is the class leaving
-	if (draft.classes.length === 1) {
+	// could have filled them is the class LEAVING — picking a first class empties nothing, because
+	// nothing was stashed to hand back and the skills were chosen before any class was there to own them
+	if (leaving && draft.classes.length === 1) {
 		draft.skills = [];
 		draft.expertise = [];
 		draft.selectedSpells = [];

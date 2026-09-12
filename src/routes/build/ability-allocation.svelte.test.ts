@@ -16,12 +16,16 @@ import { POINT_BUY_MIN, STANDARD_ARRAY } from '$lib/build/rules';
 import type { LoadedRowByType } from '$lib/content/loader';
 
 /** A level-up's carried context. Only the boosts and `loaded` matter here — the rest is what the
- *  save puts back untouched. */
+ *  save puts back untouched. `loaded` is the draft the save was made FROM, because that is what the
+ *  carried boosts are measured against. */
 const played = assembleCharacter(
 	{ name: 'hero', abilities: blankDraft().abilities },
 	{ id: 'hero', system: '5.5e', strict: true, shortRestMode: 'half', play: null, ui: null },
 );
-const editing = (boosts: Partial<Record<Ability, number>> = {}): EditContext => ({
+const editing = (
+	boosts: Partial<Record<Ability, number>> = {},
+	loaded: DraftState = blankDraft(),
+): EditContext => ({
 	id: played.id,
 	play: played.play,
 	ui: played.ui,
@@ -31,7 +35,7 @@ const editing = (boosts: Partial<Record<Ability, number>> = {}): EditContext => 
 	spellFlags: new Map(),
 	spells: new Set(),
 	skills: new Set(),
-	loaded: blankDraft(),
+	loaded,
 });
 
 /** The allocation, its draft, and the two neighbours it reads through. Every row lookup answers
@@ -166,18 +170,20 @@ describe('AbilityAllocation — the layers over the base scores', () => {
 	});
 
 	it('an ASI slot boosts through the slot, and a restored one is not counted twice', () => {
-		const { abilities } = setup(
-			{
-				strict: false, // Free, so the edit does not lock the scores this test does not touch
-				classes: [{ rowId: 'r1', classId: 'class:x:fighter', subclassId: null, level: 4 }],
-				slotFeats: { 'r1:4': ASI },
-				slotAsi: { 'r1:4': { shape: '2', picks: ['str'] } },
-			},
-			editing({ str: 2 }),
-		);
+		const filled = {
+			strict: false, // Free, so the edit does not lock the scores this test does not touch
+			classes: [{ rowId: 'r1', classId: 'class:x:fighter', subclassId: null, level: 4 }],
+			slotFeats: { 'r1:4': ASI },
+			slotAsi: { 'r1:4': { shape: '2' as const, picks: ['str' as Ability] } },
+		};
+		const { draft, abilities } = setup(filled, editing({ str: 2 }, { ...blankDraft(), ...filled }));
 		expect(abilities.slotBoosts).toEqual({ str: 2 });
 		// the carried flat +2 IS this slot's: it re-derives, so only the residue is carried
 		expect(abilities.abilityBoosts).toEqual({ str: 2 });
+
+		// moving the pick moves the boost — the save's own +2 cancels wherever the live pick now points
+		draft.slotAsi = { 'r1:4': { shape: '2', picks: ['dex'] } };
+		expect(abilities.abilityBoosts).toEqual({ dex: 2 });
 	});
 
 	it('provenance splits a score into base, allocated boost and everything else', () => {
