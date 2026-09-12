@@ -85,22 +85,22 @@
 							<span class="name-main">{r.name}</span>
 							<span
 								class="pin-star"
-								class:on={pinned[r.id]}
+								class:on={pinned[r.ref]}
 								role="button"
 								tabindex="-1"
 								title={$_('combat.spells.pinToTop')}
 								onclick={(e) => {
 									e.stopPropagation();
-									combat.togglePin(r.id);
+									combat.togglePin(r.ref);
 								}}
 								onkeydown={(e) => {
 									if (e.key === 'Enter' || e.key === ' ') {
 										e.preventDefault();
 										e.stopPropagation();
-										combat.togglePin(r.id);
+										combat.togglePin(r.ref);
 									}
 								}}
-								><Icon name="star" size={13} fill={pinned[r.id] ? 'currentColor' : 'none'} /></span
+								><Icon name="star" size={13} fill={pinned[r.ref] ? 'currentColor' : 'none'} /></span
 							>
 							{#if r.ritual && s.spellcasting.ritualCasting}
 								<!-- ritual cast: no spell slot (A17). Only shown when the character HAS ritual casting

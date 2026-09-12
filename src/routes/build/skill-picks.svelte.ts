@@ -19,8 +19,12 @@ import type { BuildVM } from './build-view-model.svelte';
  *  the shape off the class costs no runtime cycle and cannot drift from it. */
 export type SkillPicksHost = Pick<
 	BuildVM,
-	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow' | 'feats'
->;
+	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow'
+> & {
+	/** Named structurally rather than picked off `BuildVM`: `FeatsHost` picks `skillPicks` off the same
+	 *  class, and two Picks naming each other are a circular mapped type. */
+	feats: { featSkillPicks: string[] };
+};
 
 export class SkillPicks {
 	/* The host arrives as an ACCESSOR: a `$derived` field initialiser runs before a constructor

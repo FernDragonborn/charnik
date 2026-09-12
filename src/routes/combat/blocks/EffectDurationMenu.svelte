@@ -2,11 +2,13 @@
 	// Anchored dropdown for an effect's duration: a minus/plus stepper row on top, then the
 	// common-duration presets and a Custom… exact-rounds input. Opens beside/below the effect's
 	// remaining-rounds control, clamped to the viewport, follows that control when the page scrolls,
-	// and closes on a pointer outside it. Writes through the combat view-model.
+	// closes on a pointer outside it or on Escape (it is a dialog, and the way in is a keyboard path).
+	// Writes through the combat view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 
 	let {
 		iid,
@@ -84,6 +86,7 @@
 	role="dialog"
 	aria-label={$_('combat.duration.menu')}
 	style="top:{pos.top}px; left:{pos.left}px"
+	use:dismissOnEscape={onclose}
 >
 	<div class="dur-step-row">
 		<button

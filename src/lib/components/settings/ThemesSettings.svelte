@@ -281,7 +281,7 @@
 						type="color"
 						value={value.trim()}
 						oninput={(e) => setToken(editing.id, token, e.currentTarget.value)}
-						aria-label="{label(token)} colour"
+						aria-label={$_('settings.themes.tokenColorLabel', { values: { token: label(token) } })}
 					/>
 				{:else}
 					<span class="swatch swatch-lg" style="background: {value || 'transparent'}"></span>

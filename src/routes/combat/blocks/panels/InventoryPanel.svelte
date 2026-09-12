@@ -10,14 +10,21 @@
 	import { _ } from '$lib/i18n';
 	import { ATTUNEMENT_CAP } from '$lib/character/inventory';
 	import { kilograms } from '$lib/combat/constants';
+	import { why } from '$lib/combat/helpers';
+	import { provenance } from '$lib/actions/provenance';
 
 	const inv = $derived(combat.inventory);
 	const rows = $derived(inv.rows);
+	// `why` returns the provenance SENTENCE (the action takes a string), '' when there is no sheet yet
+	const capacityWhy = $derived(combat.sheet ? why(combat.sheet.carryingCapacity, $_) : '');
 </script>
 
 <div class="load">
 	<span class="eyebrow">{$_('combat.inventory.load')}</span>
-	<span class="load-figure">
+	<!-- ui.md rule 3 lists carrying capacity among the values that must explain themselves — and the
+	     5e encumbrance tiers live ONLY in this value's notes, so without the popover the two thresholds
+	     that change a 2014 character's speed are computed and unreachable -->
+	<span class="load-figure" use:provenance={capacityWhy}>
 		{$_('combat.inventory.weight', {
 			values: { carried: Math.round(inv.carriedLb), capacity: inv.capacityLb },
 		})}

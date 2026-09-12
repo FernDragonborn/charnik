@@ -29,9 +29,7 @@
 	const sheet = $derived(combat.sheet);
 	// The sheet can't compute until content is loaded, so while the graph is still null the wait is
 	// really about content, not the sheet — say so instead of the misleading "computing your sheet".
-	const loadingMessage = $derived(
-		content.graph ? 'Computing your character sheet…' : 'Loading content…',
-	);
+	const loadingMessage = $derived($_(content.graph ? 'loading.sheet' : 'loading.content'));
 	const columns = $derived(combat.layout.columns);
 	const flipDurationMs = combat.layout.flipDurationMs;
 	const dragDisabled = $derived(combat.layout.dragDisabled);

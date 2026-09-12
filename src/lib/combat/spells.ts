@@ -5,6 +5,7 @@
  */
 import { ordinal, titleCase } from '$lib/util/format';
 import type { ContentGraph } from '$lib/content/loader';
+import { localizedName } from '$lib/content/detail';
 import type { RowData } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -252,6 +253,8 @@ export interface SpellGroupsInput {
 	graph: ContentGraph;
 	groupBy: GroupMode;
 	pinned: Record<string, boolean>;
+	/** The active UI locale — a row's name is read in it, not in English. */
+	locale?: string;
 	/** effectiveIds hidden from the sheet via the spellbook eye (Issue #3) — filtered out entirely. */
 	hidden?: readonly string[];
 }
@@ -269,6 +272,7 @@ export function buildSpellGroups({
 	groupBy,
 	pinned,
 	hidden = [],
+	locale = 'en',
 }: SpellGroupsInput): SpellGroup[] {
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
@@ -276,12 +280,12 @@ export function buildSpellGroups({
 	const all: SpEntry[] = character.build.spells
 		.map((sp) => ({
 			sp,
-			row: spellRow(graph, sp.spell, prepState(sp), sheet?.level ?? 1),
+			row: spellRow(graph, sp.spell, prepState(sp), { charLevel: sheet?.level ?? 1, locale }),
 		}))
 		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));
 	const groups: SpellGroup[] = [];
-	const pins = all.filter((x) => pinned[x.row.id]);
+	const pins = all.filter((x) => pinned[x.row.ref]);
 	if (pins.length)
 		groups.push({
 			key: 'pinned',
@@ -351,7 +355,9 @@ export function spellRow(
 	graph: ContentGraph,
 	ref: string,
 	prep: SpellRow['prepState'],
-	charLevel = 1,
+	/** How the row READS: the character level cantrip dice scale with, and the locale its name is said
+	 *  in. One object, because two trailing scalars is where a parameter list stops being readable. */
+	{ charLevel = 1, locale = 'en' }: { charLevel?: number; locale?: string } = {},
 ): SpellRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
@@ -362,7 +368,9 @@ export function spellRow(
 	return {
 		id: d.id,
 		ref,
-		name: d.name_en,
+		// the ONE localized-name reader (F9), as the attacks and features panels already use — the same
+		// spell was two different words on one screen
+		name: localizedName(row, locale),
 		level: lvl,
 		summary: dmg || effectHint(d),
 		resolution: SP_RES_CHIP[res] ?? '',

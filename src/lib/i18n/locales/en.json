@@ -457,8 +457,10 @@
 			"noteDamageBonus": "{amount} damage",
 			"noteDamageUnread": "Damage not fully read — {fragments} ignored",
 			"noteNoBaseWeapon": "Base weapon not set — roll its own dice",
+			"noteNotAttuned": "Not attuned — its magic does nothing",
 			"noteNotProficient": "Not proficient — no proficiency bonus",
 			"noteScopedAttack": "{amount} attack ({source})",
+			"noteScopedDamage": "{amount} damage ({source})",
 			"unarmedStrike": "Unarmed Strike"
 		},
 		"attacksPerAction": "{count, plural, one {# attack} other {# attacks}} per Attack action",
@@ -775,6 +777,7 @@
 			"duskAmount": "dusk (+{amount})"
 		},
 		"resource": {
+			"useOne": "Use one {name}",
 			"useOneTitle": "Use one {name} · {recharge} ({source})"
 		},
 		"restKind": {
@@ -994,6 +997,7 @@
 		"rollToHit": "{name} — to hit",
 		"save": "save",
 		"score": "score",
+		"searchType": "Search {type}…",
 		"settingsData": "Settings → Data",
 		"sourceLine": "Source: {source} · {pack}",
 		"vitals": "Vitals"
@@ -1209,6 +1213,7 @@
 		"groupTranslations": "Translations",
 		"hint": "Resume picks up exactly where you left off. Deleting a draft is permanent.",
 		"loading": "loading…",
+		"newEntryLabel": "(new entry)",
 		"orphanReason": "target entry not found (deleted or source disabled)",
 		"orphanTag": "orphan",
 		"resolve": "Resolve…",
@@ -1285,6 +1290,9 @@
 		"editForkNote": "This entry ships with Charnik, so your edit is saved as a homebrew copy (the original stays untouched and your version sorts above it).",
 		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
 		"editInPlaceNote": "Editing your homebrew entry in place.",
+		"eyebrowEdit": "{type} · edit",
+		"eyebrowFork": "{type} · fork to homebrew",
+		"eyebrowNew": "{type} · new homebrew",
 		"fixFirst": "Fix before saving:",
 		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
 		"info": {
@@ -1385,10 +1393,13 @@
 		"empty": "No language matches “{query}”."
 	},
 	"loading": {
+		"content": "Loading content…",
+		"default": "Crunching the numbers…",
 		"failedBody": "Something went wrong reading the content files. The error was:",
 		"failedReport": "Please report this with the message above.",
 		"failedTitle": "Couldn’t load content",
-		"patience": "This can take up to 10 seconds — please wait."
+		"patience": "This can take up to 10 seconds — please wait.",
+		"sheet": "Computing your character sheet…"
 	},
 	"missingContent": {
 		"title": "There are no rules on disk",
@@ -1528,6 +1539,7 @@
 			"advantage": "rolled with advantage",
 			"disadvantage": "rolled with disadvantage"
 		},
+		"inheritedType": "{type} · inherited from the group on its left",
 		"intoTheList": "into the list",
 		"issue": {
 			"unaccounted": "I can’t account for “{text}”",
@@ -1832,7 +1844,8 @@
 			"export": "Export",
 			"import": "Import theme…",
 			"namePlaceholder": "Theme name",
-			"title": "Themes"
+			"title": "Themes",
+			"tokenColorLabel": "Colour of {token}"
 		}
 	},
 	"skillName": {

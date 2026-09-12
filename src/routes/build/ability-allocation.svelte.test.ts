@@ -28,6 +28,7 @@ const editing = (boosts: Partial<Record<Ability, number>> = {}): EditContext => 
 	boosts,
 	feats: [],
 	featSkills: [],
+	spellFlags: new Map(),
 	spells: new Set(),
 	skills: new Set(),
 	loaded: blankDraft(),
@@ -57,8 +58,10 @@ function setup(over: Partial<DraftState> = {}, edit: EditContext | null = null) 
 			return rows.species;
 		},
 	};
-	const skillPicks = new SkillPicks(() => base);
-	const feats = new FeatSlots(() => ({ ...base, skillPicks }));
+	// annotated, and each host reads the OTHER lazily: the two know about each other, so an inferred
+	// type here is a cycle
+	const skillPicks: SkillPicks = new SkillPicks(() => ({ ...base, feats }));
+	const feats: FeatSlots = new FeatSlots(() => ({ ...base, skillPicks }));
 	return { draft, rows, abilities: new AbilityAllocation(() => ({ ...base, feats })) };
 }
 

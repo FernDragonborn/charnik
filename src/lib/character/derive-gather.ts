@@ -10,6 +10,8 @@
 import { ISSUE_KEY, isWeaponOwnBonus } from '$lib/effects/token-parser';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
+import { resolveItem } from '../content/resolved-item';
+import { needsAttunement } from './inventory';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
@@ -58,8 +60,19 @@ class EffectGatherer {
 		for (const entry of b.classes) this.gatherClass(entry);
 		// feats (incl. repeatable ones taken more than once → their effect applies each time)
 		for (const featRef of b.feats) this.pushRow(this.resolve(featRef), 'feature');
-		for (const inv of b.inventory)
-			if (inv.equipped || inv.attuned) this.pushRow(this.resolve(inv.item), 'item');
+		// RAW, both editions: an item that REQUIRES attunement confers nothing until it is attuned —
+		// equipping it is not enough, and the `attunement` tag was read only to draw the button
+		for (const inv of b.inventory) {
+			const row = this.resolve(inv.item);
+			if (!row) continue;
+			const carried = inv.equipped || inv.attuned;
+			if (!carried) continue;
+			// resolved against its base (or the player's chosen one), so the tag read here is the MERGED
+			// one — the same answer the inventory panel gets
+			const attunementNeeded =
+				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
+			if (!attunementNeeded || inv.attuned) this.pushRow(row, 'item');
+		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
 		return this.active;

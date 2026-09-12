@@ -24,7 +24,7 @@ import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
-import { UNARMED_STRIKE_ID, numberedAttackRollName } from '$lib/combat/attacks';
+import { UNARMED_STRIKE_ID, numberedAttackRollName, attackNotes } from '$lib/combat/attacks';
 
 const S = 'SRD 5.2.1';
 
@@ -491,9 +491,9 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	});
 
 	it('a count cantrip (EB) does NOT die-multiply; a damage cantrip (Fire Bolt) still does (item 9)', () => {
-		combat.cast(spellRow(graph, `spell:${S}:fbolt`, 'on', 5)!, noModifiers); // char level 5
+		combat.cast(spellRow(graph, `spell:${S}:fbolt`, 'on', { charLevel: 5 })!, noModifiers); // char level 5
 		expect(partDiceOf('fire', 10)).toBe(2); // die-scaling: 1d10 → 2d10 at level 5
-		combat.cast(spellRow(graph, `spell:${S}:blast`, 'on', 5)!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:blast`, 'on', { charLevel: 5 })!, noModifiers);
 		expect(partDiceOf('force', 10)).toBe(1); // count-scaling: stays 1d10 (2nd beam = separate roll)
 	});
 
@@ -1025,6 +1025,22 @@ describe('CombatVM · S2 split net', () => {
 		expect(a.mod).toBe(plain.mod);
 		expect(a.check.value).toBe(plain.mod - 2);
 		expect(a.save.value).toBe(plain.save.value - 2);
+	});
+
+	it('the attack row prints the damage its own tap rolls (a scoped bonus lands on both)', () => {
+		character.play.round = 11;
+		// Rage's shape in the shipped packs: a damage bonus scoped to melee Strength attacks
+		combat.effects.addEffect({
+			label: 'Rage',
+			tokens: ['flat_bonus:damage.melee,str+2'],
+			positive: true,
+		});
+		const row = combat.attacks.find((a) => a.id === 'dagger')!;
+		combat.attackRoll(row, noModifiers);
+		const rolled = combat.journal.log[0]!.damage![0]!;
+		// the number on the row IS the number the roll used — the row was two lower before
+		expect(rolled.mod).toBe(row.damageParts[0]!.mod);
+		expect(attackNotes(row)).toContain('damage (Rage)');
 	});
 
 	it('Extra Attack: the strikes of one Attack action cost one Action between them', () => {

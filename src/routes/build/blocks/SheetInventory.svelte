@@ -9,6 +9,7 @@
 	import { provenance } from '$lib/actions/provenance';
 	import { kilograms } from '$lib/combat/constants';
 	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
+	import { resolveItem } from '$lib/content/resolved-item';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -16,7 +17,10 @@
 	const carried = $derived(
 		b.draft.inventory.reduce((lb, entry) => {
 			const row = rowOfType(b.row(entry.item), 'item');
-			return lb + Number(row?.data.weight_lb ?? 0) * entry.qty;
+			// through `resolveItem`: a magic weapon's own weight cell is blank and the weapon it IS
+			// carries the pounds
+			const weight = row && b.graph ? resolveItem(b.graph, row, entry.base ?? undefined).weightLb : 0;
+			return lb + weight * entry.qty;
 		}, 0)
 	);
 	const capacity = $derived(s?.carryingCapacity.value ?? 0);

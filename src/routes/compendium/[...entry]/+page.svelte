@@ -539,7 +539,9 @@
 				{groups}
 				bind:searchValue={query}
 				{showEdition}
-				searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
+				searchPlaceholder={$_('compendium.searchType', {
+					values: { type: $_(`contentType.${selectedType}`) },
+				})}
 				selectedId={selected?.effectiveId ?? null}
 				onselect={(e) => openEntry(e.row)}
 			/>

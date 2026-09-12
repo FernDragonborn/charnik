@@ -153,7 +153,11 @@ export interface DraftState {
 	 *  `build.featSkills`. */
 	slotFeatSkills: Record<string, string[]>;
 	selectedSpells: string[];
-	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
+	/** Carried items, in the SAVE's own entry shape rather than a hand-listed copy of it: the copy had
+	 *  already dropped `attuned` once and `base` (which weapon a template magic item IS) once, and each
+	 *  loss was silent because the draft type agreed with the mapper. Borrowing the type makes a new
+	 *  REQUIRED column fail here; the round-trip test in `build.test.ts` covers the optional ones. */
+	inventory: Character['build']['inventory'];
 	/** Free prose for the table — bonds, flaws, a debt. One bullet per line; affects nothing. */
 	notes: string;
 	/** The portrait file already SAVED beside this character (`photo.webp`), or null. A portrait
@@ -317,7 +321,10 @@ export function draftFromCharacter(char: Character): DraftState {
 			item: i.item,
 			qty: i.qty,
 			equipped: i.equipped,
-			attuned: i.attuned // preserve attunement through the builder round-trip (D15)
+			attuned: i.attuned, // preserve attunement through the builder round-trip (D15)
+			// …and WHICH weapon a template magic item is: without it a level-up strips the base, and the
+			// Flame Tongue loses its dice, its damage type and the proficiency its category granted
+			...(i.base ? { base: i.base } : {})
 		}))
 	};
 	adoptRowIds(draft.classes, draft);
@@ -402,6 +409,10 @@ export interface EditContext {
 	featSkills: string[];
 	/** Spells / skills the character already had — can't be undone in Strict edit. */
 	spells: Set<string>;
+	/** …and the prepared flags each of those spells was SAVED with. The build cannot re-derive them:
+	 *  whether a spell is prepared is the player's answer and `alwaysPrepared` is the class's grant,
+	 *  and recomputing both from the spell's level undid every one of those decisions on a level-up. */
+	spellFlags: Map<string, { prepared: boolean; alwaysPrepared: boolean }>;
 	skills: Set<string>;
 	/**
 	 * The draft exactly as this character was loaded — every decision it had already made.

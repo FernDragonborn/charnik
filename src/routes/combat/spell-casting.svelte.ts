@@ -543,10 +543,10 @@ export class SpellCasting {
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpellRow) => {
 		if (!this.host.character) return;
-		// SMELL-4: match by the ref's parsed id segment, not a string suffix — self-evident and stable
-		// if the `type:source:id` ref format ever changes. (`s.spell` is a full ref; `r.id` is the id.)
-		const idOf = (ref: string) => ref.split(':').pop();
-		const sp = this.host.character.build.spells.find((s) => idOf(s.spell) === r.id);
+		// by the REF, which is what a spell IS (`type:source:id`): matching on the bare id made two
+		// same-id spells from two packs one spell, and the first entry always won — so tapping the prep
+		// dot on one flipped the other and read as a no-op
+		const sp = this.host.character.build.spells.find((s) => s.spell === r.ref);
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the spellbook, D13)
 		const res = canTogglePreparedFor({
 			spells: this.host.character.build.spells,

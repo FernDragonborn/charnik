@@ -635,6 +635,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export SYSTEMS`
 - `re-export ABILITIES`
 - `const abilityScores`
+- `const EXHAUSTION_MAX` — The tallest exhaustion ladder a character may carry.
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
@@ -1665,4 +1666,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 995 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 996 exports across 134 modules · 65 duplicate suspects._

@@ -21,8 +21,12 @@ import type { AsiShape } from './draft';
  *  than re-described, so the two cannot drift apart. `import type` is erased, so no runtime cycle. */
 export type FeatsHost = Pick<
 	BuildVM,
-	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'skillPicks' | 'row'
->;
+	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'row'
+> & {
+	/** Named structurally, not picked: `SkillPicksHost` names `feats` and two Picks that name each
+	 *  other off the same class are a circular mapped type. This is the one member asked for here. */
+	skillPicks: { isProficientBeforeFeats(skill: string): boolean };
+};
 
 export class FeatSlots {
 	/* The host arrives as an ACCESSOR, not an object: a $derived field initialiser runs before a

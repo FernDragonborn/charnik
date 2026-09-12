@@ -3,9 +3,11 @@
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
 import type { Ability } from '$lib/rules/core';
+import { matchesTarget } from '$lib/effects/facts';
 import { gatherProfGrants, isWeaponProficient, withGrantedProfs } from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
+import { needsAttunement } from '$lib/character/inventory';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -42,8 +44,10 @@ const ATTACK_NOTE = {
 	attackBonus: 'combat.attacks.noteAttackBonus',
 	damageBonus: 'combat.attacks.noteDamageBonus',
 	scopedAttack: 'combat.attacks.noteScopedAttack',
+	scopedDamage: 'combat.attacks.noteScopedDamage',
 	notProficient: 'combat.attacks.noteNotProficient',
 	noBaseWeapon: 'combat.attacks.noteNoBaseWeapon',
+	notAttuned: 'combat.attacks.noteNotAttuned',
 	damageUnread: 'combat.attacks.noteDamageUnread',
 } as const;
 
@@ -272,33 +276,43 @@ function metaTags(tags: ItemTags): AttackMeta {
 	return { kinds, ...(property ? { property } : {}) };
 }
 
-/** §A: sum the character-level weapon-scoped `flat_bonus:attack:<category>` bonuses (Archery
- *  `attack:ranged+2`, later Dueling/GWF) that match a weapon in `scopes`. Only LITERAL `add` amounts
- *  fold (a scoped dice/expression bonus rides the roll path — none shipped). Returns bonus + a note. */
-function scopedAttackBonus(
+/**
+ * §A: the flat character-level bonuses this weapon's `attack` (or `damage`) actually takes — the
+ * scoped ones whose every scope part matches (Archery `attack:ranged+2`, a Rage `damage.melee,str+2`),
+ * the unscoped ones, and the group targets that fan out to this key (2024 exhaustion's `d20_tests-2`).
+ * Only LITERAL `add` amounts fold; dice and expression bonuses ride the roll path and are said as
+ * notes, because a row cannot print a die.
+ *
+ * BOTH axes go through here so the row and the tap cannot disagree: the damage half used to fold
+ * nowhere, so a raging barbarian's row printed a number two lower than the same row rolled.
+ */
+function scopedFlatBonus(
 	facts: CharacterSheet['facts'],
+	target: 'attack' | 'damage',
 	scopes: Set<string>,
 ): {
-	attack: number;
+	amount: number;
 	notes: AttackNote[];
 } {
-	let attack = 0;
+	let amount = 0;
 	const notes: AttackNote[] = [];
+	const noteKey = target === 'attack' ? ATTACK_NOTE.scopedAttack : ATTACK_NOTE.scopedDamage;
+	const word = target === 'attack' ? 'attack' : 'damage';
 	for (const f of facts.numeric) {
-		if (f.op !== 'add' || f.target !== 'attack' || !f.scope) continue;
+		if (f.op !== 'add' || !matchesTarget(f.target, target) || f.amount === undefined) continue;
 		// a scope is a LIST and every part must match (`melee,str`), the same sentence `roll.ts`
-		// applies to a damage scope — this side used to compare the whole string, so a two-part attack
-		// scope matched a set holding both its parts and neither of them together
-		if (!f.scope.split(',').every((part) => scopes.has(part)) || f.amount === undefined) continue;
-		attack += f.amount;
+		// applies — this side used to compare the whole string, so a two-part scope matched a set
+		// holding both its parts and neither of them together
+		if (f.scope && !f.scope.split(',').every((part) => scopes.has(part))) continue;
+		amount += f.amount;
 		notes.push(
-			attackNote(ATTACK_NOTE.scopedAttack, `${signed(f.amount)} attack (${f.source})`, {
+			attackNote(noteKey, `${signed(f.amount)} ${word} (${f.source})`, {
 				amount: signed(f.amount),
 				source: f.source,
 			}),
 		);
 	}
-	return { attack, notes };
+	return { amount, notes };
 }
 
 /**
@@ -315,6 +329,31 @@ export function attackAbility(
 	if (tags.has(ITEM_TAG.ranged)) return { ability: 'dex', mod: dexMod };
 	if (tags.has(ITEM_TAG.finesse) && dexMod > strMod) return { ability: 'dex', mod: dexMod };
 	return { ability: 'str', mod: strMod };
+}
+
+/**
+ * The Unarmed Strike row. A melee attack that carries no weapon properties, so it reads the SAME
+ * melee-scoped bonuses a weapon does — it is one of the attacks a scope names, and leaving it out made
+ * a character's fists the one melee attack a melee bonus skipped. Its damage is `1 + STR` by the book.
+ * Always Strength, so it carries that scope like any weapon that resolved from it — which is what makes
+ * 2024's "with either a weapon or an Unarmed Strike" fall out.
+ */
+function unarmedStrike(sheet: CharacterSheet, prof: number, strMod: number): Attack {
+	const unarmedScopes = new Set(['melee', 'str', UNARMED_STRIKE_ID]);
+	const unarmedScoped = scopedFlatBonus(sheet.facts, 'attack', unarmedScopes);
+	const unarmedDamage = scopedFlatBonus(sheet.facts, 'damage', unarmedScopes);
+	return {
+		id: UNARMED_STRIKE_ID,
+		name: '',
+		nameKey: 'combat.attacks.unarmedStrike',
+		toHit: strMod + prof + unarmedScoped.amount,
+		scopes: [...unarmedScopes],
+		damageParts: [{ pool: {}, mod: 1 + strMod + unarmedDamage.amount, type: 'bludgeoning' }],
+		meta: { kinds: [ITEM_TAG.melee] },
+		...(unarmedScoped.notes.length || unarmedDamage.notes.length
+			? { notes: [...unarmedScoped.notes, ...unarmedDamage.notes] }
+			: {}),
+	};
 }
 
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
@@ -353,7 +392,18 @@ export function computeAttacks(
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
 		// flat_bonus:attack / flat_bonus:damage; a dice / expression bonus (a flaming +1d6) needs the
 		// roll path or a ctx and degrades to a VISIBLE note, never a silent drop.
-		const w = weaponBonus(row.data.effects);
+		// RAW, both editions: a magic item that REQUIRES attunement confers nothing until it is attuned.
+		// The weapon's own bonus never reaches the global facts (D9 keeps it on this row), so the gate
+		// the gather applies to every other item has to be applied here too — and SAID, because an
+		// inactive +1 is indistinguishable from a weapon that never had one.
+		const attunementHeld = !needsAttunement(item) || inv.attuned;
+		const w = attunementHeld
+			? weaponBonus(row.data.effects)
+			: {
+					attack: 0,
+					damage: 0,
+					notes: [attackNote(ATTACK_NOTE.notAttuned, 'Not attuned — its magic does nothing')],
+				};
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
@@ -363,7 +413,8 @@ export function computeAttacks(
 		// rather than off the weapon: Rage pays out on "an attack using Strength", so a rapier swung
 		// with Dexterity must not take it while the same rapier swung with Strength does.
 		const scopeSet = new Set([...item.tags.keys(), row.id, ability]);
-		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
+		const scoped = scopedFlatBonus(sheet.facts, 'attack', scopeSet);
+		const scopedDamage = scopedFlatBonus(sheet.facts, 'damage', scopeSet);
 		const notProfNote = proficient
 			? undefined
 			: attackNote(ATTACK_NOTE.notProficient, 'Not proficient — no proficiency bonus');
@@ -389,12 +440,15 @@ export function computeAttacks(
 		const notes = [
 			...(w.notes ?? []),
 			...scoped.notes,
+			...scopedDamage.notes,
 			notProfNote,
 			templateNote,
 			damageNote,
 		].filter((n) => n !== undefined);
+		// the character-level damage bonuses land on the PRIMARY part, where RAW puts them and where the
+		// roll path puts them too — the row and the tap now read the same number
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
-			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p,
+			i === 0 ? { ...p, mod: p.mod + mod + w.damage + scopedDamage.amount } : p,
 		);
 		// typed magic damage (flaming +1d6 fire) rides as extra part(s) after the weapon's own types
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
@@ -402,30 +456,13 @@ export function computeAttacks(
 			id: row.id,
 			// the same name the compendium and every other row on the sheet print
 			name: localizedName(row, locale),
-			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
+			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
 			damageParts,
 			meta: metaTags(item.tags),
 			scopes: [...scopeSet],
 			...(notes.length ? { notes } : {}),
 		});
 	}
-	// an unarmed strike is a melee attack, but carries no weapon properties. It reads the SAME
-	// melee-scoped attack bonuses a weapon does — it is one of the attacks that scope names, and
-	// leaving it out made a character's fists the one melee attack a melee bonus skipped. Its damage
-	// is `1 + STR` by the book; effects (a Rage +2) fold in at the roll, as they do for every weapon.
-	// an unarmed strike is always Strength, so it carries that scope like any weapon that resolved
-	// from it — which is what makes 2024's "with either a weapon or an Unarmed Strike" fall out.
-	const unarmedScopes = new Set(['melee', 'str', UNARMED_STRIKE_ID]);
-	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
-	out.push({
-		id: UNARMED_STRIKE_ID,
-		name: '',
-		nameKey: 'combat.attacks.unarmedStrike',
-		toHit: strMod + prof + unarmedScoped.attack,
-		scopes: [...unarmedScopes],
-		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
-		meta: { kinds: [ITEM_TAG.melee] },
-		...(unarmedScoped.notes.length ? { notes: unarmedScoped.notes } : {}),
-	});
+	out.push(unarmedStrike(sheet, prof, strMod));
 	return out;
 }

@@ -274,7 +274,9 @@
 			role="button"
 			tabindex="-1"
 			title={pill.kind === PILL_KIND.damageType
-				? `${pill.type}${pill.inherited ? ' · inherited from the group on its left' : ''}`
+				? pill.inherited
+					? $_('roller.inheritedType', { values: { type: pill.type ?? '' } })
+					: (pill.type ?? '')
 				: pill.text}
 			ondragstart={(e) => e.dataTransfer?.setData('text/roller-pill', `${index}:${at}`)}
 			onclick={(e) => {

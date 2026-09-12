@@ -4,10 +4,9 @@
 	// broken content bundle on an installed app is diagnosable rather than an endless "Loading…".
 	import { _ } from '$lib/i18n';
 	import { base } from '$app/paths';
-	let {
-		message = 'Crunching the numbers…',
-		error = null,
-	}: { message?: string; error?: string | null } = $props();
+	// the default is a CATALOG LOOKUP, not an English sentence: the builder passes no message, so an
+	// English default is the one loading screen that never translates
+	let { message, error = null }: { message?: string; error?: string | null } = $props();
 </script>
 
 {#if error}
@@ -20,7 +19,7 @@
 {:else}
 	<div class="loadscreen" role="status" aria-live="polite">
 		<img class="loadgif" src="{base}/loading-dice.gif" alt="" width="220" height="244" />
-		<p class="loadbig">{message}</p>
+		<p class="loadbig">{message ?? $_('loading.default')}</p>
 		<p class="loadsub">{$_('loading.patience')}</p>
 	</div>
 {/if}

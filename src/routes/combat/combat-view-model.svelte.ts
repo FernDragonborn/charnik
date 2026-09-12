@@ -13,6 +13,7 @@ import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import { localizedName } from '$lib/content/detail';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
@@ -247,16 +248,18 @@ class CombatVM {
 	hasDuskPool = $derived(this.resources.hasBoundaryPool('dusk'));
 	/** Is there anything out of combat that the passage of time DOES something to? */
 	showTimeBar = $derived(this.hasTimedEffects || this.hasDawnPool || this.hasDuskPool);
-	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
-	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
+	// D3: pins persist per character in ui.spellsPinned, keyed by the spell's REF the way
+	// `spellsHidden` is — a bare id pinned every same-id spell from every pack at once, and the eye one
+	// row over disagreed about what a spell is. Exposed as a boolean map for the panel's lookup;
+	// toggle via togglePin so the array stays the source.
 	pinned = $derived<Record<string, boolean>>(
-		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((id) => [id, true])),
+		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((ref) => [ref, true])),
 	);
-	togglePin = (id: string) => {
+	togglePin = (ref: string) => {
 		const ui = this.character?.ui;
 		if (!ui) return;
 		const cur = ui.spellsPinned ?? [];
-		ui.spellsPinned = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+		ui.spellsPinned = cur.includes(ref) ? cur.filter((x) => x !== ref) : [...cur, ref];
 	};
 	hiddenActions = $state<Record<string, boolean>>({});
 	customEffectLabel = $state('');
@@ -374,22 +377,23 @@ class CombatVM {
 		return classes
 			.map((c) => {
 				const row = graph.get(c.class);
-				return row ? `${row.data.name_en} ${c.level}` : `Level ${c.level}`;
+				return row ? `${localizedName(row, app.activeLocale)} ${c.level}` : `Level ${c.level}`;
 			})
 			.join(' / ');
 	});
-	speciesName = $derived.by(() =>
-		this.character?.build.species && this.graph
-			? String(this.graph.get(this.character.build.species)?.data.name_en ?? '')
-			: '',
-	);
+	speciesName = $derived.by(() => {
+		const row = this.character?.build.species
+			? this.graph?.get(this.character.build.species)
+			: undefined;
+		return row ? localizedName(row, app.activeLocale) : '';
+	});
 	/** The spell currently concentrated on (resolved to a display label), or null. Reads the schema's
 	 *  `play.concentration` ref — set on cast, cleared by tapping the indicator. */
 	conc = $derived.by<{ ref: string; label: string } | null>(() => {
 		const ref = this.character?.play.concentration;
 		if (!ref) return null;
-		const name = this.graph?.get(ref)?.data.name_en;
-		return { ref, label: name ? String(name) : ref };
+		const row = this.graph?.get(ref);
+		return { ref, label: row ? localizedName(row, app.activeLocale) : ref };
 	});
 	/** Remove the cast-applied effect linked to a spell ref (`source === ref`) — dropping or
 	 *  replacing concentration takes the spell's own buff down with it. */
@@ -452,12 +456,19 @@ class CombatVM {
 	totalLevel = $derived(this.character?.build.classes.reduce((n, c) => n + c.level, 0) ?? 0);
 	/** Can still gain a level (hard cap 20 total). */
 	canLevelUp = $derived(this.totalLevel < 20 && (this.character?.build.classes.length ?? 0) > 0);
+	/** A ref's display name in the active locale, or `fallback` when the row is gone. The sheet reads a
+	 *  content name the way every other surface does (F9) — printing `name_en` made the same dagger two
+	 *  different words on one screen. */
+	private nameOf(ref: string, fallback: string): string {
+		const row = this.graph?.get(ref);
+		return row ? localizedName(row, app.activeLocale) : fallback;
+	}
 	/** The character's classes with their live names, for the level-up menu. */
 	levelUpClasses = $derived.by(() =>
 		(this.character?.build.classes ?? []).map((c, i) => ({
 			index: i,
 			level: c.level,
-			name: this.graph ? String(this.graph.get(c.class)?.data.name_en ?? 'Class') : 'Class',
+			name: this.nameOf(c.class, 'Class'),
 		})),
 	);
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
@@ -524,6 +535,7 @@ class CombatVM {
 					groupBy: this.spellGroupBy,
 					pinned: this.pinned,
 					hidden: this.character.ui.spellsHidden,
+					locale: app.activeLocale,
 				})
 			: [],
 	);

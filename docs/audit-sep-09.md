@@ -12,13 +12,17 @@ names the method that reproduced it, and the ones that could not be reproduced a
 under their own heading rather than mixed in. The sections headed *second pass* and *third pass* are
 the later batches; they carry the same contract.
 
+**Progress.** Every finding's heading carries a box: `[x]` is closed — fixed, or deliberately
+dismissed with the reason written under it — and `[ ]` is still open. The box is the only progress
+record; nothing else in this document tracks state.
+
 Coverage is **partial by construction** and each reader says where it stopped — see *What was not
 reached* at the end. Read that section before concluding a subsystem is clean: "not reported" here
 means "not read", not "correct".
 
 ## The dev toolbox
 
-### A · TRIVIAL · the content-health probe is the one page the dev toolbox does not list
+### A · [x] TRIVIAL · the content-health probe is the one page the dev toolbox does not list
 
 `src/routes/dev/+page.svelte` enumerates the probes, and its own comment states the rule it exists
 to keep: *"a probe nobody can find is a probe nobody runs."* It lists twelve. There are thirteen
@@ -38,7 +42,7 @@ the only hits are two generated lines in `docs/surface.md`. The page was maintai
 `src/lib/combat`, `src/lib/actions`, `src/routes/combat`. Five confirmed, each reproduced against
 real packs.
 
-### 1 · HIGH · Extra Attack is on the sheet and blocked in play
+### 1 · [x] HIGH · Extra Attack is on the sheet and blocked in play
 
 `sheet-rolls.svelte.ts:222` — `attackRoll` opens with
 `if (!this.host().economy.trySpend('action')) return;`, so **every** tap costs a whole Action.
@@ -62,7 +66,7 @@ of the turn and count the rest against `sheet.attacksPerAction` — a `play.turn
 `attacksMade % attacksPerAction === 0`. `ActionExecutor.rollAttackNow` already bypasses the economy,
 so Flurry is unaffected.
 
-### 2 · HIGH · a standard action rolls its skill check with no effect key
+### 2 · [x] HIGH · a standard action rolls its skill check with no effect key
 
 `combat-view-model.svelte.ts:466` — `actionClick` calls `this.rolls.roll({...}, a.roll[1], e)` with
 **no `RollTarget`**. `SheetRolls.roll` computes `fx` and advantage only `if (key)`, so Hide, Search,
@@ -85,7 +89,7 @@ advantage axis and the effect dice.
 **Fix:** one argument — pass `{ key: skill.<id> }` to `roll`, carrying the skill id on
 `StandardAction`. `actions.ts` already knows `r.skill` and drops it after computing the hint.
 
-### 3 · MEDIUM · an owed concentration save outlives the spell it was owed for
+### 3 · [x] MEDIUM · an owed concentration save outlives the spell it was owed for
 
 `hit-points.svelte.ts:50` — `pendingConcentrationSave` is cleared in `clearConcentration`,
 `dropConcentrationFromSave`, `dismissConcentrationSave` and on a passed roll, but **not** when
@@ -106,7 +110,7 @@ so it re-attaches itself to whatever is concentrated on next.
 version: a reactive sync beside `syncDyingState` — `if (!play.concentration) pendingConcentrationSave
 = null` — which covers both writers and any future one.
 
-### 4 · MEDIUM · a long rest restores HP to the *manual* max, not the *effective* max
+### 4 · [x] MEDIUM · a long rest restores HP to the *manual* max, not the *effective* max
 
 `resource-tracker.svelte.ts:241` —
 `c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 }`. Everything
@@ -129,7 +133,7 @@ readout says **"5 / 30"** while the bar beside it is scaled to 35 and Heal fills
 **Fix:** both sites read a value that already exists. `RestControlsHost`/`ExecutorHost` carry
 `hpMax`; give `ResourceTracker` the same getter and have the panel print `combat.hpMax`.
 
-### 5 · MEDIUM-LOW · filling the third success pip by hand does not stabilise
+### 5 · [x] MEDIUM-LOW · filling the third success pip by hand does not stabilise
 
 `hit-points.svelte.ts:250` — `toggleDeathSave` checks `failures >= 3` and calls `die()`, but has no
 success branch. The rolled path `deathSave()` (`:236`) calls `stopDying()` on the third success.
@@ -194,7 +198,7 @@ next damage press adds a failure to a character who is RAW stable.
 
 `src/lib/rules`, `src/lib/character`, `src/lib/build`, `src/routes/build`.
 
-### 6 · HIGH · a 2014 caster cannot be created at all
+### 6 · [x] HIGH · a 2014 caster cannot be created at all
 
 `build/derive.ts:299` (`spellTodos`) emits a **required** todo `spells`/`cantrips` whenever
 `preparedCap - leveledChosen > 0`, with no regard for whether the Strict picker built by
@@ -219,7 +223,7 @@ empty, and `save()` returns `null`. Measured for a 2014 cleric 5: `preparedCap 8
 options, or drop `required` there. The content fix (populate the 2014 `classes` column) is the other
 half and belongs in the content repo.
 
-### 7 · MEDIUM · a 2014 half-caster has spell slots at level 1
+### 7 · [x] MEDIUM · a 2014 half-caster has spell slots at level 1
 
 `character/spellcasting.ts:307` — `slotCountsFor(slotTable(graph,'half'), classLevel)` indexes the
 `half` table by **class level**. `srd-2014/spell_slots_srd.csv` row `half_1` is `2,0,0,…`, which is
@@ -233,7 +237,7 @@ RAW is 0 slots, 0 known, max spell level 0. Levels 2+ are correct (`half_2 = 2`,
 A one-cell content error — `half_1` should be zeros in `srd-2014` only, since 2024 rangers do cast at
 level 1. Recorded here because it surfaces as a wrong number out of the derive.
 
-### 8 · MEDIUM · the builder and the derive disagree about a feat-granted skill
+### 8 · [x] MEDIUM · the builder and the derive disagree about a feat-granted skill
 
 - `character/derive-stats.ts:176` — `chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])])`,
   so a Skilled-granted skill derives as `proficient` and expertise on it is honoured.
@@ -272,7 +276,7 @@ already computed at `feat-slots.svelte.ts:155`.
 `src/routes/combat/roll-journal.svelte.ts`, `src/lib/combat/roll.ts`. The largest new surface in the
 release, and the one with the most findings.
 
-### 9 · HIGH · a subtracted dice term is silently ADDED, and `issues` reports nothing
+### 9 · [ ] HIGH · a subtracted dice term is silently ADDED, and `issues` reports nothing
 
 `rules/dice.ts:252` (`DICE_TERM`), `:256` (`parseDicePool`), `:324` (`parseFormula`).
 
@@ -300,7 +304,7 @@ plugin-reachable rather than wrong today.
 dice and negative `BonusDie`s; or, smaller, have `parseFormula` report a leading minus before a dice
 term as an issue so it surfaces instead of rolling wrong.
 
-### 10 · HIGH · two rolls in the same millisecond share one identity; an amendment rewrites both
+### 10 · [ ] HIGH · two rolls in the same millisecond share one identity; an amendment rewrites both
 
 `roll-journal.svelte.ts:206` (`pushRoll` stamps `at: Date.now()`), `:274` (`reviseEntry` matches on
 `at`), `character/repository.ts:469` (`rewriteLogLine` uses `findIndex`).
@@ -331,7 +335,7 @@ Flurry of Blows)".
 That buys the unique `at`, the `group` and the single toast card in one change, and leaves `pushRoll`
 for genuine lone rolls.
 
-### 11 · MEDIUM · a retroactive re-read loses the roll's `min_die` / `reroll` floor
+### 11 · [ ] MEDIUM · a retroactive re-read loses the roll's `min_die` / `reroll` floor
 
 `rules/dice.ts:659` — `setAdvantage` draws `plainD20(rollDie(20, rng))`, raw. The docstring (`:641`)
 argues this is safe: "RAW would floor the new die the same way — so the higher contribution is the
@@ -355,7 +359,7 @@ natural 1 the rule says cannot stand.
 `setAdvantage` apply them to the die it draws instead of `plainD20`. About six lines, and it makes
 the drawn die's `detail` tell the same story as the original's.
 
-### 12 · MEDIUM · the dice tray cannot carry `labelValues`, so a tray roll's name loses its ICU values
+### 12 · [ ] MEDIUM · the dice tray cannot carry `labelValues`, so a tray roll's name loses its ICU values
 
 `roll-journal.svelte.ts:155` (`prefill` forwards `labelKey`, never `labelValues`),
 `dice-tray.svelte.ts:102` (no `labelValues` field), `:609` (`roll()` emits `labelKey` only).
@@ -380,7 +384,7 @@ key on the tray path while the instant path (`:331`) passes the full `RollName`;
 **Fix:** add `labelValues` to `RollerPrefill` and `DiceTray` and forward it in `prefill` and `roll()`,
 then pass `nameFields(name)` at the two `spell-casting` tray sites instead of a translated string.
 
-### 13 · MEDIUM-LOW · `bumpPill` leaves a stale `text`, and unfolding it flips a penalty die's sign
+### 13 · [ ] MEDIUM-LOW · `bumpPill` leaves a stale `text`, and unfolding it flips a penalty die's sign
 
 `dice-tray.svelte.ts:448` rewrites the token as count-plus-sides only. `PillCommon.text`
 (`roller.ts:54`) is documented as "kept verbatim so Backspace and double-click can unfold the pill
@@ -405,7 +409,7 @@ token.
 **Fix:** rebuild the token the way it is spelled, sign and source and bound included, or keep a
 `text` builder beside `diceText` so the pill and its token cannot drift.
 
-### 14 · LOW-MEDIUM · a forced-outcome marker is never persisted
+### 14 · [ ] LOW-MEDIUM · a forced-outcome marker is never persisted
 
 `roll-journal.svelte.ts:319` — `logMarker` never calls `this.persist`. `StoredRollLogEntry.outcome`,
 `rehydrateLogEntry` (`roll.ts:209`) and `logLineFor`'s `Number.isFinite(roll.total)` guard
@@ -419,7 +423,7 @@ marker.
 **Fix:** one `this.persist?.(entry)` in `logMarker`. `logLineFor` already omits `result` for a `NaN`
 total.
 
-### 15 · LOW · a doc that lies: `rerollKeptD20` no longer exists
+### 15 · [ ] LOW · a doc that lies: `rerollKeptD20` no longer exists
 
 `docs/internals/roller.md:211` is a normative "Conventions" bullet describing `rerollKeptD20` and
 per-edition Heroic Inspiration. Commit `9984cb2` deleted the function from `rules/dice.ts` and the
@@ -429,7 +433,7 @@ proves them wrong."
 **Fix:** replace the bullet with what `AMENDMENT_KIND.d20Reroll` now is — a legacy kind kept so old
 logs stay readable, which `roll.ts:249` already says.
 
-### 16 · LOW · `adv` typed on a damage line is accepted, invisible and ignored
+### 16 · [ ] LOW · `adv` typed on a damage line is accepted, invisible and ignored
 
 `dice/roller.ts:202` checks `ADVANTAGE_WORDS` before the resolver. `vocabularyFor`
 (`dice-tray.svelte.ts:136`) withholds mode rows from a damage line, and the doc claims "because the
@@ -443,7 +447,7 @@ does nothing, for ever.
 **Fix:** gate the `ADVANTAGE_WORDS` branch on `line.role === ROLLER_ROLE.test`, which `addToken`
 already has, so the word falls through to `wordPill` and becomes a label.
 
-### 17 · LOW · an ambiguous effect name silently becomes a damage TYPE on a damage line
+### 17 · [ ] LOW · an ambiguous effect name silently becomes a damage TYPE on a damage line
 
 `dice/roller.ts:341` (`wordPill`) versus the comment at `:522`. `candidateResolver` returns null for
 a name two candidates share, which the comment says lands as a blocking `raw` pill — "true whether
@@ -472,7 +476,7 @@ identically-named rows, hence LOW.
 
 `src/lib/effects` and its single seam `applyEffects`.
 
-### 18 · MEDIUM · `on_event`'s action formula is the one L2 slot `lintEffectTokens` still does not lint
+### 18 · [x] MEDIUM · `on_event`'s action formula is the one L2 slot `lintEffectTokens` still does not lint
 
 `effects/apply.ts:469`. Its own docstring (`:465`) claims it "lints **every** L2 expression slot —
 guard, value, resource max, resource recharge AMOUNT". `on_event:<event>:<action>` added a fifth: the
@@ -494,7 +498,7 @@ LINT on_event:turn_start:heal:1d7 => []          <- nothing
 small `actionFormulaOf(action)` from `action-token.ts` so the linter and the evaluator cannot drift —
 that drift is exactly this finding.
 
-### 19 · MEDIUM · six token kinds have no `effectTag` formatter, and a raging barbarian sees the raw string
+### 19 · [x] MEDIUM · six token kinds have no `effectTag` formatter, and a raging barbarian sees the raw string
 
 `combat/effects-view.ts:119` (`TAG_FORMATTERS`), fallback at `:183`.
 `docs/internals/effects.md` §4: "A new kind/target must be added in THREE places … (2) `effectTag`
@@ -527,7 +531,7 @@ Scope note: `blocks_concentration` itself landed in `0f258b7` (2026-08-05), befo
 user-visible half predates this window. `on_event` (`55666ac`), `damage_reroll` and
 `regain_on_initiative` are in range and repeat the omission.
 
-### 20 · LOW · `mergeFacts` uses a different resource tie-break from `collectFacts`, while claiming it is the same
+### 20 · [x] LOW · `mergeFacts` uses a different resource tie-break from `collectFacts`, while claiming it is the same
 
 `effects/apply.ts:361` versus `:305`. `pushResource` picks the larger max and, at an equal max, the
 faster recharge (`rechargeRank`, added by `5f89962`). `mergeFacts` — the plugin pre-pass path — still
@@ -540,7 +544,7 @@ Not exercised at runtime because no shipped plugin grants a pool.
 
 **Fix:** add the `rechargeRank` tie-break to `mergeFacts`.
 
-### 21 · LOW · the effects spec names a file that no longer exists
+### 21 · [x] LOW · the effects spec names a file that no longer exists
 
 `docs/internals/effects.md:47` lists `suggest.ts` as an effects-module file and `:156` points at "a
 `suggest.ts` did-you-mean". Commit `5a60e46` moved it out ("didYouMean leaves effects — nothing in
@@ -575,7 +579,7 @@ effects ever called it"); it now lives at `src/lib/util/suggest.ts` and is calle
 `src/lib/content`, `src/lib/storage`, `tools/srd`, and the sibling `charnik-content-srd` repo — 63
 app commits and 22 content commits in the window.
 
-### 22 · HIGH · `CONTENT_SEED_VERSION` was never bumped for 0.7.0, so a new shipped file and 18 commits of rules data can never reach an existing install
+### 22 · [x] HIGH · `CONTENT_SEED_VERSION` was never bumped for 0.7.0, so a new shipped file and 18 commits of rules data can never reach an existing install
 
 `src/lib/schema/version.ts:27` (`export const CONTENT_SEED_VERSION = 4;`), enforced at
 `src/lib/content/provider.ts:199`.
@@ -645,7 +649,7 @@ they are recorded as pre-existing rather than as regressions from this release.
 The findings here cluster on one shape: a row made a `<button>`, its accessories then made spans with
 `tabindex="-1"`, and the keyboard handler written for a span that can never receive focus.
 
-### 23 · HIGH · the compendium list has zero tabbable elements — the whole list is keyboard-dead
+### 23 · [ ] HIGH · the compendium list has zero tabbable elements — the whole list is keyboard-dead
 
 `src/lib/components/EntryList.svelte:46`:
 
@@ -685,7 +689,7 @@ compendium **and** the spellbook.
 `aria-activedescendant`, exactly as `SectionedPicker.svelte:236` already does. Reuse, do not
 re-derive.
 
-### 24 · HIGH · Ctrl+Z in the dice roller is bound to `e.key`, so it is dead on a Cyrillic layout
+### 24 · [ ] HIGH · Ctrl+Z in the dice roller is bound to `e.key`, so it is dead on a Cyrillic layout
 
 `src/lib/components/RollerLine.svelte:141` — `if (event.key === 'z' && held)`.
 
@@ -709,7 +713,7 @@ other ~30 `e.key` sites all test named keys — `Escape`, `Enter`, `Arrow*`, `Ta
 
 **Fix:** `event.code === 'KeyZ'`.
 
-### 25 · HIGH · a resource-borne effect can be added but not removed without a mouse
+### 25 · [ ] HIGH · a resource-borne effect can be added but not removed without a mouse
 
 `src/routes/combat/blocks/panels/EffectsPanel.svelte:226` — a `role="button" tabindex="-1"` span with
 an `onclick` and **no `onkeydown` at all**, under an `a11y_click_events_have_key_events` suppression.
@@ -727,7 +731,7 @@ is the reason the outer element swallows the tab stop.
 demote the outer `.resource-row` from a `<button>` to a row with the click on an inner button — the
 nesting is what forced the span in the first place.
 
-### 26 · MEDIUM-HIGH · every secondary control on a combat spell row is mouse-only
+### 26 · [ ] MEDIUM-HIGH · every secondary control on a combat spell row is mouse-only
 
 `src/routes/combat/blocks/panels/SpellsPanel.svelte:72` (`.prep`), `:87` (`.pin-star`), `:110`
 (`.ritual-cast`), `:131` (`.cast-icon`).
@@ -764,7 +768,7 @@ cast-time note are reachable nowhere.
 button and the four accessories real `<button>`s beside it — then the browser gives all five tab
 stops for free, and every `svelte-ignore` and hand-rolled keydown in this block deletes itself.
 
-### 27 · MEDIUM · resource pips in the combat strip are click-only
+### 27 · [ ] MEDIUM · resource pips in the combat strip are click-only
 
 `src/routes/combat/blocks/CombatStrip.svelte:111` — `<span class="resource-pip" role="button"
 tabindex="-1">`, `onclick` only, with the a11y warning suppressed. `ui.md` rule 7 makes pips a
@@ -777,7 +781,7 @@ can spend a pip but cannot restore one.
 **Fix:** either document the same pill-based fallback the Turnbar has, or give the pip row a roving
 tabindex with left/right.
 
-### 28 · MEDIUM · two literal English user-facing strings in `.svelte`
+### 28 · [x] MEDIUM · two literal English user-facing strings in `.svelte`
 
 - `src/routes/combat/blocks/panels/EffectsPanel.svelte:196` — `title="Use one {r.name}"`
 - `src/lib/components/settings/ThemesSettings.svelte:284` — `aria-label="{label(token)} colour"`
@@ -795,7 +799,7 @@ finding 92**, four more sites.
 
 **Fix:** an ICU key taking `{name}`, and a whole `themes.tokenColorLabel` key taking `{token}`.
 
-### 29 · MEDIUM · `border-radius` is off-token in 62 places, and stylelint guards font-size but not radius
+### 29 · [ ] MEDIUM · `border-radius` is off-token in 62 places, and stylelint guards font-size but not radius
 
 `config/stylelint.json:20` guards only `{"declaration-property-unit-disallowed-list": {"font-size":
 ["px"]}}`. `ui.md` ▸ Theming: "Never a hardcoded hex, rgb, **px font-size, or radius**." AGENTS.md:
@@ -853,7 +857,7 @@ The mechanical check first: `grep -rn "@tauri-apps" src/` returns 8 non-test sou
 legitimate — the four files on eslint's ignore list plus one test with a written justification. The
 eighth is finding 33.
 
-### 30 · MEDIUM-HIGH · three of the four pack writers have no `guarded()`, so a disk failure is an unhandled rejection and a half-done state
+### 30 · [ ] MEDIUM-HIGH · three of the four pack writers have no `guarded()`, so a disk failure is an unhandled rejection and a half-done state
 
 `pack-lifecycle.ts:243` (`renamePack`), `:286` (`uninstallPack`), and `updates.svelte.ts:371` →
 `install.ts:389` (`rollbackPack`). `guarded`'s own docstring
@@ -891,7 +895,7 @@ The same shape at the other two sites, visible without a probe:
 bodies; give `rollbackPack` the `catch { await recoverInterruptedApply(...); throw e; }` that
 `swapInNewTree:265` already has; and move `revokePackPlugins` after the successful delete.
 
-### 31 · MEDIUM · `installPack` asks only the registry whether a folder name is taken; `renamePack` also asks the disk
+### 31 · [ ] MEDIUM · `installPack` asks only the registry whether a folder name is taken; `renamePack` also asks the disk
 
 `pack-lifecycle.ts:145` — `const ownerName = claimedPackName(typed);` and nothing else, and
 `claimedPackName` (`packs.svelte.ts:224`) searches `packConfig.packs` only.
@@ -918,7 +922,7 @@ deletes both.
 **Fix:** one argument. `installPack` has `storage` at `:165`; move it above the check and add
 `|| (await storage.exists(...))` to the refusal at `:147`, matching `renamePack:229`.
 
-### 32 · MEDIUM · the overwrite guard is asked on the write path and never on the DELETE path
+### 32 · [ ] MEDIUM · the overwrite guard is asked on the write path and never on the DELETE path
 
 `diff.ts:135` classifies every local `isPackFile` the remote does not list as `FILE_CHANGE.removed`
 without calling `isProtectedText`; `install.ts:186` then passes them to `swapInNewTree` as
@@ -942,7 +946,7 @@ either way is that the preview cannot distinguish a file upstream dropped from a
 **Fix:** `diff.ts` has the bytes in hand two lines up for the `expectLocal` hash — feed them to
 `isProtectedText` and emit `preserved`, or flag the change as the user's so the list can say so.
 
-### 33 · MEDIUM · the Tauri architecture gate does not see dynamic `import()`, and one lives above the seam
+### 33 · [ ] MEDIUM · the Tauri architecture gate does not see dynamic `import()`, and one lives above the seam
 
 `eslint.config.js:79` and `src/routes/+layout.svelte:156`. `overview.md:35`: "There is no scattered
 raw `fs`, and **nothing above the interface imports Tauri** (eslint's `no-restricted-imports` pins
@@ -972,7 +976,7 @@ rule beside it matching `ImportExpression > Literal[value=/^@tauri-apps/]`, then
 layout to the ignores with a written reason (`openUrl` is not file IO) or put the OS-link hand-off
 behind a seam function. Correct `overview.md:36` in the same change.
 
-### 34 · MEDIUM-LOW · `homebrew.ts` re-stamps any file it is handed, destroying a hand-edited file's permanent protection
+### 34 · [ ] MEDIUM-LOW · `homebrew.ts` re-stamps any file it is handed, destroying a hand-edited file's permanent protection
 
 `homebrew.ts:379` (`writeStampedHomebrew` → `stampWithHash` → `storage.write`), reached from
 `saveHomebrewRow:434`, `upsertHomebrewRow:341` and `removeHomebrewRow:364` — none of which look at
@@ -1001,7 +1005,7 @@ component calling two functions in the right order is one caller away from being
 **Fix:** move the check into the writer. `isShippedFile` already exists in this module
 (`homebrew.ts:219`); have the three public writers take `packRoots` and refuse a target inside one.
 
-### 35 · LOW-MEDIUM · `configWritesSettled` names the data-folder move as its reason to exist, and the move never calls it
+### 35 · [ ] LOW-MEDIUM · `configWritesSettled` names the data-folder move as its reason to exist, and the move never calls it
 
 `json-config.ts:94`: "Resolves when every queued write for this file has landed. For the callers that
 must not race the queue — **a data-folder move (which swaps the Storage under it)** and the tests."
@@ -1018,7 +1022,7 @@ race — but the one function written to close it is dead code.
 **Fix:** one line — await it before `migrateDataDir`/`mergeDataDir`, or register it as an
 `onBeforeReload` flusher so every reload path gets it.
 
-### 36 · LOW · `content.md` describes a watcher mechanism the watcher does not have
+### 36 · [ ] LOW · `content.md` describes a watcher mechanism the watcher does not have
 
 `content.md:218`: "The file watcher **ignores the app's own writes**, or a write triggers a reload
 which triggers a write." `watcher.ts:8` documents the opposite design, and is what the code does:
@@ -1032,7 +1036,7 @@ file no longer drifts, plus the `adopting` re-entrancy flag at `:83`.
 
 **Fix:** replace the sentence with what is true.
 
-### 37 · LOW · the `Storage` interface promises a sandbox two of its four implementations do not enforce
+### 37 · [ ] LOW · the `Storage` interface promises a sandbox two of its four implementations do not enforce
 
 `types.ts:3`: "Paths are relative to the configured `dataDir` root and are **sandboxed by the
 implementation** (traversal outside the root is rejected)." `path.ts:8` doubles down: "the seam's own
@@ -1123,7 +1127,7 @@ The headline is that **the sandbox holds** — see *checked and correct* below, 
 enumeration from inside a live plugin is recorded. What does not hold is the contract around it: the
 target vocabulary, the budget, and the consent lifecycle.
 
-### 38 · HIGH · eight of the eighteen documented contribution target keys are rejected, and they take the whole result down with them
+### 38 · [ ] HIGH · eight of the eighteen documented contribution target keys are rejected, and they take the whole result down with them
 
 `plugin-registry.ts:103` (`TARGET_KEY_RE`), enforced at `:150`. `plugins.md` §4.4 lists the legal
 keys: `ac · initiative · speed · speed.fly · speed.swim · hp_max · attack · damage · spell_dc ·
@@ -1159,7 +1163,7 @@ against `NUMERIC_TARGETS`, keeping the existing ≤20 key cap — which is what 
 prototype-pollution keys, as the comment at `:100` says. That also deletes the second copy that
 caused the drift.
 
-### 39 · HIGH · the per-derive budget does not cover the post-trip sandbox rebuild, and a sibling handler's success keeps the fail-closed counter from ever firing
+### 39 · [ ] HIGH · the per-derive budget does not cover the post-trip sandbox rebuild, and a sibling handler's success keeps the fail-closed counter from ever firing
 
 `plugin-sandbox.ts:256` (`bootPlugin` on a limit trip, inside `call`), `plugin-registry.ts:96`
 (`AGGREGATE_BUDGET_MS = 20`), `:327` (the gate), `:343` (`noteSuccess`).
@@ -1195,7 +1199,7 @@ a sibling does. Second half, if the overrun itself matters: do not rebuild insid
 `p.context = null` and let the next call boot it, so the rebuild lands after the aggregate gate
 rather than behind it.
 
-### 40 · MEDIUM · the plugin ctx's `hpMax` and `isBloodied` disagree with the max the app clamps to
+### 40 · [ ] MEDIUM · the plugin ctx's `hpMax` and `isBloodied` disagree with the max the app clamps to
 
 `character/derive-plugins.ts:53` —
 `const preHpMax = character.play.hp.max ?? applyEffects('hp_max', o.maxHpBase, facts).value;` — and
@@ -1225,7 +1229,7 @@ variable has the identical divergence. One fix covers both.
 **Fix:** route `derive-plugins.ts:53` through `effectiveHpMax`, which already takes exactly a
 `Computed`. This is finding 4's shape in a third place — worth fixing all three together.
 
-### 41 · MEDIUM · `plugins.md` §4.3 describes pre-D12 `set` semantics
+### 41 · [x] MEDIUM · `plugins.md` §4.3 describes pre-D12 `set` semantics
 
 `docs/internals/plugins.md:245` versus `rules/pipeline.ts:202` and `effects/apply.ts:386`. The doc
 says an `op: "set"` folds "exactly like a content `set_override` (at the override stage,
@@ -1248,7 +1252,7 @@ half. Per the spec header ("Where this document and code disagree, THIS document
 amended first"), this is a doc fix: name the layer, the within-layer max, and the later-layer
 override.
 
-### 42 · MEDIUM-LOW · the web demo does ship the QuickJS runtime — 528 KB of it
+### 42 · [ ] MEDIUM-LOW · the web demo does ship the QuickJS runtime — 528 KB of it
 
 `plugins.md:341`: "Desktop only. … The web demo (GitHub Pages) has no plugin discovery and **does not
 bundle the QuickJS runtime**." `effects.md:369`: "**Desktop-only** — the web build ships no sandbox."
@@ -1274,7 +1278,7 @@ URL. What is wrong is "does not bundle": half a megabyte is deployed to Pages on
 chunk out of the Pages build. The doc edit is the honest small one; the exclusion is the one that
 saves the bytes.
 
-### 43 · MEDIUM-LOW · deleting a hand-placed plugin folder leaves its consent, so re-dropping the same bytes runs it with no dialog
+### 43 · [ ] MEDIUM-LOW · deleting a hand-placed plugin folder leaves its consent, so re-dropping the same bytes runs it with no dialog
 
 `plugin-store.svelte.ts:147` (`revokePackPlugins`) has no local-plugin counterpart, and
 `PluginsSettings.svelte` offers no way to revoke consent — `disablePlugin` (`:159`) only flips
@@ -1301,7 +1305,7 @@ Settings row simply disappears while the grant persists.
 `revokePackPlugins` does for a pack, and optionally pruning prefs for namespaces no longer discovered
 on `refreshPlugins`.
 
-### 44 · LOW · a dice-carrying upcast formula produces a fractional modifier
+### 44 · [ ] LOW · a dice-carrying upcast formula produces a fractional modifier
 
 `effects/upcast.ts:125` (`toPoolFlat`) against `:118`, which documents the field as "Numeric
 contribution (**floored**; 5e round-down)". The `number` branch does `Math.floor(v.value)`; the
@@ -1320,7 +1324,7 @@ damage:per_slot(1d6)+slot/2    slot=3 base=1 -> pool {6:2}, flat 1.5   <- not fl
 
 **Fix:** one `Math.floor` on the dice branch's `flat`.
 
-### 45 · LOW · upcast has a second, more permissive guard-truthiness rule than the resolver
+### 45 · [ ] LOW · upcast has a second, more permissive guard-truthiness rule than the resolver
 
 `upcast.ts:143` versus `effects/resolver.ts:258`. The resolver treats a guard whose value is not a
 `number` as unreadable: it pushes `ISSUE_KEY.unreadableGuard` ("the guard … is not a yes/no
@@ -1341,7 +1345,7 @@ grammar discipline (N1)".
 
 **Fix:** mirror the resolver — reject a non-number guard before the zero check.
 
-### 46 · LOW · the `readPlay` memo flag is a sandbox self-report, and a handler can forge it
+### 46 · [ ] LOW · the `readPlay` memo flag is a sandbox self-report, and a handler can forge it
 
 `plugin-sandbox.ts:245` — `return JSON.stringify({ result: r ?? {}, playRead });`. `plugins.md` §4.2
 says "**The host tracks** which sub-objects a handler actually reads". It does not: the wrapper
@@ -1359,7 +1363,7 @@ validated and clamped, so this is a wrong-number and determinism issue, not an e
 **Fix:** capture the intrinsics in the setup script before `main.js` runs, or `Object.freeze(JSON)`
 in `SETUP_SCRIPT` alongside the existing `Object.freeze(Math)`.
 
-### 47 · TRIVIAL · `registerPluginEvaluator` resets half the cross-evaluator state
+### 47 · [ ] TRIVIAL · `registerPluginEvaluator` resets half the cross-evaluator state
 
 `plugin-registry.ts:82` clears `failCounts` but not `memoBuild`/`memoFull`, while its docstring says
 "Replaces any previous": `register(evaluatorA)` then `register(evaluatorB)` still serves A's note, B
@@ -1438,7 +1442,7 @@ re-derives it.
 Queue item 4, started. These two settle SUSPECTED entries from the first pass and, in doing so, turn
 one of them into a data-loss finding rather than the bookkeeping curiosity it looked like.
 
-### 48 · HIGH · un-picking a skill orphans its expertise, and the orphan then evicts a live one
+### 48 · [ ] HIGH · un-picking a skill orphans its expertise, and the orphan then evicts a live one
 
 `skill-picks.svelte.ts:38` (`toggleSkill`) removes a skill from `draft.skills` and touches
 `draft.expertise` not at all. An exhaustive grep of every write to that array — `class-picks-cache.ts:128`
@@ -1479,7 +1483,7 @@ agree again for free because there is no longer anything for them to disagree ab
 assemble (`build-view-model.svelte.ts:367`) already exists and is not enough: it repairs the saved
 character while the builder keeps mis-counting the live one.
 
-### 49 · MEDIUM · picking your FIRST class empties the skills you already chose, unrecoverably
+### 49 · [ ] MEDIUM · picking your FIRST class empties the skills you already chose, unrecoverably
 
 `class-picks-cache.ts:177` — the wipe is guarded on `draft.classes.length === 1`, and its comment
 explains the intent: "the shared pools belong to whoever is in the draft, so they only empty when the
@@ -1512,7 +1516,7 @@ appeared to do nothing at all" — but that guard covers a stale row index, not 
 The restore path below is unaffected: `returning` is keyed on the incoming `classId` and does not
 depend on anything having been stashed this call.
 
-### 50 · MEDIUM · swapping a half-feat keeps the old ability, which the boost then silently ignores
+### 50 · [ ] MEDIUM · swapping a half-feat keeps the old ability, which the boost then silently ignores
 
 `feat-slots.svelte.ts:106` — `if (first) featAb[key] ??= first;`. The `??=` is the defect: on a feat
 swap the slot already holds an ability, so the default never fires and the **previous feat's** choice
@@ -1562,7 +1566,7 @@ background swap": the origin variant is the same bug reached through a different
 homebrew-only half, since no SRD background grants a half-feat origin feat. The slot variant above is
 the shipped-content half, and one fix covers both.
 
-### 51 · MEDIUM-HIGH · the effective HP max has two callers and four hand-rolled copies, and one of them decides a rules guard
+### 51 · [x] MEDIUM-HIGH · the effective HP max has two callers and four hand-rolled copies, and one of them decides a rules guard
 
 Findings 4 and 40 each name a site that recomputes the effective HP max by hand. They are not two
 bugs; they are two of four. An exhaustive grep settles the shape of it:
@@ -1591,7 +1595,7 @@ what each of them has in hand — a nullable manual max and the sheet's `Compute
 together is what keeps the count from drifting back to five sites and three answers; fixing them one
 finding at a time is how it got here.
 
-### 52 · MEDIUM · the click-only resource pip has a second home, which finding 27 does not name
+### 52 · [ ] MEDIUM · the click-only resource pip has a second home, which finding 27 does not name
 
 `EffectsPanel.svelte:208` is the same `<span class="resource-pip" role="button" tabindex="-1">` with
 an `onclick` and no keyboard handler, under the same `a11y_click_events_have_key_events`
@@ -1623,7 +1627,7 @@ does not need to re-run it.
 
 **Fix:** whatever fixes 27, applied here in the same change.
 
-### 53 · LOW-MEDIUM · panel reordering is pointer-only, and its handle claims to be a button
+### 53 · [ ] LOW-MEDIUM · panel reordering is pointer-only, and its handle claims to be a button
 
 `PanelCard.svelte:62` — `<span class="drag-handle" role="button" tabindex="-1"
 aria-label={…dragToReorder} onpointerdown={…}>`. The only handler is `onpointerdown`. There is no
@@ -1646,7 +1650,7 @@ place, which is the same reorder the pointer performs. If reordering is meant to
 the honest version is to drop `role="button"` and mark the handle `aria-hidden`, so nothing announces
 an action that is not there.
 
-### 54 · MEDIUM · the "no exceptions" language-switch rule has five exceptions, and a modal is where it matters most
+### 54 · [ ] MEDIUM · the "no exceptions" language-switch rule has five exceptions, and a modal is where it matters most
 
 `docs/internals/ui.md:305`: "**Every full-screen dialog, modal, or banner carries `LangSwitcher` in
 its top-right corner. No exceptions.**"
@@ -1702,7 +1706,7 @@ brace-matching scan and their bodies read for writes to reactive state. Five wri
 No effect writes into anything it reads. Nothing to fix, and recorded so the 35-site list is not
 walked again.
 
-### 55 · HIGH · a bare ability check is the one d20 roll no effect reaches, and its own sibling six lines away does it right
+### 55 · [x] HIGH · a bare ability check is the one d20 roll no effect reaches, and its own sibling six lines away does it right
 
 The first pass listed this as suspected, unable to say whether an unmodelled bare ability check was
 deliberate. It is not. The two controls sit on the same tile in the same component:
@@ -1770,7 +1774,7 @@ docstring above it. Both editions' exhaustion then lands on all three rolls inst
 The items *What was not reached* left open: the caret state machine, `movePill` across lines,
 `setDamage`'s `real` filter, `savageReroll`'s tie case and the two-column type picker.
 
-### 56 · MEDIUM · taking a pill out parks the caret one token short of the end, and the next thing typed lands mid-line
+### 56 · [ ] MEDIUM · taking a pill out parks the caret one token short of the end, and the next thing typed lands mid-line
 
 `dice-tray.svelte.ts:434` — `removePill` compensates the caret with
 `if (pillIndex < this.caretAt(index)) this.setCaret(index, this.caretAt(index) - 1)`, and `caretAt`
@@ -1807,7 +1811,7 @@ tray's own suite.
 **Fix:** test the stored caret, not the clamped one: read `this.carets[index]` raw and skip the
 adjustment when it is `AT_END`.
 
-### 57 · LOW · a pill dragged across lines keeps no caret, and a damage type may be dropped on a d20 line
+### 57 · [ ] LOW · a pill dragged across lines keeps no caret, and a damage type may be dropped on a d20 line
 
 `dice-tray.svelte.ts:458` — `movePill` rewrites both lines and touches `carets` in neither, which is
 the opposite of the sibling thirty lines above it (finding 56's guard). It also takes any pill to any
@@ -1831,7 +1835,7 @@ player asked for with the mouse, and neither is a state the model admits from th
 **Fix:** `movePill` already has both roles in hand — refuse a `damageType` pill onto a `test` line,
 and carry the caret the way `removePill` means to.
 
-### 58 · LOW · a damage part made only of effect dice is not damage at all
+### 58 · [ ] LOW · a damage part made only of effect dice is not damage at all
 
 `combat/roll.ts:50` — `dealsDamage` is `Object.keys(p.dice).length > 0 || p.mod !== 0`, and
 `dice-tray.svelte.ts:551`'s `real` filter repeats the same predicate verbatim. Neither counts
@@ -1857,7 +1861,7 @@ plugin-reachable rather than wrong today, the same footing as finding 9.
 
 **Fix:** one clause in `dealsDamage`, which `real` should then call rather than restate.
 
-### 59 · LOW-MEDIUM · the gate `AGENTS.md` prescribes cannot see a type error, and one reached `main`
+### 59 · [ ] LOW-MEDIUM · the gate `AGENTS.md` prescribes cannot see a type error, and one reached `main`
 
 `AGENTS.md` ▸ "Run the whole gate before committing" names `pnpm test && pnpm lint && pnpm build` and
 says a subset is a false green. None of the three runs a type-checker: `test` is `vitest run` (oxc
@@ -1921,7 +1925,7 @@ sentence about a subset being a false green is what leaving it out costs.
 Eleven confirmed, each reproduced against the real packs or read out of the markup. A twelfth —
 `logMarker` never persisting a no-roll cast — is finding 14, reproduced a second time here with a
 spy `persist`: in-session log 2, persisted 1.
-### 60 · MEDIUM-HIGH · an item that requires attunement grants its benefits while merely equipped
+### 60 · [x] MEDIUM-HIGH · an item that requires attunement grants its benefits while merely equipped
 
 `src/lib/character/derive-gather.ts:62` — `if (inv.equipped || inv.attuned)` pushes an item's tokens
 on either flag, so the `attunement` tag is never a gate. RAW, both editions: a magic item that
@@ -1947,7 +1951,7 @@ srd-2014 control, no armor          -> AC 10
 resolving the row through `resolveItem` as the panel already does, so the tag it reads is the
 merged one.
 
-### 61 · MEDIUM-HIGH · the combat spell row's prepare toggle finds the entry by bare id, and flips the wrong spell
+### 61 · [x] MEDIUM-HIGH · the combat spell row's prepare toggle finds the entry by bare id, and flips the wrong spell
 
 `spell-casting.svelte.ts:548` — `const idOf = (ref: string) => ref.split(':').pop();` then
 `build.spells.find((s) => idOf(s.spell) === r.id)`. `r.id` is the row's **bare** id, so two spells
@@ -1971,7 +1975,7 @@ dot lit — so the gesture reads as a no-op and the second tap un-prepares nothi
 **Fix:** `build.spells.find((s) => s.spell === r.ref)`. `SpellRow.ref` is already the effectiveId
 and is already what `hidden` filters on (`spells.ts:282`).
 
-### 62 · MEDIUM · a magic item weighs nothing, and the load meter is the one place capacity is shown
+### 62 · [x] MEDIUM · a magic item weighs nothing, and the load meter is the one place capacity is shown
 
 `inventory.svelte.ts:91` (`weightLb`) and `:139` (`carriedLb`) both read
 `row.data.weight_lb` off the item's OWN row. `resolveItem` (`content/resolved-item.ts:57`) merges
@@ -1999,7 +2003,7 @@ So the damage line inherits and the weight does not, on the same row, from the s
 (`weightLb: row.data.weight_lb ?? base.data.weight_lb`), and read it from the `ResolvedItem` at both
 inventory sites — which also fixes the build sheet's own reduce (`SheetInventory.svelte:16`).
 
-### 63 · MEDIUM · the combat sheet prints content names in English, beside two of its own panels that translate them
+### 63 · [x] MEDIUM · the combat sheet prints content names in English, beside two of its own panels that translate them
 
 `src/lib/combat/spells.ts:365` (`name: d.name_en`) and `inventory.svelte.ts:89`
 (`rowName(item.row)`, which is `name_en ?? id` — `content/loader.ts:80`). `localizedName`
@@ -2026,7 +2030,7 @@ into exactly these columns.
 **Fix:** `localizedName(row, locale)` at each of the eight sites; `spellRow` and `InventoryTracker`
 need the locale threaded in the way `computeAttacks` already takes it.
 
-### 64 · MEDIUM · the add-effect menu has a search box that searches nothing
+### 64 · [x] MEDIUM · the add-effect menu has a search box that searches nothing
 
 `CombatMenus.svelte:117` — `<input placeholder={$_('combat.menu.searchEffects')} />` with no
 `bind:value`, no `oninput`, and no consumer. The list under it is
@@ -2043,7 +2047,7 @@ src/routes/combat/effects-editor.svelte.ts` returns the placeholder and the icon
 `.filter((p) => p.label.toLowerCase().includes(effectQuery.trim().toLowerCase()))` on the `{#each}`
 — or delete the input, because an inert one is worse than none.
 
-### 65 · MEDIUM · a condition is switched on with the app's own Switch and cannot be switched off with it
+### 65 · [x] MEDIUM · a condition is switched on with the app's own Switch and cannot be switched off with it
 
 `CombatMenus.svelte:404` — `onclick={() => added ? null : addEffect({…})}`, under a row whose right
 edge is `<span class="toggle-track" class:on={added}>` (`:413`). `.toggle-track` is the class the
@@ -2062,7 +2066,7 @@ takes hover and focus and Enter, and every one of them is silent.
 `apply_condition:<id>` token (`conditionIdOf`, `effects-view.ts:262`) rather than on the label — see
 the label-matching note under *Suspected* below.
 
-### 66 · MEDIUM-LOW · the carrying-capacity readout carries no provenance, and the 5e encumbrance tiers live only there
+### 66 · [x] MEDIUM-LOW · the carrying-capacity readout carries no provenance, and the 5e encumbrance tiers live only there
 
 `blocks/panels/InventoryPanel.svelte:20` prints `carried / capacity` as plain text.
 `ui.md` rule 3 lists the values that must carry a provenance popover and names **carrying capacity**
@@ -2084,7 +2088,7 @@ other combat panel has one.
 nothing but `combat`, so it needs the sheet threaded in the way `SkillsPanel` and `SpellsPanel`
 take it.
 
-### 67 · MEDIUM-LOW · the effect-duration menu is a dialog Escape cannot close
+### 67 · [x] MEDIUM-LOW · the effect-duration menu is a dialog Escape cannot close
 
 `blocks/EffectDurationMenu.svelte:84` — `role="dialog"` with `place()`, a scroll follower and a
 `pointerdown`-outside closer, and no key handling at all. Its sibling, the combat overlay it opens
@@ -2100,7 +2104,7 @@ and `pointerdown`; there is no `onkeydown`, no `svelte:window`, and no `dismissO
 
 **Fix:** `use:dismissOnEscape={onclose}` on the `.dur-menu` div.
 
-### 68 · LOW-MEDIUM · a spell pin is stored by bare id, so it pins every same-id spell
+### 68 · [x] LOW-MEDIUM · a spell pin is stored by bare id, so it pins every same-id spell
 
 `combat-view-model.svelte.ts:253` (`togglePin(id)`) writes `ui.spellsPinned` from `r.id`, and `:250`
 reads it back as a bare-id map that `SpellsPanel.svelte:88` indexes with `pinned[r.id]`. The eye in
@@ -2119,7 +2123,7 @@ The pinned ids also land on disk in `ui.spellsPinned`, so the ambiguity outlives
 
 **Fix:** store and index the ref, as `spellsHidden` does.
 
-### 69 · LOW · the combat page hands the loading screen two English literals
+### 69 · [x] LOW · the combat page hands the loading screen two English literals
 
 `routes/combat/+page.svelte:32` —
 `content.graph ? 'Computing your character sheet…' : 'Loading content…'`, passed to `<Loading
@@ -2139,7 +2143,7 @@ repo; these are two more, and the component default is a third.
 **Fix:** two keys (`loading.sheet`, `loading.content`), and give `Loading`'s `message` prop a
 key-based default instead of an English one.
 
-### 70 · LOW · the pin-skills menu title-cases skill ids while the skills panel translates them
+### 70 · [x] LOW · the pin-skills menu title-cases skill ids while the skills panel translates them
 
 `CombatMenus.svelte:305` — `<span class="skill-name">{titleCase(skill)}</span>`.
 `SkillsPanel.svelte:55` prints the same eighteen ids as
@@ -2273,7 +2277,7 @@ The lines *What was not reached* left open: the duplicated CSS census, a `:focus
 the reverse states beyond finding 25 — pin persistence, source enable/disable, theme
 install/uninstall, pack apply/rollback.
 
-### 71 · LOW · the top of the duplicated-CSS census is the shared class being re-typed beside itself
+### 71 · [ ] LOW · the top of the duplicated-CSS census is the shared class being re-typed beside itself
 
 `node tools/visual/css-dups.mjs` — the repo's own survey, and the source of the census this audit
 already carries: **102 duplicated declaration blocks, 100 of them spanning more than one file.** The
@@ -2297,7 +2301,7 @@ two-declaration hover block is far under that floor.
 — which is what those classes exist for — and re-run `css-dups.mjs` to see what is left.
 `tools/visual/hoist-class.mjs` and `rename-class.mjs` are the mechanical half of that move.
 
-### 72 · MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
+### 72 · [ ] MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
 
 Nothing moves focus into the Inspector when a picker opens: `PickerSearch.svelte` has no autofocus,
 `OptionGrid`/`SectionedPicker` have none, and the pane is the last column in the DOM. `ui.md` ▸ the
@@ -2366,7 +2370,7 @@ the pair `CommandPalette.svelte:125`/`:138` already implements for its own input
 Queue item 4. `src/lib/character/{repository,schema,store.svelte,draft-repository,photo,derive-plugins}.ts`,
 `src/routes/build/{draft,draft-history.svelte,draft-session.svelte,class-picks-cache,class-rows.svelte,option-walk,picker-reading.svelte,card-placement,rows,draft-inventory,inspector.svelte,inspector-specs,build-view-model.svelte}.ts`,
 `src/routes/+page.svelte`, `src/routes/build/+page.svelte`. Nine confirmed.
-### 73 · MEDIUM-HIGH · deleting a character is one unconfirmed click, and it takes the snapshots that would undo it
+### 73 · [ ] MEDIUM-HIGH · deleting a character is one unconfirmed click, and it takes the snapshots that would undo it
 
 `src/routes/+page.svelte:125` — `onclick={() => removeCharacter(c.id)}` on the roster's ✕. No dialog,
 no toast, no undo. `removeCharacter` → `deleteCharacter` → `storage.remove(dirOf(slug))`
@@ -2397,7 +2401,7 @@ from `32c407e` (2026‑07‑03) and the file was still edited this cycle (+74/�
 **Fix:** the two roster ✕ buttons take the same `ConfirmDialog danger` the compendium row uses, with
 the character's name in the title.
 
-### 74 · MEDIUM · a picked portrait outlives the build it was picked for, and overwrites the next character's
+### 74 · [ ] MEDIUM · a picked portrait outlives the build it was picked for, and overwrites the next character's
 
 `build-view-model.svelte.ts:497` — `pickedPhoto` is cleared in exactly two places, `clearPhoto`
 (`:521`) and `persistPhoto` after a successful write (`:535`). None of the three entry points that
@@ -2429,7 +2433,7 @@ Bevan's portrait bytes on disk                 [1,2,3]    <- his own is gone
 **Fix:** `pickedPhoto = null` in `reset`, `hydrate` and `hydrateDraft` — the three already clear every
 other cross-build carry-over, and this is the one they missed.
 
-### 75 · MEDIUM · the v1 save migration snakes every content ref except the languages
+### 75 · [ ] MEDIUM · the v1 save migration snakes every content ref except the languages
 
 `repository.ts:48` — `for (const key of ['feats', 'skills', 'expertise'] as const)`. The E3 rename
 (`f11fab4`, kebab → snake ids) is what `migrateV1toV2` exists to repair, and it walks `species`,
@@ -2464,7 +2468,7 @@ Predates `v0.6.2`.
 **Fix:** add `'languages'` to the `snakeRefs` list at `:48`. Idempotent on already-snake ids, so
 re-running v2→v3 (which re-invokes the same function) needs no separate change.
 
-### 76 · MEDIUM · a level set before the class locks that class out at 20
+### 76 · [ ] MEDIUM · a level set before the class locks that class out at 20
 
 `class-rows.svelte.ts:36` — `totalLevel` is `classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1`.
 The `|| 1` is a floor for display, and `levelAfterTaking` (`:83`) subtracts a real held level from it:
@@ -2495,7 +2499,7 @@ row the new edition lacks and leaves the row's level where it was: a level‑20 
 **Fix:** drop the floor inside the arithmetic — `levelAfterTaking` should sum the held levels itself
 rather than borrow the display value: `classes.reduce((n, c, j) => n + (c.classId && j !== i ? c.level : 0), 0) + (stashed ?? row.level ?? 1)`.
 
-### 77 · MEDIUM · a storage failure on Create says nothing, to anyone
+### 77 · [ ] MEDIUM · a storage failure on Create says nothing, to anyone
 
 `build-view-model.svelte.ts:541` — `save()` wraps its four awaited storage calls in `try/finally`
 with no `catch`, and `build/+page.svelte:106` is `const id = await build.save(); if (!id) return;`
@@ -2522,7 +2526,7 @@ Nothing catches it above `save()`; `create()` returns a rejected promise into an
 **Fix:** `catch` in `save()` — toast the failure with the same one-id pattern as
 `DRAFT_SAVE_FAILED_TOAST` and return `null`, which `create()` already treats as "do not navigate".
 
-### 78 · MEDIUM-LOW · the autosave that lands after Create resurrects the draft Create just discarded
+### 78 · [ ] MEDIUM-LOW · the autosave that lands after Create resurrects the draft Create just discarded
 
 `build-view-model.svelte.ts:534` — `persistPhoto` writes `this.draft.photo = name` **during** `save()`.
 That is a draft mutation, and `build/+page.svelte:76` subscribes to the whole draft by deep snapshot,
@@ -2554,7 +2558,7 @@ there `written` is stale for the ordinary reason.
 **Fix:** `renew()` at the end of `save()`, beside `discard()` — a session whose draft became a
 character has no identity left to write under. It costs one line and closes both doors.
 
-### 79 · MEDIUM-LOW · Enter on a focused language chip takes the highlighted one instead
+### 79 · [ ] MEDIUM-LOW · Enter on a focused language chip takes the highlighted one instead
 
 `picker-reading.svelte.ts:108` — `fromOptions` passes the host straight through:
 `walkOptions(event, this.host())`. Its own docstring six lines above says the opposite — *"Enter is
@@ -2586,7 +2590,7 @@ but builds its picker without `onenter`, which is the only configuration where t
 **Fix:** `fromOptions` drops `onenter` before delegating — destructure it off the host rather than
 spreading it — which is what its docstring already describes.
 
-### 80 · LOW-MEDIUM · the rotating backups have no reader, no restore, and on the web no way to reach them
+### 80 · [ ] LOW-MEDIUM · the rotating backups have no reader, no restore, and on the web no way to reach them
 
 `repository.ts:118–192` maintains two rings on every save and every launch — `character.bak.save.*`
 (2 deep, 10‑minute throttle) and `character.bak.launch.*` (3 deep) — and the block comment states the
@@ -2615,7 +2619,7 @@ the save (finding above), which is the one moment they exist for.
 restore is a copy over `character.json` plus a roster reload. Until then the comment at `:119` and
 `characters.md`'s "rotating backups" describe a capability that does not exist.
 
-### 81 · LOW-MEDIUM · four screens show a raw system id, and only one shows the label
+### 81 · [ ] LOW-MEDIUM · four screens show a raw system id, and only one shows the label
 
 *Widened in the third pass — the original finding said "the roster is the one screen", which is
 wrong. Its census grepped `sysbadge`, a class name, so it could only ever find the roster.*
@@ -2739,7 +2743,7 @@ Recorded so none of it is re-derived.
 The backlog *What was not reached* left, worked item by item. Findings 82-85; the settled suspicions
 are folded back into their own *Suspected* headings above.
 
-### 82 · MEDIUM · the attack row prints a damage number the attack does not roll
+### 82 · [x] MEDIUM · the attack row prints a damage number the attack does not roll
 
 `attacks.ts:321` (`computeAttacks`) folds a weapon's own tokens and the character-level **attack**
 bonuses that a scope names (`scopedAttackBonus:278`), and no damage effect at all.
@@ -2774,7 +2778,7 @@ attack axis already does, and drop `dmgFx.flat` from `attackSpec`'s primary part
 diverge. What cannot fold into a static number — bonus dice, `min_die`, `reroll` — is what
 `AttackNote` is for, and `attackNotes` already renders it on the row's title.
 
-### 83 · MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
+### 83 · [ ] MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
 
 `saveCharacterToStore` (`character/store.svelte.ts:107`) has no `catch`, `saveCharacter`
 (`repository.ts:196`) throws on both of its failure modes, and **not one of its nine call sites has a
@@ -2832,7 +2836,7 @@ the log" instead of assuming.
 catch on `await storage.exists(logOf(slug))` and rethrows otherwise. `flushAll` wants
 `Promise.allSettled` instead, so one failed flush cannot swallow the reload.
 
-### 84 · MEDIUM · the exhaustion stepper clamps to the data cap, the schema caps at 20, and the gap silently bricks saving
+### 84 · [x] MEDIUM · the exhaustion stepper clamps to the data cap, the schema caps at 20, and the gap silently bricks saving
 
 `effects-editor.svelte.ts:54` — `setExhaustion` clamps to `this.exhaustionMax`, the exhaustion row's
 own `max_level`, and its comment says why: the ceiling is DATA, *"so a homebrew ladder of a different
@@ -2858,7 +2862,7 @@ which this is the no-disk-failure door into.
 bound to a positive-int check and let the data own the ceiling outright, which is what the stepper's
 comment already assumes.
 
-### 85 · LOW · a `flat_bonus:attack` carrying both a dotted scope and a qualifier keeps only the qualifier
+### 85 · [x] LOW · a `flat_bonus:attack` carrying both a dotted scope and a qualifier keeps only the qualifier
 
 `token-parser.ts:239` and `:253` build `{...(scope ? {scope} : {}), ...qualifierSlot(target, slot)}`,
 and `qualifierSlot:202` returns `{scope: q}` when the base target is `attack`. Later spread wins, so
@@ -2882,7 +2886,7 @@ versatile weapons` becomes `+2 on every versatile weapon` — and `isEffectTarge
 `scope: [scope, qual.scope].filter(Boolean).join(',')`, which is already the AND-semantics
 `rollEffectsFor:388` and `scopedAttackBonus:292` apply to a comma list.
 
-### 86 · MEDIUM-LOW · a failed RELOAD blanks the builder and is invisible on the other four views
+### 86 · [ ] MEDIUM-LOW · a failed RELOAD blanks the builder and is invisible on the other four views
 
 `content/store.svelte.ts:27` assigns `content.graph` only on success, so a failed reload keeps the
 working graph and sets `content.error` beside it. Five routes then read that pair, and one of them
@@ -2921,7 +2925,7 @@ overshot: the other views surface it only when the graph is actually missing.
 `Loading`. A stale-but-working graph with a failed refresh behind it is a NOTICE, not a screen — and
 if it should be one, it belongs to all five, not to the one page a user is mid-task on.
 
-### 87 · HIGH · moving a saved ASI to another ability grants BOTH, and it compounds with every move
+### 87 · [ ] HIGH · moving a saved ASI to another ability grants BOTH, and it compounds with every move
 
 `ability-allocation.svelte.ts:219` reconciles the carried flat boosts against what the restored slots
 re-derive, **per ability**:
@@ -2979,7 +2983,7 @@ reads `halfFeatOptionsFor`, and it can subtract lazily by the same rule.
 inflation applies to a half-feat's ability by construction. Finding 50 is a *different* bug on that
 same map — there the ability does not move when it should.
 
-### 88 · MEDIUM-LOW · reading a draft destroys the stale one the warning exists to show
+### 88 · [ ] MEDIUM-LOW · reading a draft destroys the stale one the warning exists to show
 
 `drafts/store.ts:87` — `readDraft` removes the file when `schemaVersion` differs, and returns null.
 `findStaleDrafts:211` exists to list exactly those files *before* they go, and says so: *"Surfaced
@@ -3011,7 +3015,7 @@ removing anything; the file is already destined for `discardDrafts`, which is th
 user behind it. `repointDraft`'s conflict check (`:156`) gets the same benefit for free — today it
 can delete a stale draft at the destination and then report "no conflict" and overwrite the slot.
 
-### 89 · LOW-MEDIUM · one unrecognised `.json` in `drafts/` takes down the whole discard dialog
+### 89 · [ ] LOW-MEDIUM · one unrecognised `.json` in `drafts/` takes down the whole discard dialog
 
 `parseDraft:221` returns whatever `JSON.parse` produced, unvalidated. Anything parseable but not a
 draft envelope therefore counts as a *readable* draft with `target: undefined`, and since its
@@ -3045,7 +3049,7 @@ set"* (`store.ts:8`) — and the folder is inside the data dir the product invit
 file to `findUnreadableDrafts` — where it is already handled by path, needs no target, and is exactly
 what that list is for.
 
-### 90 · LOW · the draft filename encoding is legal on every OS except for one character
+### 90 · [ ] LOW · the draft filename encoding is legal on every OS except for one character
 
 `draftPath:57` calls the encoding *"a valid, collision-free (reversible) filename on every OS — no
 `:` / space hazard"*. `encodeURIComponent` leaves `! ' ( ) * - . _ ~` unescaped, and exactly one of
@@ -3066,7 +3070,7 @@ unhandled rejection, since `writeDraft`'s callers treat it as fire-and-forget.
 **Fix:** escape it — `encodeURIComponent(key).replace(/\*/g, '%2A')` keeps the mapping reversible and
 closes the set.
 
-### 91 · LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
+### 91 · [ ] LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
 
 `storage/types.ts:37` states the rename contract for every implementation: *"Overwriting an existing
 target is not promised — remove it first."* `browser.ts:118` re-keys every matching entry with `put`,
@@ -3107,7 +3111,7 @@ only thing holding the invariant.
 web build IndexedDB holds only homebrew, characters and drafts (content comes from `FetchStorage`),
 so none of this is reachable at a size that matters today.
 
-### 92 · MEDIUM · finding 28's open half, closed: six more English strings, and two raw content-type ids
+### 92 · [x] MEDIUM · finding 28's open half, closed: six more English strings, and two raw content-type ids
 
 Finding 28 said its census was "complete for attributes and markup runs, and open for props" — an
 English sentence inside a `{}` expression is the shape its scan could not see. Two scans close it:
@@ -3151,7 +3155,7 @@ first (`/* */`, `<!-- -->` and `//` blanked to spaces, preserving line numbers),
 comments was ~80% of the raw hits. Neither is worth wiring into the gate as written — the signal is
 "a user-facing string with no sibling `key`", and expressing that as a lint rule is the real fix.
 
-### 93 · LOW-MEDIUM · shipped content nests conditions two deep, and the engine expands one — Unconscious is listed as Prone and is not Prone
+### 93 · [ ] LOW-MEDIUM · shipped content nests conditions two deep, and the engine expands one — Unconscious is listed as Prone and is not Prone
 
 `effects.md` states the rule three times — `apply_condition` expands *"a condition row's own tokens
 ONE level"* (`:100`), *"ONE level per id"* (`:331`), *"expands ONE level, no cascade"* (`:339`) — and
@@ -3212,7 +3216,7 @@ by hand, and fails when a nested target carries a non-`note:` token the parent d
 It is the same shape as the existing "a shipped token that folds onto nothing fails the suite"
 gate (`111ba48`), and it would have caught this row the day it was written.
 
-### 94 · HIGH · a level-up silently strips a template magic item's chosen base weapon
+### 94 · [x] HIGH · a level-up silently strips a template magic item's chosen base weapon
 
 `draft.ts:316` builds the draft's inventory field by field —
 `{ item, qty, equipped, attuned }` — and `base` is not among them. `DraftState.inventory`
@@ -3247,7 +3251,7 @@ enumerates fields by hand, so every new inventory column silently drops until so
 round-trip test (`character → draft → assembled` deep-equals on `build.inventory`) would have caught
 both `attuned` and `base`, and is the guard that stops the third one.
 
-### 95 · LOW · `content.md` names class → features as a full-key link; it is deliberately a bare-id one
+### 95 · [ ] LOW · `content.md` names class → features as a full-key link; it is deliberately a bare-id one
 
 `content.md:34` — *"Links (class → features, character → content) and the loader's `byEffectiveId`
 all use the full key."* The second half is true; the first is the counter-example.
@@ -3267,7 +3271,7 @@ full key; a content-to-content link that must survive re-sourcing (`class_id`, `
 `species_id`) is a BARE id on purpose, and `content.md` should say so beside the identity rule rather
 than leaving `derive-gather.ts`'s comment as the only place it is written down.
 
-### 96 · MEDIUM-HIGH · a level-up re-prepares every spell the player unprepared, and demotes every always-prepared one
+### 96 · [x] MEDIUM-HIGH · a level-up re-prepares every spell the player unprepared, and demotes every always-prepared one
 
 The same shape as finding 94, one field over. `draftFromCharacter:306` reduces the character's spells
 to bare refs — `char.build.spells.map((s) => s.spell)` — and `assembled`
@@ -3301,7 +3305,7 @@ character already had and default only for a newly picked one — the same repai
 the same round-trip test catches both: `character → hydrate → assembled` must deep-equal on
 `build.spells` and `build.inventory` when nothing was clicked.
 
-### 97 · MEDIUM · the data-dir trust check passes `..`, and what stops the escape is a coincidence one layer down
+### 97 · [ ] MEDIUM · the data-dir trust check passes `..`, and what stops the escape is a coincidence one layer down
 
 `src-tauri/src/lib.rs:75` — `set_data_dir` decides whether a path is trusted with
 
@@ -3357,7 +3361,7 @@ driver can reach it. The actual sandbox boundary of the desktop app is documente
 comments inside the file it guards, which is the one place a reader checking the boundary would not
 think to look.
 
-### 98 · LOW-MEDIUM · a finished formula with no trailing space cannot be rolled with the mouse at all
+### 98 · [ ] LOW-MEDIUM · a finished formula with no trailing space cannot be rolled with the mouse at all
 
 The first pass filed this as a suspicion and named the open question exactly: *"Not observed: whether
 the click still lands, since a disabled button swallows the event in Chrome and whether the blur

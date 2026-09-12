@@ -193,7 +193,7 @@
 				     stop the row's use-click, exactly like the prep/pin bits inside a spell row -->
 				<button
 					class="resource-row"
-					title="Use one {r.name}"
+					title={$_('combat.resource.useOne', { values: { name: r.name } })}
 					onclick={() => combat.useResourceOrEnter(r.id, r.max)}
 				>
 					<span class="resource-name">{r.name}</span>

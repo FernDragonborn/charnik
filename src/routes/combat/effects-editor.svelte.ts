@@ -6,8 +6,10 @@
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
  * currently modifying the character (docs/plan.md, roadmap 9). That is why they are one module.
  */
-import type { Character, DeathCause } from '$lib/character/schema';
+import { EXHAUSTION_MAX, type Character, type DeathCause } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
+import { localizedName } from '$lib/content/detail';
+import { app } from '$lib/stores/app.svelte';
 import { endConcentrationCarriedBy, remainingRounds, type MenuKind } from '$lib/combat/helpers';
 
 /** What the effects editor needs from the sheet around it. */
@@ -35,7 +37,7 @@ export class EffectsEditor {
 				// leveled conditions (exhaustion, max_level>1) are a stepper, not a binary toggle — they
 				// don't belong in this multi-select (they'd double-count with gatherExhaustion). D19.
 				.filter((r) => Number(r.data.max_level ?? 1) <= 1)
-				.map((r) => ({ id: r.id, label: r.data.name_en }))
+				.map((r) => ({ id: r.id, label: localizedName(r, app.activeLocale) }))
 		);
 	});
 	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
@@ -54,7 +56,9 @@ export class EffectsEditor {
 	setExhaustion = (level: number): void => {
 		const p = this.host().character?.play;
 		if (!p) return;
-		const max = this.exhaustionMax;
+		// the data cap AND the schema's, because the two disagree above 20: a level the schema refuses
+		// makes every later save throw into a `void`, and the sheet keeps working as if nothing is wrong
+		const max = Math.min(this.exhaustionMax, EXHAUSTION_MAX);
 		p.exhaustion = Math.max(0, Math.min(max, Math.round(level)));
 		if (max > 0 && p.exhaustion >= max) this.host().die('exhaustion');
 	};
@@ -92,7 +96,7 @@ export class EffectsEditor {
 			// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes propagate),
 			// with the baked label/tokens kept as the orphan fallback.
 			ref: r.effectiveId,
-			label: r.data.name_en,
+			label: localizedName(r, app.activeLocale),
 			tokens: r.data.effects,
 			negative: r.data.negative,
 			durationRounds: r.data.duration_rounds ?? null,

@@ -186,7 +186,7 @@ export class SheetRolls {
 					...nameFields(attackRollName(at, t)),
 					test: {
 						dice: { 20: 1 },
-						mod: at.toHit + fx.flat,
+						mod: at.toHit,
 						advantage: netAdvantage(fx),
 						bonusDice: fx.bonusDice,
 						mods: dieModsOf(fx),
@@ -209,10 +209,7 @@ export class SheetRolls {
 	rollAttackNow = (at: Attack, name: RollName = attackRollName(at, t)) => {
 		const { parts, fx, hasDmg } = this.attackSpec(at);
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
-		const toHit = rollPool(
-			{ 20: 1 },
-			{ ...fx, mod: at.toHit + fx.flat, advantage: netAdvantage(fx) },
-		);
+		const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) });
 		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
@@ -249,11 +246,13 @@ export class SheetRolls {
 		const scopes = new Set(at.scopes);
 		const fx = this.effectsFor('attack', scopes);
 		const dmgFx = this.effectsFor('damage', scopes);
-		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
-		// adds them to the weapon's base damage, not to a second damage type's dice.
+		// The FLAT halves of both axes are already in the row (`computeAttacks` folds them where the
+		// weapon is known), so picking them up here would count them twice — and it is why the row can
+		// print the number the tap rolls. What only a roll can carry rides on: bonus dice and the
+		// die manipulations, folded onto the PRIMARY part, as RAW adds them to the weapon's base damage.
 		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({
 			dice: p.pool,
-			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
+			mod: p.mod,
 			type: p.type,
 			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dieModsOf(dmgFx) } : {}),
 		}));

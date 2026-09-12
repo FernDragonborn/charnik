@@ -280,8 +280,14 @@
 
 <article class="detail-body edit">
 	<div class="deyebrow">
-		{type.replace(/_/g, ' ')} · {editing ? 'edit' : 'new homebrew'}{#if editShipped}
-			· fork to homebrew{/if}
+		{$_(
+			editShipped
+				? 'homebrewForm.eyebrowFork'
+				: editing
+					? 'homebrewForm.eyebrowEdit'
+					: 'homebrewForm.eyebrowNew',
+			{ values: { type: $_(`contentType.${type}`) } },
+		)}
 	</div>
 	<input class="titlein" placeholder={$_('contentField.name')} bind:value={draft.name_en} />
 	<div class="id-row">

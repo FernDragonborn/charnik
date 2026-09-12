@@ -10,7 +10,7 @@
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { titleCase, ABIL, MOD_TARGETS, modTargetKey } from '$lib/combat/helpers';
+	import { titleCase, ABIL, MOD_TARGETS, modTargetKey, conditionIdOf } from '$lib/combat/helpers';
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import Switch from '$lib/components/Switch.svelte';
 	import { COINS } from '$lib/rules/currency';
@@ -23,6 +23,16 @@
 	const character = $derived(combat.character);
 	const { setTempHp, addCustomModifier, togglePassive } = combat;
 	const { addEffect } = combat.effects;
+
+	/** The add-effect menu's own filter. The catalog is user-extendable content, so the box beside it
+	 *  is the only way the list stays navigable at size — it used to search nothing at all. */
+	let effectQuery = $state('');
+	const matchingEffects = $derived.by(() => {
+		const q = effectQuery.trim().toLowerCase();
+		return q
+			? combat.effects.effectCatalog.filter((p) => p.label.toLowerCase().includes(q))
+			: combat.effects.effectCatalog;
+	});
 
 	let popEl = $state<HTMLDivElement>();
 	let pos = $state<{ top: number; left: number | null; right: number | null }>({
@@ -117,6 +127,7 @@
 			<div class="search">
 				<span class="search-icon"><Icon name="search" size={13} /></span><input
 					placeholder={$_('combat.menu.searchEffects')}
+					bind:value={effectQuery}
 				/>
 			</div>
 			<div class="section eyebrow">{$_('combat.menu.durationApplied')}</div>
@@ -152,7 +163,7 @@
 				>
 			</div>
 			<div class="section eyebrow">{$_('combat.menu.catalog')}</div>
-			{#each combat.effects.effectCatalog as p (p.label)}
+			{#each matchingEffects as p (p.label)}
 				{@const dur = p.durationRounds ?? combat.effects.newEffectDuration}
 				<button
 					class="menu-row"
@@ -302,7 +313,9 @@
 								<button class="menu-row" onclick={() => togglePassive(skill)}>
 									<span class="passive-eye" class:on={passiveSkills.includes(skill)}
 										><EyeIcon on={passiveSkills.includes(skill)} /></span
-									><span class="skill-name">{titleCase(skill)}</span>
+									><span class="skill-name"
+										>{$_(`skillName.${skill}`, { default: titleCase(skill) })}</span
+									>
 								</button>
 							{/each}
 						</div>
@@ -398,19 +411,23 @@
 				>
 			</div>
 			{#each conditionList as cn (cn.id)}
-				{@const added = character?.play.effects.some((e) => e.label === cn.label)}
+				<!-- matched by the TOKEN it carries, not by its label: the label is content and a
+				     translated pack would stop the switch recognising its own condition -->
+				{@const applied = character?.play.effects.find((e) => conditionIdOf(e) === cn.id)}
 				<button
 					class="menu-row"
+					aria-pressed={!!applied}
 					onclick={() =>
-						added
-							? null
+						applied
+							? combat.effects.removeEffect(applied.iid)
 							: addEffect({
 									label: cn.label,
 									tokens: [`apply_condition:${cn.id}`],
 									positive: false,
 								})}
 				>
-					<span class="main">{cn.label}</span><span class="toggle-track" class:on={added}></span>
+					<span class="main">{cn.label}</span><span class="toggle-track" class:on={!!applied}
+					></span>
 				</button>
 			{/each}
 		{/if}

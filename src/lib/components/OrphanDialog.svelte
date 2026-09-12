@@ -54,7 +54,7 @@
 	const oldId = $derived(current ? draftIdLabel(current.target) : '');
 
 	function draftIdLabel(t: DraftTarget): string {
-		if (t.kind === 'add') return '(new entry)';
+		if (t.kind === 'add') return $_('drafts.newEntryLabel');
 		return `${t.type}:${t.source}:${t.id}${t.kind === 'translate' ? ` · ${t.locale}` : ''}`;
 	}
 

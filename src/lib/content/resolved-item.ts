@@ -21,6 +21,10 @@ export interface ResolvedItem {
 	row: LoadedRowOf<'item'>;
 	tags: ItemTags;
 	damage: string;
+	/** Pounds, inherited from the base the way `damage` and the tags are: every shipped row that names
+	 *  a `base_item_id` leaves its own weight blank, so a magic weapon read off its own row weighs
+	 *  nothing — on the sheet whose load meter is the only place capacity is shown. */
+	weightLb: number;
 }
 
 /**
@@ -51,10 +55,17 @@ export function resolveItem(
 		: chosenBase
 			? graph.get(chosenBase)
 			: undefined;
-	if (base?.type !== 'item') return { row, tags: own, damage: row.data.damage ?? '' };
+	const ownWeight = Number(row.data.weight_lb ?? 0);
+	if (base?.type !== 'item')
+		return { row, tags: own, damage: row.data.damage ?? '', weightLb: ownWeight };
 	const tags = new Map(parseItemTags(base.data.tags));
 	for (const [name, value] of own) tags.set(name, value);
-	return { row, tags, damage: row.data.damage || base.data.damage || '' };
+	return {
+		row,
+		tags,
+		damage: row.data.damage || base.data.damage || '',
+		weightLb: ownWeight || Number(base.data.weight_lb ?? 0),
+	};
 }
 
 /**

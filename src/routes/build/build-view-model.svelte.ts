@@ -176,6 +176,12 @@ export class BuildVM {
 			featSkills: [...(char.build.featSkills ?? [])],
 			skills: new Set(char.build.skills),
 			spells: new Set(this.draft.selectedSpells),
+			spellFlags: new Map(
+				char.build.spells.map((s) => [
+					s.spell,
+					{ prepared: s.prepared, alwaysPrepared: s.alwaysPrepared },
+				]),
+			),
 			loaded: settled
 		};
 		this.history.reset();
@@ -312,11 +318,11 @@ export class BuildVM {
 
 	/** Skill proficiencies and expertise — the class list, the background's grants, and the two capped
 	 *  pickers over them. See skill-picks.svelte.ts. */
-	skillPicks = new SkillPicks(() => this);
+	skillPicks: SkillPicks = new SkillPicks(() => this);
 
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
-	feats = new FeatSlots(() => this);
+	feats: FeatSlots = new FeatSlots(() => this);
 	/** Ability scores + every boost layered on them — see ability-allocation.svelte.ts. Read as
 	 *  `b.abilities.*`: unlike the combat subsystems this one has a single consumer component, so it
 	 *  is addressed directly instead of behind a dozen forwarding accessors. */
@@ -383,8 +389,14 @@ export class BuildVM {
 			},
 			languages: [...this.draft.selectedLanguages],
 			inventory: this.draft.inventory.map((i) => ({ ...i })),
-			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
+			// A spell the character ALREADY had keeps the flags it had: unpreparing one is the player's
+			// decision and an always-prepared domain spell is the class's, and recomputing both from the
+			// level re-prepared what they put away and demoted what they never chose — which also moved
+			// the prepared tally against `preparedCap`. The default is for a NEWLY picked spell only:
+			// cantrips are always-prepared, leveled spells start prepared (tweak in the Spellbook).
 			spells: this.draft.selectedSpells.map((ref) => {
+				const had = this.edit?.spellFlags.get(ref);
+				if (had) return { spell: ref, ...had };
 				const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
 				return { spell: ref, prepared: lvl > 0, alwaysPrepared: lvl === 0 };
 			}),

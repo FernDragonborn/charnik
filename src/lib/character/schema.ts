@@ -50,6 +50,12 @@ const classEntry = z.object({
 	rowId: z.string().optional(),
 });
 
+/** The tallest exhaustion ladder a character may carry. The DATA owns the real ceiling (a condition
+ *  row's `max_level`), so this is only the sanity bound the save schema validates against — but the
+ *  stepper has to know it, because a level the schema refuses is a character that can never be saved
+ *  again and nothing would say so. */
+export const EXHAUSTION_MAX = 20;
+
 const inventoryEntry = z.object({
 	item: ref,
 	qty: z.number().int().min(1).default(1),
@@ -189,8 +195,9 @@ const playSchema = z.object({
 		.default(null),
 	/** Exhaustion level. The real ceiling is DATA (the exhaustion condition row's `max_level`, 6 in
 	 *  both editions) and the stepper clamps to it; this is only a generous sanity bound so a homebrew
-	 *  ladder taller than 6 still validates (D19). */
-	exhaustion: z.number().int().min(0).max(20).default(0),
+	 *  ladder taller than 6 still validates (D19). The stepper clamps to `EXHAUSTION_MAX` as well —
+	 *  above it a character validates nowhere and every later save throws, silently. */
+	exhaustion: z.number().int().min(0).max(EXHAUSTION_MAX).default(0),
 	/** Whether the action-economy is being tracked. Off → no turnbar, no action/bonus/reaction
 	 *  enforcement (rolls always go through); on → attacks/spells spend their slot and are blocked
 	 *  when the slot is exhausted. */
@@ -247,8 +254,9 @@ const uiSchema = z
 		/** Spells the user hid from the combat sheet via the spellbook's eye toggle (effectiveIds,
 		 *  `source:id`). Additive: absent → shown. The combat spell list filters these out. */
 		spellsHidden: z.array(z.string()).default([]),
-		/** Spells pinned to the top of the combat spell list (bare spell ids — the combat key format;
-		 *  D3). Absent → nothing pinned; per character, no demo default. */
+		/** Spells pinned to the top of the combat spell list, by full ref (`spell:source:id`) — the same
+		 *  identity `spellsHidden` uses, so the star and the eye agree about what a spell is (D3). A save
+		 *  written with bare ids simply pins nothing until the star is tapped again. */
 		spellsPinned: z.array(z.string()).default([]),
 		/** Which skills show in the passive-senses row (Pin skills). Absent → the default trio
 		 *  (Perception / Investigation / Insight). Stored per character, not a global. */

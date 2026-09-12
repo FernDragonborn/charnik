@@ -25,7 +25,9 @@ import {
 } from '$lib/character/inventory';
 import { COINS, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
-import { rowName, type ContentGraph } from '$lib/content/loader';
+import { type ContentGraph } from '$lib/content/loader';
+import { localizedName } from '$lib/content/detail';
+import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 import type { Character } from '$lib/character/schema';
@@ -86,9 +88,9 @@ export class InventoryTracker {
 				entry,
 				// the ref itself is the last resort: a row whose item left the graph must still be
 				// visible and removable, never a blank line the user cannot act on
-				name: item ? rowName(item.row) : entry.item,
+				name: item ? localizedName(item.row, app.activeLocale) : entry.item,
 				item,
-				weightLb: Number(item?.row.data.weight_lb ?? 0),
+				weightLb: item?.weightLb ?? 0,
 				meta: [item?.row.data.category ?? '', item?.damage ?? '', ac === null ? '' : `AC ${ac}`]
 					.filter(Boolean)
 					.join(' · '),
@@ -136,8 +138,8 @@ export class InventoryTracker {
 	coinsLb = $derived(this.weighsCoins ? purseWeightLb(this.purse) : 0);
 
 	carriedLb = $derived(
-		carriedWeight(this.list, (ref) => Number(this.resolve(ref)?.row.data.weight_lb ?? 0)) +
-			this.coinsLb,
+		// through `resolveItem`, so a magic weapon weighs what the weapon it IS weighs
+		carriedWeight(this.list, (ref, base) => this.resolve(ref, base)?.weightLb ?? 0) + this.coinsLb,
 	);
 	capacityLb = $derived.by(() => this.getSheet()?.carryingCapacity.value ?? 0);
 	/** 0…1 for the load meter; 0 when nothing has told us a capacity yet. */
@@ -195,7 +197,7 @@ export class InventoryTracker {
 			if (row.data.category !== template.data.category || row.data.rarity) continue;
 			// a row that would itself need a base has nothing to lend
 			if (needsBaseItem(resolveItem(graph, row))) continue;
-			out.push({ ref: `item:${row.source}:${row.id}`, name: rowName(row) });
+			out.push({ ref: `item:${row.source}:${row.id}`, name: localizedName(row, app.activeLocale) });
 		}
 		return out.sort((a, b) => a.name.localeCompare(b.name));
 	};

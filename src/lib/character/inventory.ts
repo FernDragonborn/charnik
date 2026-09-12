@@ -39,9 +39,12 @@ export const attunedCount = (list: InventoryList): number =>
 	list.filter((entry) => entry.attuned).length;
 
 /** Total carried weight in pounds. `weightOf` is injected because the graph lookup belongs to the
- *  caller — this module stays free of content loading. */
-export const carriedWeight = (list: InventoryList, weightOf: (ref: string) => number): number =>
-	list.reduce((lb, entry) => lb + weightOf(entry.item) * entry.qty, 0);
+ *  caller — this module stays free of content loading. It is asked with the entry's chosen BASE too:
+ *  a template magic item weighs what the weapon the player answered with weighs. */
+export const carriedWeight = (
+	list: InventoryList,
+	weightOf: (ref: string, base?: string) => number,
+): number => list.reduce((lb, entry) => lb + weightOf(entry.item, entry.base) * entry.qty, 0);
 
 const withEntry = (
 	list: InventoryList,

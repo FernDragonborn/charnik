@@ -127,6 +127,25 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		]);
 	});
 
+	it('a round trip with NOTHING clicked changes no play-side decision the save recorded', () => {
+		// the guard the dropped-field family needed: `attuned`, then `base` (which weapon a template
+		// magic item IS), then every prepared flag were each lost by a mapper that copies field by field
+		const saved = savedCharacter();
+		saved.build.inventory = [
+			{ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: true, base: `item:${S}:longsword` }
+		];
+		saved.build.spells = [
+			{ spell: `spell:${S}:fireball`, prepared: false, alwaysPrepared: false }, // put away by the player
+			{ spell: `spell:${S}:light`, prepared: true, alwaysPrepared: true } // granted by the class
+		];
+		const parsed = characterSchema.parse(saved);
+		build.hydrate(parsed);
+		const out = build.assembled;
+
+		expect(out.build.inventory).toEqual(parsed.build.inventory);
+		expect(out.build.spells).toEqual(parsed.build.spells);
+	});
+
 	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
 		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
