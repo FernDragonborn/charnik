@@ -9,6 +9,7 @@
  * let the player fix the rest — matching the app's "everything doable, nothing enforced to a
  * dead end" stance.
  */
+import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -78,6 +79,10 @@ const FALLBACK_SLUG = 'hero';
  * shows it. A carve that moves DERIVATIONS over the draft is cheap; one that moves a bound field is
  * not, and is verified in a driven browser rather than reasoned about.
  */
+/** One id for the Create failure, so a disk that stays full replaces its notice rather than stacking
+ *  one per press. Same pattern as the draft autosave's. */
+const CREATE_FAILED_TOAST = 'build-create-failed';
+
 export class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload
 	graph = $derived(content.graph);
@@ -564,11 +569,24 @@ export class BuildVM {
 			}
 			await this.persistPhoto(character);
 			await saveCharacterToStore(character);
-			// the draft became a character, so the unfinished copy has nothing left to be
+			// the draft became a character, so the unfinished copy has nothing left to be — and the
+			// session gives up its identity with it, or the autosave landing after Create (the photo
+			// write above is itself a draft mutation, which arms one) writes the draft back under the
+			// same guid and resurrects it in the roster
 			await this.drafts.discard();
+			this.drafts.renew();
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
 			return character.id;
+		} catch (e) {
+			// a full disk, a renamed data folder, a permission error — the one button that creates a
+			// character used to answer a rejected promise into an `onclick`: no toast, no error, and
+			// "Saving…" back to "Create" as if nothing had been asked of it
+			toast(t('build.notice.createFailed'), {
+				id: CREATE_FAILED_TOAST,
+				description: e instanceof Error ? e.message : String(e),
+			});
+			return null;
 		} finally {
 			this.saving = false;
 		}

@@ -174,6 +174,22 @@ export async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyRes
 	}
 }
 
+/**
+ * The same guard for the disk operations that do NOT return an `ApplyResult` — a rename, an
+ * uninstall, a rollback. Each of those throws on exactly the failures `guarded` was written for, and
+ * each of them was unwrapped: the rejection escaped into an `onclick`, nothing was toasted, and the
+ * panel went on listing a pack whose folder no longer existed. `fallback` is what the caller is told
+ * when it did not happen, so a refusal and a failure read the same way at the call site.
+ */
+export async function guardedDisk<T>(fallback: T, run: () => Promise<T>): Promise<T> {
+	try {
+		return await run();
+	} catch (e) {
+		fail({ kind: 'raw', message: e instanceof Error ? e.message : String(e) });
+		return fallback;
+	}
+}
+
 /** An apply that wrote nothing, and why. The ONE shape a refusal takes: an apply either reports what
  *  it did or reports why it did nothing — it never answers `null`, which says neither (NULL-1). */
 function applyFailed(error: UpdateError): ApplyResult {

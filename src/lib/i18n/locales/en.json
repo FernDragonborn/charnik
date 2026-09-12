@@ -33,6 +33,8 @@
 		"shield": "shield"
 	},
 	"character": {
+		"notSaved": "This character isn't being saved",
+		"notSavedBody": "Charnik can't write to your data folder, so nothing since the last successful save is on disk. Check the folder still exists and has room — the next change tries again.",
 		"portraitOf": "Portrait of {name}"
 	},
 	"build": {
@@ -379,6 +381,7 @@
 			}
 		},
 		"notice": {
+			"createFailed": "Couldn't create this character",
 			"strictKnownSpell": "Strict: you can't unlearn a known spell — switch to Free to remove it.",
 			"strictCapFull": "{who}{what} full ({cap}) — remove one first, or switch to Free.",
 			"capCantrips": "cantrips",

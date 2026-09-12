@@ -47,6 +47,7 @@ import {
 	refuse,
 	clearErrors,
 	guarded,
+	guardedDisk,
 	noListing,
 	checkFailure,
 } from './pack-update-state.svelte';
@@ -240,17 +241,23 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 	// Files and bookkeeping move under one raised flag: in between, NEITHER name has a folder, and a
 	// content reload landing there would read the old one as uninstalled and drop the entry this is
 	// about to rewrite — leaving a renamed folder with no repo, no pin and a `true` returned for it.
-	await duringPackWrite(async () => {
-		await storage.rename(`content/${from}`, `content/${target}`);
-		// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
-		// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
-		if (await storage.exists(`content/${from}.prev`))
-			await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
-		renamePackEntry(from, target);
-		// …and the browse-config, which disables content FILES by path: leaving those behind would
-		// turn every file the user had switched off back on, as a side effect of a rename
-		renameFileRoot(`content/${from}`, `content/${target}`);
-	});
+	// the rename can THROW (a locked file, a folder the OS refuses) and the bookkeeping below it must
+	// not be skipped silently: the failure is reported and the caller is told it did not happen
+	const moved = await guardedDisk(false, () =>
+		duringPackWrite(async () => {
+			await storage.rename(`content/${from}`, `content/${target}`);
+			// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
+			// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
+			if (await storage.exists(`content/${from}.prev`))
+				await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
+			renamePackEntry(from, target);
+			// …and the browse-config, which disables content FILES by path: leaving those behind would
+			// turn every file the user had switched off back on, as a side effect of a rename
+			renameFileRoot(`content/${from}`, `content/${target}`);
+			return true;
+		}),
+	);
+	if (!moved) return false;
 	const pending = updates.pending[from];
 	if (pending) {
 		delete updates.pending[from];
@@ -267,8 +274,9 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
  *
  * The revoke belongs HERE, not in the button: consent lives outside the data
  * dir (PLG-SEC 12), so it outlives the files, and an invariant that depends on one component calling
- * two functions in the right order is one caller away from being false. It runs BEFORE the delete,
- * while the folder is still there to say which namespaces were this pack's.
+ * two functions in the right order is one caller away from being false. It runs AFTER the delete
+ * succeeds — `discoverPlugins` reads the registry rather than the folder, and revoking first meant a
+ * failed delete left the pack installed with its permission already gone.
  */
 export async function uninstallPack(pack: string): Promise<void> {
 	// This deletes a folder recursively, so a reserved name reaching it is the worst outcome in the
@@ -279,19 +287,27 @@ export async function uninstallPack(pack: string): Promise<void> {
 		forgetPack(pack);
 		return;
 	}
-	await revokePackPlugins(pack);
 	// The folder goes first and the entry second, so a reload in between sees a pack that is gone
 	// and forgets it — harmless here (that is what we are doing anyway), except that it would race
-	// the very write that removes it. One flag, one order, one writer.
-	await duringPackWrite(async () => {
-		const storage = getUserStorage();
-		await storage.remove(`content/${pack}`);
-		// …and the staging folders WITH it. A `<pack>.prev` left behind is not inert: startup recovery
-		// reads a lone `.prev` as an apply that died between its two renames and renames it back, so an
-		// uninstall that leaves one uninstalls nothing — the pack (and its plugin code) is on disk again
-		// at the next launch, and only the revoke above keeps that code from running.
-		await removeStaging(storage, pack);
-		forgetPack(pack);
-	});
+	// the very write that removes it. One flag, one order, one writer. Guarded, because a delete that
+	// throws used to skip everything below it and say nothing: the pack stayed installed with its
+	// consent revoked, and the confirm row sat there reporting success by silence.
+	const removed = await guardedDisk(false, () =>
+		duringPackWrite(async () => {
+			const storage = getUserStorage();
+			await storage.remove(`content/${pack}`);
+			// …and the staging folders WITH it. A `<pack>.prev` left behind is not inert: startup recovery
+			// reads a lone `.prev` as an apply that died between its two renames and renames it back, so an
+			// uninstall that leaves one uninstalls nothing — the pack (and its plugin code) is on disk again
+			// at the next launch, and only the revoke below keeps that code from running.
+			await removeStaging(storage, pack);
+			forgetPack(pack);
+			return true;
+		}),
+	);
+	if (!removed) return;
+	// …and the consent LAST: it outlives the files (PLG-SEC 12), so revoking before a delete that then
+	// failed left the pack installed and its permission gone.
+	await revokePackPlugins(pack);
 	delete updates.pending[pack];
 }

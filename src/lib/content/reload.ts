@@ -9,6 +9,8 @@
  * Phase B (later) will add a no-flash live reload (reset caches + bump a content-version signal that
  * views watch) — see docs/plan.md. Until then a webview reload is the reliable, simple answer.
  */
+import { logger } from '$lib/diag/logger';
+import { errText } from '$lib/util/format';
 
 // Pending-write flushers (e.g. a debounced character autosave) — awaited before any reload.
 const flushers = new Set<() => Promise<void> | void>();
@@ -20,7 +22,13 @@ export function onBeforeReload(fn: () => Promise<void> | void): () => void {
 }
 
 async function flushAll(): Promise<void> {
-	await Promise.all([...flushers].map((fn) => Promise.resolve(fn())));
+	// allSettled, not all: a flusher that REJECTS used to take the reload with it — `reloadApp` awaits
+	// this before `location.reload()`, and two of its three callers are `void reloadApp()`, so the
+	// reload the user pressed simply did not happen and nothing said why.
+	const settled = await Promise.allSettled([...flushers].map((fn) => Promise.resolve(fn())));
+	for (const r of settled)
+		if (r.status === 'rejected')
+			logger.error('flush before reload failed', { error: errText(r.reason) });
 }
 
 /** Flush pending writes, then reload the webview so every view re-reads fresh data from disk. */

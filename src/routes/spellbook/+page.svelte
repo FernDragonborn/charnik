@@ -11,7 +11,7 @@
 	import { _ } from '$lib/i18n';
 	import { sayText } from '$lib/util/say';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
+	import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { preparedTalliesByClass, canTogglePreparedFor } from '$lib/combat/helpers';
@@ -63,7 +63,7 @@
 		character.ui.spellsHidden = isHidden(id)
 			? character.ui.spellsHidden.filter((x) => x !== id)
 			: [...character.ui.spellsHidden, id];
-		void saveCharacterToStore(character);
+		void saveCharacterGuarded(character);
 	}
 
 	// resolved {spellEntry, row} pairs + a lookup by effectiveId for the toggles
@@ -116,7 +116,7 @@
 			return;
 		}
 		if (e) e.prepared = !e.prepared;
-		if (character) void saveCharacterToStore(character);
+		if (character) void saveCharacterGuarded(character);
 	}
 	function toggleSet(set: Set<string>, id: string): Set<string> {
 		const next = new Set(set);

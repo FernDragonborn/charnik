@@ -7,7 +7,7 @@
 	import { dndzone } from 'svelte-dnd-action';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
-	import { saveCharacterToStore } from '$lib/character/store.svelte';
+	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
@@ -82,7 +82,7 @@
 		JSON.stringify(c.ui);
 		JSON.stringify(c.build);
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => void saveCharacterToStore(c), 800);
+		saveTimer = setTimeout(() => void saveCharacterGuarded(c), 800);
 	});
 
 	// flush the pending autosave before a manual refresh, so an unsaved edit survives the reload

@@ -6,7 +6,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
-import { saveCharacterToStore } from '$lib/character/store.svelte';
+import { saveCharacterGuarded } from '$lib/character/store.svelte';
 import {
 	endConcentrationCarriedBy,
 	pipClick,
@@ -222,7 +222,7 @@ export class ResourceTracker {
 			}
 		}
 		c.play.resourcesSpent = spent;
-		void saveCharacterToStore(c);
+		void saveCharacterGuarded(c);
 		toast(t(`combat.timeSkip.${trigger === 'dawn' ? 'newDay' : 'nightfall'}`), {
 			description: said.length ? said.join(' · ') : t('combat.notice.nothingRecharged'),
 		});
@@ -309,7 +309,7 @@ export class ResourceTracker {
 		};
 		endConcentrationCarriedBy(c.play, c.play.effects.filter(outlived));
 		c.play.effects = c.play.effects.filter((e) => !outlived(e));
-		void saveCharacterToStore(c);
+		void saveCharacterGuarded(c);
 		const lostExhaustion = exhaustionBefore > c.play.exhaustion;
 		toast(t('combat.notice.restRestored', { kind: t(`combat.restKind.${kind}`) }), {
 			...(lostExhaustion

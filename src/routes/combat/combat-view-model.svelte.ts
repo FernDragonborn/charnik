@@ -10,7 +10,7 @@
 import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
+import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { localizedName } from '$lib/content/detail';
@@ -448,7 +448,7 @@ class CombatVM {
 		if (!c) return;
 		const cur = this.passiveSkills;
 		c.ui.passiveSkills = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
-		void saveCharacterToStore(c);
+		void saveCharacterGuarded(c);
 	};
 
 	// --- level-up: advance an existing character's class by one level ---------------------------

@@ -431,12 +431,11 @@ export function appendLog(storage: Storage, slug: string, entry: LogEntry): Prom
 }
 
 async function writeLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	let prev = '';
-	try {
-		prev = await storage.read(logOf(slug));
-	} catch {
-		/* first entry */
-	}
+	// "there is no log yet" and "the log is there and could not be read" are different answers, and the
+	// recovery for the first — rewrite the file from this one entry — destroys the second's hundred
+	// lines. `exists` is on the interface, so the branch can ask instead of assuming.
+	const path = logOf(slug);
+	const prev = (await storage.exists(path)) ? await storage.read(path) : '';
 	const lines = prev ? prev.split('\n').filter((l) => l.trim()) : [];
 	lines.push(JSON.stringify(entry));
 	const kept = lines.length > LOG_MAX_LINES ? lines.slice(lines.length - LOG_MAX_LINES) : lines;

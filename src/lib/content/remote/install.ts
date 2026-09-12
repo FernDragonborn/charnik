@@ -393,11 +393,19 @@ export async function rollbackPack(storage: Storage, pack: string): Promise<bool
 	// the pack is absent between the two renames below, exactly as it is during an apply
 	return duringPackWrite(async () => {
 		const scratch = stagingDir(pack);
-		await storage.remove(scratch).catch(() => {});
-		if (await storage.exists(live)) await storage.rename(live, scratch);
-		await storage.rename(prev, live);
-		await storage.remove(scratch).catch(() => {});
-		return true;
+		try {
+			await storage.remove(scratch).catch(() => {});
+			if (await storage.exists(live)) await storage.rename(live, scratch);
+			await storage.rename(prev, live);
+			await storage.remove(scratch).catch(() => {});
+			return true;
+		} catch (e) {
+			// the same settling `swapInNewTree` does, for the same reason and the same window: a throw
+			// between the two renames leaves the pack folder missing, and once the in-flight flag drops
+			// the next rebuild reads that as an uninstall and takes the repo URL and the pin with it
+			await recoverInterruptedApply(storage, pack);
+			throw e;
+		}
 	});
 }
 

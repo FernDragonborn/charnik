@@ -278,6 +278,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function recreateDemoCharacter` — Reset the demo to a fresh build — overwrites the persisted demo save, makes it active, refreshes * the roster (also (…
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
 - `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
+- `function saveCharacterGuarded` — * Persist a character and SAY SO when it does not happen.
 - `function removeCharacter` — Delete a character and refresh the roster.
 
 ### `src/lib/content/packs.svelte.ts`
@@ -333,6 +334,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function checkFailure` — * How such a failure reads to the user.
 - `function fetchRepo` — * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
 - `function guarded` — * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY` * from a content C…
+- `function guardedDisk` — * The same guard for the disk operations that do NOT return an `ApplyResult` — a rename, an * uninstall, a rollback.
 - `function refuse` — Refuse to write, on BOTH channels at once: the panel's error list and the caller's answer.
 
 ### `src/lib/content/remote/updates.svelte.ts`
@@ -1666,4 +1668,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 996 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 998 exports across 134 modules · 65 duplicate suspects._

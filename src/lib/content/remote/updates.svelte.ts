@@ -43,6 +43,7 @@ import {
 	clearErrors,
 	serialised,
 	guarded,
+	guardedDisk,
 	stagedShas,
 	noListing,
 	checkFailure,
@@ -368,7 +369,9 @@ async function runRestore(): Promise<void> {
  * Returns false when there is nothing to go back to.
  */
 export async function undoUpdate(pack: string): Promise<boolean> {
-	const done = await rollbackPack(getUserStorage(), pack);
+	// a rollback is two renames on the real filesystem, so it can fail the way an apply can — reported
+	// on the panel's error channel rather than rejecting into the button's `onclick`
+	const done = await guardedDisk(false, () => rollbackPack(getUserStorage(), pack));
 	// the rolled-back files are older than the remote again, so the offer is live once more; the next
 	// check re-derives it, and until then the pack simply reads as up to date
 	if (done) forgetPending(pack);

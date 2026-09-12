@@ -112,8 +112,11 @@
 
 <svelte:head><title>{$_('nav.build')} — Charnik</title></svelte:head>
 
-{#if content.error}
-	<!-- A content-load failure was silent here (empty pickers) — surface it like other views. -->
+{#if !build.graph}
+	<!-- A content-load failure was silent here (empty pickers) — surface it like other views. The gate
+	     is a MISSING graph, not `content.error`: a FAILED REFRESH leaves the working graph in place and
+	     sets the error beside it, and blanking the builder mid-build over a transient listing failure
+	     is the one screen a user cannot afford to lose. The error still renders, as a reason. -->
 	<Loading error={content.error} />
 {:else}
 	<section class="page build-page">

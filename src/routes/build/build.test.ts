@@ -387,6 +387,27 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		await build.drafts.discard();
 	});
 
+	it('a failed Create says so, returns null, and leaves nothing half-done', async () => {
+		const storage = getUserStorage();
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Doomed';
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 1 },
+		];
+		build.draft.speciesId = `species:${S}:hardy`;
+		build.draft.backgroundId = `background:${S}:prodigy`;
+		build.feats.setSlotFeatAbility(ORIGIN_SLOT_KEY, 'dex');
+		build.draft.skills = ['arcana', 'history'];
+
+		const write = vi.spyOn(storage, 'write').mockRejectedValue(new Error('disk full'));
+		// the button does `const id = await build.save()` — a rejection here is an unhandled rejection
+		// in an onclick, which is the one failure shape the user cannot see
+		await expect(build.save()).resolves.toBeNull();
+		expect(build.saving).toBe(false);
+		write.mockRestore();
+	});
+
 	it('a class picker left open on a removed row cannot empty the shared pools (B4)', () => {
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.skills = ['arcana'];

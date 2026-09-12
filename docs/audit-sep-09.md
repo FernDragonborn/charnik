@@ -857,7 +857,7 @@ The mechanical check first: `grep -rn "@tauri-apps" src/` returns 8 non-test sou
 legitimate — the four files on eslint's ignore list plus one test with a written justification. The
 eighth is finding 33.
 
-### 30 · [ ] MEDIUM-HIGH · three of the four pack writers have no `guarded()`, so a disk failure is an unhandled rejection and a half-done state
+### 30 · [x] MEDIUM-HIGH · three of the four pack writers have no `guarded()`, so a disk failure is an unhandled rejection and a half-done state
 
 `pack-lifecycle.ts:243` (`renamePack`), `:286` (`uninstallPack`), and `updates.svelte.ts:371` →
 `install.ts:389` (`rollbackPack`). `guarded`'s own docstring
@@ -2499,7 +2499,7 @@ row the new edition lacks and leaves the row's level where it was: a level‑20 
 **Fix:** drop the floor inside the arithmetic — `levelAfterTaking` should sum the held levels itself
 rather than borrow the display value: `classes.reduce((n, c, j) => n + (c.classId && j !== i ? c.level : 0), 0) + (stashed ?? row.level ?? 1)`.
 
-### 77 · [ ] MEDIUM · a storage failure on Create says nothing, to anyone
+### 77 · [x] MEDIUM · a storage failure on Create says nothing, to anyone
 
 `build-view-model.svelte.ts:541` — `save()` wraps its four awaited storage calls in `try/finally`
 with no `catch`, and `build/+page.svelte:106` is `const id = await build.save(); if (!id) return;`
@@ -2526,7 +2526,7 @@ Nothing catches it above `save()`; `create()` returns a rejected promise into an
 **Fix:** `catch` in `save()` — toast the failure with the same one-id pattern as
 `DRAFT_SAVE_FAILED_TOAST` and return `null`, which `create()` already treats as "do not navigate".
 
-### 78 · [ ] MEDIUM-LOW · the autosave that lands after Create resurrects the draft Create just discarded
+### 78 · [x] MEDIUM-LOW · the autosave that lands after Create resurrects the draft Create just discarded
 
 `build-view-model.svelte.ts:534` — `persistPhoto` writes `this.draft.photo = name` **during** `save()`.
 That is a draft mutation, and `build/+page.svelte:76` subscribes to the whole draft by deep snapshot,
@@ -2778,7 +2778,7 @@ attack axis already does, and drop `dmgFx.flat` from `attackSpec`'s primary part
 diverge. What cannot fold into a static number — bonus dice, `min_die`, `reroll` — is what
 `AttackNote` is for, and `attackNotes` already renders it on the row's title.
 
-### 83 · [ ] MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
+### 83 · [x] MEDIUM-HIGH · every play-loop save is fire-and-forget, so a character can stop persisting for a whole session in silence
 
 `saveCharacterToStore` (`character/store.svelte.ts:107`) has no `catch`, `saveCharacter`
 (`repository.ts:196`) throws on both of its failure modes, and **not one of its nine call sites has a
@@ -2886,7 +2886,7 @@ versatile weapons` becomes `+2 on every versatile weapon` — and `isEffectTarge
 `scope: [scope, qual.scope].filter(Boolean).join(',')`, which is already the AND-semantics
 `rollEffectsFor:388` and `scopedAttackBonus:292` apply to a comma list.
 
-### 86 · [ ] MEDIUM-LOW · a failed RELOAD blanks the builder and is invisible on the other four views
+### 86 · [x] MEDIUM-LOW · a failed RELOAD blanks the builder and is invisible on the other four views
 
 `content/store.svelte.ts:27` assigns `content.graph` only on success, so a failed reload keeps the
 working graph and sets `content.error` beside it. Five routes then read that pair, and one of them
