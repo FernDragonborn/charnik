@@ -542,7 +542,7 @@
 	.shipped-warn {
 		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-3) 14px;
 		margin-bottom: var(--space-3);
 	}
@@ -587,7 +587,7 @@
 		gap: var(--space-1);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.meta-cell .meta-key {
@@ -617,7 +617,7 @@
 		align-self: flex-start;
 		width: 38px;
 		height: 20px;
-		border-radius: 999px;
+		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
 		position: relative;
@@ -702,7 +702,7 @@
 		line-height: 1.5;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		color: var(--color-text);
 		padding: var(--space-2-5) var(--space-3);
 		margin-bottom: var(--space-3);
@@ -715,7 +715,7 @@
 	.issues {
 		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-2-5) 14px;
 		margin-bottom: var(--space-3);
 		font-size: var(--font-size-sm);

@@ -65,10 +65,14 @@
 						>{/if}
 				</div>
 				{#each g.rows as r (g.key + r.id)}
-					<button class="spell-row" onclick={(e) => cast(r, e)}>
+					<!-- the row is a DIV and each control on it is a real `<button>`: they used to be spans and
+					     `<i>`s inside one row-button, which is invalid nested interactive content and the reason
+					     Tab went row, row, out — prepare, pin, ritual cast and the cast-time note were
+					     reachable by mouse only, and ritual casting by nothing else anywhere in the app. The
+					     NAME is the cast button, so the widest cell of the row still casts on a click. -->
+					<div class="spell-row">
 						<span class="row-name">
-							<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-							<i
+							<button
 								class="prep"
 								class:on={r.prepState === 'on'}
 								class:always={r.prepState === 'always'}
@@ -77,44 +81,31 @@
 										? 'combat.spells.alwaysPrepared'
 										: 'combat.spells.togglePrepared',
 								)}
-								onclick={(e) => {
-									e.stopPropagation();
-									togglePrepared(r);
-								}}
-							></i>
-							<span class="name-main">{r.name}</span>
-							<span
+								aria-pressed={r.prepState === 'on' || r.prepState === 'always'}
+								onclick={() => togglePrepared(r)}
+							></button>
+							<button class="name-cast" onclick={(e) => cast(r, e)}
+								><span class="name-main">{r.name}</span></button
+							>
+							<button
 								class="pin-star"
 								class:on={pinned[r.ref]}
-								role="button"
-								tabindex="-1"
 								title={$_('combat.spells.pinToTop')}
-								onclick={(e) => {
-									e.stopPropagation();
-									combat.togglePin(r.ref);
-								}}
-								onkeydown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										e.preventDefault();
-										e.stopPropagation();
-										combat.togglePin(r.ref);
-									}
-								}}
-								><Icon name="star" size={13} fill={pinned[r.ref] ? 'currentColor' : 'none'} /></span
+								aria-pressed={!!pinned[r.ref]}
+								onclick={() => combat.togglePin(r.ref)}
+								><Icon
+									name="star"
+									size={13}
+									fill={pinned[r.ref] ? 'currentColor' : 'none'}
+								/></button
 							>
 							{#if r.ritual && s.spellcasting.ritualCasting}
 								<!-- ritual cast: no spell slot (A17). Only shown when the character HAS ritual casting
-								     (E7 — Wizard/Cleric/Druid/Bard; not base Warlock). Row-click casts normally. -->
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<span
+								     (E7 — Wizard/Cleric/Druid/Bard; not base Warlock). The name casts normally. -->
+								<button
 									class="ritual-cast"
-									role="button"
-									tabindex="-1"
 									title={$_('combat.spells.castRitual')}
-									onclick={(e) => {
-										e.stopPropagation();
-										cast(r, e, { ritual: true });
-									}}>R</span
+									onclick={(e) => cast(r, e, { ritual: true })}>R</button
 								>
 							{/if}
 						</span>
@@ -127,54 +118,31 @@
 								})}</span
 							>{:else}<span></span>{/if}
 						<span class="spell-level"
-							>{#if r.castTimeIcon}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
+							>{#if r.castTimeIcon}{@const when = $_(
+									r.castTimeIcon === 'react'
+										? 'combat.spells.reaction'
+										: 'combat.spells.bonusAction',
+								)}<button
 									class="cast-icon"
-									title={$_(
-										r.castTimeIcon === 'react'
-											? 'combat.spells.reaction'
-											: 'combat.spells.bonusAction',
-									)}
-									onclick={(e) => {
-										e.stopPropagation();
-										toast(
-											$_('combat.notice.castingTime', {
-												values: {
-													when: $_(
-														r.castTimeIcon === 'react'
-															? 'combat.spells.reaction'
-															: 'combat.spells.bonusAction',
-													),
-												},
-											}),
-										);
-									}}
+									title={when}
+									onclick={() => toast($_('combat.notice.castingTime', { values: { when } }))}
 									><Icon
 										name={r.castTimeIcon === 'react' ? 'corner-down-left' : 'zap'}
 										size={12}
-									/></i
-								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><span
+									/></button
+								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><button
 									class="upcast-btn"
-									role="button"
-									tabindex="0"
 									aria-label={$_('combat.spells.castUpcast')}
 									use:provenance={[$_('combat.spells.castUpcast'), combat.upcastLadder(r, $_)]
 										.filter(Boolean)
 										.join('\n')}
-									onclick={(e) => {
-										e.stopPropagation();
-										combat.openUpcast(r, e);
-									}}
-									onkeydown={(e) => {
-										if (e.code !== 'Enter' && e.code !== 'Space') return;
-										e.preventDefault();
-										e.stopPropagation();
-										combat.openUpcast(r, e);
-									}}><Icon name="arrow-up" size={12} /></span
+									onclick={(e) => combat.openUpcast(r, e)}
+									><Icon name="arrow-up" size={12} /></button
 								>{/if}{$_(r.levelTagKey, {
 								...(r.levelTagValues ? { values: r.levelTagValues } : {}),
 							})}</span
 						>
-					</button>
+					</div>
 				{/each}
 			</div>
 		{/each}
@@ -245,17 +213,10 @@
 		gap: var(--space-2);
 		padding: var(--space-1-5) var(--space-1-5);
 		border-top: 1px solid var(--color-border);
-		border-radius: 7px;
-		cursor: pointer;
+		border-radius: var(--radius);
 		break-inside: avoid;
 		width: 100%;
-		background: transparent;
-		border-inline-start: 0;
-		border-inline-end: 0;
-		border-bottom: 0;
 		color: var(--color-text);
-		text-align: start;
-		font: inherit;
 	}
 	.spgroup:first-child .spell-category {
 		padding-top: 2px;
@@ -272,7 +233,21 @@
 		font-weight: 600;
 		font-size: var(--font-size-sm);
 	}
+	/* the cast target. It takes its CONTENT's width and no more: the pin star sits immediately after
+	   the name (ui.md §11 — a row's own state hugs the name it belongs to), and a cast button that
+	   stretched pushed the star to the far side of the cell. */
+	.spell-row .name-cast {
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
 	.spell-row .row-name .name-main {
+		display: block;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -321,8 +296,10 @@
 		white-space: nowrap;
 	}
 	.spell-row .spell-level .cast-icon {
-		font-style: normal;
 		margin-inline-end: var(--space-1-5);
+		padding: 0;
+		border: 0;
+		background: transparent;
 		color: var(--color-accent-bright);
 		cursor: help;
 	}
@@ -332,11 +309,18 @@
 		display: inline-block;
 		margin-inline-end: var(--space-1);
 		padding: 0 var(--space-1);
-		border-radius: 4px;
+		border: 0;
+		border-radius: var(--radius-xs);
+		background: transparent;
 		color: var(--color-resource);
 		opacity: 0;
 		cursor: pointer;
 		transition: opacity 0.12s;
+	}
+	/* it is invisible until the row is hovered, so a keyboard that lands on it must bring it back —
+	   otherwise Tab stops on something nobody can see */
+	.spell-row .spell-level .upcast-btn:focus-visible {
+		opacity: 1;
 	}
 	.spell-row:hover .spell-level .upcast-btn,
 	.spell-row:focus-within .spell-level .upcast-btn {
@@ -351,11 +335,14 @@
 		display: inline-block;
 		width: 8px;
 		height: 8px;
+		padding: 0;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
+		background: transparent;
 		margin-inline-end: var(--space-2);
 		vertical-align: middle;
 		cursor: pointer;
+		flex: none;
 	}
 	/* big invisible click target so the tiny dot is easy to hit */
 	.prep::before {
@@ -414,16 +401,18 @@
 		margin: var(--space-1) 0 var(--space-1-5);
 		padding: var(--space-1) var(--space-2);
 		border: 1px solid var(--color-danger);
-		border-radius: 4px;
+		border-radius: var(--radius-xs);
 		color: var(--color-danger);
 		font-size: 0.85em;
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {
+		flex: none;
+		background: transparent;
 		margin-inline-start: var(--space-1-5);
 		padding: 0 var(--space-1);
 		border: 1px solid var(--color-border);
-		border-radius: 4px;
+		border-radius: var(--radius-xs);
 		color: var(--color-text-muted);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);

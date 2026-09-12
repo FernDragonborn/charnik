@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (65)
+## Duplicate suspects (66)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -48,6 +48,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `DRAFTS_DIR` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
+- `entryOf` ×2 — src/lib/components/EntryList.svelte · src/routes/combat/roll-journal.svelte.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
@@ -92,7 +93,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **misc** — `--space-0`, `--space-1`, `--space-1-5`, `--space-2`, `--space-2-5`, `--space-3`, `--space-4`, `--space-5`, `--space-6`, `--space-8`
 
-**radius** — `--radius-sm`
+**a hairline rounding — a tag, a 2px-ish inset marker** — `--radius-sm`
 
 **the default/base radius — by far the most common (buttons, inputs, chips, cards)** — `--radius-md`, `--radius-lg`, `--radius-full`
 
@@ -430,7 +431,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (119 modules)
+## Library functions & types (120 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1643,6 +1644,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function externalLinkToOpen` — * What to do with a click on `href` from a page served at `origin`: * - a URL string → open it in the OS browser (and…
 - `function shouldCancelNavigation` — …and whether the click must be CANCELLED even when nothing gets opened.
 
+### `src/lib/util/option-walk.ts`
+
+- `interface KeyPress` — All a walk needs from a key event.
+- `interface OptionWalk`
+- `function walkOptions` — Handle a key, or leave it alone.
+- `const optionDomId` — * A stable DOM id for one option, so the search box can name the highlighted one through * `aria-activedescendant` — …
+
 ### `src/lib/util/persist.ts`
 
 - `function readStored` — Read + JSON-parse a localStorage key.
@@ -1670,4 +1678,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1000 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1004 exports across 135 modules · 66 duplicate suspects._

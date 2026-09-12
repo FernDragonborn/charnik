@@ -148,7 +148,7 @@
 <style>
 	.source {
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		margin-bottom: var(--space-2-5);
 		overflow: hidden;
 	}
@@ -240,7 +240,7 @@
 		width: 34px;
 		height: 20px;
 		flex: none;
-		border-radius: 999px;
+		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface);
 		position: relative;

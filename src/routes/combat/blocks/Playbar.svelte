@@ -74,7 +74,7 @@
 		min-height: 56px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		overflow: hidden;
 	}
 	.no-roll {

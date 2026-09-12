@@ -701,7 +701,7 @@
 		inset-inline-start: 0;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-1-5);
 		box-shadow: var(--shadow-2);
 		min-width: 160px;
@@ -798,7 +798,7 @@
 		padding: var(--space-1-5);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-2);
 	}
 	.mode-item {
@@ -809,7 +809,7 @@
 		text-align: start;
 		padding: var(--space-2) var(--space-2-5);
 		border: 0;
-		border-radius: 7px;
+		border-radius: var(--radius);
 		background: transparent;
 		color: var(--color-text);
 		cursor: pointer;

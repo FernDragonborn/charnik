@@ -209,7 +209,7 @@
 		gap: var(--space-3);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-2-5) var(--space-3);
 		margin-bottom: var(--space-2);
 	}
@@ -265,7 +265,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		padding: 1px var(--space-1-5);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text-muted);
 	}

@@ -31,6 +31,7 @@
 	--space-8: 3rem;
 
 	/* ---- radius ---- */
+	--radius-xs: 4px; /* a hairline rounding — a tag, a 2px-ish inset marker */
 	--radius-sm: 6px;
 	--radius: 8px; /* the default/base radius — by far the most common (buttons, inputs, chips, cards) */
 	--radius-md: 11px;

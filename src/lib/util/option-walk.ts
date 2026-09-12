@@ -1,9 +1,10 @@
 /*
  * ↑/↓/Home/End/Enter over a picker's options (ui.md §5).
  *
- * Shared by the grid and the sectioned list because it is the same contract in both: arrows move the
- * HIGHLIGHT and never commit — walking a list must not take six things on the way down — and Enter
- * is identical to a left click on whatever is highlighted.
+ * Shared by every searched list — the builder's two pickers and the compendium/spellbook
+ * `EntryList` — because it is the same contract in all of them: arrows move the HIGHLIGHT and never
+ * commit (walking a list must not take six things on the way down), and Enter is identical to a left
+ * click on whatever is highlighted.
  */
 
 /** All a walk needs from a key event. Narrower than `KeyboardEvent` on purpose: a real one is

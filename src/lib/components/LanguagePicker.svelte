@@ -137,7 +137,7 @@
 		overflow: auto;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-2);
 		padding: var(--space-2);
 	}
@@ -145,7 +145,7 @@
 		width: 100%;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1-5) var(--space-2-5);
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
@@ -163,7 +163,7 @@
 		text-align: start;
 		background: transparent;
 		border: 0;
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1-5) var(--space-2);
 		color: var(--color-text);
 		cursor: pointer;

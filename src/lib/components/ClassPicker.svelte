@@ -107,7 +107,7 @@
 		gap: var(--space-1-5);
 		font-size: var(--font-size-sm);
 		border: 1px solid var(--color-border);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
 		background: transparent;
 		color: var(--color-text-muted);
@@ -129,7 +129,7 @@
 		place-items: center;
 		font-size: var(--font-size-micro);
 		border: 1px solid currentColor;
-		border-radius: 4px;
+		border-radius: var(--radius-xs);
 	}
 	.customs {
 		display: flex;
@@ -143,7 +143,7 @@
 		gap: var(--space-1);
 		font-size: var(--font-size-xs);
 		border: 1px dashed var(--color-border-strong);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-2-5);
 		color: var(--color-text);
 	}
@@ -168,7 +168,7 @@
 		flex: 1;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1-5) var(--space-2-5);
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
@@ -178,7 +178,7 @@
 		font-weight: 600;
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1-5) var(--space-3);
 		color: var(--color-text);
 		cursor: pointer;

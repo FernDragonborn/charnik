@@ -339,7 +339,7 @@
 	.preview {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-3) 14px;
 	}
 	.pv-label {
@@ -379,7 +379,7 @@
 	}
 	.cf-pane {
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-3) 14px;
 		background: var(--color-surface-2);
 		display: flex;

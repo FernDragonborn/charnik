@@ -145,7 +145,7 @@
 		color: var(--color-text-muted);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1) var(--space-1-5);
 		cursor: pointer;
 	}

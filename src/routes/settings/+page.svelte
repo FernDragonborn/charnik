@@ -138,7 +138,7 @@
 		min-width: 16px;
 		text-align: center;
 		padding: 1px var(--space-1);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		background: var(--color-warning);
 		color: var(--color-warning-text);
 	}

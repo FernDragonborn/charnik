@@ -88,38 +88,36 @@
 				<div class="resource-chips">
 					{#each s.resources as r (r.id)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
-						<!-- the whole chip is the "use one" action (UBUG-8): when the pool has exactly ONE
+						<!-- the chip's NAME is the "use one" action (UBUG-8): when the pool has exactly ONE
 						     action-option it RUNS it (Second Wind heals, Rage enters the state — cost + turn
 						     slot included, UBUG-16); with several or none it decrements the pool. The pips
-						     inside still set the count manually and stop the chip's use-click -->
-						<button
-							type="button"
-							class="resource"
-							title={$_('combat.resource.useOneTitle', {
-								values: {
-									name: r.name,
-									recharge: sayText(rechargeLabel(r.recharge), $_),
-									source: r.source,
-								},
-							})}
-							onclick={() => combat.useResourceOrEnter(r.id, r.max)}
-						>
-							{r.name}
+						     beside it set the count manually, and they are real buttons for the same reason
+						     the slot pips in the Spells panel are: a pip nested in the chip's `<button>` is
+						     invalid content that the chip then swallows the tab stop of, leaving a keyboard
+						     able to SPEND a use and never to restore one. -->
+						<span class="resource">
+							<button
+								type="button"
+								class="resource-use"
+								title={$_('combat.resource.useOneTitle', {
+									values: {
+										name: r.name,
+										recharge: sayText(rechargeLabel(r.recharge), $_),
+										source: r.source,
+									},
+								})}
+								onclick={() => combat.useResourceOrEnter(r.id, r.max)}>{r.name}</button
+							>
 							{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
 								<span class="resource-pips">
 									{#each range(r.max) as i (i)}
-										<!-- svelte-ignore a11y_click_events_have_key_events -->
-										<span
+										<button
+											type="button"
 											class="resource-pip"
 											class:used={i >= r.max - spent}
-											role="button"
-											tabindex="-1"
 											aria-label="{r.name} {i + 1}"
-											onclick={(e) => {
-												e.stopPropagation();
-												combat.resources.resourceClick(r.id, r.max, i);
-											}}
-										></span>
+											onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
+										></button>
 									{/each}
 								</span>
 								<small>{r.max - spent}/{r.max}</small>
@@ -130,7 +128,7 @@
 								<!-- an unlimited pool (`inf` max — 5e Rage at 20): count uses since recharge -->
 								<small>{spent} · ∞</small>
 							{/if}
-						</button>
+						</span>
 					{/each}
 				</div>
 			</div>
@@ -217,7 +215,7 @@
 		text-align: start;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 13px;
+		border-radius: var(--radius-lg);
 		padding: var(--space-3) 15px;
 		color: var(--color-text);
 	}
@@ -265,7 +263,7 @@
 		gap: var(--space-2);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 13px;
+		border-radius: var(--radius-lg);
 		padding: var(--space-3) 14px;
 	}
 	.resource-chips {
@@ -274,7 +272,8 @@
 		align-content: flex-start;
 		gap: var(--space-1-5);
 	}
-	/* the whole chip is the "use one" button (UBUG-8) — clickable + highlighted on hover */
+	/* the chip's NAME is the "use one" button (UBUG-8) and fills it, so the chip still reads as one
+	   clickable thing and highlights on hover */
 	.resource-chips .resource {
 		display: inline-flex;
 		align-items: center;
@@ -287,6 +286,13 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
 		padding: var(--space-1) var(--space-2-5);
+	}
+	.resource-chips .resource-use {
+		padding: 0;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		color: inherit;
 		cursor: pointer;
 	}
 	.resource-chips .resource small {
@@ -302,6 +308,7 @@
 	}
 	.resource-pip {
 		display: inline-block;
+		position: relative;
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -309,6 +316,13 @@
 		border-radius: 50%;
 		background: var(--color-resource);
 		cursor: pointer;
+	}
+	/* a 12px dot is below any reasonable pointer target; the inset grows the hit area without moving
+	   what is drawn (ui.md ▸ Every interactive element says so) */
+	.resource-pip::before {
+		content: '';
+		position: absolute;
+		inset: -3px;
 	}
 	.resource-pip.used {
 		background: transparent;
@@ -322,7 +336,7 @@
 		gap: 14px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		padding: var(--space-2-5) var(--space-4);
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */

@@ -139,7 +139,7 @@
 		padding: 18px 22px;
 		border: 1px solid var(--color-accent);
 		border-inline-start-width: 5px;
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		background: var(--color-accent-soft, var(--color-surface));
 	}
 	.db-badge {
@@ -151,7 +151,7 @@
 		font-weight: 700;
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
-		border-radius: 999px;
+		border-radius: var(--radius-full);
 		padding: var(--space-1) var(--space-2-5);
 		margin-bottom: var(--space-2-5);
 	}

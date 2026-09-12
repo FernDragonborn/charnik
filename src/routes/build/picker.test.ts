@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { type LoadedRow } from '$lib/content/loader';
 import { pickerMeta } from './rows';
-import { walkOptions } from './option-walk';
+import { walkOptions } from '$lib/util/option-walk';
 import { makeTempContentRoot } from '../../test-support/fixtures';
 
 const S = 'SRD 5.2.1';

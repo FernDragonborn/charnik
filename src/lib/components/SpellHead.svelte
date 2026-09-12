@@ -151,7 +151,7 @@
 		justify-content: center;
 		gap: var(--space-1-5);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		background: var(--color-surface-2);
 		padding: var(--space-3) var(--space-2-5);
 		text-align: center;

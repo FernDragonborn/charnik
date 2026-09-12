@@ -6,11 +6,17 @@
 			"customSyntax": "postcss-html",
 			"rules": { "no-invalid-position-declaration": null }
 		},
-		{ "files": ["**/tokens.css"], "rules": { "color-no-hex": null } }
+		{
+			"files": ["**/tokens.css"],
+			"rules": { "color-no-hex": null, "declaration-property-unit-disallowed-list": null }
+		}
 	],
 	"rules": {
 		"color-no-hex": true,
-		"declaration-property-unit-disallowed-list": { "font-size": ["px"] },
+		"declaration-property-unit-disallowed-list": {
+			"font-size": ["px"],
+			"border-radius": ["px"]
+		},
 		"property-disallowed-list": [
 			[
 				"margin-left",

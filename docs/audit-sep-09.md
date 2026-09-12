@@ -660,7 +660,7 @@ they are recorded as pre-existing rather than as regressions from this release.
 The findings here cluster on one shape: a row made a `<button>`, its accessories then made spans with
 `tabindex="-1"`, and the keyboard handler written for a span that can never receive focus.
 
-### 23 · [ ] HIGH · the compendium list has zero tabbable elements — the whole list is keyboard-dead
+### 23 · [x] HIGH · the compendium list has zero tabbable elements — the whole list is keyboard-dead
 
 `src/lib/components/EntryList.svelte:46`:
 
@@ -700,7 +700,7 @@ compendium **and** the spellbook.
 `aria-activedescendant`, exactly as `SectionedPicker.svelte:236` already does. Reuse, do not
 re-derive.
 
-### 24 · [ ] HIGH · Ctrl+Z in the dice roller is bound to `e.key`, so it is dead on a Cyrillic layout
+### 24 · [x] HIGH · Ctrl+Z in the dice roller is bound to `e.key`, so it is dead on a Cyrillic layout
 
 `src/lib/components/RollerLine.svelte:141` — `if (event.key === 'z' && held)`.
 
@@ -724,7 +724,7 @@ other ~30 `e.key` sites all test named keys — `Escape`, `Enter`, `Arrow*`, `Ta
 
 **Fix:** `event.code === 'KeyZ'`.
 
-### 25 · [ ] HIGH · a resource-borne effect can be added but not removed without a mouse
+### 25 · [x] HIGH · a resource-borne effect can be added but not removed without a mouse
 
 `src/routes/combat/blocks/panels/EffectsPanel.svelte:226` — a `role="button" tabindex="-1"` span with
 an `onclick` and **no `onkeydown` at all**, under an `a11y_click_events_have_key_events` suppression.
@@ -742,7 +742,7 @@ is the reason the outer element swallows the tab stop.
 demote the outer `.resource-row` from a `<button>` to a row with the click on an inner button — the
 nesting is what forced the span in the first place.
 
-### 26 · [ ] MEDIUM-HIGH · every secondary control on a combat spell row is mouse-only
+### 26 · [x] MEDIUM-HIGH · every secondary control on a combat spell row is mouse-only
 
 `src/routes/combat/blocks/panels/SpellsPanel.svelte:72` (`.prep`), `:87` (`.pin-star`), `:110`
 (`.ritual-cast`), `:131` (`.cast-icon`).
@@ -779,7 +779,7 @@ cast-time note are reachable nowhere.
 button and the four accessories real `<button>`s beside it — then the browser gives all five tab
 stops for free, and every `svelte-ignore` and hand-rolled keydown in this block deletes itself.
 
-### 27 · [ ] MEDIUM · resource pips in the combat strip are click-only
+### 27 · [x] MEDIUM · resource pips in the combat strip are click-only
 
 `src/routes/combat/blocks/CombatStrip.svelte:111` — `<span class="resource-pip" role="button"
 tabindex="-1">`, `onclick` only, with the a11y warning suppressed. `ui.md` rule 7 makes pips a
@@ -791,6 +791,11 @@ can spend a pip but cannot restore one.
 
 **Fix:** either document the same pill-based fallback the Turnbar has, or give the pip row a roving
 tabindex with left/right.
+
+**Closed** by making each pip a real `<button>`, as the Spells panel's slot pips already were, and
+taking the chip's own `<button>` off the container that held them — a pip nested in a button is
+invalid content whose tab stop the button swallows, which is why neither answer above was needed once
+the nesting went. Finding 52's site (the same pip in `EffectsPanel`) is the same change.
 
 ### 28 · [x] MEDIUM · two literal English user-facing strings in `.svelte`
 
@@ -810,7 +815,7 @@ finding 92**, four more sites.
 
 **Fix:** an ICU key taking `{name}`, and a whole `themes.tokenColorLabel` key taking `{token}`.
 
-### 29 · [ ] MEDIUM · `border-radius` is off-token in 62 places, and stylelint guards font-size but not radius
+### 29 · [x] MEDIUM · `border-radius` is off-token in 62 places, and stylelint guards font-size but not radius
 
 `config/stylelint.json:20` guards only `{"declaration-property-unit-disallowed-list": {"font-size":
 ["px"]}}`. `ui.md` ▸ Theming: "Never a hardcoded hex, rgb, **px font-size, or radius**." AGENTS.md:
@@ -835,6 +840,14 @@ remaps `--radius*` moves nothing on these 62 spots.
 **Fix:** add `"border-radius": ["px"]` to the existing rule in `config/stylelint.json` and let the
 failures drive the mapping. Widening the scale by one or two values is the honest half of that
 change — 7px and 10px appear 20+ times between them.
+
+**Closed:** the rule is in (with `tokens.css` exempt, where the scale is defined), and all 64
+declarations map by INTENT rather than by nearest number — every 20px and 999px site is a pill
+(`--radius-full`), 13/16px are cards (`--radius-lg`), 10/12px are panels and popovers
+(`--radius-md`), 7px is the base `--radius`, and 2–4px became one new token, `--radius-xs`. The 16
+`50%` declarations stay: a circle is geometry, not a size, and a theme that remapped it would turn
+the pips into squares. Pixel-diffed against a baseline taken at the commit before — the only drift
+is corner pixels.
 
 (The other 516 `px` literals are padding, gap, width and height. `--space-*` is a `rem` scale, so
 those are not a like-for-like swap and are not called defects here.)
@@ -1606,7 +1619,7 @@ what each of them has in hand — a nullable manual max and the sheet's `Compute
 together is what keeps the count from drifting back to five sites and three answers; fixing them one
 finding at a time is how it got here.
 
-### 52 · [ ] MEDIUM · the click-only resource pip has a second home, which finding 27 does not name
+### 52 · [x] MEDIUM · the click-only resource pip has a second home, which finding 27 does not name
 
 `EffectsPanel.svelte:208` is the same `<span class="resource-pip" role="button" tabindex="-1">` with
 an `onclick` and no keyboard handler, under the same `a11y_click_events_have_key_events`

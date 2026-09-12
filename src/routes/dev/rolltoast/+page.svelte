@@ -286,7 +286,7 @@
 		display: flex;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		min-height: 56px;
 		overflow: hidden;
 	}

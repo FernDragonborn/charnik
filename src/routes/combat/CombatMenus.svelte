@@ -444,7 +444,7 @@
 		z-index: 51;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 13px;
+		border-radius: var(--radius-lg);
 		box-shadow: 0 18px 40px var(--color-overlay);
 		padding-bottom: var(--space-1-5);
 	}

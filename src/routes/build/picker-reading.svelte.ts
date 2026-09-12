@@ -12,7 +12,7 @@
  * a walk started from there hands the caret back to the search box rather than leaving a focus ring
  * on one option while Enter takes another.
  */
-import { walkOptions, optionDomId } from './option-walk';
+import { walkOptions, optionDomId } from '$lib/util/option-walk';
 
 /** What the walk needs from the picker around it, read fresh on every key. */
 export interface PickerReadingHost {

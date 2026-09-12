@@ -69,7 +69,10 @@ custom theme, and Charnik ships user-authored themes (Settings ▸ Themes → ru
 
 A genuinely new shade is a **semantic** token added to *both* theme blocks (`:root` dark and
 `[data-theme='light']`). Alpha tints are `color-mix(in srgb, var(--token) N%, transparent)`, which
-themes for free. The stylelint `color-no-hex` guard enforces the colour half; sizes are on you.
+themes for free. Stylelint holds three of the lines itself — `color-no-hex`, and a px ban on
+`font-size` and on `border-radius` — so a literal size is caught where it is typed rather than in a
+census later. A `%` radius is geometry, not a size: `50%` is how a circle is spelled and stays.
+Everything else is on you.
 
 **A box side is logical, never physical:** `margin-inline-start`, `padding-inline-end`,
 `border-inline-start`, `text-align: start`. A physical side stays put when the UI is mirrored, and
@@ -145,6 +148,19 @@ good", so they are pinned here and every component follows them.
     `SkillRows` puts the proficiency dot before the name and `×2` expertise after it. "Taken" in a
     builder picker is the row's own state, so it goes left. Gold means taken/proficient/prepared
     everywhere, so a new control reuses it rather than inventing a colour.
+
+12. **A row that carries controls is a `<div>`, never a `<button>`.** The row's own action goes on an
+    element INSIDE it — the name is the usual one — and every accessory beside it is a real
+    `<button>`. Interactive content nested in a `<button>` is invalid HTML, and the browser gives the
+    outer element the tab stop and swallows every inner one: that is how a spell row's prepare, pin,
+    ritual-cast and cast-time controls ended up mouse-only, and how a resource-borne effect could be
+    added and not removed without a mouse. A `role="button"` span with `tabindex="-1"` and a keydown
+    handler is the same bug wearing a hat — the handler cannot fire on an element the keyboard cannot
+    reach. Real buttons also delete the `svelte-ignore` above them and the `stopPropagation` inside
+    them, since there is no outer click to stop. A searched LIST is the other shape, and it is the
+    command palette's: the caret stays in the search box, `walkOptions` (`lib/util/option-walk.ts`)
+    moves a highlight the box names through `aria-activedescendant`, and Enter does what a click on
+    the highlighted row does — `EntryList` and both builder pickers share that one implementation.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.

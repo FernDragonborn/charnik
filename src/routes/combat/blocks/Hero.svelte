@@ -109,7 +109,7 @@
 		color: var(--color-good);
 		background: var(--color-good-soft);
 		border: 1px solid var(--color-good);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 	}

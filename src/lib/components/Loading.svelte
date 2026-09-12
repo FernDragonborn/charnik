@@ -38,7 +38,7 @@
 	.loadgif {
 		width: 240px;
 		height: auto;
-		border-radius: 16px;
+		border-radius: var(--radius-lg);
 	}
 	.loadbig {
 		font-family: var(--font-display);

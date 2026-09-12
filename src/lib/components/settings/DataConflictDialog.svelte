@@ -191,7 +191,7 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-good);
 		border: 1px solid var(--color-good);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		padding: 0 var(--space-1-5);
 	}
 	.count {

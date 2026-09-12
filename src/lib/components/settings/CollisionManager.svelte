@@ -68,7 +68,7 @@
 <style>
 	.collision {
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-2-5) var(--space-3);
 		margin-bottom: var(--space-2);
 		background: var(--color-surface-2);
@@ -102,7 +102,7 @@
 	.choice {
 		font-size: var(--font-size-xs);
 		padding: var(--space-1) var(--space-2-5);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border-strong);
 		background: transparent;
 		color: var(--color-text-muted);

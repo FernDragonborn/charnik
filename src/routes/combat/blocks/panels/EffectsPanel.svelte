@@ -188,31 +188,30 @@
 			</div>
 			{#each effectGroups.resources as r (r.iid)}
 				{@const spent = combat.resources.resourceSpent(r.id)}
-				<!-- the WHOLE row is the "use one" action (UBUG-8), the resource analogue of casting a
-				     spell row; the pips inside still set the count manually (restore / arbitrary) and
-				     stop the row's use-click, exactly like the prep/pin bits inside a spell row -->
-				<button
-					class="resource-row"
-					title={$_('combat.resource.useOne', { values: { name: r.name } })}
-					onclick={() => combat.useResourceOrEnter(r.id, r.max)}
-				>
-					<span class="resource-name">{r.name}</span>
+				<!-- the NAME is the "use one" action (UBUG-8), the resource analogue of casting a spell
+				     row; the pips beside it set the count manually (restore / arbitrary) and the ✕ drops
+				     the pool. Three real buttons side by side rather than one row-button with spans
+				     inside it: interactive content nested in a `<button>` is invalid, and it is why the
+				     row swallowed the tab stops of everything it contained — so a resource-borne effect
+				     could be added and not removed without a mouse. -->
+				<div class="resource-row">
+					<button
+						class="resource-use"
+						title={$_('combat.resource.useOne', { values: { name: r.name } })}
+						onclick={() => combat.useResourceOrEnter(r.id, r.max)}
+					>
+						<span class="resource-name">{r.name}</span>
+					</button>
 					{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
 						<span class="resource-pips">
 							{#each range(r.max) as i (i)}
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<span
+								<button
 									class="resource-pip"
 									class:off={i >= r.max - spent}
-									role="button"
-									tabindex="-1"
 									title="{r.name} {i + 1}"
 									aria-label="{r.name} {i + 1}"
-									onclick={(e) => {
-										e.stopPropagation();
-										combat.resources.resourceClick(r.id, r.max, i);
-									}}
-								></span>
+									onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
+								></button>
 							{/each}
 						</span>
 						<span class="resource-count">{r.max - spent}/{r.max}</span>
@@ -224,18 +223,13 @@
 						<span class="resource-count">{spent} · ∞</span>
 					{/if}
 					<span class="recharge-chip">{sayText(rechargeLabel(r.recharge), $_)}</span>
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<span
+					<button
 						class="icon-button effect-remove"
-						role="button"
-						tabindex="-1"
 						title={$_('combat.effects.remove')}
-						onclick={(e) => {
-							e.stopPropagation();
-							combat.effects.removeEffect(r.iid);
-						}}><Icon name="x" size={12} /></span
+						onclick={() => combat.effects.removeEffect(r.iid)}
+						><Icon name="x" size={12} label={$_('combat.effects.remove')} /></button
 					>
-				</button>
+				</div>
 			{/each}
 		</div>
 	{/if}
@@ -426,7 +420,7 @@
 		font-size: var(--font-size-micro);
 		color: var(--color-resource);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		padding: var(--space-1) var(--space-1-5);
 		cursor: pointer;
 		white-space: nowrap;
@@ -467,8 +461,9 @@
 		color: var(--color-text);
 		font-weight: 600;
 	}
-	/* resource row: the WHOLE row is the "use one" button (UBUG-8) — clickable + highlighted on hover
-	   like a spell / action row; margin bleed makes the tint span full width. */
+	/* resource row: the NAME is the "use one" button (UBUG-8) and it fills the row, so the row still
+	   reads as one clickable thing and highlights on hover like a spell / action row; margin bleed
+	   makes the tint span full width. */
 	.resource-row {
 		display: flex;
 		align-items: center;
@@ -476,16 +471,24 @@
 		padding: var(--space-1-5) var(--space-2);
 		margin: 0 calc(-1 * var(--space-2));
 		width: calc(100% + 18px);
-		border: 0;
 		border-top: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		background: transparent;
 		color: var(--color-text);
-		text-align: start;
-		cursor: pointer;
 	}
 	.resource-row:hover {
 		background: var(--color-surface-2);
+	}
+	.resource-use {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		text-align: start;
+		cursor: pointer;
 	}
 	.resource-name {
 		font-family: var(--font-display);
@@ -500,6 +503,7 @@
 	}
 	.resource-pip {
 		display: inline-block;
+		position: relative;
 		width: 11px;
 		height: 11px;
 		padding: 0;
@@ -507,6 +511,13 @@
 		border: 1px solid var(--color-resource);
 		background: var(--color-resource);
 		cursor: pointer;
+	}
+	/* a pip is 11px, which is smaller than any pointer target should be — the inset grows the hit area
+	   without moving the dot (ui.md ▸ Every interactive element says so) */
+	.resource-pip::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
 	}
 	.resource-pip.off {
 		background: transparent;

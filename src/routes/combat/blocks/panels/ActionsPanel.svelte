@@ -117,7 +117,7 @@
 		display: inline-block;
 		padding: 0 var(--space-1-5);
 		border: 1px solid var(--color-accent);
-		border-radius: 4px;
+		border-radius: var(--radius-xs);
 		color: var(--color-accent-bright);
 		font-size: 0.8em;
 		text-transform: capitalize;

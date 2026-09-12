@@ -133,7 +133,7 @@
 		min-width: 34px;
 		height: 28px;
 		padding: 0 var(--space-2);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface);
 		color: var(--color-text);

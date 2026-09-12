@@ -138,7 +138,8 @@
 		// walk a token left: what is typed folds back into the line and the token before it opens.
 		// Ctrl+Z is the same move — the browser's own undo would restore the TEXT of a token while the
 		// pill it became stayed in the line, which is a line that says the same thing twice.
-		if (event.key === 'z' && held) {
+		// the PHYSICAL key (AGENTS.md ▸ Taste): on a Ukrainian layout — a shipped locale — `key` is "я"
+		if (event.code === 'KeyZ' && held) {
 			event.preventDefault();
 			void step(true);
 			return;
@@ -508,7 +509,7 @@
 		flex: none;
 		width: 3px;
 		align-self: stretch;
-		border-radius: 2px;
+		border-radius: var(--radius-xs);
 		background: var(--color-accent);
 	}
 	.roller-stripe.damage {
@@ -575,7 +576,7 @@
 		align-items: center;
 		gap: var(--space-1);
 		padding: var(--space-1) var(--space-2);
-		border-radius: 7px;
+		border-radius: var(--radius);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		font-size: var(--font-size-xs);
@@ -735,7 +736,7 @@
 		width: 100%;
 		padding: var(--space-1-5) var(--space-2);
 		border: 0;
-		border-radius: 7px;
+		border-radius: var(--radius);
 		background: transparent;
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
@@ -838,7 +839,7 @@
 		justify-content: center;
 		width: 30px;
 		height: 30px;
-		border-radius: 7px;
+		border-radius: var(--radius);
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
 		font-family: var(--font-display);

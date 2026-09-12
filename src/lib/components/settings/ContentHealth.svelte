@@ -275,7 +275,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		padding: var(--space-1) var(--space-2-5);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text);
 	}
@@ -330,7 +330,7 @@
 		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 20px;
+		border-radius: var(--radius-full);
 		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 	}

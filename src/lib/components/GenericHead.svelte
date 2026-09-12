@@ -92,7 +92,7 @@
 	.meta-cell {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.meta-cell :global(.meta-key) {

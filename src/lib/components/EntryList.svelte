@@ -4,6 +4,7 @@
 	// (Spellbook: eye/pin + prepare toggle). Compendium passes none → a plain browsable list.
 	import Icon from './Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { walkOptions, optionDomId } from '$lib/util/option-walk';
 	import type { Snippet } from 'svelte';
 	import type { Entry } from '$lib/content/detail';
 
@@ -29,6 +30,40 @@
 		leading?: Snippet<[Entry<T>]>;
 		trailing?: Snippet<[Entry<T>]>;
 	} = $props();
+
+	/*
+	 * The list is operated from the SEARCH BOX (ui.md §5, and the command palette's own shape): the
+	 * caret stays where the typing is, ↑/↓ move a highlight the input names through
+	 * `aria-activedescendant`, and Enter does what a left click on the highlighted row does. The rows
+	 * are not tab stops — a roving one over five hundred of them is a worse answer than the combobox
+	 * contract, and the per-row controls a Spellbook row carries stay tabbable on their own.
+	 */
+	const uid = $props.id();
+	const listId = `${uid}-rows`;
+	const ids = $derived(groups.flatMap((g) => g.entries.map((e) => e.id)));
+	let highlightId = $state<string | null>(null);
+	/** The highlight, as long as the current search still shows it — narrowing the list must not leave
+	 *  the input naming a row that is no longer there. */
+	const activeId = $derived(highlightId && ids.includes(highlightId) ? highlightId : null);
+	const rowId = (id: string) => optionDomId(uid, id);
+	const entryOf = (id: string) => groups.flatMap((g) => g.entries).find((e) => e.id === id);
+
+	function onSearchKeydown(event: KeyboardEvent): void {
+		walkOptions(event, {
+			ids,
+			previewId: activeId,
+			// Home and End stay with the caret, the same call the builder's search box makes
+			jumpKeys: false,
+			onpreview: (id) => {
+				highlightId = id;
+				document.getElementById(rowId(id))?.scrollIntoView({ block: 'nearest' });
+			},
+			onenter: (id) => {
+				const entry = entryOf(id);
+				if (entry) onselect(entry);
+			},
+		});
+	}
 </script>
 
 <div class="list">
@@ -36,20 +71,30 @@
 		<span class="search-icon"><Icon name="search" size={13} /></span><input
 			placeholder={searchPlaceholder ?? $_('app.search')}
 			bind:value={searchValue}
+			role="combobox"
+			aria-expanded="true"
+			aria-controls={listId}
+			aria-activedescendant={activeId ? rowId(activeId) : undefined}
+			onkeydown={onSearchKeydown}
 		/>
 	</div>
 	{#if filters}<div class="lfilter">{@render filters()}</div>{/if}
-	<div class="rows">
+	<div class="rows" id={listId} role="listbox">
 		{#each groups as g (g.label)}
-			{#if g.label}<div class="section eyebrow"><span>{g.label}</span></div>{/if}
+			{#if g.label}<div class="section eyebrow" role="presentation">
+					<span>{g.label}</span>
+				</div>{/if}
 			{#each g.entries as e (e.id)}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
 					class="entry-row"
 					class:selected={e.id === selectedId}
-					role="button"
+					class:highlighted={e.id === activeId}
+					id={rowId(e.id)}
+					role="option"
 					tabindex="-1"
+					aria-selected={e.id === selectedId}
 					onclick={() => onselect(e)}
-					onkeydown={(ev) => (ev.key === 'Enter' || ev.key === ' ') && onselect(e)}
 				>
 					{#if leading}<span class="acts">{@render leading(e)}</span>{/if}
 					<span class="entry-name"
@@ -59,7 +104,7 @@
 					{#if trailing}{@render trailing(e)}{/if}
 				</div>
 			{:else}
-				<div class="section eyebrow"><span>{$_('app.noMatches')}</span></div>
+				<div class="section eyebrow" role="presentation"><span>{$_('app.noMatches')}</span></div>
 			{/each}
 		{/each}
 	</div>
@@ -120,6 +165,13 @@
 	.entry-row.selected {
 		background: var(--color-surface-2);
 		box-shadow: inset 3px 0 0 var(--color-accent);
+	}
+	/* where the keyboard is, which is not the same fact as which row is open — a walk moves the
+	   highlight without selecting anything, so the two must not wear one look */
+	.entry-row.highlighted {
+		background: var(--color-surface-2);
+		outline: 1px solid var(--color-border-strong);
+		outline-offset: -1px;
 	}
 	.acts {
 		display: flex;
