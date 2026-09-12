@@ -198,11 +198,22 @@ type KindParser = (rest: string, raw: string, kind: EffectKind) => ParsedEffect;
 
 /** The `:<qualifier>` slot of a flat_bonus, routed by TARGET (the §A collision resolver): an
  *  `attack` bonus is never damage-typed → the qualifier is a weapon-category `scope`; any
- *  other target keeps the qualifier as a `damageType` (flaming-weapon extra part). Absent → {}. */
-function qualifierSlot(target: string, slot: string | undefined): Partial<ParsedEffect> {
-	if (!slot) return {};
+ *  other target keeps the qualifier as a `damageType` (flaming-weapon extra part). Absent → {}.
+ *
+ *  On `attack` the qualifier and a dotted scope land in the SAME slot, so they are JOINED rather than
+ *  one overwriting the other: `attack.melee:versatile` is a bonus on melee versatile weapons, and a
+ *  comma list is already read as "all of these" by the roll path and by `scopedAttackBonus`. Letting
+ *  the qualifier win widened the token instead of narrowing it. */
+function qualifierSlot(
+	target: string,
+	slot: string | undefined,
+	dottedScope: string | undefined,
+): Partial<ParsedEffect> {
+	if (!slot) return dottedScope ? { scope: dottedScope } : {};
 	const q = slot.toLowerCase();
-	return baseTarget(target) === 'attack' ? { scope: q } : { damageType: q };
+	if (baseTarget(target) !== 'attack')
+		return { damageType: q, ...(dottedScope ? { scope: dottedScope } : {}) };
+	return { scope: dottedScope ? `${dottedScope},${q}` : q };
 }
 
 /** The targets a dotted sub-name SCOPES rather than names: `damage.melee` is a damage bonus for
@@ -236,7 +247,7 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 		);
 	if (lit) {
 		const { target, scope } = scopedTarget(lit[1] ?? '');
-		const qual = { ...(scope ? { scope } : {}), ...qualifierSlot(target, lit[2]) };
+		const qual = qualifierSlot(target, lit[2], scope);
 		const sign = lit[3] ?? '';
 		const amount = lit[4] ?? '';
 		if (/d/i.test(amount))
@@ -250,7 +261,7 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 		);
 	if (!ex) return { kind: 'unknown', raw };
 	const { target, scope } = scopedTarget(ex[1] ?? '');
-	const qual = { ...(scope ? { scope } : {}), ...qualifierSlot(target, ex[2]) };
+	const qual = qualifierSlot(target, ex[2], scope);
 	const valueExpr = ex[3] === '-' ? `-(${(ex[4] ?? '').trim()})` : (ex[4] ?? '').trim();
 	return { kind, target, valueExpr, raw, ...qual };
 };

@@ -243,8 +243,10 @@ All three keys optional; an empty object is a valid "nothing applies" answer.
   `override` layer are host-reserved in `api: 1`); `op` ∈ `add | set | mult`; `amount` must
   be finite, `|amount| ≤ 1000`; `label` ≤ 48 chars. The host prefixes every label with your
   `namespace` in the provenance trace — a plugin cannot masquerade as core math. An `op: "set"` folds
-  exactly like a content `set_override` (at the override stage, most-potent-wins across all
-  sets); `add`/`mult` fold at your declared layer.
+  exactly like a content `set_override`: at YOUR declared layer (D12 — a set is no longer forced to
+  `override`), most-potent-wins among the sets of that one layer, and a set in a later layer of
+  `LAYER_SEQUENCE` then replaces whatever an earlier layer settled on. `add`/`mult` fold at your
+  declared layer too.
 - **`notes`** — plain-text explanations for the stat tooltip / effects panel. Rendered as
   plain text ONLY (no markdown, no links), ≤ 200 chars each.
 

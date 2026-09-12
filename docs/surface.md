@@ -1211,6 +1211,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/action-token.ts`
 
 - `function resolveActionFormula` — Resolve the L2 values inside an action token.
+- `function actionFormulas` — Every L2 expression slot inside an action token (a `;`-separated multi-action carries one per verb).
 
 ### `src/lib/effects/apply.ts`
 
@@ -1664,4 +1665,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 994 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 995 exports across 134 modules · 65 duplicate suspects._

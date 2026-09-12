@@ -737,6 +737,16 @@ describe('lintEffectTokens · content-health soft-warns over every expression sl
 		expect(lintEffectTokens(['1d7 ? advantage:attack']).join(' ')).toContain('unusual die d7');
 		expect(lintEffectTokens(['grant_resource:ki:1d7:short']).join(' ')).toContain('unusual die');
 	});
+	it("lints an on_event action's own formula — the fifth slot", () => {
+		expect(lintEffectTokens(['on_event:turn_start:heal:1d7']).join(' ')).toContain(
+			'unusual die d7',
+		);
+		// a multi-action lints each verb that carries a formula, and nothing that carries an id
+		expect(
+			lintEffectTokens(['on_event:turn_start:restore_resource:focus;heal:1d7']).join(' '),
+		).toContain('unusual die d7');
+		expect(lintEffectTokens(['on_event:turn_start:apply_condition:prone'])).toEqual([]);
+	});
 	it('is quiet for clean tokens and prefixes each warning with the offending token', () => {
 		expect(lintEffectTokens(['flat_bonus:ac+2', 'flat_bonus:damage+1d6'])).toEqual([]);
 		expect(lintEffectTokens(['flat_bonus:damage+1d7'])[0]).toContain('flat_bonus:damage+1d7 —');
@@ -750,6 +760,21 @@ describe('a scoped bonus can name SEVERAL scopes, and needs all of them (RAGE-SC
 			target: 'damage',
 			scope: 'melee,str',
 			amount: 2,
+		});
+	});
+	it('an attack token carrying BOTH a dotted scope and a qualifier keeps both', () => {
+		// the two land in one slot on `attack`, and the qualifier used to overwrite the scope — which
+		// WIDENED the bonus (every versatile weapon) instead of narrowing it (melee versatile ones)
+		expect(parseToken('flat_bonus:attack.melee:versatile+2')).toMatchObject({
+			target: 'attack',
+			scope: 'melee,versatile',
+			amount: 2,
+		});
+		// damage has two distinct slots, and they stay distinct
+		expect(parseToken('flat_bonus:damage.melee:fire+1d6')).toMatchObject({
+			target: 'damage',
+			scope: 'melee',
+			damageType: 'fire',
 		});
 	});
 	it('keeps the single-scope and unscoped forms exactly as they were', () => {

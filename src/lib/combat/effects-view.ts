@@ -152,6 +152,38 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.autoFail]: (p, tr) => p.target && prefixed(tr, 'autoFail', p.target),
 	[EFFECT_KIND.autoSucceed]: (p, tr) => p.target && prefixed(tr, 'autoSucceed', p.target),
 	[EFFECT_KIND.note]: (p) => p.target, // free-form display text, as authored
+	// the two roll MANIPULATIONS read as what they do to a die, not as their token
+	[EFFECT_KIND.reroll]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.reroll', `reroll ≤${p.amount} · ${targetLabel(p.target)}`, {
+			value: p.amount ?? 0,
+			target: targetLabel(p.target, tr),
+		}),
+	[EFFECT_KIND.minDie]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.minDie', `min ${p.amount} · ${targetLabel(p.target)}`, {
+			value: p.amount ?? 0,
+			target: targetLabel(p.target, tr),
+		}),
+	// the two MARKERS carry no target or value — the whole tag is the sentence
+	[EFFECT_KIND.blocksConcentration]: (_p, tr) =>
+		say(tr, 'combat.tag.blocksConcentration', 'blocks concentration'),
+	[EFFECT_KIND.damageReroll]: (_p, tr) => say(tr, 'combat.tag.damageReroll', 'may reroll damage'),
+	[EFFECT_KIND.regainOnInitiative]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.regainOnInitiative', `${titleCase(p.target)} +${p.amount} on initiative`, {
+			value: p.amount ?? 0,
+			target: titleCase(p.target),
+		}),
+	// an event HOOK: when it fires, and what it runs. The action keeps its own machine spelling —
+	// it is a verb token, and translating half of it would read worse than showing it whole.
+	[EFFECT_KIND.onEvent]: (p, tr) =>
+		p.target &&
+		p.action &&
+		say(tr, 'combat.tag.onEvent', `on ${p.target.replace(/_/g, ' ')} · ${p.action}`, {
+			event: say(tr, `combat.playEvent.${p.target}`, p.target.replace(/_/g, ' ')),
+			action: p.action,
+		}),
 	// a handler REFERENCE — the namespace is the readable part; args are opaque machine input
 	[EFFECT_KIND.plugin]: (p, tr) =>
 		p.plugin &&
@@ -176,8 +208,10 @@ function prefixed(tr: Translate | undefined, kind: keyof typeof PREFIX_EN, targe
 
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
  *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; damage_sensitivity → "resist · fire";
- *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
- *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
+ *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name;
+ *  the roll manips, the two markers and `on_event` → what they do. EVERY kind but one has a formatter:
+ *  grant_resource is deliberately absent — it gets its own Resources section (see groupEffects) — and
+ *  the raw fallback below is for a homebrew token nothing parses, never for a kind we ship. */
 export function effectTag(token: string, translate?: Translate): string {
 	const p = parseToken(token);
 	return TAG_FORMATTERS[p.kind]?.(p, translate) || token.replace(/[-:]/g, ' ');

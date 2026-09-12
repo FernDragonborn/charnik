@@ -508,6 +508,21 @@ describe('effectTag — auto_fail / auto_succeed render readably in the panel', 
 	});
 });
 
+describe('effectTag — every kind we ship has a formatter, so no panel row reads as its token', () => {
+	it('tags the roll manips, the two markers and an event hook', () => {
+		expect(effectTag('reroll:damage:2')).toBe('reroll ≤2 · Damage');
+		expect(effectTag('min_die:d20_tests:10')).toBe('min 10 · all d20 tests');
+		expect(effectTag('blocks_concentration')).toBe('blocks concentration');
+		expect(effectTag('damage_reroll')).toBe('may reroll damage');
+		expect(effectTag('regain_on_initiative:focus:4')).toBe('Focus +4 on initiative');
+		expect(effectTag('on_event:turn_start:heal:5')).toBe('on turn start · heal:5');
+	});
+	it('a raging barbarian sees a sentence where the raw token used to be', () => {
+		// the shipped `rage` condition carries it, in BOTH packs
+		expect(effectTag('blocks_concentration')).not.toContain('_');
+	});
+});
+
 describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 	it('adds Bless (+1d4) and Bane (−1d4) group tokens to any save', () => {
 		const r = rollEffectsFor(fx('flat_bonus:saves+1d4', 'flat_bonus:saves-1d4'), 'save.dex');

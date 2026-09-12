@@ -25,7 +25,7 @@ import {
 	type ParsedEffect,
 	isPlayEvent,
 } from './token-parser';
-import { resolveActionFormula } from './action-token';
+import { actionFormulas, resolveActionFormula } from './action-token';
 import { RECHARGE_ALL, rechargeRank } from '../rules/recharge';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
@@ -334,8 +334,8 @@ export function collectFacts(
 /**
  * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned
  * tokens become synthetic effects, collected separately, then merged. Arrays concatenate;
- * condition/resource ids dedupe; resource pools keep the largest max per id (the same rule
- * `collectFacts` itself applies within one pass).
+ * condition/resource ids dedupe; resource pools keep the largest max per id and, at an equal max, the
+ * faster recharge — the same rule `collectFacts` itself applies within one pass.
  */
 export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.numeric.push(...extra.numeric);
@@ -361,7 +361,13 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);
 		if (!prev) base.resources.push(def);
-		else if (def.max > prev.max) base.resources[base.resources.indexOf(prev)] = def;
+		// the SAME rule `pushResource` applies within one pass, including the equal-max tie-break on the
+		// faster recharge — compared here by max alone, a plugin's faster policy silently lost
+		else if (
+			def.max > prev.max ||
+			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
+		)
+			base.resources[base.resources.indexOf(prev)] = def;
 	}
 }
 
@@ -463,7 +469,8 @@ export function applyEffects(
 }
 
 /** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression
- *  slot — guard, value, resource max, resource recharge AMOUNT — for the spec-promised soft warns
+ *  slot — guard, value, resource max, resource recharge AMOUNT, an `on_event` action's formula — for
+ *  the spec-promised soft warns
  *  (mixed-type `if()`, unusual die). Parse ERRORS are not reported here; they surface at derive as
  *  issues/inert notes. */
 export function lintEffectTokens(tokens: string[]): string[] {
@@ -482,6 +489,9 @@ export function lintEffectTokens(tokens: string[]): string[] {
 		// one — it was the single L2 slot nothing looked at, one segment over from the max that is lit
 		if (p.resource && p.resource.recharge.amount !== RECHARGE_ALL)
 			exprs.push(p.resource.recharge.amount);
+		// an `on_event` action's own formula (`heal:5+con_mod`) is an L2 expression too — the fifth slot,
+		// asked through the same function the evaluator uses so the two cannot drift apart again
+		if (p.action) exprs.push(...actionFormulas(p.action));
 		for (const e of exprs) for (const w of lintExpression(e)) warns.push(`${raw} — ${w}`);
 	}
 	return warns;

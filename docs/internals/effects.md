@@ -44,7 +44,7 @@ play-state action model lives in [`actions.md`](actions.md), and the threat mode
 | `dependency-graph.ts`                                                                    | The ONE resolve stage — `resolveActiveEffects` (gather → guards → expand → dedupe → facts), in dependency order.                                               |
 | `context.ts`                                                                             | `makeExprContext` / `ctxOf` — the `ctx` a formula reads (build + play vars).                                                                                   |
 | `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `plugins.md`.                                                                                                                                     |
-| `suggest.ts`                                                                             | "did you mean?" fuzzy hints for a typo'd token/target.                                                                                                         |
+| `../util/suggest.ts`                                                                     | "did you mean?" fuzzy hints for a typo'd token/target — OUTSIDE the module, called by `character/derive-targets.ts`. |
 
 ### The token DSL is snake_case, with `.` for namespacing
 
@@ -153,8 +153,8 @@ target, so `half:skills` reads as "proficiency in half the skills"; and "half" r
 while this rung is a gain — a lesser proficiency, never a cut-down one.
 
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
-`unknown target "<t>" for <kind>` content-health issue (with a `suggest.ts` "did you mean?"),
-never folded onto nothing.
+`unknown target "<t>" for <kind>` content-health issue (with a `util/suggest.ts` "did you mean?",
+offered by `character/derive-targets.ts`), never folded onto nothing.
 
 ---
 
