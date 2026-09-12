@@ -32,10 +32,11 @@
   home outside the converters today — if they go, it needs one, and that is the real work in this
   item rather than the deletion itself.
 
-  Salvage one thing first, whatever is decided: the slug generator emitted `see_i_nvisibility` into
-  `srd-2014/spells_srd.csv`, an underscore injected mid-word. Ten minutes to find WHICH shape of
-  input breaks it — that class of bug outlives the code that produced it, and the next thing to
-  generate a slug will meet the same input.
+  The `see_i_nvisibility` slug is settled and was not the generator's fault: SRD 5.1 itself prints
+  "See I nvisibility", the same OCR artifact as its "Extra A ttack" heading, and the slug is a faithful
+  rendering of it. The row is transcribed as `see_invisibility` now, name included. Nothing in the
+  generator needs finding — but a name-matching converter must squash whitespace before comparing, as
+  `convert-2014-spell-lists.mjs` does, because the source's typography cannot be trusted.
 
 - [ ] **MASTERY-HALF · weapon mastery is half-modelled.** The WEAPON half is data and shipped: every
   2024 weapon carries its one mastery property as `mastery:<name>` (5.5e only — 2014 has no such
@@ -45,6 +46,14 @@
   and one swappable on a long rest. That is build state (`build.masteries`, re-editable at level-up
   like every other chosen option) plus the eight mastery effects, none of which exist.
   `versatile:1d10` is the same shape: data with no mechanic reading it.
+- [ ] **BARD-LIST-2014 · the 2014 Bard spell list is missing its 1st-level half.**
+  `convert-2014-spell-lists.mjs` fills every 2014 spell's `classes` column from the SRD 5.1 "Spell
+  Lists" section, and that section's Bard block has lost its "1st Level" and "2nd Level" headings: the
+  2nd-level names survive under the cantrip heading, the 1st-level ones are absent from the document
+  altogether. So a 2014 bard can pick cantrips and 2nd-level spells and has nothing at 1st. The
+  converter prints the gap on every run rather than inventing the list; closing it needs a CC-BY source
+  the names can be read out of, and not a memory of the PHB. Every other 2014 class's list is complete
+  (cleric 78, druid 84, paladin 29, ranger 23, sorcerer 97, warlock 46, wizard 156, bard 54).
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
   block the loader; each raises fidelity where the UI later wants a structured filter. In priority
   order: species ability bonuses as `effects` (`flat_bonus:con+2`) rather than only prose — 5e on

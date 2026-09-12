@@ -13,7 +13,8 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { fileHashState } from './hash';
-import { HASH_STATE } from './meta';
+import { HASH_STATE, parseContentDirectives } from './meta';
+import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import { contentPacks, packDir } from '../../../tools/content-repo.mjs';
 import { hasContentRepo, readPackFile } from '../../test-support/real-content';
 
@@ -34,3 +35,37 @@ describe.runIf(hasContentRepo)('shipped content stamps', () => {
 		expect(await fileHashState(readPackFile(pack, file))).toBe(HASH_STATE.match);
 	});
 });
+
+/*
+ * The shipped SET, as one line: every pack's files with the hash each declares. A desktop install only
+ * re-seeds when `CONTENT_SEED_VERSION` is HIGHER than the marker on disk, so shipped content that
+ * changes without a bump can never reach an existing install — which has now happened twice, once for
+ * a whole new file. The signature below is what makes the miss loud HERE instead of silent in the app:
+ * when it changes, bump the constant and paste the new one in.
+ */
+const SEEDED_CONTENT = { version: 5, signature: '3a407388e2c7c3ce' };
+
+describe.runIf(hasContentRepo)('the shipped set and the seed version move together', () => {
+	it('content that changed since the last bump is a bump', () => {
+		const parts = contentPacks().map((pack: string) => {
+			const files = readdirSync(packDir(pack))
+				.filter((file: string) => file.endsWith('.csv'))
+				.sort();
+			const hashes = files.map(
+				(file: string) =>
+					parseContentDirectives(readPackFile(pack, file)).directives.get('hash') ?? '',
+			);
+			return `${pack}:${files.length}/${files.join(',')}/${hashes.join(',')}`;
+		});
+		expect({ version: CONTENT_SEED_VERSION, signature: digest(parts.join('|')) }).toEqual(
+			SEEDED_CONTENT,
+		);
+	});
+});
+
+/** A short stable fingerprint of the whole shipped set — its files and the hash each declares. */
+function digest(text: string): string {
+	let h = 0n;
+	for (const ch of text) h = (h * 1099511628211n + BigInt(ch.codePointAt(0) ?? 0)) % (1n << 64n);
+	return h.toString(16);
+}

@@ -17,7 +17,10 @@ import type { BuildVM } from './build-view-model.svelte';
 
 /** What the pickers need from the build view-model around them. `import type` is erased, so picking
  *  the shape off the class costs no runtime cycle and cannot drift from it. */
-export type SkillPicksHost = Pick<BuildVM, 'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow'>;
+export type SkillPicksHost = Pick<
+	BuildVM,
+	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow' | 'feats'
+>;
 
 export class SkillPicks {
 	/* The host arrives as an ACCESSOR: a `$derived` field initialiser runs before a constructor
@@ -70,9 +73,17 @@ export class SkillPicks {
 	chosenCount = $derived.by(
 		() => this.host().draft.skills.filter((s) => !this.autoSkills.includes(s)).length,
 	);
-	/** Proficient = chosen or background-granted (a prerequisite for expertise). */
-	isProficient = (skill: string): boolean =>
+	/** Proficient WITHOUT the §C feat grants — what a feat's OWN skill picker compares against, so its
+	 *  own grant does not read back to it as "already proficient elsewhere". */
+	isProficientBeforeFeats = (skill: string): boolean =>
 		this.autoSkills.includes(skill) || this.host().draft.skills.includes(skill);
+	/** Proficient = chosen, background-granted, or granted by a feat (Skilled) — the same union the
+	 *  derive builds from `build.skills` + `build.featSkills`. Expertise keys off this and assemble
+	 *  filters by it, so a narrower answer here silently drops expertise the sheet says you have. */
+	isProficient = (skill: string): boolean =>
+		this.isProficientBeforeFeats(skill) ||
+		this.host().feats.featSkillPicks.includes(skill) ||
+		(this.host().edit?.featSkills ?? []).includes(skill);
 	/** A skill is pickable when Free, or (Strict) it is on the class list / the class has no list. */
 	pickable = (skill: string): boolean =>
 		this.autoSkills.includes(skill) ||

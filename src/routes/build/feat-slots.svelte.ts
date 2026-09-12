@@ -145,7 +145,7 @@ export class FeatSlots {
 	/** Strict-mode guard: a skill already proficient from ANOTHER source (class/background pick or a
 	 *  different feat's grant) is a wasted pick — disable it in Strict, allow it in Free. */
 	featSkillTakenElsewhere = (key: string, skill: string): boolean => {
-		if (this.host().skillPicks.isProficient(skill)) return true;
+		if (this.host().skillPicks.isProficientBeforeFeats(skill)) return true;
 		return Object.entries(this.host().draft.slotFeatSkills).some(
 			([k, list]) => k !== key && list.includes(skill)
 		);

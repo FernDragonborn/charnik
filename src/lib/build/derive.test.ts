@@ -179,6 +179,31 @@ describe('buildTodos', () => {
 		expect(todos[0]).toMatchObject({ index: 0, level: 3 });
 		expect(todos.slice(1).map((t) => t.slotKey)).toEqual(['p-4', 'p-8']);
 	});
+	it('an under-cap spell line is a nudge, not a block, when the picker has nothing in it', () => {
+		// a pack whose spells claim no class (srd-2014 ships exactly that) leaves the Strict pool empty:
+		// a REQUIRED todo would block Create on a choice with no options behind it
+		const profile = { className: 'Cleric', cantripCap: 4, preparedCap: 8 };
+		const emptyPicker = [
+			{ profile, groups: [], cantripsChosen: 0, leveledChosen: 0 }
+		] as unknown as BuildTodoInput['spellPicker'];
+		expect(buildTodos({ ...done, spellPicker: emptyPicker }).map((t) => t.required)).toEqual([
+			false,
+			false
+		]);
+		// …and with a pool it is required again, per tier: cantrips pickable, leveled not
+		const cantripsOnly = [
+			{
+				profile,
+				groups: [{ level: 0, spells: [{}] }],
+				cantripsChosen: 0,
+				leveledChosen: 0
+			}
+		] as unknown as BuildTodoInput['spellPicker'];
+		expect(buildTodos({ ...done, spellPicker: cantripsOnly }).map((t) => t.required)).toEqual([
+			true,
+			false
+		]);
+	});
 	it('a granted origin feat that still asks something is one line, naming the feat', () => {
 		expect(buildTodos({ ...done, originFeat: { name: 'Skilled', owed: 3 } })[0]).toMatchObject({
 			kind: 'originFeat',

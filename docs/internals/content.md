@@ -193,7 +193,9 @@ Two things follow, and both are easy to forget:
 
 1. **Bump `CONTENT_SEED_VERSION`** whenever the shipped set of files changes. A new file is the
    easiest case to miss, because nothing about the existing files looks stale — and without the bump
-   a desktop install seeded at the old version never receives it.
+   a desktop install seeded at the old version never receives it. The bump is no longer a thing to
+   remember: `content_stamps.test.ts` pins the shipped set's signature beside the constant, so content
+   that moved without it fails there. Paste the new signature in with the bump.
 2. **Do not declare `#content-type:` on a file whose type is new.** Left to the filename, an older
    build reports a warning and skips one file; declared explicitly, the same build reports an error.
    Both skip it, so the quieter one is the kinder one.

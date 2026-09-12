@@ -588,6 +588,21 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.todos.map((t) => t.kind)).not.toContain('originFeat');
 	});
 
+	it('a feat-granted skill counts as proficient, so expertise on it is offered and survives assemble', () => {
+		build.draft.backgroundId = `background:${S}:scholar`; // grants Skilled
+		build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, 'stealth', 3);
+		// the derive reads `build.skills` + `build.featSkills` as one set; the picker must agree
+		expect(build.skillPicks.isProficient('stealth')).toBe(true);
+		// …and the feat's OWN picker must not read its grant back as taken elsewhere
+		expect(build.feats.featSkillTakenElsewhere(ORIGIN_SLOT_KEY, 'stealth')).toBe(false);
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
+		];
+		expect(build.skillPicks.expertiseOffered('stealth')).toBe(true);
+		build.skillPicks.toggleExpertise('stealth');
+		expect(build.assembled.build.expertise).toContain('stealth');
+	});
+
 	it("a granted half-feat's +1 is asked for, and reaches the ability score (B13)", () => {
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
 		build.draft.backgroundId = `background:${S}:prodigy`;

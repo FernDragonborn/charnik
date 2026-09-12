@@ -289,23 +289,31 @@ export interface BuildTodoInput {
 }
 
 /** The four spell todos a caster class can owe, as (condition, key) pairs — written once so the
- *  under-cap and over-cap halves can't drift apart. */
+ *  under-cap and over-cap halves can't drift apart.
+ *
+ *  An under-cap line is only REQUIRED when the picker it links to has something in it. A pack whose
+ *  spells claim no class (`srd-2014` ships exactly that) leaves the Strict pool empty at every level,
+ *  and a required todo then blocks creation on a choice the player cannot make — the same reason
+ *  `openSubclassChoices` asks `hasOptions`. It stays on the list as a nudge, so the content problem is
+ *  visible rather than swallowed. */
 function spellTodos(d: BuildTodoInput): BuildTodo[] {
 	const out: BuildTodo[] = [];
 	const named = d.spellPicker.length > 1; // multiclass: say WHICH class owes the pick
 	for (const pc of d.spellPicker) {
 		const values = { class: pc.profile.className };
-		const short: [number, string, string][] = [
-			[pc.profile.cantripCap - pc.cantripsChosen, 'cantrips', 'cantripsOver'],
-			[pc.profile.preparedCap - pc.leveledChosen, 'spells', 'spellsOver'],
+		const canPick = (cantrips: boolean) =>
+			pc.groups.some((g) => cantrips === (g.level === 0) && g.spells.length > 0);
+		const short: [number, string, string, boolean][] = [
+			[pc.profile.cantripCap - pc.cantripsChosen, 'cantrips', 'cantripsOver', canPick(true)],
+			[pc.profile.preparedCap - pc.leveledChosen, 'spells', 'spellsOver', canPick(false)],
 		];
-		for (const [delta, underKey, overKey] of short) {
+		for (const [delta, underKey, overKey, pickable] of short) {
 			if (delta > 0)
 				out.push({
 					kind: 'spells',
 					key: named ? `${underKey}For` : underKey,
 					values: { count: delta, ...values },
-					required: true,
+					required: pickable,
 				});
 			// over-cap is a RULE, not an empty field — only Strict cares
 			else if (delta < 0 && d.strict)

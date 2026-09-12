@@ -24,7 +24,11 @@ export const CONTENT_SCHEMA_VERSION = 2;
 // would keep showing a title-cased id with no way for the user to tell why.
 // v4: ITEM-TAGS reshaped both items CSVs (schema v2). Every shipped file's bytes changed, so an
 // install left at v3 would keep reading v1 items through the migration instead of the real thing.
-export const CONTENT_SEED_VERSION = 4;
+// v5: `srd-2014/class_casting_srd.csv` is a NEW FILE (a 2014 caster read zero cantrips and zero
+// prepared without it) — the exact case v3's note describes, missed again — and the 2014 spells file
+// now carries the `classes` column that makes a 2014 caster creatable at all. An install left at v4
+// receives neither, plus none of the rules data of the 18 content commits beside them.
+export const CONTENT_SEED_VERSION = 5;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;
