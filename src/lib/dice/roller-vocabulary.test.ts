@@ -151,11 +151,17 @@ describe('candidateResolver', () => {
 		expect(candidateResolver(en())('bles')).toBeNull();
 	});
 
-	it('leaves a name two candidates share unresolved rather than picking one', () => {
+	it('blocks on a name two candidates share rather than picking one', () => {
 		const shared: NamedRollSource[] = [
 			{ key: 'a', names: { en: 'Ray' }, tokens: ['flat_bonus:attack+1d4'], active: false },
 			{ key: 'b', names: { en: 'Ray' }, tokens: ['flat_bonus:attack+1d6'], active: false },
 		];
-		expect(candidateResolver(rollerCandidates(shared, 'en'))('ray')).toBeNull();
+		// a blocking pill rather than `null`: null means "not a name", and on a DAMAGE line an unknown
+		// word becomes a damage type — so an ambiguous effect would have silently typed the damage and
+		// dropped the dice it was asked for
+		expect(candidateResolver(rollerCandidates(shared, 'en'))('ray')).toEqual({
+			kind: 'pill',
+			pill: { kind: 'raw', text: 'ray', ambiguous: true },
+		});
 	});
 });

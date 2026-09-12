@@ -274,11 +274,38 @@ describe('a word the vocabulary does not know', () => {
 	});
 });
 
+describe('a mode is a fact about d20s', () => {
+	it('is not set by typing the word on a damage line — the menu withholds the row there', () => {
+		const line = type(ROLLER_ROLE.damage, '2d6', 'adv');
+		expect(line.advantage).toBe(ADVANTAGE_MODE.neither);
+		// the word falls through to what any other word is on a damage line: its type
+		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.damageType, type: 'adv' });
+	});
+
+	it('is set on a test line, by the word and by a named effect alike', () => {
+		expect(type(ROLLER_ROLE.test, 'd20', 'adv').advantage).toBe(ADVANTAGE_MODE.advantage);
+		expect(type(ROLLER_ROLE.test, 'd20', 'trickster').advantage).toBe(ADVANTAGE_MODE.advantage);
+	});
+});
+
 describe('issues', () => {
 	it('blocks the roll on a fragment it could not account for', () => {
 		const line = type(ROLLER_ROLE.damage, '1d8', '+2', '+d4?', 'fire');
 		expect(canRoll([line])).toBe(false);
 		expect(rollerIssues([line])[0]).toMatchObject({ blocking: true });
+	});
+
+	it('blocks on a name the vocabulary knows TWICE, even on a damage line', () => {
+		// the resolver answers with an ambiguous raw pill; a plain unknown word would become a damage
+		// type here, which is how an ambiguous Bless typed the damage and dropped its +1d4
+		const ambiguous: RollerResolver = () =>
+			pill({ kind: PILL_KIND.raw, text: 'ray', ambiguous: true });
+		const line = addToken(emptyLine(ROLLER_ROLE.damage), 'ray', ambiguous);
+		expect(line.pills[0]).toMatchObject({ kind: PILL_KIND.raw, ambiguous: true });
+		expect(rollerIssues([line])[0]).toMatchObject({
+			key: 'roller.issue.ambiguous',
+			blocking: true,
+		});
 	});
 
 	it('has nothing to roll when the lines carry no value at all', () => {

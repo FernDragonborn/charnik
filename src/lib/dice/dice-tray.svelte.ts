@@ -21,6 +21,7 @@ import {
 	type RollPoolOptions,
 } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
+import type { SaidValue } from '$lib/util/say';
 import {
 	PILL_KIND,
 	ROLLER_ROLE,
@@ -29,6 +30,7 @@ import {
 	canRoll,
 	damageParts,
 	countPill,
+	dicePillToken,
 	emptyLine,
 	isInherited,
 	normalizeLine,
@@ -56,6 +58,10 @@ export interface RollerPrefill {
 	/** The catalog key for `label`, carried straight through to the entries `roll()` answers with —
 	 *  the dice tray has no locale and never turns it into a word. */
 	labelKey?: string;
+	/** ICU values for `labelKey` — a numbered strike's "1 of 2", a content row's own name. Carried for
+	 *  the same reason the key is: without them the recorded row asks the catalog for a numbering frame
+	 *  with no numbers in it. */
+	labelValues?: Record<string, SaidValue>;
 	test?: {
 		dice: Record<number, number>;
 		mod: number;
@@ -101,6 +107,9 @@ export class DiceTray {
 	/** What the roll is for ("Greataxe"). Empty for an ad-hoc roll. */
 	label = $state('');
 	labelKey = $state('');
+	/** ICU values for `labelKey`, held beside it and travelling with it into every entry `roll()`
+	 *  answers with. `undefined` rather than `{}`: "nobody gave me values" is not "there are none". */
+	labelValues = $state<Record<string, SaidValue> | undefined>(undefined);
 	/** Provenance carried into the logged entry (an upcast's extra dice), never shown as a pill —
 	 *  it explains the roll rather than contributing to it. */
 	note = $state('');
@@ -445,7 +454,9 @@ export class DiceTray {
 		if (pill?.kind === PILL_KIND.dice) {
 			const count = pill.count + delta;
 			if (count < 1) return this.removePill(index, pillIndex);
-			next = { ...pill, count, text: `${count}d${pill.sides}` };
+			// through the shared builder, so the token keeps the SIGN a penalty die is spelled with: a
+			// nudged Bane die used to read `2d4`, and unfolding that made it a bonus
+			next = { ...pill, count, text: dicePillToken({ ...pill, count }) };
 		} else if (pill?.kind === PILL_KIND.flat) {
 			const amount = pill.amount + delta;
 			if (amount === 0) return this.removePill(index, pillIndex);
@@ -496,6 +507,7 @@ export class DiceTray {
 	reset = (): void => {
 		this.label = '';
 		this.labelKey = '';
+		this.labelValues = undefined;
 		this.note = '';
 		this.lines = [emptyLine(ROLLER_ROLE.test)];
 		this.drafts = [''];
@@ -512,6 +524,7 @@ export class DiceTray {
 		this.reset();
 		this.label = spec.label;
 		this.labelKey = spec.labelKey ?? '';
+		this.labelValues = spec.labelValues;
 		this.note = spec.note ?? '';
 		const lines: RollerLine[] = [];
 		if (spec.test)
@@ -608,6 +621,7 @@ export class DiceTray {
 				// that as its KEY so the log is not frozen in the language it was rolled in
 				label: this.label || 'Custom roll',
 				...(this.labelKey || !this.label ? { labelKey: this.labelKey || 'roller.customRoll' } : {}),
+				...(this.labelValues ? { labelValues: this.labelValues } : {}),
 				...primary,
 				...(damage ? { damage } : {}),
 				...(note ? { note } : {}),

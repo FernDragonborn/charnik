@@ -166,6 +166,11 @@ export interface Rolled {
 	 *  already in `log.jsonl` carry and what an older build reads. Nothing new should read it:
 	 *  `parseLegacyExpr` exists for those old entries and for nothing else. */
 	expr: string;
+	/** The reroll / bounds the POOL's dice were rolled under (Reliable Talent's floor, a Halfling's
+	 *  reroll), when the roll carried any. Recorded because a roll can be re-read later: the d20 an
+	 *  amendment draws has to be floored the same way the first one was, or one tap of the control
+	 *  decides the roll with a die the rule says cannot stand. Absent when the roll had none. */
+	mods?: DieMods;
 	/** Set ONLY by the legacy reader, for a pair logged before the first-drawn die was recorded: the
 	 *  two numbers are known, the order they came in is not. Such a roll can still be read either way
 	 *  round — advantage and disadvantage are exact from the pair alone — but it can never go back to
@@ -245,23 +250,33 @@ export function parseDiceTerm(term: string): BonusDie | null {
 	};
 }
 
-/** A dice term anywhere in a formula: `2d6`, and `d8` where the count is left implicit (= 1). ONE
- *  regex because the pool parser and the modifier parser must agree on what a die IS — whatever one
- *  of them skips, the other must not read as a plain number, which is precisely how UBUG-22 lost a
- *  `+3`. Global, so only use it with `matchAll`/`replace` (both leave `lastIndex` alone). */
-const DICE_TERM = /(\d*)d(\d+)/gi;
+/** A dice term anywhere in a formula: `2d6`, `d8` where the count is left implicit (= 1), and the sign
+ *  that binds it. ONE regex because the pool parser and the modifier parser must agree on what a die
+ *  IS — whatever one of them skips, the other must not read as a plain number, which is precisely how
+ *  UBUG-22 lost a `+3`. The sign is captured because a pool keyed by sides cannot hold one, and a
+ *  reader that skipped it ADDED `2d6-1d4`. Global, so only use it with `matchAll`/`replace` (both
+ *  leave `lastIndex` alone). */
+const DICE_TERM = /([+\-−]?)\s*(\d*)d(\d+)/gi;
 
-/** Parse every dice term in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}.
+/** Every dice term of a string, split by its sign: the added ones as a pool ({sides: count}), the
+ *  SUBTRACTED ones as signed `BonusDie`s, which is the only shape that can express them. `rollPool`
+ *  takes both, so a formula carrying a penalty die rolls what it says.
  *  Counts/sides are cost-capped (see the caps above) so an untrusted formula can't blow the loop. */
-export function parseDicePool(s: string): Record<number, number> {
-	const out: Record<number, number> = {};
+export function parseSignedDice(s: string): { pool: Record<number, number>; negative: BonusDie[] } {
+	const pool: Record<number, number> = {};
+	const negative: BonusDie[] = [];
 	for (const m of s.matchAll(DICE_TERM)) {
-		const sides = Math.min(Number(m[2]), MAX_DIE_SIDES);
-		const count = Math.min(m[1] ? Number(m[1]) : 1, MAX_DICE_PER_TERM);
-		out[sides] = Math.min((out[sides] ?? 0) + count, MAX_DICE_PER_TERM);
+		const sides = Math.min(Number(m[3]), MAX_DIE_SIDES);
+		const count = Math.min(m[2] ? Number(m[2]) : 1, MAX_DICE_PER_TERM);
+		if (m[1] === '-' || m[1] === '−') negative.push({ count, sides, sign: -1 });
+		else pool[sides] = Math.min((pool[sides] ?? 0) + count, MAX_DICE_PER_TERM);
 	}
-	return out;
+	return { pool, negative };
 }
+
+/** The ADDED dice terms of a string as a pool. "2d6 + 1d4" → {6:2, 4:1}. A subtracted term is not one
+ *  of them — `parseSignedDice` is what a caller able to roll a penalty die asks instead. */
+export const parseDicePool = (s: string): Record<number, number> => parseSignedDice(s).pool;
 
 /** A signed flat term, the shape `parseFlatModifier` sums. Named because the residue walk in
  *  `parseFormula` has to remove exactly what that sum consumed, or it reports a term twice. */
@@ -280,6 +295,8 @@ const SIGNED_NUMBER = /([+\-−])\s*(\d+)/g;
  * because damage strings carry prose ("1d20 vs AC 15"). A missing number beats a wrong one.
  */
 export function parseFlatModifier(s: string): number {
+	// the dice come out WITH the sign that binds them, so a subtracted die's minus can never be read as
+	// a flat term of its own — `-1d4` is one die, not "minus nothing"
 	const rest = s.replace(DICE_TERM, ' ');
 	let mod = rest === s ? Number(/^\s*(\d+)\b/.exec(rest)?.[1] ?? 0) : 0;
 	for (const m of rest.matchAll(SIGNED_NUMBER)) mod += (m[1] === '+' ? 1 : -1) * Number(m[2]);
@@ -305,6 +322,9 @@ const PLAIN_WORD = /^\p{L}[\p{L}\p{M}'’-]*$/u;
 export interface ParsedFormula {
 	dice: Record<number, number>;
 	mod: number;
+	/** The SUBTRACTED dice terms (`2d6-1d4`), which a pool keyed by sides cannot hold. Empty for every
+	 *  shipped content string; a caller that rolls the pool hands these to `rollPool` as `bonusDice`. */
+	bonusDice: BonusDie[];
 	/** What neither half accounted for, verbatim, in reading order. Empty for every shipped content
 	 *  string. A number here is one the roll did NOT include; a `+` is an operator whose operand was
 	 *  never found. */
@@ -326,9 +346,11 @@ export function parseFormula(formula: string): ParsedFormula {
 		.replace(SIGNED_DICE_TERM, ' ')
 		.replace(SIGNED_NUMBER, ' ')
 		.replace(/^\s*\d+\b/, ' ');
+	const { pool, negative } = parseSignedDice(formula);
 	return {
-		dice: parseDicePool(formula),
+		dice: pool,
 		mod: parseFlatModifier(formula),
+		bonusDice: negative,
 		issues: residue
 			.split(/\s+/)
 			.map((fragment) => fragment.replace(FORMULA_PUNCTUATION, ''))
@@ -354,6 +376,29 @@ interface RollOptions extends DieMods {
 interface PoolResult {
 	dice: RolledDie[];
 	d20s: RolledDie[];
+}
+
+/**
+ * One die rolled under a set of `DieMods`: reroll first, then the bounds, with `detail` spelling out
+ * what happened (1↻4, 3→10). `face` is the actual result AFTER a reroll but BEFORE a bound — a
+ * nat-1/nat-20 is judged by what the die SHOWS, so Reliable Talent's "treat as 10" does not erase a
+ * natural 1, which is why `face` is taken between the two steps and never after.
+ *
+ * Shared by the pool and by the die `setAdvantage` draws later: a roll's mods belong to the roll, not
+ * to the moment it was made.
+ */
+function rollOneDie(sides: number, mods: DieMods, rng: Rng): RolledDie {
+	let v = rollDie(sides, rng);
+	let detail = `${v}`;
+	if (mods.reroll !== undefined && v <= mods.reroll) {
+		v = rollDie(sides, rng);
+		detail += `↻${v}`;
+	}
+	const face = v;
+	if (mods.minDie !== undefined && v < mods.minDie) v = mods.minDie;
+	if (mods.maxDie !== undefined && v > mods.maxDie) v = mods.maxDie;
+	if (v !== face) detail += `→${v}`;
+	return { sides, value: v, face, sign: 1, detail, role: DIE_ROLE.pool };
 }
 
 /** Roll the main pool (all NdM groups, highest die first). The FIRST d20 is the roll's DECIDING die
@@ -446,25 +491,15 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 	const mod = o.modParts ? flatTotal(o.modParts) : (o.mod ?? 0);
 	const advantage = o.advantage ?? 0;
 	const bonusDice = o.bonusDice ?? [];
-	// one pool die with reroll + bounds applied; `detail` spells out what happened (1↻4, 3→10). `face`
-	// is the actual die result AFTER a reroll but BEFORE a bound — a nat-1/nat-20 is judged by what the
-	// die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
-	const rollOne = (sides: number): RolledDie => {
-		let v = rollDie(sides, rng);
-		let detail = `${v}`;
-		if (o.reroll !== undefined && v <= o.reroll) {
-			v = rollDie(sides, rng);
-			detail += `↻${v}`;
-		}
-		const face = v;
-		// a bound moves what the die COUNTS FOR and leaves its face alone — a nat 1 floored to 10 is
-		// still a natural 1, which is why `face` is taken before this and never after
-		if (o.minDie !== undefined && v < o.minDie) v = o.minDie;
-		if (o.maxDie !== undefined && v > o.maxDie) v = o.maxDie;
-		if (v !== face) detail += `→${v}`;
-		return { sides, value: v, face, sign: 1, detail, role: DIE_ROLE.pool };
-	};
+	const rollOne = (sides: number): RolledDie => rollOneDie(sides, o, rng);
 	const pool = rollPoolDice(dice, advantage, rollOne);
+	// what the pool was rolled UNDER, kept only when there was something to keep: an amendment draws its
+	// die later and has no other way to learn the floor it has to honour
+	const mods: DieMods = {
+		...(o.reroll !== undefined ? { reroll: o.reroll } : {}),
+		...(o.minDie !== undefined ? { minDie: o.minDie } : {}),
+		...(o.maxDie !== undefined ? { maxDie: o.maxDie } : {}),
+	};
 	const rolled = pool.dice;
 	for (const b of bonusDice)
 		for (let k = 0; k < b.count; k++) {
@@ -484,6 +519,7 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 	return {
 		...roll,
 		...(o.modParts ? { modParts: o.modParts } : {}),
+		...(Object.keys(mods).length ? { mods } : {}),
 		total: totalOf(roll),
 		expr: formatExpr(roll),
 	};
@@ -610,6 +646,9 @@ export function rehydrateRoll(roll: StoredRoll): Rolled {
 		// provenance is the point of recording it — a roll whose "+2" knew it came from Bless must
 		// still know after a reload, exactly as its dice do
 		...(roll.modParts ? { modParts: roll.modParts } : {}),
+		// the floor travels with the roll: a re-read AFTER a reload draws its die the same way the
+		// original was drawn, and a row written before this existed simply has none
+		...(roll.mods ? { mods: roll.mods } : {}),
 		...(roll.drawOrderUnknown ? { drawOrderUnknown: true as const } : {}),
 	};
 	if (roll.d20s && roll.advantage)
@@ -656,7 +695,10 @@ export function setAdvantage<T extends Rolled>(
 	if (mode === roll.advantage) return roll;
 	if (mode === ADVANTAGE_MODE.neither && roll.drawOrderUnknown) return null;
 	const needsPair = mode !== ADVANTAGE_MODE.neither && roll.d20s.length < 2;
-	const d20s = needsPair ? [...roll.d20s, plainD20(rollDie(20, rng))] : roll.d20s;
+	// floored and rerolled exactly as the roll's own d20 was: RAW treats the second die the same way,
+	// and at DISADVANTAGE the unfloored one would WIN — a Reliable Talent rogue's 6 deciding a roll
+	// whose floor is 10, or a rerolled natural 1 standing as the roll's natural
+	const d20s = needsPair ? [...roll.d20s, rollOneDie(20, roll.mods ?? {}, rng)] : roll.d20s;
 	const next = { ...roll, d20s, advantage: mode };
 	return {
 		...next,
@@ -692,6 +734,6 @@ export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): 
  *  Sugar over `parseFormula`, and it DROPS that parse's issues: a site that has somewhere to surface
  *  them calls `parseFormula` itself and rolls the pool it answers with. */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {
-	const { dice, mod } = parseFormula(formula);
-	return rollPool(dice, { mod, rng });
+	const { dice, mod, bonusDice } = parseFormula(formula);
+	return rollPool(dice, { mod, rng, ...(bonusDice.length ? { bonusDice } : {}) });
 }

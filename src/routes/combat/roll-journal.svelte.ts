@@ -25,6 +25,7 @@ import { DiceTray } from '$lib/dice/dice-tray.svelte';
 import type { SaidText, SaidValue } from '$lib/util/say';
 import {
 	amendedAdvantage,
+	nameFields,
 	withoutLegacyAmendment,
 	type AutoOutcome,
 	type RollLogEntry,
@@ -157,6 +158,7 @@ export class RollJournal {
 		this.diceTray.prefill({
 			label: spec.label,
 			...(spec.labelKey ? { labelKey: spec.labelKey } : {}),
+			...(spec.labelValues ? { labelValues: spec.labelValues } : {}),
 			...(spec.test
 				? {
 						test: {
@@ -190,6 +192,28 @@ export class RollJournal {
 		);
 	};
 
+	/**
+	 * A completed roll as the entry that records it, WITHOUT recording it — what an action resolving
+	 * SEVERAL rolls collects so `recordRolls` can stamp one group and a distinct `at` on each.
+	 *
+	 * `at` defaults to now and is passed in by a batch, because two rolls made in the same millisecond
+	 * would otherwise share the identity an amendment matches on and rewrite each other.
+	 */
+	entryFor = (
+		name: RollName,
+		r: Rolled,
+		// spread rather than passed straight through: `damage: undefined` is not the same as "no damage"
+		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
+		opts: { at?: number; damage?: TypedRoll[]; noteParts?: SaidText[] } = {},
+	): RollLogEntry =>
+		entryOf({
+			...nameFields(name),
+			r,
+			at: opts.at ?? Date.now(),
+			...(opts.damage ? { damage: opts.damage } : {}),
+			...(opts.noteParts ? { noteParts: opts.noteParts } : {}),
+		});
+
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
 	pushRoll = (
@@ -198,15 +222,7 @@ export class RollJournal {
 		damage?: TypedRoll[],
 		noteParts?: SaidText[],
 	): RollLogEntry => {
-		const { text: label, key: labelKey, values: labelValues } = name;
-		// spread rather than passed straight through: `damage: undefined` is not the same as "no damage"
-		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
-		const entry = entryOf({
-			label,
-			r,
-			at: Date.now(),
-			...(labelKey ? { labelKey } : {}),
-			...(labelValues ? { labelValues } : {}),
+		const entry = this.entryFor(name, r, {
 			...(damage ? { damage } : {}),
 			...(noteParts ? { noteParts } : {}),
 		});
@@ -229,17 +245,12 @@ export class RollJournal {
 		roll: () => { r: Rolled; damage?: TypedRoll[] },
 		noteParts?: SaidText[],
 	): void => {
-		const { text: label, key: labelKey, values: labelValues } = name;
 		const at = Date.now();
 		this.recordRolls(
 			// `at + i` so an amendment rewrites ITS beam, not a sibling that shared the millisecond
 			Array.from({ length: Math.max(1, times) }, (_, i) => {
 				const { r, damage } = roll();
-				return entryOf({
-					label,
-					...(labelKey ? { labelKey } : {}),
-					...(labelValues ? { labelValues } : {}),
-					r,
+				return this.entryFor(name, r, {
 					at: at + i,
 					...(damage ? { damage } : {}),
 					...(noteParts ? { noteParts } : {}),
@@ -317,22 +328,20 @@ export class RollJournal {
 	 * marker a forced save leaves: the condition decided it, so there is no die to show.
 	 */
 	logMarker = (name: RollName, outcome?: AutoOutcome) => {
-		const { text: label, key: labelKey, values: labelValues } = name;
-		this.log = [
-			{
-				label,
-				...(labelKey ? { labelKey } : {}),
-				...(labelValues ? { labelValues } : {}),
-				...(outcome ? { outcome } : {}),
-				expr: '',
-				dice: [],
-				d20s: [],
-				advantage: ADVANTAGE_MODE.neither,
-				mod: 0,
-				total: NaN,
-				at: Date.now(),
-			},
-			...this.log,
-		].slice(0, ROLL_LOG_MAX);
+		const entry: RollLogEntry = {
+			...nameFields(name),
+			...(outcome ? { outcome } : {}),
+			expr: '',
+			dice: [],
+			d20s: [],
+			advantage: ADVANTAGE_MODE.neither,
+			mod: 0,
+			total: NaN,
+			at: Date.now(),
+		};
+		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
+		// persisted like any other line: a paralysed character's auto-failed save is part of the record,
+		// and a marker that lived only until the reload was the log quietly editing itself
+		this.persist?.(entry);
 	};
 }

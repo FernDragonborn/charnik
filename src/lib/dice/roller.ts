@@ -103,6 +103,10 @@ interface NotePill extends PillCommon {
 
 interface RawPill extends PillCommon {
 	kind: typeof PILL_KIND.raw;
+	/** The fragment is a name the vocabulary knows TWICE — two packs shipping a Bless. It stays raw
+	 *  (and so stops the roll) even on a damage line, where a plain word would become a damage type:
+	 *  "bless" silently becoming a damage type named bless is how the `+1d4` went missing. */
+	ambiguous?: true;
 }
 
 export type RollerPill = DicePill | FlatPill | DamageTypePill | CountPill | NotePill | RawPill;
@@ -263,7 +267,7 @@ export function pillsFromPool(
 		.sort((a, b) => Number(b[0]) - Number(a[0]))
 		.map(([sides, count]) => ({
 			kind: PILL_KIND.dice,
-			text: `${count}d${sides}`,
+			text: dicePillToken({ count, sides: Number(sides), sign: 1 }),
 			count,
 			sides: Number(sides),
 			sign: 1,
@@ -275,7 +279,12 @@ export function pillsFromPool(
 	for (const b of opts.bonusDice ?? [])
 		pills.push({
 			kind: PILL_KIND.dice,
-			text: `${b.sign < 0 ? '-' : '+'}${b.count}d${b.sides}`,
+			text: dicePillToken({
+				count: b.count,
+				sides: b.sides,
+				sign: b.sign < 0 ? -1 : 1,
+				source: '',
+			}),
 			count: b.count,
 			sides: b.sides,
 			sign: b.sign < 0 ? -1 : 1,
@@ -285,6 +294,22 @@ export function pillsFromPool(
 	if (opts.type) pills.push({ kind: PILL_KIND.damageType, text: opts.type, type: opts.type });
 	return pills;
 }
+
+/**
+ * The TOKEN a dice pill is spelled as — its `text`, which is what unfolding the pill puts back in the
+ * draft. A signed (effect) die writes its sign, a pool die does not, exactly as the roll's own `expr`
+ * does, so a pill and the record of it read alike.
+ *
+ * ONE builder because a pill's number and its token are the same fact twice: nudging a count used to
+ * rewrite the text as bare `2d4`, and unfolding that turned a Bane die into a BONUS — an 8-point swing
+ * on a d20 test with nothing on screen to say so.
+ *
+ * A bound (`>10`) is deliberately NOT spelled here: it arrives as its own token and lands on the die,
+ * and a text carrying both would come back from an unfold as one unparsable fragment.
+ */
+export const dicePillToken = (
+	p: Pick<DicePill, 'count' | 'sides' | 'sign'> & Pick<Partial<DicePill>, 'source'>,
+): string => `${p.sign < 0 ? '-' : p.source !== undefined ? '+' : ''}${p.count}d${p.sides}`;
 
 /** The pills that carry a NUMBER. The two folds below both walk these and skip the rest. */
 const isValue = (p: RollerPill): p is DicePill | FlatPill =>
@@ -339,7 +364,7 @@ const isWord = (text: string): boolean => /^\p{L}[\p{L}\p{M}\s'’-]*$/u.test(te
  * quietly smaller; a word never can.
  */
 function wordPill(pill: RollerPill, role: RollerRole): RollerPill {
-	if (pill.kind !== PILL_KIND.raw || !isWord(pill.text)) return pill;
+	if (pill.kind !== PILL_KIND.raw || pill.ambiguous || !isWord(pill.text)) return pill;
 	return role === ROLLER_ROLE.damage
 		? { kind: PILL_KIND.damageType, text: pill.text, type: pill.text.trim().toLowerCase() }
 		: { kind: PILL_KIND.note, text: pill.text };
@@ -353,7 +378,17 @@ export function addToken(line: RollerLine, raw: string, resolve: RollerResolver)
 	if (compound) return compound.reduce((l, t) => addToken(l, t, resolve), line);
 	const parsed = parseRollerToken(raw, resolve);
 	if (!parsed) return line;
-	if (parsed.kind === TOKEN_KIND.advantage) return { ...line, advantage: parsed.mode };
+	// a mode is a fact about d20s: the vocabulary withholds the rows from a damage line, and typing the
+	// word in full must not get past what the menu withheld — `roll()` reads the mode off the TEST line
+	// alone, so a damage line's would be set, unrendered and ignored for ever
+	if (parsed.kind === TOKEN_KIND.advantage) {
+		if (line.role !== ROLLER_ROLE.test)
+			return normalizeLine({
+				...line,
+				pills: [...line.pills, wordPill({ kind: PILL_KIND.raw, text: raw.trim() }, line.role)],
+			});
+		return { ...line, advantage: parsed.mode };
+	}
 	if (parsed.kind === TOKEN_KIND.pill)
 		return normalizeLine({ ...line, pills: [...line.pills, wordPill(parsed.pill, line.role)] });
 
@@ -519,11 +554,12 @@ export function rollerIssues(lines: RollerLine[]): RollerIssue[] {
 	const issues: RollerIssue[] = [];
 	for (const line of lines) {
 		for (const p of line.pills)
-			// true whether the fragment is nonsense or merely ambiguous — the vocabulary leaves a name
-			// shared by two candidates unresolved rather than picking one, and both land here
+			// nonsense and a name two candidates SHARE both land here — the vocabulary leaves an ambiguous
+			// one unresolved rather than picking a side — and each says which it is: "I can't account for
+			// Bless" would be a lie when the trouble is that two packs ship one
 			if (p.kind === PILL_KIND.raw)
 				issues.push({
-					key: 'roller.issue.unaccounted',
+					key: p.ambiguous ? 'roller.issue.ambiguous' : 'roller.issue.unaccounted',
 					values: { text: p.text },
 					blocking: true,
 				});

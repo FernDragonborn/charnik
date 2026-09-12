@@ -31,6 +31,12 @@ positive bonus die's sign, so after one pass a pool die and an effect die become
 `+`, a pool die does not), and it is where "these are the doubled dice" lives without a field beside
 the die.
 
+**A roll remembers what it was rolled UNDER.** `Rolled.mods` is the `DieMods` the pool's own dice
+were taken with (Reliable Talent's floor, a Halfling's reroll), recorded because a roll can be re-read
+later: `setAdvantage` draws its second d20 under the same floor, since RAW would floor that die too
+and at DISADVANTAGE the unfloored one would win. It travels through `rehydrateRoll`, so a re-read
+after a reload honours it as well. Absent when the roll carried none.
+
 **A flat modifier answers the same way.** `Rolled.mod` is a sum, and `modParts: FlatPart[]` is what
 the sum was made of — so "+2 from Bless" and "+2 someone typed" stay two facts. It is recorded only
 when at least one part knows its source: an anonymous `+3` is fully described by the total already
@@ -105,6 +111,14 @@ their order or count. A lone roll carries none: one line already says it, and th
 `actionRuns` reads the log back as the actions it recorded; the log draws a run as one bracketed
 `×N` block, one row per throw, so every throw keeps the live controls that belong to it.
 
+**Every multi-roll action goes through `recordRolls`, and that is where the identity comes from.** A
+roll's `at` is what an amendment matches on, in memory and in `log.jsonl` alike, so rolls made in one
+synchronous loop are stamped `at + i` — two strikes sharing a millisecond shared an identity, and
+re-reading one rewrote both while only one line on disk changed. `RollJournal.entryFor` builds an
+entry without recording it, which is what lets a caller collect N of them and hand them over once:
+one group, one toast, N lines in throw order. `pushRoll` is that plus the log, the file and the toast,
+and belongs to a genuinely lone roll.
+
 **Two levels, not a tree.** Action → instances → parts. The pull toward arbitrary depth is refused:
 nobody has asked for a third level. A volley rolls the same set N times — that is what a volley IS —
 so a per-instance target and a per-instance advantage do not exist.
@@ -120,6 +134,11 @@ so a per-instance target and a per-instance advantage do not exist.
 - **A line is a list of PILLS, not a formula string** — the same decision `Rolled.dice` makes one floor
   down. A pill holds what a string cannot: which effect gave the die, that a bound applies to it, that
   a damage type was inherited rather than typed.
+- **A pill's `text` is the token it is spelled as, built in one place.** `dicePillToken` writes the
+  sign a sourced die carries and nothing a token cannot hold — a bound arrives as its own token and
+  lands on the die, so spelling it into the text would come back from an unfold as one unparsable
+  fragment. The number and the token are the same fact twice: nudging a count used to rewrite the text
+  without the sign, and unfolding that turned a Bane die into a bonus.
 - **The fold keeps what a pill knows.** `foldValues` hands `rollPool` dice that carry their own
   `source` and a modifier told as its parts, so a Bless d4 and a typed d4 stay different on the card,
   in the toast and on disk. A die's and a modifier's hover names the effect; a `note` pill has no
@@ -133,7 +152,13 @@ so a per-instance target and a per-instance advantage do not exist.
 - **Only a fragment that looks like arithmetic and did not parse blocks the roll** (`+d4?`). A bare
   WORD never blocks: on a damage line it is a damage type (homebrew invents them freely), anywhere
   else it is a label the player wrote beside a die. A missing damage type underlines and rolls — the
-  number is not in doubt.
+  number is not in doubt. The one word that DOES block is a name the vocabulary knows twice (two packs
+  shipping a Bless): the resolver refuses to pick a side and answers with an `ambiguous` raw pill, so
+  it stays raw even on a damage line — becoming a damage type there would have dropped the `+1d4` it
+  was typed for.
+- **A mode is a fact about d20s, so only a test line takes one.** The vocabulary withholds the mode
+  rows from a damage line and `addToken` withholds the WORD, because `roll()` reads the mode off the
+  test line alone: one set on a damage line would be invisible and ignored for ever.
 - **Whitespace parses a token, but a token typed WITHOUT it still splits.** `2d6+3` is what a person
   types and what a pasted statblock carries, so a compound token becomes its signed terms — but only
   when EVERY term means something arithmetic on its own. `+d4?` therefore still arrives whole and
@@ -202,18 +227,18 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   slot picks a different key rather than being appended to the phrase it produced. A forced outcome is
   the same shape one field over: `outcome` is a FACT on the entry and `RollRow` says "{label} —
   auto-fail" around it, because a marker holds one key and the sentence could not have been one.
+  The VALUES travel wherever the key does, the dice tray included: a tray that forwarded the key alone
+  left the recorded row asking the catalog for a numbering frame with no numbers in it.
   A VALUE may itself be a catalog word (`{catalog, id}`), which is what lets a numbered strike keep
   its name a key — "Unarmed Strike 2/3" is the app's word in a numbering frame, and the one attack
   that is not a content row would otherwise be frozen into whatever language rolled it. Saying a
   recorded name is `sayRollName`, in one place, because the log row, the toast card and the
   forced-outcome notice all ask the same question.
 
-- **A d20 can be thrown again, and the new one stands.** `rerollKeptD20` replaces the deciding die
-  and the pair a re-read advantage may have drawn goes with it: "use the new roll" and "keep the
-  better of two" are different rules, and leaving the twin standing would let Heroic Inspiration buy
-  nothing while the line said it was spent. It is offered per EDITION, because the editions differ in
-  when the choice is made: 2024 rerolls after the roll, 2014 spends before it and so re-reads the roll
-  at advantage — the same amendment the d20 pill makes, with the flag spent.
+- **Throwing the deciding d20 again is a LEGACY kind, not a control.** `AMENDMENT_KIND.d20Reroll`
+  stays in the vocabulary because a `log.jsonl` line written before the Heroic Inspiration control was
+  removed carries it and a log must stay readable; nothing produces one any more. Re-reading a roll at
+  a different advantage is the one amendment a d20 offers today.
 
 - **A roll's own provenance is FACTS, never a sentence — and so is an amendment.** `noteParts:
   SaidText[]` says what an upcast added and out of which slot, or which formula fragment rolled
@@ -238,6 +263,11 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
   and must roll 2d6+5, never 2d6+17. Prose numbers ("1d20 vs AC 15") are ignored for the same reason:
   a missing number beats a wrong one. One `DICE_TERM` regex is shared by both parsers, because what
   one skips the other must not read as a number.
+- **A dice term carries its SIGN, and a pool cannot hold one.** `parseSignedDice` splits a formula's
+  terms: the added ones into the `{sides: count}` pool, the subtracted ones into signed `BonusDie`s,
+  which `rollFormula` rolls as such — `2d6-1d4` used to come out as `2d6+1d4` on this path while the
+  tray's own parser read the same string correctly. A caller holding only a pool (a damage PART) cannot
+  express a penalty die, so it surfaces the term as unread rather than rolling it with the wrong sign.
 - **An attack deals damage on dice OR on a flat value.** Unarmed Strike is `1 + STR` and rolled
   nothing while the gate asked for dice.
 - **The formula string is a plugin-facing trust boundary.** `plugins.md` makes randomness the host's:

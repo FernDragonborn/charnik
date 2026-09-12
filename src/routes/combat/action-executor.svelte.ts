@@ -272,12 +272,15 @@ export class ActionExecutor {
 			return;
 		}
 		// numbered, because two identical entries in the log are indistinguishable otherwise — and
-		// which of the two Flurry strikes hit is exactly what the player is reading the log for
-		for (let i = 0; i < count; i++)
-			this.host().rolls.rollAttackNow(
-				at,
+		// which of the two Flurry strikes hit is exactly what the player is reading the log for.
+		// Handed over as ONE action: the strikes then share a group and a toast, and each keeps an
+		// identity of its own for an amendment to match on.
+		this.host().rolls.rollAttacks(
+			at,
+			Array.from({ length: count }, (_, i) =>
 				count > 1 ? numberedAttackRollName(at, t, i + 1, count) : attackRollName(at, t),
-			);
+			),
+		);
 	}
 
 	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add

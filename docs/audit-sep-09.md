@@ -276,7 +276,7 @@ already computed at `feat-slots.svelte.ts:155`.
 `src/routes/combat/roll-journal.svelte.ts`, `src/lib/combat/roll.ts`. The largest new surface in the
 release, and the one with the most findings.
 
-### 9 · [ ] HIGH · a subtracted dice term is silently ADDED, and `issues` reports nothing
+### 9 · [x] HIGH · a subtracted dice term is silently ADDED, and `issues` reports nothing
 
 `rules/dice.ts:252` (`DICE_TERM`), `:256` (`parseDicePool`), `:324` (`parseFormula`).
 
@@ -304,7 +304,12 @@ plugin-reachable rather than wrong today.
 dice and negative `BonusDie`s; or, smaller, have `parseFormula` report a leading minus before a dice
 term as an issue so it surfaces instead of rolling wrong.
 
-### 10 · [ ] HIGH · two rolls in the same millisecond share one identity; an amendment rewrites both
+**Closed** with the split (`parseSignedDice`), so the formula path — the plugin and content trust
+boundary — rolls what it says. A caller holding only a POOL takes the second door: `parseDamageParts`
+cannot express a penalty die in `{sides: count}`, so it carries the term in the part's `issues` rather
+than rolling it with the wrong sign.
+
+### 10 · [x] HIGH · two rolls in the same millisecond share one identity; an amendment rewrites both
 
 `roll-journal.svelte.ts:206` (`pushRoll` stamps `at: Date.now()`), `:274` (`reviseEntry` matches on
 `at`), `character/repository.ts:469` (`rewriteLogLine` uses `findIndex`).
@@ -335,7 +340,7 @@ Flurry of Blows)".
 That buys the unique `at`, the `group` and the single toast card in one change, and leaves `pushRoll`
 for genuine lone rolls.
 
-### 11 · [ ] MEDIUM · a retroactive re-read loses the roll's `min_die` / `reroll` floor
+### 11 · [x] MEDIUM · a retroactive re-read loses the roll's `min_die` / `reroll` floor
 
 `rules/dice.ts:659` — `setAdvantage` draws `plainD20(rollDie(20, rng))`, raw. The docstring (`:641`)
 argues this is safe: "RAW would floor the new die the same way — so the higher contribution is the
@@ -359,7 +364,7 @@ natural 1 the rule says cannot stand.
 `setAdvantage` apply them to the die it draws instead of `plainD20`. About six lines, and it makes
 the drawn die's `detail` tell the same story as the original's.
 
-### 12 · [ ] MEDIUM · the dice tray cannot carry `labelValues`, so a tray roll's name loses its ICU values
+### 12 · [x] MEDIUM · the dice tray cannot carry `labelValues`, so a tray roll's name loses its ICU values
 
 `roll-journal.svelte.ts:155` (`prefill` forwards `labelKey`, never `labelValues`),
 `dice-tray.svelte.ts:102` (no `labelValues` field), `:609` (`roll()` emits `labelKey` only).
@@ -384,7 +389,7 @@ key on the tray path while the instant path (`:331`) passes the full `RollName`;
 **Fix:** add `labelValues` to `RollerPrefill` and `DiceTray` and forward it in `prefill` and `roll()`,
 then pass `nameFields(name)` at the two `spell-casting` tray sites instead of a translated string.
 
-### 13 · [ ] MEDIUM-LOW · `bumpPill` leaves a stale `text`, and unfolding it flips a penalty die's sign
+### 13 · [x] MEDIUM-LOW · `bumpPill` leaves a stale `text`, and unfolding it flips a penalty die's sign
 
 `dice-tray.svelte.ts:448` rewrites the token as count-plus-sides only. `PillCommon.text`
 (`roller.ts:54`) is documented as "kept verbatim so Backspace and double-click can unfold the pill
@@ -409,7 +414,13 @@ token.
 **Fix:** rebuild the token the way it is spelled, sign and source and bound included, or keep a
 `text` builder beside `diceText` so the pill and its token cannot drift.
 
-### 14 · [ ] LOW-MEDIUM · a forced-outcome marker is never persisted
+**Closed** with the builder (`dicePillToken`), which writes the sign — so the penalty die survives a
+nudge and an unfold. The BOUND is deliberately not spelled into it: a bound arrives as its own token
+(`>10`) and lands on the die, a pill is exactly one token, and a text holding both would come back
+from an unfold as one unparsable fragment that blocks the roll. Unfolding a floored die therefore
+still drops its floor, which is the token model's limit rather than this defect.
+
+### 14 · [x] LOW-MEDIUM · a forced-outcome marker is never persisted
 
 `roll-journal.svelte.ts:319` — `logMarker` never calls `this.persist`. `StoredRollLogEntry.outcome`,
 `rehydrateLogEntry` (`roll.ts:209`) and `logLineFor`'s `Number.isFinite(roll.total)` guard
@@ -423,7 +434,7 @@ marker.
 **Fix:** one `this.persist?.(entry)` in `logMarker`. `logLineFor` already omits `result` for a `NaN`
 total.
 
-### 15 · [ ] LOW · a doc that lies: `rerollKeptD20` no longer exists
+### 15 · [x] LOW · a doc that lies: `rerollKeptD20` no longer exists
 
 `docs/internals/roller.md:211` is a normative "Conventions" bullet describing `rerollKeptD20` and
 per-edition Heroic Inspiration. Commit `9984cb2` deleted the function from `rules/dice.ts` and the
@@ -433,7 +444,7 @@ proves them wrong."
 **Fix:** replace the bullet with what `AMENDMENT_KIND.d20Reroll` now is — a legacy kind kept so old
 logs stay readable, which `roll.ts:249` already says.
 
-### 16 · [ ] LOW · `adv` typed on a damage line is accepted, invisible and ignored
+### 16 · [x] LOW · `adv` typed on a damage line is accepted, invisible and ignored
 
 `dice/roller.ts:202` checks `ADVANTAGE_WORDS` before the resolver. `vocabularyFor`
 (`dice-tray.svelte.ts:136`) withholds mode rows from a damage line, and the doc claims "because the
@@ -447,7 +458,7 @@ does nothing, for ever.
 **Fix:** gate the `ADVANTAGE_WORDS` branch on `line.role === ROLLER_ROLE.test`, which `addToken`
 already has, so the word falls through to `wordPill` and becomes a label.
 
-### 17 · [ ] LOW · an ambiguous effect name silently becomes a damage TYPE on a damage line
+### 17 · [x] LOW · an ambiguous effect name silently becomes a damage TYPE on a damage line
 
 `dice/roller.ts:341` (`wordPill`) versus the comment at `:522`. `candidateResolver` returns null for
 a name two candidates share, which the comment says lands as a blocking `raw` pill — "true whether

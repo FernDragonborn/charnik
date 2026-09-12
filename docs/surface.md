@@ -1180,6 +1180,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type ParsedRollerToken`
 - `function parseRollerToken` — * One token → what it means.
 - `function pillsFromPool` — * A dice pool + modifier (+ its damage type, its roll-manipulation facts, its effect dice) → the * pills that describ…
+- `const dicePillToken` — * The TOKEN a dice pill is spelled as — its `text`, which is what unfolding the pill puts back in the * draft.
 - `function normalizeLine` — * Re-derive the line's implicit parts after an edit.
 - `const countPill` — The volley pill for a roll the app already knows fires N times (Eldritch Blast's beams) — the * same pill typing `×3`…
 - `const isInherited` — A pill `normalizeLine` DERIVED rather than one that was typed.
@@ -1441,7 +1442,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't * one.
-- `function parseDicePool` — Parse every dice term in a string into a pool ({sides: count}).
+- `function parseSignedDice` — Every dice term of a string, split by its sign: the added ones as a pool ({sides: count}), the * SUBTRACTED ones as s…
+- `const parseDicePool` — The ADDED dice terms of a string as a pool.
 - `function parseFlatModifier` — * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die, * summed.
 - `interface ParsedFormula` — A formula, fully accounted for: the pool, the flat modifier, and every fragment that is NEITHER.
 - `function parseFormula` — * Parse a formula into what it rolls plus what it could not account for.
@@ -1668,4 +1670,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 998 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1000 exports across 134 modules · 65 duplicate suspects._

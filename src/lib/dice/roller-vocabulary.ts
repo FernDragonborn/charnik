@@ -213,6 +213,14 @@ export function candidateResolver(candidates: RollerCandidate[]): RollerResolver
 	return (word) => {
 		const q = word.trim().toLowerCase();
 		const hits = candidates.filter((c) => c.aliases.includes(q));
-		return hits.length === 1 ? (hits[0]?.insert ?? null) : null;
+		if (hits.length === 1) return hits[0]?.insert ?? null;
+		// a name two candidates share is not a word the line may absorb: picking one of them would roll a
+		// number the player did not ask for, so it lands as a BLOCKING pill that says which word it was
+		if (hits.length > 1)
+			return {
+				kind: TOKEN_KIND.pill,
+				pill: { kind: PILL_KIND.raw, text: word.trim(), ambiguous: true },
+			};
+		return null;
 	};
 }

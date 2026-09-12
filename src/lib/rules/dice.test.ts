@@ -21,6 +21,7 @@ import {
 	type Rng,
 	type Rolled,
 } from './dice';
+import { parseSignedDice } from './dice';
 import { rngSequence } from '../../test-support/rng';
 
 describe('parseDiceTerm', () => {
@@ -44,6 +45,15 @@ describe('parseDicePool', () => {
 	it('reads an implicit count of one ("d8" is a die, not nothing)', () => {
 		expect(parseDicePool('d8')).toEqual({ 8: 1 });
 		expect(parseDicePool('d6 + 2d6')).toEqual({ 6: 3 });
+	});
+	it('leaves a SUBTRACTED term out — a pool keyed by sides cannot hold its sign', () => {
+		expect(parseDicePool('2d6-1d4')).toEqual({ 6: 2 });
+		expect(parseSignedDice('2d6-1d4')).toEqual({
+			pool: { 6: 2 },
+			negative: [{ count: 1, sides: 4, sign: -1 }],
+		});
+		// the unicode minus `signed()` writes counts the same, and a `+` term is an ordinary pool die
+		expect(parseSignedDice('1d8 − 1d4 + 1d6').negative).toEqual([{ count: 1, sides: 4, sign: -1 }]);
 	});
 });
 
@@ -253,6 +263,19 @@ describe('rollFormula', () => {
 		expect(rollFormula('1d6-2+1d4', rngSequence(0.99, 0.99)).total).toBe(8);
 	});
 
+	it('SUBTRACTS a subtracted dice term instead of adding it', () => {
+		// the tray's own parser always read `-1d4` as a penalty die; the formula path added it, so the
+		// same string came to two different numbers — and `issues` reported nothing either way
+		expect(rollFormula('2d6-1d4', rngSequence(0.99, 0.99, 0.99)).total).toBe(8); // 12 − 4
+		const parsed = parseFormula('2d6-1d4');
+		expect(parsed).toEqual({
+			dice: { 6: 2 },
+			mod: 0,
+			bonusDice: [{ count: 1, sides: 4, sign: -1 }],
+			issues: [],
+		});
+	});
+
 	it('never reads a die COUNT as a modifier', () => {
 		const r = rollFormula('2d6+10d4', rngSequence(...Array(12).fill(0.99)));
 		expect(r.total).toBe(2 * 6 + 10 * 4); // the +10 belongs to d4, not to the total
@@ -425,6 +448,27 @@ describe('setAdvantage', () => {
 
 	it('refuses a roll with no d20 in it (damage)', () => {
 		expect(adv(rolled('d8(5) + d6(2) +3', 10))).toBeNull();
+	});
+
+	it("draws the second die under the ROLL's own floor, which decides it at disadvantage", () => {
+		// Reliable Talent: a natural 3 floored to 10. RAW floors the amendment die too — and at
+		// disadvantage an unfloored one WINS, so skipping the floor loses the rule by one tap
+		const rogue = rollPool({ 20: 1 }, { rng: rngSequence(0.1), minDie: 10, mod: 11 });
+		expect(rogue.mods).toEqual({ minDie: 10 });
+		const pair = setAdvantage(rogue, ADVANTAGE_MODE.advantage, rngSequence(0.25)); // → 6 → 10
+		expect(pair?.d20s.map((d) => d.value)).toEqual([10, 10]);
+		const down = setAdvantage(pair!, ADVANTAGE_MODE.disadvantage);
+		expect(keptD20(down!)?.value).toBe(10);
+		expect(down?.total).toBe(21);
+	});
+
+	it('carries the floor across a reload, so a re-read after one honours it too', () => {
+		const rogue = rollPool({ 20: 1 }, { rng: rngSequence(0.1), reroll: 1, minDie: 10 });
+		expect(rehydrateRoll(rogue).mods).toEqual({ reroll: 1, minDie: 10 });
+	});
+
+	it('records no mods for a roll that carried none', () => {
+		expect(rollPool({ 20: 1 }, rngSequence(0.5)).mods).toBeUndefined();
 	});
 
 	it('is a no-op for the mode the roll already has', () => {

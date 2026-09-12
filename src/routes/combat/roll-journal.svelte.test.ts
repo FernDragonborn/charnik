@@ -106,6 +106,25 @@ describe('the generic dice-tray seam', () => {
 	});
 });
 
+describe('logMarker', () => {
+	it('persists a forced outcome, so the record survives the reload', () => {
+		const persisted: { label: string; outcome?: string; total: number }[] = [];
+		const marking = new RollJournal((e) => persisted.push(e));
+		marking.logMarker(
+			{ text: 'DEX save', key: 'combat.log.save', values: { name: 'DEX' } },
+			'fail',
+		);
+
+		expect(marking.log).toHaveLength(1);
+		expect(marking.log[0]).toMatchObject({ outcome: 'fail', labelKey: 'combat.log.save' });
+		// a paralysed character's auto-failed save is part of the record — it used to live only until
+		// the page reloaded, while the log claimed to be the history of the session
+		expect(persisted).toHaveLength(1);
+		expect(persisted[0]?.outcome).toBe('fail');
+		expect(Number.isNaN(persisted[0]?.total)).toBe(true); // no die decided it
+	});
+});
+
 describe('recordRolls', () => {
 	it('logs a volley line by line and toasts it as ONE card — it was one action', () => {
 		const at = Date.now();

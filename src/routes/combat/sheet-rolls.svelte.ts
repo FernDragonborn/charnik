@@ -204,21 +204,41 @@ export class SheetRolls {
 	/**
 	 * Roll one attack instantly, charging NOTHING: no turn slot, no tray. What an action that makes
 	 * attacks calls (UBUG-11) — a Flurry of Blows already paid one bonus action for the pair, so each
-	 * strike inside it must not try to pay again. `label` distinguishes the strikes in the log.
+	 * strike inside it must not try to pay again. `name` distinguishes the strikes in the log.
 	 */
 	rollAttackNow = (at: Attack, name: RollName = attackRollName(at, t)) => {
+		this.rollAttacks(at, [name]);
+	};
+
+	/**
+	 * Roll N strikes of ONE attack as one action (a Flurry of Blows' pair, Extra Attack): each strike is
+	 * its own throw and its own log line, recorded TOGETHER so they share a `group`, get distinct `at`
+	 * stamps and toast as a single card — which is what `actionRuns` reads the run back from.
+	 *
+	 * The stamps are the load-bearing half: `at` is the identity an amendment matches on, and two
+	 * strikes made in the same millisecond shared it, so re-reading one rewrote both and only one line
+	 * on disk.
+	 */
+	rollAttacks = (at: Attack, names: RollName[]) => {
 		const { parts, fx, hasDmg } = this.attackSpec(at);
-		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
-		const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) });
-		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
+		const stamp = Date.now();
+		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry each
+		const entries = names.map((name, i) =>
+			this.host().journal.entryFor(
+				name,
+				rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) }),
+				{ at: stamp + i, ...(hasDmg ? { damage: rollDamageParts(parts) } : {}) },
+			),
+		);
+		this.host().journal.recordRolls(entries);
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
-		// (The Shift-click tray path arms the same offer, from `recordTrayRolls`.)
-		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.host().journal.pushRoll(name, toHit, dmgRolls);
-		if (savage && entry.at !== undefined)
-			this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };
+		// A multi-strike action arms on its FIRST strike, like a volley through the tray does.
+		const first = entries[0];
+		const savage = this.savageOffer(parts[0], first?.damage);
+		if (savage && first?.at !== undefined)
+			this.savagePending = { spec: savage.spec, roll: savage.roll, at: first.at };
 	};
 
 	/**

@@ -156,12 +156,15 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 		.map((s) => s.trim())
 		.filter(Boolean)
 		.map((seg) => {
-			const { dice, mod, issues } = parseFormula(seg);
+			const { dice, mod, bonusDice, issues } = parseFormula(seg);
+			// a part carries a POOL, which has no sign to hold a subtracted term with — so a `-1d4` is
+			// surfaced as what the segment could not express rather than rolled as `+1d4`
+			const unread = [...issues, ...bonusDice.map((d) => `-${d.count}d${d.sides}`)];
 			return {
 				pool: dice,
 				mod,
 				type: segmentType(seg),
-				...(issues.length ? { issues } : {}),
+				...(unread.length ? { issues: unread } : {}),
 			};
 		});
 }

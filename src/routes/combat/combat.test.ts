@@ -2003,9 +2003,16 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		expect(combat.journal.log.length - before).toBe(2); // two strikes, two log entries
 		expect(character.play.turn.bonus).toBe(1); // ONE bonus action, not one per strike
 		expect(combat.resources.resourceSpent('focus')).toBe(1);
-		// numbered, so the log says WHICH strike each line was
-		expect(combat.journal.log[0]?.label).toMatch(/2\/2$/);
-		expect(combat.journal.log[1]?.label).toMatch(/1\/2$/);
+		// numbered, so the log says WHICH strike each line was — in throw order, like a volley's beams,
+		// because the two were recorded as ONE action
+		expect(combat.journal.log[0]?.label).toMatch(/1\/2$/);
+		expect(combat.journal.log[1]?.label).toMatch(/2\/2$/);
+		// one action, so one group — and each strike keeps an identity of its own, which is what an
+		// amendment matches on: sharing a millisecond made re-reading one rewrite both
+		const [a, b] = combat.journal.log;
+		expect(a?.group).toBeTruthy();
+		expect(b?.group).toBe(a?.group);
+		expect(a?.at).not.toBe(b?.at);
 	});
 
 	it('a weapon the character has not got is surfaced, not silently skipped', async () => {

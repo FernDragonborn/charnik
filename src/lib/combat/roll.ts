@@ -312,10 +312,14 @@ export const withoutLegacyAmendment = (note: string | undefined): string =>
  * making the total quietly smaller (docs/internals/roller.md ▸ Conventions).
  */
 export function rollFormulaEntry(label: string, formula: string, rng?: Rng): RollLogEntry {
-	const { dice, mod, issues } = parseFormula(formula);
+	const { dice, mod, bonusDice, issues } = parseFormula(formula);
 	return {
 		label,
-		...rollPool(dice, { mod, ...(rng ? { rng } : {}) }),
+		...rollPool(dice, {
+			mod,
+			...(bonusDice.length ? { bonusDice } : {}),
+			...(rng ? { rng } : {}),
+		}),
 		...(issues.length
 			? { noteParts: [{ key: NOTE_KEY.formulaUnread, values: { fragments: { list: issues } } }] }
 			: {}),
