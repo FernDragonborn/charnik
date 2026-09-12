@@ -121,9 +121,11 @@ export interface UpcastResult {
 
 const isError = (t: ParsedUpcastToken | UpcastParseError): t is UpcastParseError => 'error' in t;
 
-/** Normalize an ExprValue into pool + flat (a number → an empty pool + that flat). */
+/** Normalize an ExprValue into pool + flat (a number → an empty pool + that flat). Both branches
+ *  floor: the field is declared floored (5e round-down), and a dice-carrying formula that divides
+ *  (`damage:per_slot(1d6)+slot/2`) otherwise rolled `2d6 + 1.5`. */
 function toPoolFlat(v: ExprValue): { pool: Record<number, number>; flat: number } {
-	if (v.type === 'dice') return { pool: { ...v.dice.pool }, flat: v.dice.flat };
+	if (v.type === 'dice') return { pool: { ...v.dice.pool }, flat: Math.floor(v.dice.flat) };
 	return { pool: {}, flat: Math.floor(v.value) };
 }
 
@@ -142,8 +144,15 @@ export function evalUpcast(
 		if (tok.guard) {
 			const g = evalExpression(tok.guard, ctx);
 			if (!g.ok) return { error: `upcast guard failed: ${g.error}`, raw: tok.raw };
+			// the same rule the resolver applies to a token guard: a value that is not a number is not a
+			// yes/no condition, so it is REPORTED rather than read as true (`1d4 ? …` used to apply)
+			if (g.value.type !== 'number')
+				return {
+					error: `the guard "${tok.guard}" is not a yes/no condition`,
+					raw: tok.raw,
+				};
 			// a guard that evaluates false contributes nothing — a 0 delta / absolute of the base
-			if (g.value.type === 'number' && g.value.value === 0)
+			if (g.value.value === 0)
 				return {
 					kind: tok.kind,
 					combine: tok.combine,

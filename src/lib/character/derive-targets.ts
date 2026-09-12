@@ -103,6 +103,33 @@ const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof
 	}
 };
 
+/**
+ * Group aliases a CONTRIBUTION may not name (plugins.md §4.4): they fan out over many stats, which is
+ * a token's job — one contribution names one target.
+ */
+const CONTRIBUTION_GROUPS = new Set<string>([
+	'saves',
+	'skills',
+	'ability_checks',
+	'attacks',
+	...ABILITIES,
+]);
+/** `skill.`/`passive.` take a snake-case id by GRAMMAR rather than by membership, so an unknown skill
+ *  folds onto nothing exactly as a typo'd content target does (plugins.md §4.4). */
+const SKILL_SCOPED_TARGET = /^(?:skill|passive)\.[a-z][a-z0-9_]{0,31}$/;
+
+/**
+ * May a plugin `contributions` key name this target (plugins.md §4.4)?
+ *
+ * Answered HERE, off `NUMERIC_TARGETS`, because this file owns the vocabulary. The plugin host used
+ * to carry a hand-written regex copy of it and the copy drifted: eight documented keys — `speed.fly`,
+ * `speed.swim`, `spell_dc`, `spell_attack`, the action-economy three, `d20_tests` and any passive but
+ * the three senses — were rejected, and a rejected key takes the whole result down with it, tokens
+ * and notes included.
+ */
+export const isPluginContributionTarget = (key: string): boolean =>
+	SKILL_SCOPED_TARGET.test(key) || (NUMERIC_TARGETS.has(key) && !CONTRIBUTION_GROUPS.has(key));
+
 /** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
  *  Open-vocab kinds (damage_sensitivity, grant_resource, apply_condition) are always supported —
  *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */

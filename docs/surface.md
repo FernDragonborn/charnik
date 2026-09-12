@@ -398,6 +398,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const plugins`
 - `function loadPlugins` — Discover plugins + build the evaluator for already-consented, enabled ones.
 - `function refreshPlugins` — Re-scan `<dataDir>/plugins/` (user added/edited a folder) and rebuild the evaluator.
+- `function forgetPlugin` — Forget one plugin: its consent and its enablement go, so running it again asks again.
 - `function retryPlugins` — Give plugins that auto-disabled (3 failures) another chance on THIS character without a full * re-scan: clearing the …
 - `function consentAndEnable` — The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable.
 - `function revokePackPlugins` — * Drop consent + enablement for every plugin a content pack shipped.
@@ -553,6 +554,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/derive-targets.ts`
 
+- `const isPluginContributionTarget` — * May a plugin `contributions` key name this target (plugins.md §4.4)?
 - `const isEffectTargetSupported` — B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
 
 ### `src/lib/character/derive.ts`
@@ -1309,7 +1311,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PluginEvaluator`
 - `function registerPluginEvaluator` — Install the evaluator (the sandbox host, once ≥1 plugin is enabled).
 - `function clearPluginEvaluator` — Remove the evaluator (kill switch / module teardown) — plugin tokens degrade to notes.
-- `function clearPluginMemo` — Test/teardown helper: drop all memoized results + failure counts.
+- `function clearPluginMemo` — Drop all memoized results + failure counts.
 - `interface PluginExpansion`
 - `function expandPluginEffects` — * Resolve every `plugin:` token in the resolved effect list — once per DISTINCT token (memoized), * applied once per …
 
@@ -1678,4 +1680,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1004 exports across 135 modules · 66 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1006 exports across 135 modules · 66 duplicate suspects._

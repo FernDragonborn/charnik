@@ -296,6 +296,33 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 		expect(n).toBe(4);
 	});
 
+	it("a sibling handler's success does not clear the failing one's strikes", () => {
+		// one counter per plugin meant a healthy handler wiped the hanging one's streak on every
+		// derive, so "3 consecutive failures" never arrived and the hang was paid for for ever
+		const calls: string[] = [];
+		const ev: PluginEvaluator = {
+			has: () => true,
+			call: (token) => {
+				calls.push(token.handlerName);
+				return token.handlerName === 'bad'
+					? { ok: false, reason: 'boom' }
+					: { ok: true, resultJson: '{}', readPlay: true };
+			},
+		};
+		registerPluginEvaluator(ev);
+		const issues: EffectIssue[] = [];
+		for (let i = 0; i < 5; i++)
+			expandPluginEffects(
+				[carrier('plugin:ns1:bad'), carrier('plugin:ns1:good')],
+				ctx({ hp: i }),
+				issues,
+				's',
+			);
+		expect(calls.filter((h) => h === 'bad')).toHaveLength(3); // disabled after its own three
+		expect(calls.filter((h) => h === 'good')).toHaveLength(5); // and the sibling keeps running
+		expect(issues.at(-1)?.detail).toMatch(/disabled after repeated failures/);
+	});
+
 	it('a success resets the consecutive-failure streak (PLG-T2)', () => {
 		let mode: 'fail' | 'ok' = 'fail';
 		let n = 0;
@@ -343,6 +370,53 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 		// first token eats the budget; the second is degraded before its call
 		expect(issues.some((i) => /budget/.test(i.detail ?? ''))).toBe(true);
 		expect(out?.unknown.some((u) => u.token === 'plugin:ns1:bbb')).toBe(true);
+	});
+});
+
+describe('§4.4 target keys — the vocabulary the derive folds by, asked once', () => {
+	const contribute = (target: string) => {
+		const issues: EffectIssue[] = [];
+		registerPluginEvaluator(
+			fakeEvaluator({
+				'ns1:fn1': () => ({
+					contributions: { [target]: [{ layer: 'feature', op: 'add', amount: 1 }] },
+					notes: ['kept'],
+				}),
+			}),
+		);
+		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues, target);
+		clearPluginMemo();
+		return { accepted: out?.numeric.some((n) => n.target === target) === true, issues };
+	};
+
+	it('accepts every key the derive consumes — a rejected one takes the whole result with it', () => {
+		for (const key of [
+			'ac',
+			'initiative',
+			'speed',
+			'speed.fly',
+			'speed.swim',
+			'hp_max',
+			'attack',
+			'damage',
+			'spell_dc',
+			'spell_attack',
+			'action',
+			'bonus',
+			'reaction',
+			'd20_tests',
+			'save.dex',
+			'skill.stealth',
+			'passive.perception',
+			'passive.stealth', // every check has a passive form, not only the three senses
+			'skill.homebrew_thing', // an unknown id is grammar-legal and folds onto nothing
+		])
+			expect([key, contribute(key).accepted]).toEqual([key, true]);
+	});
+
+	it('rejects a group alias and a key the derive has no fold for', () => {
+		for (const key of ['saves', 'skills', 'str', 'nonsense', '__proto__'])
+			expect([key, contribute(key).accepted]).toEqual([key, false]);
 	});
 });
 

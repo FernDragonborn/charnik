@@ -50,6 +50,10 @@ const SETUP_SCRIPT = `
 "use strict";
 Math.random = () => { throw new Error("Math.random is removed (determinism is mandatory)"); };
 Object.freeze(Math);
+// the call wrapper reports what the handler READ through JSON.stringify, and that report decides
+// which memo the result is cached in — a handler that swapped JSON.stringify mid-call could claim it
+// never touched ctx.play and be served its own stale answer across every HP tick
+Object.freeze(JSON);
 globalThis.WeakRef = undefined;
 globalThis.FinalizationRegistry = undefined;
 globalThis.performance = undefined;
@@ -251,10 +255,15 @@ export async function createSandboxEvaluator(
 			p.deadline = now() + CALL_BUDGET_MS;
 			const res = context.evalCode(code, 'charnik-call.js');
 			if (res.error) {
-				// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those)
+				// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those). The
+				// context is dropped rather than rebuilt in place: re-evaluating `main.js` is unbounded
+				// (QuickJS's interrupt handler does not cover parse or compile), so a legal 250 KB file
+				// cost ~65 ms charged to THIS derive, after the aggregate budget gate had already been
+				// passed. The next call boots it lazily — by which time the fail-closed counter may have
+				// disabled the handler instead (PLG-SEC 8).
 				res.error.dispose();
-				const err = (p.loadError = bootPlugin(getModuleSync(), p));
-				return { ok: false, reason: err ? 'over budget (sandbox rebuild failed)' : 'over budget' };
+				disposePlugin(p);
+				return { ok: false, reason: 'over budget' };
 			}
 			const raw = context.getString(res.value);
 			res.value.dispose();

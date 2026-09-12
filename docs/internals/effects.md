@@ -367,7 +367,8 @@ zod revalidation, length-prefixed SHA-256 consent hash stored outside the dataDi
 counter). A handler returns declarative output (`contributions` / L1 `tokens`) that rides the
 existing fold; it can NEVER break derive (any failure degrades to an inert note). Three state
 channels: `passive` (READ state → contributions), `onUse` / `onEvent` (WRITE play-state, core-owned
-per actions.md; deferred to `api: 2`). **Desktop-only** — the web build ships no sandbox. Full
+per actions.md; deferred to `api: 2`). **Desktop-only** — the web build never loads the sandbox
+(it ships the chunk and never fetches it; `plugins.md` ▸ Lifecycle). Full
 normative contract, ctx/result schemas, budgets, and the security checklist: [`plugins.md`](plugins.md).
 
 ---

@@ -77,6 +77,40 @@ export async function loadPlugins(): Promise<void> {
 export async function refreshPlugins(): Promise<void> {
 	if (!plugins.supported) return;
 	plugins.discovered = await discoverPlugins(getUserStorage());
+	forgetUndiscovered();
+	await rebuildEvaluator();
+}
+
+/**
+ * Drop consent + enablement for namespaces the scan no longer finds — the same rule
+ * `revokePackPlugins` applies to a pack, for a folder the user deleted by hand.
+ *
+ * Consent lives outside the data dir and is keyed by the code hash, so it OUTLIVES the files it was
+ * granted for: without this, deleting a plugin folder and later dropping the same bytes back started
+ * running it immediately, with no dialog and nothing said. "I deleted that folder" is the clearest
+ * possible statement that the permission is over. A failed scan never reaches here — `discoverPlugins`
+ * throws rather than answering with an empty list.
+ */
+function forgetUndiscovered(): void {
+	const present = new Set(plugins.discovered.map((p) => p.namespace));
+	const gone = [
+		...new Set([...Object.keys(plugins.prefs.consent), ...Object.keys(plugins.prefs.enabled)]),
+	].filter((ns) => !present.has(ns));
+	if (!gone.length) return;
+	for (const ns of gone) {
+		delete plugins.prefs.consent[ns];
+		delete plugins.prefs.enabled[ns];
+	}
+	persist();
+}
+
+/** Forget one plugin: its consent and its enablement go, so running it again asks again. The way OUT
+ *  of the consent a dialog granted — disabling only stops it for now, and the row's own button then
+ *  re-enables it silently. */
+export async function forgetPlugin(namespace: string): Promise<void> {
+	delete plugins.prefs.consent[namespace];
+	delete plugins.prefs.enabled[namespace];
+	persist();
 	await rebuildEvaluator();
 }
 
@@ -101,7 +135,8 @@ async function rebuildEvaluator(): Promise<void> {
 	}
 	evaluatorHandle?.dispose();
 	evaluatorHandle = next;
-	clearPluginMemo();
+	// both of these drop the memo and the failure streaks themselves — a result belongs to the
+	// evaluator that produced it
 	if (next) registerPluginEvaluator(next);
 	else clearPluginEvaluator();
 	// a plugin that booted with a broken main.js reports its real error → surface it globally

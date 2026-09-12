@@ -18,6 +18,9 @@ import { z } from 'zod';
 import type { Ability } from '../rules/core';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
 import type { NumericFact } from './apply';
+// the §4.4 target vocabulary, asked of the module that owns it. `derive-targets` is a pure leaf (no
+// derive.ts, no Svelte), so this costs the effects module nothing it does not already carry.
+import { isPluginContributionTarget } from '../character/derive-targets';
 
 // --- The ctx a handler receives (docs/internals/plugins.md §4.2) ------------------------------------------
 // Least-data by design: game numbers only, never names/notes/free text. Two sub-objects with
@@ -78,14 +81,16 @@ export interface PluginEvaluator {
 
 let evaluator: PluginEvaluator | null = null;
 
-/** Install the evaluator (the sandbox host, once ≥1 plugin is enabled). Replaces any previous. */
+/** Install the evaluator (the sandbox host, once ≥1 plugin is enabled). Replaces any previous —
+ *  memoized results and failure streaks belong to the evaluator that made them, so they go with it. */
 export function registerPluginEvaluator(e: PluginEvaluator): void {
 	evaluator = e;
-	failCounts.clear();
+	clearPluginMemo();
 }
 /** Remove the evaluator (kill switch / module teardown) — plugin tokens degrade to notes. */
 export function clearPluginEvaluator(): void {
 	evaluator = null;
+	clearPluginMemo();
 }
 
 // --- Host-side result validation (§4.3 — the sandbox output is untrusted input) -----------------
@@ -96,12 +101,6 @@ const MAX_RESULT_JSON = 64 * 1024;
 const AGGREGATE_BUDGET_MS = 20;
 /** Consecutive failures before a plugin is disabled for the session (§5 fail-closed). */
 const MAX_CONSECUTIVE_FAILURES = 3;
-
-/** §4.4 target keys. Skills validated by GRAMMAR (snake id), not membership — folding is
- *  string-compare into arrays (never `obj[key] =`), so an unknown id folds onto nothing;
- *  the pattern + count caps are what kill prototype-pollution keys (PLG-SEC 22b). */
-const TARGET_KEY_RE =
-	/^(ac|initiative|speed|hp_max|attack|damage|save\.(str|dex|con|int|wis|cha)|skill\.[a-z][a-z0-9_]{0,31}|passive\.(perception|investigation|insight))$/;
 
 const contributionSchema = z.object({
 	layer: z.enum(['feature', 'item', 'condition']),
@@ -145,9 +144,13 @@ function validateResult(
 		return { ok: false, reason: `invalid result: ${where}${iss?.message ?? 'shape'}` };
 	}
 	const keys = Object.keys(r.data.contributions ?? {});
+	// the ≤20-key cap is what kills prototype-pollution keys (PLG-SEC 22b); folding is a string
+	// compare into arrays (never `obj[key] =`), so an unknown key folds onto nothing
 	if (keys.length > 20) return { ok: false, reason: 'invalid result: too many contribution keys' };
 	for (const k of keys)
-		if (!TARGET_KEY_RE.test(k))
+		// §4.4, asked of the one module that owns the target vocabulary — a second copy of it here is
+		// what let eight documented keys be rejected
+		if (!isPluginContributionTarget(k))
 			return { ok: false, reason: `invalid result: bad target key "${k}"` };
 	return { ok: true, result: r.data };
 }
@@ -178,7 +181,9 @@ function memoSet(map: Map<string, PluginResult>, key: string, value: PluginResul
 	}
 	map.set(key, value);
 }
-/** Test/teardown helper: drop all memoized results + failure counts. */
+/** Drop all memoized results + failure counts. Called whenever the evaluator is replaced or cleared —
+ *  a memo entry belongs to the evaluator that produced it, and serving one across a swap hands back
+ *  the OLD plugin's answer for a call the new one never made. */
 export function clearPluginMemo(): void {
 	memoBuild.clear();
 	memoFull.clear();
@@ -186,13 +191,18 @@ export function clearPluginMemo(): void {
 }
 
 // --- Fail-closed counter (§5: 3 consecutive failures disable the plugin for the session) --------
-// Keyed by (namespace, characterId): a handler that fails only on ONE character's ctx (a bug at a
-// high level, a ctx field that character lacks) must NOT disable the plugin for OTHER characters.
-// The disabled state belongs to the exact plugin×character pair and persists per character.
+// Keyed by (namespace, handler, characterId). The character is in the key because a handler that
+// fails only on ONE character's ctx (a bug at a high level, a ctx field that character lacks) must
+// NOT disable the plugin for OTHER characters. The HANDLER is in it because a plugin's handlers fail
+// independently: with one counter per plugin, a healthy sibling's success wiped the hanging
+// handler's strikes on every derive, so the streak never reached three and the hang was paid for
+// again on every HP tick, for as long as the plugin stayed enabled.
 
 const failCounts = new Map<string, number>();
-/** NUL joins the two parts — neither a namespace (grammar `[a-z0-9-]`) nor a character id contains it. */
-const failKey = (namespace: string, scope: string): string => `${namespace}\0${scope}`;
+/** NUL joins the parts — none of a namespace (grammar `[a-z0-9-]`), a handler name or a character id
+ *  contains it. */
+const failKey = (namespace: string, handlerName: string, scope: string): string =>
+	`${namespace}\0${handlerName}\0${scope}`;
 const isDisabled = (key: string): boolean => (failCounts.get(key) ?? 0) >= MAX_CONSECUTIVE_FAILURES;
 function noteFailure(key: string): void {
 	failCounts.set(key, (failCounts.get(key) ?? 0) + 1);
@@ -231,7 +241,8 @@ const now = (): number => (typeof performance !== 'undefined' ? performance.now(
  * + an `issues` entry; the aggregate budget degrades the REMAINDER once exhausted.
  *
  * `scope` is the character identity (`character.id`) — the fail-closed counter is keyed per
- * (namespace, scope) so one character's ctx can't disable the plugin for another (see `failKey`).
+ * (namespace, handler, scope), so neither one character's ctx nor one healthy handler decides
+ * anything for the others (see `failKey`).
  */
 export function expandPluginEffects(
 	effects: ActiveEffect[],
@@ -276,8 +287,9 @@ export function expandPluginEffects(
 				buildJson,
 				playJson,
 			};
-			// fail-closed counter is per (namespace, character) — a fail on THIS character only
-			const r = resolvePluginToken(ref, failKey(namespace, scope), keys, budget);
+			// fail-closed counter is per (namespace, handler, character) — a fail on THIS handler, for
+			// THIS character only
+			const r = resolvePluginToken(ref, failKey(namespace, handlerName, scope), keys, budget);
 			if (r.ok) applyResult({ out, eff, namespace, token, result: r.result });
 			else degrade(eff, token, r.reason);
 		}
@@ -301,7 +313,7 @@ interface TokenKeys {
 
 /** Resolve ONE plugin token to its validated result — a memo hit or a fresh sandbox call — or a
  *  degrade reason. Mutates `budget.over` (aggregate cutoff) and the memo caches, and records
- *  fail/success on `fkey` (the per-(namespace, character) fail-closed counter). */
+ *  fail/success on `fkey` (the per-(namespace, handler, character) fail-closed counter). */
 function resolvePluginToken(
 	ref: PluginTokenRef,
 	fkey: string,

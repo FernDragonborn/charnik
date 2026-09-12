@@ -1151,7 +1151,7 @@ The headline is that **the sandbox holds** — see *checked and correct* below, 
 enumeration from inside a live plugin is recorded. What does not hold is the contract around it: the
 target vocabulary, the budget, and the consent lifecycle.
 
-### 38 · [ ] HIGH · eight of the eighteen documented contribution target keys are rejected, and they take the whole result down with them
+### 38 · [x] HIGH · eight of the eighteen documented contribution target keys are rejected, and they take the whole result down with them
 
 `plugin-registry.ts:103` (`TARGET_KEY_RE`), enforced at `:150`. `plugins.md` §4.4 lists the legal
 keys: `ac · initiative · speed · speed.fly · speed.swim · hp_max · attack · damage · spell_dc ·
@@ -1187,7 +1187,7 @@ against `NUMERIC_TARGETS`, keeping the existing ≤20 key cap — which is what 
 prototype-pollution keys, as the comment at `:100` says. That also deletes the second copy that
 caused the drift.
 
-### 39 · [ ] HIGH · the per-derive budget does not cover the post-trip sandbox rebuild, and a sibling handler's success keeps the fail-closed counter from ever firing
+### 39 · [x] HIGH · the per-derive budget does not cover the post-trip sandbox rebuild, and a sibling handler's success keeps the fail-closed counter from ever firing
 
 `plugin-sandbox.ts:256` (`bootPlugin` on a limit trip, inside `call`), `plugin-registry.ts:96`
 (`AGGREGATE_BUDGET_MS = 20`), `:327` (the gate), `:343` (`noteSuccess`).
@@ -1223,7 +1223,11 @@ a sibling does. Second half, if the overrun itself matters: do not rebuild insid
 `p.context = null` and let the next call boot it, so the rebuild lands after the aggregate gate
 rather than behind it.
 
-### 40 · [ ] MEDIUM · the plugin ctx's `hpMax` and `isBloodied` disagree with the max the app clamps to
+**Closed with both halves.** The counter is per handler, so the hanging one reaches three strikes and
+stops being called while its healthy sibling keeps running (asserted in `plugin.test.ts`), and a
+tripped call disposes the context instead of re-evaluating `main.js` behind the gate.
+
+### 40 · [x] MEDIUM · the plugin ctx's `hpMax` and `isBloodied` disagree with the max the app clamps to
 
 `character/derive-plugins.ts:53` —
 `const preHpMax = character.play.hp.max ?? applyEffects('hp_max', o.maxHpBase, facts).value;` — and
@@ -1253,6 +1257,10 @@ variable has the identical divergence. One fix covers both.
 **Fix:** route `derive-plugins.ts:53` through `effectiveHpMax`, which already takes exactly a
 `Computed`. This is finding 4's shape in a third place — worth fixing all three together.
 
+**Closed with finding 51**, which did fix all of them together: both this site and `hpMaxLive()` go
+through `effectiveHpMax` now, so the plugin ctx, the L2 `is_bloodied` variable, the bar and the two
+clamps read one number.
+
 ### 41 · [x] MEDIUM · `plugins.md` §4.3 describes pre-D12 `set` semantics
 
 `docs/internals/plugins.md:245` versus `rules/pipeline.ts:202` and `effects/apply.ts:386`. The doc
@@ -1276,7 +1284,7 @@ half. Per the spec header ("Where this document and code disagree, THIS document
 amended first"), this is a doc fix: name the layer, the within-layer max, and the later-layer
 override.
 
-### 42 · [ ] MEDIUM-LOW · the web demo does ship the QuickJS runtime — 528 KB of it
+### 42 · [x] MEDIUM-LOW · the web demo does ship the QuickJS runtime — 528 KB of it
 
 `plugins.md:341`: "Desktop only. … The web demo (GitHub Pages) has no plugin discovery and **does not
 bundle the QuickJS runtime**." `effects.md:369`: "**Desktop-only** — the web build ships no sandbox."
@@ -1302,7 +1310,11 @@ URL. What is wrong is "does not bundle": half a megabyte is deployed to Pages on
 chunk out of the Pages build. The doc edit is the honest small one; the exclusion is the one that
 saves the bytes.
 
-### 43 · [ ] MEDIUM-LOW · deleting a hand-placed plugin folder leaves its consent, so re-dropping the same bytes runs it with no dialog
+**Closed** with the doc edit: both lines now say the runtime is shipped and never loaded, and name
+what excluding it would cost (a build-mode stub for `plugin-sandbox`). Half a megabyte of unfetched
+lazy chunk is a size fact, not a behaviour one, and nothing has asked for the build mode.
+
+### 43 · [x] MEDIUM-LOW · deleting a hand-placed plugin folder leaves its consent, so re-dropping the same bytes runs it with no dialog
 
 `plugin-store.svelte.ts:147` (`revokePackPlugins`) has no local-plugin counterpart, and
 `PluginsSettings.svelte` offers no way to revoke consent — `disablePlugin` (`:159`) only flips
@@ -1329,7 +1341,7 @@ Settings row simply disappears while the grant persists.
 `revokePackPlugins` does for a pack, and optionally pruning prefs for namespaces no longer discovered
 on `refreshPlugins`.
 
-### 44 · [ ] LOW · a dice-carrying upcast formula produces a fractional modifier
+### 44 · [x] LOW · a dice-carrying upcast formula produces a fractional modifier
 
 `effects/upcast.ts:125` (`toPoolFlat`) against `:118`, which documents the field as "Numeric
 contribution (**floored**; 5e round-down)". The `number` branch does `Math.floor(v.value)`; the
@@ -1348,7 +1360,7 @@ damage:per_slot(1d6)+slot/2    slot=3 base=1 -> pool {6:2}, flat 1.5   <- not fl
 
 **Fix:** one `Math.floor` on the dice branch's `flat`.
 
-### 45 · [ ] LOW · upcast has a second, more permissive guard-truthiness rule than the resolver
+### 45 · [x] LOW · upcast has a second, more permissive guard-truthiness rule than the resolver
 
 `upcast.ts:143` versus `effects/resolver.ts:258`. The resolver treats a guard whose value is not a
 `number` as unreadable: it pushes `ISSUE_KEY.unreadableGuard` ("the guard … is not a yes/no
@@ -1369,7 +1381,7 @@ grammar discipline (N1)".
 
 **Fix:** mirror the resolver — reject a non-number guard before the zero check.
 
-### 46 · [ ] LOW · the `readPlay` memo flag is a sandbox self-report, and a handler can forge it
+### 46 · [x] LOW · the `readPlay` memo flag is a sandbox self-report, and a handler can forge it
 
 `plugin-sandbox.ts:245` — `return JSON.stringify({ result: r ?? {}, playRead });`. `plugins.md` §4.2
 says "**The host tracks** which sub-objects a handler actually reads". It does not: the wrapper
@@ -1387,7 +1399,7 @@ validated and clamped, so this is a wrong-number and determinism issue, not an e
 **Fix:** capture the intrinsics in the setup script before `main.js` runs, or `Object.freeze(JSON)`
 in `SETUP_SCRIPT` alongside the existing `Object.freeze(Math)`.
 
-### 47 · [ ] TRIVIAL · `registerPluginEvaluator` resets half the cross-evaluator state
+### 47 · [x] TRIVIAL · `registerPluginEvaluator` resets half the cross-evaluator state
 
 `plugin-registry.ts:82` clears `failCounts` but not `memoBuild`/`memoFull`, while its docstring says
 "Replaces any previous": `register(evaluatorA)` then `register(evaluatorB)` still serves A's note, B

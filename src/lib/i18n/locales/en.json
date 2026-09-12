@@ -1781,6 +1781,8 @@
 			"enable": "Enable",
 			"disable": "Disable",
 			"review": "Review & enable…",
+			"forget": "Forget",
+			"forgetTitle": "Forget this plugin — enabling it again asks for your review",
 			"status": {
 				"broken": "Broken",
 				"needsConsent": "Not reviewed",

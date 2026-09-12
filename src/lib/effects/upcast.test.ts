@@ -140,6 +140,20 @@ describe('UPCAST · evalUpcast — evaluation against a cast ctx', () => {
 	it('floors a fractional numeric total (5e round-down)', () => {
 		expect(one('area:slot/2', at(5, 1))).toMatchObject({ flat: 2 }); // 5/2 = 2.5 → 2
 	});
+
+	it('floors the flat half of a DICE-carrying total too — the spell rolled 2d6 + 1.5', () => {
+		expect(one('damage:per_slot(1d6)+slot/2', at(3, 1))).toMatchObject({
+			pool: { 6: 2 },
+			flat: 1, // 3/2 = 1.5 → 1
+		});
+	});
+
+	it('reports a guard that is not a yes/no condition, as the resolver does', () => {
+		// `1d4 ? …` used to fall through as TRUE: the zero check only looked at numbers
+		expect(evalUpcast('1d4 ? damage:per_slot(1d6)', at(3, 1))[0]).toMatchObject({
+			error: expect.stringContaining('yes/no'),
+		});
+	});
 });
 
 describe('UPCAST · combinePools — base + delta merge', () => {

@@ -11,6 +11,7 @@
 		consentAndEnable,
 		disablePlugin,
 		enableConsented,
+		forgetPlugin,
 		setKillSwitch,
 		pluginStatus,
 		type PluginStatus,
@@ -111,6 +112,15 @@
 						<button class="pill-btn" class:accent={status === 'enabled'} onclick={() => toggle(p)}>
 							{$_(actionKey[status])}
 						</button>
+					{/if}
+					<!-- the way out of a consent: disabling only stops it for now, and the button above then
+					     re-enables it with no dialog. Offered wherever a consent is on record. -->
+					{#if plugins.prefs.consent[p.namespace] !== undefined}
+						<button
+							class="pill-btn"
+							title={$_('settings.plugins.forgetTitle')}
+							onclick={() => forgetPlugin(p.namespace)}>{$_('settings.plugins.forget')}</button
+						>
 					{/if}
 				</div>
 			{/each}
