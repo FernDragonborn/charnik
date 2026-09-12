@@ -73,8 +73,10 @@ export interface ResolveState {
 	/** Effective ability scores/mods, updated as each ability node folds (SPEC2). */
 	scores: Record<Ability, number>;
 	mods: Record<Ability, number>;
-	/** Folded max HP including hp_max-writing effects (what `is_bloodied`/`hp_percent` guards read). */
-	hpMax: { value: number };
+	/** Folded max HP including hp_max-writing effects (what `is_bloodied`/`hp_percent` guards read).
+	 *  Carries its TRACE as well as its value: a manual play-state max re-folds the effect layers on
+	 *  top of itself (`effectiveHpMax`), and that rule needs to tell them from the base. */
+	hpMax: { value: number; trace: Contribution[] };
 	/** Condition ids applied by surviving `apply_condition` tokens. */
 	conditions: Set<string>;
 	/** Remaining / max resource pools from surviving `grant_resource` tokens. */

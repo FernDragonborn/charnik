@@ -4,7 +4,7 @@
  * (docs/internals/plugins.md §4.2) and merges the results into the typed facts. A no-op when no plugin token /
  * no registry is present (the removability invariant), so this file only runs for plugin-using builds.
  */
-import { abilityModifier, type Ability } from '../rules/core';
+import { abilityModifier, effectiveHpMax, type Ability } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { Character } from './schema';
 import { applyEffects, mergeFacts, collectFacts, type EffectFacts } from '../effects/apply';
@@ -50,7 +50,10 @@ export interface PluginPrePassInputs {
  *  condition's sub-tokens read the PRE-plugin state — plugins cannot feed the condition DAG. */
 export function applyPluginPrePass(o: PluginPrePassInputs): void {
 	const { character, resolvedEffects, scores, prof, level, classLevels, facts, effCtx } = o;
-	const preHpMax = character.play.hp.max ?? applyEffects('hp_max', o.maxHpBase, facts).value;
+	const preHpMax = effectiveHpMax(
+		character.play.hp.max ?? null,
+		applyEffects('hp_max', o.maxHpBase, facts),
+	);
 	const pluginCtx: PluginCtx = {
 		api: 1,
 		build: {

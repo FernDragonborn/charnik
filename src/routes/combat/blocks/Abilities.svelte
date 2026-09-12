@@ -33,14 +33,21 @@
 				<button
 					type="button"
 					class="ability-check"
-					use:provenance={why(a.score, $_)}
+					use:provenance={why(a.check, $_)}
 					onclick={(e) =>
-						roll({ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` }, a.mod, e)}
+						roll(
+							{ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` },
+							a.check.value,
+							e,
+							`check.${ab}`,
+						)}
 				>
 					<span class="ability-name">
 						<b>{abilityShortLabel(ab, $_)}</b> · {a.score.value}
 					</span>
-					<span class="ability-mod">{signed(a.mod)}</span>
+					<!-- the folded CHECK bonus, not the raw modifier: this button rolls a check, and a row
+					     that prints one number and rolls another is the defect, not the tidier layout -->
+					<span class="ability-mod">{signed(a.check.value)}</span>
 				</button>
 				<button
 					type="button"

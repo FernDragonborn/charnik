@@ -21,6 +21,9 @@ export interface StandardAction {
 	markerKey: string;
 	/** `[roll-name key, modifier]` for the actions that make a check. */
 	roll?: [string, number];
+	/** The skill that check IS, so the roll picks up the same effects the skills panel's own row does
+	 *  (advantage, Bless dice, a reroll floor). Present exactly when `roll` is. */
+	skill?: SkillId;
 }
 
 const MARKER = {
@@ -69,6 +72,8 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 		hint: r.skill ? signed(sk(r.skill)) : '',
 		descKey: `combat.action.${r.id}Desc`,
 		markerKey: MARKER[r.marker],
-		...(r.skill ? { roll: [`combat.action.${r.id}Roll`, sk(r.skill)] as [string, number] } : {}),
+		...(r.skill
+			? { roll: [`combat.action.${r.id}Roll`, sk(r.skill)] as [string, number], skill: r.skill }
+			: {}),
 	}));
 }

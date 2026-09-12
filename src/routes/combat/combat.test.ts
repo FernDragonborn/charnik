@@ -183,7 +183,8 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.hpAmount = 6;
 		combat.damage();
 		expect(character.play.hp.current).toBe(14);
-		expect(combat.pendingConcentrationSave).toEqual({ dc: 10 }); // 6 dmg → DC max(10, 3) = 10
+		// 6 dmg → DC max(10, 3) = 10, owed for THIS spell
+		expect(combat.pendingConcentrationSave).toEqual({ dc: 10, spell: `spell:${S}:bless` });
 		expect(character.play.concentration).toBe(`spell:${S}:bless`); // never auto-dropped
 	});
 
@@ -222,6 +223,27 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.damage();
 		combat.dropConcentrationFromSave();
 		expect(character.play.concentration).toBeNull();
+		expect(combat.pendingConcentrationSave).toBeNull();
+	});
+
+	it('an owed save does not outlive the concentration it was owed for', () => {
+		character.play.hp = { current: 30, max: 30, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 20;
+		combat.damage();
+		expect(combat.pendingConcentrationSave).not.toBeNull();
+		// the next concentration spell REPLACES the first; the save owed for Bless is not owed for it
+		combat.cast(spellRow(graph, `spell:${S}:hold_person`, 'on')!, noModifiers);
+		expect(character.play.concentration).toBe(`spell:${S}:hold_person`);
+		combat.syncPendingConcentration();
+		expect(combat.pendingConcentrationSave).toBeNull();
+		// …and the same for a long rest, which ends concentration without touching the banner
+		character.play.hp.current = 30;
+		combat.hpAmount = 10;
+		combat.damage();
+		expect(combat.pendingConcentrationSave).not.toBeNull();
+		combat.resources.rest('long');
+		combat.syncPendingConcentration();
 		expect(combat.pendingConcentrationSave).toBeNull();
 	});
 
@@ -974,6 +996,55 @@ describe('CombatVM · S2 split net', () => {
 		const before = combat.journal.log.length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.journal.log.length).toBe(before + 1);
+	});
+
+	it('a standard action rolls its check with the skill effects the skills panel uses', () => {
+		// the Hide action IS a Stealth check: one check must not roll two ways depending on which panel
+		// the player tapped it in (2014 exhaustion L1 rides `ability_checks`)
+		combat.effects.addEffect({
+			label: 'Exhausted',
+			tokens: ['disadvantage:ability_checks'],
+			positive: false,
+		});
+		const hide = combat.actions.find((a) => a.id === 'hide')!;
+		expect(hide.skill).toBe('stealth');
+		combat.actionClick(hide, noModifiers);
+		expect(combat.journal.log[0]!.advantage).toBe('disadvantage');
+	});
+
+	it('a bare ability check is folded and reachable: `d20_tests` lands on it, not only on the save', () => {
+		const plain = combat.sheet!.abilities.str;
+		expect(plain.check.value).toBe(plain.mod);
+		combat.effects.addEffect({
+			label: 'Exhausted (2024)',
+			tokens: ['flat_bonus:d20_tests-2'],
+			positive: false,
+		});
+		const a = combat.sheet!.abilities.str;
+		// the raw modifier is untouched (damage and DCs are built from it); the CHECK carries the penalty
+		expect(a.mod).toBe(plain.mod);
+		expect(a.check.value).toBe(plain.mod - 2);
+		expect(a.save.value).toBe(plain.save.value - 2);
+	});
+
+	it('Extra Attack: the strikes of one Attack action cost one Action between them', () => {
+		character.play.inCombat = true;
+		character.play.round = 9; // its own round (see the Savage Attacker test below)
+		combat.effects.addEffect({
+			label: 'Extra Attack',
+			tokens: ['set_override:attacks:2:floor'],
+			positive: true,
+		});
+		expect(combat.sheet!.attacksPerAction.value).toBe(2);
+		const before = combat.journal.log.length;
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		// both rolled, on ONE Action — the second strike rides the first's Attack action
+		expect(combat.journal.log.length).toBe(before + 2);
+		expect(character.play.turn.action).toBe(1);
+		// the third wants a second Action, and there is none
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		expect(combat.journal.log.length).toBe(before + 2);
 	});
 
 	it('Savage Attacker rerolls the WEAPON dice and leaves an effect die alone', () => {
@@ -2009,6 +2080,30 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 		expect(combat.hp.damageWasCrit).toBe(false);
 		// down again: the next ordinary hit costs ONE failure, not the stale crit's two
 		character.play.hp.current = 0;
+		combat.hpAmount = 3;
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(1);
+	});
+
+	it('a long rest fills to the EFFECTIVE max, manual max and hp_max effect together (A14)', () => {
+		character.play.hp = { current: 5, max: 30, temp: 4 }; // a MANUAL max of 30
+		combat.effects.addEffect({
+			label: 'Aid',
+			tokens: ['flat_bonus:hp_max+5'],
+			positive: true,
+		});
+		expect(combat.hpMax).toBe(35); // what heal and the bar already use
+		combat.resources.rest('long');
+		expect(character.play.hp.current).toBe(35);
+		expect(character.play.hp.temp).toBe(0);
+	});
+
+	it('filling the third success pip by hand stabilises, like the rolled track does', () => {
+		character.play.hp = { current: 0, max: 20, temp: 0 };
+		character.play.deathSaves = { successes: 2, failures: 1 };
+		combat.toggleDeathSave('successes', 2); // the third pip
+		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
+		// and a stable character's next hit starts the track over rather than continuing it
 		combat.hpAmount = 3;
 		combat.damage();
 		expect(character.play.deathSaves.failures).toBe(1);

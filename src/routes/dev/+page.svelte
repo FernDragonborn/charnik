@@ -41,6 +41,7 @@
 		<ul>
 			<li><a href={dev('meta')}>Content-metadata modal</a></li>
 			<li><a href={dev('drift')}>Hash-drift review</a></li>
+			<li><a href={dev('health')}>Content health — the problem states</a></li>
 			<li><a href={dev('firstrun')}>First-run flow</a></li>
 			<li><a href={dev('deathsaves')}>Death saves</a></li>
 			<li><a href={dev('rolltoast')}>Roll toast</a></li>

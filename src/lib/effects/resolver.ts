@@ -146,7 +146,7 @@ class Resolver {
 		this.state = {
 			scores: zeroAbilities(),
 			mods: zeroAbilities(),
-			hpMax: { value: 0 },
+			hpMax: { value: 0, trace: [] },
 			conditions: new Set(),
 			resources: {},
 			resourceMax: {},
@@ -342,7 +342,10 @@ class Resolver {
 			const c = this.contributionOf(w, false);
 			if (c) contribs.push(c);
 		}
-		this.state.hpMax.value = computed(contribs, { min: 1 }).value;
+		const foldedHpMax = computed(contribs, { min: 1 });
+		this.state.hpMax.value = foldedHpMax.value;
+		// mutated in place, not reassigned: the ctx closes over `state` and reads it LIVE
+		this.state.hpMax.trace = foldedHpMax.trace;
 	}
 	private foldConditionNode(id: string, writers: Inst[]): void {
 		for (const w of writers) if (this.decide(w)) this.state.conditions.add(id);

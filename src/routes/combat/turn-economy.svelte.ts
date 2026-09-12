@@ -23,6 +23,17 @@ import type { CharacterSheet } from '$lib/character/derive';
  *  `apply_condition:incapacitated`, so this one id gates them all. */
 const INCAPACITATED_CONDITION_ID = 'incapacitated';
 
+/** A turn with nothing spent yet — what `Next turn` and entering combat both reset to. */
+const freshTurn = (): Character['play']['turn'] => ({
+	action: 0,
+	bonus: 0,
+	reaction: 0,
+	move: 0,
+	grantedActions: 0,
+	attacksMade: 0,
+	usedRolls: [],
+});
+
 export class TurnEconomy {
 	constructor(
 		private getCharacter: () => Character | null,
@@ -99,7 +110,7 @@ export class TurnEconomy {
 	nextTurn = () => {
 		const c = this.getCharacter();
 		if (!c) return;
-		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0, usedRolls: [] };
+		c.play.turn = freshTurn();
 		c.play.round += 1;
 		this.expireTimedEffects();
 	};
@@ -133,7 +144,7 @@ export class TurnEconomy {
 		if (!c) return;
 		c.play.inCombat = !c.play.inCombat;
 		if (c.play.inCombat) {
-			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0, usedRolls: [] };
+			c.play.turn = freshTurn();
 			c.play.round = 1;
 		}
 	};
@@ -150,6 +161,18 @@ export class TurnEconomy {
 		if (!c || !c.play.inCombat) return true;
 		if (this.incapacitated) return false;
 		return c.play.turn[slot] < this.slotMax[slot];
+	}
+
+	/** Spend the turn cost of ONE weapon strike. Extra Attack buys several strikes with a single
+	 *  Action, so the Action is charged on the first strike of each group and the rest ride it —
+	 *  which is why an attack does not call `trySpend('action')` directly. */
+	trySpendStrike(): boolean {
+		const c = this.getCharacter();
+		if (!c || !c.play.inCombat) return true;
+		const perAction = Math.max(1, this.getSheet()?.attacksPerAction.value ?? 1);
+		if (c.play.turn.attacksMade % perAction === 0 && !this.trySpend('action')) return false;
+		c.play.turn.attacksMade += 1;
+		return true;
 	}
 
 	/** In combat, spend one pip of `slot`; block (return false) + warn when it's exhausted. Out of

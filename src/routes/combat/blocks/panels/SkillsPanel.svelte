@@ -4,7 +4,7 @@
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed, titleCase, ABIL } from '$lib/combat/helpers';
+	import { why, signed, titleCase, ABIL, skillRollTarget } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
@@ -17,13 +17,6 @@
 		proficient: 'combat.skills.profProficient',
 		expertise: 'combat.skills.profExpertise',
 	} as const;
-
-	/** What a skill check IS, for effects that only apply to some checks. `proficient` here means
-	 *  "this check adds your proficiency bonus" — RAW's own wording for Reliable Talent — so expertise
-	 *  carries it too and Jack of All Trades' partial rung does not: 2024 says "uses one of your skill
-	 *  proficiencies", which a skill you are untrained in is not. */
-	const scopesOf = (prof: CharacterSheet['skills'][SkillId]['prof']): Set<string> =>
-		new Set(prof === 'proficient' || prof === 'expertise' ? ['proficient'] : []);
 </script>
 
 <div class="sklgrid">
@@ -39,10 +32,12 @@
 							class="skill-row"
 							use:provenance={why(sk, $_)}
 							onclick={(e) =>
-								roll({ text: titleCase(skill), key: `skillName.${skill}` }, sk.value, e, {
-									key: `skill.${skill}`,
-									scopes: scopesOf(sk.prof),
-								})}
+								roll(
+									{ text: titleCase(skill), key: `skillName.${skill}` },
+									sk.value,
+									e,
+									skillRollTarget(skill, s),
+								)}
 						>
 							<i
 								class="prof-dot"

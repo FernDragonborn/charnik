@@ -8,7 +8,7 @@
  */
 import { recordOf } from '../util/records';
 import type { Character } from './schema';
-import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
+import { ABILITY_IDS, abilityModifier, effectiveHpMax, type Ability } from '../rules/core';
 import type { LoadedRow } from '../content/loader';
 import { armorWeightOf } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
@@ -38,7 +38,7 @@ export function baseResolveState(
 	return {
 		scores,
 		mods,
-		hpMax: { value: hpMaxValue },
+		hpMax: { value: hpMaxValue, trace: [] },
 		conditions: new Set(),
 		resources: {},
 		resourceMax: {},
@@ -85,8 +85,14 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 			},
 			baseSpeed,
 		};
-		// a manual play-state max (play.hp.max) wins over the computed one, as everywhere
-		const hpMaxLive = (): number => character.play.hp.max ?? state.hpMax.value;
+		// a manual play-state max (play.hp.max) REPLACES the computed base and the hp_max effects still
+		// fold on top of it (A14) — the same rule the bar, the clamp and the plugin ctx use, so
+		// `is_bloodied` cannot cross its threshold at a number the rest of the app disagrees with
+		const hpMaxLive = (): number =>
+			effectiveHpMax(character.play.hp.max ?? null, {
+				value: state.hpMax.value,
+				trace: state.hpMax.trace,
+			});
 		const playVars: PlayVars = {
 			hp: character.play.hp.current,
 			get hpMax() {

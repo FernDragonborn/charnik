@@ -39,7 +39,6 @@ import {
 	formatDamageParts,
 	applyDamageSensitivity,
 	standardActions,
-	effectiveHpMax,
 	weaponBonus,
 	attackMeta,
 	attackNotes,
@@ -50,6 +49,7 @@ import {
 	canTogglePreparedFor,
 	type EffectInstance,
 } from './helpers';
+import { effectiveHpMax } from '$lib/rules/core';
 import { collectFacts } from '$lib/effects/apply';
 import { computed, type Translate } from '$lib/rules/pipeline';
 import type { CharacterSheet } from '$lib/character/derive';

@@ -1,8 +1,8 @@
 /*
- * Damage defenses (resist/immune/vulnerable) and effective max-HP under a manual override. Pure.
- * Split out of the old combat/helpers.ts junk-drawer.
+ * Damage defenses (resist/immune/vulnerable). Pure. Split out of the old combat/helpers.ts
+ * junk-drawer. The effective max-HP rule lives in `rules/core.ts` with the rest of the HP math —
+ * every layer of the app asks it, not only this view.
  */
-import { computed, type Computed, type Contribution, type Layer } from '$lib/rules/pipeline';
 
 /** The sheet's damage defenses (from `damage_sensitivity` effects) — the three buckets by damage type. */
 export interface DamageSensitivities {
@@ -31,20 +31,4 @@ export function applyDamageSensitivity(
 	if (defenses.vulnerable.includes(type)) return { final: amount * 2, bucket: 'vulnerable' };
 	if (defenses.resist.includes(type)) return { final: Math.floor(amount / 2), bucket: 'resist' };
 	return { final: amount, bucket: null };
-}
-
-/** Effective max HP under an optional manual-max override (A14 — a Free-block affordance).
- *  `manualMax` null → the sheet's fully-computed max. Otherwise the manual value REPLACES the base/
- *  ability layers but hp_max EFFECTS still stack on top (Aid; a 2014-exhaustion `halve`): re-fold
- *  `{Manual max}` (base) + the sheet trace's item/feature/condition/override contributions through
- *  the SAME pipeline, so set/floor/cap/mult semantics survive. Never re-sum from facts (double-count
- *  + a D7 violation) — the effect layers are read straight off `sheetMaxHp.trace`. */
-const HP_EFFECT_LAYERS = new Set<Layer>(['item', 'feature', 'condition', 'override']);
-export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): number {
-	if (manualMax === null) return sheetMaxHp.value;
-	const contribs: Contribution[] = [
-		{ source: 'Manual max', layer: 'base', op: 'set', amount: manualMax },
-		...sheetMaxHp.trace.filter((c) => HP_EFFECT_LAYERS.has(c.layer)),
-	];
-	return computed(contribs, { min: 1 }).value;
 }

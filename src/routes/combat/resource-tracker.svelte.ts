@@ -13,7 +13,7 @@ import {
 	remainingRounds,
 	titleCase,
 } from '$lib/combat/helpers';
-import { hitDiceRecoveredOnLongRest } from '$lib/rules/core';
+import { effectiveHpMax, hitDiceRecoveredOnLongRest } from '$lib/rules/core';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
 import { rechargeCount } from '$lib/effects/recharge-amount';
@@ -238,7 +238,13 @@ export class ResourceTracker {
 	 *  complexity budget. */
 	private applyLongRest = (c: Character, sheet: CharacterSheet) => {
 		c.play.spellSlotsSpent = {};
-		c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
+		// full HP is the EFFECTIVE max (A14): a manual max does not silence an `hp_max` effect, so a
+		// long rest must fill to the same number heal and the bar clamp to
+		c.play.hp = {
+			...c.play.hp,
+			current: effectiveHpMax(c.play.hp.max ?? null, sheet.maxHp),
+			temp: 0,
+		};
 		c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
 		// effect in play.effects (e.g. Hold Person on an enemy) — A13
 		// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). Recover

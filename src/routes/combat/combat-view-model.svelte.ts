@@ -25,6 +25,7 @@ import {
 	buildSpellGroups,
 	preparedTalliesByClass,
 	modTargetLabel,
+	skillRollTarget,
 	type Attack,
 	type StandardAction,
 } from '$lib/combat/helpers';
@@ -149,6 +150,7 @@ class CombatVM {
 	setTempHp = () => this.hp.setTempHp();
 	clampCurrentHp = () => this.hp.clampCurrentHp();
 	syncDyingState = () => this.hp.syncDyingState();
+	syncPendingConcentration = () => this.hp.syncPendingConcentration();
 	rollConcentrationSave = () => this.hp.rollConcentrationSave();
 	dropConcentrationFromSave = () => this.hp.dropConcentrationFromSave();
 	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();
@@ -464,8 +466,16 @@ class CombatVM {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.economy.trySpend('action')) return;
 		// the roll's NAME is a key: a standard action is a closed rules vocabulary, so its check reads
-		// in the language the log is READ in rather than the one it was made in
-		if (a.roll) this.rolls.roll({ text: t(a.roll[0]), key: a.roll[0] }, a.roll[1], e);
+		// in the language the log is READ in rather than the one it was made in. Its TARGET is the skill
+		// it checks — Hide is a Stealth check, and it must roll the way the skills panel's Stealth row
+		// does or the same check rolls two ways depending on which panel you tapped.
+		if (a.roll)
+			this.rolls.roll(
+				{ text: t(a.roll[0]), key: a.roll[0] },
+				a.roll[1],
+				e,
+				a.skill ? skillRollTarget(a.skill, this.sheet) : undefined,
+			);
 		else toast(t('combat.notice.actionUsed', { name: t(a.nameKey) }));
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */

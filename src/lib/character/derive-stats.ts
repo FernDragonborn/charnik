@@ -49,7 +49,12 @@ export interface AbilityBlock {
 	/** The effective score — traced + clamped through the pipeline (A10), explainable on hover. */
 	score: Computed;
 	baseScore: number;
+	/** The raw ability modifier — what damage, a spell DC and a weapon's to-hit are built from. NOT
+	 *  what a bare ability check rolls: that is `check`, the folded one. */
 	mod: number;
+	/** A BARE ability check (the tile's own tap), folded under `check.<ab>` so a `d20_tests` or
+	 *  `ability_checks` effect reaches it the way it reaches the save and the skills. */
+	check: Computed;
 	save: Computed;
 	/** Is this save proficient? A VALUE, because the UI used to answer it by sniffing the trace for a
 	 *  `layer === 'proficiency'` contribution — reaching into the stacking algebra, which
@@ -159,6 +164,11 @@ export function deriveAbilityBlocks(
 			score: abilityComputed[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
+			check: applyEffects(
+				`check.${ab}`,
+				skillCheck({ ability: ab, score: scores[ab], level }),
+				facts,
+			),
 			save: applyEffects(`save.${ab}`, base, facts),
 			saveProficient: proficient,
 		};

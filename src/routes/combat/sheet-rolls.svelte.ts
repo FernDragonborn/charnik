@@ -177,7 +177,7 @@ export class SheetRolls {
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray. */
 	attackRoll = (at: Attack, e: Event) => {
-		if (!this.host().economy.trySpend('action')) return;
+		if (!this.host().economy.trySpendStrike()) return;
 		const { fx, parts, hasDmg } = this.attackSpec(at);
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry

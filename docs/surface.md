@@ -701,7 +701,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DamageSensitivities` — The sheet's damage defenses (from `damage_sensitivity` effects) — the three buckets by damage type.
 - `type SensitivityBucket` — Which bucket, if any, a damage type hits.
 - `function applyDamageSensitivity` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
-- `function effectiveHpMax`
 
 ### `src/lib/combat/effects-view.ts`
 
@@ -759,6 +758,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RollEffects` — What a roll target (e.g.
 - `const NO_ROLL_EFFECTS`
 - `function rollEffectsFor`
+- `const skillRollTarget` — What a skill check rolls AS: its effect key plus the scopes that narrow which effects apply.
 - `const dieModsOf` — Just the roll-MANIPULATION half of a `RollEffects` — the `DieMods` a die carries.
 - `const AUTO_OUTCOME` — The two outcomes a condition can force in place of a roll.
 - `type AutoOutcome`
@@ -1401,6 +1401,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function maxHpForClass` — Max HP for one class (SRD fixed values).
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
 - `function carryingCapacity` — Carrying capacity in pounds = STR × 15.
+- `function effectiveHpMax`
 
 ### `src/lib/rules/currency.ts`
 
@@ -1663,4 +1664,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 993 exports across 134 modules · 65 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 994 exports across 134 modules · 65 duplicate suspects._

@@ -9,18 +9,24 @@ import type { Layer } from '../rules/pipeline';
 import type { DamageSensitivity, PlayEvent, RechargePolicy } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
- *  `saves`→`save.*`, `skills`/`ability_checks`→`skill.*` (the ability checks the sheet models —
- *  2014 exhaustion L1 rides `ability_checks`), and `d20_tests`→every d20-based roll (saves, ability
- *  checks/skills, attack, initiative) — the 2024 exhaustion penalty rides this one group. */
+ *  `saves`→`save.*`, `skills`→`skill.*`, `ability_checks`→both the skill checks and the BARE ability
+ *  checks (`check.*`) the sheet rolls — 2014 exhaustion L1 rides `ability_checks` — and
+ *  `d20_tests`→every d20-based roll (saves, ability checks/skills, attack, initiative), which is what
+ *  the 2024 exhaustion penalty rides. */
 export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
 	if (effTarget === key) return true;
 	if (effTarget === 'saves' && key.startsWith('save')) return true;
-	if ((effTarget === 'skills' || effTarget === 'ability_checks') && key.startsWith('skill'))
+	if (effTarget === 'skills' && key.startsWith('skill')) return true;
+	if (effTarget === 'ability_checks' && (key.startsWith('skill') || key.startsWith('check')))
 		return true;
 	if (
 		effTarget === 'd20_tests' &&
-		(key.startsWith('save') || key.startsWith('skill') || key === 'attack' || key === 'initiative')
+		(key.startsWith('save') ||
+			key.startsWith('skill') ||
+			key.startsWith('check') ||
+			key === 'attack' ||
+			key === 'initiative')
 	)
 		return true;
 	return false;

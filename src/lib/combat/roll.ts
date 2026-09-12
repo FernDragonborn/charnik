@@ -22,6 +22,7 @@ import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 import { sayText, type Said, type SaidText, type SaidValue } from '$lib/util/say';
 import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
+import type { CharacterSheet, SkillId } from '$lib/character/derive';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -407,6 +408,25 @@ export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<str
 		if (matchesTarget(m.target, key) && scopeOk(m)) out.minDie = Math.max(out.minDie ?? 0, m.value);
 	return out;
 }
+
+/** What a skill check rolls AS: its effect key plus the scopes that narrow which effects apply.
+ *  `proficient` here means "this check adds your proficiency bonus" — RAW's own wording for Reliable
+ *  Talent — so expertise carries it and Jack of All Trades' partial rung does not (2024 says "uses one
+ *  of your skill proficiencies", which an untrained skill is not).
+ *
+ *  Shared, because a Stealth check is the same check whether the player taps it in the skills panel or
+ *  takes the Hide action: two call sites building this by hand is how one of them rolled with no
+ *  effects at all. */
+export const skillRollTarget = (
+	skill: SkillId,
+	sheet: CharacterSheet | null,
+): { key: string; scopes: Set<string> } => {
+	const prof = sheet?.skills[skill]?.prof;
+	return {
+		key: `skill.${skill}`,
+		scopes: new Set(prof === 'proficient' || prof === 'expertise' ? ['proficient'] : []),
+	};
+};
 
 /** Just the roll-MANIPULATION half of a `RollEffects` — the `DieMods` a die carries. `RollEffects`
  *  extends `DieMods`, so passing the whole thing where `DieMods` is asked for type-checks while

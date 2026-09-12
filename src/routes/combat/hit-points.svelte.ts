@@ -13,12 +13,8 @@
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { naturalOf, rollPool } from '$lib/rules/dice';
-import {
-	applyDamageSensitivity,
-	effectiveHpMax,
-	netAdvantage,
-	DEATH_CAUSE_LABEL,
-} from '$lib/combat/helpers';
+import { applyDamageSensitivity, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
+import { effectiveHpMax } from '$lib/rules/core';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { RollJournal } from './roll-journal.svelte';
@@ -51,9 +47,13 @@ export class HitPoints {
 	hpAmount = $state(1);
 	/** B4 concentration-save banner: a CON save the player owes after taking damage while concentrating.
 	 *  `dc` is the suggested-but-editable DC; `failed` is set once a rolled save misses (the banner then
-	 *  offers Drop). Null = no check due. Set in `damage()`, cleared on a passed roll / drop / when
-	 *  concentration ends. */
-	pendingConcentrationSave = $state<{ dc: number; failed?: boolean } | null>(null);
+	 *  offers Drop). Null = no check due. Set in `damage()`, cleared on a passed roll / drop / when the
+	 *  concentration it names ends or is replaced.
+	 *
+	 *  `spell` is WHICH concentration it is owed for: an owed save is a fact about one spell, and
+	 *  without the name the banner re-attached itself to whatever was concentrated on next — offering
+	 *  "Drop" for a spell that had never been rolled for. */
+	pendingConcentrationSave = $state<{ dc: number; failed?: boolean; spell: string } | null>(null);
 	/** The CON saving-throw bonus a concentration save rolls (d20 + this); already folds save.con flat
 	 *  effects, so the roll must NOT re-add `fx.flat` (roll.ts: saves are pre-folded into the sheet). */
 	get concentrationSaveMod(): number {
@@ -114,6 +114,18 @@ export class HitPoints {
 		if (p.deathSaves.successes || p.deathSaves.failures || this.damageWasCrit) this.stopDying(p);
 	};
 
+	/**
+	 * The owed save belongs to the concentration it names, so it dies when that concentration does —
+	 * whichever of the several writers of `play.concentration` did it (the next spell replacing it, a
+	 * long rest, an expiring carrier). Matching by NAME rather than by "is anything concentrated on"
+	 * is what covers the replacement case. Reactive + idempotent, like `syncDyingState` beside it.
+	 */
+	syncPendingConcentration = () => {
+		const pend = this.pendingConcentrationSave;
+		if (pend && pend.spell !== this.host().character?.play.concentration)
+			this.pendingConcentrationSave = null;
+	};
+
 	damage = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
@@ -157,7 +169,10 @@ export class HitPoints {
 		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
 		if (taken > 0 && p.concentration && p.hp.current > 0) {
 			const cap = this.host().character?.system === '5.5e' ? 30 : Number.POSITIVE_INFINITY;
-			this.pendingConcentrationSave = { dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))) };
+			this.pendingConcentrationSave = {
+				dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))),
+				spell: p.concentration,
+			};
 		}
 	};
 	/** Heal by the entered amount. Leaving 0 HP clears the death-save track, but that is not written
@@ -196,7 +211,7 @@ export class HitPoints {
 			toast(t('combat.notice.concentrationFailed', { total: r.total, dc: pend.dc }), {
 				description: t('combat.notice.concentrationFailedBody'),
 			});
-			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
+			this.pendingConcentrationSave = { ...pend, failed: true };
 		}
 	};
 	/** The B4 banner's "Drop spell" — deliberately END concentration (either instead of rolling, or to
@@ -251,10 +266,17 @@ export class HitPoints {
 	/** Manually set a death-save track (players track by hand too): clicking pip `index` fills to it,
 	 *  or clears it when it's already the last filled one. `kind` is 'successes' | 'failures'. */
 	toggleDeathSave = (kind: 'successes' | 'failures', index: number) => {
-		const ds = this.host().character?.play.deathSaves;
-		if (!ds) return;
+		const play = this.host().character?.play;
+		const ds = play?.deathSaves;
+		if (!play || !ds) return;
 		ds[kind] = ds[kind] === index + 1 ? index : index + 1;
 		if (kind === 'failures' && ds.failures >= 3) this.die('death_saves');
+		// the track filled by hand means what the rolled one means: three successes and you are stable,
+		// so the counters reset (RAW) instead of sitting at 3/0 for ever
+		if (kind === 'successes' && ds.successes >= 3) {
+			this.stopDying(play);
+			toast(t('combat.notice.stabilised'));
+		}
 	};
 
 	/** Record a death. The three lethal rules (massive damage · three death-save failures · the top of

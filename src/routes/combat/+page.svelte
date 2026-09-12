@@ -54,6 +54,12 @@
 		combat.syncDyingState();
 	});
 
+	// …and an owed concentration save goes with the concentration it was owed for, however that ended
+	// (replaced by the next spell, a long rest, an expiring carrier).
+	$effect(() => {
+		combat.syncPendingConcentration();
+	});
+
 	// A conditional ability's window opening is a thing that HAPPENS, and the sheet is where it is
 	// noticed — the panel already greys a closed one, but nothing said when it stopped being closed.
 	$effect(() => {
