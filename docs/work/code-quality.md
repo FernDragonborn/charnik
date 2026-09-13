@@ -34,3 +34,30 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   revision, and the dice tray a roll is built in. `DiceTray` (the live tray state) and
   `menus/DiceTray.svelte` (its overlay) keep the name, and the `dice/tray.svelte.ts` open-the-tray
   seam was never part of it.
+
+- [ ] **AUDIT-COVERAGE · what the September audit did not read.** Every FINDING in
+  [`../audit-sep-09.md`](../audit-sep-09.md) is closed; its coverage never was. That document stays as
+  the reference record — what was checked and is correct, what each finding was and how it was
+  reproduced, and *What was not reached*, which is the detail behind this item and is not copied here.
+  What is left, highest value first:
+  - [ ] **The `/dev/` probe on the real desktop app.** `AGENTS.md` ▸ Verifying signs filesystem work
+        off there, and the whole desktop half of storage is read and reasoned rather than RUN: the
+        data-folder move end to end, `walkTree`'s symlink skip against a real junction, the photo
+        write, the backup ring under a Windows rename refusal, `deleteCharacter` against an open
+        handle, and plugin discovery over the Tauri `Storage` (case-folding against `NAMESPACE_RE`, a
+        plugin folder inside a watched pack). The audit skipped it because the tree was shared, not
+        because it was blocked. The native folder picker stays out of reach of any driver
+        (`testing.md`).
+  - [ ] **The play loop across both editions.** The both-editions sweep covered the BUILD path — 96
+        class sheets and 811 build-path derives, clean — and not a rest, a cast or an action option.
+  - [ ] **`tools/restamp.ts`, unread.** Runtime-adjacent and what any future import path leans on.
+        The converters beside it are deliberately out of scope (CONTENT ▸ CONVERTERS-SUNSET).
+  - [ ] **Named tails.** `readCharacterFiles` unexercised; `seedDemoIfFirstRun` and
+        `recreateDemoCharacter` read but not driven; `Hero.svelte` and `PanelCard.svelte` below their
+        markup unread; `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a
+        finding — no shipped CSV carries the rest chapter, so nothing here can check the claim.
+
+  **The shape that worked** is written down at the end of the audit: one reader per subsystem, three
+  at a time, each told to read `AGENTS.md` and the subsystem doc first, to REPRODUCE every finding
+  rather than infer it, and to report CONFIRMED · SUSPECTED · RULED OUT · **NOT YET CHECKED**. The
+  fourth part is what made this item cheap to write.

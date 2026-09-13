@@ -12,8 +12,6 @@ pointer at it, not a second set of rules.
   [release](work/release.md). An item lives in exactly one of these; the reasoning behind it lives in
   the subsystem's own doc below. There is nowhere else open work may hide.
 - [Changelog](changelog.md)
-- [Audit — everything since 0.6.2](audit-sep-09.md) — a fresh-eyes read of the whole release for
-  implementation defects, with what each one is, how it was reproduced, and where the reading stopped.
 
 ## How it works — and which file rules on what
 
@@ -36,6 +34,10 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
+- [Audit — everything since 0.6.2](audit-sep-09.md) — a fresh-eyes read of that release for
+  implementation defects. Every finding is closed; it is kept for what it PROVED — what was checked
+  and is correct, how each defect was reproduced, and where the reading stopped. The coverage it did
+  not reach is [work/code-quality](work/code-quality.md) ▸ AUDIT-COVERAGE.
 
 Design research sits in [research/](research/) — including
 [Wild Shape](research/wild-shape.md), the per-edition spec N2b is built from, every line quoted from

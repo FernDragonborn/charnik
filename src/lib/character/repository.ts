@@ -215,8 +215,9 @@ export async function listCharacterBackups(
  * unmigratable one is refused with its reason rather than written over a working character — the
  * whole point of restoring is that the thing you have is already broken.
  *
- * The current state is not itself snapshotted first: the confirm says the sheet is replaced, and the
- * rings still hold the other four, so a restore of the wrong one is a restore away from undone.
+ * The state being replaced is checkpointed on the way out only as far as the `save` ring's 10-minute
+ * throttle allows, so it is NOT a guaranteed undo — what makes a wrong restore recoverable is that
+ * the other snapshots are untouched, which is what the confirm promises.
  */
 export async function restoreCharacterBackup(
 	storage: Storage,

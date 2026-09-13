@@ -12,9 +12,15 @@ names the method that reproduced it, and the ones that could not be reproduced a
 under their own heading rather than mixed in. The sections headed *second pass* and *third pass* are
 the later batches; they carry the same contract.
 
-**Progress.** Every finding's heading carries a box: `[x]` is closed — fixed, or deliberately
-dismissed with the reason written under it — and `[ ]` is still open. The box is the only progress
-record; nothing else in this document tracks state.
+**Every finding here is CLOSED** — fixed, or deliberately dismissed with the reason written under it.
+Each heading still carries its box, and it stays the only progress record; nothing else in this
+document tracks state.
+
+What is NOT closed is the **coverage**, and it has moved: `docs/work/code-quality.md` ▸
+AUDIT-COVERAGE is the open item, and *What was not reached* at the end of this document is the detail
+behind it. So this file is now a REFERENCE — what was checked and is correct (do not re-check it),
+what each finding was and how it was reproduced, and where the reading stopped — rather than a
+tracker.
 
 Coverage is **partial by construction** and each reader says where it stopped — see *What was not
 reached* at the end. Read that section before concluding a subsystem is clean: "not reported" here

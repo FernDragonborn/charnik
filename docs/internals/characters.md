@@ -22,7 +22,8 @@ snapshot's epoch-ms in the filename so pruning needs no mtime. **Settings ▸ Da
 reader**: it lists both rings per character, newest first, and puts one back through the same
 parse → migrate → validate the live save gets — so a corrupt snapshot is refused with its reason
 rather than written over a working character. Restoring is itself a save, so the state it replaced is
-checkpointed into the ring on the way out.
+checkpointed on the way out as far as the `save` ring's throttle allows — what makes a wrong restore
+recoverable is the other snapshots, not that one.
 
 ## The unfinished one is a different kind of file
 
