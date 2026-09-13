@@ -168,6 +168,45 @@ layer that now tracks money, recharges, events and the reasons behind each numbe
   time you went down — and a tick nobody spent on a hit could cost two failures on a later ordinary
   one, from a checkbox that is only on screen at 0 HP.
 
+### Caught by the audit of this release
+
+A second fresh-eyes read, this one subsystem by subsystem, with every finding reproduced before it
+was believed. What it turned up, in the order it matters to you:
+
+- **Deleting a character asks first.** The roster's ✕ took the sheet, the portrait, the roll log and
+  every automatic backup on one unconfirmed click — the most expensive thing you own was the only
+  destructive action in the app with no way out. Discarding an unfinished build asks too.
+- **Your automatic snapshots are reachable.** Charnik has always kept a few copies of every character
+  — two checkpoints while you play, one per launch — and nothing could read one back. Settings ▸ Data
+  ▸ Snapshots lists them and puts one back, and refuses a copy that is itself damaged rather than
+  writing it over a working sheet.
+- **A portrait you picked and walked away from no longer follows you.** It used to show on the next
+  character you opened and overwrite their own face on the next save.
+- **A character built at a level can still choose a class.** Setting the level before picking the
+  class locked the class picker out at 20, and flipping a level-20 character to the other edition did
+  the same thing.
+- **Old saves keep their languages.** The one field the id migration forgot, so a save from before it
+  came back with its languages silently gone.
+- **Unconscious imposes what Prone imposes.** It listed the condition and none of its mechanics.
+- **The roller stops losing your place.** Taking a pill out left the caret one token short of the end,
+  so the next thing you typed landed mid-formula and a `>10` floor attached to the wrong die; a
+  finished formula with no trailing space could not be rolled with the mouse at all, however many
+  times you clicked; damage made only of an effect's dice now gets its damage line; and a damage type
+  cannot be dragged onto the d20 line, where it did nothing and said nothing.
+- **The keyboard reaches the builder's pickers and the combat layout.** Opening a picker puts the
+  caret in its search box and closing it hands the caret back to the card you opened — before, the
+  pane was 89 Tab stops away. The panel handle is a real button and the arrow keys move a panel the
+  way dragging does. Every full-screen dialog carries the language switch, including the five that
+  ask something you cannot take back.
+- **An edition is called what Settings calls it** — "D&D 5.5e", not `5.5e` — on the roster, the play
+  sheet, the builder's switch and the homebrew form.
+- **Unfinished edits survive being looked at.** Opening Translate used to delete the drafts the
+  "these are being discarded" warning exists to name, one stray file in the drafts folder took the
+  whole discard dialog down, and a pack whose source contained `*` could not be drafted at all on
+  Windows.
+- **Installing a pack cannot land on a folder you put there yourself**, and a CSV you added to a pack
+  folder is preserved rather than removed when the pack updates.
+
 ### Rename
 
 - **`resist_immune` is `damage_sensitivity`, and it always says which relation.** The old name

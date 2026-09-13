@@ -311,7 +311,7 @@
 		{#each SYSTEMS as sys (sys)}
 			<button
 				type="button"
-				class="syschip"
+				class="chip syschip"
 				class:on={hasSystem(sys)}
 				onclick={() => toggleSystem(sys)}>{systemShortLabel(sys)}</button
 			>
@@ -563,24 +563,10 @@
 		gap: var(--space-2);
 		margin-bottom: var(--space-4);
 	}
+	/* the global `.chip`, wider — the base, its hover and its selected state all come from there
+	   rather than being re-typed here (AGENTS.md ▸ a shared class lives in exactly one place) */
 	.syschip {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
 		padding: var(--space-1) var(--space-3);
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-	.syschip:hover {
-		border-color: var(--color-border-strong);
-		color: var(--color-text);
-	}
-	.syschip.on {
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
-		background: var(--color-accent-soft);
 	}
 	.meta-cell {
 		display: flex;

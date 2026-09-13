@@ -30,6 +30,14 @@ is a standing risk of a well-meaning wrong merge. **Do not collapse them:**
   `effects.test.ts` keeps them aligned; a shared import would defeat the point.
 - **`formatModifier`** (`rules/dice`, pure core) versus **`signed`** (`util/format`) — same body, but
   the hot roll path in the core must not pull in `util`. The duplication is the accepted cost.
+- **The CSS census's top rows are STATES, not controls.** `css-dups.mjs` counts a hover pair
+  (`border-strong` + `text`) across 10 selectors and an accent-selected triple across 6, and the
+  obvious reading — "compose `.chip` / `.pill-btn` / `.eyebrow` instead" — is wrong for most of them:
+  `.cls`, `.choice` and `.jumpbtn` are `radius-full` at three different sizes and paddings, and the
+  `.eyebrow` family carries `text-transform: uppercase` + `letter-spacing` that a weight figure or a
+  timestamp must not get. Two declarations shared by two different controls is a coincidence of the
+  palette, not a shared class. Merge only where the base rules are the same too — `.syschip` was, and
+  is now `.chip` plus its padding.
 - **`displayNamesByLocale`** and the translate name reads versus **`localizedName`** — different
   semantics. Search indexes *all* locales with no fallback; translate uses `?? ''`, where empty means
   "not translated" and specifically **not** the English fallback. Merging breaks both.

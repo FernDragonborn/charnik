@@ -181,7 +181,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.mono-path` | components.css | a filesystem path shown inline (settings Data row) — mono, muted, ellipsized |
 | `.monster-type` | components.css |  |
 | `.muted` | components.css |  |
-| `.on` | components.css |  |
+| `.on` | components.css | the SELECTED chip. |
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |

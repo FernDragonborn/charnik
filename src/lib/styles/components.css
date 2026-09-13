@@ -657,6 +657,13 @@ svg.lucide {
 	color: var(--color-text);
 	border-color: var(--color-border-strong);
 }
+/* the SELECTED chip. It lived here nowhere, so every chip-like control wrote its own copy of the
+   same accent triple — `css-dups.mjs` counted six. A chip that is on is the same chip everywhere. */
+.chip.on {
+	background: var(--color-accent-soft);
+	border-color: var(--color-accent);
+	color: var(--color-accent-bright);
+}
 
 /* --- buttons: neutral base + ghost / primary variants (dialog footers, forms) --- */
 .btn {

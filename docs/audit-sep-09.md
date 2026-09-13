@@ -2313,7 +2313,7 @@ The lines *What was not reached* left open: the duplicated CSS census, a `:focus
 the reverse states beyond finding 25 — pin persistence, source enable/disable, theme
 install/uninstall, pack apply/rollback.
 
-### 71 · [ ] LOW · the top of the duplicated-CSS census is the shared class being re-typed beside itself
+### 71 · [x] LOW · the top of the duplicated-CSS census is the shared class being re-typed beside itself
 
 `node tools/visual/css-dups.mjs` — the repo's own survey, and the source of the census this audit
 already carries: **102 duplicated declaration blocks, 100 of them spanning more than one file.** The
@@ -2336,6 +2336,27 @@ two-declaration hover block is far under that floor.
 `.pill-btn` / `.chip` / `.eyebrow` in the markup instead of restating their hover and selected pairs
 — which is what those classes exist for — and re-run `css-dups.mjs` to see what is left.
 `tools/visual/hoist-class.mjs` and `rename-class.mjs` are the mechanical half of that move.
+
+**Closed, partly by doing it and partly by disagreeing with it.** One row was a real duplicate and is
+gone: `.syschip` was the global `.chip` declaration for declaration bar its padding, so it is now
+`class="chip syschip"` with one padding rule left, and the global gained the `.chip.on` it never had —
+which is why every chip-like control had written its own copy of the accent triple. 32 states at 0 px
+drift.
+
+The other four rows are NOT merged, and the reason is measured rather than asserted:
+
+- **`.cls` / `.choice` / `.jumpbtn` are not chips.** `radius-full` against the chip's `radius-sm`,
+  three different font sizes, three different paddings, and `.jumpbtn` opens with `all: unset`.
+  Composing `.chip` there changes the shape of three controls to remove two declarations from each.
+- **The micro-label rows are not `.eyebrow`s.** `components.css:93` puts `text-transform: uppercase`
+  and `letter-spacing: var(--tracking-label)` on the whole eyebrow family. Composing it would
+  uppercase a carried weight, a timestamp and a spell's sub-line — nineteen labels that are
+  deliberately sentence case.
+
+What those rows actually share is a *state* (one hover pair, one selected triple) across controls that
+are otherwise different, which is the palette being consistent rather than a class being re-typed. The
+standing note is in `tooling.md` ▸ Look-alikes that are separate ON PURPOSE, so the next reader of the
+census does not re-take this decision.
 
 ### 72 · [x] MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
 
