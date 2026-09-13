@@ -9,21 +9,15 @@
  * ad-hoc roll (an empty body) and a prefilled attack without a mode flag telling them apart.
  */
 import { app } from '$lib/stores/app.svelte';
-import {
-	dealsDamage,
-	rollDamageParts,
-	type DamagePartSpec,
-	type RollLogEntry,
-} from '$lib/combat/roll';
+import { dealsDamage, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
+import { damageSpecsOf, rollLines } from './roll-lines';
 import {
 	ADVANTAGE_MODE,
 	NEXT_ADVANTAGE,
-	rollPool,
 	type AdvantageMode,
 	type BonusDie,
 	type DieMods,
 	type Rng,
-	type RollPoolOptions,
 } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { SaidValue } from '$lib/util/say';
@@ -33,7 +27,6 @@ import {
 	TOKEN_KIND,
 	addToken,
 	canRoll,
-	damageParts,
 	countPill,
 	dicePillToken,
 	emptyLine,
@@ -41,9 +34,6 @@ import {
 	normalizeLine,
 	pillsFromPool,
 	rollerIssues,
-	rollerNotes,
-	testRoll,
-	volleyOf,
 	type RollerLine,
 	type RollerPill,
 	type RollerRole,
@@ -86,18 +76,6 @@ export interface RollerPrefill {
 	/** Provenance recorded with the roll — an upcast's "8d6 base + 1d6 @ slot 4". */
 	note?: string;
 }
-
-/** The folded test line → what `rollPool` is asked for. Loop-invariant, so a volley builds it once;
- *  a named function rather than an inline literal because every instance of it is an optional field
- *  that is only spelled when it has a value (`exactOptionalPropertyTypes`). */
-const poolOptions = (spec: ReturnType<typeof testRoll> | null, rng?: Rng): RollPoolOptions => ({
-	// one or the other, never both: `modParts` IS the modifier, told with its provenance
-	...(spec?.modParts ? { modParts: spec.modParts } : { mod: spec?.mod ?? 0 }),
-	advantage: spec?.advantage ?? 0,
-	...(spec?.bonusDice.length ? { bonusDice: spec.bonusDice } : {}),
-	...(spec?.mods ?? {}),
-	...(rng ? { rng } : {}),
-});
 
 /** The caret is in the LINE, not in the suggestion menu. `↓` moves it in, `↑` off the top row moves
  *  it back — so there is one selection, not a line selection and a menu selection at once. */
@@ -596,15 +574,10 @@ export class DiceTray {
 		this.drafts = this.lines.map((_, i) => this.drafts[i] ?? '');
 	};
 
-	/** The damage the lines currently describe, as the specs `roll()` throws. Exposed because a
-	 *  surface may have to roll ONE of them again (Savage Attacker rerolls the weapon's part), and
-	 *  reproducing it from the recorded dice would lose the part's crit method and its die mods. */
+	/** The damage the lines currently describe, as the specs a roll throws. Exposed because a surface
+	 *  may have to roll ONE of them again (Savage Attacker rerolls the weapon's part). */
 	get damageSpecs(): DamagePartSpec[] {
-		return this.lines
-			.filter((l) => l.role === ROLLER_ROLE.damage)
-			.flatMap((line) =>
-				damageParts(line).map((p) => (line.crit ? { ...p, crit: this.critMethod } : p)),
-			);
+		return damageSpecsOf(this.lines, this.critMethod);
 	}
 
 	/**
@@ -618,36 +591,16 @@ export class DiceTray {
 	roll = (rng?: Rng): RollLogEntry[] => {
 		this.commit(this.focus);
 		if (!this.rollable) return [];
-		const test = this.lines.find((l) => l.role === ROLLER_ROLE.test && l.pills.length);
-		const spec = test ? testRoll(test) : null;
-		const parts = this.damageSpecs;
-		// a volley is a count on ANY line, not only the test one: a damage-only spell can fire N times
-		// too, and reading it off the test line alone would silently drop that
-		const times = Math.max(1, ...this.lines.map(volleyOf));
-		// what the player called their own dice rides the note beside whatever provenance the roll site
-		// already wrote there — the fold has no number to give those pills, and dropping them was the
-		// last of the four losses at that seam
-		const note = [this.note, ...rollerNotes(this.lines)].filter(Boolean).join(' · ');
-		const at = Date.now();
-		const opts = poolOptions(spec, rng);
-		const out: RollLogEntry[] = [];
-		for (let i = 0; i < times; i++) {
-			const primary = rollPool(spec?.dice ?? {}, opts);
-			const damage = parts.length ? rollDamageParts(parts, rng) : undefined;
-			out.push({
-				// no name typed → the roll is called what the catalog calls an unnamed one, and carries
-				// that as its KEY so the log is not frozen in the language it was rolled in
-				label: this.label || 'Custom roll',
-				...(this.labelKey || !this.label ? { labelKey: this.labelKey || 'roller.customRoll' } : {}),
+		return rollLines(
+			{
+				lines: this.lines,
+				label: this.label,
+				labelKey: this.labelKey,
 				...(this.labelValues ? { labelValues: this.labelValues } : {}),
-				...primary,
-				...(damage ? { damage } : {}),
-				...(note ? { note } : {}),
-				// one instance per millisecond: `at` is what an amendment matches on to rewrite ITS line,
-				// so a volley whose three attacks shared a timestamp would rewrite the wrong one
-				at: at + i,
-			});
-		}
-		return out;
+				note: this.note,
+				critMethod: this.critMethod,
+			},
+			rng,
+		);
 	};
 }

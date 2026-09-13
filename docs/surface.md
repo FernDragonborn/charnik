@@ -30,7 +30,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
-- `of` ×3 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
+- `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `probe` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `REPORT` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
@@ -71,7 +71,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
-- `rather` ×2 — src/lib/dice/dice-tray.svelte.ts · src/lib/rules/proficiency.ts
+- `rather` ×2 — src/lib/dice/roll-lines.ts · src/lib/rules/proficiency.ts
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
@@ -435,7 +435,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (120 modules)
+## Library functions & types (123 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -509,6 +509,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface AssembleWrapper` — The character-envelope fields that wrap an assembled build.
 - `function assembleCharacter` — * Validate an assembled build into a Character.
 
+### `src/lib/character/derive-assemble.ts`
+
+- `interface AssembleInput` — The inputs assembly needs beyond that state: what was loaded, what was asked for, and the two * accumulators the whol…
+- `function assembleSheet`
+
 ### `src/lib/character/derive-context.ts`
 
 - `function baseResolveState` — The BASE (pre-effect) resolve state, for building `castCtx` when auto-calc is OFF: no effects were * gathered, so sco…
@@ -532,11 +537,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/derive-setup.ts`
 
-- `function seedAbilityBase` — A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions.
-- `function computeClassLevels` — Class levels keyed by BARE id (`class_level.monk`), summed across multiclass entries.
-- `function pickPrimaryCaster` — The primary caster's ability (highest caster-class level) — the ctx's default `spellcasting_mod`.
 - `interface HitDiePool` — A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with * that die).
 - `function hitDicePools` — Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice, * keep different …
+- `interface DeriveSetup` — Everything `deriveSheet` needs in hand BEFORE the fold: the level-derived numbers, the pure build * slices, the equip…
+- `function prepareDerive`
 
 ### `src/lib/character/derive-stats.ts`
 
@@ -566,7 +570,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export SKILL_ABILITY`
 - `re-export type SkillId`
 - `interface CharacterSheet`
-- `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
+- `function deriveSheet` — A4: armor with the stealth-disadvantage flag synthesizes a `disadvantage:skill.stealth` FACT so * it reaches BOTH the…
 
 ### `src/lib/character/draft-repository.ts`
 
@@ -900,6 +904,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function linkedRowsOf` — * The rows of `parent`'s linked table, in reading order.
 - `function linkedPrefill` — The draft a new linked row starts from: the joins the user cannot guess, plus the parent's * editions and whatever th…
 
+### `src/lib/content/loader-validate.ts`
+
+- `function collectTranslationGaps` — * Content-health: flag rows that are PARTIALLY translated into a locale — some `<base>_<loc>` prose is * filled but a…
+- `function validateSpellListJoins` — Validate additive spell_lists joins: an unknown class_id/spell_id (no such row in the row's * edition) is likely a ty…
+- `function validateItemTags` — Validate what folding item columns into `tags` took away from zod: a numeric tag's value, and the * existence of the …
+
 ### `src/lib/content/loader.ts`
 
 - `interface LoadedRowOf` — A loaded row of a KNOWN content type `T`: the common identity + the zod-validated, coerced model * for `T` (Spell, Mo…
@@ -907,6 +917,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const rowName` — A row's English name — the label a trace, toast or list shows.
 - `const tokensOf` — A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
 - `type LoadedRowByType` — The loaded-row member(s) for a type `T`.
+- `interface ContentIssue`
 - `interface ContentGraph`
 - `const LOCALE_TAG` — A BCP-47-ish locale code (guardrail vs phantom locales): a 2–3 letter base + optional subtags * (`pt-BR`).
 - `interface ContentSource` — One content root paired with the storage it lives in.
@@ -1147,6 +1158,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function initDiag` — Wire the desktop file sink.
 - `function openLogDir` — Desktop only: reveal the rotating log-file folder (OS app-log dir) in the file manager, so a user * can attach the fu…
 - `function captureGlobalErrors` — Route otherwise-lost uncaught errors + unhandled rejections into the logger.
+
+### `src/lib/dice/roll-lines.ts`
+
+- `interface LineRoll` — Everything a roll needs that is not a line: what it is called, what it says it came from, and the * table's crit rule.
+- `function damageSpecsOf` — The damage the lines describe, as the specs `rollLines` throws.
+- `function rollLines` — Roll the lines — one entry per instance of a volley.
 
 ### `src/lib/dice/roll-toast.ts`
 
@@ -1689,4 +1706,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1013 exports across 135 modules · 68 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1021 exports across 138 modules · 68 duplicate suspects._

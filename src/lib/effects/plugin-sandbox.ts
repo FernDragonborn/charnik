@@ -189,6 +189,76 @@ function disposePlugin(p: LoadedPlugin): void {
 }
 
 /**
+ * One handler call, start to finish: the lazy re-boot after a recycled context, the in-sandbox
+ * wrapper, and the single JSON string that crosses back. Lives beside the factory rather than
+ * inside it because the call path is where the containment rules are, and it reads as its own unit.
+ */
+function callPlugin(
+	p: LoadedPlugin,
+	token: PluginTokenRef,
+	buildJson: string,
+	playJson: string,
+): PluginCallOutcome {
+	// context recycled after a limit trip (PLG-SEC 8): rebuild lazily
+	if (!p.context) {
+		const err = (p.loadError = bootPlugin(getModuleSync(), p));
+		if (err || !p.context) return { ok: false, reason: err ?? 'sandbox unavailable' };
+	}
+	const context = p.context;
+
+	// The wrapper runs INSIDE the sandbox: it parses the ctx halves, tracks whether the
+	// handler touches `ctx.play` (the §4.2 memo split), rejects thenables (the host never
+	// drains the job queue), and stringifies the outcome — so exactly ONE string crosses
+	// the boundary (PLG-SEC 1c; `getString` on a primitive runs no sandbox getters).
+	const code = `(() => {
+		try {
+			const t = ${JSON.stringify(token)};
+			const b = JSON.parse(${JSON.stringify(buildJson)});
+			const pl = JSON.parse(${JSON.stringify(playJson)});
+			let playRead = false;
+			const ctx = { api: 1, build: b };
+			Object.defineProperty(ctx, "play", { get() { playRead = true; return pl; } });
+			const r = globalThis.handlers[t.handlerName].passive(t, ctx);
+			if (r !== undefined && r !== null && typeof r.then === "function")
+				return JSON.stringify({ err: "async handlers are invalid (return plain JSON)" });
+			return JSON.stringify({ result: r ?? {}, playRead });
+		} catch (e) {
+			return JSON.stringify({ err: String((e && e.message) || e).slice(0, 200) });
+		}
+	})()`;
+
+	p.deadline = now() + CALL_BUDGET_MS;
+	const res = context.evalCode(code, 'charnik-call.js');
+	if (res.error) {
+		// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those). The
+		// context is dropped rather than rebuilt in place: re-evaluating `main.js` is unbounded
+		// (QuickJS's interrupt handler does not cover parse or compile), so a legal 250 KB file
+		// cost ~65 ms charged to THIS derive, after the aggregate budget gate had already been
+		// passed. The next call boots it lazily — by which time the fail-closed counter may have
+		// disabled the handler instead (PLG-SEC 8).
+		res.error.dispose();
+		disposePlugin(p);
+		return { ok: false, reason: 'over budget' };
+	}
+	const raw = context.getString(res.value);
+	res.value.dispose();
+	if (raw.length > MAX_RAW_RESULT) return { ok: false, reason: 'result too large' };
+
+	let parsed: { result?: unknown; playRead?: unknown; err?: unknown };
+	try {
+		parsed = JSON.parse(raw) as typeof parsed;
+	} catch {
+		return { ok: false, reason: 'invalid result: not JSON' };
+	}
+	if (parsed.err !== undefined) return { ok: false, reason: asText(parsed.err, 'plugin error') };
+	return {
+		ok: true,
+		resultJson: JSON.stringify(parsed.result ?? {}),
+		readPlay: parsed.playRead === true,
+	};
+}
+
+/**
  * Build the `PluginEvaluator` for a set of consented, enabled plugins. Async ONLY for the one-time
  * WASM module load — every `call` afterwards is synchronous (derive stays sync). Each plugin gets
  * its own runtime; a plugin that fails to boot stays listed (has() = false → its tokens degrade).
@@ -224,64 +294,7 @@ export async function createSandboxEvaluator(
 			const p = plugins.get(token.namespace);
 			if (!p || !p.passiveHandlers.has(token.handlerName))
 				return { ok: false, reason: 'handler not registered' };
-			// context recycled after a limit trip (PLG-SEC 8): rebuild lazily
-			if (!p.context) {
-				const err = (p.loadError = bootPlugin(getModuleSync(), p));
-				if (err || !p.context) return { ok: false, reason: err ?? 'sandbox unavailable' };
-			}
-			const context = p.context;
-
-			// The wrapper runs INSIDE the sandbox: it parses the ctx halves, tracks whether the
-			// handler touches `ctx.play` (the §4.2 memo split), rejects thenables (the host never
-			// drains the job queue), and stringifies the outcome — so exactly ONE string crosses
-			// the boundary (PLG-SEC 1c; `getString` on a primitive runs no sandbox getters).
-			const code = `(() => {
-				try {
-					const t = ${JSON.stringify(token)};
-					const b = JSON.parse(${JSON.stringify(buildJson)});
-					const pl = JSON.parse(${JSON.stringify(playJson)});
-					let playRead = false;
-					const ctx = { api: 1, build: b };
-					Object.defineProperty(ctx, "play", { get() { playRead = true; return pl; } });
-					const r = globalThis.handlers[t.handlerName].passive(t, ctx);
-					if (r !== undefined && r !== null && typeof r.then === "function")
-						return JSON.stringify({ err: "async handlers are invalid (return plain JSON)" });
-					return JSON.stringify({ result: r ?? {}, playRead });
-				} catch (e) {
-					return JSON.stringify({ err: String((e && e.message) || e).slice(0, 200) });
-				}
-			})()`;
-
-			p.deadline = now() + CALL_BUDGET_MS;
-			const res = context.evalCode(code, 'charnik-call.js');
-			if (res.error) {
-				// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those). The
-				// context is dropped rather than rebuilt in place: re-evaluating `main.js` is unbounded
-				// (QuickJS's interrupt handler does not cover parse or compile), so a legal 250 KB file
-				// cost ~65 ms charged to THIS derive, after the aggregate budget gate had already been
-				// passed. The next call boots it lazily — by which time the fail-closed counter may have
-				// disabled the handler instead (PLG-SEC 8).
-				res.error.dispose();
-				disposePlugin(p);
-				return { ok: false, reason: 'over budget' };
-			}
-			const raw = context.getString(res.value);
-			res.value.dispose();
-			if (raw.length > MAX_RAW_RESULT) return { ok: false, reason: 'result too large' };
-
-			let parsed: { result?: unknown; playRead?: unknown; err?: unknown };
-			try {
-				parsed = JSON.parse(raw) as typeof parsed;
-			} catch {
-				return { ok: false, reason: 'invalid result: not JSON' };
-			}
-			if (parsed.err !== undefined)
-				return { ok: false, reason: asText(parsed.err, 'plugin error') };
-			return {
-				ok: true,
-				resultJson: JSON.stringify(parsed.result ?? {}),
-				readPlay: parsed.playRead === true,
-			};
+			return callPlugin(p, token, buildJson, playJson);
 		},
 		dispose() {
 			for (const p of plugins.values()) disposePlugin(p);
