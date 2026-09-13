@@ -48,6 +48,15 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
         plugin folder inside a watched pack). The audit skipped it because the tree was shared, not
         because it was blocked. The native folder picker stays out of reach of any driver
         (`testing.md`).
+
+        **The character half of it is written and waiting to be run**: `/dev/characters-write`,
+        listed in the dev index beside `/dev/packs-write`. Open it inside `pnpm tauri dev` and read
+        the verdict, or the report it leaves in the data folder. It covers the portrait write, both
+        backup rings and the restore, `readCharacterFiles`, and the draft filename encoding against a
+        real Windows name — and says out loud what it cannot reach (a handle another process holds,
+        the picker, a junction). What is left to WRITE is the data-folder move, which cannot complete
+        under a driver: `set_data_dir` refuses a path the picker did not choose, so only the copy,
+        verify and rollback halves can be probed.
   - [ ] **The play loop across both editions.** The both-editions sweep covered the BUILD path — 96
         class sheets and 811 build-path derives, clean — and not a rest, a cast or an action option.
   - [ ] **`tools/restamp.ts`, unread.** Runtime-adjacent and what any future import path leans on.

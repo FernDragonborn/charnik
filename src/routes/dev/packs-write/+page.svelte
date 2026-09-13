@@ -35,6 +35,8 @@
 
 	let lines = $state<string[]>([]);
 	let failures = $state(0);
+	/** Whether the probe got past the platform gate — see the verdict below. */
+	let ran = $state(false);
 	const say = (line: string): void => {
 		lines = [...lines, line];
 	};
@@ -62,7 +64,9 @@
 			check('the probe ran to the end', false, String(e));
 		}
 		await cleanup();
-		say(failures === 0 ? '\nALL PASSED' : `\n${failures} FAILED`);
+		// a probe that prints ALL PASSED for a run that did nothing is worse than one that prints
+		// nothing: the verdict is the only thing anyone reads
+		say(!ran ? '\nNOT RUN HERE' : failures === 0 ? '\nALL PASSED' : `\n${failures} FAILED`);
 		await getUserStorage()
 			.write(REPORT, lines.join('\n'))
 			.catch((e: unknown) => say(`report not written: ${String(e)}`));
@@ -108,6 +112,7 @@
 			say('NOT the desktop app — the point of this probe is the real filesystem. Nothing run.');
 			return;
 		}
+		ran = true;
 		await cleanup();
 
 		// --- 1. the swap: all-old to all-new, with everything else carried across -------------------
