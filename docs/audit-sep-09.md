@@ -1810,7 +1810,7 @@ docstring above it. Both editions' exhaustion then lands on all three rolls inst
 The items *What was not reached* left open: the caret state machine, `movePill` across lines,
 `setDamage`'s `real` filter, `savageReroll`'s tie case and the two-column type picker.
 
-### 56 · [ ] MEDIUM · taking a pill out parks the caret one token short of the end, and the next thing typed lands mid-line
+### 56 · [x] MEDIUM · taking a pill out parks the caret one token short of the end, and the next thing typed lands mid-line
 
 `dice-tray.svelte.ts:434` — `removePill` compensates the caret with
 `if (pillIndex < this.caretAt(index)) this.setCaret(index, this.caretAt(index) - 1)`, and `caretAt`
@@ -1847,7 +1847,7 @@ tray's own suite.
 **Fix:** test the stored caret, not the clamped one: read `this.carets[index]` raw and skip the
 adjustment when it is `AT_END`.
 
-### 57 · [ ] LOW · a pill dragged across lines keeps no caret, and a damage type may be dropped on a d20 line
+### 57 · [x] LOW · a pill dragged across lines keeps no caret, and a damage type may be dropped on a d20 line
 
 `dice-tray.svelte.ts:458` — `movePill` rewrites both lines and touches `carets` in neither, which is
 the opposite of the sibling thirty lines above it (finding 56's guard). It also takes any pill to any
@@ -1871,7 +1871,7 @@ player asked for with the mouse, and neither is a state the model admits from th
 **Fix:** `movePill` already has both roles in hand — refuse a `damageType` pill onto a `test` line,
 and carry the caret the way `removePill` means to.
 
-### 58 · [ ] LOW · a damage part made only of effect dice is not damage at all
+### 58 · [x] LOW · a damage part made only of effect dice is not damage at all
 
 `combat/roll.ts:50` — `dealsDamage` is `Object.keys(p.dice).length > 0 || p.mod !== 0`, and
 `dice-tray.svelte.ts:551`'s `real` filter repeats the same predicate verbatim. Neither counts
@@ -1897,7 +1897,7 @@ plugin-reachable rather than wrong today, the same footing as finding 9.
 
 **Fix:** one clause in `dealsDamage`, which `real` should then call rather than restate.
 
-### 59 · [ ] LOW-MEDIUM · the gate `AGENTS.md` prescribes cannot see a type error, and one reached `main`
+### 59 · [x] LOW-MEDIUM · the gate `AGENTS.md` prescribes cannot see a type error, and one reached `main`
 
 `AGENTS.md` ▸ "Run the whole gate before committing" names `pnpm test && pnpm lint && pnpm build` and
 says a subset is a false green. None of the three runs a type-checker: `test` is `vitest run` (oxc
@@ -3397,7 +3397,7 @@ driver can reach it. The actual sandbox boundary of the desktop app is documente
 comments inside the file it guards, which is the one place a reader checking the boundary would not
 think to look.
 
-### 98 · [ ] LOW-MEDIUM · a finished formula with no trailing space cannot be rolled with the mouse at all
+### 98 · [x] LOW-MEDIUM · a finished formula with no trailing space cannot be rolled with the mouse at all
 
 The first pass filed this as a suspicion and named the open question exactly: *"Not observed: whether
 the click still lands, since a disabled button swallows the event in Chrome and whether the blur

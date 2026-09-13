@@ -173,10 +173,12 @@ a helper. The things most often re-created here are CSS classes and functions of
 obvious utilities. A shared class lives in exactly one place; a shared control is one component. If
 something close exists, extend it rather than forking a scoped lookalike.
 
-**Run the whole gate before committing.** `pnpm test && pnpm lint && pnpm build` — under a minute
-together, so there is nothing to save by trimming it. A subset is a false green: `pnpm check`
-type-checks but does not catch build and prerender failures, `pnpm build` type-checks *nothing*
-(vite transpiles with esbuild), and `pnpm test` runs the browser project too.
+**Run the whole gate before committing.** `pnpm test && pnpm check && pnpm lint && pnpm build` —
+under a minute together, so there is nothing to save by trimming it. A subset is a false green, and
+each of the four reads something the others cannot: `pnpm check` is the ONLY one that type-checks at
+all (`pnpm build` type-checks *nothing* — vite transpiles with esbuild — and vitest does the same),
+`pnpm build` is the only one that catches a build or prerender failure, and `pnpm test` runs the
+browser project too. Leaving `check` out is how an excess property on a schema reached `main`.
 
 **If you would WAIT for it, run it in the BACKGROUND.** No command is exempt; there is always the
 next file to read while it runs. Two rules make that safe: never edit a file while a run that reads it

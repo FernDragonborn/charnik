@@ -9,7 +9,12 @@
  * ad-hoc roll (an empty body) and a prefilled attack without a mode flag telling them apart.
  */
 import { app } from '$lib/stores/app.svelte';
-import { rollDamageParts, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
+import {
+	dealsDamage,
+	rollDamageParts,
+	type DamagePartSpec,
+	type RollLogEntry,
+} from '$lib/combat/roll';
 import {
 	ADVANTAGE_MODE,
 	NEXT_ADVANTAGE,
@@ -439,8 +444,12 @@ export class DiceTray {
 			index,
 			normalizeLine({ ...line, pills: line.pills.filter((_, i) => i !== pillIndex) }),
 		);
-		// a pill taken out from the LEFT of the caret would otherwise shift the caret one token right
-		if (pillIndex < this.caretAt(index)) this.setCaret(index, this.caretAt(index) - 1);
+		// a pill taken out from the LEFT of the caret would otherwise shift the caret one token right.
+		// Asked of the STORED caret, not of `caretAt`: that clamps `AT_END` down to the line's length,
+		// so a caret nobody has ever moved reported "in front of the last pill", the guard fired, and
+		// the sentinel that exists to keep the caret at the end was materialised one place short of it.
+		const caret = this.carets[index] ?? AT_END;
+		if (caret !== AT_END && pillIndex < caret) this.setCaret(index, caret - 1);
 	};
 
 	/** Nudge a pill's quantity — the −/+ that appear on hover. They exist because a pill has no caret
@@ -471,12 +480,21 @@ export class DiceTray {
 		const target = this.lineAt(to);
 		const pill = source?.pills[pillIndex];
 		if (!source || !target || !pill || from === to) return;
+		// the mouse may not reach a state the keyboard cannot: `vocabularyFor` withholds damage types
+		// from a test line, so a dragged one would sit there as a real pill contributing nothing to
+		// `testRoll` and reported by nothing
+		if (pill.kind === PILL_KIND.damageType && target.role !== ROLLER_ROLE.damage) return;
 		this.lines = this.lines.map((l, i) => {
 			if (i === from)
 				return normalizeLine({ ...l, pills: l.pills.filter((_, k) => k !== pillIndex) });
 			if (i === to) return normalizeLine({ ...l, pills: [...l.pills, pill] });
 			return l;
 		});
+		// both lines changed length; `removePill`'s reasoning applies to the line it LEFT, and the pill
+		// lands at the end of the line it joined
+		const caret = this.carets[from] ?? AT_END;
+		if (caret !== AT_END && pillIndex < caret) this.setCaret(from, caret - 1);
+		this.caretToEnd(to);
 	};
 
 	/** A die button in the header: it lands in the line the caret is in. The header has no role of its
@@ -561,7 +579,7 @@ export class DiceTray {
 	 * the d20 and the card resolved a silently-wrong number.
 	 */
 	setDamage = (parts: DamagePartSpec[]): void => {
-		const real = parts.filter((p) => Object.keys(p.dice).length || p.mod);
+		const real = parts.filter((p) => dealsDamage([p])); // one predicate, not two spellings of it
 		const line: RollerLine = {
 			...emptyLine(ROLLER_ROLE.damage),
 			pills: real.flatMap((p) =>

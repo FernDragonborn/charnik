@@ -91,11 +91,15 @@
 			</div>
 		{/if}
 
+		<!-- muted, never `disabled`: `roll()` commits the half-typed token first, and a disabled button
+		     takes no pointer events and moves no focus — so the blur that would have committed `2d6`
+		     never fired and no number of clicks could ever roll it. The band above says why when the
+		     click genuinely cannot, which is a message a keyboard can reach; a `title` on a dead
+		     control is not. -->
 		<button
 			type="button"
 			class="roller-roll"
 			class:muted={!diceTray.rollable}
-			disabled={!diceTray.rollable}
 			title={$_(diceTray.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
 			onclick={fire}>{$_('roller.roll')}</button
 		>
@@ -236,15 +240,14 @@
 		cursor: pointer;
 		box-shadow: var(--shadow-1);
 	}
-	.roller-roll:hover:not(:disabled) {
+	.roller-roll:hover:not(.muted) {
 		background: var(--color-accent);
 	}
-	/* muted rather than disabled-looking-normal: "you can't press this" has to be visible BEFORE the
-	   press, not discovered by it */
+	/* muted rather than disabled: "the lines do not add up yet" has to be visible BEFORE the press —
+	   but the press still commits what is being typed, which is often the very thing that fixes it */
 	.roller-roll.muted {
 		background: var(--color-surface-2);
 		color: var(--color-text-muted);
-		cursor: not-allowed;
 		box-shadow: none;
 	}
 </style>

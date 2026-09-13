@@ -185,6 +185,52 @@ describe('editing pills', () => {
 		expect(diceTray.lines[1]?.pills[0]).toMatchObject({ sides: 6 });
 	});
 
+	it('taking a pill out leaves a never-moved caret AT the end, not one token short of it', () => {
+		// the guard read `caretAt`, which clamps the AT_END sentinel to the line's length — so an
+		// untouched caret reported "in front of the last pill" and was materialised one place left
+		typeInto(0, '1d20 +3 +5 ');
+		diceTray.removePill(0, 0);
+		typeInto(0, '+9 ');
+		expect(diceTray.lines[0]?.pills.map((p) => p.text)).toEqual(['+3', '+5', '+9']);
+	});
+
+	it('…and a bound still lands on the die it was typed for', () => {
+		// `addToken` binds the last die LEFT of the caret, so the same slip turned a Reliable Talent
+		// floor into an unaccounted fragment that blocked the roll
+		diceTray.addDamageLine();
+		typeInto(0, '1d6 1d20 ');
+		diceTray.removePill(0, 0);
+		typeInto(0, '>10 ');
+		expect(diceTray.issues.filter((i) => i.blocking)).toEqual([]);
+		expect(diceTray.rollable).toBe(true);
+	});
+
+	it('refuses a damage type dragged onto a test line — the menu withholds it there', () => {
+		diceTray.addDamageLine();
+		typeInto(1, '2d6 fire ');
+		diceTray.movePill(1, 1, 0);
+		expect(diceTray.lines[0]?.pills).toHaveLength(0);
+		expect(diceTray.lines[1]?.pills.map((p) => p.text)).toContain('fire');
+	});
+
+	it('a damage part made only of EFFECT dice is still damage', () => {
+		// `dealsDamage` is asked after the effects fold in: a `+1d6` rider on a weapon whose own damage
+		// folds to zero (Unarmed Strike at STR 8, a Net at modifier 0) had no damage line at all
+		diceTray.prefill({
+			label: 'Strike',
+			test: { dice: { 20: 1 }, mod: 5 },
+			damage: [
+				{
+					dice: {},
+					mod: 0,
+					type: 'bludgeoning',
+					bonusDice: [{ count: 1, sides: 6, sign: 1, source: 'Divine Favor' }],
+				},
+			],
+		});
+		expect(diceTray.lines.map((l) => l.role)).toContain(ROLLER_ROLE.damage);
+	});
+
 	it('lands a header die in the line the caret is in', () => {
 		diceTray.addDamageLine();
 		diceTray.focus = 1;

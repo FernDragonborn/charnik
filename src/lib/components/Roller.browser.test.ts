@@ -118,9 +118,19 @@ describe('the dice tray (browser)', () => {
 	it('holds the roll on a fragment it cannot account for, and says so', async () => {
 		const { onroll, screen, caret } = await mount();
 		await typeInto(caret(), '1d8 +d4? ');
-		await expect.element(screen.getByRole('button', { name: 'Roll' })).toBeDisabled();
+		await expect.element(screen.getByRole('button', { name: 'Roll' })).toHaveClass(/muted/);
 		expect(document.querySelector('.roller-blocked')).not.toBeNull();
+		await screen.getByRole('button', { name: 'Roll' }).click();
 		expect(onroll).not.toHaveBeenCalled();
+	});
+
+	it('a finished formula with no trailing space still rolls from the MOUSE', async () => {
+		// the button used to be `disabled` here, and a disabled button takes no pointer events and
+		// moves no focus — so the blur that commits `2d6` never fired and no number of clicks helped
+		const { onroll, screen, caret } = await mount();
+		await typeInto(caret(), '2d6');
+		await screen.getByRole('button', { name: 'Roll' }).click();
+		expect(onroll).toHaveBeenCalledOnce();
 	});
 
 	it('underlines damage with no type, and rolls it anyway', async () => {
