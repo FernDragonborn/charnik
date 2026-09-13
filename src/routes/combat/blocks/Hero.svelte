@@ -12,6 +12,7 @@
 	import { _ } from '$lib/i18n';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { signed } from '$lib/combat/helpers';
+	import { systemShortLabel } from '$lib/rules/pipeline';
 	import HpPanel from './HpPanel/HpPanel.svelte';
 	import Exhaustion from './Exhaustion.svelte';
 
@@ -37,7 +38,9 @@
 			<div class="subline">
 				{$_('combat.hero.level')}
 				<b>{s.level}</b>
-				· <span class="system-badge">{c.system}</span> · {$_('combat.hero.proficiency')}
+				· <span class="system-badge">{systemShortLabel(c.system)}</span> · {$_(
+					'combat.hero.proficiency',
+				)}
 				<b>{signed(s.proficiencyBonus)}</b>
 				{#if combat.canLevelUp}
 					<button

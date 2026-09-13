@@ -88,6 +88,8 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 					{ item: 'item:SRD 5.2.1:studded-leather', qty: 1, equipped: true, attuned: false },
 				],
 				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }],
+				// refs too, and present in v1 twelve days BEFORE the rename that made this migration
+				languages: ['language:SRD 5.2.1:deep-speech', 'language:SRD 5.2.1:common'],
 			},
 			play: { hp: { current: 20, temp: 0 }, concentration: 'spell:SRD 5.2.1:hold-person' },
 		};
@@ -105,6 +107,10 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 		expect(c.build.inventory[0]!.item).toBe('item:SRD 5.2.1:studded_leather');
 		expect(c.build.spells[0]!.spell).toBe('spell:SRD 5.2.1:fire_bolt');
 		expect(c.play.concentration).toBe('spell:SRD 5.2.1:hold_person');
+		expect(c.build.languages).toEqual([
+			'language:SRD 5.2.1:deep_speech',
+			'language:SRD 5.2.1:common',
+		]);
 	});
 
 	it('v2→v3 re-snakes refs a v2 save still carried in kebab (the seeded demo)', async () => {

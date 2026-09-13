@@ -35,8 +35,8 @@ const snakeRefs = (arr: unknown): unknown => (Array.isArray(arr) ? arr.map(snake
 
 /**
  * E3 migration (v1→v2): content ids became snake_case, so a saved character's REFS are rewritten.
- * Build refs (species/classes/subclass/feats/inventory/spells/background) + skill/expertise arrays
- * + the concentration ref are snaked. Runtime `play.effects` tokens are left as-is (user-entered,
+ * Build refs (species/classes/subclass/feats/inventory/spells/background/languages) + skill/expertise
+ * arrays + the concentration ref are snaked. Runtime `play.effects` tokens are left as-is (user-entered,
  * ambiguous with the `-` minus operator; the user re-adds them) — a pragmatic, safe scope.
  */
 const migrateV1toV2: Migration<Versioned> = (data) => {
@@ -45,7 +45,10 @@ const migrateV1toV2: Migration<Versioned> = (data) => {
 	const play = (d.play ?? {}) as Record<string, unknown>;
 	for (const key of ['species', 'speciesOption', 'background'] as const)
 		if (typeof build[key] === 'string') build[key] = snakeRef(build[key]);
-	for (const key of ['feats', 'skills', 'expertise'] as const) build[key] = snakeRefs(build[key]);
+	// `languages` holds `language:src:id` refs and predates the rename by twelve days — left out of
+	// this list, a v1 save silently lost every language whose id was kebab-cased
+	for (const key of ['feats', 'skills', 'expertise', 'languages'] as const)
+		build[key] = snakeRefs(build[key]);
 	// spells are `{spell: ref, …}` objects, not bare refs
 	if (Array.isArray(build.spells))
 		build.spells = build.spells.map((s) => {

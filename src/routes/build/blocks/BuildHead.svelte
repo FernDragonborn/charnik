@@ -10,7 +10,7 @@
 	import { toast } from 'svelte-sonner';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { SYSTEMS } from '$lib/rules/pipeline';
+	import { SYSTEMS, SYSTEM_SHORT_LABELS } from '$lib/rules/pipeline';
 	import { signed } from '$lib/util/format';
 	import EditionSwitchDialog from './EditionSwitchDialog.svelte';
 	import type { SystemId } from '$lib/stores/app.svelte';
@@ -110,7 +110,7 @@
 			<button
 				class:on={b.draft.system === sys}
 				aria-pressed={b.draft.system === sys}
-				onclick={() => askSwitch(sys)}>{sys}</button
+				onclick={() => askSwitch(sys)}>{SYSTEM_SHORT_LABELS[sys]}</button
 			>
 		{/each}
 	</div>

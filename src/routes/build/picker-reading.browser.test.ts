@@ -146,4 +146,17 @@ describe('PickerReading — the walk from an option that holds focus', () => {
 		expect(reading.reading).toBe(false);
 		expect(state.taken).toEqual([]);
 	});
+
+	it('…including on a host that HAS an onenter — the languages pane, where it mattered', () => {
+		// a language has no article to read, so `LanguagesPane` supplies `onenter` for the walk from
+		// the search box. Passed through to `fromOptions` it cancelled the focused chip's own click
+		// and toggled the HIGHLIGHTED language instead — ui.md §5, "Enter is identical to a left click"
+		const toggled: string[] = [];
+		const { state, reading } = picker({ onenter: (id) => toggled.push(id) });
+		state.previewId = IDS[0] ?? null;
+		const event = key('Enter');
+		reading.fromOptions(event);
+		expect(toggled).toEqual([]);
+		expect(event.defaultPrevented).toBe(false);
+	});
 });

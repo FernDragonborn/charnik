@@ -52,9 +52,11 @@ function keyString(target: DraftTarget): string {
 
 /** The draft's file path. `encodeURIComponent` makes the key a valid, collision-free (reversible)
  *  filename on every OS — no `:` / space hazard, and deterministic so re-editing the same target
- *  overwrites its one file instead of piling duplicates. */
+ *  overwrites its one file instead of piling duplicates. `*` is escaped by hand: it is one of the
+ *  nine characters `encodeURIComponent` leaves alone, and the only one Windows refuses in a name —
+ *  a pack whose `#content-source` carries it failed the write with ENOENT. */
 function draftPath(target: DraftTarget): string {
-	return `${DRAFTS_DIR}/${encodeURIComponent(keyString(target))}.json`;
+	return `${DRAFTS_DIR}/${encodeURIComponent(keyString(target)).replace(/\*/g, '%2A')}.json`;
 }
 
 /** Write (or overwrite) the draft for `target`. Atomic via the Storage impl; parents auto-created. */
@@ -75,7 +77,12 @@ export async function writeDraft<D extends object>(
 }
 
 /** Read the draft for `target`, or null if none / unreadable / a different schema version (ephemeral
- *  WIP → a mismatch is discarded, not migrated; the stale file is removed). */
+ *  WIP → a mismatch is not migrated).
+ *
+ *  It does NOT remove the stale file. `findStaleDrafts` exists to list exactly those before they go,
+ *  and the read has three call sites the warning does not gate — so opening Translate deleted the
+ *  unsaved work the discard dialog would otherwise have named. Removal belongs to `discardDrafts`,
+ *  which has a user behind it. */
 export async function readDraft<D extends object = Record<string, unknown>>(
 	storage: Storage,
 	target: DraftTarget,
@@ -84,10 +91,7 @@ export async function readDraft<D extends object = Record<string, unknown>>(
 	if (!(await storage.exists(path))) return null;
 	const envelope = await parseDraft<D>(storage, path);
 	if (!envelope) return null;
-	if (envelope.schemaVersion !== CONTENT_SCHEMA_VERSION) {
-		await storage.remove(path); // ephemeral WIP from another schema → drop it
-		return null;
-	}
+	if (envelope.schemaVersion !== CONTENT_SCHEMA_VERSION) return null;
 	return envelope;
 }
 
@@ -217,13 +221,36 @@ export async function discardDrafts(storage: Storage, drafts: DraftEnvelope[]): 
 	for (const d of drafts) await deleteDraft(storage, d.target);
 }
 
-/** Read + JSON-parse a draft file, or null if it's corrupt / unparseable (never throws). */
+const DRAFT_KINDS: ReadonlySet<string> = new Set(['translate', 'editor', 'add']);
+
+/**
+ * Is this parsed JSON actually a draft envelope? Anything else that lands in `drafts/` — a stray
+ * `.json`, a hand-edit that broke the shape — parses fine and then has no `target`, which every
+ * consumer dereferences: the discard dialog threw while RENDERING, and `discardDrafts` stopped at it
+ * mid-loop with an unhandled rejection. Routing it to `findUnreadableDrafts` instead is what that
+ * list is for — it is handled by PATH and needs no target.
+ */
+function isDraftEnvelope(value: unknown): value is DraftEnvelope {
+	if (typeof value !== 'object' || value === null) return false;
+	const env = value as Record<string, unknown>;
+	if (typeof env.schemaVersion !== 'number') return false;
+	const target: unknown = env.target;
+	if (typeof target !== 'object' || target === null) return false;
+	const kind: unknown = (target as Record<string, unknown>).kind;
+	return typeof kind === 'string' && DRAFT_KINDS.has(kind);
+}
+
+/** Read + JSON-parse a draft file, or null if it's corrupt / unparseable / not a draft at all
+ *  (never throws). */
 async function parseDraft<D extends object = Record<string, unknown>>(
 	storage: Storage,
 	path: string,
 ): Promise<DraftEnvelope<D> | null> {
 	try {
-		return JSON.parse(await storage.read(path)) as DraftEnvelope<D>;
+		const parsed: unknown = JSON.parse(await storage.read(path));
+		// `D` stays the caller's assertion about `data`, as it always was; the envelope around it is
+		// what is checked here
+		return isDraftEnvelope(parsed) ? (parsed as DraftEnvelope<D>) : null;
 	} catch {
 		return null;
 	}

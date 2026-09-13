@@ -1466,6 +1466,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SYSTEMS` — The two supported rule systems — the ONE owner (AUDIT F7/D2).
 - `type System`
 - `const SYSTEM_LABELS` — What a system is CALLED to a user — never the raw id in prose (AGENTS.md ▸ A small glossary (source)).
+- `const SYSTEM_SHORT_LABELS` — The same name where the full one will not fit — a roster badge, a segmented switch.
+- `function systemShortLabel` — …for the callers holding a plain `string`: a draft summary reads its system out of a file the * user can edit, so an …
 - `const DEFAULT_SYSTEM` — The system a NEW character/draft starts in when nothing says otherwise.
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`
@@ -1681,4 +1683,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1007 exports across 135 modules · 66 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1009 exports across 135 modules · 66 duplicate suspects._

@@ -441,6 +441,30 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.classRows.totalLevel).toBe(20);
 	});
 
+	it('a picked portrait does not survive into the next build', () => {
+		// the VM is a singleton and `portraitSource` prefers a pick over the stored file, so bytes left
+		// behind by an abandoned build showed on the next character AND overwrote their own portrait
+		build.pickedPhoto = { bytes: new Uint8Array([1, 2, 3]), ext: 'webp', mime: 'image/webp' };
+		build.reset();
+		expect(build.pickedPhoto).toBeNull();
+
+		build.pickedPhoto = { bytes: new Uint8Array([1, 2, 3]), ext: 'webp', mime: 'image/webp' };
+		build.hydrate(savedCharacter());
+		expect(build.pickedPhoto).toBeNull();
+		expect(build.portraitSource?.kind).not.toBe('picked');
+	});
+
+	it('a level set before the class does NOT lock that class out at 20', () => {
+		// `totalLevel`'s `|| 1` is a display floor; when it entered the arithmetic, taking the first
+		// class was computed as level + 1 — so a blank row walked to 20 could never be filled
+		build.draft.classes = [
+			{ ...newClassRow(), classId: null, subclassId: null, level: 20 },
+		];
+		build.classRows.setClass(0, `class:${S}:fighter`);
+		expect(build.draft.classes[0]?.classId).toBe(`class:${S}:fighter`);
+		expect(build.classRows.totalLevel).toBe(20);
+	});
+
 	it('undo takes the class stash back with the draft (B18)', () => {
 		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.selectedSpells = [`spell:${S}:fireball`];

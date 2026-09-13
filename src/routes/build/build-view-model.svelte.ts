@@ -116,6 +116,7 @@ export class BuildVM {
 	 *  "New character" after a level-up must clear the prior edit/hydrated state). Keeps the graph. */
 	reset = () => {
 		this.edit = null;
+		this.pickedPhoto = null; // bytes belong to the build they were picked for, not to the next one
 		this.draft = blankDraft();
 		this.classPicks.clear();
 		this.drafts.renew();
@@ -143,6 +144,7 @@ export class BuildVM {
 	/** Resume an unfinished build, cache and all. */
 	hydrateDraft = (record: DraftRecord): void => {
 		this.edit = null;
+		this.pickedPhoto = null; // see `reset`
 		// parsed, not cast: the record is a file the user can edit and an older Charnik may have written
 		this.draft = parseDraftState(record.draft);
 		this.classPicks = parseClassPicks(record.classPicks);
@@ -161,6 +163,9 @@ export class BuildVM {
 		const settled = structuredClone(loaded);
 		this.draft = loaded;
 		// This view-model is a singleton, so everything the PREVIOUS build left behind is still here.
+		// The portrait is the sharpest of those: `portraitSource` prefers a pick over the stored file,
+		// so an abandoned build's face would show on this character AND be written over their own.
+		this.pickedPhoto = null;
 		// The stash is keyed by class ref alone: left in place, taking a class this character never had
 		// hands it the level and the skills another character stashed under that same ref.
 		this.classPicks.clear();

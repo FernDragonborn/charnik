@@ -1587,7 +1587,13 @@
 		"draft": "чернетка",
 		"draftUnnamed": "Персонаж без імені",
 		"draftNoClass": "клас ще не обрано",
-		"discardDraft": "Видалити чернетку"
+		"discardDraft": "Видалити чернетку",
+		"deleteTitle": "Видалити «{name}»?",
+		"deleteBody": "Це видалить аркуш персонажа, портрет, журнал кидків і всі резервні копії. Скасувати неможливо.",
+		"deleteConfirm": "Видалити персонажа",
+		"discardDraftTitle": "Відкинути «{name}»?",
+		"discardDraftBody": "Цю незавершену заготовку буде видалено назавжди. Скасувати неможливо.",
+		"discardDraftConfirm": "Відкинути заготовку"
 	},
 	"settings": {
 		"collisions": {

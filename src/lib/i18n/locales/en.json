@@ -1587,7 +1587,13 @@
 		"draft": "draft",
 		"draftUnnamed": "Unnamed character",
 		"draftNoClass": "no class yet",
-		"discardDraft": "Discard this draft"
+		"discardDraft": "Discard this draft",
+		"deleteTitle": "Delete “{name}”?",
+		"deleteBody": "This removes the character’s sheet, portrait, roll log and every backup. It can’t be undone.",
+		"deleteConfirm": "Delete character",
+		"discardDraftTitle": "Discard “{name}”?",
+		"discardDraftBody": "This unfinished build is removed for good. It can’t be undone.",
+		"discardDraftConfirm": "Discard draft"
 	},
 	"settings": {
 		"collisions": {

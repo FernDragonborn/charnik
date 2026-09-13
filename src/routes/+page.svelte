@@ -15,6 +15,8 @@
 	} from '$lib/character/store.svelte';
 	import { listDrafts, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
 	import { getUserStorage } from '$lib/storage/provider';
+	import { systemShortLabel } from '$lib/rules/pipeline';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
 	const demo = isDemo();
 
@@ -34,6 +36,13 @@
 		}
 		loading = false;
 	});
+
+	// Both deletions are irreversible and take everything with them — a character's folder holds the
+	// sheet, the portrait, the roll log and every rotating backup — so each goes behind the same
+	// confirm the compendium already puts in front of deleting one homebrew ROW.
+	let confirming = $state<{ title: string; body: string; label: string; run: () => void } | null>(
+		null,
+	);
 
 	async function discardDraft(guid: string) {
 		await deleteDraft(getUserStorage(), guid);
@@ -94,13 +103,21 @@
 						</span>
 						<span class="roster-subtitle">
 							{d.summary.classes || $_('roster.draftNoClass')}
-							<span class="sysbadge">{d.summary.system}</span>
+							<span class="sysbadge">{systemShortLabel(d.summary.system)}</span>
 						</span>
 					</a>
 					<button
 						class="roster-delete"
 						title={$_('roster.discardDraft')}
-						onclick={() => discardDraft(d.guid)}
+						onclick={() => {
+							const name = d.summary.name || $_('roster.draftUnnamed');
+							confirming = {
+								title: $_('roster.discardDraftTitle', { values: { name } }),
+								body: $_('roster.discardDraftBody'),
+								label: $_('roster.discardDraftConfirm'),
+								run: () => void discardDraft(d.guid),
+							};
+						}}
 					>
 						<Icon name="x" label={$_('roster.discardDraft')} />
 					</button>
@@ -112,7 +129,7 @@
 						<span class="roster-name">{c.name}</span>
 						<span class="roster-subtitle">
 							{c.classes || 'level ' + c.level}
-							{#if c.system}<span class="sysbadge">{c.system}</span>{/if}
+							{#if c.system}<span class="sysbadge">{systemShortLabel(c.system)}</span>{/if}
 							{#if c.error}<span class="roster-error"
 									><Icon name="triangle-alert" size={13} />
 									{c.error}</span
@@ -122,13 +139,34 @@
 					<button
 						class="roster-delete"
 						title={$_('roster.delete', { values: { name: c.name } })}
-						onclick={() => removeCharacter(c.id)}
+						onclick={() => {
+							confirming = {
+								title: $_('roster.deleteTitle', { values: { name: c.name } }),
+								body: $_('roster.deleteBody'),
+								label: $_('roster.deleteConfirm'),
+								run: () => void removeCharacter(c.id),
+							};
+						}}
 					>
 						<Icon name="x" label={$_('roster.delete', { values: { name: c.name } })} />
 					</button>
 				</li>
 			{/each}
 		</ul>
+	{/if}
+
+	{#if confirming}
+		<ConfirmDialog
+			title={confirming.title}
+			message={confirming.body}
+			confirmLabel={confirming.label}
+			danger
+			onConfirm={() => {
+				confirming?.run();
+				confirming = null;
+			}}
+			onCancel={() => (confirming = null)}
+		/>
 	{/if}
 </section>
 

@@ -82,8 +82,12 @@ export class ClassRows {
 	 *  brings the level it left with, not the level the row shows now. */
 	private levelAfterTaking(i: number, id: string): number {
 		const row = this.host().draft.classes[i];
-		const held = row?.classId ? row.level : 0;
-		return this.totalLevel - held + (this.host().classPicks.get(id)?.level ?? row?.level ?? 1);
+		// summed here rather than borrowed from `totalLevel`, whose `|| 1` is a DISPLAY floor: with no
+		// class held anywhere it reads 1 instead of 0, so taking the first class computed as level + 1
+		// and a row the stepper had walked to 20 could never be filled at all
+		const others = this.host()
+			.draft.classes.reduce((n, c, j) => n + (c.classId && j !== i ? c.level : 0), 0);
+		return others + (this.host().classPicks.get(id)?.level ?? row?.level ?? 1);
 	}
 	setSubclass = (i: number, id: string | null) => {
 		this.host().draft.classes = this.host().draft.classes.map((c, idx) =>

@@ -2406,7 +2406,7 @@ the pair `CommandPalette.svelte:125`/`:138` already implements for its own input
 Queue item 4. `src/lib/character/{repository,schema,store.svelte,draft-repository,photo,derive-plugins}.ts`,
 `src/routes/build/{draft,draft-history.svelte,draft-session.svelte,class-picks-cache,class-rows.svelte,option-walk,picker-reading.svelte,card-placement,rows,draft-inventory,inspector.svelte,inspector-specs,build-view-model.svelte}.ts`,
 `src/routes/+page.svelte`, `src/routes/build/+page.svelte`. Nine confirmed.
-### 73 · [ ] MEDIUM-HIGH · deleting a character is one unconfirmed click, and it takes the snapshots that would undo it
+### 73 · [x] MEDIUM-HIGH · deleting a character is one unconfirmed click, and it takes the snapshots that would undo it
 
 `src/routes/+page.svelte:125` — `onclick={() => removeCharacter(c.id)}` on the roster's ✕. No dialog,
 no toast, no undo. `removeCharacter` → `deleteCharacter` → `storage.remove(dirOf(slug))`
@@ -2437,7 +2437,7 @@ from `32c407e` (2026‑07‑03) and the file was still edited this cycle (+74/�
 **Fix:** the two roster ✕ buttons take the same `ConfirmDialog danger` the compendium row uses, with
 the character's name in the title.
 
-### 74 · [ ] MEDIUM · a picked portrait outlives the build it was picked for, and overwrites the next character's
+### 74 · [x] MEDIUM · a picked portrait outlives the build it was picked for, and overwrites the next character's
 
 `build-view-model.svelte.ts:497` — `pickedPhoto` is cleared in exactly two places, `clearPhoto`
 (`:521`) and `persistPhoto` after a successful write (`:535`). None of the three entry points that
@@ -2469,7 +2469,7 @@ Bevan's portrait bytes on disk                 [1,2,3]    <- his own is gone
 **Fix:** `pickedPhoto = null` in `reset`, `hydrate` and `hydrateDraft` — the three already clear every
 other cross-build carry-over, and this is the one they missed.
 
-### 75 · [ ] MEDIUM · the v1 save migration snakes every content ref except the languages
+### 75 · [x] MEDIUM · the v1 save migration snakes every content ref except the languages
 
 `repository.ts:48` — `for (const key of ['feats', 'skills', 'expertise'] as const)`. The E3 rename
 (`f11fab4`, kebab → snake ids) is what `migrateV1toV2` exists to repair, and it walks `species`,
@@ -2504,7 +2504,7 @@ Predates `v0.6.2`.
 **Fix:** add `'languages'` to the `snakeRefs` list at `:48`. Idempotent on already-snake ids, so
 re-running v2→v3 (which re-invokes the same function) needs no separate change.
 
-### 76 · [ ] MEDIUM · a level set before the class locks that class out at 20
+### 76 · [x] MEDIUM · a level set before the class locks that class out at 20
 
 `class-rows.svelte.ts:36` — `totalLevel` is `classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1`.
 The `|| 1` is a floor for display, and `levelAfterTaking` (`:83`) subtracts a real held level from it:
@@ -2594,7 +2594,7 @@ there `written` is stale for the ordinary reason.
 **Fix:** `renew()` at the end of `save()`, beside `discard()` — a session whose draft became a
 character has no identity left to write under. It costs one line and closes both doors.
 
-### 79 · [ ] MEDIUM-LOW · Enter on a focused language chip takes the highlighted one instead
+### 79 · [x] MEDIUM-LOW · Enter on a focused language chip takes the highlighted one instead
 
 `picker-reading.svelte.ts:108` — `fromOptions` passes the host straight through:
 `walkOptions(event, this.host())`. Its own docstring six lines above says the opposite — *"Enter is
@@ -2655,7 +2655,7 @@ the save (finding above), which is the one moment they exist for.
 restore is a copy over `character.json` plus a roster reload. Until then the comment at `:119` and
 `characters.md`'s "rotating backups" describe a capability that does not exist.
 
-### 81 · [ ] LOW-MEDIUM · four screens show a raw system id, and only one shows the label
+### 81 · [x] LOW-MEDIUM · four screens show a raw system id, and only one shows the label
 
 *Widened in the third pass — the original finding said "the roster is the one screen", which is
 wrong. Its census grepped `sysbadge`, a class name, so it could only ever find the roster.*
@@ -3019,7 +3019,7 @@ reads `halfFeatOptionsFor`, and it can subtract lazily by the same rule.
 inflation applies to a half-feat's ability by construction. Finding 50 is a *different* bug on that
 same map — there the ability does not move when it should.
 
-### 88 · [ ] MEDIUM-LOW · reading a draft destroys the stale one the warning exists to show
+### 88 · [x] MEDIUM-LOW · reading a draft destroys the stale one the warning exists to show
 
 `drafts/store.ts:87` — `readDraft` removes the file when `schemaVersion` differs, and returns null.
 `findStaleDrafts:211` exists to list exactly those files *before* they go, and says so: *"Surfaced
@@ -3051,7 +3051,7 @@ removing anything; the file is already destined for `discardDrafts`, which is th
 user behind it. `repointDraft`'s conflict check (`:156`) gets the same benefit for free — today it
 can delete a stale draft at the destination and then report "no conflict" and overwrite the slot.
 
-### 89 · [ ] LOW-MEDIUM · one unrecognised `.json` in `drafts/` takes down the whole discard dialog
+### 89 · [x] LOW-MEDIUM · one unrecognised `.json` in `drafts/` takes down the whole discard dialog
 
 `parseDraft:221` returns whatever `JSON.parse` produced, unvalidated. Anything parseable but not a
 draft envelope therefore counts as a *readable* draft with `target: undefined`, and since its
@@ -3085,7 +3085,7 @@ set"* (`store.ts:8`) — and the folder is inside the data dir the product invit
 file to `findUnreadableDrafts` — where it is already handled by path, needs no target, and is exactly
 what that list is for.
 
-### 90 · [ ] LOW · the draft filename encoding is legal on every OS except for one character
+### 90 · [x] LOW · the draft filename encoding is legal on every OS except for one character
 
 `draftPath:57` calls the encoding *"a valid, collision-free (reversible) filename on every OS — no
 `:` / space hazard"*. `encodeURIComponent` leaves `! ' ( ) * - . _ ~` unescaped, and exactly one of

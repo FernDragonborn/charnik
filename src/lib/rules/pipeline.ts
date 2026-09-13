@@ -22,6 +22,21 @@ export const SYSTEM_LABELS: Record<System, string> = {
 	'5.5e': 'D&D 5.5e (2024)',
 };
 
+/** The same name where the full one will not fit — a roster badge, a segmented switch. It is a ROW
+ *  here rather than a raw id read at the call site, which is the state that had four screens giving
+ *  four different answers to "which edition is this". */
+export const SYSTEM_SHORT_LABELS: Record<System, string> = {
+	'5e': 'D&D 5e',
+	'5.5e': 'D&D 5.5e',
+};
+
+/** …for the callers holding a plain `string`: a draft summary reads its system out of a file the
+ *  user can edit, so an unknown id prints itself rather than nothing. */
+export function systemShortLabel(system: string): string {
+	const known = SYSTEMS.find((s) => s === system);
+	return known ? SYSTEM_SHORT_LABELS[known] : system;
+}
+
 /** The system a NEW character/draft starts in when nothing says otherwise. Named so the choice is
  *  in one place rather than as a `?? '5.5e'` in whichever file needed a default that day. */
 export const DEFAULT_SYSTEM: System = '5.5e';

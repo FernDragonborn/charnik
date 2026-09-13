@@ -27,6 +27,7 @@
 	import { classCasts } from '$lib/character/spellcasting';
 	import ClassPicker from './ClassPicker.svelte';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
+	import { systemShortLabel } from '$lib/rules/pipeline';
 	import {
 		writeDraft,
 		readDraft,
@@ -312,7 +313,7 @@
 				type="button"
 				class="syschip"
 				class:on={hasSystem(sys)}
-				onclick={() => toggleSystem(sys)}>{sys}</button
+				onclick={() => toggleSystem(sys)}>{systemShortLabel(sys)}</button
 			>
 		{/each}
 	</div>

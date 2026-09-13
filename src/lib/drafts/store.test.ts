@@ -53,7 +53,9 @@ describe('draft store', () => {
 		expect(await readDraft(s, translateTarget)).toBeNull();
 	});
 
-	it('discards a draft from a different schema version (ephemeral WIP → not migrated) and removes it', async () => {
+	it('refuses a draft from a different schema version WITHOUT removing it', async () => {
+		// a read must not destroy what `findStaleDrafts` exists to warn about: the warning runs in one
+		// place, the read in four, so opening Translate used to delete the unsaved work silently
 		const s = new MemoryStorage();
 		await writeDraft(s, translateTarget, { name: 'old', text: '' });
 		const path = `drafts/${encodeURIComponent('translate:spell:SRD 5.2.1:fireball:uk')}.json`;
@@ -61,7 +63,32 @@ describe('draft store', () => {
 		env.schemaVersion = 999; // pretend a newer app wrote it
 		await s.write(path, JSON.stringify(env));
 		expect(await readDraft(s, translateTarget)).toBeNull();
+		expect(await s.exists(path)).toBe(true);
+		expect((await findStaleDrafts(s)).length).toBe(1); // still there to be named, then discarded
+		await discardDrafts(s, await findStaleDrafts(s));
 		expect(await s.exists(path)).toBe(false);
+	});
+
+	it('a stray .json in drafts/ is UNREADABLE, not a draft with no target', async () => {
+		// it parsed, so it counted as a readable draft — and every consumer then dereferenced a
+		// `target` that was not there, taking the discard dialog down while it rendered
+		const s = new MemoryStorage();
+		await writeDraft(s, { kind: 'add', type: 'spell', addGuid: 'g1' }, { name: 'new' });
+		await s.write('drafts/stray.json', JSON.stringify({ hello: 'world' }));
+		expect((await listDrafts(s)).map((d) => d.target.kind)).toEqual(['add']);
+		expect(await findStaleDrafts(s)).toEqual([]);
+		expect(await findUnreadableDrafts(s)).toEqual(['drafts/stray.json']);
+		await expect(discardDrafts(s, await findStaleDrafts(s))).resolves.toBeUndefined();
+	});
+
+	it('escapes the one unreserved character Windows forbids in a filename', async () => {
+		const s = new MemoryStorage();
+		const target = { kind: 'editor', type: 'item', source: 'My*Pack', id: 'axe' } as const;
+		await writeDraft(s, target, { name: 'Axe' });
+		expect((await s.list('drafts')).map((e) => e.name)).toEqual([
+			'editor%3Aitem%3AMy%2APack%3Aaxe.json',
+		]);
+		expect(await readDraft(s, target)).not.toBeNull();
 	});
 
 	it('is empty when there is no drafts folder', async () => {
