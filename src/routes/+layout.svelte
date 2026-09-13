@@ -45,6 +45,7 @@
 		defaultDataDir,
 		setDataDirOverride,
 		pickDataDir,
+		openExternalUrl,
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import MobileWarning from '$lib/components/MobileWarning.svelte';
@@ -153,9 +154,9 @@
 			event.preventDefault();
 			const target = externalLinkToOpen(href, location.origin);
 			if (target === null) return; // cancelled, but not a scheme we hand to the OS either
-			void import('@tauri-apps/plugin-opener')
-				.then(({ openUrl }) => openUrl(target))
-				.catch((e: unknown) => logger.warn('could not open link', { href, e }));
+			void openExternalUrl(target).catch((e: unknown) =>
+				logger.warn('could not open link', { href, e }),
+			);
 		};
 		document.addEventListener('click', onClick, true);
 		return () => document.removeEventListener('click', onClick, true);

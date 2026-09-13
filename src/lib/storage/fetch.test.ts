@@ -153,6 +153,12 @@ describe('FetchStorage — read-only guards + URL joining', () => {
 		expect(typeof new FetchStorage().watch()).toBe('function');
 	});
 
+	it('rejects a traversing path — the browser would resolve `..` before the request', async () => {
+		await expect(new FetchStorage('/charnik').read('content/../../etc/passwd')).rejects.toThrow(
+			'escapes storage root',
+		);
+	});
+
 	it('collapses double slashes when joining the base prefix', async () => {
 		fetchMock.mockResolvedValueOnce(okText('x'));
 		await new FetchStorage('/charnik').read('content/x.csv');

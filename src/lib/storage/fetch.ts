@@ -7,6 +7,7 @@
  * OPFS). Writes here throw. `watch` is a no-op (static assets don't change at runtime).
  */
 import type { Storage, FileEntry } from './types';
+import { sandboxRelative } from './path';
 
 interface Manifest {
 	roots: Record<string, string[]>;
@@ -22,7 +23,9 @@ export class FetchStorage implements Storage {
 	) {}
 
 	private url(path: string): string {
-		return `${this.basePrefix}/${path}`.replace(/\/{2,}/g, '/');
+		// sandboxed like every other impl (`types.ts`): `../../x` appended to the base is resolved by
+		// the browser BEFORE the request, so the seam is the only thing that can refuse it
+		return `${this.basePrefix}/${sandboxRelative(path)}`.replace(/\/{2,}/g, '/');
 	}
 
 	private loadManifest(): Promise<Manifest> {

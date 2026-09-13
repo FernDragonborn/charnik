@@ -122,6 +122,15 @@ describe('diffPack', () => {
 		expect((await diffPack(s, { pack: 'p', files: [] })).changes).toEqual([]);
 	});
 
+	it("a file the user wrote is preserved even when upstream doesn't ship it — the guard decides the DELETE path too", async () => {
+		// the removal half of the rule above: `removeDeleted` would otherwise take a CSV the user
+		// dropped into the pack folder, because nothing upstream ever mentioned it
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/mine.csv', enc('id\nMY OWN FILE'));
+		const diff = await diffPack(s, { pack: 'p', files: [] });
+		expect(diff.changes).toMatchObject([{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved }]);
+	});
+
 	it('notices a plugin file the pack no longer ships — code, nested two levels down', async () => {
 		// a pack's plugins live in `plugins/<ns>/`; a flat listing would leave deleted executable code
 		// sitting on disk forever

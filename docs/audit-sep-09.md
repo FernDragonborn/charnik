@@ -919,7 +919,7 @@ The same shape at the other two sites, visible without a probe:
 bodies; give `rollbackPack` the `catch { await recoverInterruptedApply(...); throw e; }` that
 `swapInNewTree:265` already has; and move `revokePackPlugins` after the successful delete.
 
-### 31 · [ ] MEDIUM · `installPack` asks only the registry whether a folder name is taken; `renamePack` also asks the disk
+### 31 · [x] MEDIUM · `installPack` asks only the registry whether a folder name is taken; `renamePack` also asks the disk
 
 `pack-lifecycle.ts:145` — `const ownerName = claimedPackName(typed);` and nothing else, and
 `claimedPackName` (`packs.svelte.ts:224`) searches `packConfig.packs` only.
@@ -946,7 +946,7 @@ deletes both.
 **Fix:** one argument. `installPack` has `storage` at `:165`; move it above the check and add
 `|| (await storage.exists(...))` to the refusal at `:147`, matching `renamePack:229`.
 
-### 32 · [ ] MEDIUM · the overwrite guard is asked on the write path and never on the DELETE path
+### 32 · [x] MEDIUM · the overwrite guard is asked on the write path and never on the DELETE path
 
 `diff.ts:135` classifies every local `isPackFile` the remote does not list as `FILE_CHANGE.removed`
 without calling `isProtectedText`; `install.ts:186` then passes them to `swapInNewTree` as
@@ -970,7 +970,7 @@ either way is that the preview cannot distinguish a file upstream dropped from a
 **Fix:** `diff.ts` has the bytes in hand two lines up for the `expectLocal` hash — feed them to
 `isProtectedText` and emit `preserved`, or flag the change as the user's so the list can say so.
 
-### 33 · [ ] MEDIUM · the Tauri architecture gate does not see dynamic `import()`, and one lives above the seam
+### 33 · [x] MEDIUM · the Tauri architecture gate does not see dynamic `import()`, and one lives above the seam
 
 `eslint.config.js:79` and `src/routes/+layout.svelte:156`. `overview.md:35`: "There is no scattered
 raw `fs`, and **nothing above the interface imports Tauri** (eslint's `no-restricted-imports` pins
@@ -1000,7 +1000,7 @@ rule beside it matching `ImportExpression > Literal[value=/^@tauri-apps/]`, then
 layout to the ignores with a written reason (`openUrl` is not file IO) or put the OS-link hand-off
 behind a seam function. Correct `overview.md:36` in the same change.
 
-### 34 · [ ] MEDIUM-LOW · `homebrew.ts` re-stamps any file it is handed, destroying a hand-edited file's permanent protection
+### 34 · [x] MEDIUM-LOW · `homebrew.ts` re-stamps any file it is handed, destroying a hand-edited file's permanent protection
 
 `homebrew.ts:379` (`writeStampedHomebrew` → `stampWithHash` → `storage.write`), reached from
 `saveHomebrewRow:434`, `upsertHomebrewRow:341` and `removeHomebrewRow:364` — none of which look at
@@ -1029,7 +1029,7 @@ component calling two functions in the right order is one caller away from being
 **Fix:** move the check into the writer. `isShippedFile` already exists in this module
 (`homebrew.ts:219`); have the three public writers take `packRoots` and refuse a target inside one.
 
-### 35 · [ ] LOW-MEDIUM · `configWritesSettled` names the data-folder move as its reason to exist, and the move never calls it
+### 35 · [x] LOW-MEDIUM · `configWritesSettled` names the data-folder move as its reason to exist, and the move never calls it
 
 `json-config.ts:94`: "Resolves when every queued write for this file has landed. For the callers that
 must not race the queue — **a data-folder move (which swaps the Storage under it)** and the tests."
@@ -1046,7 +1046,7 @@ race — but the one function written to close it is dead code.
 **Fix:** one line — await it before `migrateDataDir`/`mergeDataDir`, or register it as an
 `onBeforeReload` flusher so every reload path gets it.
 
-### 36 · [ ] LOW · `content.md` describes a watcher mechanism the watcher does not have
+### 36 · [x] LOW · `content.md` describes a watcher mechanism the watcher does not have
 
 `content.md:218`: "The file watcher **ignores the app's own writes**, or a write triggers a reload
 which triggers a write." `watcher.ts:8` documents the opposite design, and is what the code does:
@@ -1060,7 +1060,7 @@ file no longer drifts, plus the `adopting` re-entrancy flag at `:83`.
 
 **Fix:** replace the sentence with what is true.
 
-### 37 · [ ] LOW · the `Storage` interface promises a sandbox two of its four implementations do not enforce
+### 37 · [x] LOW · the `Storage` interface promises a sandbox two of its four implementations do not enforce
 
 `types.ts:3`: "Paths are relative to the configured `dataDir` root and are **sandboxed by the
 implementation** (traversal outside the root is rejected)." `path.ts:8` doubles down: "the seam's own
@@ -3106,7 +3106,7 @@ unhandled rejection, since `writeDraft`'s callers treat it as fire-and-forget.
 **Fix:** escape it — `encodeURIComponent(key).replace(/\*/g, '%2A')` keeps the mapping reversible and
 closes the set.
 
-### 91 · [ ] LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
+### 91 · [x] LOW · `BrowserStorage.rename` is the one implementation that neither refuses a bad move nor reports it
 
 `storage/types.ts:37` states the rename contract for every implementation: *"Overwriting an existing
 target is not promised — remove it first."* `browser.ts:118` re-keys every matching entry with `put`,
@@ -3341,7 +3341,7 @@ character already had and default only for a newly picked one — the same repai
 the same round-trip test catches both: `character → hydrate → assembled` must deep-equal on
 `build.spells` and `build.inventory` when nothing was clicked.
 
-### 97 · [ ] MEDIUM · the data-dir trust check passes `..`, and what stops the escape is a coincidence one layer down
+### 97 · [x] MEDIUM · the data-dir trust check passes `..`, and what stops the escape is a coincidence one layer down
 
 `src-tauri/src/lib.rs:75` — `set_data_dir` decides whether a path is trusted with
 

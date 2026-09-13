@@ -132,15 +132,22 @@ export async function diffPack(
 	// Only files the PACK FORMAT covers can be "removed": anything else in that folder is the user's,
 	// not the update's business (a README, notes, a leftover from an older layout).
 	const localRoot = localPath(localPack);
-	for (const path of await listFilesRecursive(storage, localRoot))
-		if (!seen.has(path) && isPackFile(path))
-			changes.push({
-				// stated the way every other change is — repo-relative — so one mapping serves them all,
-				// even though a removed file is by definition not in the repo any more
-				path: `${remote.pack}/${path.slice(localRoot.length + 1)}`,
-				kind: FILE_CHANGE.removed,
-				expectLocal: await gitBlobSha(await storage.readBytes(path)),
-			});
+	for (const path of await listFilesRecursive(storage, localRoot)) {
+		if (seen.has(path) || !isPackFile(path)) continue;
+		const bytes = await storage.readBytes(path);
+		changes.push({
+			// stated the way every other change is — repo-relative — so one mapping serves them all,
+			// even though a removed file is by definition not in the repo any more
+			path: `${remote.pack}/${path.slice(localRoot.length + 1)}`,
+			// The overwrite guard decides the DELETE path too: a file the user wrote or edited is
+			// theirs whether the update wants to change it or to drop it, and "never overwritten"
+			// cannot mean "unless upstream stopped shipping it".
+			kind: (await isProtectedText(path, decoder.decode(bytes)))
+				? FILE_CHANGE.preserved
+				: FILE_CHANGE.removed,
+			expectLocal: await gitBlobSha(bytes),
+		});
+	}
 
 	return { pack: localPack, changes };
 }

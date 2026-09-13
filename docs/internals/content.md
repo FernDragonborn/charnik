@@ -217,9 +217,11 @@ Writes are **atomic** (temp then rename) and encoded **UTF-8 with BOM, CRLF line
 opens Cyrillic correctly. Rows are serialized with `papaparse.unparse` from the same forms the user
 fills in — nobody is ever required to open a file by hand.
 
-The file watcher **ignores the app's own writes**, or a write triggers a reload which triggers a
-write. A CSV edited directly on disk is picked up in real time; only the changed file is reparsed,
-and a manual refresh is the fallback.
+The file watcher does **not** suppress the app's own writes, and does not need to: `reloadContent()`
+only reads, so a homebrew save costs at worst one redundant re-read. The one callback that does write
+back, `autoAdoptDrift`, terminates because a re-stamped file no longer drifts. A CSV edited directly
+on disk is picked up in real time; only the changed file is reparsed, and a manual refresh is the
+fallback.
 
 Note the asymmetry with the content repo: the converters write **LF and no BOM** on purpose
 (`tools/srd/lib.mjs`). BOM and CRLF are for CSVs the app writes into the user's data folder.

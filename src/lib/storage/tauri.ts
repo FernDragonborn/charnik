@@ -26,7 +26,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
-import { openPath } from '@tauri-apps/plugin-opener';
+import { openPath, openUrl } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
 import { errText } from '../util/format';
@@ -94,6 +94,12 @@ export async function pickTargetDataDir(): Promise<string | null> {
 /** Open the active data folder in the OS file manager (shows content/ + characters/). */
 export async function openDataDir(): Promise<void> {
 	await openPath(await resolveDataDir());
+}
+
+/** Hand an external URL to the OS browser. Lives here because this is the module the architecture
+ *  gate lets talk to Tauri; the POLICY of which links leave the app is `util/links.ts`. */
+export async function openExternalUrl(url: string): Promise<void> {
+	await openUrl(url);
 }
 
 /** Persist a chosen data folder WITHOUT moving anything — "just read from here now". Used when the

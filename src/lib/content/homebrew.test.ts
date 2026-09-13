@@ -45,6 +45,29 @@ describe('homebrew save targets', () => {
 	});
 });
 
+describe('the writers refuse a target outside the homebrew root', () => {
+	// a re-stamp is irreversible: it restores a hand-edited pack file's `#content-hash` and hands it
+	// back to the next seed/update, edits and all
+	const shipped = 'content/srd-2014/items_srd.csv';
+
+	it('saveHomebrewRow / upsertHomebrewRow report instead of writing', async () => {
+		const s = new MemoryStorage();
+		await s.write(shipped, 'id,name_en\nold,Old');
+		const add = await saveHomebrewRow(s, 'item', { name_en: 'Axe', systems: '5e' }, shipped);
+		const edit = await upsertHomebrewRow(s, 'item', { id: 'old', name_en: 'X' }, shipped);
+		expect(add.ok).toBe(false);
+		expect(edit.ok).toBe(false);
+		expect(await s.read(shipped)).toBe('id,name_en\nold,Old');
+	});
+
+	it('removeHomebrewRow throws — a silent no-op would hide the refusal', async () => {
+		const s = new MemoryStorage();
+		await s.write(shipped, 'id,name_en\nold,Old');
+		await expect(removeHomebrewRow(s, 'item', shipped, 'old')).rejects.toThrow();
+		expect(await s.read(shipped)).toBe('id,name_en\nold,Old');
+	});
+});
+
 describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 	const file = homebrewFile('condition');
 

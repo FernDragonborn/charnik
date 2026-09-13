@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Component, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
@@ -66,6 +66,15 @@ fn pick_data_dir(app: tauri::AppHandle) -> Result<Option<String>, String> {
 #[tauri::command]
 fn set_data_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
     let dir = PathBuf::from(&path);
+    // `Path::starts_with` compares whole components and `..` is an ordinary component, so
+    // `<picked>/../../Windows` passes the trust test below as a descent from the picked folder. The
+    // grant it then records is inert (tauri stores the pattern un-normalised and canonicalises every
+    // request), so the escape does not happen — it just bricks the install: every read and write is
+    // refused against a pointer only Rust can rewrite. Reject the shape here instead of relying on
+    // an asymmetry two crates down.
+    if dir.components().any(|c| matches!(c, Component::ParentDir)) {
+        return Err("data dir must not contain `..`".into());
+    }
     let trusted = app
         .state::<GrantedDirs>()
         .0

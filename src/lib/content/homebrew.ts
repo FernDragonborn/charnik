@@ -220,6 +220,23 @@ export function isShippedFile(file: string, shippedRoots: readonly string[]): bo
 	return shippedRoots.some((r) => file === r || file.startsWith(`${r}/`));
 }
 
+/**
+ * May the app WRITE this file? Only the homebrew root — `content.md` ▸ Writing CSV back: the app
+ * writes only files it created.
+ *
+ * It is checked in the writers rather than left to the caller because a re-stamp is irreversible: a
+ * hand-edited pack file whose body no longer matches its `#content-hash` is protected from seeding
+ * and every pack update FOREVER, and one write here restores the stamp and hands it back to the next
+ * update. The UI already refuses both entrances, and an invariant that depends on one component
+ * calling two functions in the right order is one caller away from being false.
+ */
+const isHomebrewTarget = (file: string): boolean => file.startsWith(`${HOMEBREW_ROOT}/`);
+
+const notHomebrewTarget = (file: string): SaveResult => ({
+	ok: false,
+	issues: [`targetFile: ${file} is not under ${HOMEBREW_ROOT} — the app writes only its own files`],
+});
+
 export interface TargetFile {
 	/** dataDir-relative CSV path a homebrew row can be saved to. */
 	file: string;
@@ -322,6 +339,7 @@ export async function upsertHomebrewRow(
 	draft: Record<string, string>,
 	targetFile: string = homebrewFile(type),
 ): Promise<SaveResult> {
+	if (!isHomebrewTarget(targetFile)) return notHomebrewTarget(targetFile);
 	const id = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
 
 	const { rows: existing, directives, header } = await readHomebrewFile(storage, targetFile);
@@ -352,6 +370,12 @@ export async function removeHomebrewRow(
 	targetFile: string,
 	id: string,
 ): Promise<void> {
+	// throws rather than no-ops: this is a caller bug, and a delete that silently did nothing would
+	// leave the row on screen with no reason given
+	if (!isHomebrewTarget(targetFile))
+		throw new Error(
+			`${targetFile} is not under ${HOMEBREW_ROOT} — the app removes only its own files`,
+		);
 	if (!(await storage.exists(targetFile))) return;
 	const { rows, directives, header } = await readHomebrewFile(storage, targetFile);
 	const remaining = rows.filter((r) => r.id !== id);
@@ -422,6 +446,7 @@ export async function saveHomebrewRow(
 	targetFile: string = homebrewFile(type),
 ): Promise<SaveResult> {
 	const file = targetFile;
+	if (!isHomebrewTarget(file)) return notHomebrewTarget(file);
 
 	// existing rows + header (if the file exists) — to keep ids unique, preserve prior entries + header
 	const { rows: existing, directives, header } = await readHomebrewFile(storage, file);

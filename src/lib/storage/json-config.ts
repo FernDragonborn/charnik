@@ -89,8 +89,12 @@ export function writeConfigSection(
 	chains.set(file, next);
 }
 
-/** Resolves when every queued write for this file has landed. For the callers that must not race
- *  the queue — a data-folder move (which swaps the Storage under it) and the tests. */
-export function configWritesSettled(file: string): Promise<void> {
-	return chains.get(file) ?? Promise.resolve();
+/** Resolves when every queued write has landed — for one file, or (no argument) for all of them.
+ *  For the callers that must not race the queue: a data-folder move, which copies the tree and then
+ *  swaps the Storage under it, so a write still queued is copied in its pre-write state and then
+ *  flushed against a root that no longer exists. The move does not know which sections are pending,
+ *  which is why the whole-queue form exists. */
+export function configWritesSettled(file?: string): Promise<void> {
+	if (file !== undefined) return chains.get(file) ?? Promise.resolve();
+	return Promise.all([...chains.values()]).then(() => undefined);
 }

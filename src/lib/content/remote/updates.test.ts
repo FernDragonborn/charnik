@@ -226,6 +226,22 @@ describe('two repos publishing the same folder name', () => {
 		expect(packConfig.packs['dark-sun']?.repo).toBe(REPO); // still the first repo's
 	});
 
+	/* A folder can exist with NO registry entry — the user copied one in by hand. `renamePack` and
+	   the suggested name both ask the disk; the typed-in install name asked only the registry, so it
+	   ran the diff against a stranger's folder and swapped it away to `.prev`. */
+	it('refuses a folder name the registry does not claim but the DISK holds', async () => {
+		await getUserStorage().write('content/handmade/classes_srd.csv', 'id\nmine');
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+
+		const res = await installPack('dark-sun', { fetcher: fetcher(ALL), localName: 'handmade' });
+
+		expect(res.written).toEqual([]);
+		expect(res.error).toMatchObject({ key: 'settings.packs.folderTaken' });
+		expect(packConfig.packs['handmade']).toBeUndefined();
+		expect(await getUserStorage().read('content/handmade/classes_srd.csv')).toContain('mine');
+		await getUserStorage().remove('content/handmade');
+	});
+
 	it('a check asks the repo for ITS name and offers the update against OUR folder', async () => {
 		await discoverPacks(OTHER, { fetcher: fetcher(ALL) });
 		await installPack('dark-sun', { fetcher: fetcher(ALL), localName: 'dark-sun-2' });

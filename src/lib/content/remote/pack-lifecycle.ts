@@ -143,6 +143,7 @@ export async function installPack(
 	// Matched case-INSENSITIVELY, because NTFS/APFS fold case: `SRD-2024` typed beside an installed
 	// `srd-2024` is the same directory, and an exact lookup calling it free is how the swap renames
 	// somebody else's pack away to `.prev`.
+	const storage = getUserStorage();
 	const ownerName = claimedPackName(typed);
 	const owner = ownerName === undefined ? undefined : packConfig.packs[ownerName];
 	if (owner !== undefined && localPackFor(found.repo, pack) !== ownerName)
@@ -150,6 +151,15 @@ export async function installPack(
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
 			values: { name: typed, repo: owner.repo },
+		});
+	// …and the registry is not the only claimant: a folder can exist with no entry (the user copied
+	// one in by hand), and installing over it is the data loss this check exists to avoid. Same rule
+	// `renamePack` and `freeLocalPackName` already apply; only the typed-in name can reach here.
+	if (ownerName === undefined && (await storage.exists(`content/${typed}`)))
+		return refuse({
+			kind: 'i18n',
+			key: 'settings.packs.folderTaken',
+			values: { name: typed, repo: '' },
 		});
 	// our own pack under a differently-cased name is ONE folder, so write to the name the registry
 	// already knows rather than minting a second entry for the same directory
@@ -163,7 +173,6 @@ export async function installPack(
 		});
 	const repo: GithubRepo = { ...parsed, branch: found.branch };
 
-	const storage = getUserStorage();
 	const res = await guarded(async () =>
 		applyPackUpdate({
 			storage,

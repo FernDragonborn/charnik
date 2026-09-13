@@ -21,6 +21,22 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 2. **Tauri capabilities / least privilege.** Grant only the plugins we need (`fs`,
    `dialog`, `path`) and **scope `fs` to `dataDir`/roots** — no broad filesystem access.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
+   > **Where the desktop sandbox is actually decided** (`src-tauri/src/lib.rs`). The fs scope is not
+   > static: it is widened at runtime to whatever data folder the user chose, and the rule for who may
+   > widen it lives in Rust, not in the capability file.
+   >
+   > - `pick_data_dir` opens the OS folder dialog and records the picked path in `GrantedDirs` — a
+   >   session set the renderer cannot write to. Only a human click puts a path in it.
+   > - `set_data_dir` persists a path to the pointer **only if it is, or is under, a path in that
+   >   set**, so page JS cannot persist an arbitrary directory for a silent grant next launch. It
+   >   also rejects any path containing `..`: `Path::starts_with` compares whole components and `..`
+   >   is an ordinary one, so `<picked>/../../Windows` would otherwise read as a descent from the
+   >   pick.
+   > - `apply_saved_data_dir` re-grants the saved path at startup **with no check**, which is sound
+   >   only because the pointer file is Rust-owned and `set_data_dir` is the one thing that writes it.
+   >
+   > The pointer lives beside the app config, not in the data folder — so a restored backup cannot
+   > arrive pointing somewhere new, the same posture consent hashes take (§4).
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
    > **Precisely** (checked 2026-08-12): the Tauri and memory impls call the shared

@@ -88,6 +88,17 @@ export default ts.config(
 					],
 				},
 			],
+			// `no-restricted-imports` is blind to `import()` expressions, so the gate above stopped at
+			// the static half and a dynamic `import('@tauri-apps/plugin-opener')` crossed the seam
+			// unnoticed. Same invariant, the syntax the other rule cannot see.
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'ImportExpression > Literal[value=/^@tauri-apps/]',
+					message:
+						'Tauri imports live ONLY in lib/storage/tauri.ts (Storage seam) or lib/update — a dynamic import is the same crossing (docs/plan.md invariant).',
+				},
+			],
 		},
 	},
 	{

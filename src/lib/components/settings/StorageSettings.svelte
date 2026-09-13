@@ -18,6 +18,7 @@
 		type MigrateOutcome,
 	} from '$lib/storage/tauri';
 	import { conflictRows, isSameOrInside, type ConflictRow } from '$lib/storage/migrate';
+	import { configWritesSettled } from '$lib/storage/json-config';
 	import { errText } from '$lib/util/format';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { reloadApp } from '$lib/content/reload';
@@ -99,6 +100,11 @@
 	// cleanup caveat shows a warning then reloads on close; full success toasts after the reload.
 	// The content watcher is stopped for the duration (deleting the old folder would fire it against
 	// a vanishing tree) and resumed only when the pointer did NOT move (failure — success reloads).
+	/** Every path below swaps the `Storage` root out from under the config queue, which is
+	 *  fire-and-forget: a pin or an ETag written a moment ago is still queued, so it would be COPIED
+	 *  in its pre-write state and then flushed against a root that no longer exists. */
+	const settleBeforeSwap = () => configWritesSettled();
+
 	async function applyOutcome(outcome: MigrateOutcome, failTitle: string, successMsg: string) {
 		if (!outcome.ok) {
 			startContentWatcher(); // pointer unchanged — resume watching the still-active folder
@@ -152,6 +158,7 @@
 				return;
 			}
 			stopContentWatcher();
+			await settleBeforeSwap();
 			await applyOutcome(
 				await migrateDataDir(from, target, true),
 				$_('settings.migrate.moveFailed'),
@@ -182,6 +189,7 @@
 		busy = true;
 		try {
 			stopContentWatcher();
+			await settleBeforeSwap();
 			await applyOutcome(
 				await mergeDataDir(from, target, true),
 				$_('settings.migrate.mergeFailed'),
@@ -205,6 +213,7 @@
 		conflict = null;
 		busy = true;
 		try {
+			await settleBeforeSwap();
 			await repointDataDir(target);
 			flashAfterReload($_('settings.migrate.repointed'));
 			await reloadApp();

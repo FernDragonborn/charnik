@@ -1545,7 +1545,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function readConfigFile` — The whole file as a plain object — `{}` when it is missing, unreadable, or not a JSON object.
 - `function readConfigSection` — One section, or `undefined` when absent.
 - `function writeConfigSection` — * Replace one section, preserving every other key in the file.
-- `function configWritesSettled` — Resolves when every queued write for this file has landed.
+- `function configWritesSettled` — Resolves when every queued write has landed — for one file, or (no argument) for all of them.
 
 ### `src/lib/storage/memory.ts`
 
@@ -1585,6 +1585,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function currentDataDir` — The active data dir (the saved choice or the default) — for display in settings.
 - `function pickTargetDataDir` — Open the folder picker and propose `<picked parent>/charnik` as the move target.
 - `function openDataDir` — Open the active data folder in the OS file manager (shows content/ + characters/).
+- `function openExternalUrl` — Hand an external URL to the OS browser.
 - `function repointDataDir` — Persist a chosen data folder WITHOUT moving anything — "just read from here now".
 - `function dirIsEmpty` — True when `dir` has no entries (or doesn't exist yet) — the precondition for an automatic move.
 - `function listDataDirFiles` — The current data folder's files — for the merge dialog's name table (see docs/plan.md).
@@ -1680,4 +1681,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1006 exports across 135 modules · 66 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1007 exports across 135 modules · 66 duplicate suspects._

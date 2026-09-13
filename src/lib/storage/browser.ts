@@ -7,6 +7,7 @@
  */
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Storage, FileEntry } from './types';
+import { sandboxRelative } from './path';
 
 const DB_NAME = 'charnik';
 const STORE = 'fs';
@@ -23,7 +24,10 @@ interface CharnikDB extends DBSchema {
 	[STORE]: { key: string; value: Node };
 }
 
-const norm = (p: string) => p.replace(/^\/+|\/+$/g, '');
+/** The seam's sandbox, then the flat-keyspace form IndexedDB is keyed by. The traversal check is
+ *  not theoretical here — `types.ts` promises every implementation enforces it, and this one used to
+ *  strip slashes and nothing else. */
+const norm = (p: string) => sandboxRelative(p);
 const name = (p: string) => (p.includes('/') ? p.slice(p.lastIndexOf('/') + 1) : p);
 
 type Listener = { dir: string; fn: (path: string) => void };
@@ -120,6 +124,14 @@ export class BrowserStorage implements Storage {
 		const dst = norm(to);
 		const db = await this.#db;
 		const keys = await db.getAllKeys(STORE);
+		// A flat keyspace re-keys happily, so without these two the web build is the one
+		// implementation that neither refuses nor reports a bad move: a missing source succeeded as a
+		// no-op, and an occupied destination MERGED the two trees. Both real filesystems throw, and
+		// `types.ts` promises exactly that — "overwriting an existing target is not promised".
+		const under = (root: string) => (k: IDBValidKey) =>
+			k === root || (typeof k === 'string' && k.startsWith(`${root}/`));
+		if (!keys.some(under(src))) throw new Error(`no such path: ${src}`);
+		if (keys.some(under(dst))) throw new Error(`rename target exists: ${dst}`);
 		const tx = db.transaction(STORE, 'readwrite');
 		for (const key of keys) {
 			if (key !== src && !key.startsWith(`${src}/`)) continue;

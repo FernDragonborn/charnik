@@ -40,6 +40,26 @@ describe('BrowserStorage (IndexedDB)', () => {
 		expect(Array.from(await s.readBytes('photo.bin'))).toEqual([1, 2, 3]);
 	});
 
+	it('rename refuses a missing source and an occupied target, like a real filesystem', async () => {
+		// the flat keyspace merges both happily; `types.ts` promises neither, and the pack swap is
+		// built on the refusal (Windows will not rename a directory onto an existing one)
+		const s = fresh();
+		await s.write('a/one.txt', 'A-one');
+		await s.write('b/one.txt', 'B-one');
+		await expect(s.rename('nope', 'elsewhere')).rejects.toThrow('no such path');
+		await expect(s.rename('a', 'b')).rejects.toThrow('target exists');
+		expect(await s.read('b/one.txt')).toBe('B-one');
+		expect(await s.read('a/one.txt')).toBe('A-one');
+		await s.remove('b');
+		await s.rename('a', 'b');
+		expect(await s.read('b/one.txt')).toBe('A-one');
+	});
+
+	it('rejects a path that traverses out of the root', async () => {
+		const s = fresh();
+		await expect(s.read('../secret')).rejects.toThrow('escapes storage root');
+	});
+
 	it('persists a character through the repository', async () => {
 		const s = fresh();
 		await saveCharacter(s, demoCharacter());
