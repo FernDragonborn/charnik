@@ -25,7 +25,14 @@
 	import { flashAfterReload } from '$lib/stores/flash';
 	import { toast } from 'svelte-sonner';
 	import { _ } from '$lib/i18n';
-	import { recreateDemoCharacter } from '$lib/character/store.svelte';
+	import {
+		characters,
+		loadRoster,
+		recreateDemoCharacter,
+		restoreBackup,
+	} from '$lib/character/store.svelte';
+	import { listCharacterBackups, type CharacterBackup } from '$lib/character/repository';
+	import { getUserStorage } from '$lib/storage/provider';
 	import DataMigrationDialog from './DataMigrationDialog.svelte';
 	import DataConflictDialog from './DataConflictDialog.svelte';
 	import ConfirmDialog from '../ConfirmDialog.svelte';
@@ -40,6 +47,37 @@
 		confirmRestore = false;
 		const demo = await recreateDemoCharacter();
 		toast($_('settings.notice.demoRestored', { values: { name: demo.build.name } }));
+	}
+
+	/*
+	 * Snapshots — the READER for the two rotating rings `repository.ts` has always written.
+	 *
+	 * Listed per character because that is how they are taken and how they are wanted back ("Bevan's
+	 * sheet is wrong"), and lazily, on the disclosure's first open: a roster of twenty would otherwise
+	 * cost twenty directory listings to render a section most visits never expand.
+	 */
+	let snapshots = $state<Record<string, CharacterBackup[]>>({});
+	async function loadSnapshots(id: string) {
+		snapshots[id] = await listCharacterBackups(getUserStorage(), id);
+	}
+	const snapshotWhen = (b: CharacterBackup) =>
+		`${new Date(b.ts).toLocaleString()} · ${$_(
+			b.tier === 'launch' ? 'settings.snapshots.tierLaunch' : 'settings.snapshots.tierSave',
+		)}`;
+
+	let confirmSnapshot = $state<{ id: string; name: string; backup: CharacterBackup } | null>(null);
+	async function doRestore() {
+		const asked = confirmSnapshot;
+		confirmSnapshot = null;
+		if (!asked) return;
+		const res = await restoreBackup(asked.id, asked.backup.path);
+		if (!res.ok) {
+			toast(`${$_('settings.snapshots.failed')} ${res.error ?? ''}`);
+			return;
+		}
+		// the ring moved: the restore is itself a save, so it checkpointed the state it replaced
+		await loadSnapshots(asked.id);
+		toast($_('settings.snapshots.done', { values: { name: asked.name } }));
 	}
 
 	// A failed move is important — it must NOT be a toast that flashes past. It goes in this persistent
@@ -71,6 +109,9 @@
 	let busy = $state(false);
 	onMount(async () => {
 		if (isDesktop) path = await currentDataDir();
+		// the roster is loaded by the ROSTER page, and Settings is reachable without ever visiting it
+		// (a bookmark, `?tab=data`, the update chip) — where an unloaded roster reads as "no characters"
+		if (characters.roster.length === 0) await loadRoster();
 	});
 
 	// Turn a failed migrate outcome into a one-sentence "what happened". The fs reason (`outcome.error`)
@@ -268,6 +309,49 @@
 	</div>
 </div>
 
+<section class="sec-head">
+	<h2>{$_('settings.snapshots.title')}</h2>
+	<p class="sec-note">{$_('settings.snapshots.blurb')}</p>
+</section>
+{#if characters.roster.length === 0}
+	<p class="sec-note">{$_('settings.snapshots.empty')}</p>
+{:else}
+	{#each characters.roster as entry (entry.id)}
+		<details class="snap" ontoggle={() => void loadSnapshots(entry.id)}>
+			<summary>{entry.name}</summary>
+			{#if snapshots[entry.id]?.length}
+				<ul class="snap-list">
+					{#each snapshots[entry.id] ?? [] as backup (backup.path)}
+						<li>
+							<span class="snap-when">{snapshotWhen(backup)}</span>
+							<button
+								class="pill-btn"
+								onclick={() => (confirmSnapshot = { id: entry.id, name: entry.name, backup })}
+								>{$_('settings.snapshots.restore')}</button
+							>
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="sec-note">{$_('settings.snapshots.none')}</p>
+			{/if}
+		</details>
+	{/each}
+{/if}
+
+{#if confirmSnapshot}
+	<ConfirmDialog
+		title={$_('settings.snapshots.confirmTitle', { values: { name: confirmSnapshot.name } })}
+		message={$_('settings.snapshots.confirmBody', {
+			values: { when: snapshotWhen(confirmSnapshot.backup) },
+		})}
+		confirmLabel={$_('settings.snapshots.confirmAction')}
+		danger
+		onConfirm={doRestore}
+		onCancel={() => (confirmSnapshot = null)}
+	/>
+{/if}
+
 {#if confirmRestore}
 	<ConfirmDialog
 		title={$_('settings.demo.confirmTitle')}
@@ -302,6 +386,39 @@
 {/if}
 
 <style>
+	/* one disclosure per character: the list is per character, and a flat roster-wide list would make
+	   "which sheet is this" the reader's problem */
+	.snap {
+		margin: 0 0 var(--space-2);
+	}
+	.snap summary {
+		cursor: pointer;
+		padding: var(--space-1) 0;
+		color: var(--color-text);
+	}
+	.snap-list {
+		list-style: none;
+		margin: var(--space-1) 0 var(--space-2);
+		padding: 0 0 0 var(--space-4);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1-5);
+	}
+	/* a grid, not a flex row: the timestamps differ in width and the Restore buttons under each other
+	   are what the eye scans down */
+	.snap-list li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-3);
+		max-width: 360px;
+	}
+	.snap-when {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+
 	/* rows use the global .setting-row / .setting-label / .setting-options / .mono-path
 	   (components.css) */
 </style>

@@ -1859,6 +1859,20 @@
 			"namePlaceholder": "Theme name",
 			"title": "Themes",
 			"tokenColorLabel": "Colour of {token}"
+		},
+		"snapshots": {
+			"title": "Snapshots",
+			"blurb": "Charnik keeps a few automatic copies of every character — two checkpoints while you play and one per launch. Put one back if a sheet is lost or wrong.",
+			"none": "No snapshots yet. The first is taken the next time this character is saved.",
+			"empty": "No characters to snapshot yet.",
+			"restore": "Restore",
+			"tierSave": "while playing",
+			"tierLaunch": "at launch",
+			"confirmTitle": "Restore “{name}”?",
+			"confirmBody": "The sheet as it is now is replaced by the snapshot from {when}. The other snapshots are kept, so this is not the only way back.",
+			"confirmAction": "Restore snapshot",
+			"done": "Restored “{name}”.",
+			"failed": "That snapshot could not be restored —"
 		}
 	},
 	"skillName": {

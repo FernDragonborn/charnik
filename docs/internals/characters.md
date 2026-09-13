@@ -16,7 +16,13 @@ reference. An optional append-only `log.jsonl` sits beside it, deliberately
 **out** of `character.json` so a long campaign cannot bloat the save.
 
 There is no database. Writes are atomic — temp file, then rename — with a debounced autosave and
-rotating backups.
+**rotating backups**: two rings beside the save, `character.bak.save.*` (2 deep, throttled to one
+checkpoint per 10 minutes) and `character.bak.launch.*` (3 deep, one per app run), keyed by the
+snapshot's epoch-ms in the filename so pruning needs no mtime. **Settings ▸ Data ▸ Snapshots is the
+reader**: it lists both rings per character, newest first, and puts one back through the same
+parse → migrate → validate the live save gets — so a corrupt snapshot is refused with its reason
+rather than written over a working character. Restoring is itself a save, so the state it replaced is
+checkpointed into the ring on the way out.
 
 ## The unfinished one is a different kind of file
 

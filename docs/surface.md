@@ -280,6 +280,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
 - `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
 - `function saveCharacterGuarded` — * Persist a character and SAY SO when it does not happen.
+- `function restoreBackup` — * Put one of a character's snapshots back as its live save, and make what is on screen agree.
 - `function removeCharacter` — Delete a character and refresh the roster.
 
 ### `src/lib/content/packs.svelte.ts`
@@ -613,6 +614,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface LoadResult`
 - `interface RosterEntry`
 - `function backupCharacter` — Snapshot the CURRENT `character.json` into the rotating ring for `tier`, then prune to the newest * N.
+- `interface CharacterBackup` — One snapshot the rings hold, as the restore UI needs it.
+- `function listCharacterBackups` — * Every snapshot of one character, both rings merged, newest first — the READER the two writers * never had.
+- `function restoreCharacterBackup` — * Put one snapshot back as the live save.
 - `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
 - `function saveCharacter` — Write a character (validates first; refuses to persist an invalid one).
 - `function writeCharacterPhoto` — Write a character's portrait and return the name to store in `build.photo`.
@@ -1683,4 +1687,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1009 exports across 135 modules · 66 duplicate suspects._
+_47 tokens · 80 global classes · 53 components · 1013 exports across 135 modules · 66 duplicate suspects._

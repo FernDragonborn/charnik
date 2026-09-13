@@ -18,6 +18,7 @@ import {
 import { characterSchema, parseCharacter, type Character } from './schema';
 import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
+import { errText } from '../util/format';
 // TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
 // the roll lives. Erased at build — no runtime edge from the character layer into combat.
 import type { RollLogEntry } from '../combat/roll';
@@ -180,6 +181,62 @@ export async function backupCharacter(
 	}
 }
 
+/** One snapshot the rings hold, as the restore UI needs it. */
+export interface CharacterBackup {
+	tier: BackupTier;
+	/** When it was taken — epoch ms, read from the filename. */
+	ts: number;
+	/** dataDir-relative path, and the handle `restoreCharacterBackup` is given. */
+	path: string;
+}
+
+/**
+ * Every snapshot of one character, both rings merged, newest first — the READER the two writers
+ * never had. Without it the whole recovery set was write-only: five files per character that only
+ * a desktop user who knew the layout could reach by renaming one by hand, and that nobody on the
+ * web could reach at all (`AGENTS.md` ▸ Reverse states).
+ */
+export async function listCharacterBackups(
+	storage: Storage,
+	id: string,
+): Promise<CharacterBackup[]> {
+	const tiers = await Promise.all(
+		(Object.keys(BACKUP_KEEP) as BackupTier[]).map(async (tier) =>
+			(await listBackups(storage, id, tier)).map((b) => ({ tier, ...b })),
+		),
+	);
+	return tiers.flat().sort((a, b) => b.ts - a.ts);
+}
+
+/**
+ * Put one snapshot back as the live save.
+ *
+ * The snapshot goes through the SAME parse → migrate → validate the live file gets, so a corrupt or
+ * unmigratable one is refused with its reason rather than written over a working character — the
+ * whole point of restoring is that the thing you have is already broken.
+ *
+ * The current state is not itself snapshotted first: the confirm says the sheet is replaced, and the
+ * rings still hold the other four, so a restore of the wrong one is a restore away from undone.
+ */
+export async function restoreCharacterBackup(
+	storage: Storage,
+	id: string,
+	path: string,
+): Promise<LoadResult> {
+	let raw: string;
+	try {
+		raw = await storage.read(path);
+	} catch (e) {
+		return { ok: false, error: `cannot read snapshot: ${errText(e)}` };
+	}
+	const res = readSavedCharacter(raw);
+	if (!res.ok || !res.character) return res;
+	// through `saveCharacter`, so the restore is checkpointed into the ring like any other write and
+	// the id is re-anchored to the folder it is landing in (a hand-copied snapshot may carry another)
+	await saveCharacter(storage, { ...res.character, id });
+	return { ok: true, character: { ...res.character, id } };
+}
+
 /** Character ids already launch-snapshotted this session — one snapshot per app run, not per open. */
 const launchSnapshotted = new Set<string>();
 
@@ -281,6 +338,12 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 	} catch {
 		return { ok: false, error: `not found: ${slug}` };
 	}
+	return readSavedCharacter(raw);
+}
+
+/** The same parse → migrate → validate over bytes already in hand, so a SNAPSHOT is put through
+ *  exactly what the live save is put through before anything is written over. */
+function readSavedCharacter(raw: string): LoadResult {
 	let data: unknown;
 	try {
 		data = JSON.parse(raw);

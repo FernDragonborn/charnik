@@ -15,6 +15,8 @@ import {
 	logLineFor,
 	readLog,
 	backupCharacter,
+	listCharacterBackups,
+	restoreCharacterBackup,
 	uniqueCharacterId,
 	writeCharacterPhoto,
 	readCharacterPhoto,
@@ -415,6 +417,48 @@ describe('rotating backups (B3)', () => {
 			.filter((e) => e.name.startsWith('character.bak.launch.'))
 			.map((e) => e.name);
 		expect(kept.length).toBe(3);
+	});
+
+	it('lists both rings newest-first, and puts one back as the live save', async () => {
+		// the rings had two writers and no reader: five files per character that only a desktop user
+		// who knew the layout could reach by renaming one by hand, and nobody on the web could
+		const s = new MemoryStorage();
+		const c = newCharacter('mirt', 'Mirt', '5e');
+		await saveCharacter(s, c);
+		await backupCharacter(s, 'mirt', 'save', t0);
+		await backupCharacter(s, 'mirt', 'launch', t0 + min);
+
+		const listed = await listCharacterBackups(s, 'mirt');
+		expect(listed.map((b) => [b.tier, b.ts])).toEqual([
+			['launch', t0 + min],
+			['save', t0],
+		]);
+
+		// the live save moves on, then a snapshot is put back over it
+		await saveCharacter(s, { ...c, build: { ...c.build, name: 'Mirt the Moneylender' } });
+		expect((await loadCharacter(s, 'mirt')).character?.build.name).toBe('Mirt the Moneylender');
+
+		const restored = await restoreCharacterBackup(s, 'mirt', listed[0]!.path);
+		expect(restored.ok).toBe(true);
+		expect((await loadCharacter(s, 'mirt')).character?.build.name).toBe('Mirt');
+	});
+
+	it('refuses a corrupt snapshot instead of writing it over a working character', async () => {
+		// the reason to restore is that what you have is already broken; replacing it with something
+		// worse, silently, is the one outcome this must not have
+		const s = new MemoryStorage();
+		await saveCharacter(s, newCharacter('mirt', 'Mirt', '5e'));
+		await s.write('characters/mirt/character.bak.save.1.json', '{ not json');
+
+		const res = await restoreCharacterBackup(
+			s,
+			'mirt',
+			'characters/mirt/character.bak.save.1.json',
+		);
+
+		expect(res.ok).toBe(false);
+		expect(res.error).toContain('invalid JSON');
+		expect((await loadCharacter(s, 'mirt')).character?.build.name).toBe('Mirt');
 	});
 
 	it('a backup is a faithful copy of character.json', async () => {

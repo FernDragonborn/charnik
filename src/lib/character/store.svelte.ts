@@ -13,6 +13,8 @@ import {
 	listCharacters,
 	deleteCharacter,
 	type RosterEntry,
+	restoreCharacterBackup,
+	type LoadResult,
 } from './repository';
 import type { Character } from './schema';
 import type { Storage } from '$lib/storage/types';
@@ -138,6 +140,21 @@ export async function saveCharacterGuarded(character: Character): Promise<boolea
 		});
 		return false;
 	}
+}
+
+/**
+ * Put one of a character's snapshots back as its live save, and make what is on screen agree.
+ *
+ * Reloads the roster (the name and level may have moved) and re-opens the character when it is the
+ * active one — leaving the in-memory sheet from before the restore would show one state while the
+ * disk holds another, and the next autosave would write the stale one straight back over it.
+ */
+export async function restoreBackup(slug: string, path: string): Promise<LoadResult> {
+	const res = await restoreCharacterBackup(getUserStorage(), slug, path);
+	if (!res.ok) return res;
+	if (characters.active?.id === slug) characters.active = res.character ?? null;
+	await loadRoster();
+	return res;
 }
 
 /** Delete a character and refresh the roster. */

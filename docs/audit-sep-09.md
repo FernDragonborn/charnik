@@ -2626,7 +2626,7 @@ but builds its picker without `onenter`, which is the only configuration where t
 **Fix:** `fromOptions` drops `onenter` before delegating — destructure it off the host rather than
 spreading it — which is what its docstring already describes.
 
-### 80 · [ ] LOW-MEDIUM · the rotating backups have no reader, no restore, and on the web no way to reach them
+### 80 · [x] LOW-MEDIUM · the rotating backups have no reader, no restore, and on the web no way to reach them
 
 `repository.ts:118–192` maintains two rings on every save and every launch — `character.bak.save.*`
 (2 deep, 10‑minute throttle) and `character.bak.launch.*` (3 deep) — and the block comment states the
