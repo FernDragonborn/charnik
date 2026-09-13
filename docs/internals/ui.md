@@ -124,8 +124,12 @@ good", so they are pinned here and every component follows them.
 7. **Resource, slot, and economy pips are click-to-set**: clicking a filled pip empties it and every
    pip after it; clicking an empty one fills it and every pip before it. Available on the left, spent
    on the right.
-8. **A panel header is** a collapse chevron, the title, right-aligned actions, and a drag handle.
-   Panels collapse, hide, and drag-reorder **within the two-column area only** — never a free canvas.
+8. **A panel header is** a collapse chevron, the title, right-aligned actions, and a move handle.
+   Panels collapse, hide, and reorder **within the two-column area only** — never a free canvas. The
+   handle is a real `<button>` in the tab order: dragging it reorders, and so do the arrow keys —
+   up/down inside the column, left/right across to the other one (`PanelLayout.movePanel`), with the
+   caret put back on the handle afterwards because svelte-dnd-action rebuilds the column's nodes. A
+   reorder that only a pointer can perform is a layout a keyboard user cannot get back out of.
 9. **An icon slot takes an emoji or an image.** The SRD ships no art, so the fallback is a glyph;
    homebrew and user-created entities may set an image.
 
@@ -225,11 +229,15 @@ sub-choices in as `extra` rather than rebuilding the grid. `LanguagesPane` is th
 the same walk over a multi-select chip list. The pane itself is not a scroll container; which element
 is depends on the target, and `Inspector.bodyScrolls` decides.
 
-**The caret stays in the search box.** An option is a real button, so it can be tabbed to — and a
+**The caret stays in the search box** — and gets there on its own. `PickerSearch` focuses itself when
+a picker opens, and `Inspector` hands focus back to whatever opened it when the pane closes: the pane
+is the last column in the DOM, so without those two the walk this whole contract describes was 89 Tab
+stops away from the card that started it. An option is a real button, so it can be tabbed to — and a
 walk started from there hands focus back to the search box rather than leaving a ring on one option
 while Enter takes another. That is why the search box is a `searchbox` naming the highlight through
 `aria-activedescendant`: with focus that never moves, it is the only thing a screen reader has to go
-on. Enter is the search box's to interpret; on a focused option the browser's own Enter is right.
+on. Enter is the search box's to interpret; on a focused option the browser's own Enter is right —
+which is why `fromOptions` drops `onenter` before delegating, rather than merely not supplying one.
 
 **Not a `combobox`, and the big list is not a `listbox`.** APG's combobox is single-select with
 selection following focus; these walks are multi-select and deliberately commit nothing, so the role
@@ -321,8 +329,11 @@ Copies drift. The language switch is `LangSwitcher.svelte`, used by the topbar a
 **Every full-screen dialog, modal, or banner carries `LangSwitcher` in its top-right corner. No
 exceptions.** It can appear before the user has reached the topbar switch, or while covering it, so
 it may be the only text on screen — someone who cannot read the current locale must still be able to
-change it. `DialogShell` bakes it in (`.dialog-lang-corner`); a bespoke full-screen component adds it
-by hand.
+change it. A backdrop is also a DISMISS target, so while a dialog is open reaching for the topbar's
+switcher cancels the question. `DialogShell` bakes it in (`.dialog-lang-corner`); a bespoke
+full-screen component adds it by hand, and `components/dialog-lang-switcher.test.ts` holds the line —
+five dialogs built from the house template missed this clause equally, which is what a rule enforced
+only by memory costs.
 
 The **house dialog shape**, which every attention dialog bakes from: a centered modal on a dim
 backdrop; a round badge header with the title, an optional count pill ("1 of 2"), and one muted

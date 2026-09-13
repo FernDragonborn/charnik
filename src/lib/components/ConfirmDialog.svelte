@@ -5,6 +5,7 @@
 	import { _ } from '$lib/i18n';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
+	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
 		title,
@@ -37,6 +38,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge" class:danger><Icon name="flag" size={17} /></span>
 		<h2 id="confirm-title" class="dialog-title">{title}</h2>
 		<p class="dialog-subtitle">{message}</p>

@@ -4,6 +4,16 @@
  * one cohesive unit; CombatVM composes it as `combat.layout` and wires persistence (the column order
  * round-trips onto the character's `ui.panelColumns`) via the constructor callback.
  */
+/** Which way a keyboard move goes. Up/down reorders inside a column; left/right hands the panel to
+ *  the other one — between them they reach every arrangement a drag can. */
+export const PANEL_MOVE = {
+	up: 'up',
+	down: 'down',
+	left: 'left',
+	right: 'right',
+} as const;
+export type PanelMove = (typeof PANEL_MOVE)[keyof typeof PANEL_MOVE];
+
 export class PanelLayout {
 	collapsed = $state<Record<string, boolean>>({});
 	// two independent column arrays (svelte-dnd-action items need an id)
@@ -38,6 +48,40 @@ export class PanelLayout {
 		const last = kept[kept.length - 1];
 		if (last) last.push(...added);
 		this.columns = kept;
+	};
+
+	/**
+	 * Move one panel with the keyboard — the same reorder the drag performs, for the people the drag
+	 * excludes. Arranging your own combat screen had a pointer path and no other, which is
+	 * `AGENTS.md` ▸ Reverse states applied to an affordance: a layout a keyboard user did not choose
+	 * is one they cannot get back out of.
+	 *
+	 * Persists through the same callback a finalized drag does, so a keyboard arrangement survives a
+	 * reload exactly as a dragged one does.
+	 */
+	movePanel = (pid: string, dir: PanelMove): void => {
+		const ci = this.columns.findIndex((col) => col.some((panel) => panel.id === pid));
+		const next = this.columns.map((col) => [...col]);
+		const from = next[ci];
+		if (!from) return;
+		const at = from.findIndex((panel) => panel.id === pid);
+		const moving = from[at];
+		if (!moving) return;
+		if (dir === PANEL_MOVE.up || dir === PANEL_MOVE.down) {
+			const to = at + (dir === PANEL_MOVE.up ? -1 : 1);
+			const swap = from[to];
+			if (!swap) return; // the end of the column — nowhere further to go
+			from[to] = moving;
+			from[at] = swap;
+		} else {
+			const target = next[dir === PANEL_MOVE.left ? ci - 1 : ci + 1];
+			if (!target) return;
+			from.splice(at, 1);
+			// same height in the other column, so the panel lands where the eye expects it
+			target.splice(Math.min(at, target.length), 0, moving);
+		}
+		this.columns = next;
+		this.persist(this.columns.map((col) => col.map((panel) => panel.id)));
 	};
 
 	// svelte-dnd-action: sync each column on drag consider + finalize; re-lock the grip.

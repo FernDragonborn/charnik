@@ -1663,7 +1663,7 @@ does not need to re-run it.
 
 **Fix:** whatever fixes 27, applied here in the same change.
 
-### 53 · [ ] LOW-MEDIUM · panel reordering is pointer-only, and its handle claims to be a button
+### 53 · [x] LOW-MEDIUM · panel reordering is pointer-only, and its handle claims to be a button
 
 `PanelCard.svelte:62` — `<span class="drag-handle" role="button" tabindex="-1"
 aria-label={…dragToReorder} onpointerdown={…}>`. The only handler is `onpointerdown`. There is no
@@ -1686,7 +1686,7 @@ place, which is the same reorder the pointer performs. If reordering is meant to
 the honest version is to drop `role="button"` and mark the handle `aria-hidden`, so nothing announces
 an action that is not there.
 
-### 54 · [ ] MEDIUM · the "no exceptions" language-switch rule has five exceptions, and a modal is where it matters most
+### 54 · [x] MEDIUM · the "no exceptions" language-switch rule has five exceptions, and a modal is where it matters most
 
 `docs/internals/ui.md:305`: "**Every full-screen dialog, modal, or banner carries `LangSwitcher` in
 its top-right corner. No exceptions.**"
@@ -2337,7 +2337,7 @@ two-declaration hover block is far under that floor.
 — which is what those classes exist for — and re-run `css-dups.mjs` to see what is left.
 `tools/visual/hoist-class.mjs` and `rename-class.mjs` are the mechanical half of that move.
 
-### 72 · [ ] MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
+### 72 · [x] MEDIUM · opening a builder picker leaves the keyboard 89 Tab stops away from it
 
 Nothing moves focus into the Inspector when a picker opens: `PickerSearch.svelte` has no autofocus,
 `OptionGrid`/`SectionedPicker` have none, and the pane is the last column in the DOM. `ui.md` ▸ the
@@ -3191,7 +3191,7 @@ first (`/* */`, `<!-- -->` and `//` blanked to spaces, preserving line numbers),
 comments was ~80% of the raw hits. Neither is worth wiring into the gate as written — the signal is
 "a user-facing string with no sibling `key`", and expressing that as a lint rule is the real fix.
 
-### 93 · [ ] LOW-MEDIUM · shipped content nests conditions two deep, and the engine expands one — Unconscious is listed as Prone and is not Prone
+### 93 · [x] LOW-MEDIUM · shipped content nests conditions two deep, and the engine expands one — Unconscious is listed as Prone and is not Prone
 
 `effects.md` states the rule three times — `apply_condition` expands *"a condition row's own tokens
 ONE level"* (`:100`), *"ONE level per id"* (`:331`), *"expands ONE level, no cascade"* (`:339`) — and
@@ -3287,7 +3287,7 @@ enumerates fields by hand, so every new inventory column silently drops until so
 round-trip test (`character → draft → assembled` deep-equals on `build.inventory`) would have caught
 both `attuned` and `base`, and is the guard that stops the third one.
 
-### 95 · [ ] LOW · `content.md` names class → features as a full-key link; it is deliberately a bare-id one
+### 95 · [x] LOW · `content.md` names class → features as a full-key link; it is deliberately a bare-id one
 
 `content.md:34` — *"Links (class → features, character → content) and the loader's `byEffectiveId`
 all use the full key."* The second half is true; the first is the counter-example.

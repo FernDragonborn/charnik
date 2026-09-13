@@ -8,6 +8,7 @@
 	// here), or merge the two. The table lists every file across both folders — collisions (a name in
 	// both) sit up top, and the newer side is highlighted so the user can see which copy a merge keeps.
 	import type { ConflictRow } from '$lib/storage/migrate';
+	import LangSwitcher from '../LangSwitcher.svelte';
 
 	let {
 		rows,
@@ -47,6 +48,7 @@
 	use:trapFocus={safeBtn}
 >
 	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge warn"><Icon name="triangle-alert" size={17} /></span>
 		<h2 id="cf-title" class="dialog-title">{$_('settings.conflict.title')}</h2>
 		<!-- the two choices are named as the buttons name them, so the sentence and the footer cannot

@@ -23,7 +23,7 @@ import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { ResourceTracker } from './resource-tracker.svelte';
-import { PanelLayout } from './panel-layout.svelte';
+import { PanelLayout, PANEL_MOVE } from './panel-layout.svelte';
 import { UNARMED_STRIKE_ID, numberedAttackRollName, attackNotes } from '$lib/combat/attacks';
 
 const S = 'SRD 5.2.1';
@@ -1950,6 +1950,32 @@ describe('PanelLayout · a saved layout is reconciled with the panels that exist
 		expect(restored).toContain('inventory');
 		// every shipped panel is reachable — there is no UI to add a missing one back
 		expect([...restored].sort()).toEqual([...shipped].sort());
+	});
+
+	it('moves a panel by keyboard, within a column and across to the other, and persists it', () => {
+		// the drag was the only way to arrange the screen; a keyboard user could not get back out of a
+		// layout they did not choose
+		const saved: string[][] = [];
+		const layout = new PanelLayout((cols) => saved.push(cols.flat()));
+		const ids = () => layout.columns.map((col) => col.map((p) => p.id));
+		const [first = [], second = []] = ids();
+		const [top = '', below = ''] = first;
+
+		layout.movePanel(top, PANEL_MOVE.down);
+		expect(ids()[0]?.slice(0, 2)).toEqual([below, top]);
+
+		layout.movePanel(top, PANEL_MOVE.right);
+		expect(ids()[0]).not.toContain(top);
+		expect(ids()[1]).toContain(top);
+		expect(ids()[1]?.length).toBe(second.length + 1);
+
+		// at an edge it is a no-op, not a wrap or a drop
+		const before = ids();
+		layout.movePanel(below, PANEL_MOVE.up);
+		layout.movePanel(below, PANEL_MOVE.left);
+		expect(ids()).toEqual(before);
+
+		expect(saved).toHaveLength(2); // each real move round-trips onto the character
 	});
 
 	it('leaves an up-to-date layout exactly as saved, order included', () => {

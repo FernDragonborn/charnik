@@ -6,6 +6,7 @@
 	import Icon from '../Icon.svelte';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	import { _ } from '$lib/i18n';
+	import LangSwitcher from '../LangSwitcher.svelte';
 
 	let {
 		tone,
@@ -56,6 +57,7 @@
 	use:trapFocus={closeBtn}
 >
 	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge" class:err={tone === 'error'} class:warn={tone === 'warning'}
 			><Icon name={tone === 'error' ? 'triangle-alert' : 'info'} size={17} /></span
 		>

@@ -99,11 +99,16 @@ is fine, while a 550-line one carrying 221 lines of script is not.
 
 ## The rest of `pnpm lint`
 
-- **`pnpm knip`** — its rules are set to `warn`, so it reports and exits 0. It is a report, not a
-  gate. Do not reintroduce unused exports, and triage what it lists: in active development an unused
-  export is sometimes scaffolding for planned work, so read before deleting. Truly orphaned with no
-  plan behind it goes; planned stays, marked (`@public` JSDoc silences the warning) with the wiring
-  gap noted.
+- **`pnpm knip`** — `exports`, `types`, `enumMembers` and `duplicates` are set to `warn`, so those
+  report and exit 0. Triage what they list: in active development an unused export is sometimes
+  scaffolding for planned work, so read before deleting. Truly orphaned with no plan behind it goes;
+  planned stays, marked (`@public` JSDoc silences the warning) with the wiring gap noted.
+  > **`files` is NOT a warning — an unused FILE fails `pnpm lint`.** And the failure rarely points at
+  > the file that caused it: knip compiles a `.svelte` file to find its imports, and when one trips
+  > that step the whole import graph below it disappears, so **every component it pulled in is
+  > reported as unused while the file itself is not**. One `$derived` holding a template literal in
+  > `PanelCard.svelte` reported eight untouched combat panels. Read the list as a POINTER — the
+  > culprit is whatever imports them — and bisect the file you actually edited.
 - **`pnpm jscpd`** — copy-paste detection, threshold 1.8%. The config reporter is `silent`, i.e. the
   one-line verdict and nothing else, because a hook that prints two hundred lines of CSS on every
   successful commit trains you to stop reading it. The threshold still fails the commit; the reporter

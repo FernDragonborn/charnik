@@ -21,6 +21,7 @@
 	} from '$lib/drafts/store';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { rowName, type ContentGraph, type LoadedRow } from '$lib/content/loader';
+	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
 		orphans,
@@ -157,6 +158,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="orphan-title" class="dialog-title">
 			{$_('orphan.title')}{#if total > 1}<span class="count-pill"

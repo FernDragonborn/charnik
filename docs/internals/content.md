@@ -31,8 +31,15 @@ SEARCH is article-only (`isBrowsable`), so the palette never answers a spell que
 A row's effective identity is **`type:source:id`**, so the same `id` from two different sources
 coexists and both remain addressable. An exact clash *within one source* is a real error. The **type**
 scopes it because slugs are unique per type and not globally: `shield` is both a spell and an item,
-so `source:id` alone would collide. Links (class → features, character → content) and the loader's
-`byEffectiveId` all use the full key.
+so `source:id` alone would collide. A character → content reference and the loader's `byEffectiveId`
+use the full key.
+
+**A content → content link is a BARE id, on purpose, and that is the extension point.** `class_id`,
+`subclass_id` and `species_id` match on the id plus the edition and NEVER on the source
+(`character/derive-gather.ts`), and the shipped rows spell them that way — `subclasses_srd.csv` carries
+`barbarian`, not `class:SRD 5.2.1:barbarian`. That is what lets a homebrew or third-party pack add a
+feature, a subclass or a species option to an SRD class without forking the class row. "Fixing" one of
+these into a full-key comparison would break every pack that extends shipped content.
 
 Duplicate-group resolutions (keep one, keep all) live in a separate **`collisions.json`** — never in
 `charnik.config.json`, because a decision *between* sources cannot live inside one of them without

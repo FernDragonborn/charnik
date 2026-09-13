@@ -33,6 +33,14 @@
 	} = $props();
 
 	const inputId = $props.id();
+
+	// Opening a picker puts the caret HERE. The whole contract is built on it — `option-walk.ts`:
+	// "the walk happens from the search box", and with focus that never moves the box's
+	// `aria-activedescendant` is the only thing a screen reader has to go on — but nothing moved focus
+	// in, and the pane is the last column in the DOM: 89 Tab stops from the card that opened it.
+	$effect(() => {
+		element?.focus();
+	});
 </script>
 
 <div class="lsearch">

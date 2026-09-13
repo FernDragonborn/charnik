@@ -10,6 +10,7 @@
 	// WILL be dropped. We surface exactly what's being lost + let the user acknowledge, rather than
 	// having their unsaved work vanish silently on the next read (PLAN DRAFT-CACHE backlog).
 	import type { DraftEnvelope } from '$lib/drafts/store';
+	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
 		drafts,
@@ -63,6 +64,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="discard-title" class="dialog-title">
 			{$_('drafts.discard.title')}{#if total > 1}<span class="count-pill">{total}</span>{/if}

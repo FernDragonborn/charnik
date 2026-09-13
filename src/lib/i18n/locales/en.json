@@ -762,7 +762,8 @@
 			"skills": "Skills",
 			"spells": "Spells",
 			"coins": "Coins",
-			"usedThisTurn": "used this turn"
+			"usedThisTurn": "used this turn",
+			"moveHandle": "Move the {panel} panel — drag it, or use the arrow keys"
 		},
 		"playEvent": {
 			"turn_start": "turn start"

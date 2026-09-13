@@ -57,11 +57,32 @@
 		if (el instanceof Element && el.closest(OPERABLE)) return;
 		ins.previewId = null;
 	}
+
+	/**
+	 * …and closing it hands the caret back to whatever opened it — the other half of the picker's
+	 * focus contract (the command palette's `restoreEl` does the same thing for the same reason).
+	 *
+	 * `$effect.pre`, because it has to read `document.activeElement` BEFORE the pane re-renders — by
+	 * the time an ordinary effect runs the search box has already taken the caret. The pane guard
+	 * covers the other direction: switching targets must not overwrite the opener with the box.
+	 */
+	let pane = $state<HTMLElement | null>(null);
+	let openerEl: HTMLElement | null = null;
+	let wasOpen = false;
+	$effect.pre(() => {
+		const isOpen = ins.target !== null;
+		const active = document.activeElement;
+		if (isOpen) {
+			if (active instanceof HTMLElement && !pane?.contains(active)) openerEl = active;
+		} else if (wasOpen) openerEl?.focus();
+		wasOpen = isOpen;
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="pane"
+	bind:this={pane}
 	onclick={clearOnBackground}
 	onkeydown={(e) => e.code === 'Escape' && (ins.previewId = null)}
 >

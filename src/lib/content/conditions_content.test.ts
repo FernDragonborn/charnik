@@ -40,6 +40,32 @@ describe('shipped conditions · effects column is engine-valid', () => {
 					}
 			});
 
+			/* The engine expands `apply_condition` exactly ONE level and says so three times
+			   (`effects.md` — "no cascade"), which is a deliberate guard against a cycle. So a shipped
+			   row that nests two deep is a CONTENT bug: `unconscious` listed `prone`, and `prone`'s own
+			   `disadvantage:attack` reached nobody — the condition was named, queryable by every guard
+			   and every `is_*` flag, and inert. Flatten the parent instead of widening the engine.
+			   `note:` is exempt: it is display-only, the panel already tags the implied condition by
+			   name, and hoisting every child note would duplicate the whole reference text. */
+			it('nests no MECHANIC a parent does not also carry (the engine expands one level)', async () => {
+				const g = await loadEdition(path);
+				const effectsOf = (id: string) =>
+					g.list('condition').find((r) => r.id === id)?.data.effects ?? [];
+				const mechanics = (id: string) =>
+					effectsOf(id).filter((t) => !splitGuard(t).token.startsWith('note:'));
+				for (const row of g.list('condition'))
+					for (const raw of effectsOf(row.id)) {
+						const token = splitGuard(raw).token;
+						if (!token.startsWith('apply_condition:')) continue;
+						const child = token.slice('apply_condition:'.length);
+						const parent = new Set(mechanics(row.id));
+						const lost = mechanics(child).filter(
+							(t) => !parent.has(t) && !t.startsWith('apply_condition:'),
+						);
+						expect(lost, `${row.id} → ${child}`).toEqual([]);
+					}
+			});
+
 			it('wires the key mechanics (paralyzed / incapacitated / prone)', async () => {
 				const g = await loadEdition(path);
 				const effectsOf = (id: string) =>
