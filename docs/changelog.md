@@ -2,8 +2,6 @@
 
 ## 0.7.0
 
-> Written from `v0.6.2..HEAD`. To extend it, read the commits after the last one it names.
-
 The release where the app stops speaking only English and stops guessing what you meant. Three big
 things: **every screen reads in your language**, **the roller became a thing you can steer**, and
 **the builder became a live sheet you edit rather than a form you fill**. Under all of it, a play

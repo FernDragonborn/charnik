@@ -101,4 +101,10 @@
   `stylelint > table > ajv`. The existing override still read `fast-uri@<3.1.5`, so the advisory's own
   4.x range walked straight past it — a pin narrower than the next advisory is a pin that expires
   silently. Widened to `<4.1.3` and clean again.
+  **Re-audited 2026-09-15** at the 0.7.0 cut: three moderate + one HIGH, all dev-only. The vitest
+  family went to 4.1.11 for the `@vitest/mocker` path traversal — a DIRECT dep, so package.json, not
+  an override. The other two (`colord` via stylelint, `smol-toml` via knip) needed nothing: the
+  dependabot group bump carried stylelint and knip far enough that both resolved patched on their
+  own. **An override is only worth adding once the upstream bump is ruled out** — a pin that restates
+  what the tree already resolves is the kind that outlives its advisory and misleads the next reader.
   Pages deploy recovery still open.

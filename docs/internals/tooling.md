@@ -229,7 +229,11 @@ particular type-checks *nothing*, because vite transpiles with esbuild.
   gate. For a tight loop use `pnpm check:watch`: one full pass, then each save re-checks in about a
   second.
 - **Browser tests need a local chromium.** `*.browser.test.ts` run under the `browser` vitest project;
-  a fresh machine needs `pnpm exec playwright install chromium` first. Run just them with
+  a fresh machine needs `pnpm exec playwright install chromium` first — and so does an OLD machine
+  after a playwright bump, because each release pins its own chromium build number and the previous
+  one no longer satisfies it. It surfaces as a test FAILURE (`Executable doesn't exist at
+  …chromium_headless_shell-<n>`) with 16 files silently unreported, not as a missing-browser message,
+  so re-run the install before reading it as a regression. Run just them with
   `pnpm vitest run --project browser`. Under vitest-browser-svelte 3, `render()` is **async** — miss
   the `await` and you get `screen.getByRole is not a function`.
 - **A type-aware lint COUNT is not a defect count.** `@typescript-eslint/no-unsafe-*` cannot see
