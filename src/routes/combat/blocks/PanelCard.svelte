@@ -3,7 +3,7 @@
 	// attacks / actions / effects / spells / inventory — under a shared collapsible head (title + toolbar
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
 	// as props. The dnd grid that hosts these cards stays in the page.
-	import { tick } from 'svelte';
+	import { flushSync, tick } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import { base } from '$app/paths';
@@ -90,7 +90,12 @@
 		class="drag-handle"
 		aria-label={moveLabel}
 		title={moveLabel}
-		onpointerdown={() => (combat.layout.dragDisabled = false)}
+		onpointerdown={() => {
+			// FLUSHED, not just assigned: `dndzone` reads `dragDisabled` while handling the SAME press,
+			// and a runes update lands on a microtask — so the library saw the old `true`, ignored the
+			// gesture, and unblocking it afterwards did not bring that press back.
+			flushSync(() => (combat.layout.dragDisabled = false));
+		}}
 		onkeydown={moveOnArrow}>⠿</button
 	>
 </div>

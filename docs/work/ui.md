@@ -133,17 +133,22 @@
   - [x] **КО, not КБ**, for Armor Class in Ukrainian.
   - [x] **A passive score says what a passive score is** (`whyPassive`), in the builder and in combat.
   - [x] **A save says it saved.** The failure path always toasted; success only navigated.
-  - [ ] **Panel drag does not start.** REGRESSION, diagnosed not fixed: `dndzone` attaches (the column
-        carries its `role`/`aria-describedby`, the children are `draggable`) but a synthetic drag from
-        the ⠿ grip produces no shadow item and no console error. `PanelCard` arms it by setting
-        `layout.dragDisabled = false` on the grip's `pointerdown`, which the library reads for the SAME
-        press — if the flag is still `true` when it looks, the gesture is ignored and unblocking it
-        afterwards does not bring it back. `svelte-dnd-action` stayed at 0.9.79 while `svelte` went
-        5.56.8 → 5.57.0 in `16fd05e`, which is the suspect: the handle pattern relies on that flag
-        landing synchronously. Try `flushSync` in the grip handler. **The gesture itself is the
-        maintainer's to confirm** (`AGENTS.md` ▸ Verifying); the keyboard reorder beside it
-        (`panel-layout.move`) is separate code and may still work — checking that first says whether
-        the reorder broke or only the drag did.
+  - [ ] **Panel drag reported broken — one fix applied, and NOT confirmed.** What is known: reading
+        `svelte-dnd-action`'s own source, a zone attaches its `mousedown` listener to each item ONLY
+        while `dragDisabled` is false, and it does that inside the action's `update`. The handle
+        pattern here flips that flag from the grip's `pointerdown`, so the flag has to land BEFORE the
+        `mousedown` of the same press — and a runes assignment lands on a microtask. `PanelCard` now
+        wraps it in `flushSync`, which is correct on that reading whatever else is true.
+        **What is NOT known: whether that fixes it.** A synthetic Playwright drag starts no drag —
+        but it starts none on the PRE-BUMP dependency set either (`svelte` 5.56.8 + `dnd-action`
+        0.9.74, installed and driven to check), so the harness cannot drive this library and proves
+        nothing in either direction. An earlier note here calling the drag confirmed-broken was that
+        artifact, not evidence.
+        The bump is still the suspect worth naming: `16fd05e` moved `svelte-dnd-action` 0.9.74 → 0.9.79
+        as well as `svelte` 5.56.8 → 5.57.0.
+        **Next step is a hand on a mouse** (`AGENTS.md` ▸ a drag is ours to confirm): does the grip drag
+        now? And does the keyboard reorder beside it (`panel-layout.move`, arrow keys on the ⠿ button)
+        still work — that answers whether the reorder broke or only the pointer path did.
   - [ ] **Every (i) opens on a click.** The provenance popover opens on `pointerenter`/`focusin`, and
         `EffectsPanel`'s ⓘ renders only for a condition that has text — a buff from a spell has none.
   - [ ] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square, per the
