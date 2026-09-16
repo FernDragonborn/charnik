@@ -13,6 +13,13 @@ pointer at it, not a second set of rules.
   the subsystem's own doc below. There is nowhere else open work may hide.
 - [Changelog](changelog.md)
 
+## For the people using Charnik
+
+- [Effects — the author's guide](guide/effects.md) — how the `effects` column works, for whoever is
+  writing content rather than changing the app. Plain language first, then the full vocabulary: every
+  effect kind, every target, and the formula language. The normative version of the same thing is
+  [internals/effects.md](internals/effects.md).
+
 ## How it works — and which file rules on what
 
 Open the one whose subject you are about to touch, before the recommendation and before the code

@@ -98,7 +98,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
-| `hp_max`                     | `flat_bonus:hp_max+<value>`                             | Max-HP contribution (Toughness/Aid), re-folded on a manual base.                                                                                                                                        |
+| `regain_on_initiative`       | `regain_on_initiative:<resource>:<n>`                   | When initiative is rolled, top `<resource>` back up to `<n>` (2024 Perfect Focus, Superior Inspiration). AUTO-applied with a notice, not a player click — RAW gives no choice. Same `kind:target:int` shape as `reroll`/`min_die`. |
 | `note`                       | `note:<free text>`                                      | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
 | `blocks_concentration`       | `blocks_concentration`                                  | MARKER, no target: the carrying state forbids Concentration (RAW Rage). A fact the combat layer reads to drop or withhold it. |
 | `damage_reroll`              | `damage_reroll`                                         | MARKER, no target: once per turn you may reroll a WEAPON's damage dice and keep either (2024 Savage Attacker). Offered as a post-roll button, never auto-applied. |
@@ -197,7 +197,9 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
 **Operators** (precedence high→low): `d` (dice) > unary `-` > `* / %` > binary `+ -` >
 comparisons (`< <= > >= == !=`) > `not` > `and` > `or`. Comparisons are **non-associative** —
 `5<=level<=10` is a parse error (spell it `5<=level and level<=10`). **No `?:` ternary.**
-Whitelisted functions: `if min max floor ceil round abs clamp sign` — nothing else.
+Whitelisted functions: `if min max floor ceil round abs clamp sign step var per_slot` — nothing
+else. `step(index, a->v, …)` is the level-table primitive (the `->` pair shape is legal ONLY
+inside it), `var()` is readability sugar, and `per_slot()` reads the cast-ephemeral slot vars.
 
 **The colon rule:** `:` is STRUCTURAL only (token delimiter + namespacing). An expression NEVER
 contains a `:`, so the delimiter is never ambiguous. That is why conditional values use `if()` and
