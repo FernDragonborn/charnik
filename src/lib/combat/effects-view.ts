@@ -49,6 +49,21 @@ export function why(c: Computed, translate?: Translate): string {
 	);
 }
 
+/** What a passive score IS, said before the arithmetic of one. The sheet shows a passive beside
+ *  every skill and never said what the number is FOR, which is the one thing a player new to it asks.
+ *  Carries its own English for the translator-less callers, the same contract `why` keeps. */
+const PASSIVE_MEANING = {
+	key: 'provenance.passiveMeaning',
+	en: 'Passive: what you notice without rolling — the DM reads this instead of asking for a check.',
+};
+
+/** `why` for a passive score, with the sentence that says what a passive score is on top of it. */
+export function whyPassive(c: Computed, translate?: Translate): string {
+	const meaning = translate ? translate(PASSIVE_MEANING.key) : PASSIVE_MEANING.en;
+	// the popover renders `pre-line`, so the sentence and the breakdown read as two lines
+	return `${meaning}\n${why(c, translate)}`;
+}
+
 /** A target key → its catalog key and the English it reads as with no translator. Both live in one
  *  entry because they are one fact said twice: the module is locale-free, so a caller that hands it
  *  no translator (a node test, an attack note) still gets a readable label rather than a key.

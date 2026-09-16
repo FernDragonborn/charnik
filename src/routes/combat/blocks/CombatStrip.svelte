@@ -10,7 +10,7 @@
 	import { damageTypeLabel } from '$lib/combat/attacks';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
-	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
+	import { why, whyPassive, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
 	import { sayText } from '$lib/util/say';
 	import { provenance } from '$lib/actions/provenance';
 	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
@@ -143,7 +143,7 @@
 					(t) => t.key === SOURCE_KEY.advantage || t.key === SOURCE_KEY.disadvantage,
 				)}
 				{@const isAdv = advDis?.key === SOURCE_KEY.advantage}
-				<span class="ability-save" use:provenance={why(p.comp, $_)}>
+				<span class="ability-save" use:provenance={whyPassive(p.comp, $_)}>
 					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={!isAdv}

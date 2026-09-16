@@ -386,6 +386,8 @@
 		},
 		"notice": {
 			"createFailed": "Couldn't create this character",
+			"created": "Character created.",
+			"saved": "Changes saved.",
 			"strictKnownSpell": "Strict: you can't unlearn a known spell — switch to Free to remove it.",
 			"strictCapFull": "{who}{what} full ({cap}) — remove one first, or switch to Free.",
 			"capCantrips": "cantrips",
@@ -1465,6 +1467,7 @@
 	},
 	"provenance": {
 		"advantage": "{source}: advantage on {target}",
+		"passiveMeaning": "Passive: what you notice without rolling — the DM reads this instead of asking for a check.",
 		"alreadyAtLeast": "{source}: already ≥ {amount}",
 		"alreadyAtMost": "{source}: already ≤ {amount}",
 		"autoFail": "{source}: auto-fail on {target}",
