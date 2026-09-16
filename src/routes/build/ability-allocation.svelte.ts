@@ -11,6 +11,8 @@
  * Everything reading the host is a getter, never `$derived`: a field initialiser runs before the
  * constructor assigns `host`.
  */
+import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { ABILITIES } from '$lib/character/schema';
 import type { Ability } from '$lib/rules/core';
 import {
@@ -23,7 +25,9 @@ import {
 	pointsSpent,
 	MANUAL_SCORE_BOUNDS,
 	POINT_BUY_BUDGET,
+	POINT_BUY_MAX,
 	POINT_BUY_MIN,
+	pointBuyCost,
 	STANDARD_ARRAY,
 	type StatMethod,
 } from '$lib/build/rules';
@@ -105,15 +109,37 @@ export class AbilityAllocation {
 	bumpAbility = (ab: Ability, dir: 1 | -1) => {
 		// editing an existing character in Strict: base scores are locked (you don't re-roll them at
 		// level-up — increases come only from ASI slots). Free lets you edit anything.
-		if (this.host().edit && this.host().draft.strict) return;
+		if (this.host().edit && this.host().draft.strict) {
+			toast(t('build.strictSettled'));
+			return;
+		}
 		const cur = this.host().draft.abilities[ab];
 		if (this.host().draft.method === 'point_buy') {
 			// point buy keeps its budget and caps in BOTH modes, so the counter beside it means something
-			if (dir === 1 && !canRaise(this.host().draft.abilities, ab)) return;
-			if (dir === -1 && !canLower(this.host().draft.abilities, ab)) return;
+			// — and a refusal SAYS which of the two stopped it. A step from 13 to 14 costs 2 where every
+			// step before it cost 1, so a button that moved nothing and explained nothing read as broken.
+			if (dir === 1 && !canRaise(this.host().draft.abilities, ab)) {
+				const next = cur + 1;
+				if (next > POINT_BUY_MAX) toast(t('build.abilities.pointBuyCap', { max: POINT_BUY_MAX }));
+				else
+					toast(
+						t('build.abilities.pointBuyTooExpensive', {
+							cost: pointBuyCost(next) - pointBuyCost(cur),
+							left: this.pointsLeft,
+						}),
+					);
+				return;
+			}
+			if (dir === -1 && !canLower(this.host().draft.abilities, ab)) {
+				toast(t('build.abilities.pointBuyFloor', { min: POINT_BUY_MIN }));
+				return;
+			}
 		} else {
 			const bounds = MANUAL_SCORE_BOUNDS[this.host().draft.strict ? 'strict' : 'free'];
-			if (cur + dir < bounds.min || cur + dir > bounds.max) return;
+			if (cur + dir < bounds.min || cur + dir > bounds.max) {
+				toast(t('build.abilities.scoreBounds', bounds));
+				return;
+			}
 		}
 		this.host().draft.abilities = { ...this.host().draft.abilities, [ab]: cur + dir };
 	};
