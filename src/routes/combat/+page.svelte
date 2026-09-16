@@ -141,11 +141,15 @@
 					type: 'panel',
 					flipDurationMs,
 					dropTargetStyle: {},
-					// The floating card keeps the size of the panel you PICKED UP. Left on, the library
-					// resizes it to match whatever slot it is currently over — and these panels are wildly
-					// different heights, so the card's background kept collapsing and re-growing under text
-					// that stayed put, with a lurch at the moment the drag began.
+					// The floating card keeps the size it is given. Left on, the library resizes it into
+					// whatever slot it is currently over — and these panels are wildly different heights, so
+					// the background kept collapsing and re-growing under text that stayed put.
 					morphDisabled: true,
+					// …and what it is given is the panel's HEADER, not the whole panel. Dragging a
+					// full-height clone of Skills meant carrying a card taller than the viewport: you had to
+					// scroll the entire block into view before you could aim it anywhere. The header is the
+					// part that identifies the panel, so it is the part you carry.
+					transformDraggedElement: (el) => el?.classList.add('dragging-panel'),
 				}}
 				onconsider={(e) => dndConsider(ci, e)}
 				onfinalize={(e) => dndFinalize(ci, e)}

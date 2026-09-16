@@ -547,13 +547,17 @@
 		min-height: 36px;
 		padding: var(--space-1-5) var(--space-2);
 		background: transparent;
-		border: 1px solid transparent;
+		/* A field you can type into says so before you click it. It used to be transparent at rest, so
+		   the only way to find out there was a field here was to click where you guessed one was —
+		   `ui.md` ▸ Every interactive element says so. The edge is quiet; focus is what brightens it. */
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 	}
 	/* focus is NEUTRAL and light on purpose: colouring it by role would make "active" and "this is a
-	   test" the same signal, and then neither reads */
+	   test" the same signal, and then neither reads. It reads as focus by being a STEP up from the
+	   resting edge rather than by appearing out of nothing. */
 	.roller-field.focused {
-		border-color: var(--color-border);
+		border-color: var(--color-border-strong);
 	}
 	.roller-field.menu-open {
 		border-radius: var(--radius) var(--radius) 0 0;

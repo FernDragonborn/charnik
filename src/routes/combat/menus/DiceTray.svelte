@@ -55,9 +55,15 @@
 	.tray {
 		display: flex;
 		flex-direction: column;
+		/* Room for the Roll tab, which hangs off the builder's bottom-right corner while the readout
+		   sits beside it. Measured as the MAX over shipped locales, not guessed: English "Roll" reaches
+		   82px in from the panel's right edge, Ukrainian «Кинути» reaches 103px — and the 90px this used
+		   to be was chosen against the short one, so the readout sat on top of the button in Ukrainian.
+		   Re-measure when a locale is added (`AGENTS.md` ▸ A locale is not free of layout consequences). */
+		--roll-tab-reserve: 112px;
 	}
 	/* the readout sits BESIDE the Roll tab rather than under it: the tab hangs off the builder's bottom
-	   edge on the right, so this only has to clear its column (~90px) — and can then sit close under
+	   edge on the right, so this only has to clear its column — and can then sit close under
 	   the card instead of a whole tab-height away from it. The negative margin takes back most of the
 	   room `.roller` reserves for the tab, which it still needs where nothing sits beside it. */
 	.roll-history {
@@ -66,7 +72,7 @@
 		   which dropped the builder's shadow across the readout that comes after it. */
 		position: relative;
 		margin-top: -30px;
-		margin-inline-end: 90px;
+		margin-inline-end: var(--roll-tab-reserve);
 		padding: var(--space-1-5) var(--space-3) var(--space-2-5);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);

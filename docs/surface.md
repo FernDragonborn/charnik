@@ -121,7 +121,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (78)
+## Global CSS classes (79)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -163,6 +163,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
 | `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
+| `.dragging-panel` | components.css | What you actually carry is the panel's HEADER. |
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
@@ -1705,4 +1706,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 78 global classes · 53 components · 1022 exports across 138 modules · 68 duplicate suspects._
+_47 tokens · 79 global classes · 53 components · 1022 exports across 138 modules · 68 duplicate suspects._

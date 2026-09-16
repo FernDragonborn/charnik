@@ -71,6 +71,13 @@
 	outline: 1px solid var(--color-border-strong);
 	border-radius: var(--radius-lg);
 }
+/* What you actually carry is the panel's HEADER. A clone of the whole panel is as tall as the panel,
+   and the tallest of them is taller than the window — which made it impossible to aim, because you
+   had to bring the entire block into view first. Everything below the head is hidden on the CLONE
+   only; the placeholder left behind still holds the panel's full height, so nothing jumps. */
+#dnd-action-dragged-el.dragging-panel .panel-head ~ * {
+	display: none;
+}
 .drag-handle:active {
 	cursor: grabbing;
 }
