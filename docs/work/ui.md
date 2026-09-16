@@ -149,8 +149,14 @@
         **Next step is a hand on a mouse** (`AGENTS.md` ▸ a drag is ours to confirm): does the grip drag
         now? And does the keyboard reorder beside it (`panel-layout.move`, arrow keys on the ⠿ button)
         still work — that answers whether the reorder broke or only the pointer path did.
-  - [ ] **Every (i) opens on a click.** The provenance popover opens on `pointerenter`/`focusin`, and
-        `EffectsPanel`'s ⓘ renders only for a condition that has text — a buff from a spell has none.
+  - [ ] **Every (i) opens on a click — and on a desktop both already do.** Driven in chromium: a click
+        on a traced value opens the provenance popover (the action adds a tab stop, so the click
+        focuses it and `focusin` fires), and `EffectsPanel`'s ⓘ opens its rules text. So the report is
+        NOT "click does nothing" on a mouse. Two candidates left, and they want the reporter's device
+        to tell them apart: a TOUCH tap, where `pointerenter` opens and the next tap anywhere fires
+        `pointerleave` and closes it again; and the ⓘ simply being ABSENT on an effect that is not a
+        condition, because a manual buff carries no content row and so has no prose to show — which
+        reads as "this one has no (i)" rather than "the (i) does nothing".
   - [ ] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square, per the
         maintainer. The item itself is BUILD data, so this writes through to the build inventory.
   - [ ] **An item does not show its price.** The `cost` column exists and 149/383 (2014) and 128/390
