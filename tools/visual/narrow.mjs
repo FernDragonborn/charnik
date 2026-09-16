@@ -98,9 +98,15 @@ for (const width of WIDTHS) {
 		const continueButton = page.locator('.mobile-warning .continue');
 		if (await continueButton.count()) await continueButton.click();
 		if (LOCALE && !localeSet) {
-			// the topbar chip cycles the active locale and the choice persists, so once per context
-			await page.locator('header.topbar .chip').first().click();
-			localeSet = true;
+			// the topbar chip CYCLES the discovered locale list and shows the active one, so click until
+			// it reads the one asked for rather than assuming the next click lands there
+			const chip = page.locator('header.topbar .chip').first();
+			for (let i = 0; i < 12; i++) {
+				if ((await chip.innerText()).trim().toLowerCase() === LOCALE) break;
+				await chip.click();
+				await page.waitForTimeout(150);
+			}
+			localeSet = true; // the choice persists for the rest of the context
 		}
 		await page.waitForTimeout(450);
 		const result = await page.evaluate(findOverflow);

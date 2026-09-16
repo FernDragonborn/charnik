@@ -4,13 +4,13 @@
 	import LangSwitcher from './LangSwitcher.svelte';
 	import { trapFocus } from '$lib/actions/trapFocus';
 
-	// The narrow layout is alpha, not absent: the chrome fits and the views mostly do, but nothing is
-	// sized for a finger and the dense views still overflow their own box. A narrow viewport is the
-	// honest signal — not user-agent, which lies. The same 800px is the layout's own breakpoint
-	// (`+layout.svelte`), so the banner and the responsive rules agree on where narrow starts. Dismiss
-	// is in-memory only: this component lives in the root layout (never remounted across SPA
-	// navigation), so a dismissal lasts the whole visit but a real page reload shows the warning
-	// again — the point is that every fresh visit gets the heads-up.
+	// The narrow layout is alpha, not absent: nothing overflows any more (`tools/visual/narrow.mjs`
+	// holds that line), but the dense views are cramped and most controls are still mouse-sized. A
+	// narrow viewport is the honest signal — not user-agent, which lies. The same 800px is the
+	// layout's own breakpoint (`+layout.svelte`), so the banner and the rules that make it survivable
+	// agree on where narrow starts. Dismiss is in-memory only: this component lives in the root layout
+	// (never remounted across SPA navigation), so a dismissal lasts the whole visit but a real page
+	// reload shows the warning again — the point is that every fresh visit gets the heads-up.
 	const QUERY = '(max-width: 800px)';
 
 	let narrow = $state(false);
