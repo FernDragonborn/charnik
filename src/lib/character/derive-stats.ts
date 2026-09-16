@@ -205,12 +205,15 @@ export function deriveSkills(
 	});
 }
 
-/** AC: equipped armor (dex-capped) + a raised shield's +2 (the play-state flag, the single source
- *  for it — not the inventory equipped flag), else unarmored; then AC effects fold on top. */
+/** AC: equipped armor (dex-capped) + the shield in hand, else unarmored; then AC effects fold on top.
+ *  The shield's contribution follows what is EQUIPPED, because that is the only condition 5e puts on
+ *  it — there is no action for raising one, and a shield you are holding is worth its AC while you
+ *  hold it. Its own `ac` tag is the amount, so a +1 shield is worth 3 rather than a flat 2, and a
+ *  shield row that declares no `ac` contributes nothing — the same rule armour follows. */
 export function deriveAc(
 	{ scores, facts }: StatInputs,
 	equippedArmor: ResolvedItem | undefined,
-	shieldRaised: boolean,
+	equippedShield: ResolvedItem | undefined,
 ): Computed {
 	let acBase: Computed;
 	if (equippedArmor) {
@@ -221,15 +224,25 @@ export function deriveAc(
 	} else {
 		acBase = unarmoredAC({ dexScore: scores.dex });
 	}
-	if (shieldRaised)
+	if (equippedShield) {
+		// its own `ac` tag, exactly like armour above — a shield row that does not declare one
+		// contributes nothing rather than a number we made up for it
+		const shieldAc = tagInt(equippedShield.tags, ITEM_TAG.ac) ?? 0;
 		acBase = {
 			...acBase,
-			value: acBase.value + 2,
+			value: acBase.value + shieldAc,
 			trace: [
 				...acBase.trace,
-				{ source: 'Shield', layer: 'item', op: 'add', amount: 2, key: SOURCE_KEY.shield },
+				{
+					source: equippedShield.row.data.name_en,
+					layer: 'item',
+					op: 'add',
+					amount: shieldAc,
+					key: SOURCE_KEY.shield,
+				},
 			],
 		};
+	}
 	return applyEffects('ac', acBase, facts);
 }
 

@@ -477,6 +477,7 @@
 			"combat": "Combat",
 			"combatHint": "Track the action economy (rounds, action/bonus/reaction)",
 			"shield": "Shield",
+			"shieldHint": "Holding it is what gives the AC — this equips and stows the shield you carry.",
 			"concentration": "Concentration",
 			"concentrationHint": "Tap to stop concentrating",
 			"short": "Short",

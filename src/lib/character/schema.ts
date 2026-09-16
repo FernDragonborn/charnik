@@ -176,9 +176,6 @@ const playSchema = z.object({
 	effects: z.array(effectInstance).default([]),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
-	/** Shield raised (don/doff in one tap) → +2 AC live. The single source of truth for the
-	 *  shield's AC contribution (not the inventory equipped flag). */
-	shieldRaised: z.boolean().default(false),
 	/** Effects-auto engine on. Off → derived stats drop their effect layers (flat bonuses,
 	 *  advantage, conditions) and show base values only (docs/plan.md effects global toggle). */
 	autoCalc: z.boolean().default(true),

@@ -158,7 +158,14 @@ export interface AssembleInput {
 export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const { character, graph, isActive, setup, state, missing, issues } = input;
 	const { facts, scores, abilityComputed, maxHpBase, effCtx, resolvedEffects } = state;
-	const { level, proficiencyBonus: prof, equippedArmor, speciesRow, baseSpeed } = setup;
+	const {
+		level,
+		proficiencyBonus: prof,
+		equippedArmor,
+		equippedShield,
+		speciesRow,
+		baseSpeed,
+	} = setup;
 	const build = character.build;
 	const system = character.system;
 	const poolNames = resourceNames(graph, system, isActive);
@@ -179,7 +186,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const classSaves = resolveClassSaves(build, graph, grantedSaves, missing);
 	const abilities = deriveAbilityBlocks(statInputs, abilityComputed, classSaves);
 	const skills = deriveSkills(statInputs, grantedSkills);
-	const ac = deriveAc(statInputs, equippedArmor, character.play.shieldRaised);
+	const ac = deriveAc(statInputs, equippedArmor, equippedShield);
 
 	// HP: the base fold came out of the resolve stage (recomputed at the final CON); hp_max flows
 	// through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).

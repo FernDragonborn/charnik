@@ -109,6 +109,9 @@ export interface DeriveSetup {
 	 *  score-writing effects have resolved. */
 	hpMaxBaseFor: (conScore: number) => Contribution[];
 	equippedArmor: ResolvedItem | undefined;
+	/** The shield in hand, resolved the same way armour is. A shield you WIELD is worth its AC while
+	 *  you wield it — 5e has no action for raising one — so being equipped is the whole condition. */
+	equippedShield: ResolvedItem | undefined;
 	abilityByClass: Record<string, Ability>;
 	primaryAbility: Ability | undefined;
 	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined;
@@ -155,6 +158,18 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 			? resolveItem(graph, equippedArmorRow, equippedArmorEntry?.base)
 			: undefined;
 
+	// the shield is its own category, and its own slot: a character wears one armour and holds one
+	// shield, so it is found beside the armour rather than folded into it
+	const equippedShieldEntry = build.inventory.find((i) => {
+		const row = i.equipped ? graph.get(i.item) : undefined;
+		return row?.type === 'item' && row.data.category === 'shield';
+	});
+	const equippedShieldRow = equippedShieldEntry ? graph.get(equippedShieldEntry.item) : undefined;
+	const equippedShield =
+		equippedShieldRow?.type === 'item'
+			? resolveItem(graph, equippedShieldRow, equippedShieldEntry?.base)
+			: undefined;
+
 	// casting ability per caster class + the primary caster (highest caster class level) — the
 	// cheap slice the resolve ctx needs; full spellcasting derives AFTER the final scores exist.
 	const abilityByClass = castingAbilityByClass(character, graph);
@@ -180,6 +195,7 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 		primaryAbility,
 		baseSpeed,
 		equippedArmor,
+		equippedShield,
 		speciesRow,
 		abilityByClass,
 	});
@@ -192,6 +208,7 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 		baseSpeed,
 		hpMaxBaseFor,
 		equippedArmor,
+		equippedShield,
 		abilityByClass,
 		primaryAbility,
 		expandCondition,

@@ -154,6 +154,11 @@ export class InventoryTracker {
 		if (c) c.build.inventory = next;
 	};
 
+	/** The shield this character carries, if any. The Combat toolbar's Shield toggle is this row's
+	 *  equip button under another name: a shield in HAND is what the AC counts (`deriveAc`), so there
+	 *  is one fact here and not a play flag beside it that could disagree. */
+	shield = $derived(this.rows.find((r) => r.item?.row.data.category === 'shield'));
+
 	equip = (ref: string) => this.write(toggleEquipped(this.list, ref));
 
 	/**

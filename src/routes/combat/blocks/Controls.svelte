@@ -10,6 +10,7 @@
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
+	const shield = $derived(combat.inventory.shield);
 	const { openDice } = combat;
 	/** Every toggle's state pill reads the same two words. */
 	const state = (on: boolean) => $_(on ? 'combat.controls.on' : 'combat.controls.off');
@@ -25,14 +26,20 @@
 		{$_('combat.controls.combat')}
 		<span class="toggle-state">{state(c.play.inCombat)}</span></button
 	>
-	<button
-		class="toggle"
-		class:on={c.play.shieldRaised}
-		onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
-		><Icon name="shield" />
-		{$_('combat.controls.shield')}
-		<span class="toggle-state">{state(c.play.shieldRaised)}</span></button
-	>
+	<!-- shown only when this character carries a shield: the toggle IS that shield's equip button, so
+	     with none in the pack it could never do anything, and a button like that says the wrong thing
+	     about the sheet (the same rule the Dawn/Dusk buttons follow). -->
+	{#if shield}
+		<button
+			class="toggle"
+			class:on={shield.entry.equipped}
+			onclick={() => combat.inventory.equip(shield.entry.item)}
+			title={$_('combat.controls.shieldHint')}
+			><Icon name="shield" />
+			{$_('combat.controls.shield')}
+			<span class="toggle-state">{state(shield.entry.equipped)}</span></button
+		>
+	{/if}
 	{#if conc}<button
 			class="toggle concentration on"
 			onclick={combat.clearConcentration}

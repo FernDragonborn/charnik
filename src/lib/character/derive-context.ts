@@ -54,6 +54,7 @@ export interface EffectCtxDeps {
 	primaryAbility: Ability | undefined;
 	baseSpeed: number;
 	equippedArmor: ResolvedItem | undefined;
+	equippedShield: ResolvedItem | undefined;
 	speciesRow: LoadedRow | undefined;
 	abilityByClass: Record<string, Ability>;
 }
@@ -70,6 +71,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 		primaryAbility,
 		baseSpeed,
 		equippedArmor,
+		equippedShield,
 		speciesRow,
 		abilityByClass,
 	} = deps;
@@ -105,7 +107,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 					return character.play.hp.current <= hpMaxLive() / 2;
 				},
 				is_concentrating: character.play.concentration != null,
-				is_wearing_shield: character.play.shieldRaised,
+				is_wearing_shield: !!equippedShield,
 				is_wearing_armor: !!equippedArmor,
 				// "When you roll Initiative" — the first combat round. The once/long-rest gate on an
 				// initiative-regain option keeps it from re-firing later, so a round-wide window is fine (v1).

@@ -669,12 +669,26 @@ describe('deriveSheet aggregator', () => {
 		);
 	});
 
-	it('adds a shield when raised (the play-state toggle, not the inventory flag)', () => {
+	it('adds the shield that is EQUIPPED, at the AC its own row declares', () => {
 		const c = wizard();
-		c.play.shieldRaised = true;
+		c.build.inventory = [
+			...c.build.inventory,
+			{ item: `item:${S}:shield`, qty: 1, equipped: true, attuned: false },
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(17); // leather 11 + DEX 2 + shield 2 + faith 2
 		expect(s.ac.trace.map((x) => x.source)).toContain('Shield');
+	});
+
+	it('a shield that is carried but not equipped is worth nothing', () => {
+		const c = wizard();
+		c.build.inventory = [
+			...c.build.inventory,
+			{ item: `item:${S}:shield`, qty: 1, equipped: false, attuned: false },
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.value).toBe(15); // leather 11 + DEX 2 + faith 2
+		expect(s.ac.trace.map((x) => x.source)).not.toContain('Shield');
 	});
 
 	it('applies a custom flat_bonus to a specific skill and save (GM modifier)', () => {

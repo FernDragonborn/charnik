@@ -612,14 +612,20 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   Remaining: **`grant_slot:<level>`** — Mystic Arcanum puts an extra SLOT into the pools rather than a
   resource, and no token says that. One consumer, so it waits for a second.
 
-- [ ] **PLAYTEST-SHIELD · a wielded shield is worth +2 AC, and the sheet says 0.** `deriveAc`
+- [x] **PLAYTEST-SHIELD · a wielded shield is worth +2 AC, and the sheet said 0.** `deriveAc`
   (`character/derive-stats.ts`) takes the shield's +2 from `character.play.shieldRaised` — a combat
   toggle — and its own comment says that flag is "the single source for it, not the inventory equipped
   flag". So equipping a shield in the builder changes no number, which is what the playtest reported
   and what RAW disagrees with: 5e has no "raise your shield" action, a shield you wield gives +2 while
   you wield it. The play toggle is not wrong to EXIST (a shield can be stowed mid-fight, and the app
   cannot know), but it should default from what is equipped rather than be the only source. Nothing in
-  `docs/internals/` settled this, so it is an implementation shortcut and not a closed decision.
+  `docs/internals/` settled this, so it was an implementation shortcut and not a closed decision.
+  **Done, by deleting the flag rather than defaulting it.** A shield in hand IS inventory state, so
+  `play.shieldRaised` is gone and `deriveAc` reads the equipped shield — at the AC its own row
+  declares, which makes a +1 shield worth 3 and a row with no `ac` tag worth nothing, the same rule
+  armour already followed. The Combat toolbar's Shield toggle is now that row's equip button under
+  another name, and it is absent for a character carrying no shield, where it used to offer a phantom
+  +2. Old saves keep parsing: zod strips the dropped key.
 
 - [ ] **PLAYTEST-SPECIES-GRANTS · a species can give an ability boost and nothing else.**
   `species.boost_choice` already encodes "+N to M abilities of your choice" (`schemas.ts`, 5e
