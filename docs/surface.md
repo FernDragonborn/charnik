@@ -121,7 +121,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (80)
+## Global CSS classes (78)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -179,7 +179,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
 | `.meter` | components.css | --- meter: a proportion (encumbrance, the social read-out) --- |
-| `.mobile-blocked` | MobileWarning.svelte :global |  |
 | `.mono-path` | components.css | a filesystem path shown inline (settings Data row) — mono, muted, ellipsized |
 | `.monster-type` | components.css |  |
 | `.muted` | components.css |  |
@@ -203,7 +202,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.stepper` | components.css | --- number stepper: a count you can nudge either way (class level, ability scores, item qty) --- |
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
-| `.topbar` | MobileWarning.svelte :global |  |
 | `.trace` | components.css | --- small shared bits --- |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
@@ -1706,4 +1704,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 80 global classes · 53 components · 1021 exports across 138 modules · 68 duplicate suspects._
+_47 tokens · 78 global classes · 53 components · 1021 exports across 138 modules · 68 duplicate suspects._
