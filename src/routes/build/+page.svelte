@@ -188,8 +188,11 @@
 		align-items: start;
 	}
 	@media (max-width: 900px) {
+		/* minmax(0, …) rather than a bare 1fr: a bare one floors at the track's min-content, so the
+		   widest card in the pair set a floor the phone viewport could not meet and the whole sheet
+		   overflowed sideways. */
 		.sheet-pair {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 	/* A fixed-height box, NOT a scroll container: a wheel goes to the innermost scrollable ancestor
@@ -211,7 +214,7 @@
 			height: auto;
 		}
 		.split {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		.sheet,
 		.inspector {

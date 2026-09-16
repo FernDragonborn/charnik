@@ -401,6 +401,14 @@ svg.lucide {
 .combat-bar > * {
 	white-space: nowrap;
 }
+/* Below the app's narrow threshold a bar can run out of room with nothing left to narrow (TimeSkip's
+   four steps at 320px). It scrolls sideways rather than wrapping, because the one thing a status
+   strip must never become is two rows that read as two bars. */
+@media (max-width: 800px) {
+	.combat-bar {
+		overflow-x: auto;
+	}
+}
 /* the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) */
 .bar-label {
 	font-family: var(--font-mono);
