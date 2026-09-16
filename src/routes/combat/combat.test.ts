@@ -572,13 +572,14 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['mark']);
 	});
 
-	it('B19: hasTimedEffects is true only while a round-timed effect is active', () => {
+	it('B19: passing time is offered whether or not anything is ticking', () => {
+		// the bar used to appear and vanish with the player's buffs, which is a control they could not
+		// ask for. Passing time always moves the round counter, so it is never a no-op.
 		character.play.effects = [{ iid: 'x', label: 'X', effects: [], positive: false }];
-		expect(combat.hasTimedEffects).toBe(false); // indefinite only
-		character.play.effects = [
-			{ iid: 'y', label: 'Y', effects: [], positive: true, durationRounds: 5, startedRound: 0 },
-		];
-		expect(combat.hasTimedEffects).toBe(true);
+		character.play.round = 0;
+		combat.economy.advanceTime(10);
+		expect(character.play.round).toBe(10);
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['x']); // indefinite, so untouched
 	});
 
 	it('an expiring cast_linked effect also ends its concentration', () => {

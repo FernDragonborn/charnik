@@ -237,17 +237,13 @@ class CombatVM {
 	get round(): number {
 		return this.character?.play.round ?? 0;
 	}
-	// B19: any round-timed effect currently ticking. Gates the out-of-combat "pass time" control — a
-	// timed buff cast outside a fight has no turn advance to expire it, so it'd hang until a rest.
-	hasTimedEffects = $derived(
-		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null),
-	);
 	/** Pools that come back at dawn / at dusk — each gates its own control in the time bar, so a
-	 *  character with no such pool never sees a button that would do nothing. */
+	 *  character with no such pool never sees a button that would do nothing. The STEPS are not gated
+	 *  the same way: passing time always advances the round counter and always expires whatever is
+	 *  ticking, so the control is never a no-op — and a bar that appeared and vanished as buffs came
+	 *  and went was a control the player could not ask for when they wanted it. */
 	hasDawnPool = $derived(this.resources.hasBoundaryPool('dawn'));
 	hasDuskPool = $derived(this.resources.hasBoundaryPool('dusk'));
-	/** Is there anything out of combat that the passage of time DOES something to? */
-	showTimeBar = $derived(this.hasTimedEffects || this.hasDawnPool || this.hasDuskPool);
 	// D3: pins persist per character in ui.spellsPinned, keyed by the spell's REF the way
 	// `spellsHidden` is — a bare id pinned every same-id spell from every pack at once, and the eye one
 	// row over disagreed about what a spell is. Exposed as a boolean map for the panel's lookup;

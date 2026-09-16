@@ -2,7 +2,9 @@
 	// B19: out-of-combat "pass time" bar. In combat, Next turn advances the round + expires timed
 	// effects; OUT of combat the round is frozen, so a round-timed buff (a 10-round Bless) would hang
 	// until a rest. This lets the user skip a round / minute / 10 min / hour (1 round = 6 s) and expire
-	// whatever timed out. Shown only when a timed effect is actually ticking (see combat.hasTimedEffects).
+	// whatever timed out. ALWAYS offered out of combat: passing time moves the round counter whether or
+	// not something is ticking, and a bar that came and went with the player's buffs was a control they
+	// could not reach for when they wanted it.
 	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '$lib/i18n';
@@ -19,16 +21,14 @@
 
 <section class="combat-bar">
 	<span class="bar-label"><Icon name="timer" size={13} /> {$_('combat.timeSkip.title')}</span>
-	{#if combat.hasTimedEffects}
-		{#each STEPS as [key, rounds] (key)}
-			<button
-				type="button"
-				class="step"
-				onclick={() => combat.economy.advanceTime(rounds)}
-				title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
-			>
-		{/each}
-	{/if}
+	{#each STEPS as [key, rounds] (key)}
+		<button
+			type="button"
+			class="step"
+			onclick={() => combat.economy.advanceTime(rounds)}
+			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
+		>
+	{/each}
 	<!-- Dawn and dusk are BOUNDARIES, not durations: a wand recharges at dawn, and the app has no
 	     clock to know when that is, so the player says so. Shown only when something comes back
 	     there — a button that could never do anything says the wrong thing about the sheet. -->
