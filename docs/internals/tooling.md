@@ -83,6 +83,11 @@ scrolls on purpose. It names the deepest offender rather than every ancestor tha
 a row that English clears; `--width=` / `--height=` take one size, e.g. a landscape phone. Same `BASE`
 caveat as above. Unlike `shot.mjs` it needs no baseline, so it is the cheaper one to run first.
 
+It prints one advisory beside the failures: a **tap-target census** of controls a 24×24 finger square
+does not reliably hit. It HIT-TESTS rather than reading boxes, because most of the small controls here
+already carry an invisible `::before` expander — a box-size census calls those broken and sends you to
+fix what is already fixed.
+
 Also here: `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`, and the
 class-refactor helpers `hoist-class.mjs` and `rename-class.mjs`.
 

@@ -111,15 +111,15 @@
   `main` escapes it. The one threshold and the rules behind it are
   [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
   The banner stays and says alpha rather than absent. Left:
-  - [ ] **Touch targets inside the views.** The chrome is done — nav rows and the icon-only chips are
-        32-36px — but the combat view still draws thirteen kinds of control under 24px, measured at
-        393px: `.prep` at 8×8 is the worst, then `.slot-pip` and `.resource-pip` at 12×12 (the second
-        grows to 18 through its `::before` inset), `.cast-icon` 12×17, `.pin-star` 18×18,
-        `.name-cast` 51×20, `.ability-save` 98×21. The `::before` inset is the pattern to extend,
-        because it grows the target without moving what is drawn — but the pips sit 4px apart, so a
-        blind −6px would overlap its neighbour and turn a small target into a wrong one. **This one
-        wants a phone in a hand**, not a driver: which of them to grow and by how much is a mis-tap
-        question. The exhaustion gauge is already covered — its 22×10 pips are a shortcut beside a
-        full-size ∓ stepper that does the same job.
+  - [ ] **Four tap targets, all of them in combat.** Hit-tested at 393px rather than measured as
+        boxes, which is the difference between a list worth working and a list of false alarms: the
+        controls that LOOK broken (`.prep` at 8×8, `.pin-star` at 18×18) already carry a `::before`
+        expander and fill a finger square, and every route but combat comes back clean. What is left
+        is `.slot-pip` (12×12, misses 4 of 8 probe points), `.resource-pip` (12×12, misses 1),
+        exhaustion's `.pip` (22×10, misses 2 — and a shortcut beside a full-size ∓ stepper that does
+        the same job), and the inventory row's quantity stepper (22×22, misses 1). Each sits ~4px
+        from a neighbour, so the `::before` trick cannot grow it without stealing the neighbour's
+        taps — the fix is to space or restack the row, which is a **phone-in-a-hand** call and not a
+        driver's. `tools/visual/narrow.mjs` prints the list on every run.
   - [ ] **No narrow baseline.** `shot.mjs` renders at 1280 only, so a regression here shows up as
         overflow or not at all, never as a pixel diff.
