@@ -4,7 +4,7 @@
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
-	import { dndzone } from 'svelte-dnd-action';
+	import { dragHandleZone } from 'svelte-dnd-action';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
@@ -32,8 +32,7 @@
 	const loadingMessage = $derived($_(content.graph ? 'loading.sheet' : 'loading.content'));
 	const columns = $derived(combat.layout.columns);
 	const flipDurationMs = combat.layout.flipDurationMs;
-	const dragDisabled = $derived(combat.layout.dragDisabled);
-	const { dndConsider, dndFinalize, releaseDrag } = combat.layout;
+	const { dndConsider, dndFinalize } = combat.layout;
 
 	onMount(combat.load);
 	// D8: expose the rich combat tray through the DiceTrayRequest seam while this route is mounted,
@@ -106,7 +105,6 @@
 </script>
 
 <svelte:head><title>{$_('nav.combat')} — Charnik</title></svelte:head>
-<svelte:window onpointerup={releaseDrag} />
 
 {#if combat.noCharacter}
 	<NoCharacter />
@@ -138,12 +136,16 @@
 		{#each columns as col, ci (ci)}
 			<div
 				class="panel-column"
-				use:dndzone={{
+				use:dragHandleZone={{
 					items: col,
 					type: 'panel',
-					dragDisabled,
 					flipDurationMs,
 					dropTargetStyle: {},
+					// The floating card keeps the size of the panel you PICKED UP. Left on, the library
+					// resizes it to match whatever slot it is currently over — and these panels are wildly
+					// different heights, so the card's background kept collapsing and re-growing under text
+					// that stayed put, with a lurch at the moment the drag began.
+					morphDisabled: true,
 				}}
 				onconsider={(e) => dndConsider(ci, e)}
 				onfinalize={(e) => dndFinalize(ci, e)}

@@ -133,22 +133,22 @@
   - [x] **КО, not КБ**, for Armor Class in Ukrainian.
   - [x] **A passive score says what a passive score is** (`whyPassive`), in the builder and in combat.
   - [x] **A save says it saved.** The failure path always toasted; success only navigated.
-  - [ ] **Panel drag reported broken — one fix applied, and NOT confirmed.** What is known: reading
-        `svelte-dnd-action`'s own source, a zone attaches its `mousedown` listener to each item ONLY
-        while `dragDisabled` is false, and it does that inside the action's `update`. The handle
-        pattern here flips that flag from the grip's `pointerdown`, so the flag has to land BEFORE the
-        `mousedown` of the same press — and a runes assignment lands on a microtask. `PanelCard` now
-        wraps it in `flushSync`, which is correct on that reading whatever else is true.
-        **What is NOT known: whether that fixes it.** A synthetic Playwright drag starts no drag —
-        but it starts none on the PRE-BUMP dependency set either (`svelte` 5.56.8 + `dnd-action`
-        0.9.74, installed and driven to check), so the harness cannot drive this library and proves
-        nothing in either direction. An earlier note here calling the drag confirmed-broken was that
-        artifact, not evidence.
-        The bump is still the suspect worth naming: `16fd05e` moved `svelte-dnd-action` 0.9.74 → 0.9.79
-        as well as `svelte` 5.56.8 → 5.57.0.
-        **Next step is a hand on a mouse** (`AGENTS.md` ▸ a drag is ours to confirm): does the grip drag
-        now? And does the keyboard reorder beside it (`panel-layout.move`, arrow keys on the ⠿ button)
-        still work — that answers whether the reorder broke or only the pointer path did.
+  - [x] **Panel drag: the grip was a `<button>`, and that alone discarded every press.**
+        `svelte-dnd-action` refuses to start a gesture whose target "is a nested input element", and
+        its test is `e.target.value !== undefined` — which every `<button>` passes, because
+        `HTMLButtonElement.value` is `""`. So the grip had never worked by pointer since it became a
+        real button; the dependency bump this was first blamed on is innocent, and a pre-bump install
+        (svelte 5.56.8 + dnd-action 0.9.74) was driven to confirm that.
+        Two more bugs sat behind it, both from Charnik hand-rolling what the library already has: our
+        `dragDisabled` flag updated on a microtask, so it landed AFTER the press it was meant to
+        allow; and a window `pointerup` re-locked it in a race with the drop, which is why a drag
+        could work once and then stop. `dragHandleZone` + `dragHandle` replace the lot — the library
+        arms the zone through its own synchronous store, releases on `finalize`, and
+        `preventDefault()`s the press, which is also what stopped a finished drag from leaving a click
+        that collapsed the panel it had just moved. `morphDisabled` keeps the floating card the size
+        of the panel you picked up instead of resizing it into every slot it passes over.
+        **Deleted, not added:** `layout.dragDisabled`, `layout.releaseDrag`, the `svelte:window`
+        pointerup, and the `flushSync` that was treating the symptom.
   - [ ] **Every (i) opens on a click — and on a desktop both already do.** Driven in chromium: a click
         on a traced value opens the provenance popover (the action adds a tab stop, so the click
         focuses it and `focusin` fires), and `EffectsPanel`'s ⓘ opens its rules text. So the report is

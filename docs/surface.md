@@ -162,7 +162,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-spacer` | components.css |  |
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
-| `.drag-handle` | components.css |  |
+| `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |

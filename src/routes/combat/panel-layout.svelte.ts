@@ -21,7 +21,6 @@ export class PanelLayout {
 		[{ id: 'skills' }, { id: 'spells' }, { id: 'features' }],
 		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }, { id: 'inventory' }],
 	]);
-	dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
 	flipDurationMs = 150;
 
 	/** `persist` is called with the flattened column id layout whenever a drag finalizes, so the owner
@@ -84,14 +83,13 @@ export class PanelLayout {
 		this.persist(this.columns.map((col) => col.map((panel) => panel.id)));
 	};
 
-	// svelte-dnd-action: sync each column on drag consider + finalize; re-lock the grip.
+	// svelte-dnd-action: sync each column on drag consider + finalize. Arming the grip is the
+	// library's own `dragHandle`/`dragHandleZone` pair, not ours — see PanelCard.
 	dndConsider = (ci: number, e: CustomEvent<{ items: { id: string }[] }>) => {
 		this.columns[ci] = e.detail.items;
 	};
 	dndFinalize = (ci: number, e: CustomEvent<{ items: { id: string }[] }>) => {
 		this.columns[ci] = e.detail.items;
-		this.dragDisabled = true;
 		this.persist(this.columns.map((col) => col.map((x) => x.id)));
 	};
-	releaseDrag = () => (this.dragDisabled = true); // window pointerup
 }

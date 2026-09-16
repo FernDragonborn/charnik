@@ -3,7 +3,7 @@
 	// attacks / actions / effects / spells / inventory — under a shared collapsible head (title + toolbar
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
 	// as props. The dnd grid that hosts these cards stays in the page.
-	import { flushSync, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import { base } from '$app/paths';
@@ -11,6 +11,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { PANEL_MOVE, type PanelMove } from '../panel-layout.svelte';
+	import { dragHandle } from 'svelte-dnd-action';
 	import { _ } from '$lib/i18n';
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 	import SkillsPanel from './panels/SkillsPanel.svelte';
@@ -81,22 +82,26 @@
 			><Icon name="settings" size={13} /> {$_('combat.panel.manageAll')}</a
 		>
 	{/if}
-	<!-- a real button in the tab order, not a role nothing listens to: reordering your own combat
-	     screen had a pointer path and no other. The arrows are the same reorder the drag performs —
-	     up/down inside the column, left/right across to the other one. -->
-	<button
-		type="button"
+	<!-- The grip. Armed by the library's own `dragHandle`, not by a flag of ours — which fixes three
+	     things we had wrong at once. It `preventDefault()`s the press, so finishing a drag no longer
+	     leaves behind a click that collapses the panel you just moved. It arms the zone through the
+	     library's own store, which updates synchronously, where our flag updated on a microtask and so
+	     landed after the very press it was meant to allow. And the zone releases it on `finalize`,
+	     where our window `pointerup` raced the drop — which is why a drag could work once and then
+	     stop.
+	     NOT a <button>, either: the library discards a press whose target "is a nested input element",
+	     and its test for that is `e.target.value !== undefined` — which every <button> passes, because
+	     `HTMLButtonElement.value` is `""`. `dragHandle` sets `role="button"` and owns the tab stop; the
+	     arrow keys, which move a panel without a pointer, stay ours. -->
+	<span
 		id="panel-grip-{pid}"
 		class="drag-handle"
+		use:dragHandle
+		role="button"
+		tabindex="0"
 		aria-label={moveLabel}
 		title={moveLabel}
-		onpointerdown={() => {
-			// FLUSHED, not just assigned: `dndzone` reads `dragDisabled` while handling the SAME press,
-			// and a runes update lands on a microtask — so the library saw the old `true`, ignored the
-			// gesture, and unblocking it afterwards did not bring that press back.
-			flushSync(() => (combat.layout.dragDisabled = false));
-		}}
-		onkeydown={moveOnArrow}>⠿</button
+		onkeydown={moveOnArrow}>⠿</span
 	>
 </div>
 {#if !collapsed[pid]}
