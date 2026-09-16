@@ -74,6 +74,15 @@ For a state the harness does not cover, write a one-off Playwright script **insi
 script in a temp directory throws module-not-found. Drive to the state, screenshot, look at the PNG,
 delete the script. Screenshots go in `design-preview/`, which is gitignored for images.
 
+**`tools/visual/narrow.mjs`** is the other half, because `shot.mjs` renders at 1280 and nothing in it
+can see a phone breaking. It drives every route at 393px and 320px and fails on two things: a
+`document.scrollWidth` wider than the viewport (which scrolls the whole page sideways and drags every
+`position: fixed` overlay off-side), and any box inside `main` wider than `main` that no ancestor
+scrolls on purpose. It names the deepest offender rather than every ancestor that inherited the floor.
+`--locale=uk` re-runs it in Ukrainian, whose labels run wider than English and are what usually breaks
+a row that English clears; `--width=` / `--height=` take one size, e.g. a landscape phone. Same `BASE`
+caveat as above. Unlike `shot.mjs` it needs no baseline, so it is the cheaper one to run first.
+
 Also here: `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`, and the
 class-refactor helpers `hoist-class.mjs` and `rename-class.mjs`.
 

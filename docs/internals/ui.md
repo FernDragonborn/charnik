@@ -96,6 +96,31 @@ Hoisting a `.field` input base once bled onto `.field` form-row wrappers across 
 specific names for global utilities (`.text-field`, `.dialog-card`, never `.field` / `.row` /
 `.item`), and keep exact values when migrating so the pixel diff stays at zero.
 
+## A narrow window
+
+A phone, or a desktop window dragged small — the same thing, and `MobileWarning` says out loud that
+it is alpha. The app has ONE narrow threshold, **800px**, shared by the root layout's rules and that
+banner, so the warning and the rules that make it survivable agree on where narrow starts. A view
+whose own floor is higher names its own width instead (the combat stat grid and the settings tab
+strip both at 640px): that number is a fact about the box's min-content, never about a device.
+
+- **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
+  document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
+  it. The topbar therefore wraps below the threshold — nav on a row of its own, a labelled control
+  collapsed to its icon. Collapsing keeps the `aria-label` and never removes the control: the bug
+  chip is the only entrance to the diagnostics bundle.
+- **Chrome wraps; a status strip scrolls.** A `.combat-bar` never becomes two rows (see its own note
+  in `components.css`), so when it runs out of room it scrolls sideways. Same for the settings tab
+  strip, whose active underline belongs on the strip's own border and not floating mid-panel.
+- **A grid track is `minmax(0, 1fr)`, never a bare `1fr`.** A bare one floors at the track's
+  min-content, so the widest card in it sets a width the viewport may not have — which is how the
+  whole build sheet ran sideways at 320px.
+- **A locale is where a row stops fitting.** Ukrainian labels run wider than English, so a header
+  that pairs a translated title with a `nowrap` button wraps rather than waiting for a threshold.
+
+**Verified by `tools/visual/narrow.mjs`**, not by `shot.mjs` — that one renders at 1280 only. See
+`tooling.md` ▸ Visual regression.
+
 ## The UX pattern contract
 
 These are conventions of *intent* — which control means "state" versus "visibility", how provenance

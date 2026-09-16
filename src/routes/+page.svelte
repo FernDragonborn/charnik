@@ -224,6 +224,10 @@
 	}
 	.head {
 		display: flex;
+		/* wraps rather than breaking at a threshold: the title is a translated word beside a
+		   nowrap button, so where the pair stops fitting is a property of the locale, not of a width
+		   we could name ("+ Новий персонаж" runs 18px over a 393px phone where English clears it) */
+		flex-wrap: wrap;
 		justify-content: space-between;
 		align-items: flex-end;
 		gap: var(--space-3);

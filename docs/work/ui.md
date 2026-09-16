@@ -106,3 +106,17 @@
   inside its component (`.pip`, `.move`, `.dice`, `.filled`), the `class:strip` shorthands, and any
   name produced in the script (`tone()` → `max`/`min`) — renaming those is a JS change, not a class
   change. The census and rename tools are in `tooling.md`.
+- [~] **MOBILE-ALPHA · the narrow layout is usable, not finished.** Nothing overflows any more: at
+  393px and 320px, in English and Ukrainian, no route scrolls the document sideways and no box inside
+  `main` escapes it. The one threshold and the rules behind it are
+  [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
+  The banner stays and says alpha rather than absent. Left:
+  - [ ] **Touch targets inside the views.** The chrome is done — nav rows and the icon-only chips are
+        32-36px — but combat's action pips are 22×10 and its resource pips a 12px dot with a ±3px
+        inset, over the 24px floor only by that hit-area hack. The pass wants a narrow-only minimum
+        that grows the target without moving what is drawn.
+  - [ ] **The anchored popovers are unverified at narrow.** `.popup` clamps its own width to the
+        viewport, but its placement is written from JS (`card-placement.ts`) and nothing has opened one
+        at 393px — `narrow.mjs` drives routes, not menus.
+  - [ ] **No narrow baseline.** `shot.mjs` renders at 1280 only, so a regression here shows up as
+        overflow or not at all, never as a pixel diff.

@@ -550,12 +550,25 @@
 			flex: 1 0 100%;
 			overflow-x: auto;
 		}
+		/* the primary control on a phone, and a finger is not a mouse pointer */
+		.nav a {
+			padding-block: var(--space-2);
+		}
 		.chips {
 			flex-wrap: wrap;
 			justify-content: flex-end;
 		}
 		.control-label {
 			display: none;
+		}
+		/* with the label gone a 13px glyph is the whole button, which is under any usable tap target */
+		.feedback,
+		.search-chip {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 32px;
+			min-height: 32px;
 		}
 		main,
 		main.full-bleed {
