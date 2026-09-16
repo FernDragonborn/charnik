@@ -173,6 +173,19 @@
 		// Tab with no menu open is still Tab — the roller must not trap focus
 		if (event.key === 'Enter' || (event.key === 'Tab' && diceTray.menu.length)) {
 			event.preventDefault();
+			// Enter FINISHES what is pending — the token being typed, or the suggestion under the
+			// highlight. With neither, it had nothing to finish and did nothing at all, which is the one
+			// state where the press obviously means "roll it" (playtest). Ctrl+Enter is unchanged: it
+			// rolls from anywhere, including a header die button with no line focused.
+			if (
+				event.key === 'Enter' &&
+				!diceTray.menu.length &&
+				!(diceTray.drafts[index] ?? '').trim()
+			) {
+				event.stopPropagation();
+				roll();
+				return;
+			}
 			diceTray.commit(index);
 			return;
 		}
