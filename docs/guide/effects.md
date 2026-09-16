@@ -77,6 +77,7 @@ of this page is vocabulary.
 
 ```
 [ guard ? ] kind : target [ : value ]
+[ guard ? ] flat_bonus : target +|- value
 ```
 
 - **`kind`** — what sort of change this is. There are 21, all listed in §5. You cannot invent a new
@@ -84,6 +85,23 @@ of this page is vocabulary.
 - **`target`** — what the change lands on: a stat, a roll, a skill. Listed in §6.
 - **`value`** — how much, when the kind needs one. A whole number, a dice term like `2d6`, or a
   formula (§7).
+
+**`flat_bonus` is the one that uses a sign**, and the sign is part of the value, not a fixed joint.
+A penalty is written the way you would expect:
+
+```
+flat_bonus:speed-5
+flat_bonus:save.dex-1
+```
+
+Both of those are real shipped rows. There is no separate "penalty" effect — a bonus of −5 *is* the
+penalty.
+
+**One trap worth knowing:** a `-` in front of a *formula* negates the whole of it, not just its first
+term. `flat_bonus:speed-2*exhaustion` means `-(2 × exhaustion)`, which is what you want. But it also
+means `flat_bonus:hp_max-2+3` is −5, not +1. When a formula has more than one term, write the sign
+inside it and keep the joint a `+`: `flat_bonus:d20_tests+(-2*exhaustion)` is how the shipped 2024
+exhaustion rule says it.
 
 **The colon is structure, never arithmetic.** `:` separates the parts of an effect and nothing else —
 which is why a formula never contains one, and why a conditional value is written `if(a, b, c)`
