@@ -123,3 +123,44 @@
         driver's. `tools/visual/narrow.mjs` prints the list on every run.
   - [ ] **No narrow baseline.** `shot.mjs` renders at 1280 only, so a regression here shows up as
         overflow or not at all, never as a pixel diff.
+- [ ] **PLAYTEST-UI · what the first outside playtest found on the screens.** One session, one
+  player, 23 notes. The ones that are copy or a missing affordance, smallest first; the rules half is
+  `mechanics.md` ▸ PLAYTEST-SHIELD, the tray half is `roller.md` ▸ PLAYTEST-TRAY, and the override
+  layer is `authoring.md` ▸ OWN-WORDS.
+  - [x] **A refused ability bump says why.** Point buy's step from 13 to 14 costs 2 where every step
+        before it cost 1, and the "+" that could not afford it did nothing and explained nothing.
+  - [x] **Strict/Free say what they change**, and say it through `provenance` rather than `title`.
+  - [x] **КО, not КБ**, for Armor Class in Ukrainian.
+  - [x] **A passive score says what a passive score is** (`whyPassive`), in the builder and in combat.
+  - [x] **A save says it saved.** The failure path always toasted; success only navigated.
+  - [ ] **Panel drag does not start.** REGRESSION, diagnosed not fixed: `dndzone` attaches (the column
+        carries its `role`/`aria-describedby`, the children are `draggable`) but a synthetic drag from
+        the ⠿ grip produces no shadow item and no console error. `PanelCard` arms it by setting
+        `layout.dragDisabled = false` on the grip's `pointerdown`, which the library reads for the SAME
+        press — if the flag is still `true` when it looks, the gesture is ignored and unblocking it
+        afterwards does not bring it back. `svelte-dnd-action` stayed at 0.9.79 while `svelte` went
+        5.56.8 → 5.57.0 in `16fd05e`, which is the suspect: the handle pattern relies on that flag
+        landing synchronously. Try `flushSync` in the grip handler. **The gesture itself is the
+        maintainer's to confirm** (`AGENTS.md` ▸ Verifying); the keyboard reorder beside it
+        (`panel-layout.move`) is separate code and may still work — checking that first says whether
+        the reorder broke or only the drag did.
+  - [ ] **Every (i) opens on a click.** The provenance popover opens on `pointerenter`/`focusin`, and
+        `EffectsPanel`'s ⓘ renders only for a condition that has text — a buff from a spell has none.
+  - [ ] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square, per the
+        maintainer. The item itself is BUILD data, so this writes through to the build inventory.
+  - [ ] **An item does not show its price.** The `cost` column exists and 149/383 (2014) and 128/390
+        (2024) rows carry one; no view renders it. Magic items carry none in either edition — the SRD
+        gives no prices — so the rarity→range table a player would want next is DMG content we cannot
+        author (`AGENTS.md` ▸ Inventing game data).
+  - [ ] **The builder's pickers have no language switcher.** `DialogShell` carries one and only
+        `EditionSwitchDialog` uses it; `SectionedPicker` / `PickerCard` / `PickerPeek` have their own
+        markup.
+  - [ ] **The weapon picker mixes magic items with the basics**, and the basics are what a starting
+        character takes. Wants a filter, or the two as separate lists.
+  - [ ] **No quick way to add a custom language or tool** without authoring a content row.
+  - [ ] **Two things exist and are not found: Level up, and a species ASI.** The level-up button is in
+        the masthead and the +1 is folded into the score with only the popover to say so. Both are
+        discoverability, not absence — 5e species DO carry the bonus (the shipped human gives +1 to all
+        six via `flat_bonus`), and in 5.5e they correctly carry none, which is its own unexplained
+        blank.
+  - [ ] **Rows inside a panel cannot be reordered.** `dndzone` is on the panel COLUMNS only.

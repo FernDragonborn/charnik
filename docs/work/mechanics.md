@@ -611,3 +611,22 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   row does exactly that).
   Remaining: **`grant_slot:<level>`** — Mystic Arcanum puts an extra SLOT into the pools rather than a
   resource, and no token says that. One consumer, so it waits for a second.
+
+- [ ] **PLAYTEST-SHIELD · a wielded shield is worth +2 AC, and the sheet says 0.** `deriveAc`
+  (`character/derive-stats.ts`) takes the shield's +2 from `character.play.shieldRaised` — a combat
+  toggle — and its own comment says that flag is "the single source for it, not the inventory equipped
+  flag". So equipping a shield in the builder changes no number, which is what the playtest reported
+  and what RAW disagrees with: 5e has no "raise your shield" action, a shield you wield gives +2 while
+  you wield it. The play toggle is not wrong to EXIST (a shield can be stowed mid-fight, and the app
+  cannot know), but it should default from what is equipped rather than be the only source. Nothing in
+  `docs/internals/` settled this, so it is an implementation shortcut and not a closed decision.
+
+- [ ] **PLAYTEST-SPECIES-GRANTS · a species can give an ability boost and nothing else.**
+  `species.boost_choice` already encodes "+N to M abilities of your choice" (`schemas.ts`, 5e
+  Half-Elf). Two things beside it have no column and no token: a species that grants a **feat** — and
+  the feat must be a CHOICE where more than one is legal, not a fixed one — and a species that grants
+  a **skill proficiency of the player's choice** (feats have `skill_choices`; species do not). Until
+  both exist, a whole shape of species is unauthorable even as someone's own homebrew.
+  **We do not write the rows.** The species that makes this famous is PHB, in no SRD, and there is no
+  CC-BY source for it — so this item is the VOCABULARY only, and whoever wants that species writes it
+  in their own pack (`AGENTS.md` ▸ Inventing game data).

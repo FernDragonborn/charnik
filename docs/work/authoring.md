@@ -135,3 +135,19 @@ hash-drift dialogs (default homebrew license = `Custom`); and the **license** is
 the detail source-line (was a hardcoded `CC-BY-4.0`).
 
 ---
+
+- [ ] **OWN-WORDS · a player rewrites any description in their own words.** Playtest: flavour text is
+  the table's, not the book's, and a player wants to say it their way — anywhere a description is
+  shown, it can be tapped and replaced, with a small control to put the original back. It is a CACHE
+  over the content, never an edit of it: the CSV is untouched, which is what separates this from the
+  homebrew editor that already exists beside it.
+  **Settled with the maintainer:** a row is per-CHARACTER by default and carries a toggle that
+  promotes it to the whole install, so two characters can read the same item differently. Two stores,
+  each where its scope belongs — the per-character rows in `character.json` (so a character still
+  travels with everything it needs), the promoted ones in an `overrides.json` beside the settings; the
+  toggle moves a row between them.
+  **The expensive half is search.** A player who rewrote a description and then cannot find their own
+  words has been given nothing, so the override has to reach the index the palette and the compendium
+  filter read — which is the part to design before the storage.
+  Keyed by `type:source:id`, never by name, so a pack update does not orphan the override
+  (`../internals/content.md`).
