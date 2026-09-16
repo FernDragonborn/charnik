@@ -64,8 +64,14 @@ nobody asked for, the RNG consumption of every roll in the app would change, and
 a die that was never in play. It also does not generalise — the same argument demands a pre-rolled
 third die for Elven Accuracy and a doubled set for a possible crit.
 
-Back at `neither` the second die is still SHOWN, struck through and unframed, because it really was
-rolled. Elven Accuracy is a third element in `d20s`, not a new concept.
+Back at `neither` the second die is still SHOWN, struck through, because it really was rolled.
+Elven Accuracy is a third element in `d20s`, not a new concept.
+
+**A roll card says the mode with a BRACKET around the test's dice** — teal for advantage, red for
+disadvantage, quiet otherwise — and that bracket is also the control where the surface passes one.
+One mark around the group is what the pair IS: framing each die on its own read as two unrelated
+values, which is the confusion the bracket replaces. A rule then separates the to-hit half from the
+damage half and nothing else; a total is joined to what it sums by an `=`, not ruled off from it.
 
 **Legacy:** an old `{kept, dropped}` pair converts on read, but without `original` the pair is known
 and its ORDER is not, so such a roll reads either way round and cannot return to `neither`
