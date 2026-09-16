@@ -35,11 +35,11 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   `menus/DiceTray.svelte` (its overlay) keep the name, and the `dice/tray.svelte.ts` open-the-tray
   seam was never part of it.
 
-- [ ] **AUDIT-COVERAGE · what the September audit did not read.** Every FINDING in
-  [`../audit-sep-09.md`](../audit-sep-09.md) is closed; its coverage never was. That document stays as
-  the reference record — what was checked and is correct, what each finding was and how it was
-  reproduced, and *What was not reached*, which is the detail behind this item and is not copied here.
-  What is left, highest value first:
+- [ ] **AUDIT-COVERAGE · what the September audit did not read.** Every FINDING of that audit is
+  closed, so its write-up is gone from the tree; the coverage never was, and that is this item. The
+  record it held — what was checked and is correct, how each finding was reproduced, and the per-area
+  remainder — is `docs/audit-sep-09.md` in git, at the commit that removed it. What is left, highest
+  value first:
   - [ ] **The `/dev/` probe on the real desktop app.** `AGENTS.md` ▸ Verifying signs filesystem work
         off there, and the whole desktop half of storage is read and reasoned rather than RUN: the
         data-folder move end to end, `walkTree`'s symlink skip against a real junction, the photo
@@ -64,7 +64,12 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   - [ ] **Named tails.** `readCharacterFiles` unexercised; `seedDemoIfFirstRun` and
         `recreateDemoCharacter` read but not driven; `Hero.svelte` and `PanelCard.svelte` below their
         markup unread; `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a
-        finding — no shipped CSV carries the rest chapter, so nothing here can check the claim.
+        finding — no shipped CSV carries the rest chapter, so nothing here can check the claim. Two
+        the audit judged too small to number, and they are live: `plugins.md` promises a plugin's
+        `url` "opens in the OS browser, never in-app" and nothing opens it anywhere — the consent
+        dialog is its only consumer and shows it as text; and `PluginsSettings.svelte` reads
+        `loadErr` ahead of `p.problem` for the status badge, so a duplicate-namespace loser can be
+        labelled "load failed" while its own row explains the clash.
 
   **The shape that worked** is written down at the end of the audit: one reader per subsystem, three
   at a time, each told to read `AGENTS.md` and the subsystem doc first, to REPRODUCE every finding
