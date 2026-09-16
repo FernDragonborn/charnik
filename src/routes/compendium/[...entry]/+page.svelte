@@ -742,6 +742,21 @@
 		max-height: 168px;
 		overflow: auto;
 	}
+	/* On a narrow window a 320px menu opened by a button that sits half-way across the row runs off the
+	   right edge. Anchoring to the controls ROW instead of to the button drops it straight down the
+	   width of the row, which is the only width guaranteed to fit. */
+	@media (max-width: 800px) {
+		.controls {
+			position: relative;
+		}
+		.disclosure {
+			position: static;
+		}
+		.dropdown-menu.wide {
+			width: auto;
+			inset-inline: 0;
+		}
+	}
 	.ddclear {
 		margin: var(--space-2) var(--space-1) 2px;
 		background: transparent;

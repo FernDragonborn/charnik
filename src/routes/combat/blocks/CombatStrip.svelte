@@ -202,6 +202,21 @@
 	.combat-grid.has-resources .sensitivities-strip {
 		grid-column: 1 / -1;
 	}
+	/* Three stat columns plus the 150px resources block need ~440px before anything can shrink, so
+	   below that the grid halves and the resources block takes a row of its own instead of a fourth
+	   column. Same 640px as the sibling blocks (Abilities, Hero), so the combat view steps down at one
+	   width rather than three. */
+	@media (max-width: 640px) {
+		.combat-grid,
+		.combat-grid.has-resources {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.combat-grid.has-resources .resources-block,
+		.combat-grid.has-resources .senses-strip {
+			grid-column: 1 / -1;
+			grid-row: auto;
+		}
+	}
 
 	.tile {
 		/* a <button> centres its content vertically whatever its display is, so the tiles with less text

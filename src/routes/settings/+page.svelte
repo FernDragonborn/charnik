@@ -132,6 +132,18 @@
 		color: var(--color-text);
 		border-bottom-color: var(--color-accent);
 	}
+	/* The full row of tabs measures ~530px. Narrower than that it scrolls sideways rather than wrapping
+	   into rows, because a wrapped row's active underline would float mid-panel instead of sitting on
+	   the strip's own bottom border. */
+	@media (max-width: 640px) {
+		.tabs {
+			overflow-x: auto;
+		}
+		.tab {
+			flex: 0 0 auto;
+			white-space: nowrap;
+		}
+	}
 	.badge {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
