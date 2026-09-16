@@ -53,13 +53,18 @@
 	function place(clamp: boolean): void {
 		if (!overlay || !popEl) return;
 		const margin = 8;
+		const viewportWidth = document.documentElement.clientWidth;
 		const r = overlay.anchor?.getBoundingClientRect();
 		// which EDGE it hangs from was decided when it opened; only the measurement is redone
-		const left = r && overlay.left != null ? r.left : overlay.left;
-		const right =
-			r && overlay.right != null ? document.documentElement.clientWidth - r.right : overlay.right;
+		let left = r && overlay.left != null ? r.left : overlay.left;
+		let right = r && overlay.right != null ? viewportWidth - r.right : overlay.right;
 		let top = r ? r.bottom + 6 : overlay.top;
 		if (clamp) {
+			// the same reasoning on the other axis: the menu is 300px wide, so a button anywhere near an
+			// edge hangs it off the screen — which a phone viewport hits with almost every button
+			const furthest = viewportWidth - margin - popEl.offsetWidth;
+			if (left != null) left = Math.max(margin, Math.min(left, furthest));
+			if (right != null) right = Math.max(margin, Math.min(right, furthest));
 			if (top + popEl.offsetHeight > window.innerHeight - margin)
 				top = window.innerHeight - margin - popEl.offsetHeight;
 			if (top < margin) top = margin;
@@ -89,10 +94,16 @@
 			if (popEl?.contains(t) || overlay.anchor?.contains(t)) return;
 			combat.overlay = null;
 		};
+		// The first place() measures a menu whose body has not laid out yet, so the clamp above ran
+		// against a height of nothing and a tall menu still hung off the bottom. The same observer
+		// covers a menu that RESIZES while open — the add-effect list shortens as its filter narrows.
+		const refit = new ResizeObserver(reflow);
+		refit.observe(popEl);
 		window.addEventListener('scroll', follow, true);
 		window.addEventListener('resize', reflow);
 		window.addEventListener('pointerdown', closeOnOutside, true);
 		return () => {
+			refit.disconnect();
 			window.removeEventListener('scroll', follow, true);
 			window.removeEventListener('resize', reflow);
 			window.removeEventListener('pointerdown', closeOnOutside, true);

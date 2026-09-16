@@ -112,11 +112,14 @@
   [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
   The banner stays and says alpha rather than absent. Left:
   - [ ] **Touch targets inside the views.** The chrome is done — nav rows and the icon-only chips are
-        32-36px — but combat's action pips are 22×10 and its resource pips a 12px dot with a ±3px
-        inset, over the 24px floor only by that hit-area hack. The pass wants a narrow-only minimum
-        that grows the target without moving what is drawn.
-  - [ ] **The anchored popovers are unverified at narrow.** `.popup` clamps its own width to the
-        viewport, but its placement is written from JS (`card-placement.ts`) and nothing has opened one
-        at 393px — `narrow.mjs` drives routes, not menus.
+        32-36px — but the combat view still draws thirteen kinds of control under 24px, measured at
+        393px: `.prep` at 8×8 is the worst, then `.slot-pip` and `.resource-pip` at 12×12 (the second
+        grows to 18 through its `::before` inset), `.cast-icon` 12×17, `.pin-star` 18×18,
+        `.name-cast` 51×20, `.ability-save` 98×21. The `::before` inset is the pattern to extend,
+        because it grows the target without moving what is drawn — but the pips sit 4px apart, so a
+        blind −6px would overlap its neighbour and turn a small target into a wrong one. **This one
+        wants a phone in a hand**, not a driver: which of them to grow and by how much is a mis-tap
+        question. The exhaustion gauge is already covered — its 22×10 pips are a shortcut beside a
+        full-size ∓ stepper that does the same job.
   - [ ] **No narrow baseline.** `shot.mjs` renders at 1280 only, so a regression here shows up as
         overflow or not at all, never as a pixel diff.
