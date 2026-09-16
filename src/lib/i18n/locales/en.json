@@ -1414,8 +1414,8 @@
 		"keepDeleted": "I meant to — don’t ask again"
 	},
 	"mobile": {
-		"title": "No mobile version yet",
-		"body": "What you see on a phone has never been tested or designed for small screens — there's no responsive layout at all right now.\n\nA mobile version will come later, once the core features are done.\n\nCharnik works best on a desktop.",
+		"title": "Mobile is in deep alpha",
+		"body": "The phone layout is early and rough — screens still overflow, and nothing here is designed for touch yet.\n\nIt gets better as the core settles.\n\nPlease open Charnik on a desktop for anything real.",
 		"continue": "Continue anyway"
 	},
 	"nav": {
