@@ -4,6 +4,8 @@
  * one cohesive unit; CombatVM composes it as `combat.layout` and wires persistence (the column order
  * round-trips onto the character's `ui.panelColumns`) via the constructor callback.
  */
+import { movedOrder, orderRows } from '$lib/combat/row-order';
+
 /** Which way a keyboard move goes. Up/down reorders inside a column; left/right hands the panel to
  *  the other one — between them they reach every arrangement a drag can. */
 export const PANEL_MOVE = {
@@ -25,7 +27,12 @@ export class PanelLayout {
 
 	/** `persist` is called with the flattened column id layout whenever a drag finalizes, so the owner
 	 *  (CombatVM) can store it on the character. */
-	constructor(private persist: (columns: string[][]) => void = () => {}) {}
+	/** `persist` stores the column layout; `rows` reaches the character's own row-order map, which is
+	 *  written in place (it is `$state` on the character, and saving is the store's business). */
+	constructor(
+		private persist: (columns: string[][]) => void = () => {},
+		private rows: () => Record<string, string[]> | undefined = () => undefined,
+	) {}
 
 	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
 
@@ -92,4 +99,26 @@ export class PanelLayout {
 		this.columns[ci] = e.detail.items;
 		this.persist(this.columns.map((col) => col.map((x) => x.id)));
 	};
+
+	/**
+	 * The order of the rows INSIDE a panel, for the panels whose rows are derived — attacks come from
+	 * what you wield, actions from what you can do, so there is no array to reorder and the order is
+	 * stored beside them on the character's `ui`. (The inventory needs none of this: its rows are
+	 * `build.inventory`, so the array IS the order.)
+	 *
+	 * Lives here rather than on CombatVM because it is the same concern the columns are: which thing
+	 * sits where on this player's screen.
+	 */
+	rowOrder = (panel: string): string[] | undefined => this.rows()?.[panel];
+	/** Apply this panel's saved order to the rows it has right now — the one call a panel's list
+	 *  makes, so no view-model has to remember both halves of the reconciliation. */
+	ordered = <T>(panel: string, rows: readonly T[], idOf: (row: T) => string): T[] =>
+		orderRows(rows, idOf, this.rowOrder(panel));
+	setRowOrder = (panel: string, ids: string[]) => {
+		const stored = this.rows();
+		if (stored) stored[panel] = ids;
+	};
+	/** The same reorder by keyboard — one step, for the people a drag excludes. */
+	moveRow = (panel: string, ids: readonly string[], id: string, by: -1 | 1) =>
+		this.setRowOrder(panel, movedOrder(ids, id, by));
 }

@@ -10,6 +10,9 @@
  * something a player could fix from the app if it went wrong.
  */
 
+/** The panels that keep a stored row order — compared against these, never a bare string. */
+export const ROW_PANEL = { attacks: 'attacks', actions: 'actions' } as const;
+
 /** Sort `rows` by a saved order, keeping anything unnamed in its own order at the end. */
 export function orderRows<T>(
 	rows: readonly T[],

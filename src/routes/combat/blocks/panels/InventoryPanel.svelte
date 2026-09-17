@@ -13,8 +13,8 @@
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemDialog from '../AddItemDialog.svelte';
-	import { dndzone, dragHandle } from 'svelte-dnd-action';
-	import { tick } from 'svelte';
+	import { dndzone } from 'svelte-dnd-action';
+	import RowGrip from '../RowGrip.svelte';
 
 	const inv = $derived(combat.inventory);
 	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
@@ -31,17 +31,6 @@
 	let dragging = $state<{ id: string }[] | null>(null);
 	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.item })));
 	const rowOf = (id: string) => rows.find((row) => row.entry.item === id);
-
-	const ARROW_MOVE: Record<string, -1 | 1> = { ArrowUp: -1, ArrowDown: 1 };
-	function moveOnArrow(event: KeyboardEvent, ref: string): void {
-		const by = ARROW_MOVE[event.code];
-		if (!by) return;
-		event.preventDefault(); // the panel would scroll instead
-		inv.move(ref, by);
-		// the library rebuilds the row's nodes, so the grip holding the caret is gone by the time the
-		// move lands — a reorder must not cost the keyboard its place
-		void tick().then(() => document.getElementById(`inv-grip-${ref}`)?.focus());
-	}
 </script>
 
 <div class="load">
@@ -125,18 +114,12 @@
 		{@const row = rowOf(item.id)}
 		{#if row}
 			<div class="inv-row" class:asks-base={row.isTemplate}>
-				<!-- NOT a <button>: `svelte-dnd-action` discards a press whose target has a `value`, which
-				     every button has (see `PanelCard`'s grip for the whole story). -->
-				<span
-					id="inv-grip-{row.entry.item}"
-					class="drag-handle"
-					use:dragHandle
-					role="button"
-					tabindex="0"
-					aria-label={$_('combat.inventory.moveItem', { values: { name: row.name } })}
-					title={$_('combat.inventory.moveItem', { values: { name: row.name } })}
-					onkeydown={(e) => moveOnArrow(e, row.entry.item)}>⠿</span
-				>
+				<RowGrip
+					panel="inventory"
+					id={row.entry.item}
+					name={row.name}
+					onmove={(by) => inv.move(row.entry.item, by)}
+				/>
 				<span class="nm">{row.name}</span>
 				{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
 				<span class="meta">{row.meta}</span>
@@ -222,19 +205,6 @@
 {/if}
 
 <style>
-	/* the row's grip: quiet until the row is under the pointer, so a list of things you carry does not
-	   read as a list of handles */
-	.inv-row .drag-handle {
-		flex: none;
-		color: var(--color-text-muted);
-		opacity: 0.35;
-		cursor: grab;
-		line-height: 1;
-	}
-	.inv-row:hover .drag-handle,
-	.inv-row .drag-handle:focus-visible {
-		opacity: 1;
-	}
 	/* a header for the list, holding the one control that adds to it */
 	.items-head {
 		display: flex;

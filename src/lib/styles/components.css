@@ -797,3 +797,21 @@ svg.lucide {
 .has-provenance[tabindex] {
 	cursor: help;
 }
+
+/* --- a reorderable list of combat rows: the zone, and one row beside its grip ---
+   A combat row IS a button, so its grip cannot live inside it (a control nested in a control is what
+   cost the keyboard its walk once already) — the wrap puts the two side by side. Shared, because the
+   attacks and actions panels are the same shape and a copy in each drifts. */
+.dnd-rows {
+	display: flex;
+	flex-direction: column;
+}
+.row-wrap {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-1);
+}
+.row-wrap .combat-row {
+	flex: 1;
+	min-width: 0;
+}

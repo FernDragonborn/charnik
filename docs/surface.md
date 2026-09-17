@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (71)
+## Duplicate suspects (70)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -22,8 +22,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `open` ×5 — src/lib/actions/provenance.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
-- `ARROW_MOVE` ×4 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
-- `moveOnArrow` ×4 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
@@ -40,6 +38,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
@@ -67,11 +66,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
+- `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
-- `PANEL` ×2 — src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `rather` ×2 — src/lib/dice/roll-lines.ts · src/lib/rules/proficiency.ts
@@ -124,7 +123,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (79)
+## Global CSS classes (81)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -165,6 +164,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-spacer` | components.css |  |
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
+| `.dnd-rows` | components.css | --- a reorderable list of combat rows: the zone, and one row beside its grip --- A combat row IS a button, so its gri… |
 | `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
 | `.dragging-panel` | components.css | What you actually carry is the panel's HEADER. |
 | `.durpill` | components.css | duration / generic mono pill |
@@ -194,6 +194,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.provenance-popover` | components.css | --- the provenance popover: how an auto-calculated value explains itself (ui.md ▸ rule 3). |
 | `.roll-toast` | RollToast.svelte :global |  |
 | `.row-name` | components.css |  |
+| `.row-wrap` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |
 | `.sectlab` | components.css | section label (with trailing rule) |
@@ -790,6 +791,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/row-order.ts`
 
+- `const ROW_PANEL` — The panels that keep a stored row order — compared against these, never a bare string.
 - `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
 - `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
 
@@ -1719,4 +1721,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 79 global classes · 53 components · 1026 exports across 140 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 53 components · 1027 exports across 140 modules · 70 duplicate suspects._
