@@ -54,7 +54,9 @@
 <!-- one Buffs/Debuffs effect row: name (white) + wrapping tags, then the duration dropdown + remove -->
 {#snippet effectRow(e: EffectInstance, polarity: 'positive' | 'negative')}
 	{@const condId = conditionIdOf(e)}
-	{@const infoText = condId ? combat.effects.conditionText(condId) : null}
+	<!-- every effect that HAS something to say carries the ⓘ, not only a condition: a spell's buff
+	     opens the spell's own text, a custom one opens what the player typed. -->
+	{@const infoText = combat.effects.effectProse(e)}
 	<!-- a condition instance only carries `apply_condition:<id>`; show what the condition DOES by
 	     rendering the condition row's own tokens (mechanical tags + display-only notes) instead -->
 	{@const tags = condId ? combat.effects.conditionTokens(condId) : e.effects}

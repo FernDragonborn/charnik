@@ -149,21 +149,17 @@
         of the panel you picked up instead of resizing it into every slot it passes over.
         **Deleted, not added:** `layout.dragDisabled`, `layout.releaseDrag`, the `svelte:window`
         pointerup, and the `flushSync` that was treating the symptom.
-  - [ ] **The (i) a manual buff does not have.** The reporter was on a MOUSE, which closes the
-        investigation below: a click opens both the provenance popover and `EffectsPanel`'s ⓘ, so what
-        was read as "the (i) does nothing" is the ⓘ being ABSENT — it renders only for a condition
-        carrying text, and a buff from a spell carries none. So every effect row needs something to
-        open: what it does and where it came from, composed from the effect itself when no content row
-        backs it.
-        Kept for the record, since it is what the driving found:
-    - [ ] **Every (i) opens on a click — and on a desktop both already do.** Driven in chromium: a click
-        on a traced value opens the provenance popover (the action adds a tab stop, so the click
-        focuses it and `focusin` fires), and `EffectsPanel`'s ⓘ opens its rules text. So the report is
-        NOT "click does nothing" on a mouse. Two candidates left, and they want the reporter's device
-        to tell them apart: a TOUCH tap, where `pointerenter` opens and the next tap anywhere fires
-        `pointerleave` and closes it again; and the ⓘ simply being ABSENT on an effect that is not a
-        condition, because a manual buff carries no content row and so has no prose to show — which
-        reads as "this one has no (i)" rather than "the (i) does nothing".
+  - [x] **The (i) a manual buff does not have.** The reporter was on a MOUSE, which closed the
+        investigation: a click opens both the provenance popover and `EffectsPanel`'s ⓘ, so what read
+        as "the (i) does nothing" was the ⓘ being ABSENT — it rendered only for a condition, and a
+        buff from a spell is the commonest row on that panel. The control now asks the EFFECT what it
+        can open, in three steps: the condition's rules text, then the row that granted it (a spell's
+        own description), then whatever the player typed for a custom one. An effect with none of the
+        three still has no ⓘ — a hand-made buff already shows its tokens as tags, and a control that
+        opens the words beside it is a control that does nothing.
+        A bug found on the way: `conditionText` read `text_en`, so a condition shipping a `text_uk`
+        opened in English beside a panel that had already switched.
+
   - [x] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square opens the
         SAME picker the builder mounts, in a dialog — sections by category, take on the left, read on
         the right — and writes through to `build.inventory`, because what a character owns is build

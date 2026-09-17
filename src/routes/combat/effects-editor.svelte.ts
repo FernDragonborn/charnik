@@ -6,11 +6,17 @@
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
  * currently modifying the character (docs/plan.md, roadmap 9). That is why they are one module.
  */
-import { EXHAUSTION_MAX, type Character, type DeathCause } from '$lib/character/schema';
+import {
+	EXHAUSTION_MAX,
+	type Character,
+	type DeathCause,
+	type EffectInstance,
+} from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
+import { localizedName, localizedProse } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { endConcentrationCarriedBy, remainingRounds, type MenuKind } from '$lib/combat/helpers';
+import { conditionIdOf } from '$lib/combat/effects-view';
 
 /** What the effects editor needs from the sheet around it. */
 export interface EffectsHost {
@@ -70,8 +76,30 @@ export class EffectsEditor {
 		const system = this.host().character?.system;
 		if (!graph || !system) return null;
 		const row = graph.list('condition', { system }).find((r) => r.id === id);
-		const text = row ? String(row.data.text_en ?? '') : '';
-		return text || null;
+		// the READER's language, not `text_en`: a condition that ships a `text_uk` was being opened in
+		// English beside a panel that had already switched
+		return (row && localizedProse(row, 'text', app.activeLocale)) || null;
+	};
+
+	/**
+	 * The prose an effect can OPEN — what the ⓘ shows.
+	 *
+	 * The playtest read "the (i) does nothing" on a buff, and the ⓘ was simply absent: it rendered
+	 * only for a condition, so a spell's buff — the commonest thing on that panel — had no way to say
+	 * what the spell does. Three sources, first one that answers: the condition's rules text, the row
+	 * that GRANTED it (a spell's own description), then whatever the player typed for a custom one.
+	 *
+	 * Null is a real answer: a hand-made buff carrying only tokens already shows them as tags, and an
+	 * ⓘ that opens the words already on the row is a control that does nothing.
+	 */
+	effectProse = (e: EffectInstance): string | null => {
+		const applied = conditionIdOf(e);
+		const rules = applied ? this.conditionText(applied) : null;
+		if (rules) return rules;
+		const graph = this.host().graph;
+		const row = e.source && graph ? graph.get(e.source) : undefined;
+		const granted = row ? localizedProse(row, 'text', app.activeLocale) : '';
+		return granted || e.text?.trim() || null;
 	};
 
 	/** A condition's own effect tokens (its `effects` column) — what the panel renders as tags for an
