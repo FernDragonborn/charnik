@@ -655,23 +655,26 @@
 		color: var(--color-text-muted);
 		font-weight: 500;
 	}
-	/* the loser is collapsed until the roll is hovered or focused — the bracket reads `[15]`, and
-	   `[15 2]` once you ask. Where there is no hover it is simply always out. */
-	/* The die SLIDES out of the bracket, and what used to twitch during it was not the slide: with the
-	   two boxes splitting the card's width evenly, every frame of the growth re-laid the damage box's
-	   contents, so its text crawled and its last chip clipped in and out. Content-sized boxes fixed
-	   that at the source — measured during the reveal, the damage box now keeps its width to the
-	   0.1px and only its position moves, so nothing inside it reflows. */
+	/* The loser is collapsed until the roll is hovered or focused: the bracket reads `[15]`, and
+	   `[15 2]` once you ask.
+	   Its SLOT is reserved the whole time — as padding on the line that holds the bracket — and the
+	   reveal only trades that padding for the die's own width. The two are the same size, so the sum
+	   never changes: the card cannot resize, and nothing around it can re-wrap while the pointer sits
+	   on it. What moves is the bracket, sliding out over a die that was always there; what changes is
+	   the clip. Anything else reflows the card mid-animation, and a wrapped neighbour flickering in and
+	   out is what that looks like. */
 	.roll-dropped {
 		display: inline-flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: var(--space-1);
+		width: var(--drop-slot);
 		max-width: 0;
 		opacity: 0;
 		overflow: hidden;
 		/* a zero-width flex item still takes the group's GAP, so the collapsed state held 4px of nothing
 		   and pushed the closing bracket out — `[15 ]` where a one-die roll reads `[15]`. The negative
-		   margin eats exactly that gap and gives it back on reveal. */
+		   margin eats exactly that gap, in BOTH states, so the trade above stays exact. */
 		margin-inline-start: calc(-1 * var(--space-1));
 		/* the margin travels WITH the width: left instant, it snapped the whole bracket 4px right at the
 		   first frame of the reveal. And the cap is 3ch, not a roomy 6 — max-width stops moving the
@@ -680,20 +683,31 @@
 		   rest catching up afterwards. */
 		transition:
 			max-width 140ms ease,
-			margin-inline-start 140ms ease,
 			opacity 140ms ease;
 	}
 	.roll-row:hover .roll-dropped,
 	.roll-row:focus-within .roll-dropped {
-		max-width: 3ch;
+		max-width: var(--drop-slot);
 		opacity: 1;
-		margin-inline-start: 0;
+	}
+	/* the reserved half of the trade. `2.6ch` holds the widest thing a dropped d20 can be — two
+	   tabular digits and the divider before them. */
+	.roll-to-hit:has(.roll-dropped) {
+		--drop-slot: 2.6ch;
+		padding-inline-end: var(--drop-slot);
+		transition: padding-inline-end 140ms ease;
+	}
+	.roll-row:hover .roll-to-hit:has(.roll-dropped),
+	.roll-row:focus-within .roll-to-hit:has(.roll-dropped) {
+		padding-inline-end: 0;
 	}
 	@media (hover: none) {
 		.roll-dropped {
-			max-width: 3ch;
+			max-width: var(--drop-slot);
 			opacity: 1;
-			margin-inline-start: 0;
+		}
+		.roll-to-hit:has(.roll-dropped) {
+			padding-inline-end: 0;
 		}
 	}
 	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */

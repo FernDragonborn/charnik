@@ -194,11 +194,14 @@
         equipment pane and combat's add-item dialog — from one component.
         Driven in chromium: 71 weapons whole-band, 38 at mundane-only, and the all-magic categories
         (ring, wand, staff, rod) leave the section rail entirely.
-  - [ ] **No quick way to add a custom language or tool** without authoring a content row.
-        **Settled with the maintainer: it is a free-text string on the CHARACTER, not a content row.**
-        Languages and tools interact with nothing in the engine today — they are flavour a sheet
-        prints — so a row in a pack would be machinery for a string. If either ever gains a mechanic,
-        that is when it earns a row.
+  - [x] **No quick way to add a custom language or tool** without authoring a content row. Done as
+        free text on the CHARACTER (`build.customLanguages`, `build.customTools`), per the maintainer:
+        neither interacts with anything the engine computes — they are flavour a sheet prints — so a
+        row in a pack would be machinery for a string. If either gains a mechanic, that is when it
+        earns a row. Both lists live in the languages pane (a second pane for one text field would be a
+        trip for a word), each entry carries its own remove, and the sheet prints them in the same
+        line as what the content granted: the question is "what do I speak", not "where did the word
+        come from". Old saves parse with empty lists — asserted, along with the round-trip.
   - [ ] **Two things exist and are not found: Level up, and a species ASI.** The level-up button is in
         the masthead and the +1 is folded into the score with only the popover to say so. Both are
         discoverability, not absence — 5e species DO carry the bonus (the shipped human gives +1 to all

@@ -11,6 +11,7 @@
 	import { filterByName } from '../rows';
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
+	import OwnEntries from './OwnEntries.svelte';
 	const b = build;
 
 	let query = $state('');
@@ -69,3 +70,17 @@
 		<p class="subtext">{$_('build.inspector.noMatch', { values: { query } })}</p>
 	{/each}
 </div>
+
+<!-- The pane is where languages are edited, so the TOOLS a player writes for themselves live here
+     too: both are the same kind of fact (a proficiency the app prints and never computes), and a
+     second pane holding one text field would be a trip for a word. -->
+<OwnEntries
+	label={$_('build.own.languages')}
+	placeholder={$_('build.own.languagesHint')}
+	bind:entries={b.draft.customLanguages}
+/>
+<OwnEntries
+	label={$_('build.own.tools')}
+	placeholder={$_('build.own.toolsHint')}
+	bind:entries={b.draft.customTools}
+/>

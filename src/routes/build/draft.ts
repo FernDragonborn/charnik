@@ -143,6 +143,9 @@ export interface DraftState {
 	skills: string[];
 	expertise: string[];
 	selectedLanguages: string[];
+	/** What the player typed instead of picking — see `character/schema.ts`. */
+	customLanguages: string[];
+	customTools: string[];
 	slotFeats: Record<string, string>;
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	/** Half-feat ability choice per slot: the +1 a feat like Grappler (STR/DEX) or an Epic Boon
@@ -190,6 +193,8 @@ export function blankDraft(): DraftState {
 		skills: [],
 		expertise: [],
 		selectedLanguages: [],
+		customLanguages: [],
+		customTools: [],
 		slotFeats: {},
 		slotAsi: {},
 		slotFeatAbility: {},
@@ -252,6 +257,8 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	skills: z.array(z.string()).catch(() => []),
 	expertise: z.array(z.string()).catch(() => []),
 	selectedLanguages: z.array(z.string()).catch(() => []),
+	customLanguages: z.array(z.string()).catch(() => []),
+	customTools: z.array(z.string()).catch(() => []),
 	slotFeats: slotMapSchemas.feats.catch(() => ({})),
 	slotAsi: slotMapSchemas.asi.catch(() => ({})),
 	slotFeatAbility: slotMapSchemas.ability.catch(() => ({})),
@@ -307,6 +314,8 @@ export function draftFromCharacter(char: Character): DraftState {
 		skills: [...char.build.skills],
 		expertise: [...char.build.expertise],
 		selectedLanguages: [...char.build.languages],
+		customLanguages: [...char.build.customLanguages],
+		customTools: [...char.build.customTools],
 		selectedSpells: char.build.spells.map((s) => s.spell),
 		// restore the per-slot ASI/feat picks so a level-up shows already-filled slots and re-derives
 		// their boosts from the slots (never re-offers + double-applies them — UBUG-13). Old saves have

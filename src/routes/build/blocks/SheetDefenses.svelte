@@ -41,12 +41,20 @@
 	const armor = $derived(profText(classRows.map((r) => r.data.armor_profs), granted.armor));
 	const weapons = $derived(profText(classRows.map((r) => r.data.weapon_profs), granted.weapons));
 	const tools = $derived(
-		splitList(b.backgroundRow?.data.tools)
-			.map((t) => titleCase(t))
-			.join(' · ')
+		[
+			...splitList(b.backgroundRow?.data.tools).map((t) => titleCase(t)),
+			...b.draft.customTools,
+		].join(' · '),
 	);
+	// what the content granted and what the player typed read as ONE list: the sheet is asked "what do
+	// I speak", and where the word came from is not part of that answer
 	const languages = $derived(
-		b.draft.selectedLanguages.map((ref) => rowName(b.row(ref))).filter(Boolean).join(' · ')
+		[
+			...b.draft.selectedLanguages.map((ref) => rowName(b.row(ref))),
+			...b.draft.customLanguages,
+		]
+			.filter(Boolean)
+			.join(' · '),
 	);
 	const defenses = $derived(s?.damageSensitivities ?? { resist: [], immune: [], vulnerable: [] });
 	const hasDefenses = $derived(

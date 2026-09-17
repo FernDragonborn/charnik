@@ -123,6 +123,12 @@ const buildSchema = z.object({
 	slotPicks: slotPicksSchema.default({ feats: {}, asi: {}, featAbility: {}, featSkills: {} }),
 	/** Known languages, as `language:source:id` refs. */
 	languages: z.array(ref).default([]),
+	/** Languages and tools the player simply TYPED — a table's own tongue, a trade the SRD never
+	 *  listed. Free text and not refs, because neither interacts with any rule the app computes: a
+	 *  language and a tool proficiency are flavour a sheet prints. A row in a pack would be machinery
+	 *  for a string, and the day either gains a mechanic is the day it earns one. */
+	customLanguages: z.array(z.string()).default([]),
+	customTools: z.array(z.string()).default([]),
 	inventory: z.array(inventoryEntry).default([]),
 	spells: z.array(spellEntry).default([]),
 	/** Photo file name (sibling of character.json — NOT base64 in the JSON). */

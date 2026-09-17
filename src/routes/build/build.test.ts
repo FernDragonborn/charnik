@@ -120,6 +120,24 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(out.build.spells.map((s) => s.spell)).toContain(`spell:${S}:fireball`);
 	});
 
+	it('carries the languages and tools a player TYPED, which no content row backs', () => {
+		const saved = savedCharacter();
+		saved.build.customLanguages = ['Thieves’ cant of my table'];
+		saved.build.customTools = ['Glassblower’s tools'];
+		build.hydrate(saved);
+		const out = build.assembled;
+
+		expect(out.build.customLanguages).toEqual(['Thieves’ cant of my table']);
+		expect(out.build.customTools).toEqual(['Glassblower’s tools']);
+		// and a save written before the two columns existed still parses, with nothing typed in it
+		const legacy = characterSchema.parse({
+			...saved,
+			build: { ...saved.build, customLanguages: undefined, customTools: undefined },
+		});
+		expect(legacy.build.customLanguages).toEqual([]);
+		expect(legacy.build.customTools).toEqual([]);
+	});
+
 	it('preserves item attunement through the hydrate → assemble round-trip (D15)', () => {
 		const saved = savedCharacter();
 		saved.build.inventory = [

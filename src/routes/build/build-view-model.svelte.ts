@@ -398,6 +398,8 @@ export class BuildVM {
 				featSkills: { ...this.draft.slotFeatSkills }
 			},
 			languages: [...this.draft.selectedLanguages],
+			customLanguages: [...this.draft.customLanguages],
+			customTools: [...this.draft.customTools],
 			inventory: this.draft.inventory.map((i) => ({ ...i })),
 			// A spell the character ALREADY had keeps the flags it had: unpreparing one is the player's
 			// decision and an always-prepared domain spell is the class's, and recomputing both from the
