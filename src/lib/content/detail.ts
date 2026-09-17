@@ -6,6 +6,7 @@
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
 import { abilityShortLabel, asText, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
+import { costSaid } from '$lib/rules/currency';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
 import type { Said, SaidText } from '$lib/util/say';
@@ -401,12 +402,14 @@ export function buildDetail(
 		.flatMap(([k, v]): MetaCell[] =>
 			k === 'tags'
 				? tagCells(v)
-				: [
-						[
-							fieldLabel(k),
-							asText(v) === 'true' ? { key: 'contentValue.yes', fallback: 'Yes' } : cellText(v),
+				: k === 'cost'
+					? [[fieldLabel(k), costSaid(v)]]
+					: [
+							[
+								fieldLabel(k),
+								asText(v) === 'true' ? { key: 'contentValue.yes', fallback: 'Yes' } : cellText(v),
+							],
 						],
-					],
 		);
 	return {
 		...common,

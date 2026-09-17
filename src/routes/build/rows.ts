@@ -15,6 +15,8 @@ import {
 } from '$lib/content/detail';
 import type { Translate } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
+import { costSaid } from '$lib/rules/currency';
+import { say } from '$lib/util/say';
 import { splitList, type ContentType } from '$lib/content/schemas';
 
 import { abilityShortLabel, titleCase } from '$lib/util/format';
@@ -110,8 +112,12 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 			.join(', ');
 	if (row.type === 'feat') return label('featCategory', row.data.category);
 	// the item picker groups BY category, so repeating it on every row of its own section says
-	// nothing; rarity is the part that still differs inside one
-	if (row.type === 'item') return label('itemRarity', row.data.rarity);
+	// nothing; rarity and PRICE are what still differ inside one — and price is the question a player
+	// outfitting a level-1 character is actually asking, which is why the article alone was not enough
+	if (row.type === 'item')
+		return [label('itemRarity', row.data.rarity), say(costSaid(row.data.cost), t)]
+			.filter(Boolean)
+			.join(' · ');
 	return entryMeta(row, t);
 }
 

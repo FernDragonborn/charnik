@@ -9,8 +9,10 @@
  * attunement cap, and using a consumable up.
  */
 import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
+import { t, translator } from '$lib/i18n';
 import {
+	addItem,
+	removeItem,
 	ATTUNEMENT_CAP,
 	attunedCount,
 	bumpQty,
@@ -23,7 +25,8 @@ import {
 	useOne,
 	type InventoryEntry,
 } from '$lib/character/inventory';
-import { COINS, purseWeightLb, type Purse } from '$lib/rules/currency';
+import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
+import { say } from '$lib/util/say';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 import { type ContentGraph } from '$lib/content/loader';
 import { localizedName } from '$lib/content/detail';
@@ -91,7 +94,14 @@ export class InventoryTracker {
 				name: item ? localizedName(item.row, app.activeLocale) : entry.item,
 				item,
 				weightLb: item?.weightLb ?? 0,
-				meta: [item?.row.data.category ?? '', item?.damage ?? '', ac === null ? '' : `AC ${ac}`]
+				meta: [
+					item?.row.data.category ?? '',
+					item?.damage ?? '',
+					ac === null ? '' : `AC ${ac}`,
+					// what it is worth, for the half of the game that is spending and selling. Magic items
+					// carry no price in either SRD, so the cell is simply absent for them rather than zero.
+					say(costSaid(item?.row.data.cost), translator()),
+				]
 					.filter(Boolean)
 					.join(' · '),
 				equippable: isEquippable(item),
@@ -186,6 +196,12 @@ export class InventoryTracker {
 	};
 
 	bump = (ref: string, by: number) => this.write(bumpQty(this.list, ref, by));
+
+	/** Own one more of something, and put one back. Both are BUILD writes made from play: the builder
+	 *  still decides what a character owns, and this is the same act reached from where you notice it
+	 *  — a looted item mid-session. Quantity beyond the first is `bump`'s job. */
+	add = (ref: string) => this.write(addItem(this.list, ref));
+	remove = (ref: string) => this.write(removeItem(this.list, ref));
 
 	/** Every mundane item a template could BE, of the same kind as the template asking: a weapon
 	 *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks

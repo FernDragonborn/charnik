@@ -12,8 +12,12 @@
 	import { kilograms } from '$lib/combat/constants';
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
+	import AddItemDialog from '../AddItemDialog.svelte';
 
 	const inv = $derived(combat.inventory);
+	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
+	 *  panel's one control, and nothing else opens it. */
+	let adding = $state(false);
 	const rows = $derived(inv.rows);
 	// `why` returns the provenance SENTENCE (the action takes a string), '' when there is no sheet yet
 	const capacityWhy = $derived(combat.sheet ? why(combat.sheet.carryingCapacity, $_) : '');
@@ -62,6 +66,20 @@
 	{/each}
 </div>
 <p class="note rates">{$_('combat.inventory.exchange')}</p>
+
+<!-- Adding is a BUILD act done from play, so it is a control here and not only a link away: the
+     moment you notice you are carrying something is mid-session, not in the builder. -->
+<div class="items-head">
+	<span class="eyebrow">{$_('combat.inventory.items')}</span>
+	<button
+		class="add-item"
+		onclick={() => (adding = true)}
+		title={$_('combat.inventory.addItem')}
+		aria-label={$_('combat.inventory.addItem')}
+	>
+		<Icon name="plus" size={14} />
+	</button>
+</div>
 
 <div class="items">
 	{#each rows as row (row.entry.item)}
@@ -145,7 +163,39 @@
 	{/each}
 </div>
 
+{#if adding}
+	<AddItemDialog onclose={() => (adding = false)} />
+{/if}
+
 <style>
+	/* a header for the list, holding the one control that adds to it */
+	.items-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) 0 var(--space-1);
+	}
+	.items-head .eyebrow {
+		flex: 1;
+	}
+	/* a rounded SQUARE, not a pill: it is a button that opens something, not one of the row's own
+	   state toggles, and the shape is what keeps those two readable apart */
+	.add-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-muted);
+	}
+	.add-item:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+
 	/* the chooser gets its OWN line: it is a sentence-long question in a row of one-word controls, and
 	   squeezing it in beside them collapses the item's kind line to an ellipsis. Only the few rows
 	   that ASK wrap — every other row keeps the single-line shape it has always had. */

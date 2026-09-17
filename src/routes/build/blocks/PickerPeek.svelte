@@ -4,6 +4,7 @@
 	// needs no hover-bridge to survive the trip and can never be the thing you try to scroll. Reading
 	// in full is the click, and that opens PickerCard.
 	import { placeCard, entryElement } from '../card-placement';
+	import { floatInBody } from '$lib/actions/floatInBody';
 
 	let {
 		picker,
@@ -43,7 +44,7 @@
 	});
 </script>
 
-<div class="picker-peek" bind:this={peek}>
+<div class="picker-peek" bind:this={peek} use:floatInBody>
 	<header>
 		<b>{title}</b>
 		{#if meta}<span class="pmeta">{meta}</span>{/if}

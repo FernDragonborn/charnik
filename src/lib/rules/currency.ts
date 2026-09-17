@@ -8,6 +8,7 @@
  * can I afford", and mixing them makes every price a lookup through the same list a player scrolls
  * for their sword. So it is its own play-state map, and the only thing the two share is weight.
  */
+import type { Said } from '$lib/util/say';
 
 /** One denomination: its id (the key in `play.currency`) and what it is worth in copper. */
 export interface Coin {
@@ -45,3 +46,23 @@ export const purseWeightLb = (purse: Purse): number => coinCount(purse) / COINS_
  *  exchange reference is written from. */
 export const purseInCopper = (purse: Purse): number =>
 	COINS.reduce((total, coin) => total + Math.max(0, purse[coin.id] ?? 0) * coin.copper, 0);
+
+/**
+ * An item's `cost` column as a sentence to be said later: "15 gp" → 15 + the reader's word for gold.
+ * The amount is data and stays as written; only the coin's abbreviation is ours, and it comes from the
+ * same `coinName` catalog the purse prints, so a price reads identically in the picker, on an
+ * inventory row and in the article. A cost naming no coin we know (a homebrew "2 bits") passes
+ * through as its own text — a price the app cannot parse is still a price its author wrote.
+ */
+export const costSaid = (cost: unknown): Said => {
+	const raw = String(cost ?? '').trim();
+	const match = /^([\d,.]+)\s*([a-z]{2})$/i.exec(raw);
+	const coin = match ? COINS.find((c) => c.id === match[2]?.toLowerCase()) : undefined;
+	return coin && match
+		? {
+				key: 'contentValue.cost',
+				values: { amount: match[1] ?? '', coin: { catalog: 'coinName', id: coin.id } },
+				fallback: raw,
+			}
+		: raw;
+};

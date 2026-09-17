@@ -164,17 +164,27 @@
         `pointerleave` and closes it again; and the ⓘ simply being ABSENT on an effect that is not a
         condition, because a manual buff carries no content row and so has no prose to show — which
         reads as "this one has no (i)" rather than "the (i) does nothing".
-  - [ ] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square, per the
-        maintainer. The item itself is BUILD data, so this writes through to the build inventory.
-  - [ ] **An item does not show its price, and a magic item has none to show.** The `cost` column
-        exists and 149/383 (2014) and 128/390 (2024) rows carry one; no view renders it. **Counted, not
-        assumed: 0 of 234 (2014) and 0 of 251 (2024) magic rows carry a cost** — the SRD prices no magic
-        item and gives no formula for one either; the rarity→value table is DMG, which we cannot author
-        (`AGENTS.md` ▸ Inventing game data). What every magic row DOES carry is `rarity`, complete in
-        both editions, so rarity is the axis a player can actually be given.
-  - [ ] **The builder's pickers have no language switcher.** `DialogShell` carries one and only
-        `EditionSwitchDialog` uses it; `SectionedPicker` / `PickerCard` / `PickerPeek` have their own
-        markup.
+  - [x] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square opens the
+        SAME picker the builder mounts, in a dialog — sections by category, take on the left, read on
+        the right — and writes through to `build.inventory`, because what a character owns is build
+        data wherever you noticed it. Reusing the picker found two bugs in it that only a picker
+        inside a DIALOG can have: a `position: fixed` card resolves against the dialog's own
+        `translate(-50%, -50%)` rather than the viewport (so it landed off-screen — `floatInBody`
+        moves both floating cards to the body, the same reasoning that already puts the provenance
+        popover there), and its `z-index: 40` sat under the dialog shell's 61.
+  - [x] **An item does not show its price, and a magic item has none to show.** Done: the picker row,
+        the inventory row and the article all say it through one parser (`costSaid`), so the coin is
+        the reader's word — "15 gp" / «15 зм» — and an unparseable homebrew price passes through as its
+        author wrote it. A magic row simply has no price cell.
+        The counts behind it, taken from the shipped packs rather than remembered: 149/383 (2014) and
+        128/390 (2024) rows carry a `cost`, and **0 of 234 (2014) and 0 of 251 (2024) MAGIC rows do** —
+        the SRD prices no magic item and gives no formula for one either, and the rarity→value table is
+        DMG, which we cannot author (`AGENTS.md` ▸ Inventing game data). What every magic row does carry
+        is `rarity`, complete in both editions, which is why rarity is the axis the weapon filter uses.
+  - [x] **The builder's pickers have no language switcher.** `PickerCard` — the popup where a player
+        READS an article while choosing — now carries the shared `LangSwitcher` beside its close
+        button. The topbar has the same control, but it is a screen away from the thing that made you
+        want it. `PickerPeek` deliberately has none: it is a hover teaser, gone before a press lands.
   - [ ] **The weapon picker mixes magic items with the basics**, and the basics are what a starting
         character takes. **Settled with the maintainer:** one toggle for magic items, plus a
         double-ended slider over RARITY — the two handles pick the band that shows. Rarity is the only
