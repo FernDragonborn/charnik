@@ -151,3 +151,4 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
   filter read — which is the part to design before the storage.
   Keyed by `type:source:id`, never by name, so a pack update does not orphan the override
   (`../internals/content.md`).
+  **In the current batch**, alongside the rest of the playtest items.

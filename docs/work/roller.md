@@ -14,6 +14,13 @@
 
 - [ ] **PLAYTEST-TRAY · what the playtest found in the dice tray.**
   - [x] **Enter with nothing pending rolls** instead of doing nothing.
+  - [x] **The roll card reads as answers, not as a wall of numbers.** Three rendered variants went to
+        the maintainer (`design-preview/toast-readability.png`); the picked one gives each answer a
+        labelled box holding the caption, the sum, and the arithmetic that produced it — dimmed, on the
+        sum's baseline. To hit and damage carry the same weight, because which one you say is the
+        caption's job. The dropped advantage die is no longer struck (a line at formula size turns a
+        digit into a blob): it is collapsed inside the bracket and slides out dimmed on hover or focus,
+        always out where there is no hover. The design of record is `../internals/roller.md`.
   - [ ] **A damage-type pill does not look tappable.** The type menu opens on a click nobody knows is
         there; the pill needs to carry its own affordance the way the advantage cue does.
   - [ ] **Advantage/disadvantage wants a real switch, not a cycling button.** `cycleAdvantage` walks

@@ -64,14 +64,22 @@ nobody asked for, the RNG consumption of every roll in the app would change, and
 a die that was never in play. It also does not generalise — the same argument demands a pre-rolled
 third die for Elven Accuracy and a doubled set for a possible crit.
 
-Back at `neither` the second die is still SHOWN, struck through, because it really was rolled.
+Back at `neither` the second die is still SHOWN, because it really was rolled — dimmed inside the
+bracket, and collapsed until the card is hovered or focused (`.roll-dropped`), so a roll reads `[15]`
+and answers `[15 2]` when asked. Where there is no hover it is always out. Struck-through was the
+earlier treatment and lost: at formula size the line turns a digit into a blob.
 Elven Accuracy is a third element in `d20s`, not a new concept.
 
 **A roll card says the mode with a BRACKET around the test's dice** — teal for advantage, red for
 disadvantage, quiet otherwise — and that bracket is also the control where the surface passes one.
 One mark around the group is what the pair IS: framing each die on its own read as two unrelated
-values, which is the confusion the bracket replaces. A rule then separates the to-hit half from the
-damage half and nothing else; a total is joined to what it sums by an `=`, not ruled off from it.
+values, which is the confusion the bracket replaces.
+
+**Each answer is a labelled box: the caption, the sum, then the formula that produced it** — dimmed,
+on the sum's baseline, to its right. To hit and damage are boxes of equal weight, because which one
+you say is the caption's job; making one smaller only asks the question again. The first outside
+playtest read the previous card — two totals at different sizes, captions a row above the numbers they
+named — as one wall of numbers.
 
 **Legacy:** an old `{kept, dropped}` pair converts on read, but without `original` the pair is known
 and its ORDER is not, so such a roll reads either way round and cannot return to `neither`

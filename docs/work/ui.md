@@ -149,7 +149,14 @@
         of the panel you picked up instead of resizing it into every slot it passes over.
         **Deleted, not added:** `layout.dragDisabled`, `layout.releaseDrag`, the `svelte:window`
         pointerup, and the `flushSync` that was treating the symptom.
-  - [ ] **Every (i) opens on a click — and on a desktop both already do.** Driven in chromium: a click
+  - [ ] **The (i) a manual buff does not have.** The reporter was on a MOUSE, which closes the
+        investigation below: a click opens both the provenance popover and `EffectsPanel`'s ⓘ, so what
+        was read as "the (i) does nothing" is the ⓘ being ABSENT — it renders only for a condition
+        carrying text, and a buff from a spell carries none. So every effect row needs something to
+        open: what it does and where it came from, composed from the effect itself when no content row
+        backs it.
+        Kept for the record, since it is what the driving found:
+    - [ ] **Every (i) opens on a click — and on a desktop both already do.** Driven in chromium: a click
         on a traced value opens the provenance popover (the action adds a tab stop, so the click
         focuses it and `focusin` fires), and `EffectsPanel`'s ⓘ opens its rules text. So the report is
         NOT "click does nothing" on a mouse. Two candidates left, and they want the reporter's device
@@ -159,16 +166,24 @@
         reads as "this one has no (i)" rather than "the (i) does nothing".
   - [ ] **Combat's Inventory panel has no way to add an item.** A `+` in a rounded square, per the
         maintainer. The item itself is BUILD data, so this writes through to the build inventory.
-  - [ ] **An item does not show its price.** The `cost` column exists and 149/383 (2014) and 128/390
-        (2024) rows carry one; no view renders it. Magic items carry none in either edition — the SRD
-        gives no prices — so the rarity→range table a player would want next is DMG content we cannot
-        author (`AGENTS.md` ▸ Inventing game data).
+  - [ ] **An item does not show its price, and a magic item has none to show.** The `cost` column
+        exists and 149/383 (2014) and 128/390 (2024) rows carry one; no view renders it. **Counted, not
+        assumed: 0 of 234 (2014) and 0 of 251 (2024) magic rows carry a cost** — the SRD prices no magic
+        item and gives no formula for one either; the rarity→value table is DMG, which we cannot author
+        (`AGENTS.md` ▸ Inventing game data). What every magic row DOES carry is `rarity`, complete in
+        both editions, so rarity is the axis a player can actually be given.
   - [ ] **The builder's pickers have no language switcher.** `DialogShell` carries one and only
         `EditionSwitchDialog` uses it; `SectionedPicker` / `PickerCard` / `PickerPeek` have their own
         markup.
   - [ ] **The weapon picker mixes magic items with the basics**, and the basics are what a starting
-        character takes. Wants a filter, or the two as separate lists.
+        character takes. **Settled with the maintainer:** one toggle for magic items, plus a
+        double-ended slider over RARITY — the two handles pick the band that shows. Rarity is the only
+        axis the content can support (see the price item above).
   - [ ] **No quick way to add a custom language or tool** without authoring a content row.
+        **Settled with the maintainer: it is a free-text string on the CHARACTER, not a content row.**
+        Languages and tools interact with nothing in the engine today — they are flavour a sheet
+        prints — so a row in a pack would be machinery for a string. If either ever gains a mechanic,
+        that is when it earns a row.
   - [ ] **Two things exist and are not found: Level up, and a species ASI.** The level-up button is in
         the masthead and the +1 is folded into the score with only the popover to say so. Both are
         discoverability, not absence — 5e species DO carry the bonus (the shipped human gives +1 to all

@@ -165,8 +165,15 @@
 				>
 			{/each}
 			{#if a.dropped !== undefined}
-				<span class="roll-die-divider"></span>
-				<span class="roll-face dropped-die" title={$_('roller.droppedD20')}>{a.dropped}</span>
+				<!-- the die the rule threw away is a FACT about the roll, but not one of its answers: it
+				     stays collapsed until the card is hovered or focused, then slides out dimmed beside the
+				     die that won. Struck-through was the old treatment and lost: at this size the line
+				     turns a digit into a blob. Where there is no hover (touch, or reduced motion) it is
+				     simply always out — a state you cannot reach is a state that does not exist. -->
+				<span class="roll-dropped">
+					<span class="roll-die-divider"></span>
+					<span class="roll-face dropped-die" title={$_('roller.droppedD20')}>{a.dropped}</span>
+				</span>
 			{/if}
 			{#if foldedDice(a)}
 				<span class="roll-face folded-dice" title={a.chips.map((c) => c.detail).join(' + ')}
@@ -240,30 +247,19 @@
 			{/each}
 			<span class="roll-total big-total">{shown(model.total)}</span>
 		</span>
-	{:else}
+	{:else if strip}
 		<span
 			class="roll-grid"
 			class:damaging={twoPart}
 			class:damage-only={model.damaging && !model.tested}
-			class:multi
 		>
-			<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
-		     own width can't widen them, and lands on the to-hit total's right edge. A damage-only roll
-		     has nothing to distinguish, so it gets no captions at all. -->
-			{#if twoPart}
-				<span class="roll-caption hit eyebrow">{$_('roller.toHit')}</span>
-				<span></span>
-				<span class="roll-caption eyebrow">{$_('roller.damage')}</span>
-			{/if}
 			{#each attacks as a, i (i)}
-				{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
-					>{/if}
 				{#if model.tested}{@render hitDice(a)}{/if}
 				{#if twoPart}
 					<span
 						class="roll-to-hit-total"
 						class:nat-20={a.natural === 20}
-						class:nat-1={a.natural === 1}><span class="roll-eq">=</span>{a.subtotal}</span
+						class:nat-1={a.natural === 1}>{a.subtotal}</span
 					>
 				{/if}
 				{#if model.damaging}
@@ -276,30 +272,83 @@
 					</span>
 				{/if}
 				<span
-					class="roll-total"
-					class:big-total={!multi}
+					class="roll-total big-total"
 					class:nat-20={a.natural === 20}
 					class:nat-1={a.natural === 1}
 				>
-					{#if !model.damaging}{#if Number.isFinite(a.subtotal)}<span class="roll-eq">=</span
-							>{/if}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
+					{#if !model.damaging}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
 							>{$_('roller.miss')}</span
-						>{:else}<span class="roll-eq">=</span>{a.damageTotal}{/if}
+						>{:else}{a.damageTotal}{/if}
 				</span>
 			{/each}
-			{#if multi}
-				<span class="roll-type-sums">
-					{#each model.byType as t, i (i)}
-						<span class="roll-type-sum" title={damageTypeLabel(t.type, $_) || undefined}>
-							<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
-						</span>
-					{/each}
-				</span>
-				<span class="roll-total big-total grand-total"
-					><span class="roll-eq">=</span>{shown(model.total)}</span
-				>
-			{/if}
 		</span>
+	{:else}
+		<!-- Each ANSWER gets a box that names it and holds the arithmetic that produced it, dimmed, on
+		     its own baseline. The card used to print both totals at different weights with the captions
+		     a row above the numbers they named, and the first playtest read it as one undifferentiated
+		     wall of numbers: which of the two do you say to the DM. A box is the smallest thing that
+		     binds a caption, a sum and its formula into one object the eye can take at once. -->
+		<div class="roll-lanes">
+			{#each attacks as a, i (i)}
+				<div class="roll-lane">
+					{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
+						>{/if}
+					{#if model.tested}
+						<div class="roll-box">
+							<span class="roll-caption eyebrow"
+								>{$_(model.damaging ? 'roller.toHit' : 'roller.result')}</span
+							>
+							<span class="roll-answer">
+								<span
+									class="roll-answer-sum"
+									class:nat-20={a.natural === 20}
+									class:nat-1={a.natural === 1}>{shown(a.subtotal)}</span
+								>
+								<span class="roll-formula">{@render hitDice(a)}</span>
+							</span>
+						</div>
+					{/if}
+					{#if model.damaging}
+						<div class="roll-box damage-box">
+							<span class="roll-caption eyebrow">{$_('roller.damage')}</span>
+							<span class="roll-answer">
+								{#if a.natural === 1}
+									<span class="roll-answer-sum nat-1 roll-miss">{$_('roller.miss')}</span>
+								{:else}
+									<span class="roll-answer-sum" class:nat-20={a.natural === 20}
+										>{a.damageTotal}</span
+									>
+									<span class="roll-formula">
+										{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
+									</span>
+								{/if}
+							</span>
+						</div>
+					{/if}
+				</div>
+			{/each}
+			<!-- a volley's own answer: what the whole action dealt, with the per-type split as its
+			     formula — the same shape as a line's, so the card reads down one column of sums -->
+			{#if multi}
+				<div class="roll-lane">
+					<div class="roll-box damage-box">
+						<span class="roll-caption eyebrow"
+							>{$_('roller.attacks', { values: { count: attacks.length } })}</span
+						>
+						<span class="roll-answer">
+							<span class="roll-answer-sum">{shown(model.total)}</span>
+							<span class="roll-formula">
+								{#each model.byType as t, i (i)}
+									<span class="roll-type-sum" title={damageTypeLabel(t.type, $_) || undefined}>
+										<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
+									</span>
+								{/each}
+							</span>
+						</span>
+					</div>
+				</div>
+			{/if}
+		</div>
 	{/if}
 	<!-- the note is a RECORD (an upcast's provenance, an amendment) and records belong in the log,
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
@@ -331,18 +380,6 @@
 		min-width: 3ch;
 		padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
 	}
-	.strip .roll-grid,
-	.strip .roll-grid.damaging,
-	.strip .roll-grid.multi,
-	.strip .roll-grid.volley {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		padding: 0 var(--space-1);
-	}
-	.strip .roll-caption {
-		display: none;
-	}
 	.strip .roll-to-hit,
 	.strip .roll-damage {
 		padding: 0;
@@ -350,11 +387,6 @@
 	}
 	.strip .roll-to-hit-total {
 		padding-inline-end: 0;
-	}
-	/* one line has its own separator — a rule before the total — so the equals sign would say the same
-	   thing twice, and the group's card inset has nothing to line up with here */
-	.strip .roll-eq {
-		display: none;
 	}
 	.strip .roll-dice-group {
 		margin-inline-start: 0;
@@ -376,48 +408,93 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	/* one row per attack. The fixed-ish columns let a stack of rolls read down the same seams; they
-	   grow past their floor rather than clip (a dropped adv die, a three-digit total). */
+	/* the strip's row — the one layout that still flows its parts inline */
 	.roll-grid {
-		display: grid;
-		grid-template-columns: 1fr 68px;
+		display: flex;
 		align-items: center;
-		padding: 0 0 var(--space-3) var(--space-4);
+		gap: var(--space-2);
+		padding: 0 var(--space-1);
 	}
-	.roll-grid.damaging {
-		grid-template-columns: minmax(58px, max-content) minmax(36px, max-content) 1fr 68px;
+
+	/* ---- the card: a lane per attack, an answer per box ---- */
+	.roll-lanes {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		padding: 0 var(--space-4) var(--space-3);
 	}
-	.roll-grid.multi {
-		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 68px;
-		padding-inline-start: 0;
+	.roll-lane {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-2);
 	}
-	/* damage with no test (Fireball): the damage IS the row, so it leads instead of sitting in a
-	   column ruled off from a to-hit that doesn't exist */
-	.roll-grid.damage-only {
-		grid-template-columns: 1fr 68px;
+	.roll-box {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: var(--space-2) var(--space-2-5);
+		background: var(--color-surface-2);
+		border-radius: var(--radius);
 	}
-	.roll-grid.multi.damage-only {
-		grid-template-columns: 26px 1fr 68px;
+	/* damage reads on its own ground: with two boxes of identical weight side by side, the tint is
+	   what lets a glance land on the half it wants before reading either caption */
+	.roll-box.damage-box {
+		background: color-mix(in srgb, var(--color-danger) 7%, var(--color-surface-2));
 	}
-	.damage-only .roll-damage {
-		justify-content: flex-start;
-		padding-inline-start: 0;
+	.roll-answer {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		min-width: 0;
+	}
+	/* THE number — the one thing said out loud. Both halves carry it at the same size: which one you
+	   mean is the caption's job, and making one of them smaller only asks the question again. */
+	.roll-answer-sum {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		font-weight: 700;
+		line-height: 1.05;
+		color: var(--color-text);
+		font-variant-numeric: tabular-nums;
+	}
+	.roll-answer-sum.nat-20 {
+		color: var(--color-resource);
+	}
+	.roll-answer-sum.nat-1 {
+		color: var(--color-danger);
+	}
+	/* the arithmetic rides the sum's baseline, dimmed: it explains the number without competing with
+	   it, and it is what expands when the card is hovered */
+	/* The TEST's formula never wraps: wrapped, the box changes height when the dropped die slides out
+	   and the lane jumps under the pointer that asked for it. Damage keeps wrapping — three types on
+	   one line is the case that would otherwise run off the card. */
+	.roll-formula .roll-to-hit {
+		flex-wrap: nowrap;
+	}
+	.roll-formula {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-1);
+		min-width: 0;
+		opacity: 0.8;
+	}
+	.roll-formula .roll-to-hit,
+	.roll-formula .roll-damage {
+		padding: 0;
 		border-inline-start: 0;
 	}
+	.roll-formula .roll-face {
+		font-size: var(--font-size-xs);
+	}
+	.roll-formula .roll-dice-group::before,
+	.roll-formula .roll-dice-group::after {
+		font-size: var(--font-size-sm);
+	}
 	.roll-caption {
-		padding: 0 0 var(--space-1);
 		font-size: var(--font-size-micro);
-		text-align: center;
-	}
-	.roll-caption.hit {
-		grid-column: 1 / 3;
-		padding-inline-end: var(
-			--space-3
-		); /* the to-hit total's own padding — the caption sits on its end edge */
-		text-align: end;
-	}
-	.multi .roll-caption.hit {
-		grid-column: 1 / 4;
 	}
 	/* which attack of the volley this is — a bare ordinal, gold when that one crit */
 	.roll-attack-index {
@@ -521,11 +598,34 @@
 		color: var(--color-danger);
 		font-weight: 700;
 	}
-	/* the adv/disadv die that lost: struck through and stepped back */
+	/* the adv/disadv die that lost: dimmed and stepped back, never struck (see `.roll-dropped`) */
 	.roll-face.dropped-die {
 		color: var(--color-text-muted);
 		font-weight: 500;
-		text-decoration: line-through;
+	}
+	/* the loser is collapsed until the roll is hovered or focused — the bracket reads `[15]`, and
+	   `[15 2]` once you ask. Where there is no hover it is simply always out. */
+	.roll-dropped {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		max-width: 0;
+		opacity: 0;
+		overflow: hidden;
+		transition:
+			max-width 160ms ease,
+			opacity 160ms ease;
+	}
+	.roll-row:hover .roll-dropped,
+	.roll-row:focus-within .roll-dropped {
+		max-width: 6ch;
+		opacity: 1;
+	}
+	@media (hover: none) {
+		.roll-dropped {
+			max-width: 6ch;
+			opacity: 1;
+		}
 	}
 	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */
 	.roll-face.folded-dice {
@@ -575,15 +675,6 @@
 		font-weight: 700;
 		color: var(--color-text);
 		font-variant-numeric: tabular-nums;
-	}
-	/* the sign that says the number to its right is the SUM of what is to its left. It is the only
-	   thing that separates a total from the dice now — the rule that used to sit there said the total
-	   was a different kind of thing than the damage it adds up. */
-	.roll-eq {
-		font-family: var(--font-body);
-		font-size: var(--font-size-sm);
-		font-weight: 400;
-		color: var(--color-text-muted);
 	}
 	/* the damage half of the row: glyph-led chips, right-aligned against the total's rule, wrapping
 	   onto a second line when a crit doubles the types */
@@ -640,17 +731,6 @@
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 	}
-	/* the volley's footer: what it dealt per type, then the one number that leaves the card */
-	.roll-type-sums {
-		/* every column but the total's, whichever shape the grid is in */
-		grid-column: 1 / -2;
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: flex-end;
-		gap: var(--space-3);
-		padding: var(--space-1-5) var(--space-3) var(--space-2-5) 0;
-	}
 	.roll-type-sum {
 		display: flex;
 		align-items: center;
@@ -662,11 +742,6 @@
 	}
 	.roll-type-sum span {
 		color: var(--color-text);
-	}
-	.roll-total.grand-total {
-		align-self: stretch;
-		padding: var(--space-1) 0 var(--space-2-5);
-		border-top: 1px solid var(--color-border);
 	}
 	.roll-note {
 		padding: 0 var(--space-4) var(--space-2);

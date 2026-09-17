@@ -636,3 +636,8 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   **We do not write the rows.** The species that makes this famous is PHB, in no SRD, and there is no
   CC-BY source for it — so this item is the VOCABULARY only, and whoever wants that species writes it
   in their own pack (`AGENTS.md` ▸ Inventing game data).
+  **An optional rule is a CHOICE at the point of the trait, not a settings shelf.** Settled with the
+  maintainer: a variant trait is an ordinary content row that declares which trait it stands in for,
+  and the builder offers the two side by side where that trait is granted — the usual one and the
+  homebrew/variant. No global toggle, nothing to enable before building, and a pack someone installs
+  brings its variants with it.
