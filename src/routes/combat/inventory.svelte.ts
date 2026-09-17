@@ -197,6 +197,33 @@ export class InventoryTracker {
 
 	bump = (ref: string, by: number) => this.write(bumpQty(this.list, ref, by));
 
+	/**
+	 * Reorder what the character carries. The inventory ARRAY is the order — nothing new is stored,
+	 * and a reorder persists the way every other inventory edit does.
+	 *
+	 * Refs the caller does not name keep their places at the end rather than being dropped: a list
+	 * rebuilt from a drag is the view's idea of the list, and the character's is the one that counts.
+	 */
+	reorder = (refs: string[]) => {
+		const byRef = new Map(this.list.map((entry) => [entry.item, entry]));
+		const moved = refs.map((ref) => byRef.get(ref)).filter((e) => e !== undefined);
+		const rest = this.list.filter((entry) => !refs.includes(entry.item));
+		this.write([...moved, ...rest]);
+	};
+
+	/** The same reorder by keyboard — one step up or down, for the people a drag excludes. */
+	move = (ref: string, by: -1 | 1) => {
+		const order = this.list.map((entry) => entry.item);
+		const at = order.indexOf(ref);
+		const to = at + by;
+		if (at < 0 || to < 0 || to >= order.length) return;
+		const swapped = order[to];
+		if (swapped === undefined) return;
+		order[to] = ref;
+		order[at] = swapped;
+		this.reorder(order);
+	};
+
 	/** Own one more of something, and put one back. Both are BUILD writes made from play: the builder
 	 *  still decides what a character owns, and this is the same act reached from where you notice it
 	 *  — a looted item mid-session. Quantity beyond the first is `bump`'s job. */

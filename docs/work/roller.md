@@ -21,8 +21,10 @@
         caption's job. The dropped advantage die is no longer struck (a line at formula size turns a
         digit into a blob): it is collapsed inside the bracket and slides out dimmed on hover or focus,
         always out where there is no hover. The design of record is `../internals/roller.md`.
-  - [ ] **A damage-type pill does not look tappable.** The type menu opens on a click nobody knows is
-        there; the pill needs to carry its own affordance the way the advantage cue does.
+  - [x] **A damage-type pill does not look tappable.** It wears the same chevron every other
+        menu-opening control in the app does (the duration select, the base-item chooser) rather than a
+        cue invented for one pill — quiet until the pointer is on it. The playtest had been finding the
+        type menu by accident.
   - [ ] **Advantage/disadvantage wants a real switch, not a cycling button.** `cycleAdvantage` walks
         three states through one press. The maintainer has no preference yet, so this is picked from
         RENDERED variants (`AGENTS.md` ▸ Screenshots go in design-preview). The harder half is WHERE:

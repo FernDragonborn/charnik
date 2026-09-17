@@ -18,6 +18,7 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
+import { orderRows, movedOrder } from '$lib/combat/row-order';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -510,17 +511,43 @@ class CombatVM {
 		this.casting.upcastSpell = v;
 	}
 
+	/** What a row is CALLED for ordering purposes: the panel it lives in plus its own id. */
+	private static readonly ROW_PANEL = { attacks: 'attacks', actions: 'actions' } as const;
+
 	attacks = $derived.by<Attack[]>(() =>
 		this.character && this.sheet && this.graph
-			? computeAttacks(this.character, this.sheet, this.graph, app.activeLocale)
+			? orderRows(
+					computeAttacks(this.character, this.sheet, this.graph, app.activeLocale),
+					(a) => a.id,
+					this.character.ui.rowOrder[CombatVM.ROW_PANEL.attacks],
+				)
 			: [],
 	);
+
+	/**
+	 * A player's own order for a panel whose rows are DERIVED — attacks come from what you wield,
+	 * actions from what you can do, so there is no array to reorder and the order lives on `ui`.
+	 * Everything above reads through `orderRows`, so a saved order and the live rows are reconciled
+	 * on every read rather than at a moment somebody has to remember.
+	 */
+	setRowOrder = (panel: string, ids: string[]) => {
+		if (this.character) this.character.ui.rowOrder[panel] = ids;
+	};
+	/** The same reorder by keyboard, for the people a drag excludes. */
+	moveRow = (panel: string, ids: string[], id: string, by: -1 | 1) =>
+		this.setRowOrder(panel, movedOrder(ids, id, by));
 
 	// standard actions (from d-charnik); roll ones reference live skills — pure builder in helpers
 	actions = $derived.by<StandardAction[]>(() =>
 		standardActions(this.sheet, this.character?.system ?? DEFAULT_SYSTEM),
 	);
-	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));
+	visibleActions = $derived(
+		orderRows(
+			this.actions.filter((a) => !this.hiddenActions[a.id]),
+			(a) => a.id,
+			this.character?.ui.rowOrder[CombatVM.ROW_PANEL.actions],
+		),
+	);
 
 	spellGroups = $derived.by(() =>
 		this.character && this.graph

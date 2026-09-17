@@ -31,7 +31,14 @@
 			onclick={open}
 		>
 			<small>{abilityShortLabel(ab, $_)}</small>
-			<b>{score}</b>
+			<span class="score">
+				<b>{score}</b>
+				<!-- What the score gained from OUTSIDE what you rolled or bought, said as a number. The
+				     crimson tint alone marked that something happened without saying what, and the first
+				     playtest never noticed a species' +1 at all — the popover held the only answer, and a
+				     popover is a thing you open once you already suspect there is something to open. -->
+				{#if boosted}<span class="bump">{signed(score - b.draft.abilities[ab])}</span>{/if}
+			</span>
 			<span class="mod">{block ? signed(block.mod) : ''}</span>
 			{#if block?.saveProficient}<span class="save" title={$_('build.vitals.saveProficient')}
 					>{$_('build.vitals.save', { values: { mod: signed(block.save.value) } })}</span
@@ -56,6 +63,18 @@
 		padding: var(--space-2-5) var(--space-1-5);
 	}
 	.ability.boosted b {
+		color: var(--color-accent-bright);
+	}
+	/* the number and its bump ride one baseline, so the tile still reads as one score */
+	.score {
+		display: inline-flex;
+		align-items: baseline;
+		gap: var(--space-1);
+	}
+	.bump {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		font-weight: 600;
 		color: var(--color-accent-bright);
 	}
 	.mod {

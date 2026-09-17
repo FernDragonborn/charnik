@@ -462,15 +462,15 @@
 			"utilize": "Використання",
 			"utilizeDesc": "скористатися предметом"
 		},
-		"actions": {
-			"unavailable": "Зараз недоступно",
-			"cantAfford": "Недостатньо: {resource}"
-		},
 		"actionType": {
 			"action": "дія",
 			"bonus_action": "бонусна дія",
 			"reaction": "реакція",
 			"free": "вільна"
+		},
+		"actions": {
+			"unavailable": "Зараз недоступно",
+			"cantAfford": "Недостатньо: {resource}"
 		},
 		"attacks": {
 			"noteAttackBonus": "{amount} до атаки",
@@ -560,8 +560,9 @@
 		},
 		"hero": {
 			"level": "Рівень",
-			"proficiency": "Володіння",
-			"levelUp": "Підвищити рівень"
+			"levelUp": "Підвищити рівень",
+			"levelUpTo": "Підвищити до {level} рівня",
+			"proficiency": "Володіння"
 		},
 		"hp": {
 			"concentrationCheck": "Перевірка концентрації",
@@ -617,6 +618,7 @@
 			"leftCount": "лишилось {count}",
 			"load": "Навантаження",
 			"more": "На одну одиницю більше: {name}",
+			"moveItem": "Перемістити «{name}» — перетягніть або скористайтесь стрілками",
 			"openBuilder": "відкрити",
 			"overCapacity": "Перевантаження — швидкість падає, і кожна перевірка, що її використовує, страждає. Вирішувати вам.",
 			"pounds": "{lb} фн",
@@ -705,6 +707,7 @@
 			"speed": "Швидкість (фт)",
 			"to": "до {target}"
 		},
+		"moveRow": "Перемістити «{name}» — перетягніть або скористайтесь стрілками",
 		"notice": {
 			"notAvailable": "{name} — зараз недоступно",
 			"notEnoughResource": "Бракує «{resource}» для «{name}»",

@@ -251,6 +251,10 @@ const uiSchema = z
 	.object({
 		/** Combat-sheet panel layout: one array of panel ids per column (left, right). */
 		panelColumns: z.array(z.array(z.string())).optional(),
+		/** A player's own order for the rows INSIDE a panel, keyed by panel id. Only the panels whose
+		 *  rows are derived need it — the inventory's order is its own array. Reconciled against the
+		 *  rows that exist on every read (`combat/row-order.ts`). */
+		rowOrder: z.record(z.string(), z.array(z.string())).default({}),
 		/** Build/edit mode for THIS character: Strict enforces its system's rules, Free lifts them.
 		 *  Stored per character (not a global setting), Strict by default. */
 		strict: z.boolean().default(true),
@@ -283,6 +287,7 @@ const uiSchema = z
 		shortRestMode: 'dice',
 		coinsHidden: [],
 		coinWeight: false,
+		rowOrder: {},
 	});
 
 // --- character ----------------------------------------------------------------

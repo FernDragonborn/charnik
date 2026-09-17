@@ -322,6 +322,10 @@
 				{:else}
 					<span class="roller-value muted-value">{pill.type}</span>
 				{/if}
+				<!-- the pill OPENS something, and nothing said so: the playtest found the type menu by
+				     accident. The same chevron every menu control in the app wears (the duration select,
+				     the base-item chooser) is what marks it, rather than a cue invented for one pill. -->
+				<Icon name="chevron-down" size={10} />
 			{/if}
 			{#if sourceOf(pill)}<span class="roller-source">{sourceOf(pill)}</span>{/if}
 			{#if pill.kind === PILL_KIND.dice || pill.kind === PILL_KIND.flat}
@@ -607,8 +611,19 @@
 		background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface-2));
 	}
 	.roller-pill.type-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
 		padding: var(--space-1) var(--space-1-5);
 		color: var(--color-text-muted);
+	}
+	/* the chevron is quieter than the type it belongs to until the pill is under the pointer */
+	.roller-pill.type-pill :global(svg:last-child) {
+		opacity: 0.55;
+	}
+	.roller-pill.type-pill:hover :global(svg:last-child),
+	.roller-pill.type-pill:focus :global(svg:last-child) {
+		opacity: 1;
 	}
 	/* an inherited type is drawn as the same pill, dashed — so inheritance is visible and editable
 	   rather than a silent assumption (§7) */

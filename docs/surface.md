@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (68)
+## Duplicate suspects (71)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -22,6 +22,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `open` ×5 — src/lib/actions/provenance.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `ARROW_MOVE` ×4 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
+- `moveOnArrow` ×4 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
@@ -69,6 +71,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
+- `PANEL` ×2 — src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/AttacksPanel.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `rather` ×2 — src/lib/dice/roll-lines.ts · src/lib/rules/proficiency.ts
@@ -434,7 +437,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (124 modules)
+## Library functions & types (125 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -784,6 +787,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type AutoOutcome`
 - `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
 - `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
+
+### `src/lib/combat/row-order.ts`
+
+- `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
+- `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
 
 ### `src/lib/combat/spells.ts`
 
@@ -1711,4 +1719,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 79 global classes · 53 components · 1024 exports across 139 modules · 68 duplicate suspects._
+_47 tokens · 79 global classes · 53 components · 1026 exports across 140 modules · 71 duplicate suspects._

@@ -2,7 +2,6 @@
 	// Character header: eyebrow (class · species), name, the level/system/proficiency subline with
 	// the Level-up button, and the HP panel alongside. Reads the `combat` view-model; character +
 	// sheet come in as props.
-	import Icon from '$lib/components/Icon.svelte';
 	import Portrait from '$lib/components/Portrait.svelte';
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
@@ -36,21 +35,29 @@
 			<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
 			<h1>{c.build.name}</h1>
 			<div class="subline">
-				{$_('combat.hero.level')}
-				<b>{s.level}</b>
+				<!-- Levelling up rides the LEVEL itself rather than a button beside it: the number is what a
+				     player looks at when they think about levelling, and a separate control had to compete
+				     with the line of facts around it for the same attention. -->
+				{#if combat.canLevelUp}
+					<button
+						class="levelup"
+						title={$_('combat.hero.levelUpTo', { values: { level: s.level + 1 } })}
+						onclick={async () => {
+							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
+							void goto(`${base}/build?levelup=${c.id}`);
+						}}
+					>
+						{$_('combat.hero.level')}
+						<b>{s.level}</b>
+					</button>
+				{:else}
+					{$_('combat.hero.level')}
+					<b>{s.level}</b>
+				{/if}
 				· <span class="system-badge">{systemShortLabel(c.system)}</span> · {$_(
 					'combat.hero.proficiency',
 				)}
 				<b>{signed(s.proficiencyBonus)}</b>
-				{#if combat.canLevelUp}
-					<button
-						class="levelup"
-						onclick={async () => {
-							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
-							void goto(`${base}/build?levelup=${c.id}`);
-						}}><Icon name="arrow-up" size={13} /> {$_('combat.hero.levelUp')}</button
-					>
-				{/if}
 			</div>
 		</div>
 	</div>
@@ -104,20 +111,20 @@
 		color: var(--color-resource);
 		font-weight: 600;
 	}
+	/* it reads as the text it replaced — the line says the same words — and marks itself as a control
+	   the way every other inline one here does: on hover, and under the keyboard's focus ring */
 	.levelup {
-		margin-inline-start: var(--space-2);
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-xs);
-		color: var(--color-good);
-		background: var(--color-good-soft);
-		border: 1px solid var(--color-good);
-		border-radius: var(--radius);
-		padding: var(--space-1) var(--space-2-5);
+		padding: 0;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		color: inherit;
 		cursor: pointer;
 	}
-	.levelup:hover {
-		filter: brightness(1.15);
+	.levelup:hover b,
+	.levelup:focus-visible b {
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 	.system-badge {
 		font-family: var(--font-mono);

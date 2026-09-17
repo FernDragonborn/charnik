@@ -13,14 +13,35 @@
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemDialog from '../AddItemDialog.svelte';
+	import { dndzone, dragHandle } from 'svelte-dnd-action';
+	import { tick } from 'svelte';
 
 	const inv = $derived(combat.inventory);
 	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
 	 *  panel's one control, and nothing else opens it. */
 	let adding = $state(false);
+
 	const rows = $derived(inv.rows);
 	// `why` returns the provenance SENTENCE (the action takes a string), '' when there is no sheet yet
 	const capacityWhy = $derived(combat.sheet ? why(combat.sheet.carryingCapacity, $_) : '');
+
+	/* What the list looks like MID-DRAG. The character's array is the real order, but writing to it on
+	   every `consider` would re-derive the whole sheet for each frame of a drag — so the zone's own
+	   list stands in until the drop, and the drop is what the character hears about. */
+	let dragging = $state<{ id: string }[] | null>(null);
+	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.item })));
+	const rowOf = (id: string) => rows.find((row) => row.entry.item === id);
+
+	const ARROW_MOVE: Record<string, -1 | 1> = { ArrowUp: -1, ArrowDown: 1 };
+	function moveOnArrow(event: KeyboardEvent, ref: string): void {
+		const by = ARROW_MOVE[event.code];
+		if (!by) return;
+		event.preventDefault(); // the panel would scroll instead
+		inv.move(ref, by);
+		// the library rebuilds the row's nodes, so the grip holding the caret is gone by the time the
+		// move lands — a reorder must not cost the keyboard its place
+		void tick().then(() => document.getElementById(`inv-grip-${ref}`)?.focus());
+	}
 </script>
 
 <div class="load">
@@ -81,80 +102,113 @@
 	</button>
 </div>
 
-<div class="items">
-	{#each rows as row (row.entry.item)}
-		<div class="inv-row" class:asks-base={row.isTemplate}>
-			<span class="nm">{row.name}</span>
-			{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
-			<span class="meta">{row.meta}</span>
-			{#if row.weightLb}<span class="wt"
-					>{$_('combat.inventory.pounds', { values: { lb: row.weightLb } })}</span
-				>{/if}
-			<!-- A template item ("any Simple or Martial weapon") is not a content gap to report — it is a
+<!-- The order of what you carry is the PLAYER's, and it is the array itself — so a drag here needs no
+     stored layout of its own, unlike the panels. The other panels are deliberately not draggable: their
+     order IS their grouping (skills by ability, spells by level), and a row dragged out of its group
+     would be saying something the list does not mean. -->
+<div
+	class="items"
+	use:dndzone={{
+		items,
+		type: 'inventory-row',
+		flipDurationMs: 150,
+		dropTargetStyle: {},
+		morphDisabled: true,
+	}}
+	onconsider={(e) => (dragging = e.detail.items)}
+	onfinalize={(e) => {
+		dragging = null;
+		inv.reorder(e.detail.items.map((i) => i.id));
+	}}
+>
+	{#each items as item (item.id)}
+		{@const row = rowOf(item.id)}
+		{#if row}
+			<div class="inv-row" class:asks-base={row.isTemplate}>
+				<!-- NOT a <button>: `svelte-dnd-action` discards a press whose target has a `value`, which
+				     every button has (see `PanelCard`'s grip for the whole story). -->
+				<span
+					id="inv-grip-{row.entry.item}"
+					class="drag-handle"
+					use:dragHandle
+					role="button"
+					tabindex="0"
+					aria-label={$_('combat.inventory.moveItem', { values: { name: row.name } })}
+					title={$_('combat.inventory.moveItem', { values: { name: row.name } })}
+					onkeydown={(e) => moveOnArrow(e, row.entry.item)}>⠿</span
+				>
+				<span class="nm">{row.name}</span>
+				{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
+				<span class="meta">{row.meta}</span>
+				{#if row.weightLb}<span class="wt"
+						>{$_('combat.inventory.pounds', { values: { lb: row.weightLb } })}</span
+					>{/if}
+				<!-- A template item ("any Simple or Martial weapon") is not a content gap to report — it is a
 			     question only the player can answer, so it is asked here, where the item is. -->
-			{#if row.isTemplate}
-				<label class="base-pick">
-					<span class="visually-hidden"
-						>{$_('combat.inventory.baseItem', { values: { name: row.name } })}</span
-					>
-					<select
-						value={row.entry.base ?? ''}
-						onchange={(e) => inv.setBase(row.entry.item, e.currentTarget.value)}
-					>
-						<option value="">{$_('combat.inventory.baseItemNone')}</option>
-						{#each inv.baseOptionsFor(row.entry.item) as opt (opt.ref)}
-							<option value={opt.ref}>{opt.name}</option>
-						{/each}
-					</select>
-				</label>
-			{/if}
-			<span class="acts">
-				<span class="stepper">
-					<button
-						aria-label={$_('combat.inventory.fewer', { values: { name: row.name } })}
-						onclick={() => inv.bump(row.entry.item, -1)}
-					>
-						<Icon name="minus" size={11} />
-					</button>
-					<span class="base">{row.entry.qty}</span>
-					<button
-						aria-label={$_('combat.inventory.more', { values: { name: row.name } })}
-						onclick={() => inv.bump(row.entry.item, 1)}
-					>
-						<Icon name="plus" size={11} />
-					</button>
+				{#if row.isTemplate}
+					<label class="base-pick">
+						<span class="visually-hidden"
+							>{$_('combat.inventory.baseItem', { values: { name: row.name } })}</span
+						>
+						<select
+							value={row.entry.base ?? ''}
+							onchange={(e) => inv.setBase(row.entry.item, e.currentTarget.value)}
+						>
+							<option value="">{$_('combat.inventory.baseItemNone')}</option>
+							{#each inv.baseOptionsFor(row.entry.item) as opt (opt.ref)}
+								<option value={opt.ref}>{opt.name}</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
+				<span class="acts">
+					<span class="stepper">
+						<button
+							aria-label={$_('combat.inventory.fewer', { values: { name: row.name } })}
+							onclick={() => inv.bump(row.entry.item, -1)}
+						>
+							<Icon name="minus" size={11} />
+						</button>
+						<span class="base">{row.entry.qty}</span>
+						<button
+							aria-label={$_('combat.inventory.more', { values: { name: row.name } })}
+							onclick={() => inv.bump(row.entry.item, 1)}
+						>
+							<Icon name="plus" size={11} />
+						</button>
+					</span>
+					{#if row.consumable}
+						<button class="pill-btn" onclick={() => inv.use(row.entry.item)}
+							>{$_('combat.inventory.use')}</button
+						>
+					{/if}
+					{#if row.equippable}
+						<button
+							class="pill-btn"
+							class:accent={row.entry.equipped}
+							onclick={() => inv.equip(row.entry.item)}
+							title={$_(
+								row.entry.equipped ? 'combat.inventory.unequipHint' : 'combat.inventory.equipHint',
+							)}
+						>
+							{$_(row.entry.equipped ? 'combat.inventory.equipped' : 'combat.inventory.equip')}
+						</button>
+					{/if}
+					{#if row.attunable}
+						<button
+							class="pill-btn"
+							class:accent={row.entry.attuned}
+							onclick={() => inv.attune(row.entry.item)}
+							title={$_(
+								row.entry.attuned ? 'combat.inventory.unattuneHint' : 'combat.inventory.attuneHint',
+							)}
+						>
+							{$_(row.entry.attuned ? 'combat.inventory.attunedOn' : 'combat.inventory.attune')}
+						</button>
+					{/if}
 				</span>
-				{#if row.consumable}
-					<button class="pill-btn" onclick={() => inv.use(row.entry.item)}
-						>{$_('combat.inventory.use')}</button
-					>
-				{/if}
-				{#if row.equippable}
-					<button
-						class="pill-btn"
-						class:accent={row.entry.equipped}
-						onclick={() => inv.equip(row.entry.item)}
-						title={$_(
-							row.entry.equipped ? 'combat.inventory.unequipHint' : 'combat.inventory.equipHint',
-						)}
-					>
-						{$_(row.entry.equipped ? 'combat.inventory.equipped' : 'combat.inventory.equip')}
-					</button>
-				{/if}
-				{#if row.attunable}
-					<button
-						class="pill-btn"
-						class:accent={row.entry.attuned}
-						onclick={() => inv.attune(row.entry.item)}
-						title={$_(
-							row.entry.attuned ? 'combat.inventory.unattuneHint' : 'combat.inventory.attuneHint',
-						)}
-					>
-						{$_(row.entry.attuned ? 'combat.inventory.attunedOn' : 'combat.inventory.attune')}
-					</button>
-				{/if}
-			</span>
-		</div>
+			</div>
+		{/if}
 	{:else}
 		<p class="note">
 			{$_('combat.inventory.empty')}
@@ -168,6 +222,19 @@
 {/if}
 
 <style>
+	/* the row's grip: quiet until the row is under the pointer, so a list of things you carry does not
+	   read as a list of handles */
+	.inv-row .drag-handle {
+		flex: none;
+		color: var(--color-text-muted);
+		opacity: 0.35;
+		cursor: grab;
+		line-height: 1;
+	}
+	.inv-row:hover .drag-handle,
+	.inv-row .drag-handle:focus-visible {
+		opacity: 1;
+	}
 	/* a header for the list, holding the one control that adds to it */
 	.items-head {
 		display: flex;

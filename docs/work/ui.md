@@ -198,9 +198,26 @@
         trip for a word), each entry carries its own remove, and the sheet prints them in the same
         line as what the content granted: the question is "what do I speak", not "where did the word
         come from". Old saves parse with empty lists — asserted, along with the round-trip.
-  - [ ] **Two things exist and are not found: Level up, and a species ASI.** The level-up button is in
-        the masthead and the +1 is folded into the score with only the popover to say so. Both are
-        discoverability, not absence — 5e species DO carry the bonus (the shipped human gives +1 to all
-        six via `flat_bonus`), and in 5.5e they correctly carry none, which is its own unexplained
-        blank.
-  - [ ] **Rows inside a panel cannot be reordered.** `dndzone` is on the panel COLUMNS only.
+  - [x] **Two things exist and are not found: Level up, and a species ASI.** Both were discoverability,
+        not absence. **Levelling up rides the LEVEL itself** — "Level 8" in the hero line is the
+        control, with "Level up to 9" as its tooltip — per the maintainer, who took the standalone
+        button back out: the number is what a player looks at when they think about levelling, and a
+        button beside it competed with the same line of facts for the same attention. (Where the
+        button sits is deliberately unfinished; the action works from the number meanwhile.)
+        **A boosted score says its bump as a number** (`+1` beside the score, in the same crimson the
+        tint already used). The tint alone said something happened without saying what, and the only
+        answer lived in a popover — which is a thing you open once you already suspect there is
+        something to open. 5e species DO carry the bonus (the shipped human gives +1 to all six via
+        `flat_bonus`); in 5.5e they correctly carry none.
+  - [x] **Rows inside a panel cannot be reordered.** Done for the three panels whose order is the
+        PLAYER's — inventory, attacks and the standard actions. Two storage shapes, because the lists
+        are two different things: the inventory's rows ARE `build.inventory`, so its drag stores
+        nothing new, while attacks and actions are DERIVED from what you wield and what you can do, so
+        their order lives in `ui.rowOrder` keyed by panel and is reconciled against the live rows on
+        every read (`combat/row-order.ts`, the same rule the panel columns use: an unnamed row is new
+        and goes last, a name with no row is dropped). Every grip answers the arrow keys and keeps its
+        focus through the library's rebuild; a row stays ONE button with the grip beside it, never
+        inside it.
+        **The rest are deliberately left alone: their order IS their grouping** — skills by ability,
+        spells by level, features by source, effects by polarity — and so are the actions panel's two
+        lower lists, which follow the feature that granted them. Verified across a reload.

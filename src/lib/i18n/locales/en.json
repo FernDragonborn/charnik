@@ -462,15 +462,15 @@
 			"utilize": "Utilize",
 			"utilizeDesc": "use an object"
 		},
-		"actions": {
-			"unavailable": "Not available right now",
-			"cantAfford": "Not enough {resource}"
-		},
 		"actionType": {
 			"action": "action",
 			"bonus_action": "bonus action",
 			"reaction": "reaction",
 			"free": "free"
+		},
+		"actions": {
+			"unavailable": "Not available right now",
+			"cantAfford": "Not enough {resource}"
 		},
 		"attacks": {
 			"noteAttackBonus": "{amount} attack",
@@ -560,8 +560,9 @@
 		},
 		"hero": {
 			"level": "Level",
-			"proficiency": "Proficiency",
-			"levelUp": "Level up"
+			"levelUp": "Level up",
+			"levelUpTo": "Level up to {level}",
+			"proficiency": "Proficiency"
 		},
 		"hp": {
 			"concentrationCheck": "Concentration check",
@@ -617,6 +618,7 @@
 			"leftCount": "{count} left",
 			"load": "Load",
 			"more": "One more {name}",
+			"moveItem": "Move {name} — drag, or use the arrow keys",
 			"openBuilder": "open it",
 			"overCapacity": "Over capacity — speed drops and every check that uses it suffers. Your call.",
 			"pounds": "{lb} lb",
@@ -705,6 +707,7 @@
 			"speed": "Speed (ft)",
 			"to": "to {target}"
 		},
+		"moveRow": "Move {name} — drag, or use the arrow keys",
 		"notice": {
 			"notAvailable": "{name} — not available right now",
 			"notEnoughResource": "Not enough {resource} for {name}",
