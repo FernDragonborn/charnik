@@ -15,6 +15,7 @@
 	import AddItemDialog from '../AddItemDialog.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import RowGrip from '../RowGrip.svelte';
+	import type { InventoryRow } from '../../inventory.svelte';
 
 	const inv = $derived(combat.inventory);
 	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
@@ -28,9 +29,9 @@
 	/* What the list looks like MID-DRAG. The character's array is the real order, but writing to it on
 	   every `consider` would re-derive the whole sheet for each frame of a drag — so the zone's own
 	   list stands in until the drop, and the drop is what the character hears about. */
-	let dragging = $state<{ id: string }[] | null>(null);
-	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.item })));
-	const rowOf = (id: string) => rows.find((row) => row.entry.item === id);
+	let dragging = $state<{ id: string; row: InventoryRow }[] | null>(null);
+	/* the item carries its ROW — see `AttacksPanel` for what a lookup by id cost the shadow item */
+	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.item, row })));
 </script>
 
 <div class="load">
@@ -111,7 +112,7 @@
 	}}
 >
 	{#each items as item (item.id)}
-		{@const row = rowOf(item.id)}
+		{@const row = item.row}
 		{#if row}
 			<div class="inv-row" class:asks-base={row.isTemplate}>
 				<RowGrip

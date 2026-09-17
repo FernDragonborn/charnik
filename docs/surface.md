@@ -166,7 +166,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-title` | components.css |  |
 | `.dnd-rows` | components.css | --- a reorderable list of combat rows: the zone, and one row beside its grip --- A combat row IS a button, so its gri… |
 | `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
-| `.dragging-panel` | components.css | What you actually carry is the panel's HEADER. |
+| `.dragging-panel` | components.css | A clone of the whole panel is as tall as the panel, and the tallest of them is taller than the window — impossible to… |
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |

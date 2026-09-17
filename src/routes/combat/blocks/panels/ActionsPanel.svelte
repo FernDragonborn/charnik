@@ -7,6 +7,7 @@
 	import { dndzone } from 'svelte-dnd-action';
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL } from '$lib/combat/row-order';
+	import type { StandardAction } from '$lib/combat/helpers';
 	const visibleActions = $derived(
 		combat.layout.ordered(ROW_PANEL.actions, combat.visibleActions, (a) => a.id),
 	);
@@ -15,9 +16,9 @@
 	   character's own features and resources grant: their order follows the thing that granted them,
 	   and a hand-sorted Sneak Attack floating above the action that fires it would be saying something
 	   the sheet does not mean. */
-	let dragging = $state<{ id: string }[] | null>(null);
-	const items = $derived(dragging ?? visibleActions.map((a) => ({ id: a.id })));
-	const actionOf = (id: string) => visibleActions.find((a) => a.id === id);
+	let dragging = $state<{ id: string; a: StandardAction }[] | null>(null);
+	/* the item carries its ROW — see `AttacksPanel` for what a lookup by id cost the shadow item */
+	const items = $derived(dragging ?? visibleActions.map((a) => ({ id: a.id, a })));
 </script>
 
 <div
@@ -39,7 +40,7 @@
 	}}
 >
 	{#each items as item (item.id)}
-		{@const a = actionOf(item.id)}
+		{@const a = item.a}
 		{#if a}
 			<div class="row-wrap">
 				<RowGrip

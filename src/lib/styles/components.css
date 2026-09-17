@@ -71,12 +71,16 @@
 	outline: 1px solid var(--color-border-strong);
 	border-radius: var(--radius-lg);
 }
-/* What you actually carry is the panel's HEADER. A clone of the whole panel is as tall as the panel,
-   and the tallest of them is taller than the window — which made it impossible to aim, because you
-   had to bring the entire block into view first. Everything below the head is hidden on the CLONE
-   only; the placeholder left behind still holds the panel's full height, so nothing jumps. */
-#dnd-action-dragged-el.dragging-panel .panel-head ~ * {
-	display: none;
+/* A clone of the whole panel is as tall as the panel, and the tallest of them is taller than the
+   window — impossible to aim, because you had to bring the entire block into view first. Hiding
+   everything but the head fixed the aim and cost the answer to "what am I carrying": a bare title
+   bar. So the clone is CAPPED instead, and faded where it is cut — enough of the panel to recognise
+   it, never more than a hand can carry. The placeholder left behind still holds the panel's full
+   height, so nothing jumps. */
+#dnd-action-dragged-el.dragging-panel {
+	max-height: 200px;
+	overflow: hidden;
+	mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
 }
 .drag-handle:active {
 	cursor: grabbing;

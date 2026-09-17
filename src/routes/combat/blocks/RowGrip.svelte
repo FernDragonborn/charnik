@@ -49,15 +49,21 @@
 >
 
 <style>
-	/* quiet until the row is under the pointer, so a list of things you own does not read as a list of
-	   handles — and always visible once the keyboard is on it */
+	/* INVISIBLE at rest. A list of things you own is not a list of handles, and a ⠿ on every row was
+	   a mark on every line of the panel for an act most players do once. Its box stays — the target
+	   and the layout are the same — and the glyph appears where a hand or the keyboard already is. */
 	.row-grip {
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		flex: none;
-		padding: 0 2px;
+		width: var(--space-3);
+		/* it hangs into the panel's own padding instead of pushing the row: the rows used to start on
+		   the same line as the panel's title, and a handle that moved every one of them 20px right
+		   would be paid for by every row for the sake of a control that is invisible at rest. */
+		margin-inline-start: calc(-1 * (var(--space-3) + var(--space-1)));
 		color: var(--color-text-muted);
-		opacity: 0.35;
+		opacity: 0;
 		cursor: grab;
 		line-height: 1;
 	}
@@ -65,5 +71,12 @@
 	:global(.inv-row:hover) .row-grip,
 	.row-grip:focus-visible {
 		opacity: 1;
+	}
+	/* where there is no hover there is no reveal, so the grip has to be its own affordance — quiet,
+	   but present, or a phone cannot reorder at all */
+	@media (hover: none) {
+		.row-grip {
+			opacity: 0.4;
+		}
 	}
 </style>
