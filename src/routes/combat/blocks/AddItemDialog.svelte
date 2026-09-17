@@ -9,6 +9,8 @@
 	import { _ } from '$lib/i18n';
 	import DialogShell from '$lib/components/DialogShell.svelte';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
+	import RarityRange from '../../build/blocks/RarityRange.svelte';
+	import { WHOLE_BAND, withinBand } from '../../build/rarity';
 	import { rowDetail, rowName } from '../../build/rows';
 	import { ITEM_CATEGORIES } from '$lib/content/schemas';
 	import { titleCase } from '$lib/util/format';
@@ -19,6 +21,8 @@
 
 	let query = $state('');
 	let previewId = $state<string | null>(null);
+	let from = $state(WHOLE_BAND.from);
+	let to = $state(WHOLE_BAND.to);
 
 	const inv = $derived(combat.inventory);
 	/** The same pool the builder offers: this character's edition, enabled sources only. A row the
@@ -34,7 +38,9 @@
 		ITEM_CATEGORIES.map((category) => ({
 			key: category,
 			label: titleCase(category),
-			rows: items.filter((r) => r.data.category === category),
+			rows: items.filter(
+				(r) => r.data.category === category && withinBand(r.data.rarity, from, to),
+			),
 		})).filter((s) => s.rows.length),
 	);
 	const detail = $derived(rowDetail(previewId ? combat.graph?.get(previewId) : undefined, 'item'));
@@ -58,7 +64,11 @@
 			ontake={(id) => (carried.includes(id) ? inv.remove(id) : inv.add(id))}
 			{detail}
 			placeholder={$_('build.inventory.search')}
-		/>
+		>
+			{#snippet controls()}
+				<RarityRange bind:from bind:to />
+			{/snippet}
+		</SectionedPicker>
 	</div>
 </DialogShell>
 

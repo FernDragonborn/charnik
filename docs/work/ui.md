@@ -185,10 +185,15 @@
         READS an article while choosing — now carries the shared `LangSwitcher` beside its close
         button. The topbar has the same control, but it is a screen away from the thing that made you
         want it. `PickerPeek` deliberately has none: it is a hover teaser, gone before a press lands.
-  - [ ] **The weapon picker mixes magic items with the basics**, and the basics are what a starting
-        character takes. **Settled with the maintainer:** one toggle for magic items, plus a
-        double-ended slider over RARITY — the two handles pick the band that shows. Rarity is the only
-        axis the content can support (see the price item above).
+  - [x] **The weapon picker mixes magic items with the basics**, and the basics are what a starting
+        character takes. A double-ended slider over the rarity ladder now picks the band that shows,
+        with **mundane as its lowest rung** — that is what a row with no `rarity` IS in the data, so
+        "basics only" is one handle rather than a separate toggle beside the slider. Two native range
+        inputs sharing a track, so the keyboard and the screen reader come for free; the ring is on the
+        handle that has the key, not around the whole control. Both pickers mount it — the builder's
+        equipment pane and combat's add-item dialog — from one component.
+        Driven in chromium: 71 weapons whole-band, 38 at mundane-only, and the all-magic categories
+        (ring, wand, staff, rod) leave the section rail entirely.
   - [ ] **No quick way to add a custom language or tool** without authoring a content row.
         **Settled with the maintainer: it is a free-text string on the CHARACTER, not a content row.**
         Languages and tools interact with nothing in the engine today — they are flavour a sheet

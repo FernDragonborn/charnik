@@ -9,10 +9,16 @@
 	import { titleCase } from '$lib/util/format';
 	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
+	import RarityRange from './RarityRange.svelte';
+	import { WHOLE_BAND, withinBand } from '../rarity';
 	const b = build;
 
 	let query = $state('');
-	let previewId = $state<string | null>(null);
+	let previewId = $state('' as string | null);
+	// the picker opens showing everything: a filter that starts narrowed hides rows the player never
+	// asked to hide (ui.md §4 — structure, not a filter, is what a list is grouped by)
+	let from = $state(WHOLE_BAND.from);
+	let to = $state(WHOLE_BAND.to);
 
 	const detail = $derived(rowDetail(previewId ? b.row(previewId) : undefined, 'item'));
 	const carrying = (id: string) => b.draft.inventory.some((i) => i.item === id);
@@ -23,7 +29,9 @@
 		ITEM_CATEGORIES.map((category) => ({
 			key: category,
 			label: titleCase(category),
-			rows: b.itemList.filter((r) => r.data.category === category),
+			rows: b.itemList.filter(
+				(r) => r.data.category === category && withinBand(r.data.rarity, from, to),
+			),
 		})).filter((s) => s.rows.length),
 	);
 </script>
@@ -37,4 +45,8 @@
 	ontake={(id) => (carrying(id) ? b.inventory.remove(id) : b.inventory.add(id))}
 	{detail}
 	placeholder={$_('build.inventory.search')}
-/>
+>
+	{#snippet controls()}
+		<RarityRange bind:from bind:to />
+	{/snippet}
+</SectionedPicker>

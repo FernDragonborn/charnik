@@ -237,24 +237,27 @@
 			"speciesAutomatic": "In 5e the species bonuses apply automatically from its entry."
 		},
 		"inventory": {
-			"title": "Equipment",
-			"itemCount": "{count, plural, one {# item} other {# items}}",
 			"add": "Add",
+			"capacity": "Capacity",
+			"carrying": "Carrying",
+			"empty": "Nothing carried yet — armour and a weapon change AC and your attacks.",
+			"encumbranceAt": "Encumbrance rules start at {lb} lb.",
 			"equip": "Equip",
 			"equipped": "Equipped",
-			"remove": "Remove {name}",
 			"fewer": "Fewer",
-			"more": "More",
-			"empty": "Nothing carried yet — armour and a weapon change AC and your attacks.",
+			"itemCount": "{count, plural, one {# item} other {# items}}",
 			"load": "Load",
-			"carrying": "Carrying",
-			"capacity": "Capacity",
-			"weight": "{lb} lb ({kg})",
-			"pounds": "{lb} lb",
-			"overCapacity": "Over capacity — speed drops to 0 by the book.",
-			"encumbranceAt": "Encumbrance rules start at {lb} lb.",
+			"more": "More",
 			"needBasics": "Choose a class and abilities to get a capacity.",
-			"search": "Search equipment…"
+			"overCapacity": "Over capacity — speed drops to 0 by the book.",
+			"pounds": "{lb} lb",
+			"rarityBand": "rarity",
+			"rarityFrom": "lowest rarity to show",
+			"rarityTo": "highest rarity to show",
+			"remove": "Remove {name}",
+			"search": "Search equipment…",
+			"title": "Equipment",
+			"weight": "{lb} lb ({kg})"
 		},
 		"story": {
 			"title": "Out of combat",
@@ -1370,12 +1373,13 @@
 		"wondrous": "Wondrous item"
 	},
 	"itemRarity": {
+		"artifact": "Artifact",
 		"common": "Common",
-		"uncommon": "Uncommon",
-		"rare": "Rare",
-		"very_rare": "Very rare",
 		"legendary": "Legendary",
-		"artifact": "Artifact"
+		"none": "Mundane",
+		"rare": "Rare",
+		"uncommon": "Uncommon",
+		"very_rare": "Very rare"
 	},
 	"itemTag": {
 		"ac": "AC",
