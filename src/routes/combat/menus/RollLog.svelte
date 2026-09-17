@@ -85,6 +85,14 @@
 		padding-inline-start: var(--space-5);
 		margin-inline-start: var(--space-1);
 	}
+	/* One action says its NAME once. Every throw is still its own row — that is what keeps its own
+	   live controls — but printing "Eldritch Blast" above each of them says nothing the bracket and
+	   the ×N have not already said, and it pushed the numbers a player is comparing further apart.
+	   Decided here rather than with a prop on the row: which throw is a repeat is a fact about the
+	   RUN, and the run is the chrome's (`RollRow` ▸ the component's own note). */
+	.log-row.one-action :global(.roll-row ~ .roll-row .roll-label) {
+		display: none;
+	}
 	.action-count {
 		position: absolute;
 		inset-inline-start: var(--space-1);

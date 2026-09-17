@@ -298,11 +298,10 @@ export class SpellCasting {
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
 		const hasDmg = dealsDamage(parts);
-		const label = {
-			text: `${r.name} (spell attack)`,
-			key: 'combat.log.spellAttack',
-			values: { name: r.name },
-		};
+		// The spell's own name and nothing appended: the card already says TO HIT above the number, so
+		// "(spell attack)" restated in the label what the row's own captions say — and it said it twice
+		// over on an action that throws more than once. A weapon attack has always logged just its name.
+		const label = { text: r.name };
 		if (wantsTray(e)) {
 			this.host.openRoll(
 				{
