@@ -205,6 +205,7 @@
 		opacity: 0.5;
 	}
 	.spell-row {
+		position: relative;
 		display: grid;
 		/* fixed columns so effect/tag/timing line up across rows even when a row has no
 		   resolution pill (its cell stays empty but keeps its width) */
@@ -245,6 +246,25 @@
 		font: inherit;
 		text-align: start;
 		cursor: pointer;
+	}
+	/* …and its CLICK still covers the whole row. Casting used to be a press anywhere on the row, and
+	   making the row a div — the fix for nested interactive content — left every part of it but the
+	   name dead. An overlay owned by the cast button gives that area back without a second control:
+	   it paints UNDER the row's other buttons (they carry `z-index: 1`), so prepare, pin, ritual and
+	   upcast keep their own presses, and the keyboard still meets exactly one cast target. */
+	.spell-row .name-cast::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+	.spell-row .prep,
+	.spell-row .pin-star,
+	.spell-row .ritual-cast,
+	.spell-row .spell-level .cast-icon,
+	.spell-row .spell-level .upcast-btn {
+		position: relative;
+		z-index: 1;
 	}
 	.spell-row .row-name .name-main {
 		display: block;
