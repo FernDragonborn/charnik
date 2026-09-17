@@ -54,14 +54,14 @@
 <style>
 	/* sonner only sizes toasts it styles itself, and a custom component opts out of that — the <li>
 	   shrink-wraps, so a card that sizes to its own content would drift to the left edge of the
-	   toaster column. Give the li a band to centre the card in. The band is the design's 400px max,
+	   toaster column. Give the li a band to centre the card in. The band is the design's 460px max,
 	   wider than sonner's own column, so pull it back half the difference and the roll toasts stay
 	   centred on the same axis as every other toast. */
 	:global([data-sonner-toast]:has(> .roll-toast)) {
 		display: flex;
 		justify-content: center;
-		width: 400px;
-		margin-inline-start: calc((var(--width) - 400px) / 2);
+		width: 460px;
+		margin-inline-start: calc((var(--width) - 460px) / 2);
 	}
 	/* under 600px sonner takes the li full-width itself — don't fight it, just stop shifting */
 	@media (max-width: 600px) {

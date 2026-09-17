@@ -459,17 +459,18 @@
 		box-shadow: 0 18px 40px var(--color-overlay);
 		padding-bottom: var(--space-1-5);
 	}
-	/* the roll log's row is four columns wide (dice · to hit · damage · total) and does not fit the
-	   menu width — at 300px the d20 pair wrapped, which drew as a two-line blob. The row is the fixed
-	   thing here (it is the same RollRow everywhere); the menu is what gives. */
+	/* the roll log's row does not fit the menu width — at 300px the d20 pair wrapped, which drew as a
+	   two-line blob. The row is the fixed thing here (it is the same RollRow everywhere); the menu is
+	   what gives, and it gives more since a roll became two labelled boxes: at 360px a crit's pool
+	   started folding into a four-wide column of dice. */
 	.popup.wide {
-		width: min(360px, calc(100vw - 1.5rem));
+		width: min(440px, calc(100vw - 1.5rem));
 	}
 	/* the roller is a two-line tray with a header of dice buttons — at 300px the header wrapped onto
 	   three rows and a damage line with two types had nowhere to go. Same reasoning as the log above:
 	   the content is the fixed thing, the menu is what gives. */
 	.popup.dice-tray {
-		width: min(460px, calc(100vw - 1.5rem));
+		width: min(560px, calc(100vw - 1.5rem));
 		/* the tray is two CARDS with a gap between them, each carrying its own edge and shadow — so the
 		   dropdown behind them draws nothing, or the gap would show a third surface through it. It keeps
 		   its padding, though: this box still scrolls, so a shadow cast outside it is a shadow clipped

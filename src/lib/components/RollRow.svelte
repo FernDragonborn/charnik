@@ -423,14 +423,23 @@
 		gap: var(--space-2);
 		padding: 0 var(--space-4) var(--space-3);
 	}
+	/* NOT `flex-wrap: wrap`: the toast sizes itself with `width: max-content`, and a wrapping flex
+	   container reports its largest ITEM as that — so the two halves stacked on a card with room for
+	   both. They share the line and shrink; the phone case is the media query at the end. */
 	.roll-lane {
 		display: flex;
 		align-items: stretch;
 		gap: var(--space-2);
 	}
+	/* Each box is as wide as ITS content, not half the card: a to-hit box holds one bracket and a
+	   modifier, a damage box can hold three types with their dice, and splitting the width evenly
+	   left the first with slack while the second ran into the card's edge. They shrink (min-width: 0)
+	   only where the card itself is capped. */
 	.roll-box {
-		flex: 1;
-		min-width: 0;
+		flex: 0 1 auto;
+		/* …down to a floor, so the two halves stay a PAIR. A miss puts one word in the damage box and
+		   content-sizing alone shrank it to that word, leaving a card of two mismatched stubs. */
+		min-width: 5.5rem;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
@@ -438,9 +447,17 @@
 		background: var(--color-surface-2);
 		border-radius: var(--radius);
 	}
+	/* The test's box carries less — one bracket and a modifier — and its formula cannot wrap, so it
+	   neither grows past its content nor gives any of it back. Damage is what yields when the card is
+	   tight, because damage is the half that CAN break onto another line. */
+	.roll-box:not(.damage-box) {
+		flex-shrink: 0;
+	}
 	/* damage reads on its own ground: with two boxes of identical weight side by side, the tint is
-	   what lets a glance land on the half it wants before reading either caption */
+	   what lets a glance land on the half it wants before reading either caption. Its floor is the
+	   higher of the two, because a miss leaves it holding one word. */
 	.roll-box.damage-box {
+		min-width: 7rem;
 		background: color-mix(in srgb, var(--color-danger) 7%, var(--color-surface-2));
 	}
 	.roll-answer {
@@ -452,6 +469,11 @@
 	/* THE number — the one thing said out loud. Both halves carry it at the same size: which one you
 	   mean is the caption's job, and making one of them smaller only asks the question again. */
 	.roll-answer-sum {
+		/* never shrinks and never breaks: a flex item may be squeezed below its content, and a squeezed
+		   number wraps BETWEEN ITS DIGITS — an 11 read as 1 and 1 down the card. The formula beside it
+		   is what gives way instead. */
+		flex: none;
+		white-space: nowrap;
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl);
 		font-weight: 700;
@@ -495,6 +517,36 @@
 	}
 	.roll-caption {
 		font-size: var(--font-size-micro);
+	}
+	/* A damage part is ONE bracket and normally short, so it is laid out as an unbreakable run — but a
+	   crit on a big pool is sixteen dice in that one bracket, and unbreakable meant it ran straight out
+	   of the card. Inside a card's formula a DAMAGE part may wrap and its bracket with it.
+	   Deliberately not the test's bracket (`.roll-to-hit` above stays `nowrap`): that one grows by a
+	   few pixels when the dropped die slides out, and in a toast — narrower than the log — those pixels
+	   were enough to fold the bracket into a second line mid-animation. The strip is untouched either
+	   way, since it prints a part's total and never its dice. */
+	.roll-formula .roll-damage-part,
+	.roll-formula .roll-dice-group {
+		flex-wrap: wrap;
+		white-space: normal;
+		/* and both must be ALLOWED to be narrower than their content, or wrapping never gets the chance:
+		   a damage part is `flex: none` everywhere else (a strip's parts must not squeeze each other),
+		   which kept it at its max-content width and ran a 20-die pool straight off the card. */
+		flex: 0 1 auto;
+		min-width: 0;
+	}
+	/* …except the ONE bracket whose width animates. The dropped die adds ~10px when it slides out, and
+	   in a toast — narrower than the log — those pixels were enough to fold the bracket into a second
+	   line for the length of the reveal. A pair of d20s has nothing to wrap anyway. */
+	.roll-formula .roll-dice-group:has(.roll-dropped) {
+		flex-wrap: nowrap;
+	}
+	/* on a phone the toast is the full width of a narrow screen, and two halves side by side leave
+	   each one too little for its formula — so they stack instead of squeezing */
+	@media (max-width: 600px) {
+		.roll-lane {
+			flex-direction: column;
+		}
 	}
 	/* which attack of the volley this is — a bare ordinal, gold when that one crit */
 	.roll-attack-index {
@@ -605,6 +657,11 @@
 	}
 	/* the loser is collapsed until the roll is hovered or focused — the bracket reads `[15]`, and
 	   `[15 2]` once you ask. Where there is no hover it is simply always out. */
+	/* The die SLIDES out of the bracket, and what used to twitch during it was not the slide: with the
+	   two boxes splitting the card's width evenly, every frame of the growth re-laid the damage box's
+	   contents, so its text crawled and its last chip clipped in and out. Content-sized boxes fixed
+	   that at the source — measured during the reveal, the damage box now keeps its width to the
+	   0.1px and only its position moves, so nothing inside it reflows. */
 	.roll-dropped {
 		display: inline-flex;
 		align-items: center;
@@ -612,19 +669,31 @@
 		max-width: 0;
 		opacity: 0;
 		overflow: hidden;
+		/* a zero-width flex item still takes the group's GAP, so the collapsed state held 4px of nothing
+		   and pushed the closing bracket out — `[15 ]` where a one-die roll reads `[15]`. The negative
+		   margin eats exactly that gap and gives it back on reveal. */
+		margin-inline-start: calc(-1 * var(--space-1));
+		/* the margin travels WITH the width: left instant, it snapped the whole bracket 4px right at the
+		   first frame of the reveal. And the cap is 3ch, not a roomy 6 — max-width stops moving the
+		   moment it passes the die's own width, so a cap far above it spent most of the duration
+		   animating nothing while the fade ran on, which is what read as the slide ending early and the
+		   rest catching up afterwards. */
 		transition:
-			max-width 160ms ease,
-			opacity 160ms ease;
+			max-width 140ms ease,
+			margin-inline-start 140ms ease,
+			opacity 140ms ease;
 	}
 	.roll-row:hover .roll-dropped,
 	.roll-row:focus-within .roll-dropped {
-		max-width: 6ch;
+		max-width: 3ch;
 		opacity: 1;
+		margin-inline-start: 0;
 	}
 	@media (hover: none) {
 		.roll-dropped {
-			max-width: 6ch;
+			max-width: 3ch;
 			opacity: 1;
+			margin-inline-start: 0;
 		}
 	}
 	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */

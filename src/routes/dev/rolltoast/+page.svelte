@@ -107,6 +107,23 @@
 			},
 		},
 		{
+			title:
+				'a pool big enough to WRAP — the bracket breaks inside its box rather than running off the card',
+			entry: {
+				label: 'Greataxe',
+				expr: 'd20(9) +6',
+				total: 15,
+				natural: 9,
+				damage: [
+					{
+						type: 'slashing',
+						expr: 'd12(4) + d12(10) + d12(8) + d12(8) + d12(2) + d12(6) + d12(8) + d12(2) + d12(12) + d12(6) + d12(8) + d12(4) + d12(10) + d12(6) + d12(3) + d12(9) + d12(11) + d12(1) + d12(7) + d12(5) +3',
+						total: 133,
+					},
+				],
+			},
+		},
+		{
 			title: 'a flurry — a line per attack, then the per-type footer and the one big number',
 			entry: [
 				{

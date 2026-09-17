@@ -434,11 +434,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (123 modules)
+## Library functions & types (124 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
 - `const dismissOnEscape` — * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home * for the `<svel…
+
+### `src/lib/actions/floatInBody.ts`
+
+- `function floatInBody` — * Move a floating element to `document.body` for as long as it lives.
 
 ### `src/lib/actions/provenance.ts`
 
@@ -1443,6 +1447,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const coinCount` — How many coins in total, of every denomination — what the weight is computed from.
 - `const purseWeightLb` — What the purse weighs, in pounds.
 - `const purseInCopper` — The purse's total value in copper — what "can I afford this" is answered with, and what an * exchange reference is wr…
+- `const costSaid` — * An item's `cost` column as a sentence to be said later: "15 gp" → 15 + the reader's word for gold.
 
 ### `src/lib/rules/dice.ts`
 
@@ -1706,4 +1711,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 79 global classes · 53 components · 1022 exports across 138 modules · 68 duplicate suspects._
+_47 tokens · 79 global classes · 53 components · 1024 exports across 139 modules · 68 duplicate suspects._
