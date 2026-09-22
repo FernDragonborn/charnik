@@ -13,6 +13,7 @@ import { ABILITIES, type Character } from './schema';
 import { DIE_MAX, maxHpForClass, proficiencyBonus, type Ability } from '../rules/core';
 import { SOURCE_KEY, type Contribution } from '../rules/pipeline';
 import { resolveItem, type ResolvedItem } from '../content/resolved-item';
+import { conditionRow } from '../content/states';
 import { castingAbilityByClass } from './spellcasting';
 import { makeEffectCtxFactory } from './derive-context';
 import { num } from './derive-stats';
@@ -180,7 +181,7 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 		// when both roots are loaded, exactly the `systems` gate the class-feature scan above uses.
 		// A16(b): first match is now deterministic within the edition (load order); a genuine
 		// same-id/same-edition clash across two sources is a collisions.json concern, not resolved here.
-		const cond = graph.list('condition', { system }).find((r) => r.id === condId);
+		const cond = conditionRow(graph, system, condId);
 		const toks = tokensOf(cond);
 		return cond && toks.length ? { source: cond.data.name_en, tokens: toks } : undefined;
 	};

@@ -8,7 +8,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
-import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import { slug, writeCsv, assertCount, dedupeIds, existingRowsById } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 import {
 	weaponTags,
@@ -359,25 +359,58 @@ const CONDITIONS = [
 function convertConditions() {
 	const entries = htmlEntries(src(`${SRC}.html`));
 	const want = new Set(CONDITIONS);
-	const authored = existingEffectsById('conditions_srd.csv'); // CONDITIONS-1 tokens, not in the HTML
+	// Everything this file says that the HTML does not: the CONDITIONS-1 tokens, `max_level`
+	// (exhaustion's ladder), and whole ROWS authored here (Rage is a state the app tracks as a
+	// condition and no SRD entry produces it). A re-run used to drop all three.
+	const prior = existingRowsById(out('conditions_srd.csv'));
 	const rows = entries
 		.filter((e) => want.has(e.name))
-		.map((e) => ({
-			id: slug(e.name),
+		.map((e) => {
+			const id = slug(e.name);
+			const was = prior.get(id) ?? {};
+			return {
+				id,
+				systems: '5e',
+				source: 'SRD 5.1',
+				name_en: e.name,
+				name_uk: '',
+				text_en: e.paras.map(strip).filter(Boolean).join('\n'),
+				text_uk: '',
+				effects: was.effects ?? '',
+				kind: 'condition',
+				valence: was.valence || (e.name === 'Invisible' ? 'helpful' : 'harmful'),
+				max_level: was.max_level ?? '',
+			};
+		});
+	assertCount('conditions', rows.length, 15);
+	const fromSource = new Set(rows.map((r) => r.id));
+	// an authored row written before CONDEFF says `negative`; carry that forward as the valence it
+	// meant rather than leaving the cell blank, which would read as `neutral`
+	const authoredRows = [...prior.values()]
+		.filter((r) => !fromSource.has(r.id))
+		.map((r) => ({
+			...r,
 			systems: '5e',
 			source: 'SRD 5.1',
-			name_en: e.name,
-			name_uk: '',
-			text_en: e.paras.map(strip).filter(Boolean).join('\n'),
-			text_uk: '',
-			effects: authored.get(slug(e.name)) ?? '',
-			negative: String(e.name !== 'Invisible'),
+			kind: r.kind || 'condition',
+			valence: r.valence || (r.negative === 'false' ? 'helpful' : 'harmful'),
 		}));
-	assertCount('conditions', rows.length, 15);
 	writeCsv(
 		out('conditions_srd.csv'),
-		['id', 'systems', 'source', 'negative', 'effects', 'name_en', 'name_uk', 'text_en', 'text_uk'],
-		rows,
+		[
+			'id',
+			'systems',
+			'source',
+			'kind',
+			'valence',
+			'max_level',
+			'effects',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+		],
+		[...rows, ...authoredRows],
 	);
 	return rows.length;
 }

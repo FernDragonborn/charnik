@@ -408,10 +408,28 @@ const languageSchema = baseRow.extend({
 	script: optStr, // per-language script (2014 only; 2024 dropped this)
 });
 
-/** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
-const conditionSchema = baseRow.extend({
-	/** Negative conditions render crimson, beneficial ones teal. */
-	negative: boolDefault(true),
+/** What a state row IS. Poisoned and Bless are the same fact — something currently modifying the
+ *  character — and were two content types only because they were authored at different times, which
+ *  is a distinction the person writing a pack should never have had to learn (CONDEFF). One type
+ *  now, with the kind naming the two UIs that still differ: a condition is a binary (or levelled)
+ *  toggle the rules name, an effect is a "+" catalog entry carrying a duration.
+ *  OPEN, like every other kind column: a pack may name a third and it reaches the panel as itself. */
+export const ROW_KIND = { condition: 'condition', effect: 'effect' } as const;
+
+/** Whether a state is something you WANT. It replaced `negative`, a boolean whose default was
+ *  inverted between the two old types — so merging them meant picking whose default won for every
+ *  row of the other, a question with no right answer. It also says more: Bless and a cover bonus
+ *  were both "not negative", which is not the same fact as Poisoned being harmful. Blank reads
+ *  `neutral`. OPEN — a pack may name its own and it renders as the neutral case. */
+export const VALENCE = { harmful: 'harmful', helpful: 'helpful', neutral: 'neutral' } as const;
+export type Valence = (typeof VALENCE)[keyof typeof VALENCE];
+
+/** A state the character is under: a condition (Poisoned, exhaustion) or a runtime effect (Bless,
+ *  half cover). Mechanics ride in `effects` like every other type; the columns here are the union of
+ *  what the two kinds need, and each kind leaves the other's blank. */
+const effectSchema = baseRow.extend({
+	kind: optStr,
+	valence: optStr,
 	/** Ladder height for a LEVELED condition (exhaustion). 1 = a plain binary condition (a toggle in
 	 *  the conditions picker); >1 = a level 0..max_level shown as a stepper, its `effects` scaling off
 	 *  the `exhaustion`/level var. The play cap is DATA — a homebrew 10-rung exhaustion sets
@@ -419,19 +437,12 @@ const conditionSchema = baseRow.extend({
 	max_level: z
 		.preprocess((v) => (v === '' || v == null ? 1 : v), z.coerce.number().int().min(1))
 		.default(1),
+	/** Optional default duration the "+" picker applies; the round counter auto-expires it. */
+	duration_rounds: optInt,
 	// ponytail: `derived_when` (a predicate that auto-activates a state, e.g. bloodied = hp_percent<50)
 	// is deliberately NOT added yet — `is_bloodied` already works as a computed flag exposed via the
 	// unified read vocab, and a derived predicate would need DAG-ordering against hp_max with no second
 	// consumer to justify it. Add the column when a second derived state actually needs it (A2 defer).
-});
-
-/** Catalog row for the runtime "+" effect picker (effects.csv). The mechanics ride in the shared
- *  `effects` token list like every other content type; this row only adds picker metadata. */
-const effectSchema = baseRow.extend({
-	/** Debuffs (Bane, covers against you…) render crimson in the panel, like conditions. */
-	negative: boolDefault(false),
-	/** Optional default duration the picker applies; the round counter auto-expires it. */
-	duration_rounds: optInt,
 });
 
 /** Monster / NPC stat block (compendium). Headline stats are structured columns; the
@@ -565,7 +576,6 @@ export const CONTENT_TYPES = {
 	feat: { schema: featSchema, filebase: 'feats' },
 	spell: { schema: spellSchema, filebase: 'spells' },
 	item: { schema: itemSchema, filebase: 'items' },
-	condition: { schema: conditionSchema, filebase: 'conditions' },
 	language: { schema: languageSchema, filebase: 'languages' },
 	effect: { schema: effectSchema, filebase: 'effects' },
 	monster: { schema: monsterSchema, filebase: 'monsters' },
@@ -578,6 +588,15 @@ export const CONTENT_TYPES = {
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
+
+/** Type names and filebases that are no longer types of their own, and what they resolve to — with
+ *  the `kind` a row of such a file gets when it does not say otherwise. `conditions_*.csv` keeps its
+ *  name, its header and every row it had: the merge is ours, and making a pack author re-declare
+ *  their own file for it would be charging them for our tidying (CONDEFF). */
+export const TYPE_ALIASES: Readonly<Record<string, { type: ContentType; kind: string }>> = {
+	condition: { type: 'effect', kind: ROW_KIND.condition },
+	conditions: { type: 'effect', kind: ROW_KIND.condition },
+};
 
 /** Rules/lookup tables — data the engine consumes, NOT browsable articles (no name/text). The
  *  compendium, search and article views skip these. */

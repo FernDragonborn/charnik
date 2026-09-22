@@ -34,6 +34,14 @@ scopes it because slugs are unique per type and not globally: `shield` is both a
 so `source:id` alone would collide. A character → content reference and the loader's `byEffectiveId`
 use the full key.
 
+**What scopes the slug is the type, except where two types became one.** The merged STATE type
+(conditions and runtime effects — CONDEFF) carries two `kind`s whose slugs were unique per kind and
+never globally: `rage` is both a condition holding the mechanics and a catalog entry that applies it,
+exactly the way `shield` is both a spell and an item. So the kind scopes it there
+(`condition:SRD 5.2.1:rage`), which also keeps every saved reference resolving verbatim — a kind is
+spelled the way the type it replaced was. `loader.ts ▸ identityScope` is the one place that decides,
+and it reads the merged types off `TYPE_ALIASES` so the two cannot drift.
+
 **A content → content link is a BARE id, on purpose, and that is the extension point.** `class_id`,
 `subclass_id` and `species_id` match on the id plus the edition and NEVER on the source
 (`character/derive-gather.ts`), and the shipped rows spell them that way — `subclasses_srd.csv` carries
@@ -52,6 +60,11 @@ making that one authoritative over the others.
 `string | undefined`, because the lookup tables (spell slots, XP thresholds) have no such column at
 all — so `String(row.data.name_en)` renders the literal "undefined" for exactly those rows. The
 accessor falls back to the id. Narrowed rows, where the column is simply present, read it directly.
+
+**A type that MERGED into another keeps answering to its old name.** `conditions_*.csv` and
+`#content-type: condition` both still load — as rows of the merged type, stamped with
+`kind: condition`. The merge is ours, and a pack author should not have to re-declare their own file
+for it; the aliases live in `schemas.ts ▸ TYPE_ALIASES`, next to the registry they qualify.
 
 **An unrecognised file is never silently dropped.** Type comes from the `#content-type:` directive
 first, then the filename, and if neither answers, the file is surfaced in content health for the user

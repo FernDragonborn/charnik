@@ -12,7 +12,7 @@ const cfg = (over: Partial<Parameters<typeof isRowActive>[1]> = {}) => ({
 
 // makeRow gives root:'test', file:'<type>.csv'
 const row = (id: string, source: string, systems: string[]) => {
-	const r = makeRow('condition', { id, name_en: id }, source);
+	const r = makeRow('effect', { id, name_en: id }, source);
 	return { ...r, systems };
 };
 
@@ -20,7 +20,7 @@ describe('two-dimensional source filtering', () => {
 	it('hides a row whose FILE is disabled', () => {
 		const r = row('blinded', 'SRD 5.1', ['5e']);
 		expect(isRowActive(r, cfg())).toBe(true);
-		expect(isRowActive(r, cfg({ disabledFiles: ['test/condition.csv'] }))).toBe(false);
+		expect(isRowActive(r, cfg({ disabledFiles: ['test/effect.csv'] }))).toBe(false);
 	});
 
 	it('hides a row whose SOURCE tag is disabled', () => {
@@ -32,12 +32,12 @@ describe('two-dimensional source filtering', () => {
 	it('keep-one collision hides the losing sources, keeps the chosen one', () => {
 		const srd = row('fireball', 'SRD 5.1', ['5e']);
 		const hb = row('fireball', 'Homebrew', ['5e']);
-		const keepHb = cfg({ collisions: { 'condition:fireball': 'Homebrew' } });
+		const keepHb = cfg({ collisions: { 'effect:fireball': 'Homebrew' } });
 		expect(isRowActive(hb, keepHb)).toBe(true);
 		expect(isRowActive(srd, keepHb)).toBe(false);
 		// 'all' (default / explicit) keeps both
 		expect(isRowActive(srd, cfg())).toBe(true);
-		expect(isRowActive(srd, cfg({ collisions: { 'condition:fireball': 'all' } }))).toBe(true);
+		expect(isRowActive(srd, cfg({ collisions: { 'effect:fireball': 'all' } }))).toBe(true);
 	});
 });
 

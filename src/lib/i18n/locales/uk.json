@@ -1179,7 +1179,7 @@
 		"class_casting": "Таблиця чаклування",
 		"class_feature": "Класова особливість",
 		"condition": "Стан",
-		"effect": "Ефект",
+		"effect": "Стан або ефект",
 		"feat": "Фіт",
 		"item": "Предмет",
 		"language": "Мова",

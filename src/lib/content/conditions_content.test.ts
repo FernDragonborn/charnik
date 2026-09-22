@@ -31,7 +31,7 @@ describe('shipped conditions · effects column is engine-valid', () => {
 
 			it('every effect token is a KNOWN kind (no typo degrading to an inert note)', async () => {
 				const g = await loadEdition(path);
-				const rows = g.list('condition');
+				const rows = g.list('effect');
 				expect(rows.length).toBeGreaterThan(10);
 				for (const row of rows)
 					for (const raw of row.data.effects ?? []) {
@@ -50,10 +50,10 @@ describe('shipped conditions · effects column is engine-valid', () => {
 			it('nests no MECHANIC a parent does not also carry (the engine expands one level)', async () => {
 				const g = await loadEdition(path);
 				const effectsOf = (id: string) =>
-					g.list('condition').find((r) => r.id === id)?.data.effects ?? [];
+					g.list('effect').find((r) => r.id === id)?.data.effects ?? [];
 				const mechanics = (id: string) =>
 					effectsOf(id).filter((t) => !splitGuard(t).token.startsWith('note:'));
-				for (const row of g.list('condition'))
+				for (const row of g.list('effect'))
 					for (const raw of effectsOf(row.id)) {
 						const token = splitGuard(raw).token;
 						if (!token.startsWith('apply_condition:')) continue;
@@ -69,7 +69,7 @@ describe('shipped conditions · effects column is engine-valid', () => {
 			it('wires the key mechanics (paralyzed / incapacitated / prone)', async () => {
 				const g = await loadEdition(path);
 				const effectsOf = (id: string) =>
-					g.list('condition').find((r) => r.id === id)?.data.effects ?? [];
+					g.list('effect').find((r) => r.id === id)?.data.effects ?? [];
 				// paralyzed: chains incapacitated, drops speed, auto-fails STR/DEX saves
 				expect(effectsOf('paralyzed')).toEqual(
 					expect.arrayContaining([

@@ -11,7 +11,9 @@
 
 // v2 (ITEM-TAGS): eight sparse item columns fold into `tags`, and `base_item_id` replaces the prose
 // parenthetical `item_type` used to name a base weapon in. See content/migrations.ts.
-export const CONTENT_SCHEMA_VERSION = 2;
+// v3 (CONDEFF): conditions and runtime effects are ONE type, so a state row carries `kind` and the
+// `valence` open enum in place of `negative` — a boolean whose default was inverted between the two.
+export const CONTENT_SCHEMA_VERSION = 3;
 // Desktop content SEED version — bump whenever the shipped SRD CSVs change (data, ids, headers). On
 // update, a desktop install whose on-disk seed version is older is RE-SEEDED (untouched shipped files
 // overwritten, user-edited ones preserved). v1 = the 0.4.0 snake_case + redone-SRD baseline.
@@ -37,7 +39,10 @@ export const CONTENT_SCHEMA_VERSION = 2;
 // states) and 36 in 2014 (which states in so many words that it does not). An install left at v7 has
 // nothing to be proficient WITH, so the tool proficiency it can now take lists nothing — and the
 // Soldier's own tool was the slug `choose_one_kind_of_gaming_set`, an id no row will ever have.
-export const CONTENT_SEED_VERSION = 8;
+// v9: CONDEFF — conditions and effects are one content type, so every state row carries `kind` and
+// `valence` in place of the inverted `negative`. An install left at v8 keeps four files whose
+// columns this build no longer reads, which shows as every buff rendering as if it were neutral.
+export const CONTENT_SEED_VERSION = 9;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

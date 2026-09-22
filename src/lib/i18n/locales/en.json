@@ -1179,7 +1179,7 @@
 		"class_casting": "Casting table",
 		"class_feature": "Class feature",
 		"condition": "Condition",
-		"effect": "Effect",
+		"effect": "Condition or effect",
 		"feat": "Feat",
 		"item": "Item",
 		"language": "Language",

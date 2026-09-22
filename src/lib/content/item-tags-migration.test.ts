@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import Papa from 'papaparse';
-import { migrateRows } from './migrations';
+import { migrateRows, CONTENT_MIGRATIONS } from './migrations';
 import { CONTENT_SCHEMA_VERSION } from '../schema/version';
 import { contentRepoDir } from '../../../tools/content-repo.mjs';
 import { hasContentRepo, readPackFile } from '../../test-support/real-content';
@@ -165,10 +165,16 @@ describe.runIf(hasContentRepo)('the converters and the migration agree', () => {
 		});
 	}
 
-	it('the shipped items files declare the version this build migrates TO', () => {
-		for (const pack of ['srd-2014', 'srd-2024'])
-			expect(readPackFile(pack, 'items_srd.csv'), pack).toContain(
-				`#content-schema: ${CONTENT_SCHEMA_VERSION}`,
-			);
+	/* The shipped files are already PAST the item step, so the migration never re-runs on them — which
+	   is the property worth pinning, not equality with the global counter. That counter covers every
+	   type at once (`migrations.ts`), so a bump made for another type would otherwise fail here and
+	   demand a pointless re-stamp of a file nothing changed in. */
+	it('the shipped items files declare a version at or past the last item step', () => {
+		const lastItemStep = Math.max(...Object.keys(CONTENT_MIGRATIONS.item ?? {}).map(Number));
+		for (const pack of ['srd-2014', 'srd-2024']) {
+			const declared = /#content-schema:\s*(\d+)/.exec(readPackFile(pack, 'items_srd.csv'))?.[1];
+			expect(Number(declared), pack).toBeGreaterThan(lastItemStep);
+			expect(Number(declared), pack).toBeLessThanOrEqual(CONTENT_SCHEMA_VERSION);
+		}
 	});
 });

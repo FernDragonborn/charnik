@@ -16,6 +16,7 @@ import Papa from 'papaparse';
 import type { Storage, FileEntry } from '../storage/types';
 import {
 	CONTENT_TYPES,
+	TYPE_ALIASES,
 	parseRow,
 	PROSE_BASES,
 	LOC_STATUS_COL_BASE,
@@ -141,8 +142,9 @@ export interface ContentGraph {
 	 *  yields the full `LoadedRow` union (the return distributes over `T`). */
 	list<T extends ContentType>(type: T, opts?: ListOptions): LoadedRowByType<T>[];
 	get(effectiveId: string): LoadedRow | undefined;
-	/** All editions/sources of one article (same type + slug). */
-	editionsOf(type: ContentType, id: string): LoadedRow[];
+	/** All editions/sources of one article (same identity SCOPE + slug — the type, except for the
+	 *  merged state type, where the kind scopes the slug; see `identityScope`). */
+	editionsOf(scope: ContentType | string, id: string): LoadedRow[];
 	/** Base-class features for a class row (same source, matching class_id). */
 	featuresForClass(classRow: LoadedRow): LoadedRowByType<'class_feature'>[];
 	/** Resolve referenced `source:id`s; report which are missing (render-what-you-can). */
@@ -213,6 +215,10 @@ interface FileRef {
 /** File-level `#content-` header values stamped onto every row of the file. */
 interface FileHeader {
 	type: ContentType;
+	/** The `kind` rows of this file take when they declare none — set when the file named a type
+	 *  that has since been merged into another (`conditions_srd.csv` → `effect` rows of kind
+	 *  `condition`). Absent for a file that named the type itself. */
+	kind: string | undefined;
 	source: string | undefined;
 	license: string | undefined;
 	sourceLang: string;
@@ -225,11 +231,14 @@ function resolveFileType(
 	file: FileRef,
 	directives: Map<string, string>,
 	acc: LoadAcc,
-): ContentType | null {
+): { type: ContentType; kind: string | undefined } | null {
 	const { root, entry } = file;
 	const declaredType = directives.get('type');
 	if (declaredType) {
-		if (declaredType in CONTENT_TYPES) return declaredType as ContentType;
+		if (declaredType in CONTENT_TYPES)
+			return { type: declaredType as ContentType, kind: undefined };
+		const alias = TYPE_ALIASES[declaredType];
+		if (alias) return alias;
 		acc.issues.push({
 			level: 'error',
 			root,
@@ -241,7 +250,11 @@ function resolveFileType(
 	const base = entry.name.replace(/\.csv$/, '');
 	// type = the filebase that the name equals or starts with (e.g. species_srd → species)
 	const match = acc.typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
-	if (match) return match[1];
+	if (match) return { type: match[1], kind: undefined };
+	const aliased = Object.entries(TYPE_ALIASES).find(
+		([fb]) => base === fb || base.startsWith(fb + '_'),
+	);
+	if (aliased) return aliased[1];
 	acc.issues.push({
 		level: 'warn',
 		root,
@@ -251,6 +264,27 @@ function resolveFileType(
 	return null;
 }
 
+/**
+ * What scopes a row's slug inside its source — the first segment of `type:source:id`.
+ *
+ * It is the TYPE for every type but one. The merged state type (CONDEFF) carries two KINDS whose
+ * slugs were unique per kind and never globally: `rage` is both a condition (the mechanics) and a
+ * catalog entry that applies it, exactly the way `shield` is both a spell and an item. So the kind
+ * scopes it — which is also what keeps every saved reference resolving verbatim, since a kind is
+ * spelled the way the type it replaced was.
+ */
+const identityScope = (type: ContentType, kind: string | undefined): string =>
+	(MERGED_TYPES.has(type) && kind?.trim()) || type;
+
+/** The types another type was merged INTO — the only ones whose rows scope their slug by `kind`.
+ *  Read off the alias table so it cannot drift from it, and narrow on purpose: `kind` is an ordinary
+ *  column elsewhere (a species option's subrace/lineage), and scoping identity by it there would
+ *  rename every such row's reference. */
+const MERGED_TYPES = new Set<ContentType>(Object.values(TYPE_ALIASES).map((a) => a.type));
+
+/** …and the same scope read back off a built row, so the two indices cannot drift apart. */
+const scopeOf = (row: LoadedRow): string => row.effectiveId.slice(0, row.effectiveId.indexOf(':'));
+
 /** Parse+validate ONE raw CSV row against its type, re-attach the localized prose/status columns the
  *  strict schema stripped, and assemble the LoadedRow (precedence: row column → file header →
  *  fallback). Returns a ContentIssue instead when the row fails validation. */
@@ -259,6 +293,10 @@ function buildLoadedRow(
 	header: FileHeader,
 	file: FileRef,
 ): LoadedRow | ContentIssue {
+	// A merged type's rows take their `kind` from the FILE when they do not carry the column, stamped
+	// before validation like the source and systems columns — which is what lets `conditions_*.csv`
+	// stay exactly as its author wrote it (schemas.ts ▸ TYPE_ALIASES).
+	if (header.kind !== undefined && !rawRow.kind) rawRow = { ...rawRow, kind: header.kind };
 	const res = parseRow(header.type, rawRow);
 	if (!res.success)
 		return {
@@ -296,7 +334,7 @@ function buildLoadedRow(
 		type: header.type,
 		source,
 		id,
-		effectiveId: `${header.type}:${source}:${id}`,
+		effectiveId: `${identityScope(header.type, rawRow.kind)}:${source}:${id}`,
 		systems,
 		...(header.license ? { license: header.license } : {}),
 		sourceLang: header.sourceLang,
@@ -335,8 +373,9 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 	// `#content-type:` lets a freely-named file declare its type; `#content-source:` / `-systems:` are
 	// the file-level source tag / editions stamped onto every row. Explicit wins.
 	const { directives, body } = parseContentDirectives(raw);
-	const type = resolveFileType(file, directives, acc);
-	if (!type) return;
+	const resolved = resolveFileType(file, directives, acc);
+	if (!resolved) return;
+	const { type } = resolved;
 
 	// DATA-VER-1 detection (surfaced, never thrown): (a) a REQUIRED metadata key missing →
 	// ContentMetaModal; (b) a recorded hash that no longer matches the body → HashDriftModal.
@@ -354,6 +393,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 
 	const header: FileHeader = {
 		type,
+		kind: resolved.kind,
 		source: directives.get('source'),
 		license: directives.get('license'),
 		// the language this file's rows are authored in (default en) — always "reviewed" for l10n status
@@ -426,7 +466,7 @@ function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices
 		byEffectiveId.set(r.effectiveId, r);
 		uniqueRows.push(r);
 		pushMap(byType, r.type, r);
-		pushMap(articles, `${r.type}:${r.id}`, r);
+		pushMap(articles, `${scopeOf(r)}:${r.id}`, r);
 	}
 	return { byType, byEffectiveId, articles, uniqueRows };
 }

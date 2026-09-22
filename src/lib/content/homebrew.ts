@@ -22,6 +22,8 @@ import {
 	CONTENT_TYPES,
 	parseRow,
 	SPECIES_OPTION_KINDS,
+	ROW_KIND,
+	VALENCE,
 	SIZES,
 	ABILITIES,
 	HIT_DICE,
@@ -65,12 +67,15 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	rarity: RARITIES,
 	save_ability: ABILITIES,
 	spell_ability: ABILITIES,
-	// `kind` is a column on TWO types with unrelated vocab, so it's disambiguated below (like
-	// `category`): species_option.kind = these; spell_slots.kind is a free string (rendered as text).
+	valence: Object.values(VALENCE),
+	// `kind` is a column on THREE types with unrelated vocab, so it's disambiguated below (like
+	// `category`): species_option.kind = these; effect.kind = condition/effect; spell_slots.kind is a
+	// free string (rendered as text).
 	kind_species_option: SPECIES_OPTION_KINDS,
+	kind_effect: Object.values(ROW_KIND),
 	category_feat: FEAT_CATEGORIES, // feat.category (disambiguated below)
 };
-const BOOL_FIELDS = new Set(['concentration', 'ritual', 'negative', 'repeatable']);
+const BOOL_FIELDS = new Set(['concentration', 'ritual', 'repeatable']);
 const NUMBER_FIELDS = new Set([
 	'speed',
 	'level',
@@ -114,7 +119,7 @@ function kindOf(type: ContentType, name: string): FieldKind {
 	if (name === 'id') return 'slug';
 	if (name === 'text_en' || name === 'text_uk') return 'textarea';
 	if (name === 'category' && type === 'feat') return 'enum';
-	if (name === 'kind' && type === 'species_option') return 'enum';
+	if (name === 'kind' && (type === 'species_option' || type === 'effect')) return 'enum';
 	if (ENUM_OPTS[name]) return 'enum';
 	if (BOOL_FIELDS.has(name)) return 'bool';
 	if (NUMBER_FIELDS.has(name)) return 'number';
@@ -123,6 +128,7 @@ function kindOf(type: ContentType, name: string): FieldKind {
 function optionsOf(type: ContentType, name: string): readonly string[] | undefined {
 	if (name === 'category' && type === 'feat') return ENUM_OPTS.category_feat;
 	if (name === 'kind' && type === 'species_option') return ENUM_OPTS.kind_species_option;
+	if (name === 'kind' && type === 'effect') return ENUM_OPTS.kind_effect;
 	return ENUM_OPTS[name];
 }
 

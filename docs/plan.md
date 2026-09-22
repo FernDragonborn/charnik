@@ -315,7 +315,7 @@ position and are given per wave, because most of them were learned the hard way.
   so the picker, the caps and the DC attribution it wanted already existed. What that did NOT close is
   the free cast the feat also grants — `FEAT-FREE-CAST`, which is a cast-time source choice, not a
   choice at a slot.
-- **The content-shaped work**, once the app stops moving under it: CONDEFF's merge, N2's
+- **The content-shaped work**, once the app stops moving under it: N2's
   three shapes, then N2b's beast data (an attacks column, and the CR ≤ 1 beasts a 2014 druid can
   actually turn into) and N5's ammunition (the same converter, and the 2024 ammunition table). The
   2014 casting counts left this wave for the 0.7.0 one above. Each lands as a commit in `charnik-content-srd` with an assert in this repo.

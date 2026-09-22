@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
 import {
 	blocks,
+	existingRowsById,
 	field,
 	description,
 	abilities,
@@ -127,12 +128,19 @@ function convertFeats() {
 
 // --- conditions (glossary entries tagged "[Condition]") ----------------------
 const POSITIVE_CONDITIONS = new Set(['invisible']); // the only beneficial one in SRD
+/** A condition's valence — the open enum that replaced the inverted `negative` boolean (CONDEFF). */
+const conditionValence = (id) => (POSITIVE_CONDITIONS.has(id) ? 'helpful' : 'harmful');
 function convertConditions() {
 	const all = blocks(src('rules-glossary.md')).filter((b) => /\[Condition\]\s*$/.test(b.name));
-	const authored = existingEffectsById('conditions_srd.csv'); // CONDITIONS-1 tokens, not in the source
+	// Everything this file says that the SRD does not: the CONDITIONS-1 tokens, the `max_level` ladder
+	// (exhaustion's 6), and whole ROWS authored here — Rage is a state the app tracks as a condition
+	// and no glossary entry produces it. A re-run used to drop all three, which is why the docs
+	// carried a standing "never re-run a converter" warning.
+	const prior = existingRowsById(out('conditions_srd.csv'));
 	const rows = all.map((b) => {
 		const name = b.name.replace(/\s*\[Condition\]\s*$/, '');
 		const id = slug(name);
+		const was = prior.get(id) ?? {};
 		return {
 			id,
 			systems: '5.5e',
@@ -141,14 +149,38 @@ function convertConditions() {
 			name_uk: '',
 			text_en: description(b.body),
 			text_uk: '',
-			effects: authored.get(id) ?? '',
-			negative: String(!POSITIVE_CONDITIONS.has(id)),
+			effects: was.effects ?? '',
+			kind: 'condition',
+			valence: was.valence || conditionValence(id),
+			max_level: was.max_level ?? '',
 		};
 	});
+	const fromSource = new Set(rows.map((r) => r.id));
+	// an authored row written before CONDEFF says `negative`; carry that forward as the valence it
+	// meant rather than leaving the cell blank, which would read as `neutral`
+	const authoredRows = [...prior.values()]
+		.filter((r) => !fromSource.has(r.id))
+		.map((r) => ({
+			...r,
+			kind: r.kind || 'condition',
+			valence: r.valence || (r.negative === 'false' ? 'helpful' : 'harmful'),
+		}));
 	writeCsv(
 		out('conditions_srd.csv'),
-		['id', 'systems', 'source', 'negative', 'effects', 'name_en', 'name_uk', 'text_en', 'text_uk'],
-		rows,
+		[
+			'id',
+			'systems',
+			'source',
+			'kind',
+			'valence',
+			'max_level',
+			'effects',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+		],
+		[...rows, ...authoredRows.map((r) => ({ ...r, systems: '5.5e', source: 'SRD 5.2.1' }))],
 	);
 	assertCount('conditions', rows.length, all.length);
 }

@@ -9,6 +9,7 @@
  */
 import { ISSUE_KEY, isWeaponOwnBonus } from '$lib/effects/token-parser';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
+import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import { resolveItem } from '../content/resolved-item';
 import { needsAttunement } from './inventory';
@@ -186,9 +187,9 @@ class EffectGatherer {
 		if (this.character.play.exhaustion <= 0) return;
 		// indexed lookup (byType via list) instead of a full graph.rows scan — derive re-runs on every
 		// reactive play-state change, so scan only condition rows, edition-filtered.
-		const row = this.graph
-			.list('condition', { system: this.character.system })
-			.find((r) => r.id === 'exhaustion' && this.isActive(r));
+		const row = conditionRows(this.graph, this.character.system).find(
+			(r) => r.id === 'exhaustion' && this.isActive(r),
+		);
 		const tokens = tokensOf(row);
 		if (row && tokens.length)
 			this.active.push({ source: rowName(row), layer: 'condition', tokens });

@@ -24,14 +24,14 @@ describe('assigning a content type', () => {
 	const UNNAMED = 'id,name_en\nblinded,Blinded';
 
 	it('writes the directive, and the loader reads the file as that type', async () => {
-		const stamped = await restampText(UNNAMED, { type: 'condition', source: 'My Pack' });
-		expect(stamped).toContain('#content-type: condition');
+		const stamped = await restampText(UNNAMED, { type: 'effect', source: 'My Pack' });
+		expect(stamped).toContain('#content-type: effect');
 
 		const storage = new MemoryStorage();
 		await storage.write('content/mystuff.csv', stamped);
 		const graph = await loadContent(storage, ['content']);
 		expect(graph.issues.filter((i) => i.level === 'error')).toEqual([]);
-		expect(graph.list('condition').map((r) => r.id)).toEqual(['blinded']);
+		expect(graph.list('effect').map((r) => r.id)).toEqual(['blinded']);
 	});
 
 	it('leaves the file unplaced while nothing declares the type', async () => {

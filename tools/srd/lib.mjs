@@ -165,6 +165,27 @@ export function existingColById(csvPath, col) {
 	return map;
 }
 
+/**
+ * Every row of an existing output file, by id — what a re-run must not lose.
+ *
+ * `existingColById` answers "what was authored into THIS column"; this answers "what is in the file
+ * at all", which is what a converter needs to keep a column the source does not produce (a
+ * condition's `max_level`) and a row the source never had (an authored state like Rage). Missing
+ * file → an empty map, so a first run behaves as if nothing was ever there.
+ */
+export function existingRowsById(csvPath) {
+	if (!existsSync(csvPath)) return new Map();
+	const raw = readFileSync(csvPath, 'utf8')
+		.replace(/^\ufeff/, '')
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id) map.set(r.id, r);
+	return map;
+}
+
 export function dedupeIds(rows) {
 	const seen = new Set();
 	for (const r of rows) {

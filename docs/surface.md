@@ -453,7 +453,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (126 modules)
+## Library functions & types (127 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1124,8 +1124,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
 - `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry).
+- `const ROW_KIND` — What a state row IS.
+- `const VALENCE` — Whether a state is something you WANT.
+- `type Valence`
 - `const CONTENT_TYPES`
 - `type ContentType`
+- `const TYPE_ALIASES` — Type names and filebases that are no longer types of their own, and what they resolve to — with * the `kind` a row of…
 - `const isBrowsable` — A browsable content type (an ARTICLE: shows in compendium + search).
 - `const hasProse` — A type whose rows carry TRANSLATABLE prose — a superset of the browsable ones.
 - `const PROSE_BASES` — The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`, * `higher_level_uk`).
@@ -1156,6 +1160,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellAccess`
 - `function buildSpellAccess` — Build the union access index from the content graph (pure).
 - `function getSpellAccess` — Cached access index for a graph (rebuilt only when the graph object changes — the content * store rotates the graph o…
+
+### `src/lib/content/states.ts`
+
+- `type StateRow` — One state row — the merged `effect` type, of either kind.
+- `const isConditionRow` — A row the RULES name, as opposed to one the player adds.
+- `const conditionRows` — Every condition of this edition.
+- `const conditionRow` — One condition by id, or undefined — the lookup `apply_condition:<id>` resolves through.
+- `const effectCatalogRows` — The "+" picker's catalog: the states a player adds themselves, which is everything that is not a * condition (a condi…
+- `const valenceOf` — Whether a state is something you want.
+- `const isHarmful` — Does this state belong on the DEBUFF side of the panel?
 
 ### `src/lib/content/test-utils.ts`
 
@@ -1750,4 +1764,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1048 exports across 142 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1059 exports across 143 modules · 71 duplicate suspects._

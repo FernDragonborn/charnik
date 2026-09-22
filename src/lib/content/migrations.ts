@@ -166,7 +166,25 @@ export const CONTENT_MIGRATIONS: Partial<
 	item: {
 		1: ({ rows }) => ({ schemaVersion: 2, rows: rows.map(itemV1ToV2) }),
 	},
+	effect: {
+		2: ({ rows }) => ({ schemaVersion: 3, rows: rows.map(stateV2ToV3) }),
+	},
 };
+
+/**
+ * v2 → v3 (CONDEFF): the `negative` boolean becomes the `valence` open enum.
+ *
+ * The rename is the whole of it, because the merge kept both files' names and both kinds' columns —
+ * but the VALUE has to move, or a debuff written before the merge reads as `neutral` and renders as
+ * something the player wants. `true`/`false` are the only two things the old column could say, and a
+ * row that already carries a valence is left alone: an author who wrote both meant the newer one.
+ */
+function stateV2ToV3(row: Record<string, string>): Record<string, string> {
+	const { negative, ...rest } = row;
+	if (rest.valence) return rest;
+	if (negative === undefined || negative === '') return rest;
+	return { ...rest, valence: negative.toLowerCase() === 'true' ? 'harmful' : 'helpful' };
+}
 
 /** What a file's `#content-schema:` said, or the current version when it says nothing. Absent is
  *  treated as current rather than as 0: an unstamped hand-authored CSV is written against TODAY's

@@ -34,6 +34,7 @@ import {
 import { gatherProfGrants, isArmorProficient, withGrantedProfs } from '../rules/proficiency';
 import { ITEM_TAG } from '../content/item-tags';
 import { TOOL_ITEM_CATEGORY } from '../content/schemas';
+import { conditionRows } from '../content/states';
 import { armorCategoryOf, type ResolvedItem } from '../content/resolved-item';
 import { resourceNames, namedResources } from './resource-names';
 import {
@@ -77,7 +78,7 @@ function flagPhantomConditions(
 	system: System,
 	issues: EffectIssue[],
 ): void {
-	const conditionIds = new Set(graph.list('condition', { system }).map((r) => r.id));
+	const conditionIds = new Set(conditionRows(graph, system).map((r) => r.id));
 	for (const id of facts.conditions)
 		if (!conditionIds.has(id))
 			issues.push({

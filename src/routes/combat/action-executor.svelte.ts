@@ -169,7 +169,7 @@ export class ActionExecutor {
 	 *  at derive). Each verb lands on an EXISTING system (actions.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
 	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
-	 *  (ref/negative/duration all read from the row), `gain_action` → one ADDITIONAL action this turn
+	 *  (ref/valence/duration all read from the row), `gain_action` → one ADDITIONAL action this turn
 	 *  (Action Surge — a granted pip, never a refund), `rest:short|long` → take that rest
 	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
 	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
@@ -284,7 +284,7 @@ export class ActionExecutor {
 	}
 
 	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add
-	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets
+	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, its valence sets
 	 *  buff/debuff, `duration_rounds` gives the timer (round-counter auto-expires it). Missing id →
 	 *  surface, not a silent no-op. Split out of `runOneAction` to keep its verb-dispatch under budget. */
 	private applyCatalogEffect(name: string, arg: string) {
@@ -303,7 +303,7 @@ export class ActionExecutor {
 		this.host().effects.addEffect({
 			label: cat.label,
 			tokens: cat.tokens,
-			positive: !cat.negative,
+			positive: !cat.harmful,
 			ref: cat.ref,
 			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {}),
 		});

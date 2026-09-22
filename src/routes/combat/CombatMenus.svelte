@@ -182,13 +182,13 @@
 						addEffect({
 							label: p.label,
 							tokens: p.tokens,
-							positive: !p.negative,
+							positive: !p.harmful,
 							durationRounds: dur,
 							ref: p.ref,
 						})}
 				>
 					<span class="main"
-						><span class="effect-icon" class:negative={p.negative}
+						><span class="effect-icon" class:negative={p.harmful}
 							><Icon name="plus" size={11} /></span
 						>{p.label}</span
 					><span class="durpill">{dur > 0 ? `${dur} ${$_('combat.menu.roundsShort')}` : '∞'}</span>
@@ -434,7 +434,7 @@
 							: addEffect({
 									label: cn.label,
 									tokens: [`apply_condition:${cn.id}`],
-									positive: false,
+									positive: !cn.harmful,
 								})}
 				>
 					<span class="main">{cn.label}</span><span class="toggle-track" class:on={!!applied}

@@ -69,10 +69,10 @@ describe('the writers refuse a target outside the homebrew root', () => {
 });
 
 describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
-	const file = homebrewFile('condition');
+	const file = homebrewFile('effect');
 
 	it('rowToDraft flattens a row to cells (systems joined, source dropped, id kept)', () => {
-		const row = makeRow('condition', { id: 'dazed', name_en: 'Dazed', text_en: 'x' }, 'SRD 5.1');
+		const row = makeRow('effect', { id: 'dazed', name_en: 'Dazed', text_en: 'x' }, 'SRD 5.1');
 		const d = rowToDraft(row);
 		expect(d.id).toBe('dazed');
 		expect(d.name_en).toBe('Dazed');
@@ -83,13 +83,13 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const s = new MemoryStorage();
 		await upsertHomebrewRow(
 			s,
-			'condition',
+			'effect',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v1' },
 			file,
 		);
 		await upsertHomebrewRow(
 			s,
-			'condition',
+			'effect',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v2' },
 			file,
 		);
@@ -101,14 +101,14 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 	it('forks a shipped row into homebrew: same id, source forced to Homebrew', async () => {
 		const s = new MemoryStorage();
 		const shipped = makeRow(
-			'condition',
+			'effect',
 			{ id: 'blinded', name_en: 'Blinded', text_en: 'orig' },
 			'SRD 5.1',
 		);
 		const draft = rowToDraft(shipped);
 		draft.systems = '5e';
 		draft.text_en = 'my house rule';
-		const res = await upsertHomebrewRow(s, 'condition', draft, file);
+		const res = await upsertHomebrewRow(s, 'effect', draft, file);
 		expect(res.ok).toBe(true);
 		const rows = await readRows(s, file);
 		expect(rows[0]?.id).toBe('blinded');
@@ -119,13 +119,13 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 	it('preserves columns beyond the schema (localized prose) instead of dropping them', async () => {
 		const s = new MemoryStorage();
 		const row = makeRow(
-			'condition',
+			'effect',
 			{ id: 'x', name_en: 'X', text_en: 'e', name_uk: 'Ікс', text_uk: 'опис' },
 			'SRD 5.1',
 		);
 		const draft = rowToDraft(row);
 		draft.systems = '5e';
-		await upsertHomebrewRow(s, 'condition', draft, file);
+		await upsertHomebrewRow(s, 'effect', draft, file);
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_uk).toBe('Ікс');
 		expect(rows[0]?.text_uk).toBe('опис');
@@ -133,17 +133,17 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 
 	it('removes a row by id (rewriting the file), and deletes the file when its last row goes', async () => {
 		const s = new MemoryStorage();
-		await upsertHomebrewRow(s, 'condition', { id: 'a', name_en: 'A', systems: '5e' }, file);
-		await upsertHomebrewRow(s, 'condition', { id: 'b', name_en: 'B', systems: '5e' }, file);
-		await removeHomebrewRow(s, 'condition', file, 'a');
+		await upsertHomebrewRow(s, 'effect', { id: 'a', name_en: 'A', systems: '5e' }, file);
+		await upsertHomebrewRow(s, 'effect', { id: 'b', name_en: 'B', systems: '5e' }, file);
+		await removeHomebrewRow(s, 'effect', file, 'a');
 		expect((await readRows(s, file)).map((r) => r.id)).toEqual(['b']);
-		await removeHomebrewRow(s, 'condition', file, 'b'); // last row → file removed
+		await removeHomebrewRow(s, 'effect', file, 'b'); // last row → file removed
 		expect(await s.exists(file)).toBe(false);
 	});
 
 	it('stamps a #content header (source+license) so the metadata-check pop-up never nags', async () => {
 		const s = new MemoryStorage();
-		await upsertHomebrewRow(s, 'condition', { id: 'x', name_en: 'X', systems: '5e' }, file);
+		await upsertHomebrewRow(s, 'effect', { id: 'x', name_en: 'X', systems: '5e' }, file);
 		const { directives } = parseContentDirectives(await s.read(file));
 		expect(directives.get('source')).toBe(HOMEBREW_SOURCE);
 		expect(directives.get('license')).toBeTruthy();
@@ -152,11 +152,11 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 });
 
 describe('fresh save (append a new row)', () => {
-	const file = homebrewFile('condition');
+	const file = homebrewFile('effect');
 
 	it('appends the validated row and returns its id', async () => {
 		const s = new MemoryStorage();
-		const res = await saveHomebrewRow(s, 'condition', { name_en: 'Dazed', systems: '5e' }, file);
+		const res = await saveHomebrewRow(s, 'effect', { name_en: 'Dazed', systems: '5e' }, file);
 		expect(res).toEqual({ ok: true, id: 'dazed' }); // id auto-slugged from the name
 		expect((await readRows(s, file)).map((r) => r.id)).toEqual(['dazed']);
 	});
@@ -167,7 +167,7 @@ describe('fresh save (append a new row)', () => {
 		const s = new MemoryStorage();
 		await saveHomebrewRow(
 			s,
-			'condition',
+			'effect',
 			{ id: 'x', name_en: 'X', text_en: 'e', name_uk: 'Ікс', text_uk: 'опис', systems: '5e' },
 			file,
 		);

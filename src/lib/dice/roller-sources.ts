@@ -65,10 +65,9 @@ export function rollerSources(
 	system: string | undefined,
 	active: ActiveRollSource[],
 ): NamedRollSource[] {
-	const rows =
-		graph && system
-			? [...graph.list('effect', { system }), ...graph.list('condition', { system })]
-			: [];
+	// conditions and runtime effects are ONE type now (CONDEFF), so the roller's vocabulary is one
+	// list rather than two joined here — which is the shape that made Poisoned typeable at all
+	const rows = graph && system ? graph.list('effect', { system }) : [];
 	const locales = graph ? localesOf(graph) : ['en'];
 	const byName = new Map<string, NamedRollSource>();
 

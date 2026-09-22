@@ -335,34 +335,29 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 
 ---
 
-- [ ] **CONDEFF · one content type for conditions and effects.** From the roller: "I can't add
-  Poisoned to an attack roll". Poisoned IS disadvantage on the attack the same
-  way Bless is +1d4 on it; that they are two content TYPES is an authoring accident the player is
-  made to know about. **Already merged, and staying that way:** play-state has ONE list
-  (`play.effects`, an "effect/condition instance"), everything runtime folds at the **`condition`
-  LAYER** — which is stacking algebra and survives the merge untouched — and both schemas are
-  `baseRow` + the same `effects` token column.
-  **What actually differs:** three columns (`max_level` on conditions, `duration_rounds` on effects,
-  and `negative`), plus two UIs (a binary multi-select vs the "+" catalog with a duration), plus the
-  `apply_condition:<id>` indirection between an applied instance and what it does.
-  **`negative` is DELETED, not merged.** Its default is inverted between the two types, so merging it
-  means picking whose default wins for every row of the other — a question with no right answer.
-  Replace it with `valence`, an open enum (`harmful` | `helpful` | `neutral`) with no default:
-  blank reads `neutral`, the converters state it per row, and the inversion stops existing. It also
-  says more than the boolean did — Bless and a cover bonus were both "not negative", which is not the
-  same fact as Poisoned being harmful.
-  **Size, measured not guessed:** the merged schema is the union of those columns behind a `kind`
-  open enum (AGENTS.md ▸ Taste (open enums, never booleans)); `~10` call sites of `graph.list('condition', …)`
-  (derive-gather, derive, resolver, effects-editor ×4, roller-sources); character JSON is untouched
-  (refs are `source:id`, and `apply_condition` keeps resolving — an id lookup inside one type instead
-  of the other); the content repo needs a `#content-type` change on `conditions_*.csv` + a re-stamp,
-  no row rewriting, since the loader already merges any number of CSVs into one type. So: a day, and
-  the risk sits in the content-repo diff, not in the engine.
-  **Unblocked meanwhile:** the roller's vocabulary lists BOTH types, so Poisoned is typeable into a
-  roll today; the merge is what stops the next surface from having to remember to.
-  **On disk this stays a header change.** The loader folds any number of CSVs into one type, so the
-  files keep their names and their rows — `conditions_*.csv` declares the merged `#content-type`,
-  gets its `valence`, and is re-stamped. No row is rewritten and no id moves.
+- [x] **CONDEFF · one content type for conditions and effects.** Poisoned IS disadvantage on the
+  attack the same way Bless is, and that they were two content TYPES was an authoring accident the
+  player and the pack author were both made to know about. One type now (`effect`), with a `kind`
+  open enum naming the two UIs that still differ — a binary or levelled toggle the rules name, versus
+  a "+" catalog entry carrying a duration — and `src/lib/content/states.ts` as the ONE place that
+  answers "which is this row", so no consumer re-derives the split.
+  **`negative` is gone, replaced by `valence`** (`harmful` | `helpful` | `neutral`, blank reads
+  neutral): its default was inverted between the two old types, so merging it meant picking whose
+  default won for every row of the other. A `v2 → v3` content migration carries an older row's
+  boolean across, and the converters emit the enum.
+  **On disk it cost a pack author nothing.** `conditions_*.csv` keeps its name, its header and its
+  rows: the filename and the old `#content-type: condition` are both ALIASES of the merged type
+  (`TYPE_ALIASES`), and a file that resolves through one stamps `kind: condition` on rows that do not
+  carry the column. Shipped files changed only where the data changed — `negative` → `valence`.
+  **The identity had to give, and gave in the right place**: `rage` exists as both a condition and a
+  catalog entry, so the merged type scopes its slug by KIND rather than by type. Every saved
+  reference (`condition:SRD 5.2.1:rage`) still resolves, because a kind is spelled the way the type
+  it replaced was.
+  **The converter trap died with it.** `convert.mjs` used to regenerate `conditions_srd.csv` from the
+  SRD alone, dropping `max_level` and the authored Rage row — the reason the docs carried a standing
+  "never re-run a converter to re-stamp". Both converters now read what the file already says and
+  keep it (`existingRowsById`).
+
 - [x] **B25 / RV4 · Subclass-caster spell list.** The seam is DATA, not a class-name branch: a
   `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
   off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out

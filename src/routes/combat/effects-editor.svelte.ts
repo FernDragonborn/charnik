@@ -13,6 +13,7 @@ import {
 	type EffectInstance,
 } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
+import { conditionRow, conditionRows, effectCatalogRows, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
 import { describedProse } from '$lib/content/overrides.svelte';
 import { app } from '$lib/stores/app.svelte';
@@ -34,17 +35,23 @@ export class EffectsEditor {
 	constructor(private host: () => EffectsHost) {}
 
 	// read). An empty effects column still registers the id, so mechanics can be authored incrementally.
-	conditionList = $derived.by<{ id: string; label: string }[]>(() => {
+	conditionList = $derived.by<{ id: string; label: string; harmful: boolean }[]>(() => {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return [];
 		return (
-			graph
-				.list('condition', { system })
+			conditionRows(graph, system)
 				// leveled conditions (exhaustion, max_level>1) are a stepper, not a binary toggle — they
 				// don't belong in this multi-select (they'd double-count with gatherExhaustion). D19.
 				.filter((r) => Number(r.data.max_level ?? 1) <= 1)
-				.map((r) => ({ id: r.id, label: localizedName(r, app.activeLocale) }))
+				// the row's own valence, so Invisible and Rage stop landing under Debuffs: applying a
+				// condition used to hardcode `positive: false`, because the old schema's boolean
+				// DEFAULTED to negative and the list never read it
+				.map((r) => ({
+					id: r.id,
+					label: localizedName(r, app.activeLocale),
+					harmful: isHarmful(r),
+				}))
 		);
 	});
 	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
@@ -53,7 +60,7 @@ export class EffectsEditor {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return 0;
-		const row = graph.list('condition', { system }).find((r) => r.id === 'exhaustion');
+		const row = conditionRow(graph, system, 'exhaustion');
 		return row ? Number(row.data.max_level ?? 1) : 0;
 	});
 	/** Set the exhaustion level, clamped to [0, max]. Play-state mutation (autosaves like HP). The TOP
@@ -76,7 +83,7 @@ export class EffectsEditor {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return null;
-		const row = graph.list('condition', { system }).find((r) => r.id === id);
+		const row = conditionRow(graph, system, id);
 		// the READER's language, not `text_en`: a condition that ships a `text_uk` was being opened in
 		// English beside a panel that had already switched
 		return (row && describedProse(row, app.activeLocale)) || null;
@@ -110,7 +117,7 @@ export class EffectsEditor {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return [];
-		const row = graph.list('condition', { system }).find((r) => r.id === id);
+		const row = conditionRow(graph, system, id);
 		return row?.data.effects ?? [];
 	};
 
@@ -121,13 +128,13 @@ export class EffectsEditor {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return [];
-		return graph.list('effect', { system }).map((r) => ({
+		return effectCatalogRows(graph, system).map((r) => ({
 			// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes propagate),
 			// with the baked label/tokens kept as the orphan fallback.
 			ref: r.effectiveId,
 			label: localizedName(r, app.activeLocale),
 			tokens: r.data.effects,
-			negative: r.data.negative,
+			harmful: isHarmful(r),
 			durationRounds: r.data.duration_rounds ?? null,
 		}));
 	});
