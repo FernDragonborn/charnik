@@ -37,6 +37,9 @@ export const ITEM_TAG = {
 	strMin: 'str_min',
 	stealthDisadvantage: 'stealth_disadvantage',
 	attunement: 'attunement',
+	/** A tool's check ability (`ability:int`). 5.5e states it per tool; 5.1 says in so many words
+	 *  that tool use is NOT tied to one ability, so its rows carry no such tag and the sheet asks. */
+	ability: 'ability',
 } as const;
 
 /** Armor weight classes an `armor:<weight>` tag may name. */

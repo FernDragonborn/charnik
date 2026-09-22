@@ -1218,6 +1218,34 @@ function convertItems() {
 	}
 	assertCount('armor+shields', nA, 13);
 
+	// tools: one 3-cell row per tool (Item, Cost, Weight), with single-cell group labels between
+	// them. SRD 5.1 states no ABILITY for a tool check — "Tool use is not tied to a single ability" —
+	// so these rows carry no `ability` tag and the sheet asks the player, where 5.5e reads the column.
+	const TOOL_GROUPS = new Set(["Artisan's tools", 'Gaming set', 'Musical instrument']);
+	let tc = sectionCells(html, 'Tools'),
+		nT = 0;
+	while (tc.length && !TOOL_GROUPS.has(tc[0])) tc.shift(); // skip caption + header cells
+	for (let i = 0; i < tc.length;) {
+		if (TOOL_GROUPS.has(tc[i])) {
+			i++;
+			continue;
+		}
+		const [name, cost, weight] = tc.slice(i, i + 3);
+		i += 3;
+		if (!name) continue;
+		rows.push(
+			irow({
+				id: slug(name),
+				name_en: name,
+				category: 'tool',
+				cost: /\d/.test(cost) ? cost : '', // "*" (vehicles) is a cross-reference, not a price
+				weight_lb: wlb(weight),
+			}),
+		);
+		nT++;
+	}
+	assertCount('tools', nT, 36);
+
 	// adventuring gear: a real <tr>/<td> table (Item, Cost, Weight); <em> rows are
 	// category sub-labels (Ammunition, Arcane focus…) and are skipped.
 	let nG = 0;
@@ -1281,7 +1309,7 @@ function convertItems() {
 		);
 		nM++;
 	}
-	console.log(`  gear ${nG}, magic ${nM}`);
+	console.log(`  tools ${nT}, gear ${nG}, magic ${nM}`);
 
 	dedupeIds(rows);
 	writeCsv(out('items_srd.csv'), ITEM_COLS, rows);

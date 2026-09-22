@@ -7,6 +7,8 @@ import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 import { UNARMED_STRIKE_ID } from '../combat/attacks';
+import { parseItemTags, ITEM_TAG } from './item-tags';
+import { TOOL_ITEM_CATEGORY } from './schemas';
 
 /*
  * Guards the SHIPPED magic-item data (MAGIC-ITEM-EFX authoring): the `effects` tokens we filled must
@@ -26,6 +28,43 @@ async function loadEdition(pack: string) {
 	await s.write('c/items_srd.csv', readPackFile(pack, 'items_srd.csv'));
 	return loadContent(s, ['c']);
 }
+
+/*
+ * Shipped TOOLS (TOOLS). Both packs carry the rows a tool proficiency can name, and they differ in
+ * exactly one way that is the SOURCE's, not ours: 5.2.1 prints an Ability entry per tool, 5.1 says
+ * "Tool use is not tied to a single ability" and prints none. Asserted literally, because a
+ * converter re-run that stopped reading the Ability column would leave the sheet guessing.
+ */
+describe('shipped tools · the rows a proficiency can name', () => {
+	const tools = (g: Awaited<ReturnType<typeof loadEdition>>) =>
+		g.list('item').filter((r) => r.data.category === TOOL_ITEM_CATEGORY);
+
+	it("2024 ships the SRD's 25 tools, each stating the ability its check uses", async () => {
+		const rows = tools(await loadEdition('srd-2024'));
+		expect(rows).toHaveLength(25);
+		for (const row of rows)
+			expect(parseItemTags(row.data.tags).get(ITEM_TAG.ability), row.id).toMatch(
+				/^(str|dex|con|int|wis|cha)$/,
+			);
+		const byId = (id: string) =>
+			parseItemTags(rows.find((r) => r.id === id)?.data.tags).get(ITEM_TAG.ability);
+		expect(byId('thieves_tools')).toBe('dex');
+		expect(byId('smiths_tools')).toBe('str');
+		expect(byId('disguise_kit')).toBe('cha');
+		expect(byId('herbalism_kit')).toBe('int');
+	});
+
+	it('2014 ships its 36, and states no ability for any of them', async () => {
+		const rows = tools(await loadEdition('srd-2014'));
+		expect(rows).toHaveLength(36);
+		for (const row of rows)
+			expect(parseItemTags(row.data.tags).get(ITEM_TAG.ability), row.id).toBeUndefined();
+		// the instruments and gaming sets are separate proficiencies in 5.1, so they are separate rows
+		expect(rows.map((r) => r.id)).toEqual(
+			expect.arrayContaining(['thieves_tools', 'bagpipes', 'dice_set', 'vehicles']),
+		);
+	});
+});
 
 describe('shipped magic items · effects column is engine-valid', () => {
 	for (const [edition, path] of EDITIONS) {

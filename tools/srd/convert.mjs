@@ -389,7 +389,11 @@ function convertBackgrounds() {
 			text_uk: '',
 			effects: '',
 			skills: skillList(field(text, 'Skill Proficiencies')),
-			tools: slug(field(text, 'Tool Proficiency')),
+			// "_Choose one kind of_ Gaming Set (see "Equipment")" — the instruction is prose around the
+			// tool, and slugging it whole produced `choose_one_kind_of_gaming_set`, an id no row has.
+			// The pack ships ONE Gaming Set row (its variants are prose there too), so the choice the
+			// SRD asks for is a choice between flavours of the same proficiency.
+			tools: slug(field(text, 'Tool Proficiency').replace(/^_[^_]*_\s*/, '')),
 			languages: '',
 			ability_choices: abilities(field(text, 'Ability Scores')),
 			origin_feat: slug(field(text, 'Feat')),

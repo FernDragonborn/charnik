@@ -152,6 +152,8 @@ export interface DraftState {
 	skills: string[];
 	expertise: string[];
 	selectedLanguages: string[];
+	/** Tool proficiencies picked from the content (bare `tool` item ids) — `build.tools`. */
+	selectedTools: string[];
 	/** What the player typed instead of picking — see `character/schema.ts`. */
 	customLanguages: string[];
 	customTools: string[];
@@ -206,6 +208,7 @@ export function blankDraft(): DraftState {
 		skills: [],
 		expertise: [],
 		selectedLanguages: [],
+		selectedTools: [],
 		customLanguages: [],
 		customTools: [],
 		slotFeats: {},
@@ -272,6 +275,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	skills: z.array(z.string()).catch(() => []),
 	expertise: z.array(z.string()).catch(() => []),
 	selectedLanguages: z.array(z.string()).catch(() => []),
+	selectedTools: z.array(z.string()).catch(() => []),
 	customLanguages: z.array(z.string()).catch(() => []),
 	customTools: z.array(z.string()).catch(() => []),
 	slotFeats: slotMapSchemas.feats.catch(() => ({})),
@@ -330,6 +334,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		skills: [...char.build.skills],
 		expertise: [...char.build.expertise],
 		selectedLanguages: [...char.build.languages],
+		selectedTools: [...char.build.tools],
 		customLanguages: [...char.build.customLanguages],
 		customTools: [...char.build.customTools],
 		selectedSpells: char.build.spells.map((s) => s.spell),

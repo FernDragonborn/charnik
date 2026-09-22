@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ContentGraph } from '../content/loader';
 import { ABILITIES, characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
+import { TABLE_CHOSEN_ABILITY, toolCheck } from './derive-stats';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
 import { ISSUE_KEY } from '../effects/token-parser';
 import { attackNotes, computeAttacks, formatDamageParts, rollEffectsFor } from '../combat/helpers';
@@ -44,6 +45,9 @@ async function graphOf(): Promise<ContentGraph> {
 			`net,5.5e,${S},Net,,weapon,"martial, ranged, thrown",`,
 			// an ARMOUR template: "Armor (Medium or Heavy)" states no weight class and no AC
 			`adamantine_armor,5.5e,${S},Adamantine Armor,,armor,attunement,`,
+			// tools: 5.5e states the ability a check uses, 5.1 leaves it to the table — both shapes
+			`thieves_tools,5.5e,${S},Thieves' Tools,,tool,ability:dex,`,
+			`smiths_tools,5.5e,${S},Smith's Tools,,tool,,`,
 		].join('\n'),
 		'feats_srd.csv': [
 			'id,systems,source,name_en,effects,category',
@@ -767,6 +771,65 @@ describe('deriveSheet aggregator', () => {
 		expect(s.skills.stealth.prof).toBe('proficient'); // was 'none'
 		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
+	});
+
+	it('TOOLS: a picked tool is listed with the ability its row states', () => {
+		const c = wizard();
+		c.build.tools = ['thieves_tools'];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.tools).toEqual([{ id: 'thieves_tools', name: "Thieves' Tools", ability: 'dex' }]);
+	});
+
+	it('TOOLS: a tool whose edition names no ability says so, rather than guessing one', () => {
+		const c = wizard();
+		c.build.tools = ['smiths_tools'];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.tools[0]?.ability).toBe(TABLE_CHOSEN_ABILITY);
+	});
+
+	it('TOOLS: `grant_proficiency:tool.<id>` grants one, and is neither a skill nor equipment', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 't',
+				label: 'Guild Artisan',
+				effects: ['grant_proficiency:tool.smiths_tools'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.tools.map((t) => t.id)).toEqual(['smiths_tools']);
+		// it must not leak into the skill ladder, which is where every non-equipment target used to land
+		expect(Object.values(s.skills).every((sk) => sk.prof === 'none')).toBe(true);
+		expect(s.deriveIssues.filter((i) => i.token.startsWith('grant_proficiency'))).toEqual([]);
+	});
+
+	it('TOOLS: a proficiency the content no longer ships still lists, under its own id', () => {
+		const c = wizard();
+		c.build.tools = ['dulcimer']; // a 5.1 instrument, not in this 5.5e fixture
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.tools).toEqual([{ id: 'dulcimer', name: 'dulcimer', ability: TABLE_CHOSEN_ABILITY }]);
+	});
+
+	it('TOOLS: the check is the ability check plus proficiency, and carries both in its trace', () => {
+		const c = wizard();
+		c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 }; // DEX +2
+		c.build.tools = ['thieves_tools'];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const check = toolCheck(s.abilities.dex.check, s.proficiencyBonus);
+		expect(check.value).toBe(4); // DEX +2 + prof +2
+		expect(check.trace.filter((t) => t.layer === 'proficiency')).toHaveLength(1);
+	});
+
+	it('TOOLS: an `ability_checks` effect reaches a tool check, because it IS an ability check', () => {
+		const c = wizard();
+		c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
+		c.build.tools = ['thieves_tools'];
+		c.play.effects = [
+			{ iid: 'g', label: 'Guidance', effects: ['flat_bonus:ability_checks+2'], positive: true },
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(toolCheck(s.abilities.dex.check, s.proficiencyBonus).value).toBe(6);
 	});
 
 	it('§C: build.featSkills (Skilled choice-grant) makes a skill proficient like a class pick', () => {

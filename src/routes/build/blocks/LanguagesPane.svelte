@@ -71,6 +71,28 @@
 	{/each}
 </div>
 
+<!-- Tools sit in the same pane for the same reason: a proficiency you take once and never spend.
+     They are CHIPS rather than typed words because a tool has a row — which is where the ability its
+     check uses comes from — and the typed list below is still there for a trade no pack ships. -->
+<span class="eyebrow">{$_('build.tools.label')}</span>
+<div class="chips" role="group" aria-label={$_('build.tools.label')}>
+	{#each b.toolList as row (row.effectiveId)}
+		{@const granted = b.backgroundTools.includes(row.id)}
+		{@const on = granted || b.draft.selectedTools.includes(row.id)}
+		<!-- a background's tool is locked on, the way its skills are: it is not a pick -->
+		<button
+			class="pick-chip"
+			aria-pressed={on}
+			class:on
+			disabled={granted}
+			title={granted ? $_('build.tools.fromBackground') : undefined}
+			onclick={() => b.toggleTool(row.id)}>{rowName(row)}</button
+		>
+	{:else}
+		<p class="subtext">{$_('build.tools.none')}</p>
+	{/each}
+</div>
+
 <!-- The pane is where languages are edited, so the TOOLS a player writes for themselves live here
      too: both are the same kind of fact (a proficiency the app prints and never computes), and a
      second pane holding one text field would be a trip for a word. -->

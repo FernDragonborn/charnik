@@ -19,8 +19,13 @@ import type { Character } from './schema';
 import { SKILL_ABILITY, type SkillId } from './skills';
 import { applyEffects, matchesTarget, type EffectFacts } from '../effects/apply';
 import { computed, SOURCE_KEY, type Computed, type Contribution } from '../rules/pipeline';
-import { rowName, type ContentGraph, type LoadedRow } from '../content/loader';
-import { tagInt, ITEM_TAG } from '../content/item-tags';
+import {
+	rowName,
+	type ContentGraph,
+	type LoadedRow,
+	type LoadedRowByType,
+} from '../content/loader';
+import { tagInt, parseItemTags, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
@@ -75,6 +80,10 @@ export interface StatInputs {
 /** The prefixes that make a `grant_proficiency` target EQUIPMENT rather than a save or a skill —
  *  `armor.heavy` (Life Domain), `weapon.martial`, `weapon.warhammer` (Dwarven Combat Training). */
 const EQUIPMENT_PREFIX = { armor: 'armor.', weapon: 'weapon.' } as const;
+/** …and the one that makes it a TOOL (`tool.thieves_tools`). Its own namespace rather than a third
+ *  equipment prefix: equipment proficiency answers "may I use this without penalty", a tool's
+ *  answers "does my proficiency bonus ride this check", and only one of them is a roll. */
+const TOOL_PREFIX = 'tool.';
 
 /** The group targets that mean every save, or every skill, at once. */
 const ALL_SAVES = 'saves';
@@ -91,7 +100,7 @@ export function gatherGrantedProficiencies(facts: EffectFacts): {
 	const grantedSaves = new Set<Ability>();
 	const grantedSkills = new Map<string, SkillProficiency>();
 	for (const p of facts.proficiencies) {
-		if (isEquipmentTarget(p.target)) continue;
+		if (isEquipmentTarget(p.target) || p.target.startsWith(TOOL_PREFIX)) continue;
 		// "proficiency in ALL saving throws" (Diamond Soul) is one statement in the rules, so it is one
 		// token here rather than six — spelling out the six would be data the source does not have.
 		if (p.target === ALL_SAVES) {
@@ -128,6 +137,75 @@ export function grantedEquipmentProfs(facts: EffectFacts): { armor: string[]; we
 			weapons.push(p.target.slice(EQUIPMENT_PREFIX.weapon.length));
 	}
 	return { armor, weapons };
+}
+
+/** The ability a tool check rolls where the edition's SRD names one. 5.1 states the opposite in so
+ *  many words — "Tool use is not tied to a single ability, since proficiency with a tool represents
+ *  broader knowledge of its use" — so that edition's answer is the TABLE's, and a named state says
+ *  so rather than an absent ability the sheet would have to guess at. */
+export const TABLE_CHOSEN_ABILITY = 'table-chosen';
+
+/** One tool this character is proficient with: what to call it, and which ability its check uses. */
+export interface ToolProficiency {
+	/** The bare content id — what `grant_proficiency:tool.<id>` and `build.tools` both name. */
+	id: string;
+	name: string;
+	ability: Ability | typeof TABLE_CHOSEN_ABILITY;
+}
+
+/**
+ * Tools the character is proficient with: the build's picks plus every `grant_proficiency:tool.<id>`
+ * a class, feat or item granted. A tool with no row in the active edition still LISTS (under its own
+ * id) — a proficiency a pack no longer ships is the player's fact, not ours to drop — it simply has
+ * no ability to read.
+ */
+export function deriveTools(
+	{ build, facts }: StatInputs,
+	toolRows: readonly LoadedRowByType<'item'>[],
+): ToolProficiency[] {
+	const granted = facts.proficiencies
+		.filter((p) => p.target.startsWith(TOOL_PREFIX))
+		.map((p) => p.target.slice(TOOL_PREFIX.length));
+	const byId = new Map(toolRows.map((r) => [r.id, r]));
+	return [...new Set([...(build.tools ?? []), ...granted])].sort().map((id) => {
+		const row = byId.get(id);
+		const declared = row ? toolAbility(row) : undefined;
+		return {
+			id,
+			name: row ? rowName(row) : id,
+			ability: declared ?? TABLE_CHOSEN_ABILITY,
+		};
+	});
+}
+
+/** A tool row's `ability:<abl>` tag, when it carries one the ability list knows. */
+function toolAbility(row: LoadedRowByType<'item'>): Ability | undefined {
+	const tags = parseItemTags(row.data.tags);
+	const raw = tags.get(ITEM_TAG.ability);
+	return ABILITIES.find((a) => a === raw);
+}
+
+/**
+ * A tool check: the ability check, plus your proficiency bonus because you are proficient. RAW says
+ * nothing else — "add your Proficiency Bonus to any ability check you make that uses the tool" — so
+ * it is built ON the ability's own folded check rather than beside it, and Guidance, exhaustion and
+ * every other `ability_checks` effect reach it exactly as they reach a skill.
+ */
+export function toolCheck(abilityCheck: Computed, proficiencyBonus: number): Computed {
+	return computed(
+		[
+			...abilityCheck.trace,
+			{
+				source: 'Proficiency',
+				key: SOURCE_KEY.proficiency,
+				layer: 'proficiency',
+				op: 'add',
+				amount: proficiencyBonus,
+			},
+		],
+		undefined,
+		abilityCheck.notes,
+	);
 }
 
 /** Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves. Multiclass

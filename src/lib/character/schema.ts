@@ -127,6 +127,11 @@ const buildSchema = z.object({
 	featSpells: z.array(featSpellChoice.extend({ feat: ref, key: z.string() })).default([]),
 	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
 	expertise: z.array(z.string()).default([]),
+	/** Tool proficiencies, as bare `item` ids of category `tool` — the same id a
+	 *  `grant_proficiency:tool.<id>` names, so a class grant and a player's pick are one vocabulary.
+	 *  Bare and not a ref, like `skills`, because a homebrew pack's thieves' tools are still thieves'
+	 *  tools. What the SRD never listed stays free text in `customTools`. */
+	tools: z.array(z.string()).default([]),
 	/** Allocated ability boosts (5.5e background / ASIs), applied at the feature layer on top
 	 *  of the base `abilities` scores. Kept separate from base so point-buy stays 8–15 and the
 	 *  boost keeps its provenance. Species boosts flow through the effects engine, not here.
@@ -145,10 +150,10 @@ const buildSchema = z.object({
 	}),
 	/** Known languages, as `language:source:id` refs. */
 	languages: z.array(ref).default([]),
-	/** Languages and tools the player simply TYPED — a table's own tongue, a trade the SRD never
-	 *  listed. Free text and not refs, because neither interacts with any rule the app computes: a
-	 *  language and a tool proficiency are flavour a sheet prints. A row in a pack would be machinery
-	 *  for a string, and the day either gains a mechanic is the day it earns one. */
+	/** Languages and tools the player simply TYPED — a table's own tongue, a trade no pack ships.
+	 *  Free text and not refs: a language computes nothing, and a typed tool has no row to read an
+	 *  ability off, so it prints as a proficiency and rolls nothing. A tool that HAS a row is picked
+	 *  into `tools` above and gets the check. */
 	customLanguages: z.array(z.string()).default([]),
 	customTools: z.array(z.string()).default([]),
 	inventory: z.array(inventoryEntry).default([]),

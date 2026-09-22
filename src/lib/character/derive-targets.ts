@@ -56,6 +56,10 @@ const ROLL_TARGETS = new Set<string>([
 // `save.`; a bare ability grants that save). Equipment carries its own prefix, because "heavy" and
 // "martial" are only unambiguous next to the thing they are a category OF.
 const WEAPON_PREFIX = 'weapon.';
+/** A tool names a content id the same way a specific weapon does, so it is open vocabulary for the
+ *  same reason: this module holds no graph, and a mistyped id is indistinguishable from a homebrew
+ *  pack's own tool. */
+const TOOL_PREFIX = 'tool.';
 const PROFICIENCY_TARGETS = new Set<string>([
 	...ABILITIES,
 	'saves', // the group: proficiency in ALL saving throws (Diamond Soul)
@@ -97,7 +101,9 @@ const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof
 			// this module holds no graph to check ids against, so the whole `weapon.` namespace is open
 			// like a damage type. A mistyped category is indistinguishable from an id here — armour,
 			// which has no ids, stays closed and spell-checked.
-			return target.startsWith(WEAPON_PREFIX) ? OPEN_VOCAB : PROFICIENCY_TARGETS;
+			return target.startsWith(WEAPON_PREFIX) || target.startsWith(TOOL_PREFIX)
+				? OPEN_VOCAB
+				: PROFICIENCY_TARGETS;
 		default:
 			return OPEN_VOCAB;
 	}

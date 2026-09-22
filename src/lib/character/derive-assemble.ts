@@ -18,6 +18,7 @@ import {
 	resolveClassSaves,
 	deriveAbilityBlocks,
 	deriveSkills,
+	deriveTools,
 	deriveAc,
 	deriveSpeed,
 	derivePassives,
@@ -32,6 +33,7 @@ import {
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, withGrantedProfs } from '../rules/proficiency';
 import { ITEM_TAG } from '../content/item-tags';
+import { TOOL_ITEM_CATEGORY } from '../content/schemas';
 import { armorCategoryOf, type ResolvedItem } from '../content/resolved-item';
 import { resourceNames, namedResources } from './resource-names';
 import {
@@ -186,6 +188,12 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const classSaves = resolveClassSaves(build, graph, grantedSaves, missing);
 	const abilities = deriveAbilityBlocks(statInputs, abilityComputed, classSaves);
 	const skills = deriveSkills(statInputs, grantedSkills);
+	const tools = deriveTools(
+		statInputs,
+		graph
+			.list('item', { system })
+			.filter((r) => r.data.category === TOOL_ITEM_CATEGORY && isActive(r)),
+	);
 	const ac = deriveAc(statInputs, equippedArmor, equippedShield);
 
 	// HP: the base fold came out of the resolve stage (recomputed at the final CON); hp_max flows
@@ -210,6 +218,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		proficiencyBonus: prof,
 		abilities,
 		skills,
+		tools,
 		ac,
 		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), facts),
 		speed,

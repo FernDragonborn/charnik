@@ -189,6 +189,8 @@ export const ITEM_CATEGORIES = [
  *  too; the shipped rows do not yet say which base weapon, so their bonus has no attack row to land
  *  on and applies nowhere, rather than to everything. */
 export const WEAPON_LIKE_ITEM_CATEGORIES: readonly string[] = ['weapon', 'staff', 'rod'];
+/** The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`). */
+export const TOOL_ITEM_CATEGORY = 'tool';
 export const RARITIES = [
 	'common',
 	'uncommon',

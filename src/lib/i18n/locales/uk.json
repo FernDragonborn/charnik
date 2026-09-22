@@ -414,6 +414,11 @@
 			"spellAttack": "Атака закляттям",
 			"save": "рят. {mod}",
 			"saveProficient": "Володіння цим рятувальним кидком"
+		},
+		"tools": {
+			"label": "володіння інструментами",
+			"none": "У завантаженому вмісті немає інструментів.",
+			"fromBackground": "надає ваше походження"
 		}
 	},
 	"coinName": {
@@ -866,7 +871,10 @@
 			"profNone": "Без вправності",
 			"profPartial": "Часткова вправність",
 			"profProficient": "Вправність",
-			"profExpertise": "Експертиза (×2)"
+			"profExpertise": "Експертиза (×2)",
+			"tools": "Інструменти",
+			"toolAbility": "Характеристика для перевірки: {name}",
+			"toolAbilityAsk": "яка?"
 		},
 		"slot": {
 			"action": "дій",

@@ -2,6 +2,8 @@
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
 	// and shows proficiency tier (none / partial / proficient / expertise) + provenance on hover.
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
+	import { TABLE_CHOSEN_ABILITY, toolCheck } from '$lib/character/derive-stats';
+	import type { Ability } from '$lib/rules/core';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed, titleCase, ABIL, skillRollTarget } from '$lib/combat/helpers';
@@ -9,6 +11,14 @@
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
+
+	// Which ability a 5e tool check swings with is the table's call, not ours (`derive-stats.ts` ▸
+	// TABLE_CHOSEN_ABILITY), so the row asks — and remembers the answer for as long as the sheet is
+	// open. It is deliberately NOT saved on the character: the same kit carves with STR and forges
+	// with DEX, and a stored ability would be this app deciding one of them is the real one.
+	let pickedAbility = $state<Record<string, Ability>>({});
+	const abilityFor = (tool: { id: string; ability: Ability | typeof TABLE_CHOSEN_ABILITY }) =>
+		tool.ability === TABLE_CHOSEN_ABILITY ? pickedAbility[tool.id] : tool.ability;
 	// friendly label per proficiency tier (the dot's own hover; the row hover keeps the full why())
 	// catalog KEYS, not words — the dot's hover reads in the player's language
 	const PROF_LABEL = {
@@ -57,6 +67,48 @@
 		{/if}
 	{/each}
 </div>
+
+{#if s.tools.length}
+	<div class="category-block tools">
+		<div class="ability-heading">{$_('combat.skills.tools')}</div>
+		{#each s.tools as tool (tool.id)}
+			{@const ab = abilityFor(tool)}
+			{@const check = ab ? toolCheck(s.abilities[ab].check, s.proficiencyBonus) : undefined}
+			<div class="skill-row tool-row">
+				<i class="prof-dot on"></i>
+				<span class="skill-name">{tool.name}</span>
+				{#if tool.ability === TABLE_CHOSEN_ABILITY}
+					<!-- labelled by the tool's own name, so a screen reader hears which kit it belongs to -->
+					<select
+						class="ability-pick"
+						aria-label={$_('combat.skills.toolAbility', { values: { name: tool.name } })}
+						value={ab ?? ''}
+						onchange={(e) => (pickedAbility[tool.id] = e.currentTarget.value as Ability)}
+					>
+						<option value="" disabled>{$_('combat.skills.toolAbilityAsk')}</option>
+						{#each ABIL as a (a)}
+							<option value={a}>{$_(`abilityShort.${a}`, { default: a.toUpperCase() })}</option>
+						{/each}
+					</select>
+				{/if}
+				{#if check}
+					<button
+						class="tool-roll"
+						use:provenance={why(check, $_)}
+						onclick={(e) =>
+							roll({ text: tool.name }, check.value, e, {
+								key: `check.${ab}`,
+								// RAW Reliable Talent floors "an ability check that lets you add your
+								// proficiency bonus" — a tool check is one, so it carries the same scope a
+								// proficient skill does
+								scopes: new Set(['proficient']),
+							})}><b class="skill-mod">{signed(check.value)}</b></button
+					>
+				{/if}
+			</div>
+		{/each}
+	</div>
+{/if}
 
 <style>
 	.sklgrid {
@@ -122,5 +174,35 @@
 	.skill-row .skill-mod {
 		font-family: var(--font-display);
 		font-weight: 700;
+	}
+	/* the tools list sits UNDER the two skill columns rather than inside them: it is one group and
+	   a column break through it would read as two */
+	.tools {
+		border-top: 1px solid var(--color-border);
+	}
+	.tool-row {
+		cursor: default;
+	}
+	.tool-row:hover {
+		background: transparent;
+	}
+	.ability-pick {
+		font-size: var(--font-size-xs);
+		background: var(--color-surface-2);
+		color: var(--color-text);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		padding: 0 var(--space-1);
+	}
+	.tool-roll {
+		background: transparent;
+		border: 0;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius);
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.tool-roll:hover {
+		background: var(--color-surface-2);
 	}
 </style>

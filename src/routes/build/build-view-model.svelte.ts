@@ -39,7 +39,7 @@ import { Inspector, targetForTodo } from './inspector.svelte';
 import { ClassRows } from './class-rows.svelte';
 import { SkillPicks } from './skill-picks.svelte';
 import { SpellPicks } from './spell-picks.svelte';
-import type { ContentType } from '$lib/content/schemas';
+import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
 import type { SystemId } from '$lib/stores/app.svelte';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
@@ -94,6 +94,11 @@ export class BuildVM {
 		this.draft.selectedLanguages = this.draft.selectedLanguages.includes(ref)
 			? this.draft.selectedLanguages.filter((x) => x !== ref)
 			: [...this.draft.selectedLanguages, ref];
+	};
+	toggleTool = (id: string) => {
+		this.draft.selectedTools = this.draft.selectedTools.includes(id)
+			? this.draft.selectedTools.filter((x) => x !== id)
+			: [...this.draft.selectedTools, id];
 	};
 	/** Carrying, equipping and resolving items — see `draft-inventory`. */
 	inventory = new DraftInventory(() => this);
@@ -216,6 +221,9 @@ export class BuildVM {
 	featList = $derived(this.list('feat'));
 	languageList = $derived(this.list('language'));
 	itemList = $derived(this.list('item'));
+	/** The tools a proficiency can be taken in — items, filtered to the one category that has a
+	 *  check behind it, so the pane lists trades and not the whole equipment table. */
+	toolList = $derived(this.itemList.filter((r) => r.data.category === TOOL_ITEM_CATEGORY));
 	/** Read by the spell picker, which needs the whole pool before it sections it per caster class. */
 	spellList = $derived(this.list('spell'));
 
@@ -325,6 +333,9 @@ export class BuildVM {
 
 	/** How many free "of your choice" languages the background grants (display only). */
 	backgroundLangCount = $derived(Number(this.backgroundRow?.data.languages ?? 0));
+	/** Tools the background grants outright — always proficient, never a pick, exactly like the
+	 *  skills beside them in the same row. */
+	backgroundTools = $derived(splitList(this.backgroundRow?.data.tools));
 
 	/** Skill proficiencies and expertise — the class list, the background's grants, and the two capped
 	 *  pickers over them. See skill-picks.svelte.ts. */
@@ -403,6 +414,7 @@ export class BuildVM {
 				featSpells: { ...this.draft.slotFeatSpells }
 			},
 			languages: [...this.draft.selectedLanguages],
+			tools: [...new Set([...this.backgroundTools, ...this.draft.selectedTools])],
 			customLanguages: [...this.draft.customLanguages],
 			customTools: [...this.draft.customTools],
 			inventory: this.draft.inventory.map((i) => ({ ...i })),

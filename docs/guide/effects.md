@@ -232,8 +232,10 @@ What you can be proficient *with* is not what a bonus can land on:
 - a skill (`skill.stealth`, or just `stealth`), or the group (`skills`)
 - armour: `armor.light` · `armor.medium` · `armor.heavy` · `armor.shield`
 - weapons: `weapon.simple` · `weapon.martial`, or a specific `weapon.<item_id>`
+- tools: `tool.<item_id>` — the id of a row whose category is `tool`
 
-Equipment proficiency is all-or-nothing — there is no expertise in wearing plate.
+Equipment proficiency is all-or-nothing — there is no expertise in wearing plate. A tool is the same:
+you either add your proficiency bonus to a check made with it or you do not.
 
 ---
 

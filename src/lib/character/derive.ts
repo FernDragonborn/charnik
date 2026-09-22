@@ -26,7 +26,7 @@ export type { ResourceOption };
 import { prepareDerive, type HitDiePool } from './derive-setup';
 import { assembleSheet } from './derive-assemble';
 import { applyPluginPrePass } from './derive-plugins';
-import { type SkillProficiency, type AbilityBlock } from './derive-stats';
+import { type SkillProficiency, type AbilityBlock, type ToolProficiency } from './derive-stats';
 import { ABILITIES } from './schema';
 import { ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
@@ -49,6 +49,10 @@ export interface CharacterSheet {
 	proficiencyBonus: number;
 	abilities: Record<Ability, AbilityBlock>;
 	skills: Record<SkillId, Computed & { prof: SkillProficiency }>;
+	/** Tools this character is proficient with — the only ones with a number to show, since a tool
+	 *  you lack is a plain ability check. The CHECK is composed at the roll (`toolCheck`), because in
+	 *  5e the ability is the table's to pick and so cannot be folded here. */
+	tools: ToolProficiency[];
 	ac: Computed;
 	initiative: Computed;
 	speed: Computed;

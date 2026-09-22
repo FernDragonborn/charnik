@@ -136,13 +136,18 @@ Unarmed Strike) — the same sentence each edition prints, said in scopes.
 what a bonus can land on: a bare ability or `save.<ability>` (and the `saves` group — "proficiency in
 all saving throws" is one statement in the rules, so it is one token), a skill (`skill.<id>`, which
 canonicalizes to the bare id, plus the `skills` group for a rung on every skill at once),
-`armor.<light|medium|heavy|shield>`, and `weapon.<simple|martial>` or
-`weapon.<item_id>` for a feature that names specific weapons (Dwarven Combat Training). Equipment
-grants are BINARY — there is no expertise in wearing plate — and they fold on top of what the classes
-declare, so a grant never turns a lenient (undeclared) character into a constrained one. The whole
-`weapon.` namespace is open vocabulary, like a damage type: `derive-targets.ts` holds no content graph
-to check an id against, and a mistyped category is indistinguishable from an id it has never heard of.
-Armour has no ids, so it stays closed and spell-checked.
+`armor.<light|medium|heavy|shield>`, `weapon.<simple|martial>` or
+`weapon.<item_id>` for a feature that names specific weapons (Dwarven Combat Training), and
+`tool.<item_id>` for one that names a trade. Equipment and tool
+grants are BINARY — there is no expertise in wearing plate — and equipment folds on top of what the
+classes declare, so a grant never turns a lenient (undeclared) character into a constrained one. The
+`weapon.` and `tool.` namespaces are open vocabulary, like a damage type: `derive-targets.ts` holds no
+content graph to check an id against, and a mistyped category is indistinguishable from an id it has
+never heard of. Armour has no ids, so it stays closed and spell-checked.
+A tool grant is not equipment and not a skill: it lands in `sheet.tools`, and the only number it moves
+is the one `toolCheck` builds — the ability check the player picks, plus the proficiency bonus. Which
+ability that is comes from the tool row's own `ability:<abl>` tag where the edition states one (5.5e)
+and from the player at roll time where it does not (5.1 says tool use is tied to no single ability).
 
 **The ladder does RAW's own de-duplication.** Jack of All Trades is `grant_proficiency:partial:skills`,
 one token for "half your proficiency bonus on any check that doesn't already include it" — because the

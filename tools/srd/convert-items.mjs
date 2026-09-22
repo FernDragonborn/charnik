@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+	abilities,
 	blocks,
 	description,
 	slug,
@@ -79,6 +80,7 @@ const rows = [];
 let nWeapon = 0,
 	nArmor = 0,
 	nGear = 0,
+	nTool = 0,
 	nMagic = 0;
 
 // --- weapons -----------------------------------------------------------------
@@ -153,6 +155,52 @@ let nWeapon = 0,
 		nArmor++;
 	}
 	assertCount('armor+shields', nArmor, 13);
+}
+
+// --- tools -------------------------------------------------------------------
+// A tool is a `**Name (cost)**` bold line inside `## Tools`, not a `####` block, so the two `####`
+// group headings (Artisan's Tools / Other Tools) carry every entry in their body. 5.5e states the
+// ABILITY a tool's check uses — the one thing 2014 leaves to the GM — so it ships as a tag and the
+// sheet never guesses one.
+{
+	const sec = sectionBetween(src('equipment.md'), /^## Tools/m, /^## Adventuring Gear/m);
+	const lines = sec.split(/\r?\n/);
+	let cur = null;
+	const flush = () => {
+		if (!cur) return;
+		rows.push(
+			row({
+				id: slug(cur.name),
+				name_en: cur.name,
+				text_en: cur.body.filter(Boolean).join('\n'),
+				category: 'tool',
+				tags: cur.ability ? `ability:${cur.ability}` : '',
+				cost: cost(cur.cost),
+				weight_lb: num(cur.weight),
+			}),
+		);
+		nTool++;
+		cur = null;
+	};
+	for (const line of lines) {
+		const head = /^\*\*(.+?)\s*\(([^)]*)\)\*\*\s*$/.exec(line);
+		if (head) {
+			flush();
+			cur = { name: head[1].trim(), cost: head[2], ability: '', weight: '', body: [] };
+			continue;
+		}
+		if (!cur) continue;
+		const meta = /^\*\*Ability:\*\*\s*(\w+)\s*\*\*Weight:\*\*\s*(.+?)\s*$/.exec(line);
+		if (meta) {
+			cur.ability = abilities(meta[1]);
+			cur.weight = meta[2];
+			continue;
+		}
+		// "**Utilize:** …", "**Craft:** …", "**Variants:** …" — the entry's own prose, kept whole
+		cur.body.push(strip(line.replace(/\*\*/g, '').replace(/_/g, '')).trim());
+	}
+	flush();
+	assertCount('tools', nTool, 25); // 17 artisan's + 8 other
 }
 
 // --- adventuring gear --------------------------------------------------------
@@ -240,5 +288,5 @@ assertCount('magic items', nMagic, 258);
 dedupeIds(rows);
 writeCsv(resolve(packDir('srd-2024'), 'items_srd.csv'), COLUMNS, rows);
 console.log(
-	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`,
+	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, tools ${nTool}, gear ${nGear}, magic ${nMagic})`,
 );

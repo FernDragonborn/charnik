@@ -414,6 +414,11 @@
 			"spellAttack": "Spell attack",
 			"save": "save {mod}",
 			"saveProficient": "Proficient saving throw"
+		},
+		"tools": {
+			"label": "tool proficiencies",
+			"none": "No tools in the loaded content.",
+			"fromBackground": "granted by your background"
 		}
 	},
 	"coinName": {
@@ -866,7 +871,10 @@
 			"profNone": "Not proficient",
 			"profPartial": "Partial proficiency",
 			"profProficient": "Proficient",
-			"profExpertise": "Expertise (×2)"
+			"profExpertise": "Expertise (×2)",
+			"tools": "Tools",
+			"toolAbility": "Ability for the {name} check",
+			"toolAbilityAsk": "ability?"
 		},
 		"slot": {
 			"action": "action",

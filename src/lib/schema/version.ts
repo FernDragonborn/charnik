@@ -33,7 +33,11 @@ export const CONTENT_SCHEMA_VERSION = 2;
 // left at v5 keeps a condition that names Prone and imposes none of it.
 // v7: Magic Initiate says what it teaches (`spell_choice*`), and Acolyte and Sage say which list the
 // SRD pins it to — an install left at v6 has the feat as prose, so its spells reach no sheet.
-export const CONTENT_SEED_VERSION = 7;
+// v8: both packs ship TOOL rows — 25 in 2024 (each with the ability its check uses, which that SRD
+// states) and 36 in 2014 (which states in so many words that it does not). An install left at v7 has
+// nothing to be proficient WITH, so the tool proficiency it can now take lists nothing — and the
+// Soldier's own tool was the slug `choose_one_kind_of_gaming_set`, an id no row will ever have.
+export const CONTENT_SEED_VERSION = 8;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

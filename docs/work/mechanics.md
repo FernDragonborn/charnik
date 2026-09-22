@@ -389,14 +389,18 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   the spell. The shape is a cast-time SOURCE choice ("a slot, or this pool"), which is the same
   control an at-will cast and a ritual already want, so it lands there rather than on the feat.
   Until then the feat's own text states it and the sheet prints that text.
-- [ ] **TOOLS · a tool proficiency, and that is the whole mechanic.** Tools already exist as things:
-  `tool` is an `ITEM_CATEGORIES` member, so they sit in the inventory today. What is missing is being
-  PROFICIENT with one — a build field, a grant reusing N4's third segment
-  (`grant_proficiency:tool.<id>`), and a check that adds the proficiency bonus. Nothing else: no
-  crafting, no downtime, no tool-specific rules.
-  **The one edition divergence:** 2014 leaves the ability for a tool check to the GM, 2024 pairs an
-  ability with each tool. So the ability comes from a column where that edition's SRD states one, and
-  from the player at roll time where it does not — never guessed.
+- [x] **TOOLS · a tool proficiency, and that is the whole mechanic.** `build.tools` holds bare `tool`
+  item ids, `grant_proficiency:tool.<id>` grants one from a class, feat or item, and `toolCheck`
+  builds the roll: the ability check the player is making, plus the proficiency bonus. Nothing else —
+  no crafting, no downtime. It rides the ability's OWN folded check rather than a parallel one, so
+  Guidance, exhaustion and every `ability_checks` effect reach a tool check for free, and the
+  `proficient` scope makes Reliable Talent floor it exactly as RAW floors it.
+  **What the packs did not have** turned out to be the tools themselves: neither edition shipped a
+  single `tool` row. Both do now — 25 in 2024 and 36 in 2014 — and the edition divergence lands as a
+  tag rather than a branch: 5.2.1 prints an Ability per tool, so the row carries `ability:<abl>`; 5.1
+  says tool use is tied to no single ability, so its rows carry none and the sheet ASKS, keeping the
+  answer for the session and never writing it to the character (the same kit carves with STR and
+  forges with DEX). A typed tool stays in `customTools`, printing as a proficiency with no check.
   Unblocks Skilled's tool half in D16.
 - [x] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The model is
   BUILT (`rules/recharge.ts`, `docs/internals/effects.md` ▸ How a pool comes back): triggers
