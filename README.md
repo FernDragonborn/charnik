@@ -11,6 +11,12 @@ standalone in the system webview.
 
 > See [`docs/plan.md`](docs/plan.md) for the authoritative spec and roadmap.
 
+**Writing your own content?** [**Effects — the author's guide**](https://claude.ai/code/artifact/b908baa5-f4c7-46bf-bd51-f3b2bdd4ad9e)
+is the `effects` column explained in plain language, with every effect kind and the formula
+language, as a page you can read in a browser. Its source is
+[`docs/guide/effects.md`](docs/guide/effects.md), and the normative spec lives in
+[`docs/internals/effects.md`](docs/internals/effects.md).
+
 ## Install
 
 Grab the latest Windows installer from the [Releases](https://github.com/FernDragonborn/charnik/releases)

@@ -1,5 +1,10 @@
 # Effects — the author's guide
 
+> This guide is also published as a readable web page —
+> <https://claude.ai/code/artifact/b908baa5-f4c7-46bf-bd51-f3b2bdd4ad9e> — which is the link the
+> README hands a content author. **The page is a copy: an edit here is not live until it is
+> redeployed to that same URL**, so a change to this file includes that deploy.
+
 Charnik reads your rules out of CSV files you own. Most columns are plain facts: a name, a weight, a
 damage die. One column is different — **`effects`** — and it is the one that makes a number on the
 sheet change by itself.

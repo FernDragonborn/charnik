@@ -681,6 +681,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
+- `interface FeatSpellGrant` — One rung of a feat's spell grant: how many spells of that level it teaches.
+- `function featSpellGrants` — Parse a feat's `spell_choice` column — `level:count` pairs (`"0:2,1:1"` = two cantrips and one * level-1 spell).
 - `interface SpellcastingInput` — What the full casting derive needs.
 - `function deriveSpellcasting`
 
@@ -1721,4 +1723,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 53 components · 1027 exports across 140 modules · 70 duplicate suspects._
+_47 tokens · 81 global classes · 53 components · 1029 exports across 140 modules · 70 duplicate suspects._
