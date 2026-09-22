@@ -82,7 +82,11 @@
 				</span>
 			{/each}
 			{#if !casting.pools.length}
-				<span class="tag ghost">{$_('build.spells.noSlots')}</span>
+				<!-- "yet" is a promise, and a character who casts only because a FEAT taught them will
+				     never be given slots by it — no caster level means nothing is on its way. -->
+				<span class="tag ghost"
+					>{$_(casting.casterLevel ? 'build.spells.noSlots' : 'build.spells.noSlotsEver')}</span
+				>
 			{/if}
 			{#if casting.ritualCasting}<span class="tag muted">{$_('build.spells.rituals')}</span>{/if}
 		</div>

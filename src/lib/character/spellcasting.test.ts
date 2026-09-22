@@ -3,6 +3,7 @@ import { ISSUE_KEY } from '../effects/token-parser';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { deriveSheet } from './derive';
+import { casterForSpell } from './spellcasting';
 import { characterSchema, newCharacter, type Character } from './schema';
 
 /*
@@ -225,5 +226,143 @@ describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls
 		const sheet = deriveSheet(wiz, graph);
 		expect(sheet.spellcasting.classes[0]?.preparedCap).toBe(9);
 		expect(sheet.deriveIssues.filter((i) => i.token.startsWith('class_casting:'))).toEqual([]);
+	});
+});
+
+/*
+ * §D — a feat that teaches spells (Magic Initiate) is a caster profile of its own. RAW it names the
+ * ability its spells are cast with, which is the whole of what a profile decides; modelled as one,
+ * the picker, the caps and the DC attribution all come for free. Repeatable, so two instances are
+ * two profiles with two lists.
+ */
+describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
+	let g: ContentGraph;
+	beforeAll(async () => {
+		const s = new MemoryStorage();
+		await s.write(
+			'a/classes_srd.csv',
+			[
+				CLASS,
+				'fighter,5.5e,SRD 5.2.1,fighter,d10,"str,con",none,',
+				cls('wizard', 'full', 'int'),
+				cls('cleric', 'full', 'wis'),
+			].join('\n'),
+		);
+		await s.write(
+			'a/spells_srd.csv',
+			[
+				'id,systems,source,name_en,level,school,casting_time,range,components,duration,concentration,ritual,classes',
+				'fire_bolt,5.5e,SRD 5.2.1,Fire Bolt,0,evocation,action,120 feet,V S,instant,false,false,wizard',
+				'shield,5.5e,SRD 5.2.1,Shield,1,abjuration,reaction,self,V S,1 round,false,false,wizard',
+				'bless,5.5e,SRD 5.2.1,Bless,1,enchantment,action,30 feet,V S M,1 minute,true,false,cleric',
+			].join('\n'),
+		);
+		await s.write(
+			'a/feats_srd.csv',
+			[
+				'id,systems,source,name_en,category,repeatable,spell_choice,spell_choice_lists,spell_choice_ability',
+				'magic_initiate,5.5e,SRD 5.2.1,Magic Initiate,origin,true,"0:2,1:1","cleric,wizard","int,wis,cha"',
+				'alert,5.5e,SRD 5.2.1,Alert,origin,false,,,',
+			].join('\n'),
+		);
+		await s.write('a/spell_slots_srd.csv', [SLOTS, slotRow('full', 5, 4, 3, 2)].join('\n'));
+		await s.write('a/class_casting_srd.csv', [CAST, castRow('wizard', 5, 4, 9)].join('\n'));
+		g = await loadContent(s, ['a']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+	});
+
+	const MI = 'feat:SRD 5.2.1:magic_initiate';
+	const withFeat = (
+		classes: Character['build']['classes'],
+		...picks: { key: string; list: string; ability: 'int' | 'wis' | 'cha' }[]
+	): Character =>
+		make((c) => {
+			c.build.classes = classes;
+			c.build.feats = [MI];
+			c.build.featSpells = picks.map((p) => ({ feat: MI, ...p }));
+		});
+
+	it('a NON-caster who took it casts: the feat is the whole profile', () => {
+		const sc = deriveSheet(
+			withFeat([{ class: 'class:SRD 5.2.1:fighter', level: 5 }], {
+				key: 'r1:4',
+				list: 'wizard',
+				ability: 'cha',
+			}),
+			g,
+		).spellcasting;
+		expect(sc.classes).toHaveLength(1);
+		const p = sc.classes[0]!;
+		expect(p.className).toBe('Magic Initiate');
+		expect(p.ability).toBe('cha');
+		expect(p.saveDC.value).toBe(14); // 8 + 3(prof L5) + 3(cha 16)
+		// the counts ARE the caps: two cantrips and one level-1 spell
+		expect(p.cantripCap).toBe(2);
+		expect(p.preparedCap).toBe(1);
+		expect(p.maxSpellLevel).toBe(1);
+		expect(p.accessSpellIds).toContain('spell:SRD 5.2.1:fire_bolt');
+		expect(p.accessSpellIds).not.toContain('spell:SRD 5.2.1:bless'); // the cleric list was not chosen
+		expect(sc.pools).toEqual([]); // a feat grants no slots
+	});
+
+	it('the feat never displaces the class as the primary caster', () => {
+		const sc = deriveSheet(
+			withFeat([{ class: 'class:SRD 5.2.1:wizard', level: 5 }], {
+				key: 'r1:4',
+				list: 'cleric',
+				ability: 'wis',
+			}),
+			g,
+		).spellcasting;
+		expect(sc.classes.map((c) => c.classId)).toEqual(['wizard', `${MI}@r1:4`]);
+		expect(sc.casterLevel).toBe(5); // the feat adds nothing to it
+	});
+
+	it('a spell off the feat list is cast AS the feat, not as the class', () => {
+		const sheet = deriveSheet(
+			withFeat([{ class: 'class:SRD 5.2.1:wizard', level: 5 }], {
+				key: 'r1:4',
+				list: 'cleric',
+				ability: 'wis',
+			}),
+			g,
+		);
+		expect(casterForSpell(sheet, 'spell:SRD 5.2.1:bless')?.ability).toBe('wis');
+		expect(casterForSpell(sheet, 'spell:SRD 5.2.1:shield')?.classId).toBe('wizard');
+	});
+
+	it('repeatable: two instances are two profiles with their own lists', () => {
+		const sc = deriveSheet(
+			withFeat(
+				[{ class: 'class:SRD 5.2.1:fighter', level: 8 }],
+				{ key: 'r1:4', list: 'wizard', ability: 'int' },
+				{ key: 'r1:8', list: 'cleric', ability: 'wis' },
+			),
+			g,
+		).spellcasting;
+		expect(sc.classes).toHaveLength(2);
+		expect(sc.classes.map((c) => c.ability)).toEqual(['int', 'wis']);
+		expect(sc.classes[0]!.accessSpellIds).not.toContain('spell:SRD 5.2.1:bless');
+		expect(sc.classes[1]!.accessSpellIds).toContain('spell:SRD 5.2.1:bless');
+	});
+
+	it('an answer for a feat the character no longer has is residue, not a profile', () => {
+		const stale = make((c) => {
+			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
+			c.build.feats = []; // the feat was taken out; its answer was left behind
+			c.build.featSpells = [{ feat: MI, key: 'r1:4', list: 'wizard', ability: 'int' }];
+		});
+		expect(deriveSheet(stale, g).spellcasting.classes).toEqual([]);
+	});
+
+	it('a feat that teaches nothing makes no profile', () => {
+		const none = make((c) => {
+			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
+			c.build.feats = ['feat:SRD 5.2.1:alert'];
+			c.build.featSpells = [
+				{ feat: 'feat:SRD 5.2.1:alert', key: 'r1:4', list: 'wizard', ability: 'int' },
+			];
+		});
+		expect(deriveSheet(none, g).spellcasting.classes).toEqual([]);
 	});
 });

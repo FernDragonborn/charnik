@@ -380,6 +380,10 @@ export class BuildVM {
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
 			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.feats.featSkillPicks])],
+			// §D: the list + casting ability each spell-teaching feat was answered with. Derived from the
+			// slots alone (not carried from the edit like featSkills): a slot that still holds the feat
+			// still holds its answer, and one that no longer does has no question to answer.
+			featSpells: this.feats.featSpellPicks.map((p) => ({ ...p })),
 			expertise: this.draft.expertise.filter((s) => this.skillPicks.isProficient(s)),
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
@@ -395,7 +399,8 @@ export class BuildVM {
 				feats: { ...this.draft.slotFeats },
 				asi: { ...this.draft.slotAsi },
 				featAbility: { ...this.draft.slotFeatAbility },
-				featSkills: { ...this.draft.slotFeatSkills }
+				featSkills: { ...this.draft.slotFeatSkills },
+				featSpells: { ...this.draft.slotFeatSpells }
 			},
 			languages: [...this.draft.selectedLanguages],
 			customLanguages: [...this.draft.customLanguages],

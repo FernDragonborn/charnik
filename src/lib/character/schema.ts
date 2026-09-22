@@ -74,6 +74,15 @@ const spellEntry = z.object({
 	alwaysPrepared: z.boolean().default(false),
 });
 
+/** What a spell-granting feat (Magic Initiate) was answered with: which class list its spells come
+ *  from, and which ability casts them. The spells themselves are ordinary `build.spells` entries —
+ *  the feat is a caster profile of its own, so the access map attributes them to it. */
+const featSpellChoice = z.object({
+	/** Bare class id of the chosen spell list (`wizard`) — the list is the feat's access map. */
+	list: z.string(),
+	ability: z.enum(ABILITIES),
+});
+
 /** Per-slot ASI/feat picks, keyed by slot key (`"<classIndex>:<level>"`, plus `"origin"` for the
  *  background feat's skill grant). Mirrors the builder's draft maps so a level-up can RESTORE the
  *  slots it already filled (shown filled, applied once) instead of re-offering + double-applying them
@@ -92,6 +101,8 @@ const slotPicksSchema = z.object({
 	featAbility: z.record(z.string(), z.enum(ABILITIES)).default({}),
 	/** slot key → §C feat skill-grant picks (Skilled). */
 	featSkills: z.record(z.string(), z.array(z.string())).default({}),
+	/** slot key → §D feat spell-grant answers (Magic Initiate's list + casting ability). */
+	featSpells: z.record(z.string(), featSpellChoice).default({}),
 });
 
 const buildSchema = z.object({
@@ -109,6 +120,11 @@ const buildSchema = z.object({
 	 *  (class/background picks) so the builder's class-skill cap counter isn't inflated on edit. Merged
 	 *  into skill proficiency at derive, exactly like a class-chosen skill. */
 	featSkills: z.array(z.string()).default([]),
+	/** §D: every spell-granting feat this character has TAKEN, with the two answers it asked for. One
+	 *  entry per instance — Magic Initiate is repeatable and each instance is its own list, its own
+	 *  ability and its own caster profile. Flat for the derive, exactly like `featSkills`; the
+	 *  per-slot copy under `slotPicks.featSpells` is what a level-up restores from. */
+	featSpells: z.array(featSpellChoice.extend({ feat: ref, key: z.string() })).default([]),
 	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
 	expertise: z.array(z.string()).default([]),
 	/** Allocated ability boosts (5.5e background / ASIs), applied at the feature layer on top
@@ -120,7 +136,13 @@ const buildSchema = z.object({
 	saves: z.array(z.enum(ABILITIES)).default([]),
 	feats: z.array(ref).default([]),
 	/** Per-slot ASI/feat picks so level-up restores filled slots (UBUG-13); see `slotPicksSchema`. */
-	slotPicks: slotPicksSchema.default({ feats: {}, asi: {}, featAbility: {}, featSkills: {} }),
+	slotPicks: slotPicksSchema.default({
+		feats: {},
+		asi: {},
+		featAbility: {},
+		featSkills: {},
+		featSpells: {},
+	}),
 	/** Known languages, as `language:source:id` refs. */
 	languages: z.array(ref).default([]),
 	/** Languages and tools the player simply TYPED — a table's own tongue, a trade the SRD never

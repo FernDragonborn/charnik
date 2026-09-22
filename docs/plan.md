@@ -310,11 +310,11 @@ position and are given per wave, because most of them were learned the hard way.
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
   not app-roadmap work at all.
-- **The choice a feature asks for** · D16's last piece, Magic Initiate's spell picks. It is the one
-  place a granted feature still asks a question the app cannot take an answer to, and the same
-  "player choice at a slot" block that already handles half-feats and Skilled is where it lands.
-  It needs a CONTENT shape for the question (which lists, how many, at which levels), so it sits
-  next to the content-shaped work rather than ahead of it.
+- **The choice a feature asks for — done.** D16 closed on Magic Initiate's spell picks: the content
+  shape it needed is three columns on the feat row, and the answer makes the feat a caster PROFILE,
+  so the picker, the caps and the DC attribution it wanted already existed. What that did NOT close is
+  the free cast the feat also grants — `FEAT-FREE-CAST`, which is a cast-time source choice, not a
+  choice at a slot.
 - **The content-shaped work**, once the app stops moving under it: TOOLS, CONDEFF's merge, N2's
   three shapes, then N2b's beast data (an attacks column, and the CR ≤ 1 beasts a 2014 druid can
   actually turn into) and N5's ammunition (the same converter, and the 2024 ammunition table). The

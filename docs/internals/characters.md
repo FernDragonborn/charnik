@@ -45,7 +45,10 @@ existing character, whose own save is already the record. Creating the character
 
 **`build` is who the character is** — chosen at creation and level-up, and untouched by anything that
 happens at the table: name, species and its sub-option, background, classes with their levels, the
-six ability scores, skills, expertise, feats.
+six ability scores, skills, expertise, feats — and the ANSWERS a feat asked back, which are build data
+of their own rather than refs: the ability a half-feat raised, the skills a Skilled-shaped one granted,
+and the spell list plus casting ability a Magic-Initiate-shaped one draws on (`build.featSpells`, one
+entry per instance, because it is repeatable and each instance is its own caster profile).
 
 **`play` is what is true right now** — current and temporary HP, hit dice spent, spell slots spent,
 resource uses spent, active effects and conditions, what they are concentrating on, and the coins in

@@ -32,22 +32,26 @@ async function graphOf(): Promise<ContentGraph> {
 			`expertise,5.5e,${S},Expertise,rogue,1,"1:2,6:2"`
 		].join('\n'),
 		'feats_srd.csv': [
-			'id,systems,source,name_en,category,ability_choice,skill_choice',
-			`alert,5.5e,${S},Alert,general,,`,
-			`tough,5.5e,${S},Tough,general,,`,
+			'id,systems,source,name_en,category,ability_choice,skill_choice,spell_choice,spell_choice_lists,spell_choice_ability',
+			`alert,5.5e,${S},Alert,general,,,,,`,
+			`tough,5.5e,${S},Tough,general,,,,,`,
 			// two half-feats with DISJOINT +1 options, and a third overlapping one: what a slot keeps
 			// across a swap is decided by whether the new feat still offers the ability
-			`wide,5.5e,${S},Wide Reader,general,"int,cha",`,
-			`grappler,5.5e,${S},Grappler,general,"str,dex",`,
-			`lore,5.5e,${S},Lore Keeper,general,"cha,wis",`,
-			`skilled,5.5e,${S},Skilled,origin,,3`,
+			`wide,5.5e,${S},Wide Reader,general,"int,cha",,,,`,
+			`grappler,5.5e,${S},Grappler,general,"str,dex",,,,`,
+			`lore,5.5e,${S},Lore Keeper,general,"cha,wis",,,,`,
+			`skilled,5.5e,${S},Skilled,origin,,3,,,`,
+			// §D: a spell-teaching feat, once as a free choice of list and once pinned by a background
+			`initiate,5.5e,${S},Initiate,origin,,,"0:2,1:1","wizard,rogue","int,wis"`,
 			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
-			`gifted,5.5e,${S},Gifted,origin,"str,dex",`
+			`gifted,5.5e,${S},Gifted,origin,"str,dex",,,,`
 		].join('\n'),
 		'backgrounds_srd.csv': [
-			'id,systems,source,name_en,skills,origin_feat',
-			`scholar,5.5e,${S},Scholar,"arcana,history",skilled`,
-			`prodigy,5.5e,${S},Prodigy,,gifted`
+			'id,systems,source,name_en,skills,origin_feat,origin_feat_spell_list',
+			`scholar,5.5e,${S},Scholar,"arcana,history",skilled,`,
+			`prodigy,5.5e,${S},Prodigy,,gifted,`,
+			// the SRD's "Magic Initiate (Cleric)" shape: the background names which list
+			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard`
 		].join('\n'),
 		'species_srd.csv': [
 			'id,systems,source,name_en,effects,size,speed,creature_type',
@@ -557,6 +561,37 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.name).toBe('Old'); // and the sheet derives at all, which is the point
 	});
 
+	it('§D: a granted spell feat pins its list, keeps its ability, and survives the round-trip', () => {
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 1 }];
+		build.draft.backgroundId = `background:${S}:hedge`;
+		// the background pins the list, so the pane offers ONE and the question left is the ability
+		expect(build.feats.featSpellListsFor(ORIGIN_SLOT_KEY).map((r) => r.id)).toEqual(['wizard']);
+		expect(build.feats.featSpellAbilitiesFor(ORIGIN_SLOT_KEY)).toEqual(['int', 'wis']);
+		expect(build.feats.originChoicesOwed).toBe(1); // unanswered, and the todo bar says so
+
+		// answering the ability settles the pinned list with it — no tap on a lone chip
+		build.feats.setFeatSpellAbility(ORIGIN_SLOT_KEY, 'wis');
+		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({ list: 'wizard', ability: 'wis' });
+		expect(build.feats.originChoicesOwed).toBe(0);
+
+		const saved = characterSchema.parse(build.assembled);
+		expect(saved.build.featSpells).toEqual([
+			{ feat: `feat:${S}:initiate`, key: ORIGIN_SLOT_KEY, list: 'wizard', ability: 'wis' },
+		]);
+		// the feat is a caster profile, and a Fighter who has one casts
+		const profile = build.sheet?.spellcasting.classes[0];
+		expect(profile?.className).toBe('Initiate');
+		expect(profile?.ability).toBe('wis');
+		expect(profile?.cantripCap).toBe(2);
+		expect(profile?.preparedCap).toBe(1);
+
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({ list: 'wizard', ability: 'wis' });
+		expect(build.sheet?.spellcasting.classes[0]?.ability).toBe('wis');
+	});
+
 	it('a character saved when slot keys named a row index still restores its slots (S4)', () => {
 		const saved = savedCharacter();
 		saved.build.classes = [{ class: `class:${S}:wizard`, level: 4 }]; // no rowId: an older save
@@ -565,6 +600,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			asi: { '0:4': { shape: '2', picks: ['con'] } },
 			featAbility: {},
 			featSkills: {},
+			featSpells: {},
 		};
 		build.reset();
 		build.graph = graph;

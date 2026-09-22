@@ -135,9 +135,17 @@ resolves to 2014 spells, never across. And a spell article's "available to" list
 The character level sits ABOVE that index: subclass, feat, item and species grants are computed in
 derive, not baked into the shared content index.
 
+**A caster profile is not always a class.** A feat that teaches spells (Magic Initiate) names the
+ability its spells are cast with, which is the whole of what a profile decides, so it becomes one —
+appended after the class profiles, carrying the counts its `spell_choice` column states as its
+cantrip/known caps, the chosen class list as its access map, and no slots and no share of the caster
+level. Everything downstream then needs no case for it: `casterForSpell` attributes its spells to it,
+the builder's picker gets a section, and a non-caster class who took the feat casts.
+
 **The rules that are easy to get wrong**, each of which the model has to keep expressible:
-always-prepared spells (domain, oath, Magic Initiate) sit OUTSIDE the prepared count but still count
-as class spells; a ritual is castable without preparation or a slot, and its SOURCE varies (a wizard
+always-prepared spells (domain, oath) sit OUTSIDE the prepared count but still count
+as class spells, and a spell a FEAT teaches is outside it because the feat is its own caster profile
+(below), not because of a flag; a ritual is castable without preparation or a slot, and its SOURCE varies (a wizard
 rituals from the spellbook unprepared, a prepared caster only what is prepared); cantrips are
 independent of slots, which is why a pure warlock has cantrips and no shared slots; a slot casts any
 spell of level ≤ its own, and **Pact Magic forces the upcast** — every pact spell is cast at the

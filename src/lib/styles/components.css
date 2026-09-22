@@ -80,7 +80,10 @@
 #dnd-action-dragged-el.dragging-panel {
 	max-height: 200px;
 	overflow: hidden;
-	mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+	/* a MASK's colour is an alpha ramp, not a colour anyone sees — opaque to transparent. It takes no
+	   theme token for the same reason `transparent` does not: a theme that could move it would only
+	   be able to break the fade. */
+	mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
 }
 .drag-handle:active {
 	cursor: grabbing;

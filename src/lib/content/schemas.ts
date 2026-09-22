@@ -326,6 +326,9 @@ const backgroundSchema = baseRow.extend({
 	ability_choices: optStr,
 	/** 5.5e: granted origin feat id. */
 	origin_feat: optStr,
+	/** The spell list that granted feat is PINNED to, as a bare class id — the SRD's "Magic Initiate
+	 *  (Cleric)". Blank when the feat names no list, and then the player chooses one. */
+	origin_feat_spell_list: optStr,
 });
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */
@@ -341,6 +344,16 @@ const featSchema = baseRow.extend({
 	 *  = 3). The builder shows a "pick N skills" picker, folded into `build.featSkills`. NB SRD Skilled
 	 *  reads "skills OR tools"; tools aren't modelled yet (skills-only — flagged deviation). */
 	skill_choice: optInt,
+	/** §D choice-grant: the spells this feat teaches, as `level:count` pairs (Magic Initiate =
+	 *  `0:2,1:1` — two cantrips and one level-1 spell). The feat becomes a caster profile of its own,
+	 *  so the counts ARE its cantrip/known caps and the ordinary spell picker asks the question. */
+	spell_choice: optStr,
+	/** Which class spell LISTS §D may draw from, as a comma list of class ids (`cleric,druid,wizard`).
+	 *  The player picks one; a repeatable feat must pick a different one each time. */
+	spell_choice_lists: optStr,
+	/** Which abilities may cast §D's spells, as a comma list (`int,wis,cha`) or `any` — the same
+	 *  grammar `ability_choice` uses. The pick drives this profile's save DC and attack. */
+	spell_choice_ability: optStr,
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive

@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Ability } from '$lib/rules/core';
-import { slotMapSchemas, type AsiShape, type DraftState } from './draft';
+import { slotMapSchemas, type AsiShape, type DraftState, type FeatSpellChoice } from './draft';
 
 /** Everything in the draft that belongs to one class row's class choice. */
 export interface ClassScopedPicks {
@@ -24,6 +24,7 @@ export interface ClassScopedPicks {
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	slotFeatAbility: Record<string, Ability>;
 	slotFeatSkills: Record<string, string[]>;
+	slotFeatSpells: Record<string, FeatSpellChoice>;
 	/**
 	 * Shared pools, carried only while the draft has a single class row. With two classes these are
 	 * one pool fed by both, so restoring a snapshot of them would silently discard the other class's
@@ -44,6 +45,7 @@ const classScopedPicksSchema: z.ZodType<ClassScopedPicks> = z.object({
 	slotAsi: slotMapSchemas.asi.catch(() => ({})),
 	slotFeatAbility: slotMapSchemas.ability.catch(() => ({})),
 	slotFeatSkills: slotMapSchemas.skills.catch(() => ({})),
+	slotFeatSpells: slotMapSchemas.spells.catch(() => ({})),
 	shared: z
 		.object({
 			skills: z.array(z.string()).catch(() => []),
@@ -90,6 +92,7 @@ export function stashClassPicks(draft: DraftState, row: number): ClassScopedPick
 		slotAsi: byLevel(draft.slotAsi),
 		slotFeatAbility: byLevel(draft.slotFeatAbility),
 		slotFeatSkills: byLevel(draft.slotFeatSkills),
+		slotFeatSpells: byLevel(draft.slotFeatSpells),
 		shared:
 			draft.classes.length === 1
 				? {
@@ -110,6 +113,7 @@ export function dropRowSlots(draft: DraftState, rowId: string): void {
 	drop(draft.slotAsi);
 	drop(draft.slotFeatAbility);
 	drop(draft.slotFeatSkills);
+	drop(draft.slotFeatSpells);
 }
 
 /** Put a stashed set back on a row, re-keying the slot maps to it. */
@@ -123,6 +127,7 @@ export function restoreClassPicks(draft: DraftState, row: number, picks: ClassSc
 	put(draft.slotAsi, picks.slotAsi);
 	put(draft.slotFeatAbility, picks.slotFeatAbility);
 	put(draft.slotFeatSkills, picks.slotFeatSkills);
+	put(draft.slotFeatSpells, picks.slotFeatSpells);
 	if (picks.shared && draft.classes.length === 1) {
 		draft.skills = [...picks.shared.skills];
 		draft.expertise = [...picks.shared.expertise];

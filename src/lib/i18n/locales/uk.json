@@ -153,6 +153,10 @@
 			"halfFeatAsk": "{feat} — куди піде його +1?",
 			"skillGrant": "Навички — оберіть {chosen}/{cap}",
 			"toolsNote": "(інструменти ще не змодельовані)",
+			"spellListAsk": "Закляття — з якого списку?",
+			"spellListFixed": "Закляття — зі списку класу «{list}»",
+			"spellAbilityAsk": "Якою здібністю ви їх читаєте?",
+			"spellsInPane": "Самі закляття оберіть на вкладці «Закляття».",
 			"searchFeats": "Пошук фітів…"
 		},
 		"free": "Вільно",
@@ -355,7 +359,8 @@
 			"groupCantrips": "Замовляння",
 			"groupLevel": "{level} рівень",
 			"concentration": "Концентрація",
-			"ritual": "Ритуал"
+			"ritual": "Ритуал",
+			"noSlotsEver": "без комірок — це читання їх не дає"
 		},
 		"story": {
 			"title": "Поза боєм",
@@ -1041,6 +1046,7 @@
 		"neverAsk": "Більше не питати (режим редагування контенту)"
 	},
 	"contentField": {
+		"ability_choice": "Вибір здібності",
 		"ac": "КЗ",
 		"base_item_id": "Базовий предмет",
 		"caster_from_level": "Закляття з рівня",
@@ -1065,6 +1071,7 @@
 		"level": "Рівень",
 		"material": "Матеріальний компонент",
 		"name": "Назва",
+		"origin_feat_spell_list": "Список заклять фіту",
 		"prepare_style": "Стиль підготовки",
 		"primary_ability": "Основна характеристика",
 		"properties": "Властивості",
@@ -1077,12 +1084,16 @@
 		"school": "Школа",
 		"senses": "Чуття",
 		"size": "Розмір",
+		"skill_choice": "Дає навичок",
 		"skills": "Навички",
 		"skills_choose": "Вибір навичок",
 		"skills_from": "Список навичок",
 		"source": "Джерело",
 		"speed": "Швидкість",
 		"spell_ability": "Характеристика заклять",
+		"spell_choice": "Дає заклять",
+		"spell_choice_ability": "Здібність читання",
+		"spell_choice_lists": "Списки заклять",
 		"subclass_level": "Підклас на рівні",
 		"systems": "Видання",
 		"tags": "Теги",

@@ -31,7 +31,9 @@ export const CONTENT_SCHEMA_VERSION = 2;
 // v6: `unconscious` carries `disadvantage:attack` itself in both packs. It nested `prone`, which is
 // where that token lived, and the engine expands `apply_condition` exactly one level — so an install
 // left at v5 keeps a condition that names Prone and imposes none of it.
-export const CONTENT_SEED_VERSION = 6;
+// v7: Magic Initiate says what it teaches (`spell_choice*`), and Acolyte and Sage say which list the
+// SRD pins it to — an install left at v6 has the feat as prose, so its spells reach no sheet.
+export const CONTENT_SEED_VERSION = 7;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

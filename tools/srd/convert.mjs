@@ -72,6 +72,11 @@ function convertFeats() {
 	const authored = existingFeatCol('effects');
 	const authoredAbility = existingFeatCol('ability_choice');
 	const authoredSkill = existingFeatCol('skill_choice');
+	// §D spell choice-grant: which lists, how many spells of which level, and which ability casts
+	// them. Curated from the feat's own text the same way, so preserved the same way.
+	const authoredSpell = existingFeatCol('spell_choice');
+	const authoredSpellLists = existingFeatCol('spell_choice_lists');
+	const authoredSpellAbility = existingFeatCol('spell_choice_ability');
 	const all = blocks(src('feats.md')).filter((b) => FEAT_SECTIONS[b.h3]);
 	const rows = all.map((b) => {
 		const text = b.body.join('\n');
@@ -90,6 +95,9 @@ function convertFeats() {
 			repeatable: String(/_Repeatable\._/.test(text)),
 			ability_choice: authoredAbility.get(slug(b.name)) ?? '', // half-feat +1 targets, preserved
 			skill_choice: authoredSkill.get(slug(b.name)) ?? '', // §C skill choice-grant count, preserved
+			spell_choice: authoredSpell.get(slug(b.name)) ?? '', // §D, all three preserved
+			spell_choice_lists: authoredSpellLists.get(slug(b.name)) ?? '',
+			spell_choice_ability: authoredSpellAbility.get(slug(b.name)) ?? '',
 		};
 	});
 	writeCsv(
@@ -103,6 +111,9 @@ function convertFeats() {
 			'repeatable',
 			'ability_choice',
 			'skill_choice',
+			'spell_choice',
+			'spell_choice_lists',
+			'spell_choice_ability',
 			'effects',
 			'name_en',
 			'name_uk',
@@ -353,6 +364,17 @@ function convertSpeciesOptions() {
 }
 
 // --- backgrounds -------------------------------------------------------------
+/**
+ * The spell list a background's origin feat is pinned to: `"Magic Initiate (Cleric) (see \"Feats\")"`
+ * → `cleric`. Every Feat line ends in the same `(see "Feats")` cross-reference, so that one is
+ * dropped first and what remains is the variant the background actually grants — blank for a feat
+ * that names no list.
+ */
+function originFeatSpellList(featField) {
+	const named = featField.replace(/\(see[^)]*\)/gi, '');
+	return slug(/\(([^)]+)\)/.exec(named)?.[1] ?? '');
+}
+
 function convertBackgrounds() {
 	const all = blocks(src('character-origins.md')).filter((b) => b.h3 === 'Background Descriptions');
 	const rows = all.map((b) => {
@@ -371,6 +393,10 @@ function convertBackgrounds() {
 			languages: '',
 			ability_choices: abilities(field(text, 'Ability Scores')),
 			origin_feat: slug(field(text, 'Feat')),
+			// "Magic Initiate (Cleric)" — the parenthetical is the SPELL LIST the granted feat is pinned
+			// to, and `slug` drops it to resolve the feat id. Kept here so the builder states the list
+			// instead of asking a question RAW does not ask.
+			origin_feat_spell_list: originFeatSpellList(field(text, 'Feat')),
 		};
 	});
 	writeCsv(
@@ -384,6 +410,7 @@ function convertBackgrounds() {
 			'languages',
 			'ability_choices',
 			'origin_feat',
+			'origin_feat_spell_list',
 			'effects',
 			'name_en',
 			'name_uk',

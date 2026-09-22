@@ -367,11 +367,28 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
   off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out
   of the index — never silently given a list. EK/AT are PHB, not SRD, so coverage lives in fixtures.
-- [ ] **D16 · generalized player-choice model.** Half-feat ability-choice and Skilled's skill grants
-  are DONE, at a level's slot AND under the background's granted origin feat — both ask through the
-  same `FeatSubChoices` block, keyed by a slot key or by `ORIGIN_SLOT_KEY`. Still open: Magic Initiate
-  spell picks (the `magic_initiate` feat's spell-learning half). One "player choice at a slot"
-  abstraction covers all. Skilled's TOOL half moved out to `TOOLS`, which is a model, not a choice.
+- [x] **D16 · generalized player-choice model.** Half-feat ability-choice, Skilled's skill grants and
+  Magic Initiate's spells all ask through the same `FeatSubChoices` block, keyed by a slot key or by
+  `ORIGIN_SLOT_KEY`. Skilled's TOOL half moved out to `TOOLS`, which is a model, not a choice.
+  **§D, the spell grant, is a caster PROFILE rather than a fourth kind of grant** — RAW the feat names
+  the ability its spells are cast with, which is the whole of what a profile decides, so modelled as
+  one the ordinary machinery does the rest: the builder's picker gets a section with the feat's own
+  caps, `casterForSpell` attributes the picks to it, and the sheet reads their DC off the chosen
+  ability instead of off whichever class happened to be first. A Fighter who took it casts.
+  Three columns say it (`spell_choice` as `level:count` pairs, `spell_choice_lists`,
+  `spell_choice_ability`), so a homebrew feat of the same shape needs no code. Repeatable works: each
+  instance is its own slot, its own list and its own profile, and Strict refuses a list already taken.
+  **Deliberately not built: the free cast.** "Cast it once without a spell slot, regain on a Long
+  Rest" is a pool plus a way to SPEND it on a cast, and the cast path knows only slots — a
+  `grant_resource` shipped today would be a pip nothing can spend, which is the half-done shape the
+  0.7.0 gate exists to stop. It is `FEAT-FREE-CAST` below.
+- [ ] **FEAT-FREE-CAST · a spell you may cast once without a slot.** Magic Initiate's level-1 spell,
+  and the same sentence on several magic items. The POOL is already expressible
+  (`grant_resource:<id>:1:long`); what does not exist is spending it — the cast path offers slots and
+  nothing else, so a pip shipped today could be clicked down by hand and would never be what paid for
+  the spell. The shape is a cast-time SOURCE choice ("a slot, or this pool"), which is the same
+  control an at-will cast and a ritual already want, so it lands there rather than on the feat.
+  Until then the feat's own text states it and the sheet prints that text.
 - [ ] **TOOLS · a tool proficiency, and that is the whole mechanic.** Tools already exist as things:
   `tool` is an `ITEM_CATEGORIES` member, so they sit in the inventory today. What is missing is being
   PROFICIENT with one — a build field, a grant reusing N4's third segment

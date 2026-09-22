@@ -82,12 +82,20 @@ export const newClassRow = (): DraftClass => ({
  */
 export const ORIGIN_SLOT_KEY = 'origin';
 
-/** The four per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
+/** What a spell-granting feat was answered with, in the slot it sits in (§D, Magic Initiate). */
+export interface FeatSpellChoice {
+	/** Bare class id of the chosen spell list. */
+	list: string;
+	ability: Ability;
+}
+
+/** The per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
 interface SlotMaps {
 	slotFeats: Record<string, string>;
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	slotFeatAbility: Record<string, Ability>;
 	slotFeatSkills: Record<string, string[]>;
+	slotFeatSpells: Record<string, FeatSpellChoice>;
 }
 
 /**
@@ -105,6 +113,7 @@ function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
 		slots.slotAsi,
 		slots.slotFeatAbility,
 		slots.slotFeatSkills,
+		slots.slotFeatSpells,
 	];
 	rows.forEach((row, index) => {
 		if (row.rowId) return;
@@ -155,6 +164,10 @@ export interface DraftState {
 	 *  keyed by slot (the origin feat's own picks live under {@link ORIGIN_SLOT_KEY}). Folds into
 	 *  `build.featSkills`. */
 	slotFeatSkills: Record<string, string[]>;
+	/** §D spell choice-grant per slot: which list a spell-teaching feat (Magic Initiate) draws from
+	 *  and which ability casts it. The spells it then teaches are picked in the Spells pane like any
+	 *  other, because the feat becomes a caster profile of its own. Folds into `build.featSpells`. */
+	slotFeatSpells: Record<string, FeatSpellChoice>;
 	selectedSpells: string[];
 	/** Carried items, in the SAVE's own entry shape rather than a hand-listed copy of it: the copy had
 	 *  already dropped `attuned` once and `base` (which weapon a template magic item IS) once, and each
@@ -199,6 +212,7 @@ export function blankDraft(): DraftState {
 		slotAsi: {},
 		slotFeatAbility: {},
 		slotFeatSkills: {},
+		slotFeatSpells: {},
 		selectedSpells: [],
 		inventory: [],
 		notes: ''
@@ -227,6 +241,7 @@ export const slotMapSchemas = {
 	),
 	ability: z.record(z.string(), z.enum(ABILITIES)),
 	skills: z.record(z.string(), z.array(z.string())),
+	spells: z.record(z.string(), z.object({ list: z.string(), ability: z.enum(ABILITIES) })),
 } as const;
 
 const draftStateSchema: z.ZodType<DraftState> = z.object({
@@ -263,6 +278,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	slotAsi: slotMapSchemas.asi.catch(() => ({})),
 	slotFeatAbility: slotMapSchemas.ability.catch(() => ({})),
 	slotFeatSkills: slotMapSchemas.skills.catch(() => ({})),
+	slotFeatSpells: slotMapSchemas.spells.catch(() => ({})),
 	selectedSpells: z.array(z.string()).catch(() => []),
 	inventory: z
 		.array(
@@ -324,6 +340,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		slotAsi: { ...char.build.slotPicks.asi },
 		slotFeatAbility: { ...char.build.slotPicks.featAbility },
 		slotFeatSkills: { ...char.build.slotPicks.featSkills },
+		slotFeatSpells: { ...char.build.slotPicks.featSpells },
 		notes: char.build.notes,
 		photo: char.build.photo ?? null,
 		inventory: char.build.inventory.map((i) => ({

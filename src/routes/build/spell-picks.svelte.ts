@@ -17,12 +17,17 @@ export type SpellPicksHost = Pick<BuildVM, 'draft' | 'edit' | 'graph' | 'sheet' 
 export class SpellPicks {
 	constructor(private host: () => SpellPicksHost) {}
 
-	isCaster = $derived.by(() =>
-		this.host().draft.classes.some((c) => {
-			const row = rowOfType(this.host().row(c.classId), 'class');
+	/** Does this character cast at all? Asked of the PROFILES rather than of the class rows, because a
+	 *  Fighter who took Magic Initiate casts and no class row says so (§D). The class test survives as
+	 *  the answer before a sheet exists — the profiles are derived from one. */
+	isCaster = $derived.by(() => {
+		const host = this.host();
+		if ((host.sheet?.spellcasting.classes.length ?? 0) > 0) return true;
+		return host.draft.classes.some((c) => {
+			const row = rowOfType(host.row(c.classId), 'class');
 			return !!row && classCasts(row);
-		}),
-	);
+		});
+	});
 
 	/** One section per caster class — a single-class character collapses to one. */
 	picker = $derived.by(() => {
