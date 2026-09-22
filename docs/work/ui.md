@@ -121,8 +121,11 @@
         from a neighbour, so the `::before` trick cannot grow it without stealing the neighbour's
         taps — the fix is to space or restack the row, which is a **phone-in-a-hand** call and not a
         driver's. `tools/visual/narrow.mjs` prints the list on every run.
-  - [ ] **No narrow baseline.** `shot.mjs` renders at 1280 only, so a regression here shows up as
-        overflow or not at all, never as a pixel diff.
+  - [x] **A narrow baseline exists.** `shot.mjs` captures every state at 393 as well as 1280 (the
+        file carries an `@393` tag), so a narrow regression is a pixel diff rather than something only
+        `narrow.mjs`'s overflow rule could catch. Eight interaction states do not reach their `ready`
+        selector at 393 and are announced as skipped, which is the harness's own contract: a state it
+        cannot reach is never captured as the wrong screen.
 - [ ] **PLAYTEST-UI · what the first outside playtest found on the screens.** One session, one
   player, 23 notes. The ones that are copy or a missing affordance, smallest first; the rules half is
   `mechanics.md` ▸ PLAYTEST-SHIELD, the tray half is `roller.md` ▸ PLAYTEST-TRAY, and the override

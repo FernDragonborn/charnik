@@ -58,6 +58,13 @@ them against a saved baseline. Use it for **every** CSS or layout change.
   servers take it and Vite lands on 5174 or 5175. Read `pnpm dev`'s output, or every route "did not
   load (skipped)".
 
+**Every state is captured twice**, at 1280 and at the 393px narrow threshold; the narrow file carries
+an `@393` tag, so the two baselines sit side by side and `--filter` selects across both. Eight of the
+interaction states do not reach their `ready` selector at 393 — the narrow layout puts those controls
+somewhere else — and the run says so per state rather than capturing the wrong screen. The landing
+states all capture, which is what makes a narrow regression a pixel diff instead of the nothing it
+used to be.
+
 Each state gets a fresh page load, and animations, transitions, and the caret are frozen, so captures
 are deterministic. Coverage includes interaction states (open menus, the command palette, a selected
 compendium entry) through per-state `prep` functions with a self-validating `ready` selector — add
@@ -74,8 +81,8 @@ For a state the harness does not cover, write a one-off Playwright script **insi
 script in a temp directory throws module-not-found. Drive to the state, screenshot, look at the PNG,
 delete the script. Screenshots go in `design-preview/`, which is gitignored for images.
 
-**`tools/visual/narrow.mjs`** is the other half, because `shot.mjs` renders at 1280 and nothing in it
-can see a phone breaking. It drives every route at 393px and 320px and fails on two things: a
+**`tools/visual/narrow.mjs`** is the other half: `shot.mjs` says whether the narrow layout CHANGED,
+and this says whether it is broken — no baseline, and a rule instead of a comparison. It drives every route at 393px and 320px and fails on two things: a
 `document.scrollWidth` wider than the viewport (which scrolls the whole page sideways and drags every
 `position: fixed` overlay off-side), and any box inside `main` wider than `main` that no ancestor
 scrolls on purpose. It names the deepest offender rather than every ancestor that inherited the floor.
@@ -212,7 +219,7 @@ generous ceiling is not insurance, it is the cost.
 
 `pnpm test` ~21 s (node ~18 s, browser ~11 s — run one project to pay one) · `pnpm check` ~15 s ·
 `eslint .` ~17 s · `pnpm build` ~12 s · a single `vitest run <file>` ~4 s ·
-`pnpm lint:typed:changed` ~15 s · `shot.mjs` ~30 s for the full set · **`pnpm lint:typed` ~11m30**.
+`pnpm lint:typed:changed` ~15 s · `shot.mjs` ~60 s for the full set (both widths) · **`pnpm lint:typed` ~11m30**.
 For anything genuinely long or unknown, run it in the background instead of buying a big timeout.
 
 Only the last one is worth working around. The whole ordinary gate — test, check, build — is under a

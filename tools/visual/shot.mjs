@@ -30,6 +30,18 @@ const UPDATE = process.argv.includes('--update');
 const FILTER = (process.argv.find((a) => a.startsWith('--filter=')) ?? '').slice(
 	'--filter='.length,
 );
+/**
+ * The widths every state is captured at. The narrow one is the same 393px `narrow.mjs` hit-tests at
+ * (the one threshold, `internals/ui.md` ▸ A narrow window) — without it a narrow regression shows up
+ * as overflow or not at all, never as a pixel diff, which is how a phone layout rots between the
+ * sessions somebody remembers to look at it. A state's file carries the tag, so the two baselines
+ * sit side by side and a `--filter` still selects across both.
+ */
+const VIEWPORTS = [
+	{ tag: '', width: 1280, height: 1400 },
+	{ tag: '@393', width: 393, height: 850 },
+];
+
 /** Long enough for a debounced autosave to land — the combat sheet's is 800ms. */
 const RESTORE_FLUSH_MS = 1000;
 const DIR = 'tools/visual';
@@ -244,10 +256,21 @@ function compare(name, buf) {
 async function run() {
 	const browser = await chromium.launch();
 	const page = await browser.newPage({
-		viewport: { width: 1280, height: 1400 },
+		viewport: { width: VIEWPORTS[0].width, height: VIEWPORTS[0].height },
 		reducedMotion: 'reduce',
 	});
 	const drifted = []; // { name, px } for every state that changed — a summary beats a lone `worst`
+	let captured = 0;
+	for (const vp of VIEWPORTS) {
+		await page.setViewportSize({ width: vp.width, height: vp.height });
+		captured += await capturePass(page, vp, drifted);
+	}
+	await browser.close();
+	report(captured, drifted);
+}
+
+/** One full pass over every route/state at one viewport. Returns how many states it captured. */
+async function capturePass(page, vp, drifted) {
 	let captured = 0;
 	// One fresh page load PER state, so an interaction (an open menu, a toggled combat mode) can never
 	// leak into the next state's capture. A few extra reloads buy full isolation — worth it for a
@@ -255,11 +278,12 @@ async function run() {
 	for (const route of ROUTES) {
 		for (const st of route.states) {
 			if (FILTER && !st.name.includes(FILTER)) continue;
+			const name = `${st.name}${vp.tag}`;
 			try {
 				await page.goto(`${BASE}${route.path}`, { waitUntil: 'networkidle' });
 				await page.waitForSelector(route.wait, { timeout: 15000 });
 			} catch {
-				console.log(`! ${st.name}: route ${route.path} did not load (skipped)`);
+				console.log(`! ${name}: route ${route.path} did not load (skipped)`);
 				continue;
 			}
 			await freeze(page);
@@ -269,18 +293,18 @@ async function run() {
 					if (st.ready) await page.waitForSelector(st.ready, { timeout: 5000 });
 				} catch {
 					// prep/ready failed → the state wasn't reached; skip rather than capture the wrong screen
-					console.log(`! ${st.name}: prep did not reach the state (skipped)`);
+					console.log(`! ${name}: prep did not reach the state (skipped)`);
 					continue;
 				}
 			}
 			await page.waitForTimeout(st.settle ?? 120);
 			const buf = await page.screenshot({ fullPage: true });
-			writeFileSync(`${UPDATE ? BASELINE : CURRENT}/${st.name}.png`, buf);
+			writeFileSync(`${UPDATE ? BASELINE : CURRENT}/${name}.png`, buf);
 			captured++;
-			if (UPDATE) console.log(`· ${st.name}: baseline saved`);
+			if (UPDATE) console.log(`· ${name}: baseline saved`);
 			else {
-				const px = compare(st.name, buf);
-				if (px > 0) drifted.push({ name: st.name, px });
+				const px = compare(name, buf);
+				if (px > 0) drifted.push({ name, px });
 			}
 			// `restore` reverts a state that mutated PERSISTENT data (e.g. combat-turnbar toggles
 			// play.inCombat, which autosaves) so it can't bleed into the next state or the next run.
@@ -295,7 +319,10 @@ async function run() {
 			}
 		}
 	}
-	await browser.close();
+	return captured;
+}
+
+function report(captured, drifted) {
 	if (UPDATE) {
 		console.log(`\nbaseline updated (${captured} states).`);
 		return;
