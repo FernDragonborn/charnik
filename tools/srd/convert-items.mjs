@@ -80,6 +80,7 @@ const rows = [];
 let nWeapon = 0,
 	nArmor = 0,
 	nGear = 0,
+	nAmmo = 0,
 	nTool = 0,
 	nMagic = 0;
 
@@ -241,6 +242,38 @@ assertCount(
 	81,
 );
 
+// --- ammunition --------------------------------------------------------------
+// The five types live ONLY in the Ammunition table inside the `ammunition` gear entry's prose — a
+// <table>, which is not somewhere `src/` may read a value from — so the weapons that say
+// `ammo:arrow` had nothing to spend. Each row carries the `ammo:<kind>` tag its weapons name, so the
+// two halves match on a tag rather than on a name.
+{
+	const sec = sectionBetween(src('equipment.md'), /^\*\*Ammunition\*\*/m, /^#### /m);
+	for (const tr of firstTable(sec).match(/<tr[\s\S]*?<\/tr>/gi) || []) {
+		const td = trCells(tr, 'td');
+		if (td.length < 5) continue;
+		const [type, amount, storage, weight, cst] = td;
+		// The kind a weapon's `ammo:` tag names is the FIRST word: "Bullets, Firearm" and "Bullets,
+		// Sling" are both `bullet`, because the weapons table says "Bullet" for a sling and for a
+		// musket alike. Two rows share the tag, and which one you load is the table's call — the
+		// source draws no line a converter could.
+		const kind = slug(type.split(',')[0] ?? type).replace(/s$/, '');
+		rows.push(
+			row({
+				id: slug(type),
+				name_en: type,
+				text_en: `${amount} per purchase; stored in a ${storage}.`,
+				category: 'ammunition',
+				tags: `ammo:${kind}, quantity:${num(amount)}`,
+				cost: cost(cst),
+				weight_lb: num(weight),
+			}),
+		);
+		nAmmo++;
+	}
+	assertCount('ammunition', nAmmo, 5);
+}
+
 // --- magic items -------------------------------------------------------------
 // Magic-item `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — curated from the SRD
 // text into the bounded vocabulary, not present as such in the prose. Preserve them by id, or a raw
@@ -288,5 +321,5 @@ assertCount('magic items', nMagic, 258);
 dedupeIds(rows);
 writeCsv(resolve(packDir('srd-2024'), 'items_srd.csv'), COLUMNS, rows);
 console.log(
-	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, tools ${nTool}, gear ${nGear}, magic ${nMagic})`,
+	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, tools ${nTool}, gear ${nGear}, ammo ${nAmmo}, magic ${nMagic})`,
 );

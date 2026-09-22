@@ -42,7 +42,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v9: CONDEFF — conditions and effects are one content type, so every state row carries `kind` and
 // `valence` in place of the inverted `negative`. An install left at v8 keeps four files whose
 // columns this build no longer reads, which shows as every buff rendering as if it were neutral.
-export const CONTENT_SEED_VERSION = 9;
+// v10: the ammunition a weapon spends exists as rows — 2024's five (each carrying the `ammo:<kind>`
+// its weapons already named), 2014's four promoted from gear to `ammunition`. An install left at v9
+// has weapons that name a kind nothing in its inventory can be.
+export const CONTENT_SEED_VERSION = 10;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

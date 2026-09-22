@@ -35,6 +35,51 @@ async function loadEdition(pack: string) {
  * "Tool use is not tied to a single ability" and prints none. Asserted literally, because a
  * converter re-run that stopped reading the Ability column would leave the sheet guessing.
  */
+/*
+ * Shipped AMMUNITION (N5 §4). The two editions are asymmetric because their SOURCES are: 5.2.1
+ * prints the ammunition type on each weapon AND a table of the types, so the two halves can be
+ * matched on a tag; 5.1 prints "Ammunition (range 80/320)" and never says which kind, so its rows
+ * carry no `ammo:` tag and nothing here pretends otherwise.
+ */
+describe('shipped ammunition · what a weapon can spend', () => {
+	const ammoRows = (g: Awaited<ReturnType<typeof loadEdition>>) =>
+		g.list('item').filter((r) => r.data.category === 'ammunition');
+
+	it('2024: every `ammo:<kind>` a weapon names has a row that carries it', async () => {
+		const g = await loadEdition('srd-2024');
+		const rows = ammoRows(g);
+		expect(rows).toHaveLength(5);
+		const carried = new Set(rows.map((r) => parseItemTags(r.data.tags).get('ammo')));
+		const named = new Set(
+			g
+				.list('item')
+				.map((r) => parseItemTags(r.data.tags).get('ammo'))
+				.filter((k): k is string => k !== undefined && k !== ''),
+		);
+		expect(named.size).toBeGreaterThan(0);
+		for (const kind of named) expect(carried, `no ammunition row for "${kind}"`).toContain(kind);
+		// the count a purchase gives, off the source's own table
+		const arrows = rows.find((r) => r.id === 'arrows');
+		expect(arrows && parseItemTags(arrows.data.tags).get('quantity')).toBe('20');
+	});
+
+	it('2014: the four kinds are ammunition rather than gear, and claim no weapon', async () => {
+		const g = await loadEdition('srd-2014');
+		const rows = ammoRows(g);
+		expect(rows.map((r) => r.id).sort()).toEqual([
+			'arrows',
+			'blowgun_needles',
+			'crossbow_bolts',
+			'sling_bullets',
+		]);
+		for (const row of rows)
+			expect(parseItemTags(row.data.tags).get('ammo'), row.id).toBeUndefined();
+		// …and no 2014 weapon claims one either, because SRD 5.1 never states the type
+		for (const row of g.list('item'))
+			expect(parseItemTags(row.data.tags).get('ammo'), row.id).toBeUndefined();
+	});
+});
+
 describe('shipped tools · the rows a proficiency can name', () => {
 	const tools = (g: Awaited<ReturnType<typeof loadEdition>>) =>
 		g.list('item').filter((r) => r.data.category === TOOL_ITEM_CATEGORY);

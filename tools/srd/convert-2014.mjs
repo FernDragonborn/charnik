@@ -1279,27 +1279,54 @@ function convertItems() {
 	}
 	assertCount('tools', nT, 36);
 
-	// adventuring gear: a real <tr>/<td> table (Item, Cost, Weight); <em> rows are
-	// category sub-labels (Ammunition, Arcane focus…) and are skipped.
-	let nG = 0;
+	// adventuring gear: a real <tr>/<td> table (Item, Cost, Weight). An <em> row is a category
+	// sub-label (Ammunition, Arcane focus…) — not an item, but it SAYS what the rows under it are,
+	// which is how the arrows and bolts get the `ammunition` category instead of being plain gear.
+	// The count is in the name the source wrote ("Arrows (20)"), so it becomes a tag rather than
+	// staying a number only a human can see.
+	// What 5.1 does NOT say is which ammunition a given weapon fires: its weapons table prints
+	// "Ammunition (range 80/320)" and stops, and the property's own text names no type either. So no
+	// 2014 weapon carries an `ammo:` tag and no 2014 row claims one — unlike 5.2.1, which prints the
+	// type per weapon.
+	// A group has a START marker and no end one, and the table is alphabetised at BOTH levels — so a
+	// group runs while its rows keep ascending and ends at the first that does not ("Antitoxin" after
+	// "Sling bullets" is the parent list resuming, not a fifth kind of ammunition). The row count is
+	// asserted below, so a source that reorders fails here instead of shipping Antitoxin as ammo.
+	let nG = 0,
+		nAmmo = 0,
+		gearGroup = '',
+		lastInGroup = '';
 	const gStart = html.indexOf("id='AdventuringGear'");
 	const gTable = (/<table[\s\S]*?<\/table>/i.exec(html.slice(gStart)) || [''])[0];
 	for (const tr of gTable.match(/<tr[\s\S]*?<\/tr>/gi) || []) {
 		const td = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => m[1]);
-		if (td.length < 3 || /<em>/i.test(td[0])) continue;
+		if (!td.length) continue;
+		if (/<em>/i.test(td[0])) {
+			gearGroup = strip(td[0]).toLowerCase();
+			lastInGroup = '';
+			continue;
+		}
+		if (td.length < 3) continue;
 		const name = strip(td[0]);
 		if (!name) continue;
+		if (gearGroup && lastInGroup && name.localeCompare(lastInGroup) < 0) gearGroup = '';
+		if (gearGroup) lastInGroup = name;
+		const isAmmo = gearGroup === 'ammunition';
+		const per = (/\((\d+)\)/.exec(name) || [, ''])[1];
 		rows.push(
 			irow({
 				id: slug(name),
 				name_en: name,
-				category: 'gear',
+				category: isAmmo ? 'ammunition' : 'gear',
+				tags: isAmmo && per ? `quantity:${per}` : '',
 				cost: strip(td[1]),
 				weight_lb: wlb(strip(td[2])),
 			}),
 		);
-		nG++;
+		if (isAmmo) nAmmo++;
+		else nG++;
 	}
+	assertCount('ammunition', nAmmo, 4);
 
 	// magic items: h4 entries with an <em>Type, rarity (requires attunement)</em> meta.
 	// Their `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — preserve by id, or a
