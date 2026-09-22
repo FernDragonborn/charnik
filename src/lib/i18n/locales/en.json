@@ -2009,5 +2009,16 @@
 		"downloading": "Downloading update… {progress}%",
 		"installing": "Installing…",
 		"error": "Update failed: {error}. Click to retry."
+	},
+	"ownWords": {
+		"write": "In your own words",
+		"edit": "Edit your words",
+		"save": "Save",
+		"restore": "Restore the original",
+		"scope": "Who reads this",
+		"scopeCharacter": "This character",
+		"scopeAll": "Everywhere",
+		"inUseCharacter": "your words · this character",
+		"inUseAll": "your words · everywhere"
 	}
 }

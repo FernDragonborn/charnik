@@ -17,13 +17,14 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
+- `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `say` ×6 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
-- `open` ×5 — src/lib/actions/provenance.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
+- `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
@@ -35,7 +36,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `probe` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `REPORT` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
-- `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
@@ -211,7 +211,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (53)
+## Shared components (54)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -249,6 +249,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
+| **OwnWords** | `rowId`, `original` | "Say it the way your table says it." Any article's description can be replaced with the |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
@@ -269,7 +270,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **UpcastBuilder** | `value` | The `upcast` cell, built rather than typed. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (15 modules)
+## Stores & reactive state (16 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -287,6 +288,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function saveCharacterGuarded` — * Persist a character and SAY SO when it does not happen.
 - `function restoreBackup` — * Put one of a character's snapshots back as its live save, and make what is on screen agree.
 - `function removeCharacter` — Delete a character and refresh the roster.
+
+### `src/lib/content/overrides.svelte.ts`
+
+- `const OVERRIDE_SCOPE` — Which store a row's own words live in.
+- `type OverrideScope`
+- `type OverrideMap` — `type:source:id` → locale → the prose written for it.
+- `function overridesFromJson` — Read an untrusted parsed JSON into a map, dropping everything that is not prose under a key.
+- `const serializeOverrides`
+- `function withOverride` — Set (or, with empty text, clear) one row's prose in a map, without mutating the original.
+- `const overrides`
+- `function bindOpenCharacter` — * Track the character whose own words apply, taking a SNAPSHOT of their map rather than the * character's own `$state…
+- `const describedProse` — A row's prose as the READER should see it: their own words when they wrote some, the shipped * text otherwise.
+- `const describedPlainProse` — The same words with their markdown STRIPPED — for the sheets that print prose as running text.
 
 ### `src/lib/content/packs.svelte.ts`
 
@@ -438,7 +452,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (125 modules)
+## Library functions & types (126 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -830,8 +844,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/detail.ts`
 
 - `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
-- `const localizedProse` — A content row's PROSE in `locale`, falling back to EN then a legacy bare column — the same rule * the detail pane use…
-- `const plainProse` — A row's prose with its markdown syntax STRIPPED rather than rendered — for the sheets that print * a feature's or tra…
 - `type MetaCell` — One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when * the word is the ap…
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
@@ -974,6 +986,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const localizedName` — The name to SHOW out of a locale→name map: the active locale, else English, else whatever there * is.
 - `function namesByLocale` — Every locale a row is NAMED in → its name there, empty columns skipped so `localizedName`'s * fallback chain only eve…
 - `function localesOf` — The locales the DATA actually carries (from its `name_*` columns); always includes `en`.
+
+### `src/lib/content/prose.ts`
+
+- `const cellText` — A cell's text: a list column joins, anything else goes through the shared `asText` (so an object * from a homebrew ce…
+- `const localizedCell` — A localized prose CELL: target locale → en → a legacy bare column (so pre-localization data like * a plain `material`…
+- `const localizedProse` — The same read, given a ROW — what every surface that renders a row's text calls.
+- `const plainProse` — A row's prose with its markdown syntax STRIPPED rather than rendered — for the sheets that print * a feature's or tra…
+- `const stripProse` — The strip itself, over prose that did not come from a row — a player's own words go through the * same rule, or their…
 
 ### `src/lib/content/provider.ts`
 
@@ -1119,6 +1139,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface TextDoc`
 - `interface SearchResult`
 - `const plainText` — Strip HTML tags + markdown markers so matches hit prose, not markup.
+- `type ProseOverride` — A row's prose as the reader sees it — the caller supplies the override lookup, because a player * who rewrote a descr…
 - `const makeNameIndex`
 - `const makeTextIndex`
 - `interface SearchOpts`
@@ -1723,4 +1744,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 53 components · 1029 exports across 140 modules · 70 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1043 exports across 142 modules · 70 duplicate suspects._

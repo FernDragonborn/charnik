@@ -13,7 +13,8 @@ import {
 	type EffectInstance,
 } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
-import { localizedName, localizedProse } from '$lib/content/detail';
+import { localizedName } from '$lib/content/detail';
+import { describedProse } from '$lib/content/overrides.svelte';
 import { app } from '$lib/stores/app.svelte';
 import { endConcentrationCarriedBy, remainingRounds, type MenuKind } from '$lib/combat/helpers';
 import { conditionIdOf } from '$lib/combat/effects-view';
@@ -78,7 +79,7 @@ export class EffectsEditor {
 		const row = graph.list('condition', { system }).find((r) => r.id === id);
 		// the READER's language, not `text_en`: a condition that ships a `text_uk` was being opened in
 		// English beside a panel that had already switched
-		return (row && localizedProse(row, 'text', app.activeLocale)) || null;
+		return (row && describedProse(row, app.activeLocale)) || null;
 	};
 
 	/**
@@ -98,7 +99,7 @@ export class EffectsEditor {
 		if (rules) return rules;
 		const graph = this.host().graph;
 		const row = e.source && graph ? graph.get(e.source) : undefined;
-		const granted = row ? localizedProse(row, 'text', app.activeLocale) : '';
+		const granted = row ? describedProse(row, app.activeLocale) : '';
 		return granted || e.text?.trim() || null;
 	};
 

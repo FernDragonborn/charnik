@@ -56,8 +56,10 @@ their purse. Money is play-state and not an inventory row: a stack of arrows ans
 carry", a purse answers "what can I afford", and the only thing the two share is weight — which a
 character counts only if their table does (`ui.coinWeight`, off by default).
 
-**`ui` is neither** — which panels are shown, in what order, and the per-character build mode. It
-survives a reset of play, because resetting the game should not destroy a layout someone arranged.
+**`ui` is neither** — which panels are shown, in what order, the per-character build mode, and the
+descriptions this character reads in the player's own words (`textOverrides`, one of the two scopes in
+[content.md](content.md) ▸ The words a player puts over ours). It survives a reset of play, because
+resetting the game should not destroy a layout someone arranged, nor prose they wrote.
 
 The split is what makes rests safe. **A long rest only ever edits `play`**, so it has no way to reach
 the build; resetting play returns a character to "full HP, nothing spent" without needing to know

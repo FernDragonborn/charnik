@@ -287,6 +287,11 @@ const uiSchema = z
 		 *  identity `spellsHidden` uses, so the star and the eye agree about what a spell is (D3). A save
 		 *  written with bare ids simply pins nothing until the star is tapped again. */
 		spellsPinned: z.array(z.string()).default([]),
+		/** Descriptions this character reads in the PLAYER's own words, keyed `type:source:id` → locale
+		 *  → prose. A cache over the content, never an edit of it: the CSV is untouched and clearing an
+		 *  entry brings the shipped text back. Per character by default so two characters may read the
+		 *  same item differently; the promoted ones live in `overrides.json` instead. */
+		textOverrides: z.record(z.string(), z.record(z.string(), z.string())).default({}),
 		/** Which skills show in the passive-senses row (Pin skills). Absent → the default trio
 		 *  (Perception / Investigation / Insight). Stored per character, not a global. */
 		passiveSkills: z.array(z.string()).optional(),
@@ -306,6 +311,7 @@ const uiSchema = z
 		strict: true,
 		spellsHidden: [],
 		spellsPinned: [],
+		textOverrides: {},
 		shortRestMode: 'dice',
 		coinsHidden: [],
 		coinWeight: false,

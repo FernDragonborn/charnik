@@ -10,6 +10,7 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
+	import { overrides } from '$lib/content/overrides.svelte';
 	import { makeNameIndex, makeTextIndex, searchContent } from '$lib/content/search';
 	import { isRowActive } from '$lib/content/sources.svelte';
 
@@ -47,7 +48,16 @@
 	// name index rebuilds on content change; text index on content OR locale change (edition is
 	// a post-filter, never a rebuild). Both derived from the reactive store.
 	const nameIndex = $derived(content.graph ? makeNameIndex(content.graph) : null);
-	const textIndex = $derived(content.graph ? makeTextIndex(content.graph, app.activeLocale) : null);
+	// …and on the player's own words: a rewritten description that the palette cannot find is a
+	// rewrite that was thrown away. `overrides.guid` is the rebuild trigger.
+	const textIndex = $derived.by(() => {
+		void overrides.guid;
+		return content.graph
+			? makeTextIndex(content.graph, app.activeLocale, (id, locale) =>
+					overrides.textFor(id, locale),
+				)
+			: null;
+	});
 
 	const pages = $derived<PageItem[]>(
 		COMMANDS.filter((c) => $_(c.labelKey).toLowerCase().includes(query.trim().toLowerCase())).map(

@@ -73,14 +73,22 @@ function buildNameDocs(graph: ContentGraph): NameDoc[] {
 		});
 }
 
-function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
+/** A row's prose as the reader sees it — the caller supplies the override lookup, because a player
+ *  who rewrote a description and then cannot find their own words has been given nothing. Absent is
+ *  the pure projection, which is what the tests index. */
+export type ProseOverride = (effectiveId: string, locale: string) => string | undefined;
+
+function buildTextDocs(graph: ContentGraph, locale: string, override?: ProseOverride): TextDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
 		.map((r) => ({
 			...base(r),
 			names: namesByLocale(r, locales),
-			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || '')),
+			text: plainText(
+				override?.(r.effectiveId, locale) ??
+					String(r.data[`text_${locale}`] || r.data.text_en || ''),
+			),
 		}));
 }
 
@@ -94,8 +102,8 @@ const OPTS = {
 export const makeNameIndex = (graph: ContentGraph) =>
 	new Fuse(buildNameDocs(graph), { ...OPTS, threshold: 0.3, keys: ['nameAll'] });
 
-export const makeTextIndex = (graph: ContentGraph, locale: string) =>
-	new Fuse(buildTextDocs(graph, locale), { ...OPTS, threshold: 0.34, keys: ['text'] });
+export const makeTextIndex = (graph: ContentGraph, locale: string, override?: ProseOverride) =>
+	new Fuse(buildTextDocs(graph, locale, override), { ...OPTS, threshold: 0.34, keys: ['text'] });
 
 function snippetFor(text: string, matches: readonly FuseResultMatch[] | undefined): string {
 	const m = matches?.find((x) => x.key === 'text');

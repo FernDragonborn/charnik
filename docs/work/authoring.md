@@ -136,19 +136,21 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
 
 ---
 
-- [ ] **OWN-WORDS · a player rewrites any description in their own words.** Playtest: flavour text is
-  the table's, not the book's, and a player wants to say it their way — anywhere a description is
-  shown, it can be tapped and replaced, with a small control to put the original back. It is a CACHE
-  over the content, never an edit of it: the CSV is untouched, which is what separates this from the
-  homebrew editor that already exists beside it.
-  **Settled with the maintainer:** a row is per-CHARACTER by default and carries a toggle that
-  promotes it to the whole install, so two characters can read the same item differently. Two stores,
-  each where its scope belongs — the per-character rows in `character.json` (so a character still
-  travels with everything it needs), the promoted ones in an `overrides.json` beside the settings; the
-  toggle moves a row between them.
-  **The expensive half is search.** A player who rewrote a description and then cannot find their own
-  words has been given nothing, so the override has to reach the index the palette and the compendium
-  filter read — which is the part to design before the storage.
-  Keyed by `type:source:id`, never by name, so a pack update does not orphan the override
-  (`../internals/content.md`).
-  **In the current batch**, alongside the rest of the playtest items.
+- [x] **OWN-WORDS · a player rewrites any description in their own words.** Anywhere an article is
+  shown — the compendium, the builder's pickers, the spellbook — its description can be replaced with
+  the player's own prose and put back. It is a CACHE over the content, never an edit of it: the CSV is
+  untouched, which is what separates this from the homebrew editor beside it.
+  **Two scopes, and a row is never in both.** Per character by default (`ui.textOverrides` in
+  `character.json`, so a character still travels with everything it needs), promoted to the whole
+  install in `overrides.json` in the data dir. Promoting MOVES the row, so there is never a second
+  answer to "what does this say". Keyed by `type:source:id` and by LOCALE, exactly like the content's
+  own `text_<code>` columns: prose written in Ukrainian is not shown to a reader who switched to
+  English, because it is not a translation of it.
+  **Search was the expensive half and it is done**: the palette's text index is built through the same
+  override lookup and rebuilt when one changes, so a player who rewrote a description finds it by the
+  words they wrote. Driven in chromium end to end — rewrite, find by the new words, restore.
+  **The seam is one accessor.** `describedProse` / `describedPlainProse` (`content/overrides.svelte.ts`)
+  is what every display surface reads through; `localizedProse` stays the pure content read beneath it.
+  **Known edge, deliberate:** with no character open — a direct load of `/compendium` — there is
+  nothing for "just this character" to mean, so the scope is install-wide and the chip says so. The app
+  binds whichever character is open; it does not load one to have an opinion about a default.

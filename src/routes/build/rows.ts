@@ -10,9 +10,9 @@ import {
 	contentLabel,
 	entryMeta,
 	localizedName,
-	plainProse,
 	type DetailModel,
 } from '$lib/content/detail';
+import { describedPlainProse } from '$lib/content/overrides.svelte';
 import type { Translate } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { costSaid } from '$lib/rules/currency';
@@ -51,7 +51,7 @@ export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): 
  *  adds is the builder's two defaults: the undefined-row guard and the active locale. The full
  *  article, markdown intact, is one click away in the inspector. */
 export function rowText(row: LoadedRow | undefined, locale = app.activeLocale): string {
-	return row ? plainProse(row, locale) : '';
+	return row ? describedPlainProse(row, locale) : '';
 }
 
 /**

@@ -9,6 +9,7 @@ import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import { costSaid } from '$lib/rules/currency';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
+import { cellText, localizedCell } from './prose';
 import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
 import { ITEM_TAG, parseItemTags } from './item-tags';
@@ -83,42 +84,19 @@ function tagCells(raw: unknown): MetaCell[] {
 		? [[fieldLabel('properties'), properties.join(', ')], ...labelled]
 		: labelled;
 }
-/** A meta cell's text: a list column joins, anything else goes through the shared `asText` (so an
- *  object from a homebrew cell renders empty rather than "[object Object]"). */
-const cellText = (v: unknown): string =>
-	Array.isArray(v) ? v.map((x: unknown) => asText(x)).join(', ') : asText(v);
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
 // skip noisy negative/placeholder values ("false", "none", "0") from the meta grid
 const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(String(v));
 
-// Prose columns are localized `<base>_<loc>`. Read a locale with fallback: target → en → a legacy
-// bare column (so pre-localization data like a plain `material` still renders). PROSE_LOC matches the
-// suffixed variants so the meta grid can skip them (they're rendered as prose, not as k/v cells).
-const localized = (d: Record<string, unknown>, base: string, locale: string): string =>
-	cellText(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base]);
+// Prose columns are localized `<base>_<loc>` — the read itself lives in `./prose`. PROSE_LOC matches
+// the suffixed variants so the meta grid can skip them (they're rendered as prose, not as k/v cells).
+const localized = localizedCell;
 
 /** A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one
  *  localized-name reader). NB translate view deliberately does NOT use this (it wants an empty
  *  string, not an EN fallback, to mark "not yet translated"). */
 export const localizedName = (row: LoadedRow, locale: string): string =>
 	String(row.data[`name_${locale}`] || row.data.name_en || row.id);
-
-/** A content row's PROSE in `locale`, falling back to EN then a legacy bare column — the same rule
- *  the detail pane uses, exported for the surfaces that render a row's text without building a whole
- *  `DetailModel` (the builder sheet lists feature and trait text inline). */
-export const localizedProse = (row: LoadedRow, base: string, locale: string): string =>
-	localized(row.data, base, locale);
-
-/** A row's prose with its markdown syntax STRIPPED rather than rendered — for the sheets that print
- *  a feature's or trait's text as plain running text. `_Origin Feat_` reading as literal underscores
- *  is worse than losing the emphasis, and neither sheet is an article renderer. One owner, because
- *  both sheets print the same rows and a strip written twice drifts. */
-export const plainProse = (row: LoadedRow, locale: string): string =>
-	localizedProse(row, 'text', locale)
-		.replace(/[*_`]+/g, '')
-		.replace(/^#+\s*/gm, '')
-		.replace(/\s*\n+\s*/g, ' ')
-		.trim();
 
 const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
@@ -288,6 +266,9 @@ export function editionLabel(systems: unknown): string {
 }
 
 export interface DetailModel {
+	/** The row this was built from (`type:source:id`) — what a per-row preference is keyed by, and
+	 *  what tells two editions of the same article apart. */
+	rowId: string;
 	eyebrow: Said[]; // "Level 3" + "Evocation" (spell), or the type name — joined by the view
 	title: string;
 	abilities: AbilityScore[]; // monster STR..CHA block (empty otherwise)
@@ -353,6 +334,7 @@ export function buildDetail(
 	// fields every type's DetailModel shares (title/prose/attribution); the branch adds its own
 	// eyebrow/meta/higherLevel + the dedicated monster/spell block.
 	const common = {
+		rowId: row.effectiveId,
 		title: localized(d, 'name', locale),
 		abilities: [] as AbilityScore[],
 		bodyHtml: localized(d, 'text', locale),

@@ -254,6 +254,22 @@ Aasimar. Users add that themselves as homebrew. Keep the CC-BY attribution with 
 every `source` carries its own `license` and `attribution` columns so SRD and community packs coexist
 and the About screen can credit each correctly.
 
+## The words a player puts over ours
+
+A description can be rewritten in the player's own words, and it never touches the CSV. The rewrite is
+an OVERRIDE keyed by `type:source:id` and by locale, read at display time through one accessor
+(`describedProse` / `describedPlainProse`, `content/overrides.svelte.ts`); `localizedProse` stays the
+pure content read underneath it, and deleting the override brings the shipped text straight back. A
+pack update therefore cannot orphan a rewrite, and a rewrite cannot survive as a fork nobody knows is
+there — which is exactly what separates this from the homebrew editor, where the row itself is copied.
+
+**Two scopes, never both at once.** The open character's own words live in `ui.textOverrides` inside
+`character.json`, so the character travels with them; promoted ones live in `overrides.json` in the
+data dir and apply wherever no character is open. Promoting moves the row between the two.
+
+**Whatever reads prose reads it through that accessor** — the article, the sheets, and the search
+index the command palette is built from. A rewrite the palette cannot find is a rewrite thrown away.
+
 ## Prose is not a data source
 
 **Nothing in `src/` may read a value out of an article's prose.** Every number, die, damage type, or

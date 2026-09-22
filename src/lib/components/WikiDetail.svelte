@@ -13,6 +13,9 @@
 	import MonsterHead from './MonsterHead.svelte';
 	import GenericHead from './GenericHead.svelte';
 	import ArticleProse from './ArticleProse.svelte';
+	import OwnWords from './OwnWords.svelte';
+	import { app } from '$lib/stores/app.svelte';
+	import { overrides } from '$lib/content/overrides.svelte';
 
 	let {
 		detail,
@@ -38,6 +41,13 @@
 		return detail?.higherLevel ?? '';
 	});
 	const material = $derived(detail?.spell ? detail.spell.material : '');
+	// What the reader sees is their own words when they wrote some. The shipped prose stays available
+	// as the placeholder and as what "restore" puts back — this replaces nothing on disk.
+	const body = $derived(
+		(detail ? overrides.textFor(detail.rowId, app.activeLocale) : undefined) ??
+			detail?.bodyHtml ??
+			'',
+	);
 </script>
 
 <article class="detail-body">
@@ -54,7 +64,11 @@
 
 		{#if actions}<div class="dactions">{@render actions()}</div>{/if}
 
-		<ArticleProse bodyMarkdown={detail.bodyHtml} {higherLevel} {material} {editable} {draft} />
+		<ArticleProse bodyMarkdown={body} {higherLevel} {material} {editable} {draft} />
+		<!-- not while TRANSLATING: that pane is already editing this prose, for everyone, in the file -->
+		{#if !editable}
+			<OwnWords rowId={detail.rowId} original={detail.bodyHtml} />
+		{/if}
 		<div class="source-line">
 			{sayText(detail.source, $_)}{#if detail.license}
 				· {detail.license}{/if}

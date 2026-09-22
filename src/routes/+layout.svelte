@@ -16,6 +16,8 @@
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
+	import { bindOpenCharacter, overrides } from '$lib/content/overrides.svelte';
+	import { characters, saveCharacterGuarded } from '$lib/character/store.svelte';
 	import {
 		autoCheckAllowed,
 		checkNow,
@@ -128,6 +130,13 @@
 		void i18nLocale.set(app.activeLocale);
 	});
 
+	// The open character's own rewrites (OWN-WORDS), bound app-wide: "whose words are these" has one
+	// answer for the whole app — the character that is open, or nobody's but the install's.
+	$effect(() => {
+		const character = characters.active;
+		bindOpenCharacter(character, () => character && void saveCharacterGuarded(character));
+	});
+
 	/**
 	 * A link OUT of the app opens in the OS browser, never in the app's own window.
 	 *
@@ -180,6 +189,7 @@
 		if (detectPlatform() !== Platform.Desktop) {
 			void loadContentStore();
 			void syncThemes(); // web: IndexedDB storage is always ready
+			void overrides.load(getUserStorage()); // the descriptions the player rewrote for everyone
 			return;
 		}
 		const saved = await applySavedDataDir(); // Rust re-grants the custom folder from its own pointer
@@ -188,6 +198,7 @@
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 			void syncThemes(); // load user themes from the data dir now it's granted
+			void overrides.load(getUserStorage());
 			// Content-pack updates (REL-4). First put back what the last check already found — that
 			// costs nothing and needs no permission, it is a conclusion we reached, not a new request.
 			// Then check, which self-gates on the user's update mode + the once-a-day throttle. Both
@@ -231,6 +242,7 @@
 		startContentWatcher();
 		void loadPlugins();
 		void syncThemes(); // data dir just chosen → load/seed themes there
+		void overrides.load(getUserStorage());
 	}
 	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
 	const driftItems = $derived(pendingDriftItems());

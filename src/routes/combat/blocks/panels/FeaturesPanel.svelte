@@ -12,7 +12,8 @@
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import { combat } from '../../combat-view-model.svelte';
-	import { localizedName, plainProse } from '$lib/content/detail';
+	import { localizedName } from '$lib/content/detail';
+	import { describedPlainProse } from '$lib/content/overrides.svelte';
 	import {
 		FEATURE_SECTION,
 		type CharacterFeature,
@@ -38,7 +39,7 @@
 {#each sections as section (section.key)}
 	<div class="feature-section eyebrow">{$_(`combat.features.${section.key}`)}</div>
 	{#each section.items as f, i (`${f.row.effectiveId}:${f.at ?? ''}:${i}`)}
-		{@const prose = plainProse(f.row, app.activeLocale)}
+		{@const prose = describedPlainProse(f.row, app.activeLocale)}
 		<details class="feature-item">
 			<summary>
 				<!-- the class level a feature arrived at. A multiclass sheet needs the class too, or "3"
