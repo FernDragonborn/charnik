@@ -195,9 +195,16 @@ So after any hand-edit, run **`pnpm restamp <file.csv>`**. It is a thin CLI over
 and one stamped from the UI come out byte-identical. It rewrites the hash and `updated_at`, fills in
 `id` and `schema` if absent, and preserves BOM and line endings.
 
-**Never re-run a converter just to re-stamp.** The row regeneration in `convert.mjs` drops
-`conditions_srd.csv`'s `max_level` column. Converters are for real content changes; if one touches a
-file you did not mean to change, `git checkout` it. A converter stamps its own output.
+**Never re-run a converter just to re-stamp.** It regenerates every row of every file it owns, so it
+churns files you did not mean to change and moves their `updated_at`. Converters are for real content
+changes; if one touches a file you did not mean to change, `git checkout` it. A converter stamps its
+own output.
+
+What a re-run no longer does is LOSE anything. Each converter reads what its file already says and
+keeps what the SRD does not state: a condition's `max_level` and an authored row (Rage), a spell's
+`classes`, `upcast` and hand-filled healing `damage`, a feat's and a magic item's `effects`. It also
+repairs a name the 5.1 source split mid-word ("See I nvisibility", "Gladiato r"), which is what used
+to silently RENAME two rows on every run and orphan the references to them.
 
 `src/lib/content/content_stamps.test.ts` fails if any shipped CSV is unstamped or drifted.
 

@@ -48,7 +48,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v11: BEAST-DATA — every stat block states its `attacks` as a column, and the 2014 pack gains the
 // 116 creatures of SRD 5.1's two appendices (every ordinary animal is in there). An install left at
 // v10 has a 2014 druid with no legal Wild Shape form and no creature that can state an attack.
-export const CONTENT_SEED_VERSION = 11;
+// v12: `see_invisibility` and `gladiator` keep the ids somebody had to fix by hand — the 5.1 source
+// splits a word mid-name ("See I nvisibility", "Gladiato r") and the converter now repairs it, so a
+// re-run stops renaming those two rows and orphaning every reference to them.
+export const CONTENT_SEED_VERSION = 12;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

@@ -34,8 +34,8 @@ The coordinate JSON (PDF dump) is avoided.
 
 ### SRD 5.1 (2014) — `tools/srd/convert-2014.mjs`, source "SRD 5.1"
 Complete except the app-only effects catalog: **spells 319, monsters 317, items 419**
-(37 weapons + 13 armor + 36 tools + 95 gear + 4 ammunition + 234 magic), **class_features 196**
-(123 base + 73 subclass), **conditions 15, classes 12, subclasses 12, species 9, backgrounds 1**
+(37 weapons + 13 armor + 36 tools + 95 gear + 4 ammunition + 234 magic), **class_features 197**
+(124 base + 73 subclass), **conditions 15, classes 12, subclasses 12, species 9, backgrounds 1**
 (Acolyte), **feats 1** (Grappler). `caster`/`spell_ability`/`subclass_level` for the 12 classes use
 the known mechanical classification (a fact, not prose) rather than fragile 2014 slot-table
 parsing; class-feature levels come from the progression table row text.

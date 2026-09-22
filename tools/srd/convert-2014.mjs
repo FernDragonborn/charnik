@@ -51,6 +51,31 @@ function existingColById(csvFile, col) {
 }
 const existingEffectsById = (csvFile) => existingColById(csvFile, 'effects');
 
+/**
+ * Repair a word the PDF extraction split: "See I nvisibility", "Gladiato r".
+ *
+ * A one-letter token is never a word in this document, so it belongs to a neighbour — the next one
+ * when there is one, the previous otherwise. It matters because the name becomes the id: the spell
+ * shipped as `see_invisibility` only because somebody fixed it by hand once, and the next converter
+ * run would have renamed it back and orphaned every character that had it prepared.
+ */
+const fixSplitWord = (name) => {
+	const parts = String(name ?? '').split(' ');
+	const out = [];
+	for (let i = 0; i < parts.length; i++) {
+		if (parts[i].length === 1 && /[A-Za-z]/.test(parts[i]) && i + 1 < parts.length) {
+			parts[i + 1] = parts[i] + parts[i + 1];
+			continue;
+		}
+		if (parts[i].length === 1 && /[A-Za-z]/.test(parts[i]) && out.length) {
+			out[out.length - 1] += parts[i];
+			continue;
+		}
+		out.push(parts[i]);
+	}
+	return out.join(' ');
+};
+
 const strip = (s) =>
 	s
 		.replace(/<[^>]+>/g, '')
@@ -76,7 +101,13 @@ function htmlEntries(html) {
 		const h = /<h([234])[^>]*?(?:id='([^']*)')?[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>/i.exec(line);
 		if (h) {
 			if (cur) entries.push(cur);
-			cur = { level: Number(h[1]), id: h[2] || '', name: strip(h[3]), paras: [], parts: [] };
+			cur = {
+				level: Number(h[1]),
+				id: h[2] || '',
+				name: fixSplitWord(strip(h[3])),
+				paras: [],
+				parts: [],
+			};
 			continue;
 		}
 		// every table in this source opens and closes on one line
@@ -117,6 +148,11 @@ const ABIL = {
 // --- spells ------------------------------------------------------------------
 function convertSpells() {
 	const entries = htmlEntries(src(`${SRC}.html`));
+	// Three columns of a spell row are NOT in the SRD's spell block and are filled afterwards: the
+	// `classes` list (5.1 prints the class spell lists in a separate chapter — `convert-2014-spell-lists.mjs`),
+	// the authored `effects` tokens, and the structured `upcast`. A re-run used to blank all three,
+	// and `upcast` was not even in the column list, so it vanished from the file entirely.
+	const prior = existingRowsById(out('spells_srd.csv'));
 	const SCHOOLS = [
 		'abjuration',
 		'conjuration',
@@ -193,6 +229,7 @@ function convertSpells() {
 		}
 		const dm = /(\d+d\d+)\s+([A-Za-z]+)\s+damage/.exec(description);
 		const matM = /\(([^)]*)\)/.exec(compRaw);
+		const was = prior.get(slug(e.name)) ?? {};
 
 		rows.push({
 			id: slug(e.name),
@@ -202,7 +239,7 @@ function convertSpells() {
 			name_uk: '',
 			text_en: description,
 			text_uk: '',
-			effects: '',
+			effects: was.effects ?? '',
 			level,
 			school,
 			casting_time: castingTime,
@@ -212,11 +249,15 @@ function convertSpells() {
 			duration,
 			concentration: String(/^concentration/i.test(duration)),
 			ritual: String(/ritual/i.test(castingTime)),
-			classes: '', // SRD 5.1 lists classes separately, not in the spell block
-			resolution,
+			classes: was.classes ?? '', // filled by convert-2014-spell-lists.mjs
+			resolution: resolution === 'none' ? (was.resolution ?? 'none') : resolution,
 			save_ability: save,
-			damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
+			// authored where the source states it in words the regex cannot see: a healing die is not
+			// "damage", and the D6/E4 pass filled those cells by hand. A computed value still wins —
+			// this only stops a re-run from CLEARING one.
+			damage: (dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '') || was.damage || '',
 			higher_level: higher,
+			upcast: was.upcast ?? '',
 		});
 	}
 	rows.sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
@@ -242,6 +283,7 @@ function convertSpells() {
 			'save_ability',
 			'damage',
 			'higher_level',
+			'upcast',
 			'effects',
 			'name_en',
 			'name_uk',

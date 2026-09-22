@@ -59,8 +59,18 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
         verify and rollback halves can be probed.
   - [ ] **The play loop across both editions.** The both-editions sweep covered the BUILD path — 96
         class sheets and 811 build-path derives, clean — and not a rest, a cast or an action option.
-  - [ ] **`tools/restamp.ts`, unread.** Runtime-adjacent and what any future import path leans on.
-        The converters beside it are deliberately out of scope (CONTENT ▸ CONVERTERS-SUNSET).
+  - [x] **`tools/restamp.ts`, read.** The stamping itself is the app's own `restampText`, so there
+        was nothing to find there; what the read found was around it. A file it SKIPS — no
+        `#content-*` header — used to leave the exit code at 0, so a run that stamped nothing
+        reported success, which is the one failure this tool exists to prevent (an unstamped file is
+        one the app never refreshes again). It exits 1 now. Its header comment also still warned that
+        a converter re-run drops `conditions_srd.csv`'s `max_level`, which CONDEFF fixed.
+        **What reading it actually turned up is in the converters beside it**, which the earlier
+        audit put out of scope: a `convert-2014.mjs` re-run silently wiped every spell's `classes`
+        and `upcast`, cleared the hand-filled healing `damage`, and RENAMED two rows whose ids
+        somebody had fixed by hand (`see_invisibility`, `gladiator` — the 5.1 source splits a word
+        mid-name). All four are fixed at the source, so the standing "never re-run a converter"
+        warning is now about churn rather than loss.
   - [ ] **Named tails.** `readCharacterFiles` unexercised; `seedDemoIfFirstRun` and
         `recreateDemoCharacter` read but not driven; `Hero.svelte` and `PanelCard.svelte` below their
         markup unread; `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a

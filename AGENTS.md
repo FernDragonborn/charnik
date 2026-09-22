@@ -95,10 +95,13 @@ find. Pushing is the one git action that needs explicit permission in the curren
 `#content-hash` is not decoration: a file whose body no longer matches its stamp is treated as the
 user's own, so seeding and every pack update skip it forever. A missed stamp freezes that file on disk.
 
-**Re-running a converter to re-stamp.** It regenerates rows and drops `conditions_srd.csv`'s
-`max_level`. Converters are for real content changes; `pnpm restamp` is for hand-edits. If a converter
-run touches a file you did not mean to change, `git checkout` it — in the content repo, which is where
-all of this shows up as a diff.
+**Re-running a converter to re-stamp.** It rewrites every row of every file it owns, so it churns
+files you did not mean to touch. Converters are for real content changes; `pnpm restamp` is for
+hand-edits. If a converter run touches a file you did not mean to change, `git checkout` it — in the
+content repo, which is where all of this shows up as a diff. What a re-run no longer does is LOSE
+anything: each converter reads what the file already says and keeps what the source does not state
+(a condition's `max_level`, a spell's `classes`/`upcast`, an authored row). That took three separate
+losses to find, so check a re-run's diff before trusting a fourth converter with it.
 
 **Hardcoding a colour or a size.** Charnik ships user-authored themes, so a literal hex or px is a
 spot that stays wrong under someone's theme. Style only through the tokens in `styles/tokens.css`; a
