@@ -97,11 +97,15 @@ isn't running is worse than one that says why.
 | `name`        | yes      | ≤ 64 chars, rendered as plain text                        |
 | `version`     | yes      | semver string, ≤ 32 chars                                 |
 | `author`      | no       | ≤ 64 chars                                                |
-| `url`         | no       | **https:// only**; opens in the OS browser, never in-app  |
+| `url`         | no       | **https:// only**; rendered as PLAIN TEXT, never a link   |
 | `description` | no       | ≤ 280 chars                                               |
 
 There is no custom entry point, no multi-file imports, no assets in `api: 1` — one `main.js`,
 evaluated once per session per plugin in its own isolated runtime.
+
+`url` is shown and never clickable, in the consent dialog and everywhere else. The one place a user
+reads it is the moment they are deciding whether to trust the code, and a link there is the phishing
+click §6.3 already hashes the manifest to prevent — so the field is copyable text, not a control.
 
 ## 3. Registration: what `main.js` must define
 

@@ -64,12 +64,12 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   - [ ] **Named tails.** `readCharacterFiles` unexercised; `seedDemoIfFirstRun` and
         `recreateDemoCharacter` read but not driven; `Hero.svelte` and `PanelCard.svelte` below their
         markup unread; `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a
-        finding — no shipped CSV carries the rest chapter, so nothing here can check the claim. Two
-        the audit judged too small to number, and they are live: `plugins.md` promises a plugin's
-        `url` "opens in the OS browser, never in-app" and nothing opens it anywhere — the consent
-        dialog is its only consumer and shows it as text; and `PluginsSettings.svelte` reads
-        `loadErr` ahead of `p.problem` for the status badge, so a duplicate-namespace loser can be
-        labelled "load failed" while its own row explains the clash.
+        finding — no shipped CSV carries the rest chapter, so nothing here can check the claim. The two
+        the audit judged too small to number are CLOSED: the plugin status badge now yields to a row's
+        own `problem`, so the duplicate-namespace loser stops being labelled "load failed" over its
+        own explanation; and the manifest `url` is display-only by decision rather than by omission —
+        it is read at the moment the user is deciding whether to trust the code, which is the one
+        place a clickable link is the attack (`plugins.md` §2).
 
   **The shape that worked** is written down at the end of the audit: one reader per subsystem, three
   at a time, each told to read `AGENTS.md` and the subsystem doc first, to REPRODUCE every finding

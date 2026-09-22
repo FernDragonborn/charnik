@@ -103,7 +103,10 @@
 							<div class="plugin-desc">{p.manifest.description}</div>
 						{/if}
 					</div>
-					{#if loadErr}
+					<!-- a row carrying its OWN problem (the duplicate-namespace loser) says that, not
+					     "load failed": `loadErrors` is keyed by NAMESPACE, so the winner's failure would
+					     otherwise label the loser too, contradicting the reason printed above. -->
+					{#if loadErr && !p.problem}
 						<span class="status status-broken">{$_('settings.plugins.status.loadFailed')}</span>
 					{:else}
 						<span class="status status-{status}">{$_(statusKey[status])}</span>

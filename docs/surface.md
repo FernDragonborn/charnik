@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (70)
+## Duplicate suspects (71)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -85,6 +85,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
+- `TOOL_PREFIX` ×2 — src/lib/character/derive-stats.ts · src/lib/character/derive-targets.ts
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -572,6 +573,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).
 - `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
 - `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
+- `const TABLE_CHOSEN_ABILITY` — The ability a tool check rolls where the edition's SRD names one.
+- `interface ToolProficiency` — One tool this character is proficient with: what to call it, and which ability its check uses.
+- `function deriveTools` — * Tools the character is proficient with: the build's picks plus every `grant_proficiency:tool.<id>` * a class, feat …
+- `function toolCheck` — * A tool check: the ability check, plus your proficiency bonus because you are proficient.
 - `function resolveClassSaves` — Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves.
 - `function deriveAbilityBlocks`
 - `function deriveSkills` — Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the * effect-granted level…
@@ -1114,6 +1119,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
 - `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
+- `const TOOL_ITEM_CATEGORY` — The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`).
 - `const RARITIES`
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
@@ -1744,4 +1750,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1043 exports across 142 modules · 70 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1048 exports across 142 modules · 71 duplicate suspects._
