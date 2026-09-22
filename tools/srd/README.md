@@ -33,13 +33,20 @@ Never claim both unless verified identical — 2024 diverges from 2014.
 The coordinate JSON (PDF dump) is avoided.
 
 ### SRD 5.1 (2014) — `tools/srd/convert-2014.mjs`, source "SRD 5.1"
-Complete except the app-only effects catalog: **spells 319, monsters 201, items 383**
-(37 weapons + 13 armor + 99 gear + 234 magic), **class_features 196** (123 base + 73
-subclass), **conditions 15, classes 12, subclasses 12, species 9, backgrounds 1** (Acolyte),
-**feats 1** (Grappler). `caster`/`spell_ability`/`subclass_level` for the 12 classes use the
-known mechanical classification (a fact, not prose) rather than fragile 2014 slot-table
-parsing; class-feature levels come from the progression table row text. SRD 5.1's monster
-chapter (Monsters JSON, 201) already includes animals/NPCs, so there is no separate appendix.
+Complete except the app-only effects catalog: **spells 319, monsters 317, items 419**
+(37 weapons + 13 armor + 36 tools + 95 gear + 4 ammunition + 234 magic), **class_features 196**
+(123 base + 73 subclass), **conditions 15, classes 12, subclasses 12, species 9, backgrounds 1**
+(Acolyte), **feats 1** (Grappler). `caster`/`spell_ability`/`subclass_level` for the 12 classes use
+the known mechanical classification (a fact, not prose) rather than fragile 2014 slot-table
+parsing; class-feature levels come from the progression table row text.
+
+**The monsters come from TWO sources**, because SRD 5.1 is two lists. The Monsters chapter is the
+pre-structured Tabyltop JSON (201), and it holds no ordinary animals at all: every one of them is in
+**Appendix MM-A "Miscellaneous Creatures" (95)** and **MM-B "Nonplayer Characters" (21)**, which exist
+only in the HTML. An earlier note here said the JSON "already includes animals/NPCs, so there is no
+separate appendix" — it does not, and the pack shipped without a wolf for as long as that stood. The
+JSON is also lossy where the HTML is not (fifteen entries have an empty `actions` array, a few
+descriptions are typo'd past its own parser), so a chapter row's `attacks` falls back to the HTML.
 
 ## Regenerate
 

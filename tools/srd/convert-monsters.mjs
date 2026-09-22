@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import { slug, writeCsv, assertCount, dedupeIds, attackRecord, damagePart } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -44,6 +44,40 @@ const cleanProse = (s) =>
 		.replace(/ *\n/g, '\n')
 		.replace(/\n{3,}/g, '\n\n')
 		.trim();
+
+/**
+ * The attacks of one stat block, in the `attacks` column's grammar (lib.mjs ▸ attackRecord).
+ *
+ * 5.2.1 writes an attack as one line — `**_Bite._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 15
+ * (2d10 + 4) Piercing damage.` — so the line IS the record, and everything else in the Actions
+ * section (a save-based effect, a Multiattack sentence) has no attack roll and is left in the prose.
+ *
+ * A second damage part is taken only after "plus", the way the source writes damage that is ADDED;
+ * a number in a later sentence is a condition or an alternative, not part of the hit.
+ */
+function attacksOf(block) {
+	const DAMAGE = String.raw`(?:\((\d+d\d+[^)]*)\)|(\d+))\s+(\w+)\s+damage`;
+	const out = [];
+	for (const line of block.split(/\r?\n/)) {
+		const head =
+			/^\*\*_([^_]+?)\.?_\*\*\s*_((?:Melee|Ranged)[^_]*Attack Roll:)_\s*([+−-]\s*\d+)/i.exec(line);
+		if (!head) continue;
+		const range = (/\b(?:reach|ranged?)\s+(\d[^,.]*)/i.exec(line) || [, ''])[1];
+		const first = new RegExp(DAMAGE, 'i').exec(line);
+		const extra = new RegExp(`plus\\s+${DAMAGE}`, 'i').exec(line);
+		const part = (m) => (m ? damagePart(m[1] || m[2], m[3]) : '');
+		out.push(
+			attackRecord({
+				// "Rock (Recharge 6)" keeps its qualifier: it is part of what the attack is called
+				name: head[1].trim(),
+				hit: head[3],
+				range,
+				damage: [part(first), part(extra)],
+			}),
+		);
+	}
+	return out.join('; ');
+}
 
 // `cutH3`: in monsters-A-Z, "### Name" is a monster name (cut it from prose); in animals,
 // "### Actions" is a section heading to KEEP (only "## Name" cuts).
@@ -137,6 +171,7 @@ function parseMonsters(md, cutH3) {
 			senses: field1(block, 'Senses'),
 			languages: field1(block, 'Languages'),
 			skills: field1(block, 'Skills'),
+			attacks: attacksOf(block),
 		});
 	}
 	return out;
@@ -183,6 +218,7 @@ writeCsv(
 		'senses',
 		'languages',
 		'skills',
+		'attacks',
 		'effects',
 		'name_en',
 		'name_uk',

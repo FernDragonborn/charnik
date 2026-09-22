@@ -186,6 +186,45 @@ export function existingRowsById(csvPath) {
 	return map;
 }
 
+/**
+ * One attack of a stat block, in the `attacks` column's grammar:
+ *
+ *     <name>:<to hit>:<reach or range>:<dice> <type>[, <dice> <type>]
+ *
+ * and attacks are joined with `; `, the separator every compound column here already uses. Three
+ * levels, three separators, no nesting — the same shape `damage` has, because it is the same kind of
+ * fact. It exists because a stat block's attacks were the ONE thing `monsters_srd.csv` kept only as
+ * prose, and `src/` may not read a value out of prose (docs/internals/content.md).
+ *
+ * A dash is written as `-`, never the source's `−`: the minus sign is an L2 operator and a content id
+ * that could appear in an expression must avoid the look-alike.
+ */
+export function attackRecord({ name, hit, range, damage }) {
+	const parts = damage.filter(Boolean).join(', ');
+	// the two editions punctuate the distance differently ("5 ft." / "5 ft") and a consumer should
+	// not have to know which pack it is reading, so the record spells it one way
+	return [clean(name), signed(hit), clean(range).replace(/\.$/, ''), parts].join(':');
+}
+
+/** `2d10 + 8` → `2d10+8`; `1d6 − 1` → `1d6-1`. Spaces around the sign are the source's typography. */
+export function damagePart(dice, type) {
+	if (!dice || !type) return '';
+	return `${clean(dice)
+		.replace(/\s*[−–-]\s*/g, '-')
+		.replace(/\s*\+\s*/g, '+')} ${type.toLowerCase()}`;
+}
+
+const clean = (s) =>
+	String(s ?? '')
+		.replace(/[−–]/g, '-')
+		.replace(/\s+/g, ' ')
+		.replace(/[:;]/g, ' ')
+		.trim();
+const signed = (s) => {
+	const n = clean(s).replace(/^\+?/, '');
+	return n.startsWith('-') ? n : `+${n}`;
+};
+
 export function dedupeIds(rows) {
 	const seen = new Set();
 	for (const r of rows) {

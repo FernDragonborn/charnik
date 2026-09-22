@@ -45,7 +45,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v10: the ammunition a weapon spends exists as rows — 2024's five (each carrying the `ammo:<kind>`
 // its weapons already named), 2014's four promoted from gear to `ammunition`. An install left at v9
 // has weapons that name a kind nothing in its inventory can be.
-export const CONTENT_SEED_VERSION = 10;
+// v11: BEAST-DATA — every stat block states its `attacks` as a column, and the 2014 pack gains the
+// 116 creatures of SRD 5.1's two appendices (every ordinary animal is in there). An install left at
+// v10 has a 2014 druid with no legal Wild Shape form and no creature that can state an attack.
+export const CONTENT_SEED_VERSION = 11;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

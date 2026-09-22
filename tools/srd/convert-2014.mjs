@@ -8,7 +8,15 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
-import { slug, writeCsv, assertCount, dedupeIds, existingRowsById } from './lib.mjs';
+import {
+	slug,
+	writeCsv,
+	assertCount,
+	dedupeIds,
+	existingRowsById,
+	attackRecord,
+	damagePart,
+} from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 import {
 	weaponTags,
@@ -251,10 +259,192 @@ function convertSpells() {
 	return rows.length;
 }
 
-// --- monsters (from the pre-structured Monsters JSON) ------------------------
+// --- monsters ----------------------------------------------------------------
+// Two sources, because SRD 5.1 is two lists: the Monsters chapter, which Tabyltop ships
+// pre-structured as JSON (201 entries, no ordinary animals in it at all), and Appendix MM-A
+// "Miscellaneous Creatures" + MM-B "Nonplayer Characters", which live only in the HTML. The
+// appendix is where every beast is — a 2014 druid had four legal Wild Shape forms in the whole pack
+// and none at all below CR 2, because 120 stat blocks the SRD has were never converted.
+
+/** "Dex +6, Con +13" → { dex: 6, con: 13 }. */
+function savesByAbility(raw) {
+	const out = {};
+	for (const m of String(raw ?? '').matchAll(/\b(Str|Dex|Con|Int|Wis|Cha)\s*([+−-]\s*\d+)/gi))
+		out[m[1].toLowerCase()] = Number(m[2].replace(/[−\s]/g, '').replace('-', '-'));
+	return out;
+}
+const saveCols = (raw) => {
+	const by = savesByAbility(raw);
+	return {
+		str_save: by.str ?? '',
+		dex_save: by.dex ?? '',
+		con_save: by.con ?? '',
+		int_save: by.int ?? '',
+		wis_save: by.wis ?? '',
+		cha_save: by.cha ?? '',
+	};
+};
+
+/** The attacks of one JSON action list — the entries carrying a to-hit, which is what makes an
+ *  action an attack. Tabyltop already split the numbers out of the sentence; this only spells them
+ *  in the column's grammar. */
+function attacksFromJson(actions) {
+	return (actions || [])
+		.filter((a) => a.to_hit && a.damage_dice)
+		.map((a) =>
+			attackRecord({
+				name: String(a.name || '').replace(/\.$/, ''),
+				hit: a.to_hit,
+				range: a.reach || a.range || '',
+				damage: [
+					damagePart(a.damage_dice, a.damage_type),
+					damagePart(a.extra_damage_dice, a.extra_damage_type),
+				],
+			}),
+		)
+		.join('; ');
+}
+
+/** An appendix stat block's action paragraphs, split into `{name, text}` — each begins with its own
+ *  bold-italic name and may run on into the next <p>, which is how the source breaks the line. */
+function actionChunks(paras) {
+	const out = [];
+	for (const p of paras) {
+		const m = /<b>\s*<em>([\s\S]*?)<\/em>\s*<\/b>([\s\S]*)/i.exec(p);
+		if (m) out.push({ name: strip(m[1]).replace(/\.\s*$/, ''), text: strip(m[2]) });
+		else if (out.length) out[out.length - 1].text += ' ' + strip(p);
+	}
+	return out;
+}
+
+/** …and those chunks as attacks. An attack says "Weapon Attack:" and a to-hit; everything else is a
+ *  trait, a Multiattack sentence or a save-based effect, and stays in the prose. */
+function attacksFromProse(paras) {
+	return actionChunks(paras)
+		.filter((a) => /Weapon\s*Attack/i.test(a.text) && /[+−-]\d+\s*to hit/i.test(a.text))
+		.map((a) => {
+			const hit = (/([+−-]\s*\d+)\s*to hit/i.exec(a.text) || [, ''])[1];
+			// a NUMBER has to follow, or "Ranged Weapon Attack" matches its own first word; the source
+			// writes the keyword as both "range" and "ranged"
+			const range = (/\b(?:reach|ranged?)\s+(\d[^,)]*)/i.exec(a.text) || [, ''])[1];
+			// "Hit: 6 (1d6 + 3) bludgeoning damage" — the bare number is the AVERAGE and the dice are
+			// the parenthetical, so the dice win where there are any; a flat "1 piercing damage" (Bat)
+			// has no parenthetical and the number IS the damage.
+			//
+			// A SECOND part is taken only after the word "plus", which is how the SRD writes damage
+			// that is added. Every other second number in the sentence is an ALTERNATIVE — a versatile
+			// grip, a swarm at half hit points — and folding those in made a veteran's longsword deal
+			// both of its dice at once.
+			const DAMAGE = /(?:\((\d+d\d+[^)]*)\)|(\d+))\s+(\w+)\s+damage/i;
+			const part = (m) => (m ? damagePart(m[1] || m[2], m[3]) : '');
+			const damage = [
+				part(DAMAGE.exec(a.text)),
+				part(new RegExp(`plus\s+${DAMAGE.source}`, 'i').exec(a.text)),
+			];
+			return attackRecord({ name: a.name, hit, range, damage });
+		})
+		.join('; ');
+}
+
+/** One appendix stat block → a monster row. The fields are `<b>Label</b> value` paragraphs and one
+ *  ability <table>, both regular enough to read straight; `actions` is the entry that follows it,
+ *  because an "Actions" heading starts a new entry in `htmlEntries`. */
+function appendixMonster(entry, actions) {
+	// matched on the STRIPPED paragraph: the source's bold tags do not always wrap the whole label
+	// ("<b>Armor </b> Class 14 (natural armor)"), and a reader keyed to the markup dropped those rows
+	const field = (label) => {
+		for (const p of entry.paras) {
+			const m = new RegExp(`^${label}\\s+([\\s\\S]*)`, 'i').exec(strip(p));
+			if (m) return m[1].trim();
+		}
+		return '';
+	};
+	const meta = /^(\w+)\s+([^,]+),\s*(.+)$/.exec(strip(entry.paras[0] ?? ''));
+	const table = entry.parts.find((p) => /^<table>/i.test(p)) ?? '';
+	const cells = [...table.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => strip(m[1]));
+	const score = (i) => (/(\d+)/.exec(cells[6 + i] ?? '') || [, ''])[1];
+	const hp = /(\d+)\s*(?:\(([^)]*)\))?/.exec(field('Hit Points'));
+	return {
+		id: slug(entry.name),
+		systems: '5e',
+		source: 'SRD 5.1',
+		name_en: entry.name,
+		name_uk: '',
+		text_en: [entryText(entry), actions ? 'Actions.' : '', actions ? entryText(actions) : '']
+			.filter(Boolean)
+			.join('\n'),
+		text_uk: '',
+		effects: '',
+		size: meta ? meta[1].toLowerCase() : '',
+		creature_type: meta ? meta[2].toLowerCase() : '',
+		alignment: meta ? meta[3].trim() : '',
+		ac: (/(\d+)/.exec(field('Armor Class')) || [, ''])[1],
+		hp: hp ? hp[1] : '',
+		hp_formula: hp && hp[2] ? hp[2].trim() : '',
+		speed: field('Speed'),
+		str: score(0),
+		dex: score(1),
+		con: score(2),
+		int: score(3),
+		wis: score(4),
+		cha: score(5),
+		...saveCols(field('Saving Throws')),
+		cr: (/^([0-9/]+)/.exec(field('Challenge')) || [, ''])[1],
+		resistances: field('Damage Resistances'),
+		immunities: field('Damage Immunities'),
+		vulnerabilities: field('Damage Vulnerabilities'),
+		senses: field('Senses'),
+		languages: field('Languages') === '-' ? '' : field('Languages'),
+		skills: field('Skills'),
+		// the creature's OWN paragraphs as well as the Actions entry's: several stat blocks put the
+		// whole action list under the creature heading with no "Actions" heading of their own, and a
+		// trait can never be mistaken for an attack — the filter wants "Weapon Attack" and a to-hit
+		attacks: attacksFromProse([...entry.paras, ...(actions?.paras ?? [])]),
+	};
+}
+
+/** Every stat block in a slice of the HTML: an entry carrying an Armor Class, paired with the
+ *  "Actions" entry that follows it when there is one. A heading with no Armor Class is prose (a
+ *  variant note, a section title) and is skipped rather than read as a creature with no numbers. */
+function statBlocks(html, fromHeading, toHeading) {
+	const start = fromHeading ? html.indexOf(fromHeading) : 0;
+	const end = toHeading ? html.indexOf(toHeading) : html.length;
+	const entries = htmlEntries(html.slice(start, end > start ? end : html.length));
+	const out = [];
+	for (let i = 0; i < entries.length; i++) {
+		const e = entries[i];
+		if (e.level !== 4 || !e.paras.some((p) => /^Armor\s+Class/i.test(strip(p)))) continue;
+		const next = entries[i + 1];
+		// the source spells this heading three ways — "Actions", "Actio ns", "Action s" — so the
+		// spaces come out before the compare, or a stat block silently loses every attack it has
+		const isActions = /^actions?$/i.test((next?.name ?? '').replace(/\s+/g, ''));
+		out.push({ entry: e, actions: isActions ? next : undefined });
+	}
+	return out;
+}
+
+const appendixMonsters = (html, fromHeading, toHeading) =>
+	statBlocks(html, fromHeading, toHeading).map((b) => appendixMonster(b.entry, b.actions));
+
+/** id → attacks, read off the HTML for the WHOLE document. The Monsters chapter comes from the
+ *  pre-structured JSON, which is lossy in two ways the HTML is not: fifteen entries carry an empty
+ *  `actions` array, and a few descriptions are typo'd past its own parser ("H it:10 (2d6+3)"). So
+ *  the HTML is what fills a chapter row the JSON left with no attacks — same document, same rules,
+ *  and a value is either in the source or absent, never guessed. */
+function htmlAttacksById(html) {
+	const map = new Map();
+	for (const { entry, actions } of statBlocks(html, '', '')) {
+		const found = attacksFromProse([...entry.paras, ...(actions?.paras ?? [])]);
+		if (found) map.set(slug(entry.name), found);
+	}
+	return map;
+}
+
 function convertMonsters() {
+	const html = src(`${SRC}.html`);
 	const data = JSON.parse(src('Monsters-SRD5.1-CCBY4.0License-TT.json'));
 	const list = data.monsters;
+	const fromHtml = htmlAttacksById(html);
 	const rows = list.map((m) => {
 		const acM = /(\d+)/.exec(m.armor_class || '');
 		const hpM = /(\d+)\s*(?:\(([^)]*)\))?/.exec(m.hit_points || '');
@@ -288,13 +478,23 @@ function convertMonsters() {
 			int: score(st.int),
 			wis: score(st.wis),
 			cha: score(st.cha),
+			...saveCols(m.saving_throws),
 			cr: (/^([0-9/]+)/.exec(m.challenge || '') || [, ''])[1],
+			resistances: m.damage_resistances || '',
+			immunities: m.damage_immunities || '',
+			vulnerabilities: m.damage_vulnerabilities || '',
 			senses: m.senses || '',
 			languages: '',
 			skills: m.skills || '',
+			attacks: attacksFromJson(m.actions) || fromHtml.get(slug(m.name)) || '',
 		};
 	});
-	assertCount('monsters', rows.length, 201); // Tabyltop Monsters JSON (SRD 5.1 Monsters chapter)
+	assertCount('monsters (chapter)', rows.length, 201); // Tabyltop Monsters JSON (SRD 5.1 chapter)
+	const creatures = appendixMonsters(html, 'Miscellaneous Creatures', 'Nonplayer Characters');
+	const npcs = appendixMonsters(html, 'Nonplayer Characters', '');
+	assertCount('monsters (appendix MM-A)', creatures.length, 95);
+	assertCount('monsters (appendix MM-B)', npcs.length, 21);
+	rows.push(...creatures, ...npcs);
 	dedupeIds(rows);
 	writeCsv(
 		out('monsters_srd.csv'),
@@ -315,10 +515,20 @@ function convertMonsters() {
 			'int',
 			'wis',
 			'cha',
+			'str_save',
+			'dex_save',
+			'con_save',
+			'int_save',
+			'wis_save',
+			'cha_save',
 			'cr',
+			'resistances',
+			'immunities',
+			'vulnerabilities',
 			'senses',
 			'languages',
 			'skills',
+			'attacks',
 			'effects',
 			'name_en',
 			'name_uk',

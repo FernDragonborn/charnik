@@ -368,21 +368,29 @@
   4 known, a sorcerer 20 reads 6 / 15. Prepared casters get only the cantrip half — 2014 has no
   prepared-spells column, that is a 2024 invention, so the formula still owns the rest.
 
-- [ ] **BEAST-DATA · a beast row cannot fight, and the 2014 pack has almost no beasts.** Two
-  holes, both found writing [`../research/wild-shape.md`](../research/wild-shape.md), both blocking
-  N2b and 2024 Primal Strike:
-  - `monsters_srd.csv` has **no attacks column in either edition** — a stat block's attacks live in
-    `text_en` prose. Every other combat number (ac, hp, the six scores, cr, speed, senses, skills) is
-    a declared column, so this is the one place the monster schema stops being data. Reading them out
-    of the prose in `src/` is the thing AGENTS.md forbids; the column is authored, in both editions.
-  - The 2014 pack ships **four** beasts — stirge (CR 1/8, flying), plesiosaurus (CR 2), triceratops
-    (CR 5), tyrannosaurus (CR 8). A 2014 druid may take CR 1/4 with no flying or swimming speed at
-    level 2, so **no legal form exists at levels 2-7**. The wolf, crocodile and giant eagle its own
-    Beast Shapes table names are not in the file. 2024 ships 69 beasts at CR ≤ 1, so this is a 2014
-    conversion gap, not a licence one.
-  - Related asymmetry worth fixing in the same pass: 2014 monsters carry no `*_save` and no
-    `resistances`/`immunities`/`vulnerabilities` columns, which 2024 does. The 2014 Wild Shape rule
-    "use the creature's bonus if it is higher" has data for skills and none for saves.
+- [x] **BEAST-DATA · a beast row can fight, and the 2014 pack has its animals.** All three holes
+  closed, in the converters:
+  - **`attacks` is a column in both editions**, written as
+    `<name>:<+hit>:<reach or range>:<dice> <type>[, <dice> <type>]`, attacks joined by `; ` — a
+    compound column with its own grammar, like `damage` (`tools/srd/lib.mjs ▸ attackRecord`). A
+    second damage part is taken only after the word "plus", which is how both SRDs write damage that
+    is ADDED; every other number later in the sentence is an alternative (a versatile grip, a swarm
+    at half HP) or a condition, and folding those in gave a veteran's longsword both of its dice at
+    once. Three creatures in each pack carry no attacks, and all of them have none in the source (a
+    shrieker, a frog, a sea horse).
+  - **The 2014 pack ships 317 creatures, not 201.** SRD 5.1's monster CHAPTER is what the Tabyltop
+    JSON holds, and it contains no ordinary animals at all — every one of them is in Appendix MM-A
+    "Miscellaneous Creatures" (95 stat blocks) and MM-B "Nonplayer Characters" (21), which live only
+    in the HTML and had never been converted. So the doc's earlier claim that 5.1 has "no separate
+    appendix" was wrong, and with it the belief that the missing wolf was a licence gap. A 2014
+    druid now has 74 beasts at CR ≤ 1 to choose from where it had none.
+  - **2014 states its saves and damage defences.** `str_save`…`cha_save`, `resistances`,
+    `immunities` and `vulnerabilities` come off the JSON's own fields and the appendix's own
+    paragraphs, so the two editions' monster schemas no longer differ.
+  - **The JSON is lossy and the HTML is the check.** Fifteen chapter entries carry an empty `actions`
+    array and a few descriptions are typo'd past Tabyltop's own parser ("H it:10 (2d6 + 3)"), so a
+    chapter row with no attacks from the JSON is filled from the same document's HTML. Same source,
+    same rules — a value is either in it or absent, never guessed.
 
 - [x] **MONK-MOVEMENT · Unarmored Movement's ladder is in the row.** Every monk from level 2 to 20
   walked at 30 feet: the feature's text says "+10 feet" and then defers to the Monk table, so the row

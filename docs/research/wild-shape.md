@@ -253,10 +253,10 @@ Given N2b's `play.form = {monsterRef, formHp} | null` plus a `deriveSheet` branc
 | §3 CR gate | Compare `cr` against 1/4, 1/2, 1 by level | `monsters.cr` is `optStr` with fractions. A fraction-aware comparator does not exist in `src/lib` today. |
 | §3 movement gate | Detect fly (both editions) and swim (2014 only) | `speed` is a **free string**, and case differs across editions (2014 `"swim 40 ft."`, 2024 `"Swim 30 ft."`). No structured movement column. A case-insensitive substring match on a declared column is the only option — narrow and defensible, but it is not a typed field. |
 | §3 "Beast stat blocks" | Filter on `creature_type` | Free-form: real 2024 values include `beast`, `beast (dinosaur)`, `swarm of tiny beasts`. Prefix match needed; the swarm question is **NOT IN SRD**. |
-| §3 the 2014 roster | Any legal form at all | **BLOCKER for 2014.** `srd-2014/monsters_srd.csv` ships **4 beasts total**: `plesiosaurus` (CR 2), `triceratops` (CR 5), `tyrannosaurus_rex` (CR 8), `stirge` (CR 1/8, `fly 40 ft.`). Only the stirge is CR ≤ 1, and it flies — so a 2014 druid has **zero legal forms at levels 2–7 and exactly one from level 8**. The table's own examples (Wolf, Crocodile, Giant eagle) are **not in the 2014 file**. 2024 is healthy: 69 beasts at CR ≤ 1 (24 at CR 0, 9 at 1/8, 18 at 1/4, 9 at 1/2, 9 at 1), including all four recommended forms (`rat`, `riding_horse`, `spider`, `wolf`). `giant_eagle` exists in 2024 but is `celestial`, not a beast. |
+| §3 the 2014 roster | Any legal form at all | **Supported** (BEAST-DATA). The 2014 pack ships 317 creatures, 74 of them beasts at CR ≤ 1: SRD 5.1's animals were all in the two appendices, which had never been converted. |
 | §4 replaced scores | STR/DEX/CON, AC, speed from the row | `str`…`cha` and `ac` are `optInt` — **supported**. |
-| §4 attacks | The form's attacks with to-hit and damage | **BLOCKER, both editions.** `monsters_srd.csv` has **no attack column of any kind**. Every attack lives only in `text_en` prose (`"**_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage."`). Mining that from `src/` is exactly what `prose-is-not-data.test.ts` forbids. Two honest options: (a) a new structured `attacks` column produced by the converter, or (b) render the stat block prose read-only and let the player add a manual attack row. |
-| §4 skills / saves | Union of the druid's proficiencies with the creature's, higher wins | `skills` is a free string (`"Perception +5, Stealth +4"`) that must be parsed into `skill → bonus` to compare. 2024 has typed `str_save`…`cha_save` (`optInt`); **2014 has no save columns at all**, so the 2014 "higher creature bonus" comparison has data for skills and none for saves. |
+| §4 attacks | The form's attacks with to-hit and damage | **Supported** (BEAST-DATA). `attacks` is a column in both editions — `<name>:<+hit>:<reach or range>:<dice> <type>`, attacks joined by `; ` — written by the converters, which are the only things allowed to read a value out of the SRD's sentences. |
+| §4 skills / saves | Union of the druid's proficiencies with the creature's, higher wins | `skills` is a free string (`"Perception +5, Stealth +4"`) that must be parsed into `skill → bonus` to compare. 2024 has typed `str_save`…`cha_save` (`optInt`); 2014 carries the same `str_save`…`cha_save` columns since BEAST-DATA, so the "higher creature bonus" comparison has data on both sides in both editions. |
 | §4 senses (2014) | Suppress the druid's own darkvision unless the form has it | `senses` is a free string, and the druid's own senses are not modelled as a suppressible set. |
 | §4 legendary / lair ban (2014) | Nothing to enforce — no column, and no CR ≤ 1 beast carries them | No code needed; a note in the form panel covers it. |
 | §5 duration | `floor(level/2)` hours (2014 explicit, 2024 unstated rounding) | Derivable from build level. Wants a `play.form` expiry; the existing timer machinery is `durationRounds` on effects — hours are a different scale, so this is a new clock or an explicit "no timer, revert manually". |
@@ -271,7 +271,7 @@ Given N2b's `play.form = {monsterRef, formHp} | null` plus a `deriveSheet` branc
 existing pool, and a `build.wildShapeForms` list beside it. Make `formHp` optional and edition-driven
 rather than intrinsic to the form object.
 
-**The two hard blockers are content, not code:** no `wild_shape` resource row exists in either edition
-(there is no pool to spend), and `monsters_srd.csv` has **no attacks column** in either edition (a form
-cannot fight). On top of that, 2014 has effectively **no legal beast to become** — which makes 2024 the
-only edition where a finished Wild Shape can be demonstrated against shipped content.
+**One content blocker is left:** no `wild_shape` resource row exists in either edition, so there is
+no pool to spend. The other two are closed — `monsters_srd.csv` states every stat block's `attacks`,
+and the 2014 pack has its animals (BEAST-DATA) — so a finished Wild Shape can now be demonstrated
+against shipped content in BOTH editions, which is what this spec was blocked on.

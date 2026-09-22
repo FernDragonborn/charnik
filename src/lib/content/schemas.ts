@@ -476,6 +476,12 @@ const monsterSchema = baseRow.extend({
 	senses: optStr,
 	languages: optStr,
 	skills: optStr,
+	/** The stat block's attacks, as `<name>:<to hit>:<reach or range>:<dice> <type>[, <dice> <type>]`
+	 *  joined by `; ` — a compound column with its own grammar, like `damage`. Every other combat
+	 *  number a creature has was already a column; this was the one that lived only in `text_en`, and
+	 *  a form that replaces your attacks (Wild Shape) cannot read prose. Written by the converters,
+	 *  which are the only things allowed to read a value out of the SRD's sentences. */
+	attacks: optStr,
 });
 
 // --- Rules / lookup tables (NOT browsable articles: no name_en, minimal identity) ----------
