@@ -38,6 +38,7 @@ import {
 import { Inspector, targetForTodo } from './inspector.svelte';
 import { ClassRows } from './class-rows.svelte';
 import { SkillPicks } from './skill-picks.svelte';
+import { MasteryPicks } from './mastery-picks.svelte';
 import { SpellPicks } from './spell-picks.svelte';
 import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
 import type { SystemId } from '$lib/stores/app.svelte';
@@ -342,6 +343,10 @@ export class BuildVM {
 	 *  pickers over them. See skill-picks.svelte.ts. */
 	skillPicks: SkillPicks = new SkillPicks(() => this);
 
+	/** Weapon mastery: the kinds of weapon this character has drilled, capped by the class's own
+	 *  ladder — see mastery-picks.svelte.ts. 2024 only. */
+	masteryPicks: MasteryPicks = new MasteryPicks(() => this);
+
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
 	feats: FeatSlots = new FeatSlots(() => this);
@@ -399,6 +404,7 @@ export class BuildVM {
 			// still holds its answer, and one that no longer does has no question to answer.
 			featSpells: this.feats.featSpellPicks.map((p) => ({ ...p })),
 			expertise: this.draft.expertise.filter((s) => this.skillPicks.isProficient(s)),
+			masteries: [...this.masteryPicks.picks],
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead). `choiceKeys`, not the class
@@ -528,6 +534,7 @@ export class BuildVM {
 				this.skillPicks.speciesSkillCount - this.skillPicks.speciesSkillPicks.length,
 				0,
 			),
+			masteriesOwed: Math.max(this.masteryPicks.cap - this.masteryPicks.picks.length, 0),
 			originFeat: {
 				name: rowName(this.row(this.feats.originFeatRef)),
 				owed: this.feats.originChoicesOwed,

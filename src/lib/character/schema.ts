@@ -129,6 +129,11 @@ const buildSchema = z.object({
 	 *  ability and its own caster profile. Flat for the derive, exactly like `featSkills`; the
 	 *  per-slot copy under `slotPicks.featSpells` is what a level-up restores from. */
 	featSpells: z.array(featSpellChoice.extend({ feat: ref, key: z.string() })).default([]),
+	/** MASTERY-HALF: the weapon KINDS whose mastery property this character may use, as bare weapon
+	 *  ids — the same vocabulary `grant_proficiency:weapon.<id>` names. A 2024-only rule: 2014 has no
+	 *  weapon mastery and ships no grant, so this stays empty there. Re-chosen at level-up like every
+	 *  other picked option (RAW swaps one on a Long Rest, which is the same edit). */
+	masteries: z.array(z.string()).default([]),
 	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
 	expertise: z.array(z.string()).default([]),
 	/** Tool proficiencies, as bare `item` ids of category `tool` — the same id a

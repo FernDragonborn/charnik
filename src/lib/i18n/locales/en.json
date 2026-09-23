@@ -287,6 +287,12 @@
 		"shortRestDiceHint": "Short rest: spend Hit Dice to heal (by the book)",
 		"shortRestHalf": "½ HP",
 		"shortRestHalfHint": "Short rest: heal half your max HP (house/video-game style)",
+		"masteries": {
+			"picks": "mastery {chosen}/{cap}",
+			"hint": "Pick the kinds of weapon you have drilled. The attack row prints the property once the kind is yours.",
+			"none": "Nothing this character has grants weapon mastery.",
+			"noWeapons": "No weapon you are proficient with carries a mastery property."
+		},
 		"skills": {
 			"title": "Skills",
 			"columns": "check · passive",
@@ -329,6 +335,8 @@
 			"abilitiesTitle": "Ability scores",
 			"abilitiesBlurb": "The six numbers everything else is built from. Pick how they are generated, then allocate — every boost that lands on them is listed underneath.",
 			"skillsTitle": "Skills & expertise",
+			"masteriesTitle": "Weapon mastery",
+			"masteriesBlurb": "Your training lets you use the mastery property of a few KINDS of weapon. Every 2024 weapon has one; it does nothing until one of these picks unlocks it, and you may re-drill on a Long Rest.",
 			"skillsBlurb": "Your class offers a list to choose from; your background grants its own for free. Expertise doubles proficiency on a skill you already have.",
 			"languagesTitle": "Languages",
 			"languagesBlurb": "What your character can speak and read.",
@@ -400,6 +408,7 @@
 			"featIn": "Level {level} ({class}): take a feat or raise an ability.",
 			"speciesFeat": "{species}: choose the feat it grants.",
 			"speciesSkills": "{count, plural, one {Choose # more skill from your species.} other {Choose # more skills from your species.}}",
+			"masteries": "{count, plural, one {Choose # more weapon mastery.} other {Choose # more weapon masteries.}}",
 			"originFeat": "{feat}: {count, plural, one {# choice} other {# choices}} still to make.",
 			"cantrips": "{count, plural, one {Choose # more cantrip.} other {Choose # more cantrips.}}",
 			"cantripsFor": "{count, plural, one {Choose # more {class} cantrip.} other {Choose # more {class} cantrips.}}",

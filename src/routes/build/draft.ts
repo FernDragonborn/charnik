@@ -165,6 +165,8 @@ export interface DraftState {
 	boostPicks: Ability[];
 	skills: string[];
 	expertise: string[];
+	/** Weapon kinds drilled for their mastery property, as bare weapon ids (`build.masteries`). */
+	masteries: string[];
 	selectedLanguages: string[];
 	/** Tool proficiencies picked from the content (bare `tool` item ids) — `build.tools`. */
 	selectedTools: string[];
@@ -221,6 +223,7 @@ export function blankDraft(): DraftState {
 		boostShape: '2-1',
 		boostPicks: [],
 		skills: [],
+		masteries: [],
 		expertise: [],
 		selectedLanguages: [],
 		selectedTools: [],
@@ -290,6 +293,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	boostPicks: z.array(z.enum(ABILITIES)).catch(() => []),
 	skills: z.array(z.string()).catch(() => []),
 	expertise: z.array(z.string()).catch(() => []),
+	masteries: z.array(z.string()).catch(() => []),
 	selectedLanguages: z.array(z.string()).catch(() => []),
 	selectedTools: z.array(z.string()).catch(() => []),
 	customLanguages: z.array(z.string()).catch(() => []),
@@ -350,6 +354,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		skills: [...char.build.skills],
 		speciesSkills: [...(char.build.speciesSkills ?? [])],
 		expertise: [...char.build.expertise],
+		masteries: [...(char.build.masteries ?? [])],
 		selectedLanguages: [...char.build.languages],
 		selectedTools: [...char.build.tools],
 		customLanguages: [...char.build.customLanguages],

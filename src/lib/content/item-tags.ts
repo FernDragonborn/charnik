@@ -40,6 +40,10 @@ export const ITEM_TAG = {
 	/** A tool's check ability (`ability:int`). 5.5e states it per tool; 5.1 says in so many words
 	 *  that tool use is NOT tied to one ability, so its rows carry no such tag and the sheet asks. */
 	ability: 'ability',
+	/** The weapon's one mastery property (`mastery:vex`) — 2024 only; 2014 has no such rule, so only
+	 *  that edition's weapons carry it. The property does nothing until a feature unlocks this KIND
+	 *  of weapon for the character (MASTERY-HALF). */
+	mastery: 'mastery',
 } as const;
 
 /** Armor weight classes an `armor:<weight>` tag may name. */

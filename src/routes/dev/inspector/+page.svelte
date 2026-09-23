@@ -54,6 +54,7 @@
 			...featSlot,
 			{ label: 'abilities', target: { id: 'abilities' } },
 			{ label: 'skills', target: { id: 'skills' } },
+			{ label: 'masteries', target: { id: 'masteries' } },
 			{ label: 'languages', target: { id: 'languages' } },
 			{ label: 'spells', target: { id: 'spells' } },
 			{ label: 'inventory', target: { id: 'inventory' } },

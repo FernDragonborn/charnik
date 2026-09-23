@@ -4,7 +4,12 @@
  */
 import type { Ability } from '$lib/rules/core';
 import { matchesTarget } from '$lib/effects/facts';
-import { gatherProfGrants, isWeaponProficient, withGrantedProfs } from '$lib/rules/proficiency';
+import {
+	gatherProfGrants,
+	isWeaponProficient,
+	withGrantedProfs,
+	type ProfGrants,
+} from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
 import { needsAttunement } from '$lib/character/inventory';
@@ -257,6 +262,10 @@ export interface AttackMeta {
 	kinds: string[];
 	/** The weapon's first property, name and value (`['versatile', '1d10']`). */
 	property?: [name: string, value: string];
+	/** The weapon's mastery property (`vex`), set ONLY when this character has drilled this kind of
+	 *  weapon — RAW the property does nothing until a feature unlocks it, so a row that printed it
+	 *  unconditionally would be offering something the character cannot do (MASTERY-HALF). */
+	mastery?: string;
 }
 
 /** An attack row's sub-line, in the reader's language. A tag's NAME is a vocabulary and reads from
@@ -266,17 +275,22 @@ export function attackMeta({ meta }: Attack, translate?: Translate): string {
 	return [
 		meta.kinds.map((t) => itemTagLabel(t, translate)).join(' '),
 		property ? [itemTagLabel(property[0], translate), property[1]].filter(Boolean).join(' ') : '',
+		// the mastery reads as its own NAME and not as `mastery: vex`: it is the thing the player
+		// chose this weapon for, and the tag name adds nothing they do not already know
+		meta.mastery ? itemTagLabel(meta.mastery, translate) : '',
 	]
 		.filter(Boolean)
 		.join(' · ');
 }
 
-/** The tags an attack row's sub-line reads, gathered off the weapon. */
-function metaTags(tags: ItemTags): AttackMeta {
+/** The tags an attack row's sub-line reads, gathered off the weapon. `mastered` is whether THIS
+ *  character may use the weapon's mastery property — the tag alone never means they can. */
+function metaTags(tags: ItemTags, mastered: boolean): AttackMeta {
 	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
 	const kinds = kindOrder.filter((t) => tags.has(t));
-	const property = [...tags].find(([name]) => !kinds.includes(name));
-	return { kinds, ...(property ? { property } : {}) };
+	const property = [...tags].find(([name]) => !kinds.includes(name) && name !== ITEM_TAG.mastery);
+	const mastery = mastered ? (tags.get(ITEM_TAG.mastery) ?? '') : '';
+	return { kinds, ...(property ? { property } : {}), ...(mastery ? { mastery } : {}) };
 }
 
 /**
@@ -359,6 +373,26 @@ function unarmedStrike(sheet: CharacterSheet, prof: number, strMod: number): Att
 	};
 }
 
+/** Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a
+ *  feature or item granted. Lenient — a class that declares none stays proficient with everything.
+ *  Shared, because the attack row's proficiency gate and the weapon-mastery picker must agree about
+ *  what "you have proficiency with" means. */
+export function weaponProfGrants(
+	classes: readonly { class: string }[],
+	facts: CharacterSheet['facts'],
+	graph: ContentGraph,
+): ProfGrants {
+	return withGrantedProfs(
+		gatherProfGrants(
+			classes.map((c) => {
+				const r = graph.get(c.class);
+				return r?.type === 'class' ? r.data.weapon_profs : undefined;
+			}),
+		),
+		grantedEquipmentProfs(facts).weapons,
+	);
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -372,15 +406,10 @@ export function computeAttacks(
 	// A7: weapon proficiency gate. A weapon you're not proficient with omits the proficiency bonus
 	// from its to-hit (RAW). Grants come from the character's classes; lenient — a class (or set of
 	// classes) that declares no weapon_profs stays proficient with everything.
-	const weaponGrants = withGrantedProfs(
-		gatherProfGrants(
-			character.build.classes.map((c) => {
-				const r = graph.get(c.class);
-				return r?.type === 'class' ? r.data.weapon_profs : undefined;
-			}),
-		),
-		grantedEquipmentProfs(sheet.facts).weapons,
-	);
+	const weaponGrants = weaponProfGrants(character.build.classes, sheet.facts, graph);
+	// the weapon kinds this character has drilled (MASTERY-HALF) — by the BASE row's id, because that
+	// is the kind: a +1 Greataxe is still a Greataxe
+	const masteries = new Set(character.build.masteries ?? []);
 	const out: Attack[] = [];
 	for (const inv of character.build.inventory) {
 		if (!inv.equipped) continue;
@@ -461,7 +490,7 @@ export function computeAttacks(
 			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
 			damageParts,
-			meta: metaTags(item.tags),
+			meta: metaTags(item.tags, masteries.has(item.kindId)),
 			scopes: [...scopeSet],
 			...(notes.length ? { notes } : {}),
 		});

@@ -475,8 +475,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/build/derive.ts`
 
 - `function halfFeatAbilities` — The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all * six (Epic Boons), …
-- `function expertiseSlotsAtLevel` — Sum the `level:count` expertise pairs (`"1:2,6:2"`) whose unlock level ≤ the class level.
+- `function slotsGrantedAtLevel` — Sum the `level:count` pairs (`"1:2,6:2"`) whose unlock level ≤ the class level.
 - `function expertiseBudget` — N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's * active features'…
+- `function masteryBudget` — MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the * same sum over `mast…
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
 - `function speciesFixedAbilities` — Abilities raised by a species/sub-option's FIXED ASI (its flat_bonus effects) — excluded from the * free choice (5e H…
 - `function asiBoost` — One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map.
@@ -727,6 +728,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, a finesse weapon takes * the better of the …
+- `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 
 ### `src/lib/combat/constants.ts`
@@ -1766,4 +1768,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1061 exports across 143 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1063 exports across 143 modules · 71 duplicate suspects._

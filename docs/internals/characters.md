@@ -53,6 +53,9 @@ asks back too, and its answers are their own fields for the same reason: `build.
 what a species-granted skill choice was spent on, kept apart from `skills` so no cap counts another's
 picks, and the feat a species grants by choice sits in `slotPicks` under the reserved `species` key —
 the same maps a level's slot uses, because what a feat asks does not depend on how it arrived.
+`build.masteries` is the same kind of answer from the CLASS: the weapon kinds a 2024 character has
+drilled, as bare weapon ids, because a weapon's shipped mastery property does nothing until one of
+these says it may be used.
 
 **`play` is what is true right now** — current and temporary HP, hit dice spent, spell slots spent,
 resource uses spent, active effects and conditions, what they are concentrating on, and the coins in

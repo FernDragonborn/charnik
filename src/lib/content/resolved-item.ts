@@ -25,6 +25,11 @@ export interface ResolvedItem {
 	 *  a `base_item_id` leaves its own weight blank, so a magic weapon read off its own row weighs
 	 *  nothing — on the sheet whose load meter is the only place capacity is shown. */
 	weightLb: number;
+	/** WHICH KIND of weapon or armour this is, as a bare id: the base row's when there is one, the
+	 *  row's own otherwise. A +1 Greataxe is a Greataxe — so this is what a rule about a kind of
+	 *  weapon (weapon mastery) matches against, where `row.id` would be the magic row and match
+	 *  nothing. */
+	kindId: string;
 }
 
 /**
@@ -57,7 +62,13 @@ export function resolveItem(
 			: undefined;
 	const ownWeight = Number(row.data.weight_lb ?? 0);
 	if (base?.type !== 'item')
-		return { row, tags: own, damage: row.data.damage ?? '', weightLb: ownWeight };
+		return {
+			row,
+			tags: own,
+			damage: row.data.damage ?? '',
+			weightLb: ownWeight,
+			kindId: row.data.id,
+		};
 	const tags = new Map(parseItemTags(base.data.tags));
 	for (const [name, value] of own) tags.set(name, value);
 	return {
@@ -65,6 +76,7 @@ export function resolveItem(
 		tags,
 		damage: row.data.damage || base.data.damage || '',
 		weightLb: ownWeight || Number(base.data.weight_lb ?? 0),
+		kindId: base.data.id,
 	};
 }
 

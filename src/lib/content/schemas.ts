@@ -325,6 +325,12 @@ const classFeatureSchema = baseRow.extend({
 	 *  L6 → `"1:2,6:2"`; Bard 2024 `"2:2,9:2"`, 2014 `"3:2,10:2"`). The builder sums the counts whose
 	 *  level ≤ the class level. Curated onto the row like `effects` (not in the prose); empty → 0. */
 	expertise_slots: optStr,
+	/** MASTERY-HALF: weapon-mastery CHOICES this feature unlocks, in the same `level:count` grammar
+	 *  `expertise_slots` uses and summed by the same reader — 2024 Barbarian `"1:2,4:1,10:1"` is two
+	 *  kinds at 1st and one more at 4th and 10th. Only two SRD classes grow it (the Weapon Mastery
+	 *  column of their Features table); the other three say a flat two and name no table. Curated onto
+	 *  the row like `effects`; empty → 0. */
+	mastery_slots: optStr,
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with

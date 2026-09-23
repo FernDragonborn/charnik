@@ -55,7 +55,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // read from keeps only some of each page's columns, so 551 of the SRD's 778 list entries survived it;
 // the official CC-BY PDF has all of them. An install left at v12 has a bard with nothing at 1st level
 // and a wizard 51 spells short of the list they are allowed to prepare from.
-export const CONTENT_SEED_VERSION = 13;
+// v14: MASTERY-HALF's content half — the 2024 class features that grant Weapon Mastery say HOW MANY
+// kinds of weapon, off the Weapon Mastery column of their own Features table. An install left at v13
+// has five classes whose mastery picks cap at zero, so every weapon's shipped `mastery:` stays inert.
+export const CONTENT_SEED_VERSION = 14;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

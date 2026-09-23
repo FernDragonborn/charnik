@@ -38,14 +38,28 @@
   generator needs finding — but a name-matching converter must squash whitespace before comparing, as
   `convert-2014-spell-lists.mjs` does, because the source's typography cannot be trusted.
 
-- [ ] **MASTERY-HALF · weapon mastery is half-modelled.** The WEAPON half is data and shipped: every
-  2024 weapon carries its one mastery property as `mastery:<name>` (5.5e only — 2014 has no such
-  rule, so only the 2024 converter writes it). The CHARACTER half does not exist: RAW the property
-  does nothing until a feature unlocks it, and the five SRD classes that grant Weapon Mastery at
-  level 1 each unlock it for N kinds of weapon of the player's CHOICE, N growing per the class table
-  and one swappable on a long rest. That is build state (`build.masteries`, re-editable at level-up
-  like every other chosen option) plus the eight mastery effects, none of which exist.
-  `versatile:1d10` is the same shape: data with no mechanic reading it.
+- [~] **MASTERY-HALF · weapon mastery. The CHARACTER half is built; the eight EFFECTS are not.**
+  The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
+  2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature
+  unlocks that KIND of weapon for you.
+  **What shipped.** `mastery_slots` on the five 2024 class features that grant Weapon Mastery, in the
+  same `level:count` grammar `expertise_slots` uses and read by the same function — which is now
+  named for the grammar (`slotsGrantedAtLevel`) rather than for one of its two columns. The ladders
+  are the SRD's own: Barbarian and Fighter have a Weapon Mastery column in their Features table
+  (`1:2,4:1,10:1` and `1:3,4:1,10:1,16:1`); Paladin, Ranger and Rogue name no table and stay flat at
+  two. `build.masteries` holds the picked weapon KINDS as bare ids; the picker is a capped chip pane
+  off the Attacks card, and the attack row prints the mastery **only** when a pick unlocks it —
+  matched on `ResolvedItem.kindId`, because a +1 Greataxe is still a Greataxe. 2014 caps at 0, so
+  nothing of this leaks into it. Screenshot: `design-preview/mastery-picked.png`.
+  **Multiclass grants SUM**, and that is RAW rather than a convenience: the 2024 multiclassing rules
+  name their exceptions (Extra Attack, Spellcasting, alternative AC) and Weapon Mastery is not one of
+  them, so a Fighter 1 / Barbarian 1 drills five kinds.
+  **What is left is the eight mastery EFFECTS** (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex),
+  and most of them act on a creature the app does not model — Push moves the target, Sap gives its
+  next attack disadvantage, Topple forces a save. Those are `note:` work by the same argument that
+  keeps Favored Enemy prose. Graze, Nick and Vex touch the character's own numbers and are the ones
+  worth a token. `versatile:1d10` is still the other half of this shape: data with no mechanic
+  reading it, and a grip the player CHOOSES, so it wants a control before it can mean anything.
 - [x] **BARD-LIST-2014 · the 2014 Bard spell list was missing its 1st-level half — and so was a third
   of every other class's list.** The item read the symptom right and the cause wrong: the SRD 5.1
   document has its "1st Level" and "2nd Level" Bard headings. What lost them is the **Tabyltop

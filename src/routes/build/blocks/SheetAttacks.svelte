@@ -29,6 +29,18 @@
 		<span class="eyebrow">{$_('build.attacks.title')}</span>
 		<span class="spacer"></span>
 		<span class="trail">{$_('combat.attacksPerAction', { values: { count: perTurn } })}</span>
+		{#if b.masteryPicks.cap > 0}
+			<!-- only where the rule exists: 2024, and a class that grants it. The count is on the button
+			     because an unfinished grant is a choice nobody would go looking for. -->
+			<button
+				class="pill-btn"
+				class:accent={b.inspector.isOpen({ id: 'masteries' })}
+				onclick={() => b.inspector.toggle({ id: 'masteries' })}
+				>{$_('build.masteries.picks', {
+					values: { chosen: b.masteryPicks.picks.length, cap: b.masteryPicks.cap }
+				})}</button
+			>
+		{/if}
 		<button
 			class="pill-btn"
 			class:accent={b.inspector.isOpen({ id: 'inventory' })}

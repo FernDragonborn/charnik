@@ -90,6 +90,7 @@ export const EDIT_PANES = {
 	// feat over, and the pane exists for the questions it then asks back
 	originFeat: { titleKey: 'originFeatTitle', blurbKey: 'originFeatBlurb', ownsScroll: false },
 	skills: { titleKey: 'skillsTitle', blurbKey: 'skillsBlurb', ownsScroll: false },
+	masteries: { titleKey: 'masteriesTitle', blurbKey: 'masteriesBlurb', ownsScroll: false },
 	languages: { titleKey: 'languagesTitle', blurbKey: 'languagesBlurb', ownsScroll: false },
 	spells: { titleKey: 'spellsTitle', blurbKey: 'spellsBlurb', ownsScroll: true },
 	inventory: { titleKey: 'inventoryTitle', blurbKey: 'inventoryBlurb', ownsScroll: true },

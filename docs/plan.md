@@ -301,11 +301,15 @@ position and are given per wave, because most of them were learned the hard way.
     at-cap behaviour is a REPLACE, not the disable the item claimed), the other a list that had gone
     stale under its own successes and was describing work already shipped.
 
-  **What is deliberately NOT in 0.7.0, and is not a wrong number.** `versatile:1d10` and
-  `mastery:<name>` are shipped on every weapon and read by nothing (MASTERY-HALF): both are a grip or
-  a feature the player CHOOSES, so each wants play state and a control before it can mean anything —
+  **What was deliberately NOT in 0.7.0, and is not a wrong number.** `versatile:1d10` and
+  `mastery:<name>` were shipped on every weapon and read by nothing (MASTERY-HALF): both are a grip or
+  a feature the player CHOOSES, so each wants state and a control before it can mean anything —
   a missing feature, not arithmetic we get wrong. Same for the Champion's crit threshold, which the
   app cannot get wrong because it never decides a crit at all.
+  **The mastery half of that is now built**: the class's ladder is a content column, the player picks
+  the weapon KINDS it unlocks, and the attack row prints the property exactly when a pick says it may
+  be used. What is left there is the eight mastery EFFECTS, most of which act on a creature the app
+  does not model. `versatile` and the crit threshold are untouched.
 
 - **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
   content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are

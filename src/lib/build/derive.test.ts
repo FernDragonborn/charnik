@@ -5,7 +5,7 @@ import {
 	speciesFixedAbilities,
 	buildTodos,
 	type BuildTodoInput,
-	expertiseSlotsAtLevel,
+	slotsGrantedAtLevel,
 	expertiseBudget,
 	openSubclassChoices,
 	halfFeatAbilities,
@@ -49,17 +49,17 @@ describe('halfFeatAbilities (half-feat +1 targets)', () => {
 	});
 });
 
-describe('expertiseSlotsAtLevel (N4a level:count grants)', () => {
+describe('slotsGrantedAtLevel (the level:count grants — expertise and weapon mastery)', () => {
 	it('sums the pairs whose unlock level ≤ the class level', () => {
-		expect(expertiseSlotsAtLevel('1:2,6:2', 1)).toBe(2);
-		expect(expertiseSlotsAtLevel('1:2,6:2', 5)).toBe(2);
-		expect(expertiseSlotsAtLevel('1:2,6:2', 6)).toBe(4);
-		expect(expertiseSlotsAtLevel('3:2,10:2', 20)).toBe(4);
+		expect(slotsGrantedAtLevel('1:2,6:2', 1)).toBe(2);
+		expect(slotsGrantedAtLevel('1:2,6:2', 5)).toBe(2);
+		expect(slotsGrantedAtLevel('1:2,6:2', 6)).toBe(4);
+		expect(slotsGrantedAtLevel('3:2,10:2', 20)).toBe(4);
 	});
 	it('is 0 for empty / undefined / garbage', () => {
-		expect(expertiseSlotsAtLevel(undefined, 20)).toBe(0);
-		expect(expertiseSlotsAtLevel('', 20)).toBe(0);
-		expect(expertiseSlotsAtLevel('junk', 20)).toBe(0);
+		expect(slotsGrantedAtLevel(undefined, 20)).toBe(0);
+		expect(slotsGrantedAtLevel('', 20)).toBe(0);
+		expect(slotsGrantedAtLevel('junk', 20)).toBe(0);
 	});
 });
 
@@ -138,6 +138,7 @@ describe('buildTodos', () => {
 		skillChosenCount: 0,
 		openFeatSlots: [],
 		speciesSkillsOwed: 0,
+		masteriesOwed: 0,
 		originFeat: { name: '', owed: 0 },
 		spellPicker: []
 	};

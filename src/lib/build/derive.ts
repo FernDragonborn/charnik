@@ -24,9 +24,11 @@ export function halfFeatAbilities(spec: string | undefined): Ability[] {
 	return ABILITIES.filter((a) => wanted.has(a));
 }
 
-/** Sum the `level:count` expertise pairs (`"1:2,6:2"`) whose unlock level ≤ the class level. A single
- *  feature row can thus carry a progressive grant (Rogue's L1 row also grants +2 at L6). Pure. */
-export function expertiseSlotsAtLevel(spec: string | undefined, classLevel: number): number {
+/** Sum the `level:count` pairs (`"1:2,6:2"`) whose unlock level ≤ the class level. A single feature
+ *  row can thus carry a progressive grant (Rogue's L1 Expertise row also grants +2 at L6; the 2024
+ *  Fighter's L1 Weapon Mastery row grows to six kinds by L16). One reader, because the two columns
+ *  are one grammar. Pure. */
+export function slotsGrantedAtLevel(spec: string | undefined, classLevel: number): number {
 	if (!spec) return 0;
 	let total = 0;
 	for (const pair of spec.split(',')) {
@@ -50,7 +52,23 @@ export function expertiseBudget(
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
 		const spec = feature.row.data.expertise_slots;
-		if (spec) total += expertiseSlotsAtLevel(spec, feature.entry.level);
+		if (spec) total += slotsGrantedAtLevel(spec, feature.entry.level);
+	}
+	return total;
+}
+
+/** MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the
+ *  same sum over `mastery_slots` that `expertiseBudget` does over its own column. 0 in 5e, which has
+ *  no such rule and ships no such value. Pure. */
+export function masteryBudget(
+	classes: readonly DraftClassEntry[],
+	graph: ContentGraph,
+	system: string
+): number {
+	let total = 0;
+	for (const feature of activeClassFeatures(classes, graph, system)) {
+		const spec = feature.row.data.mastery_slots;
+		if (spec) total += slotsGrantedAtLevel(spec, feature.entry.level);
 	}
 	return total;
 }
@@ -248,6 +266,7 @@ type TodoKind =
 	| 'skills'
 	| 'spells'
 	| 'feat'
+	| 'masteries'
 	| 'originFeat';
 
 export interface BuildTodo {
@@ -287,6 +306,8 @@ export interface BuildTodoInput {
 	/** Skills the species grants by choice and the player has not picked yet. Its own line, because
 	 *  it is its own cap: a species grant never counts against the class's. */
 	speciesSkillsOwed: number;
+	/** Weapon kinds the 2024 class grants a mastery pick for and the player has not chosen. */
+	masteriesOwed: number;
 	/** The background's granted origin feat and how many choices it still asks for. A grant nobody is
 	 *  told about is a grant thrown away — Skilled hands out three skills or none. */
 	originFeat: { name: string; owed: number };
@@ -372,6 +393,13 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 			kind: 'skills',
 			key: 'speciesSkills',
 			values: { count: d.speciesSkillsOwed },
+			required: true,
+		});
+	if (d.masteriesOwed > 0)
+		out.push({
+			kind: 'masteries',
+			key: 'masteries',
+			values: { count: d.masteriesOwed },
 			required: true,
 		});
 	for (const slot of d.openFeatSlots)

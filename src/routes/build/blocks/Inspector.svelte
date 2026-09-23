@@ -15,6 +15,7 @@
 	import OriginFeatPane from './OriginFeatPane.svelte';
 	import AbilitiesPane from './AbilitiesPane.svelte';
 	import SkillsPane from './SkillsPane.svelte';
+	import MasteriesPane from './MasteriesPane.svelte';
 	import LanguagesPane from './LanguagesPane.svelte';
 	import SpellsPane from './SpellsPane.svelte';
 	import InventoryPane from './InventoryPane.svelte';
@@ -28,6 +29,7 @@
 		abilities: AbilitiesPane,
 		originFeat: OriginFeatPane,
 		skills: SkillsPane,
+		masteries: MasteriesPane,
 		languages: LanguagesPane,
 		spells: SpellsPane,
 		inventory: InventoryPane,
