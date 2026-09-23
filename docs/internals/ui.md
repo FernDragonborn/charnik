@@ -59,6 +59,33 @@ Move the code with a script rather than retyping it through a model, gate every 
 and a pixel-identical screenshot, and run `pnpm format` before committing — script-spliced files are
 not prettier-clean and CI lint checks formatting.
 
+**A view-model that outgrows its file splits into SUBSYSTEMS, not chunks.** Each one is a class named
+for what it owns, composed as a field on the view-model (`combat.hp`, `combat.casting`) and handed a
+getter back to its host rather than an import of it — so nothing below the view-model depends on the
+rest of the sheet, and there is no import cycle. The trigger is the `max-lines` warning: every time
+it has fired on a view-model here, the answer was a seam and not denser code.
+
+Combat is the view that has them. Which field to open first:
+
+| field         | file               | owns                                                             |
+| ------------- | ------------------ | ---------------------------------------------------------------- |
+| `hp`          | `hit-points`       | damage, healing, temp HP, the concentration banner, death saves   |
+| `casting`     | `spell-casting`    | slot reservation, upcast, a cast's rolls and tokens, prepared     |
+| `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |
+| `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
+| `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
+| `resources`   | `resource-tracker` | slot and resource pips, and what each rest recharges              |
+| `rests`       | `rest-controls`    | the short rest as the player performs it — Hit Dice and their HP  |
+| `economy`     | `turn-economy`     | action/bonus/reaction pips, movement, the turn, entering combat   |
+| `effects`     | `effects-editor`   | the effects and conditions on the sheet, and their round timers   |
+| `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |
+| `featureView` | `feature-view`     | which features are shown, which are pinned, and in what order     |
+| `layout`      | `panel-layout`     | the two panel columns, their order, and what is collapsed         |
+| `menus`       | `menu-overlay`     | where a dropdown opens, and the one dice-tray seam every roll uses |
+
+Each file's own header says why its contents are ONE unit and what it deliberately does not own. This
+table is the index, not the explanation.
+
 ## Theming
 
 Style only through the design tokens in `styles/tokens.css`: `var(--color-*)`, `var(--font-size-*)`,

@@ -1,7 +1,7 @@
 /*
  * Spell casting — slot reservation, upcast evaluation, the spell's own effect tokens, the
  * attack/save/damage rolls a cast produces, and the prepared toggle. One of the subsystems the
- * combat view-model delegates to (§7.2).
+ * combat view-model delegates to (docs/internals/ui.md ▸ Splitting a large view).
  *
  * It reads the host through a narrow interface rather than importing the view-model class, so
  * nothing here depends on the rest of the sheet and there is no import cycle.

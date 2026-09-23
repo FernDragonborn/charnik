@@ -4,7 +4,8 @@
  *
  * "Conditions are merged into the Effects panel" is a design decision, not a coincidence — a
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
- * currently modifying the character (docs/plan.md, roadmap 9). That is why they are one module.
+ * currently modifying the character (docs/internals/content.md ▸ CONDEFF). That is why they are one
+ * module.
  */
 import {
 	EXHAUSTION_MAX,

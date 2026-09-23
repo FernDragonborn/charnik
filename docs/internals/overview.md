@@ -70,7 +70,8 @@ link and a `404.html` SPA fallback.
 - **`src/lib/character`** — the save schema and the derive pipeline. See `characters.md`.
 - **`src/lib/storage`** — the interface and its three implementations.
 - **`src/lib/components`, `src/lib/styles`** — shared components and the one global stylesheet.
-- **`src/routes/<view>`** — a view-model class plus thin components. See `ui.md`.
+- **`src/routes/<view>`** — a view-model class plus thin components; one that outgrows its file
+  composes named subsystems, mapped in `ui.md`.
 - **`src-tauri`** — the Rust shell, capabilities, and plugin registration.
 
 ## Live switching
