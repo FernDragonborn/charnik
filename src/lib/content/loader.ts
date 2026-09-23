@@ -144,7 +144,7 @@ export interface ContentGraph {
 	get(effectiveId: string): LoadedRow | undefined;
 	/** All editions/sources of one article (same identity SCOPE + slug — the type, except for the
 	 *  merged state type, where the kind scopes the slug; see `identityScope`). */
-	editionsOf(scope: ContentType | string, id: string): LoadedRow[];
+	editionsOf(scope: string, id: string): LoadedRow[];
 	/** Base-class features for a class row (same source, matching class_id). */
 	featuresForClass(classRow: LoadedRow): LoadedRowByType<'class_feature'>[];
 	/** Resolve referenced `source:id`s; report which are missing (render-what-you-can). */

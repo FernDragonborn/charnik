@@ -9,6 +9,7 @@
  * for their sword. So it is its own play-state map, and the only thing the two share is weight.
  */
 import type { Said } from '$lib/util/say';
+import { asText } from '$lib/util/format';
 
 /** One denomination: its id (the key in `play.currency`) and what it is worth in copper. */
 export interface Coin {
@@ -55,7 +56,7 @@ export const purseInCopper = (purse: Purse): number =>
  * through as its own text — a price the app cannot parse is still a price its author wrote.
  */
 export const costSaid = (cost: unknown): Said => {
-	const raw = String(cost ?? '').trim();
+	const raw = asText(cost).trim();
 	const match = /^([\d,.]+)\s*([a-z]{2})$/i.exec(raw);
 	const coin = match ? COINS.find((c) => c.id === match[2]?.toLowerCase()) : undefined;
 	return coin && match

@@ -7,7 +7,9 @@
  * makes a release carry them as its bundled floor. Missing content fails LOUDLY here rather than
  * producing a build with no rules in it.
  *
- * Runs as `predev`/`prebuild` (see package.json). `static/content/` is generated + gitignored.
+ * Runs as `predev`/`prebuild` (see package.json), and again on every change while the dev server is
+ * up (the content watcher in `vite.config.ts` calls `vendorContent`). `static/content/` is generated
+ * + gitignored.
  */
 import { readdirSync, mkdirSync, copyFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
@@ -61,23 +63,47 @@ function collect(dir, rel, into) {
 	return into;
 }
 
-const manifest = { roots: {} };
-for (const pack of contentPacks()) {
-	const srcDir = packDir(pack);
-	// the runtime path stays `content/<pack>` — where it came from is a build-time detail
-	const rel = `content/${pack}`;
-	for (const [dirRel, files] of Object.entries(collect(srcDir, rel, {}))) {
-		const outDir = resolve(root, 'static', dirRel);
-		mkdirSync(outDir, { recursive: true });
-		const from = join(srcDir, dirRel.slice(rel.length));
-		for (const f of files) copyFileSync(join(from, f), resolve(outDir, f));
-		manifest.roots[dirRel] = files;
+/** Copy every pack into `static/content/` and write the manifest beside them. Throws when the
+ *  content repo isn't there — a caller decides whether that ends the process (the CLI below) or is
+ *  reported and survived (the dev watcher). */
+export function vendorContent() {
+	requireContentRepo();
+	if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
+	mkdirSync(destBase, { recursive: true });
+
+	/** @type {{ roots: Record<string, string[]> }} */
+	const manifest = { roots: {} };
+	for (const pack of contentPacks()) {
+		const srcDir = packDir(pack);
+		// the runtime path stays `content/<pack>` — where it came from is a build-time detail
+		const rel = `content/${pack}`;
+		for (const [dirRel, files] of Object.entries(collect(srcDir, rel, {}))) {
+			const outDir = resolve(root, 'static', dirRel);
+			mkdirSync(outDir, { recursive: true });
+			const from = join(srcDir, dirRel.slice(rel.length));
+			for (const f of files) copyFileSync(join(from, f), resolve(outDir, f));
+			manifest.roots[dirRel] = files;
+		}
+	}
+	writeFileSync(resolve(destBase, 'manifest.json'), JSON.stringify(manifest, null, 2));
+	return manifest;
+}
+
+// run as a script (`predev`/`prebuild`) → vendor once and say what landed; missing content is fatal
+// HERE rather than a build with no rules in it
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+	try {
+		const manifest = vendorContent();
+		console.log(
+			`static content (from ${requireContentRepo()}):`,
+			Object.entries(manifest.roots)
+				.map(([r, fs]) => `${r} (${fs.length})`)
+				.join(', '),
+		);
+	} catch (e) {
+		console.error(`
+${e instanceof Error ? e.message : e}
+`);
+		process.exit(1);
 	}
 }
-writeFileSync(resolve(destBase, 'manifest.json'), JSON.stringify(manifest, null, 2));
-console.log(
-	`static content (from ${requireContentRepo()}):`,
-	Object.entries(manifest.roots)
-		.map(([r, fs]) => `${r} (${fs.length})`)
-		.join(', '),
-);

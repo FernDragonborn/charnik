@@ -6,13 +6,14 @@
  * ships 234 magic rows against 149 priced mundane ones, so an unfiltered list buries the basics.
  */
 import { RARITIES } from '$lib/content/schemas';
+import { asText } from '$lib/util/format';
 
 export const RARITY_BAND = ['none', ...RARITIES] as const;
 export type RarityRung = (typeof RARITY_BAND)[number];
 
 /** Where a row sits on the ladder; anything the schema does not know reads as mundane. */
 export const rarityIndex = (rarity: unknown): number => {
-	const at = RARITY_BAND.indexOf(String(rarity ?? '') as RarityRung);
+	const at = RARITY_BAND.indexOf(asText(rarity) as RarityRung);
 	return at < 0 ? 0 : at;
 };
 

@@ -302,12 +302,17 @@ prebuild, `tools/restamp.ts` is `pnpm restamp`, and `tools/content-repo.mjs` res
 content repo is.
 
 **The dev server serves the VENDORED copy, not the content repo.** `predev` copies the packs into
-`static/content/` once, and vite serves that — so a CSV you just edited in `charnik-content-srd` is
-invisible to the running app until `node tools/build-static-content.mjs` runs again. The failure is
-nasty because it is silent and asymmetric: node tests read the content repo directly and go GREEN,
-while the browser shows the old numbers, so the app looks like it has a bug the tests deny. Re-vendor
-before believing a screenshot of freshly-authored content — the dev server does not need restarting,
-only the copy refreshing.
+`static/content/`, and vite serves that — the repo itself is outside the served root and the browser
+cannot reach it, which is also why a release carries the copy rather than a path. Keeping the two in
+step is the `charnik-content-watch` plugin in `vite.config.ts`: it watches the content repo, re-runs
+`vendorContent()` on any change there, and forces a full reload, so editing a CSV in
+`charnik-content-srd` shows up in the running app without a restart.
+
+**When that watcher is not running, the staleness is silent and asymmetric** — node tests read the
+content repo directly and go GREEN while the browser shows the old numbers, so the app looks like it
+has a bug the tests deny. So a screenshot of freshly-authored content taken against a server started
+before the plugin existed, or with `vite dev` invoked past `predev`, is evidence about the old copy;
+`node tools/build-static-content.mjs` re-vendors by hand.
 
 **A converter run rewrites its WHOLE edition, and the packs have moved on since the last one.** Each
 converter re-emits every file it owns, so a run to fix one file also reverts every column the packs
