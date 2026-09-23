@@ -38,11 +38,20 @@
 	});
 
 	let popEl = $state<HTMLDivElement>();
-	let pos = $state<{ top: number; left: number | null; right: number | null }>({
+	let pos = $state<{
+		top: number;
+		left: number | null;
+		right: number | null;
+		/** How tall the menu may be where it currently sits. */
+		maxHeight: number;
+	}>({
 		top: 0,
 		left: 0,
 		right: null,
+		maxHeight: 0,
 	});
+	/** A menu squeezed below this is not worth placing there; the clamp pulls it up instead. */
+	const MIN_MENU_HEIGHT = 160;
 
 	/**
 	 * Where the dropdown sits, in viewport coordinates: under its button, re-measured from it. A menu
@@ -52,6 +61,12 @@
 	 * deliberately off while following a scroll: clamping there would pin the menu to the top of the
 	 * screen while the button it belongs to scrolled away underneath, which is a menu pointing at
 	 * nothing. It scrolls off with its button instead.
+	 *
+	 * The HEIGHT is capped in BOTH modes, which is a different job from the clamp and the reason a
+	 * menu could still end up cut off at the bottom: hiding a row shortens the panel behind it, which
+	 * moves the anchor without the menu's own size changing, so neither the resize observer nor the
+	 * open-time clamp fired — only the scroll follow, which did not clamp. Capping the height instead
+	 * of the top cannot pin the menu anywhere: it just stops it being taller than the room it has.
 	 */
 	function place(clamp: boolean): void {
 		if (!overlay || !popEl) return;
@@ -72,7 +87,12 @@
 				top = window.innerHeight - margin - popEl.offsetHeight;
 			if (top < margin) top = margin;
 		}
-		pos = { top, left, right };
+		pos = {
+			top,
+			left,
+			right,
+			maxHeight: Math.max(MIN_MENU_HEIGHT, window.innerHeight - margin - top),
+		};
 	}
 
 	/**
@@ -123,7 +143,9 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		style="top:{pos.top}px; {pos.left != null ? `left:${pos.left}px` : `right:${pos.right}px`}"
+		style="top:{pos.top}px; max-height:min(72vh, {pos.maxHeight}px); {pos.left != null
+			? `left:${pos.left}px`
+			: `right:${pos.right}px`}"
 		use:dismissOnEscape={() => (combat.overlay = null)}
 	>
 		{#if overlay.kind === 'dice'}
@@ -490,6 +512,7 @@
 	.popup {
 		position: fixed;
 		width: min(300px, calc(100vw - 1.5rem));
+		/* the ceiling; the room actually available comes from `place` as an inline max-height */
 		max-height: 72vh;
 		overflow: auto;
 		z-index: 51;
