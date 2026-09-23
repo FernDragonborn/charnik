@@ -21,6 +21,10 @@ import type { RollJournal } from './roll-journal.svelte';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
+/** RAW's floor for a concentration save: DC 10, or half the damage taken if that is higher. It is
+ *  also the whole DC when the app never saw the hit — a hazard, a shove, a GM call. */
+const CONCENTRATION_DC_FLOOR = 10;
+
 /** What the HP rules need from the sheet around them. */
 export interface HitPointsHost {
 	character: Character | null;
@@ -46,14 +50,13 @@ export class HitPoints {
 	// --- HP: apply damage / healing to the play-state (temp HP soaks damage first) -------------
 	hpAmount = $state(1);
 	/** B4 concentration-save banner: a CON save the player owes after taking damage while concentrating.
-	 *  `dc` is the suggested-but-editable DC; `failed` is set once a rolled save misses (the banner then
-	 *  offers Drop). Null = no check due. Set in `damage()`, cleared on a passed roll / drop / when the
-	 *  concentration it names ends or is replaced.
+	 *  `dc` is the suggested-but-editable DC. Null = no check due. Set in `damage()`, cleared on any
+	 *  rolled save and when the concentration it names ends or is replaced.
 	 *
 	 *  `spell` is WHICH concentration it is owed for: an owed save is a fact about one spell, and
-	 *  without the name the banner re-attached itself to whatever was concentrated on next — offering
-	 *  "Drop" for a spell that had never been rolled for. */
-	pendingConcentrationSave = $state<{ dc: number; failed?: boolean; spell: string } | null>(null);
+	 *  without the name the banner re-attached itself to whatever was concentrated on next — asking
+	 *  for a spell that had never been hit. */
+	pendingConcentrationSave = $state<{ dc: number; spell: string } | null>(null);
 	/** The CON saving-throw bonus a concentration save rolls (d20 + this); already folds save.con flat
 	 *  effects, so the roll must NOT re-add `fx.flat` (roll.ts: saves are pre-folded into the sheet). */
 	get concentrationSaveMod(): number {
@@ -165,12 +168,12 @@ export class HitPoints {
 		// went invisible while staying set, and cost two failures on some later ordinary hit.
 		this.damageWasCrit = false;
 		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
-		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
-		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
+		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, and PLAYER-rolled: the
+		// app never rolls it for you. 0 HP already ends it via endConcentrationIfBroken.
 		if (taken > 0 && p.concentration && p.hp.current > 0) {
 			const cap = this.host().character?.system === '5.5e' ? 30 : Number.POSITIVE_INFINITY;
 			this.pendingConcentrationSave = {
-				dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))),
+				dc: Math.min(cap, Math.max(CONCENTRATION_DC_FLOOR, Math.floor(taken / 2))),
 				spell: p.concentration,
 			};
 		}
@@ -183,14 +186,21 @@ export class HitPoints {
 		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
 	};
 
-	/** Roll the owed concentration save (B4 banner). Instant + auto-applied like a death save — the tray
-	 *  has no result callback, and save.con effects (Bless bonus dice, War Caster advantage) already fold
-	 *  through `effectsFor`. `mod` is the sheet CON-save value (flat effects pre-folded → do NOT add
-	 *  `fx.flat`, roll.ts). Pass → the check clears. Fail → RAW the spell ends, but we mark the banner
-	 *  `failed` and OFFER Drop rather than auto-dropping (surface, never force). */
+	/**
+	 * Roll a concentration save — from the owed check (B4 banner) or from the concentration chip with
+	 * nothing owed, which is the table asking for one the app cannot see the trigger for: that rolls
+	 * against the RAW floor. Instant + auto-applied like a death save: the tray has no result callback,
+	 * and save.con effects (Bless bonus dice, War Caster advantage) fold through `effectsFor`. `mod` is
+	 * the sheet CON-save value (flat effects pre-folded → do NOT add `fx.flat`, roll.ts).
+	 *
+	 * A MISS ENDS THE SPELL, which is the one place this tracker applies a consequence instead of
+	 * offering it. RAW leaves nothing to decide — a failed save ends concentration, full stop — so the
+	 * thing being surfaced is the ROLL, which the player presses. The chip's ✕ is the deliberate end
+	 * and the way back is the spell itself, re-cast.
+	 */
 	rollConcentrationSave = () => {
-		const pend = this.pendingConcentrationSave;
-		if (!pend || pend.failed || !this.host().character?.play.concentration) return;
+		if (!this.host().character?.play.concentration) return;
+		const dc = this.pendingConcentrationSave?.dc ?? CONCENTRATION_DC_FLOOR;
 		const fx = this.host().rolls.effectsFor('save.con');
 		const r = rollPool(
 			{ 20: 1 },
@@ -204,21 +214,15 @@ export class HitPoints {
 			{ text: 'Concentration save', key: 'combat.roll.concentration' },
 			r,
 		);
-		if (r.total >= pend.dc) {
-			toast(t('combat.notice.concentrationHeld', { total: r.total, dc: pend.dc }));
-			this.pendingConcentrationSave = null;
+		this.pendingConcentrationSave = null;
+		if (r.total >= dc) {
+			toast(t('combat.notice.concentrationHeld', { total: r.total, dc }));
 		} else {
-			toast(t('combat.notice.concentrationFailed', { total: r.total, dc: pend.dc }), {
+			toast(t('combat.notice.concentrationFailed', { total: r.total, dc }), {
 				description: t('combat.notice.concentrationFailedBody'),
 			});
-			this.pendingConcentrationSave = { ...pend, failed: true };
+			this.host().clearConcentration();
 		}
-	};
-	/** The B4 banner's "Drop spell" — deliberately END concentration (either instead of rolling, or to
-	 *  confirm the RAW consequence of a failed save). Ends the spell AND dismisses the banner. */
-	dropConcentrationFromSave = () => {
-		this.host().clearConcentration();
-		this.pendingConcentrationSave = null;
 	};
 	/** The B4 banner's ✕ — dismiss the reminder WITHOUT ending concentration. Unlike Drop, the spell
 	 *  keeps going: the player is waving off the check (they'll roll physically, have a feature that

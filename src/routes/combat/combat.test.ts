@@ -203,27 +203,33 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		expect(combat.pendingConcentrationSave).toBeNull();
 	});
 
-	it('rolling the save resolves the check and NEVER auto-drops (fail → offers Drop)', () => {
+	it('rolling the save always resolves the check, and a miss ends the spell', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 6;
 		combat.damage();
 		combat.rollConcentrationSave();
-		// resolved: either held (cleared) or failed (banner offers Drop) — never a still-unrolled {dc}
-		const pend = combat.pendingConcentrationSave;
-		expect(pend === null || pend.failed === true).toBe(true);
-		// the roll itself never ends the spell — only Drop does
-		expect(character.play.concentration).toBe(`spell:${S}:bless`);
+		// the check is answered either way — never left as a still-unrolled {dc}
+		expect(combat.pendingConcentrationSave).toBeNull();
+		// held or ended, and nothing in between: a failed save has no "confirm" step, it IS the end
+		const held = character.play.concentration === `spell:${S}:bless`;
+		expect(held || character.play.concentration === null).toBe(true);
 	});
 
-	it('Drop from the banner ends concentration and dismisses the banner', () => {
+	it('the chip rolls with nothing owed — the table asking for a check the app never saw', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
-		combat.hpAmount = 6;
-		combat.damage();
-		combat.dropConcentrationFromSave();
-		expect(character.play.concentration).toBeNull();
-		expect(combat.pendingConcentrationSave).toBeNull();
+		expect(combat.pendingConcentrationSave).toBeNull(); // no damage taken
+		const before = combat.journal.log.length;
+		combat.rollConcentrationSave();
+		expect(combat.journal.log.length).toBe(before + 1); // it rolled, against the DC 10 floor
+	});
+
+	it('rolling with no concentration at all does nothing', () => {
+		character.play.concentration = null;
+		const before = combat.journal.log.length;
+		combat.rollConcentrationSave();
+		expect(combat.journal.log.length).toBe(before);
 	});
 
 	it('an owed save does not outlive the concentration it was owed for', () => {
@@ -248,8 +254,8 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 	});
 
 	it('Dismiss (✕) clears the banner but KEEPS concentration, and a new hit re-arms it', () => {
-		// regression: Drop ends the spell; the reminder must ALSO be dismissable WITHOUT losing
-		// concentration, else waving it off once silently kills the spell and the banner never returns.
+		// regression: rolling can end the spell, so the reminder must ALSO be dismissable WITHOUT
+		// rolling — else waving it off is a coin flip on a spell, and the banner never returns.
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 6;

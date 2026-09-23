@@ -43,14 +43,31 @@
 			<span class="toggle-state">{state(shield.entry.equipped)}</span></button
 		>
 	{/if}
-	{#if conc}<button
-			class="toggle concentration on"
-			onclick={combat.clearConcentration}
-			title={$_('combat.controls.concentrationHint')}
-			><Icon name="target" />
-			{$_('combat.controls.concentration')}
-			<span class="toggle-state">{conc.label}</span></button
-		>{/if}
+	<!-- The chip ROLLS the save; ending the spell on purpose is the ✕ that drops out of it. The two are
+	     one press apart on purpose: a miss ends concentration, so the roll is the common act and the
+	     deliberate end is the rare one, and it used to be the other way round — a single stray press on
+	     this chip killed the spell with nothing to confirm it. -->
+	{#if conc}
+		<span class="conc-chip">
+			<button
+				class="toggle concentration on"
+				onclick={combat.rollConcentrationSave}
+				title={$_('combat.controls.concentrationHint')}
+				><Icon name="target" />
+				{$_('combat.controls.concentration')}
+				<span class="toggle-state">{conc.label}</span></button
+			>
+			<span class="conc-drop">
+				<button
+					class="conc-end"
+					onclick={combat.clearConcentration}
+					title={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					aria-label={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					><Icon name="x" size={12} /></button
+				>
+			</span>
+		</span>
+	{/if}
 	<span class="spacer"></span>
 	<button
 		class="toggle rest"
@@ -108,6 +125,51 @@
 	}
 	.toggle.on .toggle-state {
 		border-color: var(--color-resource);
+	}
+	/* The ✕ hangs UNDER the chip and is a descendant of it, so the pointer crossing the gap never
+	   leaves the hover — the gap is this wrapper's own padding, not empty page. */
+	.conc-chip {
+		position: relative;
+		display: inline-flex;
+	}
+	.conc-drop {
+		position: absolute;
+		inset-inline: 0;
+		top: 100%;
+		padding-top: var(--space-1);
+		display: flex;
+		justify-content: center;
+		opacity: 0;
+		/* not `visibility`, which would take it out of the tab order — the keyboard reaches it and the
+		   focus-within rule below is what reveals it. */
+		pointer-events: none;
+		transition: opacity 120ms ease;
+		z-index: 2;
+	}
+	.conc-chip:hover .conc-drop,
+	.conc-chip:focus-within .conc-drop {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	/* Neutral at rest and red only under the pointer: the chip it hangs from is already accent-red, so
+	   a red ✕ beside it reads as more of the same chip rather than as the thing that ENDS it. */
+	.conc-end {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		color: var(--color-text-muted);
+	}
+	.conc-end:hover,
+	.conc-end:focus-visible {
+		background: var(--color-danger-soft);
+		border-color: var(--color-danger);
+		color: var(--color-danger);
 	}
 	.toggle.concentration.on {
 		background: var(--color-accent-soft);

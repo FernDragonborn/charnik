@@ -142,3 +142,23 @@ existence is never news. Highlighting it the moment its window opens is the othe
 built (`plan.md` ▸ RECHARGE-TAIL). A mandatory save — concentration on damage — is an on-demand
 button beside its indicator, like the death-save button at 0 HP, carrying a suggested but editable
 DC. Prefer *event → reminder* over an auto-mutating event bus.
+
+**What the player presses is the ROLL; what follows it is not a choice.** A failed concentration save
+ends the spell — RAW leaves nothing to decide — so the save applies its own result, the way the
+death-save track already does. Offering a "Drop" button afterwards asked the player to confirm
+arithmetic the app had just shown them. The line this draws: the tracker never decides whether to
+fire a rule and never picks between two readings, but once the player has fired one, it applies what
+that rule states.
+
+**The concentration chip rolls; its ✕ ends the spell.** Pressing the chip is a save — against the
+owed DC after damage, against the RAW floor of 10 otherwise, which is the check a table calls for
+when the app never saw the trigger. Ending concentration deliberately is a separate control that
+drops out of the chip on hover or focus, so the common act is one press and the rare, irreversible
+one is a step further: the chip's own press used to end the spell outright, which made every stray
+click a lost spell.
+
+**Several saves for one lump of equal projectiles is deliberately not built.** Magic Missile's darts
+each raise their own save in 2014; the way to say that is to press Damage once per dart, which is the
+same path different SOURCES already take. A segmented "how many saves" control would stand on the
+damage line of every character in both editions to serve one spell in one of them, and 2024 dropped
+the sentence it serves. A rejected shape, not a missing one.

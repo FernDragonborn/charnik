@@ -81,44 +81,29 @@
 		</select>
 	{/if}
 	<!-- B4: concentration-save banner — a thin, persistent bar shown while a CON save is DUE after
-	     taking damage while concentrating. Suggested-but-editable DC, player-rolled (surface, never
-	     force); a failed roll offers Drop rather than auto-ending the spell. -->
+	     taking damage while concentrating. Suggested-but-editable DC, and the PLAYER rolls it; a miss
+	     ends the spell, which is RAW and not a choice (hit-points.svelte.ts ▸ rollConcentrationSave).
+	     Ending it deliberately is the concentration chip's ✕ in the toolbar, not a third button here. -->
 	{#if combat.pendingConcentrationSave && combat.conc}
 		{@const pend = combat.pendingConcentrationSave}
-		<div class="conc-banner" class:failed={pend.failed} role="status">
-			{#if pend.failed}
-				<span class="conc-warn"
-					><Icon name="circle-x" size={13} /> {$_('combat.hp.saveFailed')}</span
-				>
-				<span class="conc-detail">
-					{$_('combat.hp.spellEnds', { values: { spell: combat.conc.label } })}
-				</span>
-			{:else}
-				<span class="conc-warn"
-					><Icon name="triangle-alert" size={13} /> {$_('combat.hp.concentrationCheck')}</span
-				>
-				<span class="conc-detail">
-					{combat.conc.label} · DC
-					<input
-						class="conc-dc"
-						type="number"
-						min="1"
-						bind:value={pend.dc}
-						aria-label={$_('combat.hp.concentrationDc')}
-					/>
-					· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
-				</span>
-			{/if}
+		<div class="conc-banner" role="status">
+			<span class="conc-warn"
+				><Icon name="triangle-alert" size={13} /> {$_('combat.hp.concentrationCheck')}</span
+			>
+			<span class="conc-detail">
+				{combat.conc.label} · DC
+				<input
+					class="conc-dc"
+					type="number"
+					min="1"
+					bind:value={pend.dc}
+					aria-label={$_('combat.hp.concentrationDc')}
+				/>
+				· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
+			</span>
 			<span class="conc-actions">
-				{#if !pend.failed}
-					<button class="conc-btn roll" onclick={combat.rollConcentrationSave}
-						><DiceIcon size={14} /> {$_('combat.hp.roll')}</button
-					>
-				{/if}
-				<button
-					class="conc-btn drop"
-					title={$_('combat.hp.endConcentration', { values: { spell: combat.conc.label } })}
-					onclick={combat.dropConcentrationFromSave}>{$_('combat.hp.dropSpell')}</button
+				<button class="conc-btn roll" onclick={combat.rollConcentrationSave}
+					><DiceIcon size={14} /> {$_('combat.hp.roll')}</button
 				>
 				<button
 					class="conc-btn dismiss"
@@ -337,17 +322,10 @@
 		border: 1px solid var(--color-accent);
 		font-size: var(--font-size-xs);
 	}
-	.conc-banner.failed {
-		background: var(--color-danger-soft);
-		border-color: var(--color-danger);
-	}
 	.conc-warn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		color: var(--color-accent-bright);
-	}
-	.conc-banner.failed .conc-warn {
-		color: var(--color-danger);
 	}
 	.conc-detail {
 		color: var(--color-text-muted);

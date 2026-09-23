@@ -467,18 +467,9 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         `is_bloodied and hp>=1 ? on_event:turn_start:heal:5+con_mod` in both editions. Arbitrary event
         LOGIC stays L3 plugin `onEvent`: widening L1 past a bounded vocabulary is a security property.
         `regain_on_initiative` keeps its own token — "top up TO n" is not one of the verbs.
-  - [ ] **Concentration: several saves for one lump of EQUAL projectiles** (Magic Missile, Scorching
-        Ray) — a segmented `1 · 2 · 3` control choosing HOW MANY saves, all at the same flat DC 10,
-        never dividing the entered damage. Different SOURCES already work with no new UI: they are
-        separate Damage presses, each raising its own save. Prototype:
-        `design-preview/concentration-split-button.html`.
-        **Weighed, and the recommendation is to KILL it — a maintainer's call, so it stays open.**
-        For: the control is small and the prototype exists. Against, and it is the stronger side:
-        the rule it serves is 2014-only (2024 dropped the per-source sentence), the player already
-        has an exact way to say it — press Damage once per missile, which raises one save each and
-        is what the separate-sources path does — and the segmented control would sit permanently on
-        the damage line of every character in both editions to serve one spell in one of them. A
-        control that is on screen always for a case that is rare is the shape this tracker avoids.
+  - [x] **Concentration: several saves for one lump of EQUAL projectiles — REJECTED, not built.**
+        The reasoning that must not be re-opened lives beside the rule it is about
+        (`internals/characters.md` ▸ A tracker surfaces, it never decides).
   - [ ] **Massive Damage / System Shock** — ≥ half max HP in one instance → DC 15 CON → the System
         Shock table. **DMG-optional, NOT SRD**, so it can only ever ship as a toggle beside
         encumbrance, never as core rows or shipped data. Opening it means opening the category

@@ -162,7 +162,6 @@ class CombatVM {
 	syncDyingState = () => this.hp.syncDyingState();
 	syncPendingConcentration = () => this.hp.syncPendingConcentration();
 	rollConcentrationSave = () => this.hp.rollConcentrationSave();
-	dropConcentrationFromSave = () => this.hp.dropConcentrationFromSave();
 	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();
 	deathSave = () => this.hp.deathSave();
 	toggleDeathSave = (...a: Parameters<HitPoints['toggleDeathSave']>) =>
