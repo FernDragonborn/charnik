@@ -752,6 +752,7 @@
 			"castingReaction": "reaction",
 			"castingBonus": "bonus action",
 			"actionUsed": "{name} — action used",
+			"concentrationEnded": "Concentration ended — {spell}",
 			"concentrationHeld": "Concentration held — {total} ≥ DC {dc}",
 			"concentrationFailed": "Concentration save failed — {total} < DC {dc}",
 			"concentrationFailedBody": "The spell ends.",

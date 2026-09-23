@@ -155,7 +155,10 @@ owed DC after damage, against the RAW floor of 10 otherwise, which is the check 
 when the app never saw the trigger. Ending concentration deliberately is a separate control that
 drops out of the chip on hover or focus, so the common act is one press and the rare, irreversible
 one is a step further: the chip's own press used to end the spell outright, which made every stray
-click a lost spell.
+click a lost spell. **Ending it by hand says so**, because all that happens on screen is a chip
+disappearing and the press one step above it is a save — a spell dropped on purpose and a spell lost
+to a bad roll must not look alike. Every other way it ends stays silent: 0 HP, an incapacitating
+state, a replacing cast and a rest are all consequences of something the player just watched happen.
 
 **Several saves for one lump of equal projectiles is deliberately not built.** Magic Missile's darts
 each raise their own save in 2014; the way to say that is to press Damage once per dart, which is the

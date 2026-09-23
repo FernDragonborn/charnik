@@ -752,6 +752,7 @@
 			"castingReaction": "реакція",
 			"castingBonus": "бонусна дія",
 			"actionUsed": "{name} — дію витрачено",
+			"concentrationEnded": "Концентрацію припинено — {spell}",
 			"concentrationHeld": "Концентрацію втримано — {total} ≥ DC {dc}",
 			"concentrationFailed": "Рятівний кидок на концентрацію провалено — {total} < DC {dc}",
 			"concentrationFailedBody": "Закляття завершується.",

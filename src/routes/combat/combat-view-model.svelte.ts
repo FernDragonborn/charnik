@@ -415,7 +415,17 @@ class CombatVM {
 		const c = this.character;
 		if (c) c.play.effects = c.play.effects.filter((e) => e.source !== ref);
 	}
-	/** Stop concentrating (tap the concentration indicator). */
+	/** The player ENDING it on purpose — the chip's ✕ and the Effects panel's badge. It says so,
+	 *  because all that happens on screen is a chip disappearing, and the press one step above the ✕
+	 *  is a save: a spell dropped deliberately and a spell lost to a bad roll must not look alike.
+	 *  `clearConcentration` stays the silent primitive every other path uses (0 HP, a replacing cast,
+	 *  a rest) — those are consequences of something the player already saw. */
+	endConcentrationByHand = () => {
+		const label = this.conc?.label;
+		this.clearConcentration();
+		if (label) toast(t('combat.notice.concentrationEnded', { spell: label }));
+	};
+	/** Stop concentrating — the state change alone, with nothing said about it. */
 	clearConcentration = () => {
 		const c = this.character;
 		if (!c) return;

@@ -60,7 +60,7 @@
 			<span class="conc-drop">
 				<button
 					class="conc-end"
-					onclick={combat.clearConcentration}
+					onclick={combat.endConcentrationByHand}
 					title={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					aria-label={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					><Icon name="x" size={12} /></button
@@ -141,7 +141,7 @@
 		justify-content: center;
 		opacity: 0;
 		/* not `visibility`, which would take it out of the tab order — the keyboard reaches it and the
-		   focus-within rule below is what reveals it. */
+		   rule below is what reveals it. */
 		pointer-events: none;
 		transition: opacity 120ms ease;
 		z-index: 2;

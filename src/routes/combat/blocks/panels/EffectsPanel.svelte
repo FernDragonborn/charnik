@@ -70,7 +70,7 @@
 				<button
 					class="conc-badge"
 					title={$_('combat.effects.concentrating')}
-					onclick={combat.clearConcentration}
+					onclick={combat.endConcentrationByHand}
 					><Icon name="target" size={13} /> {$_('combat.effects.concentration')}</button
 				>
 			{/if}
