@@ -107,6 +107,10 @@ content repo, which is where all of this shows up as a diff. What a re-run no lo
 anything: each converter reads what the file already says and keeps what the source does not state
 (a condition's `max_level`, a spell's `classes`/`upcast`, an authored row). That took three separate
 losses to find, so check a re-run's diff before trusting a fourth converter with it.
+**They are RETIRED**, so do not improve them: content will be produced elsewhere, and the only piece
+of them with a future is the row-count assertion (`work/content.md` ▸ CONVERTERS-SUNSET, which also
+says what that costs). Reading 3 500 lines to tidy code that is going is the expensive kind of
+thorough.
 
 **Hardcoding a colour or a size.** Charnik ships user-authored themes, so a literal hex or px is a
 spot that stays wrong under someone's theme. Style only through the tokens in `styles/tokens.css`; a

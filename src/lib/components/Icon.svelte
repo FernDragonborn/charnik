@@ -10,8 +10,11 @@
 	// another), and a substituted glyph brings its own metrics, so it sits off the text baseline.
 	//
 	// Keep the keys spelled as Lucide spells them: one name per fact, and the icon is then findable at
-	// lucide.dev without a translation table. Two glyphs stay hand-drawn and are NOT here — `DiceIcon`
-	// (a d20 with a d4, which no icon set has) and `EyeIcon` (its open/closed pair is the toggle).
+	// lucide.dev without a translation table. THREE glyphs stay hand-drawn and are NOT here, because
+	// no set has them — `DamageIcon` (the thirteen damage types), `DiceIcon` (a d20 with a d4) and
+	// `EyeIcon` (its open/closed pair is the toggle). Each carries `class="hand-drawn"`, which is what
+	// the global baseline rule in components.css looks for: a drawn glyph that misses it sits on the
+	// text baseline and floats above its own label.
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';

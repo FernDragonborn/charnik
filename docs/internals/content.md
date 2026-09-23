@@ -290,6 +290,17 @@ data dir and apply wherever no character is open. Promoting moves the row betwee
 **Whatever reads prose reads it through that accessor** — the article, the sheets, and the search
 index the command palette is built from. A rewrite the palette cannot find is a rewrite thrown away.
 
+**The control is ONE pencil, floated at the top-right of the prose it rewrites** (`OwnWords`), and the
+editor it opens REPLACES that prose rather than standing under it — the same words in a box below the
+words they replace is the same thing said twice. At rest the scope pills and the restore live inside
+the editor, not standing under every article: a rewrite in force accents the pencil and names its
+scope in the title, which is all the standing row ever said. The box opens at the height of the text
+already in it (`growToFit`) and Escape leaves it. **Wherever an article is READ, the pencil is
+there** — the compendium, the builder's pickers, the spellbook, and the Combat view's Features panel,
+which is where a feature is actually looked up, mid-session. What `original` receives is the SHIPPED
+prose, never the displayed one: the displayed one is already the override, and seeding the editor
+from it would compare a value against itself when deciding whether a save is really a restore.
+
 ## Prose is not a data source
 
 **Nothing in `src/` may read a value out of an article's prose.** Every number, die, damage type, or

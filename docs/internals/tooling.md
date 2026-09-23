@@ -308,6 +308,12 @@ step is the `charnik-content-watch` plugin in `vite.config.ts`: it watches the c
 `vendorContent()` on any change there, and forces a full reload, so editing a CSV in
 `charnik-content-srd` shows up in the running app without a restart.
 
+**`vite.config.ts` IMPORTS the vendoring module, so nothing in it may touch the filesystem at import
+time.** It used to carry the wipe-and-recreate block it had when it was only a CLI script, which then
+ran on every dev-server boot — after `predev` had already vendored — and the app started with an empty
+graph: inventory rows printing their `type:source:id` instead of a name, no spells, no features. The
+node suites cannot see that, for the reason below.
+
 **When that watcher is not running, the staleness is silent and asymmetric** — node tests read the
 content repo directly and go GREEN while the browser shows the old numbers, so the app looks like it
 has a bug the tests deny. So a screenshot of freshly-authored content taken against a server started

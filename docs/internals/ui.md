@@ -191,6 +191,21 @@ good", so they are pinned here and every component follows them.
     moves a highlight the box names through `aria-activedescendant`, and Enter does what a click on
     the highlighted row does — `EntryList` and both builder pickers share that one implementation.
 
+13. **An anchored dropdown travels with its button, and is never taller than the room under it.**
+    Two different jobs, and conflating them is what broke it once. The TOP is clamped when the menu
+    opens, so one opened near an edge is pulled up to fit — but deliberately NOT while following a
+    scroll, because clamping there would pin the menu to the top of the screen while its button
+    scrolled away underneath, which is a menu pointing at nothing. The HEIGHT is capped in both
+    modes: capping cannot pin anything, it only stops the menu being taller than the space beneath
+    it, and it is what covers the case neither the clamp nor the resize observer sees — a reflow
+    BEHIND the menu (hiding a row shortens its panel) moves the anchor while the menu's own size
+    never changes. It stops shrinking at a floor of about six rows and hangs a little instead, since
+    a short list you have to scroll reads worse than a slightly long one.
+
+14. **A hide/pin/reorder trio is the same three arrays on `ui`, whichever panel grows them**, and a
+    FILTER over them writes those arrays rather than layering over them — see
+    [characters.md](characters.md) ▸ `ui`. A pin survives a filter.
+
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
 
@@ -386,8 +401,11 @@ A font glyph doing an icon's job fails three ways, all worse as the display shri
 `⇈` drew its two arrows at different heights), and **presentation drift** (`⚠`, `☀`, `✦` render as
 colour emoji on one platform and monochrome on another, so the same build is not the same UI).
 
-Two icons stay hand-drawn because no set has them: `DamageIcon` (the thirteen damage types) and
-`EyeIcon` (the open/closed pair).
+Three icons stay hand-drawn because no set has them: `DamageIcon` (the thirteen damage types),
+`DiceIcon` (a d20 with a d4) and `EyeIcon` (the open/closed pair). **Each carries
+`class="hand-drawn"`**, which is what the global rule in `components.css` matches alongside
+`svg.lucide`: a drawn glyph needs the same `flex: none` and the same hair below the baseline, and one
+that misses it sits ON the baseline and floats above the label beside it.
 
 **An icon-only control names itself** — its glyph used to be its accessible name, and an SVG has
 none, so pass `label` (which becomes `aria-label` plus `role="img"`). Beside a text label, leave

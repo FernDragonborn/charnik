@@ -28,11 +28,24 @@
   `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
   because of these blocks, and that comes out with them.
 
-- [ ] **CONVERTERS-SUNSET · stop maintaining `tools/srd/`, and decide whether it is kept at all.**
-  Two decisions in one item, and the first is not blocked on the second. **Do not audit them** — the
-  fresh-eyes read skips the block deliberately, and any later read should skip it too until the
-  second half here is answered. Reading 3 500 lines to improve code that may be deleted is the
-  expensive kind of thorough.
+- [ ] **CONVERTERS-SUNSET · `tools/srd/` is retired. DECIDED: delete it, once the row count has a
+  home.** **Do not audit them** — reading 3 500 lines to improve code that is going is the expensive
+  kind of thorough.
+  The two halves collapsed into one: content will be produced by a sibling repository instead (see
+  `AGENTS.md` ▸ The content lives in another repo, which states the naming convention and the rule
+  that only SRD-derived rows cross into the shipped pack). A converter cut down to "here is the row
+  count" would be a converter that converts nothing, and a folder whose name lies is worse than no
+  folder.
+  **Order matters, and it is not the deletion that is the work.** First the row-count assertion gets a
+  home in `charnik-content-srd` — a checked-in manifest of expected counts per file plus a test —
+  because between the two commits there is otherwise a state where nothing guards the pack. Then the
+  folder goes, and the standing "never re-run a converter to re-stamp" hazard goes with it
+  (`AGENTS.md`, `tooling.md`).
+  **What weakens, said plainly:** today the assertion compares the emitted rows against the SOURCE. A
+  manifest compares them against a number we wrote down, which catches a truncated file or a bad
+  hand-edit but is a snapshot, not a cross-check. That is a real loss and worth naming rather than
+  papering over; the producer that replaces this will want its own count assertion anyway, so the
+  manifest is the interface it writes against.
 
   The shipped CSVs are the artifact; the converters are how they were produced once, not what the app
   runs. Eleven files, ~3 500 lines of offline prose extraction, re-run rarely, carrying a documented

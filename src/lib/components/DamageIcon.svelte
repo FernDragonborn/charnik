@@ -10,6 +10,7 @@
 
 {#if paths.length}
 	<svg
+		class="hand-drawn"
 		viewBox="0 0 24 24"
 		width={size}
 		height={size}
