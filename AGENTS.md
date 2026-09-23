@@ -141,6 +141,23 @@ some-folder/
 ```
 
 Another location goes in `charnik.dev.json` (gitignored) or `$CHARNIK_CONTENT`.
+
+**Charnik is more than one repository, and they are named so you can find them without a list.**
+Every one of them is a sibling directory named `charnik-<role>`: `charnik-content-<name>` is a content
+pack (`charnik-content-srd` is the one the app requires and the only one a release carries), and any
+other `charnik-<role>` is tooling that PRODUCES or maintains content rather than shipping inside the
+app. So **scan the parent directory for `charnik-*` before assuming this repo is the whole project** —
+a sibling you did not expect is the normal case, not a surprise. This file deliberately does NOT
+enumerate them: a maintainer keeps repositories that are local, offline, or simply none of the app's
+business, and a list here would go stale the moment one is added and would claim to be complete when
+it cannot be. What a sibling is allowed to do is settled by the rule below, not by being listed.
+
+**What may cross into `charnik-content-srd` is only SRD-derived content.** `ATTRIBUTION.md` and the
+CC-BY licence in that repo assert the provenance of every row in it, and both are public, so a row
+from anywhere else does not merely sit oddly — it makes two shipped files untrue. A producer sibling
+may output whatever its owner needs; the channel into the shipped pack stays SRD-only, and anything
+else is a user's own homebrew folder, which the app already loads as a content root.
+
 **`tools/content-repo.mjs` is the one seam that knows where the content is** — the vendoring step, the
 converters, and the content tests all resolve through it. Never hardcode a content path; add it there.
 Missing content fails loudly at `pnpm dev` and `pnpm build`, so no build ships with no rules in it.
