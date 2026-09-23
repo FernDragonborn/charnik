@@ -14,6 +14,9 @@
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import Switch from '$lib/components/Switch.svelte';
 	import { COINS } from '$lib/rules/currency';
+	import { FEATURE_PRESET } from '$lib/character/features';
+	import { localizedName } from '$lib/content/detail';
+	import { app } from '$lib/stores/app.svelte';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
@@ -296,11 +299,48 @@
 				>
 			</div>
 			{#each actions as a (a.id)}
-				<button class="menu-row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
+				<button class="menu-row" onclick={() => combat.toggleActionHidden(a.id)}>
 					<span class="passive-eye" class:on={!hiddenActions[a.id]}
 						><EyeIcon on={!hiddenActions[a.id]} /></span
 					><span class="main">{$_(a.nameKey)}</span>{#if hiddenActions[a.id]}<span class="meta"
 							>{$_('combat.menu.hidden')}</span
+						>{/if}
+				</button>
+			{/each}
+		{:else if overlay.kind === 'featuresview'}
+			<div class="popup-heading eyebrow">
+				{$_('combat.menu.whichFeatures')}<button
+					class="icon-button"
+					onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
+				>
+			</div>
+			<!-- The presets WRITE the eyes below rather than filtering past them, so there is one answer
+			     to "is this shown" and a player can see and undo what a press did. -->
+			<div class="feature-presets">
+				<button class="pill-btn" onclick={() => combat.featureView.applyPreset(FEATURE_PRESET.all)}
+					>{$_('combat.menu.featuresAll')}</button
+				>
+				<button
+					class="pill-btn"
+					onclick={() => combat.featureView.applyPreset(FEATURE_PRESET.newest)}
+					>{$_('combat.menu.featuresNewest')}</button
+				>
+				{#each combat.featureView.classes as className (className)}
+					<button
+						class="pill-btn"
+						onclick={() => combat.featureView.applyPreset(FEATURE_PRESET.class, className)}
+						>{className}</button
+					>
+				{/each}
+			</div>
+			{#each combat.features as f, i (`${f.row.effectiveId}:${i}`)}
+				{@const id = f.row.effectiveId}
+				<button class="menu-row" onclick={() => combat.featureView.toggleHidden(id)}>
+					<span class="passive-eye" class:on={!combat.featureView.isHidden(id)}
+						><EyeIcon on={!combat.featureView.isHidden(id)} /></span
+					><span class="main">{localizedName(f.row, app.activeLocale)}</span
+					>{#if combat.featureView.isHidden(id)}<span class="meta">{$_('combat.menu.hidden')}</span
 						>{/if}
 				</button>
 			{/each}
@@ -545,6 +585,13 @@
 	.passive-eye.on {
 		color: var(--color-good);
 		opacity: 1;
+	}
+	/* the presets, above the per-feature eyes they write */
+	.feature-presets {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1-5);
+		padding: var(--space-1) var(--space-3) var(--space-2);
 	}
 	/* --- section label + search + divider (d-menus) --- */
 	.section {

@@ -48,25 +48,26 @@
   regions it missed were found by driving the app in Ukrainian and reading the screen, and the last
   three strings hid behind a scan rule that excluded a text run followed by `{`.
 
-- [ ] **FEATURES-VIEW · the Features panel gets hide, pin and reorder — driven by FILTERS, not only
-  by hand.** Maintainer-stated. Three of the four halves already exist somewhere and are reuse:
-  - **Hide** is `ui.spellsHidden`'s shape (an array of refs on the character) and the Actions panel's
-    `showhide` menu is the control. **One thing to fix while passing:** `hiddenActions` is plain
-    `$state` on `CombatVM` with nothing in the schema behind it, so hiding an action is lost on
-    reload while hiding a spell survives. Two panels, two answers to one question.
-  - **Pin** is `ui.spellsPinned` — the same array of refs, and the same open question as RESOURCE-PIN
-    about WHERE a pin lands once more than one panel has them.
-  - **Reorder** is `ui.rowOrder` + `combat/row-order.ts`, already used by attacks and actions. This
-    REVERSES a decision recorded above: "the rest are deliberately left alone, their order IS their
-    grouping — features by source". The grouping stays; what changes is that a player may override it.
-    Say so when it lands, and fix that paragraph in the same commit.
-  - **The filters are the new half, and the interesting one.** Not a parallel view layer: a filter
-    SETS the per-item visibility, so there is one answer to "is this shown" and the player can see and
-    undo what a preset did. The maintainer named two presets — *only the newest level* (so a player
-    has time to get used to what they just gained) and *only the classes in this build* — and the
-    design question is what the preset VOCABULARY is, since "flexible" cannot mean "one checkbox per
-    idea forever". Level, source section and class are the three axes the data already carries
-    (`CharacterFeature` holds `at`, `section` and `className`), so a preset is a predicate over those.
+- [x] **FEATURES-VIEW · the Features panel hides, pins and reorders — driven by FILTERS.**
+  **The filters WRITE the per-feature answer, they do not layer over it.** So there is one answer to
+  "is this shown", a preset's effect reads back in the same eyes a player toggles by hand, and undoing
+  it is the same click either way. The preset vocabulary is an open enum over the three axes the data
+  already carries (`FEATURE_PRESET`, `character/features.ts`): `all`, `newest` — only what the highest
+  class level granted, so there is room to learn what you just gained — and `class`, which narrows the
+  CLASS features to one of the build's classes and leaves species, background and feats alone, because
+  those are not a class's to filter. A fourth preset is a member here, not a new mechanism.
+  **A PINNED feature survives every preset.** Pinning is the player saying "I always want this one",
+  and a filter that overruled it would make two controls argue; the eye still hides it by hand, so
+  nothing becomes unreachable.
+  **Pinned rows lift into a group of their own** above the sections and do not repeat below — a row in
+  two places is two answers to where it is. Everything else keeps its section. One saved `ui.rowOrder`
+  array serves every group: each sorts its own members by it, so a group nobody has dragged keeps the
+  order it was gathered in.
+  **`hiddenActions` was the defect this turned up and fixed**: plain `$state` on `CombatVM` with
+  nothing in the schema behind it, so hiding an action was forgotten on reload while hiding a spell
+  survived — one question with two answers. It is `ui.actionsHidden` now.
+  Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
+  keys reorder inside a section and back, and all three survive a reload.
 
 - [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
   `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same
@@ -273,5 +274,7 @@
         focus through the library's rebuild; a row stays ONE button with the grip beside it, never
         inside it.
         **The rest are deliberately left alone: their order IS their grouping** — skills by ability,
-        spells by level, features by source, effects by polarity — and so are the actions panel's two
-        lower lists, which follow the feature that granted them. Verified across a reload.
+        spells by level, effects by polarity — and so are the actions panel's two lower lists, which
+        follow the feature that granted them. Verified across a reload.
+        **FEATURES came off that list** (FEATURES-VIEW): the grouping stayed and a player may now
+        order INSIDE a section, which is a different thing from ordering across one.

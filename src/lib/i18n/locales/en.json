@@ -575,12 +575,15 @@
 			"increase": "Increase exhaustion"
 		},
 		"features": {
-			"classFeatures": "Class features",
-			"speciesTraits": "Species traits",
 			"background": "Background",
+			"classFeatures": "Class features",
+			"empty": "Nothing yet — features arrive with a species, a background and a class.",
 			"feats": "Feats",
 			"noText": "This row carries no description.",
-			"empty": "Nothing yet — features arrive with a species, a background and a class."
+			"pin": "Pin above the rest",
+			"pinned": "Pinned",
+			"speciesTraits": "Species traits",
+			"unpin": "Unpin"
 		},
 		"hero": {
 			"level": "Level",
@@ -679,6 +682,9 @@
 			"amount": "Amount",
 			"catalog": "Catalog",
 			"close": "Close",
+			"coinWeight": "Count coin weight",
+			"coinWeightNote": "50 coins weigh a pound. Off by default — most tables do not weigh money.",
+			"coinsTitle": "Coins on the sheet",
 			"conditionsTitle": "Conditions · multi-select",
 			"customEffect": "Custom effect…",
 			"customEffectMeta": "text + manual mod",
@@ -689,6 +695,8 @@
 			"duration": "Duration",
 			"durationApplied": "Duration · applied to what you add",
 			"durationRounds": "Duration in rounds",
+			"featuresAll": "All",
+			"featuresNewest": "Newest level",
 			"hidden": "hidden",
 			"hitDiceNote": "Each die heals its roll <b>+ CON</b> (min 1). Rolls show in the log.",
 			"labelOptional": "Label (optional)…",
@@ -716,9 +724,7 @@
 			"upcastNote": "Upcasting spends the higher-level slot.",
 			"upcastTitle": "Cast {name} · at which slot",
 			"whichActions": "Which actions appear",
-			"coinsTitle": "Coins on the sheet",
-			"coinWeight": "Count coin weight",
-			"coinWeightNote": "50 coins weigh a pound. Off by default — most tables do not weigh money."
+			"whichFeatures": "Which features show"
 		},
 		"modTarget": {
 			"ac": "AC",

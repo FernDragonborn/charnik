@@ -9,6 +9,11 @@
 	// Each row is a native <details>: the player expands the one they are looking up and the rest stay
 	// out of the way. Native because it is already everything this needs — keyboard-operable, Enter
 	// takes, no state to hold — and a scripted accordion would only re-implement it worse.
+	//
+	// PINNED features lift into a group of their own above the sections, the way a pinned spell does,
+	// and do not repeat below — a row in two places is two answers to where it is. Everything else
+	// keeps its section, because a section IS the grouping; what a player may now override is the
+	// order INSIDE one.
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import { combat } from '../../combat-view-model.svelte';
@@ -17,11 +22,18 @@
 	import { localizedProse } from '$lib/content/prose';
 	import ArticleProse from '$lib/components/ArticleProse.svelte';
 	import OwnWords from '$lib/components/OwnWords.svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import RowGrip from '../RowGrip.svelte';
+	import { dndzone } from 'svelte-dnd-action';
+	import { ROW_PANEL } from '$lib/combat/row-order';
 	import {
 		FEATURE_SECTION,
 		type CharacterFeature,
 		type FeatureSection,
 	} from '$lib/character/features';
+
+	/** The pinned group's key — not a FeatureSection, because it is not a source, it is a choice. */
+	const PINNED = 'pinned';
 
 	// reading order: what a player looks up most often first
 	const ORDER: FeatureSection[] = [
@@ -30,56 +42,130 @@
 		FEATURE_SECTION.background,
 		FEATURE_SECTION.feats,
 	];
-	const features = $derived(combat.features);
+	const features = $derived(combat.featureView.visible);
+	const idOf = (f: CharacterFeature) => f.row.effectiveId;
+	const nameOf = (f: CharacterFeature) => localizedName(f.row, app.activeLocale);
 	/** Which feature's rewrite editor is open, by row. Keyed rather than a single flag: the panel is a
 	 *  list of independent <details>, and a player may have more than one expanded. Bound through a
 	 *  getter/setter pair, since a key that has never been written reads `undefined` and `bind:` will
 	 *  not hand that to a prop with a fallback. */
 	const rewriting = $state<Record<string, boolean>>({});
-	const sections = $derived(
-		ORDER.map((key) => ({
-			key,
-			items: features.filter((f: CharacterFeature) => f.section === key),
-		})).filter((s) => s.items.length),
+	/** The pinned group first, then the sections with their pinned members removed. One saved order
+	 *  serves them all: `ordered` sorts each group's own members by it, and a group a player has never
+	 *  dragged keeps the reading order it was gathered in. */
+	const groups = $derived(
+		[
+			{ key: PINNED, items: features.filter((f) => combat.featureView.isPinned(idOf(f))) },
+			...ORDER.map((key) => ({
+				key,
+				items: features.filter(
+					(f: CharacterFeature) => f.section === key && !combat.featureView.isPinned(idOf(f)),
+				),
+			})),
+		]
+			.map((g) => ({ key: g.key, items: combat.layout.ordered(ROW_PANEL.features, g.items, idOf) }))
+			.filter((g) => g.items.length),
 	);
+
+	/** A drag rewrites ONE group; the saved order is the flat concatenation of every group after it,
+	 *  so one array keeps serving all of them. */
+	function reorder(groupKey: string, ids: string[]) {
+		combat.layout.setRowOrder(
+			ROW_PANEL.features,
+			groups.flatMap((g) => (g.key === groupKey ? ids : g.items.map(idOf))),
+		);
+	}
+	/** The row being dragged, per group — the item carries its feature, so the shadow row renders. */
+	let dragging = $state<{ key: string; items: { id: string; f: CharacterFeature }[] } | null>(null);
+	const itemsFor = (g: { key: string; items: CharacterFeature[] }) =>
+		dragging?.key === g.key ? dragging.items : g.items.map((f) => ({ id: idOf(f), f }));
 </script>
 
-{#each sections as section (section.key)}
-	<div class="feature-section eyebrow">{$_(`combat.features.${section.key}`)}</div>
-	{#each section.items as f, i (`${f.row.effectiveId}:${f.at ?? ''}:${i}`)}
-		{@const prose = describedProse(f.row, app.activeLocale)}
-		<details class="feature-item">
-			<summary>
-				<!-- the class level a feature arrived at. A multiclass sheet needs the class too, or "3"
-				     names nothing; a trait or a feat has no level and gets no chip. -->
-				{#if f.at !== undefined}<span class="feature-level" title={f.className}>{f.at}</span>{/if}
-				<span class="feature-name">{localizedName(f.row, app.activeLocale)}</span>
-			</summary>
-			<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and
+{#each groups as group (group.key)}
+	<div class="feature-section eyebrow">{$_(`combat.features.${group.key}`)}</div>
+	<div
+		class="dnd-rows"
+		use:dndzone={{
+			items: itemsFor(group),
+			type: 'feature-row',
+			flipDurationMs: 150,
+			dropTargetStyle: {},
+			morphDisabled: true,
+		}}
+		onconsider={(e) => (dragging = { key: group.key, items: e.detail.items })}
+		onfinalize={(e) => {
+			dragging = null;
+			reorder(
+				group.key,
+				e.detail.items.map((i) => i.id),
+			);
+		}}
+	>
+		{#each itemsFor(group) as item (item.id)}
+			{@const f = item.f}
+			{@const prose = describedProse(f.row, app.activeLocale)}
+			{@const id = idOf(f)}
+			<div class="row-wrap">
+				<RowGrip
+					panel={ROW_PANEL.features}
+					{id}
+					name={nameOf(f)}
+					onmove={(by) => combat.layout.moveRow(ROW_PANEL.features, group.items.map(idOf), id, by)}
+				/>
+				<details class="feature-item">
+					<summary>
+						<!-- the class level a feature arrived at. A multiclass sheet needs the class too, or
+						     "3" names nothing; a trait or a feat has no level and gets no chip. -->
+						{#if f.at !== undefined}<span class="feature-level" title={f.className}>{f.at}</span
+							>{/if}
+						<span class="feature-name">{nameOf(f)}</span>
+						<!-- the pin is a real button beside the name, not inside the summary's click: a
+						     control nested in a control is what cost the keyboard its walk before -->
+						<button
+							class="feature-pin"
+							class:on={combat.featureView.isPinned(id)}
+							aria-pressed={combat.featureView.isPinned(id)}
+							title={$_(
+								combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
+							)}
+							aria-label={$_(
+								combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
+							)}
+							onclick={(e) => {
+								e.preventDefault();
+								combat.featureView.togglePinned(id);
+							}}
+							><Icon
+								name="star"
+								size={12}
+								{...combat.featureView.isPinned(id) ? { fill: 'currentColor' } : {}}
+							/></button
+						>
+					</summary>
+					<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and
 			     printing it stripped collapsed every blank line into one wall of a paragraph. The
 			     EffectsPanel's ⓘ already reuses it for the same reason (UBUG-7). -->
-			<!-- the same rewrite control the compendium article carries, and BEFORE the prose so its
+					<!-- the same rewrite control the compendium article carries, and BEFORE the prose so its
 			     floated pencil lands at the text's top-right. This is where a feature is actually READ
 			     — mid-session, on the panel — so a table's own wording has to be reachable from here
 			     and not only from the browsing view. `original` is the SHIPPED prose, never `prose`:
 			     that one is already the override. -->
-			<div class="feature-prose">
-				<OwnWords
-					rowId={f.row.effectiveId}
-					original={localizedProse(f.row, 'text', app.activeLocale)}
-					bind:rewriting={
-						() => rewriting[f.row.effectiveId] ?? false,
-						(open) => (rewriting[f.row.effectiveId] = open)
-					}
-				/>
-				{#if !rewriting[f.row.effectiveId]}
-					{#if prose}<ArticleProse bodyMarkdown={prose} />{:else}<p class="feature-none">
-							{$_('combat.features.noText')}
-						</p>{/if}
-				{/if}
+					<div class="feature-prose">
+						<OwnWords
+							rowId={id}
+							original={localizedProse(f.row, 'text', app.activeLocale)}
+							bind:rewriting={() => rewriting[id] ?? false, (open) => (rewriting[id] = open)}
+						/>
+						{#if !rewriting[id]}
+							{#if prose}<ArticleProse bodyMarkdown={prose} />{:else}<p class="feature-none">
+									{$_('combat.features.noText')}
+								</p>{/if}
+						{/if}
+					</div>
+				</details>
 			</div>
-		</details>
-	{/each}
+		{/each}
+	</div>
 {:else}
 	<p class="feature-empty">{$_('combat.features.empty')}</p>
 {/each}
@@ -93,6 +179,35 @@
 	.feature-section:not(:first-child) {
 		border-top: 1px solid var(--color-border);
 		margin-top: var(--space-1);
+	}
+	/* the grip sits BESIDE the row, never inside it (RowGrip's own comment) */
+	.row-wrap {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-1);
+	}
+	.row-wrap > .feature-item {
+		flex: 1;
+		min-width: 0;
+	}
+	/* quiet until the row is under the pointer, loud once a feature IS pinned — a star at full
+	   strength on every row is a column of stars */
+	.feature-pin {
+		margin-inline-start: auto;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		opacity: 0;
+	}
+	.feature-item:hover .feature-pin,
+	.feature-pin:focus-visible,
+	.feature-pin.on {
+		opacity: 1;
+	}
+	.feature-pin.on {
+		color: var(--color-resource);
 	}
 	.feature-item summary {
 		display: flex;

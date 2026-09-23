@@ -18,6 +18,7 @@ export type MenuKind =
 	| 'log'
 	| 'pinskills'
 	| 'showhide'
+	| 'featuresview'
 	| 'condition'
 	| 'upcast'
 	| 'restshort'

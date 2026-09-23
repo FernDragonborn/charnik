@@ -313,6 +313,15 @@ const uiSchema = z
 		 *  the short-rest popover); `half` = the popular non-book variant (heal ½ max HP, no dice — the
 		 *  Baldur's Gate 3 model). Default `dice` (ship SRD-faithful); old saves without it migrate there. */
 		shortRestMode: z.enum(SHORT_REST_MODES).default('dice'),
+		/** Standard actions hidden from the Actions panel, by action id. Stored here and not on the
+		 *  view-model: a hidden row that came back on the next launch was a preference the app kept
+		 *  forgetting, while a hidden SPELL had always survived — one question, two answers. */
+		actionsHidden: z.array(z.string()).default([]),
+		/** Features hidden from the Features panel, and features pinned above it, by `type:source:id`.
+		 *  Same shape and same rules as the spell pair. Keyed by the ROW, so a feature a multiclass
+		 *  holds twice is one entry: a player hiding "Ability Score Improvement" means all of them. */
+		featuresHidden: z.array(z.string()).default([]),
+		featuresPinned: z.array(z.string()).default([]),
 		/** Coin denominations this character does not use, hidden from the purse (electrum is why this
 		 *  exists). A view preference, so hiding a coin never touches what is in it. */
 		coinsHidden: z.array(z.string()).default([]),
@@ -325,6 +334,9 @@ const uiSchema = z
 		strict: true,
 		spellsHidden: [],
 		spellsPinned: [],
+		actionsHidden: [],
+		featuresHidden: [],
+		featuresPinned: [],
 		textOverrides: {},
 		shortRestMode: 'dice',
 		coinsHidden: [],

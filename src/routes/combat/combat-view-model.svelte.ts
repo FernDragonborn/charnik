@@ -18,6 +18,7 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
+import { FeatureView } from './feature-view.svelte';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -104,6 +105,11 @@ class CombatVM {
 	);
 	/** HP, damage/healing and death — see hit-points.svelte.ts. */
 	hp = new HitPoints(() => this);
+	/** Which features show, which are pinned, and the presets that set both — see feature-view.svelte.ts. */
+	featureView = new FeatureView(
+		() => this.character,
+		() => this.features,
+	);
 	/** What is carried, and the play-time verbs on it (equip, attune, qty, use) — N1. */
 	inventory = new InventoryTracker(
 		() => this.character,
@@ -260,7 +266,17 @@ class CombatVM {
 		const cur = ui.spellsPinned ?? [];
 		ui.spellsPinned = cur.includes(ref) ? cur.filter((x) => x !== ref) : [...cur, ref];
 	};
-	hiddenActions = $state<Record<string, boolean>>({});
+	/** Hidden standard actions, as the menu reads them. Backed by `ui.actionsHidden`, so the answer
+	 *  survives a restart the way a hidden spell always did. */
+	hiddenActions = $derived(
+		Object.fromEntries((this.character?.ui.actionsHidden ?? []).map((id) => [id, true])),
+	);
+	toggleActionHidden = (id: string) => {
+		const ui = this.character?.ui;
+		if (!ui) return;
+		const cur = ui.actionsHidden ?? [];
+		ui.actionsHidden = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+	};
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
 	// which skills show in the passive-senses row — PERSISTED per character in ui.passiveSkills

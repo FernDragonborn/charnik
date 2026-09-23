@@ -83,6 +83,21 @@ export const FEATURE_SECTION = {
 } as const;
 export type FeatureSection = (typeof FEATURE_SECTION)[keyof typeof FEATURE_SECTION];
 
+/** The ways a player narrows the Features panel in one press. An OPEN enum rather than a checkbox
+ *  per idea: the three axes the data carries are the level a feature was gained at, the section it
+ *  belongs to and the class that granted it, so a preset is a predicate over those and a fourth one
+ *  is a member here rather than a new mechanism. A preset WRITES the per-feature hidden list; it
+ *  never layers over it. */
+export const FEATURE_PRESET = {
+	/** Everything back. */
+	all: 'all',
+	/** Only what the highest class level granted — room to learn what you just gained. */
+	newest: 'newest',
+	/** Only one class's features; species, background and feats are not a class's to filter. */
+	class: 'class',
+} as const;
+export type FeaturePreset = (typeof FEATURE_PRESET)[keyof typeof FEATURE_PRESET];
+
 /** One thing a character HAS, as the sheet reads it. `row` carries its own localized name and prose,
  *  so nothing here composes a sentence; `at` is the class level a feature was gained at, absent for
  *  anything a level does not grant. */

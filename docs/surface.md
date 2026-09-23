@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (71)
+## Duplicate suspects (72)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -68,6 +68,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
+- `nameOf` ×2 — src/lib/combat/actions.ts · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -617,6 +618,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
 - `const FEATURE_SECTION` — What section a feature is read under.
 - `type FeatureSection`
+- `const FEATURE_PRESET` — The ways a player narrows the Features panel in one press.
+- `type FeaturePreset`
 - `interface CharacterFeature` — One thing a character HAS, as the sheet reads it.
 - `function characterFeatures` — Every feature, trait and feat a character has, in reading order: class features by level, then * what their origin ga…
 
@@ -1772,4 +1775,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1064 exports across 144 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1066 exports across 144 modules · 72 duplicate suspects._

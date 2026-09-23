@@ -83,6 +83,10 @@
 				aria-label={autoCalcLabel}><Icon name="zap" size={13} /></button
 			>
 		</span>
+	{:else if pid === 'features'}
+		<button class="pill-btn" onclick={(e) => openMenu('featuresview', e)}
+			><EyeIcon on={true} /> {$_('combat.panel.showHide')}</button
+		>
 	{:else if pid === 'inventory'}
 		<button class="pill-btn" onclick={(e) => openMenu('coins', e)}
 			><Icon name="coins" size={13} /> {$_('combat.panel.coins')}</button
