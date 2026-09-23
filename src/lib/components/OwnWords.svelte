@@ -118,7 +118,7 @@
 	/* a secondary action sits at the end of the prose it acts on, not under its first word */
 	.own-pencil {
 		display: flex;
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 	/* `accent` on an icon-button: the shared class carries the state everywhere else, and there is
 	   no global rule for what it looks like on an icon, only on a pill */

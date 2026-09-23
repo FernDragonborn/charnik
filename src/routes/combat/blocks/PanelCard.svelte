@@ -47,6 +47,9 @@
 		$_('combat.panel.moveHandle', { values: { panel: $_(`combat.panel.${pid}`) } }),
 	);
 	const { openMenu, cycleGroupBy } = combat;
+	const autoCalcLabel = $derived(
+		`${$_('combat.panel.autoCalc')} · ${$_(c.play.autoCalc ? 'combat.controls.on' : 'combat.controls.off')}`,
+	);
 	const { toggle } = combat.layout;
 </script>
 
@@ -67,6 +70,17 @@
 			>
 			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}
 				><Icon name="plus" size={13} /> {$_('combat.panel.addEffect')}</button
+			>
+			<!-- Auto-calc lives HERE, not in the toolbar: switching it off drops the effect layers, and
+			     this is the panel those layers are. It is an escape hatch for a number the engine got
+			     wrong, so it stays out of sight until reached for. -->
+			<button
+				class="icon-button auto-calc"
+				class:off={!c.play.autoCalc}
+				aria-pressed={c.play.autoCalc}
+				onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
+				title={`${autoCalcLabel} — ${$_('combat.panel.autoCalcHint')}`}
+				aria-label={autoCalcLabel}><Icon name="zap" size={13} /></button
 			>
 		</span>
 	{:else if pid === 'inventory'}
@@ -126,6 +140,21 @@
 	.head-btns {
 		display: flex;
 		gap: var(--space-1-5);
+	}
+	/* invisible until the head is under the pointer or the button itself takes focus — an everyday
+	   button it is not. OFF keeps it visible and accented whatever the pointer does: an engine the
+	   player switched off is a state they have to be able to SEE and undo. */
+	.auto-calc {
+		opacity: 0;
+		transition: opacity 120ms ease;
+	}
+	.panel-head:hover .auto-calc,
+	.auto-calc:focus-visible,
+	.auto-calc.off {
+		opacity: 1;
+	}
+	.auto-calc.off {
+		color: var(--color-accent);
 	}
 	.prepared-count {
 		font-family: var(--font-mono);

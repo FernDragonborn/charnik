@@ -1,7 +1,10 @@
 <script lang="ts">
-	// Combat toolbar: the play-state toggles (Combat / Shield / Concentration),
-	// the rest buttons, Auto-calc, and the Dice-tray opener. Reads the `combat` view-model
+	// Combat toolbar: the play-state toggles (Combat / Shield / Concentration), the rest buttons and
+	// the Dice-tray opener — the things a player presses every session. Reads the `combat` view-model
 	// singleton; the non-null character comes in as a prop so the markup stays terse.
+	//
+	// Auto-calc is NOT here. It is the escape hatch for a number the engine got wrong, pressed almost
+	// never, and it lives on the Effects panel head — beside the layers it drops.
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
@@ -63,15 +66,6 @@
 		onclick={() => combat.resources.rest('long')}
 		title={$_('combat.controls.longHint')}><Icon name="tent" /> {$_('combat.controls.long')}</button
 	>
-	<button
-		class="toggle auto"
-		class:on={c.play.autoCalc}
-		onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
-		title={$_('combat.controls.autoCalcHint')}
-		><Icon name="settings" />
-		{$_('combat.controls.autoCalc')}
-		<span class="toggle-state">{state(c.play.autoCalc)}</span></button
-	>
 	<button class="toggle dice" onclick={openDice}
 		><DiceIcon /> {$_('combat.controls.diceTray')}</button
 	>
@@ -123,16 +117,6 @@
 	.toggle.concentration.on .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
-	}
-	/* neutral, not green: auto-calc being ON is the NORMAL state, not a good outcome — green here reads
-	   as "something went well" beside toggles whose colour really does mean a state (rage, concentration) */
-	.toggle.auto.on {
-		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
-		border-color: var(--color-text-muted);
-		color: var(--color-text);
-	}
-	.toggle.auto.on .toggle-state {
-		border-color: var(--color-text-muted);
 	}
 	.toggle.dice {
 		background: var(--color-accent-deep);

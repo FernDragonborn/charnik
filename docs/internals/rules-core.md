@@ -55,8 +55,11 @@ much as a design one — see `security.md`.
 An unknown effect degrades to **text plus a manual modifier**. It is never silently dropped, and it
 is surfaced in the effects panel.
 
-The whole auto-calculation system has a **global toggle**. Off means stats are manual and textual
-only. Users can add custom or temporary effects at runtime through a "+" — a catalog from the
+The whole auto-calculation system has a **per-character toggle** (`play.autoCalc`). Off means stats
+are manual and textual only. It is an escape hatch for a number the engine got wrong, not a rules
+variant, so it lives on the Effects panel's head — beside the layers it drops — and stays invisible
+until the head is hovered or it takes focus. Switched OFF it shows accented whatever the pointer
+does: an engine a player turned off is a state they have to see and be able to undo. Users can add custom or temporary effects at runtime through a "+" — a catalog from the
 `effects` content type plus a Custom… option — each with an optional **duration in rounds** that a
 round counter expires. Those live in runtime play-state, not in the build.
 

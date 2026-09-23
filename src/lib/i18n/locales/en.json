@@ -522,8 +522,6 @@
 			"shortHintHalf": "Short rest — heal half your max HP",
 			"long": "Long",
 			"longHint": "Long rest",
-			"autoCalc": "Auto-calc",
-			"autoCalcHint": "Auto-calculate derived stats from effects (off → base values only)",
 			"diceTray": "Dice tray",
 			"on": "ON",
 			"off": "OFF"
@@ -813,7 +811,9 @@
 			"spells": "Spells",
 			"coins": "Coins",
 			"usedThisTurn": "used this turn",
-			"moveHandle": "Move the {panel} panel — drag it, or use the arrow keys"
+			"moveHandle": "Move the {panel} panel — drag it, or use the arrow keys",
+			"autoCalc": "Auto-calc",
+			"autoCalcHint": "Auto-calculate derived stats from effects (off → base values only)"
 		},
 		"playEvent": {
 			"turn_start": "turn start"
