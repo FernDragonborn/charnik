@@ -50,8 +50,11 @@
 		right: null,
 		maxHeight: 0,
 	});
-	/** A menu squeezed below this is not worth placing there; the clamp pulls it up instead. */
-	const MIN_MENU_HEIGHT = 160;
+	/** The floor the height cap will not shrink past — about six rows, so a menu that runs out of room
+	 *  is still a list rather than a peephole. Below it the menu overflows instead of shrinking
+	 *  further, which is the better trade: that only happens with the anchor almost at the bottom
+	 *  edge, where a taller menu hanging a little is easier to read than a short one that scrolls. */
+	const MIN_MENU_HEIGHT = 240;
 
 	/**
 	 * Where the dropdown sits, in viewport coordinates: under its button, re-measured from it. A menu
