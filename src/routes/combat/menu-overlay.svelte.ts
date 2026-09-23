@@ -10,7 +10,7 @@
  * `openDiceTray({label, formula})` raised anywhere in combat has to arrive at THIS tray (pool,
  * advantage, the attack→damage chain) rather than the instant-roll fallback.
  *
- * The view-model keeps `overlay` / `openMenu` / `openDice` as its own names (§6.1) — every panel and
+ * The view-model keeps `overlay` / `openMenu` / `openDice` as its own names (ui.md ▸ Splitting a large view) — every panel and
  * both sibling subsystems are written against them.
  */
 import { parseDamageParts, type MenuKind } from '$lib/combat/helpers';

@@ -86,6 +86,17 @@ Combat is the view that has them. Which field to open first:
 Each file's own header says why its contents are ONE unit and what it deliberately does not own. This
 table is the index, not the explanation.
 
+**Moving an implementation is no reason to move the NAME people call.** A carve leaves a one-line
+forward on the view-model, so nothing above it has to know the split happened — and several of those
+forwards are load-bearing rather than convenience: a sibling subsystem declares `die`, `effectsFor`
+and `openRoll` on its own host interface and reaches the view-model through them, so deleting the
+forward would make subsystems import each other. Panels destructure `openMenu`, markup two-way binds
+`tempHpInput`, and the behavioural tests drive every one from `combat.*`. What does NOT stay behind is
+a FORM: its fields belong with the verb they end at, bound where they live
+(`bind:value={combat.effects.customModTarget}`), because a form split across two objects is two places
+to look for one panel. Unit tests do not cover that binding seam — a moved scalar is checked by
+driving the control.
+
 ## Theming
 
 Style only through the design tokens in `styles/tokens.css`: `var(--color-*)`, `var(--font-size-*)`,

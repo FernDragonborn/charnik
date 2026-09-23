@@ -17,8 +17,14 @@ import type { ContentGraph } from '$lib/content/loader';
 import { conditionRow, conditionRows, effectCatalogRows, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
 import { describedProse } from '$lib/content/overrides.svelte';
+import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import { endConcentrationCarriedBy, remainingRounds, type MenuKind } from '$lib/combat/helpers';
+import {
+	endConcentrationCarriedBy,
+	modTargetLabel,
+	remainingRounds,
+	type MenuKind,
+} from '$lib/combat/helpers';
 import { conditionIdOf } from '$lib/combat/effects-view';
 
 /** What the effects editor needs from the sheet around it. */
@@ -31,6 +37,25 @@ export interface EffectsHost {
 }
 
 export class EffectsEditor {
+	/** The custom-modifier form: target · sign · amount · label → a `flat_bonus` token the engine
+	 *  already applies. It lives here because the button it ends at is `addEffect` — the same dialog's
+	 *  other half (`newEffectDuration`) was already on this subsystem, and a form split across two
+	 *  objects is two places to look for one panel. */
+	customModTarget = $state('ac');
+	customModSign = $state<'+' | '-'>('+');
+	customModAmount = $state(1);
+	customEffectLabel = $state('');
+	addCustomModifier = () => {
+		const amount = Math.abs(Math.round(this.customModAmount)) || 1;
+		const token = `flat_bonus:${this.customModTarget}${this.customModSign}${amount}`;
+		const label =
+			this.customEffectLabel.trim() ||
+			`${this.customModSign}${amount} ${modTargetLabel(this.customModTarget, translator())}`;
+		this.addEffect({ label, tokens: [token], positive: this.customModSign === '+' });
+		this.customEffectLabel = '';
+		this.customModAmount = 1;
+	};
+
 	/* Accessor, not an object: a $derived field initialiser runs before a constructor parameter
 	   property is assigned (same shape as TurnEconomy / FeatSlots). */
 	constructor(private host: () => EffectsHost) {}

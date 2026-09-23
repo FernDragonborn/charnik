@@ -24,7 +24,8 @@
 	const passiveSkills = $derived(combat.passiveSkills);
 	const conditionList = $derived(combat.effects.conditionList);
 	const character = $derived(combat.character);
-	const { setTempHp, addCustomModifier, togglePassive } = combat;
+	const { setTempHp, togglePassive } = combat;
+	const { addCustomModifier } = combat.effects;
 	const { addEffect } = combat.effects;
 
 	/** The add-effect menu's own filter. The catalog is user-extendable content, so the box beside it
@@ -241,7 +242,7 @@
 				<div class="modifier-row">
 					<select
 						class="modifier-target"
-						bind:value={combat.customModTarget}
+						bind:value={combat.effects.customModTarget}
 						aria-label={$_('combat.menu.modifierTarget')}
 					>
 						{#each MOD_TARGETS as g (g.groupKey)}
@@ -254,14 +255,15 @@
 					</select>
 					<button
 						class="modifier-sign"
-						onclick={() => (combat.customModSign = combat.customModSign === '+' ? '-' : '+')}
-						title={$_('combat.menu.toggleSign')}>{combat.customModSign}</button
+						onclick={() =>
+							(combat.effects.customModSign = combat.effects.customModSign === '+' ? '-' : '+')}
+						title={$_('combat.menu.toggleSign')}>{combat.effects.customModSign}</button
 					>
 					<input
 						class="modifier-amount"
 						type="number"
 						min="1"
-						bind:value={combat.customModAmount}
+						bind:value={combat.effects.customModAmount}
 						aria-label={$_('combat.menu.amount')}
 					/>
 				</div>
@@ -297,7 +299,7 @@
 					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						placeholder={$_('combat.menu.labelOptional')}
-						bind:value={combat.customEffectLabel}
+						bind:value={combat.effects.customEffectLabel}
 						autofocus
 					/>
 					<button class="submit-btn" onclick={addCustomModifier}>{$_('combat.menu.add')}</button>
@@ -307,7 +309,7 @@
 					{@html sanitizeHtml(
 						$_('combat.menu.customModNote', {
 							values: {
-								mod: `${combat.customModSign}${Math.abs(combat.customModAmount) || 1}`,
+								mod: `${combat.effects.customModSign}${Math.abs(combat.effects.customModAmount) || 1}`,
 							},
 						}),
 					)}

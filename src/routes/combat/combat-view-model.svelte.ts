@@ -8,7 +8,7 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from 'svelte-sonner';
-import { t, translator } from '$lib/i18n';
+import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
@@ -26,7 +26,6 @@ import {
 	standardActions,
 	buildSpellGroups,
 	preparedTalliesByClass,
-	modTargetLabel,
 	skillRollTarget,
 	type Attack,
 	type StandardAction,
@@ -67,7 +66,7 @@ const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insig
  * **The accessors are the point, not clutter.** `hpMax` and `die` are declared on two sibling
  * subsystems' host interfaces, five panels destructure `openMenu`, the markup two-way binds
  * `tempHpInput`, and the behavioural tests drive every one of them from `combat.*`. Moving an
- * implementation is no reason to move the name people call (§6.1) — so each carve leaves a
+ * implementation is no reason to move the name people call (ui.md ▸ Splitting a large view) — so each carve leaves a
  * one-line forward here and nothing above this file has to know it happened.
  *
  * A subsystem reads back through a `() => this` host thunk. A `$derived` field CANNOT use it: field
@@ -118,7 +117,7 @@ class CombatVM {
 	);
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
 	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
-	   of them from here (§6.1). */
+	   of them from here (ui.md ▸ Splitting a large view). */
 	get hpMax(): number {
 		return this.hp.hpMax;
 	}
@@ -171,7 +170,7 @@ class CombatVM {
 	/** The short-rest popover + Hit-Dice spending — see rest-controls.svelte.ts. */
 	rests = new RestControls(() => this);
 	/* The rest verbs stay ON the view-model: the Controls bar, the popover markup and the
-	   behavioural tests are all written against these names (§6.1). */
+	   behavioural tests are all written against these names (ui.md ▸ Splitting a large view). */
 	get hitDice() {
 		return this.rests.hitDice;
 	}
@@ -195,7 +194,7 @@ class CombatVM {
 	/** Menus + the dice-tray seam (where a dropdown opens) — see menu-overlay.svelte.ts. */
 	menus = new MenuOverlay(() => this);
 	/* The menu verbs stay ON the view-model: five panels destructure `openMenu` off it, and both
-	   sibling subsystems declare it on their host interface (§6.1). */
+	   sibling subsystems declare it on their host interface (ui.md ▸ Splitting a large view). */
 	get overlay(): OpenOverlay | null {
 		return this.menus.overlay;
 	}
@@ -203,8 +202,6 @@ class CombatVM {
 		this.menus.overlay = v;
 	}
 	openMenu = (...a: Parameters<MenuOverlay['openMenu']>) => this.menus.openMenu(...a);
-	openMenuCentered = (...a: Parameters<MenuOverlay['openMenuCentered']>) =>
-		this.menus.openMenuCentered(...a);
 	openDice = (...a: Parameters<MenuOverlay['openDice']>) => this.menus.openDice(...a);
 	registerTray = () => this.menus.registerTray();
 	// read the shared reactive content store → a live content refresh (reloadContent) re-derives the
@@ -213,7 +210,7 @@ class CombatVM {
 	 *  rolls.svelte.ts. */
 	rolls = new SheetRolls(() => this);
 	/* The roll verbs stay ON the view-model: every panel and the behavioural tests call them here,
-	   and casting reads `effectsFor`/`openRoll` through the same names (§6.1). */
+	   and casting reads `effectsFor`/`openRoll` through the same names (ui.md ▸ Splitting a large view). */
 	effectsFor = (...a: Parameters<SheetRolls['effectsFor']>) => this.rolls.effectsFor(...a);
 	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
@@ -276,7 +273,6 @@ class CombatVM {
 		const cur = ui.actionsHidden ?? [];
 		ui.actionsHidden = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
 	};
-	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
 	// which skills show in the passive-senses row — PERSISTED per character in ui.passiveSkills
 	// (D19/D3), falling back to the default trio; toggling saves.
@@ -331,22 +327,6 @@ class CombatVM {
 		const id = this.character?.id;
 		if (!id) return;
 		void reviseLog(getUserStorage(), id, logLineFor(e));
-	};
-
-	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a
-	// flat_bonus token the effects engine already applies (now live, via the reactive sheet).
-	customModTarget = $state('ac');
-	customModSign = $state<'+' | '-'>('+');
-	customModAmount = $state(1);
-	addCustomModifier = () => {
-		const amount = Math.abs(Math.round(this.customModAmount)) || 1;
-		const token = `flat_bonus:${this.customModTarget}${this.customModSign}${amount}`;
-		const label =
-			this.customEffectLabel.trim() ||
-			`${this.customModSign}${amount} ${modTargetLabel(this.customModTarget, translator())}`;
-		this.effects.addEffect({ label, tokens: [token], positive: this.customModSign === '+' });
-		this.customEffectLabel = '';
-		this.customModAmount = 1;
 	};
 
 	/** EFX-ROLL: feature-granted named rollables (Sneak Attack, Bardic Inspiration die) — the derive
@@ -516,7 +496,7 @@ class CombatVM {
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */
 	casting = new SpellCasting(this);
 	/* The casting API stays ON the view-model: it is the boundary the markup and the behavioural
-	   tests are written against (§6.1), and moving 434 lines of implementation out is no reason to
+	   tests are written against (ui.md ▸ Splitting a large view), and moving 434 lines of implementation out is no reason to
 	   move the seam people call. */
 	cast = (...args: Parameters<SpellCasting['cast']>) => this.casting.cast(...args);
 	castAtSlot = (...args: Parameters<SpellCasting['castAtSlot']>) =>
