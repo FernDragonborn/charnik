@@ -36,11 +36,11 @@
   that only SRD-derived rows cross into the shipped pack). A converter cut down to "here is the row
   count" would be a converter that converts nothing, and a folder whose name lies is worse than no
   folder.
-  **Order matters, and it is not the deletion that is the work.** First the row-count assertion gets a
-  home in `charnik-content-srd` — a checked-in manifest of expected counts per file plus a test —
-  because between the two commits there is otherwise a state where nothing guards the pack. Then the
-  folder goes, and the standing "never re-run a converter to re-stamp" hazard goes with it
-  (`AGENTS.md`, `tooling.md`).
+  **The first of the two commits has landed.** `charnik-content-srd` carries `manifest.json` (34
+  files, 3219 rows) and a zero-dependency `check.mjs` that counts by quote state and exits 1 on
+  drift — proved against the app's own papaparse loader over every shipped file. So the pack is
+  guarded on its own now, and what is left is the deletion: the folder goes, and the standing
+  "never re-run a converter to re-stamp" hazard goes with it (`AGENTS.md`, `tooling.md`).
   Nothing else in them needs rescuing: the one lesson that outlives the code — a source's typography
   is not evidence, so repair the spacing before a name is compared or turned into an id — is recorded
   in `content.md` ▸ Where the shipped data comes from.
