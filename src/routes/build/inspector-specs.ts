@@ -299,15 +299,18 @@ function subclassPickSpec(b: InspectorHost, index: number): PickSpec {
 function featPickSpec(b: InspectorHost, slotKey: string, level: number): PickSpec {
 	const held = b.draft.slotFeats[slotKey] ?? null;
 	const lock = settledPick(!!b.settledDraft?.slotFeats[slotKey], held);
+	// the species' slot asks a narrower question — which of the feats IT offers — so it says so and
+	// offers only those. Everything else about a filled slot is identical.
+	const fromSpecies = b.feats.slotIsSpecies(slotKey);
 	return {
 		kind: 'pick',
-		titleKey: 'featTitle',
-		blurbKey: 'featBlurb',
+		titleKey: fromSpecies ? 'speciesFeatTitle' : 'featTitle',
+		blurbKey: fromSpecies ? 'speciesFeatBlurb' : 'featBlurb',
 		values: { level },
 		type: 'feat',
 		// a feat another slot already spent stays in the list and says so, unless its row says it
 		// repeats. Taking one twice grants its benefit once and reads as a bug.
-		options: b.feats.featOptionsFor(level),
+		options: fromSpecies ? b.feats.speciesFeatOptions : b.feats.featOptionsFor(level),
 		blockedKey: (id) =>
 			lock.blocked(id) ??
 			(b.feats.featOptionBlocked(id, slotKey) ? 'build.feats.takenElsewhere' : null),

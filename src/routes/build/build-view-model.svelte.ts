@@ -55,6 +55,7 @@ import {
 	selectedRefs,
 	allSelectedRefs,
 	parseDraftState,
+	SPECIES_SLOT_KEY,
 	type DraftState,
 	type EditContext
 } from './draft';
@@ -391,6 +392,8 @@ export class BuildVM {
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
 			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.feats.featSkillPicks])],
+			// the species' own skill grant, in its own field for the same reason featSkills is in one
+			speciesSkills: [...this.skillPicks.speciesSkillPicks],
 			// §D: the list + casting ability each spell-teaching feat was answered with. Derived from the
 			// slots alone (not carried from the edit like featSkills): a slot that still holds the feat
 			// still holds its answer, and one that no longer does has no question to answer.
@@ -398,11 +401,12 @@ export class BuildVM {
 			expertise: this.draft.expertise.filter((s) => this.skillPicks.isProficient(s)),
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
-			// its ability boost flows through abilityBoosts instead)
+			// its ability boost flows through abilityBoosts instead). `choiceKeys`, not the class
+			// slots: a species-granted feat is as taken as one a level bought.
 			feats: [
 				...new Set([
 					...this.carriedFeats,
-					...this.feats.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
+					...this.feats.choiceKeys.map((key) => this.draft.slotFeats[key]).filter((r) => r && r !== ASI)
 				])
 			],
 			// persist the per-slot picks so a later level-up restores filled slots (UBUG-13)
@@ -505,7 +509,25 @@ export class BuildVM {
 			pointsLeft: this.abilities.pointsLeft,
 			classSkillCount: this.skillPicks.classSkillCount,
 			skillChosenCount: this.skillPicks.chosenCount,
-			openFeatSlots: this.feats.featSlots.filter((s) => !this.draft.slotFeats[s.key]),
+			openFeatSlots: [
+				...this.feats.featSlots,
+				// the species' own slot joins the list only when a species actually grants a feat, so
+				// every SRD species (none does) adds no line
+				...(this.feats.speciesGrantsFeat
+					? [
+							{
+								key: SPECIES_SLOT_KEY,
+								level: 1,
+								className: '',
+								species: rowName(this.speciesOptionRow ?? this.speciesRow),
+							},
+						]
+					: []),
+			].filter((s) => !this.draft.slotFeats[s.key]),
+			speciesSkillsOwed: Math.max(
+				this.skillPicks.speciesSkillCount - this.skillPicks.speciesSkillPicks.length,
+				0,
+			),
 			originFeat: {
 				name: rowName(this.row(this.feats.originFeatRef)),
 				owed: this.feats.originChoicesOwed,

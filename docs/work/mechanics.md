@@ -199,10 +199,18 @@ stay semi-manual.
   "score a critical hit on"). Every row below carries no token today. Grouped by what it is waiting
   on, because only the first group is pure content:
 
-  - **Writable against the targets that exist — all shipped.** `danger_sense` (`advantage:save.dex`) ·
-    `fast_movement`, 2024 `roving` and `unarmored_movement` (a speed bonus under each one's own armour
-    guard; the monk's is the `step()` ladder, MONK-MOVEMENT) · `feral_instinct` and 2024
-    `champion_remarkable_athlete` (`advantage:initiative`).
+  - **Writable against the targets that exist — DONE, every row carries its token.** Checked against
+    both shipped packs rather than against this list: `danger_sense` (`advantage:save.dex` under its
+    own condition guard, and the guards DIFFER by edition — 2014 also excludes blinded and deafened) ·
+    `fast_movement` and 2024 `roving` (`armor_type!=heavy ? flat_bonus:speed+10`) ·
+    `unarmored_movement` (the `step()` ladder under the no-armour-no-shield guard, MONK-MOVEMENT) ·
+    `feral_instinct` and 2024 `champion_remarkable_athlete` (`advantage:initiative`, and the 2024
+    Champion adds `advantage:skill.athletics`).
+    **2014 `champion_remarkable_athlete` is NOT this shape and does not belong here**: it adds half
+    proficiency ROUNDED UP to STR/DEX/CON checks, and the `partial` rung is Jack of All Trades' —
+    `Math.floor(prof / 2)`, labelled "Jack of All Trades" in the trace. Saying it with that rung would
+    be a wrong number wearing another feature's name. It needs the rung to carry its rounding and its
+    own label first.
     Two rows that were listed here are NOT shape 1 and moved: 2024 `superior_defense` spends 3 Focus
     Points for a minute of resistance, so it is an activated ability with a duration, not a passive;
     `pact_boon` is a choice of three, so it waits on `choose_n` with the rest of the choices below.
@@ -643,17 +651,28 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   another name, and it is absent for a character carrying no shield, where it used to offer a phantom
   +2. Old saves keep parsing: zod strips the dropped key.
 
-- [ ] **PLAYTEST-SPECIES-GRANTS · a species can give an ability boost and nothing else.**
-  `species.boost_choice` already encodes "+N to M abilities of your choice" (`schemas.ts`, 5e
-  Half-Elf). Two things beside it have no column and no token: a species that grants a **feat** — and
-  the feat must be a CHOICE where more than one is legal, not a fixed one — and a species that grants
-  a **skill proficiency of the player's choice** (feats have `skill_choices`; species do not). Until
-  both exist, a whole shape of species is unauthorable even as someone's own homebrew.
-  **We do not write the rows.** The species that makes this famous is PHB, in no SRD, and there is no
-  CC-BY source for it — so this item is the VOCABULARY only, and whoever wants that species writes it
-  in their own pack (`AGENTS.md` ▸ Inventing game data).
-  **An optional rule is a CHOICE at the point of the trait, not a settings shelf.** Settled with the
-  maintainer: a variant trait is an ordinary content row that declares which trait it stands in for,
-  and the builder offers the two side by side where that trait is granted — the usual one and the
-  homebrew/variant. No global toggle, nothing to enable before building, and a pack someone installs
-  brings its variants with it.
+- [x] **PLAYTEST-SPECIES-GRANTS · a species can give an ability boost and nothing else.** It can give
+  two more things now, and both are a CHOICE — a FIXED grant is what `effects` has always been for.
+  The vocabulary only: no SRD species uses either column, and the species that makes this shape famous
+  is PHB, in no CC-BY source, so whoever wants it writes it in their own pack (`AGENTS.md` ▸ Inventing
+  game data).
+  - **`skill_choice`** — how many skill proficiencies of the player's choice the species grants. The
+    same column `feat.skill_choice` already carried, on the other kind of row that grants one. Its
+    picks land in `build.speciesSkills`, a list of its OWN: a species grant counted against the class
+    cap would silently cost the player a proficiency, which is the bug the separate `featSkills` list
+    exists to avoid. Asked as chips in the Skills pane, capped the way every capped picker here is (at
+    the cap a click replaces the oldest).
+  - **`feat_choice`** — `any`, or a comma list of feat ids to choose between, the same "list or
+    keyword" grammar `ability_choice` uses. That keyword is `ANY_OPTION` now rather than three
+    separate bare `'any'` literals.
+    The feat rides the EXISTING slot machinery under a reserved key (`SPECIES_SLOT_KEY`), so
+    everything a filled slot then asks — a half-feat's +1, a Skilled-shaped feat's skills, a
+    Magic-Initiate-shaped one's list — works with no second implementation. What the species slot does
+    NOT offer is the ability improvement: that is what a LEVEL offers, and a species grant spent on one
+    is a grant the species never made. It has its own row on the feats card, its own to-do line, and
+    counts as taken, so a level slot cannot spend the same non-repeatable feat twice.
+  - **A variant species is a row, not a settings shelf.** `SPECIES_OPTION_KINDS` gains `variant`
+    beside subrace/lineage/legacy/ancestry, so a trait set offered BESIDE the usual one — the shape an
+    optional rule takes here — says what it is in the data, and the builder offers it where the trait
+    it stands in for is granted. Both new columns sit on `species_option` as well as `species`, which
+    is where a variant usually carries them.

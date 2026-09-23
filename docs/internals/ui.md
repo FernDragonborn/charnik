@@ -220,7 +220,11 @@ on the draft is undoable the moment it exists — and it is what makes the fast 
 
 **Level-up reuses this page** (`?levelup=<slug>`), and a character may be built at ANY starting level:
 every subclass and every ASI/feat slot the chosen levels opened is its own todo line, and the
-class-features list shows every level up to this one plus a three-level look-ahead. Jumping straight
+class-features list shows every level up to this one plus a three-level look-ahead. A species that
+grants a feat by choice (`species.feat_choice`) adds one more line and one more slot, under the
+reserved `species` key — a slot that offers feats and NOT an ability improvement, because the
+improvement is what a level offers and a species grant spent on one would be a grant the species never
+made. Jumping straight
 to level 8 cannot silently skip three choices. `blocking` gates Create; leaving is not intercepted,
 because the draft autosaves and waits in the roster (`characters.md`).
 

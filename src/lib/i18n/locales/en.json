@@ -138,6 +138,7 @@
 			"slotsFilled": "{filled}/{total} slots filled",
 			"needClass": "Choose a class to see which levels offer a feat.",
 			"origin": "origin",
+			"fromSpecies": "species",
 			"grantedByBackground": "Granted by your background.",
 			"originOwes": "{count, plural, one {# choice still to make.} other {# choices still to make.}}",
 			"noOriginFeat": "This background grants no origin feat.",
@@ -290,6 +291,7 @@
 			"title": "Skills",
 			"columns": "check · passive",
 			"classPicks": "class picks {chosen}/{cap}",
+			"speciesPicks": "species picks {chosen}/{cap}",
 			"fromBackground": "{count, plural, one {# from background} other {# from background}}",
 			"expertise": "expertise {used}/{cap}",
 			"whichCanITake": "Which can I take?",
@@ -300,7 +302,8 @@
 			"classListFree": "Your class list — Free mode lets you take anything: {skills}",
 			"noRestriction": "This class doesn't restrict which skills you may train.",
 			"needClass": "Choose a class to see which skills it offers.",
-			"lockedOn": "Locked on from your background: {skills}."
+			"lockedOn": "Locked on from your background: {skills}.",
+			"speciesGrant": "Skills from {species} — choose {chosen}/{cap}"
 		},
 		"social": {
 			"sway": "Sway",
@@ -321,6 +324,8 @@
 			"subclassBlurb": "The specialisation inside {class}. It adds features at its own levels.",
 			"featTitle": "Level {level} — feat or ability boost",
 			"featBlurb": "This level offers one improvement: raise your abilities, or take a feat that does something an ability score cannot.",
+			"speciesFeatTitle": "Feat from your species",
+			"speciesFeatBlurb": "Your species grants a feat and lets you pick which one. Whatever the feat then asks back — an ability, skills, a spell list — it asks right here.",
 			"abilitiesTitle": "Ability scores",
 			"abilitiesBlurb": "The six numbers everything else is built from. Pick how they are generated, then allocate — every boost that lands on them is listed underneath.",
 			"skillsTitle": "Skills & expertise",
@@ -393,6 +398,8 @@
 			"skills": "{count, plural, one {Choose # more skill.} other {Choose # more skills.}}",
 			"feat": "Level {level}: take a feat or raise an ability.",
 			"featIn": "Level {level} ({class}): take a feat or raise an ability.",
+			"speciesFeat": "{species}: choose the feat it grants.",
+			"speciesSkills": "{count, plural, one {Choose # more skill from your species.} other {Choose # more skills from your species.}}",
 			"originFeat": "{feat}: {count, plural, one {# choice} other {# choices}} still to make.",
 			"cantrips": "{count, plural, one {Choose # more cantrip.} other {Choose # more cantrips.}}",
 			"cantripsFor": "{count, plural, one {Choose # more {class} cantrip.} other {Choose # more {class} cantrips.}}",

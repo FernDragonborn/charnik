@@ -228,11 +228,12 @@ export class AbilityAllocation {
 		const feats = this.host().feats;
 		for (const s of feats.featSlots)
 			if (slots.slotFeats[s.key] === ASI) addBoosts(out, asiBoost(slots.slotAsi[s.key]));
-		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot, and
-		// of the granted origin feat, which asks the same question without being a slot. Validated
-		// against the options of the feat THESE maps hold, so a slot whose feat changed is measured by
-		// the feat that granted the +1 rather than by the one sitting there now.
-		for (const key of [...feats.featSlots.map((s) => s.key), ORIGIN_SLOT_KEY]) {
+		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot,
+		// of the species' own granted feat, and of the granted origin feat, which asks the same question
+		// without being a slot. Validated against the options of the feat THESE maps hold, so a slot
+		// whose feat changed is measured by the feat that granted the +1 rather than by the one sitting
+		// there now.
+		for (const key of [...feats.choiceKeys, ORIGIN_SLOT_KEY]) {
 			const ab = slots.slotFeatAbility[key];
 			const ref = key === ORIGIN_SLOT_KEY ? feats.originFeatRef : (slots.slotFeats[key] ?? null);
 			if (ab && feats.halfFeatOptionsOf(ref).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;

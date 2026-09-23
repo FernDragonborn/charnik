@@ -120,6 +120,10 @@ const buildSchema = z.object({
 	 *  (class/background picks) so the builder's class-skill cap counter isn't inflated on edit. Merged
 	 *  into skill proficiency at derive, exactly like a class-chosen skill. */
 	featSkills: z.array(z.string()).default([]),
+	/** Skill proficiencies granted by the SPECIES' own choice-grant, kept separate from both lists
+	 *  above for the same reason `featSkills` is: the class-skill cap counts class picks, and a
+	 *  species grant that inflated it would quietly cost the player a proficiency. */
+	speciesSkills: z.array(z.string()).default([]),
 	/** §D: every spell-granting feat this character has TAKEN, with the two answers it asked for. One
 	 *  entry per instance — Magic Initiate is repeatable and each instance is its own list, its own
 	 *  ability and its own caster profile. Flat for the derive, exactly like `featSkills`; the

@@ -1,11 +1,13 @@
 <script lang="ts">
-	// Every improvement this character's levels opened: the background's origin feat, then one slot
-	// per ASI/feat level. A character built straight to level 12 owes four of these, so each is its own
-	// row — an unfilled one reads crimson and is a click into the inspector, never a silent gap.
+	// Every improvement this character owes: a feat the species grants by choice, the background's
+	// origin feat, then one slot per ASI/feat level. A character built straight to level 12 owes four
+	// of these, so each is its own row — an unfilled one reads crimson and is a click into the
+	// inspector, never a silent gap.
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { rowText } from '../rows';
+	import { SPECIES_SLOT_KEY } from '../draft';
 	import { ABILITIES } from '$lib/character/schema';
 	const b = build;
 
@@ -21,17 +23,40 @@
 	<div class="card-head">
 		<span class="eyebrow">{$_('build.feats.title')}</span>
 		<span class="spacer"></span>
-		<span class="trail" class:open={b.feats.filledSlots < b.feats.featSlots.length}>
+		<span class="trail" class:open={b.feats.filledSlots < b.feats.choiceKeys.length}>
 			{$_('build.feats.slotsFilled', {
-				values: { filled: b.feats.filledSlots, total: b.feats.featSlots.length }
+				values: { filled: b.feats.filledSlots, total: b.feats.choiceKeys.length }
 			})}
 		</span>
 	</div>
 
-	{#if !b.classRows.primaryClassId}
+	{#if !b.classRows.primaryClassId && !b.feats.speciesGrantsFeat}
 		<p class="subtext">{$_('build.feats.needClass')}</p>
 	{:else}
 		<div class="slots">
+			{#if b.feats.speciesGrantsFeat}
+				<!-- the species' grant is a CHOICE, so it is a slot like the levels' — what differs is the
+				     badge, because it was granted by who you are rather than by a level you reached. -->
+				{@const chosen = b.draft.slotFeats[SPECIES_SLOT_KEY] ?? ''}
+				<button
+					class="slot featrow"
+					class:empty={!chosen}
+					class:active={b.inspector.isOpen({ id: 'feat', slotKey: SPECIES_SLOT_KEY, level: 1 })}
+					onclick={() =>
+						b.inspector.toggle({ id: 'feat', slotKey: SPECIES_SLOT_KEY, level: 1 })}
+				>
+					<span class="lvl" class:done={!!chosen}>{$_('build.feats.fromSpecies')}</span>
+					<span class="ftext">
+						{#if chosen}
+							<b>{rowName(b.row(chosen))}</b>
+							<span class="clamp-2">{rowText(b.row(chosen))}</span>
+						{:else}
+							<b>{$_('build.notChosen')}</b>
+							<span class="clamp-2">{$_('build.feats.notChosenHint')}</span>
+						{/if}
+					</span>
+				</button>
+			{/if}
 			{#if b.feats.originFeatRef}
 				<!-- granted, not chosen — so it is not a slot: the level badge reads "origin", there is no
 				     empty state, and opening it leads to what the feat asks back rather than to a list. -->
@@ -82,7 +107,7 @@
 				</button>
 			{/each}
 
-			{#if !b.feats.featSlots.length && !b.feats.originFeatRef}
+			{#if !b.feats.choiceKeys.length && !b.feats.originFeatRef}
 				<p class="subtext">{$_('build.feats.noSlots')}</p>
 			{/if}
 		</div>

@@ -28,6 +28,18 @@
 		{$_('build.skills.fromBackground', { values: { count: b.skillPicks.autoSkills.length } })}
 	</span>
 {/if}
+{#if b.skillPicks.speciesSkillCount > 0}
+	<span
+		class={[badge, b.skillPicks.speciesSkillPicks.length < b.skillPicks.speciesSkillCount && lit]}
+	>
+		{$_('build.skills.speciesPicks', {
+			values: {
+				chosen: b.skillPicks.speciesSkillPicks.length,
+				cap: b.skillPicks.speciesSkillCount
+			}
+		})}
+	</span>
+{/if}
 {#if b.skillPicks.expertiseCap > 0}
 	<span class={badge}>
 		{$_('build.skills.expertise', { values: { used: b.skillPicks.expertiseUsed, cap: b.skillPicks.expertiseCap } })}

@@ -82,6 +82,16 @@ export const newClassRow = (): DraftClass => ({
  */
 export const ORIGIN_SLOT_KEY = 'origin';
 
+/**
+ * The slot key a SPECIES-granted feat sits in.
+ *
+ * Also not a `<rowId>:<level>` slot: the species grants the feat at creation rather than at a level,
+ * and it is a CHOICE rather than the background's outright grant. Everything a filled slot then asks
+ * — a half-feat's +1, a Skilled-shaped feat's skills, a spell-teaching feat's list — is the same
+ * shape as any other slot's, so it rides the same maps under this one reserved key.
+ */
+export const SPECIES_SLOT_KEY = 'species';
+
 /** What a spell-granting feat was answered with, in the slot it sits in (§D, Magic Initiate). */
 export interface FeatSpellChoice {
 	/** Bare class id of the chosen spell list. */
@@ -142,6 +152,10 @@ export interface DraftState {
 	speciesOptionId: string | null;
 	/** Abilities the user picked for a 5e species floating ASI. */
 	speciesBoostPicks: Ability[];
+	/** Skills picked against the species' own `skill_choice` grant. Its OWN list, never the class's:
+	 *  a species grant that ate a class pick would silently cost the player a proficiency. Folds into
+	 *  `build.speciesSkills`. */
+	speciesSkills: string[];
 	backgroundId: string | null;
 	classes: DraftClass[];
 	method: StatMethod;
@@ -198,6 +212,7 @@ export function blankDraft(): DraftState {
 		speciesId: null,
 		speciesOptionId: null,
 		speciesBoostPicks: [],
+		speciesSkills: [],
 		backgroundId: null,
 		classes: [newClassRow()],
 		method: 'point_buy',
@@ -256,6 +271,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	speciesId: z.string().nullable().catch(null),
 	speciesOptionId: z.string().nullable().catch(null),
 	speciesBoostPicks: z.array(z.enum(ABILITIES)).catch(() => []),
+	speciesSkills: z.array(z.string()).catch(() => []),
 	backgroundId: z.string().nullable().catch(null),
 	classes: z
 		.array(
@@ -332,6 +348,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		method: 'manual',
 		abilities: { ...char.build.abilities },
 		skills: [...char.build.skills],
+		speciesSkills: [...(char.build.speciesSkills ?? [])],
 		expertise: [...char.build.expertise],
 		selectedLanguages: [...char.build.languages],
 		selectedTools: [...char.build.tools],

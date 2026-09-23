@@ -13,7 +13,7 @@ import { loadCharacter, readCharacterPhoto } from '$lib/character/repository';
 import { type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
-import { newClassRow, ORIGIN_SLOT_KEY } from './draft';
+import { newClassRow, ORIGIN_SLOT_KEY, SPECIES_SLOT_KEY } from './draft';
 import { targetForTodo, sameTarget } from './inspector-specs';
 import { toggleSource } from '$lib/content/sources.svelte';
 
@@ -54,8 +54,11 @@ async function graphOf(): Promise<ContentGraph> {
 			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard`
 		].join('\n'),
 		'species_srd.csv': [
-			'id,systems,source,name_en,effects,size,speed,creature_type',
-			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`
+			'id,systems,source,name_en,effects,size,speed,creature_type,skill_choice,feat_choice',
+			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid,,`,
+			// the shape PLAYTEST-SPECIES-GRANTS exists for: a species whose grant is a CHOICE
+			`gifted_kin,5.5e,${S},Gifted Kin,,medium,30,humanoid,1,"alert,tough"`,
+			`open_kin,5.5e,${S},Open Kin,,medium,30,humanoid,,any`
 		].join('\n'),
 		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components',
@@ -883,6 +886,80 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.skillPicks.toggleExpertise('perception');
 		expect(build.draft.expertise).toEqual(['acrobatics', 'perception']);
 		expect(build.assembled.build.expertise).toEqual(['acrobatics', 'perception']);
+	});
+
+	/*
+	 * PLAYTEST-SPECIES-GRANTS. A species that grants an ability boost and nothing else was the whole
+	 * of what the content could say; these are the other two grants, and both are a CHOICE — a fixed
+	 * grant is what `effects` has always been for.
+	 */
+	it('a species that grants a skill asks for it on a count of its OWN, not the class one', () => {
+		build.draft.speciesId = `species:${S}:gifted_kin`;
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
+		];
+		expect(build.skillPicks.speciesSkillCount).toBe(1);
+
+		build.skillPicks.toggleSpeciesSkill('arcana');
+		expect(build.assembled.build.speciesSkills).toEqual(['arcana']);
+		// the class count is untouched — a species grant that spent one would cost a proficiency
+		expect(build.skillPicks.chosenCount).toBe(0);
+		expect(build.assembled.build.skills).not.toContain('arcana');
+		// and the sheet says proficient all the same
+		expect(build.sheet?.skills.arcana.prof).toBe('proficient');
+	});
+
+	it('the species skill grant is capped, and at the cap a click replaces the oldest pick', () => {
+		build.draft.speciesId = `species:${S}:gifted_kin`;
+		build.skillPicks.toggleSpeciesSkill('arcana');
+		build.skillPicks.toggleSpeciesSkill('stealth');
+		expect(build.skillPicks.speciesSkillPicks).toEqual(['stealth']);
+	});
+
+	it('a species feat is chosen from the list the species names, and counts as taken', () => {
+		build.draft.speciesId = `species:${S}:gifted_kin`;
+		expect(build.feats.speciesGrantsFeat).toBe(true);
+		expect(build.feats.speciesFeatOptions.map((f) => f.id).sort()).toEqual(['alert', 'tough']);
+
+		build.feats.setSlotFeat(SPECIES_SLOT_KEY, `feat:${S}:alert`);
+		expect(build.feats.speciesFeatRef).toBe(`feat:${S}:alert`);
+		expect(build.assembled.build.feats).toContain(`feat:${S}:alert`);
+		// and it is spent: a level slot may not take the same non-repeatable feat again
+		expect(build.feats.usedFeatRefs).toContain(`feat:${S}:alert`);
+	});
+
+	it('`any` offers every feat a level slot would, and a species granting none asks nothing', () => {
+		build.draft.speciesId = `species:${S}:open_kin`;
+		expect(build.feats.speciesFeatOptions.map((f) => f.id)).toEqual(
+			build.feats.featOptionsFor(1).map((f) => f.id),
+		);
+
+		build.draft.speciesId = `species:${S}:hardy`;
+		expect(build.feats.speciesGrantsFeat).toBe(false);
+		expect(build.feats.speciesFeatOptions).toEqual([]);
+		expect(build.skillPicks.speciesSkillCount).toBe(0);
+	});
+
+	it('both grants are still owed until answered, and say so on the to-do list', () => {
+		build.draft.name = 'Kin';
+		build.draft.speciesId = `species:${S}:gifted_kin`;
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 1 },
+		];
+		const owed = () => build.todos.map((t) => t.key);
+		expect(owed()).toEqual(expect.arrayContaining(['speciesFeat', 'speciesSkills']));
+
+		build.feats.setSlotFeat(SPECIES_SLOT_KEY, `feat:${S}:tough`);
+		build.skillPicks.toggleSpeciesSkill('athletics');
+		expect(owed()).not.toEqual(expect.arrayContaining(['speciesFeat', 'speciesSkills']));
+	});
+
+	it('a species feat asks its own sub-choices, exactly like a level slot does', () => {
+		build.draft.speciesId = `species:${S}:open_kin`;
+		build.feats.setSlotFeat(SPECIES_SLOT_KEY, `feat:${S}:grappler`);
+		// a half-feat defaults its +1 to the first option it offers, wherever the slot came from
+		expect(build.draft.slotFeatAbility[SPECIES_SLOT_KEY]).toBe('str');
+		expect(build.assembled.build.abilityBoosts).toEqual({ str: 1 });
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

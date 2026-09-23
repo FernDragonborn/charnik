@@ -9,6 +9,7 @@ import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader
 import type { CharacterSheet } from '../character/derive';
 import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
+import { ANY_OPTION } from '../content/schemas';
 import type { StatMethod } from './rules';
 import { activeClassFeatures } from '../character/features';
 
@@ -18,7 +19,7 @@ import { activeClassFeatures } from '../character/features';
 export function halfFeatAbilities(spec: string | undefined): Ability[] {
 	if (!spec) return [];
 	const raw = spec.trim().toLowerCase();
-	if (raw === 'any') return [...ABILITIES];
+	if (raw === ANY_OPTION) return [...ABILITIES];
 	const wanted = new Set(raw.split(',').map((s) => s.trim()));
 	return ABILITIES.filter((a) => wanted.has(a));
 }
@@ -280,8 +281,12 @@ export interface BuildTodoInput {
 	pointsLeft: number;
 	classSkillCount: number;
 	skillChosenCount: number;
-	/** Feat/ASI slots the character has reached and not yet filled. */
-	openFeatSlots: { key: string; level: number; className: string }[];
+	/** Feat/ASI slots the character has reached and not yet filled. A slot carrying `species` is the
+	 *  one the SPECIES grants: not a level's improvement, so it says whose grant it is instead. */
+	openFeatSlots: { key: string; level: number; className: string; species?: string }[];
+	/** Skills the species grants by choice and the player has not picked yet. Its own line, because
+	 *  it is its own cap: a species grant never counts against the class's. */
+	speciesSkillsOwed: number;
 	/** The background's granted origin feat and how many choices it still asks for. A grant nobody is
 	 *  told about is a grant thrown away — Skilled hands out three skills or none. */
 	originFeat: { name: string; owed: number };
@@ -362,11 +367,18 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 	const needSkills = d.classSkillCount - d.skillChosenCount;
 	if (needSkills > 0)
 		out.push({ kind: 'skills', key: 'skills', values: { count: needSkills }, required: true });
+	if (d.speciesSkillsOwed > 0)
+		out.push({
+			kind: 'skills',
+			key: 'speciesSkills',
+			values: { count: d.speciesSkillsOwed },
+			required: true,
+		});
 	for (const slot of d.openFeatSlots)
 		out.push({
 			kind: 'feat',
-			key: slot.className ? 'featIn' : 'feat',
-			values: { level: slot.level, class: slot.className },
+			key: slot.species ? 'speciesFeat' : slot.className ? 'featIn' : 'feat',
+			values: { level: slot.level, class: slot.className, species: slot.species ?? '' },
 			slotKey: slot.key,
 			level: slot.level,
 			required: true,

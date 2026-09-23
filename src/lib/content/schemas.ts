@@ -199,6 +199,13 @@ export const RARITIES = [
 	'legendary',
 	'artifact',
 ] as const;
+/**
+ * The wildcard a choice column takes instead of a list: `skills_from`, `ability_choice` and
+ * `feat_choice` all read "this list, or everything there is", and they read it by the same word.
+ * One name, because it is one fact of the content grammar rather than three coincidences.
+ */
+export const ANY_OPTION = 'any';
+
 /** Feat categories as named constants — compare against these, not bare strings. */
 export const FEAT_CATEGORY = {
 	origin: 'origin',
@@ -236,20 +243,43 @@ const speciesSchema = baseRow.extend({
 	/** A "+N to M abilities of your choice" ASI (5e Half-Elf), encoded `NxM` (e.g. `1x2`). The
 	 *  fixed part rides on `effects`; abilities already boosted there are excluded from the choice. */
 	boost_choice: optStr,
+	/** How many SKILL proficiencies of the player's choice this species grants — the same
+	 *  choice-grant `feat.skill_choice` carries, on the other kind of row that grants one. Folded
+	 *  into `build.speciesSkills`, which is a pick of its own and never eats the class's count. */
+	skill_choice: optInt,
+	/** A FEAT of the player's choice: `any`, or a comma list of feat ids to choose between — the
+	 *  "list or keyword" grammar `ability_choice` already uses. A species whose feat is FIXED says so
+	 *  on `effects` instead; this column exists because the species that make this shape famous all
+	 *  offer a choice, and a choice of one is not one. */
+	feat_choice: optStr,
 });
 
 /** A sub-choice within a species: a 2014 **subrace** (Hill Dwarf) or a 2024 in-species
  *  **lineage / legacy / ancestry** choice. Linked to its parent by `species_id`; carries its own
  *  ASI + traits via the common `effects`/`text`. `option_label` overrides the picker heading
  *  (e.g. "Subrace" vs "Lineage") when the default from `kind` isn't right. */
-/** The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry). */
-export const SPECIES_OPTION_KINDS = ['subrace', 'lineage', 'legacy', 'ancestry'] as const;
+/** The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry), plus
+ *  `variant` — a trait set offered BESIDE the usual one rather than under it. That is how an optional
+ *  rule reaches a player here: a row of its own, at the point where the trait it stands in for is
+ *  granted, never a settings shelf to enable before building. */
+export const SPECIES_OPTION_KINDS = [
+	'subrace',
+	'lineage',
+	'legacy',
+	'ancestry',
+	'variant',
+] as const;
 const speciesOptionSchema = baseRow.extend({
 	species_id: reqStr,
 	kind: enumDefault(z.enum(SPECIES_OPTION_KINDS), 'subrace'),
 	option_label: optStr,
 	/** Like `species.boost_choice` — a "+N to M of your choice" ASI carried by the sub-option. */
 	boost_choice: optStr,
+	/** Like `species.skill_choice` — a sub-option may be the thing that grants the skills. */
+	skill_choice: optInt,
+	/** Like `species.feat_choice` — and the commonest home for it, since a species that grants a feat
+	 *  is usually a VARIANT of one that does not. */
+	feat_choice: optStr,
 });
 
 /** A class. Subclass features live in class_features keyed by class_id+level. */

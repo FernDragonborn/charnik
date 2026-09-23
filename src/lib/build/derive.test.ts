@@ -137,6 +137,7 @@ describe('buildTodos', () => {
 		classSkillCount: 0,
 		skillChosenCount: 0,
 		openFeatSlots: [],
+		speciesSkillsOwed: 0,
 		originFeat: { name: '', owed: 0 },
 		spellPicker: []
 	};

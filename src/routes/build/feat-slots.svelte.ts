@@ -13,8 +13,14 @@ import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
 import { featSpellGrants, type FeatSpellGrant } from '$lib/character/spellcasting';
 import { asiFeatLevels, EPIC_BOON_MIN_LEVEL } from '$lib/build/rules';
-import { FEAT_CATEGORY, splitList } from '$lib/content/schemas';
-import { asiPickCount, toggleCapped, ORIGIN_SLOT_KEY, type FeatSpellChoice } from './draft';
+import { ANY_OPTION, FEAT_CATEGORY, splitList } from '$lib/content/schemas';
+import {
+	asiPickCount,
+	toggleCapped,
+	ORIGIN_SLOT_KEY,
+	SPECIES_SLOT_KEY,
+	type FeatSpellChoice,
+} from './draft';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
 import type { AsiShape } from './draft';
 
@@ -22,7 +28,7 @@ import type { AsiShape } from './draft';
  *  than re-described, so the two cannot drift apart. `import type` is erased, so no runtime cycle. */
 export type FeatsHost = Pick<
 	BuildVM,
-	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'row'
+	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'speciesRow' | 'speciesOptionRow' | 'row'
 > & {
 	/** Named structurally, not picked: `SkillPicksHost` names `feats` and two Picks that name each
 	 *  other off the same class are a circular mapped type. This is the one member asked for here. */
@@ -49,6 +55,43 @@ export class FeatSlots {
 		}
 		return out;
 	});
+	/**
+	 * The feat ids the SPECIES offers to choose between, off its `feat_choice` column: `any` for every
+	 * feat the slot would otherwise offer, or a comma list to choose within. Empty = this species
+	 * grants no feat, which is every species the SRD ships.
+	 *
+	 * A choice and not a grant, on purpose: a species whose feat is FIXED says so on `effects` like
+	 * any other trait, and the shape this column exists for is the one where more than one is legal.
+	 */
+	speciesFeatChoice = $derived.by<string[]>(() => {
+		const raw = String(
+			this.host().speciesOptionRow?.data.feat_choice ||
+				this.host().speciesRow?.data.feat_choice ||
+				'',
+		);
+		return splitList(raw);
+	});
+	/** Does the species ask for a feat at all? */
+	speciesGrantsFeat = $derived(this.speciesFeatChoice.length > 0);
+	/** What the species slot may be filled with. `any` means every feat an ordinary slot offers at
+	 *  level 1; a list names its own ids, and one naming nothing that exists offers nothing rather
+	 *  than silently falling back to everything. */
+	speciesFeatOptions = $derived.by<LoadedRow[]>(() => {
+		const choice = this.speciesFeatChoice;
+		if (!choice.length) return [];
+		const options = this.featOptionsFor(1);
+		if (choice.length === 1 && choice[0]?.toLowerCase() === ANY_OPTION) return options;
+		return options.filter((f) => choice.includes(f.id));
+	});
+	/** The feat taken in the species slot, or null while the question is open. */
+	speciesFeatRef = $derived.by<string | null>(
+		() => this.host().draft.slotFeats[SPECIES_SLOT_KEY] ?? null,
+	);
+	/** Is this slot the species' one? Its answer is a feat and nothing else — an ability improvement
+	 *  is what a LEVEL offers, and offering it here would let a species grant be spent on something
+	 *  the species never granted. */
+	slotIsSpecies = (key: string): boolean => key === SPECIES_SLOT_KEY;
+
 	/** The background's granted origin feat (5.5e), resolved to a ref — auto, not a slot. */
 	originFeatRef = $derived.by<string | null>(() => {
 		const id = this.host().backgroundRow?.data.origin_feat;
@@ -59,6 +102,12 @@ export class FeatSlots {
 	 *  lookup, because everything a filled slot then asks for is asked of the origin feat too. */
 	featRefFor = (key: string): string | null =>
 		key === ORIGIN_SLOT_KEY ? this.originFeatRef : (this.host().draft.slotFeats[key] ?? null);
+	/** Every slot key that can hold a feat right now — the class slots plus the species' one. What
+	 *  `usedFeatRefs` and the §C fold walk, so a species feat counts as taken exactly like a slot's. */
+	choiceKeys = $derived.by<string[]>(() => [
+		...this.featSlots.map((s) => s.key),
+		...(this.speciesGrantsFeat ? [SPECIES_SLOT_KEY] : []),
+	]);
 	/** Feat options that make sense for a slot at `level`: origin feats are background-only, and
 	 *  epic boons only unlock at level 19+. (Not a hard block — just the right menu per slot.) */
 	featOptionsFor = (level: number): LoadedRow[] =>
@@ -84,8 +133,8 @@ export class FeatSlots {
 	// `.by` rather than plain `$derived(…)`: the bare form's argument is evaluated at field-init
 	// time, which is before the constructor has assigned `host`.
 	usedFeatRefs = $derived.by<string[]>(() =>
-		this.featSlots.flatMap((s) => {
-			const ref = this.host().draft.slotFeats[s.key];
+		this.choiceKeys.flatMap((key) => {
+			const ref = this.host().draft.slotFeats[key];
 			return ref ? [ref] : [];
 		}),
 	);
@@ -138,7 +187,9 @@ export class FeatSlots {
 	setSlotFeatAbility = (key: string, ab: Ability) => {
 		this.host().draft.slotFeatAbility = { ...this.host().draft.slotFeatAbility, [key]: ab };
 	};
-	filledSlots = $derived(this.featSlots.filter((s) => this.host().draft.slotFeats[s.key]).length);
+	/** How many of the improvements this character owes are answered — the level slots plus the
+	 *  species' one, so the card's counter says the same total the list below it shows. */
+	filledSlots = $derived(this.choiceKeys.filter((key) => this.host().draft.slotFeats[key]).length);
 
 	// --- §C skill choice-grant (Skilled: pick N skill proficiencies) ------------
 	// Data-driven off the feat's `skill_choice` column (author-set count, no feat-id hardcode), so a
@@ -173,7 +224,8 @@ export class FeatSlots {
 		const take = (key: string, count: number) => {
 			for (const s of this.slotFeatSkillsFor(key).slice(0, count)) out.add(s);
 		};
-		for (const s of this.featSlots) take(s.key, this.featSkillCountOf(this.host().draft.slotFeats[s.key]));
+		for (const key of this.choiceKeys)
+			take(key, this.featSkillCountOf(this.host().draft.slotFeats[key]));
 		take(ORIGIN_SLOT_KEY, this.featSkillCountOf(this.originFeatRef));
 		return [...out];
 	});
@@ -276,7 +328,7 @@ export class FeatSlots {
 	/** Every answered §D feat, flattened for `build.featSpells` — the derive's view of them. A slot
 	 *  whose feat no longer teaches spells drops out here rather than lingering in the character. */
 	featSpellPicks = $derived.by<{ feat: string; key: string; list: string; ability: Ability }[]>(() => {
-		const keys = [...this.featSlots.map((s) => s.key), ORIGIN_SLOT_KEY];
+		const keys = [...this.choiceKeys, ORIGIN_SLOT_KEY];
 		return keys.flatMap((key) => {
 			const ref = this.featRefFor(key);
 			const choice = this.host().draft.slotFeatSpells[key];

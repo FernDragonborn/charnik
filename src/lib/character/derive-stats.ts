@@ -260,8 +260,13 @@ export function deriveSkills(
 	{ build, scores, level, facts }: StatInputs,
 	grantedSkills: Map<string, SkillProficiency>,
 ): Record<SkillId, Computed & { prof: SkillProficiency }> {
-	// class/background picks + §C feat-granted skill choices (Skilled) — both are plain proficiency
-	const chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])]);
+	// class/background picks + §C feat-granted skill choices (Skilled) + the species' own grant — all
+	// three are plain proficiency, and separate lists only so no cap counts another's picks
+	const chosenProf = new Set([
+		...build.skills,
+		...(build.featSkills ?? []),
+		...(build.speciesSkills ?? []),
+	]);
 	const chosenExpert = new Set(build.expertise ?? []);
 	// expertise only counts on a skill the build is also proficient in
 	function chosenProficiency(skill: SkillId): SkillProficiency {

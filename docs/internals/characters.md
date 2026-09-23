@@ -48,7 +48,11 @@ happens at the table: name, species and its sub-option, background, classes with
 six ability scores, skills, expertise, tools, feats — and the ANSWERS a feat asked back, which are build data
 of their own rather than refs: the ability a half-feat raised, the skills a Skilled-shaped one granted,
 and the spell list plus casting ability a Magic-Initiate-shaped one draws on (`build.featSpells`, one
-entry per instance, because it is repeatable and each instance is its own caster profile).
+entry per instance, because it is repeatable and each instance is its own caster profile). The SPECIES
+asks back too, and its answers are their own fields for the same reason: `build.speciesSkills` holds
+what a species-granted skill choice was spent on, kept apart from `skills` so no cap counts another's
+picks, and the feat a species grants by choice sits in `slotPicks` under the reserved `species` key —
+the same maps a level's slot uses, because what a feat asks does not depend on how it arrived.
 
 **`play` is what is true right now** — current and temporary HP, hit dice spent, spell slots spent,
 resource uses spent, active effects and conditions, what they are concentrating on, and the coins in

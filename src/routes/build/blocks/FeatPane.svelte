@@ -18,31 +18,36 @@
 
 	const chosen = $derived(b.draft.slotFeats[slotKey] ?? '');
 	const asi = $derived(b.draft.slotAsi[slotKey]);
+	// A species-granted slot offers no ability improvement: the improvement is what a LEVEL offers,
+	// and putting it here would let a species' grant be spent on something the species never granted.
+	const offersAsi = $derived(!b.feats.slotIsSpecies(slotKey));
 </script>
 
 <!-- Reading and taking are separate controls here too (ui.md §6, §11): the card body highlights the
      option so the diff below says what +2 would do, and the ✓ on its left commits it — the same pair
      the sectioned picker's rows carry. A single click that committed made this the one thing in the
      pane that decided for you. -->
-<div class="asi-card" class:is-active={ins.previewId === ASI} class:is-taken={chosen === ASI}>
-	<button
-		class="addbtn"
-		class:on={chosen === ASI}
-		aria-pressed={chosen === ASI}
-		aria-label={$_('build.picker.takeRow', { values: { name: $_('build.feats.asi') } })}
-		onclick={() => ins.take(ASI)}
-	>
-		<Icon name="check" size={12} />
-	</button>
-	<button
-		class="asi-body"
-		onclick={(event) => event.detail < 2 && (ins.previewId = ASI)}
-		ondblclick={() => ins.take(ASI)}
-	>
-		<b>{$_('build.feats.asi')}</b>
-		<span>{$_('build.feats.asiHint')}</span>
-	</button>
-</div>
+{#if offersAsi}
+	<div class="asi-card" class:is-active={ins.previewId === ASI} class:is-taken={chosen === ASI}>
+		<button
+			class="addbtn"
+			class:on={chosen === ASI}
+			aria-pressed={chosen === ASI}
+			aria-label={$_('build.picker.takeRow', { values: { name: $_('build.feats.asi') } })}
+			onclick={() => ins.take(ASI)}
+		>
+			<Icon name="check" size={12} />
+		</button>
+		<button
+			class="asi-body"
+			onclick={(event) => event.detail < 2 && (ins.previewId = ASI)}
+			ondblclick={() => ins.take(ASI)}
+		>
+			<b>{$_('build.feats.asi')}</b>
+			<span>{$_('build.feats.asiHint')}</span>
+		</button>
+	</div>
+{/if}
 
 {#if chosen === ASI && asi}
 	<div class="alloc">

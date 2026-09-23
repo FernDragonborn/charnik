@@ -11,7 +11,7 @@ import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { SKILL_ABILITY } from '$lib/character/skills';
 import { expertiseBudget } from '$lib/build/derive';
-import { splitList } from '$lib/content/schemas';
+import { ANY_OPTION, splitList } from '$lib/content/schemas';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
 
@@ -19,7 +19,7 @@ import type { BuildVM } from './build-view-model.svelte';
  *  the shape off the class costs no runtime cycle and cannot drift from it. */
 export type SkillPicksHost = Pick<
 	BuildVM,
-	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow'
+	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow' | 'speciesRow' | 'speciesOptionRow'
 > & {
 	/** Named structurally rather than picked off `BuildVM`: `FeatsHost` picks `skillPicks` off the same
 	 *  class, and two Picks naming each other are a circular mapped type. */
@@ -36,11 +36,36 @@ export class SkillPicks {
 	/** The list they are chosen from — a class saying "any" offers every skill there is. */
 	classSkillOptions = $derived.by<string[]>(() => {
 		const from = splitList(this.host().classRow?.data.skills_from);
-		if (from.length === 1 && from[0]?.toLowerCase() === 'any') return Object.keys(SKILL_ABILITY);
+		if (from.length === 1 && from[0]?.toLowerCase() === ANY_OPTION) return Object.keys(SKILL_ABILITY);
 		return from;
 	});
 	/** Skills granted for free by the background — always proficient, never a pick. */
 	autoSkills = $derived.by(() => splitList(this.host().backgroundRow?.data.skills));
+	/** How many skills the SPECIES grants by choice (0 = it grants none). Read off the sub-option
+	 *  first, the way every other species grant is: a subrace/lineage/variant that carries one speaks
+	 *  for the species it belongs to. */
+	speciesSkillCount = $derived.by(() =>
+		Number(
+			this.host().speciesOptionRow?.data.skill_choice ??
+				this.host().speciesRow?.data.skill_choice ??
+				0,
+		),
+	);
+	/** Toggle one of the species' own picks. Capped like every other capped picker here: at the cap a
+	 *  click REPLACES the oldest, because nothing on screen says to un-pick first (ui.md §10). */
+	toggleSpeciesSkill = (skill: string) => {
+		const draft = this.host().draft;
+		draft.speciesSkills = toggleCapped(draft.speciesSkills, skill, this.speciesSkillCount);
+	};
+	/** The species' picks, trimmed to what it still grants — a species swapped for one that grants
+	 *  fewer must not keep handing out the surplus. */
+	speciesSkillPicks = $derived.by(() =>
+		this.host().draft.speciesSkills.slice(0, this.speciesSkillCount),
+	);
+	/** Strict-mode guard, the same one a feat's grant uses: a skill already proficient from another
+	 *  source is a wasted pick — disabled in Strict, allowed in Free. */
+	speciesSkillTakenElsewhere = (skill: string): boolean =>
+		this.isProficientBeforeFeats(skill) || this.host().feats.featSkillPicks.includes(skill);
 
 	toggleSkill = (skill: string) => {
 		const draft = this.host().draft;
@@ -85,12 +110,14 @@ export class SkillPicks {
 	 *  own grant does not read back to it as "already proficient elsewhere". */
 	isProficientBeforeFeats = (skill: string): boolean =>
 		this.autoSkills.includes(skill) || this.host().draft.skills.includes(skill);
-	/** Proficient = chosen, background-granted, or granted by a feat (Skilled) — the same union the
-	 *  derive builds from `build.skills` + `build.featSkills`. Expertise keys off this and assemble
+	/** Proficient = chosen, background-granted, or granted by a feat (Skilled) or the species — the
+	 *  same union the derive builds from `build.skills` + `featSkills` + `speciesSkills`. Expertise
+	 *  keys off this and assemble
 	 *  filters by it, so a narrower answer here silently drops expertise the sheet says you have. */
 	isProficient = (skill: string): boolean =>
 		this.isProficientBeforeFeats(skill) ||
 		this.host().feats.featSkillPicks.includes(skill) ||
+		this.speciesSkillPicks.includes(skill) ||
 		(this.host().edit?.featSkills ?? []).includes(skill);
 	/** A skill is pickable when Free, or (Strict) it is on the class list / the class has no list. */
 	pickable = (skill: string): boolean =>
