@@ -218,12 +218,24 @@
      party are different rings, and the content row is shared. Nothing stores a per-instance answer
      yet; that is the whole of this piece.
 
-  3. **A bonus set by the row's own RARITY** (10 rows). `weapon_1_2_or_3`, `armor_1_2_or_3`,
+  3. **A bonus the row states as a RANGE** (10 rows). `weapon_1_2_or_3`, `armor_1_2_or_3`,
      `shield_1_2_or_3`, `ammunition_1_2_or_3` and `wand_of_the_war_mage_1_2_or_3`, in both editions —
      one row standing for three bonuses. **These are the most-used magic items at a real table**, which
-     is what earns them a place here over rarer rows that fold. Either three rows per item (data, and
-     the id scheme already tolerates it) or the same per-instance answer as (2) — decide once, because
-     the same decision covers both.
+     is what earns them a place here over rarer rows that fold.
+     **DECIDED: the same per-instance answer as (2), not three rows per item.** A player does not own
+     "a Weapon +1", they own a +1 Longsword — and the SRD prints ONE entry per kind, so one row is what
+     is faithful to the book. Three rows would also fix a lie in three places instead of removing it:
+     every one of these rows says `rarity: very_rare` today, which is already wrong for its +1 and +2.
+     **It costs almost nothing, because the tokens exist.** Holy Avenger and Dwarven Thrower already
+     carry `flat_bonus:attack+3;flat_bonus:damage+3` in their own `effects` column. So this is one
+     field on `inventoryEntry` beside `base`, the chooser the row already shows for a template, and
+     `resolveItem` emitting those two tokens from the answer (`flat_bonus:ac+N` for armour and shield).
+     No new grammar.
+     **Rarity comes from the pair (category, N), not from N**: armour runs rare → very rare →
+     legendary while the other four run uncommon → rare → very rare. A five-row table, and it changes
+     no number on the sheet — rarity is a browsing fact.
+     **A named magic weapon is not in scope and needs nothing**: the `+1/+2/+3` row is "Any Simple or
+     Martial", a MUNDANE base, and Holy Avenger already states its own +3 and its own `legendary`.
 
   4. **A climb speed** (2 rows). There is `speed.fly` and `speed.swim` and no `speed.climb`
      (Slippers of Spider Climbing, Gloves of Swimming and Climbing). **Sized: ~8 lines and two catalog
@@ -241,18 +253,14 @@
      nine species). `darkvision`, `truesight`, `blindsight` and `tremorsense` appear NOWHERE in
      `src/` today — not a target, not a sheet field, not a catalog string. So the token is the easy
      half and the answer to these two is what decides its shape:
-     - **Q1 · Where does a sense live on the sheet?** The Defenses card is the natural host — its own
-       comment already calls it "what is true of your body", and it is where fly/swim speed and the
-       damage sensitivities went. But a sense is a NAME plus a RANGE ("darkvision 60 ft"), not a chip
-       like "resists Cold", and a character can hold three at once. So: another chip row that happens
-       to carry a number, a small labelled list, or a line next to the passive senses that already sit
-       in the skill list?
-     - **Q2 · Is a sense a mechanic here at all, or is it prose?** In a tracker for ONE character a
-       sense changes no number — it changes what the GM tells you. A token that folds onto nothing is
-       exactly what `note:` is for, and every species and item that grants darkvision already says so
-       in its own text. If the answer is "prose", these rows are already correct and this item loses
-       its largest group.
-     Both are the maintainer's calls, not the agent's; nothing here is blocked on code.
+     **DECIDED: a sense is a MECHANIC, and it is a chip on the Defenses card.**
+     Mechanic, because two sources of darkvision take the GREATER range — a species' 60 ft under
+     Goggles of Night's 120 ft is 120 ft, which is stacking, and stacking is what `note:` cannot do.
+     So `senses.<name>` is a numeric target folding by max.
+     The card needs no new vocabulary: the premise that "a sense is a name plus a range, and this card
+     speaks in chips" was wrong — `SheetDefenses.svelte` already carries `fly 30 ft` and `swim 30 ft`
+     as exactly that chip, next to the damage sensitivities, under a comment calling the card "what is
+     true of your body". A sense chip is the same shape beside them.
 
   6. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
      dice YOU roll: `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has

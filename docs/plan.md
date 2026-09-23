@@ -336,13 +336,12 @@ position and are given per wave, because most of them were learned the hard way.
   one of those rows already SAYS what it does as a note, so nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **Waiting on a design session, not on code — two questions, the maintainer's to answer**
-  (`work/content.md` ▸ MAGIC-ITEM-VOCAB §5): **Q1 — where does a sense live on the sheet?** A sense is
-  a name plus a range and a character can hold three; the Defenses card is the natural host but its
-  vocabulary is chips. **Q2 — is a sense a mechanic here at all, or is it prose?** In a tracker for one
-  character a sense changes no number, and a token that folds onto nothing is what `note:` is for. If
-  the answer is "prose", those rows are already correct today. Everything else in the item can proceed
-  without these two.
+  **The design session that gated it is done** (`work/content.md` ▸ MAGIC-ITEM-VOCAB). A sense is a
+  MECHANIC — two sources take the greater range, which is stacking and not something `note:` can do —
+  and it is a chip on the Defenses card beside the fly and swim speeds already written that way. The
+  `+1/+2/+3` rows stay ONE row each and grow a per-instance answer, the same shape Ring of Resistance
+  wanted: the SRD prints one entry per kind, the tokens already exist on Holy Avenger, and three rows
+  would fix in three places the `rarity: very_rare` those rows wrongly claim for their +1 and +2.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
