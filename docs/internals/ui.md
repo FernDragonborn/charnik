@@ -413,6 +413,12 @@ on the left and the thing being chosen on the right, plus a searchable picker an
 footer running destructive action far-left, then a spacer, then Skip → secondary → primary. Share the
 shell through the global `.dialog` classes rather than restyling per dialog.
 
+**The shell is for a QUESTION the app is asking** — a confirm, a collision, a review it wants
+settled before anything else happens. A working surface the user reached for on purpose is not one,
+and wearing the shell hands it the whole apparatus of an alert: a flag badge over an ordinary verb, a
+subtitle explaining itself to somebody who already knows why they opened it, and no visible way out.
+That is its own surface, sharing the picker but not the chrome.
+
 ## Icons are drawn, never typed
 
 A character that is **text** stays text: `−`, `≥`, `∞`, `×`, an arrow inside a sentence. A character
