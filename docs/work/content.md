@@ -46,14 +46,19 @@
   and one swappable on a long rest. That is build state (`build.masteries`, re-editable at level-up
   like every other chosen option) plus the eight mastery effects, none of which exist.
   `versatile:1d10` is the same shape: data with no mechanic reading it.
-- [ ] **BARD-LIST-2014 · the 2014 Bard spell list is missing its 1st-level half.**
-  `convert-2014-spell-lists.mjs` fills every 2014 spell's `classes` column from the SRD 5.1 "Spell
-  Lists" section, and that section's Bard block has lost its "1st Level" and "2nd Level" headings: the
-  2nd-level names survive under the cantrip heading, the 1st-level ones are absent from the document
-  altogether. So a 2014 bard can pick cantrips and 2nd-level spells and has nothing at 1st. The
-  converter prints the gap on every run rather than inventing the list; closing it needs a CC-BY source
-  the names can be read out of, and not a memory of the PHB. Every other 2014 class's list is complete
-  (cleric 78, druid 84, paladin 29, ranger 23, sorcerer 97, warlock 46, wizard 156, bard 54).
+- [x] **BARD-LIST-2014 · the 2014 Bard spell list was missing its 1st-level half — and so was a third
+  of every other class's list.** The item read the symptom right and the cause wrong: the SRD 5.1
+  document has its "1st Level" and "2nd Level" Bard headings. What lost them is the **Tabyltop
+  conversion** the 2014 converters read, which keeps only some of each page's columns — the SRD prints
+  these lists several columns to a page, and 551 of the document's 778 entries survive that. So the
+  Bard lost a whole column (its 1st-level block) and every other class lost a slice: the counts this
+  item recorded as "complete" were short by 30% (wizard 153 of 204, cleric 75 of 105, ranger 20 of 37).
+  **`convert-2014-spell-lists.mjs` reads WotC's own CC-BY PDF now** (`pdfjs-dist` over
+  `SRD_CC_v5.1.pdf`), and what that document names is exactly the 319 spells this pack ships — so the
+  run asserts the CORRESPONDENCE rather than a count somebody wrote down: every shipped row must come
+  out carrying a class, and a list name matching no row fails the run. 211 class tags gained, none
+  lost, no other column touched. The shipped sizes are pinned in `spell_lists_content.test.ts`:
+  bard 112, cleric 105, druid 105, paladin 31, ranger 37, sorcerer 120, warlock 64, wizard 204.
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
   block the loader; each raises fidelity where the UI later wants a structured filter. In priority
   order: species ability bonuses as `effects` (`flat_bonus:con+2`) rather than only prose — 5e on

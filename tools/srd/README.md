@@ -32,6 +32,15 @@ Never claim both unless verified identical — 2024 diverges from 2014.
 `<p><b>Label:</b>value</p>` fields); monsters map from the **pre-structured Monsters JSON**.
 The coordinate JSON (PDF dump) is avoided.
 
+**One type does NOT parse from Tabyltop: the class spell lists.** The SRD prints them several columns
+to a page, and that conversion keeps only some of the columns — 551 of the document's 778 entries
+survive it, dropping the Bard's whole 1st-level block and 51 Wizard spells. So
+`convert-2014-spell-lists.mjs` reads WotC's own CC-BY PDF instead
+(<https://media.wizards.com/2023/downloads/dnd/SRD_CC_v5.1.pdf> → `tools/srd-src/2014/SRD_CC_v5.1.pdf`,
+text layer via `pdfjs-dist`). It asserts the correspondence rather than a remembered count: the SRD's
+lists name every spell the SRD describes, so every one of the 319 shipped rows must come out with a
+class, and a list name that matches no row is a hard failure.
+
 ### SRD 5.1 (2014) — `tools/srd/convert-2014.mjs`, source "SRD 5.1"
 Complete except the app-only effects catalog: **spells 319, monsters 317, items 419**
 (37 weapons + 13 armor + 36 tools + 95 gear + 4 ammunition + 234 magic), **class_features 197**
