@@ -57,8 +57,15 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
         the picker, a junction). What is left to WRITE is the data-folder move, which cannot complete
         under a driver: `set_data_dir` refuses a path the picker did not choose, so only the copy,
         verify and rollback halves can be probed.
-  - [ ] **The play loop across both editions.** The both-editions sweep covered the BUILD path — 96
-        class sheets and 811 build-path derives, clean — and not a rest, a cast or an action option.
+  - [x] **The play loop across both editions.** The both-editions sweep covered the BUILD path — 96
+        class sheets and 811 build-path derives — and not a rest, a cast or an action option.
+        `play-loop.both-editions.test.ts` now drives the Combat VM over both shipped packs with ONE
+        script: damage and healing, temp HP soaking first, a slot spent on a leveled spell, a long
+        rest returning slots and hit points, a Hit Die spent on a short rest, the monk's pool spent
+        through a shipped spend-option, and concentration started by a cast and ended by the rest.
+        Clean in both editions. The one divergence it asserts BY NAME is the monk pool — `focus` in
+        5.5e, `ki` in 5e — because a difference that matters is an assertion and anything else that
+        differed would be a bug.
   - [x] **`tools/restamp.ts`, read.** The stamping itself is the app's own `restampText`, so there
         was nothing to find there; what the read found was around it. A file it SKIPS — no
         `#content-*` header — used to leave the exit code at 0, so a run that stamped nothing
@@ -71,9 +78,16 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
         somebody had fixed by hand (`see_invisibility`, `gladiator` — the 5.1 source splits a word
         mid-name). All four are fixed at the source, so the standing "never re-run a converter"
         warning is now about churn rather than loss.
-  - [ ] **Named tails.** `readCharacterFiles` unexercised; `seedDemoIfFirstRun` and
-        `recreateDemoCharacter` read but not driven; `Hero.svelte` and `PanelCard.svelte` below their
-        markup unread; `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a
+  - [x] **Named tails.** `readCharacterFiles` is driven now, on the question it exists to answer: a
+        save the SCHEMA REJECTS still reports its refs to the pack-update preview, a character folder
+        with no `character.json` is skipped rather than failing the read, and an app nobody has saved
+        in yields nothing. `seedDemoIfFirstRun` and `recreateDemoCharacter` turned out to be driven
+        already — `store.test.ts` walks the whole seed-once lifecycle — so that half of this item was
+        stale. Reading `Hero.svelte` and `PanelCard.svelte` found two small things, both fixed: the
+        panel head's collapse toggle carried no `aria-expanded`, so a screen reader was told nothing
+        about the state the chevron shows; and the hero grid's gap was a literal `22px`, the one kind
+        of hardcoded size the tokens exist to prevent (`--space-5`).
+        `spendHitDie`'s `Math.max(1, roll + CON)` floor is a maintainer's call, not a
         finding — no shipped CSV carries the rest chapter, so nothing here can check the claim. The two
         the audit judged too small to number are CLOSED: the plugin status badge now yields to a row's
         own `problem`, so the duplicate-namespace loser stops being labelled "load failed" over its

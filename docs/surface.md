@@ -36,6 +36,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `probe` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `REPORT` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
+- `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
@@ -81,7 +82,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
-- `SKILLS` ×2 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
@@ -1121,9 +1121,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
 - `const TOOL_ITEM_CATEGORY` — The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`).
 - `const RARITIES`
+- `const ANY_OPTION` — * The wildcard a choice column takes instead of a list: `skills_from`, `ability_choice` and * `feat_choice` all read …
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
-- `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry).
+- `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry), plus * `variant` — a trait set …
 - `const ROW_KIND` — What a state row IS.
 - `const VALENCE` — Whether a state is something you WANT.
 - `type Valence`
@@ -1764,4 +1765,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1059 exports across 143 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1060 exports across 143 modules · 71 duplicate suspects._

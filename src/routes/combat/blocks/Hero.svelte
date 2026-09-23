@@ -71,7 +71,7 @@
 	.hero {
 		display: grid;
 		grid-template-columns: 1fr 1.35fr;
-		gap: 22px;
+		gap: var(--space-5);
 		align-items: end;
 		margin-bottom: var(--space-4);
 	}

@@ -21,7 +21,9 @@ import {
 	writeCharacterPhoto,
 	readCharacterPhoto,
 	removeCharacterPhotos,
+	readCharacterFiles,
 } from './repository';
+import { charactersReferencing } from '$lib/content/remote/diff';
 import { attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
 function sample(): Character {
@@ -222,6 +224,37 @@ describe('character repository (in-memory)', () => {
 		await deleteCharacter(s, 'mirt');
 		expect((await loadCharacter(s, 'mirt')).ok).toBe(false);
 		expect(await listCharacters(s)).toEqual([]);
+	});
+});
+
+describe('every save as raw text, for the question a broken save must still answer', () => {
+	/** `readCharacterFiles` is deliberately UNPARSED: the pack-update preview asks "does any character
+	 *  mention this row", and the saves most at risk of losing a row are exactly the ones a parse
+	 *  would drop. */
+	it('returns a save the schema REJECTS, so the update preview still sees its refs', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		// valid JSON, not a valid character — an older schema, or one a future version wrote
+		await s.write(
+			'characters/ancient/character.json',
+			JSON.stringify({ id: 'ancient', spells: ['spell:SRD 5.1:bless'] }),
+		);
+		const files = await readCharacterFiles(s);
+		expect(files.map((f) => f.slug).sort()).toEqual(['ancient', 'mirt']);
+		expect(charactersReferencing(files, ['spell:SRD 5.1:bless'])).toEqual([
+			{ slug: 'ancient', keys: ['spell:SRD 5.1:bless'] },
+		]);
+	});
+
+	it('skips a character folder with no character.json rather than failing the whole read', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		await s.write('characters/ghost/log.jsonl', '');
+		expect((await readCharacterFiles(s)).map((f) => f.slug)).toEqual(['mirt']);
+	});
+
+	it('is empty before anyone has saved a character', async () => {
+		expect(await readCharacterFiles(new MemoryStorage())).toEqual([]);
 	});
 });
 
