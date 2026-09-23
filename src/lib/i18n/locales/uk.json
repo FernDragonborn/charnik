@@ -499,6 +499,7 @@
 			"cantAfford": "Недостатньо: {resource}"
 		},
 		"attacks": {
+			"finesseSwap": "Фінес — замах цією; натисніть, щоб {other}",
 			"noteAttackBonus": "{amount} до атаки",
 			"noteDamageBonus": "{amount} до шкоди",
 			"noteDamageUnread": "Шкоду прочитано не повністю — {fragments} проігноровано",

@@ -82,7 +82,62 @@
 						class="combat-row-marker">{attackMeta(at, $_)}</span
 					>
 				</button>
+				<!-- FINESSE-ABILITY: RAW hands the player this choice every swing, and the app used to take
+				     it silently. Rendered only where there IS a choice, and BESIDE the row rather than
+				     inside it — a control nested in a row-wide button is what cost the keyboard its walk
+				     the last time this shape was built. -->
+				{#if at.finesse}
+					{@const fin = at.finesse}
+					{@const other = fin.ability === 'str' ? 'dex' : 'str'}
+					<button
+						class="finesse-swap"
+						onclick={() => combat.inventory.setFinesseAbility(fin.kindId, other)}
+						title={$_('combat.attacks.finesseSwap', {
+							values: { other: $_(`abilityName.${other}`) },
+						})}
+						aria-label={$_('combat.attacks.finesseSwap', {
+							values: { other: $_(`abilityName.${other}`) },
+						})}
+					>
+						<!-- BOTH abilities stand, the live one lit: showing only the current
+						     one made the control read as one more meta tag, and a player who
+						     never pressed it would never learn a choice was there. -->
+						<span class="fin-ab" class:on={fin.ability === 'str'}>{$_('abilityShort.str')}</span
+						><span class="fin-ab" class:on={fin.ability === 'dex'}>{$_('abilityShort.dex')}</span>
+					</button>
+				{/if}
 			</div>
 		{/if}
 	{/each}
 </div>
+
+<style>
+	/* A finesse weapon's grip: quiet next to the number it changes, and never mistakable for the
+	   damage type beside it — it is the one thing on this row that is a CHOICE rather than a fact. */
+	.finesse-swap {
+		flex: none;
+		align-self: center;
+		display: inline-flex;
+		padding: 0;
+		overflow: hidden;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+	}
+	.fin-ab {
+		padding: 2px var(--space-1-5);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		letter-spacing: 0.04em;
+		color: var(--color-text-muted);
+	}
+	.fin-ab.on {
+		background: var(--color-accent-soft);
+		color: var(--color-accent-bright);
+	}
+	.finesse-swap:hover,
+	.finesse-swap:focus-visible {
+		border-color: var(--color-accent);
+	}
+</style>

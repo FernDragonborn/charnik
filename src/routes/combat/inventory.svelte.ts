@@ -259,6 +259,15 @@ export class InventoryTracker {
 		else delete entry.base;
 	};
 
+	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, the fifth play-time verb on
+	 *  something carried. Keyed by the weapon KIND, so a +1 Rapier and a plain one answer together —
+	 *  they are one weapon as far as the choice goes. RAW offers this every swing; storing it per kind
+	 *  is the tracker remembering what you keep saying, not deciding for you. */
+	setFinesseAbility = (kindId: string, ability: 'str' | 'dex') => {
+		const build = this.getCharacter()?.build;
+		if (build) build.finesseAbility[kindId] = ability;
+	};
+
 	/** Spend one. The last one leaves the list, so a used-up stack does not linger as a zero row. */
 	use = (ref: string) => {
 		const c = this.getCharacter();

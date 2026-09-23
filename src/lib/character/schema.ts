@@ -134,6 +134,13 @@ const buildSchema = z.object({
 	 *  weapon mastery and ships no grant, so this stays empty there. Re-chosen at level-up like every
 	 *  other picked option (RAW swaps one on a Long Rest, which is the same edit). */
 	masteries: z.array(z.string()).default([]),
+	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, keyed by weapon KIND — a +1
+	 *  Rapier is a Rapier, the same key `masteries` uses. RAW hands the player this choice; the app
+	 *  defaults to the bigger modifier and only stores an entry once they have said otherwise, so an
+	 *  absent key means "whichever is higher" and no save has to be migrated. It matters beyond the
+	 *  modifier itself: the answer is an effect SCOPE, so Rage pays out on a rapier swung with Strength
+	 *  and not on the same rapier swung with Dexterity. */
+	finesseAbility: z.record(z.string(), z.enum(['str', 'dex'])).default({}),
 	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
 	expertise: z.array(z.string()).default([]),
 	/** Tool proficiencies, as bare `item` ids of category `tool` — the same id a

@@ -99,6 +99,11 @@ export interface Attack {
 	/** §A/§B the weapon's tag NAMES, which the roll path matches a scoped effect against — Archery
 	 *  (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
 	scopes: string[];
+	/** FINESSE-ABILITY — present only when the weapon HAS the choice, which is what the row renders a
+	 *  STR/DEX control from: `ability` is what this attack resolved with, `kindId` is where an answer
+	 *  is written. A weapon with no choice to make carries nothing, so the control cannot appear where
+	 *  pressing it would mean nothing. */
+	finesse?: { kindId: string; ability: Ability };
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). Read through
 	 *  `attackNotes`. Omitted when the row has nothing to explain. */
@@ -333,18 +338,28 @@ function scopedFlatBonus(
 }
 
 /**
- * Which ability an attack resolves from, and its modifier: ranged is DEX, a finesse weapon takes
- * the better of the two, everything else is STR. The ANSWER is also an effect scope, because RAW
- * keys some bonuses off the ability rather than off the weapon — Rage pays out on "an attack using
- * Strength", so the same rapier is or is not eligible depending on this call.
+ * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR,
+ * and a finesse weapon is the PLAYER's call — `chosen` is what they said, and with nothing said the
+ * bigger modifier is the default, which is what they would pick almost every time.
+ *
+ * The ANSWER is also an effect scope, because RAW keys some bonuses off the ability rather than off
+ * the weapon — Rage pays out on "an attack using Strength", so the same rapier is or is not eligible
+ * depending on this call. That is exactly why the default cannot simply stand: at STR 14 / DEX 16 a
+ * raging barbarian's rapier does MORE damage swung with the smaller modifier, and the app used to
+ * take the bigger one silently and never say a choice existed.
  */
 export function attackAbility(
 	tags: ItemTags,
 	strMod: number,
 	dexMod: number,
+	chosen?: Ability,
 ): { ability: Ability; mod: number } {
 	if (tags.has(ITEM_TAG.ranged)) return { ability: 'dex', mod: dexMod };
-	if (tags.has(ITEM_TAG.finesse) && dexMod > strMod) return { ability: 'dex', mod: dexMod };
+	if (tags.has(ITEM_TAG.finesse)) {
+		if (chosen === 'str') return { ability: 'str', mod: strMod };
+		if (chosen === 'dex') return { ability: 'dex', mod: dexMod };
+		return dexMod > strMod ? { ability: 'dex', mod: dexMod } : { ability: 'str', mod: strMod };
+	}
 	return { ability: 'str', mod: strMod };
 }
 
@@ -418,7 +433,14 @@ export function computeAttacks(
 		// a magic weapon carries only what it adds; the rest — category, properties, base damage —
 		// comes from the mundane row its `base_item_id` names
 		const item = resolveItem(graph, row, inv.base);
-		const { ability, mod } = attackAbility(item.tags, strMod, dexMod);
+		// the kind, not the row: a +1 Rapier is a Rapier, so one answer covers every copy of it
+		const finesse = item.tags.has(ITEM_TAG.finesse);
+		const { ability, mod } = attackAbility(
+			item.tags,
+			strMod,
+			dexMod,
+			finesse ? character.build.finesseAbility[item.kindId] : undefined,
+		);
 		const proficient = isWeaponProficient(weaponGrants, weaponCategoryOf(item.tags), row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
@@ -492,6 +514,7 @@ export function computeAttacks(
 			damageParts,
 			meta: metaTags(item.tags, masteries.has(item.kindId)),
 			scopes: [...scopeSet],
+			...(finesse ? { finesse: { kindId: item.kindId, ability } } : {}),
 			...(notes.length ? { notes } : {}),
 		});
 	}

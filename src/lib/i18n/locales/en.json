@@ -499,6 +499,7 @@
 			"cantAfford": "Not enough {resource}"
 		},
 		"attacks": {
+			"finesseSwap": "Finesse — swung with this; tap for {other}",
 			"noteAttackBonus": "{amount} attack",
 			"noteDamageBonus": "{amount} damage",
 			"noteDamageUnread": "Damage not fully read — {fragments} ignored",
