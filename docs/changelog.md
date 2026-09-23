@@ -1,5 +1,148 @@
 # Changelog
 
+## Unreleased
+
+The release the table wrote. Charnik went out to its first outside playtest, and most of what is
+here is a player pointing at something: a number that did not move when they equipped a shield, a
+roll card they could not read out loud, a panel holding rows in an order that was not theirs. Three
+themes came back from it — **the sheet is yours to arrange**, **the rules that were quietly
+missing**, and **a card that says which number you read** — and under them, an app that no longer
+falls off a phone screen.
+
+### The sheet is yours to arrange
+
+- **Inventory, attacks, the standard actions and your features go in the order you want.** Drag a
+  row by its grip, or move it with the arrow keys — the grip is keyboard-reachable everywhere. The
+  order is saved per panel and survives a reload. What stays fixed is everything whose order IS its
+  grouping: skills by ability, spells by level, features by source.
+- **The Features panel hides, pins and filters.** An eye hides a feature you never read; a pin keeps
+  one always in view, lifted into its own group. The filter presets — everything, only what your
+  newest level granted, or one class's features — WRITE those same eyes rather than layering over
+  them, so there is one answer to "is this shown" and undoing a preset is the same click as undoing
+  a hand toggle. A pinned feature survives every preset.
+- **Hiding an action is remembered.** It used to be forgotten on reload, while hiding a spell
+  survived — one question with two answers.
+- **Auto-calculation is the Effects panel's power switch**, not a button in the bar you press every
+  session. It sits on the head of the panel whose layers it turns off, quiet until you hover or tab
+  to it, and stays visible and accented while it is OFF.
+
+### Your own words
+
+- **Any description can be rewritten in your own prose, and put back.** The content CSV is never
+  touched — a rewrite is a layer over it, so a content update cannot orphan what you wrote. One
+  pencil, floated at the top-right of the text it replaces; the editor opens at the height of the
+  words already in it, and Escape leaves.
+- **Two scopes, never both at once**: this character (so it travels in the character file) or the
+  whole install. Promoting moves it, so there is never a second answer to what something says.
+- **The command palette finds your words**, not just the shipped ones.
+- **And the pencil reaches the Combat screen's Features panel** — where a feature is actually read,
+  mid-session. That panel also renders its prose properly now: paragraphs, breaks and emphasis
+  instead of one wall of text.
+
+### Rules that were missing
+
+- **Weapon mastery (2024).** Every 2024 weapon has carried its mastery property since the pack was
+  written and nothing read it, because the property does nothing until a feature unlocks that kind
+  of weapon for you. That feature is here: a capped chip pane off the Attacks card, offered only to
+  the classes that grant it, and the attack row prints the mastery exactly when a pick unlocks it. A
+  multiclass sums its grants.
+- **Tool proficiencies, and the check that rides them.** A tool check is the ability check plus your
+  proficiency bonus, built ON the folded ability check — so Guidance, exhaustion and every effect
+  that touches ability checks reach it for free. 2024 rows name the ability; 5e rows do not, so the
+  app asks rather than deciding. Backgrounds grant their tools now: a Criminal has Thieves' Tools
+  without picking them.
+- **A species can grant a skill choice and a feat.** Neither existed, so a whole shape of species
+  was unauthorable even as somebody's own homebrew. The species' skill is counted separately from
+  the class cap, which it would otherwise silently cost you.
+- **A feat that teaches spells is a caster of its own.** Magic Initiate asked two questions nothing
+  could take an answer to, so a character who took it learned nothing. A Fighter with Magic Initiate
+  casts now, with the DC read off the ability the feat names.
+- **The shield's +2 comes from the shield you are holding.** It used to come from a combat toggle
+  beside the inventory, so equipping a shield in the builder changed no number at all — and a
+  character carrying no shield could switch on a +2 out of nothing. A +1 shield is worth 3.
+- **A long rest is eight hours, not forever.** It used to clear every timed effect there was, so a
+  night's sleep ended a 24-hour Water Breathing and a 30-day Geas. Both rests now measure against
+  their own length.
+
+### The roller
+
+- **A roll card that says which number you read out loud.** Each answer — to hit, and each damage
+  type — gets a box holding its caption, its sum, and the arithmetic that produced it dimmed
+  alongside. Both sums carry the same weight; which one you mean is the caption's job.
+- **Each answer takes the width it needs.** The two halves used to split the card evenly, so a
+  squeezed sum wrapped between its own digits and an 11 read as 1 and 1. A crit's twenty dice stay
+  inside the card in the toast, the tray and the log.
+- **The dropped advantage die is collapsed, not struck through** — at formula size a strike turns a
+  digit into a blob. It slides out dimmed on hover or focus, and the card does not change size while
+  it does.
+- **Enter rolls when there is nothing left to finish.** It used to complete the token you were
+  typing, and do nothing at all when there was none.
+- **The tray's readout no longer sits on the Roll button** in Ukrainian, where «Кинути» reaches 20px
+  further in from the panel edge than "Roll" does.
+
+### Playing
+
+- **An item is added from play**, with the same picker the builder uses, and what you own is written
+  where it belongs — the character's inventory, wherever you happened to notice it.
+- **A price reads in the picker, on the inventory row and in the article**, in your own coin word,
+  and a homebrew price the app cannot parse passes through as its author wrote it.
+- **The item pickers show a band of rarity, mundane first.** 5e ships 234 magic rows against 149
+  mundane ones, so a level-1 character's weapon list was buried under items nobody at that table
+  will hold.
+- **A press anywhere on a spell row casts it again.** The summary, the tag and the row's background
+  had become dead space around the name.
+- **A volley says its name once.** Two beams of Eldritch Blast used to print the name twice, with
+  the numbers you are comparing pushed apart between them.
+- **Every effect that has something to say carries its ⓘ** — a condition's rules text, the spell
+  that granted the buff, or the words you typed for a custom one — and it opens in the language the
+  panel is already in.
+- **A passive score explains itself.** All eighteen used to share one sentence about passive
+  Perception, which says nothing about passive Athletics.
+- **A refused ability bump says why**, with its numbers: the step's cost, the 15 ceiling, the 8
+  floor, the lock. Strict and Free now list what actually changes between them instead of naming a
+  mood.
+- **Saving a character says it saved.** Only the failure had spoken, so an edit that worked and one
+  that silently did not looked the same.
+- **Languages and tools you type yourself**, as the last chip in the row rather than a standing
+  field under a list most characters leave empty.
+- **The pass-time bar stops appearing and vanishing on its own**, and the level itself is the
+  level-up control.
+
+### On a phone
+
+Charnik is still a desktop app, and a narrow screen is deep alpha — the banner now says that rather
+than "no mobile version". But nothing overflows any more. The topbar wraps instead of dragging the
+whole page sideways, the three views with a fixed minimum reflow, scroll or re-anchor instead of
+overflowing, the build sheet survives 320px, and an anchored menu stays on the screen it is anchored to on both axes — including
+in a short desktop window, which hit the same bug.
+
+### Content
+
+- **116 creatures of SRD 5.1's two appendices**, where every ordinary animal lives, plus an
+  `attacks` column in both editions. A 2014 druid has forms to take at CR ≤ 1.
+- **The 2014 spell lists are read from WotC's own PDF.** The conversion they came from keeps only
+  some of each page's columns — the Bard had lost a whole one, and the counts were short by 30%. 211
+  class tags gained, none lost.
+- **Ammunition rows** in both packs. 5e's own source never states which ammunition a weapon fires,
+  so no row there claims one.
+- **A condition and an effect are one kind of thing**, which is what they always were. Applying
+  Invisible or Rage used to file them under Debuffs; a row says which it is now.
+
+### Ukrainian
+
+«Накласти» is the word for casting, in all ~25 strings that had been spreading four words over one
+idea. Armour Class is КО; attunement is «прив’язка», not the word the Settings page owns; the saving
+throw chip fits; «замовляння» fits the spell row.
+
+### Under the hood
+
+- **The dev server follows the content repo.** A CSV edited in the pack reaches the running app and
+  reloads it, instead of staying invisible until the next build.
+- **The screenshot harness sees a phone**, and a probe fails on anything that overflows at 393 or
+  320px, in either locale.
+- **A converter re-run no longer loses what the source does not state** — a spell's class list, its
+  upcast, a hand-filled healing die.
+
 ## 0.7.0
 
 The release where the app stops speaking only English and stops guessing what you meant. Three big
