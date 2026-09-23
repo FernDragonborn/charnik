@@ -7,6 +7,7 @@
 
 {#if on}
 	<svg
+		class="hand-drawn"
 		width="13"
 		height="13"
 		viewBox="0 0 24 24"
@@ -21,6 +22,7 @@
 	</svg>
 {:else}
 	<svg
+		class="hand-drawn"
 		width="13"
 		height="13"
 		viewBox="0 0 24 24"

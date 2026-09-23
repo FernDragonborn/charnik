@@ -172,6 +172,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
 | `.good` | components.css |  |
+| `.hand-drawn` | components.css |  |
 | `.has-provenance` | components.css | a plain value that explains itself says so; a CONTROL that also explains itself keeps the cursor its click deserves, … |
 | `.hb-btn` | components.css | the manage button an article footer offers (delete, move to drafts, add a linked row) — shared by the compendium page… |
 | `.htoggle` | components.css |  |
@@ -180,7 +181,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. |
 | `.is-open` | components.css |  |
 | `.loading` | components.css | --- full-view loading / empty state --- |
-| `.lucide` | components.css | --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so no consumer's scope… |
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
 | `.meter` | components.css | --- meter: a proportion (encumbrance, the social read-out) --- |

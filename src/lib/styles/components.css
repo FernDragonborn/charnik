@@ -257,10 +257,13 @@
 	justify-content: center;
 }
 
-/* --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so
-   no consumer's scoped style can reach it. Sitting a hair below the baseline is what makes a glyph
-   look typeset next to its label instead of floating. --- */
-svg.lucide {
+/* --- drawn icons (Icon.svelte / Lucide, plus our two hand-drawn ones — DiceIcon, EyeIcon) — global
+   because the svg belongs to the icon component, so no consumer's scoped style can reach it. Sitting
+   a hair below the baseline is what makes a glyph look typeset next to its label instead of floating.
+   The hand-drawn pair is here because it was NOT: an eye beside "Show / hide" sat on the baseline and
+   so floated above its own label, while every lucide glyph in the same row was nudged down. --- */
+svg.lucide,
+svg.hand-drawn {
 	flex: none;
 	vertical-align: -0.15em;
 }
