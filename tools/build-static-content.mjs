@@ -10,6 +10,10 @@
  * Runs as `predev`/`prebuild` (see package.json), and again on every change while the dev server is
  * up (the content watcher in `vite.config.ts` calls `vendorContent`). `static/content/` is generated
  * + gitignored.
+ *
+ * Because `vite.config.ts` IMPORTS this module, nothing here may touch the filesystem at import
+ * time: a wipe at module scope runs on every dev-server boot, after `predev` has already vendored,
+ * and the app starts with no rules in it.
  */
 import { readdirSync, mkdirSync, copyFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
@@ -18,16 +22,6 @@ import { contentPacks, packDir, requireContentRepo } from './content-repo.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const destBase = resolve(root, 'static/content');
-
-try {
-	requireContentRepo();
-} catch (e) {
-	console.error(`\n${e instanceof Error ? e.message : e}\n`);
-	process.exit(1);
-}
-
-if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
-mkdirSync(destBase, { recursive: true });
 
 /** A plugin is only a plugin at `<pack>/plugins/<namespace>/` (PLUGINS §2) — code anywhere else in
  *  a pack is loaded by nothing and disclosed by nothing. */
