@@ -102,6 +102,29 @@ export class FeatSlots {
 	 *  lookup, because everything a filled slot then asks for is asked of the origin feat too. */
 	featRefFor = (key: string): string | null =>
 		key === ORIGIN_SLOT_KEY ? this.originFeatRef : (this.host().draft.slotFeats[key] ?? null);
+	/** The slots still waiting for a feat — the class levels' and, where a species grants one, its
+	 *  own. Lives here rather than in the view-model's todo call because which slots EXIST is this
+	 *  subsystem's fact; the todo list only words it. */
+	openFeatSlots = $derived.by<
+		{ key: string; level: number; className: string; species?: string }[]
+	>(() =>
+		[
+			...this.featSlots,
+			// the species' slot joins only when a species actually grants a feat, so every SRD
+			// species (none does) adds no line
+			...(this.speciesGrantsFeat
+				? [
+						{
+							key: SPECIES_SLOT_KEY,
+							level: 1,
+							className: '',
+							species: rowName(this.host().speciesOptionRow ?? this.host().speciesRow),
+						},
+					]
+				: []),
+		].filter((slot) => !this.host().draft.slotFeats[slot.key]),
+	);
+
 	/** Every slot key that can hold a feat right now — the class slots plus the species' one. What
 	 *  `usedFeatRefs` and the §C fold walk, so a species feat counts as taken exactly like a slot's. */
 	choiceKeys = $derived.by<string[]>(() => [

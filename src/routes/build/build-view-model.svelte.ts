@@ -56,7 +56,6 @@ import {
 	selectedRefs,
 	allSelectedRefs,
 	parseDraftState,
-	SPECIES_SLOT_KEY,
 	type DraftState,
 	type EditContext
 } from './draft';
@@ -515,21 +514,7 @@ export class BuildVM {
 			pointsLeft: this.abilities.pointsLeft,
 			classSkillCount: this.skillPicks.classSkillCount,
 			skillChosenCount: this.skillPicks.chosenCount,
-			openFeatSlots: [
-				...this.feats.featSlots,
-				// the species' own slot joins the list only when a species actually grants a feat, so
-				// every SRD species (none does) adds no line
-				...(this.feats.speciesGrantsFeat
-					? [
-							{
-								key: SPECIES_SLOT_KEY,
-								level: 1,
-								className: '',
-								species: rowName(this.speciesOptionRow ?? this.speciesRow),
-							},
-						]
-					: []),
-			].filter((s) => !this.draft.slotFeats[s.key]),
+			openFeatSlots: this.feats.openFeatSlots,
 			speciesSkillsOwed: Math.max(
 				this.skillPicks.speciesSkillCount - this.skillPicks.speciesSkillPicks.length,
 				0,
