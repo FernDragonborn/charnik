@@ -48,6 +48,39 @@
   regions it missed were found by driving the app in Ukrainian and reading the screen, and the last
   three strings hid behind a scan rule that excluded a text run followed by `{`.
 
+- [ ] **FEATURES-VIEW · the Features panel gets hide, pin and reorder — driven by FILTERS, not only
+  by hand.** Maintainer-stated. Three of the four halves already exist somewhere and are reuse:
+  - **Hide** is `ui.spellsHidden`'s shape (an array of refs on the character) and the Actions panel's
+    `showhide` menu is the control. **One thing to fix while passing:** `hiddenActions` is plain
+    `$state` on `CombatVM` with nothing in the schema behind it, so hiding an action is lost on
+    reload while hiding a spell survives. Two panels, two answers to one question.
+  - **Pin** is `ui.spellsPinned` — the same array of refs, and the same open question as RESOURCE-PIN
+    about WHERE a pin lands once more than one panel has them.
+  - **Reorder** is `ui.rowOrder` + `combat/row-order.ts`, already used by attacks and actions. This
+    REVERSES a decision recorded above: "the rest are deliberately left alone, their order IS their
+    grouping — features by source". The grouping stays; what changes is that a player may override it.
+    Say so when it lands, and fix that paragraph in the same commit.
+  - **The filters are the new half, and the interesting one.** Not a parallel view layer: a filter
+    SETS the per-item visibility, so there is one answer to "is this shown" and the player can see and
+    undo what a preset did. The maintainer named two presets — *only the newest level* (so a player
+    has time to get used to what they just gained) and *only the classes in this build* — and the
+    design question is what the preset VOCABULARY is, since "flexible" cannot mean "one checkbox per
+    idea forever". Level, source section and class are the three axes the data already carries
+    (`CharacterFeature` holds `at`, `section` and `className`), so a preset is a predicate over those.
+
+- [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
+  `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same
+  act has one contract — inside `DialogShell`, which is documented as "the shared ATTENTION-dialog
+  shell", the skeleton the content-review modals repeat. A working surface is not an alert, and the
+  mismatch shows as concrete defects rather than as taste: a red flag badge over "Add an item", a
+  language switcher inside it, a subtitle explaining that inventory is build data to someone who is
+  mid-fight, no visible close, and the list running past the panel's bottom edge. The category chips
+  also read "Weapon2" and "Armor1" — a taken-count glued to the label with no separator.
+  **The picker is not the work; the presentation is.** Which means rendered variants before code
+  (`AGENTS.md` ▸ Screenshots go in design-preview): a wide working dialog with no badge and no
+  subtitle, a side drawer, or the compendium's own master-detail surface reached and returned from.
+  Screenshot of the current state: `design-preview/add-item-now.png`.
+
 - [ ] **COMBAT-RAIL · the play screen is a scrolling body beside a rail that does not scroll — a
   maintainer-stated rework, its own design session.** Three parts, and the third is the reason the
   other two are not a CSS tweak:

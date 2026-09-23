@@ -756,7 +756,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
-- `function whyPassive` — `why` for a passive score, with the sentence that says what a passive score is on top of it.
+- `function whyPassive` — * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `function effectTagResolved` — Panel tag for a token, preferring the DERIVE-RESOLVED value when the token's value is an L2 * EXPRESSION — `effectTag…
 - `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).

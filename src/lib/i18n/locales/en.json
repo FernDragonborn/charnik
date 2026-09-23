@@ -804,7 +804,6 @@
 			"effects": "Effects & conditions",
 			"features": "Features",
 			"inventory": "Inventory",
-			"manageAll": "Manage all",
 			"roll": "roll",
 			"showHide": "Show / hide",
 			"skills": "Skills",
@@ -1522,7 +1521,6 @@
 	},
 	"provenance": {
 		"advantage": "{source}: advantage on {target}",
-		"passiveMeaning": "Passive: what you notice without rolling — the DM reads this instead of asking for a check.",
 		"alreadyAtLeast": "{source}: already ≥ {amount}",
 		"alreadyAtMost": "{source}: already ≤ {amount}",
 		"autoFail": "{source}: auto-fail on {target}",
@@ -1574,7 +1572,27 @@
 			"skillBonus": "Skill bonus",
 			"speciesDefault": "Default"
 		},
-		"unresolved": "{source}: unresolved \"{token}\" ({error})"
+		"unresolved": "{source}: unresolved \"{token}\" ({error})",
+		"passive": {
+			"acrobatics": "Passive Acrobatics: how well you keep your feet without thinking about it — the DM reads this when you are jostled or crossing something narrow in passing.",
+			"animal_handling": "Passive Animal Handling: how animals read you when you are not working at it — the DM reads this for a beast’s first reaction to your presence.",
+			"arcana": "Passive Arcana: the magic you recognise on sight — the DM reads this when a symbol, a spell effect or an item is something you would simply know.",
+			"athletics": "Passive Athletics: the strength you bring without bracing for it — the DM reads this for a shove you did not see coming, or a grip that has to hold on its own.",
+			"deception": "Passive Deception: how well your ordinary manner hides what you mean — the DM reads this when someone is sizing you up and you are not performing.",
+			"history": "Passive History: what you remember without being asked to think — the DM reads this when a name, a ruin or a banner should mean something to you.",
+			"insight": "Passive Insight: what someone’s manner tells you in passing — the DM reads this instead of asking whether you notice a lie.",
+			"intimidation": "Passive Intimidation: the weight you carry in a room without trying — the DM reads this for how far others hold back around you.",
+			"investigation": "Passive Investigation: the details that catch your eye unprompted — the DM reads this for a seam or a false bottom you were not searching for.",
+			"medicine": "Passive Medicine: what a body tells you at a glance — the DM reads this for an illness, a poison or a cause of death that would be plain to you.",
+			"nature": "Passive Nature: the country read without stopping to look — the DM reads this for weather turning, a track, or a plant you would not eat.",
+			"perception": "Passive Perception: what you notice without looking for it — the DM reads this instead of asking you to search.",
+			"performance": "Passive Performance: how much a room warms to you as you are — the DM reads this when you are part of a crowd rather than the act.",
+			"persuasion": "Passive Persuasion: how readily people take you at your word — the DM reads this for a first impression you are not managing.",
+			"religion": "Passive Religion: the rites and powers you know on sight — the DM reads this when a symbol, a prayer or an undead’s nature should be plain to you.",
+			"sleight_of_hand": "Passive Sleight of Hand: how steady your hands are when nobody is testing them — the DM reads this to see whether an onlooker catches a movement you make in passing.",
+			"stealth": "Passive Stealth: how easy you are to overlook when you are not actively hiding — the DM reads this against what a watcher would notice.",
+			"survival": "Passive Survival: the ground read as you walk it — the DM reads this for a trail going cold, a coming storm, or which way is north."
+		}
 	},
 	"refresh": {
 		"title": "Refresh data (re-read from disk)"

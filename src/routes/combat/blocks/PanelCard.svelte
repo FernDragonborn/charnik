@@ -92,8 +92,10 @@
 		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}
 			>{$_(groupByLabel)} <Icon name="chevron-down" size={12} /></button
 		>
+		<!-- named for the view it opens, not for what you do there: `nav.spellbook` is that view's one
+		     name, and a link that calls it something else is a second name for one place -->
 		<a class="pill-btn" href="{base}/spellbook"
-			><Icon name="settings" size={13} /> {$_('combat.panel.manageAll')}</a
+			><Icon name="book-open" size={13} /> {$_('nav.spellbook')}</a
 		>
 	{/if}
 	<!-- The grip. Armed by the library's own `dragHandle`, not by a flag of ours — which fixes three

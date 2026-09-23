@@ -19,6 +19,10 @@
 		entries = $bindable([]),
 	}: { label: string; placeholder: string; entries: string[] } = $props();
 
+	/** The press that mounts the input IS the request to type in it. An action rather than the
+	 *  `autofocus` attribute, which warns because it is wrong on a page load — this is not one. */
+	const takeFocus = (node: HTMLInputElement) => node.focus();
+
 	let typing = $state(false);
 	let typed = $state('');
 
@@ -52,10 +56,9 @@
 			</span>
 		{/each}
 		{#if typing}
-			<!-- autofocus: the press that mounts this input IS the request to type in it -->
 			<input
 				class="own-input"
-				autofocus
+				use:takeFocus
 				bind:value={typed}
 				{placeholder}
 				aria-label={label}

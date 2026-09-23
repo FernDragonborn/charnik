@@ -143,7 +143,7 @@
 					(t) => t.key === SOURCE_KEY.advantage || t.key === SOURCE_KEY.disadvantage,
 				)}
 				{@const isAdv = advDis?.key === SOURCE_KEY.advantage}
-				<span class="ability-save" use:provenance={whyPassive(p.comp, $_)}>
+				<span class="ability-save" use:provenance={whyPassive(p.comp, p.key, $_)}>
 					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={!isAdv}

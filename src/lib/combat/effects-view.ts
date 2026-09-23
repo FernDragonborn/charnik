@@ -16,6 +16,7 @@ import { abilityShortLabel, titleCase, signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND, type RechargePolicy } from '$lib/effects/token-parser';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
 import type { EffectInstance } from '$lib/character/schema';
+import type { SkillId } from '$lib/character/skills';
 import type { SaidText } from '$lib/util/say';
 import { RECHARGE_ALL } from '$lib/rules/recharge';
 
@@ -52,14 +53,23 @@ export function why(c: Computed, translate?: Translate): string {
 /** What a passive score IS, said before the arithmetic of one. The sheet shows a passive beside
  *  every skill and never said what the number is FOR, which is the one thing a player new to it asks.
  *  Carries its own English for the translator-less callers, the same contract `why` keeps. */
-const PASSIVE_MEANING = {
-	key: 'provenance.passiveMeaning',
-	en: 'Passive: what you notice without rolling — the DM reads this instead of asking for a check.',
-};
+/** The locale-free fallback, for a caller that hands this module no translator. The app never sees
+ *  it: every passive the UI renders is a skill, and each skill has its own sentence in the catalog. */
+const PASSIVE_MEANING_EN =
+	'Passive: what you notice without rolling — the DM reads this instead of asking for a check.';
 
-/** `why` for a passive score, with the sentence that says what a passive score is on top of it. */
-export function whyPassive(c: Computed, translate?: Translate): string {
-	const meaning = translate ? translate(PASSIVE_MEANING.key) : PASSIVE_MEANING.en;
+/**
+ * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
+ *
+ * Per skill, not one sentence for all eighteen: "what you notice without rolling" says everything
+ * about passive Perception and nothing about passive Athletics or passive Sleight of Hand, which are
+ * exactly the ones a player needs told. `provenance.passive.<skill>` carries each.
+ *
+ * Without a translator — a node test, a caller outside the app — it degrades to the generic line
+ * rather than restating eighteen English sentences here beside the catalog that already holds them.
+ */
+export function whyPassive(c: Computed, skill: SkillId, translate?: Translate): string {
+	const meaning = translate ? translate(`provenance.passive.${skill}`) : PASSIVE_MEANING_EN;
 	// the popover renders `pre-line`, so the sentence and the breakdown read as two lines
 	return `${meaning}\n${why(c, translate)}`;
 }
