@@ -250,93 +250,43 @@ named after what it does rather than numbered — the order is this list's order
 closes leaves the list and nothing else is renamed. The SEQUENCING REASONS matter more than the
 position and are given per wave, because most of them were learned the hard way.
 
-- **THE 0.7.0 GATE — cleared.** The test was not feature count: **no number on a default character
-  may be one we know to be wrong**. Four items failed it, three of them this cycle's own debt — a
-  mechanism built and never given its first consumer, which is the worst kind of done, because the
-  suite is green and the player sees nothing. All four are closed: **EXTRA-ATTACK** (a level-5
-  martial attacked once, at the tier most games are played at) · **RAGE-SCOPE** (rage damage paid
-  out on a crossbow) · **RECHARGE-3**'s first charged items (the two-axis model and its Dawn/Dusk
-  control shipped with nothing that used them) · **2014 casting counts** (every 2014 caster read 0
-  cantrips).
-  A fifth was listed and then **removed from the gate, not done**: Agonizing Blast was written down
-  as one content row, and is not — no pack carries a row per Eldritch Invocation, in either edition,
-  so it needs those rows AND N2's chooser, and its sibling Magic Weapon needs D16's cast-time choice.
-  An absent feature is not a wrong number, and this gate was about wrong numbers.
-  **Keep the rule for the next release**: what blocks a version is a number we know to be wrong, and
-  a release that ships with one says so in the changelog rather than letting a player hunt for it.
-
-  **ROUND TWO — cleared.** Found by auditing for half-done work rather than by reading checkboxes, so
-  the test widened by one clause: a version is also blocked by **a path a user can start and cannot
-  finish**, and by **shipped content that visibly does nothing**. All three are closed.
-  - **HOMEBREW-LINKED** — an article that owns a linked table lists its rows and offers to write one
-    more with the joins already filled. Four links ship (class, subclass, species, resource); a fifth
-    is one row in `LINKED_TABLES`.
-  - **MAGIC-ITEM-EFX** — every shipped magic item whose text states a passive benefit while worn,
-    wielded or attuned now folds it, the +N weapons and 54 charged pools included. What stayed prose is
-    what the vocabulary cannot NAME, and it says so as a note rather than staying blank. **ITEM-TEXT-2014**
-    fell out of it and closed too: the 2014 extractor was dropping the description of 89 magic rows, so
-    a fifth of that pack was unauthorable — the source had the text all along.
-  - **PROF-GRANT** — the token says saves, skills, armour categories and specific weapons, and eleven
-    shipped rows say it instead of only printing it.
-
-  **Keep both clauses for the next release.** A version is blocked by a number we know to be wrong, by
-  a path a user can start and cannot finish, and by shipped content that visibly does nothing.
-
-  **ROUND THREE — cleared, and the gate grew a test instead of a habit.** Round two found its items
-  by hand; twice in a row the thing found was "a mechanism with no consumer", so that half of the
-  gate is now two assertions over the shipped packs rather than an audit somebody has to remember to
-  run: **every effect KIND has a shipped row** (with a pinned list of the three that legitimately
-  have none, each carrying its reason), and **every shipped token names a TARGET the sheet consumes**
-  — B13 could always answer that question and nothing had ever asked it of our own data. Losing the
-  last user of a kind now fails loudly.
-  What the hand pass still found, and closed:
-  - **MONK-MOVEMENT** — a wrong number, and the last one: every monk from 2 to 20 walked at 30 feet.
-    The item had been parked behind "the class tables are not data", which its own sibling row
-    disproves — `monk_martial_arts` has carried its die ladder off that same table all along, because
-    `step()` IS a table.
-  - **SUBCLASS-LEVEL-2024** — already correct in the shipped pack; the item outlived the fix and the
-    per-system override column it asked for turned out to be nothing, since each edition is its own
-    file.
-  - **N4's residual** and **FEATURE-PASSIVES** — one was a screenshot nobody had taken (taken; the
-    at-cap behaviour is a REPLACE, not the disable the item claimed), the other a list that had gone
-    stale under its own successes and was describing work already shipped.
-
-  **What was deliberately NOT in 0.7.0, and is not a wrong number.** `versatile:1d10` and
-  `mastery:<name>` were shipped on every weapon and read by nothing (MASTERY-HALF): both are a grip or
-  a feature the player CHOOSES, so each wants state and a control before it can mean anything —
-  a missing feature, not arithmetic we get wrong. Same for the Champion's crit threshold, which the
-  app cannot get wrong because it never decides a crit at all.
-  **The mastery half of that is now built**: the class's ladder is a content column, the player picks
-  the weapon KINDS it unlocks, and the attack row prints the property exactly when a pick says it may
-  be used. What is left there is the eight mastery EFFECTS, most of which act on a creature the app
-  does not model. `versatile` and the crit threshold are untouched.
-
-- **Done.** REL-4 content packs, then the roll card. One consequence stays live: SRD
-  content ships from `charnik-content-srd`, so the content passes (MAGIC-ITEM-EFX, E4, D6/D10) are
-  not app-roadmap work at all.
-- **The choice a feature asks for — done.** D16 closed on Magic Initiate's spell picks: the content
-  shape it needed is three columns on the feat row, and the answer makes the feat a caster PROFILE,
-  so the picker, the caps and the DC attribution it wanted already existed. What that did NOT close is
-  the free cast the feat also grants — `FEAT-FREE-CAST`, which is a cast-time source choice, not a
-  choice at a slot.
-- **The content-shaped work**, once the app stops moving under it: N2's three shapes. What came
-  before it in this wave is done — TOOLS, CONDEFF's merge, N5's ammunition, and N2b's beast data (an
-  attacks column in both editions, and the 116 creatures of SRD 5.1's two appendices, which is where
-  every animal a 2014 druid can turn into actually lives). Each landed as a commit in
-  `charnik-content-srd` with an assert in this repo.
-- **Ready, unscheduled, and app-only** — _(empty. N2b looked ready once its converter blocker went
-  away, and writing the spec — [`research/wild-shape.md`](research/wild-shape.md) — proved otherwise:
-  beasts carry no attacks column and the 2014 pack ships four beasts, so the app work would land on
-  content that cannot feed it. It sits in the content-shaped wave with the rest.)_
+- **The release gate — three clauses, and they stand for every version.** What blocks a release is
+  **a number we know to be wrong**, **a path a user can start and cannot finish**, and **shipped
+  content that visibly does nothing**. A release that ships with one anyway says so in the changelog
+  rather than letting a player hunt for it.
+  Half the gate is automated, because what a hand pass found twice running was the same thing — a
+  mechanism built and never given its first consumer, the worst kind of done, since the suite is
+  green and the player sees nothing. Two assertions over the shipped packs hold it now: **every
+  effect KIND has a shipped row** (with a pinned list of the three that legitimately have none, each
+  carrying its reason), and **every shipped token names a TARGET the sheet consumes**. Losing the
+  last user of a kind fails loudly instead of quietly.
+  **An absent feature is not a wrong number**, and blocks nothing. `versatile:1d10` ships on every
+  weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
+  never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
+  control before it can mean anything.
+- **What the playtest left.** The first outside playtest is where the current work comes from, and
+  its tail is PLAYTEST-UI, PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the screens, the dice
+  tray, the chrome the add-item picker wears, and a narrow layout that is usable rather than
+  finished. First, because each one is a player already standing in front of it.
+- **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
+  FEATURE-PASSIVES naming shape 1 and N2b (Wild Shape) no longer blocked on data — the attacks column
+  and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
+  can turn into actually lives. MASTERY-HALF's remaining half sits here: the eight mastery EFFECTS,
+  most of which act on a creature the app does not model.
+- **CONVERTERS-SUNSET, in two commits and in that order.** The row-count assertion gets a home in
+  `charnik-content-srd` first, because between the two there is otherwise a state where nothing
+  guards the pack; then `tools/srd/` goes, and the "never re-run a converter to re-stamp" hazard goes
+  with it.
+- **Ready, unscheduled, and app-only** — _(empty.)_
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
   party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, `speed.climb`
-  (sized: ~8 lines), the senses, and attack rolls made AGAINST you. It is not in 0.7.0 because every
-  one of those rows already SAYS what it does as a note, so nothing is silently wrong — the work is
+  (sized: ~8 lines), the senses, and attack rolls made AGAINST you. It blocks no release, because every one
+  of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **The design session that gated it is done** (`work/content.md` ▸ MAGIC-ITEM-VOCAB). A sense is a
+  **Two of its three questions are settled** (`work/content.md` ▸ MAGIC-ITEM-VOCAB). A sense is a
   MECHANIC — two sources take the greater range, which is stacking and not something `note:` can do —
   and it is a chip on the Defenses card beside the fly and swim speeds already written that way. The
   `+1/+2/+3` rows stay ONE row each and grow a per-instance answer, the same shape Ring of Resistance
