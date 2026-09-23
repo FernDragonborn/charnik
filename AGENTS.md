@@ -73,9 +73,9 @@ say so out loud and get a human sign-off instead of quietly breaking it.
 
 ## The ways to hurt yourself
 
-**Inventing game data.** Never author a spell, item, stat, cost, or mechanic from memory. Game data
-comes from a real CC-BY SRD source through the converters in `tools/srd/`, which assert row counts
-against it. Schema tests validate shape, not truth, so a hallucinated damage die passes every gate you
+**Inventing game data.** Never author a spell, item, stat, cost, or mechanic from memory. Game data is
+transcribed from a real CC-BY SRD source, and the row count of what ships is asserted rather than
+trusted. Schema tests validate shape, not truth, so a hallucinated damage die passes every gate you
 have and poisons the app. Need a dataset? Fetch it.
 
 **Naming a repository that is not this one or `charnik-content-srd`.** This repo is public and git

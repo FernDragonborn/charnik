@@ -265,6 +265,12 @@ Game data is converted from a real CC-BY source, never authored from memory. The
 
 Tag every row by the SRD it came from; never claim both editions unverified.
 
+**A source's typography is not evidence, and a name becomes an id.** Extracted text splits words
+where the layout did — SRD 5.1 prints "See I nvisibility" and "Extra A ttack" — so whatever matches a
+name against a source, or derives an id from one, repairs the spacing before it compares. The cost is
+not cosmetic: `see_invisibility` re-derived as `see_i_nvisibility` is a different row, and every
+character holding the old one points at nothing.
+
 **Shipped translations are English only.** No CC-licensed Ukrainian SRD exists, so the localization
 columns ship filled for `en` and empty elsewhere; other locales are community-filled through the
 translate flow, which is why that flow has to be good rather than an export to a spreadsheet.

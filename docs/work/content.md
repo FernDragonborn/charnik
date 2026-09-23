@@ -41,6 +41,9 @@
   because between the two commits there is otherwise a state where nothing guards the pack. Then the
   folder goes, and the standing "never re-run a converter to re-stamp" hazard goes with it
   (`AGENTS.md`, `tooling.md`).
+  Nothing else in them needs rescuing: the one lesson that outlives the code — a source's typography
+  is not evidence, so repair the spacing before a name is compared or turned into an id — is recorded
+  in `content.md` ▸ Where the shipped data comes from.
   **What weakens, said plainly:** today the assertion compares the emitted rows against the SOURCE. A
   manifest compares them against a number we wrote down, which catches a truncated file or a bad
   hand-edit but is a snapshot, not a cross-check. That is a real loss and worth naming rather than
