@@ -208,8 +208,11 @@
 		position: relative;
 		display: grid;
 		/* fixed columns so effect/tag/timing line up across rows even when a row has no
-		   resolution pill (its cell stays empty but keeps its width) */
-		grid-template-columns: minmax(0, 1fr) 76px 74px 46px;
+		   resolution pill (its cell stays empty but keeps its width). Each row is its OWN grid, so a
+		   track that sized to content would line up with nothing — hence the pixels.
+		   The level track holds a WORD, not a number ("cantrip", «замовляння»), and 46px fit the
+		   English one only; the name track is the 1fr and gives the difference up without noticing. */
+		grid-template-columns: minmax(0, 1fr) 76px 74px 62px;
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-1-5) var(--space-1-5);

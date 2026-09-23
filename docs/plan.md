@@ -346,8 +346,10 @@ position and are given per wave, because most of them were learned the hard way.
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
   item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
-  pinned rail, left-aligned, with the panel regions re-decided — also its own session) and COMPANION
-  (research first).
+  pinned rail, left-aligned, with the panel regions re-decided — also its own session; RESOURCE-PIN
+  asks the same "where does a pin land" question and wants answering with it), PROSE-MARKDOWN (211
+  HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
+  COMPANION (research first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
 `UBUG-22` was the last one and is closed.)_

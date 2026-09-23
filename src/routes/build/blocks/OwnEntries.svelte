@@ -3,10 +3,15 @@
 	// Plain strings on the character, because neither languages nor tools feed any rule the app
 	// computes; a content row for each would be machinery around a word (`work/ui.md`).
 	//
+	// Adding one is the LAST CHIP in the row, not a field beside it: a standing text input says a
+	// list is a form to be filled, when almost every character types nothing here at all. Pressed, the
+	// chip becomes the input in place, so the control is where the result will appear.
+	//
 	// The way out is the way in: every entry carries its own remove, so nothing typed here is
 	// permanent (`AGENTS.md` ▸ Reverse states).
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 
 	let {
 		label,
@@ -14,17 +19,20 @@
 		entries = $bindable([]),
 	}: { label: string; placeholder: string; entries: string[] } = $props();
 
+	let typing = $state(false);
 	let typed = $state('');
 
 	/** Trimmed, never blank, never a duplicate — the three ways a typed list turns to noise. */
 	function add() {
 		const name = typed.trim();
-		if (!name || entries.includes(name)) {
-			typed = '';
-			return;
-		}
-		entries = [...entries, name];
+		if (name && !entries.includes(name)) entries = [...entries, name];
 		typed = '';
+	}
+	/** Leaving keeps whatever was typed rather than dropping it — a half-typed word lost to a stray
+	 *  click is the kind of thing nobody reports and everybody resents. */
+	function addAndClose() {
+		add();
+		typing = false;
 	}
 </script>
 
@@ -43,17 +51,32 @@
 				</button>
 			</span>
 		{/each}
+		{#if typing}
+			<!-- autofocus: the press that mounts this input IS the request to type in it -->
+			<input
+				class="own-input"
+				autofocus
+				bind:value={typed}
+				{placeholder}
+				aria-label={label}
+				onblur={addAndClose}
+				onkeydown={(event) => {
+					if (event.key !== 'Enter') return;
+					// Enter keeps the field open: someone adding one language usually adds two
+					event.preventDefault();
+					add();
+				}}
+				use:dismissOnEscape={() => {
+					typed = '';
+					typing = false;
+				}}
+			/>
+		{:else}
+			<button class="pill-btn" onclick={() => (typing = true)}
+				><Icon name="plus" size={12} /> {$_('build.own.add')}</button
+			>
+		{/if}
 	</div>
-	<!-- Enter adds, because a one-field form whose only button is "add" is a field you press Enter in -->
-	<form
-		onsubmit={(event) => {
-			event.preventDefault();
-			add();
-		}}
-	>
-		<input bind:value={typed} {placeholder} aria-label={label} />
-		<button class="pill-btn" type="submit" disabled={!typed.trim()}>{$_('build.own.add')}</button>
-	</form>
 </div>
 
 <style>
@@ -63,13 +86,12 @@
 		gap: var(--space-1-5);
 		padding-top: var(--space-2);
 	}
-	form {
-		display: flex;
-		gap: var(--space-2);
-	}
-	input {
-		flex: 1;
-		min-width: 0;
+	/* sized like the chip it replaces, and it grows with what is typed rather than standing at form
+	   width in a row of short words */
+	.own-input {
+		min-width: 8rem;
+		max-width: 100%;
+		field-sizing: content;
 	}
 	.tag {
 		display: inline-flex;

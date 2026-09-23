@@ -74,6 +74,34 @@ stay semi-manual.
   `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
+  feedback. Today `ui.spellsPinned` pins spells to the top of the combat spell list and nothing else
+  can be pinned — so a Barbarian hunting Rage, or a player who wants the two potions they are actually
+  carrying within reach, scrolls a panel for them mid-turn.
+  **The shape already exists and is the cheap half**: a pin is a per-character array of refs on `ui`,
+  and `spellsPinned` is exactly that, keyed by the same `type:source:id` identity everything else uses.
+  So a resource and an inventory row pin by their own refs through the same mechanism.
+  **The design half is WHERE a pin lands**, and that is the question to answer first: the spell pin
+  sorts within its own panel, but a pin that spans spells, resources and inventory has no single panel
+  to sort inside. Either it is a surface of its own — which is COMBAT-RAIL's question, so these two
+  want answering together — or each panel keeps sorting its own and "pinned" stops meaning one place.
+  **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
+  and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
+
+- [ ] **DAMAGE-TYPE-UI · taking damage names a type, but the interface around it is a stub.**
+  The arithmetic is real and lands: `damageTypeOptions` offers the types this character has any
+  defence for, and `applyDamageSensitivity` halves, doubles or zeroes accordingly. What is missing is
+  everything around it.
+  - **The result is invisible until it has happened.** Typing 12 against a resistance shows no "→ 6"
+    before the press, so the player finds out by watching the HP bar move.
+  - **A type the character has no defence for cannot be picked at all.** That is defensible — it
+    resolves identically to untyped — but it means the log cannot say what the damage WAS, and the
+    log is the record a table argues from.
+  - **One press is one type.** A hit that deals two types (a flame tongue's slashing + fire against a
+    creature resistant to one of them) has no form, and that is the case a tracker exists for.
+  A play-tracker SUGGESTS and never auto-applies, so the shape is a pre-filled answer the player
+  confirms, not a computed total applied for them.
+
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
   damage except Force) degrades to a note. The cheap shape is a subtractive relation

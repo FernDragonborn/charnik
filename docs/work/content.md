@@ -12,6 +12,22 @@
   `armor:<weight>` or `ac`, while a template carries only `attunement` — the old "no tags and no
   damage" test matched no shipped row at all (they all carry `attunement`) and would have called a
   net, which does no damage, a template. ~20 rows per edition needed this, Flame Tongue among them.
+- [ ] **PROSE-MARKDOWN · the tables in content prose are HTML; make them Markdown — its own session.**
+  211 `<table>` blocks across the two packs (2014: 116 in monsters, 16 in class features; 2024: 49 in
+  items, 16 in spells, 11 in class features, 3 in species), plus 70 `<em>`, 34 `<b>` and one `<span>`.
+  The renderer already takes both — `renderContentMarkdown` parses Markdown and sanitizes raw HTML in
+  one pass — so nothing is broken today. What is wrong is that a column the USER is invited to edit in
+  a table processor holds two notations for the same thing, and the HTML one is the notation they
+  cannot read or write by hand.
+  **Why it is a session and not a pass:** a Markdown table is only equivalent when the source table is
+  RECTANGULAR. A monster stat block's tables are the ones most likely not to be, so the conversion has
+  to be checked, not trusted — and it is 211 diffs in the content repo, each of which a human reads.
+  **Do the audit with it, not after:** the same pass answers where else HTML is doing a job Markdown
+  does (`<b>`/`<em>` are plain `**`/`_`), and whether anything left is load-bearing enough to keep.
+  The one pipeline note that bounds the work: `renderContentMarkdown` force-feeds blank lines around
+  `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
+  because of these blocks, and that comes out with them.
+
 - [ ] **CONVERTERS-SUNSET · stop maintaining `tools/srd/`, and decide whether it is kept at all.**
   Two decisions in one item, and the first is not blocked on the second. **Do not audit them** — the
   fresh-eyes read skips the block deliberately, and any later read should skip it too until the
