@@ -63,12 +63,20 @@ function collect(dir, rel, into) {
 	return into;
 }
 
-/** Copy every pack into `static/content/` and write the manifest beside them. Throws when the
- *  content repo isn't there — a caller decides whether that ends the process (the CLI below) or is
- *  reported and survived (the dev watcher). */
-export function vendorContent() {
+/**
+ * Copy every pack into `static/content/` and write the manifest beside them. Throws when the content
+ * repo isn't there — a caller decides whether that ends the process (the CLI below) or is reported
+ * and survived (the dev watcher).
+ *
+ * `clean` empties the destination first, so a file the content repo dropped does not ship. The dev
+ * watcher turns it OFF: a running app fetches these files, and a re-copy that starts by deleting
+ * them has a window where the page reloads into no rules at all. What a stale leftover costs there
+ * is nothing — `list()` reads the regenerated manifest, which no longer names it.
+ * @param {{ clean?: boolean }} [opts]
+ */
+export function vendorContent({ clean = true } = {}) {
 	requireContentRepo();
-	if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
+	if (clean && existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
 	mkdirSync(destBase, { recursive: true });
 
 	/** @type {{ roots: Record<string, string[]> }} */

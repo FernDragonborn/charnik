@@ -1,7 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, type Plugin } from 'vite';
-import { readFileSync, watch } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { requireContentRepo } from './tools/content-repo.mjs';
 import { vendorContent } from './tools/build-static-content.mjs';
 
@@ -23,22 +23,30 @@ const appVersion: string = JSON.parse(
  * Re-copying is whole-tree and takes milliseconds, so there is nothing to gain by tracking WHICH
  * file changed; the debounce is only there because one editor save and one `git pull` both arrive as
  * a burst of events.
+ *
+ * It rides VITE'S watcher rather than opening one of its own, because vite RESTARTS this server
+ * whenever this file changes — a hand-rolled `fs.watch` survives that restart with nobody left
+ * holding its handle, so every config edit in a session adds another copy of the callback and
+ * another reload per save. Vite closes its own.
  */
 const contentWatch: Plugin = {
 	name: 'charnik-content-watch',
 	apply: 'serve',
 	configureServer(server) {
-		const contentRepo = requireContentRepo();
+		const contentRepo = requireContentRepo().replace(/\\/g, '/');
 		let queued: ReturnType<typeof setTimeout> | undefined;
-		watch(contentRepo, { recursive: true }, (_event, file) => {
-			// `.git` churns on every command in there (index.lock, refs, objects) and holds no content
-			if (file !== null && file.startsWith('.git')) return;
+		server.watcher.add(contentRepo);
+		server.watcher.on('all', (_event, changed) => {
+			const path = changed.replace(/\\/g, '/');
+			// the watcher carries the whole project; `.git` churns on every command in the content repo
+			// (index.lock, refs, objects) and holds nothing we ship
+			if (!path.startsWith(`${contentRepo}/`) || path.includes('/.git/')) return;
 			clearTimeout(queued);
 			queued = setTimeout(() => {
 				try {
-					vendorContent();
-					// vite watches `static/` for ITS content, and a copy it did not see start is not
-					// reliably one it reloads for — say so directly rather than hope
+					vendorContent({ clean: false });
+					// vite serves `static/` as public assets; whether it reloads for a change it did not
+					// make is not ours to rely on — say so directly rather than hope
 					server.ws.send({ type: 'full-reload' });
 				} catch (e) {
 					server.config.logger.error(
