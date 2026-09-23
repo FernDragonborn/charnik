@@ -88,9 +88,12 @@
   maintainer picked from seeing them — visible, and good enough to ship — but "good enough from one
   pair of eyes that already knew what the control was" is not the same claim as "a player who has
   never been told finds it".
-  **What to ask, and of whom:** players who have not seen the control before, on their own character,
-  with no prompt naming it. The question is whether they notice a choice exists at all — not whether
-  they like the styling. The two other renderings are recorded in the commit that shipped this
+  **The question is NOT which rendering is most visible.** The same playtest said "too much of
+  everything", and a screen that is 43% furniture (COMBAT-RAIL ▸ 4) cannot answer a visibility
+  question honestly — every control is most visible alone. So ask first whether a standing control is
+  the right shape at all, and only then which one: players who have not seen it before, on their own
+  character, with no prompt naming it, and watch whether they look for the choice rather than whether
+  they find the chip. The two other renderings are recorded in the commit that shipped this
   (`design-preview/fin-A-chip.png`, `fin-C-inline.png`): the quiet single-value chip, and the chip
   with a swap glyph.
   **It generalises, which is why it is its own item rather than a tail on FINESSE-ABILITY.** Every
@@ -113,6 +116,25 @@
      session: which panels are rail-shaped (log, and what else), whether the rail is reorderable and
      collapsible like the columns are, what a narrow window does with it, and how an existing
      `ui.panelColumns` migrates rather than being thrown away.
+  4. **How much stands on the resting screen — "too much of everything" from the playtest, counted.**
+     At 1536×864 the Combat screen carries **225 controls inside `main`**, 50 visible at once, over
+     3.2 screens of scroll. **96 of the 225 are FURNITURE** — drag grips, pins, eyes, own-words
+     pencils, show/hide — against 129 that do something to the character. **45 are drag grips alone.**
+     So 43% of the controls on the play screen exist to rearrange the play screen.
+     The reason that reads as clutter rather than as richness: furniture is BIMODAL. A sheet is
+     arranged once and played for months, so those 96 stand permanently for an act performed rarely,
+     while the 129 are wanted every turn. Most of the 96 arrived recently and separately — row
+     reorder, the Features panel's hide/pin, the own-words pencil — each defensible alone, and the
+     sum is what a player met.
+     Three directions, and the middle one is recorded to be rejected: **an arrange MODE** (one
+     control reveals every grip, eye and pin at once — sheds nearly all 96 for the cost of one, works
+     on touch, and has a reverse state); **furniture revealed on row hover** (cheap, matches the
+     auto-calc switch and the concentration ✕, but dead on touch and twitchy across twenty rows);
+     **or cutting** — asking whether a per-row grip earns its place when the keyboard already
+     reorders. Rendered variants decide it, not this paragraph.
+     **It belongs in THIS session and not beside it.** "What stands on the resting screen" and "how
+     the screen is divided" are one question; answered apart they get two answers that do not fit.
+
   Nothing here is blocked on code. What it needs first is RENDERED variants, not names
   (`AGENTS.md` ▸ Screenshots go in design-preview).
 
@@ -202,6 +224,9 @@
   player, 23 notes. The ones that are copy or a missing affordance, smallest first; the rules half is
   `mechanics.md` ▸ PLAYTEST-SHIELD, the tray half is `roller.md` ▸ PLAYTEST-TRAY, and the override
   layer is `authoring.md` ▸ OWN-WORDS.
+  **One of the 23 never landed anywhere, and it was the structural one**: "too much of everything".
+  It is not a copy fix or a missing affordance, so it had no home among these — it is the shape of the
+  screen, and it sits in COMBAT-RAIL ▸ 4 with the count behind it.
   - [x] **A refused ability bump says why.** Point buy's step from 13 to 14 costs 2 where every step
         before it cost 1, and the "+" that could not afford it did nothing and explained nothing.
   - [x] **Strict/Free say what they change**, and say it through `provenance` rather than `title`.
