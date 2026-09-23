@@ -125,7 +125,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (81)
+## Global CSS classes (82)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -192,6 +192,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
+| `.prose-table-scroll` | ArticleProse.svelte :global |  |
 | `.provenance-description` | components.css | the same text as an accessible description. |
 | `.provenance-popover` | components.css | --- the provenance popover: how an auto-calculated value explains itself (ui.md ▸ rule 3). |
 | `.roll-toast` | RollToast.svelte :global |  |
@@ -1775,4 +1776,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1066 exports across 144 modules · 72 duplicate suspects._
+_47 tokens · 82 global classes · 54 components · 1066 exports across 144 modules · 72 duplicate suspects._

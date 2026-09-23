@@ -162,7 +162,11 @@
   393px and 320px, in English and Ukrainian, no route scrolls the document sideways and no box inside
   `main` escapes it. The one threshold and the rules behind it are
   [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
-  The banner stays and says alpha rather than absent. Left:
+  The banner stays and says alpha rather than absent.
+  Two things had escaped that at 320px and are fixed: a class feature's spell TABLE (the Warlock's
+  Pact Magic list) ran 39px past the screen and every ancestor inherited it, so a content table now
+  gets its own `overflow-x` scroller in the renderer; and the panel HEAD did not wrap, leaving its
+  drag grip hanging 13px off the edge. Left:
   - [ ] **Four tap targets, all of them in combat.** Hit-tested at 393px rather than measured as
         boxes, which is the difference between a list worth working and a list of false alarms: the
         controls that LOOK broken (`.prep` at 8×8, `.pin-star` at 18×18) already carry a `::before`

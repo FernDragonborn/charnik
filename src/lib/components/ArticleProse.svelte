@@ -78,6 +78,13 @@
 	.body :global(p) {
 		margin: 0 0 var(--space-3);
 	}
+	/* A table may be wider than the column it is in — it scrolls in its OWN box (the wrapper the
+	   renderer puts around it) rather than dragging the page sideways. On a phone a class feature's
+	   spell table is 39px past a 320px screen, and every ancestor inherited that. */
+	.body :global(.prose-table-scroll) {
+		max-width: 100%;
+		overflow-x: auto;
+	}
 	/* content tables (spell/item tables, embedded summon stat blocks) rendered from the CSV */
 	.body :global(table) {
 		width: 100%;

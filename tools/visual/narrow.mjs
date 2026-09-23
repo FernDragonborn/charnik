@@ -54,7 +54,9 @@ const findOverflow = () => {
 	const main = document.querySelector('main');
 	const viewport = document.documentElement.clientWidth;
 	const documentWidth = document.documentElement.scrollWidth;
-	if (!main) return { viewport, documentWidth, offenders: [] };
+	// no <main> is not "nothing overflowed" — it is a route that did not render, and reporting that as
+	// a pass is how this probe once cleared /combat while measuring nothing at all.
+	if (!main) return { viewport, documentWidth, offenders: [], noMain: true };
 	const bounds = main.getBoundingClientRect();
 	const escapes = (el) => {
 		const box = el.getBoundingClientRect();
@@ -159,9 +161,10 @@ for (const width of WIDTHS) {
 		await page.waitForTimeout(450);
 		const result = await page.evaluate(findOverflow);
 		const scrolls = result.documentWidth > result.viewport + 1;
-		if (scrolls || result.offenders.length) failures++;
+		const bad = scrolls || result.offenders.length > 0 || result.noMain;
+		if (bad) failures++;
 		console.log(
-			`${scrolls || result.offenders.length ? '✗' : '✓'} ${route} — document=${result.documentWidth}${scrolls ? ' PAGE SCROLLS SIDEWAYS' : ''} main=${result.mainScrollWidth} offenders=${result.offenders.length}`,
+			`${bad ? '✗' : '✓'} ${route} — document=${result.documentWidth}${scrolls ? ' PAGE SCROLLS SIDEWAYS' : ''}${result.noMain ? ' NO <main> — THE ROUTE DID NOT RENDER, NOTHING WAS MEASURED' : ` main=${result.mainScrollWidth}`} offenders=${result.offenders.length}`,
 		);
 		for (const offender of result.offenders.slice(0, 8)) console.log(`      ${offender}`);
 		// a tap target is a property of the control, not of the width, so once per run — and it scrolls

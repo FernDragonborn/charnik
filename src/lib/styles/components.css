@@ -19,6 +19,11 @@
 	align-items: center;
 	gap: var(--space-2);
 	margin: 0 0 var(--space-2-5);
+	/* Chrome wraps rather than overflowing (`internals/ui.md` ▸ A narrow window). Unconditional, with
+	   no threshold: a row that fits does not wrap, so this only fires where the title plus its buttons
+	   plus the grip are wider than the panel — which on a 320px screen they are, and the grip was the
+	   thing left hanging 13px off the edge. */
+	flex-wrap: wrap;
 }
 .htoggle {
 	display: inline-flex;

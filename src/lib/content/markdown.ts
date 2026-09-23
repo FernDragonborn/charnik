@@ -17,7 +17,13 @@ export function renderContentMarkdown(md: string): string {
 	let html = marked.parse(spaced, { async: false, breaks: true });
 	html = html
 		.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
-		.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>');
+		.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>')
+		// A table is one of the few blocks allowed to be wider than the column it sits in, and it gets
+		// its OWN scroller rather than pushing the page sideways (`AGENTS.md` ▸ Hit every surface).
+		// Wrapped here rather than styled `display: block`, which would also stop it filling its column
+		// on a wide screen: this leaves every existing rendering untouched and only adds the scroll.
+		.replace(/<table>/g, '<div class="prose-table-scroll"><table>')
+		.replace(/<\/table>/g, '</table></div>');
 	return DOMPurify.sanitize(html);
 }
 
