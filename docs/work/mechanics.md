@@ -160,19 +160,13 @@ stay semi-manual.
   in `combat/attacks.ts`, extracted so the rule has one home), and a scope may be a comma-separated
   list the roll path requires ALL of — which it already matched that way, only the parser refused to
   accept one.
-- [ ] **FINESSE-ABILITY · a finesse weapon asks which ability it swings with. NEEDS A MAINTAINER'S
-  EYES ON THE FEEL, not just a green test.** RAW hands the player the choice — "you use your choice
-  of your Strength or Dexterity modifier" — and the app takes it silently: `Math.max(strMod, dexMod)`.
-  That was invisible while the bigger modifier was strictly better. RAGE-SCOPE makes it visible and
-  sometimes wrong: at STR 14 / DEX 16 the auto-pick takes Dexterity (+3/+3) while Strength gives
-  +2/+2 **plus** rage damage, which is more damage on the same swing. The same shape will recur for
-  any feature that keys off an ability rather than a weapon.
-  Shape: a two-state control on the attack row of a finesse weapon only (everything else has no
-  choice to make), defaulting to the higher modifier, remembered per weapon, and visible in the
-  attack's trace so the number still explains itself.
-  **The open question is not whether it computes right — it is whether a player reads it without
-  being told.** That verdict is the maintainer's, from the running app; it lands in the manual-check
-  report when built, not closed on a passing test.
+- [x] **FINESSE-ABILITY · a finesse weapon asks which ability it swings with.** What must not be
+  re-litigated: the choice is keyed by weapon KIND (a +1 Rapier is a Rapier), an ABSENT key means
+  "whichever modifier is higher" so no save needs migrating, and the control renders only where there
+  is a choice to make. The reason it is not cosmetic is the one to keep: the ability an attack
+  resolves from is an effect SCOPE, so Rage pays out on a rapier swung with Strength and not on the
+  same rapier swung with Dexterity — which is why the silent `Math.max` was sometimes picking the
+  worse number. The same shape recurs for any feature that keys off an ability rather than a weapon.
 - [ ] **GWF-2014 · Great Weapon Fighting is a REROLL in 2014 and a floor in 2024, and only one of
   them ships.** 2024 says "treat any 1 or 2 on a damage die as a 3" and carries
   `min_die:damage:two_handed,melee:3`. 2014 says "you can reroll the die and **must use the new roll**"

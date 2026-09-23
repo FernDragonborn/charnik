@@ -82,6 +82,22 @@
   subtitle, a side drawer, or the compendium's own master-detail surface reached and returned from.
   Screenshot of the current state: `design-preview/add-item-now.png`.
 
+- [ ] **PICK-CONTROL-STUDY · which rendering of a two-state choice players actually read — asked of
+  users, not of us.** FINESSE-ABILITY shipped the first one: both abilities standing with the live
+  one lit (`STR DEX`), on the attack row of a finesse weapon. Three renderings went up first and the
+  maintainer picked from seeing them — visible, and good enough to ship — but "good enough from one
+  pair of eyes that already knew what the control was" is not the same claim as "a player who has
+  never been told finds it".
+  **What to ask, and of whom:** players who have not seen the control before, on their own character,
+  with no prompt naming it. The question is whether they notice a choice exists at all — not whether
+  they like the styling. The two other renderings are recorded in the commit that shipped this
+  (`design-preview/fin-A-chip.png`, `fin-C-inline.png`): the quiet single-value chip, and the chip
+  with a swap glyph.
+  **It generalises, which is why it is its own item rather than a tail on FINESSE-ABILITY.** Every
+  two-state pick the sheet grows later — a versatile weapon's grip, a damage type chosen per
+  instance — asks the same question, and answering it once settles the house pattern rather than one
+  control. Until then the shipped rendering stands.
+
 - [ ] **COMBAT-RAIL · the play screen is a scrolling body beside a rail that does not scroll — a
   maintainer-stated rework, its own design session.** Three parts, and the third is the reason the
   other two are not a CSS tweak:
