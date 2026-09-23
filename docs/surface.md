@@ -764,6 +764,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const remainingRounds` — Rounds an effect has left at the given round counter (null = indefinite, floor 0).
 - `function endConcentrationCarriedBy` — * An effect leaving the sheet takes its concentration WITH it.
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
+- `const ROUNDS_PER_UNIT` — Rounds in one of the units a duration is said in — 1 round = 6 seconds.
 - `function durationToRounds` — Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" → * 600, "2 rounds" → 2.
 - `const EFFECT_DURATION_PRESETS` — The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
 
@@ -1765,4 +1766,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1060 exports across 143 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1061 exports across 143 modules · 71 duplicate suspects._

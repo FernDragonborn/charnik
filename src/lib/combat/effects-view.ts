@@ -396,7 +396,14 @@ export function endConcentrationCarriedBy(
 export const isEffectExpired = (e: EffectInstance, round: number): boolean =>
 	e.durationRounds != null && round >= (e.startedRound ?? 0) + e.durationRounds;
 
-const ROUNDS_PER_UNIT: Record<string, number> = { round: 1, minute: 10, hour: 600, day: 14400 };
+/** Rounds in one of the units a duration is said in — 1 round = 6 seconds. Exported because a REST
+ *  is a duration too, and the rule about which effects it outlasts is arithmetic on these. */
+export const ROUNDS_PER_UNIT: Record<string, number> = {
+	round: 1,
+	minute: 10,
+	hour: 600,
+	day: 14400,
+};
 
 /** Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" →
  *  600, "2 rounds" → 2. Null when it doesn't map to rounds (Instantaneous / Until dispelled /

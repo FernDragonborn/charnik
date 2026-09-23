@@ -11,6 +11,7 @@ import {
 	endConcentrationCarriedBy,
 	pipClick,
 	remainingRounds,
+	ROUNDS_PER_UNIT,
 	titleCase,
 } from '$lib/combat/helpers';
 import { effectiveHpMax, hitDiceRecoveredOnLongRest } from '$lib/rules/core';
@@ -19,6 +20,10 @@ import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
 import { rechargeCount } from '$lib/effects/recharge-amount';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
+
+/** How long a rest TAKES, in hours — RAW in both editions, and the only thing that decides which
+ *  round-timed effects it outlasts. */
+const REST_HOURS = { short: 1, long: 8 } as const;
 
 export class ResourceTracker {
 	constructor(
@@ -272,9 +277,9 @@ export class ResourceTracker {
 
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
 	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
-	 *  round-timed effects the rest outlives: a short rest is 1 h (600 rounds), a long rest outlives
-	 *  every round-timed effect. Indefinite effects (no duration) persist — those are curses/manual
-	 *  states the player removes explicitly. */
+	 *  round-timed effects the rest outlives — a rest is a duration, so it outlasts what runs out
+	 *  inside it and NOT what is still running after. Indefinite effects (no duration) persist —
+	 *  those are curses/manual states the player removes explicitly. */
 	rest = (kind: 'short' | 'long') => {
 		const c = this.getCharacter();
 		const sheet = this.getSheet();
@@ -301,11 +306,13 @@ export class ResourceTracker {
 			c.play.spellSlotsSpent = slots;
 		}
 		// a rest expires an effect it OUTLASTS: compare rounds LEFT (not total duration) to the rest's
-		// length — a short rest = 1 h (600 rounds), a long rest outlasts any timed effect (A12).
+		// own length (A12). A long rest is EIGHT HOURS, not forever: a 24-hour effect is still running
+		// when you get up, and wiping it was the app deciding a duration the rules had already decided.
 		const round = c.play.round;
+		const restRounds = REST_HOURS[kind] * (ROUNDS_PER_UNIT.hour ?? 0);
 		const outlived = (e: (typeof c.play.effects)[number]) => {
 			const left = remainingRounds(e, round);
-			return left != null && (kind === 'long' || left <= 600);
+			return left != null && left <= restRounds;
 		};
 		endConcentrationCarriedBy(c.play, c.play.effects.filter(outlived));
 		c.play.effects = c.play.effects.filter((e) => !outlived(e));

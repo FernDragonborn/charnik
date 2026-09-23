@@ -443,9 +443,14 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         Ray) — a segmented `1 · 2 · 3` control choosing HOW MANY saves, all at the same flat DC 10,
         never dividing the entered damage. Different SOURCES already work with no new UI: they are
         separate Damage presses, each raising its own save. Prototype:
-        `design-preview/concentration-split-button.html`. **Weigh killing this instead of building
-        it**: 2024 dropped the per-source sentence, and even under 2014 the player can press Damage
-        three times.
+        `design-preview/concentration-split-button.html`.
+        **Weighed, and the recommendation is to KILL it — a maintainer's call, so it stays open.**
+        For: the control is small and the prototype exists. Against, and it is the stronger side:
+        the rule it serves is 2014-only (2024 dropped the per-source sentence), the player already
+        has an exact way to say it — press Damage once per missile, which raises one save each and
+        is what the separate-sources path does — and the segmented control would sit permanently on
+        the damage line of every character in both editions to serve one spell in one of them. A
+        control that is on screen always for a case that is rare is the shape this tracker avoids.
   - [ ] **Massive Damage / System Shock** — ≥ half max HP in one instance → DC 15 CON → the System
         Shock table. **DMG-optional, NOT SRD**, so it can only ever ship as a toggle beside
         encumbrance, never as core rows or shipped data. Opening it means opening the category
@@ -454,6 +459,14 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   - [ ] **2014 long rest recovers HALF your Hit Dice and the app picks them largest-first**; RAW lets
         the player choose which. Visible on a multiclass d12+d6 pool. A picker if anyone asks — 2024
         recovers all and is unaffected.
+  - [x] **A long rest is eight hours, and it was outlasting everything.** A rest expires the timed
+        effects it OUTLASTS, and the short rest compared correctly against its own hour while the long
+        rest simply removed every timed effect there was. So a long rest ended a 24-hour Water
+        Breathing and a 30-day Geas — the app deciding a duration the rules had already decided. Both
+        rests read their own length off `REST_HOURS` now (1 and 8), so the rule is one comparison and
+        the two cannot drift apart. No shipped spell row carries an `effects` token with a duration
+        that long yet, so what this was wrong for is the durations a PLAYER types, and it is what
+        UPCAST-DURATION-TAIL above was actually blocked on.
 - [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved
@@ -535,6 +548,9 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         `higher_level` is still the fallback for a spell whose scaling is not a formula at all.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
+    **What made it unsafe is fixed** (RECHARGE-TAIL below): a long rest used to remove every timed
+    effect, so encoding a 30-day duration would have produced a Geas that a night's sleep ended.
+    Encoding one now survives the rest it should survive.
 - [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is
   `docs/internals/characters.md` ▸ Concentration is a REF, not a clock. The CON save on damage is a
   toast REMINDER, never an auto-drop. Duration canon is rounds.

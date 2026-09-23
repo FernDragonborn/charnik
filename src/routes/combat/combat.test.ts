@@ -656,6 +656,26 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		// pre-fix both survived (compared totals > 600); now only the still-running one does
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['fresh-long']);
 	});
+
+	it('a LONG rest is eight hours, so a 24-hour effect is still running when you get up', () => {
+		character.play.round = 0;
+		const timed = (iid: string, durationRounds: number) => ({
+			iid,
+			label: iid,
+			effects: [],
+			positive: true,
+			durationRounds,
+			startedRound: 0,
+		});
+		character.play.effects = [
+			timed('one-hour', 600), // runs out inside the rest
+			timed('eight-hours', 4800), // ends exactly as the rest does
+			timed('a-day', 14400), // Water Breathing: still on when you wake
+			timed('a-month', 432000), // Geas
+		];
+		combat.resources.rest('long');
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['a-day', 'a-month']);
+	});
 });
 
 describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => {
