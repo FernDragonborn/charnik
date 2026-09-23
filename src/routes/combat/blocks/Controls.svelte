@@ -146,8 +146,11 @@
 		transition: opacity 120ms ease;
 		z-index: 2;
 	}
+	/* `:focus-visible`, never `:focus-within`: a mouse CLICK leaves focus on the chip, so focus-within
+	   kept the ✕ standing open after the pointer had long gone — until you clicked something else. The
+	   keyboard still needs it, and only the keyboard does. */
 	.conc-chip:hover .conc-drop,
-	.conc-chip:focus-within .conc-drop {
+	.conc-chip:has(:focus-visible) .conc-drop {
 		opacity: 1;
 		pointer-events: auto;
 	}
