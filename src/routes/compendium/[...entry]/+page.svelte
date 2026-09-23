@@ -465,7 +465,7 @@
 			{:else}
 				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
 					<summary class="pill-btn accent"
-						><Icon name="pencil" size={13} /> {$_('compendium.editMode')}</summary
+						><Icon name="book-open" size={13} /> {$_('compendium.editMode')}</summary
 					>
 					<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
 				     the currently-selected entry (a shipped row forks to homebrew on save). -->

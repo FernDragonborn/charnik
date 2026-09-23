@@ -250,7 +250,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
-| **OwnWords** | `rowId`, `original` | "Say it the way your table says it." Any article's description can be replaced with the |
+| **OwnWords** | `rowId`, `original`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |

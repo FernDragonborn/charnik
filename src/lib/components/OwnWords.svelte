@@ -11,13 +11,22 @@
 	import { overrides, OVERRIDE_SCOPE, type OverrideScope } from '$lib/content/overrides.svelte';
 	import Icon from './Icon.svelte';
 
-	let { rowId, original }: { rowId: string; original: string } = $props();
+	let {
+		rowId,
+		original,
+		rewriting = $bindable(false),
+	}: {
+		rowId: string;
+		original: string;
+		/** Whether the editor is open, bound OUT so the surface can drop the rendered copy of this
+		 *  prose while it is. Otherwise the same words stand twice — once read, once in the box. */
+		rewriting?: boolean;
+	} = $props();
 
 	const locale = $derived(app.activeLocale);
 	const mine = $derived(overrides.textFor(rowId, locale));
 	const scope = $derived(overrides.scopeOf(rowId, locale));
 
-	let editing = $state(false);
 	let text = $state('');
 	/** Where a SAVE will put it. Seeded from where the words already live, so re-saving an install-wide
 	 *  rewrite does not quietly demote it to this character. */
@@ -35,17 +44,17 @@
 	function open() {
 		text = mine ?? original;
 		target = scope ?? (overrides.hasCharacter ? OVERRIDE_SCOPE.character : OVERRIDE_SCOPE.install);
-		editing = true;
+		rewriting = true;
 	}
 	function save() {
 		// identical to the shipped words is not a rewrite — it is a restore that happens to be typed
 		overrides.write(rowId, locale, text.trim() === original.trim() ? '' : text, target);
-		editing = false;
+		rewriting = false;
 	}
 </script>
 
 <div class="own-words">
-	{#if editing}
+	{#if rewriting}
 		<textarea class="text-field own-body" bind:value={text} placeholder={original}></textarea>
 		<div class="row">
 			{#if overrides.hasCharacter}
@@ -79,7 +88,7 @@
 					aria-label={$_('ownWords.restore')}
 					onclick={() => {
 						overrides.restore(rowId, locale);
-						editing = false;
+						rewriting = false;
 					}}><Icon name="rotate-ccw" size={14} /></button
 				>
 			{/if}
@@ -87,7 +96,7 @@
 				class="icon-button"
 				title={$_('app.cancel')}
 				aria-label={$_('app.cancel')}
-				onclick={() => (editing = false)}><Icon name="x" size={14} /></button
+				onclick={() => (rewriting = false)}><Icon name="x" size={14} /></button
 			>
 			<button
 				class="icon-button accent"
@@ -112,13 +121,13 @@
 </div>
 
 <style>
-	.own-words {
-		margin-top: var(--space-2);
-	}
-	/* a secondary action sits at the end of the prose it acts on, not under its first word */
+	/* FLOATED, and rendered before the prose: that puts it at the top-right of the TEXT it rewrites,
+	   with the words wrapping around it rather than under it. Not the article's own corner — the
+	   compendium's "Edit compendium" already owns that, and two pencils stacked there read as one
+	   control that moved. */
 	.own-pencil {
-		display: flex;
-		margin-inline-start: auto;
+		float: inline-end;
+		margin-inline-start: var(--space-2);
 	}
 	/* `accent` on an icon-button: the shared class carries the state everywhere else, and there is
 	   no global rule for what it looks like on an icon, only on a pill */

@@ -15,6 +15,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Bot from '@lucide/svelte/icons/bot';
 	import Bug from '@lucide/svelte/icons/bug';
 	import Check from '@lucide/svelte/icons/check';
@@ -64,6 +65,7 @@
 		'arrow-left': ArrowLeft,
 		'arrow-left-right': ArrowLeftRight,
 		'arrow-up': ArrowUp,
+		'book-open': BookOpen,
 		bot: Bot,
 		bug: Bug,
 		check: Check,

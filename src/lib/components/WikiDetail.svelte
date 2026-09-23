@@ -43,6 +43,7 @@
 	const material = $derived(detail?.spell ? detail.spell.material : '');
 	// What the reader sees is their own words when they wrote some. The shipped prose stays available
 	// as the placeholder and as what "restore" puts back — this replaces nothing on disk.
+	let rewriting = $state(false);
 	const body = $derived(
 		(detail ? overrides.textFor(detail.rowId, app.activeLocale) : undefined) ??
 			detail?.bodyHtml ??
@@ -64,11 +65,21 @@
 
 		{#if actions}<div class="dactions">{@render actions()}</div>{/if}
 
-		<ArticleProse bodyMarkdown={body} {higherLevel} {material} {editable} {draft} />
-		<!-- not while TRANSLATING: that pane is already editing this prose, for everyone, in the file -->
+		<!-- BEFORE the prose, so the floated pencil sits at the top-right of the body text. Not while
+		     TRANSLATING: that pane is already editing this prose, for everyone, in the file. -->
 		{#if !editable}
-			<OwnWords rowId={detail.rowId} original={detail.bodyHtml} />
+			<OwnWords rowId={detail.rowId} original={detail.bodyHtml} bind:rewriting />
 		{/if}
+		<!-- the BODY goes empty while the rewrite editor is open, so the words stand once. `higherLevel`
+		     and `material` keep rendering: a rewrite is the one prose string the override stores, and
+		     dropping the whole block would hide two fields it cannot touch. -->
+		<ArticleProse
+			bodyMarkdown={rewriting ? '' : body}
+			{higherLevel}
+			{material}
+			{editable}
+			{draft}
+		/>
 		<div class="source-line">
 			{sayText(detail.source, $_)}{#if detail.license}
 				· {detail.license}{/if}

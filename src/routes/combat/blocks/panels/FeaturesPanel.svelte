@@ -31,6 +31,11 @@
 		FEATURE_SECTION.feats,
 	];
 	const features = $derived(combat.features);
+	/** Which feature's rewrite editor is open, by row. Keyed rather than a single flag: the panel is a
+	 *  list of independent <details>, and a player may have more than one expanded. Bound through a
+	 *  getter/setter pair, since a key that has never been written reads `undefined` and `bind:` will
+	 *  not hand that to a prop with a fallback. */
+	const rewriting = $state<Record<string, boolean>>({});
 	const sections = $derived(
 		ORDER.map((key) => ({
 			key,
@@ -53,19 +58,26 @@
 			<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and
 			     printing it stripped collapsed every blank line into one wall of a paragraph. The
 			     EffectsPanel's ⓘ already reuses it for the same reason (UBUG-7). -->
+			<!-- the same rewrite control the compendium article carries, and BEFORE the prose so its
+			     floated pencil lands at the text's top-right. This is where a feature is actually READ
+			     — mid-session, on the panel — so a table's own wording has to be reachable from here
+			     and not only from the browsing view. `original` is the SHIPPED prose, never `prose`:
+			     that one is already the override. -->
 			<div class="feature-prose">
-				{#if prose}<ArticleProse bodyMarkdown={prose} />{:else}<p class="feature-none">
-						{$_('combat.features.noText')}
-					</p>{/if}
+				<OwnWords
+					rowId={f.row.effectiveId}
+					original={localizedProse(f.row, 'text', app.activeLocale)}
+					bind:rewriting={
+						() => rewriting[f.row.effectiveId] ?? false,
+						(open) => (rewriting[f.row.effectiveId] = open)
+					}
+				/>
+				{#if !rewriting[f.row.effectiveId]}
+					{#if prose}<ArticleProse bodyMarkdown={prose} />{:else}<p class="feature-none">
+							{$_('combat.features.noText')}
+						</p>{/if}
+				{/if}
 			</div>
-			<!-- the same rewrite control the compendium article carries. This is where a feature is
-			     actually READ — mid-session, on the panel — so a table's own wording has to be
-			     reachable from here and not only from the browsing view. `original` is the SHIPPED
-			     prose, never `prose`: that one is already the override. -->
-			<OwnWords
-				rowId={f.row.effectiveId}
-				original={localizedProse(f.row, 'text', app.activeLocale)}
-			/>
 		</details>
 	{/each}
 {:else}
