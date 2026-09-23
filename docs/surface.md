@@ -453,7 +453,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (127 modules)
+## Library functions & types (128 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -462,6 +462,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/actions/floatInBody.ts`
 
 - `function floatInBody` — * Move a floating element to `document.body` for as long as it lives.
+
+### `src/lib/actions/growToFit.ts`
+
+- `const growToFit` — * Open a textarea at the height of the text already in it, and keep it there as that text changes — * so a rewrite of…
 
 ### `src/lib/actions/provenance.ts`
 
@@ -1768,4 +1772,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 81 global classes · 54 components · 1063 exports across 143 modules · 71 duplicate suspects._
+_47 tokens · 81 global classes · 54 components · 1064 exports across 144 modules · 71 duplicate suspects._

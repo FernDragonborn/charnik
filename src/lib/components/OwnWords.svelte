@@ -10,6 +10,8 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { overrides, OVERRIDE_SCOPE, type OverrideScope } from '$lib/content/overrides.svelte';
 	import Icon from './Icon.svelte';
+	import { growToFit } from '$lib/actions/growToFit';
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 
 	let {
 		rowId,
@@ -55,7 +57,14 @@
 
 <div class="own-words">
 	{#if rewriting}
-		<textarea class="text-field own-body" bind:value={text} placeholder={original}></textarea>
+		<!-- Escape leaves the editor the way Cancel does; the action is mounted with the editor, so it
+		     listens for exactly as long as there is something to dismiss. -->
+		<textarea
+			class="text-field own-body"
+			bind:value={text}
+			placeholder={original}
+			use:growToFit
+			use:dismissOnEscape={() => (rewriting = false)}></textarea>
 		<div class="row">
 			{#if overrides.hasCharacter}
 				<!-- `accent` is the app's ONE "this control is on" modifier (components.css). `on` was
@@ -150,7 +159,7 @@
 	}
 	.own-body {
 		width: 100%;
-		min-height: 140px;
+		min-height: 6rem;
 		resize: vertical;
 		font-family: var(--font-body);
 		font-size: var(--font-size-body);

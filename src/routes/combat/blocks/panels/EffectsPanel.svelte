@@ -242,7 +242,10 @@
 			<div class="section-head">{$_('combat.effects.fromItems')}</div>
 			{#each derivedEffects.groups as g (g.source)}
 				<div class="derived-effect-row">
-					<span class="row-name">{g.source}</span>
+					<!-- the same `.effect-name` a player-added state wears: an item's contribution and a
+					     spell's are the same kind of thing on this panel, and only one of them was set in
+					     the display face -->
+					<span class="row-name effect-name">{g.source}</span>
 					<span class="derived-tags">
 						{#each g.tags as tag, i (i)}<span class="effect-tag">{tag}</span>{/each}
 					</span>
