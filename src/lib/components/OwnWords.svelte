@@ -23,6 +23,15 @@
 	 *  rewrite does not quietly demote it to this character. */
 	let target = $state<OverrideScope>(OVERRIDE_SCOPE.character);
 
+	/** Says both what the pencil does and, when a rewrite is in force, how far it reaches — the state
+	 *  the old standing pill carried. The SCOPE word, not the in-use sentence: that one opened with
+	 *  "your words", which `ownWords.edit` has already said. */
+	const ownWordsLabel = $derived(
+		mine
+			? `${$_('ownWords.edit')} · ${$_(scope === OVERRIDE_SCOPE.install ? 'ownWords.scopeAll' : 'ownWords.scopeCharacter')}`
+			: $_('ownWords.write'),
+	);
+
 	function open() {
 		text = mine ?? original;
 		target = scope ?? (overrides.hasCharacter ? OVERRIDE_SCOPE.character : OVERRIDE_SCOPE.install);
@@ -40,52 +49,82 @@
 		<textarea class="text-field own-body" bind:value={text} placeholder={original}></textarea>
 		<div class="row">
 			{#if overrides.hasCharacter}
+				<!-- `accent` is the app's ONE "this control is on" modifier (components.css). `on` was
+				     styled by nothing here, so the scope toggle changed the target and said nothing —
+				     a control with no feedback reads as a broken one. -->
 				<div class="scope" role="group" aria-label={$_('ownWords.scope')}>
 					<button
 						class="pill-btn"
-						class:on={target === OVERRIDE_SCOPE.character}
+						class:accent={target === OVERRIDE_SCOPE.character}
 						aria-pressed={target === OVERRIDE_SCOPE.character}
 						onclick={() => (target = OVERRIDE_SCOPE.character)}
 						>{$_('ownWords.scopeCharacter')}</button
 					>
 					<button
 						class="pill-btn"
-						class:on={target === OVERRIDE_SCOPE.install}
+						class:accent={target === OVERRIDE_SCOPE.install}
 						aria-pressed={target === OVERRIDE_SCOPE.install}
 						onclick={() => (target = OVERRIDE_SCOPE.install)}>{$_('ownWords.scopeAll')}</button
 					>
 				</div>
 			{/if}
 			<span class="spacer"></span>
-			<button class="hb-btn" onclick={() => (editing = false)}>{$_('app.cancel')}</button>
-			<button class="hb-btn primary" onclick={save}>{$_('ownWords.save')}</button>
-		</div>
-	{:else}
-		<div class="row">
-			<button class="hb-btn" onclick={open}>
-				<Icon name="pencil" size={12} />
-				{$_(mine ? 'ownWords.edit' : 'ownWords.write')}
-			</button>
+			<!-- the three verbs are icons: the panel this opens in is a narrow column, and three worded
+			     buttons beside the scope pills wrapped onto a second line there. Each keeps its word as
+			     the title and the accessible name. -->
 			{#if mine}
-				<span class="durpill"
-					>{$_(
-						scope === OVERRIDE_SCOPE.install ? 'ownWords.inUseAll' : 'ownWords.inUseCharacter',
-					)}</span
-				>
-				<span class="spacer"></span>
-				<button class="hb-btn" onclick={() => overrides.restore(rowId, locale)}
-					>{$_('ownWords.restore')}</button
+				<button
+					class="icon-button"
+					title={$_('ownWords.restore')}
+					aria-label={$_('ownWords.restore')}
+					onclick={() => {
+						overrides.restore(rowId, locale);
+						editing = false;
+					}}><Icon name="rotate-ccw" size={14} /></button
 				>
 			{/if}
+			<button
+				class="icon-button"
+				title={$_('app.cancel')}
+				aria-label={$_('app.cancel')}
+				onclick={() => (editing = false)}><Icon name="x" size={14} /></button
+			>
+			<button
+				class="icon-button accent"
+				title={$_('ownWords.save')}
+				aria-label={$_('ownWords.save')}
+				onclick={save}><Icon name="save" size={14} /></button
+			>
 		</div>
+	{:else}
+		<!-- one pencil at rest. The scope pills and the restore live INSIDE the editor: at rest they
+		     were three controls and a sentence standing under every article for a thing most readers
+		     never do. A rewrite in use accents the pencil and says so in its title, so the way back
+		     out is one click from where the way in is. -->
+		<button
+			class="icon-button own-pencil"
+			class:accent={!!mine}
+			onclick={open}
+			title={ownWordsLabel}
+			aria-label={ownWordsLabel}><Icon name="pencil" size={13} /></button
+		>
 	{/if}
 </div>
 
 <style>
 	.own-words {
-		margin-top: var(--space-2-5);
-		padding-top: var(--space-2);
-		border-top: 1px solid var(--color-border);
+		margin-top: var(--space-2);
+	}
+	/* a secondary action sits at the end of the prose it acts on, not under its first word */
+	.own-pencil {
+		display: flex;
+		margin-left: auto;
+	}
+	/* `accent` on an icon-button: the shared class carries the state everywhere else, and there is
+	   no global rule for what it looks like on an icon, only on a pill */
+	.row .icon-button.accent,
+	.own-pencil.accent {
+		color: var(--color-accent);
 	}
 	.row {
 		display: flex;

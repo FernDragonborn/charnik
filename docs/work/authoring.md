@@ -153,9 +153,15 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
 ---
 
 - [x] **OWN-WORDS · a player rewrites any description in their own words.** Anywhere an article is
-  shown — the compendium, the builder's pickers, the spellbook — its description can be replaced with
-  the player's own prose and put back. It is a CACHE over the content, never an edit of it: the CSV is
-  untouched, which is what separates this from the homebrew editor beside it.
+  shown — the compendium, the builder's pickers, the spellbook, and the Combat view's Features panel —
+  its description can be replaced with the player's own prose and put back. It is a CACHE over the
+  content, never an edit of it: the CSV is untouched, which is what separates this from the homebrew
+  editor beside it.
+  **The control is ONE pencil.** At rest it is an icon and nothing else: the scope pills and the
+  restore sit inside the editor it opens, because a standing row of three controls and a sentence
+  under every article charges every reader for a thing few of them do. A rewrite in force accents the
+  pencil and says so in its title, which is the whole of what the old pill said. Combat matters most
+  and had it least — a feature is READ mid-session, on the panel, not in the browsing view.
   **Two scopes, and a row is never in both.** Per character by default (`ui.textOverrides` in
   `character.json`, so a character still travels with everything it needs), promoted to the whole
   install in `overrides.json` in the data dir. Promoting MOVES the row, so there is never a second

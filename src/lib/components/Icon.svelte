@@ -42,6 +42,7 @@
 	import Recycle from '@lucide/svelte/icons/recycle';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
+	import Save from '@lucide/svelte/icons/save';
 	import Search from '@lucide/svelte/icons/search';
 	import Settings from '@lucide/svelte/icons/settings';
 	import Shield from '@lucide/svelte/icons/shield';
@@ -92,6 +93,7 @@
 		recycle: Recycle,
 		'rotate-ccw': RotateCcw,
 		'rotate-cw': RotateCw,
+		save: Save,
 		search: Search,
 		settings: Settings,
 		shield: Shield,

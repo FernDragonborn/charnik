@@ -2041,8 +2041,6 @@
 		"restore": "Restore the original",
 		"scope": "Who reads this",
 		"scopeCharacter": "This character",
-		"scopeAll": "Everywhere",
-		"inUseCharacter": "your words · this character",
-		"inUseAll": "your words · everywhere"
+		"scopeAll": "Everywhere"
 	}
 }

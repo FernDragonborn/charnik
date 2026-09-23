@@ -13,7 +13,10 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { combat } from '../../combat-view-model.svelte';
 	import { localizedName } from '$lib/content/detail';
-	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { describedProse } from '$lib/content/overrides.svelte';
+	import { localizedProse } from '$lib/content/prose';
+	import ArticleProse from '$lib/components/ArticleProse.svelte';
+	import OwnWords from '$lib/components/OwnWords.svelte';
 	import {
 		FEATURE_SECTION,
 		type CharacterFeature,
@@ -39,7 +42,7 @@
 {#each sections as section (section.key)}
 	<div class="feature-section eyebrow">{$_(`combat.features.${section.key}`)}</div>
 	{#each section.items as f, i (`${f.row.effectiveId}:${f.at ?? ''}:${i}`)}
-		{@const prose = describedPlainProse(f.row, app.activeLocale)}
+		{@const prose = describedProse(f.row, app.activeLocale)}
 		<details class="feature-item">
 			<summary>
 				<!-- the class level a feature arrived at. A multiclass sheet needs the class too, or "3"
@@ -47,7 +50,22 @@
 				{#if f.at !== undefined}<span class="feature-level" title={f.className}>{f.at}</span>{/if}
 				<span class="feature-name">{localizedName(f.row, app.activeLocale)}</span>
 			</summary>
-			<p class="feature-prose">{prose || $_('combat.features.noText')}</p>
+			<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and
+			     printing it stripped collapsed every blank line into one wall of a paragraph. The
+			     EffectsPanel's ⓘ already reuses it for the same reason (UBUG-7). -->
+			<div class="feature-prose">
+				{#if prose}<ArticleProse bodyMarkdown={prose} />{:else}<p class="feature-none">
+						{$_('combat.features.noText')}
+					</p>{/if}
+			</div>
+			<!-- the same rewrite control the compendium article carries. This is where a feature is
+			     actually READ — mid-session, on the panel — so a table's own wording has to be
+			     reachable from here and not only from the browsing view. `original` is the SHIPPED
+			     prose, never `prose`: that one is already the override. -->
+			<OwnWords
+				rowId={f.row.effectiveId}
+				original={localizedProse(f.row, 'text', app.activeLocale)}
+			/>
 		</details>
 	{/each}
 {:else}
@@ -95,11 +113,18 @@
 		text-align: end;
 	}
 	.feature-prose {
-		margin: 0;
 		padding: 0 var(--space-2) var(--space-2) calc(1.4em + var(--space-2));
 		font-size: var(--font-size-xs);
 		line-height: 1.55;
 		color: var(--color-text-muted);
+	}
+	/* ArticleProse's .body trails a bottom margin on its last block, which doubles the padding here */
+	.feature-prose :global(.body > :last-child),
+	.feature-none {
+		margin-bottom: 0;
+	}
+	.feature-none {
+		margin-top: 0;
 	}
 	.feature-empty {
 		margin: 0;

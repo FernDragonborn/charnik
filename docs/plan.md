@@ -346,7 +346,9 @@ position and are given per wave, because most of them were learned the hard way.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
-  item from play, not from the compendium) and COMPANION (research first).
+  item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
+  pinned rail, left-aligned, with the panel regions re-decided — also its own session) and COMPANION
+  (research first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
 `UBUG-22` was the last one and is closed.)_

@@ -48,6 +48,24 @@
   regions it missed were found by driving the app in Ukrainian and reading the screen, and the last
   three strings hid behind a scan rule that excluded a text run followed by `{`.
 
+- [ ] **COMBAT-RAIL · the play screen is a scrolling body beside a rail that does not scroll — a
+  maintainer-stated rework, its own design session.** Three parts, and the third is the reason the
+  other two are not a CSS tweak:
+  1. **The roll log, and some blocks, move to a PINNED right rail.** The two scroll independently:
+     the combat body scrolls under a log that stays put, and the log scrolls without moving the body.
+     Today everything is one page scroll, so the log — the thing you look at right after acting —
+     leaves the screen exactly when you acted.
+  2. **The play screen moves to the LEFT edge.** It is centred now, which spends the widest part of
+     a desktop window on gutters while the rail has to come from somewhere.
+  3. **Which blocks live where is re-decided.** `combat.layout` already holds two drag-reorderable
+     columns persisted on `ui.panelColumns`, so a THIRD region is a change to that model and to what
+     a saved layout means for a character who has one — not a wrapper div. That is the design
+     session: which panels are rail-shaped (log, and what else), whether the rail is reorderable and
+     collapsible like the columns are, what a narrow window does with it, and how an existing
+     `ui.panelColumns` migrates rather than being thrown away.
+  Nothing here is blocked on code. What it needs first is RENDERED variants, not names
+  (`AGENTS.md` ▸ Screenshots go in design-preview).
+
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
   written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects

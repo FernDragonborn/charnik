@@ -2041,8 +2041,6 @@
 		"restore": "Повернути оригінал",
 		"scope": "Хто це читає",
 		"scopeCharacter": "Цей персонаж",
-		"scopeAll": "Усюди",
-		"inUseCharacter": "ваші слова · цей персонаж",
-		"inUseAll": "ваші слова · усюди"
+		"scopeAll": "Усюди"
 	}
 }
