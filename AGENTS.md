@@ -78,6 +78,11 @@ comes from a real CC-BY SRD source through the converters in `tools/srd/`, which
 against it. Schema tests validate shape, not truth, so a hallucinated damage die passes every gate you
 have and poisons the app. Need a dataset? Fetch it.
 
+**Naming a repository that is not this one or `charnik-content-srd`.** This repo is public and git
+history is permanent, so a name written here is published irreversibly — a later commit removing it
+does not unpublish it. Refer to any other sibling by its role alone. The full rule, and why the
+convention makes a list unnecessary, is under "The content lives in another repo".
+
 **Reading a number out of prose.** Nothing in `src/` mines `text`/`text_<locale>` for a value. A die,
 a damage type, a category — it comes from a declared column or it does not exist, and a missing column
 shows as missing rather than as the first number the paragraph happened to contain. The converters in
@@ -157,6 +162,20 @@ CC-BY licence in that repo assert the provenance of every row in it, and both ar
 from anywhere else does not merely sit oddly — it makes two shipped files untrue. A producer sibling
 may output whatever its owner needs; the channel into the shipped pack stays SRD-only, and anything
 else is a user's own homebrew folder, which the app already loads as a content root.
+
+**Name only two repositories anywhere in this one: `charnik` and `charnik-content-srd`.** Those are
+the app and the pack it ships, and they are the only two a reader of this repository has any business
+knowing about. Every other sibling is referred to by its ROLE and never by its name, its contents, its
+origin, or what it reads — "a producer sibling", "another `charnik-*` repository", and no more than
+that. This is not a style preference: **this repository is public, and git history is permanent**, so
+a name written here is published the moment it is pushed and stays published even after a later commit
+removes it. A maintainer's other repositories may be private, unreleased, or simply not the public's
+business, and naming one here discloses its existence on their behalf, irreversibly, without being
+asked. When you cannot describe something without naming it, describe less.
+
+The rule covers **everything that lands on disk here** — docs, code, comments, commit messages, test
+fixtures, config, TODOs, branch names — and it holds for the content repo too. Work notes about a
+sibling belong in that sibling.
 
 **`tools/content-repo.mjs` is the one seam that knows where the content is** — the vendoring step, the
 converters, and the content tests all resolve through it. Never hardcode a content path; add it there.
