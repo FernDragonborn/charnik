@@ -14,6 +14,7 @@
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemDialog from '../AddItemDialog.svelte';
 	import { dndzone } from 'svelte-dnd-action';
+	import { dragMotion } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
 	import type { InventoryRow } from '../../inventory.svelte';
 
@@ -98,6 +99,7 @@
      would be saying something the list does not mean. -->
 <div
 	class="items"
+	use:dragMotion
 	use:dndzone={{
 		items,
 		type: 'inventory-row',
@@ -332,6 +334,12 @@
 		margin-top: var(--space-2-5);
 	}
 	.inv-row {
+		/* the handle hangs outside this row, which — unlike a combat row — does not bleed into the
+		   card's padding. What it must clear instead is this row's own border: an absolute child is
+		   positioned against the PADDING box, which sits inside it. Matched to the border below, and a
+		   hairline is a hairline at any root size. */
+		position: relative;
+		--row-bleed: 1px;
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);

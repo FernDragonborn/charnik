@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (72)
+## Duplicate suspects (73)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -30,6 +30,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
+- `nameOf` ×3 — src/lib/combat/actions.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
@@ -68,7 +69,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
-- `nameOf` ×2 — src/lib/combat/actions.ts · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -79,6 +79,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
+- `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
@@ -125,7 +126,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (82)
+## Global CSS classes (86)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -168,7 +169,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-title` | components.css |  |
 | `.dnd-rows` | components.css | --- a reorderable list of combat rows: the zone, and one row beside its grip --- A combat row IS a button, so its gri… |
 | `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
-| `.dragging-panel` | components.css | A clone of the whole panel is as tall as the panel, and the tallest of them is taller than the window — impossible to… |
+| `.dragging-panel` | components.css |  |
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
@@ -179,6 +180,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
+| `.inv-row` | components.css |  |
 | `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. |
 | `.is-open` | components.css |  |
 | `.loading` | components.css | --- full-view loading / empty state --- |
@@ -192,12 +194,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
+| `.prose-break` | components.css | The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every <br>): the source separa… |
 | `.prose-table-scroll` | ArticleProse.svelte :global |  |
 | `.provenance-description` | components.css | the same text as an accessible description. |
 | `.provenance-popover` | components.css | --- the provenance popover: how an auto-calculated value explains itself (ui.md ▸ rule 3). |
 | `.roll-toast` | RollToast.svelte :global |  |
+| `.roller-pill` | components.css |  |
+| `.row-grip` | components.css | A drag affordance names the AXIS its thing travels on, and does it with a SYSTEM cursor, so the whole app keeps whate… |
 | `.row-name` | components.css |  |
-| `.row-wrap` | components.css |  |
+| `.row-wrap` | components.css | positioning context for the row's drag handle, which hangs in the card's padding (RowGrip) |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |
 | `.sectlab` | components.css | section label (with trailing rule) |
@@ -455,11 +460,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (128 modules)
+## Library functions & types (129 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
 - `const dismissOnEscape` — * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home * for the `<svel…
+
+### `src/lib/actions/dragMotion.ts`
+
+- `const dragMotion`
 
 ### `src/lib/actions/floatInBody.ts`
 
@@ -1776,4 +1785,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 82 global classes · 54 components · 1066 exports across 144 modules · 72 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1067 exports across 145 modules · 73 duplicate suspects._

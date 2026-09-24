@@ -25,6 +25,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import RowGrip from '../RowGrip.svelte';
 	import { dndzone } from 'svelte-dnd-action';
+	import { dragMotion } from '$lib/actions/dragMotion';
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import {
 		FEATURE_SECTION,
@@ -43,6 +44,9 @@
 		FEATURE_SECTION.feats,
 	];
 	const features = $derived(combat.featureView.visible);
+	/** What a row would be called by inside its group: the class that granted it, or the section it
+	 *  came from when no class did. */
+	const qualifierOf = (f: CharacterFeature) => f.className ?? $_(`combat.features.${f.section}`);
 	const idOf = (f: CharacterFeature) => f.row.effectiveId;
 	const nameOf = (f: CharacterFeature) => localizedName(f.row, app.activeLocale);
 	/** Which feature's rewrite editor is open, by row. Keyed rather than a single flag: the panel is a
@@ -63,7 +67,13 @@
 				),
 			})),
 		]
-			.map((g) => ({ key: g.key, items: combat.layout.ordered(ROW_PANEL.features, g.items, idOf) }))
+			.map((g) => {
+				const items = combat.layout.ordered(ROW_PANEL.features, g.items, idOf);
+				// A qualifier earns its place only once a group MIXES them. A single-class sheet's class
+				// section answers "Warlock" on every row and says nothing; the pinned group, which is the
+				// one place a class feature sits beside a feat, answers differently and says plenty.
+				return { key: g.key, items, mixed: new Set(items.map(qualifierOf)).size > 1 };
+			})
 			.filter((g) => g.items.length),
 	);
 
@@ -85,9 +95,14 @@
 	<div class="feature-section eyebrow">{$_(`combat.features.${group.key}`)}</div>
 	<div
 		class="dnd-rows"
+		use:dragMotion
 		use:dndzone={{
 			items: itemsFor(group),
-			type: 'feature-row',
+			// one dnd type PER GROUP, so a row cannot be dropped into a section it does not belong to. A
+			// shared type let it: the target zone accepted the row, the next derive put it back where its
+			// section says it lives, and the library — no longer owning that element — never lifted the
+			// `visibility: hidden` it drags with, leaving the feature invisible until a reload.
+			type: `feature-row-${group.key}`,
 			flipDurationMs: 150,
 			dropTargetStyle: {},
 			morphDisabled: true,
@@ -106,41 +121,50 @@
 			{@const prose = describedProse(f.row, app.activeLocale)}
 			{@const id = idOf(f)}
 			<div class="row-wrap">
-				<RowGrip
-					panel={ROW_PANEL.features}
-					{id}
-					name={nameOf(f)}
-					onmove={(by) => combat.layout.moveRow(ROW_PANEL.features, group.items.map(idOf), id, by)}
-				/>
 				<details class="feature-item">
-					<summary>
-						<!-- the class level a feature arrived at. A multiclass sheet needs the class too, or
-						     "3" names nothing; a trait or a feat has no level and gets no chip. -->
-						{#if f.at !== undefined}<span class="feature-level" title={f.className}>{f.at}</span
-							>{/if}
-						<span class="feature-name">{nameOf(f)}</span>
-						<!-- the pin is a real button beside the name, not inside the summary's click: a
-						     control nested in a control is what cost the keyboard its walk before -->
-						<button
-							class="feature-pin"
-							class:on={combat.featureView.isPinned(id)}
-							aria-pressed={combat.featureView.isPinned(id)}
-							title={$_(
-								combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
-							)}
-							aria-label={$_(
-								combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
-							)}
-							onclick={(e) => {
-								e.preventDefault();
-								combat.featureView.togglePinned(id);
-							}}
-							><Icon
-								name="star"
-								size={12}
-								{...combat.featureView.isPinned(id) ? { fill: 'currentColor' } : {}}
-							/></button
-						>
+					<!-- the same row a panel uses everywhere else (`.combat-row` in components.css): name on
+					     the left, its figures on the right. A feature carries no second line, so the grid's
+					     lower cells simply stay empty rather than the row growing its own look. -->
+					<summary class="combat-row">
+						<!-- INSIDE the summary, unlike every other panel's: this row opens, and a handle
+						     anchored to the whole <details> would run the height of the expanded prose. The
+						     pin beside it already sets the precedent that a summary hosts real controls. -->
+						<RowGrip
+							panel={ROW_PANEL.features}
+							{id}
+							name={nameOf(f)}
+							onmove={(by) =>
+								combat.layout.moveRow(ROW_PANEL.features, group.items.map(idOf), id, by)}
+						/>
+						<span class="row-name">{nameOf(f)}</span>
+						<span class="feature-meta">
+							<!-- what tells this row apart inside its group, and the class level it arrived at. A
+							     trait or a feat has no level and shows none. -->
+							{#if group.mixed}<span class="combat-row-marker">{qualifierOf(f)}</span>{/if}
+							{#if f.at !== undefined}<span class="combat-row-hint">{f.at}</span>{/if}
+							<!-- the pin is a real button beside the name, not inside the summary's click: a
+							     control nested in a control is what cost the keyboard its walk before -->
+							<button
+								class="feature-pin"
+								class:on={combat.featureView.isPinned(id)}
+								aria-pressed={combat.featureView.isPinned(id)}
+								title={$_(
+									combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
+								)}
+								aria-label={$_(
+									combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
+								)}
+								onclick={(e) => {
+									e.preventDefault();
+									combat.featureView.togglePinned(id);
+								}}
+								><Icon
+									name="star"
+									size={12}
+									{...combat.featureView.isPinned(id) ? { fill: 'currentColor' } : {}}
+								/></button
+							>
+						</span>
 					</summary>
 					<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and
 			     printing it stripped collapsed every blank line into one wall of a paragraph. The
@@ -182,9 +206,7 @@
 	}
 	/* the grip sits BESIDE the row, never inside it (RowGrip's own comment) */
 	.row-wrap {
-		display: flex;
 		align-items: flex-start;
-		gap: var(--space-1);
 	}
 	.row-wrap > .feature-item {
 		flex: 1;
@@ -193,7 +215,6 @@
 	/* quiet until the row is under the pointer, loud once a feature IS pinned — a star at full
 	   strength on every row is a column of stars */
 	.feature-pin {
-		margin-inline-start: auto;
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -209,38 +230,33 @@
 	.feature-pin.on {
 		color: var(--color-resource);
 	}
+	/* the box, the padding, the hover fill and the name are `.combat-row`'s — only what a <summary>
+	   needs on top of it lives here. `width` because that shared rule is written for a flex item and
+	   a summary is a block: unchecked it would hang 10px past the row it sits in. */
 	.feature-item summary {
-		display: flex;
+		position: relative;
 		align-items: baseline;
-		gap: var(--space-2);
-		padding: var(--space-1-5) var(--space-2);
-		margin: 0 calc(-1 * var(--space-2));
-		border-radius: var(--radius);
-		cursor: pointer;
+		width: auto;
 		list-style: none;
+		/* its own margin already carries it over the card's padding, so the handle has nothing to
+		   clear — unlike a `.combat-row`, which is measured from a wrapper that does not move */
+		--row-bleed: 0px;
 	}
-	/* the disclosure triangle is Safari's own and sits outside the flex row; the row's own layout
-	   already says what is expandable */
+	/* the disclosure triangle is Safari's own and sits outside the row; the row's own layout already
+	   says what is expandable */
 	.feature-item summary::-webkit-details-marker {
 		display: none;
 	}
-	.feature-item summary:hover {
-		background: var(--color-surface-2);
-	}
-	.feature-name {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
-	}
-	.feature-level {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-resource);
-		min-width: 1.4em;
-		text-align: end;
+	/* the row's right-hand cell: which class granted the feature, at what level, and the pin */
+	.feature-meta {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
 	}
 	.feature-prose {
-		padding: 0 var(--space-2) var(--space-2) calc(1.4em + var(--space-2));
+		/* the summary's own bleed already puts its text column further left, so a full step of indent
+		   here reads as a different list; half a step keeps the prose subordinate without detaching it */
+		padding: 0 var(--space-2) var(--space-2) var(--space-1);
 		font-size: var(--font-size-xs);
 		line-height: 1.55;
 		color: var(--color-text-muted);

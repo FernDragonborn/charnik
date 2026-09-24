@@ -58,7 +58,9 @@
 	color: var(--color-border-strong);
 	font-size: var(--font-size-body);
 	line-height: 1;
-	cursor: grab;
+	/* a panel crosses two columns, so both axes — and `!important` for the reason the axis block below
+	   gives: the library writes its own `cursor` inline on this element */
+	cursor: move !important;
 	background: transparent;
 	border: 0;
 	padding: 2px var(--space-1);
@@ -70,7 +72,18 @@
    with this id, so the rule is global by necessity — nothing scoped can reach it. It is the panel you
    picked up, lifted: same card, a shadow under it, and out of the way of its own drop target. */
 #dnd-action-dragged-el {
-	cursor: grabbing;
+	/* The clone carries the axis of whatever was picked up: a row by default, a panel when the page
+	   marks it one (`transformDraggedElement`).
+
+	   `!important` on both declarations, and it is not optional: the library builds this clone by
+	   copying the SOURCE element's whole computed style onto it INLINE — so the row's own `cursor`
+	   and its `animation: none` arrive here as inline declarations that nothing else can outrank.
+
+	   A carried thing is under load: it squashes as it is lifted and spreads again where it lands
+	   (the landing, and the gap that grows to meet it, are `actions/dragMotion.ts`). `scale` rather
+	   than a `transform`, because the library positions this element with one and would overwrite it. */
+	cursor: ns-resize !important;
+	animation: drag-lift 160ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 	opacity: 0.96;
 	box-shadow: var(--shadow-2);
 	outline: 1px solid var(--color-border-strong);
@@ -82,7 +95,17 @@
    bar. So the clone is CAPPED instead, and faded where it is cut — enough of the panel to recognise
    it, never more than a hand can carry. The placeholder left behind still holds the panel's full
    height, so nothing jumps. */
+@keyframes drag-lift {
+	from {
+		scale: 1 1;
+	}
+	to {
+		scale: 1 0.93;
+	}
+}
 #dnd-action-dragged-el.dragging-panel {
+	/* `!important` for the same reason the rule above gives */
+	cursor: move !important;
 	max-height: 200px;
 	overflow: hidden;
 	/* a MASK's colour is an alpha ramp, not a colour anyone sees — opaque to transparent. It takes no
@@ -90,8 +113,21 @@
 	   be able to break the fade. */
 	mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
 }
-.drag-handle:active {
-	cursor: grabbing;
+/* A drag affordance names the AXIS its thing travels on, and does it with a SYSTEM cursor, so the
+   whole app keeps whatever cursor theme the machine is wearing. `grab`/`grabbing` cannot: Windows
+   has no grabbing-hand in its scheme, so Chrome draws its own bitmap and those two states — and only
+   those two — come out untouched by the user's theme. There is no held variant of any of these,
+   because the system has none. `docs/internals/ui.md` ▸ the UX pattern contract states the rule;
+   this is where it lives.
+
+   `!important` on the two handles for the same reason it is on `.row-wrap`/`.inv-row` below:
+   `svelte-dnd-action` writes `cursor: grab` INLINE on the handle as well as on the item, and inline
+   cannot be answered any other way. The roller pill is a native `draggable`, so it needs none. */
+.row-grip {
+	cursor: ns-resize !important; /* a row moves up and down its own list, never sideways */
+}
+.roller-pill {
+	cursor: ew-resize; /* the pills sit on one horizontal line */
 }
 /* display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium
    group-by + disclosure summaries, back/mode pickers). Neutral by default; `.accent` is the crimson
@@ -821,10 +857,27 @@ svg.hand-drawn {
 	display: flex;
 	flex-direction: column;
 }
+/* The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every
+   <br>): the source separates paragraphs with a single newline, and a <br> cannot be given a margin.
+   Global because every surface that renders that prose gets the markup — article, panel, effect ⓘ. */
+.prose-break {
+	display: block;
+	height: 0.5em;
+}
+
+/* positioning context for the row's drag handle, which hangs in the card's padding (RowGrip) */
 .row-wrap {
+	position: relative;
 	display: flex;
 	align-items: stretch;
-	gap: var(--space-1);
+}
+/* svelte-dnd-action writes `cursor: grab` INLINE on every draggable item, which is a lie wherever a
+   drag handle is used: only the handle drags, and the row under the pointer is a click target or
+   plain text. Inline beats a stylesheet, so this is the one place `!important` is the fix rather
+   than a smell. `.row-grip` keeps its own `grab` — a child's own declaration is never inherited over. */
+.row-wrap,
+.inv-row {
+	cursor: default !important;
 }
 .row-wrap .combat-row {
 	flex: 1;

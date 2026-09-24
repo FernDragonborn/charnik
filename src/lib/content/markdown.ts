@@ -22,6 +22,13 @@ export function renderContentMarkdown(md: string): string {
 		// its OWN scroller rather than pushing the page sideways (`AGENTS.md` ▸ Hit every surface).
 		// Wrapped here rather than styled `display: block`, which would also stop it filling its column
 		// on a wide screen: this leaves every existing rendering untouched and only adds the scroll.
+		// A hard break carries two different meanings in this content: the source separates paragraphs
+		// with a SINGLE newline ("Prerequisites." on its own line, a `•` bullet per line), and it also
+		// wraps a long sentence. Only the first deserves air, so only a break that follows the end of a
+		// sentence gets it — a break mid-sentence is a wrapping artifact and stays tight. The air is an
+		// ELEMENT because a <br> takes no margin in any browser: display, line-height and ::before all
+		// measure zero.
+		.replace(/([.!?:”’"')\]])(<br\s*\/?>)/g, '$1$2<span class="prose-break"></span>')
 		.replace(/<table>/g, '<div class="prose-table-scroll"><table>')
 		.replace(/<\/table>/g, '</table></div>');
 	return DOMPurify.sanitize(html);

@@ -8,6 +8,7 @@
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import { dndzone } from 'svelte-dnd-action';
+	import { dragMotion } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import type { Attack } from '$lib/combat/attacks';
@@ -37,6 +38,7 @@
 
 <div
 	class="dnd-rows"
+	use:dragMotion
 	use:dndzone={{
 		items,
 		type: 'attack-row',

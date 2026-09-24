@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import { dragHandleZone } from 'svelte-dnd-action';
+	import { dragMotion } from '$lib/actions/dragMotion';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
@@ -136,6 +137,7 @@
 		{#each columns as col, ci (ci)}
 			<div
 				class="panel-column"
+				use:dragMotion
 				use:dragHandleZone={{
 					items: col,
 					type: 'panel',

@@ -244,6 +244,48 @@ good", so they are pinned here and every component follows them.
     FILTER over them writes those arrays rather than layering over them — see
     [characters.md](characters.md) ▸ `ui`. A pin survives a filter.
 
+15. **Every cursor is a SYSTEM cursor, and a drag affordance names the axis its thing travels on.**
+    The machine is wearing a cursor theme, and the app has no standing to opt out of it for one
+    state: a cursor Chrome draws itself is the single thing on screen that ignores the user's own
+    colours, and it is spotted instantly. `default`, `pointer`, `text`, `help`, `not-allowed`,
+    `move`, `ns-resize` and `ew-resize` all map to entries the scheme owns; **`grab` and `grabbing`
+    do not** — Windows has no grabbing hand, so Chrome substitutes a bitmap of its own. They are
+    therefore not used, and neither is `cursor: url()`: a drawn cursor is the same opt-out with extra
+    steps.
+    So a handle says WHERE, not HOW: `ns-resize` on a row that moves up and down its own list,
+    `move` on a panel that crosses two columns, `ew-resize` on a pill that sits on a line. The clone
+    that follows the pointer repeats whatever it was lifted from. There is no held state, because the
+    system has no held variant to switch to. The rest of the vocabulary is just as fixed: `pointer`
+    for anything that acts on a click, `default` for a row that only holds controls, `not-allowed`
+    for a refusal, `help` for a figure that explains itself, `text` for what can be selected. Nothing
+    else is used, and it all lives in one block in `components.css`.
+    Watch for a library writing its own: `svelte-dnd-action` puts `cursor: grab` INLINE on every
+    draggable item, which is both untouched by the theme and a lie wherever a handle does the
+    dragging. Worse on the floating CLONE, which it builds by copying the source element's ENTIRE
+    computed style onto it inline — cursor and `animation: none` included, so anything the clone is
+    meant to do has to outrank an inline declaration. `!important` is the only answer to inline;
+    `.row-wrap`, `.inv-row` and `#dnd-action-dragged-el` use it for exactly this and nothing else
+    should need to.
+
+16. **A dragged thing has mass.** Motion here is not decoration — it is the only way a pointer
+    gesture reports what it is doing to a layout. Three beats, and the library supplies only the
+    middle one (its FLIP slides the rows that move):
+    - **Lifted**, the block SQUASHES — it is under load. On the clone, in CSS, with the `scale`
+      property rather than a `transform`, because the library owns this element's `transform`.
+    - **Carried**, the gap it would drop into GROWS from nothing to meet it, so the rows below are
+      moved by the gap rather than by a slot allocated before the block is anywhere near it. A hole
+      that is already waiting reads as a diagram of a drag.
+    - **Dropped**, the block SPREADS back out and settles. Squash and stretch: it arrives still flat
+      from being carried and returns to its own shape.
+    All of it lives in `actions/dragMotion.ts`, applied to the ZONE — the gap is found in the DOM by
+    the marker the library puts there (`data-is-dnd-shadow-item-internal`), so no panel marks its own
+    rows and a new draggable list gets the whole thing with one `use:`. Heights are MEASURED, never
+    written in CSS: a feature row and an action row are different heights, and a collapse that
+    changed `display` to animate a grid track would rearrange an inventory row's insides mid-drag.
+    Easing is always OUT — a gesture decelerates into place, it does not accelerate away from the
+    hand. And the Web Animations API is outside the reach of the global `prefers-reduced-motion`
+    rule in `app.css`, so that action asks the media query itself.
+
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
 

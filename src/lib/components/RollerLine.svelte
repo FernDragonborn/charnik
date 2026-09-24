@@ -602,7 +602,6 @@
 		border: 1px solid var(--color-border-strong);
 		font-size: var(--font-size-xs);
 		white-space: nowrap;
-		cursor: grab;
 	}
 	/* focus is the selection: the pill you clicked is the pill Del removes */
 	.roller-pill:focus {

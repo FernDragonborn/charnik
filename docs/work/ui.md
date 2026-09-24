@@ -69,6 +69,25 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
+- [ ] **TITLE-POPOVER · an explanation appears where the pointer is, not where Windows decides.**
+      Every control that explains itself still does it with `title`: the browser waits about a second,
+      then draws an OS tooltip somewhere near the cursor, in the OS font, that a keyboard never sees.
+      The replacement already exists and is already the contract — `use:provenance`
+      (`lib/actions/provenance.ts`, [`../internals/ui.md`](../internals/ui.md) ▸ rule 3) opens ONE
+      shared anchored popover on hover AND focus, with no delay, positioned under its trigger and
+      kept inside the viewport. It is in use at 28 sites across 14 files, so this is extension, not
+      design.
+      What is left is **144 `title=` attributes**, and they are not one thing: some carry a real
+      explanation (the effects panel's ⓘ, a blocked row's reason, a feature's granting class), some
+      are the accessible NAME of an icon-only button and must stay `title`/`aria-label` rather than
+      become a popover. So the item is a pass, not a sweep: sort the 144 into "explains" and "names",
+      move the first group to `use:provenance`, and leave the second alone.
+      The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
+      expands prose inside the row, with `title` on the button as a second, slower explanation of the
+      button itself. Hover should open the prose where the pointer already is; whether the click
+      toggle survives beside it is the one open question here, and it is answered with rendered
+      variants, not in this paragraph.
+
 - [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
   `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same
   act has one contract — inside `DialogShell`, which is documented as "the shared ATTENTION-dialog
@@ -205,6 +224,16 @@
   Pact Magic list) ran 39px past the screen and every ancestor inherited it, so a content table now
   gets its own `overflow-x` scroller in the renderer; and the panel HEAD did not wrap, leaving its
   drag grip hanging 13px off the edge. Left:
+  - [ ] **The row drag handle cannot pass the finger probe, and should not try.** `span.row-grip`
+        is 6px wide and misses 2 of 8 probe points — the two horizontal ones, 11px either side of the
+        mark: the left lands on the card's own border, the right INSIDE the row's hover pill. Passing
+        needs a 24px target and the whole gutter between card edge and row is 10px, so the only way
+        through is to overlap the row — and a handle that swallows taps meant for the row it sits
+        beside is worse than one that is hard to hit. Not a regression from the handle's redesign: at
+        its previous 12px the same two points missed for the same reason. An invisible `::after`
+        expander reaching back across the card's padding was TRIED and removed — measured, it changed
+        the count not at all. What would actually fix it is a different gesture on touch (press-and-
+        hold the row itself to reorder), which is a design question, not a size one.
   - [ ] **Four tap targets, all of them in combat.** Hit-tested at 393px rather than measured as
         boxes, which is the difference between a list worth working and a list of false alarms: the
         controls that LOOK broken (`.prep` at 8×8, `.pin-star` at 18×18) already carry a `::before`
@@ -316,10 +345,14 @@
         their order lives in `ui.rowOrder` keyed by panel and is reconciled against the live rows on
         every read (`combat/row-order.ts`, the same rule the panel columns use: an unnamed row is new
         and goes last, a name with no row is dropped). Every grip answers the arrow keys and keeps its
-        focus through the library's rebuild; a row stays ONE button with the grip beside it, never
-        inside it.
+        focus through the library's rebuild. The grip sits BESIDE a row that is one big button and
+        INSIDE one that is not — a `<summary>` hosts it, so a row that expands anchors the handle to
+        its header rather than to everything the header opens.
+        **The actions panel orders all three of its lists together**, because a player sees one list
+        of things they can do: a spend-option has as much claim to the top as Dash. A standard action
+        keeps its bare id in `rowOrder` and the two newer kinds carry theirs, so an order saved before
+        they joined still applies.
         **The rest are deliberately left alone: their order IS their grouping** — skills by ability,
-        spells by level, effects by polarity — and so are the actions panel's two lower lists, which
-        follow the feature that granted them. Verified across a reload.
+        spells by level, effects by polarity. Verified across a reload.
         **FEATURES came off that list** (FEATURES-VIEW): the grouping stayed and a player may now
         order INSIDE a section, which is a different thing from ordering across one.

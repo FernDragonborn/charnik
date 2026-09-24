@@ -1,10 +1,12 @@
 <script lang="ts">
-	// The ⠿ that moves one row of a panel — a drag for a pointer, the arrow keys for everyone else.
+	// The handle that moves one row of a panel — a drag for a pointer, the arrow keys for everyone else.
 	//
 	// It is NOT a `<button>`: `svelte-dnd-action` discards a press whose target carries a `value`, and
-	// every button does (`PanelCard`'s grip carries the whole story). It also sits BESIDE the row
-	// rather than inside it, because a combat row is itself one big button and a control nested in a
-	// control is what cost the keyboard its walk the last time this shape was built.
+	// every button does (`PanelCard`'s grip carries the whole story). It sits BESIDE a row that is
+	// itself one big button, because a control nested in a control is what cost the keyboard its walk
+	// the last time this shape was built — and INSIDE one that is not, so that a row which expands
+	// anchors the handle to its header rather than to everything the header opens. Hence the swallowed
+	// click: inside a <summary>, a press on the handle would otherwise toggle the row.
 	import { tick } from 'svelte';
 	import { dragHandle } from 'svelte-dnd-action';
 	import { _ } from '$lib/i18n';
@@ -45,30 +47,54 @@
 	tabindex="0"
 	aria-label={label}
 	title={label}
-	onkeydown={moveOnArrow}>⠿</span
->
+	onkeydown={moveOnArrow}
+></span>
 
 <style>
-	/* INVISIBLE at rest. A list of things you own is not a list of handles, and a ⠿ on every row was
+	/* INVISIBLE at rest. A list of things you own is not a list of handles, and a mark on every row was
 	   a mark on every line of the panel for an act most players do once. Its box stays — the target
-	   and the layout are the same — and the glyph appears where a hand or the keyboard already is. */
+	   and the layout are the same — and the spine appears where a hand or the keyboard already is.
+
+	   OUT OF FLOW, because the gutter is smaller than it looks: the card's padding is 17px but the row
+	   bleeds 8px of it (`.combat-row` in components.css), so a handle in the flex flow can only clear
+	   the row by pushing it — the margin that keeps the row still is exactly `width + gap`, which puts
+	   the handle back under the row's own hover fill. Absolute takes the handle out of that arithmetic:
+	   the row does not move and the 6px that are genuinely free are the handle's alone.
+
+	   DRAWN, never typed: a font character is at the mercy of whatever font resolves it, brings its own
+	   metrics and sits off the baseline (`Icon.svelte` ▸ UBUG-19). A 2px rule needs no glyph anyway. */
 	.row-grip {
+		position: absolute;
+		/* just outside the row's visible edge — `--row-bleed` is how far that edge overhangs its box */
+		inset-inline-start: calc(-1 * (var(--row-bleed, var(--space-2)) + var(--space-1-5)));
+		top: 0;
+		bottom: 0;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		flex: none;
-		width: var(--space-3);
-		/* it hangs into the panel's own padding instead of pushing the row: the rows used to start on
-		   the same line as the panel's title, and a handle that moved every one of them 20px right
-		   would be paid for by every row for the sake of a control that is invisible at rest. */
-		margin-inline-start: calc(-1 * (var(--space-3) + var(--space-1)));
-		color: var(--color-text-muted);
+		/* the mark sits OUTWARD in its box (see `::before`), so it breathes against the row while the
+		   6px target keeps its distance from the card's border */
+		justify-content: flex-start;
+		width: var(--space-1-5);
+		/* a quiet line, not a piece of text: dimmer than the row it belongs to in either theme */
+		color: var(--color-border-strong);
 		opacity: 0;
-		cursor: grab;
-		line-height: 1;
 	}
-	:global(.row-wrap:hover) .row-grip,
-	:global(.inv-row:hover) .row-grip,
+	/* the spine itself: the target is the full height of the row, the mark is a hairline inside it */
+	.row-grip::before {
+		content: '';
+		/* fractions of the target box, never pixels: `--space-1-5` is a rem, so the mark scales with
+		   the root font the same way the row it marks does */
+		width: calc(var(--space-1-5) / 3);
+		margin-inline-start: calc(var(--space-1-5) / 6);
+		/* a proportion, not a subtraction: these rows range from one line to an expanded card, and a
+		   fixed inset that reads right on a 36px row is a full-height bar on a tall one */
+		height: 70%;
+		border-radius: var(--radius-full);
+		background: currentColor;
+	}
+	/* whatever row HOSTS the handle reveals it — one rule instead of a list that grows a line every
+	   time a panel gets a different wrapper */
+	:global(:hover) > .row-grip,
 	.row-grip:focus-visible {
 		opacity: 1;
 	}
