@@ -6,7 +6,7 @@ import { readPackFile } from '../../test-support/real-content';
 
 /*
  * Data gate: the shipped `full` spell-slot table (generated from the SRD class tables by
- * tools/srd/convert-slots.mjs) must agree with the trusted `FULL_CASTER_SLOTS` in rules/core.
+ * the shipped `spell_slots` rows) must agree with the trusted `FULL_CASTER_SLOTS` in rules/core.
  * Two independent encodings of the same SRD fact — if they ever drift, one is wrong.
  */
 describe('shipped spell_slots table', () => {

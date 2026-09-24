@@ -25,7 +25,7 @@ async function loadEdition(pack: string) {
 	return loadContent(s, ['c']);
 }
 
-/** `<name>:<+hit>:<reach|range>:<dice> <type>[, …]` — the grammar `tools/srd/lib.mjs` writes. The
+/** `<name>:<+hit>:<reach|range>:<dice> <type>[, …]` — the grammar the shipped packs are written in. The
  *  last two fields may be empty: a roper's tendril hits and grapples and deals no damage, and an
  *  attack whose reach the source leaves unstated is still an attack. */
 const ATTACK = /^[^:;]+:[+-]\d+:[^:;]*:[^:;]*$/;

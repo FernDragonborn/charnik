@@ -7,8 +7,8 @@
  * since the overwrite guard reads the same signal, the seed and every pack update stop touching it
  * forever, freezing that file at whatever the user has on disk.
  *
- * It also pins the writer/verifier agreement across the two implementations of the rule: the app's
- * `hashInput` and the converters' copy in `tools/srd/lib.mjs`.
+ * `hashInput` is the single implementation of the rule now; anything that WRITES a stamped file from
+ * outside this repo has to agree with it, and this pins what it must agree with.
  */
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';

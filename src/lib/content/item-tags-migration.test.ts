@@ -1,10 +1,11 @@
 /*
  * The v1→v2 item migration, checked against the shipped CSVs it was written for.
  *
- * The point of the file-level assertions: the CONVERTERS build `tags` from the SRD tables directly,
- * while the MIGRATION builds them from the v1 columns. Two implementations, one result — so running
- * the migration over the v1 file in git history must reproduce the v2 file on disk. That is the only
- * check that catches one of the two drifting away from the other.
+ * The point of the file-level assertions: the SHIPPED `tags` were built from the SRD tables directly,
+ * while the MIGRATION builds them from the v1 columns. Two paths, one result — so running the
+ * migration over the v1 file in git history must reproduce the v2 file on disk. It is what catches a
+ * migration that has drifted from the data it is supposed to land on, and it keeps working however
+ * the pack is produced, because it reads the pack rather than whatever wrote it.
  */
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';

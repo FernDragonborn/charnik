@@ -71,7 +71,6 @@
 		"jscpd": "^5.2.0",
 		"knip": "^6.35.1",
 		"madge": "^8.0.0",
-		"pdfjs-dist": "^6.3.289",
 		"pixelmatch": "^7.2.0",
 		"playwright": "^1.63.0",
 		"pngjs": "^7.0.0",

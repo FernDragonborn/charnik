@@ -85,9 +85,10 @@ convention makes a list unnecessary, is under "The content lives in another repo
 
 **Reading a number out of prose.** Nothing in `src/` mines `text`/`text_<locale>` for a value. A die,
 a damage type, a category — it comes from a declared column or it does not exist, and a missing column
-shows as missing rather than as the first number the paragraph happened to contain. The converters in
-`tools/srd/` are the only exception, because the SRD *is* prose, and what they extract lands in a CSV
-a human reads in a diff. `prose-is-not-data.test.ts` guards the usual shape; `docs/internals/content.md`
+shows as missing rather than as the first number the paragraph happened to contain. There is no
+exception any more: the SRD *is* prose, so whatever turns it into columns has to mine it, and that
+work now happens in a producer sibling whose output a human reads as a CSV diff. Nothing in this
+repository does it. `prose-is-not-data.test.ts` guards the usual shape; `docs/internals/content.md`
 has the rule.
 
 **Pushing.** Commit whenever you have a meaningful, verified checkpoint — straight to `main`, this
@@ -99,18 +100,6 @@ find. Pushing is the one git action that needs explicit permission in the curren
 **Skipping a re-stamp.** After hand-editing a content CSV, run `pnpm restamp <file>`. The
 `#content-hash` is not decoration: a file whose body no longer matches its stamp is treated as the
 user's own, so seeding and every pack update skip it forever. A missed stamp freezes that file on disk.
-
-**Re-running a converter to re-stamp.** It rewrites every row of every file it owns, so it churns
-files you did not mean to touch. Converters are for real content changes; `pnpm restamp` is for
-hand-edits. If a converter run touches a file you did not mean to change, `git checkout` it — in the
-content repo, which is where all of this shows up as a diff. What a re-run no longer does is LOSE
-anything: each converter reads what the file already says and keeps what the source does not state
-(a condition's `max_level`, a spell's `classes`/`upcast`, an authored row). That took three separate
-losses to find, so check a re-run's diff before trusting a fourth converter with it.
-**They are RETIRED**, so do not improve them: content will be produced elsewhere, and the only piece
-of them with a future is the row-count assertion (`work/content.md` ▸ CONVERTERS-SUNSET, which also
-says what that costs). Reading 3 500 lines to tidy code that is going is the expensive kind of
-thorough.
 
 **Hardcoding a colour or a size.** Charnik ships user-authored themes, so a literal hex or px is a
 spot that stays wrong under someone's theme. Style only through the tokens in `styles/tokens.css`; a

@@ -28,48 +28,24 @@
   `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
   because of these blocks, and that comes out with them.
 
-- [ ] **CONVERTERS-SUNSET · `tools/srd/` is retired. DECIDED: delete it, once the row count has a
-  home.** **Do not audit them** — reading 3 500 lines to improve code that is going is the expensive
-  kind of thorough.
-  The two halves collapsed into one: content will be produced by a sibling repository instead (see
-  `AGENTS.md` ▸ The content lives in another repo, which states the naming convention and the rule
-  that only SRD-derived rows cross into the shipped pack). A converter cut down to "here is the row
-  count" would be a converter that converts nothing, and a folder whose name lies is worse than no
-  folder.
-  **The first of the two commits has landed.** `charnik-content-srd` carries `manifest.json` (34
-  files, 3219 rows) and a zero-dependency `check.mjs` that counts by quote state and exits 1 on
-  drift — proved against the app's own papaparse loader over every shipped file. So the pack is
-  guarded on its own now, and what is left is the deletion: the folder goes, and the standing
-  "never re-run a converter to re-stamp" hazard goes with it (`AGENTS.md`, `tooling.md`).
-  Nothing else in them needs rescuing: the one lesson that outlives the code — a source's typography
-  is not evidence, so repair the spacing before a name is compared or turned into an id — is recorded
-  in `content.md` ▸ Where the shipped data comes from.
-  **What weakens, said plainly:** today the assertion compares the emitted rows against the SOURCE. A
+- [x] **CONVERTERS-SUNSET · `tools/srd/` is gone.** 4 235 lines and nine converters deleted, and
+  `pdfjs-dist` with them — the one dependency nothing else in the repo used. Content is produced by a
+  sibling repository now (`AGENTS.md` ▸ The content lives in another repo), so a converter cut down
+  to "here is the row count" would have been a converter that converts nothing.
+  The guard that replaced them lives with the thing it guards: `charnik-content-srd` carries
+  `manifest.json` (34 files, 3 219 rows) and a zero-dependency `check.mjs` that counts by quote state
+  and exits 1 on drift, proved against the app's own papaparse loader over every shipped file.
+  **Two standing hazards left with the code.** "Never re-run a converter to re-stamp" is gone from
+  `AGENTS.md` because there is nothing to re-run, and prose-mining no longer has an in-repo
+  exception — `prose-is-not-data.test.ts` now covers the whole repository rather than everything but
+  one folder.
+  **What weakens, said plainly:** the old assertion compared emitted rows against the SOURCE. A
   manifest compares them against a number we wrote down, which catches a truncated file or a bad
-  hand-edit but is a snapshot, not a cross-check. That is a real loss and worth naming rather than
-  papering over; the producer that replaces this will want its own count assertion anyway, so the
-  manifest is the interface it writes against.
-
-  The shipped CSVs are the artifact; the converters are how they were produced once, not what the app
-  runs. Eleven files, ~3 500 lines of offline prose extraction, re-run rarely, carrying a documented
-  destructive trap — a re-run regenerates rows and drops `conditions_srd.csv`'s `max_level`
-  (`AGENTS.md` ▸ The ways to hurt yourself) — and holding a second, informal account of what a valid
-  row is, next to the authoritative one in `src/lib/content/schemas.ts`. Deletion over addition
-  applies to tooling as much as to `src/`.
-
-  What has durable value and must survive either decision: the CSV output contract and the
-  `type:source:id` identity, which already live in `schemas.ts`; the stamping discipline, which lives
-  in `restamp.ts`; and the row-count assertion against the source, which is the only thing standing
-  between a silent extraction loss and a shipped pack that is quietly short. That last one has no
-  home outside the converters today — if they go, it needs one, and that is the real work in this
-  item rather than the deletion itself.
-
-  The `see_i_nvisibility` slug is settled and was not the generator's fault: SRD 5.1 itself prints
-  "See I nvisibility", the same OCR artifact as its "Extra A ttack" heading, and the slug is a faithful
-  rendering of it. The row is transcribed as `see_invisibility` now, name included. Nothing in the
-  generator needs finding — but a name-matching converter must squash whitespace before comparing, as
-  `convert-2014-spell-lists.mjs` does, because the source's typography cannot be trusted.
-
+  hand-edit but is a snapshot, not a cross-check. The producer that replaces this wants its own count
+  assertion against the source; until it has one, that cross-check does not exist anywhere.
+  The one lesson that outlived the code — a source's typography is not evidence, so repair the
+  spacing before a name is compared or turned into an id — is in `content.md` ▸ Where the shipped
+  data comes from.
 - [~] **MASTERY-HALF · weapon mastery. The CHARACTER half is built; the eight EFFECTS are not.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature
@@ -135,8 +111,8 @@
   folded, qualifier noted) and the 2014 Cloak needs its hood UP (an action), so it stays text while the
   2024 one folds. **Converter preservation FIXED** — `convert-items.mjs` and the 2014 converter emitted
   `effects: ''`, so a re-run wiped the authoring (verified by doing exactly that, then re-running to
-  prove the fix: byte-identical output, same hash). The `existingColById` helper the other two
-  converters had each copied is now one export in `tools/srd/lib.mjs`. Hashes re-stamped;
+  prove the fix: byte-identical output, same hash). The preservation helper the other two
+  converters had each copied ended as one shared export. Hashes re-stamped;
   `items_content.test.ts` pins the values + drift.
   **SECOND TRANCHE DONE 2026-08-21 — 23 items in 2024, 12 in 2014**, again read off each edition's own
   shipped text. Named damage types fold (`damage_sensitivity:resist:<type>` — Staff of Fire/Frost, Brooch of
@@ -414,7 +390,7 @@
   missing is purely DATA: `content/srd-2014/class_casting_srd.csv` **doesn't exist**, so every 2014 caster
   reports **cantripCap 0**, and known-casters (bard/sorcerer/warlock/ranger) get the prepared FORMULA
   instead of their table's "Spells Known" (a 2014 bard 1 should read 2 cantrips / 4 known, not 0 / CHA+1).
-  **DONE** — `tools/srd/convert-2014-casting.mjs` emits all 140 rows (seven casters × 20 levels;
+  **DONE** — all 140 rows ship (seven casters × 20 levels;
   paladin has neither column in 2014). The converter route was the right one after all: the source is
   HTML, where every class table is a real `<table>` of `<td>` cells — the space-aligned form is the
   `.txt` beside it, which nothing reads.
@@ -431,7 +407,7 @@
   closed, in the converters:
   - **`attacks` is a column in both editions**, written as
     `<name>:<+hit>:<reach or range>:<dice> <type>[, <dice> <type>]`, attacks joined by `; ` — a
-    compound column with its own grammar, like `damage` (`tools/srd/lib.mjs ▸ attackRecord`). A
+    compound column with its own grammar, like `damage`. A
     second damage part is taken only after the word "plus", which is how both SRDs write damage that
     is ADDED; every other number later in the sentence is an alternative (a versatile grip, a swarm
     at half HP) or a condition, and folding those in gave a veteran's longsword both of its dice at

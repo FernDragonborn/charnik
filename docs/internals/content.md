@@ -250,13 +250,14 @@ back, `autoAdoptDrift`, terminates because a re-stamped file no longer drifts. A
 on disk is picked up in real time; only the changed file is reparsed, and a manual refresh is the
 fallback.
 
-Note the asymmetry with the content repo: the converters write **LF and no BOM** on purpose
-(`tools/srd/lib.mjs`). BOM and CRLF are for CSVs the app writes into the user's data folder.
+Note the asymmetry with the content repo: a shipped pack's files are **LF and no BOM**. BOM and CRLF
+are for CSVs the app writes into the user's data folder.
 
 ## Where the shipped data comes from
 
-Game data is converted from a real CC-BY source, never authored from memory. The converters live in
-`tools/srd/` and each asserts its row count against the source.
+Game data is converted from a real CC-BY source, never authored from memory. That conversion happens
+in a producer sibling, not here; what this repository sees is the pack, which checks its own 34 files
+against a manifest of row counts (`charnik-content-srd` ▸ `check.mjs`).
 
 - **5.5e = SRD 5.2.1** — `downfallx/dnd-5e-srd-markdown`.
 - **5e = SRD 5.1** — `Tabyltop/CC-SRD`.
@@ -324,32 +325,31 @@ column in — that is a gap a user can see and close. `src/lib/content/prose-is-
 the build on the shape this mistake is usually written in; it is a tripwire on the cheap path, not a
 proof, so the rule is the thing to hold, not the test.
 
-**The converters in `tools/srd/` are the exception, and the only one.** The SRD ships as prose, so
-they have no other source: `resolution` and `save_ability` come from "… saving throw", a race's ASI
-tokens from its Ability Score Increase paragraph. What makes that legitimate is where it lands —
+**Whatever PRODUCES the pack is the exception, and it does not live here.** The SRD ships as prose, so
+a producer has no other source: `resolution` and `save_ability` come from "… saving throw", a race's
+ASI tokens from its Ability Score Increase paragraph. What makes that legitimate is where it lands —
 a CSV column, in a diff, that a human reads before it ships. That review is the boundary; downstream
-of it, the column is the only truth.
+of it, the column is the only truth, and this repository only ever sees the downstream side.
 
 There is **no live exception left in `src/`**. The last one was an item's `item_type`, which held a
 category for mundane gear (`martial melee`) and a prose phrase for magic items (`weapon (any sword
 that deals slashing damage)`) — three readers sniffed substrings out of it, so a magic weapon had no
 properties, no damage dice and no fighting-style scopes. ITEM-TAGS replaced it with the `tags` column
-and `base_item_id` (`docs/plan.md`); the phrase is now read once, in the converter, into a column.
+and `base_item_id` (`docs/plan.md`); the phrase is now read once, upstream, into a column.
 
 ## The content repo
 
 The shipped SRD content is a separate repository, `charnik-content-srd`, so rules data can be
 corrected and released without an app build. `tools/content-repo.mjs` is the one seam that resolves
-where it is; the vendoring step, the converters, and the content tests all go through it.
+where it is; the vendoring step and the content tests both go through it.
 
 **Committing here is ordinary work, under this repo's rules.** A data fix belongs in the content
 repo the same way a code fix belongs in this one: commit at a verified checkpoint, straight to
 `main`, no feature branch. `git push` is the one action needing explicit permission in the current
 turn, in either repo. The content-specific traps are the whole difference: rows come from a real
-CC-BY source through `tools/srd/`, never from memory; a hand-edit is followed by `pnpm restamp
-<file>`, never by a converter re-run; and a change to shipped rows lands together with an assert in
-the APP repo pinning the count or the value, so a later converter run that drops it fails loudly
-instead of silently reverting.
+CC-BY source, never from memory; a hand-edit is followed by `pnpm restamp <file>`; and a change to
+shipped rows lands together with an assert in the APP repo pinning the count or the value, so a later
+regeneration that drops it fails loudly instead of silently reverting.
 
 **A pack repo must carry `.gitattributes` with `* -text`.** The updater answers "did this file
 change?" from the git blob SHA in a tree listing, without downloading anything, and that only holds

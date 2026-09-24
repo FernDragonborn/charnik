@@ -273,10 +273,6 @@ position and are given per wave, because most of them were learned the hard way.
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
   can turn into actually lives. MASTERY-HALF's remaining half sits here: the eight mastery EFFECTS,
   most of which act on a creature the app does not model.
-- **CONVERTERS-SUNSET — half done.** The row-count guard has its home: `charnik-content-srd` checks
-  its own 34 files against a manifest, so the pack no longer depends on the converters to notice a
-  truncated file. What is left is the deletion of `tools/srd/`, which takes the "never re-run a
-  converter to re-stamp" hazard with it.
 - **Ready, unscheduled, and app-only:** FEAT-FREE-CAST. The POOL a once-per-long-rest cast spends
   is already expressible; what does not exist is SPENDING it, because the cast path offers slots and
   nothing else. It needs no content and nothing else needs it first.

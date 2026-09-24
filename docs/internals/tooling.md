@@ -297,9 +297,8 @@ read the report. `/dev/packs-write` is the worked example.
 
 ## Other tools
 
-`tools/srd/*` are the SRD converters, `tools/build-static-content.mjs` vendors content on predev and
-prebuild, `tools/restamp.ts` is `pnpm restamp`, and `tools/content-repo.mjs` resolves where the
-content repo is.
+`tools/build-static-content.mjs` vendors content on predev and prebuild, `tools/restamp.ts` is
+`pnpm restamp`, and `tools/content-repo.mjs` resolves where the content repo is.
 
 **The dev server serves the VENDORED copy, not the content repo.** `predev` copies the packs into
 `static/content/`, and vite serves that — the repo itself is outside the served root and the browser

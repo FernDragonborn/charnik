@@ -1,7 +1,7 @@
 /*
  * The SHIPPED 2014 class spell lists, against the SRD's own counts.
  *
- * The 2014 `classes` column is produced by `tools/srd/convert-2014-spell-lists.mjs` from the official
+ * The 2014 `classes` column is produced from the official
  * CC-BY SRD 5.1 PDF — not from the Tabyltop conversion the other 2014 converters read, because that
  * one keeps only some of each page's columns and silently drops 227 of the document's 778 list
  * entries. That loss is invisible in the CSV (a short list is still a valid list), and it left a 2014

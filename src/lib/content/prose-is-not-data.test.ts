@@ -7,8 +7,9 @@
  * the row or writes the same rule in different words. A missing column stays missing: show nothing
  * and let the author fill it in.
  *
- * `tools/srd/` is deliberately out of scope. The SRD ships as prose, so the converters have no other
- * source, and what they extract lands in a CSV a human reads in a diff — that review is the boundary.
+ * Whatever PRODUCES a pack mines prose by necessity — the SRD ships as prose and there is no other
+ * source — but that work happens in a sibling repository and lands as a CSV diff a human reads. This
+ * repository has no exception to cover.
  *
  * Line-based on purpose: it catches the shape that actually gets written (and copy-pasted), not every
  * conceivable one. A prose read and its regex split across two statements slips through. A tripwire on
