@@ -326,8 +326,9 @@
 		color: var(--color-accent-bright);
 		cursor: help;
 	}
-	/* upcast affordance (⇡): opens the slot-picker. Dim until the row is hovered/focused so it doesn't
-	   clutter, then reads as clickable (interactive-affordance invariant). */
+	/* cast-source affordance (⇡): opens the picker that asks what pays for this cast — a higher slot,
+	   or a pool instead of one. Dim until the row is hovered/focused so it doesn't clutter, then reads
+	   as clickable (interactive-affordance invariant). */
 	.spell-row .spell-level .upcast-btn {
 		display: inline-block;
 		margin-inline-end: var(--space-1);

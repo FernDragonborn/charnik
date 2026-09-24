@@ -35,6 +35,7 @@
 	import Flag from '@lucide/svelte/icons/flag';
 	import FlameKindling from '@lucide/svelte/icons/flame-kindling';
 	import Folder from '@lucide/svelte/icons/folder';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Infinity_ from '@lucide/svelte/icons/infinity';
 	import Info from '@lucide/svelte/icons/info';
 	import Minus from '@lucide/svelte/icons/minus';
@@ -87,6 +88,7 @@
 		   moon, which said "rest" for both and told them apart not at all */
 		'flame-kindling': FlameKindling,
 		folder: Folder,
+		'grip-vertical': GripVertical,
 		infinity: Infinity_,
 		info: Info,
 		minus: Minus,

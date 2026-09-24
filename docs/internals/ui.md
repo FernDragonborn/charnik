@@ -189,10 +189,13 @@ good", so they are pinned here and every component follows them.
    on the right.
 8. **A panel header is** a collapse chevron, the title, right-aligned actions, and a move handle.
    Panels collapse, hide, and reorder **within the two-column area only** — never a free canvas. The
-   handle is a real `<button>` in the tab order: dragging it reorders, and so do the arrow keys —
-   up/down inside the column, left/right across to the other one (`PanelLayout.movePanel`), with the
-   caret put back on the handle afterwards because svelte-dnd-action rebuilds the column's nodes. A
-   reorder that only a pointer can perform is a layout a keyboard user cannot get back out of.
+   handle is in the tab order and answers the arrow keys — up/down inside the column, left/right
+   across to the other one (`PanelLayout.movePanel`), with the caret put back on the handle afterwards
+   because svelte-dnd-action rebuilds the column's nodes. A reorder that only a pointer can perform is
+   a layout a keyboard user cannot get back out of. It is a `<span role="button">` and NOT a real
+   `<button>`, which is the one place that rule is inverted: the library discards a press whose target
+   carries a `value`, and every button has one, so a real button silently ate every drag. Its mark is
+   a drawn `<Icon>` like every other (▸ Icons are drawn, never typed).
 9. **An icon slot takes an emoji or an image.** The SRD ships no art, so the fallback is a glyph;
    homebrew and user-created entities may set an image.
 

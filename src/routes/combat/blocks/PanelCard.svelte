@@ -121,7 +121,7 @@
 		tabindex="0"
 		aria-label={moveLabel}
 		title={moveLabel}
-		onkeydown={moveOnArrow}>⠿</span
+		onkeydown={moveOnArrow}><Icon name="grip-vertical" size={15} /></span
 	>
 </div>
 {#if !collapsed[pid]}
