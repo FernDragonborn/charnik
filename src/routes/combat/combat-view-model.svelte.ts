@@ -505,6 +505,12 @@ class CombatVM {
 		this.casting.castPreview(...args);
 	castableSlots = (...args: Parameters<SpellCasting['castableSlots']>) =>
 		this.casting.castableSlots(...args);
+	castablePools = (...args: Parameters<SpellCasting['castablePools']>) =>
+		this.casting.castablePools(...args);
+	hasCastChoice = (...args: Parameters<SpellCasting['hasCastChoice']>) =>
+		this.casting.hasCastChoice(...args);
+	castFromPool = (...args: Parameters<SpellCasting['castFromPool']>) =>
+		this.casting.castFromPool(...args);
 	upcastLadder = (...args: Parameters<SpellCasting['upcastLadder']>) =>
 		this.casting.upcastLadder(...args);
 	openUpcast = (...args: Parameters<SpellCasting['openUpcast']>) =>

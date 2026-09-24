@@ -406,6 +406,16 @@
 				<div class="popup-heading eyebrow" style="border: 0">
 					{$_('combat.menu.upcastTitle', { values: { name: r.name } })}
 				</div>
+				<!-- a spell with ONE slot option does not list it (`castableSlots` is empty then), so the
+				     implied cast is spelled out here — otherwise a pool would be the only row offered and
+				     the ordinary way to cast would have disappeared behind the picker. -->
+				{#if !combat.castableSlots(r).length}
+					<button class="menu-row" onclick={(e) => combat.cast(r, e)}>
+						<span class="main"
+							>{$_('combat.menu.slotLevelBase', { values: { level: r.level } })}</span
+						>
+					</button>
+				{/if}
 				{#each combat.castableSlots(r) as lvl (lvl)}
 					{@const preview = combat.castPreview(r, lvl)}
 					<button class="menu-row" onclick={(e) => combat.castAtSlot(lvl, e)}>
@@ -415,6 +425,17 @@
 							})}</span
 						>
 						{#if preview}<span class="meta">{preview}</span>{/if}
+					</button>
+				{/each}
+				<!-- FEAT-FREE-CAST: the other way to pay. A pool is offered, never chosen for the player —
+				     nothing in the data says which pool a given spell may spend, and the feat's own text,
+				     which the player is reading, does. -->
+				{#each combat.castablePools(r) as pool (pool.id)}
+					<button class="menu-row" onclick={(e) => combat.castFromPool(pool.id, e)}>
+						<span class="main"
+							>{$_('combat.menu.castFromPool', { values: { pool: pool.name } })}</span
+						>
+						<span class="meta">{combat.resources.remainingFor(pool.id)}/{pool.max}</span>
 					</button>
 				{/each}
 				<p class="note" style="padding: 6px 13px 2px">{$_('combat.menu.upcastNote')}</p>

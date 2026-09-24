@@ -22,6 +22,7 @@ import {
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
+import type { ResourceDef } from '$lib/effects/facts';
 import {
 	wantsTray,
 	durationToRounds,
@@ -74,6 +75,11 @@ export interface CastingHost {
 	round: number;
 	journal: RollJournal;
 	economy: TurnEconomy;
+	/** The pool half of a cast (FEAT-FREE-CAST) — what it takes to pay with one, and nothing else. */
+	resources: {
+		resourceSpent(id: string): number;
+		useResource(id: string, max: number): boolean;
+	};
 	cantConcentrate: boolean;
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
 	effectsFor(key: string, scopes?: Set<string>): RollEffects;
@@ -170,6 +176,33 @@ export class SpellCasting {
 			return { blocked: true };
 		}
 		return { key: spend && 'key' in spend ? spend.key : null };
+	}
+
+	/** The pool a `cast({ pool })` names, or undefined when this character has no such resource — a
+	 *  stale picker choice must not cast for free. */
+	private poolFor(id: string): ResourceDef | undefined {
+		return (this.host.sheet?.resources ?? []).find((pool) => pool.id === id);
+	}
+
+	/** What pays for this cast, settled BEFORE anything is committed: the slot key to spend later, or
+	 *  `null` for a cast that spends no slot (cantrip / pure pact / ritual / a pool). `undefined` means
+	 *  it cannot be paid for and the cast must not happen — the action economy is not touched, nothing
+	 *  is applied, and whichever half refused has already said so.
+	 *
+	 *  A POOL (FEAT-FREE-CAST, "cast it once without a slot") spends HERE rather than reserving: unlike
+	 *  a slot there is no level to resolve afterwards, so the unit is gone or the cast never happened. */
+	private payForCast(
+		r: SpellRow,
+		ritual: boolean,
+		opts?: { slot?: number; pool?: string },
+	): { slot: string | null } | undefined {
+		if (opts?.pool) {
+			const pool = this.poolFor(opts.pool);
+			if (!pool) return undefined;
+			return this.host.resources.useResource(pool.id, pool.max) ? { slot: null } : undefined;
+		}
+		const reserved = this.reserveSpellSlot(r, ritual, opts?.slot);
+		return 'blocked' in reserved ? undefined : { slot: reserved.key };
 	}
 
 	/** The slot LEVEL a cast resolves at (drives upcast, §4): a pact slot forces the cast up to the
@@ -474,6 +507,26 @@ export class SpellCasting {
 			this.host.character?.play.spellSlotsSpent ?? {},
 		);
 
+	/** The pools a cast can be paid from instead of a slot — every named resource this character still
+	 *  has a use in. FEAT-FREE-CAST: the sentence is Magic Initiate's "cast it once without a slot",
+	 *  and several magic items say the same, but nothing in the data LINKS a pool to a spell. The
+	 *  player is who knows, so the picker OFFERS and the player names it — the tracker's standing rule
+	 *  (`AGENTS.md` ▸ a play-tracker surfaces and suggests). Narrowing this to a declared pool is a
+	 *  later filter on the same control, not a different one.
+	 *  A cantrip costs nothing, so it is never asked. */
+	castablePools = (r: SpellRow): ResourceDef[] =>
+		r.level === 0
+			? []
+			: (this.host.sheet?.resources ?? []).filter(
+					(pool) => this.host.resources.resourceSpent(pool.id) < pool.max,
+				);
+
+	/** Whether this cast has more than one way to be PAID FOR — what the picker affordance asks.
+	 *  `castableSlots` is empty for a single option rather than holding it, so a pool beside that one
+	 *  implied slot is already a choice; the menu spells the implied option out as its own row. */
+	hasCastChoice = (r: SpellRow): boolean =>
+		this.castableSlots(r).length > 1 || this.castablePools(r).length > 0;
+
 	/** The spell whose upcast slot-picker is open (drives the `upcast` overlay menu — item 1). */
 	upcastSpell = $state<SpellRow | null>(null);
 	/** Open the slot-picker for a leveled spell (the ⇡ affordance), anchored under the click. */
@@ -487,6 +540,13 @@ export class SpellCasting {
 		if (!r) return;
 		this.host.overlay = null;
 		this.cast(r, e, { slot });
+	};
+	/** Cast the picker's spell paid for by a POOL rather than a slot, then close the picker. */
+	castFromPool = (pool: string, e: Event) => {
+		const r = this.upcastSpell;
+		if (!r) return;
+		this.host.overlay = null;
+		this.cast(r, e, { pool });
 	};
 	/** What casting `r` from `slotLevel` yields beyond its base, as one line. Empty at the base slot
 	 *  or a non-scaling spell. The wording is `upcastPreview`'s; this only decides WHAT to preview. */
@@ -505,16 +565,16 @@ export class SpellCasting {
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.
-	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean; slot?: number }) => {
+	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean; slot?: number; pool?: string }) => {
 		const play = this.host.character?.play;
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
 		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
 		// pact casters spend nothing; the action-economy check below stays combat-only.
 		const ritual =
 			opts?.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
-		const reserved = this.reserveSpellSlot(r, ritual, opts?.slot);
-		if ('blocked' in reserved) return;
-		const slot = reserved.key;
+		const paid = this.payForCast(r, ritual, opts);
+		if (!paid) return;
+		const slot = paid.slot;
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.host.economy.trySpend(this.host.economy.ctSlot(r.castTimeIcon))) return;
 		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;

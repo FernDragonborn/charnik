@@ -130,7 +130,7 @@
 										name={r.castTimeIcon === 'react' ? 'corner-down-left' : 'zap'}
 										size={12}
 									/></button
-								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><button
+								>{/if}{#if r.level > 0 && combat.hasCastChoice(r)}<!-- cast-SOURCE picker: more than one way to pay — a higher slot (item 1) or a pool instead of a slot (FEAT-FREE-CAST) --><button
 									class="upcast-btn"
 									aria-label={$_('combat.spells.castUpcast')}
 									use:provenance={[$_('combat.spells.castUpcast'), combat.upcastLadder(r, $_)]

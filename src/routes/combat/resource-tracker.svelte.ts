@@ -57,17 +57,19 @@ export class ResourceTracker {
 	};
 	/** Use ONE unit of a resource — the spell-cast analogue for named pools (UBUG-8): spend the next
 	 *  available unit, or BLOCK with a toast when exhausted (mirrors how a cast reserves + gates a spell
-	 *  slot). Fine-grained restore / arbitrary set stays on the pips (`resourceClick`). */
-	useResource = (id: string, max: number) => {
+	 *  slot). Fine-grained restore / arbitrary set stays on the pips (`resourceClick`).
+	 *  Returns whether it went through, because a cast paying from a pool has to know BEFORE it touches
+	 *  the action economy — the same reserve-before-commit rule `reserveSpellSlot` follows. */
+	useResource = (id: string, max: number): boolean => {
 		const c = this.getCharacter();
-		if (!c) return;
+		if (!c) return false;
 		const name = this.resourceName(id);
 		const before = this.resourceSpent(id);
 		if (before >= max) {
 			toast(t('combat.notice.resourceNoneLeft', { name }), {
 				description: t('combat.notice.rechargeOnRest'),
 			});
-			return;
+			return false;
 		}
 		const after = before + 1;
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
@@ -77,6 +79,7 @@ export class ResourceTracker {
 				? t('combat.notice.resourceLeftOf', { left: max - after, max })
 				: t('combat.notice.resourceUsedUnlimited', { used: after }),
 		});
+		return true;
 	};
 	resourceClick = (id: string, max: number, i: number) => {
 		const c = this.getCharacter();
@@ -102,8 +105,10 @@ export class ResourceTracker {
 		return Math.max(0, Math.min(stored, max));
 	};
 
-	/** Units left in the pool backing an option (max − spent). `x`-cost options price at `amount`. */
-	private remainingFor = (resourceId: string): number => {
+	/** Units left in a pool (max − spent). Public because a chip showing what a pool has left is the
+	 *  same question a spend-option's afford-check asks, and two subtractions of the same two numbers
+	 *  is how a pool comes to say different things in two places. */
+	remainingFor = (resourceId: string): number => {
 		const max = this.defOf(resourceId)?.max ?? 0;
 		return max - this.resourceSpent(resourceId);
 	};

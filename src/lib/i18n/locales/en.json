@@ -682,6 +682,7 @@
 			"close": "Close",
 			"coinWeight": "Count coin weight",
 			"coinWeightNote": "50 coins weigh a pound. Off by default — most tables do not weigh money.",
+			"castFromPool": "{pool} — no slot",
 			"coinsTitle": "Coins on the sheet",
 			"conditionsTitle": "Conditions · multi-select",
 			"customEffect": "Custom effect…",
@@ -719,8 +720,8 @@
 			"untilRemovedLong": "∞ until removed",
 			"untilRemovedTitle": "Lasts until you remove it",
 			"untilRemovedValue": "until removed (∞)",
-			"upcastNote": "Upcasting spends the higher-level slot.",
-			"upcastTitle": "Cast {name} · at which slot",
+			"upcastNote": "A higher slot is spent as cast; a pool spends one use and no slot.",
+			"upcastTitle": "Cast {name} · what pays for it",
 			"whichActions": "Which actions appear",
 			"whichFeatures": "Which features show"
 		},
@@ -909,7 +910,7 @@
 			"autoHit": "auto",
 			"bonusAction": "bonus action",
 			"castRitual": "Cast as ritual (no slot, +10 min)",
-			"castUpcast": "Cast at a higher slot (upcast)",
+			"castUpcast": "Choose what pays for this cast",
 			"castingBlocked": "Spellcasting blocked — not proficient with {armor}",
 			"everySpell": "— every spell",
 			"groupBy": {

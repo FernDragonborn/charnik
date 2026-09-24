@@ -753,6 +753,68 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 	});
 });
 
+describe('CombatVM · a pool pays for a cast instead of a slot (FEAT-FREE-CAST)', () => {
+	/** Magic Initiate's sentence: the level-1 spell is cast once without a slot, and the pool that
+	 *  pays is a named resource. Nothing in the data links the two, so the PLAYER names the pool —
+	 *  what is asserted here is that naming it actually pays. */
+	const withPool = async (max: number) => {
+		const graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{
+				iid: '1',
+				label: 'Magic Initiate',
+				effects: [`grant_resource:free_cast:${max}:long`],
+				positive: true,
+			},
+		];
+		combat.graph = graph;
+		combat.character = character;
+		return { graph, character };
+	};
+
+	it('spends one use of the pool and NO spell slot', async () => {
+		const { graph, character } = await withPool(1);
+		const before = { ...character.play.spellSlotsSpent };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers, { pool: 'free_cast' });
+		expect(combat.resources.resourceSpent('free_cast')).toBe(1);
+		expect(character.play.spellSlotsSpent).toEqual(before);
+		// and the cast still HAPPENED — the effect it applies is the proof it was not merely blocked
+		expect(character.play.effects.some((e) => e.source === `spell:${S}:bless`)).toBe(true);
+	});
+
+	it('an exhausted pool blocks the cast entirely — no slot spent, no effect applied', async () => {
+		const { graph, character } = await withPool(1);
+		character.play.resourcesSpent = { free_cast: 1 };
+		const before = { ...character.play.spellSlotsSpent };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers, { pool: 'free_cast' });
+		expect(character.play.spellSlotsSpent).toEqual(before);
+		expect(character.play.effects.some((e) => e.source === `spell:${S}:bless`)).toBe(false);
+	});
+
+	it('a pool this character does not have pays for nothing', async () => {
+		const { graph, character } = await withPool(1);
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers, { pool: 'not_a_pool' });
+		expect(combat.resources.resourceSpent('free_cast')).toBe(0);
+		expect(character.play.effects.some((e) => e.source === `spell:${S}:bless`)).toBe(false);
+	});
+
+	it('a cantrip is never offered a pool — it costs nothing to begin with', async () => {
+		const { graph } = await withPool(1);
+		expect(combat.castablePools(spellRow(graph, `spell:${S}:fire_bolt`, 'on')!)).toEqual([]);
+		expect(
+			combat.castablePools(spellRow(graph, `spell:${S}:bless`, 'on')!).map((p) => p.id),
+		).toEqual(['free_cast']);
+	});
+
+	it('an exhausted pool is not offered', async () => {
+		const { graph, character } = await withPool(1);
+		character.play.resourcesSpent = { free_cast: 1 };
+		expect(combat.castablePools(spellRow(graph, `spell:${S}:bless`, 'on')!)).toEqual([]);
+	});
+});
+
 describe('CombatVM · conditionList uses the character system (CVM-bug2)', () => {
 	it('lists conditions for the character system, not a hardcoded edition', async () => {
 		const graph = await graphOf();

@@ -407,13 +407,25 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   Rest" is a pool plus a way to SPEND it on a cast, and the cast path knows only slots — a
   `grant_resource` shipped today would be a pip nothing can spend, which is the half-done shape the
   0.7.0 gate exists to stop. It is `FEAT-FREE-CAST` below.
-- [ ] **FEAT-FREE-CAST · a spell you may cast once without a slot.** Magic Initiate's level-1 spell,
-  and the same sentence on several magic items. The POOL is already expressible
-  (`grant_resource:<id>:1:long`); what does not exist is spending it — the cast path offers slots and
-  nothing else, so a pip shipped today could be clicked down by hand and would never be what paid for
-  the spell. The shape is a cast-time SOURCE choice ("a slot, or this pool"), which is the same
-  control an at-will cast and a ritual already want, so it lands there rather than on the feat.
-  Until then the feat's own text states it and the sheet prints that text.
+- [x] **FEAT-FREE-CAST · a spell you may cast once without a slot.** Magic Initiate's level-1 spell,
+  and the same sentence on several magic items. The pool was already expressible
+  (`grant_resource:<id>:1:long`); what did not exist was SPENDING it, so a pip could be clicked down
+  by hand and would never be what paid for the spell. It is a cast-time SOURCE choice now —
+  `cast(r, e, { pool })` spends one use and no slot, and the picker that offered slot levels offers
+  the pools beside them.
+  **The player names the pool, because nothing in the data links one to a spell.** There is no
+  `grant_spell`, no `cast:` action verb, and no column saying which pool a given spell may spend —
+  so the picker lists every pool with a use left and the feat's own text, which the player is
+  reading, decides. That is the tracker's standing rule rather than a shortcut: the app does not hold
+  enough game state to decide correctly. Narrowing it to a DECLARED pool later is a filter on this
+  same control, not a different one, and it would want vocabulary that does not exist yet.
+  **Reserve-before-commit holds.** The pool is spent and gated on BEFORE the action economy is
+  touched, the way a slot is reserved first: an exhausted pool, or a pool this character does not
+  have, blocks the whole cast rather than casting for free. Six tests pin that, and the path is
+  driven in the app — rage 2 → 1 with the slot untouched.
+  **What the picker had to grow:** `castableSlots` is empty for a spell with ONE slot option, so a
+  pool beside it is already a choice the affordance has to offer — and the menu spells that implied
+  option out as its own row, or the ordinary way to cast would have vanished behind the picker.
 - [x] **TOOLS · a tool proficiency, and that is the whole mechanic.** `build.tools` holds bare `tool`
   item ids, `grant_proficiency:tool.<id>` grants one from a class, feat or item, and `toolCheck`
   builds the roll: the ability check the player is making, plus the proficiency bonus. Nothing else —

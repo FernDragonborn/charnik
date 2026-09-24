@@ -273,9 +273,6 @@ position and are given per wave, because most of them were learned the hard way.
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
   can turn into actually lives. MASTERY-HALF's remaining half sits here: the eight mastery EFFECTS,
   most of which act on a creature the app does not model.
-- **Ready, unscheduled, and app-only:** FEAT-FREE-CAST. The POOL a once-per-long-rest cast spends
-  is already expressible; what does not exist is SPENDING it, because the cast path offers slots and
-  nothing else. It needs no content and nothing else needs it first.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
