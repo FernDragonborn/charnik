@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (73)
+## Duplicate suspects (74)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -41,6 +41,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
+- `because` ×2 — src/lib/actions/dragMotion.ts · src/lib/content/remote/pack-update-state.svelte.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
@@ -468,6 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/actions/dragMotion.ts`
 
+- `const TOUCH_HOLD_MS` — What every zone passes as `delayTouchStart`: the silence plus the fill, so the ring closes at the * exact moment the …
 - `const dragMotion`
 
 ### `src/lib/actions/floatInBody.ts`
@@ -1785,4 +1787,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1067 exports across 145 modules · 73 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1068 exports across 145 modules · 74 duplicate suspects._

@@ -69,6 +69,20 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
+- [ ] **A11Y-TIMING · the timings a gesture depends on belong to the player, not to us.** The touch
+      hold is 150ms of silence plus a 400ms fill (`internals/ui.md` ▸ rule 16), chosen to match the
+      500ms native long-press — and the web gives no way to read the machine's own setting for it,
+      though Android has one (Accessibility ▸ Touch & hold delay, 300/500/1500ms). A player whose
+      hands do not hold still for half a second, or who needs longer before a gesture commits, has
+      no way to say so.
+      So: a settings pane for interaction timing, alongside the themes and language that already
+      live there — `AGENTS.md` ▸ everything is doable from the UI, and a duration hardcoded in a
+      constant is the opposite of that. `TOUCH_HOLD_MS` is one export and already the single source
+      of both halves, so what this needs is the surface and the persisted value, not a rework.
+      Worth scoping WITH the rest of the interaction settings rather than alone: the same pane is
+      where reduced-motion overrides and a longer double-tap window would go, and one pane asked for
+      once beats three settings arriving separately. LATE — after the UI stops moving.
+
 - [ ] **TITLE-POPOVER · an explanation appears where the pointer is, not where Windows decides.**
       Every control that explains itself still does it with `title`: the browser waits about a second,
       then draws an OS tooltip somewhere near the cursor, in the OS font, that a keyboard never sees.

@@ -6,7 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import type { StandardAction } from '$lib/combat/helpers';
@@ -61,6 +61,9 @@
 	use:dndzone={{
 		items,
 		type: 'action-row',
+		// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
+		// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
+		delayTouchStart: TOUCH_HOLD_MS,
 		flipDurationMs: 150,
 		dropTargetStyle: {},
 		morphDisabled: true,

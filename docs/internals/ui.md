@@ -270,7 +270,28 @@ good", so they are pinned here and every component follows them.
     `.row-wrap`, `.inv-row` and `#dnd-action-dragged-el` use it for exactly this and nothing else
     should need to.
 
-16. **A dragged thing has mass.** Motion here is not decoration — it is the only way a pointer
+16. **On a finger, a drag is TAKEN, not started — one gesture, everywhere one exists.** A row is a
+    tap target first: it casts, rolls, prepares, toggles. So touch tells the two apart by TIME —
+    hold still and the thing becomes yours to move — and every draggable surface in the app uses the
+    same hold, the same wait and the same indicator. A list that armed differently from the list
+    beside it would be two gestures to learn for one idea.
+    The wait is **150ms of silence, then a ring that fills for 400ms**, arming at 550ms. The silence
+    is what keeps an ordinary tap (about 100ms) from flashing a ring on the commonest gesture in the
+    app; the ring is the wait itself, closing exactly as the drag arms, so it is never decoration.
+    **A finger that MOVES is scrolling**, and the attempt is dropped — the library does not
+    `preventDefault` while waiting, precisely so the page still scrolls, and the ring goes at the
+    same 3px of drift it gives up at. A second finger is a pinch and takes no ring either.
+    The holding is `delayTouchStart` on every zone; the showing is `actions/dragMotion.ts`, which
+    listens in the CAPTURE phase because the library's own handler sits on the item and stops the
+    event from ever bubbling. The two halves are one constant — `TOUCH_HOLD_MS` — so they cannot
+    drift apart.
+    **The number is ours to choose and nobody else's to tell us.** Native long-press is 500ms on both
+    phone platforms; Android even lets a user change it (Accessibility ▸ Touch & hold delay) and the
+    web is given no way to read that — there is no API, and `pointer: coarse` says only that it is a
+    finger. So the app picks, and a player who needs a different one will need the app to offer it
+    (`work/ui.md` ▸ A11Y-TIMING).
+
+17. **A dragged thing has mass.** Motion here is not decoration — it is the only way a pointer
     gesture reports what it is doing to a layout. Three beats, and the library supplies only the
     middle one (its FLIP slides the rows that move):
     - **Lifted**, the block SQUASHES — it is under load. On the clone, in CSS, with the `scale`

@@ -14,7 +14,7 @@
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemDialog from '../AddItemDialog.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
 	import type { InventoryRow } from '../../inventory.svelte';
 
@@ -103,6 +103,9 @@
 	use:dndzone={{
 		items,
 		type: 'inventory-row',
+		// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
+		// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
+		delayTouchStart: TOUCH_HOLD_MS,
 		flipDurationMs: 150,
 		dropTargetStyle: {},
 		morphDisabled: true,

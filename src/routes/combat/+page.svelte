@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import { dragHandleZone } from 'svelte-dnd-action';
-	import { dragMotion } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
@@ -141,6 +141,9 @@
 				use:dragHandleZone={{
 					items: col,
 					type: 'panel',
+					// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
+					// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
+					delayTouchStart: TOUCH_HOLD_MS,
 					flipDurationMs,
 					dropTargetStyle: {},
 					// The floating card keeps the size it is given. Left on, the library resizes it into

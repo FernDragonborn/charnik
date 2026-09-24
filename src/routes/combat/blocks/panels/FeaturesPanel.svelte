@@ -25,7 +25,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import RowGrip from '../RowGrip.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import {
 		FEATURE_SECTION,
@@ -103,6 +103,9 @@
 			// section says it lives, and the library — no longer owning that element — never lifted the
 			// `visibility: hidden` it drags with, leaving the feature invisible until a reload.
 			type: `feature-row-${group.key}`,
+			// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
+			// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
+			delayTouchStart: TOUCH_HOLD_MS,
 			flipDurationMs: 150,
 			dropTargetStyle: {},
 			morphDisabled: true,
