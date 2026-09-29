@@ -38,11 +38,27 @@ that arrangement is per character and lives in `ui`, not in `play` (`characters.
 currently modifying the character — each row with its provenance, duration, kind tag and remove
 control, and concentration shown inline. A second panel would be a second answer to "what is
 affecting me". The panel's ONE "+" is the same argument one step earlier: the two kinds are one
-content type (`content.md` ▸ CONDEFF), so they are one searchable list, and what the kind still
-decides is only how a row behaves once it is in it — a condition toggles, because you cannot be
-Poisoned twice, and anything else adds another instance. The one row kept out is a LEVELLED
-condition (exhaustion): it is a stepper with a block of its own, and a list entry that could only
-ever say "on" would double-count with it.
+content type (`content.md` ▸ CONDEFF), so they are one searchable list. The one row kept out is a
+LEVELLED condition (exhaustion): it is a stepper with a block of its own, and a list entry that
+could only ever say "on" would double-count with it.
+
+**Every row in that list is a SWITCH, and the kind decides nothing.** The SRD draws one distinction
+here — a binary state versus a ladder — and names the single ladder cumulative in its own text; the
+ladder never reaches this list, so everything in it is binary. A "+" offering a second instance
+offered what the resolver then dedupes away (`effects.md` ▸ Two of the same thing), and asking the
+row's `kind` asked which FILE it came from rather than how it behaves — which is how a cover bonus,
+not a condition and not holdable twice, wore a "+".
+
+**The duration is not set here.** It belongs to the effect once it is on you, where the panel already
+edits it per row; a second owner in the picker is what put "10 rounds" on a row that ships none. A
+row's own `duration_rounds` seeds the clock when it is switched on and a blank cell seeds nothing,
+which is the row saying "until removed". The custom-effect form keeps its own duration field,
+because that one genuinely makes a new thing.
+
+**The switch owns only what the picker put there.** A state already on the character from elsewhere —
+a spell being concentrated on, an item — reads as on and is not a control, with a hint saying where
+to end it. Ending a spell is the panel's, where the cost is visible: a list that reads as a
+reference must not quietly drop concentration.
 
 **The inventory view is a card grid, not a list.** Items are cards in sections (equipped and attuned,
 weapons, consumables, gear, treasure), each with a category icon, the key stat, quantity, and its

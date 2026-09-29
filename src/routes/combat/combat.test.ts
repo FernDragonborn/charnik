@@ -844,6 +844,29 @@ describe('CombatVM · stateCatalog uses the character system (CVM-bug2)', () => 
 		// double-count with it (D19)
 		expect(cat.find((c) => c.conditionId === 'exhaustion')).toBeUndefined();
 	});
+
+	it('a row that declares no duration gets NO clock, rather than a default', async () => {
+		combat.graph = await graphOf();
+		combat.character = newCharacter('valen', 'Valen', '5.5e');
+		// half_cover ships an EMPTY duration_rounds: cover lasts while you are behind the wall, so the
+		// blank is the row saying "until removed" and must survive to the sheet as one
+		const cover = combat.effects.stateCatalog.find((c) => c.label === 'Half Cover');
+		expect(cover?.durationRounds).toBeNull();
+		// what the picker then adds, in the shape the picker adds it (0 = no clock)
+		combat.effects.addEffect({
+			label: cover?.label ?? '',
+			tokens: cover?.tokens ?? [],
+			durationRounds: cover?.durationRounds ?? 0,
+			ref: cover?.ref ?? null,
+		});
+		const added = combat.character.play.effects.at(-1);
+		expect(added?.label).toBe('Half Cover');
+		expect(added?.durationRounds).toBeUndefined();
+		expect(added?.startedRound).toBeUndefined();
+		// and a row that DOES declare one still keeps its own number
+		combat.effects.addEffect({ label: 'Bless', tokens: [], durationRounds: 10 });
+		expect(combat.character.play.effects.at(-1)?.durationRounds).toBe(10);
+	});
 });
 
 describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {

@@ -38,24 +38,56 @@
 			? combat.effects.stateCatalog.filter((p) => p.label.toLowerCase().includes(q))
 			: combat.effects.stateCatalog;
 	});
-	/** The live instance of a condition already on the character — what turns its row into a toggle.
-	 *  Matched by the TOKEN it carries, not by its label: the label is content and a translated pack
-	 *  would stop the switch recognising its own condition. */
-	const appliedCondition = (conditionId: string | null) =>
-		conditionId ? character?.play.effects.find((e) => conditionIdOf(e) === conditionId) : undefined;
-	/** A condition row is a SWITCH and the menu stays open under it — flipping several is one visit,
-	 *  and a click that closed the surface it just flipped would make one row behave two ways. A
-	 *  catalog row is done once it is added, so that one closes. */
-	function addOrToggleState(choice: StateChoice, applied: EffectInstance | undefined) {
-		if (applied) return combat.effects.removeEffect(applied.iid);
+	/**
+	 * How a picker row stands on this character: what the picker OWNS, and what is on them anyway.
+	 *
+	 * The switch may only take away what the picker could have put there. A catalog row owns what
+	 * carries its own ref; a condition owns a BARE application of itself, never a spell's carrier that
+	 * applies the same condition among its own tokens — that one holds the concentration, and ending
+	 * it belongs to the panel where the cost is visible, not to a list that reads as a reference.
+	 *
+	 * A condition is recognised by the TOKEN it carries rather than by its label, since the label is
+	 * content and a translated pack would stop the switch recognising its own condition. Only the
+	 * FOREIGN test falls back to the label, where a miss costs a hint rather than a wrong action.
+	 */
+	function presenceOf(choice: StateChoice): { owned: EffectInstance[]; foreign: EffectInstance[] } {
+		const live = character?.play.effects ?? [];
+		const isOwn = (e: EffectInstance) =>
+			choice.conditionId
+				? e.effects.length === 1 && conditionIdOf(e) === choice.conditionId
+				: e.source === choice.ref;
+		const isSame = (e: EffectInstance) =>
+			choice.conditionId ? conditionIdOf(e) === choice.conditionId : e.label === choice.label;
+		return { owned: live.filter(isOwn), foreign: live.filter((e) => !isOwn(e) && isSame(e)) };
+	}
+	/**
+	 * Every row is a SWITCH, because every row is a state you are in or are not.
+	 *
+	 * That is not a house preference: the SRD draws exactly one distinction here — a binary state
+	 * versus a ladder, and it names the single ladder (Exhaustion) as cumulative in its own text. The
+	 * ladder is `max_level > 1` and never reaches this list, so everything that does is binary. A "+"
+	 * offering a second instance offered what `dedupeRuntimeEffects` then takes away.
+	 *
+	 * Off removes EVERY instance, not one: a save written while the "+" existed can hold two, and a
+	 * switch that took one away would still read "on" after the click.
+	 *
+	 * The menu never closes on a flip. Putting two states on yourself is one visit, and a click that
+	 * dismissed the surface it had just changed would make the same control behave two ways.
+	 */
+	function toggleState(choice: StateChoice, owned: EffectInstance[]) {
+		if (owned.length) {
+			for (const instance of owned) combat.effects.removeEffect(instance.iid);
+			return;
+		}
 		addEffect({
 			label: choice.label,
 			tokens: choice.tokens,
 			positive: !choice.harmful,
-			durationRounds: choice.durationRounds ?? combat.effects.newEffectDuration,
+			// the ROW's own clock or none. A blank `duration_rounds` is the row saying "until removed"
+			// (cover lasts while you are behind the wall), and it must not be overwritten with a default
+			durationRounds: choice.durationRounds ?? 0,
 			ref: choice.ref,
 		});
-		if (!choice.conditionId) combat.overlay = null;
 	}
 
 	let popEl = $state<HTMLDivElement>();
@@ -190,61 +222,23 @@
 					bind:value={stateQuery}
 				/>
 			</div>
-			<div class="section eyebrow">{$_('combat.menu.durationApplied')}</div>
-			<div class="dur-picker">
-				<button
-					class="pill-btn"
-					onclick={() =>
-						(combat.effects.newEffectDuration = Math.max(0, combat.effects.newEffectDuration - 1))}
-					><Icon name="minus" size={12} label={$_('combat.menu.roundsFewer')} /></button
-				>
-				<input
-					class="modifier-amount"
-					type="number"
-					min="0"
-					placeholder="∞"
-					aria-label={$_('combat.menu.durationRounds')}
-					bind:value={combat.effects.newEffectDuration}
-				/>
-				<span class="dur-val"
-					>{combat.effects.newEffectDuration > 0
-						? $_('combat.menu.roundsShort')
-						: $_('combat.menu.untilRemovedValue')}</span
-				>
-				<button class="pill-btn" onclick={() => (combat.effects.newEffectDuration += 1)}
-					><Icon name="plus" size={12} label={$_('combat.menu.roundsMore')} /></button
-				>
-				<button
-					class="pill-btn"
-					class:on={combat.effects.newEffectDuration === 0}
-					title={$_('combat.menu.untilRemovedTitle')}
-					onclick={() => (combat.effects.newEffectDuration = 0)}
-					><Icon name="infinity" size={13} label={$_('combat.menu.untilRemoved')} /></button
-				>
-			</div>
-			<div class="section eyebrow">{$_('combat.menu.catalog')}</div>
-			<!-- ONE list: a condition the rules name sits beside a buff a player adds, because they are
-			     one content type and putting either on yourself is one act (CONDEFF). What the KIND
-			     still decides is the row's behaviour — a condition toggles, since you cannot be
-			     Poisoned twice; anything else adds another instance. -->
+			<!-- ONE list, ONE row shape: a condition the rules name and a buff a player adds are one
+			     content type, one act, and — since neither can be held twice — one control. The duration is
+			     NOT set here: it belongs to the effect once it is on you, where the panel already edits it,
+			     and a second owner here is what put "10 rds" on a row that ships none. -->
 			{#each matchingStates as p (p.conditionId ?? p.ref)}
-				{@const dur = p.durationRounds ?? combat.effects.newEffectDuration}
-				{@const applied = appliedCondition(p.conditionId)}
+				{@const here = presenceOf(p)}
+				{@const mine = here.owned.length > 0}
+				{@const elsewhere = !mine && here.foreign.length > 0}
 				<button
 					class="menu-row"
-					aria-pressed={p.conditionId ? !!applied : undefined}
-					onclick={() => addOrToggleState(p, applied)}
+					aria-pressed={mine || elsewhere}
+					disabled={elsewhere}
+					title={elsewhere ? $_('combat.menu.stateHeldElsewhere') : null}
+					onclick={() => toggleState(p, here.owned)}
 				>
-					<!-- the row wears the affordance it HAS: a "+" where a click adds another instance,
-					     a switch where it turns one thing on and off. The duration pill says what the ROW
-					     declares; a row that declares none takes the box above and does not restate it. -->
-					<span class="main"
-						>{#if !p.conditionId}<span class="effect-icon" class:negative={p.harmful}
-								><Icon name="plus" size={11} /></span
-							>{/if}{p.label}</span
-					>{#if !p.conditionId || p.durationRounds != null}<span class="durpill"
-							>{dur > 0 ? `${dur} ${$_('combat.menu.roundsShort')}` : '∞'}</span
-						>{/if}{#if p.conditionId}<span class="toggle-track" class:on={!!applied}></span>{/if}
+					<span class="main">{p.label}</span><span class="toggle-track" class:on={mine || elsewhere}
+					></span>
 				</button>
 			{/each}
 			<div class="divider-light"></div>
@@ -590,6 +584,14 @@
 	.menu-row:hover {
 		background: var(--color-surface-2);
 	}
+	/* a row the picker does not own states a fact; it is not a control, so it does not offer one */
+	.menu-row:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+	.menu-row:disabled:hover {
+		background: transparent;
+	}
 	.menu-row .main {
 		flex: 1;
 		display: inline-flex;
@@ -606,9 +608,6 @@
 		width: 18px;
 		text-align: center;
 		color: var(--color-good);
-	}
-	.menu-row .effect-icon.negative {
-		color: var(--color-accent-bright);
 	}
 	/* the coin-weight switch sits in the same row shape the menu's buttons use, minus the button */
 	.coin-weight {
@@ -655,17 +654,6 @@
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-1) var(--space-3) var(--space-2);
-	}
-	.dur-picker .dur-val {
-		flex: 1;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-resource);
-	}
-	.dur-picker .pill-btn.on {
-		background: var(--color-resource-soft);
-		border-color: var(--color-resource);
-		color: var(--color-resource);
 	}
 	.search {
 		display: flex;

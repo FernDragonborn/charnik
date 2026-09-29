@@ -69,6 +69,21 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
+- [ ] **PANEL-COLLAPSE-PERSIST · a collapsed panel opens itself again on reload.** Not a dev-server
+  artifact: `PanelLayout.collapsed` is plain `$state` on the view-model
+  (`combat/panel-layout.svelte.ts`) and is never written to the character. Its own siblings all are —
+  the column order round-trips through `ui.panelColumns` via the `persist` callback, and
+  `rowOrder`, `spellsHidden`, `spellsPinned`, `actionsHidden`, `featuresHidden`, `featuresPinned`,
+  `coinsHidden` and `passiveSkills` are each a field on `ui`. Collapse is the one that was missed.
+  It also breaks a stated invariant: `../internals/ui.md` says every panel collapses, reorders and
+  hides and that **that arrangement is per character and lives in `ui`**. Two thirds of it do.
+  **The fix is one field of the same shape** — `ui.panelsCollapsed`, the ids that are collapsed, the
+  way `actionsHidden` holds the ids that are hidden (additive, absent = expanded, so every existing
+  save opens as it does today). `PanelLayout` already takes a `persist` callback for the columns;
+  the toggle wants the same wiring rather than a second mechanism.
+  `actionsHidden`'s own comment names this exact failure in the schema: *"a hidden row that came
+  back on the next launch was a preference the app kept forgetting"*.
+
 - [ ] **A11Y-TIMING · the timings a gesture depends on belong to the player, not to us.** The touch
       hold is 150ms of silence plus a 400ms fill (`internals/ui.md` ▸ rule 16), chosen to match the
       500ms native long-press — and the web gives no way to read the machine's own setting for it,

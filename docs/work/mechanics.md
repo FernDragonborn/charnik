@@ -127,7 +127,7 @@ stay semi-manual.
   **What it is NOT about:** `set` folding by most potent (`rules/pipeline.ts`) answers a different
   question — two differently named sources setting one TARGET — on which RAW says nothing general.
 
-- [ ] **STATE-LIST-BINARY · the state picker offers a behaviour the engine refuses.** A row it calls
+- [x] **STATE-LIST-BINARY · the state picker offers a behaviour the engine refuses.** A row it calls
   a catalog entry wears a "+" and adds another instance; the resolver then dedupes that instance
   away, so the second row sits in the panel moving no number. And the split it draws — toggle for a
   condition, "+" for anything else — asks `kind`, which says which FILE a row came from rather than
@@ -146,8 +146,15 @@ stay semi-manual.
   owner of one fact — and the one that is wrong. The row's own `duration_rounds` seeds the clock
   when it is switched on; blank seeds none. The custom-effect form keeps its own duration field,
   because that one genuinely makes a new thing.
-  Rendered alternatives from the pass that found this: `design-preview/_addstate-now.png` (today),
-  `_addstate-a3.png`, `_addstate-b.png`, `_addstate-c.png`.
+  **DONE.** One flat list, one row shape — a label and a switch. The stepper left the picker, the
+  "+" and the duration pill with it, and three CSS rules and four message keys went with them: the
+  change removes more than it adds. The switch owns only what the picker put there (a catalog row by
+  its own ref, a condition by a BARE application of itself), so a spell's carrier is never dropped by
+  a list that reads as a reference — a state held from elsewhere shows as on, dimmed, and says where
+  to end it. Driven in chromium: every state row reports the same shape, the menu stays open under a
+  flip, and Half cover lands on the panel reading `∞` instead of 10 rounds.
+  The alternatives it was picked from: `design-preview/_addstate-now.png` (before), `_addstate-a3.png`,
+  `_addstate-b.png`, `_addstate-c.png`; the result is `_addstate-final.png`.
 
 - [x] **PROF-GRANT · `grant_proficiency` has data, and its target namespace reaches equipment.**
   The token could only ever say a save or a skill, and no shipped row said even that. Both halves
