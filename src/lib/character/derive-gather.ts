@@ -28,6 +28,10 @@ export interface GatherInput {
 type ClassFeatureRow = ReturnType<ContentGraph['featuresForClass']>[number];
 /** Per-class context a feature's gates read (bundled so `considerFeature` stays small). */
 type ClassCtx = { level: number; classId: string; subclassId: string };
+/** What the row an effect came from still has to say about it after its tokens are read: which class
+ *  carries it (so `spellcasting_mod` reads THAT class's mod, SPEC4), and the two answers a carried
+ *  item's row asked its owner for. Absent fields mean "this row asked nothing". */
+type RowOrigin = { classId?: string; itemBonus?: number; itemChoice?: string };
 
 /**
  * Collects every active effect (species / class features / feats / items / runtime / exhaustion) as
@@ -73,7 +77,12 @@ class EffectGatherer {
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
 			if (!attunementNeeded || inv.attuned)
-				this.pushRow(row, 'item', undefined, inv.bonus, inv.choice);
+				this.pushRow(row, 'item', {
+					// spread, not assign: an unanswered question is an ABSENT field, and the two answers
+					// are independent — a +2 armour may still be waiting to be told its damage type
+					...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
+					...(inv.choice !== undefined ? { itemChoice: inv.choice } : {}),
+				});
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
@@ -108,26 +117,19 @@ class EffectGatherer {
 		return tokens.filter((token) => !isWeaponOwnBonus(token));
 	}
 
-	/** Push a row's tokens as one active effect (skipping token-less rows). `classId` marks
-	 *  class-borne effects so their `spellcasting_mod` reads THAT class's mod (SPEC4). */
-	private pushRow(
-		row: LoadedRow | undefined,
-		layer: Layer,
-		classId?: string,
-		itemBonus?: number,
-		itemChoice?: string,
-	): void {
+	/** Push a row's tokens as one active effect (skipping token-less rows). */
+	private pushRow(row: LoadedRow | undefined, layer: Layer, from: RowOrigin = {}): void {
 		if (!row) return;
 		// the answer is substituted BEFORE the token is parsed, so the parse cache never holds a
 		// template and every consumer downstream reads a finished token (`token-parser.ts`)
-		const tokens = withItemChoice(EffectGatherer.globalTokens(row), itemChoice);
+		const tokens = withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice);
 		if (!tokens.length) return;
 		this.active.push({
 			source: rowName(row),
 			layer,
+			...(from.classId !== undefined ? { classId: from.classId } : {}),
+			...(from.itemBonus !== undefined ? { itemBonus: from.itemBonus } : {}),
 			tokens,
-			...(classId !== undefined ? { classId } : {}),
-			...(itemBonus !== undefined ? { itemBonus } : {}),
 		});
 	}
 
@@ -137,9 +139,12 @@ class EffectGatherer {
 	// feature for an SRD class attaches (B26); the per-character gates are layered in `considerFeature`.
 	private gatherClass(entry: Character['build']['classes'][number]): void {
 		const classRow = this.resolve(entry.class);
-		this.pushRow(classRow, 'feature', classRow?.id);
+		// one origin for both rows: a subclass's tokens read the CLASS's casting mod, and a class row
+		// that did not resolve leaves the field absent rather than present-and-undefined
+		const from: RowOrigin = classRow ? { classId: classRow.id } : {};
+		this.pushRow(classRow, 'feature', from);
 		const subclassRow = this.resolve(entry.subclass);
-		this.pushRow(subclassRow, 'feature', classRow?.id);
+		this.pushRow(subclassRow, 'feature', from);
 		if (!classRow) return;
 		const seen = new Set<string>(); // RV2: fold each (level, id, subclass) feature ONCE
 		const ctx: ClassCtx = {
@@ -171,7 +176,7 @@ class EffectGatherer {
 			return;
 		}
 		seen.add(key);
-		this.pushRow(f, 'feature', ctx.classId);
+		this.pushRow(f, 'feature', { classId: ctx.classId });
 	}
 
 	private gatherRuntimeEffects(): void {
