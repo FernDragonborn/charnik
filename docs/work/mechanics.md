@@ -278,12 +278,11 @@ stay semi-manual.
   "no flying or SWIMMING speed"; 2024 has no swim gate at all and keeps a Known Forms list you swap on
   a long rest. Shaping costs an Action in 2014 and a Bonus Action in 2024.
 
-  **Writing the spec turned up four CONTENT blockers, and they are what actually holds this up:**
-  - `monsters_srd.csv` has no attacks column in EITHER edition — a stat block's attacks are prose. A
-    form that cannot attack is not a form. This also blocks Primal Strike.
-  - The 2014 pack ships **four** beasts (stirge CR 1/8 flying, plesiosaurus CR 2, triceratops CR 5,
-    T-rex CR 8), so a 2014 druid has **zero legal forms at levels 2-7**. The wolf, crocodile and giant
-    eagle its own table names are not in the file. 2024 ships 69 beasts at CR ≤ 1.
+  **Writing the spec turned up four CONTENT blockers; the FORMS are no longer one of them:**
+  - **DONE — a form exists and can attack.** `monsters_srd.csv` carries an `attacks` column in both
+    editions, and the beasts are there: 69 at CR ≤ 1 in 2014 (67 of them with attacks) and 64 in 2024
+    (63 with attacks). So a 2014 druid has legal forms from level 2, which is what the count read as
+    zero before the appendices shipped. Primal Strike is unblocked with them.
   - No `wild_shape` row exists in either `resources_srd.csv`, and `druid_wild_shape` carries neither
     a `resource` nor an `effects` value — there is no pool to spend.
   - The 2024 uses-per-level ladder lives in the Druid Features table, which is shipped nowhere; two is
