@@ -285,10 +285,10 @@ position and are given per wave, because most of them were learned the hard way.
   the greater range, on 24 rows across both editions. What that pass also measured is that the climb
   speed is NOT the 8-line target it was sized as: no shipped row states a literal range, so the
   target would have no consumer, and the real work is the "equal to your walking speed" relation.
-  The `+1/+2/+3` rows stay ONE row each and grow a per-instance answer, the same shape Ring of
-  Resistance wanted: the SRD prints one entry per kind, the tokens already exist on Holy Avenger, and
-  three rows would fix in three places the `rarity: very_rare` those rows wrongly claim for their +1
-  and +2.
+  **The `+1/+2/+3` rows are BUILT** the way they were decided — one row each, with the number as a
+  per-instance answer (`item_bonus`, `bonus_choice`) rather than three rows. Ring of Resistance is
+  the same shape pointed at a damage type instead of a number, and it is what remains of that
+  question.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

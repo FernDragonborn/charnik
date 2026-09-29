@@ -12,6 +12,7 @@
 import { ABILITY_IDS, type Ability, type ArmorType } from '../rules/core';
 import { splitDottedName, CONDITION_FLAG_ALIASES } from './expression-parser';
 import { type ExprContext } from './expression-evaluator';
+export type { ExprContext } from './expression-evaluator';
 
 /** Build-lifetime numbers (always available; the EXPR-2 subset of the ctx). */
 export interface BuildVars {
@@ -90,6 +91,10 @@ function scalarNumber(name: string, build: BuildVars, play?: PlayVars): number |
 			return build.spellcastingMod;
 		case 'base_speed':
 			return build.baseSpeed;
+		// 0 outside an item that was answered: a `+1/+2/+3` row whose player has not said which one
+		// they found grants nothing, rather than the app choosing the smallest for them
+		case 'item_bonus':
+			return 0;
 		case 'hp':
 			return play?.hp ?? 0;
 		case 'hp_max':
@@ -147,6 +152,26 @@ export function withCastSlot(base: ExprContext, slot: number, spellLevel: number
 			if (name === 'slot') return slot;
 			return name === 'spell_level' ? spellLevel : base.number(name);
 		},
+		boolean: (name) => base.boolean(name),
+		enum: (name) => base.enum(name),
+	};
+}
+
+/** A ctx that answers nothing — the base for a caller that has exactly one variable to supply
+ *  and no character state around it (the per-weapon attack fold). Every name reads as absent,
+ *  which is what an unresolvable expression already degrades to. */
+export const NO_VARS: ExprContext = {
+	number: () => undefined,
+	boolean: () => undefined,
+	enum: () => undefined,
+};
+
+/** The same ctx with `item_bonus` pointed at ONE carried item's answer — the `+1/+2/+3` rows, whose
+ *  number is the player's per-instance answer rather than the content row's. Scoped for the same
+ *  reason `withSpellcastingMod` is: two of the same row may be carried at once. */
+export function withItemBonus(base: ExprContext, bonus: number): ExprContext {
+	return {
+		number: (name) => (name === 'item_bonus' ? bonus : base.number(name)),
 		boolean: (name) => base.boolean(name),
 		enum: (name) => base.enum(name),
 	};

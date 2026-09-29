@@ -116,6 +116,12 @@ MISSING key, rejects the blank cell it was given a default for. `boolDefault` an
 authoring form: it writes every column of a new row, so a column that cannot take a blank cell is a
 row nobody can save.
 
+**A row that the BOOK prints once and the rarity varies asks the player which one they found.**
+`bonus_choice` lists the rungs (`1,2,3`, or `uncommon:1,rare:2,very_rare:3` where the source states
+a rarity per rung), the row's own tokens read `item_bonus`, and the answer lives on the character's
+inventory entry beside `base` — because two Weapons +N in one party are different weapons, and the
+content row is shared. Unanswered reads 0, so nothing is granted until the player says.
+
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸
 resolveItem`).

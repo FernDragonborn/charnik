@@ -119,7 +119,7 @@
 	{#each items as item (item.id)}
 		{@const row = item.row}
 		{#if row}
-			<div class="inv-row" class:asks-base={row.isTemplate}>
+			<div class="inv-row" class:asks-base={row.isTemplate || row.bonusRungs.length}>
 				<RowGrip
 					panel="inventory"
 					id={row.entry.item}
@@ -134,6 +134,37 @@
 					>{/if}
 				<!-- A template item ("any Simple or Martial weapon") is not a content gap to report — it is a
 			     question only the player can answer, so it is asked here, where the item is. -->
+				<!-- The same argument as the base above, one step in: the SRD prints ONE "Weapon, +1, +2,
+				     or +3", and which one you found is yours to say. Unanswered it grants nothing. -->
+				{#if row.bonusRungs.length}
+					<label class="base-pick">
+						<span class="visually-hidden"
+							>{$_('combat.inventory.bonusPick', { values: { name: row.name } })}</span
+						>
+						<select
+							value={row.entry.bonus ?? ''}
+							onchange={(e) =>
+								inv.setBonus(
+									row.entry.item,
+									e.currentTarget.value ? Number(e.currentTarget.value) : undefined,
+								)}
+						>
+							<option value="">{$_('combat.inventory.bonusNone')}</option>
+							{#each row.bonusRungs as rung (rung.bonus)}
+								<option value={rung.bonus}
+									>{rung.rarity
+										? $_('combat.inventory.bonusWithRarity', {
+												values: {
+													bonus: rung.bonus,
+													rarity: $_(`itemRarity.${rung.rarity}`, { default: rung.rarity }),
+												},
+											})
+										: $_('combat.inventory.bonusPlain', { values: { bonus: rung.bonus } })}</option
+								>
+							{/each}
+						</select>
+					</label>
+				{/if}
 				{#if row.isTemplate}
 					<label class="base-pick">
 						<span class="visually-hidden"

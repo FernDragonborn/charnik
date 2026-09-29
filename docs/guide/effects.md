@@ -255,6 +255,11 @@ formula is *data* that travels to the roller, so the same formula always reads t
 **About the build:** `level` · `proficiency_bonus` · `class_level.<id>` · `spellcasting_mod` ·
 `base_speed` · `<ability>_mod` and `<ability>_score` for each of `str dex con int wis cha`.
 
+**About the item the token is on:** `item_bonus` — the `+1`, `+2` or `+3` the player said their copy
+of this item is. Write the rungs your row offers in its `bonus_choice` column (`1,2,3`, or
+`uncommon:1,rare:2,very_rare:3` if your book states a rarity for each), and the number reads 0 until
+they answer.
+
 Ability names are always spelled out with what you want from them — `dex_mod`, not `dex`. A bare
 ability name is an error on purpose, because "dexterity" alone does not say modifier or score.
 

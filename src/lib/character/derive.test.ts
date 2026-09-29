@@ -1267,6 +1267,75 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		expect(s.deriveIssues).toEqual([]);
 	});
 
+	it('a +1/+2/+3 item folds the bonus the PLAYER answered, and nothing until they answer', async () => {
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`monk,5.5e,${S},Monk,d8,"str,dex"`,
+			].join('\n'),
+			'items_srd.csv': [
+				'id,systems,source,name_en,effects,category,bonus_choice',
+				`plus_armor,5.5e,${S},"Armor, +1, +2, or +3",flat_bonus:ac+item_bonus,armor,"rare:1,very_rare:2,legendary:3"`,
+			].join('\n'),
+		});
+		const worn = (bonus?: number) => {
+			const c = newCharacter('p', 'Plus', '5.5e');
+			c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
+			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+			c.build.inventory = [
+				{
+					item: `item:${S}:plus_armor`,
+					qty: 1,
+					equipped: true,
+					attuned: false,
+					...(bonus === undefined ? {} : { bonus }),
+				},
+			];
+			return deriveSheet(characterSchema.parse(c), g);
+		};
+		// unanswered grants nothing: the app does not pick the smallest on the player's behalf
+		const unanswered = worn();
+		const answered = worn(3);
+		expect(answered.ac.value - unanswered.ac.value).toBe(3);
+		expect(worn(1).ac.value - unanswered.ac.value).toBe(1);
+		expect(answered.deriveIssues).toEqual([]);
+	});
+
+	it('a +1/+2/+3 WEAPON reads the answer too, on the path its own bonus takes', async () => {
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`fighter,5.5e,${S},Fighter,d10,"str,con"`,
+			].join('\n'),
+			'items_srd.csv': [
+				'id,systems,source,name_en,effects,category,tags,damage,bonus_choice',
+				`longsword,5.5e,${S},Longsword,,weapon,"martial, melee",1d8 slashing,`,
+				`plus_sword,5.5e,${S},"Weapon, +1, +2, or +3",flat_bonus:attack+item_bonus;flat_bonus:damage+item_bonus,weapon,"martial, melee",1d8 slashing,"1,2,3"`,
+			].join('\n'),
+		});
+		const swung = (bonus?: number) => {
+			const c = newCharacter('f', 'Fighter', '5.5e');
+			c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+			c.build.inventory = [
+				{
+					item: `item:${S}:plus_sword`,
+					qty: 1,
+					equipped: true,
+					attuned: false,
+					...(bonus === undefined ? {} : { bonus }),
+				},
+			];
+			const sheet = deriveSheet(characterSchema.parse(c), g);
+			return computeAttacks(characterSchema.parse(c), sheet, g);
+		};
+		const none = swung()[0];
+		const two = swung(2)[0];
+		expect(none && two && two.toHit - none.toHit).toBe(2);
+		// and the bonus reads as a number rather than the raw token it used to degrade to
+		expect(JSON.stringify(two?.notes ?? [])).not.toContain('item_bonus');
+	});
+
 	it('clamps the effective score to the 0..30 pipeline cap', async () => {
 		const g = await abilityGraph();
 		const c = odd();

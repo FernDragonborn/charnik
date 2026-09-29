@@ -32,7 +32,7 @@ import { type ContentGraph } from '$lib/content/loader';
 import { localizedName } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
-import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
+import { tagInt, ITEM_TAG, parseBonusChoices, type BonusRung } from '$lib/content/item-tags';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
@@ -52,6 +52,9 @@ export interface InventoryRow {
 	 *  thing it is. Stays true after a base is picked, because the pick is the player's and they must
 	 *  be able to change it: the row keeps the chooser, with `entry.base` selected in it. */
 	isTemplate: boolean;
+	/** The rungs a `+1/+2/+3` row offers, empty for every row that offers none. Like `isTemplate`,
+	 *  it stays offered after an answer: which one you found is yours to correct. */
+	bonusRungs: BonusRung[];
 }
 
 /** A mundane item a template can be resolved against, as the picker lists it. */
@@ -108,6 +111,7 @@ export class InventoryTracker {
 				consumable: isConsumable(item),
 				attunable: needsAttunement(item),
 				isTemplate: !!bare && needsBaseItem(bare),
+				bonusRungs: parseBonusChoices(item?.row.data.bonus_choice),
 			};
 		});
 	});
@@ -252,6 +256,15 @@ export class InventoryTracker {
 
 	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
 	 *  one rather than silently keeping the last pick. */
+	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
+	 *  off every number it was folding into. */
+	setBonus = (ref: string, bonus: number | undefined) => {
+		const entry = this.list.find((e) => e.item === ref);
+		if (!entry) return;
+		if (bonus === undefined) delete entry.bonus;
+		else entry.bonus = bonus;
+	};
+
 	setBase = (ref: string, base: string) => {
 		const entry = this.getCharacter()?.build.inventory.find((e) => e.item === ref);
 		if (!entry) return;

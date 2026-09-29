@@ -60,8 +60,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // has five classes whose mastery picks cap at zero, so every weapon's shipped `mastery:` stays inert.
 // v15: the rows whose own text says "immune to the Charmed condition" or "Darkvision with a range
 // of 60 feet" carry that as a token (`condition_immunity`, `senses.<name>`) rather than only as
-// prose, in both editions. An install left at v14 has a paladin whose aura says nothing and a dwarf
-// who cannot see in the dark.
+// prose, in both editions, and the ten `+1/+2/+3` rows gained the `bonus_choice` column that lets a
+// player say which one they found. An install left at v14 has a paladin whose aura says nothing, a
+// dwarf who cannot see in the dark, and a +3 weapon that adds nothing.
 export const CONTENT_SEED_VERSION = 15;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.

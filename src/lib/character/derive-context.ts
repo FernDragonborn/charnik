@@ -14,6 +14,7 @@ import { armorWeightOf } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
 import {
 	makeExprContext,
+	withItemBonus,
 	withSpellcastingMod,
 	type BuildVars,
 	type PlayVars,
@@ -128,13 +129,16 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 		return (eff: ActiveEffect): ExprContext => {
 			const id = eff.classId;
 			const ability = id !== undefined ? abilityByClass[id] : undefined;
-			if (id === undefined || ability === undefined) return base;
-			let c = scoped.get(id);
-			if (!c) {
-				c = withSpellcastingMod(base, () => state.mods[ability]);
-				scoped.set(id, c);
+			let c = base;
+			if (id !== undefined && ability !== undefined) {
+				// cached per class: the wrapper is built once and the thunk keeps it live
+				const cached = scoped.get(id);
+				c = cached ?? withSpellcastingMod(base, () => state.mods[ability]);
+				if (!cached) scoped.set(id, c);
 			}
-			return c;
+			// not cached: the answer belongs to one carried item, not to a class, so there is no key
+			// that would make two of the same row share a wrapper
+			return eff.itemBonus === undefined ? c : withItemBonus(c, eff.itemBonus);
 		};
 	};
 }

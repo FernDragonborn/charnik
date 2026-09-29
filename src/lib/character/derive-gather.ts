@@ -72,7 +72,7 @@ class EffectGatherer {
 			// one — the same answer the inventory panel gets
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
-			if (!attunementNeeded || inv.attuned) this.pushRow(row, 'item');
+			if (!attunementNeeded || inv.attuned) this.pushRow(row, 'item', undefined, inv.bonus);
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
@@ -109,7 +109,12 @@ class EffectGatherer {
 
 	/** Push a row's tokens as one active effect (skipping token-less rows). `classId` marks
 	 *  class-borne effects so their `spellcasting_mod` reads THAT class's mod (SPEC4). */
-	private pushRow(row: LoadedRow | undefined, layer: Layer, classId?: string): void {
+	private pushRow(
+		row: LoadedRow | undefined,
+		layer: Layer,
+		classId?: string,
+		itemBonus?: number,
+	): void {
 		if (!row) return;
 		const tokens = EffectGatherer.globalTokens(row);
 		if (!tokens.length) return;
@@ -118,6 +123,7 @@ class EffectGatherer {
 			layer,
 			tokens,
 			...(classId !== undefined ? { classId } : {}),
+			...(itemBonus !== undefined ? { itemBonus } : {}),
 		});
 	}
 

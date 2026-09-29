@@ -431,6 +431,7 @@ const itemSchema = baseRow.extend({
 	damage: optStr, // "1d8 slashing" — dice + type, multi-type as "1d6 slashing; 1d4 radiant"
 	/** The mundane item this one is built from (same source); empty cells inherit from it. */
 	base_item_id: optStr,
+	bonus_choice: optStr,
 	rarity: z.preprocess(blankToUndef, Rarity.optional()),
 	cost: optStr, // "15 gp"
 	weight_lb: optNum,

@@ -25,6 +25,9 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'proficiency_bonus',
 	'spellcasting_mod',
 	'base_speed',
+	// ITEM-SCOPED: the +N the player answered for the carried item this token is on. 0 everywhere
+	// else, including on the same row before it is answered — the app never picks a bonus for them.
+	'item_bonus',
 	// CAST-EPHEMERAL upcast vars (UPCAST §4/B1/B2): the slot a spell is cast from and the spell's own
 	// base level. Only ever provided by the ephemeral cast ctx (`withCastSlot`); the persistent derive
 	// ctx never resolves them, so a stray `slot` in an `effects` token degrades to 0 like any absent var.

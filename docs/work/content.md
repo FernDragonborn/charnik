@@ -226,24 +226,21 @@
      party are different rings, and the content row is shared. Nothing stores a per-instance answer
      yet; that is the whole of this piece.
 
-  3. **A bonus the row states as a RANGE** (10 rows). `weapon_1_2_or_3`, `armor_1_2_or_3`,
-     `shield_1_2_or_3`, `ammunition_1_2_or_3` and `wand_of_the_war_mage_1_2_or_3`, in both editions —
-     one row standing for three bonuses. **These are the most-used magic items at a real table**, which
-     is what earns them a place here over rarer rows that fold.
-     **DECIDED: the same per-instance answer as (2), not three rows per item.** A player does not own
-     "a Weapon +1", they own a +1 Longsword — and the SRD prints ONE entry per kind, so one row is what
-     is faithful to the book. Three rows would also fix a lie in three places instead of removing it:
-     every one of these rows says `rarity: very_rare` today, which is already wrong for its +1 and +2.
-     **It costs almost nothing, because the tokens exist.** Holy Avenger and Dwarven Thrower already
-     carry `flat_bonus:attack+3;flat_bonus:damage+3` in their own `effects` column. So this is one
-     field on `inventoryEntry` beside `base`, the chooser the row already shows for a template, and
-     `resolveItem` emitting those two tokens from the answer (`flat_bonus:ac+N` for armour and shield).
-     No new grammar.
-     **Rarity comes from the pair (category, N), not from N**: armour runs rare → very rare →
-     legendary while the other four run uncommon → rare → very rare. A five-row table, and it changes
-     no number on the sheet — rarity is a browsing fact.
-     **A named magic weapon is not in scope and needs nothing**: the `+1/+2/+3` row is "Any Simple or
-     Martial", a MUNDANE base, and Holy Avenger already states its own +3 and its own `legendary`.
+  3. **DONE — a bonus the row states as a RANGE.** `weapon_1_2_or_3`, `armor_1_2_or_3`,
+     `shield_1_2_or_3`, `ammunition_1_2_or_3` and `wand_of_the_war_mage_1_2_or_3`, in both editions.
+     One row each, with the number as the player's per-instance answer: `bonus_choice` lists the
+     rungs, the row's own tokens read `item_bonus`, and the answer lives on `build.inventory[]`
+     beside `base` — two Rings of Resistance in one party are different rings, and the same is true
+     of two Weapons +N. Unanswered grants nothing rather than a +1 the app chose.
+     **The 2024 rungs carry their own rarity** (`uncommon:1,rare:2,very_rare:3`), because that
+     edition's rows print the ladder in their own text; SRD 5.1 prints only the numbers, which are
+     in the row's NAME, so the 2014 rungs are bare and the row's stated rarity stands. The
+     `rarity: very_rare` those ten rows claim is still wrong for their +1 and +2 — it is a browsing
+     fact, not a number on a sheet, and it is the row's own column rather than the answer's.
+     **It cost one thing that was not foreseen:** a weapon's own attack/damage bonus never reaches
+     the global facts (D9 keeps it per-weapon), and `weaponBonus` was pure over literals only, so an
+     expression-valued bonus degraded to a note. It takes a ctx now, which resolves `item_bonus`
+     there and, incidentally, every other expression-valued weapon bonus a pack may write.
 
   4. **A climb speed — the ~8-line sizing was wrong, and the measurement is why.** The plan was one
      entry in `NUMERIC_TARGETS`, one `CharacterSheet` field off the existing `movementOf`, a third

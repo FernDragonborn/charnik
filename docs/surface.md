@@ -700,6 +700,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export ABILITIES`
 - `const abilityScores`
 - `const EXHAUSTION_MAX` — The tallest exhaustion ladder a character may carry.
+- `const MAX_ITEM_BONUS` — The ceiling on a `+N` item's chosen bonus.
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
@@ -941,7 +942,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/item-tags.ts`
 
 - `type ItemTags` — Tag name → its value (`''` for a bare tag like `finesse`).
-- `const ITEM_TAG` — The tag names the app itself compares against.
+- `interface BonusRung` — One rung of a `+1/+2/+3` row's ladder: the bonus, and the rarity the item HAS at it when its * own text says so (2024…
+- `function parseBonusChoices` — * `bonus_choice` — the bonuses a row offers, as `1,2,3` or `uncommon:1,rare:2,very_rare:3`.
+- `const ITEM_TAG`
 - `type ArmorWeight`
 - `type WeaponCategory`
 - `type ArmorCategory`
@@ -1345,10 +1348,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/context.ts`
 
+- `re-export ExprContext`
 - `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
 - `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
 - `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
 - `function withCastSlot` — Wrap a sheet ctx with the CAST-EPHEMERAL upcast vars (UPCAST §4): the `slot` a spell is cast from * and its own `spel…
+- `const NO_VARS` — A ctx that answers nothing — the base for a caller that has exactly one variable to supply * and no character state a…
+- `function withItemBonus` — The same ctx with `item_bonus` pointed at ONE carried item's answer — the `+1/+2/+3` rows, whose * number is the play…
 - `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
 
 ### `src/lib/effects/dependency-graph.ts`
@@ -1794,4 +1800,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1075 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1081 exports across 145 modules · 74 duplicate suspects._

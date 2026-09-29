@@ -21,7 +21,8 @@ import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { RollName } from './roll';
 import type { SaidValue } from '$lib/util/say';
-import { parseToken, isWeaponOwnBonus } from '$lib/effects/token-parser';
+import { parseToken, isWeaponOwnBonus, resolveEffectValue } from '$lib/effects/token-parser';
+import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
 import { formatNote, type Note } from '$lib/rules/pipeline';
@@ -211,10 +212,14 @@ export function formatDamageParts(parts: DamagePart[], translate?: Translate): s
 		.join(' + ');
 }
 
-/** D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus. Only LITERAL
- *  `flat_bonus:attack` / `flat_bonus:damage` fold in v1; a dice / expression bonus becomes a visible
- *  note (it rides the roll path / needs a ctx — deferred, never silently dropped). Pure. */
-export function weaponBonus(tokens: string[]): {
+/** D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus. A LITERAL
+ *  `flat_bonus:attack` / `flat_bonus:damage` folds; an EXPRESSION folds when `ctx` can resolve it —
+ *  which is how a `+1/+2/+3` row's `item_bonus` becomes this weapon's number — and degrades to a
+ *  visible note when it cannot. A dice bonus stays a note (it rides the roll path). Pure. */
+export function weaponBonus(
+	tokens: string[],
+	ctx?: ExprContext,
+): {
 	attack: number;
 	damage: number;
 	/** D9-tail: typed extra damage a magic weapon adds as its OWN part(s) — a flaming sword's
@@ -241,10 +246,11 @@ export function weaponBonus(tokens: string[]): {
 			else deferred.push({ token: tok }); // expression-valued typed bonus needs a ctx → note
 			continue;
 		}
-		if (p.amount !== undefined) {
-			if (p.target === 'attack') attack += p.amount;
-			else damage += p.amount;
-		} else deferred.push({ token: tok }); // untyped dice / expression → visible degrade
+		const amount = p.amount ?? (ctx && p.valueExpr ? resolveEffectValue(p, ctx).amount : undefined);
+		if (amount !== undefined) {
+			if (p.target === 'attack') attack += amount;
+			else damage += amount;
+		} else deferred.push({ token: tok }); // untyped dice / unresolvable expression → visible degrade
 	}
 	const notes: AttackNote[] = [];
 	if (attack)
@@ -456,8 +462,12 @@ export function computeAttacks(
 		// the gather applies to every other item has to be applied here too — and SAID, because an
 		// inactive +1 is indistinguishable from a weapon that never had one.
 		const attunementHeld = !needsAttunement(item) || inv.attuned;
+		// the one variable this weapon's own tokens may read: which `+N` the player said it is
 		const w = attunementHeld
-			? weaponBonus(row.data.effects)
+			? weaponBonus(
+					row.data.effects,
+					inv.bonus === undefined ? undefined : withItemBonus(NO_VARS, inv.bonus),
+				)
 			: {
 					attack: 0,
 					damage: 0,

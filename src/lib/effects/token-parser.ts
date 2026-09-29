@@ -498,6 +498,9 @@ export interface ActiveEffect {
 	layer: Layer;
 	tokens: string[];
 	classId?: string;
+	/** The `+N` this instance of the item was answered with, read by its own `item_bonus`. Scoped to
+	 *  the effect for the same reason `classId` is: two of the same row may be carried at once. */
+	itemBonus?: number;
 }
 
 /** A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class). */

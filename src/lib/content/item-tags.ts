@@ -25,6 +25,35 @@ export type ItemTags = ReadonlyMap<string, string>;
 
 /** The tag names the app itself compares against. Content may carry any others; they still reach
  *  effect scopes and the detail view, they just mean nothing to the rules. */
+/** One rung of a `+1/+2/+3` row's ladder: the bonus, and the rarity the item HAS at it when its
+ *  own text says so (2024 prints "Uncommon (+1), Rare (+2), or Very Rare (+3)"; SRD 5.1 prints only
+ *  the numbers, which are in the row's own name, so a 2014 rung carries no rarity and the row's
+ *  stated one stands). */
+export interface BonusRung {
+	bonus: number;
+	rarity?: string;
+}
+
+/**
+ * `bonus_choice` — the bonuses a row offers, as `1,2,3` or `uncommon:1,rare:2,very_rare:3`.
+ *
+ * The SRD prints ONE entry per kind ("Weapon, +1, +2, or +3") and lets the rarity set the number,
+ * so the number is the player's answer about the item they found rather than anything the shared
+ * content row can state. A blank column means the row asks nothing.
+ */
+export function parseBonusChoices(raw: string | undefined): BonusRung[] {
+	const out: BonusRung[] = [];
+	for (const part of (raw ?? '').split(',')) {
+		const piece = part.trim();
+		if (!piece) continue;
+		const [a, b] = piece.split(':');
+		const bonus = Number(b ?? a);
+		if (!Number.isInteger(bonus) || bonus <= 0) continue;
+		out.push(b === undefined ? { bonus } : { bonus, rarity: (a ?? '').trim() });
+	}
+	return out;
+}
+
 export const ITEM_TAG = {
 	simple: 'simple',
 	martial: 'martial',

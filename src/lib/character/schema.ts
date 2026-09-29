@@ -56,6 +56,10 @@ const classEntry = z.object({
  *  again and nothing would say so. */
 export const EXHAUSTION_MAX = 20;
 
+/** The ceiling on a `+N` item's chosen bonus. The SRD stops at +3; the cap is higher so a
+ *  homebrew row may offer more, and finite so a saved number cannot be arbitrary. */
+export const MAX_ITEM_BONUS = 10;
+
 const inventoryEntry = z.object({
 	item: ref,
 	qty: z.number().int().min(1).default(1),
@@ -65,6 +69,11 @@ const inventoryEntry = z.object({
 	 *  so which weapon it is belongs to the player who found it, not to the content row. Absent for
 	 *  every item that states its own dice or names its own `base_item_id`. */
 	base: ref.optional(),
+	/** Which of the bonuses a `+1/+2/+3` row offers this one IS, for the same reason `base` exists:
+	 *  the SRD prints ONE entry per kind and the rarity sets the number, so two Weapons +N in a party
+	 *  are different weapons. Absent until the player answers, and an unanswered row grants nothing —
+	 *  the app does not pick a +1 on their behalf. Read by `item_bonus` in the row's own tokens. */
+	bonus: z.number().int().min(1).max(MAX_ITEM_BONUS).optional(),
 });
 
 const spellEntry = z.object({

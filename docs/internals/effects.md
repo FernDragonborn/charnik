@@ -211,6 +211,12 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
 - **Build/derived numbers:** `level`, `proficiency_bonus`, `<ability>_mod`/`<ability>_score`,
   `class_level.<id>`, `spellcasting_mod` (the active/carrying class's casting stat), `base_speed`
   (species walking speed, pre-effect).
+- **Item-scoped:** `item_bonus` — the `+N` the PLAYER answered for the carried item whose row this
+  token is on, scoped to that effect the way `spellcasting_mod` is scoped to a class. 0 everywhere
+  else, including on the same row before it is answered: the SRD prints ONE "Weapon, +1, +2, or +3"
+  and lets the rarity set the number, so the number belongs to the item someone found rather than to
+  the shared row, and the app does not pick the smallest on their behalf. The row declares the rungs
+  it offers in `bonus_choice` (`content.md`); the answer lives on the inventory entry beside `base`.
 - **Guards (dependency-resolved play-state):** `hp`, `hp_max`, `hp_percent`, `temp_hp`,
   `exhaustion` (0..ladder-max), `size` (ordinal), `armor_type` (`none/light/medium/heavy`), the
   `is_*` flags, `has_condition.<id>`, `resource.<id>` (remaining), `resource_max.<id>`.
