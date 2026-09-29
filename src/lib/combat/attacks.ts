@@ -186,6 +186,11 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 export const damageTypeLabel = (type: string, translate: Translate): string =>
 	type ? translate(`damageType.${type}`, { default: type }) : '';
 
+/** A sense id → the reader's word for it. Open vocabulary like a damage type: the SRD names four
+ *  and the catalog carries those; a pack's own sense falls back to the id it wrote. */
+export const senseLabel = (sense: string, translate: Translate): string =>
+	sense ? translate(`senseName.${sense}`, { default: sense }) : '';
+
 /** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4
  *  radiant"). Inverse of `parseDamageParts` for the panel. Pure.
  *

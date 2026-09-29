@@ -27,6 +27,7 @@ import {
 } from '../content/loader';
 import { tagInt, parseItemTags, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
+import { SENSE_PREFIX } from './derive-targets';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
  *  the stat helpers + deriveSheet's base-speed read. */
@@ -395,6 +396,19 @@ export function derivePassives(
 			};
 		return applyEffects(`passive.${skill}`, base, facts);
 	});
+}
+
+/** Every sense some effect grants, folded to its range. The KEYS come from the facts — there is no
+ *  list of senses anywhere, by design — and each folds from 0 so a sense nothing grants is absent
+ *  rather than present at zero feet. */
+export function deriveSenses(facts: EffectFacts): Record<string, Computed> {
+	const senses: Record<string, Computed> = {};
+	for (const f of facts.numeric) {
+		if (!f.target.startsWith(SENSE_PREFIX)) continue;
+		const name = f.target.slice(SENSE_PREFIX.length);
+		senses[name] ??= applyEffects(f.target, computed([], { min: 0 }), facts);
+	}
+	return senses;
 }
 
 /** Conditions the character cannot be given, deduped and in the order the facts arrived. Ids, not

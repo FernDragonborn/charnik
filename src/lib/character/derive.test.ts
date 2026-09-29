@@ -861,6 +861,42 @@ describe('deriveSheet aggregator', () => {
 		expect(s.damageSensitivities.vulnerable).toEqual([]);
 	});
 
+	it('a sense is a range, and two sources of one take the greater', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 's',
+				label: 'Sources',
+				effects: [
+					'set_override:senses.darkvision:60:floor',
+					'set_override:senses.darkvision:120:floor',
+					'set_override:senses.truesight:30:floor',
+				],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.senses.darkvision?.value).toBe(120);
+		expect(s.senses.truesight?.value).toBe(30);
+		// no list of senses exists anywhere: a sense nothing grants is ABSENT, not present at zero
+		expect(s.senses.blindsight).toBeUndefined();
+	});
+
+	it('a sense name is open vocabulary, so a pack may invent one', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'p',
+				label: 'Pack',
+				effects: ['set_override:senses.echolocation:40:floor'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.senses.echolocation?.value).toBe(40);
+		expect(s.facts.unknown).toEqual([]); // and it is not reported as a target nothing consumes
+	});
+
 	it('collects condition immunities, deduped, and keeps a word no condition row carries', () => {
 		const c = wizard();
 		c.play.effects = [

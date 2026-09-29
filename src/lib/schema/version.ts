@@ -58,9 +58,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v14: MASTERY-HALF's content half — the 2024 class features that grant Weapon Mastery say HOW MANY
 // kinds of weapon, off the Weapon Mastery column of their own Features table. An install left at v13
 // has five classes whose mastery picks cap at zero, so every weapon's shipped `mastery:` stays inert.
-// v15: the features whose own text says "immune to the Charmed condition" carry that as a token
-// (`condition_immunity`) rather than only as prose, in both editions, and petrified drops the note
-// that was standing in for it. An install left at v14 has a paladin whose aura says nothing.
+// v15: the rows whose own text says "immune to the Charmed condition" or "Darkvision with a range
+// of 60 feet" carry that as a token (`condition_immunity`, `senses.<name>`) rather than only as
+// prose, in both editions. An install left at v14 has a paladin whose aura says nothing and a dwarf
+// who cannot see in the dark.
 export const CONTENT_SEED_VERSION = 15;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.

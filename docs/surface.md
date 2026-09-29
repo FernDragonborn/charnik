@@ -601,11 +601,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deriveAc` — AC: equipped armor (dex-capped) + the shield in hand, else unarmored; then AC effects fold on top.
 - `function deriveSpeed` — Speed from species base; A3: armor whose `str_min` exceeds the wearer's STR drops it 10 ft (RAW, * both editions), tr…
 - `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
+- `function deriveSenses` — Every sense some effect grants, folded to its range.
 - `function deriveConditionImmunities` — Conditions the character cannot be given, deduped and in the order the facts arrived.
 - `function deriveDamageSensitivities` — Damage defenses collected from `damage_sensitivity` facts, deduped per bucket.
 
 ### `src/lib/character/derive-targets.ts`
 
+- `const SENSE_PREFIX` — `senses.<name>` — a sense and how far it reaches.
 - `const isPluginContributionTarget` — * May a plugin `contributions` key name this target (plugins.md §4.4)?
 - `const isEffectTargetSupported` — B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
 
@@ -743,6 +745,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const numberedAttackRollName` — The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
 - `const damageTypeLabel` — What a damage type is CALLED.
+- `const senseLabel` — A sense id → the reader's word for it.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
@@ -1791,4 +1794,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1072 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1075 exports across 145 modules · 74 duplicate suspects._

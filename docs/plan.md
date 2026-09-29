@@ -276,17 +276,19 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
-  party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, `speed.climb`
-  (sized: ~8 lines), the senses, and attack rolls made AGAINST you. It blocks no release, because every one
+  party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, a climb
+  speed, and attack rolls made AGAINST you. It blocks no release, because every one
   of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **Two of its three questions are settled** (`work/content.md` ▸ MAGIC-ITEM-VOCAB). A sense is a
-  MECHANIC — two sources take the greater range, which is stacking and not something `note:` can do —
-  and it is a chip on the Defenses card beside the fly and swim speeds already written that way. The
-  `+1/+2/+3` rows stay ONE row each and grow a per-instance answer, the same shape Ring of Resistance
-  wanted: the SRD prints one entry per kind, the tokens already exist on Holy Avenger, and three rows
-  would fix in three places the `rarity: very_rare` those rows wrongly claim for their +1 and +2.
+  **The senses are BUILT** (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 5) — `senses.<name>`, folding by
+  the greater range, on 24 rows across both editions. What that pass also measured is that the climb
+  speed is NOT the 8-line target it was sized as: no shipped row states a literal range, so the
+  target would have no consumer, and the real work is the "equal to your walking speed" relation.
+  The `+1/+2/+3` rows stay ONE row each and grow a per-instance answer, the same shape Ring of
+  Resistance wanted: the SRD prints one entry per kind, the tokens already exist on Holy Avenger, and
+  three rows would fix in three places the `rarity: very_rare` those rows wrongly claim for their +1
+  and +2.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

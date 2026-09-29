@@ -12,7 +12,7 @@
 	import { abilityShortLabel, signed, titleCase } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
 	import { provenance } from '$lib/actions/provenance';
-	import { damageTypeLabel } from '$lib/combat/attacks';
+	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
 	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
 	import { grantedEquipmentProfs } from '$lib/character/derive-stats';
 	import { splitList } from '$lib/content/schemas';
@@ -62,6 +62,8 @@
 	const hasDefenses = $derived(
 		defenses.resist.length + defenses.immune.length + defenses.vulnerable.length > 0
 	);
+	// a sense is a name plus a range, which is the chip this card already speaks in (fly, swim)
+	const senses = $derived(Object.entries(s?.senses ?? {}).filter(([, comp]) => comp.value > 0));
 	// a condition you cannot be given reads as a defence chip like a damage immunity, because to a
 	// player it is one — same card, same question: what is true of your body
 	const conditionImmunities = $derived.by(() => {
@@ -111,6 +113,13 @@
 				{#if s.swimSpeed.value}<span class="tag gold"
 						>{$_('build.defenses.swim', { values: { feet: s.swimSpeed.value } })}</span
 					>{/if}
+				{#each senses as [name, comp] (name)}<span
+						class="tag gold"
+						use:provenance={why(comp, $_)}
+						>{$_('build.defenses.sense', {
+							values: { sense: senseLabel(name, $_), feet: comp.value },
+						})}</span
+					>{/each}
 				{#each conditionImmunities as label (label)}<span class="tag gold"
 						>{$_('build.defenses.immuneTo', { values: { type: label } })}</span
 					>{/each}

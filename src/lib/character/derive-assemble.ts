@@ -24,6 +24,7 @@ import {
 	derivePassives,
 	deriveConditionImmunities,
 	deriveDamageSensitivities,
+	deriveSenses,
 	type StatInputs,
 } from './derive-stats';
 import {
@@ -209,6 +210,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 
 	const damageSensitivities = deriveDamageSensitivities(facts);
 	const conditionImmunities = deriveConditionImmunities(facts);
+	const senses = deriveSenses(facts);
 
 	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
 	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
@@ -234,6 +236,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		attacksPerAction: applyEffects('attacks', attacksPerActionBase(), facts),
 		damageSensitivities,
 		conditionImmunities,
+		senses,
 		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({
 			graph,

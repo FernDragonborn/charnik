@@ -19,6 +19,13 @@ const SKILL_TARGETS = [
 	'ability_checks', // group alias for skill checks (2014 exhaustion L1: disadvantage on ability checks)
 	...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`),
 ];
+/** `senses.<name>` — a sense and how far it reaches. Open by GRAMMAR, not by membership: the
+ *  SRD names four (darkvision, truesight, blindsight, tremorsense) and a pack may name its own,
+ *  exactly as it may name its own damage type. Two sources take the GREATER range, which is
+ *  what `set_override:<t>:<n>:floor` already means, so the fold needs no new op. */
+export const SENSE_PREFIX = 'senses.';
+const SENSE_TARGET = /^senses\.[a-z][a-z0-9_]{0,31}$/;
+
 const NUMERIC_TARGETS = new Set<string>([
 	...ABILITIES,
 	'ac',
@@ -85,7 +92,7 @@ const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof
 		case EFFECT_KIND.flatBonus:
 		case EFFECT_KIND.setOverride:
 		case EFFECT_KIND.blockBonus:
-			return NUMERIC_TARGETS;
+			return SENSE_TARGET.test(target) ? OPEN_VOCAB : NUMERIC_TARGETS;
 		// halve (2014 exhaustion) only ever multiplies speed or hp_max — a tighter closed set.
 		case EFFECT_KIND.halve:
 			return HALVE_TARGETS;
@@ -134,7 +141,9 @@ const SKILL_SCOPED_TARGET = /^(?:skill|passive)\.[a-z][a-z0-9_]{0,31}$/;
  * and notes included.
  */
 export const isPluginContributionTarget = (key: string): boolean =>
-	SKILL_SCOPED_TARGET.test(key) || (NUMERIC_TARGETS.has(key) && !CONTRIBUTION_GROUPS.has(key));
+	SKILL_SCOPED_TARGET.test(key) ||
+	SENSE_TARGET.test(key) ||
+	(NUMERIC_TARGETS.has(key) && !CONTRIBUTION_GROUPS.has(key));
 
 /** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
  *  Open-vocab kinds (damage_sensitivity, grant_resource, apply_condition) are always supported —

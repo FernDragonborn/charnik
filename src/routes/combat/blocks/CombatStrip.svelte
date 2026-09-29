@@ -7,7 +7,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
-	import { damageTypeLabel } from '$lib/combat/attacks';
+	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, whyPassive, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
@@ -36,6 +36,13 @@
 		if (!graph || !system) return [];
 		return s.conditionImmunities.map((id) => stateLabel(graph, system, id, app.activeLocale));
 	});
+	// a sense joins the same strip: it is not a defence, but it is the same sentence the card is
+	// already making — what is true of your body — and a range is a chip like every other here
+	const senses = $derived(
+		Object.entries(s.senses)
+			.filter(([, comp]) => comp.value > 0)
+			.map(([name, comp]) => `${senseLabel(name, $_)} ${comp.value}`),
+	);
 	// DamageSensitivities as chip groups (resist / immune / vulnerable), only the non-empty ones —
 	// rendered as per-type pills instead of a bold run-on list. Labels are resolved HERE because the
 	// immune group mixes two vocabularies, and a chip should not have to know which it came from.
@@ -53,6 +60,7 @@
 				bucket: 'vulnerable',
 				labels: s.damageSensitivities.vulnerable.map((t) => damageTypeLabel(t, $_)),
 			},
+			{ bucket: 'senses', labels: senses },
 		].filter((g) => g.labels.length),
 	);
 </script>
@@ -460,5 +468,10 @@
 	.sensitivities-strip .def-chip--vulnerable {
 		border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
 		color: var(--color-danger);
+	}
+	/* a sense is neither good nor bad news, so it keeps the neutral chip and only the group label
+	   tells it apart from the defences beside it */
+	.sensitivities-strip .def-chip--senses {
+		color: var(--color-text-muted);
 	}
 </style>

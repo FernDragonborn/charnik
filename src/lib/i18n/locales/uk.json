@@ -93,22 +93,23 @@
 			"classWord": "класу"
 		},
 		"defenses": {
-			"saves": "Рятувальні кидки",
-			"noneProficient": "без володінь",
-			"trained": "Володіння та стійкість",
-			"armour": "Броня",
-			"weapons": "Зброя",
-			"tools": "Інструменти",
-			"languages": "Мови",
 			"all": "вся",
-			"none": "немає",
+			"armour": "Броня",
+			"editLanguages": "Мови…",
 			"fly": "політ {feet} футів",
-			"swim": "плавання {feet} футів",
-			"resists": "опір: {type}",
 			"immuneTo": "імунітет: {type}",
-			"vulnerableTo": "вразливість: {type}",
+			"languages": "Мови",
 			"noResistances": "без опорів до шкоди",
-			"editLanguages": "Мови…"
+			"none": "немає",
+			"noneProficient": "без володінь",
+			"resists": "опір: {type}",
+			"saves": "Рятувальні кидки",
+			"sense": "{sense} {feet} футів",
+			"swim": "плавання {feet} футів",
+			"tools": "Інструменти",
+			"trained": "Володіння та стійкість",
+			"vulnerableTo": "вразливість: {type}",
+			"weapons": "Зброя"
 		},
 		"diff": {
 			"speed": "Швидкість",
@@ -882,8 +883,9 @@
 			"speed": "Швидкість"
 		},
 		"sensitivity": {
-			"resist": "Опір",
 			"immune": "Імунітет",
+			"resist": "Опір",
+			"senses": "Чуття",
 			"vulnerable": "Вразливість"
 		},
 		"skills": {
@@ -1681,6 +1683,12 @@
 		"discardDraftTitle": "Відкинути «{name}»?",
 		"discardDraftBody": "Цю незавершену заготовку буде видалено назавжди. Скасувати неможливо.",
 		"discardDraftConfirm": "Відкинути заготовку"
+	},
+	"senseName": {
+		"blindsight": "Сліпозір",
+		"darkvision": "Темнозір",
+		"tremorsense": "Чуття коливань",
+		"truesight": "Істинний зір"
 	},
 	"settings": {
 		"collisions": {

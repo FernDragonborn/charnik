@@ -60,6 +60,10 @@ export interface CharacterSheet {
 	 *  — the Fly spell, magic items) are the source. Rendered only when nonzero. */
 	flySpeed: Computed;
 	swimSpeed: Computed;
+	/** Senses and how far each reaches, keyed by the bare name (`darkvision`). Discovered from the
+	 *  effects that grant one rather than fixed, because a sense NAME is open vocabulary; two sources
+	 *  take the greater range (the rows say `:floor`), so a Goggles-wearing dwarf reads 120, not 180. */
+	senses: Record<string, Computed>;
 	maxHp: Computed;
 	/** Hit-dice pools grouped by die size (paladin 5 / fighter 5 → one d10 pool of 10; different die
 	 *  sizes stay separate — RAW multiclass rule). Spent counts live in `play.hitDiceSpent` keyed by die. */

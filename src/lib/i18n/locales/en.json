@@ -93,22 +93,23 @@
 			"classWord": "class"
 		},
 		"defenses": {
-			"saves": "Saving throws",
-			"noneProficient": "none proficient",
-			"trained": "Trained & resistant",
-			"armour": "Armour",
-			"weapons": "Weapons",
-			"tools": "Tools",
-			"languages": "Languages",
 			"all": "all",
-			"none": "none",
+			"armour": "Armour",
+			"editLanguages": "Languages…",
 			"fly": "fly {feet} ft",
-			"swim": "swim {feet} ft",
-			"resists": "resists {type}",
 			"immuneTo": "immune to {type}",
-			"vulnerableTo": "vulnerable to {type}",
+			"languages": "Languages",
 			"noResistances": "no damage resistances",
-			"editLanguages": "Languages…"
+			"none": "none",
+			"noneProficient": "none proficient",
+			"resists": "resists {type}",
+			"saves": "Saving throws",
+			"sense": "{sense} {feet} ft",
+			"swim": "swim {feet} ft",
+			"tools": "Tools",
+			"trained": "Trained & resistant",
+			"vulnerableTo": "vulnerable to {type}",
+			"weapons": "Weapons"
 		},
 		"diff": {
 			"speed": "Speed",
@@ -882,8 +883,9 @@
 			"speed": "Speed"
 		},
 		"sensitivity": {
-			"resist": "Resist",
 			"immune": "Immune",
+			"resist": "Resist",
+			"senses": "Senses",
 			"vulnerable": "Vulnerable"
 		},
 		"skills": {
@@ -1681,6 +1683,12 @@
 		"discardDraftTitle": "Discard “{name}”?",
 		"discardDraftBody": "This unfinished build is removed for good. It can’t be undone.",
 		"discardDraftConfirm": "Discard draft"
+	},
+	"senseName": {
+		"blindsight": "Blindsight",
+		"darkvision": "Darkvision",
+		"tremorsense": "Tremorsense",
+		"truesight": "Truesight"
 	},
 	"settings": {
 		"collisions": {

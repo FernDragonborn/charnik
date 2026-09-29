@@ -245,30 +245,37 @@
      **A named magic weapon is not in scope and needs nothing**: the `+1/+2/+3` row is "Any Simple or
      Martial", a MUNDANE base, and Holy Avenger already states its own +3 and its own `legendary`.
 
-  4. **A climb speed** (2 rows). There is `speed.fly` and `speed.swim` and no `speed.climb`
-     (Slippers of Spider Climbing, Gloves of Swimming and Climbing). **Sized: ~8 lines and two catalog
-     strings** — one entry in `NUMERIC_TARGETS`, one field on `CharacterSheet` fed by the existing
-     `movementOf`, a third chip beside the two already in `SheetDefenses`. No decision in it; the
-     shape exists three times.
-     **One tail that is NOT that shape:** both items say "a Climb Speed equal to your Speed", an
-     expression over another speed. The ctx exposes `base_speed`, which is the species' base BEFORE
-     effects — close, but a character under Longstrider or in heavy armour would read wrong. Either
-     the ctx grows the effective speed, or these two keep a note while `speed.climb` serves the
-     literal-value items.
+  4. **A climb speed — the ~8-line sizing was wrong, and the measurement is why.** The plan was one
+     entry in `NUMERIC_TARGETS`, one `CharacterSheet` field off the existing `movementOf`, a third
+     chip in `SheetDefenses`. That is still true, and it would ship a target **no shipped row can
+     use**: grepped across both packs, EVERY climbing-speed row says "equal to your walking speed" —
+     Slippers of Spider Climbing, Cloak of Arachnida, Potion of Climbing, Gloves of Swimming and
+     Climbing, in both editions. There is not one literal value to point the target at, so the
+     8 lines would be a mechanism with no first consumer, which is exactly what the release gate
+     exists to stop.
+     **So the work is the RELATION, not the target**, and it is a pipeline-ordering problem rather
+     than a vocabulary one. `set_override:speed.climb:speed` needs the character's effective walking
+     speed in the L2 ctx, and the ctx is built during RESOLVE while `deriveSpeed` runs after it (it
+     needs the facts). `base_speed` is the species' figure before effects, so a character under
+     Longstrider or in heavy armour would read wrong — a wrong number, which is worse than the note
+     these rows carry today. Whoever picks this up decides between a second fact pass for the
+     movement targets (they already fold after `deriveSpeed`, so re-collecting with an augmented ctx
+     is the cheap shape) and leaving the sentence to prose.
 
-  5. **Senses — two questions for the design session, and they are yours** (~14 rows: Goggles of
-     Night, Eyes of Minute Seeing, Crystal Ball of True Seeing, the Belt of Dwarvenkind's darkvision,
-     nine species). `darkvision`, `truesight`, `blindsight` and `tremorsense` appear NOWHERE in
-     `src/` today — not a target, not a sheet field, not a catalog string. So the token is the easy
-     half and the answer to these two is what decides its shape:
-     **DECIDED: a sense is a MECHANIC, and it is a chip on the Defenses card.**
-     Mechanic, because two sources of darkvision take the GREATER range — a species' 60 ft under
-     Goggles of Night's 120 ft is 120 ft, which is stacking, and stacking is what `note:` cannot do.
-     So `senses.<name>` is a numeric target folding by max.
-     The card needs no new vocabulary: the premise that "a sense is a name plus a range, and this card
-     speaks in chips" was wrong — `SheetDefenses.svelte` already carries `fly 30 ft` and `swim 30 ft`
-     as exactly that chip, next to the damage sensitivities, under a comment calling the card "what is
-     true of your body". A sense chip is the same shape beside them.
+  5. **Senses — DONE.** `senses.<name>` is a numeric target whose NAME is open vocabulary, accepted
+     by grammar rather than by a list, so the SRD's four and a pack's own work the same way. Two
+     sources take the greater range — that is `:floor`, so the fold needed no new op — and the sheet
+     DISCOVERS which senses a character has from the facts, so one nothing grants is absent rather
+     than present at zero. The chip sits with the damage defences in the builder and in play.
+     24 rows carry it: every species whose trait states a range in either edition (the 2024 drow
+     included), the Belt of Dwarvenkind, the Robe of Eyes, 2024's Feral Senses, and the Darkvision
+     and True Seeing spells, each at the number its own edition prints (2024 buffed Darkvision to
+     150 feet).
+     **The one row that stays prose is Goggles of Night, and the reason is the fold order**, not the
+     vocabulary: "if you already have Darkvision, wearing the goggles increases its range by 60
+     feet" is a `flat_bonus`, and the `item` layer folds BEFORE `feature`, so a dwarf's species floor
+     would land after the goggles' add and be noted "already ≥". Making a floor global the way a cap
+     is would fix it and break abilities. `internals/effects.md` ▸ Targets has the full statement.
 
   6. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
      dice YOU roll: `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has

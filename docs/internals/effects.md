@@ -118,6 +118,21 @@ plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets
 - `d20_tests` → every d20-based roll (saves, skills, `attack`, `initiative`) — the 2024
   exhaustion penalty rides this one group.
 
+**`senses.<name>` is a range, and its NAME is open vocabulary.** The SRD says four — darkvision,
+truesight, blindsight, tremorsense — and a pack may name its own, so the target is accepted by
+GRAMMAR (`derive-targets.ts` ▸ `SENSE_TARGET`) rather than by a membership list, exactly as a damage
+type is. Two sources take the greater range, which is what `:floor` already means, so the fold needs
+no new op: a 2024 dwarf's `set_override:senses.darkvision:120:floor` beside a Belt of Dwarvenkind's
+60 reads 120. The sheet DISCOVERS which senses a character has from the facts — there is no list in
+`src/` — so a sense nothing grants is absent rather than present at zero feet.
+
+**What it cannot yet say is an ADDITIVE sense**, and Goggles of Night is the row: "if you already
+have Darkvision, wearing the goggles increases its range by 60 feet". `flat_bonus` says that, but
+the fold runs the `item` layer BEFORE `feature`, so a dwarf's species floor would land on a value
+the goggles had already raised and be noted "already ≥". Making a floor global the way a cap is
+would fix it and break abilities, where `set_override:int:19:floor` deliberately floors the running
+total at its own layer. So that one row stays prose until the ordering has an answer.
+
 **A SCOPED bonus** applies to one thing rather than everything, and says so in the target namespace:
 `flat_bonus:damage.melee+2` (a category), `damage.<weapon_id>` (one weapon), `damage.<spell_id>` (one
 spell — Agonizing Blast). Only `attack` and `damage` take a scope; every other dotted target IS a

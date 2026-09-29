@@ -122,6 +122,9 @@ function targetLabel(t: string, translate?: Translate): string {
 		return say(translate, 'entryMeta.save', `${ab} save`, { ability: ab });
 	}
 	if (t.startsWith('skill.')) return skill(t.slice(6));
+	// a sense is open vocabulary, so the id it wrote is the fallback — same rule as a damage type
+	if (t.startsWith('senses.'))
+		return say(translate, `senseName.${t.slice(7)}`, titleCase(t.slice(7)));
 	if (t.startsWith('passive.')) {
 		const s = skill(t.slice(8));
 		return say(translate, 'combat.tag.passive', `Passive ${s}`, { skill: s });

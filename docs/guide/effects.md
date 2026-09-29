@@ -196,6 +196,10 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 `attack` · `attacks` (how many you get) · `damage` · `spell_dc` · `spell_attack` · `action` ·
 `bonus` · `reaction` · any ability by name (`str` … `cha`).
 
+**Senses:** `senses.darkvision` · `senses.truesight` · `senses.blindsight` · `senses.tremorsense`
+— and any name your own pack invents. The value is the RANGE in feet, and two sources of the same
+sense take the greater one, so write it as `set_override:senses.darkvision:60:floor`.
+
 **Saves:** `save.str` … `save.cha`, plus `save.death`.
 
 **Skills:** `skill.<id>` — `skill.stealth`, `skill.perception`, and so on.
