@@ -638,6 +638,8 @@
 			"bonusPick": "Який це бонус для «{name}»?",
 			"bonusPlain": "+{bonus}",
 			"bonusWithRarity": "+{bonus} · {rarity}",
+			"choiceNone": "Тип не вказано",
+			"choicePick": "Який це тип для «{name}»?",
 			"empty": "Поки що нічого не несете. Спорядження додається в конструкторі.",
 			"equip": "Спорядити",
 			"equipHint": "Вдягнути або взяти в руки",

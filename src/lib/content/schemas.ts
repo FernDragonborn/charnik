@@ -432,6 +432,10 @@ const itemSchema = baseRow.extend({
 	/** The mundane item this one is built from (same source); empty cells inherit from it. */
 	base_item_id: optStr,
 	bonus_choice: optStr,
+	/** The answers a row ASKS for, when the SRD prints one entry and lets the item someone found name
+	 *  the rest: Ring of Resistance's gemstone, Armor of Resistance's type. A comma list of ids the
+	 *  row's own `item_choice` tokens are pointed at; blank means the row asks nothing. */
+	choice_options: optStr,
 	rarity: z.preprocess(blankToUndef, Rarity.optional()),
 	cost: optStr, // "15 gp"
 	weight_lb: optNum,

@@ -1301,6 +1301,47 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		expect(answered.deriveIssues).toEqual([]);
 	});
 
+	it('an item whose row asks a TYPE folds the one the player answered, and nothing until they do', async () => {
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`druid,5.5e,${S},Druid,d8,"int,wis"`,
+			].join('\n'),
+			'items_srd.csv': [
+				'id,systems,source,name_en,effects,category,choice_options',
+				// the scale mail's own +1 rides beside the answer, so it must fold either way
+				`dragon_mail,5.5e,${S},Dragon Scale Mail,"flat_bonus:ac+1;damage_sensitivity:resist:item_choice",armor,"cold,fire,lightning"`,
+			].join('\n'),
+		});
+		const worn = (choice?: string) => {
+			const c = newCharacter('d', 'Druid', '5.5e');
+			c.build.classes = [{ class: `class:${S}:druid`, level: 1 }];
+			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+			c.build.inventory = [
+				{
+					item: `item:${S}:dragon_mail`,
+					qty: 1,
+					equipped: true,
+					attuned: false,
+					...(choice === undefined ? {} : { choice }),
+				},
+			];
+			return deriveSheet(characterSchema.parse(c), g);
+		};
+		const unanswered = worn();
+		const answered = worn('fire');
+		// unanswered resists NOTHING — the app does not pick a damage type on the player's behalf,
+		// and the word itself must never reach the sheet as though it were a type
+		expect(unanswered.damageSensitivities.resist).toEqual([]);
+		expect(answered.damageSensitivities.resist).toEqual(['fire']);
+		expect(worn('cold').damageSensitivities.resist).toEqual(['cold']);
+		// the row's OWN bonus folds either way: it asked nothing
+		expect(unanswered.ac.value).toBe(answered.ac.value);
+		expect(answered.ac.trace.map((t) => t.source)).toContain('Dragon Scale Mail');
+		expect(answered.deriveIssues).toEqual([]);
+		expect(unanswered.deriveIssues).toEqual([]);
+	});
+
 	it('a +1/+2/+3 WEAPON reads the answer too, on the path its own bonus takes', async () => {
 		const g = await makeTempContentRoot({
 			'classes_srd.csv': [

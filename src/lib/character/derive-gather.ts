@@ -7,7 +7,7 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { ISSUE_KEY, isWeaponOwnBonus } from '$lib/effects/token-parser';
+import { ISSUE_KEY, isWeaponOwnBonus, withItemChoice } from '$lib/effects/token-parser';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
@@ -72,7 +72,8 @@ class EffectGatherer {
 			// one — the same answer the inventory panel gets
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
-			if (!attunementNeeded || inv.attuned) this.pushRow(row, 'item', undefined, inv.bonus);
+			if (!attunementNeeded || inv.attuned)
+				this.pushRow(row, 'item', undefined, inv.bonus, inv.choice);
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
@@ -114,9 +115,12 @@ class EffectGatherer {
 		layer: Layer,
 		classId?: string,
 		itemBonus?: number,
+		itemChoice?: string,
 	): void {
 		if (!row) return;
-		const tokens = EffectGatherer.globalTokens(row);
+		// the answer is substituted BEFORE the token is parsed, so the parse cache never holds a
+		// template and every consumer downstream reads a finished token (`token-parser.ts`)
+		const tokens = withItemChoice(EffectGatherer.globalTokens(row), itemChoice);
 		if (!tokens.length) return;
 		this.active.push({
 			source: rowName(row),

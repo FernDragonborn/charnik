@@ -63,7 +63,11 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // prose, in both editions, and the ten `+1/+2/+3` rows gained the `bonus_choice` column that lets a
 // player say which one they found. An install left at v14 has a paladin whose aura says nothing, a
 // dwarf who cannot see in the dark, and a +3 weapon that adds nothing.
-export const CONTENT_SEED_VERSION = 15;
+// v16: the three 5.5e rows whose resistance is a type the item someone FOUND names — Ring of
+// Resistance, Armor of Resistance, Dragon Scale Mail — ask for it through the new `choice_options`
+// column and fold the answer via `item_choice`. An install left at v15 has three magic items whose
+// resistance is a sentence nothing reads.
+export const CONTENT_SEED_VERSION = 16;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

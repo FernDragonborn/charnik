@@ -33,6 +33,7 @@ import { localizedName } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { tagInt, ITEM_TAG, parseBonusChoices, type BonusRung } from '$lib/content/item-tags';
+import { splitList } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
@@ -55,6 +56,9 @@ export interface InventoryRow {
 	/** The rungs a `+1/+2/+3` row offers, empty for every row that offers none. Like `isTemplate`,
 	 *  it stays offered after an answer: which one you found is yours to correct. */
 	bonusRungs: BonusRung[];
+	/** The answers a row ASKS for — Ring of Resistance's damage type. Empty for every row that asks
+	 *  nothing, and still offered after an answer for the same reason the rungs are. */
+	choiceOptions: string[];
 }
 
 /** A mundane item a template can be resolved against, as the picker lists it. */
@@ -112,6 +116,7 @@ export class InventoryTracker {
 				attunable: needsAttunement(item),
 				isTemplate: !!bare && needsBaseItem(bare),
 				bonusRungs: parseBonusChoices(item?.row.data.bonus_choice),
+				choiceOptions: splitList(item?.row.data.choice_options),
 			};
 		});
 	});
@@ -263,6 +268,15 @@ export class InventoryTracker {
 		if (!entry) return;
 		if (bonus === undefined) delete entry.bonus;
 		else entry.bonus = bonus;
+	};
+
+	/** Answer "which type is this one" for a carried item — the ring's gemstone. Un-answering takes
+	 *  the defence back off the sheet rather than leaving the last pick standing. */
+	setChoice = (ref: string, choice: string) => {
+		const entry = this.list.find((e) => e.item === ref);
+		if (!entry) return;
+		if (choice) entry.choice = choice;
+		else delete entry.choice;
 	};
 
 	setBase = (ref: string, base: string) => {

@@ -81,6 +81,26 @@
   out carrying a class, and a list name matching no row fails the run. 211 class tags gained, none
   lost, no other column touched. The shipped sizes are pinned in `spell_lists_content.test.ts`:
   bard 112, cleric 105, druid 105, paladin 31, ranger 37, sorcerer 120, warlock 64, wizard 204.
+- [ ] **RULES-TEXT · the packs carry the SRD's ROWS and none of its rules chapters.** Both packs hold
+  spells, items, monsters, classes, species, feats, backgrounds, languages and states — every
+  row-shaped thing — and nothing else, because a converter that walks rows produces rows. So text
+  the CC-BY licence entitles us to ship simply is not here, and the app cannot quote the rule it
+  implements even to explain a number it just folded.
+  **What found this:** the same-effect rule. `resolver.ts` enforces it and `effects.md` now quotes
+  it, but grepping both packs for it returns nothing — it lives in SRD 5.1 ▸ Spellcasting ▸ Casting
+  a Spell and SRD 5.2.1 ▸ Casting Spells, neither of which is a row. The same is true of every
+  general rule the engine leans on: advantage, cover, resting, carrying capacity.
+  **Why it is worth having rather than tidy:** a stat that can explain itself already carries the
+  trace; the sentence behind the trace is the half a player reads out at the table, and today the
+  only way to settle an argument is to leave the app. It is also the shape a compendium entry for
+  a RULE would need — the same surface the states and conditions already use.
+  **It is a producer sibling's job, not this repo's**, like the spell lists and for the same reason:
+  the source is a PDF, mining it is prose work, and what lands here is a CSV diff a human reads.
+  What has to be decided first is the row SHAPE — a rules chapter is nested sections, not the flat
+  `id, name, text` every current type is, and flattening it wrongly is harder to undo than to design.
+  Sibling gaps of the same kind: 2014's missing item tables (MAGIC-ITEM-VOCAB ▸ 2b) and the spell
+  lists BARD-LIST-2014 already recovered.
+
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
   block the loader; each raises fidelity where the UI later wants a structured filter. In priority
   order: species ability bonuses as `effects` (`flat_bonus:con+2`) rather than only prose — 5e on
@@ -217,14 +237,37 @@
      ranged_weapon · poison · breath). The roll path already matches scopes; what it lacks is a scope
      for the thing coming AT you, which is the design half.
 
-  2. **A choice the ITEM asks, answered per instance** (~8 rows). Ring of Resistance, Armor of
-     Resistance and Potion of Resistance name a damage type the GM picks; Armor of Vulnerability picks
-     one of three; Dragon Scale Mail's resistance follows the dragon; Ring of Elemental Command follows
-     the plane.
-     **Shape: D16's "player choice at a slot", pointed at an inventory row rather than a build slot.**
-     The answer belongs on `build.inventory[]`, NOT on the content row — two Rings of Resistance in one
-     party are different rings, and the content row is shared. Nothing stores a per-instance answer
-     yet; that is the whole of this piece.
+  2. **DONE for 5.5e — a choice the ITEM asks, answered per instance.** `choice_options` lists the
+     answers the row offers and `item_choice` marks the slot they go in, so the mechanism is the `+N`
+     one pointed at a word: the answer lives on `build.inventory[]` beside `base` and `bonus`, because
+     two Rings of Resistance in one party are different rings and the content row is shared.
+     **It is a SUBSTITUTION, not a variable, and that is the one thing the `+N` pass did not settle.**
+     A number rides the L2 expression in a value slot; a damage type lands in a TARGET slot, which
+     evaluates nothing. So the gather swaps the answer into the token a whole segment at a time before
+     `parseToken` sees it — the grammar is unchanged and the parse cache never holds a template.
+     Unanswered drops that token and keeps the rest of the row, so Dragon Scale Mail's `+1` to AC
+     folds while its resistance waits.
+     Three 5.5e rows carry it: `ring_of_resistance` and `armor_of_resistance` (the ten types their own
+     table prints) and `dragon_scale_mail` (the five its dragon table prints), which keeps a `note:`
+     for the breath-weapon save — that half is piece 1.
+     **The rows that stay prose, and why:** Armor of Vulnerability turns ONE answer into three facts
+     (resist one of bludgeoning/piercing/slashing, vulnerable to the other two), which no single
+     substitution says; Ring of Elemental Command's plane brings resistance, movement and a page of
+     other text with it; Potion of Resistance is a consumable, and drinking is not a modelled event.
+     **5.1 cannot have this yet, and the reason is a CONTENT hole bigger than this item** — see below.
+
+  2b. **The 2014 pack ships no item TABLES at all**, and twelve rows point at one. Counted rather than
+     remembered: `srd-2014/items_srd.csv` contains zero `<table>` in 419 rows, against 37 of 420 in
+     2024, and twelve 2014 rows say "see the table" / "from the options below" with nothing under
+     them — `armor_of_resistance`, `bag_of_beans`, `bag_of_tricks`, `carpet_of_flying`,
+     `dragon_scale_mail`, `luck_blade`, `manual_of_golems`, `potion_of_resistance`,
+     `sphere_of_annihilation`, `staff_of_power`, `staff_of_the_magi`, `wand_of_wonder`. This is the
+     same loss BARD-LIST-2014 found in the spell lists: the Tabyltop conversion the 2014 converters
+     read keeps only some of each page's columns. So the 2014 half of piece 2 is not "unwritten", it
+     is **unsourced** — filling `choice_options` from the 2024 table would mix one edition's data
+     into the other, which `compatibility.md` §3b forbids by name. Transcribe the tables from
+     `SRD_CC_v5.1.pdf` (a producer sibling's job, the way the spell lists were), then the three rows
+     follow for free.
 
   3. **DONE — a bonus the row states as a RANGE.** `weapon_1_2_or_3`, `armor_1_2_or_3`,
      `shield_1_2_or_3`, `ammunition_1_2_or_3` and `wand_of_the_war_mage_1_2_or_3`, in both editions.

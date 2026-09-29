@@ -11,6 +11,7 @@
 	import { ATTUNEMENT_CAP } from '$lib/character/inventory';
 	import { kilograms } from '$lib/combat/constants';
 	import { why } from '$lib/combat/helpers';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemDialog from '../AddItemDialog.svelte';
 	import { dndzone } from 'svelte-dnd-action';
@@ -119,7 +120,10 @@
 	{#each items as item (item.id)}
 		{@const row = item.row}
 		{#if row}
-			<div class="inv-row" class:asks-base={row.isTemplate || row.bonusRungs.length}>
+			<div
+				class="inv-row"
+				class:asks-base={row.isTemplate || row.bonusRungs.length || row.choiceOptions.length}
+			>
 				<RowGrip
 					panel="inventory"
 					id={row.entry.item}
@@ -161,6 +165,24 @@
 											})
 										: $_('combat.inventory.bonusPlain', { values: { bonus: rung.bonus } })}</option
 								>
+							{/each}
+						</select>
+					</label>
+				{/if}
+				<!-- The same question with a word for an answer: the SRD's ring names ONE gemstone and
+				     lets the one you found say which. Unanswered it grants nothing. -->
+				{#if row.choiceOptions.length}
+					<label class="base-pick">
+						<span class="visually-hidden"
+							>{$_('combat.inventory.choicePick', { values: { name: row.name } })}</span
+						>
+						<select
+							value={row.entry.choice ?? ''}
+							onchange={(e) => inv.setChoice(row.entry.item, e.currentTarget.value)}
+						>
+							<option value="">{$_('combat.inventory.choiceNone')}</option>
+							{#each row.choiceOptions as option (option)}
+								<option value={option}>{damageTypeLabel(option, $_)}</option>
 							{/each}
 						</select>
 					</label>

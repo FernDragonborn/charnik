@@ -286,9 +286,14 @@ position and are given per wave, because most of them were learned the hard way.
   speed is NOT the 8-line target it was sized as: no shipped row states a literal range, so the
   target would have no consumer, and the real work is the "equal to your walking speed" relation.
   **The `+1/+2/+3` rows are BUILT** the way they were decided — one row each, with the number as a
-  per-instance answer (`item_bonus`, `bonus_choice`) rather than three rows. Ring of Resistance is
-  the same shape pointed at a damage type instead of a number, and it is what remains of that
-  question.
+  per-instance answer (`item_bonus`, `bonus_choice`) rather than three rows. **Ring of Resistance is
+  BUILT too**, as the same shape pointed at a word: `choice_options` and `item_choice`, a
+  SUBSTITUTION rather than a variable because a damage type lands in a target slot, where nothing is
+  evaluated. What that pass measured is that 5.1 cannot have it yet — the 2014 pack ships **zero**
+  item tables in 419 rows while twelve of its rows point at one, so the options are unsourced rather
+  than unwritten, and taking them from the 2024 table would mix editions. That count is now its own
+  item (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 2b) because it reaches eleven rows this wave never
+  touches.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

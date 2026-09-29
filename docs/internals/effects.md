@@ -173,6 +173,18 @@ the feature in the trace. The rung is `partial` and not `half` for two reasons: 
 target, so `half:skills` reads as "proficiency in half the skills"; and "half" reads as a REDUCTION,
 while this rung is a gain — a lesser proficiency, never a cut-down one.
 
+**`item_choice` is a PLACEHOLDER, not a variable.** Where a row asks the player a question whose
+answer is a WORD — Ring of Resistance's damage type, Dragon Scale Mail's — the row lists the answers
+in `choice_options` (`content.md`) and writes `item_choice` in the slot the word goes in:
+`damage_sensitivity:resist:item_choice`. The gather substitutes the carried instance's answer into
+the token, one whole segment at a time, BEFORE `parseToken` sees it, so the grammar is unchanged and
+the parse cache never holds a template that means two things. `item_bonus` cannot do this job and is
+not the same mechanism: it is a NUMBER, so it rides the L2 expression in a value slot, while a target
+slot evaluates nothing. Unanswered, the token is DROPPED rather than folded onto the word itself —
+the same "the app does not choose on the player's behalf" that makes an unanswered `item_bonus` read
+0 — and every other token on the row still applies, so Dragon Scale Mail's own `+1` to AC folds
+while its resistance waits.
+
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
 `unknown target "<t>" for <kind>` content-health issue (with a `util/suggest.ts` "did you mean?",
 offered by `character/derive-targets.ts`), never folded onto nothing.
@@ -345,6 +357,42 @@ ladder in content: 2014 = a distinct effect per level applied CUMULATIVELY (rows
 2024 = ONE row using the `exhaustion` variable (`flat_bonus:d20_tests+(-2*exhaustion)`,
 `halve:speed`…). `exhaustion` is play-state (0..ladder-max) AND an L2 variable, always manually
 settable (the automatic long-rest −1 is a default convenience, not a lock).
+
+### Two of the same thing
+
+**RAW: the same spell cast twice does not combine.** SRD 5.1 states it under Spellcasting ▸ Casting
+a Spell ("Combining Magical Effects") and SRD 5.2.1 restates it under Casting Spells:
+
+> The effects of different spells add together while the durations of those spells overlap. The
+> effects of the same spell cast multiple times don't combine, however. Instead, the most potent
+> effect — such as the highest bonus — from those castings applies while their durations overlap.
+
+5.2.1 titles it **Combining Spell Effects** and adds a tiebreaker 5.1 has not: where the castings are
+equally potent and their durations overlap, the **most recent** applies. The rule's own example is
+two Clerics casting Bless — one benefit, not two bonus dice.
+
+**The engine enforces it in one place**, `dedupeRuntimeEffects` (`resolver.ts`), on the `condition`
+layer only — build-time layers stay per-instance, because a repeatable feat legitimately applies each
+time. A CONDITION needs no such rule: every condition either applies or does not, and the one the SRD
+calls cumulative (Exhaustion, both editions) is a LADDER carrying its own `max_level` rather than a
+row you hold twice.
+
+**Where the implementation is narrower than the rule, stated plainly rather than implied:**
+
+- The dedupe key is the effect's label **plus its token list**, so two castings of one spell at
+  DIFFERENT potencies have different keys and both apply — which is the case the rule exists to
+  stop. Keying on the name alone and folding by most-potent is what RAW asks for.
+- The FIRST instance wins and later ones are dropped, where 5.2.1 says the MOST RECENT applies at
+  equal potency — so a re-cast changes nothing, its own duration included.
+
+Both are tracked in `work/mechanics.md`; neither is a wrong number today, because nothing in the
+shipped packs produces two same-named effects of differing potency.
+
+**`set` folding by "most potent" is a DIFFERENT question** (`rules/pipeline.ts`) and answers to no
+rule quoted above: it is about two sources setting the same TARGET, whatever their names, where RAW
+says nothing general. Highest-wins is our reading, and the loser is surfaced as a note rather than
+silently stomped. The DMG's broader same-NAME rule ("Combining Game Effects", 2014 DMG) is not SRD
+content and is not what either of these implements.
 
 ---
 

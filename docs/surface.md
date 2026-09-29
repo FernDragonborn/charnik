@@ -1465,6 +1465,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
 - `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
+- `const ITEM_CHOICE` — * The word a row writes where the PLAYER's answer goes — `damage_sensitivity:resist:item_choice` on * Ring of Resista…
+- `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
@@ -1800,4 +1802,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1081 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1083 exports across 145 modules · 74 duplicate suspects._

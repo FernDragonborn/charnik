@@ -122,6 +122,14 @@ a rarity per rung), the row's own tokens read `item_bonus`, and the answer lives
 inventory entry beside `base` — because two Weapons +N in one party are different weapons, and the
 content row is shared. Unanswered reads 0, so nothing is granted until the player says.
 
+**The same question with a WORD for an answer** is `choice_options`: a comma list of the ids a row
+offers (Ring of Resistance's ten damage types, Dragon Scale Mail's five), answered on the same
+inventory entry and read by the placeholder `item_choice` inside the row's own tokens. It is a
+SUBSTITUTION rather than a variable, because a damage type lands in a target slot where no expression
+is evaluated — `damage_sensitivity:resist:item_choice` becomes `damage_sensitivity:resist:fire`
+before the token is parsed. An unanswered row grants nothing: the token is dropped rather than folded
+onto the placeholder, while every other token on the row still applies.
+
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸
 resolveItem`).

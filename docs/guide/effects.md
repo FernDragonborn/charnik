@@ -260,6 +260,12 @@ of this item is. Write the rungs your row offers in its `bonus_choice` column (`
 `uncommon:1,rare:2,very_rare:3` if your book states a rarity for each), and the number reads 0 until
 they answer.
 
+If what your row asks for is a WORD rather than a number — which damage type this ring resists — list
+the answers in `choice_options` (`acid,cold,fire,…`) and write `item_choice` where the word goes:
+`damage_sensitivity:resist:item_choice`. This one is not a formula; it is swapped into the token
+before anything reads it, so it works in any slot. Until the player answers, that token simply does
+not apply — the rest of the row still does.
+
 Ability names are always spelled out with what you want from them — `dex_mod`, not `dex`. A bare
 ability name is an error on purpose, because "dexterity" alone does not say modifier or score.
 
