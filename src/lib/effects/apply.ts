@@ -157,7 +157,7 @@ class FactsCollector {
 	}
 	private pushFlag(list: FactRef[], p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
 		if (p.target && !this.rejectTarget(p.kind, p.target, eff.source, token))
-			list.push({ target: p.target, source: eff.source });
+			list.push({ target: p.target, source: eff.source, ...(p.scope ? { scope: p.scope } : {}) });
 		return true;
 	}
 	private pushDieMod(list: RollMod[], p: ParsedEffect, eff: ActiveEffect, token: string): boolean {

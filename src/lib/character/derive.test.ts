@@ -1342,6 +1342,38 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		expect(unanswered.deriveIssues).toEqual([]);
 	});
 
+	it('states what an ATTACKER rolling at you gets, and changes no roll of yours', async () => {
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`rogue,5.5e,${S},Rogue,d8,"dex,int"`,
+			].join('\n'),
+			'items_srd.csv': [
+				'id,systems,source,name_en,effects,category,tags',
+				`cloak,5.5e,${S},Cloak of Displacement,disadvantage:attacked,wondrous,attunement`,
+				`guard,5.5e,${S},Spellguard Shield,disadvantage:attacked.spell,shield,attunement`,
+			].join('\n'),
+		});
+		const c = newCharacter('r', 'Rue', '5.5e');
+		c.build.classes = [{ class: `class:${S}:rogue`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [
+			{ item: `item:${S}:cloak`, qty: 1, equipped: true, attuned: true },
+			{ item: `item:${S}:guard`, qty: 1, equipped: true, attuned: true },
+		];
+		const sheet = deriveSheet(characterSchema.parse(c), g);
+		expect(sheet.incomingAttacks).toEqual([
+			{ swing: 'disadvantage', source: 'Cloak of Displacement' },
+			{ swing: 'disadvantage', source: 'Spellguard Shield', scope: 'spell' },
+		]);
+		// and NOTHING of the character's own rolls moved: we do not roll the monster's dice, so a
+		// disadvantage aimed at them must never reach the attack they throw
+		const facts = sheet.facts;
+		expect(rollEffectsFor(facts, 'attack').disadvantage).toBe(false);
+		expect(rollEffectsFor(facts, 'd20_tests').disadvantage).toBe(false);
+		expect(sheet.deriveIssues).toEqual([]);
+	});
+
 	it('a +1/+2/+3 WEAPON reads the answer too, on the path its own bonus takes', async () => {
 		const g = await makeTempContentRoot({
 			'classes_srd.csv': [

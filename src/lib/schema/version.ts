@@ -67,7 +67,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Resistance, Armor of Resistance, Dragon Scale Mail — ask for it through the new `choice_options`
 // column and fold the answer via `item_choice`. An install left at v15 has three magic items whose
 // resistance is a sentence nothing reads.
-export const CONTENT_SEED_VERSION = 16;
+// v17: Cloak of Displacement and Spellguard Shield say what an ATTACKER rolling at you gets
+// (`disadvantage:attacked`), in both editions, rather than only as prose. An install left at v16 has
+// two magic items whose whole point is a sentence the sheet never states.
+export const CONTENT_SEED_VERSION = 17;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

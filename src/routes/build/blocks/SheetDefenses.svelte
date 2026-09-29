@@ -66,6 +66,10 @@
 	const senses = $derived(Object.entries(s?.senses ?? {}).filter(([, comp]) => comp.value > 0));
 	// a condition you cannot be given reads as a defence chip like a damage immunity, because to a
 	// player it is one — same card, same question: what is true of your body
+	/** What an attacker rolling at you gets. Stated beside the other facts about your body, because
+	 *  that is what it is — no roll on this sheet changes, since we never roll the monster's dice. */
+	const incoming = $derived(s?.incomingAttacks ?? []);
+
 	const conditionImmunities = $derived.by(() => {
 		const graph = b.graph;
 		if (!s || !graph) return [];
@@ -123,6 +127,18 @@
 				{#each conditionImmunities as label (label)}<span class="tag gold"
 						>{$_('build.defenses.immuneTo', { values: { type: label } })}</span
 					>{/each}
+				{#each incoming as a (a.source + a.swing + (a.scope ?? ''))}<span
+						class="tag"
+						class:gold={a.swing === 'disadvantage'}
+						class:accent={a.swing === 'advantage'}
+						title={a.source}
+						>{$_(
+							a.scope
+								? `build.defenses.attackedScoped.${a.swing}`
+								: `build.defenses.attacked.${a.swing}`,
+							{ values: { kind: a.scope ?? '' } },
+						)}</span
+					>{/each}
 				{#if hasDefenses}
 					{#each defenses.resist as d (d)}<span class="tag gold"
 							>{$_('build.defenses.resists', { values: { type: damageTypeLabel(d, $_) } })}</span
@@ -133,7 +149,7 @@
 					{#each defenses.vulnerable as d (d)}<span class="tag accent"
 							>{$_('build.defenses.vulnerableTo', { values: { type: damageTypeLabel(d, $_) } })}</span
 						>{/each}
-				{:else if !conditionImmunities.length}
+				{:else if !conditionImmunities.length && !incoming.length}
 					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>
 				{/if}
 				<button

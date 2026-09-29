@@ -24,6 +24,8 @@ const SKILL_TARGETS = [
  *  exactly as it may name its own damage type. Two sources take the GREATER range, which is
  *  what `set_override:<t>:<n>:floor` already means, so the fold needs no new op. */
 export const SENSE_PREFIX = 'senses.';
+/** The one target that is not a die this character throws: what an ATTACKER rolling at them gets. */
+export const INCOMING_ATTACK_TARGET = 'attacked';
 const SENSE_TARGET = /^senses\.[a-z][a-z0-9_]{0,31}$/;
 
 const NUMERIC_TARGETS = new Set<string>([
@@ -53,6 +55,11 @@ const NUMERIC_TARGETS = new Set<string>([
 // out over — `damage` included for GWF-style `reroll:damage`.
 const ROLL_TARGETS = new Set<string>([
 	'attack',
+	// `attacked` is the one target that is NOT your roll: it is what an attacker rolling AT you gets
+	// (Cloak of Displacement). The sheet STATES it and the roller never folds it, because we do not
+	// roll the monster's dice — which is exactly why it needs a channel of its own rather than a
+	// scope on `attack`, where it would have landed on the dice you throw.
+	'attacked',
 	'damage',
 	'initiative',
 	'd20_tests',

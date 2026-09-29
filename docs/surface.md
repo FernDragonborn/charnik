@@ -603,11 +603,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
 - `function deriveSenses` — Every sense some effect grants, folded to its range.
 - `function deriveConditionImmunities` — Conditions the character cannot be given, deduped and in the order the facts arrived.
+- `interface IncomingAttack` — One statement about the dice an ATTACKER rolls at this character.
+- `function deriveIncomingAttacks` — * What an attacker rolling AT this character gets — Cloak of Displacement, Spellguard Shield.
 - `function deriveDamageSensitivities` — Damage defenses collected from `damage_sensitivity` facts, deduped per bucket.
 
 ### `src/lib/character/derive-targets.ts`
 
 - `const SENSE_PREFIX` — `senses.<name>` — a sense and how far it reaches.
+- `const INCOMING_ATTACK_TARGET` — The one target that is not a die this character throws: what an ATTACKER rolling at them gets.
 - `const isPluginContributionTarget` — * May a plugin `contributions` key name this target (plugins.md §4.4)?
 - `const isEffectTargetSupported` — B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
 
@@ -1802,4 +1805,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1083 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1086 exports across 145 modules · 74 duplicate suspects._

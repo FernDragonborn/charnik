@@ -173,6 +173,17 @@ the feature in the trace. The rung is `partial` and not `half` for two reasons: 
 target, so `half:skills` reads as "proficiency in half the skills"; and "half" reads as a REDUCTION,
 while this rung is a gain — a lesser proficiency, never a cut-down one.
 
+**`attacked` is the one target that is not YOUR roll.** The engine models the dice this character
+throws — `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has none of
+them — so "attack rolls against you have disadvantage" (Cloak of Displacement) has nowhere to land on
+`attack` without putting the enemy's penalty on your own swing. It is a second, small channel
+instead: the sheet STATES it beside the other facts about your body, and the roller never folds it,
+because we do not roll the monster's dice. It takes a qualifier like any scopable target —
+Spellguard Shield is `disadvantage:attacked.spell`, a SPELL attack aimed at you rather than every
+attack — and a flag carries that qualifier the way a numeric fact already did (`FactRef.scope`).
+What it deliberately does NOT do is decide anything: a DM rolling the monster's attack reads the
+chip and applies it, which is the same bargain every other "you may" in this app makes.
+
 **`item_choice` is a PLACEHOLDER, not a variable.** Where a row asks the player a question whose
 answer is a WORD — Ring of Resistance's damage type, Dragon Scale Mail's — the row lists the answers
 in `choice_options` (`content.md`) and writes `item_choice` in the slot the word goes in:

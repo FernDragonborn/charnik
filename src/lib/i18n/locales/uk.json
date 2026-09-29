@@ -97,6 +97,14 @@
 			"armour": "Броня",
 			"editLanguages": "Мови…",
 			"fly": "політ {feet} футів",
+			"attacked": {
+				"advantage": "атаки по вас — з перевагою",
+				"disadvantage": "атаки по вас — з поміхою"
+			},
+			"attackedScoped": {
+				"advantage": "атаки ({kind}) по вас — з перевагою",
+				"disadvantage": "атаки ({kind}) по вас — з поміхою"
+			},
 			"immuneTo": "імунітет: {type}",
 			"languages": "Мови",
 			"noResistances": "без опорів до шкоди",

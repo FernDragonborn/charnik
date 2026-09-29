@@ -226,7 +226,7 @@ function qualifierSlot(
 /** The targets a dotted sub-name SCOPES rather than names: `damage.melee` is a damage bonus for
  *  melee things, while `speed.fly` is its own stat. Two families, one dot — so the split is a list,
  *  not a guess. */
-const SCOPABLE_TARGETS: readonly string[] = ['attack', 'damage'];
+const SCOPABLE_TARGETS: readonly string[] = ['attack', 'damage', 'attacked'];
 
 const baseTarget = (target: string): string => target.toLowerCase().split('.')[0] ?? '';
 
@@ -443,6 +443,17 @@ function tightenDelimiters(kind: EffectKind, body: string): string {
 	return FREE_TEXT_BODY.has(kind) ? body.trim() : body.replace(/\s*([:,])\s*/g, '$1').trim();
 }
 
+/**
+ * The fallback for every kind with no parser of its own: the body IS the target.
+ *
+ * A scopable one splits the same way a numeric target does (`advantage:attacked.spell` — Spellguard
+ * Shield's disadvantage is about a SPELL attack aimed at you, not every attack), so a qualifier works
+ * on a flag without a second grammar. A FREE-TEXT body is left whole: a `note:`'s prose is display
+ * text and its first full stop is punctuation, not a namespace.
+ */
+const bareTarget: KindParser = (rest, raw, kind) =>
+	FREE_TEXT_BODY.has(kind) ? { kind, target: rest, raw } : { kind, ...scopedTarget(rest), raw };
+
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -455,7 +466,7 @@ function classifyToken(token: string): ParsedEffect {
 	const rest = tightenDelimiters(kind, raw.slice(sep + 1));
 	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
 	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
-	return (KIND_PARSERS[kind] ?? ((r, rw) => ({ kind, target: r, raw: rw })))(rest, raw, kind);
+	return (KIND_PARSERS[kind] ?? bareTarget)(rest, raw, kind);
 }
 
 /** A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric

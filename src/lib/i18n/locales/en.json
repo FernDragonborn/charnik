@@ -97,6 +97,14 @@
 			"armour": "Armour",
 			"editLanguages": "Languages…",
 			"fly": "fly {feet} ft",
+			"attacked": {
+				"advantage": "attacks against you have advantage",
+				"disadvantage": "attacks against you have disadvantage"
+			},
+			"attackedScoped": {
+				"advantage": "{kind} attacks against you have advantage",
+				"disadvantage": "{kind} attacks against you have disadvantage"
+			},
 			"immuneTo": "immune to {type}",
 			"languages": "Languages",
 			"noResistances": "no damage resistances",

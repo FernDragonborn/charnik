@@ -84,6 +84,10 @@ export interface NumericFact {
 export interface FactRef {
 	target: string;
 	source: string;
+	/** What NARROWS this flag, when it applies to one case rather than to every roll on the target:
+	 *  Spellguard Shield's `advantage:attacked.spell` is about a SPELL attack aimed at you, not every
+	 *  attack. Absent means "always", which is what every flag was before the qualifier existed. */
+	scope?: string;
 }
 interface ProficiencyFact {
 	target: string;

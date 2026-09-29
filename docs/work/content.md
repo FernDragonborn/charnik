@@ -317,12 +317,19 @@
      would land after the goggles' add and be noted "already ≥". Making a floor global the way a cap
      is would fix it and break abilities. `internals/effects.md` ▸ Targets has the full statement.
 
-  6. **Attack rolls made AGAINST you** (Cloak of Displacement, both editions). The engine models the
-     dice YOU roll: `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has
-     none of them. So this wants a second, small fact channel — "what an attacker rolling at me gets"
-     — that the sheet displays and the roller never folds, since we do not roll the monster's dice.
-     Cheapest first cut is display: the sheet says "attack rolls against you have disadvantage" where
-     it already says what is true of your body, and no roll changes.
+  6. **DONE — attack rolls made AGAINST you.** `attacked` is a target of its own rather than a scope
+     on `attack`, because the two are opposite ends of the same swing: folding it into `attack` would
+     have put the enemy's disadvantage on the dice this character throws. The sheet states it beside
+     the other facts about the body and the roller never folds it — we do not roll the monster's
+     dice, so a DM reads the chip and applies it.
+     It takes a qualifier like any scopable target: Spellguard Shield is `disadvantage:attacked.spell`
+     (a SPELL attack aimed at you), which cost the one thing that was not foreseen — a flag kind
+     (`advantage`/`disadvantage`/`auto_*`) took its body as a BARE target and never split a scope off
+     it, so `FactRef` gained a `scope` and the parser's fallback now splits one, leaving a `note:`'s
+     prose alone because its first full stop is punctuation rather than a namespace.
+     Four rows carry it: Cloak of Displacement and Spellguard Shield in both editions. Robe of
+     Scintillating Colors stays prose — its disadvantage is charge-gated and applies only to
+     creatures that can see you.
 
   **What will never fold, and should stop being counted as missing:** consumables (potions, oils —
   drinking is not a modelled event), objects with their own stat block (Mirror of Life Trapping,

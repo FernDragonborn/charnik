@@ -26,7 +26,12 @@ export type { ResourceOption };
 import { prepareDerive, type HitDiePool } from './derive-setup';
 import { assembleSheet } from './derive-assemble';
 import { applyPluginPrePass } from './derive-plugins';
-import { type SkillProficiency, type AbilityBlock, type ToolProficiency } from './derive-stats';
+import {
+	type SkillProficiency,
+	type AbilityBlock,
+	type ToolProficiency,
+	type IncomingAttack,
+} from './derive-stats';
 import { ABILITIES } from './schema';
 import { ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
@@ -79,6 +84,9 @@ export interface CharacterSheet {
 	damageSensitivities: { resist: string[]; immune: string[]; vulnerable: string[] };
 	/** Conditions this character cannot be given (`condition_immunity`), as state-row ids. */
 	conditionImmunities: string[];
+	/** What an ATTACKER rolling at this character gets (`attacked`). Stated, never folded — we do not
+	 *  roll the monster's dice, so no roll on this sheet changes because of it. */
+	incomingAttacks: IncomingAttack[];
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
 	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), resolved from the

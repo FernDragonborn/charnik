@@ -27,7 +27,7 @@ import {
 } from '../content/loader';
 import { tagInt, parseItemTags, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
-import { SENSE_PREFIX } from './derive-targets';
+import { SENSE_PREFIX, INCOMING_ATTACK_TARGET } from './derive-targets';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
  *  the stat helpers + deriveSheet's base-speed read. */
@@ -416,6 +416,35 @@ export function deriveSenses(facts: EffectFacts): Record<string, Computed> {
  *  language, and a word no row carries (2014's "disease") still says itself. */
 export function deriveConditionImmunities(facts: EffectFacts): string[] {
 	return [...new Set(facts.conditionImmunities.map((c) => c.id))];
+}
+
+/** One statement about the dice an ATTACKER rolls at this character. */
+export interface IncomingAttack {
+	swing: 'advantage' | 'disadvantage';
+	/** The kind of attack it applies to (`spell`), absent when it applies to every attack. */
+	scope?: string;
+	source: string;
+}
+
+/**
+ * What an attacker rolling AT this character gets — Cloak of Displacement, Spellguard Shield.
+ *
+ * The engine models the dice YOU roll: `rollEffectsFor` takes the rolling thing's scopes, and an
+ * attack aimed at you has none of them. So this is a second, small channel that the sheet STATES and
+ * the roller never folds, because we do not roll the monster's dice. Folding it into `attack` would
+ * have put the enemy's disadvantage on your own swing, which is why it is a target of its own.
+ */
+export function deriveIncomingAttacks(facts: EffectFacts): IncomingAttack[] {
+	const lists = [
+		['advantage', facts.advantage],
+		['disadvantage', facts.disadvantage],
+	] as const;
+	const out: IncomingAttack[] = [];
+	for (const [swing, list] of lists)
+		for (const f of list)
+			if (f.target === INCOMING_ATTACK_TARGET)
+				out.push({ swing, source: f.source, ...(f.scope ? { scope: f.scope } : {}) });
+	return out;
 }
 
 /** Damage defenses collected from `damage_sensitivity` facts, deduped per bucket. */
