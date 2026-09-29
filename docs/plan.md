@@ -271,12 +271,12 @@ position and are given per wave, because most of them were learned the hard way.
      four `logger.*` calls in the whole app outside `diag/`, against a facade that already has a
      desktop file sink, a web ring buffer, a redaction rule and a `no-console` lint holding everyone
      to it. It replaces AUDIT-COVERAGE, whose findings are all closed.
-  2. **MAGIC-ITEM-VOCAB ▸ 6** — attack rolls made AGAINST you, both editions. Small, and it closes the
-     0.8.0 item together with the next one.
-  3. **MAGIC-ITEM-VOCAB ▸ 1** — a qualifier on a defence. 17 rows counted across the two packs, and
-     the one real grammar addition here: a closed qualifier set in the target namespace plus a scope
-     for what is coming AT you. It also frees Dragon Scale Mail's breath-weapon note and the six
-     FEATURE-PASSIVES rows blocked on SCOPED-BONUS reaching spells.
+  2. ~~MAGIC-ITEM-VOCAB ▸ 6~~ — **done.** `attacked` is a channel of its own; four rows.
+  3. ~~MAGIC-ITEM-VOCAB ▸ 1~~ — **done.** The qualifier is a target namespace and, more to the point,
+     a fact the fold refuses: fourteen rows. What it did NOT close is the six FEATURE-PASSIVES rows
+     waiting on SCOPED-BONUS reaching SPELLS — a different scope on a different target — and Dragon
+     Scale Mail's breath-weapon note, whose qualifier is a creature's ability rather than a kind of
+     roll.
   4. **PANEL-COLLAPSE-PERSIST** — `ui.md`. One field of a shape the schema already has seven of.
   5. **STACK-RAW** — `mechanics.md`. Two divergences from the rule the engine says it follows.
   6. **CRIT-THRESHOLD** — `mechanics.md` ▸ FEATURE-PASSIVES. A numeric target and six comparisons

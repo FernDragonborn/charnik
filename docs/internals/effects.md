@@ -173,6 +173,23 @@ the feature in the trace. The rung is `partial` and not `half` for two reasons: 
 target, so `half:skills` reads as "proficiency in half the skills"; and "half" reads as a REDUCTION,
 while this rung is a gain — a lesser proficiency, never a cut-down one.
 
+**A QUALIFIER on a defence lives in the target namespace**, beside the scopes that were already
+there: `flat_bonus:ac.ranged+2` (Arrow-Catching Shield), `advantage:saves.spell` (Mantle of Spell
+Resistance), `saves.magical` where the row says "spells and other magical effects", and
+`saves.poisoned` where it says "saves to avoid or end the Poisoned condition" — a condition id, open
+the way `condition_immunity`'s is. It costs no token segment, which `compatibility.md` §4 reserves
+for a bonus type.
+
+**A qualified fact is STATED, never folded**, and that is the half that matters: "+2 AC against
+ranged attacks" is not +2 AC, and "advantage on saving throws against spells" is not advantage on a
+Strength save. So `applyEffects` skips a fact carrying a scope, `pushFlagNotes` skips one too (a note
+on every save saying the Mantle helps would be a lie in the one place the sheet promises to explain
+itself), and `rollEffectsFor` applies one only when the roll names that scope — which a save does
+not, because the app cannot tell what a save is against. `deriveQualifiedDefenses` is where they are
+read instead, and the defences strip says them. Auto-applying would need the player to say what the
+roll is against at roll time; until that control exists, stating the fact is the honest behaviour
+(`characters.md` ▸ A tracker surfaces, it never decides).
+
 **`attacked` is the one target that is not YOUR roll.** The engine models the dice this character
 throws — `rollEffectsFor` takes the rolling thing's scopes, and an attack aimed at you has none of
 them — so "attack rolls against you have disadvantage" (Cloak of Displacement) has nowhere to land on

@@ -24,6 +24,7 @@ import {
 	derivePassives,
 	deriveConditionImmunities,
 	deriveIncomingAttacks,
+	deriveQualifiedDefenses,
 	deriveDamageSensitivities,
 	deriveSenses,
 	type StatInputs,
@@ -212,6 +213,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const damageSensitivities = deriveDamageSensitivities(facts);
 	const conditionImmunities = deriveConditionImmunities(facts);
 	const incomingAttacks = deriveIncomingAttacks(facts);
+	const qualifiedDefenses = deriveQualifiedDefenses(facts);
 	const senses = deriveSenses(facts);
 
 	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
@@ -239,6 +241,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		damageSensitivities,
 		conditionImmunities,
 		incomingAttacks,
+		qualifiedDefenses,
 		senses,
 		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({

@@ -31,6 +31,7 @@ import {
 	type AbilityBlock,
 	type ToolProficiency,
 	type IncomingAttack,
+	type QualifiedDefense,
 } from './derive-stats';
 import { ABILITIES } from './schema';
 import { ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
@@ -87,6 +88,9 @@ export interface CharacterSheet {
 	/** What an ATTACKER rolling at this character gets (`attacked`). Stated, never folded — we do not
 	 *  roll the monster's dice, so no roll on this sheet changes because of it. */
 	incomingAttacks: IncomingAttack[];
+	/** What is true only IN A CASE — "+2 AC against ranged attacks", "advantage on saves against
+	 *  spells". Stated rather than folded: the app cannot tell what a save is against. */
+	qualifiedDefenses: QualifiedDefense[];
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
 	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), resolved from the

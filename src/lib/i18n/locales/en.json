@@ -110,6 +110,15 @@
 			"noResistances": "no damage resistances",
 			"none": "none",
 			"noneProficient": "none proficient",
+			"qualifiedBonus": "{amount} {stat} vs {kind}",
+			"qualifiedSwing": {
+				"advantage": "advantage on {stat} vs {kind}",
+				"disadvantage": "disadvantage on {stat} vs {kind}"
+			},
+			"qualifiedTarget": {
+				"ac": "AC",
+				"saves": "saves"
+			},
 			"resists": "resists {type}",
 			"saves": "Saving throws",
 			"sense": "{sense} {feet} ft",
@@ -2084,5 +2093,12 @@
 		"scope": "Who reads this",
 		"scopeCharacter": "This character",
 		"scopeAll": "Everywhere"
+	},
+	"qualifier": {
+		"spell": "spells",
+		"magical": "magical effects",
+		"ranged": "ranged attacks",
+		"poisoned": "being Poisoned",
+		"ranged_weapon": "ranged weapon attacks"
 	}
 }

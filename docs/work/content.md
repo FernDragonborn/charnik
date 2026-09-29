@@ -225,17 +225,27 @@
   player applies it by hand. Grouped by the gap, because the gap is the work — the rows follow for
   free once it closes.
 
-  1. **A QUALIFIER on a defence** (~12 rows, both editions). "Advantage on saving throws against
-     spells" (Mantle of Spell Resistance, Ring of Spell Turning, Spellguard Shield, 2014's Scarab of
-     Protection), "+2 AC against ranged attack rolls" (Arrow-Catching Shield), "resistance to damage
-     from Ranged weapon attacks" (Shield of Missile Attraction), "advantage on saves to avoid the
-     Poisoned condition" (Necklace of Adaptation, Periapt of Health). A bare `advantage:saves` folds
-     far too broadly, which is exactly why these stayed text.
-     **Shape: reuse SCOPED-BONUS's decision** — the qualifier lives in the TARGET namespace, not in a
-     new segment (`advantage:saves.spell`, `flat_bonus:ac.ranged+2`,
-     `damage_sensitivity:resist:ranged_weapon`), over a CLOSED qualifier set (spell · magical ·
-     ranged_weapon · poison · breath). The roll path already matches scopes; what it lacks is a scope
-     for the thing coming AT you, which is the design half.
+  1. **DONE — a qualifier on a defence.** It lives in the TARGET namespace as SCOPED-BONUS decided:
+     `flat_bonus:ac.ranged+2`, `advantage:saves.spell`, `saves.magical` where the row says "spells and
+     other magical effects", `saves.poisoned` where it says "to avoid or end the Poisoned condition"
+     — a condition id, open the way `condition_immunity`'s is rather than a closed keyword list.
+     **The half that mattered was NOT the grammar, it was the fold.** A bare `advantage:saves` folds
+     far too broadly, and so would a qualified one if nothing stopped it: `applyEffects` now skips a
+     fact carrying a scope, `pushFlagNotes` skips one (a note on every save claiming the Mantle helps
+     would be a lie in the one place the sheet promises to explain itself), and `rollEffectsFor`
+     applies one only when the roll names that scope. The sheet STATES them instead
+     (`deriveQualifiedDefenses`), because the app cannot tell what a save is against, and "+2 AC
+     against ranged" is not a number AC can hold.
+     Fourteen rows across the two editions. **What stays prose, and why:** Shield of Missile
+     Attraction wants resistance qualified by the SOURCE of the damage rather than its type, and the
+     type slot is deliberately free-form, so a qualifier written there is indistinguishable from a
+     pack's own damage type — that one wants its own answer, not this one. Belt of Dwarvenkind's
+     advantage is gated on not being a dwarf, which no guard can ask. Holy Avenger's is an aura it
+     grants to others. 2014's Necklace of Adaptation says "harmful gases and vapours", which is not
+     the Poisoned condition its 2024 text names.
+     **What is deliberately NOT built: the roll-time control.** Auto-applying would need the player to
+     say what a save is against, which is a design question of its own; until then the chip is on the
+     sheet and the player applies it.
 
   2. **DONE for 5.5e — a choice the ITEM asks, answered per instance.** `choice_options` lists the
      answers the row offers and `item_choice` marks the slot they go in, so the mechanism is the `+N`

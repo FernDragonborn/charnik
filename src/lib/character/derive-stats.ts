@@ -447,6 +447,49 @@ export function deriveIncomingAttacks(facts: EffectFacts): IncomingAttack[] {
 	return out;
 }
 
+/** One thing that is true of this character only IN A CASE — "+2 AC against ranged attacks",
+ *  "advantage on saving throws against spells". */
+export interface QualifiedDefense {
+	/** What it moves: a stat key (`ac`) or a roll group (`saves`). */
+	target: string;
+	/** The case it applies in, as the row wrote it (`ranged`, `spell`, `poisoned`). */
+	scope: string;
+	/** A numeric bonus, for a `flat_bonus`; absent for a flag. */
+	amount?: number;
+	/** A flag, for an `advantage`/`disadvantage`; absent for a number. */
+	swing?: 'advantage' | 'disadvantage';
+	source: string;
+}
+
+/**
+ * The statements a stat's own number cannot carry.
+ *
+ * "+2 AC against ranged attack rolls" is not +2 AC, and "advantage on saving throws against spells"
+ * is not advantage on your Strength save — so the fold skips a qualified fact (`applyEffects`) and
+ * the roll path skips it until the roll says what it is against (`rollEffectsFor`). This is where
+ * they are read instead: the sheet STATES them beside the other facts about the body, which is the
+ * honest thing a tracker can do about a case it cannot detect.
+ */
+export function deriveQualifiedDefenses(facts: EffectFacts): QualifiedDefense[] {
+	const out: QualifiedDefense[] = [];
+	for (const f of facts.numeric)
+		if (f.scope && f.op === 'add' && f.amount !== undefined && QUALIFIED_TARGETS.has(f.target))
+			out.push({ target: f.target, scope: f.scope, amount: f.amount, source: f.source });
+	const flags = [
+		['advantage', facts.advantage],
+		['disadvantage', facts.disadvantage],
+	] as const;
+	for (const [swing, list] of flags)
+		for (const f of list)
+			if (f.scope && QUALIFIED_TARGETS.has(f.target))
+				out.push({ target: f.target, scope: f.scope, swing, source: f.source });
+	return out;
+}
+/** The targets whose qualified form the DEFENCES strip states. `attack`/`damage` are qualified too,
+ *  but they fold per-weapon where the weapon is known, so they are not statements about the body;
+ *  `attacked` has its own channel, because it is not this character's roll at all. */
+const QUALIFIED_TARGETS = new Set<string>(['ac', 'saves']);
+
 /** Damage defenses collected from `damage_sensitivity` facts, deduped per bucket. */
 export function deriveDamageSensitivities(facts: EffectFacts): {
 	resist: string[];

@@ -389,13 +389,17 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 };
 export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<string>): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
-	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key));
-	out.disadvantage = facts.disadvantage.some((d) => matchesTarget(d.target, key));
 	// a SCOPED fact applies only to something the scope names — every comma-separated part must be in
 	// the rolling thing's scopes (GWF `two_handed,melee`), and a roll that names no scopes at all
 	// (a save, a skill) picks up none of them
 	const inScope = (scope: string | undefined): boolean =>
 		!scope || (scopes ? scope.split(',').every((t) => scopes.has(t)) : false);
+	// advantage answers to the qualifier too: "advantage on saving throws against spells" is not
+	// advantage on a save, and until the roll says what it is against, it does not apply
+	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key) && inScope(a.scope));
+	out.disadvantage = facts.disadvantage.some(
+		(d) => matchesTarget(d.target, key) && inScope(d.scope),
+	);
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || !matchesTarget(f.target, key)) continue;
 		// §A: an ATTACK-scoped bonus is already in the row's to-hit (computeAttacks folds it there,

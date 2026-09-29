@@ -453,7 +453,10 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
  *  all share this shape). */
 function pushFlagNotes(list: FactRef[], label: string, key: string, acc: FoldCtx): void {
 	for (const a of list)
-		if (matchesTarget(a.target, acc.targetKey))
+		// a QUALIFIED flag is not true of this stat — "advantage on saves against spells" is not
+		// advantage on your Strength save, and a note saying so on every save would be a lie in the
+		// one place the sheet promises to explain itself
+		if (!a.scope && matchesTarget(a.target, acc.targetKey))
 			acc.notes.push({
 				text: `${a.source}: ${label} on ${acc.targetKey}`,
 				key,
@@ -472,8 +475,11 @@ export function applyEffects(
 	// A9 speed-bonus block: while a block_bonus matches this target, effect-borne POSITIVE bonuses
 	// are dropped (RAW). Negative adds (penalties) survive; the BASE trace is never touched.
 	const block = facts.blockedBonuses.find((b) => matchesTarget(b.target, targetKey));
+	// A QUALIFIED fact is not about this stat, it is about this stat IN A CASE: "+2 AC against ranged
+	// attacks" is not +2 AC, and folding it here would be a wrong number wearing the right label. The
+	// sheet states those separately (`deriveQualifiedDefenses`), so they are skipped rather than lost.
 	for (const f of facts.numeric)
-		if (matchesTarget(f.target, targetKey)) foldNumericFact(f, block, acc);
+		if (!f.scope && matchesTarget(f.target, targetKey)) foldNumericFact(f, block, acc);
 	pushFlagNotes(facts.advantage, 'advantage', NOTE_KEY.advantage, acc);
 	pushFlagNotes(facts.disadvantage, 'disadvantage', NOTE_KEY.disadvantage, acc);
 	pushFlagNotes(facts.autoFail, 'auto-fail', NOTE_KEY.autoFail, acc);

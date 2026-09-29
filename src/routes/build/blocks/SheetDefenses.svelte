@@ -69,6 +69,12 @@
 	/** What an attacker rolling at you gets. Stated beside the other facts about your body, because
 	 *  that is what it is — no roll on this sheet changes, since we never roll the monster's dice. */
 	const incoming = $derived(s?.incomingAttacks ?? []);
+	/** What is true only in a case. Stated, never folded: the app cannot tell what a save is against,
+	 *  and "+2 AC against ranged" is not +2 AC. */
+	const qualified = $derived(s?.qualifiedDefenses ?? []);
+	/** The word for a qualifier. Open vocabulary like a damage type — a pack may write its own, and one
+	 *  nobody has translated reads as its author wrote it. */
+	const qualifierLabel = (scope: string) => $_(`qualifier.${scope}`, { default: scope });
 
 	const conditionImmunities = $derived.by(() => {
 		const graph = b.graph;
@@ -127,6 +133,24 @@
 				{#each conditionImmunities as label (label)}<span class="tag gold"
 						>{$_('build.defenses.immuneTo', { values: { type: label } })}</span
 					>{/each}
+				{#each qualified as q (q.source + q.target + q.scope)}<span
+						class="tag"
+						class:gold={q.swing !== 'disadvantage'}
+						class:accent={q.swing === 'disadvantage'}
+						title={q.source}
+						>{$_(
+							q.amount === undefined
+								? `build.defenses.qualifiedSwing.${q.swing}`
+								: 'build.defenses.qualifiedBonus',
+							{
+								values: {
+									stat: $_(`build.defenses.qualifiedTarget.${q.target}`, { default: q.target }),
+									kind: qualifierLabel(q.scope),
+									amount: signed(q.amount ?? 0),
+								},
+							},
+						)}</span
+					>{/each}
 				{#each incoming as a (a.source + a.swing + (a.scope ?? ''))}<span
 						class="tag"
 						class:gold={a.swing === 'disadvantage'}
@@ -136,7 +160,7 @@
 							a.scope
 								? `build.defenses.attackedScoped.${a.swing}`
 								: `build.defenses.attacked.${a.swing}`,
-							{ values: { kind: a.scope ?? '' } },
+							{ values: { kind: qualifierLabel(a.scope ?? '') } },
 						)}</span
 					>{/each}
 				{#if hasDefenses}
@@ -149,7 +173,7 @@
 					{#each defenses.vulnerable as d (d)}<span class="tag accent"
 							>{$_('build.defenses.vulnerableTo', { values: { type: damageTypeLabel(d, $_) } })}</span
 						>{/each}
-				{:else if !conditionImmunities.length && !incoming.length}
+				{:else if !conditionImmunities.length && !incoming.length && !qualified.length}
 					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>
 				{/if}
 				<button

@@ -1374,6 +1374,44 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		expect(sheet.deriveIssues).toEqual([]);
 	});
 
+	it('a QUALIFIED defence is stated, and never folded into the plain number', async () => {
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`cleric,5.5e,${S},Cleric,d8,"wis,cha"`,
+			].join('\n'),
+			'items_srd.csv': [
+				'id,systems,source,name_en,effects,category,tags',
+				`arrow_shield,5.5e,${S},Arrow-Catching Shield,flat_bonus:ac.ranged+2,shield,attunement`,
+				`mantle,5.5e,${S},Mantle of Spell Resistance,advantage:saves.spell,wondrous,attunement`,
+			].join('\n'),
+		});
+		const c = newCharacter('c', 'Cleric', '5.5e');
+		c.build.classes = [{ class: `class:${S}:cleric`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [
+			{ item: `item:${S}:arrow_shield`, qty: 1, equipped: true, attuned: true },
+			{ item: `item:${S}:mantle`, qty: 1, equipped: true, attuned: true },
+		];
+		const sheet = deriveSheet(characterSchema.parse(c), g);
+		// the statements are THERE
+		expect(sheet.qualifiedDefenses).toEqual([
+			{ target: 'ac', scope: 'ranged', amount: 2, source: 'Arrow-Catching Shield' },
+			{ target: 'saves', scope: 'spell', swing: 'advantage', source: 'Mantle of Spell Resistance' },
+		]);
+		// and NOTHING unqualified moved: +2 AC against ranged is not +2 AC, and advantage on saves
+		// against spells is not advantage on a Strength save
+		expect(sheet.ac.value).toBe(10);
+		// the shield itself may sit in the trace — it IS the shield being worn — but never with the +2
+		// it only has against ranged attacks
+		expect(sheet.ac.trace.some((t) => t.source === 'Arrow-Catching Shield' && t.amount === 2)).toBe(
+			false,
+		);
+		expect(rollEffectsFor(sheet.facts, 'save.str').advantage).toBe(false);
+		expect(JSON.stringify(sheet.abilities.str.save.notes ?? [])).not.toContain('Mantle');
+		expect(sheet.deriveIssues).toEqual([]);
+	});
+
 	it('a +1/+2/+3 WEAPON reads the answer too, on the path its own bonus takes', async () => {
 		const g = await makeTempContentRoot({
 			'classes_srd.csv': [

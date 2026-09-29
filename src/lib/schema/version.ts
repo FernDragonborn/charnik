@@ -70,7 +70,11 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v17: Cloak of Displacement and Spellguard Shield say what an ATTACKER rolling at you gets
 // (`disadvantage:attacked`), in both editions, rather than only as prose. An install left at v16 has
 // two magic items whose whole point is a sentence the sheet never states.
-export const CONTENT_SEED_VERSION = 17;
+// v18: the fourteen rows whose defence carries a QUALIFIER — "+2 AC against ranged attacks",
+// "advantage on saving throws against spells", "advantage on saves to avoid the Poisoned condition"
+// — say it in tokens (`ac.ranged`, `saves.spell`, `saves.magical`, `saves.poisoned`) rather than only
+// as prose. An install left at v17 reads eleven magic items as doing nothing.
+export const CONTENT_SEED_VERSION = 18;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;
