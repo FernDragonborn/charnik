@@ -44,6 +44,11 @@ async function graphOf(): Promise<ContentGraph> {
 			`grappled,5e,${S},Grappled,`, // a DIFFERENT edition — must NOT appear for a 5.5e character
 			`exhaustion,5.5e,${S},Exhaustion,6`, // the leveled one — its max_level is the lethal rung
 		].join('\n'),
+		// the OTHER kind of the merged state type, so the "+" list can be asserted as one list
+		'effects_srd.csv': [
+			'id,systems,source,name_en,valence,duration_rounds,effects',
+			`half_cover,5.5e,${S},Half Cover,helpful,,flat_bonus:ac+2`,
+		].join('\n'),
 		'items_srd.csv': [
 			'id,systems,source,name_en,category,tags,damage',
 			`dagger,5.5e,${S},Dagger,weapon,"simple, melee, finesse",1d4 piercing`,
@@ -815,15 +820,29 @@ describe('CombatVM · a pool pays for a cast instead of a slot (FEAT-FREE-CAST)'
 	});
 });
 
-describe('CombatVM · conditionList uses the character system (CVM-bug2)', () => {
+describe('CombatVM · stateCatalog uses the character system (CVM-bug2)', () => {
 	it('lists conditions for the character system, not a hardcoded edition', async () => {
 		const graph = await graphOf();
 		combat.graph = graph;
 		combat.character = newCharacter('valen', 'Valen', '5.5e');
-		const labels = combat.effects.conditionList.map((c) => c.label);
+		const labels = combat.effects.stateCatalog.map((c) => c.label);
 		expect(labels).toContain('Prone'); // 5.5e
 		expect(labels).not.toContain('Grappled'); // 5e-only
-		expect(combat.effects.conditionList.find((c) => c.label === 'Prone')?.id).toBe('prone'); // carries the id
+		const prone = combat.effects.stateCatalog.find((c) => c.label === 'Prone');
+		expect(prone?.conditionId).toBe('prone'); // carries the id the toggle matches on
+		expect(prone?.tokens).toEqual(['apply_condition:prone']); // and applies it as a condition
+	});
+
+	it('offers conditions and catalog entries as ONE list', async () => {
+		const graph = await graphOf();
+		combat.graph = graph;
+		combat.character = newCharacter('valen', 'Valen', '5.5e');
+		const cat = combat.effects.stateCatalog;
+		expect(cat.some((c) => c.conditionId !== null)).toBe(true);
+		expect(cat.some((c) => c.conditionId === null && c.ref !== null)).toBe(true);
+		// exhaustion is the one condition kept out: it is a stepper, and a row saying only "on" would
+		// double-count with it (D19)
+		expect(cat.find((c) => c.conditionId === 'exhaustion')).toBeUndefined();
 	});
 });
 

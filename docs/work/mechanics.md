@@ -368,9 +368,10 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 - [x] **CONDEFF · one content type for conditions and effects.** Poisoned IS disadvantage on the
   attack the same way Bless is, and that they were two content TYPES was an authoring accident the
   player and the pack author were both made to know about. One type now (`effect`), with a `kind`
-  open enum naming the two UIs that still differ — a binary or levelled toggle the rules name, versus
-  a "+" catalog entry carrying a duration — and `src/lib/content/states.ts` as the ONE place that
-  answers "which is this row", so no consumer re-derives the split.
+  open enum and `src/lib/content/states.ts` as the ONE place that answers "which is this row", so no
+  consumer re-derives the split. The picker is one list too: the kind decides only how a row behaves
+  once it is in it — a condition toggles, anything else adds another instance
+  (`docs/internals/ui.md` ▸ Panels).
   **`negative` is gone, replaced by `valence`** (`harmful` | `helpful` | `neutral`, blank reads
   neutral): its default was inverted between the two old types, so merging it meant picking whose
   default won for every row of the other. A `v2 → v3` content migration carries an older row's

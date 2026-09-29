@@ -1190,7 +1190,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isConditionRow` — A row the RULES name, as opposed to one the player adds.
 - `const conditionRows` — Every condition of this edition.
 - `const conditionRow` — One condition by id, or undefined — the lookup `apply_condition:<id>` resolves through.
-- `const effectCatalogRows` — The "+" picker's catalog: the states a player adds themselves, which is everything that is not a * condition (a condi…
+- `const appliedConditionId` — The condition this row PUTS ON the character, when putting it on is the whole of what the row * does.
+- `const pickerConditionId` — Which condition a picker row stands for — its own id, or the one it exists to apply.
+- `const addableStateRows` — Every state the "+" picker offers — conditions and catalog entries in ONE list.
 - `const valenceOf` — Whether a state is something you want.
 - `const isHarmful` — Does this state belong on the DEBUFF side of the panel?
 
@@ -1787,4 +1789,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1068 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1070 exports across 145 modules · 74 duplicate suspects._

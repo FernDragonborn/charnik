@@ -33,11 +33,16 @@ actions, effects and conditions, inventory, notes. A **view is a preset arrangem
 below; the panel area is the only customizable zone. Every panel collapses, reorders and hides, and
 that arrangement is per character and lives in `ui`, not in `play` (`characters.md`).
 
-**Conditions are not their own panel.** A condition is an effect of kind `apply_condition`, so ONE
-"Effects & conditions" list is the single source of truth for what is currently modifying the
-character — each row with its provenance, duration, kind tag and remove control, concentration shown
-inline, and both quick-pickers writing into that same list. A second panel would be a second answer
-to "what is affecting me".
+**Conditions are not their own panel, and not their own picker.** A condition is an effect of kind
+`apply_condition`, so ONE "Effects & conditions" list is the single source of truth for what is
+currently modifying the character — each row with its provenance, duration, kind tag and remove
+control, and concentration shown inline. A second panel would be a second answer to "what is
+affecting me". The panel's ONE "+" is the same argument one step earlier: the two kinds are one
+content type (`content.md` ▸ CONDEFF), so they are one searchable list, and what the kind still
+decides is only how a row behaves once it is in it — a condition toggles, because you cannot be
+Poisoned twice, and anything else adds another instance. The one row kept out is a LEVELLED
+condition (exhaustion): it is a stepper with a block of its own, and a list entry that could only
+ever say "on" would double-count with it.
 
 **The inventory view is a card grid, not a list.** Items are cards in sections (equipped and attuned,
 weapons, consumables, gear, treasure), each with a category icon, the key stat, quantity, and its

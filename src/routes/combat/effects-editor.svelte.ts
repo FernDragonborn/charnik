@@ -1,11 +1,11 @@
 /*
  * Effects & conditions on the sheet: the quick-pick catalog, adding/removing a runtime effect,
- * its round timer, and the condition list (with exhaustion, which is a condition with a level).
+ * its round timer, and exhaustion, which is a condition with a level.
  *
  * "Conditions are merged into the Effects panel" is a design decision, not a coincidence — a
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
- * currently modifying the character (docs/internals/content.md ▸ CONDEFF). That is why they are one
- * module.
+ * currently modifying the character, and ONE picker writes into it (docs/internals/content.md ▸
+ * CONDEFF). That is why they are one module.
  */
 import {
 	EXHAUSTION_MAX,
@@ -14,7 +14,13 @@ import {
 	type EffectInstance,
 } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
-import { conditionRow, conditionRows, effectCatalogRows, isHarmful } from '$lib/content/states';
+import {
+	addableStateRows,
+	conditionRow,
+	isConditionRow,
+	pickerConditionId,
+	isHarmful,
+} from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
 import { describedProse } from '$lib/content/overrides.svelte';
 import { translator } from '$lib/i18n';
@@ -26,6 +32,17 @@ import {
 	type MenuKind,
 } from '$lib/combat/helpers';
 import { conditionIdOf } from '$lib/combat/effects-view';
+
+/** One row of the "+" picker. `conditionId` is what makes the two kinds behave differently once
+ *  they are in one list: a condition toggles off again, anything else adds another instance. */
+export interface StateChoice {
+	ref: string | null;
+	conditionId: string | null;
+	label: string;
+	tokens: string[];
+	harmful: boolean;
+	durationRounds: number | null;
+}
 
 /** What the effects editor needs from the sheet around it. */
 export interface EffectsHost {
@@ -54,32 +71,13 @@ export class EffectsEditor {
 		this.addEffect({ label, tokens: [token], positive: this.customModSign === '+' });
 		this.customEffectLabel = '';
 		this.customModAmount = 1;
+		this.host().overlay = null;
 	};
 
 	/* Accessor, not an object: a $derived field initialiser runs before a constructor parameter
 	   property is assigned (same shape as TurnEconomy / FeatSlots). */
 	constructor(private host: () => EffectsHost) {}
 
-	// read). An empty effects column still registers the id, so mechanics can be authored incrementally.
-	conditionList = $derived.by<{ id: string; label: string; harmful: boolean }[]>(() => {
-		const graph = this.host().graph;
-		const system = this.host().character?.system;
-		if (!graph || !system) return [];
-		return (
-			conditionRows(graph, system)
-				// leveled conditions (exhaustion, max_level>1) are a stepper, not a binary toggle — they
-				// don't belong in this multi-select (they'd double-count with gatherExhaustion). D19.
-				.filter((r) => Number(r.data.max_level ?? 1) <= 1)
-				// the row's own valence, so Invisible and Rage stop landing under Debuffs: applying a
-				// condition used to hardcode `positive: false`, because the old schema's boolean
-				// DEFAULTED to negative and the list never read it
-				.map((r) => ({
-					id: r.id,
-					label: localizedName(r, app.activeLocale),
-					harmful: isHarmful(r),
-				}))
-		);
-	});
 	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
 	 *  stepper hides). Data-driven cap (the row's `max_level`); a taller homebrew ladder Just Works. */
 	exhaustionMax = $derived.by<number>(() => {
@@ -147,23 +145,33 @@ export class EffectsEditor {
 		return row?.data.effects ?? [];
 	};
 
-	/** The "+" picker catalog — the `effects.csv` CONTENT type scoped to the character's edition
-	 *  (user-extendable like all content), not a hardcoded preset list. A row's `duration_rounds`
-	 *  is its default duration; blank falls back to the menu's duration picker. */
-	effectCatalog = $derived.by(() => {
+	/** The ONE "+" picker: every state this edition can put on the character, conditions and catalog
+	 *  entries together, scoped to its system and user-extendable like all content. A condition
+	 *  carries `apply_condition:<id>` rather than its own tokens — the resolver reads that id for
+	 *  `has_condition`, and the panel shows the row's mechanics off it.
+	 *  A row's `duration_rounds` is its default; blank falls back to the menu's duration picker. */
+	stateCatalog = $derived.by<StateChoice[]>(() => {
 		const graph = this.host().graph;
 		const system = this.host().character?.system;
 		if (!graph || !system) return [];
-		return effectCatalogRows(graph, system).map((r) => ({
-			// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes propagate),
-			// with the baked label/tokens kept as the orphan fallback.
-			ref: r.effectiveId,
-			label: localizedName(r, app.activeLocale),
-			tokens: r.data.effects,
-			harmful: isHarmful(r),
-			durationRounds: r.data.duration_rounds ?? null,
-		}));
+		return addableStateRows(graph, system)
+			.map((r) => {
+				const condition = isConditionRow(r);
+				return {
+					// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes
+					// propagate), with the baked label/tokens kept as the orphan fallback. A bare
+					// condition carries none: its token already names the row the derive looks up.
+					ref: condition ? null : r.effectiveId,
+					conditionId: pickerConditionId(r),
+					label: localizedName(r, app.activeLocale),
+					tokens: condition ? [`apply_condition:${r.id}`] : r.data.effects,
+					harmful: isHarmful(r),
+					durationRounds: r.data.duration_rounds ?? null,
+				};
+			})
+			.sort((a, b) => a.label.localeCompare(b.label, app.activeLocale));
 	});
+
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
 	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
 	newEffectDuration = $state(10);
@@ -176,7 +184,7 @@ export class EffectsEditor {
 		durationRounds?: number;
 		/** B17: the catalog ref (effectiveId) when added from the "+" catalog — stored so derive
 		 *  resolves the effect LIVE (fixes propagate); omitted for custom/GM effects (baked only). */
-		ref?: string;
+		ref?: string | null;
 	}) => {
 		const character = this.host().character;
 		if (!character) return;
@@ -193,11 +201,10 @@ export class EffectsEditor {
 				label: spec.label,
 				effects: spec.tokens,
 				positive: spec.positive ?? true,
-				...(spec.ref !== undefined ? { source: spec.ref } : {}),
+				...(spec.ref ? { source: spec.ref } : {}),
 				...duration,
 			},
 		];
-		this.host().overlay = null;
 	};
 	/** Remove an active effect from the panel (the ✕) — and with it the concentration it was carrying,
 	 *  which used to survive its own effect and leave the sheet claiming a spell that was gone. */

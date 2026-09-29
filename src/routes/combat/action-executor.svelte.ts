@@ -290,7 +290,9 @@ export class ActionExecutor {
 	private applyCatalogEffect(name: string, arg: string) {
 		const p = this.host().character?.play;
 		if (!p) return;
-		const cat = this.host().effects.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
+		// a CONDITION carries no ref (its own token names it), so `?.` is also what keeps this verb
+		// pointed at the catalog half of the one list — `apply_condition:<id>` is the other token
+		const cat = this.host().effects.stateCatalog.find((eff) => eff.ref?.split(':').pop() === arg);
 		if (!cat) {
 			toast(t('combat.notice.effectMissing', { name }), {
 				description: t('combat.notice.effectMissingBody', { id: arg }),

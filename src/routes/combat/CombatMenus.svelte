@@ -1,6 +1,6 @@
 <script lang="ts">
-	// Anchored dropdown menus dispatcher (temp HP, level-up, add-effect, custom-effect, show/hide,
-	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
+	// Anchored dropdown menus dispatcher (temp HP, level-up, add-state, custom-effect, show/hide,
+	// pin-skills, spellbook). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
@@ -17,26 +17,46 @@
 	import { FEATURE_PRESET } from '$lib/character/features';
 	import { localizedName } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
+	import type { StateChoice } from './effects-editor.svelte';
+	import type { EffectInstance } from '$lib/character/schema';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
-	const conditionList = $derived(combat.effects.conditionList);
 	const character = $derived(combat.character);
 	const { setTempHp, togglePassive } = combat;
 	const { addCustomModifier } = combat.effects;
 	const { addEffect } = combat.effects;
 
-	/** The add-effect menu's own filter. The catalog is user-extendable content, so the box beside it
-	 *  is the only way the list stays navigable at size — it used to search nothing at all. */
-	let effectQuery = $state('');
-	const matchingEffects = $derived.by(() => {
-		const q = effectQuery.trim().toLowerCase();
+	/** The add-state menu's own filter. The catalog is user-extendable content AND now holds the
+	 *  conditions too, so the box beside it is the only way the list stays navigable at size. */
+	let stateQuery = $state('');
+	const matchingStates = $derived.by(() => {
+		const q = stateQuery.trim().toLowerCase();
 		return q
-			? combat.effects.effectCatalog.filter((p) => p.label.toLowerCase().includes(q))
-			: combat.effects.effectCatalog;
+			? combat.effects.stateCatalog.filter((p) => p.label.toLowerCase().includes(q))
+			: combat.effects.stateCatalog;
 	});
+	/** The live instance of a condition already on the character — what turns its row into a toggle.
+	 *  Matched by the TOKEN it carries, not by its label: the label is content and a translated pack
+	 *  would stop the switch recognising its own condition. */
+	const appliedCondition = (conditionId: string | null) =>
+		conditionId ? character?.play.effects.find((e) => conditionIdOf(e) === conditionId) : undefined;
+	/** A condition row is a SWITCH and the menu stays open under it — flipping several is one visit,
+	 *  and a click that closed the surface it just flipped would make one row behave two ways. A
+	 *  catalog row is done once it is added, so that one closes. */
+	function addOrToggleState(choice: StateChoice, applied: EffectInstance | undefined) {
+		if (applied) return combat.effects.removeEffect(applied.iid);
+		addEffect({
+			label: choice.label,
+			tokens: choice.tokens,
+			positive: !choice.harmful,
+			durationRounds: choice.durationRounds ?? combat.effects.newEffectDuration,
+			ref: choice.ref,
+		});
+		if (!choice.conditionId) combat.overlay = null;
+	}
 
 	let popEl = $state<HTMLDivElement>();
 	let pos = $state<{
@@ -163,11 +183,11 @@
 				</div>
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>
 			</div>
-		{:else if overlay.kind === 'addeffect'}
+		{:else if overlay.kind === 'addstate'}
 			<div class="search">
 				<span class="search-icon"><Icon name="search" size={13} /></span><input
-					placeholder={$_('combat.menu.searchEffects')}
-					bind:value={effectQuery}
+					placeholder={$_('combat.menu.searchStates')}
+					bind:value={stateQuery}
 				/>
 			</div>
 			<div class="section eyebrow">{$_('combat.menu.durationApplied')}</div>
@@ -203,24 +223,28 @@
 				>
 			</div>
 			<div class="section eyebrow">{$_('combat.menu.catalog')}</div>
-			{#each matchingEffects as p (p.label)}
+			<!-- ONE list: a condition the rules name sits beside a buff a player adds, because they are
+			     one content type and putting either on yourself is one act (CONDEFF). What the KIND
+			     still decides is the row's behaviour — a condition toggles, since you cannot be
+			     Poisoned twice; anything else adds another instance. -->
+			{#each matchingStates as p (p.conditionId ?? p.ref)}
 				{@const dur = p.durationRounds ?? combat.effects.newEffectDuration}
+				{@const applied = appliedCondition(p.conditionId)}
 				<button
 					class="menu-row"
-					onclick={() =>
-						addEffect({
-							label: p.label,
-							tokens: p.tokens,
-							positive: !p.harmful,
-							durationRounds: dur,
-							ref: p.ref,
-						})}
+					aria-pressed={p.conditionId ? !!applied : undefined}
+					onclick={() => addOrToggleState(p, applied)}
 				>
+					<!-- the row wears the affordance it HAS: a "+" where a click adds another instance,
+					     a switch where it turns one thing on and off. The duration pill says what the ROW
+					     declares; a row that declares none takes the box above and does not restate it. -->
 					<span class="main"
-						><span class="effect-icon" class:negative={p.harmful}
-							><Icon name="plus" size={11} /></span
-						>{p.label}</span
-					><span class="durpill">{dur > 0 ? `${dur} ${$_('combat.menu.roundsShort')}` : '∞'}</span>
+						>{#if !p.conditionId}<span class="effect-icon" class:negative={p.harmful}
+								><Icon name="plus" size={11} /></span
+							>{/if}{p.label}</span
+					>{#if !p.conditionId || p.durationRounds != null}<span class="durpill"
+							>{dur > 0 ? `${dur} ${$_('combat.menu.roundsShort')}` : '∞'}</span
+						>{/if}{#if p.conditionId}<span class="toggle-track" class:on={!!applied}></span>{/if}
 				</button>
 			{/each}
 			<div class="divider-light"></div>
@@ -501,34 +525,6 @@
 					>
 				</div>
 			{/if}
-		{:else if overlay.kind === 'condition'}
-			<div class="popup-heading eyebrow">
-				{$_('combat.menu.conditionsTitle')}<button
-					class="icon-button"
-					onclick={() => (combat.overlay = null)}
-					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
-				>
-			</div>
-			{#each conditionList as cn (cn.id)}
-				<!-- matched by the TOKEN it carries, not by its label: the label is content and a
-				     translated pack would stop the switch recognising its own condition -->
-				{@const applied = character?.play.effects.find((e) => conditionIdOf(e) === cn.id)}
-				<button
-					class="menu-row"
-					aria-pressed={!!applied}
-					onclick={() =>
-						applied
-							? combat.effects.removeEffect(applied.iid)
-							: addEffect({
-									label: cn.label,
-									tokens: [`apply_condition:${cn.id}`],
-									positive: !cn.harmful,
-								})}
-				>
-					<span class="main">{cn.label}</span><span class="toggle-track" class:on={!!applied}
-					></span>
-				</button>
-			{/each}
 		{/if}
 	</div>
 {/if}

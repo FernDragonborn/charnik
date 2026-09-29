@@ -65,11 +65,10 @@
 		>
 	{:else if pid === 'effects'}
 		<span class="head-btns">
-			<button class="pill-btn" onclick={(e) => openMenu('condition', e)}
-				><Icon name="plus" size={13} /> {$_('combat.panel.condition')}</button
-			>
-			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}
-				><Icon name="plus" size={13} /> {$_('combat.panel.addEffect')}</button
+			<!-- ONE button: a condition and a buff are the same content type and the same act, so two
+			     "+"s beside each other were asking the player to know a distinction the data dropped -->
+			<button class="pill-btn" onclick={(e) => openMenu('addstate', e)}
+				><Icon name="plus" size={13} /> {$_('combat.panel.addState')}</button
 			>
 			<!-- Auto-calc lives HERE, not in the toolbar: switching it off drops the effect layers, and
 			     this is the panel those layers are. It is an escape hatch for a number the engine got

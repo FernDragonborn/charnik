@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { migrateRows } from './migrations';
-import { conditionRows, effectCatalogRows, valenceOf, isHarmful } from './states';
+import { addableStateRows, conditionRows, pickerConditionId, valenceOf, isHarmful } from './states';
 import { VALENCE } from './schemas';
 
 const CONDITIONS = [
@@ -41,7 +41,8 @@ describe('the merged state type', () => {
 		});
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		expect(conditionRows(g, '5e').map((r) => r.id)).toEqual(['poisoned', 'exhaustion']);
-		expect(effectCatalogRows(g, '5e').map((r) => r.id)).toEqual(['bless', 'bane']);
+		// ONE picker list: both kinds, minus the LEVELLED condition, which is a stepper of its own
+		expect(addableStateRows(g, '5e').map((r) => r.id)).toEqual(['poisoned', 'bless', 'bane']);
 	});
 
 	it('reads a file that DECLARES the old type name the same way', async () => {
@@ -57,7 +58,7 @@ describe('the merged state type', () => {
 			'conditions_pack.csv': header() + 'id,kind,valence,name_en\nhalf_cover,effect,helpful,Cover',
 		});
 		expect(conditionRows(g, '5e')).toEqual([]);
-		expect(effectCatalogRows(g, '5e').map((r) => r.id)).toEqual(['half_cover']);
+		expect(addableStateRows(g, '5e').map((r) => r.id)).toEqual(['half_cover']);
 	});
 
 	it('the KIND scopes the slug, so one id can be both a condition and a catalog entry', async () => {
@@ -76,9 +77,37 @@ describe('the merged state type', () => {
 		expect(tokensOfRef('effect:Test Pack:rage')).toEqual(['apply_condition:rage']);
 	});
 
+	it('an APPLIER stands in for the condition it applies, so the picker says the word once', async () => {
+		const g = await load({
+			'conditions_pack.csv':
+				header() + 'id,valence,effects,name_en\nrage,helpful,advantage:save.str,Rage',
+			'effects_pack.csv':
+				header() +
+				'id,valence,duration_rounds,effects,name_en\nrage,helpful,10,apply_condition:rage,Rage',
+		});
+		const rows = addableStateRows(g, '5e');
+		expect(rows.map((r) => r.effectiveId)).toEqual(['effect:Test Pack:rage']);
+		const only = rows[0];
+		expect(only && pickerConditionId(only)).toBe('rage'); // and it still behaves as that condition
+	});
+
+	it('a row that applies a condition AND does something else stays its own entry', async () => {
+		const g = await load({
+			'conditions_pack.csv': header() + 'id,valence,name_en\nprone,harmful,Prone',
+			'effects_pack.csv':
+				header() +
+				'id,valence,effects,name_en\ntrip,harmful,apply_condition:prone;flat_bonus:ac-1,Trip',
+		});
+		expect(
+			addableStateRows(g, '5e')
+				.map((r) => r.id)
+				.sort(),
+		).toEqual(['prone', 'trip']);
+	});
+
 	it('a blank valence reads neutral rather than guessing a side', async () => {
 		const g = await load({ 'effects_pack.csv': header() + 'id,name_en\nodd,Odd' });
-		const row = effectCatalogRows(g, '5e')[0];
+		const row = addableStateRows(g, '5e')[0];
 		expect(row && valenceOf(row)).toBe(VALENCE.neutral);
 		expect(row && isHarmful(row)).toBe(false);
 	});

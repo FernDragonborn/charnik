@@ -13,13 +13,12 @@ import type { DeathCause } from '$lib/character/schema';
 export type MenuKind =
 	| 'dice'
 	| 'temphp'
-	| 'addeffect'
+	| 'addstate'
 	| 'customeffect'
 	| 'log'
 	| 'pinskills'
 	| 'showhide'
 	| 'featuresview'
-	| 'condition'
 	| 'upcast'
 	| 'restshort'
 	| 'coins';
