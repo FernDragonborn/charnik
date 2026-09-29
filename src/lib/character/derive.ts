@@ -73,6 +73,8 @@ export interface CharacterSheet {
 	attacksPerAction: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
 	damageSensitivities: { resist: string[]; immune: string[]; vulnerable: string[] };
+	/** Conditions this character cannot be given (`condition_immunity`), as state-row ids. */
+	conditionImmunities: string[];
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
 	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), resolved from the

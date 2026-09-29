@@ -35,6 +35,7 @@ export const EFFECT_KINDS = [
 	'grant_roll',
 	'damage_sensitivity',
 	'apply_condition',
+	'condition_immunity',
 	'grant_resource',
 	'reroll',
 	'min_die',

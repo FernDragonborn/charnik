@@ -861,6 +861,44 @@ describe('deriveSheet aggregator', () => {
 		expect(s.damageSensitivities.vulnerable).toEqual([]);
 	});
 
+	it('collects condition immunities, deduped, and keeps a word no condition row carries', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'i',
+				label: 'Oaths',
+				// `disease` is deliberately not a condition anywhere in the SRD: 2014 states the
+				// immunity in those words, so the target namespace has to take a word with no row.
+				effects: [
+					'condition_immunity:charmed',
+					'condition_immunity:disease',
+					'condition_immunity:charmed',
+				],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.conditionImmunities).toEqual(['charmed', 'disease']);
+	});
+
+	it('a guarded immunity is only true while its guard is', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'm',
+				label: 'Mindless Rage',
+				effects: ['is_raging ? condition_immunity:charmed'],
+				positive: true,
+			},
+		];
+		expect(deriveSheet(characterSchema.parse(c), graph).conditionImmunities).toEqual([]);
+		c.play.effects = [
+			...c.play.effects,
+			{ iid: 'r', label: 'Rage', effects: ['apply_condition:rage'], positive: true },
+		];
+		expect(deriveSheet(characterSchema.parse(c), graph).conditionImmunities).toEqual(['charmed']);
+	});
+
 	it('collects trackable resources from grant_resource effects', () => {
 		const c = wizard();
 		c.play.effects = [

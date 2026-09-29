@@ -11,6 +11,8 @@
  * name is exactly the kind of thing that gets forgotten at the next call site.
  */
 import { ROW_KIND, VALENCE, type Valence } from './schemas';
+import { localizedName } from './detail';
+import { titleCase } from '../util/format';
 import type { ContentGraph, LoadedRowByType } from './loader';
 import type { System } from '../rules/pipeline';
 
@@ -61,6 +63,19 @@ export const addableStateRows = (graph: ContentGraph, system: System): StateRow[
 		rows.filter((r) => !isConditionRow(r)).flatMap((r) => appliedConditionId(r) ?? []),
 	);
 	return rows.filter((r) => !(isConditionRow(r) && applied.has(r.id)));
+};
+
+/** What to CALL a state, given a bare id. The row's own name, localized, so a translated pack
+ *  reads in its own language; an id no row carries reads as itself (2014 says "immune to
+ *  disease", and disease is not a condition anywhere in the SRD). */
+export const stateLabel = (
+	graph: ContentGraph,
+	system: System,
+	id: string,
+	locale: string,
+): string => {
+	const row = conditionRow(graph, system, id);
+	return row ? localizedName(row, locale) : titleCase(id);
 };
 
 /** Whether a state is something you want. Anything the row does not say — including a valence a pack

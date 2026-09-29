@@ -601,6 +601,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deriveAc` — AC: equipped armor (dex-capped) + the shield in hand, else unarmored; then AC effects fold on top.
 - `function deriveSpeed` — Speed from species base; A3: armor whose `str_min` exceeds the wearer's STR drops it 10 ft (RAW, * both editions), tr…
 - `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
+- `function deriveConditionImmunities` — Conditions the character cannot be given, deduped and in the order the facts arrived.
 - `function deriveDamageSensitivities` — Damage defenses collected from `damage_sensitivity` facts, deduped per bucket.
 
 ### `src/lib/character/derive-targets.ts`
@@ -1193,6 +1194,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const appliedConditionId` — The condition this row PUTS ON the character, when putting it on is the whole of what the row * does.
 - `const pickerConditionId` — Which condition a picker row stands for — its own id, or the one it exists to apply.
 - `const addableStateRows` — Every state the "+" picker offers — conditions and catalog entries in ONE list.
+- `const stateLabel` — What to CALL a state, given a bare id.
 - `const valenceOf` — Whether a state is something you want.
 - `const isHarmful` — Does this state belong on the DEBUFF side of the panel?
 
@@ -1789,4 +1791,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1070 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1072 exports across 145 modules · 74 duplicate suspects._

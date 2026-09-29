@@ -14,6 +14,8 @@
 	import { sayText } from '$lib/util/say';
 	import { provenance } from '$lib/actions/provenance';
 	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
+	import { stateLabel } from '$lib/content/states';
+	import { app } from '$lib/stores/app.svelte';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);
@@ -25,14 +27,33 @@
 	// render) — past the cap we show a numeric counter instead of pips (B10).
 	const PIP_CAP = 20;
 
-	// DamageSensitivities as chip groups (resist / immune / vulnerable), only the non-empty ones — rendered as
-	// per-type pills instead of a bold run-on list.
+	// a condition you cannot be given belongs on this strip: it is the same question — what happens
+	// to you when something happens TO you — and it joins the DAMAGE immunities under one "Immune"
+	// rather than standing under a second label saying the same word.
+	const conditionImmunities = $derived.by(() => {
+		const graph = combat.graph;
+		const system = combat.character?.system;
+		if (!graph || !system) return [];
+		return s.conditionImmunities.map((id) => stateLabel(graph, system, id, app.activeLocale));
+	});
+	// DamageSensitivities as chip groups (resist / immune / vulnerable), only the non-empty ones —
+	// rendered as per-type pills instead of a bold run-on list. Labels are resolved HERE because the
+	// immune group mixes two vocabularies, and a chip should not have to know which it came from.
 	const defenseGroups = $derived(
 		[
-			{ bucket: 'resist', types: s.damageSensitivities.resist },
-			{ bucket: 'immune', types: s.damageSensitivities.immune },
-			{ bucket: 'vulnerable', types: s.damageSensitivities.vulnerable },
-		].filter((g) => g.types.length),
+			{ bucket: 'resist', labels: s.damageSensitivities.resist.map((t) => damageTypeLabel(t, $_)) },
+			{
+				bucket: 'immune',
+				labels: [
+					...s.damageSensitivities.immune.map((t) => damageTypeLabel(t, $_)),
+					...conditionImmunities,
+				],
+			},
+			{
+				bucket: 'vulnerable',
+				labels: s.damageSensitivities.vulnerable.map((t) => damageTypeLabel(t, $_)),
+			},
+		].filter((g) => g.labels.length),
 	);
 </script>
 
@@ -165,8 +186,8 @@
 				{#each defenseGroups as g (g.bucket)}
 					<span class="def-group">
 						<span class="def-label">{$_(`combat.sensitivity.${g.bucket}`)}</span>
-						{#each g.types as t (t)}<span class="def-chip def-chip--{g.bucket}"
-								>{damageTypeLabel(t, $_)}</span
+						{#each g.labels as label (label)}<span class="def-chip def-chip--{g.bucket}"
+								>{label}</span
 							>{/each}
 					</span>
 				{/each}

@@ -174,8 +174,9 @@ class FactsCollector {
 		return true;
 	}
 
-	/** The remaining kinds: grant_proficiency / grant_roll / damage_sensitivity / apply_condition /
-	 *  grant_resource / plugin (resolved by the pre-pass) / unknown. */
+	/** The kinds that say what is TRUE of the character rather than moving a number:
+	 *  grant_proficiency / grant_roll / damage_sensitivity / apply_condition / condition_immunity.
+	 *  Everything else falls through to `collectMarkerFact`. */
 	private collectOtherFact(p: ParsedEffect, eff: ActiveEffect, token: string): void {
 		switch (p.kind) {
 			case EFFECT_KIND.grantProficiency:
@@ -200,6 +201,19 @@ class FactsCollector {
 			case EFFECT_KIND.applyCondition:
 				if (p.target) this.conditions.add(p.target.trim());
 				break;
+			case EFFECT_KIND.conditionImmunity:
+				if (p.target)
+					this.facts.conditionImmunities.push({ id: p.target.trim(), source: eff.source });
+				break;
+			default:
+				this.collectMarkerFact(p, eff, token);
+		}
+	}
+
+	/** The markers and hooks: a flag the combat layer reads (`blocks_concentration`,
+	 *  `damage_reroll`), an event or resource it runs, and the token nothing recognised. */
+	private collectMarkerFact(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		switch (p.kind) {
 			case EFFECT_KIND.blocksConcentration:
 				this.facts.breaksConcentration = true;
 				break;
@@ -346,6 +360,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.autoSucceed.push(...extra.autoSucceed);
 	base.proficiencies.push(...extra.proficiencies);
 	base.damageSensitivities.push(...extra.damageSensitivities);
+	base.conditionImmunities.push(...extra.conditionImmunities);
 	for (const r of extra.rolls)
 		if (!base.rolls.some((b) => b.id === r.id && b.source === r.source)) base.rolls.push(r);
 	base.rerolls.push(...extra.rerolls);

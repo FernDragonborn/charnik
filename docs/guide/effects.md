@@ -170,6 +170,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 | `grant_resource` | `grant_resource:<id>:<max>:<recharge>` | A pool with a size and a way back: `short`, `long`, `short_one`, `consumable`, `other`, or one carrying an amount like `long(2)` or `dawn(1d6+1)`. Rage, ki, an item's charges. |
 | `grant_roll` | `grant_roll:<id>:<expr>` | A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap. |
 | `damage_sensitivity` | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | How this character meets one damage type. Immunity beats vulnerability beats resistance. The type is free-form, so a pack may name its own. |
+| `condition_immunity` | `condition_immunity:<id>` | A condition that cannot be put on this character — write the condition's own id (`charmed`, `frightened`, `poisoned`). It shows on the sheet beside the damage defences. A word no condition row carries works too, which is how 2014's "immune to disease" is said. |
 | `apply_condition` | `apply_condition:<id>` | Apply a condition row, whose own effects then take hold. Expands one level only, so conditions cannot chain forever. |
 | `regain_on_initiative` | `regain_on_initiative:<resource>:<n>` | When you roll initiative, top this resource back up to `n`. Applied automatically, with a notice — the rules give you no choice about it. |
 

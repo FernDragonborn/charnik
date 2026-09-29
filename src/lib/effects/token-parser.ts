@@ -41,6 +41,13 @@ export const EFFECT_KIND = {
 	// type slot free-form, which it must be (a pack may name its own damage type).
 	damageSensitivity: 'damage_sensitivity',
 	applyCondition: 'apply_condition',
+	// `condition_immunity:<id>` — a condition this character cannot be given (2024 Aura of Courage
+	// → Frightened, Mindless Rage → Charmed while raging). The id REFERENCES a state row rather than
+	// naming a new closed vocabulary, which is why the slot is free-form the way a damage type is —
+	// and why `condition_immunity:disease` works for the 2014 rows whose immunity has no row at all.
+	// It says what is true of the body; it does not refuse an application, because the player is the
+	// one holding the table's ruling (`characters.md` ▸ A tracker surfaces, it never decides).
+	conditionImmunity: 'condition_immunity',
 	grantResource: 'grant_resource',
 	// L1 roll-manipulation (the bounded, known set — NOT L3): the roll path consumes these facts.
 	reroll: 'reroll', // `reroll:<target>:<threshold>` — reroll a die that lands ≤ threshold (GWF ≤2)

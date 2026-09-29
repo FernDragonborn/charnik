@@ -174,6 +174,11 @@ const TAG_FORMATTERS: Partial<
 			target: targetLabel(p.target, tr),
 		}),
 	[EFFECT_KIND.applyCondition]: (p) => p.target && titleCase(p.target),
+	[EFFECT_KIND.conditionImmunity]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.conditionImmunity', `immune · ${titleCase(p.target)}`, {
+			target: titleCase(p.target),
+		}),
 	[EFFECT_KIND.autoFail]: (p, tr) => p.target && prefixed(tr, 'autoFail', p.target),
 	[EFFECT_KIND.autoSucceed]: (p, tr) => p.target && prefixed(tr, 'autoSucceed', p.target),
 	[EFFECT_KIND.note]: (p) => p.target, // free-form display text, as authored

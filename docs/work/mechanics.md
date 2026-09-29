@@ -238,12 +238,12 @@ stay semi-manual.
     `pact_boon` is a choice of three, so it waits on `choose_n` with the rest of the choices below.
     2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no target, no
     enemy to test against, and the Features panel already prints the sentence.
-  - **Blocked on a defense bucket that is not damage.** Immunity to a CONDITION or to disease has no
-    target at all — the fold's defense buckets hold damage types only. 2014 `purity_of_body`,
-    `divine_health`, `circleoftheland_natures_ward`; 2024 `aura_of_courage` (Frightened),
-    `path_of_the_berserker_mindless_rage` (Charmed + Frightened), `oath_of_devotion_aura_of_devotion`
-    (Charmed), `circle_of_the_land_natures_ward` (Poisoned). Same shape as CONDEFF's merge — a
-    condition is content, so immunity to one is a reference to a row, not a new vocabulary.
+  - **DONE — a condition is a defence bucket now.** `condition_immunity:<id>` names a state ROW
+    rather than a new closed vocabulary, which is what let 2014's "immune to disease" ship too: the
+    slot is free-form the way a damage type is, and a word no row carries reads as itself. Eight
+    feature rows carry it across the two editions, and `petrified` lost the `note:` that was
+    standing in for it. It SAYS the immunity (a chip on the defences strip, in both the builder and
+    play) and does not refuse an application: the ruling at the table is the player's.
   - **Blocked on a fold target that does not exist yet — down to the crit threshold.** `extra_attack`
     (EXTRA-ATTACK), `unarmored_defense` and `draconicbloodline_draconic_ancestry` (a `set_override`
     on `ac` says the formula) and `reliable_talent` (RELIABLE-TALENT) all shipped their tokens; what

@@ -100,6 +100,12 @@ interface RollFact {
 	label: string;
 	formula: string;
 }
+/** A condition the character cannot be given (`condition_immunity`). `id` is a state row's id,
+ *  or a word no row carries (2014 says "immune to disease", and disease is not a condition). */
+interface ConditionImmunityFact {
+	id: string;
+	source: string;
+}
 interface DamageSensitivityFact {
 	bucket: DamageSensitivity;
 	type: string;
@@ -135,6 +141,7 @@ export interface EffectFacts {
 	autoSucceed: FactRef[];
 	proficiencies: ProficiencyFact[];
 	damageSensitivities: DamageSensitivityFact[];
+	conditionImmunities: ConditionImmunityFact[];
 	/** Feature-granted named rollables (`grant_roll`), expr resolved to a dice formula (EFX-ROLL). */
 	rolls: RollFact[];
 	/** Fully-specified resource pools (id:max:recharge), expression maxes resolved. */
@@ -177,6 +184,7 @@ export const emptyFacts = (): EffectFacts => ({
 	autoSucceed: [],
 	proficiencies: [],
 	damageSensitivities: [],
+	conditionImmunities: [],
 	rolls: [],
 	resources: [],
 	resourceIds: [],

@@ -397,6 +397,13 @@ export function derivePassives(
 	});
 }
 
+/** Conditions the character cannot be given, deduped and in the order the facts arrived. Ids, not
+ *  labels: the sheet resolves each against the state rows so a translated pack reads in its own
+ *  language, and a word no row carries (2014's "disease") still says itself. */
+export function deriveConditionImmunities(facts: EffectFacts): string[] {
+	return [...new Set(facts.conditionImmunities.map((c) => c.id))];
+}
+
 /** Damage defenses collected from `damage_sensitivity` facts, deduped per bucket. */
 export function deriveDamageSensitivities(facts: EffectFacts): {
 	resist: string[];
