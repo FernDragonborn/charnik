@@ -108,6 +108,47 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
+- [ ] **STACK-RAW · the same-effect rule is enforced, and two clauses of it are not.** RAW is quoted
+  in `../internals/effects.md` ▸ Two of the same thing, and it is SRD rather than DMG: SRD 5.1 states
+  it under Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 under Casting
+  Spells ("Combining Spell Effects"), with two Clerics
+  casting Bless as its own example. `dedupeRuntimeEffects` (`effects/resolver.ts`) already applies
+  one instance rather than two. What it does not yet do:
+  - **Most potent, not first.** The key is the label PLUS the token list, so two castings of one
+    spell at different potencies get different keys and BOTH apply — exactly the case the rule
+    exists to stop. RAW keys on the NAME and folds by highest.
+  - **First wins, where RAW says most recent.** Later instances are dropped, while 5.2.1 ("Combining
+    Spell Effects") says that at equal potency the MOST RECENT casting applies — so topping Bless up
+    before it lapses does nothing today, its fresh duration included.
+  **Neither is a wrong number in the shipped packs** — nothing there produces two same-named effects
+  of differing potency, and the only way to reach the case is a hand-made effect named after a
+  shipped one. It is a rule the engine states it follows and follows most of the way, which is worth
+  closing before a pack makes it reachable.
+  **What it is NOT about:** `set` folding by most potent (`rules/pipeline.ts`) answers a different
+  question — two differently named sources setting one TARGET — on which RAW says nothing general.
+
+- [ ] **STATE-LIST-BINARY · the state picker offers a behaviour the engine refuses.** A row it calls
+  a catalog entry wears a "+" and adds another instance; the resolver then dedupes that instance
+  away, so the second row sits in the panel moving no number. And the split it draws — toggle for a
+  condition, "+" for anything else — asks `kind`, which says which FILE a row came from rather than
+  how it behaves: `half_cover` is not a condition, cannot sensibly be held twice, and gets the "+".
+  **The fact that decides this is already in the data and already RAW-grounded.** `max_level` is 1
+  for a binary state and >1 for a ladder, which is the only distinction the SRD itself draws —
+  Exhaustion is the one condition either edition calls cumulative, and it says so in its own text.
+  Every row the picker offers has `max_level` 1 (a ladder is excluded from the list by
+  `content/states.ts` already), so **every row is a toggle** and the "+" has no case left.
+  **A second wrong number rides on the same predicate:** the row shows
+  `durationRounds ?? newEffectDuration`, so `half_cover`, which deliberately ships an EMPTY
+  `duration_rounds`, displays the stepper's 10 rounds. A blank cell means "until removed" and must
+  read as one.
+  **The stepper itself then has no job in the picker:** an active effect's duration is already
+  editable where the effect lives (`EffectsPanel`'s `duration-select`), so the picker is a second
+  owner of one fact — and the one that is wrong. The row's own `duration_rounds` seeds the clock
+  when it is switched on; blank seeds none. The custom-effect form keeps its own duration field,
+  because that one genuinely makes a new thing.
+  Rendered alternatives from the pass that found this: `design-preview/_addstate-now.png` (today),
+  `_addstate-a3.png`, `_addstate-b.png`, `_addstate-c.png`.
+
 - [x] **PROF-GRANT · `grant_proficiency` has data, and its target namespace reaches equipment.**
   The token could only ever say a save or a skill, and no shipped row said even that. Both halves
   shipped together, because the saves alone would have left the design question open.

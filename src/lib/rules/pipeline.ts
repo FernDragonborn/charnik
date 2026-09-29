@@ -196,8 +196,11 @@ const LAYER_SEQUENCE: Layer[] = [
  * community plugins) can never get a different result from file-scan / namespace-sort luck.
  *
  * Within a layer the ops fold in a fixed sub-order — set → floor → mult → add (A9):
- * `set` follows D&D's "Combining Game Effects" rule (same-target effects don't stack — the most
- * potent, i.e. HIGHEST, applies; identical in 5e and 5.5e); `floor` raises the running value to at
+ * `set` takes the most potent, i.e. HIGHEST, of the sets competing for one TARGET (identical in 5e
+ * and 5.5e). That is our reading, not a quoted rule: RAW states how two castings of the same SPELL
+ * combine (`effects.md` ▸ Two of the same thing) and says nothing general about two differently
+ * named sources setting one stat, so the loser is surfaced as a note rather than silently stomped.
+ * `floor` raises the running value to at
  * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `mult` folds as one
  * product then floors once; `add` accumulates. Across layers the fixed base→…→override order still
  * holds, so an override-layer `set` beats an item-layer one.

@@ -103,9 +103,21 @@ function zeroAbilities(): Record<Ability, number> {
 	return recordOf(ABILITY_IDS, () => 0);
 }
 
-/** A11 (D&D "Combining Game Effects"): the SAME named runtime effect applied twice (two Bless casts)
- *  applies once. Dedupe by (source label + token list) on the 'condition' layer only — build-time
- *  layers stay per-instance (a repeatable feat legitimately applies each time). */
+/**
+ * The same named runtime effect applied twice applies once — RAW, and both our editions state it:
+ * SRD 5.1 ▸ Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 ▸ Casting
+ * Spells, whose own example is two Clerics casting Bless for one benefit rather than two bonus dice.
+ * (The DMG's broader same-NAME rule is a different, non-SRD statement; this is not it.)
+ *
+ * Dedupe on the 'condition' layer only — build-time layers stay per-instance, because a repeatable
+ * feat legitimately applies each time. A CONDITION needs none of this: it applies or it does not,
+ * and the one the SRD calls cumulative (Exhaustion) is a ladder carrying its own `max_level`.
+ *
+ * NARROWER THAN THE RULE, on purpose until the cases exist (`work/mechanics.md` ▸ STACK-RAW):
+ * the key is the label PLUS the tokens, so two castings at different potencies both apply where RAW
+ * takes the most potent; and the FIRST wins, so a re-cast does not extend a duration where 5.2.1
+ * runs the effect to the later end. Nothing in the shipped packs produces either case.
+ */
 function dedupeRuntimeEffects(active: ActiveEffect[]): ActiveEffect[] {
 	const seen = new Set<string>();
 	return active.filter((eff) => {

@@ -453,7 +453,8 @@ reads max HP. RAW gives a clear answer (you ARE raging → max IS 110 → you AR
 DEPENDENCY order, not an arbitrary one. The host resolves it as:
 
 1. **RAW default, order-independent where RAW is.** Stacking bonuses fold commutatively (sum);
-   same-target sets take the most potent (max), per "Combining Game Effects". Order literally can't
+   same-target sets take the most potent (max) — our reading, not a quoted rule (`effects.md` ▸ Two
+   of the same thing). Order literally can't
    change the number, so no file-scan / namespace-sort luck ever decides a stat.
 2. **Dependency order for the rare chain.** Where one conditional's condition depends on another's
    output, effects resolve in dependency order (a DAG). For real 5e/5.5e content this graph is
