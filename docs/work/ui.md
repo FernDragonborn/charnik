@@ -69,18 +69,29 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
-- [ ] **DEFENCE-CHIPS-UNSEEN · two new chips on the defences strip have never been rendered.** The
-  qualified defences ("+2 AC vs ranged attacks", "advantage on saves vs spells") and the
-  incoming-attack statements ("attacks against you have disadvantage") are asserted at the derive
-  level and typed end to end, and the markup reuses the strip's existing `.tag` — but nobody has
-  LOOKED at them, which `AGENTS.md` ▸ Verifying does not accept for visual work.
-  **Why they were not seen:** the demo character carries none of the eleven items that grant one, so
-  the strip renders them zero times on every state `shot.mjs` covers. Driving it needs a character
-  with, say, an Arrow-Catching Shield and a Mantle of Spell Resistance in inventory — a one-off
-  Playwright script that adds them through the inventory picker, or a `/dev/` route that seeds one.
-  **What to check when it is driven:** the strip wraps rather than overflowing at 393px (one chip is
-  a whole sentence, far longer than "resists fire"), the qualified and incoming chips read as
-  different KINDS of statement rather than as two more resistances, and the Ukrainian strings fit.
+- [~] **DEFENCE-CHIPS-UNSEEN · they have been looked at now, and two of them were wrong.** The
+  qualified defences and the incoming-attack statements had never been rendered, because the eleven
+  items that grant one are on no character any covered state loads.
+  **They have a state of their own now** — `/dev/defences`, a draft wearing one item per chip KIND
+  (Arrow-Catching Shield, Mantle of Spell Resistance, Cloak of Displacement, Spellguard Shield), in
+  `shot.mjs` at both widths, so this cannot go unseen again. The draft is written directly rather than
+  through the inventory API because each item REQUIRES ATTUNEMENT to confer anything and attuning is a
+  play-sheet control — the builder has none, which is the other half of why the card never showed one.
+  **What looking found:**
+  - **English read "spells attacks against you have disadvantage."** One qualifier vocabulary served
+    two grammatical positions: `vs {kind}` wants a noun ("vs spells"), `{kind} attacks` wants an
+    adjective ("spell attacks"). `qualifierAttributive` is the second one. Ukrainian never had the bug
+    because its template parenthesises the qualifier instead — so its entries are the nominative gloss
+    the parenthesis wants, where the noun list is genitive.
+  - **Ukrainian read «перевага на рятівних кидків»** — «на» does not take that case. The template is
+    «перевага для {stat}», which the genitive the target word already carries is correct with.
+  - **The strip WRAPS at 393px** and overflows nothing, at either width. ✓
+  **What is left is the one question a screenshot answers and a sentence cannot:** the six chips read
+  as ONE undifferentiated gold list — a sense, a conditional AC bonus and a fact about what an
+  ATTACKER rolls all wear the same pill. `design-preview/_defence-chips-wide.png`. Colour is already
+  spent on the swing (gold advantage / accent disadvantage), so the distinction wants grouping or a
+  label rather than another hue, and that is a design choice: it gets RENDERED variants, not a
+  paragraph here.
 
 - [x] **PANEL-COLLAPSE-PERSIST · a collapsed panel stays collapsed.** `ui.panelsCollapsed` holds the
   ids that are folded away, the way `actionsHidden` holds the ids that are hidden — additive, absent

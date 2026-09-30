@@ -112,10 +112,13 @@
 			"noneProficient": "без володінь",
 			"qualifiedBonus": "{amount} {stat} проти {kind}",
 			"qualifiedSwing": {
-				"advantage": "перевага на {stat} проти {kind}",
-				"disadvantage": "поміха на {stat} проти {kind}"
+				"advantage": "перевага для {stat} проти {kind}",
+				"disadvantage": "поміха для {stat} проти {kind}"
 			},
-			"qualifiedTarget": { "ac": "КО", "saves": "рятівних кидків" },
+			"qualifiedTarget": {
+				"ac": "КО",
+				"saves": "рятівних кидків"
+			},
 			"resists": "опір: {type}",
 			"saves": "Рятувальні кидки",
 			"sense": "{sense} {feet} футів",
@@ -2096,5 +2099,12 @@
 		"ranged": "дальніх атак",
 		"poisoned": "отруєння",
 		"ranged_weapon": "дальньої зброї"
+	},
+	"qualifierAttributive": {
+		"spell": "закляття",
+		"magical": "магічні ефекти",
+		"ranged": "дальні атаки",
+		"poisoned": "отруєння",
+		"ranged_weapon": "дальня зброя"
 	}
 }

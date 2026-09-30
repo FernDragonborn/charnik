@@ -72,9 +72,16 @@
 	/** What is true only in a case. Stated, never folded: the app cannot tell what a save is against,
 	 *  and "+2 AC against ranged" is not +2 AC. */
 	const qualified = $derived(s?.qualifiedDefenses ?? []);
-	/** The word for a qualifier. Open vocabulary like a damage type — a pack may write its own, and one
-	 *  nobody has translated reads as its author wrote it. */
+	/** The word for a qualifier, in the NOUN position a "vs {kind}" slot needs — "vs spells". Open
+	 *  vocabulary like a damage type: a pack may write its own, and one nobody has translated reads as
+	 *  its author wrote it. */
 	const qualifierLabel = (scope: string) => $_(`qualifier.${scope}`, { default: scope });
+	/** …and the same qualifier where it MODIFIES a noun — "spell attacks against you". English needs a
+	 *  different word in the two positions ("vs spells", but "spell attacks"), which one vocabulary
+	 *  cannot give; Ukrainian parenthesises the qualifier instead, so its two entries agree. Same open
+	 *  vocabulary, same fallback to whatever the author wrote. */
+	const qualifierAttributive = (scope: string) =>
+		$_(`qualifierAttributive.${scope}`, { default: scope });
 
 	const conditionImmunities = $derived.by(() => {
 		const graph = b.graph;
@@ -160,7 +167,7 @@
 							a.scope
 								? `build.defenses.attackedScoped.${a.swing}`
 								: `build.defenses.attacked.${a.swing}`,
-							{ values: { kind: qualifierLabel(a.scope ?? '') } },
+							{ values: { kind: qualifierAttributive(a.scope ?? '') } },
 						)}</span
 					>{/each}
 				{#if hasDefenses}

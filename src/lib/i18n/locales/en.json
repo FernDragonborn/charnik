@@ -2099,5 +2099,12 @@
 		"ranged": "ranged attacks",
 		"poisoned": "being Poisoned",
 		"ranged_weapon": "ranged weapon attacks"
+	},
+	"qualifierAttributive": {
+		"spell": "spell",
+		"magical": "magical",
+		"ranged": "ranged",
+		"poisoned": "poison",
+		"ranged_weapon": "ranged weapon"
 	}
 }
