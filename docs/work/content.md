@@ -62,12 +62,22 @@
   **Multiclass grants SUM**, and that is RAW rather than a convenience: the 2024 multiclassing rules
   name their exceptions (Extra Attack, Spellcasting, alternative AC) and Weapon Mastery is not one of
   them, so a Fighter 1 / Barbarian 1 drills five kinds.
-  **What is left is the eight mastery EFFECTS** (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex),
-  and most of them act on a creature the app does not model — Push moves the target, Sap gives its
-  next attack disadvantage, Topple forces a save. Those are `note:` work by the same argument that
-  keeps Favored Enemy prose. Graze, Nick and Vex touch the character's own numbers and are the ones
-  worth a token. `versatile:1d10` is still the other half of this shape: data with no mechanic
-  reading it, and a grip the player CHOOSES, so it wants a control before it can mean anything.
+  **What is left is the eight mastery EFFECTS, and they are BLOCKED on data this repo may not write.**
+  The tail was queued as "Graze, Nick and Vex as tokens, the other five as `note:` with the reason",
+  which presumed the eight properties exist as rows to carry a token or a note. They do not. Counted,
+  not remembered: **38** 2024 weapons carry a `mastery:<name>` tag naming **8** distinct properties,
+  and **no row in either pack states what any of them does** — there is no masteries table, and the
+  names appear nowhere but inside those tags.
+  So the player sees the bare word `vex` on their attack row with no way to learn what it means, which
+  is the release gate's third clause (shipped content that visibly does nothing) rather than a wrong
+  number. Writing the eight sentences here is the one thing `AGENTS.md` forbids outright — game data
+  is transcribed from a real CC-BY source, never authored — and turning the SRD's prose into columns
+  is a producer sibling's output that a human reads as a CSV diff, like RULES-TEXT beside it.
+  **What the tail becomes, once the rows exist:** Graze, Nick and Vex touch the character's own
+  numbers and are the ones worth a token; Cleave, Push, Sap, Slow and Topple act on a creature the app
+  does not model and stay `note:` by the same argument that keeps Favored Enemy prose.
+  `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
+  the player CHOOSES, so it wants a control before it can mean anything.
 - [x] **BARD-LIST-2014 · the 2014 Bard spell list was missing its 1st-level half — and so was a third
   of every other class's list.** The item read the symptom right and the cause wrong: the SRD 5.1
   document has its "1st Level" and "2nd Level" Bard headings. What lost them is the **Tabyltop

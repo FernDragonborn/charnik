@@ -264,15 +264,16 @@ position and are given per wave, because most of them were learned the hard way.
   weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
   never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
   control before it can mean anything.
-- **The short queue, and it is an ORDER rather than a wave.** One item left; this says which one is
-  picked up next, because a session rarely closes more than two or three of them. An item leaves this
-  list when it closes, and nothing is moved between waves for it.
-  1. **MASTERY-HALF's tail** — Graze, Nick and Vex as tokens; the other five as `note:` with the
-     reason, since they act on a creature the app does not model.
+- **The short queue is EMPTY, and the last item left it by being re-sized rather than closed.**
+  MASTERY-HALF's tail was queued as "Graze, Nick and Vex as tokens, the other five as `note:`", which
+  presumed the eight mastery properties exist as rows. They do not: 38 weapons carry a
+  `mastery:<name>` tag naming 8 properties and no row in either pack says what one DOES. So it is
+  blocked on the same producer-sibling output as RULES-TEXT, and it now sits in `work/content.md`
+  saying so. What is picked up next comes from the waves below.
 
-  **Deliberately not in the queue, though they came out of the same pass:** RULES-TEXT and the
-  2014 item tables (both a producer sibling's work, not this repo's), and closing PLAYTEST-UI, which
-  is a prune rather than a change.
+  **Deliberately not in a wave, out of the same pass:** RULES-TEXT and the 2014 item tables (both a
+  producer sibling's work, not this repo's), and closing PLAYTEST-UI, which is a prune rather than a
+  change.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is PLAYTEST-UI, PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the screens, the dice
