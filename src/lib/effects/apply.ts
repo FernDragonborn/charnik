@@ -184,6 +184,7 @@ class FactsCollector {
 					this.facts.proficiencies.push({
 						target: p.target.trim(),
 						level: p.proficiency ?? 'proficient',
+						...(p.profRounding ? { rounding: p.profRounding } : {}),
 						source: eff.source,
 					});
 				break;

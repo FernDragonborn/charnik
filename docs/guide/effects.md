@@ -166,7 +166,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 
 | Effect | Write it as | What it does |
 | --- | --- | --- |
-| `grant_proficiency` | `grant_proficiency:[<rung>:]<target>` | Proficiency, at one of three rungs: `partial` (half your bonus — Jack of All Trades), `proficient` (the default when you write no rung), `expertise`. Rungs combine by taking the highest, so a grant never demotes what a character already has. |
+| `grant_proficiency` | `grant_proficiency:[<rung>:]<target>` | Proficiency, at one of the rungs: `partial` (half your bonus, rounded down — Jack of All Trades), `partial_up` (the same half, rounded up — 2014 Remarkable Athlete), `proficient` (the default when you write no rung), `expertise`. Rungs combine by taking the highest, so a grant never demotes what a character already has. The trace names YOUR feature, whatever the rung. |
 | `grant_resource` | `grant_resource:<id>:<max>:<recharge>` | A pool with a size and a way back: `short`, `long`, `short_one`, `consumable`, `other`, or one carrying an amount like `long(2)` or `dawn(1d6+1)`. Rage, ki, an item's charges. |
 | `grant_roll` | `grant_roll:<id>:<expr>` | A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap. |
 | `damage_sensitivity` | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | How this character meets one damage type. Immunity beats vulnerability beats resistance. The type is free-form, so a pack may name its own. |
@@ -235,6 +235,9 @@ What you can be proficient *with* is not what a bonus can land on:
 
 - an ability (`str`), a save (`save.str`), or the whole group (`saves`)
 - a skill (`skill.stealth`, or just `stealth`), or the group (`skills`)
+- every check one ability makes: `check.str` — the bare Strength check AND every Strength skill,
+  because the rules call both a Strength check. (A bare `str` above already means the SAVE, which is
+  why the checks have a prefix of their own.)
 - armour: `armor.light` · `armor.medium` · `armor.heavy` · `armor.shield`
 - weapons: `weapon.simple` · `weapon.martial`, or a specific `weapon.<item_id>`
 - tools: `tool.<item_id>` — the id of a row whose category is `tool`
@@ -356,6 +359,10 @@ grant_resource:bardic_inspiration:max(1,cha_mod):long
 
 grant_proficiency:partial:skills
         Jack of All Trades: half proficiency on every check that does not already have it.
+
+grant_proficiency:partial_up:check.str
+        Remarkable Athlete: the same half ROUNDED UP, on every Strength check — the bare
+        ability check and every Strength skill, because the rules call both a Strength check.
 
 armor_type==heavy ? disadvantage:skill.stealth
         Heavy armour, said the way the rules say it.

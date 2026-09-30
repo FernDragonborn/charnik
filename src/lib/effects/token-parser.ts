@@ -151,8 +151,14 @@ export interface ParsedEffect {
 	sensitivity?: DamageSensitivity;
 	/** grant_proficiency: the LEVEL granted — one ladder value, not a set of booleans, so "expertise
 	 *  without proficiency" is unrepresentable (the rungs are ordered, and sources combine by max).
-	 *  `partial` is Jack of All Trades' rung; the sheet's own ladder carries a `none` below these. */
+	 *  `partial` is half a proficiency bonus; the sheet's own ladder carries a `none` below these. */
 	proficiency?: 'partial' | 'proficient' | 'expertise';
+	/** How the PARTIAL rung rounds, from the `partial_up` spelling of it. Absent is RAW Jack of All
+	 *  Trades' "rounded down"; `up` is 2014 Remarkable Athlete, which says so in its own text. NOT a
+	 *  second ladder RUNG: the two sit at the same tier, show the same dot and differ by at most 1 —
+	 *  a member that behaved identically everywhere but one arithmetic line would be a tier nobody
+	 *  could see. */
+	profRounding?: 'up';
 	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). `max`
 	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
 	 *  derive time — exactly one of the two is set. */
@@ -341,8 +347,11 @@ const parseGrantResource: KindParser = (rest, raw, kind) => {
 
 const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 	// `grant_proficiency:[<level>:]<target>` — the LADDER RUNG is an optional leading word, defaulting
-	// to `proficient` so every token written before the rung existed keeps parsing. `partial` is Jack
-	// of All Trades: a lesser rung, half the proficiency bonus on a check you are NOT proficient in.
+	// to `proficient` so every token written before the rung existed keeps parsing. `partial` is a
+	// lesser rung: half the proficiency bonus on a check you are NOT proficient in, rounded DOWN as
+	// Jack of All Trades says. `partial_up` is the same rung rounding the other way, which 2014
+	// Remarkable Athlete's own text asks for — the ROUNDING rides beside the rung rather than being a
+	// second one, because the two sit at the same tier and differ by at most 1.
 	// NOT `half` — a rung is written BEFORE its target, so `half:skills` reads as "half the skills",
 	// and "half" reads as a reduction when this rung is a GAIN. The rungs combine
 	// by max, so a skill you are already proficient in keeps proficiency — which is RAW's "that
@@ -350,10 +359,18 @@ const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 	// The target is canonicalized here (the ONE place): a `skill.` prefix strips to the bare skill id
 	// (skills are bare in this vocab; only saves carry their `save.` prefix), so authors can write
 	// either form without it silently dropping.
-	const m = /^(?:(partial|proficient|expertise):)?(?:skill\.)?(.+)$/i.exec(rest);
+	const m = /^(?:(partial_up|partial|proficient|expertise):)?(?:skill\.)?(.+)$/i.exec(rest);
 	if (!m?.[2]) return { kind: 'unknown', raw };
-	const level = m[1]?.toLowerCase() as 'partial' | 'proficient' | 'expertise' | undefined;
-	return { kind, target: m[2].trim(), proficiency: level ?? 'proficient', raw };
+	const rung = m[1]?.toLowerCase();
+	const level = (rung === 'partial_up' ? 'partial' : rung) as
+		'partial' | 'proficient' | 'expertise' | undefined;
+	return {
+		kind,
+		target: m[2].trim(),
+		proficiency: level ?? 'proficient',
+		...(rung === 'partial_up' ? { profRounding: 'up' as const } : {}),
+		raw,
+	};
 };
 
 const parsePlugin: KindParser = (rest, raw, kind) => {

@@ -290,6 +290,27 @@ describe('shipped class feature · Improved / Superior Critical (crit_threshold)
 		});
 	}
 
+	it('2014 Remarkable Athlete adds half prof ROUNDED UP to STR/DEX/CON, under its own name', async () => {
+		// the rung it needed: Jack of All Trades rounds DOWN, so spending this one as that one is a
+		// wrong number wearing another feature's name. At level 7 prof is +3 — where the two part.
+		const c = charOf('SRD 5.1', '5e', 'fighter', 7);
+		const [only] = c.build.classes;
+		if (only) only.subclass = 'subclass:SRD 5.1:champion';
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		const s = deriveSheet(c, await loadEdition('srd-2014'));
+
+		expect(s.abilities.str.check.value).toBe(2); // ceil(3/2), not floor
+		expect(s.abilities.dex.check.value).toBe(2);
+		expect(s.abilities.con.check.value).toBe(2);
+		expect(s.abilities.int.check.value).toBe(0); // an ability it does not name is untouched
+		// …and it reaches the SKILLS of those abilities too, which is what "any Strength check" means
+		expect(s.skills.athletics.value).toBe(2);
+		expect(s.skills.athletics.prof).toBe('partial');
+		expect(s.skills.arcana.value).toBe(0);
+		// the trace credits the feature that actually did it
+		expect(s.abilities.str.check.trace.map((t) => t.source)).toContain('Remarkable Athlete');
+	});
+
 	it('a fighter of another archetype still crits on 20 only', async () => {
 		const c = charOf('SRD 5.2.1', '5.5e', 'fighter', 15);
 		expect(deriveSheet(c, await loadEdition('srd-2024')).critThreshold.value).toBe(20);

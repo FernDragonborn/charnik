@@ -54,13 +54,37 @@ describe('system-agnostic formulas', () => {
 		expect(prof.trace.map((c) => c.source)).toEqual(['DEX mod', 'Proficiency']);
 	});
 
-	it('skill: expertise doubles proficiency, half-prof adds floor(prof/2)', () => {
+	it('skill: expertise doubles proficiency, the partial rung adds half of it', () => {
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5, proficient: true }).value).toBe(6);
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5, expertise: true }).value).toBe(9);
-		expect(
-			skillCheck({ ability: 'dex', score: 16, level: 5, partialProficiency: true }).value,
-		).toBe(4);
+		// prof is +3 at level 5, which is where the two roundings part company: 1 against 2
+		const partial = (rounding: 'down' | 'up') =>
+			skillCheck({
+				ability: 'dex',
+				score: 16,
+				level: 5,
+				partial: {
+					rounding,
+					source: rounding === 'up' ? 'Remarkable Athlete' : 'Jack of All Trades',
+				},
+			});
+		expect(partial('down').value).toBe(4);
+		expect(partial('up').value).toBe(5);
 		expect(skillCheck({ ability: 'dex', score: 16, level: 5 }).value).toBe(3);
+	});
+
+	it('the partial rung is credited to the feature that granted it, not to another one', () => {
+		// the whole reason the rung is an object: a boolean spent every half-proficiency as Jack of All
+		// Trades', so 2014 Remarkable Athlete would have been the wrong number under the wrong name
+		const trace = skillCheck({
+			ability: 'str',
+			score: 10,
+			level: 5,
+			partial: { rounding: 'up', source: 'Remarkable Athlete' },
+		}).trace;
+		expect(trace.map((c) => c.source)).toContain('Remarkable Athlete');
+		// a content row's own word carries no catalog key — it is already in the player's language
+		expect(trace.find((c) => c.source === 'Remarkable Athlete')?.key).toBeUndefined();
 	});
 
 	it('passive score = 10 + check bonus', () => {

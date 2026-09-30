@@ -14,7 +14,7 @@
 	import { provenance } from '$lib/actions/provenance';
 	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
 	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
-	import { grantedEquipmentProfs } from '$lib/character/derive-stats';
+	import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 	import { splitList } from '$lib/content/schemas';
 	import { stateLabel } from '$lib/content/states';
 	import { app } from '$lib/stores/app.svelte';

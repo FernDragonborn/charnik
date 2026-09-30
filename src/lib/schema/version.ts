@@ -74,9 +74,11 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // "advantage on saving throws against spells", "advantage on saves to avoid the Poisoned condition"
 // — say it in tokens (`ac.ranged`, `saves.spell`, `saves.magical`, `saves.poisoned`) rather than only
 // as prose. An install left at v17 reads eleven magic items as doing nothing.
-// v19: both Champion crit features say which d20 face crits FOR THEM (`crit_threshold`, 19 then 18)
-// rather than only as prose. An install left at v18 has a Champion whose 19 is highlighted as an
-// ordinary number, which is the one thing the archetype is for.
+// v19: the 2014 Champion is three rows of prose less. Both crit features say which d20 face crits
+// FOR THEM (`crit_threshold`, 19 then 18), and Remarkable Athlete adds half a proficiency bonus
+// ROUNDED UP to every Strength, Dexterity and Constitution check (`partial_up`, `check.<ability>`).
+// An install left at v18 has a Champion whose 19 is an ordinary number and whose seventh level does
+// nothing at all.
 export const CONTENT_SEED_VERSION = 19;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.

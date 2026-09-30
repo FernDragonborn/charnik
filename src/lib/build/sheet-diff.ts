@@ -14,7 +14,7 @@ import { ABILITIES } from '../character/schema';
 import type { SpellcastingClass } from '../character/spellcasting';
 import { SKILL_ABILITY, type SkillId } from '../character/skills';
 // the ladder is the derive's own — a second copy of it here is a second answer to "is this better"
-import { PROF_ORDER } from '../character/derive-stats';
+import { PROF_ORDER } from '../character/granted-proficiency';
 import { signed } from '../util/format';
 
 /**

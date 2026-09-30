@@ -91,9 +91,12 @@ export interface FactRef {
 }
 interface ProficiencyFact {
 	target: string;
-	/** The ladder RUNG granted. `partial` is Jack of All Trades'; the sheet's own ladder carries a
-	 *  `none` below these, which no token can grant (a grant only ever raises). */
+	/** The ladder RUNG granted. `partial` is half a proficiency bonus; the sheet's own ladder carries
+	 *  a `none` below these, which no token can grant (a grant only ever raises). */
 	level: 'partial' | 'proficient' | 'expertise';
+	/** How the PARTIAL rung rounds — `up` is 2014 Remarkable Athlete, absent is RAW Jack of All
+	 *  Trades' "rounded down". Meaningless on the other rungs, which have nothing to halve. */
+	rounding?: 'up';
 	source: string;
 }
 /** A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression

@@ -93,7 +93,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `auto_fail` / `auto_succeed` | `auto_fail:<target>`                                    | Force a roll OUTCOME (paralyzed/stunned auto-fail STR & DEX saves) — not a die modifier.                                                                                                                |
 | `reroll`                     | `reroll:<target>:<threshold>`                           | Reroll a die landing ≤ threshold once (GWF ≤2).                                                                                                                                                         |
 | `min_die`                    | `min_die:<target>:<floor>`                              | Treat a die below floor AS floor (Reliable Talent d20→10).                                                                                                                                              |
-| `grant_proficiency`          | `grant_proficiency:[<rung>:]<target>`                   | Grant a rung of the proficiency ladder — `partial` (Jack of All Trades) · `proficient` (the default when the word is absent) · `expertise`. Sources combine by MAX, so "expertise without proficiency" is unrepresentable and a rung never lowers one already held. |
+| `grant_proficiency`          | `grant_proficiency:[<rung>:]<target>`                   | Grant a rung of the proficiency ladder — `partial` (half, rounded down: Jack of All Trades) · `partial_up` (the same rung rounding up: 2014 Remarkable Athlete) · `proficient` (the default when the word is absent) · `expertise`. Sources combine by MAX, so "expertise without proficiency" is unrepresentable and a rung never lowers one already held. |
 | `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day/an item's charges), `recharge` = a trigger, optionally with an amount: `short` · `long` · `short_one` · `consumable` · `other` · `dawn(1d6+1)` · `long(2)`. `max` is cost-capped (`MAX_RESOURCE_MAX`). See §How a pool comes back below. |
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
@@ -169,10 +169,24 @@ and from the player at roll time where it does not (5.1 says tool use is tied to
 **The ladder does RAW's own de-duplication.** Jack of All Trades is `grant_proficiency:partial:skills`,
 one token for "half your proficiency bonus on any check that doesn't already include it" — because the
 rungs combine by max, a skill the character is already proficient in keeps proficiency and the partial
-rung simply loses. The rule needs no second sentence in the engine, and the contribution is named after
-the feature in the trace. The rung is `partial` and not `half` for two reasons: a rung sits BEFORE its
-target, so `half:skills` reads as "proficiency in half the skills"; and "half" reads as a REDUCTION,
-while this rung is a gain — a lesser proficiency, never a cut-down one.
+rung simply loses. The rule needs no second sentence in the engine. The rung is `partial` and not
+`half` for two reasons: a rung sits BEFORE its target, so `half:skills` reads as "proficiency in half
+the skills"; and "half" reads as a REDUCTION, while this rung is a gain — a lesser proficiency, never
+a cut-down one.
+
+**The rung carries its own ROUNDING and its own NAME**, because two features hold it and they differ
+in both. `partial` rounds down, as Jack of All Trades says; `partial_up` rounds up, as 2014 Remarkable
+Athlete says. The rounding rides BESIDE the rung rather than being a second one: the two sit at the
+same tier, show the same dot, and differ by at most 1, so a ladder member that behaved identically
+everywhere but one arithmetic line would be a tier nobody could see. The trace credits the granting
+row's own name — which is DATA, already in the player's language, so it carries no catalog key — and
+not a hardcoded "Jack of All Trades", which is the wrong number under the wrong name twice over.
+
+**`check.<ability>` is every check that ability makes**, its BARE check and its skills alike, which is
+how 2014 Remarkable Athlete's "any Strength, Dexterity, or Constitution check" reads. A bare ability in
+this kind's target slot already means the SAVE, so the checks needed a prefix of their own. What reads
+the grants is `character/granted-proficiency.ts`, one module because it is one question asked from both
+ends: derive folds the rungs, the builder shows what it may not un-pick.
 
 **A QUALIFIER on a defence lives in the target namespace**, beside the scopes that were already
 there: `flat_bonus:ac.ranged+2` (Arrow-Catching Shield), `advantage:saves.spell` (Mantle of Spell

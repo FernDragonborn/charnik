@@ -57,12 +57,16 @@ const abilityContribution = (ability: Ability, score: number): Contribution => (
 
 /** A proficiency-layer contribution (Proficiency / Expertise / Jack of All Trades — the source names
  *  the flavour, the amount is the already-computed bonus). The one shape every prof-granting stat pushes. */
-const profContribution = (source: string, key: string, amount: number): Contribution => ({
+const profContribution = (
+	source: string,
+	key: string | undefined,
+	amount: number,
+): Contribution => ({
 	source,
 	layer: 'proficiency',
 	op: 'add',
 	amount,
-	key,
+	...(key === undefined ? {} : { key }),
 });
 
 /** The flat base-layer contribution a stat starts from (DC base 8, unarmored/armor base 10/…). */
@@ -87,26 +91,46 @@ export function savingThrow(args: {
 	return computed(c);
 }
 
-/** A skill (or ability) check bonus. Expertise doubles proficiency; half-proficiency
- *  (Jack of All Trades) adds floor(prof/2) when not otherwise proficient. */
+/**
+ * The lesser proficiency rung, and who granted it — half the proficiency bonus, rounded the way the
+ * granting feature's own text says.
+ *
+ * One object rather than a boolean, because the rung is not one fact: 2014's Remarkable Athlete
+ * rounds UP where Jack of All Trades rounds down, and it is a different feature. A boolean forced
+ * both to be spent as Jack of All Trades' — the wrong number under another feature's name, which is
+ * two defects for the price of one.
+ *
+ * `source` is the granting row's own word and so is already in the player's language, which is why it
+ * carries no catalog key (`pipeline.ts` ▸ `Contribution.key`: a content row's name is DATA).
+ */
+export interface PartialProficiency {
+	/** RAW Jack of All Trades says "rounded down"; 2014 Remarkable Athlete says "round up". */
+	rounding: 'down' | 'up';
+	source: string;
+}
+
+/** A skill (or ability) check bonus. Expertise doubles proficiency; the PARTIAL rung adds half of it,
+ *  rounded as its own feature says, and only when not otherwise proficient. */
 export function skillCheck(args: {
 	ability: Ability;
 	score: number;
 	level: number;
 	proficient?: boolean;
 	expertise?: boolean;
-	partialProficiency?: boolean;
+	partial?: PartialProficiency;
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
 	const prof = proficiencyBonus(args.level);
 	if (args.expertise) c.push(profContribution('Expertise', SOURCE_KEY.expertise, prof * 2));
 	else if (args.proficient) c.push(profContribution('Proficiency', SOURCE_KEY.proficiency, prof));
-	else if (args.partialProficiency)
-		c.push(
-			profContribution('Jack of All Trades', SOURCE_KEY.jackOfAllTrades, Math.floor(prof / 2)),
-		);
+	else if (args.partial)
+		c.push(profContribution(args.partial.source, undefined, partialAmount(args.partial, prof)));
 	return computed(c);
 }
+
+/** Half a proficiency bonus, rounded the granting feature's way. */
+const partialAmount = (partial: PartialProficiency, prof: number): number =>
+	partial.rounding === 'up' ? Math.ceil(prof / 2) : Math.floor(prof / 2);
 
 /** Passive score = 10 + the check bonus (no roll). Advantage/disadvantage (±5) are effects. */
 export function passiveScore(check: Computed): Computed {

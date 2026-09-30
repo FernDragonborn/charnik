@@ -26,8 +26,8 @@ export type { ResourceOption };
 import { prepareDerive, type HitDiePool } from './derive-setup';
 import { assembleSheet } from './derive-assemble';
 import { applyPluginPrePass } from './derive-plugins';
+import type { SkillProficiency } from './granted-proficiency';
 import {
-	type SkillProficiency,
 	type AbilityBlock,
 	type ToolProficiency,
 	type IncomingAttack,

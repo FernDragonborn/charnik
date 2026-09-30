@@ -16,7 +16,7 @@ import { needsAttunement } from '$lib/character/inventory';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { grantedEquipmentProfs } from '$lib/character/derive-stats';
+import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import type { RollName } from './roll';

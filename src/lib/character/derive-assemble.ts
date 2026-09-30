@@ -12,9 +12,8 @@ import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import { resolveResourceOptions } from './derive-resource-options';
 import { hitDicePools, type DeriveSetup } from './derive-setup';
+import { gatherGrantedProficiencies, grantedEquipmentProfs } from './granted-proficiency';
 import {
-	gatherGrantedProficiencies,
-	grantedEquipmentProfs,
 	resolveClassSaves,
 	deriveAbilityBlocks,
 	deriveSkills,
@@ -192,7 +191,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const statInputs: StatInputs = { build, scores, level, facts };
 	const { grantedSaves, grantedSkills } = gatherGrantedProficiencies(facts);
 	const classSaves = resolveClassSaves(build, graph, grantedSaves, missing);
-	const abilities = deriveAbilityBlocks(statInputs, abilityComputed, classSaves);
+	const abilities = deriveAbilityBlocks(statInputs, abilityComputed, classSaves, grantedSkills);
 	const skills = deriveSkills(statInputs, grantedSkills);
 	const tools = deriveTools(
 		statInputs,

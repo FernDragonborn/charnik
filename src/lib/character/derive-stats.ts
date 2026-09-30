@@ -28,28 +28,18 @@ import {
 import { tagInt, parseItemTags, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
 import { SENSE_PREFIX, INCOMING_ATTACK_TARGET } from './derive-targets';
+import {
+	CHECK_PREFIX,
+	maxProf,
+	partialFrom,
+	TOOL_PREFIX,
+	type GrantedProficiency,
+	type SkillProficiency,
+} from './granted-proficiency';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
  *  the stat helpers + deriveSheet's base-speed read. */
 export const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
-
-/** Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) →
- *  proficient → expertise (×2). `partial` rather than `half`: a rung is written BEFORE its target in
- *  a token, so `half:skills` reads as "half the skills", and "half" reads as a reduction when this
- *  rung is a GAIN — a lesser proficiency, not a cut-down one. */
-export type SkillProficiency = 'none' | 'partial' | 'proficient' | 'expertise';
-/** The ladder as a number, so two proficiencies can be compared — shared with the builder's diff,
- *  which reads a change in rank as better or worse. */
-export const PROF_ORDER: Record<SkillProficiency, number> = {
-	none: 0,
-	partial: 1,
-	proficient: 2,
-	expertise: 3,
-};
-/** The higher rung of the proficiency ladder — sources combine by MAX, never by flag-union, so
- *  "expertise without proficiency" is unrepresentable. */
-const maxProf = (a: SkillProficiency, b: SkillProficiency): SkillProficiency =>
-	PROF_ORDER[a] >= PROF_ORDER[b] ? a : b;
 
 export interface AbilityBlock {
 	/** The effective score — traced + clamped through the pipeline (A10), explainable on hover. */
@@ -76,68 +66,6 @@ export interface StatInputs {
 	scores: Record<Ability, number>;
 	level: number;
 	facts: EffectFacts;
-}
-
-/** The prefixes that make a `grant_proficiency` target EQUIPMENT rather than a save or a skill —
- *  `armor.heavy` (Life Domain), `weapon.martial`, `weapon.warhammer` (Dwarven Combat Training). */
-const EQUIPMENT_PREFIX = { armor: 'armor.', weapon: 'weapon.' } as const;
-/** …and the one that makes it a TOOL (`tool.thieves_tools`). Its own namespace rather than a third
- *  equipment prefix: equipment proficiency answers "may I use this without penalty", a tool's
- *  answers "does my proficiency bonus ride this check", and only one of them is a roll. */
-const TOOL_PREFIX = 'tool.';
-
-/** The group targets that mean every save, or every skill, at once. */
-const ALL_SAVES = 'saves';
-const ALL_SKILLS = 'skills';
-
-/** Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
- *  `grant_proficiency:[expertise:]<target>` — the parser already stripped any `skill.` prefix; a
- *  save target is `con` / `save.con`; expertise on a save just means proficient (doesn't apply).
- *  Equipment targets are NOT skills and are picked off first — `grantedEquipmentProfs` reads them. */
-export function gatherGrantedProficiencies(facts: EffectFacts): {
-	grantedSaves: Set<Ability>;
-	grantedSkills: Map<string, SkillProficiency>;
-} {
-	const grantedSaves = new Set<Ability>();
-	const grantedSkills = new Map<string, SkillProficiency>();
-	for (const p of facts.proficiencies) {
-		if (isEquipmentTarget(p.target) || p.target.startsWith(TOOL_PREFIX)) continue;
-		// "proficiency in ALL saving throws" (Diamond Soul) is one statement in the rules, so it is one
-		// token here rather than six — spelling out the six would be data the source does not have.
-		if (p.target === ALL_SAVES) {
-			for (const a of ABILITIES) grantedSaves.add(a);
-			continue;
-		}
-		// "a rung on every skill" (Jack of All Trades' half) is ONE token; the rungs combine by max
-		// below, so a skill already proficient keeps proficiency — RAW's "that doesn't already
-		// include your proficiency bonus", without a second rule to say it.
-		const targets =
-			p.target === ALL_SKILLS ? Object.keys(SKILL_ABILITY) : [p.target.replace(/^save\./, '')];
-		for (const tgt of targets) {
-			if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-			else grantedSkills.set(tgt, maxProf(grantedSkills.get(tgt) ?? 'none', p.level));
-		}
-	}
-	return { grantedSaves, grantedSkills };
-}
-
-const isEquipmentTarget = (target: string): boolean =>
-	target.startsWith(EQUIPMENT_PREFIX.armor) || target.startsWith(EQUIPMENT_PREFIX.weapon);
-
-/** Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids
- *  `rules/proficiency` matches equipment against. Binary, not a ladder: there is no expertise in
- *  wearing plate. Read straight off the facts, so the sheet, the attacks panel and the builder's
- *  read-out all answer from the same list. */
-export function grantedEquipmentProfs(facts: EffectFacts): { armor: string[]; weapons: string[] } {
-	const armor: string[] = [];
-	const weapons: string[] = [];
-	for (const p of facts.proficiencies) {
-		if (p.target.startsWith(EQUIPMENT_PREFIX.armor))
-			armor.push(p.target.slice(EQUIPMENT_PREFIX.armor.length));
-		else if (p.target.startsWith(EQUIPMENT_PREFIX.weapon))
-			weapons.push(p.target.slice(EQUIPMENT_PREFIX.weapon.length));
-	}
-	return { armor, weapons };
 }
 
 /** The ability a tool check rolls where the edition's SRD names one. 5.1 states the opposite in so
@@ -235,6 +163,7 @@ export function deriveAbilityBlocks(
 	{ build, scores, level, facts }: StatInputs,
 	abilityComputed: Record<Ability, Computed>,
 	classSaves: Set<Ability>,
+	grantedChecks: Map<string, GrantedProficiency>,
 ): Record<Ability, AbilityBlock> {
 	return recordOf(ABILITIES, (ab) => {
 		const proficient = classSaves.has(ab);
@@ -245,7 +174,14 @@ export function deriveAbilityBlocks(
 			mod: abilityModifier(scores[ab]),
 			check: applyEffects(
 				`check.${ab}`,
-				skillCheck({ ability: ab, score: scores[ab], level }),
+				skillCheck({
+					ability: ab,
+					score: scores[ab],
+					level,
+					// a BARE ability check is never proficient (that is what a skill is), so the only rung
+					// that can reach it is a partial one — 2014 Remarkable Athlete's `check.<ability>`
+					...partialFrom('partial', grantedChecks.get(`${CHECK_PREFIX}${ab}`)),
+				}),
 				facts,
 			),
 			save: applyEffects(`save.${ab}`, base, facts),
@@ -259,7 +195,7 @@ export function deriveAbilityBlocks(
  *  state. */
 export function deriveSkills(
 	{ build, scores, level, facts }: StatInputs,
-	grantedSkills: Map<string, SkillProficiency>,
+	grantedSkills: Map<string, GrantedProficiency>,
 ): Record<SkillId, Computed & { prof: SkillProficiency }> {
 	// class/background picks + §C feat-granted skill choices (Skilled) + the species' own grant — all
 	// three are plain proficiency, and separate lists only so no cap counts another's picks
@@ -276,14 +212,15 @@ export function deriveSkills(
 	}
 	return recordOf(Object.keys(SKILL_ABILITY) as SkillId[], (skill) => {
 		const ab = SKILL_ABILITY[skill];
-		const profLevel = maxProf(chosenProficiency(skill), grantedSkills.get(skill) ?? 'none');
+		const granted = grantedSkills.get(skill);
+		const profLevel = maxProf(chosenProficiency(skill), granted?.level ?? 'none');
 		const base = skillCheck({
 			ability: ab,
 			score: scores[ab],
 			level,
 			proficient: profLevel === 'proficient',
 			expertise: profLevel === 'expertise',
-			partialProficiency: profLevel === 'partial',
+			...partialFrom(profLevel, granted),
 		});
 		return { ...applyEffects(`skill.${skill}`, base, facts), prof: profLevel };
 	});

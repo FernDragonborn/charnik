@@ -125,7 +125,6 @@ export const SOURCE_KEY = {
 	abilityBoosts: 'provenance.source.abilityBoosts',
 	proficiency: 'provenance.source.proficiency',
 	expertise: 'provenance.source.expertise',
-	jackOfAllTrades: 'provenance.source.jackOfAllTrades',
 	passiveBase: 'provenance.source.passiveBase',
 	skillBonus: 'provenance.source.skillBonus',
 	armor: 'provenance.source.armor',

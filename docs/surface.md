@@ -88,7 +88,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
-- `TOOL_PREFIX` ×2 — src/lib/character/derive-stats.ts · src/lib/character/derive-targets.ts
+- `TOOL_PREFIX` ×2 — src/lib/character/derive-targets.ts · src/lib/character/granted-proficiency.ts
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -461,7 +461,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (131 modules)
+## Library functions & types (132 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -585,12 +585,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/derive-stats.ts`
 
 - `const num` — Coerce a CSV-derived cell to a number (already-number passes through), else the default.
-- `type SkillProficiency` — Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) → * proficient → expertise (×2).
-- `const PROF_ORDER` — The ladder as a number, so two proficiencies can be compared — shared with the builder's diff, * which reads a change…
 - `interface AbilityBlock`
 - `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).
-- `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
-- `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
 - `const TABLE_CHOSEN_ABILITY` — The ability a tool check rolls where the edition's SRD names one.
 - `interface ToolProficiency` — One tool this character is proficient with: what to call it, and which ability its check uses.
 - `function deriveTools` — * Tools the character is proficient with: the build's picks plus every `grant_proficiency:tool.<id>` * a class, feat …
@@ -642,6 +638,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type FeaturePreset`
 - `interface CharacterFeature` — One thing a character HAS, as the sheet reads it.
 - `function characterFeatures` — Every feature, trait and feat a character has, in reading order: class features by level, then * what their origin ga…
+
+### `src/lib/character/granted-proficiency.ts`
+
+- `type SkillProficiency` — Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) → * proficient → expertise (×2).
+- `const CHECK_PREFIX` — The `check.<ability>` target namespace — a grant aimed at every check one ability makes.
+- `interface GrantedProficiency` — One effect-granted rung, with what the sheet needs to SAY it: the feature's own name for the * trace, and how its `pa…
+- `const PROF_ORDER` — The ladder as a number, so two proficiencies can be compared — shared with the builder's diff, * which reads a change…
+- `const maxProf` — The higher rung of the proficiency ladder — sources combine by MAX, never by flag-union, so * "expertise without prof…
+- `const TOOL_PREFIX` — …and the one that makes it a TOOL (`tool.thieves_tools`).
+- `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
+- `function partialFrom` — The `partial` argument `skillCheck` takes, when the rung in force IS partial and a grant said so.
+- `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
 
 ### `src/lib/character/inventory.ts`
 
@@ -1519,6 +1527,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ABILITY_SCORE_CLAMP` — Hard cap an effective ability score folds to: 30 is the ceiling both editions share; 0 floors a * fully-drained score.
 - `function proficiencyBonus` — Proficiency bonus by character level: 2 + floor((level − 1) / 4) → +2..+6.
 - `function savingThrow` — A saving throw: ability mod + proficiency (if proficient in that save).
+- `interface PartialProficiency` — * The lesser proficiency rung, and who granted it — half the proficiency bonus, rounded the way the * granting featur…
 - `function skillCheck` — A skill (or ability) check bonus.
 - `function passiveScore` — Passive score = 10 + the check bonus (no roll).
 - `function initiative` — Initiative = DEX modifier (feats/effects add more later).
@@ -1819,4 +1828,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1094 exports across 147 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1100 exports across 148 modules · 74 duplicate suspects._

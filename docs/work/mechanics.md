@@ -274,11 +274,18 @@ stay semi-manual.
     `unarmored_movement` (the `step()` ladder under the no-armour-no-shield guard, MONK-MOVEMENT) ·
     `feral_instinct` and 2024 `champion_remarkable_athlete` (`advantage:initiative`, and the 2024
     Champion adds `advantage:skill.athletics`).
-    **2014 `champion_remarkable_athlete` is NOT this shape and does not belong here**: it adds half
-    proficiency ROUNDED UP to STR/DEX/CON checks, and the `partial` rung is Jack of All Trades' —
-    `Math.floor(prof / 2)`, labelled "Jack of All Trades" in the trace. Saying it with that rung would
-    be a wrong number wearing another feature's name. It needs the rung to carry its rounding and its
-    own label first.
+    **2014 `champion_remarkable_athlete` SHIPS TOO, once the rung stopped being one feature's.** It
+    adds half proficiency ROUNDED UP to STR/DEX/CON checks, where `partial` was `Math.floor(prof / 2)`
+    labelled "Jack of All Trades" — the wrong number wearing another feature's name, twice over. The
+    rung now carries both: `partial_up` rounds the other way, and the trace names the granting row.
+    **The rounding is not a second RUNG**, and that is the decision worth keeping: the two sit at the
+    same tier, draw the same dot and differ by at most 1, so a ladder member that behaved identically
+    everywhere but one arithmetic line would be a tier nobody could see. It rides beside the rung.
+    **Its target had to exist too** — `check.<ability>`, every check that ability makes, the bare one
+    and its skills alike, because the rules call both a Strength check. A bare ability in this kind's
+    target slot already meant the SAVE.
+    What reads the grants is `character/granted-proficiency.ts` now: one module, because it is one
+    question asked from both ends, and because `derive-stats.ts` was over its line budget.
     Two rows that were listed here are NOT shape 1 and moved: 2024 `superior_defense` spends 3 Focus
     Points for a minute of resistance, so it is an activated ability with a duration, not a passive;
     `pact_boon` is a choice of three, so it waits on `choose_n` with the rest of the choices below.
