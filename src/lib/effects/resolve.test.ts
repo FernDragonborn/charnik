@@ -142,6 +142,47 @@ describe('resolveActiveEffects · same-name dedupe (A11, D&D "Combining Game Eff
 		expect(saveTokens).toHaveLength(1); // not 2× the 1d4
 	});
 
+	it('takes the MOST POTENT of two castings, not the first one applied (STACK-RAW)', () => {
+		// RAW: "the most potent effect — such as the highest bonus — from those castings applies". The
+		// weaker one is applied FIRST on purpose: keying on the tokens as well as the name used to let
+		// both through, which is the case the rule exists to stop.
+		const shield = (bonus: number): ActiveEffect => ({
+			source: 'Shield of Faith',
+			layer: 'condition',
+			tokens: [`flat_bonus:ac+${bonus}`],
+		});
+		const r = resolve([shield(2), shield(3)], makeExprContext(build, play()));
+		expect(r.effects.flatMap((e) => e.tokens)).toEqual(['flat_bonus:ac+3']);
+		// …and the order it was applied in does not decide it
+		const back = resolve([shield(3), shield(2)], makeExprContext(build, play()));
+		expect(back.effects.flatMap((e) => e.tokens)).toEqual(['flat_bonus:ac+3']);
+	});
+
+	it('ranks a DEBUFF by how much it takes off, not by the signed number', () => {
+		// "most potent" is magnitude: the harsher Bane is the one to keep, and signed arithmetic would
+		// have called it the weaker of the two
+		const bane = (penalty: number): ActiveEffect => ({
+			source: 'Bane',
+			layer: 'condition',
+			tokens: [`flat_bonus:saves${penalty}`],
+		});
+		const r = resolve([bane(-3), bane(-1)], makeExprContext(build, play()));
+		expect(r.effects.flatMap((e) => e.tokens)).toEqual(['flat_bonus:saves-3']);
+	});
+
+	it('at EQUAL potency the most recent casting wins, so topping one up is not a no-op', () => {
+		// 5.2.1's own tiebreaker. Both carry the same 1d4 (a die is not a literal amount, so they tie);
+		// what differs is which instance the sheet is now running off — the fresher one.
+		const bless = (iid: string): ActiveEffect => ({
+			source: 'Bless',
+			layer: 'condition',
+			tokens: ['flat_bonus:saves+1d4', `note:${iid}`],
+		});
+		const r = resolve([bless('old'), bless('fresh')], makeExprContext(build, play()));
+		expect(r.effects.flatMap((e) => e.tokens)).toContain('note:fresh');
+		expect(r.effects.flatMap((e) => e.tokens)).not.toContain('note:old');
+	});
+
 	it('does NOT dedupe distinct build-layer effects (a repeatable feat applies each time)', () => {
 		const feat: ActiveEffect = {
 			source: 'Resilient',

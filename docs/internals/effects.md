@@ -405,16 +405,19 @@ time. A CONDITION needs no such rule: every condition either applies or does not
 calls cumulative (Exhaustion, both editions) is a LADDER carrying its own `max_level` rather than a
 row you hold twice.
 
-**Where the implementation is narrower than the rule, stated plainly rather than implied:**
+**The key is the NAME alone**, and among the instances wearing it the most potent applies. Keying on
+the token list as well would let two castings at different potencies both apply, which is the case the
+rule exists to stop. At equal potency the MOST RECENT wins — later in `play.effects` is later applied,
+because the array is appended to — so topping an effect up before it lapses carries its fresh duration
+instead of doing nothing.
 
-- The dedupe key is the effect's label **plus its token list**, so two castings of one spell at
-  DIFFERENT potencies have different keys and both apply — which is the case the rule exists to
-  stop. Keying on the name alone and folding by most-potent is what RAW asks for.
-- The FIRST instance wins and later ones are dropped, where 5.2.1 says the MOST RECENT applies at
-  equal potency — so a re-cast changes nothing, its own duration included.
-
-Both are tracked in `work/mechanics.md`; neither is a wrong number today, because nothing in the
-shipped packs produces two same-named effects of differing potency.
+**Potency is the sum of the MAGNITUDES of the literal amounts an instance's tokens declare.**
+Magnitude rather than the signed value, because the more potent Bane is the one that takes more off.
+A value that is not a literal yet — an L2 expression, a die — counts 0 at this stage, since the fold
+has not run and there is no ctx to resolve it against; both instances then tie and recency decides,
+which is the right answer for the rule's own example (two Clerics casting Bless ARE equally potent).
+**The stated limit:** two same-named effects differing only in their DIE (`+1d4` against `+1d6`) tie
+where RAW would rank them. No shipped row produces that pair.
 
 **`set` folding by "most potent" is a DIFFERENT question** (`rules/pipeline.ts`) and answers to no
 rule quoted above: it is about two sources setting the same TARGET, whatever their names, where RAW

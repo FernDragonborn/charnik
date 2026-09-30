@@ -104,29 +104,56 @@ function zeroAbilities(): Record<Ability, number> {
 }
 
 /**
+ * How potent one instance is, for RAW's "the most potent effect — such as the highest bonus". The sum
+ * of the MAGNITUDES of the literal amounts its tokens declare, and nothing cleverer: two castings of
+ * one spell are the same row at two numbers, so the sum orders them exactly as the rule intends.
+ *
+ * Magnitude rather than the signed value, because a debuff cast twice asks the same question: the
+ * more potent Bane is the one that takes MORE off, and signed arithmetic would rank it as the weaker.
+ *
+ * A value that is not a literal — an L2 expression, a die — is not a number yet at this stage (the
+ * fold has not run, and `resolveEffectValue` needs a ctx that does not exist until it has), so it
+ * counts 0 and the instances tie, falling through to the recency rule below. That is the right answer
+ * for the case that motivates the whole rule: Bless is `flat_bonus:saves+1d4` in both editions, and
+ * two Clerics casting it ARE equally potent. It is also the stated LIMIT — two same-named effects
+ * differing only in their DIE (`+1d4` against `+1d6`) tie where RAW would rank them, and no shipped
+ * row produces that pair.
+ */
+function potencyOf(eff: ActiveEffect): number {
+	return eff.tokens.reduce(
+		(sum, raw) => sum + Math.abs(parseToken(splitGuard(raw).token).amount ?? 0),
+		0,
+	);
+}
+
+/**
  * The same named runtime effect applied twice applies once — RAW, and both our editions state it:
  * SRD 5.1 ▸ Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 ▸ Casting
  * Spells, whose own example is two Clerics casting Bless for one benefit rather than two bonus dice.
  * (The DMG's broader same-NAME rule is a different, non-SRD statement; this is not it.)
  *
+ * The key is the NAME alone, and among the instances wearing it the MOST POTENT applies — keying on
+ * the tokens too would let two castings at different potencies both apply, which is the case the rule
+ * exists to stop. At equal potency the MOST RECENT wins, which is 5.2.1's own tiebreaker: later in
+ * `play.effects` is later applied (the array is appended to), so topping an effect up before it lapses
+ * carries its fresh duration instead of doing nothing.
+ *
  * Dedupe on the 'condition' layer only — build-time layers stay per-instance, because a repeatable
  * feat legitimately applies each time. A CONDITION needs none of this: it applies or it does not,
  * and the one the SRD calls cumulative (Exhaustion) is a ladder carrying its own `max_level`.
- *
- * NARROWER THAN THE RULE, on purpose until the cases exist (`work/mechanics.md` ▸ STACK-RAW):
- * the key is the label PLUS the tokens, so two castings at different potencies both apply where RAW
- * takes the most potent; and the FIRST wins, so a re-cast does not extend a duration where 5.2.1
- * runs the effect to the later end. Nothing in the shipped packs produces either case.
  */
 function dedupeRuntimeEffects(active: ActiveEffect[]): ActiveEffect[] {
-	const seen = new Set<string>();
-	return active.filter((eff) => {
-		if (eff.layer !== 'condition') return true;
-		const k = `${eff.source}|${eff.tokens.join(';')}`;
-		if (seen.has(k)) return false;
-		seen.add(k);
-		return true;
+	/** name → the instance holding it, and how potent that one is. */
+	const winner = new Map<string, { index: number; potency: number }>();
+	active.forEach((eff, index) => {
+		if (eff.layer !== 'condition') return;
+		const potency = potencyOf(eff);
+		const held = winner.get(eff.source);
+		// `>=` is the whole tiebreaker: an equally potent LATER instance takes the slot
+		if (held === undefined || potency >= held.potency) winner.set(eff.source, { index, potency });
 	});
+	const kept = new Set([...winner.values()].map((w) => w.index));
+	return active.filter((eff, i) => eff.layer !== 'condition' || kept.has(i));
 }
 
 /**

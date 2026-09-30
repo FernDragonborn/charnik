@@ -108,22 +108,20 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [ ] **STACK-RAW · the same-effect rule is enforced, and two clauses of it are not.** RAW is quoted
-  in `../internals/effects.md` ▸ Two of the same thing, and it is SRD rather than DMG: SRD 5.1 states
-  it under Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 under Casting
-  Spells ("Combining Spell Effects"), with two Clerics
-  casting Bless as its own example. `dedupeRuntimeEffects` (`effects/resolver.ts`) already applies
-  one instance rather than two. What it does not yet do:
-  - **Most potent, not first.** The key is the label PLUS the token list, so two castings of one
-    spell at different potencies get different keys and BOTH apply — exactly the case the rule
-    exists to stop. RAW keys on the NAME and folds by highest.
-  - **First wins, where RAW says most recent.** Later instances are dropped, while 5.2.1 ("Combining
-    Spell Effects") says that at equal potency the MOST RECENT casting applies — so topping Bless up
-    before it lapses does nothing today, its fresh duration included.
-  **Neither is a wrong number in the shipped packs** — nothing there produces two same-named effects
-  of differing potency, and the only way to reach the case is a hand-made effect named after a
-  shipped one. It is a rule the engine states it follows and follows most of the way, which is worth
-  closing before a pack makes it reachable.
+- [x] **STACK-RAW · the same-effect rule is enforced whole.** RAW is quoted in
+  `../internals/effects.md` ▸ Two of the same thing, and it is SRD rather than DMG: SRD 5.1 states it
+  under Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 under Casting
+  Spells ("Combining Spell Effects"), with two Clerics casting Bless as its own example.
+  `dedupeRuntimeEffects` (`effects/resolver.ts`) now keys on the NAME alone and keeps the MOST POTENT
+  instance, with the MOST RECENT winning a tie — the two clauses it followed most of the way.
+  **Potency had to be defined, and the definition is the interesting half:** the sum of the
+  MAGNITUDES of the literal amounts an instance's tokens declare. Magnitude rather than the signed
+  value, because the more potent Bane is the one that takes more off, and signed arithmetic ranked it
+  as the weaker. A value that is not a literal yet — an L2 expression, a die — counts 0, because the
+  fold has not run at dedupe time and there is no ctx to resolve one against; the instances then tie
+  and recency decides, which is what the rule's own example wants.
+  **The limit is stated rather than implied:** `+1d4` against `+1d6` under one name ties where RAW
+  would rank them, and no shipped row produces that pair.
   **What it is NOT about:** `set` folding by most potent (`rules/pipeline.ts`) answers a different
   question — two differently named sources setting one TARGET — on which RAW says nothing general.
 
