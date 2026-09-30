@@ -110,6 +110,9 @@ falls off a phone screen.
 - **A resisted hit says what it will take before you press Damage.** Pick the type and type the
   amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable —
   instead of leaving you to watch the HP bar.
+- **A long duration reads as time, not as a count of rounds.** An effect with eight hours left says
+  "8 h", a 7th-level Geas "365 days"; a countdown that no longer divides evenly says "≈8 h" rather
+  than "4799 rds". Combat-length durations stay in rounds.
 - **Numbers no longer run into their labels.** A picker's category said "Weapon2", hit points said
   "38/ 73", a boosted ability said "STR+1".
 
@@ -135,6 +138,7 @@ in a short desktop window, which hit the same bug.
 - **Dominate Beast, Person and Monster last longer from a higher slot, and Geas lasts a year or for
   good**, in both editions: the upcast durations their own text states. Casting one below its first
   higher rung keeps the base duration.
+- **2014 Hold Monster takes one more creature per slot above 5th**, as its text says.
 - **Three 2014 spells had half an "At Higher Levels"**, with the rest stuck to the end of their
   description — Moonbeam, Dominate Beast and Create Undead. Moonbeam's 2014 damage now scales with the
   slot, as that sentence says.

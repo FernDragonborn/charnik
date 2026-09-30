@@ -17,6 +17,7 @@
 		groupEffects,
 		rechargeLabel,
 		remainingRounds,
+		sayRounds,
 		range,
 		type EffectInstance,
 	} from '$lib/combat/helpers';
@@ -46,7 +47,7 @@
 	// the menu prefills / the chip shows REMAINING rounds at the live round counter, not the total
 	const menuRounds = $derived(menuEffect ? remainingRounds(menuEffect, combat.round) : null);
 	const durationLabel = (rounds: number | null | undefined) =>
-		rounds != null ? $_('combat.effects.roundsLeft', { values: { rounds } }) : '∞';
+		rounds != null ? sayRounds(rounds, $_) : '∞';
 	// item/feature-derived contributions + unknown/plugin notes (read-only, from sheet.facts)
 	const derivedEffects = $derived(describeDerivedEffects(s.facts, $_));
 </script>

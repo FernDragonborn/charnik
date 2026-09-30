@@ -557,6 +557,7 @@
 			"exhaustion": "The last level of Exhaustion"
 		},
 		"duration": {
+			"approx": "≈{said}",
 			"custom": "Custom…",
 			"customRounds": "Custom rounds",
 			"hour1": "1 hour · 600 rds",
@@ -567,6 +568,12 @@
 			"roundFewer": "One round fewer",
 			"roundMore": "Add a round",
 			"set": "Set",
+			"span": {
+				"day": "{n, plural, one {# day} other {# days}}",
+				"hour": "{n} h",
+				"minute": "{n} min",
+				"round": "{n, plural, one {# rd} other {# rds}}"
+			},
 			"untilRemoved": "∞ until removed"
 		},
 		"effects": {
@@ -580,7 +587,6 @@
 			"referenceOnly": "Shown for reference — not auto-applied",
 			"remove": "Remove effect",
 			"resources": "Resources",
-			"roundsLeft": "{rounds} rds",
 			"rulesText": "Rules text",
 			"setDuration": "Set duration",
 			"unrecognized": "Unrecognized"
@@ -1029,8 +1035,7 @@
 			"hpMax": "+{n} HP max",
 			"tempHp": "+{n} temp HP",
 			"enhancement": "+{n} attack & damage",
-			"permanent": "permanent",
-			"rounds": "{n} rds"
+			"permanent": "permanent"
 		}
 	},
 	"command": {

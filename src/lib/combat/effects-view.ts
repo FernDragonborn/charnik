@@ -423,6 +423,31 @@ export const ROUNDS_PER_UNIT: Record<string, number> = {
 	day: 14400,
 };
 
+/** The units a duration is SAID in, largest first. */
+const SPOKEN_UNITS = ['day', 'hour', 'minute'] as const;
+
+/** Below this many rounds a duration is said in rounds: it is combat time, and the count is the
+ *  thing the table ticks down. */
+const ROUNDS_SAID_AS_ROUNDS = 10;
+
+/**
+ * Rounds → the words a table uses: "30 days", "8 h", "10 min", "7 rds". The largest unit that fits;
+ * a count that does not divide evenly rounds UP and is marked approximate ("≈8 h" for 4799 rounds),
+ * so a countdown does not fall from "8 h" to "4799 rds" one round after it starts.
+ */
+export function sayRounds(rounds: number, translate: Translate): string {
+	if (rounds > ROUNDS_SAID_AS_ROUNDS) {
+		for (const unit of SPOKEN_UNITS) {
+			const size = ROUNDS_PER_UNIT[unit] ?? 1;
+			if (rounds < size) continue;
+			const n = Math.ceil(rounds / size);
+			const said = translate(`combat.duration.span.${unit}`, { values: { n } });
+			return rounds % size === 0 ? said : translate('combat.duration.approx', { values: { said } });
+		}
+	}
+	return translate('combat.duration.span.round', { values: { n: rounds } });
+}
+
 /** Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" →
  *  600, "2 rounds" → 2. Null when it doesn't map to rounds (Instantaneous / Until dispelled /
  *  Special) — a cast-applied effect is then indefinite (until removed). Pure. */

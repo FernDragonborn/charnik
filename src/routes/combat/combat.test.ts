@@ -509,7 +509,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('castPreview: a duration ladder says nothing below its first rung, and permanent at its top', () => {
 		const dominate = spellRow(graph, `spell:${S}:dominate`, 'on')!;
 		expect(combat.castPreview(dominate, 4)).toBe(''); // below the first rung → the base stands
-		expect(combat.castPreview(dominate, 5)).toContain('100');
+		expect(combat.castPreview(dominate, 5)).toBe('10 min'); // 100 rounds, said as a table says it
 		const geas = spellRow(graph, `spell:${S}:geas`, 'on')!;
 		expect(combat.castPreview(geas, 5)).toBe('');
 		expect(combat.castPreview(geas, 9)).toContain('permanent');

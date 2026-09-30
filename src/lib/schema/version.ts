@@ -82,7 +82,8 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v20: Dominate Beast, Person and Monster and Geas carry their upcast durations, and three 2014
 // spells have their whole "At Higher Levels" back, Moonbeam's damage scaling with it. An install
 // left at v19 casts a 7th-level Dominate Beast for one minute.
-export const CONTENT_SEED_VERSION = 20;
+// v21: 2014 Hold Monster takes one more creature per slot above 5th, as its text and 2024's row say.
+export const CONTENT_SEED_VERSION = 21;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

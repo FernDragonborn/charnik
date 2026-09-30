@@ -31,6 +31,7 @@ import {
 	parseResourceEffect,
 	rechargeLabel,
 	durationToRounds,
+	sayRounds,
 	netAdvantage,
 	remainingRounds,
 	isEffectExpired,
@@ -704,6 +705,25 @@ describe('effect expiry math (EFX-4)', () => {
 		expect(isEffectExpired(e(2, 1), 2)).toBe(false);
 		expect(isEffectExpired(e(2, 1), 3)).toBe(true);
 		expect(isEffectExpired(e(), 99)).toBe(false); // indefinite never expires
+	});
+});
+
+describe('sayRounds — rounds in the words a table uses', () => {
+	// the key and its values, so the assertion reads the choice rather than a catalog's wording
+	const say = (key: string, o?: { values?: Record<string, string | number> }) =>
+		`${key.split('.').at(-1) ?? ''}:${String(o?.values?.n ?? o?.values?.said ?? '')}`;
+	it('picks the largest unit that divides evenly', () => {
+		expect(sayRounds(432000, say)).toBe('day:30');
+		expect(sayRounds(4800, say)).toBe('hour:8');
+		expect(sayRounds(100, say)).toBe('minute:10');
+	});
+	it('rounds a countdown UP and marks it approximate, so it never drops to a bare round count', () => {
+		expect(sayRounds(4799, say)).toBe('approx:hour:8');
+		expect(sayRounds(11, say)).toBe('approx:minute:2');
+	});
+	it('stays in rounds at combat scale', () => {
+		expect(sayRounds(10, say)).toBe('round:10');
+		expect(sayRounds(3, say)).toBe('round:3');
 	});
 });
 

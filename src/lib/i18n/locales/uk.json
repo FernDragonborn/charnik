@@ -557,6 +557,7 @@
 			"exhaustion": "Останній рівень виснаження"
 		},
 		"duration": {
+			"approx": "≈{said}",
 			"custom": "Власна…",
 			"customRounds": "Власна кількість раундів",
 			"hour1": "1 година · 600 рд",
@@ -567,6 +568,12 @@
 			"roundFewer": "На раунд менше",
 			"roundMore": "Додати раунд",
 			"set": "Задати",
+			"span": {
+				"day": "{n} дн.",
+				"hour": "{n} год",
+				"minute": "{n} хв",
+				"round": "{n} рд"
+			},
 			"untilRemoved": "∞ доки не приберете"
 		},
 		"effects": {
@@ -580,7 +587,6 @@
 			"referenceOnly": "Показано для довідки — не застосовується автоматично",
 			"remove": "Прибрати ефект",
 			"resources": "Запаси",
-			"roundsLeft": "{rounds} рд",
 			"rulesText": "Текст правил",
 			"setDuration": "Задати тривалість",
 			"unrecognized": "Нерозпізнане"
@@ -1029,8 +1035,7 @@
 			"hpMax": "+{n} до макс. ОЖ",
 			"tempHp": "+{n} тимч. ОЖ",
 			"enhancement": "+{n} до атаки та шкоди",
-			"permanent": "постійно",
-			"rounds": "{n} рд"
+			"permanent": "постійно"
 		}
 	},
 	"command": {

@@ -8,7 +8,7 @@
  */
 import { t, translator } from '$lib/i18n';
 import { sayText, type SaidText } from '$lib/util/say';
-import { formatDamageParts, metres } from '$lib/combat/helpers';
+import { formatDamageParts, metres, sayRounds } from '$lib/combat/helpers';
 import type { evalUpcast } from '$lib/effects/upcast';
 import type { RollName } from '$lib/combat/roll';
 
@@ -60,9 +60,7 @@ export const upcastPreview = (results: ReturnType<typeof evalUpcast>): string =>
 			bits.push(t('combat.upcast.enhancement', { n: res.flat }));
 		// 0 is a ladder below its first rung, which keeps the base duration (`carrierRounds`)
 		else if (res.kind === 'duration' && (res.isInfinite || res.flat))
-			bits.push(
-				res.isInfinite ? t('combat.upcast.permanent') : t('combat.upcast.rounds', { n: res.flat }),
-			);
+			bits.push(res.isInfinite ? t('combat.upcast.permanent') : sayRounds(res.flat, translator()));
 	}
 	return bits.join(' · ');
 };
