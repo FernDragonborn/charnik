@@ -128,9 +128,22 @@
   ```
 
   **OPEN, and the reason this is a session rather than a commit: the `Saves` group is not formatted
-  right yet.** The shape above is close enough that the idea reads, and the maintainer's eye says it
-  is still wrong — two rows under one label, each a swing plus a case, is the part that has not found
-  its form. Everything else here is settled. Next variants start from `Saves`.
+  right yet.** The shape above is close enough that the idea reads, and it is still wrong — two rows
+  under one label, each a swing plus a case, is the part that has not found its form. Everything else
+  here is settled. Next variants start from `Saves`.
+
+  **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
+  open with the same word. `advantage · against spells` and `advantage · against magical effects`
+  share their first half, and the half that differs is at the end, where the eye arrives last. `AC`
+  reads cleanly beside them precisely because it leads with the number. So the group puts what is
+  COMMON in front and what is DISTINCT behind — which is the wrong way round for a list of two.
+  Three directions worth rendering, cheapest first:
+  - **Lead with the case** — `against spells · advantage`. One reordering, nothing else moves.
+  - **Hoist the swing into the label** — `Saves · advantage` then `spells`, `magical effects`. Reads
+    tightest, and breaks the moment one row is a disadvantage.
+  - **Say the swing as a MARK rather than a word** — `CombatStrip` already does this for passive
+    senses (`advantage-mark`, a `chevron-up`/`chevron-down` beside the number), so the vocabulary is
+    shipped and a player has already learnt it on the row above.
 
   **Two defects found while rendering it, both cheap and both real:**
   - `.def-chip` sets `text-transform: capitalize`, so the play sheet already reads "Darkvision 60 Ft",
