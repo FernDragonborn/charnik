@@ -88,15 +88,15 @@ stay semi-manual.
   **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
   and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
 
-- [ ] **DAMAGE-TYPE-UI · taking damage names a type, but the interface around it is a stub.**
-  The arithmetic is real and lands: `damageTypeOptions` offers the types this character has any
-  defence for, and `applyDamageSensitivity` halves, doubles or zeroes accordingly. What is missing is
-  everything around it.
-  - **The result is invisible until it has happened.** Typing 12 against a resistance shows no "→ 6"
-    before the press, so the player finds out by watching the HP bar move.
-  - **A type the character has no defence for cannot be picked at all.** That is defensible — it
-    resolves identically to untyped — but it means the log cannot say what the damage WAS, and the
-    log is the record a table argues from.
+- [ ] **DAMAGE-TYPE-UI · taking damage names a type, and says what the defence does before the
+  press, but no more than that.** `damageTypeOptions` offers the types this character has any
+  defence for, `applyDamageSensitivity` halves, doubles or zeroes accordingly, and
+  `HitPoints.damagePreview` shows the result under the picker ("Resistant: 13 → 6") while the amount
+  is still being typed. What is left:
+  - **Nothing records damage TAKEN.** The roll journal holds rolls; a Damage press changes hit points
+    and writes no entry anywhere, so there is no log that could say what the damage was. Offering
+    every type in the picker buys nothing until such a record exists — a type with no defence
+    resolves exactly as untyped — so it waits for the record rather than coming first.
   - **One press is one type.** A hit that deals two types (a flame tongue's slashing + fire against a
     creature resistant to one of them) has no form, and that is the case a tracker exists for.
   A play-tracker SUGGESTS and never auto-applies, so the shape is a pre-filled answer the player

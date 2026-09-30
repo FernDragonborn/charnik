@@ -88,6 +88,27 @@ for (const { system, pack, source } of EDITIONS) {
 			expect(character.play.hp.current).toBe(17); // 8 − 5 soaked
 		});
 
+		it('a resisted hit says what it will take before the press, and then takes exactly that', async () => {
+			const character = await play('fighter', 5);
+			character.play.hp = { current: 40, max: 40, temp: 0 };
+			character.play.effects = [
+				{
+					iid: 'r',
+					label: 'Fire ward',
+					effects: ['damage_sensitivity:resist:fire'],
+					positive: true,
+				},
+			];
+			combat.hpAmount = 13;
+			combat.damageType = null;
+			expect(combat.hp.damagePreview).toBeNull(); // untyped: nothing to say
+			combat.damageType = 'fire';
+			expect(combat.hp.damagePreview).toEqual({ raw: 13, final: 6, bucket: 'resist' });
+			combat.damage();
+			expect(character.play.hp.current).toBe(34);
+			combat.damageType = null;
+		});
+
 		it('a caster spends a slot on a leveled spell and nothing on a cantrip', async () => {
 			const character = await play('cleric', 5);
 			const pools = combat.sheet?.spellcasting.pools ?? [];

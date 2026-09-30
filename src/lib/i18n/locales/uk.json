@@ -614,6 +614,11 @@
 			"concentrationCheck": "Перевірка концентрації",
 			"concentrationDc": "СК рятівного кидка на концентрацію",
 			"damage": "Шкода",
+			"damagePreview": {
+				"immune": "Імунітет: {raw} → {final}",
+				"resist": "Опір: {raw} → {final}",
+				"vulnerable": "Вразливість: {raw} → {final}"
+			},
 			"damageTitle": "Застосувати шкоду",
 			"damageTypeLabel": "Тип шкоди (застосовує опір / імунітет / вразливість)",
 			"deathFailures": "Провали рятівних кидків від смерті",

@@ -79,6 +79,17 @@
 				<option value={t}>{damageTypeLabel(t, $_)}</option>
 			{/each}
 		</select>
+		<!-- what the press WILL take, before it is pressed: a tracker surfaces and the player confirms -->
+		<p class="hp-damage-preview" aria-live="polite">
+			{#if combat.hp.damagePreview}
+				{@const preview = combat.hp.damagePreview}
+				<span class={preview.final < preview.raw ? 'less' : 'more'}
+					>{$_(`combat.hp.damagePreview.${preview.bucket}`, {
+						values: { raw: preview.raw, final: preview.final },
+					})}</span
+				>
+			{/if}
+		</p>
 	{/if}
 	<!-- B4: concentration-save banner — a thin, persistent bar shown while a CON save is DUE after
 	     taking damage while concentrating. Suggested-but-editable DC, and the PLAYER rolls it; a miss
@@ -297,6 +308,18 @@
 	}
 	.hp-btn:hover {
 		filter: brightness(1.12);
+	}
+	.hp-damage-preview {
+		margin: var(--space-1) 0 0;
+		min-height: 1lh;
+		font-size: var(--font-size-xs);
+		font-variant-numeric: tabular-nums;
+	}
+	.hp-damage-preview .less {
+		color: var(--color-good);
+	}
+	.hp-damage-preview .more {
+		color: var(--color-danger);
 	}
 	.hp-damage-type {
 		margin-top: var(--space-1-5);

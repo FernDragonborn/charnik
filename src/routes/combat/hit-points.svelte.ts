@@ -13,7 +13,13 @@
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { naturalOf, rollPool } from '$lib/rules/dice';
-import { applyDamageSensitivity, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
+import {
+	applyDamageSensitivity,
+	netAdvantage,
+	DEATH_CAUSE_LABEL,
+	type DamageSensitivities,
+	type SensitivityBucket,
+} from '$lib/combat/helpers';
 import { effectiveHpMax } from '$lib/rules/core';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -24,6 +30,15 @@ import type { OpenOverlay } from './menu-overlay.svelte';
 /** RAW's floor for a concentration save: DC 10, or half the damage taken if that is higher. It is
  *  also the whole DC when the app never saw the hit — a hazard, a shove, a GM call. */
 const CONCENTRATION_DC_FLOOR = 10;
+
+const NO_DEFENSES: DamageSensitivities = { resist: [], immune: [], vulnerable: [] };
+
+/** What a Damage press will take once the character's defence against the picked type applies. */
+export interface DamagePreview {
+	raw: number;
+	final: number;
+	bucket: Exclude<SensitivityBucket, null>;
+}
 
 /** What the HP rules need from the sheet around them. */
 export interface HitPointsHost {
@@ -84,6 +99,19 @@ export class HitPoints {
 		if (!d) return [];
 		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
 	}
+	/** The number field as a whole, non-negative amount of hit points. */
+	private get enteredAmount(): number {
+		return Math.max(0, Math.round(this.hpAmount));
+	}
+	/** The typed-in amount after the defence against the picked type, shown BEFORE the press so the
+	 *  player sees "12 → 6" rather than finding out from the HP bar. Null when the defence changes
+	 *  nothing — no type, no defence against it, or no amount yet. */
+	get damagePreview(): DamagePreview | null {
+		const raw = this.enteredAmount;
+		const defenses = this.host().sheet?.damageSensitivities ?? NO_DEFENSES;
+		const { final, bucket } = applyDamageSensitivity(raw, this.damageType, defenses);
+		return raw > 0 && bucket ? { raw, final, bucket } : null;
+	}
 	/** Was the hit that is being entered a CRITICAL? Only asked at 0 HP, where it is the difference
 	 *  between one death-save failure and two — the Damage button has no attack behind it to read
 	 *  crit-ness from, and one checkbox beats inferring it wrong. Default off, off again after each
@@ -132,13 +160,9 @@ export class HitPoints {
 	damage = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
-		const raw = Math.max(0, Math.round(this.hpAmount));
+		const raw = this.enteredAmount;
 		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
-		const defenses = this.host().sheet?.damageSensitivities ?? {
-			resist: [],
-			immune: [],
-			vulnerable: [],
-		};
+		const defenses = this.host().sheet?.damageSensitivities ?? NO_DEFENSES;
 		const taken = applyDamageSensitivity(raw, this.damageType, defenses).final;
 		let n = taken;
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
@@ -183,7 +207,7 @@ export class HitPoints {
 	heal = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
-		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
+		p.hp.current = Math.min(this.hpMax, p.hp.current + this.enteredAmount);
 	};
 
 	/**

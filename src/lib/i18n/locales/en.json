@@ -614,6 +614,11 @@
 			"concentrationCheck": "Concentration check",
 			"concentrationDc": "Concentration save DC",
 			"damage": "Damage",
+			"damagePreview": {
+				"immune": "Immune: {raw} → {final}",
+				"resist": "Resistant: {raw} → {final}",
+				"vulnerable": "Vulnerable: {raw} → {final}"
+			},
 			"damageTitle": "Apply damage",
 			"damageTypeLabel": "Damage type (applies resistance / immunity / vulnerability)",
 			"deathFailures": "Death save failures",

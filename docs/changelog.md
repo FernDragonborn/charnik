@@ -107,6 +107,9 @@ falls off a phone screen.
   field under a list most characters leave empty.
 - **The pass-time bar stops appearing and vanishing on its own**, and the level itself is the
   level-up control.
+- **A resisted hit says what it will take before you press Damage.** Pick the type and type the
+  amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable —
+  instead of leaving you to watch the HP bar.
 - **Numbers no longer run into their labels.** A picker's category said "Weapon2", hit points said
   "38/ 73", a boosted ability said "STR+1".
 
