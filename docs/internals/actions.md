@@ -6,10 +6,9 @@
 > economy are things the TRACKING app needs with or without plugins, so the model is a CORE concern
 > and plugin hooks are THIN adapters returning this same shape. Where plugins.md §8 and this document
 > disagree, THIS document wins.
-> **Implementation:** `ActionExecutor.activateResourceOption` + `runActionToken`
+> **Implementation:** `ActionExecutor.activateResourceOption` + `runAction`
 > (`src/routes/combat/action-executor.svelte.ts`), all-or-nothing validate→execute. What is still
-> open rides `plan.md` — the `onEvent` generalization under RECHARGE-TAIL, plugin `onUse`/`onEvent`
-> at `api: 2`.
+> open is the plugin `onUse`/`onEvent` hooks at `api: 2`.
 
 ## 1. The three state channels
 
@@ -23,7 +22,7 @@ Every state transition in play maps to exactly one channel:
 
 `passive` is implemented (the derive pipeline: DAG resolve → facts → fold; the L3 plugin
 `passive` hook rides it as a pre-pass). `onUse` is implemented for the native first slice (N2:
-`activateResourceOption` + `runActionToken`). `onEvent` is implemented for L1: an
+`activateResourceOption` + `runAction`). `onEvent` is implemented for L1: an
 `on_event:<event>:<action>` token runs one of the executor verbs when a fired event happens
 (`turn_start` is the only member of the vocabulary, and it fires). The L3 PLUGIN `onEvent` hook —
 arbitrary handler logic on an event — remains deferred to `api: 2`, and that is the deferred write
@@ -59,7 +58,7 @@ Host execution mapping (each field lands on an EXISTING system — no new mutati
 | `cost`    | the turn economy tracker (`action \| bonus \| reaction \| free`)                  |
 | `notes`   | plain-text log/tooltip lines (never markup)                                       |
 
-**Implemented executor verbs (N2 first slice, `runActionToken`).** Until the full JSON intent lands,
+**Implemented executor verbs (N2 first slice, `runAction`).** Until the full JSON intent lands,
 a native action is ONE bounded token in a `resource_options.action` column, dispatched by verb — each
 still landing on an existing system per the table above:
 

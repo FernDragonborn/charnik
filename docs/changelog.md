@@ -107,6 +107,8 @@ falls off a phone screen.
   field under a list most characters leave empty.
 - **The pass-time bar stops appearing and vanishing on its own**, and the level itself is the
   level-up control.
+- **Numbers no longer run into their labels.** A picker's category said "Weapon2", hit points said
+  "38/ 73", a boosted ability said "STR+1".
 
 ### On a phone
 
@@ -127,6 +129,12 @@ in a short desktop window, which hit the same bug.
   so no row there claims one.
 - **A condition and an effect are one kind of thing**, which is what they always were. Applying
   Invisible or Rage used to file them under Debuffs; a row says which it is now.
+- **Dominate Beast, Person and Monster last longer from a higher slot, and Geas lasts a year or for
+  good**, in both editions: the upcast durations their own text states. Casting one below its first
+  higher rung keeps the base duration.
+- **Three 2014 spells had half an "At Higher Levels"**, with the rest stuck to the end of their
+  description — Moonbeam, Dominate Beast and Create Undead. Moonbeam's 2014 damage now scales with the
+  slot, as that sentence says.
 
 ### Ukrainian
 

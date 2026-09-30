@@ -142,7 +142,7 @@ everything — old homebrew is never wrong-downward.
 - **Two-dimensional source filtering + collision resolution — DONE (commit `bfe3df0`).** Settings ▸
   Sources (per-source + per-file enable toggles; a row shows iff file AND source enabled) and ▸
   Collisions (same `type:id` overlapping an edition → keep-all / keep-one = the collisions.json
-  resolution). Browse-layer only via `sources.svelte`'s persisted `sourceConfig` + pure `isRowActive`/
+  resolution). Browse-layer only via `sources.svelte.ts`'s persisted `sourceConfig` + pure `isRowActive`/
   `detectCollisions` — the loader/core graph is untouched, so it's live + never drops data. The
   homebrew fork-override (Editor mode) is the same mechanism (keep-all, homebrew sorts on top).
 - **Settings ▸ Themes (custom themes) — CORE DONE, extras PLANNED.** Users author their own
@@ -279,13 +279,12 @@ position and are given per wave, because most of them were learned the hard way.
   producer-sibling output as RULES-TEXT, and it now sits in `work/content.md` saying so.
 
   **Deliberately not in a wave, out of the same pass:** RULES-TEXT and the 2014 item tables (both a
-  producer sibling's work, not this repo's), and closing PLAYTEST-UI, which is a prune rather than a
-  change.
+  producer sibling's work, not this repo's).
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
-  its tail is PLAYTEST-UI, PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the screens, the dice
-  tray, the chrome the add-item picker wears, and a narrow layout that is usable rather than
-  finished. First, because each one is a player already standing in front of it.
+  its tail is PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the dice tray, the chrome the
+  add-item picker wears, and a narrow layout that is usable rather than finished. First, because
+  each one is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
   FEATURE-PASSIVES naming shape 1 and N2b (Wild Shape) no longer blocked on data — the attacks column
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid

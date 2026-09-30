@@ -173,7 +173,7 @@
 	{#each shown as section (section.key)}
 		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
 		<button class="jumpbtn" class:here={section.key === hereKey} onclick={() => jumpTo(section.key)}>
-			{section.label}{#if got}<span class="gold"> {got}</span>{/if}
+			{section.label}{#if got}<span class="gold">&nbsp;{got}</span>{/if}
 		</button>
 	{/each}
 	<button

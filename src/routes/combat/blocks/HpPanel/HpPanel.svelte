@@ -30,7 +30,7 @@
 				>
 			</div>
 			<div class="hitpoints-value" use:provenance={why(s.maxHp, $_)}>
-				{c.play.hp.current}<small> / {combat.hpMax}</small>{#if c.play.hp.temp > 0}<span
+				{c.play.hp.current}<small>&nbsp;/ {combat.hpMax}</small>{#if c.play.hp.temp > 0}<span
 						class="temp">+{c.play.hp.temp} {$_('combat.hp.temp')}</span
 					>{/if}
 			</div>

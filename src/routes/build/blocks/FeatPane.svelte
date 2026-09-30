@@ -63,7 +63,7 @@
 					class:on={asi.picks.includes(ab)}
 					onclick={() => b.feats.toggleAsiPick(slotKey, ab)}
 				>
-					{abilityShortLabel(ab, $_)}{#if amount}<span class="gold"> +{amount}</span>{/if}
+					{abilityShortLabel(ab, $_)}{#if amount}<span class="gold">&nbsp;+{amount}</span>{/if}
 				</button>
 			{/each}
 		</div>

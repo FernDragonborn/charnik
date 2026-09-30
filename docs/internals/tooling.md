@@ -27,7 +27,7 @@ is a standing risk of a well-meaning wrong merge. **Do not collapse them:**
 
 - **`EFFECT_KINDS`** (`content/schemas`) versus the effect vocabulary in `effects/token-parser` —
   separate so content validation does not depend on the removable effects module. A drift test in
-  `effects.test.ts` keeps them aligned; a shared import would defeat the point.
+  `effect.test.ts` keeps them aligned; a shared import would defeat the point.
 - **`formatModifier`** (`rules/dice`, pure core) versus **`signed`** (`util/format`) — same body, but
   the hot roll path in the core must not pull in `util`. The duplication is the accepted cost.
 - **The CSS census's top rows are STATES, not controls.** `css-dups.mjs` counts a hover pair

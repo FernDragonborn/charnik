@@ -91,6 +91,11 @@ The rule for every schema change:
 should. `str_min` is blank on a dagger because daggers have no Strength requirement. The first is a
 column with a bug; the second was never column-shaped.
 
+`cost` on a magic item is neither: it is blank because no price EXISTS to transcribe. Neither SRD
+prices a magic item or gives a formula for one, and the rarity→value table is the DMG's, so it is
+never filled in (`AGENTS.md` ▸ Inventing game data). `rarity` is complete in both editions, which
+is why it is the axis the picker filters magic on, with a blank `rarity` meaning mundane.
+
 - **Fold alternatives, never companions.** A tag cell stays short only because the folded facts are
   mutually exclusive by kind — a weapon never carries armour tags. Folding facts that CO-OCCUR
   (`cost`, `weight_lb`, `rarity` all apply to one row) grows every cell without bound, which is

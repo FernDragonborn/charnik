@@ -138,7 +138,7 @@
 					{@const file = fileLabel(it.root, it.file)}
 					<div class="row {cls}">
 						<div class="row-file">
-							{file}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
+							{file}{#if it.id}<span class="row-id">&nbsp;· {it.id}</span>{/if}
 						</div>
 						<div class="row-msg">{sayText(it, $_)}</div>
 						{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
@@ -208,7 +208,7 @@
 			<div class="group-label eyebrow warn">{$_('settings.health.groupJoins')}</div>
 			{#each joinIssues as j (j.file + j.id)}
 				<div class="row warn">
-					<div class="row-file">{j.file}<span class="row-id"> · {j.id}</span></div>
+					<div class="row-file">{j.file}<span class="row-id">&nbsp;· {j.id}</span></div>
 					<div class="row-msg">{sayText(j, $_)}</div>
 					<div class="row-detail">{j.detail}</div>
 				</div>

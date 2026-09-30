@@ -25,6 +25,12 @@ IO, no toast, no store write. Svelte re-runs deriveds whenever their dependencie
 more than once, so a side effect inside one fires unpredictably and creates reactive loops. Anything
 that *acts* on a change belongs in `$effect`.
 
+**A space at the edge of a tag is written `&nbsp;`.** Svelte trims whitespace at the start and end
+of an element's text, so `<span> +{n}</span>` renders glued to what precedes it; `&#32;` is decoded
+before the trim, and `{' '}` is what the linter's `no-useless-mustaches` rewrites back into the bug.
+A non-breaking space survives and keeps a number on its label's line. `tag-edge-space.test.ts` fails
+on the one-line shape.
+
 ## Panels, and the views made of them
 
 The sheet is built from discrete **panels** — HP, combat stats, abilities, skills, attacks, spells,
@@ -389,7 +395,9 @@ screenshots of how other TTRPG tools and non-game apps solve it, is in
 renders the variants it weighs, of which V6 and V9 are the two this contract describes.
 
 It lives in `src/routes/build/`. `OptionGrid` is the small pickers, `SectionedPicker` the big two;
-both open a `PickerCard` on click, and `SectionedPicker` a `PickerPeek` on hover. `PickerSearch` is
+both open a `PickerCard` on click, and `SectionedPicker` a `PickerPeek` on hover. The card carries
+the shared `LangSwitcher`, because it is where a player reads an article while choosing; the peek
+does not, because it is gone before a press could land on one. `PickerSearch` is
 the search row they share, `option-walk.ts` the keyboard walk, `picker-reading.svelte.ts` the state
 behind both — which option the card is up for, and where the arrow keys go — and `card-placement.ts`
 where a card lands. `InspectorGrid` is every `pick` target's body, so the diff's own rule (what it

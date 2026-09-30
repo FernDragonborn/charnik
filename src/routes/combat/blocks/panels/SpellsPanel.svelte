@@ -21,7 +21,7 @@
 	{@const multi = s.spellcasting.classes.length > 1}
 	<div class="cast-line">
 		{#each s.spellcasting.classes as sc, i (sc.className)}
-			{#if i > 0}<span class="cast-separator"> · </span>{/if}
+			{#if i > 0}<span class="cast-separator">&nbsp;·&nbsp;</span>{/if}
 			{#if multi}<b class="cast-class">{sc.className}</b>
 			{/if}{$_('combat.spells.saveDc')}
 			<b use:provenance={why(sc.saveDC, $_)}>{sc.saveDC.value}</b>

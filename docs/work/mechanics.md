@@ -553,9 +553,8 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         rest simply removed every timed effect there was. So a long rest ended a 24-hour Water
         Breathing and a 30-day Geas — the app deciding a duration the rules had already decided. Both
         rests read their own length off `REST_HOURS` now (1 and 8), so the rule is one comparison and
-        the two cannot drift apart. No shipped spell row carries an `effects` token with a duration
-        that long yet, so what this was wrong for is the durations a PLAYER types, and it is what
-        UPCAST-DURATION-TAIL above was actually blocked on.
+        the two cannot drift apart. What this was wrong for is the durations a PLAYER types and
+        the hours-long ones a Dominate upcast gives its concentration carrier.
 - [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved
@@ -635,11 +634,6 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         parser, so the form cannot offer what the app would refuse. The raw field stays: a `step()`
         ladder, a typed sub-slot and a guard are all wider than the two shapes here, and prose
         `higher_level` is still the fallback for a spell whose scaling is not a formula at all.
-  - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
-    low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
-    **What made it unsafe is fixed** (RECHARGE-TAIL below): a long rest used to remove every timed
-    effect, so encoding a 30-day duration would have produced a Geas that a night's sleep ended.
-    Encoding one now survives the rest it should survive.
 - [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is
   `docs/internals/characters.md` ▸ Concentration is a REF, not a clock. The CON save on damage is a
   toast REMINDER, never an auto-drop. Duration canon is rounds.
@@ -693,7 +687,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 - [x] **Half-Elf +1/+1 choice** (5e) — data-driven, no class-name branching.
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
-  combat shows a ringed dot. (Strict cap by class-feature count still TODO.)
+  combat shows a ringed dot; the Strict cap is N4 (a).
 - [x] **Languages** — a `language` content type (16 SRD rows), granted by species/background.
 - [~] **Level-up flow** — the sheet's "▲ Level up" control NAVIGATES to the builder in level-up
   mode (`?levelup=<slug>`), which hydrates the draft from the saved character; the sheet only decides
@@ -703,6 +697,13 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
+- [ ] **XP-TRACKING · the spec's optional XP mode has a field and nothing else.** `plan.md` ▸
+  Character lifecycle puts it in scope: a `levelingMode` (`milestone` | `xp`) toggle, level derived
+  from the XP thresholds in `xp` mode. What exists is `build.xp`, optional in the schema and read by
+  nothing. The thresholds are SRD data, and the 2014 pack carries them only by accident: the
+  Character Advancement table sits inside `schoolofevocation_character_advancement`, a class-feature
+  row the converter glued onto the Evocation school. A threshold row of its own is a producer-sibling
+  fix, and 2024 ships none.
 - [x] **Inventory/equipment at build** — an Inventory card on the build page.
 ## Effects vocabulary
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·

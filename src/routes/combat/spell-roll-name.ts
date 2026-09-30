@@ -58,7 +58,8 @@ export const upcastPreview = (results: ReturnType<typeof evalUpcast>): string =>
 			bits.push(t('combat.upcast.tempHp', { n: res.flat }));
 		else if (res.kind === 'enhancement' && res.flat)
 			bits.push(t('combat.upcast.enhancement', { n: res.flat }));
-		else if (res.kind === 'duration')
+		// 0 is a ladder below its first rung, which keeps the base duration (`carrierRounds`)
+		else if (res.kind === 'duration' && (res.isInfinite || res.flat))
 			bits.push(
 				res.isInfinite ? t('combat.upcast.permanent') : t('combat.upcast.rounds', { n: res.flat }),
 			);

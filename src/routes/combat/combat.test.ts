@@ -295,6 +295,11 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`,
 			// a token-less concentration spell whose DURATION upcasts (absolute rounds) — Hunter's Mark-style
 			`entangle,5.5e,${S},Entangle,1,conjuration,action,90 ft,"Concentration, up to 1 minute",V S,true,save,str,,"duration:step(slot, 1->10, 3->30)"`,
+			// a duration ladder that starts ABOVE the spell's own level (Dominate Beast): below its first
+			// rung the step is 0, which means "keep the base", never a zero-length duration
+			`dominate,5.5e,${S},Dominate,4,enchantment,action,60 ft,"Concentration, up to 1 minute",V S,true,save,wis,,"duration:step(slot, 5->100, 7->4800)"`,
+			// a duration that ends permanent at the top slot (Geas)
+			`geas,5.5e,${S},Geas,5,enchantment,1 minute,60 ft,30 days,V,false,save,wis,,"duration:step(slot, 7->5256000, 9->inf)"`,
 			// a MULTI-TYPE attack spell (Ice Knife): 1d10 piercing base + 2d6 cold base; upcast scales ONLY
 			// the cold sub-slot (item 2) — the delta must route to the cold part, not a typeless pool
 			`ice_knife,5.5e,${S},Ice Knife,1,conjuration,action,60 ft,Instantaneous,S M,false,attack,,1d10 piercing; 2d6 cold,damage:cold:per_slot(1d6)`,
@@ -499,6 +504,15 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		const r = spellRow(graph, `spell:${S}:scorch`, 'on')!;
 		expect(combat.castPreview(r, 2)).toContain('3'); // count:slot+1 at slot 2 = 3
 		expect(combat.castPreview(r, 3)).toContain('4'); // …4 at slot 3
+	});
+
+	it('castPreview: a duration ladder says nothing below its first rung, and permanent at its top', () => {
+		const dominate = spellRow(graph, `spell:${S}:dominate`, 'on')!;
+		expect(combat.castPreview(dominate, 4)).toBe(''); // below the first rung → the base stands
+		expect(combat.castPreview(dominate, 5)).toContain('100');
+		const geas = spellRow(graph, `spell:${S}:geas`, 'on')!;
+		expect(combat.castPreview(geas, 5)).toBe('');
+		expect(combat.castPreview(geas, 9)).toContain('permanent');
 	});
 
 	it('a count cantrip (EB) does NOT die-multiply; a damage cantrip (Fire Bolt) still does (item 9)', () => {

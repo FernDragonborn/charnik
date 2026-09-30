@@ -82,7 +82,7 @@
 		<div class="chips">
 			{#each b.abilities.backgroundBoostChoices as ab (ab)}
 				<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.abilities.toggleBoostPick(ab)}>
-					{abilityShortLabel(ab, $_)}{#if b.abilities.backgroundBoosts[ab]}<span class="gold"> +{b.abilities.backgroundBoosts[ab]}</span>{/if}
+					{abilityShortLabel(ab, $_)}{#if b.abilities.backgroundBoosts[ab]}<span class="gold">&nbsp;+{b.abilities.backgroundBoosts[ab]}</span>{/if}
 				</button>
 			{/each}
 		</div>

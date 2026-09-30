@@ -8,6 +8,9 @@
  * Reconciled in both directions on every read, the same rule the panel columns use: a row the saved
  * order does not name is new and goes to the end, and a name with no row left is dropped. Neither is
  * something a player could fix from the app if it went wrong.
+ *
+ * Skills, spells and effects keep no order of their own on purpose: their order IS their grouping
+ * (by ability, by level, by polarity), and features are ordered only inside their section.
  */
 
 /** The panels that keep a stored row order — compared against these, never a bare string. */
