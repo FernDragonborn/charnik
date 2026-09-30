@@ -18,7 +18,9 @@ pointer at it, not a second set of rules.
 - [Effects — the author's guide](guide/effects.md) — how the `effects` column works, for whoever is
   writing content rather than changing the app. Plain language first, then the full vocabulary: every
   effect kind, every target, and the formula language. The normative version of the same thing is
-  [internals/effects.md](internals/effects.md).
+  [internals/effects.md](internals/effects.md). Its published web page is built from
+  [guide/effects.html](guide/effects.html) beside it — **the two are edited in one commit**, and the
+  page is redeployed to the URL the guide names.
 
 ## How it works — and which file rules on what
 

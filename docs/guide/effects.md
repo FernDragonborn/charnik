@@ -4,6 +4,11 @@
 > <https://claude.ai/code/artifact/b908baa5-f4c7-46bf-bd51-f3b2bdd4ad9e> — which is the link the
 > README hands a content author. **The page is a copy: an edit here is not live until it is
 > redeployed to that same URL**, so a change to this file includes that deploy.
+>
+> **Its source is [`effects.html`](effects.html), beside this file**, so the deploy is a publish of a
+> file you can diff rather than an archaeology exercise. It did not used to be: the page lived only
+> at that URL, so keeping it in step meant fetching the live HTML and hand-patching it, and it drifted
+> a whole effect kind behind before anyone noticed. Edit both in the same commit.
 
 Charnik reads your rules out of CSV files you own. Most columns are plain facts: a name, a weight, a
 damage die. One column is different — **`effects`** — and it is the one that makes a number on the

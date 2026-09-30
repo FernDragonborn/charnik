@@ -1,0 +1,1255 @@
+<title>Charnik Effects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+	rel="stylesheet"
+	href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+/>
+
+<style>
+	/* Charnik's own shipped tokens — slate ground, heraldic crimson, gold for anything a character
+	   spends. Light palette on bare :root so the un-stamped (system) state always resolves. */
+	:root {
+		--bg: #eef0ee;
+		--surface: #ffffff;
+		--surface-2: #f4f6f2;
+		--border: #d9ddd6;
+		--border-strong: #c3c9bd;
+		--text: #1b2024;
+		--muted: #5a6570;
+		--accent: #b3243a;
+		--accent-soft: #fbeef0;
+		--gold: #8a6d1f;
+		--gold-soft: #f7f1de;
+		--code-bg: #f4f6f2;
+
+		--display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+		--body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+		--mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+		--measure: 68ch;
+		--rail: 14.5rem;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme='light']) {
+			--bg: #0f1116;
+			--surface: #171a21;
+			--surface-2: #1f232c;
+			--border: #272c37;
+			--border-strong: #333a47;
+			--text: #e6e8ec;
+			--muted: #878f9d;
+			--accent: #ef6b78;
+			--accent-soft: #241317;
+			--gold: #caa24a;
+			--gold-soft: #2a2415;
+			--code-bg: #12151b;
+		}
+	}
+	:root[data-theme='dark'] {
+		--bg: #0f1116;
+		--surface: #171a21;
+		--surface-2: #1f232c;
+		--border: #272c37;
+		--border-strong: #333a47;
+		--text: #e6e8ec;
+		--muted: #878f9d;
+		--accent: #ef6b78;
+		--accent-soft: #241317;
+		--gold: #caa24a;
+		--gold-soft: #2a2415;
+		--code-bg: #12151b;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		html {
+			scroll-behavior: smooth;
+		}
+	}
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--body);
+		font-size: 16px;
+		line-height: 1.62;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.page {
+		display: grid;
+		grid-template-columns: var(--rail) minmax(0, 1fr);
+		gap: 3.5rem;
+		max-width: 76rem;
+		margin: 0 auto;
+		padding: 3.5rem 1.75rem 6rem;
+		align-items: start;
+	}
+
+	/* ── the rail. The sections are numbered in the source because this is a reference you jump
+	   around in, so the numbers are navigation, not ornament. ── */
+	.rail {
+		position: sticky;
+		top: 3.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		font-family: var(--display);
+		font-size: 0.83rem;
+	}
+	.rail-eyebrow {
+		font-family: var(--mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted);
+		padding-bottom: 0.75rem;
+		margin-bottom: 0.5rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.rail a {
+		display: grid;
+		grid-template-columns: 1.6rem 1fr;
+		gap: 0.35rem;
+		padding: 0.34rem 0.4rem;
+		border-radius: 5px;
+		text-decoration: none;
+		color: var(--muted);
+		border-left: 2px solid transparent;
+	}
+	.rail a span.n {
+		font-family: var(--mono);
+		font-variant-numeric: tabular-nums;
+		color: var(--border-strong);
+	}
+	.rail a:hover {
+		color: var(--text);
+		background: var(--surface-2);
+	}
+	.rail a:hover span.n {
+		color: var(--accent);
+	}
+	.rail a:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	/* where you are. The rail already reserved a 2px left edge for exactly this, so marking a section
+	   moves no other pixel — the list does not reflow as you scroll past a heading. */
+	.rail a[aria-current] {
+		color: var(--text);
+		background: var(--surface-2);
+		border-left-color: var(--accent);
+	}
+	.rail a[aria-current] span.n {
+		color: var(--accent);
+	}
+
+	main {
+		min-width: 0;
+	}
+	.measure {
+		max-width: var(--measure);
+	}
+
+	/* ── masthead ── */
+	.mast {
+		margin-bottom: 3.5rem;
+	}
+	.kicker {
+		font-family: var(--mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin: 0 0 0.9rem;
+	}
+	h1 {
+		font-family: var(--display);
+		font-weight: 700;
+		font-size: clamp(2.3rem, 5vw, 3.35rem);
+		line-height: 1.04;
+		letter-spacing: -0.028em;
+		margin: 0 0 1.1rem;
+		text-wrap: balance;
+	}
+	.standfirst {
+		font-size: 1.12rem;
+		color: var(--muted);
+		margin: 0;
+		max-width: 56ch;
+	}
+	.standfirst strong {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	h2 {
+		font-family: var(--display);
+		font-weight: 700;
+		font-size: 1.62rem;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
+		margin: 3.6rem 0 1.1rem;
+		scroll-margin-top: 2rem;
+		text-wrap: balance;
+		display: grid;
+		grid-template-columns: 2.2rem 1fr;
+		align-items: baseline;
+	}
+	h2 .n {
+		font-family: var(--mono);
+		font-size: 0.85rem;
+		font-weight: 400;
+		color: var(--accent);
+		font-variant-numeric: tabular-nums;
+	}
+	h3 {
+		font-family: var(--display);
+		font-weight: 500;
+		font-size: 1.02rem;
+		letter-spacing: 0.01em;
+		margin: 2.2rem 0 0.7rem;
+		color: var(--text);
+	}
+	p {
+		margin: 0 0 1.05rem;
+	}
+	ul {
+		margin: 0 0 1.05rem;
+		padding-left: 1.15rem;
+	}
+	li {
+		margin-bottom: 0.4rem;
+	}
+	a {
+		color: var(--accent);
+		text-underline-offset: 2px;
+	}
+	em {
+		color: var(--text);
+	}
+
+	code {
+		font-family: var(--mono);
+		font-size: 0.855em;
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0.08em 0.34em;
+		/* a long token must wrap rather than push the page sideways — and when it does, `clone` gives
+		   each fragment the whole chip instead of a box with one open end */
+		overflow-wrap: break-word;
+		-webkit-box-decoration-break: clone;
+		box-decoration-break: clone;
+	}
+	pre {
+		font-family: var(--mono);
+		font-size: 0.83rem;
+		line-height: 1.75;
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--accent);
+		border-radius: 6px;
+		padding: 1rem 1.15rem;
+		margin: 0 0 1.4rem;
+		overflow-x: auto;
+	}
+	pre code {
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: inherit;
+		/* an effect wraps onto a second line rather than asking the reader to scroll a code block
+		   sideways to finish a sentence. The breaks that MEAN something are still written by hand. */
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+	/* the exception: a block whose trailing comments line up in a column. Wrapping would scramble the
+	   two columns into each other, so this one scrolls instead. */
+	pre.cols code {
+		white-space: pre;
+	}
+	pre .cmt {
+		color: var(--muted);
+	}
+
+	/* ── the aside a reader needs once ── */
+	.aside {
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--gold);
+		background: var(--gold-soft);
+		border-radius: 6px;
+		padding: 1rem 1.15rem;
+		margin: 0 0 1.4rem;
+		font-size: 0.94rem;
+	}
+	.aside p:last-child {
+		margin-bottom: 0;
+	}
+
+	/* ── ledger tables: hairline rules, the way a sheet rules its rows ── */
+	.tablewrap {
+		overflow-x: auto;
+		margin: 0 0 1.6rem;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+	}
+	table {
+		border-collapse: collapse;
+		width: 100%;
+		min-width: 40rem;
+		font-size: 0.9rem;
+	}
+	th {
+		text-align: left;
+		font-family: var(--mono);
+		font-weight: 600;
+		font-size: 0.66rem;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
+		color: var(--muted);
+		padding: 0.8rem 1rem;
+		border-bottom: 1px solid var(--border-strong);
+		white-space: nowrap;
+	}
+	td {
+		padding: 0.85rem 1rem;
+		border-bottom: 1px solid var(--border);
+		vertical-align: top;
+		line-height: 1.55;
+	}
+	tr:last-child td {
+		border-bottom: 0;
+	}
+	td:first-child {
+		white-space: nowrap;
+	}
+	td:first-child code {
+		background: none;
+		border: 0;
+		padding: 0;
+		color: var(--accent);
+		font-weight: 600;
+	}
+	td:nth-child(2) {
+		color: var(--muted);
+	}
+	/* the grammar column gets room for a whole token on one line — the wrapper scrolls, so widening a
+	   column costs nothing the page has to pay for */
+	th:nth-child(2),
+	td:nth-child(2) {
+		min-width: 16rem;
+	}
+	/* The middle column holds one grammar line per row, not inline literals in a sentence. Chipping it
+	   drew a separate bordered box around every fragment the line wrapped onto; plain mono says the
+	   same thing and survives any width. */
+	td:nth-child(2) code {
+		background: none;
+		border: 0;
+		padding: 0;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+		color: var(--text);
+	}
+
+	/* ── the kind list. This was a three-column table, and the grammar column was the problem: a line
+	   like `damage_sensitivity:<resist|immune|vulnerable>:<type>` is wider than a third of the page at
+	   any width, so it broke mid-token and read as two separate things. Stacked, the grammar gets the
+	   whole measure and never wraps — and the crimson names still scan as a column. ── */
+	.kinds {
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+		margin: 0 0 1.6rem;
+		overflow: hidden;
+	}
+	.kind {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 1.1rem 1.2rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.kind:last-child {
+		border-bottom: 0;
+	}
+	.kind-name {
+		font-family: var(--mono);
+		font-size: 0.92rem;
+		font-weight: 600;
+		color: var(--accent);
+	}
+	.kind-form {
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		padding: 0.5rem 0.7rem;
+		overflow-x: auto;
+	}
+	/* one atom: a grammar line is never broken across two lines. If one is wider than the page it
+	   scrolls inside its own strip, which is the honest way to say "this is one line". */
+	.kind-form code {
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: 0.83rem;
+		white-space: pre;
+		color: var(--text);
+	}
+	.kind-desc {
+		color: var(--muted);
+		font-size: 0.93rem;
+		max-width: var(--measure);
+	}
+	.kind-desc code {
+		white-space: normal;
+	}
+
+	/* ── grammar colouring. Three roles, which is the convention a syntax reference uses (MDN, the
+	   Rust reference): what you type verbatim, what you replace, and what is only a joint. Not a
+	   rainbow — the two colours are the page's existing two, doing the job they already do elsewhere:
+	   crimson names the effect, gold is a fixed word, and punctuation recedes so the words carry. ── */
+	.g-kind {
+		color: var(--accent);
+		font-weight: 600;
+	}
+	.g-lit {
+		color: var(--gold);
+		font-weight: 600;
+	}
+	.g-slot {
+		color: var(--text);
+	}
+	.g-punc {
+		color: var(--muted);
+	}
+
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1.4rem;
+		margin: 0 0 1.4rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+		font-size: 0.86rem;
+		color: var(--muted);
+	}
+	.legend span code {
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: 0.86rem;
+	}
+
+	/* ── the three-part anatomy of a token ── */
+	.anatomy {
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+		padding: 1.3rem 1.4rem;
+		margin: 0 0 1.5rem;
+	}
+	.anatomy-line {
+		font-family: var(--mono);
+		font-size: clamp(0.9rem, 2.4vw, 1.15rem);
+		margin-bottom: 1rem;
+		overflow-x: auto;
+		white-space: nowrap;
+		padding-bottom: 0.2rem;
+	}
+	.pt {
+		border-bottom: 2px solid currentColor;
+		padding-bottom: 2px;
+	}
+	.pt-guard {
+		color: var(--gold);
+	}
+	.pt-kind {
+		color: var(--accent);
+	}
+	.pt-target {
+		color: var(--text);
+	}
+	.pt-value {
+		color: var(--muted);
+	}
+	.anatomy dl {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 0.4rem 1rem;
+		margin: 0;
+		font-size: 0.92rem;
+	}
+	.anatomy dt {
+		font-family: var(--mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.anatomy dd {
+		margin: 0;
+		color: var(--muted);
+	}
+
+	/* ── worked examples: the cell, then what it means ── */
+	.worked {
+		display: flex;
+		flex-direction: column;
+		gap: 1.1rem;
+		margin-bottom: 1.6rem;
+	}
+	.worked figure {
+		margin: 0;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+		overflow: hidden;
+	}
+	.worked pre {
+		margin: 0;
+		border: 0;
+		border-radius: 0;
+		background: var(--code-bg);
+		border-left: 3px solid var(--gold);
+	}
+	.worked figcaption {
+		padding: 0.75rem 1.15rem;
+		font-size: 0.92rem;
+		color: var(--muted);
+		border-top: 1px solid var(--border);
+	}
+	.worked figcaption b {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	footer {
+		margin-top: 4.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border);
+		font-size: 0.88rem;
+		color: var(--muted);
+	}
+
+	@media (max-width: 62rem) {
+		.page {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0;
+			padding: 2.25rem 1.25rem 4rem;
+		}
+		.rail {
+			position: static;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+			gap: 0.1rem 0.5rem;
+			margin-bottom: 2.75rem;
+		}
+		.rail-eyebrow {
+			grid-column: 1 / -1;
+		}
+		h2 {
+			grid-template-columns: 1.8rem 1fr;
+		}
+	}
+</style>
+
+<div class="page">
+	<nav class="rail" aria-label="Sections">
+		<div class="rail-eyebrow">The guide</div>
+		<a href="#s1"><span class="n">01</span><span>Where effects live</span></a>
+		<a href="#s2"><span class="n">02</span><span>Your first three</span></a>
+		<a href="#s3"><span class="n">03</span><span>The shape of one</span></a>
+		<a href="#s4"><span class="n">04</span><span>Guards</span></a>
+		<a href="#s5"><span class="n">05</span><span>Every kind</span></a>
+		<a href="#s6"><span class="n">06</span><span>Targets</span></a>
+		<a href="#s7"><span class="n">07</span><span>Formulas</span></a>
+		<a href="#s8"><span class="n">08</span><span>Getting it wrong</span></a>
+		<a href="#s9"><span class="n">09</span><span>Worked examples</span></a>
+		<a href="#s10"><span class="n">10</span><span>Where next</span></a>
+	</nav>
+
+	<main>
+		<header class="mast">
+			<p class="kicker">Charnik · content authoring</p>
+			<h1>Effects: the author's guide</h1>
+			<p class="standfirst">
+				Charnik reads your rules out of CSV files you own. Most columns are plain facts — a name, a
+				weight, a damage die. One column is different: <strong>effects</strong>, the one that makes a
+				number on the sheet change by itself.
+			</p>
+		</header>
+
+		<div class="measure">
+			<p>
+				This page is for the person writing that column. It starts from nothing, and by the end it is
+				the complete specification: every effect Charnik understands, everything you can point one
+				at, and the small formula language you can write inside one.
+			</p>
+			<p>
+				You do not need to program. An effect is a sentence in a fixed shape, and Charnik never runs
+				it as code — it reads it, understands it, or tells you it could not.
+			</p>
+			<div class="aside">
+				<p>
+					<strong>Looking for the engineering spec?</strong> <code>docs/internals/effects.md</code>
+					is the normative document: the same vocabulary with the reasons, the invariants and the
+					edge cases that matter when you are changing Charnik rather than writing content for it.
+				</p>
+			</div>
+		</div>
+
+		<h2 id="s1"><span class="n">01</span><span>Where effects live</span></h2>
+		<div class="measure">
+			<p>
+				Any content row can carry them. Open a pack folder — <code>content/srd-2014/</code>, say —
+				and every CSV there has an <code>effects</code> column: classes, class features, species,
+				feats, items, conditions, spells.
+			</p>
+			<p>One cell holds <strong>one or more effects, separated by <code>;</code></strong>:</p>
+			<pre><code>advantage:save.dex;note:Only against effects you can see</code></pre>
+			<p>
+				Whitespace around an effect is ignored. A blank cell means "this row changes no number",
+				which is true of most rows — a spell that deals damage says so in its own columns, not here.
+			</p>
+			<p>
+				Edit the file in any spreadsheet, save it, and Charnik picks it up while it is running. If
+				you hand-edit a file that shipped with Charnik, run <code>pnpm restamp &lt;file&gt;</code>
+				afterwards so it knows the change is yours and stops replacing it on update.
+			</p>
+		</div>
+
+		<h2 id="s2"><span class="n">02</span><span>Your first three effects</span></h2>
+		<div class="measure">
+			<p><strong>A flat bonus.</strong> A cloak that makes you harder to hit:</p>
+			<pre><code>flat_bonus:ac+1</code></pre>
+			<p>
+				Read it as three parts: <em>what kind of thing this is</em> (<code>flat_bonus</code>),
+				<em>what it lands on</em> (<code>ac</code>), and <em>how much</em> (<code>+1</code>). Armor
+				Class goes up by one, and the number explains itself — hover it on the sheet and the cloak is
+				named in the breakdown.
+			</p>
+			<p>
+				<strong>A bonus that only sometimes applies.</strong> A barbarian moves faster, but not in
+				heavy armour:
+			</p>
+			<pre><code>armor_type!=heavy ? flat_bonus:speed+10</code></pre>
+			<p>
+				Everything before the <code>?</code> is a <strong>guard</strong> — a yes/no question asked
+				about this character right now. No guard means "always".
+			</p>
+			<p>
+				<strong>A bonus that depends on the character.</strong> A paladin adds their Charisma to
+				every saving throw, and at least 1 even with a Charisma penalty:
+			</p>
+			<pre><code>flat_bonus:saves+max(1,cha_mod)</code></pre>
+			<p>
+				The value is a small <strong>formula</strong>. It has no randomness, no loops and no text —
+				it reads numbers about this character and produces one number.
+			</p>
+			<p>
+				Those three shapes — a token, an optional guard, an optional formula — are the whole system.
+				The rest of this page is vocabulary.
+			</p>
+		</div>
+
+		<h2 id="s3"><span class="n">03</span><span>The shape of an effect</span></h2>
+		<div class="anatomy">
+			<div class="anatomy-line">
+				<span class="pt pt-guard">is_raging</span> ?
+				<span class="pt pt-kind">flat_bonus</span>:<span class="pt pt-target">damage</span><span
+					class="pt pt-value"
+					>+cha_mod</span
+				>
+			</div>
+			<dl>
+				<dt class="pt-guard">guard</dt>
+				<dd>Optional. A yes/no question about the character. No guard means always.</dd>
+				<dt class="pt-kind">kind</dt>
+				<dd>
+					What sort of change this is. There are 22, all in §5 — you cannot invent a new one, and
+					Charnik will tell you it has never heard of it.
+				</dd>
+				<dt class="pt-target">target</dt>
+				<dd>What the change lands on: a stat, a roll, a skill. Listed in §6.</dd>
+				<dt class="pt-value">value</dt>
+				<dd>
+					How much, when the kind needs one — <strong>sign included</strong>. A whole number, a dice
+					term like <code>2d6</code>, or a formula (§7). <code>flat_bonus</code> is the kind that
+					joins it with a sign rather than a colon, and <code>-</code> is as valid as
+					<code>+</code>: <code>flat_bonus:speed-5</code> is a real shipped row. There is no separate
+					"penalty" effect — a bonus of −5 <em>is</em> the penalty.
+				</dd>
+			</dl>
+		</div>
+		<div class="measure">
+			<p>
+				<strong>The colon is structure, never arithmetic.</strong> <code>:</code> separates the parts
+				of an effect and nothing else — which is why a formula never contains one, and why a
+				conditional value is written <code>if(a, b, c)</code> rather than with a <code>?:</code>.
+			</p>
+			<p>
+				<strong>One trap worth knowing:</strong> a <code>-</code> in front of a <em>formula</em>
+				negates the whole of it, not just its first term. <code>flat_bonus:speed-2*exhaustion</code>
+				means <code>-(2 × exhaustion)</code>, which is what you want — but it also means
+				<code>flat_bonus:hp_max-2+3</code> is −5, not +1. When a formula has more than one term, put
+				the sign inside it and keep the joint a <code>+</code>:
+				<code>flat_bonus:d20_tests+(-2*exhaustion)</code> is how the shipped 2024 exhaustion rule
+				says it.
+			</p>
+			<p>
+				A few kinds are <strong>markers</strong>: they take no target at all, because the statement
+				is about the whole character. <code>blocks_concentration</code> is one.
+			</p>
+		</div>
+
+		<h2 id="s4"><span class="n">04</span><span>Guards — when an effect applies</span></h2>
+		<div class="measure">
+			<p>Put a question and a <code>?</code> in front of any effect:</p>
+			<pre><code>is_raging ? advantage:attack
+has_condition.frightened ? disadvantage:attack
+not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_mod</code></pre>
+			<p>
+				A guard is condition-<strong>first</strong> — "is this true? → then this" — and has no
+				"otherwise" branch. If you want a different <em>number</em> in the other case, that belongs in
+				the value, with <code>if()</code>:
+			</p>
+			<pre><code>flat_bonus:ac+if(is_bloodied, 2, 0)</code></pre>
+			<p>
+				Guards see the character as they are at that moment: hit points, conditions, what they are
+				wearing, how exhausted they are. The full list of what a guard can ask is in §7.
+			</p>
+		</div>
+
+		<h2 id="s5"><span class="n">05</span><span>Every effect kind</span></h2>
+
+		<p class="measure">
+			The grammar lines below use three marks, and the same three everywhere on this page:
+		</p>
+		<div class="legend">
+			<span><code class="g-kind">flat_bonus</code> — the effect, typed exactly</span>
+			<span><code class="g-lit">floor</code> — a fixed word, typed exactly</span>
+			<span><code class="g-slot">&lt;target&gt;</code> — your own value goes here</span>
+			<span><code class="g-punc">: + [ ]</code> — joints, not content</span>
+		</div>
+
+		<h3>Changing a number</h3>
+		<div class="kinds">
+	<div class="kind">
+		<div class="kind-name">flat_bonus</div>
+		<div class="kind-form"><code><span class="g-kind">flat_bonus</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">+</span><span class="g-punc">&lt;</span><span class="g-slot">value</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Adds to the target. The everyday one. On a <code>damage</code> target you may name a damage type — <code>flat_bonus:damage:fire+1d6</code> adds a separate fire part that rolls on its own and never takes your ability modifier.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">set_override</div>
+		<div class="kind-form"><code><span class="g-kind">set_override</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">value</span><span class="g-punc">&gt;</span><span class="g-punc">[</span><span class="g-punc">:</span><span class="g-lit">floor</span><span class="g-punc">|</span><span class="g-lit">cap</span><span class="g-punc">]</span></code></div>
+		<div class="kind-desc">Forces a value instead of adding to one. Plain form replaces; <code>:floor</code> means "at least this"; <code>:cap</code> means "no more than this", applied last of all, after every bonus. When two rows set the same target the stronger one wins, and the other is recorded rather than silently lost.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">block_bonus</div>
+		<div class="kind-form"><code><span class="g-kind">block_bonus</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">"Cannot benefit from any bonus to this." Grappled and restrained use it on speed. Penalties and the base value still apply — only bonuses are refused.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">halve</div>
+		<div class="kind-form"><code><span class="g-kind">halve</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Halves it. Exists because halving is the one place the rules ask for a fraction. Targets <code>speed</code> and <code>hp_max</code>.</div>
+	</div>
+</div>
+
+		<h3>Changing a roll</h3>
+		<div class="kinds">
+	<div class="kind">
+		<div class="kind-name">advantage</div>
+		<div class="kind-form"><code><span class="g-kind">advantage</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Roll with advantage.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">disadvantage</div>
+		<div class="kind-form"><code><span class="g-kind">disadvantage</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Roll with disadvantage. One of each cancels out, exactly as the rules say. A passive score takes ±5 instead.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">auto_fail</div>
+		<div class="kind-form"><code><span class="g-kind">auto_fail</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">The roll fails whatever the die says — paralyzed and stunned do this to Strength and Dexterity saves.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">auto_succeed</div>
+		<div class="kind-form"><code><span class="g-kind">auto_succeed</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">The roll succeeds whatever the die says.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">reroll</div>
+		<div class="kind-form"><code><span class="g-kind">reroll</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">threshold</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Reroll any die landing on or below the threshold, once.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">min_die</div>
+		<div class="kind-form"><code><span class="g-kind">min_die</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">floor</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">A die below the floor counts as the floor. The shipped Reliable Talent is <code>min_die:skills:proficient:10</code> — the floor applies only to checks that add your proficiency bonus, which is the scope doing the work.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">damage_reroll</div>
+		<div class="kind-form"><code><span class="g-kind">damage_reroll</span></code></div>
+		<div class="kind-desc">Marker. Once per turn you may reroll a weapon's damage dice and keep either result. Charnik offers the button; it never decides for you.</div>
+	</div>
+</div>
+
+		<h3>Giving the character something</h3>
+		<div class="kinds">
+	<div class="kind">
+		<div class="kind-name">grant_proficiency</div>
+		<div class="kind-form"><code><span class="g-kind">grant_proficiency</span><span class="g-punc">:</span><span class="g-punc">[</span><span class="g-punc">&lt;</span><span class="g-slot">rung</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">]</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Proficiency, at one of the rungs: <code>partial</code> (half your bonus, rounded down — Jack of All Trades), <code>partial_up</code> (the same half, rounded up — 2014 Remarkable Athlete), <code>proficient</code> (the default when you write no rung), <code>expertise</code>. Rungs combine by taking the highest, so a grant never demotes what a character already has. The breakdown names <em>your</em> feature, whatever the rung.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">grant_resource</div>
+		<div class="kind-form"><code><span class="g-kind">grant_resource</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">max</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">recharge</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">A pool with a size and a way back: <code>short</code>, <code>long</code>, <code>short_one</code>, <code>consumable</code>, <code>other</code>, or one carrying an amount like <code>long(2)</code> or <code>dawn(1d6+1)</code>. Rage, ki, an item's charges.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">grant_roll</div>
+		<div class="kind-form"><code><span class="g-kind">grant_roll</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">damage_sensitivity</div>
+		<div class="kind-form"><code><span class="g-kind">damage_sensitivity</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-lit">resist</span><span class="g-punc">|</span><span class="g-lit">immune</span><span class="g-punc">|</span><span class="g-lit">vulnerable</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">type</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">How this character meets one damage type. Immunity beats vulnerability beats resistance. The type is free-form, so a pack may name its own.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">condition_immunity</div>
+		<div class="kind-form"><code><span class="g-kind">condition_immunity</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">A condition this character cannot be given — a paladin's aura against Frightened, a dwarf against disease. The id names a condition row the way a damage type names a type, so a word no row carries reads as itself. It <em>says</em> the immunity and never refuses an application: the ruling at the table is the player's.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">apply_condition</div>
+		<div class="kind-form"><code><span class="g-kind">apply_condition</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Apply a condition row, whose own effects then take hold. Expands one level only, so conditions cannot chain forever.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">regain_on_initiative</div>
+		<div class="kind-form"><code><span class="g-kind">regain_on_initiative</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">resource</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">n</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">When you roll initiative, top this resource back up to <code>n</code>. Applied automatically, with a notice — the rules give you no choice about it.</div>
+	</div>
+</div>
+
+		<h3>Saying something the sheet cannot do by itself</h3>
+		<div class="kinds">
+	<div class="kind">
+		<div class="kind-name">note</div>
+		<div class="kind-form"><code><span class="g-kind">note</span><span class="g-punc">:</span><span class="g-punc">&lt;</span>free text<span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Shown, never folded into any number. For a rule Charnik cannot model on a sheet that knows only one character — anything about what someone else can see, or about a creature it does not have. Keeps your capitalisation; separate several with <code>;</code>.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">blocks_concentration</div>
+		<div class="kind-form"><code><span class="g-kind">blocks_concentration</span></code></div>
+		<div class="kind-desc">Marker. While this is on the character they cannot concentrate. Rage does this.</div>
+	</div>
+</div>
+
+		<h3>The two advanced ones</h3>
+		<div class="kinds">
+	<div class="kind">
+		<div class="kind-name">on_event</div>
+		<div class="kind-form"><code><span class="g-kind">on_event</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">event</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">action</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">When something happens to this character, do something. Today the event is <code>turn_start</code>, and the actions are a small fixed list — see <code>docs/internals/actions.md</code>. Combine with a guard for "only while bloodied": <code>is_bloodied ? on_event:turn_start:heal:5+con_mod</code>.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">plugin</div>
+		<div class="kind-form"><code><span class="g-kind">plugin</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">namespace</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">handler</span><span class="g-punc">&gt;</span><span class="g-punc">[</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">args</span><span class="g-punc">&gt;</span><span class="g-punc">]</span></code></div>
+		<div class="kind-desc">Hands off to an installed plugin. It is a <em>reference</em> to a handler, never code in your CSV. See <code>docs/internals/plugins.md</code>.</div>
+	</div>
+</div>
+
+		<h2 id="s6"><span class="n">06</span><span>What you can point an effect at</span></h2>
+		<div class="measure">
+			<p>
+				<strong>Stats and rolls:</strong> <code>ac</code> · <code>hp_max</code> ·
+				<code>initiative</code> · <code>speed</code> · <code>speed.fly</code> ·
+				<code>speed.swim</code> · <code>attack</code> · <code>attacks</code> (how many you get) ·
+				<code>attacked</code> (what an attacker rolling at <em>you</em> gets) · <code>damage</code> ·
+				<code>spell_dc</code> · <code>spell_attack</code> · <code>crit_threshold</code> (the lowest
+				d20 face that crits for you) · <code>action</code> · <code>bonus</code> ·
+				<code>reaction</code> · <code>senses.&lt;name&gt;</code> and how far it reaches · any ability
+				by name (<code>str</code> … <code>cha</code>).
+			</p>
+			<p>
+				<strong>Saves:</strong> <code>save.str</code> … <code>save.cha</code>, plus
+				<code>save.death</code>.
+			</p>
+			<p>
+				<strong>Skills:</strong> <code>skill.&lt;id&gt;</code> — <code>skill.stealth</code>,
+				<code>skill.perception</code>, and so on.
+			</p>
+			<p>
+				<strong>Passive scores:</strong> <code>passive.&lt;skill&gt;</code> — every skill has one, not
+				only the familiar three.
+			</p>
+			<p><strong>Groups</strong>, which fan out to many at once:</p>
+			<ul>
+				<li><code>saves</code> — every saving throw.</li>
+				<li><code>skills</code> and <code>ability_checks</code> — every skill check.</li>
+				<li>
+					<code>d20_tests</code> — everything decided by a d20: saves, skills, attacks, initiative.
+					The 2024 exhaustion penalty is a single effect on this group.
+				</li>
+			</ul>
+
+			<h3>Narrowing a bonus to some attacks</h3>
+			<p>
+				<code>attack</code> and <code>damage</code> accept a <strong>scope</strong> after a dot, so a
+				bonus applies to some rolls and not others:
+			</p>
+			<pre class="cols"><code>flat_bonus:damage.melee+2          <span class="cmt">melee only</span>
+flat_bonus:damage.longsword+1      <span class="cmt">one weapon</span>
+flat_bonus:damage.str+2            <span class="cmt">attacks that used Strength</span>
+flat_bonus:damage.melee,str+2      <span class="cmt">both at once — every part must match</span></code></pre>
+			<p>
+				What a roll offers as scopes depends on what is rolling. A weapon offers its tags, its own
+				id, and the ability the attack used. A spell offers its id. A skill check offers
+				<code>proficient</code> when it is adding your proficiency bonus.
+			</p>
+
+			<h3>A defence that only applies in a case</h3>
+			<p>
+				<code>ac</code>, <code>saves</code> and <code>attacked</code> take the same dot, and it means
+				the same thing: this is true only against <em>that kind</em> of thing. It is
+				<strong>stated, never folded</strong> — "+2 AC against ranged attacks" is not +2 AC, and
+				Charnik cannot tell what a save is against, so the sheet says the sentence and leaves the
+				arithmetic to the table.
+			</p>
+			<pre class="cols"><code>flat_bonus:ac.ranged+2             <span class="cmt">Arrow-Catching Shield</span>
+advantage:saves.spell              <span class="cmt">Mantle of Spell Resistance</span>
+disadvantage:attacked              <span class="cmt">Cloak of Displacement</span>
+disadvantage:attacked.spell        <span class="cmt">Spellguard Shield</span></code></pre>
+			<p>
+				The qualifier is open vocabulary, like a damage type: write your own and it reads as you
+				wrote it.
+			</p>
+
+			<h3>Proficiency has its own targets</h3>
+			<p>What you can be proficient <em>with</em> is not what a bonus can land on:</p>
+			<ul>
+				<li>
+					an ability (<code>str</code>), a save (<code>save.str</code>), or the whole group
+					(<code>saves</code>)
+				</li>
+				<li>
+					a skill (<code>skill.stealth</code>, or just <code>stealth</code>), or the group
+					(<code>skills</code>)
+				</li>
+				<li>
+					every check one ability makes: <code>check.str</code> — the bare Strength check
+					<em>and</em> every Strength skill, because the rules call both a Strength check. (A bare
+					<code>str</code> above already means the save, which is why the checks have a prefix of
+					their own.)
+				</li>
+				<li>
+					armour: <code>armor.light</code> · <code>armor.medium</code> · <code>armor.heavy</code> ·
+					<code>armor.shield</code>
+				</li>
+				<li>
+					weapons: <code>weapon.simple</code> · <code>weapon.martial</code>, or a specific
+					<code>weapon.&lt;item_id&gt;</code>
+				</li>
+				<li>tools: <code>tool.&lt;item_id&gt;</code> — the id of a row whose category is a tool</li>
+			</ul>
+			<p>
+				Equipment proficiency is all-or-nothing — there is no expertise in wearing plate. A tool is
+				the same: you either add your proficiency bonus to a check made with it or you do not.
+			</p>
+		</div>
+
+		<h2 id="s7"><span class="n">07</span><span>The formula language</span></h2>
+		<div class="measure">
+			<p>
+				Anywhere a number is expected you may write a formula instead. It reads facts about the
+				character and produces one value. It cannot loop, cannot call out anywhere, and cannot roll
+				dice — a dice term in a formula is <em>data</em> that travels to the roller, so the same
+				formula always reads the same way.
+			</p>
+
+			<h3>What a formula can read</h3>
+			<p>
+				<strong>About the build:</strong> <code>level</code> · <code>proficiency_bonus</code> ·
+				<code>class_level.&lt;id&gt;</code> · <code>spellcasting_mod</code> ·
+				<code>base_speed</code> · <code>&lt;ability&gt;_mod</code> and
+				<code>&lt;ability&gt;_score</code> for each of <code>str dex con int wis cha</code>.
+			</p>
+			<p>
+				Ability names are always spelled out with what you want from them — <code>dex_mod</code>, not
+				<code>dex</code>. A bare ability name is an error on purpose, because "dexterity" alone does
+				not say modifier or score.
+			</p>
+			<p>
+				<strong>About the character right now:</strong> <code>hp</code> · <code>hp_max</code> ·
+				<code>hp_percent</code> · <code>temp_hp</code> · <code>exhaustion</code> ·
+				<code>size</code> · <code>armor_type</code> (<code>none</code> / <code>light</code> /
+				<code>medium</code> / <code>heavy</code>) · <code>resource.&lt;id&gt;</code> (how much is
+				left) · <code>resource_max.&lt;id&gt;</code> · <code>has_condition.&lt;id&gt;</code>.
+			</p>
+			<p>
+				<strong>Yes/no facts</strong>, which all start with <code>is_</code>:
+				<code>is_bloodied</code> · <code>is_raging</code> · <code>is_concentrating</code> ·
+				<code>is_wearing_armor</code> · <code>is_wearing_shield</code>.
+			</p>
+			<p>
+				A name Charnik knows but this character has nothing for reads as <code>0</code> or
+				<code>false</code> — <code>class_level.rogue</code> on a fighter is simply <code>0</code>, so
+				a Sneak Attack row on the wrong class quietly adds nothing. Only a name Charnik has
+				<em>never heard of</em> is an error.
+			</p>
+
+			<h3>Operators</h3>
+			<p>
+				Tightest to loosest: <code>d</code> (dice) · unary <code>-</code> · <code>*</code>
+				<code>/</code> <code>%</code> · <code>+</code> <code>-</code> · comparisons
+				(<code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code> <code>==</code>
+				<code>!=</code>) · <code>not</code> · <code>and</code> · <code>or</code>.
+			</p>
+			<p>
+				Comparisons do not chain: write <code>5&lt;=level and level&lt;=10</code>, not
+				<code>5&lt;=level&lt;=10</code>.
+			</p>
+			<p>
+				Division keeps its exact value while the formula works, and a final result that is not whole
+				is <strong>rounded down</strong> — the rules' own default. Ask for anything else explicitly
+				with <code>ceil()</code> or <code>round()</code>.
+			</p>
+		</div>
+
+		<h3>Functions</h3>
+		<div class="tablewrap">
+			<table>
+				<thead>
+					<tr>
+						<th>Function</th>
+						<th>Does</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>if(test, then, else)</code></td>
+						<td>Picks one of two values.</td>
+					</tr>
+					<tr>
+						<td><code>min(…)</code> / <code>max(…)</code></td>
+						<td>Smallest / largest of what you give it.</td>
+					</tr>
+					<tr>
+						<td><code>floor(x)</code> / <code>ceil(x)</code> / <code>round(x)</code></td>
+						<td>Round down / up / to nearest.</td>
+					</tr>
+					<tr>
+						<td><code>abs(x)</code> / <code>sign(x)</code></td>
+						<td>Magnitude / −1, 0 or 1.</td>
+					</tr>
+					<tr>
+						<td><code>clamp(x, low, high)</code></td>
+						<td>Keeps x inside a range.</td>
+					</tr>
+					<tr>
+						<td><code>step(index, a-&gt;v, b-&gt;w, …)</code></td>
+						<td>
+							A level table: the value of the highest threshold at or below the index,
+							<code>0</code> if none matches. This is how a feature that grows at levels 5, 11 and
+							20 is written once.
+						</td>
+					</tr>
+					<tr>
+						<td><code>var(x)</code></td>
+						<td>
+							Nothing at all — readability, so <code>var(class_level.rogue)d6</code> reads better
+							than the bare form.
+						</td>
+					</tr>
+					<tr>
+						<td><code>per_slot(amount[, step])</code></td>
+						<td>
+							For upcasting: <code>amount</code> once per slot level above the spell's own.
+							<code>per_slot(1d6)</code> is the usual "+1d6 per higher level".
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="measure">
+			<h3>Dice in a formula</h3>
+			<p>
+				Write <code>2d6</code>. Either side may itself be a formula, so both the number of dice and
+				the size of them can grow:
+			</p>
+			<pre class="cols"><code>ceil(class_level.rogue/2)d6                             <span class="cmt">more dice as you level</span>
+1d step(class_level.bard, 1-&gt;6, 5-&gt;8, 10-&gt;10, 15-&gt;12)   <span class="cmt">a bigger die</span></code></pre>
+		</div>
+
+		<h2 id="s8"><span class="n">08</span><span>When you get it wrong</span></h2>
+		<div class="measure">
+			<p>Charnik never throws away what it could not read, and never guesses.</p>
+			<ul>
+				<li>
+					<strong>An effect it does not recognise</strong> stays as text on the sheet, with a manual
+					modifier beside it so you can apply the rule by hand, and it is listed in
+					<strong>Settings ▸ Content health</strong>.
+				</li>
+				<li>
+					<strong>A target it does not know</strong> leaves the effect inert and says so — with a
+					"did you mean…?" when your spelling is close to a real one.
+				</li>
+				<li>
+					<strong>A formula that does not parse</strong>, or divides by zero, degrades the same way,
+					and content health quotes the exact effect and the reason.
+				</li>
+			</ul>
+			<p>
+				So a typo costs you an effect and a line in a list you can find. It never costs you a wrong
+				number, which is the thing the whole design is arranged to prevent.
+			</p>
+		</div>
+
+		<h2 id="s9"><span class="n">09</span><span>Worked examples, from the shipped rules</span></h2>
+		<div class="measure">
+			<p>Every one of these is a real cell in the SRD packs.</p>
+		</div>
+		<div class="worked">
+			<figure>
+				<pre><code>grant_resource:rage:step(class_level.barbarian, 1-&gt;2, 3-&gt;3, 6-&gt;4, 12-&gt;5, 17-&gt;6, 20-&gt;inf):long</code></pre>
+				<figcaption>
+					<b>Rage.</b> A pool that grows on a level table and comes back on a long rest.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>not is_wearing_armor ? set_override:ac:10+dex_mod+con_mod</code></pre>
+				<figcaption>
+					<b>Unarmored Defense.</b> Replace AC entirely, but only with no armour on.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>not has_condition.blinded and not has_condition.deafened and not has_condition.incapacitated
+    ? advantage:save.dex;note:Only against effects you can see</code></pre>
+				<figcaption>
+					<b>Danger Sense.</b> A guard with three parts, and a note for the half no sheet can check.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>set_override:attacks:step(class_level.fighter, 5-&gt;2, 11-&gt;3, 20-&gt;4):floor</code></pre>
+				<figcaption>
+					<b>Extra Attack.</b> "At least this many", so another feature granting more still wins.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>grant_roll:bardic_inspiration:1d step(class_level.bard, 1-&gt;6, 5-&gt;8, 10-&gt;10, 15-&gt;12)
+grant_resource:bardic_inspiration:max(1,cha_mod):long</code></pre>
+				<figcaption>
+					<b>Bardic Inspiration.</b> The die you roll and the pool it spends, in one cell.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>min_die:skills:proficient:10</code></pre>
+				<figcaption>
+					<b>Reliable Talent.</b> A floor, but only on checks your proficiency is already in.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>min_die:damage:two_handed;min_die:damage:versatile</code></pre>
+				<figcaption>
+					<b>Great Weapon Fighting.</b> Two scopes, because the rule names two kinds of weapon.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>grant_proficiency:partial:skills</code></pre>
+				<figcaption>
+					<b>Jack of All Trades.</b> Half proficiency on every check that does not already have it.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>grant_proficiency:partial_up:check.str;grant_proficiency:partial_up:check.dex
+grant_proficiency:partial_up:check.con</code></pre>
+				<figcaption>
+					<b>Remarkable Athlete.</b> The same half, rounded UP, on every Strength, Dexterity and
+					Constitution check — the bare ability check and every skill built on it.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>set_override:crit_threshold:19:cap</code></pre>
+				<figcaption>
+					<b>Improved Critical.</b> "Unless already lower", so the Champion's later 18 replaces this
+					19 rather than stacking with it into 17.
+				</figcaption>
+			</figure>
+			<figure>
+				<pre><code>armor_type==heavy ? disadvantage:skill.stealth</code></pre>
+				<figcaption><b>Heavy armour.</b> Said the way the rules say it.</figcaption>
+			</figure>
+		</div>
+
+		<h2 id="s10"><span class="n">10</span><span>Where to go next</span></h2>
+		<div class="measure">
+			<ul>
+				<li>
+					<code>docs/internals/effects.md</code> — the normative specification: the same vocabulary
+					with the reasoning, the ordering rules and the invariants.
+				</li>
+				<li><code>docs/internals/actions.md</code> — what <code>on_event</code> can actually do.</li>
+				<li>
+					<code>docs/internals/plugins.md</code> — writing a plugin, for when the vocabulary
+					genuinely cannot say it.
+				</li>
+				<li>
+					<strong>Settings ▸ Content health</strong>, in the app — everything Charnik could not read
+					in the content you have loaded. The fastest way to check your own work.
+				</li>
+			</ul>
+			<footer>
+				This page is a rendering of <code>docs/guide/effects.md</code> in the Charnik repository, and
+				its own source sits beside it as <code>docs/guide/effects.html</code> — so a change to the
+				guide is a change to this page in the same commit.
+			</footer>
+		</div>
+	</main>
+</div>
+
+<script>
+	/* Which section you are reading, marked in the rail. A scroll position rather than an
+	   IntersectionObserver: the sections here are wildly uneven — §5 is a third of the page and §10 is
+	   four lines — and an observer answers "which is visible", which is a different question from "which
+	   one am I in". The last heading above a line near the top of the viewport IS the answer. */
+	(() => {
+		const links = Array.from(document.querySelectorAll('.rail a'));
+		const targets = links.map((a) => document.querySelector(a.getAttribute('href')));
+		let frame = 0;
+
+		const mark = () => {
+			frame = 0;
+			const line = window.innerHeight * 0.28;
+			let active = 0;
+			targets.forEach((t, i) => {
+				if (t && t.getBoundingClientRect().top <= line) active = i;
+			});
+			// a short final section can never reach that line, so at the bottom of the page the last
+			// heading is the honest answer whatever the arithmetic says
+			const atEnd =
+				window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+			if (atEnd) active = links.length - 1;
+			links.forEach((a, i) => {
+				if (i === active) a.setAttribute('aria-current', 'location');
+				else a.removeAttribute('aria-current');
+			});
+		};
+
+		const schedule = () => {
+			if (!frame) frame = requestAnimationFrame(mark);
+		};
+		window.addEventListener('scroll', schedule, { passive: true });
+		window.addEventListener('resize', schedule, { passive: true });
+		mark();
+	})();
+</script>
