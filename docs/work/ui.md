@@ -69,6 +69,19 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
+- [ ] **DEFENCE-CHIPS-UNSEEN · two new chips on the defences strip have never been rendered.** The
+  qualified defences ("+2 AC vs ranged attacks", "advantage on saves vs spells") and the
+  incoming-attack statements ("attacks against you have disadvantage") are asserted at the derive
+  level and typed end to end, and the markup reuses the strip's existing `.tag` — but nobody has
+  LOOKED at them, which `AGENTS.md` ▸ Verifying does not accept for visual work.
+  **Why they were not seen:** the demo character carries none of the eleven items that grant one, so
+  the strip renders them zero times on every state `shot.mjs` covers. Driving it needs a character
+  with, say, an Arrow-Catching Shield and a Mantle of Spell Resistance in inventory — a one-off
+  Playwright script that adds them through the inventory picker, or a `/dev/` route that seeds one.
+  **What to check when it is driven:** the strip wraps rather than overflowing at 393px (one chip is
+  a whole sentence, far longer than "resists fire"), the qualified and incoming chips read as
+  different KINDS of statement rather than as two more resistances, and the Ukrainian strings fit.
+
 - [ ] **PANEL-COLLAPSE-PERSIST · a collapsed panel opens itself again on reload.** Not a dev-server
   artifact: `PanelLayout.collapsed` is plain `$state` on the view-model
   (`combat/panel-layout.svelte.ts`) and is never written to the character. Its own siblings all are —

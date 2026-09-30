@@ -109,7 +109,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 ### Targets
 
 `matchesTarget` (`apply.ts`) matches an exact key OR a group that fans out. Specific keys:
-`ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `hp_max`, `attack`, `damage`,
+`ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `hp_max`, `attack`, `attacked`, `damage`,
 `spell_dc`, `spell_attack`, `save.<ability>`, `save.death`, `skill.<id>`, `passive.<skill>`,
 plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets** (fan out):
 
@@ -135,8 +135,8 @@ total at its own layer. So that one row stays prose until the ordering has an an
 
 **A SCOPED bonus** applies to one thing rather than everything, and says so in the target namespace:
 `flat_bonus:damage.melee+2` (a category), `damage.<weapon_id>` (one weapon), `damage.<spell_id>` (one
-spell — Agonizing Blast). Only `attack` and `damage` take a scope; every other dotted target IS a
-target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
+spell — Agonizing Blast). The scopable targets are `attack`, `damage`, `attacked`, `saves` and `ac`;
+every other dotted target IS a target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
 thing and normalizes to the same field. A scope matches when EVERY comma-separated part is one of the
 rolling thing's scopes, and what those are depends on what is rolling: a weapon names its tags, its
 own id, and the ABILITY the attack resolved from (`str`/`dex`); a cast names the spell's id; a SKILL
