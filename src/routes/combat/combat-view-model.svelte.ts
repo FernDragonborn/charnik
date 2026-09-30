@@ -85,12 +85,15 @@ class CombatVM {
 		(e) => this.persistRoll(e),
 		(e) => this.persistRevision(e),
 	);
-	/** Panel-layout subsystem (columns, collapse, drag) — persists column order onto the character. */
+	/** Panel-layout subsystem (columns, collapse, drag) — persists the arrangement onto the character. */
 	layout = new PanelLayout(
 		(cols) => {
 			if (this.character) this.character.ui.panelColumns = cols;
 		},
 		() => this.character?.ui.rowOrder,
+		(ids) => {
+			if (this.character) this.character.ui.panelsCollapsed = ids;
+		},
 	);
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
 	economy = new TurnEconomy(
@@ -299,6 +302,7 @@ class CombatVM {
 		void snapshotCharacterOnLaunch(getUserStorage(), c.id);
 		// restore this character's saved panel layout (falls back to the default columns)
 		this.layout.restore(c.ui.panelColumns);
+		this.layout.restoreCollapsed(c.ui.panelsCollapsed);
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
 		const hist = await readLog(getUserStorage(), c.id);
 		// a line written since the record was unified carries the WHOLE roll; an older one carries only

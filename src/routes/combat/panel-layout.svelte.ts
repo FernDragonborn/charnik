@@ -1,8 +1,9 @@
 /*
  * The panel-layout subsystem of the Combat view-model: the two drag-reorderable panel columns, the
  * collapse state, and the svelte-dnd-action handlers. Split out of CombatVM so the layout concern is
- * one cohesive unit; CombatVM composes it as `combat.layout` and wires persistence (the column order
- * round-trips onto the character's `ui.panelColumns`) via the constructor callback.
+ * one cohesive unit; CombatVM composes it as `combat.layout` and wires persistence via the
+ * constructor callbacks — the column order round-trips onto the character's `ui.panelColumns` and
+ * the collapsed ids onto `ui.panelsCollapsed`, because the arrangement is per character.
  */
 import { movedOrder, orderRows } from '$lib/combat/row-order';
 
@@ -25,16 +26,30 @@ export class PanelLayout {
 	]);
 	flipDurationMs = 150;
 
-	/** `persist` is called with the flattened column id layout whenever a drag finalizes, so the owner
-	 *  (CombatVM) can store it on the character. */
-	/** `persist` stores the column layout; `rows` reaches the character's own row-order map, which is
-	 *  written in place (it is `$state` on the character, and saving is the store's business). */
+	/** `persist` stores the column layout and `persistCollapsed` the collapsed ids — both onto the
+	 *  character's `ui`, which is what makes an arrangement per character rather than per app. `rows`
+	 *  reaches the character's own row-order map, which is written in place (it is `$state` on the
+	 *  character, and saving is the store's business). */
 	constructor(
 		private persist: (columns: string[][]) => void = () => {},
 		private rows: () => Record<string, string[]> | undefined = () => undefined,
+		private persistCollapsed: (ids: string[]) => void = () => {},
 	) {}
 
-	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
+	toggle = (k: string) => {
+		this.collapsed[k] = !this.collapsed[k];
+		this.persistCollapsed(Object.keys(this.collapsed).filter((id) => this.collapsed[id] === true));
+	};
+
+	/**
+	 * Restore which panels this character had collapsed. NOT reconciled against the panel list the way
+	 * `restore` reconciles the columns: the same record holds the two sheet SECTIONS (`abilities`,
+	 * `combat`), which are not panels and are not in `columns`, so filtering by known panel id would
+	 * quietly re-open both of them on every load.
+	 */
+	restoreCollapsed = (saved?: string[]) => {
+		this.collapsed = Object.fromEntries((saved ?? []).map((id) => [id, true]));
+	};
 
 	/**
 	 * Restore a saved layout (from the character's ui.panelColumns), if any — RECONCILED against the

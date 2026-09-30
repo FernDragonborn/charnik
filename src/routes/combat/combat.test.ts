@@ -2118,6 +2118,29 @@ describe('PanelLayout · a saved layout is reconciled with the panels that exist
 		layout.restore(saved);
 		expect(layout.columns.map((col) => col.map((p) => p.id))).toEqual(saved);
 	});
+
+	it('round-trips a collapsed panel — and a sheet SECTION, which is not a panel at all', () => {
+		// PANEL-COLLAPSE-PERSIST: collapse was the one third of "collapses, reorders and hides" that
+		// lived in view-model state, so a panel a player folded away opened itself on the next launch
+		const saved: string[][] = [];
+		const layout = new PanelLayout(
+			() => {},
+			() => undefined,
+			(ids) => saved.push(ids),
+		);
+		layout.toggle('skills');
+		layout.toggle('abilities'); // a SECTION — it has no card and is in no column
+		expect(saved.at(-1)?.sort()).toEqual(['abilities', 'skills']);
+
+		// …and re-opening one takes it back out rather than storing `false`
+		layout.toggle('skills');
+		expect(saved.at(-1)).toEqual(['abilities']);
+
+		const next = new PanelLayout();
+		next.restoreCollapsed(saved.at(-1));
+		expect(next.collapsed.abilities).toBe(true);
+		expect(next.collapsed.skills).toBeUndefined();
+	});
 });
 
 /*

@@ -308,6 +308,12 @@ const uiSchema = z
 	.object({
 		/** Combat-sheet panel layout: one array of panel ids per column (left, right). */
 		panelColumns: z.array(z.array(z.string())).optional(),
+		/** The panels and sections this character has COLLAPSED, by id. Additive the way
+		 *  `actionsHidden` is — absent means expanded, so every save written before this opens as it
+		 *  always did. Holds the two sheet sections (`abilities`, `combat`) alongside the panel ids,
+		 *  which is why it is never reconciled against the panel list: a filter over the columns would
+		 *  drop both of them. */
+		panelsCollapsed: z.array(z.string()).default([]),
 		/** A player's own order for the rows INSIDE a panel, keyed by panel id. Only the panels whose
 		 *  rows are derived need it — the inventory's order is its own array. Reconciled against the
 		 *  rows that exist on every read (`combat/row-order.ts`). */
@@ -363,6 +369,7 @@ const uiSchema = z
 		coinsHidden: [],
 		coinWeight: false,
 		rowOrder: {},
+		panelsCollapsed: [],
 	});
 
 // --- character ----------------------------------------------------------------

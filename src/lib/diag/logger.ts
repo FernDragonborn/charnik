@@ -61,8 +61,11 @@ function record(level: LogLevel, msg: string, ctx?: Record<string, unknown>): vo
 	if (ring.length > RING_CAPACITY) ring.shift();
 	if (forwardToPlugin) {
 		forwardToPlugin(entry); // desktop: plugin owns Stdout/Webview/file, so don't also console here
-	} else if (import.meta.env.DEV) {
-		mirrorToConsole(entry); // web/headless dev, or desktop before initDiag runs
+	} else if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+		// web/headless dev, or desktop before initDiag runs — but never under the runner. A suite is
+		// `DEV` too, and a log flushing as a worker tears down is an "Errors" line on a green run; the
+		// ring still holds everything, which is what a test asserts on anyway.
+		mirrorToConsole(entry);
 	}
 }
 

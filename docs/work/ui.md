@@ -82,20 +82,18 @@
   a whole sentence, far longer than "resists fire"), the qualified and incoming chips read as
   different KINDS of statement rather than as two more resistances, and the Ukrainian strings fit.
 
-- [ ] **PANEL-COLLAPSE-PERSIST · a collapsed panel opens itself again on reload.** Not a dev-server
-  artifact: `PanelLayout.collapsed` is plain `$state` on the view-model
-  (`combat/panel-layout.svelte.ts`) and is never written to the character. Its own siblings all are —
-  the column order round-trips through `ui.panelColumns` via the `persist` callback, and
-  `rowOrder`, `spellsHidden`, `spellsPinned`, `actionsHidden`, `featuresHidden`, `featuresPinned`,
-  `coinsHidden` and `passiveSkills` are each a field on `ui`. Collapse is the one that was missed.
-  It also breaks a stated invariant: `../internals/ui.md` says every panel collapses, reorders and
-  hides and that **that arrangement is per character and lives in `ui`**. Two thirds of it do.
-  **The fix is one field of the same shape** — `ui.panelsCollapsed`, the ids that are collapsed, the
-  way `actionsHidden` holds the ids that are hidden (additive, absent = expanded, so every existing
-  save opens as it does today). `PanelLayout` already takes a `persist` callback for the columns;
-  the toggle wants the same wiring rather than a second mechanism.
-  `actionsHidden`'s own comment names this exact failure in the schema: *"a hidden row that came
-  back on the next launch was a preference the app kept forgetting"*.
+- [x] **PANEL-COLLAPSE-PERSIST · a collapsed panel stays collapsed.** `ui.panelsCollapsed` holds the
+  ids that are folded away, the way `actionsHidden` holds the ids that are hidden — additive, absent
+  means expanded, so every save written before this opens exactly as it did. `PanelLayout` takes the
+  same shape of `persist` callback the columns already had rather than a second mechanism, so the
+  stated invariant (`../internals/ui.md`: every panel collapses, reorders and hides, and that
+  arrangement is per character and lives in `ui`) is now true of all three thirds.
+  **The one thing it must NOT do is reconcile against the panel list.** The same record holds the two
+  sheet SECTIONS — `abilities` and `combat` — which have no card and sit in no column, so a
+  `known`-panel filter of the kind `restore` applies to the columns would silently re-open both on
+  every load.
+  Driven in chromium on the demo character: the Skills panel's `aria-expanded` and the Abilities
+  section's grid both survive a reload collapsed, and both come back when re-opened.
 
 - [ ] **A11Y-TIMING · the timings a gesture depends on belong to the player, not to us.** The touch
       hold is 150ms of silence plus a 400ms fill (`internals/ui.md` ▸ rule 16), chosen to match the

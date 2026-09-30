@@ -69,11 +69,13 @@ descriptions this character reads in the player's own words (`textOverrides`, on
 resetting the game should not destroy a layout someone arranged, nor prose they wrote.
 
 **What a player chose to see is `ui`, and all of it is stored the same way**: an array of ids or refs
-per panel — `spellsHidden` / `spellsPinned`, `actionsHidden`, `featuresHidden` / `featuresPinned` —
-plus `rowOrder`, keyed by panel, for the lists that are derived and so have no array of their own
-(`combat/row-order.ts`). One shape, because these are one question asked of several panels; a panel
-that kept its answer in view-model state instead would forget it on the next launch, which is exactly
-what `actionsHidden` did before it moved here.
+per panel — `spellsHidden` / `spellsPinned`, `actionsHidden`, `featuresHidden` / `featuresPinned`,
+`panelsCollapsed` — plus `rowOrder`, keyed by panel, for the lists that are derived and so have no
+array of their own (`combat/row-order.ts`). One shape, because these are one question asked of
+several panels; a panel that kept its answer in view-model state instead would forget it on the next
+launch, which is exactly what `actionsHidden` and then `panelsCollapsed` each did before they moved
+here. `panelsCollapsed` is the one that also holds the two sheet SECTIONS (`abilities`, `combat`),
+so it is never reconciled against the panel list the way `panelColumns` is.
 
 **A FILTER writes those arrays rather than layering over them** (the Features panel's presets, and
 whatever grows one next). So there is one answer to "is this shown", a preset's effect reads back in
