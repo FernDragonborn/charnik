@@ -69,7 +69,7 @@
   Driven in chromium: pin lifts and survives a preset, "newest level" leaves one row, the grip's arrow
   keys reorder inside a section and back, and all three survive a reload.
 
-- [~] **DEFENCE-CHIPS-UNSEEN · they have been looked at now, and two of them were wrong.** The
+- [x] **DEFENCE-CHIPS-UNSEEN · they have been looked at now, and two of them were wrong.** The
   qualified defences and the incoming-attack statements had never been rendered, because the eleven
   items that grant one are on no character any covered state loads.
   **They have a state of their own now** — `/dev/defences`, a draft wearing one item per chip KIND
@@ -86,12 +86,63 @@
   - **Ukrainian read «перевага на рятівних кидків»** — «на» does not take that case. The template is
     «перевага для {stat}», which the genitive the target word already carries is correct with.
   - **The strip WRAPS at 393px** and overflows nothing, at either width. ✓
-  **What is left is the one question a screenshot answers and a sentence cannot:** the six chips read
-  as ONE undifferentiated gold list — a sense, a conditional AC bonus and a fact about what an
-  ATTACKER rolls all wear the same pill. `design-preview/_defence-chips-wide.png`. Colour is already
-  spent on the swing (gold advantage / accent disadvantage), so the distinction wants grouping or a
-  label rather than another hue, and that is a design choice: it gets RENDERED variants, not a
-  paragraph here.
+  **The tail — that the six read as one undifferentiated list — is its own item below** (DEFENCE-STRIP),
+  because looking at variants turned it from a styling question into a question about what the strip
+  is a list OF.
+
+- [ ] **DEFENCE-STRIP · what is true of your body is ONE row, and its groups name what moves.**
+  Two things are wrong at once, and the second is why the first is not a five-minute fix.
+
+  **There are two implementations.** The play sheet has `sensitivities-strip` (`CombatStrip.svelte`),
+  which groups: a `def-label` then its chips — `Resist · fire`, `Immune · poison`. The builder has a
+  flat `.tags` row (`SheetDefenses.svelte`) with no grouping at all. They know different SETS, too:
+  only the builder reads `qualifiedDefenses` and `incomingAttacks`, so the eleven shipped items that
+  grant one say nothing on the screen a player actually has open at the table. A Cloak of Displacement
+  explains itself to whoever is building the character and stays silent during the fight it is for.
+  **The better row is the COMBAT one** — it already answers "are these different kinds of statement"
+  with a label, which is the thing the builder's flat list cannot do. So the builder adopts it, not
+  the other way round.
+
+  **The axis the groups sort on is WHOSE DIE IT IS**, and the types already say so. A
+  `QualifiedDefense` carries `target: 'ac' | 'saves'` — it moves YOUR number or YOUR roll.
+  An `IncomingAttack` carries no target at all, and that absence is the whole point of the type: the
+  die is the attacker's, which is why `attacked` is a channel of its own rather than a scope on
+  `attack` (it would otherwise land on the swing you throw).
+
+  **A qualifier is NOT that axis, and a first pass at the labels got this wrong.** "Only vs" was tried
+  as the group name for a qualified defence, and it reads well until you notice `IncomingAttack.scope`
+  exists too — Spellguard Shield is `disadvantage:attacked.spell`, which is equally "only vs spells".
+  The scope belongs in the CHIP, as the case, and never in the group label, which is for the subject.
+
+  **So each group names what moves**, and the one whose subject is somebody else says so:
+
+  ```
+  Resist        fire
+  Immune        poison · charmed
+  AC            +2 · against ranged attacks
+  Saves         advantage · against spells
+                advantage · against magical effects
+  Against you   attacks: disadvantage
+                spell attacks: disadvantage
+  Senses        darkvision 60 ft
+  ```
+
+  **OPEN, and the reason this is a session rather than a commit: the `Saves` group is not formatted
+  right yet.** The shape above is close enough that the idea reads, and the maintainer's eye says it
+  is still wrong — two rows under one label, each a swing plus a case, is the part that has not found
+  its form. Everything else here is settled. Next variants start from `Saves`.
+
+  **Two defects found while rendering it, both cheap and both real:**
+  - `.def-chip` sets `text-transform: capitalize`, so the play sheet already reads "Darkvision 60 Ft",
+    and the moment a chip can be a whole sentence it would capitalise every word of one. The capital
+    belongs to the label that builds the string, not to a blunt CSS rule.
+  - A group is `[label + chips]` on one line, which stops working at 393px once a chip is a sentence:
+    the label splits across two words and the chip wraps mid-phrase. One group per line (a full-width
+    group with a fixed label column) fixes both, and it is one rule.
+
+  The variants are `design-preview/defence-chips-variants.html` with `_defence-variants.png` and
+  `_defence-variants-narrow.png` beside them; `/dev/defences` is the live state, already in `shot.mjs`
+  at both widths.
 
 - [x] **PANEL-COLLAPSE-PERSIST · a collapsed panel stays collapsed.** `ui.panelsCollapsed` holds the
   ids that are folded away, the way `actionsHidden` holds the ids that are hidden — additive, absent
