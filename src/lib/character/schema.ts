@@ -356,6 +356,9 @@ const uiSchema = z
 		 *  rules variant like `shortRestMode`, OFF by default: most tables do not weigh money, and a
 		 *  purse that silently encumbers you is a rule nobody asked for. */
 		coinWeight: z.boolean().default(false),
+		/** Does a shot spend the ammunition it fires? The same kind of per-character variant, and OFF
+		 *  by default for the same reason: most tables do not count arrows. */
+		trackAmmunition: z.boolean().default(false),
 	})
 	.default({
 		strict: true,
@@ -368,6 +371,7 @@ const uiSchema = z
 		shortRestMode: 'dice',
 		coinsHidden: [],
 		coinWeight: false,
+		trackAmmunition: false,
 		rowOrder: {},
 		panelsCollapsed: [],
 	});

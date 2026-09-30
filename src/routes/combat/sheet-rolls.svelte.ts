@@ -175,9 +175,10 @@ export class SheetRolls {
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
-	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray. */
-	attackRoll = (at: Attack, e: Event) => {
-		if (!this.host().economy.trySpendStrike()) return;
+	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray.
+	 *  False when the turn could not pay for it, so what rides on the shot (its ammunition) waits. */
+	attackRoll = (at: Attack, e: Event): boolean => {
+		if (!this.host().economy.trySpendStrike()) return false;
 		const { fx, parts, hasDmg } = this.attackSpec(at);
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
@@ -196,9 +197,10 @@ export class SheetRolls {
 				},
 				e,
 			);
-			return;
+			return true;
 		}
 		this.rollAttackNow(at);
+		return true;
 	};
 
 	/**

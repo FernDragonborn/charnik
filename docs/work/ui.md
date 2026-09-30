@@ -19,15 +19,12 @@
   read-only list needs. `activeClassFeatures` moved there too, so the builder and the play sheet
   share one gate instead of two that drift. (2) **DONE** — concentration check prompt on damage (CON save DC
   max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
-  (4) Ammunition as consumable — tracking OFF by default (a toggle that exists but is never enforced;
-  ~99% of tables don't track ammo). **The CONTENT half is done**: 2024 ships the five ammunition rows
-  its own table states (arrows, bolts, both bullets, needles), each carrying the `ammo:<kind>` tag its
-  weapons already name and the `quantity:` a purchase gives; 2014 ships its four as `ammunition` rows
-  rather than plain gear. What is left is the app's decrement, and one asymmetry it has to live with:
-  **SRD 5.1 never says which ammunition a weapon fires** — its weapons table prints "Ammunition (range
-  80/320)" and the property's own text names no type. The earlier claim that `convert-2014.mjs` was
-  dropping a type the table gives was wrong; there is nothing there to drop. So a 2014 decrement has
-  to ask which stack to spend, where a 2024 one matches on the tag. (5) Short-rest
+  (4) **DONE** — ammunition as a consumable, OFF by default per character (`ui.trackAmmunition`, a
+  switch in the inventory panel's menu beside coin weight): a shot spends one from the stack it
+  fires, only once the turn has paid for it. 5.5e matches the weapon's `ammo:<kind>` to the stack's;
+  SRD 5.1 never says which ammunition a weapon fires, so there any stack qualifies and several ask
+  which. Out of stock says so and rolls anyway. Only the Attacks panel's shot spends — an action that
+  makes attacks (`attack:<weapon>:<n>`) does not yet, and no shipped action fires a ranged weapon. (5) Short-rest
   hit-dice UI (→ UBUG-1/B2). (6) **DONE** — the builder pickers carry search, and the two big ones
   carry the level/category sections and the school/concentration/ritual facets that keep a long list
   navigable (the picker contract, `docs/internals/ui.md`). (7) **DONE** — the combat prepared cap is per CLASS

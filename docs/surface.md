@@ -462,7 +462,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (132 modules)
+## Library functions & types (133 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -544,6 +544,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface SocialBar`
 - `function socialBars` — The three social bars for a sheet's passives.
+
+### `src/lib/character/ammunition.ts`
+
+- `const AMMUNITION_CATEGORY` — The item category a stack of ammunition carries.
+- `function firedAmmunition` — What a weapon fires: the kind when its row names one, `null` when it fires ammunition of a kind * its source never st…
+- `interface CarriedStack` — One carried thing, as far as this question needs it.
+- `function ammunitionStacks` — The stacks a shot may come from: ammunition of the fired kind, or every stack of ammunition when * the weapon names n…
 
 ### `src/lib/character/assemble.ts`
 
@@ -1830,4 +1837,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1101 exports across 148 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1105 exports across 149 modules · 75 duplicate suspects._

@@ -109,6 +109,47 @@ for (const { system, pack, source } of EDITIONS) {
 			combat.damageType = null;
 		});
 
+		it('with ammunition tracked, a shot spends from the stack it fires — asking when it cannot tell', async () => {
+			const character = await play('fighter', 5);
+			const carried = (id: string, qty: number) => ({
+				item: `item:${source}:${id}`,
+				qty,
+				equipped: true,
+				attuned: false,
+			});
+			// 5.1 names its ammunition rows differently and never says which one a weapon fires
+			const [arrows, bullets] =
+				system === '5e' ? ['arrows', 'sling_bullets'] : ['arrows', 'bullets_sling'];
+			character.build.inventory = [
+				carried('longbow', 1),
+				carried(arrows, 20),
+				carried(bullets, 20),
+			];
+			character.ui.trackAmmunition = true;
+			const longbow = combat.attacks.find((a) => a.id === 'longbow');
+			expect(longbow).toBeDefined();
+			if (!longbow) return;
+			const qty = (id: string) =>
+				character.build.inventory.find((e) => e.item === `item:${source}:${id}`)?.qty;
+
+			combat.attackRoll(longbow, noModifiers);
+			if (system === '5.5e') {
+				// the longbow says `ammo:arrow`, so there is nothing to ask
+				expect(combat.inventory.shotPending).toBeNull();
+			} else {
+				// 5.1's longbow could fire either stack as far as its data knows, so the player picks
+				expect(combat.inventory.shotPending?.stacks.length).toBe(2);
+				expect(qty(arrows)).toBe(20); // nothing spent while it asks
+				combat.inventory.shootFrom(`item:${source}:${arrows}`);
+			}
+			expect(qty(arrows)).toBe(19);
+			expect(qty(bullets)).toBe(20);
+
+			character.ui.trackAmmunition = false;
+			combat.attackRoll(longbow, noModifiers);
+			expect(qty(arrows)).toBe(19); // off: a shot is only a shot
+		});
+
 		it('a caster spends a slot on a leveled spell and nothing on a cantrip', async () => {
 			const character = await play('cleric', 5);
 			const pools = combat.sheet?.spellcasting.pools ?? [];

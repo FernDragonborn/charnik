@@ -110,6 +110,9 @@ falls off a phone screen.
 - **A resisted hit says what it will take before you press Damage.** Pick the type and type the
   amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable —
   instead of leaving you to watch the HP bar.
+- **Ammunition can be counted.** Switch it on in the inventory panel's menu and each shot spends one
+  from the stack it fires — the right kind in 2024, your pick in 2014, whose weapons never say. Off by
+  default, like coin weight: most tables do not count arrows.
 - **Magic Weapon enchants the weapon you touch.** Casting it asks which weapon when you carry more
   than one, before anything is spent, and only that weapon's attack and damage go up. It used to
   raise nothing at all: a cast's own additions — Magic Weapon's bonus, the extra hit points an

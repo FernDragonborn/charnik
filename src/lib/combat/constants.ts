@@ -21,6 +21,7 @@ export type MenuKind =
 	| 'featuresview'
 	| 'upcast'
 	| 'enchantweapon'
+	| 'ammo'
 	| 'restshort'
 	| 'coins';
 

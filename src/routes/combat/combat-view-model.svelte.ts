@@ -119,6 +119,7 @@ class CombatVM {
 		() => this.character,
 		() => this.graph,
 		() => this.sheet,
+		{ open: (kind, e) => this.openMenu(kind, e), close: () => (this.overlay = null) },
 	);
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
 	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
@@ -219,7 +220,8 @@ class CombatVM {
 	effectsFor = (...a: Parameters<SheetRolls['effectsFor']>) => this.rolls.effectsFor(...a);
 	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
-	attackRoll = (...a: Parameters<SheetRolls['attackRoll']>) => this.rolls.attackRoll(...a);
+	attackRoll = (at: Attack, e: Event) =>
+		this.inventory.shoot(at.id, e, () => this.rolls.attackRoll(at, e));
 	/** What the dice tray hands its completed rolls to — the log, plus the weapon-attack reroll offer. */
 	recordTrayRolls = (...a: Parameters<SheetRolls['recordTrayRolls']>) =>
 		this.rolls.recordTrayRolls(...a);

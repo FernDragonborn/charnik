@@ -73,6 +73,11 @@ export const ITEM_TAG = {
 	 *  that edition's weapons carry it. The property does nothing until a feature unlocks this KIND
 	 *  of weapon for the character (MASTERY-HALF). */
 	mastery: 'mastery',
+	/** A weapon that fires ammunition (`ammunition:80/320` — the value is its range). */
+	ammunition: 'ammunition',
+	/** WHICH ammunition it fires, and which kind a stack is (`ammo:arrow`). 5.5e states it on both
+	 *  sides; SRD 5.1 never says which ammunition a weapon fires, so its weapons carry none. */
+	ammo: 'ammo',
 } as const;
 
 /** Armor weight classes an `armor:<weight>` tag may name. */

@@ -477,6 +477,17 @@
 					</button>
 				{/each}
 			{/if}
+		{:else if overlay.kind === 'ammo'}
+			{@const pending = combat.inventory.shotPending}
+			{#if pending}
+				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.ammoTitle')}</div>
+				{#each pending.stacks as stack (stack.entry.item)}
+					<button class="menu-row" onclick={() => combat.inventory.shootFrom(stack.entry.item)}>
+						<span class="main">{stack.name}</span>
+						<span class="meta">×{stack.entry.qty}</span>
+					</button>
+				{/each}
+			{/if}
 		{:else if overlay.kind === 'coins'}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.coinsTitle')}</div>
 			{#each COINS as coin (coin.id)}
@@ -496,6 +507,15 @@
 				<span class="main">{$_('combat.menu.coinWeight')}</span>
 			</div>
 			<p class="note" style="padding: 2px 13px 6px">{$_('combat.menu.coinWeightNote')}</p>
+			<div class="coin-weight">
+				<Switch
+					on={combat.inventory.tracksAmmunition}
+					title={$_('combat.menu.trackAmmunition')}
+					onclick={combat.inventory.toggleAmmunitionTracking}
+				/>
+				<span class="main">{$_('combat.menu.trackAmmunition')}</span>
+			</div>
+			<p class="note" style="padding: 2px 13px 6px">{$_('combat.menu.trackAmmunitionNote')}</p>
 		{:else if overlay.kind === 'restshort'}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
 			{#if combat.hitDice.length}

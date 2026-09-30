@@ -34,8 +34,16 @@ import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { tagInt, ITEM_TAG, parseBonusChoices, type BonusRung } from '$lib/content/item-tags';
 import { splitList } from '$lib/content/schemas';
+import { ammunitionStacks, firedAmmunition } from '$lib/character/ammunition';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import type { MenuKind } from '$lib/combat/helpers';
+
+/** The anchored menu a shot asks "which stack" through. */
+export interface InventoryMenus {
+	open(kind: MenuKind, e: Event): void;
+	close(): void;
+}
 
 /** One carried thing, as the panel reads it. Everything the row needs, resolved once. */
 export interface InventoryRow {
@@ -72,6 +80,7 @@ export class InventoryTracker {
 		private getCharacter: () => Character | null,
 		private getGraph: () => ContentGraph | null,
 		private getSheet: () => CharacterSheet | null,
+		private menus: InventoryMenus,
 	) {}
 
 	private resolve = (ref: string, base?: string): ResolvedItem | undefined => {
@@ -259,8 +268,6 @@ export class InventoryTracker {
 		return out.sort((a, b) => a.name.localeCompare(b.name));
 	};
 
-	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
-	 *  one rather than silently keeping the last pick. */
 	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
 	 *  off every number it was folding into. */
 	setBonus = (ref: string, bonus: number | undefined) => {
@@ -279,6 +286,8 @@ export class InventoryTracker {
 		else delete entry.choice;
 	};
 
+	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
+	 *  one rather than silently keeping the last pick. */
 	setBase = (ref: string, base: string) => {
 		const entry = this.getCharacter()?.build.inventory.find((e) => e.item === ref);
 		if (!entry) return;
@@ -305,5 +314,61 @@ export class InventoryTracker {
 			toast(t('combat.notice.usedItem', { name: row.name }), {
 				description: t('combat.notice.itemsLeft', { count: row.entry.qty - 1 }),
 			});
+	};
+	/** Whether a shot spends what it fires (`ui.trackAmmunition`, off by default). */
+	get tracksAmmunition(): boolean {
+		return this.getCharacter()?.ui.trackAmmunition ?? false;
+	}
+	toggleAmmunitionTracking = () => {
+		const c = this.getCharacter();
+		if (c) c.ui.trackAmmunition = !c.ui.trackAmmunition;
+	};
+
+	/** The carried stacks the weapon behind an attack can fire, or undefined when it fires none. */
+	ammunitionFor = (weaponId: string): InventoryRow[] | undefined => {
+		const weapon = this.rows.find((r) => r.item?.row.id === weaponId)?.item;
+		const fired = weapon ? firedAmmunition(weapon.tags) : undefined;
+		if (!fired) return undefined;
+		const carried = this.rows.flatMap((r) =>
+			r.item
+				? [{ row: r, category: String(r.item.row.data.category ?? ''), tags: r.item.tags }]
+				: [],
+		);
+		return ammunitionStacks(fired, carried).map((s) => s.row);
+	};
+
+	/** A shot waiting on "which stack", and the shot itself. */
+	shotPending = $state<{ stacks: InventoryRow[]; fire: () => boolean } | null>(null);
+
+	/**
+	 * Fire, and spend what was fired — only once the shot actually happened, so an attack the turn
+	 * could not pay for costs no arrow. With tracking off, or a weapon that fires nothing, this is just
+	 * the shot. One stack is the one; several ask first; none says so and fires anyway — the tracker
+	 * keeps the count, it does not take the bow out of the player's hands.
+	 */
+	shoot = (weaponId: string, e: Event, fire: () => boolean) => {
+		const stacks = this.tracksAmmunition ? this.ammunitionFor(weaponId) : undefined;
+		if (!stacks) {
+			fire();
+			return;
+		}
+		if (stacks.length > 1) {
+			this.shotPending = { stacks, fire };
+			this.menus.open('ammo', e);
+			return;
+		}
+		const only = stacks[0];
+		if (!fire()) return;
+		if (only) this.use(only.entry.item);
+		else toast(t('combat.notice.noAmmunition'));
+	};
+
+	/** Finish the waiting shot from the stack the player picked. */
+	shootFrom = (ref: string) => {
+		const pending = this.shotPending;
+		if (!pending) return;
+		this.shotPending = null;
+		this.menus.close();
+		if (pending.fire()) this.use(ref);
 	};
 }
