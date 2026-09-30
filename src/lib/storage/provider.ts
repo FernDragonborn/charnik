@@ -5,40 +5,29 @@
  * global — `TauriStorage` is only constructed inside a Tauri webview, and its plugin functions are
  * lazy (invoked per-op, nothing at import time), so importing it is inert on the web. Nothing above
  * this news a storage.
+ *
+ * Every instance handed out is WRAPPED so each mutation and each failure reaches the diagnostics log
+ * (`withWriteLog`). One wrapper here rather than a call at each site: this is the only file IO seam
+ * the app has, so it is also the only place a write can be counted from.
  */
 import { BrowserStorage } from './browser';
 import { TauriStorage } from './tauri';
+import { withWriteLog } from './logged';
+import { Platform, detectPlatform } from './platform';
 import type { Storage } from './types';
 
-/**
- * The one runtime environment the app can be executing in. This single enum replaces the two
- * scattered booleans (`browser` + `isTauri()`) that together encoded the same one fact — "where am
- * I running" — so every platform decision reads from one typed source with one detection point.
- */
-export enum Platform {
-	/** Tauri desktop/mobile webview → real filesystem (TauriStorage) + seed content onto disk. */
-	Desktop = 'desktop',
-	/** Plain browser (the web build) → IndexedDB for user data + bundled content over fetch. */
-	Web = 'web',
-	/** No `window` at all (no browser) → build-time prerender + Node tests. Read-only, no user store. */
-	Headless = 'headless',
-}
-
-/**
- * Detect the current runtime. No `window` means a headless (non-browser) context; otherwise the
- * Tauri runtime injects `__TAURI_INTERNALS__` into the webview's `window`, so its presence means
- * desktop and its absence means a plain browser.
- */
-export function detectPlatform(): Platform {
-	if (typeof window === 'undefined') return Platform.Headless;
-	return '__TAURI_INTERNALS__' in window ? Platform.Desktop : Platform.Web;
-}
+// Re-exported: "where am I running" is asked from everywhere and the answer moved to a leaf so the
+// logger could reach it without importing this file back. Moving the implementation is no reason to
+// move the import every caller already writes.
+export { Platform, detectPlatform };
 
 let cache: Storage | null = null;
 
 export function getUserStorage(): Storage {
 	if (!cache)
-		cache = detectPlatform() === Platform.Desktop ? new TauriStorage() : new BrowserStorage();
+		cache = withWriteLog(
+			detectPlatform() === Platform.Desktop ? new TauriStorage() : new BrowserStorage(),
+		);
 	return cache;
 }
 

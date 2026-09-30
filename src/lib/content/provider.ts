@@ -39,6 +39,7 @@ import {
 	SHIPPED_PACK_REPO,
 	unDismissMissing,
 } from './packs.svelte';
+import { logger } from '$lib/diag/logger';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
@@ -198,6 +199,12 @@ export async function seedShippedContent(
 	const onDisk = await readSeedVersion(to);
 	if (onDisk === shippedVersion) return { preserved: [] };
 	const firstRun = onDisk === null;
+	logger.info('content: seeding shipped packs', {
+		roots: roots.length,
+		from: onDisk,
+		to: shippedVersion,
+		firstRun,
+	});
 
 	const preserved: string[] = [];
 	for (const root of roots) {
@@ -218,6 +225,7 @@ export async function seedShippedContent(
 		}
 	}
 	await to.write(SEED_VERSION_FILE, String(shippedVersion));
+	logger.info('content: seed complete', { preserved: preserved.length });
 	return { preserved };
 }
 

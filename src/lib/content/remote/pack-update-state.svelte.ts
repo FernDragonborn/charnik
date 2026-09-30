@@ -4,6 +4,7 @@
  * result reads to a user. Everything is exported on purpose; nothing here talks to the network.
  */
 import { detectPlatform, Platform } from '$lib/storage/provider';
+import { logger } from '$lib/diag/logger';
 import { packConfig } from '../packs.svelte';
 import { parseGithubRepo, type CheckResult, type GithubRepo, type RemotePack } from './github';
 import type { PackDiff } from './diff';
@@ -82,9 +83,17 @@ export const updates = $state<UpdateState>({
 });
 
 /** Record a failure. APPENDS: within one action every reason is worth saying, and the caller that
- *  starts the action is the one that clears (`clearErrors`). */
+ *  starts the action is the one that clears (`clearErrors`).
+ *
+ *  It is also the ONE place every pack refusal lands — a repo that would not answer, a pack over the
+ *  size ceiling, a rename onto a taken folder, a delete the OS refused — so it is where they are
+ *  logged. A user whose pack would not apply can send the reason back instead of describing it. */
 export function fail(error: UpdateError): void {
 	updates.errors = [...updates.errors, error];
+	logger.error(
+		'packs: refused',
+		error.kind === 'raw' ? { error: error.message } : { reason: error.key, ...error.values },
+	);
 }
 
 /** Start a fresh action — the previous run's reasons are no longer about anything. */

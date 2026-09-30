@@ -59,23 +59,30 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
   native picker did not choose — only its copy, verify and rollback halves can be driven. The picker
   itself is out of reach of any driver (`../internals/testing.md`).
 
-- [ ] **LOG-COVERAGE · the logging seam is built and almost nothing logs through it.** Counted, not
-  remembered: **four** `logger.*` calls in the whole app outside `$lib/diag/` — two in
-  `routes/+layout.svelte`, one in `content/reload.ts`, one in `content/overrides.svelte.ts`.
-  **Nothing is missing from the facade**, which is why this is coverage and not design.
-  `diag/logger.ts` is one seam with two impls behind one signature, the same platform split `Storage`
-  has: on desktop it forwards to `tauri-plugin-log` (a rotating file in the OS app-log dir, echoed to
-  Stdout and the webview), on web it keeps an always-on ring of the last 500 entries, which is what
-  the bug-report bundle reads (`diag/bundle.ts`). It carries levels, structured `ctx` breadcrumbs, a
-  stated REDACTION rule (ids, types, counts, error text — never character names, notes, free text or
-  file contents), and a `no-console` lint that allowlists only `$lib/diag/**`, so nobody can route
-  around it by accident.
-  **What that costs today:** a user reports a pack that would not apply, a character that would not
-  save, a plugin that did not load — and the bundle they send back is empty of everything except the
-  four lines above. The paths worth instrumenting are the ones where the app talks to something it
-  does not control: every `Storage` write and its failure, the pack fetch/diff/apply/rollback steps,
-  plugin discovery and consent, character save and restore, and the seed. Play-state mutation is NOT
-  on that list — a rest or a spend is the character's own record, and logging it would be the
-  redaction rule's first casualty.
-  **It replaces AUDIT-COVERAGE**, whose findings were all closed: a reading pass finds what is wrong
-  once, while a log says what went wrong on a machine nobody here can open.
+- [x] **LOG-COVERAGE · the paths where the app talks to something it does not control now log.**
+  Four `logger.*` calls became coverage of the five paths the item named, and the shape of the fix is
+  worth keeping: **three of the five are ONE call each**, because each subsystem already had a single
+  chokepoint.
+  - **Every `Storage` mutation and every failure** — `withWriteLog` wraps whatever
+    `getUserStorage()` hands out (`storage/logged.ts`), so a write logs once at the only file-IO seam
+    the app has instead of at ~40 call sites. Reads stay silent by design: a missing file is how half
+    this app asks whether one exists. Paths go through `redactPath` first — a `characters/` slug is
+    the character's NAME, which is the redaction rule's first casualty.
+  - **Every pack REFUSAL** — inside `fail()` (`remote/pack-update-state.svelte.ts`), the one channel
+    a repo that would not answer, a pack over the size ceiling, a rename onto a taken folder and a
+    delete the OS refused all already landed on. The milestones that are not failures are their own
+    lines: check started, update found, applied (with the written/preserved/removed counts),
+    rolled back, installed, renamed, uninstalled.
+  - **Plugin discovery and consent** — the scan's count, a namespace forgotten because its folder
+    went, consent granted (with the code hash) and revoked with its pack, the kill switch, and every
+    `loadError` the sandbox reports.
+  - **Character save and restore** — a save REFUSED for schema reasons, a backup ring that has
+    silently stopped being written, a save that failed validation or migration on the way in, and a
+    restore naming the snapshot it is putting back.
+  - **The seed** — which versions it is moving between, and how many files it preserved as the
+    user's own.
+  **Play-state mutation is still not logged**, and that is the decision rather than an omission: a
+  rest or a spend is the character's own record.
+  **What made it possible to wrap one seam** was moving `Platform`/`detectPlatform` into
+  `storage/platform.ts`: `diag/logger.ts` asks which platform it is on, so the provider could not
+  import the logger back without a cycle. `provider.ts` re-exports both names, so no call site moved.

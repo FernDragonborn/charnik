@@ -19,6 +19,7 @@ import { characterSchema, parseCharacter, type Character } from './schema';
 import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
 import { errText } from '../util/format';
+import { logger, redactPath } from '../diag/logger';
 // TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
 // the roll lives. Erased at build — no runtime edge from the character layer into combat.
 import type { RollLogEntry } from '../combat/roll';
@@ -231,7 +232,11 @@ export async function restoreCharacterBackup(
 		return { ok: false, error: `cannot read snapshot: ${errText(e)}` };
 	}
 	const res = readSavedCharacter(raw);
-	if (!res.ok || !res.character) return res;
+	if (!res.ok || !res.character) {
+		logger.error('character: snapshot refused on restore', { error: res.error });
+		return res;
+	}
+	logger.info('character: restoring snapshot', { snapshot: redactPath(path) });
 	// through `saveCharacter`, so the restore is checkpointed into the ring like any other write and
 	// the id is re-anchored to the folder it is landing in (a hand-copied snapshot may carry another)
 	await saveCharacter(storage, { ...res.character, id });
@@ -247,8 +252,8 @@ export async function snapshotCharacterOnLaunch(storage: Storage, id: string): P
 	launchSnapshotted.add(id);
 	try {
 		await backupCharacter(storage, id, 'launch');
-	} catch {
-		/* best-effort */
+	} catch (e) {
+		logger.warn('character: launch snapshot failed', { error: errText(e) });
 	}
 }
 
@@ -257,15 +262,19 @@ export async function snapshotCharacterOnLaunch(storage: Storage, id: string): P
 export async function saveCharacter(storage: Storage, character: Character): Promise<void> {
 	const res = characterSchema.safeParse(character);
 	if (!res.success) {
-		throw new Error(
-			`refusing to save invalid character: ${res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`,
-		);
+		const issues = res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ');
+		// the one way a save can be refused rather than fail — worth a line of its own, because the
+		// user sees a toast and the reason is a schema path they have no way to report back
+		logger.error('character: refusing to save invalid', { issues });
+		throw new Error(`refusing to save invalid character: ${issues}`);
 	}
 	// snapshot the state we're about to overwrite (throttled), so a bad save is recoverable
 	try {
 		await backupCharacter(storage, character.id, 'save');
-	} catch {
-		/* best-effort — never block a save on a backup failure */
+	} catch (e) {
+		// best-effort — never block a save on a backup failure, but a recovery set that has silently
+		// stopped being written is exactly what nobody finds out until they need it
+		logger.warn('character: save backup failed', { error: errText(e) });
 	}
 	await storage.mkdir(dirOf(character.id));
 	await storage.write(fileOf(character.id), JSON.stringify(res.data, null, 2));
@@ -358,10 +367,14 @@ function readSavedCharacter(raw: string): LoadResult {
 	try {
 		data = migrate(data as Versioned, CHARACTER_MIGRATIONS, CHARACTER_SCHEMA_VERSION);
 	} catch (e) {
+		logger.error('character: migration failed', { error: errText(e) });
 		return { ok: false, error: `migration failed: ${(e as Error).message}`, ...sys };
 	}
 	const res = parseCharacter(data);
 	if (!res.success) {
+		logger.error('character: save failed validation', {
+			issues: res.error.issues.map((i) => i.path.join('.')).join(', '),
+		});
 		return {
 			ok: false,
 			error: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; '),
@@ -427,6 +440,7 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 
 /** Delete a character folder (character.json, log, photo). */
 export async function deleteCharacter(storage: Storage, slug: string): Promise<void> {
+	logger.info('character: deleting');
 	await storage.remove(dirOf(slug));
 }
 

@@ -38,6 +38,13 @@ the `import()` expressions the first one cannot see — and four paths are exemp
 (the seam), `lib/update/**` (the desktop updater), `lib/diag/**` (the logger) and
 `lib/content/remote/tauri-fetch.ts` (the pack fetcher's HTTP client, per `security.md` §5).
 
+**Every mutation through it is logged.** `getUserStorage()` hands out the chosen impl wrapped in
+`withWriteLog` (`storage/logged.ts`), so each `write`/`mkdir`/`remove`/`rename` leaves a `debug`
+breadcrumb and each failure an `error` — one wrapper at the one seam, rather than a call per site.
+READS are deliberately silent: a missing file is how half the app asks whether one exists, so
+logging those would bury the writes that went wrong. Paths are redacted first (`redactPath`), because
+a `characters/` slug is taken from the character's NAME.
+
 - **Desktop** — Tauri fs, scoped by capabilities to the data directory and content roots, with
   traversal rejected.
 - **Tests** — a node and in-memory implementation.

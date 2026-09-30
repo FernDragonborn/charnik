@@ -9,6 +9,7 @@
  * A pack ARRIVING, being renamed or leaving is the neighbouring concern, in `pack-lifecycle.ts`.
  */
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
+import { logger } from '$lib/diag/logger';
 import { readCharacterFiles } from '$lib/character/repository';
 import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
 import { content } from '../store.svelte';
@@ -93,6 +94,7 @@ async function runCheck(opts: {
 
 	updates.checking = true;
 	clearErrors();
+	logger.info('packs: checking repos', { repos: repos.length, manual: opts.manual === true });
 	try {
 		// ONE budget for the whole run — the per-pack and per-repo caps say nothing about the total,
 		// and `download` mode fetches without asking anyone
@@ -118,6 +120,7 @@ async function checkOneRepo(
 		return;
 	}
 	if (res.kind === 'unchanged') {
+		logger.debug('packs: repo unchanged');
 		// a 304 still counts as "asked today" — that is exactly the check we want to skip tomorrow,
 		// and it certifies nothing we still have to write down
 		recordCheck(repo, new Date());
@@ -164,6 +167,13 @@ async function checkOneRepo(
 			pending.staged = await isStaged(getUserStorage(), pending.diff);
 		}
 		updates.pending[pack] = pending;
+		logger.info('packs: update found', {
+			pack,
+			changes: pending.diff.changes.length,
+			removedRows: pending.removedRows.length,
+			pluginsChanged: pending.pluginsChanged.length,
+			staged: pending.staged,
+		});
 		rememberPending(pack, { repo, files: remote.files });
 	}
 
@@ -311,6 +321,12 @@ async function runApply(
 		}
 		return res;
 	}
+	logger.info('packs: update applied', {
+		pack,
+		written: res.written.length,
+		preserved: res.preserved.length,
+		removed: res.removed.length,
+	});
 	// An update whose only entries are REMOVALS applies nothing unless removals were asked for.
 	// Clearing it then would report success for a no-op and hide the offer until the next check
 	// re-derived the very same one.
@@ -372,6 +388,7 @@ export async function undoUpdate(pack: string): Promise<boolean> {
 	// a rollback is two renames on the real filesystem, so it can fail the way an apply can — reported
 	// on the panel's error channel rather than rejecting into the button's `onclick`
 	const done = await guardedDisk(false, () => rollbackPack(getUserStorage(), pack));
+	logger.info('packs: rollback', { pack, done });
 	// the rolled-back files are older than the remote again, so the offer is live once more; the next
 	// check re-derives it, and until then the pack simply reads as up to date
 	if (done) forgetPending(pack);

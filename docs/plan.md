@@ -264,31 +264,20 @@ position and are given per wave, because most of them were learned the hard way.
   weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
   never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
   control before it can mean anything.
-- **The short queue, and it is an ORDER rather than a wave.** Eight items whose homes are the waves
+- **The short queue, and it is an ORDER rather than a wave.** Five items whose homes are the waves
   below; this says which one is picked up next, because a session rarely closes more than two or
   three of them. An item leaves this list when it closes, and nothing is moved between waves for it.
-  1. **LOG-COVERAGE** — `code-quality.md`. The logging SEAM is built and instrumented almost nowhere:
-     four `logger.*` calls in the whole app outside `diag/`, against a facade that already has a
-     desktop file sink, a web ring buffer, a redaction rule and a `no-console` lint holding everyone
-     to it. It replaces AUDIT-COVERAGE, whose findings are all closed.
-  2. ~~MAGIC-ITEM-VOCAB ▸ 6~~ — **done.** `attacked` is a channel of its own; four rows.
-  3. ~~MAGIC-ITEM-VOCAB ▸ 1~~ — **done.** The qualifier is a target namespace and, more to the point,
-     a fact the fold refuses: fourteen rows. What it did NOT close is the six FEATURE-PASSIVES rows
-     waiting on SCOPED-BONUS reaching SPELLS — a different scope on a different target — and Dragon
-     Scale Mail's breath-weapon note, whose qualifier is a creature's ability rather than a kind of
-     roll.
-  4. **PANEL-COLLAPSE-PERSIST** — `ui.md`. One field of a shape the schema already has seven of.
-  5. **STACK-RAW** — `mechanics.md`. Two divergences from the rule the engine says it follows.
-  6. **CRIT-THRESHOLD** — `mechanics.md` ▸ FEATURE-PASSIVES. A numeric target and six comparisons
+  1. **PANEL-COLLAPSE-PERSIST** — `ui.md`. One field of a shape the schema already has seven of.
+  2. **STACK-RAW** — `mechanics.md`. Two divergences from the rule the engine says it follows.
+  3. **CRIT-THRESHOLD** — `mechanics.md` ▸ FEATURE-PASSIVES. A numeric target and six comparisons
      against a literal 20; it is what both Champion crit features wait on.
-  7. **The `partial` rung carrying its own rounding and label** — 2014 Remarkable Athlete rounds UP,
+  4. **The `partial` rung carrying its own rounding and label** — 2014 Remarkable Athlete rounds UP,
      and saying it with Jack of All Trades' rung would be a wrong number wearing another feature's
      name.
-  8. **MASTERY-HALF's tail** — Graze, Nick and Vex as tokens; the other five as `note:` with the
+  5. **MASTERY-HALF's tail** — Graze, Nick and Vex as tokens; the other five as `note:` with the
      reason, since they act on a creature the app does not model.
 
-  **Deliberately not in the queue, though they came out of the same pass:** the logging
-  INSTRUMENTATION itself (item 1 is the tracker; the call sites are a session), RULES-TEXT and the
+  **Deliberately not in the queue, though they came out of the same pass:** RULES-TEXT and the
   2014 item tables (both a producer sibling's work, not this repo's), and closing PLAYTEST-UI, which
   is a prune rather than a change.
 

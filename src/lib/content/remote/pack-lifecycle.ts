@@ -53,6 +53,7 @@ import {
 } from './pack-update-state.svelte';
 import { tauriFetcher } from './tauri-fetch';
 import { type RemoteFetcher } from './types';
+import { logger } from '$lib/diag/logger';
 
 /**
  * Ask a pasted repo URL what packs it holds. Nothing is written and nothing is registered: this is
@@ -190,6 +191,12 @@ export async function installPack(
 		fail(res.error);
 		return res;
 	}
+	logger.info('packs: installed', {
+		pack,
+		local,
+		written: res.written.length,
+		plugins: found.plugins.length,
+	});
 	registerPack(local, found.repo, pack);
 	// …and how to reach it again: the next check and every later download resolve the branch through
 	// the registry, not by guessing `main` off the URL a second time
@@ -267,6 +274,7 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 		}),
 	);
 	if (!moved) return false;
+	logger.info('packs: renamed', { from, to: target });
 	const pending = updates.pending[from];
 	if (pending) {
 		delete updates.pending[from];
@@ -315,6 +323,7 @@ export async function uninstallPack(pack: string): Promise<void> {
 		}),
 	);
 	if (!removed) return;
+	logger.info('packs: uninstalled', { pack });
 	// …and the consent LAST: it outlives the files (PLG-SEC 12), so revoking before a delete that then
 	// failed left the pack installed and its permission gone.
 	await revokePackPlugins(pack);

@@ -461,7 +461,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (129 modules)
+## Library functions & types (131 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1246,6 +1246,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/diag/logger.ts`
 
+- `function redactPath` — * A dataDir-relative path as the log is allowed to carry it.
 - `enum LogLevel` — Syslog-ish levels, matching the Tauri plugin.
 - `interface LogEntry` — One recorded log line.
 - `const logger` — The app-wide logger.
@@ -1673,6 +1674,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function writeConfigSection` — * Replace one section, preserving every other key in the file.
 - `function configWritesSettled` — Resolves when every queued write has landed — for one file, or (no argument) for all of them.
 
+### `src/lib/storage/logged.ts`
+
+- `function withWriteLog` — Wrap a storage so its mutating half is logged.
+
 ### `src/lib/storage/memory.ts`
 
 - `class MemoryStorage` — * In-memory `Storage` for tests (and a reference impl).
@@ -1695,10 +1700,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function sandboxRelative` — * The sandbox guard shared by every `Storage` impl: normalize a caller-supplied path to * `/`-separated, root-relativ…
 
-### `src/lib/storage/provider.ts`
+### `src/lib/storage/platform.ts`
 
 - `enum Platform` — * The one runtime environment the app can be executing in.
 - `function detectPlatform` — * Detect the current runtime.
+
+### `src/lib/storage/provider.ts`
+
+- `re-export Platform` — Re-exported: "where am I running" is asked from everywhere and the answer moved to a leaf so the logger could reach i…
+- `re-export detectPlatform` — Re-exported: "where am I running" is asked from everywhere and the answer moved to a leaf so the logger could reach i…
 - `function getUserStorage`
 - `function resetUserStorage` — Drop the cached storage instance so the next `getUserStorage()` re-resolves the data root — used * when the user chan…
 
@@ -1807,4 +1817,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1088 exports across 145 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1092 exports across 147 modules · 74 duplicate suspects._

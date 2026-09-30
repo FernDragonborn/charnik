@@ -28,6 +28,7 @@ import {
 	clearPluginMemo,
 	type PluginEvaluator,
 } from './plugin-registry';
+import { logger } from '$lib/diag/logger';
 
 interface PluginsState {
 	/** Plugins exist on the desktop build only. */
@@ -77,6 +78,10 @@ export async function loadPlugins(): Promise<void> {
 export async function refreshPlugins(): Promise<void> {
 	if (!plugins.supported) return;
 	plugins.discovered = await discoverPlugins(getUserStorage());
+	logger.info('plugins: discovered', {
+		found: plugins.discovered.length,
+		broken: plugins.discovered.filter((p) => !p.ok).length,
+	});
 	forgetUndiscovered();
 	await rebuildEvaluator();
 }
@@ -97,6 +102,7 @@ function forgetUndiscovered(): void {
 		...new Set([...Object.keys(plugins.prefs.consent), ...Object.keys(plugins.prefs.enabled)]),
 	].filter((ns) => !present.has(ns));
 	if (!gone.length) return;
+	logger.info('plugins: forgetting undiscovered', { namespaces: gone });
 	for (const ns of gone) {
 		delete plugins.prefs.consent[ns];
 		delete plugins.prefs.enabled[ns];
@@ -108,6 +114,7 @@ function forgetUndiscovered(): void {
  *  of the consent a dialog granted — disabling only stops it for now, and the row's own button then
  *  re-enables it silently. */
 export async function forgetPlugin(namespace: string): Promise<void> {
+	logger.info('plugins: consent forgotten', { namespace });
 	delete plugins.prefs.consent[namespace];
 	delete plugins.prefs.enabled[namespace];
 	persist();
@@ -146,6 +153,9 @@ async function rebuildEvaluator(): Promise<void> {
 		if (le) errs[p.namespace] = le;
 	}
 	plugins.loadErrors = errs;
+	// code that would not boot is the failure a user cannot diagnose from the row alone
+	for (const [namespace, error] of Object.entries(errs))
+		logger.error('plugins: load failed', { namespace, error });
 	plugins.version++;
 }
 
@@ -163,6 +173,8 @@ function persist(): void {
 /** The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable. */
 export async function consentAndEnable(p: DiscoveredPlugin): Promise<void> {
 	if (!p.ok || p.hash === undefined) return;
+	// consent to RUN CODE is the one decision worth being able to reconstruct afterwards
+	logger.info('plugins: consent granted', { namespace: p.namespace, hash: p.hash });
 	plugins.prefs.consent[p.namespace] = p.hash;
 	plugins.prefs.enabled[p.namespace] = true;
 	persist();
@@ -183,6 +195,7 @@ export async function revokePackPlugins(pack: string): Promise<void> {
 	if (!plugins.supported) return;
 	const mine = plugins.discovered.filter((p) => p.origin === pack).map((p) => p.namespace);
 	if (mine.length === 0) return;
+	logger.info('plugins: consent revoked with pack', { pack, namespaces: mine });
 	for (const namespace of mine) {
 		delete plugins.prefs.consent[namespace];
 		delete plugins.prefs.enabled[namespace];
@@ -209,6 +222,7 @@ export async function enableConsented(p: DiscoveredPlugin): Promise<boolean> {
 
 /** The global "disable all plugins" kill switch (§6.4) — always works, survives restarts. */
 export async function setKillSwitch(on: boolean): Promise<void> {
+	logger.warn('plugins: kill switch', { on });
 	plugins.prefs.killSwitch = on;
 	persist();
 	await rebuildEvaluator();

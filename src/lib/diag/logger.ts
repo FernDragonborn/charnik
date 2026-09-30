@@ -15,8 +15,21 @@
  * be handed character names / notes / free-text or raw file contents — only ids, types, levels,
  * counts, error messages + stacks. `ctx` is for those structured breadcrumbs; callers keep PII out.
  */
-import { detectPlatform, Platform } from '$lib/storage/provider';
+import { detectPlatform, Platform } from '$lib/storage/platform';
 import { errText } from '$lib/util/format';
+
+/**
+ * A dataDir-relative path as the log is allowed to carry it.
+ *
+ * Everything under `characters/` is keyed by a slug taken from the character's NAME
+ * (`uniqueCharacterId`), and a character name is the first thing the redaction rule above keeps out,
+ * so that one segment is masked. No other subtree names a person: a pack folder, a theme id and a
+ * plugin namespace are all the user's own vocabulary for content, and a bug report is unreadable
+ * without them.
+ */
+export function redactPath(path: string): string {
+	return path.replace(/^characters\/[^/]+/, 'characters/*');
+}
 
 /** Syslog-ish levels, matching the Tauri plugin. Ordered by severity for release-level filtering. */
 export enum LogLevel {
