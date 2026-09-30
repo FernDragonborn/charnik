@@ -127,6 +127,12 @@ the concentration, and expiry, display and removal are the paths that already ex
 spell always gets a carrier even when it has no tokens, which is what gives Hold Person and Web a
 timer at all. Giving concentration its own clock needs a display proxy and a second expiry path.
 
+**A runtime effect's `source` decides where its tokens are read from, by the row's TYPE.** An entry
+added from the state catalog (an `effect` row) is read LIVE, so a fix to the catalog reaches effects
+already on a character. A cast's carrier also names its spell as the `source`, but its tokens are
+what the CAST baked — an upcast's extra `hp_max`, the weapon Magic Weapon touched — none of which is
+in the spell row, so a carrier is always read from its own `effects`.
+
 ## A tracker surfaces, it never decides
 
 When a feature triggers on a game event, the app **highlights** the option, reminds the player, and

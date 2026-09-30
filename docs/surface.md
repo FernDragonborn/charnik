@@ -863,7 +863,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export casterForSpell` — re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 - `const GROUP_MODES`
 - `type GroupMode`
-- `function enhancementTokens` — The effect tokens a magic-weapon buff (Magic Weapon, item 7) spawns for a `+n` enhancement bonus: * `+n` to attack AN…
+- `function enhancementTokens` — The effect tokens a magic-weapon buff (Magic Weapon) spawns for a `+n` enhancement bonus: `+n` to * attack AND damage…
 - `interface SpellRow` — A spell row in the spell block.
 - `interface SpellGroup` — A group of spells (Pinned / by level / by prepared / by school).
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.

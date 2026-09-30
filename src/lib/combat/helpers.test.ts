@@ -81,12 +81,15 @@ const sheetOf = (...classes: SpellcastingClass[]) =>
 const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
 
 describe('enhancementTokens — a magic-weapon buff (item 7)', () => {
-	it('spawns a +n attack AND damage bonus (untyped — v1 has no per-instance weapon target)', () => {
-		expect(enhancementTokens(2)).toEqual(['flat_bonus:attack+2', 'flat_bonus:damage+2']);
+	it('spawns a +n attack AND damage bonus scoped to the one weapon touched', () => {
+		expect(enhancementTokens(2, 'longsword')).toEqual([
+			'flat_bonus:attack.longsword+2',
+			'flat_bonus:damage.longsword+2',
+		]);
 	});
 	it('produces nothing for a non-positive bonus', () => {
-		expect(enhancementTokens(0)).toEqual([]);
-		expect(enhancementTokens(-1)).toEqual([]);
+		expect(enhancementTokens(0, 'longsword')).toEqual([]);
+		expect(enhancementTokens(-1, 'longsword')).toEqual([]);
 	});
 });
 

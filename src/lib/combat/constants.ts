@@ -20,6 +20,7 @@ export type MenuKind =
 	| 'showhide'
 	| 'featuresview'
 	| 'upcast'
+	| 'enchantweapon'
 	| 'restshort'
 	| 'coins';
 

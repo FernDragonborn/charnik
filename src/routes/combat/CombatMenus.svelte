@@ -10,7 +10,14 @@
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { titleCase, ABIL, MOD_TARGETS, modTargetKey, conditionIdOf } from '$lib/combat/helpers';
+	import {
+		titleCase,
+		ABIL,
+		MOD_TARGETS,
+		modTargetKey,
+		conditionIdOf,
+		attackName,
+	} from '$lib/combat/helpers';
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import Switch from '$lib/components/Switch.svelte';
 	import { COINS } from '$lib/rules/currency';
@@ -457,6 +464,18 @@
 					</button>
 				{/each}
 				<p class="note" style="padding: 6px 13px 2px">{$_('combat.menu.upcastNote')}</p>
+			{/if}
+		{:else if overlay.kind === 'enchantweapon'}
+			{@const pending = combat.casting.enchanting}
+			{#if pending}
+				<div class="popup-heading eyebrow" style="border: 0">
+					{$_('combat.menu.enchantTitle', { values: { name: pending.r.name } })}
+				</div>
+				{#each combat.casting.enchantableWeapons as weapon (weapon.id)}
+					<button class="menu-row" onclick={(e) => combat.casting.enchantWith(weapon.id, e)}>
+						<span class="main">{attackName(weapon, $_)}</span>
+					</button>
+				{/each}
 			{/if}
 		{:else if overlay.kind === 'coins'}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.coinsTitle')}</div>

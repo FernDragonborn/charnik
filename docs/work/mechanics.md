@@ -565,16 +565,14 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   - [x] **Rage's damage, RAW** — done as RAGE-SCOPE above: 2014 `damage.melee,str`, 2024
         `damage.str`, and the two grammar pieces it needed (an attack carries the ability it
         resolved from; a scope may be a comma-separated list).
-  - [ ] **Magic Weapon, and Agonizing Blast.** Neither blocks 0.7.0, and Agonizing Blast is NOT
-        the one content row it was billed as: the packs carry a single `warlock_eldritch_invocations`
-        row and no row per invocation, in either edition, so there is nothing to hang
-        `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the invocation rows (the 2014 source
-        names Agonizing Blast exactly once, under a heading the converter does not emit) and the
-        chooser that picks two of them, which is N2 shape 3.
-        Magic Weapon buffs every weapon because the cast
-        spawns an unscoped `flat_bonus:attack/damage+N` — RAW it names ONE weapon you touch, so the
-        fix is not grammar any more, it is a cast-time CHOICE of which weapon (D16's shape).
-        Agonizing Blast needs only the content row that says `damage.eldritch_blast+cha_mod`.
+  - [ ] **Agonizing Blast.** It is NOT the one content row it was billed as: the packs carry a
+        single `warlock_eldritch_invocations` row and no row per invocation, in either edition, so
+        there is nothing to hang `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the
+        invocation rows (the 2014 source names Agonizing Blast exactly once, under a heading the
+        converter does not emit) and the chooser that picks two of them, which is N2 shape 3.
+        Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
+        scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
+        inventory entry has no identity of its own to scope to.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
   the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented

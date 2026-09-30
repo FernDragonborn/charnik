@@ -285,6 +285,12 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			'id,systems,source,kind,level,slot_1,slot_2,slot_3,slot_4,slot_5,slot_6,slot_7,slot_8,slot_9',
 			`full_5,5.5e,${S},full,5,4,3,2,0,0,0,0,0,0`,
 		].join('\n'),
+		// two weapons, so a magic-weapon buff has a choice to ask about
+		'items_srd.csv': [
+			'id,systems,source,name_en,effects,category,tags,damage',
+			`dagger,5.5e,${S},Dagger,,weapon,"simple, melee",1d4 piercing`,
+			`quarterstaff,5.5e,${S},Quarterstaff,,weapon,"simple, melee",1d6 bludgeoning`,
+		].join('\n'),
 		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast,effects',
 			// level-1 save-damage spell: base 3d8, +1d8 per slot above 1st
@@ -424,6 +430,15 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(carrier()?.effects).toEqual(['flat_bonus:hp_max+5', 'flat_bonus:hp_max+5']);
 	});
 
+	it('Aid: what the slot bought reaches the sheet, not only the carrier', () => {
+		// the carrier names its SPELL as the source, and the derive used to read that row's tokens
+		// instead of the carrier's — so the upcast +5 sat in the carrier and folded nowhere
+		const before = combat.sheet?.maxHp.value ?? 0;
+		character.play.spellSlotsSpent = { '2': 3 }; // spill to slot 3 → +5 base, +5 upcast
+		combat.cast(spellRow(graph, `spell:${S}:aid`, 'on')!, noModifiers);
+		expect((combat.sheet?.maxHp.value ?? 0) - before).toBe(10);
+	});
+
 	it('False Life: temp HP rolls its dice + upcast delta, NO spellcasting mod (item 3)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers); // base slot 1
 		expect(combat.journal.log[0]?.label).toContain('temp HP');
@@ -434,10 +449,47 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(combat.journal.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
 	});
 
-	it('Magic Weapon: casting at the base slot spawns +1 attack&damage effect tokens (item 7)', () => {
+	const magicWeaponCarrier = () =>
+		character.play.effects.find((ef) => ef.source === `spell:${S}:magic_weapon`);
+	const carry = (...ids: string[]) =>
+		(character.build.inventory = ids.map((id) => ({
+			item: `item:${S}:${id}`,
+			qty: 1,
+			equipped: true,
+			attuned: false,
+		})));
+
+	it('Magic Weapon: one weapon is the one touched, and only it takes the bonus', () => {
+		carry('dagger');
 		combat.cast(spellRow(graph, `spell:${S}:magic_weapon`, 'on')!, noModifiers); // base slot 2 → +1
-		const carrier = character.play.effects.find((ef) => ef.source === `spell:${S}:magic_weapon`);
-		expect(carrier?.effects).toEqual(['flat_bonus:attack+1', 'flat_bonus:damage+1']);
+		expect(magicWeaponCarrier()?.effects).toEqual([
+			'flat_bonus:attack.dagger+1',
+			'flat_bonus:damage.dagger+1',
+		]);
+	});
+
+	it('Magic Weapon: with two weapons it asks which, and spends nothing until answered', () => {
+		carry('dagger', 'quarterstaff');
+		combat.cast(spellRow(graph, `spell:${S}:magic_weapon`, 'on')!, noModifiers);
+		expect(combat.casting.enchanting?.r.id).toBe('magic_weapon');
+		expect(combat.casting.enchantableWeapons.map((a) => a.id)).toEqual(['dagger', 'quarterstaff']);
+		expect(character.play.spellSlotsSpent['2'] ?? 0).toBe(0); // asked BEFORE paying
+		combat.casting.enchantWith('quarterstaff', noModifiers);
+		expect(character.play.spellSlotsSpent['2']).toBe(1);
+		expect(magicWeaponCarrier()?.effects).toEqual([
+			'flat_bonus:attack.quarterstaff+1',
+			'flat_bonus:damage.quarterstaff+1',
+		]);
+		const staff = combat.attacks.find((a) => a.id === 'quarterstaff');
+		const dagger = combat.attacks.find((a) => a.id === 'dagger');
+		expect((staff?.toHit ?? 0) - (dagger?.toHit ?? 0)).toBe(1); // the untouched weapon stays mundane
+	});
+
+	it('Magic Weapon: with no weapon it still casts, says so, and grants nothing', () => {
+		carry();
+		combat.cast(spellRow(graph, `spell:${S}:magic_weapon`, 'on')!, noModifiers);
+		expect(character.play.spellSlotsSpent['2']).toBe(1);
+		expect(magicWeaponCarrier()?.effects).toEqual([]); // the concentration carrier, no bonus
 	});
 
 	it('Magic Weapon: the enhancement step scales +1/+2/+3 by slot (item 7)', () => {

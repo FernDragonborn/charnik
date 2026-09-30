@@ -40,6 +40,8 @@ import {
 	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
+	type Attack,
+	UNARMED_STRIKE_ID,
 } from '$lib/combat/helpers';
 import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
@@ -66,6 +68,10 @@ type UpcastCast = {
  *  caller cannot read the sentinel as a slot — see `reserveSpellSlot`. */
 type SlotReservation = { key: string | null } | { blocked: true };
 
+/** How a cast was asked for. `weapon` is the one a magic-weapon buff lands on: a weapon id, or
+ *  `null` once it is settled that there is none to touch. Absent means not asked yet. */
+type CastOptions = { ritual?: boolean; slot?: number; pool?: string; weapon?: string | null };
+
 /** What casting needs from the sheet around it. A narrow structural interface rather than the VM
  *  class, so this module does not import the thing that imports it. */
 export interface CastingHost {
@@ -81,6 +87,8 @@ export interface CastingHost {
 		useResource(id: string, max: number): boolean;
 	};
 	cantConcentrate: boolean;
+	/** The attacks the sheet shows — the weapons a magic-weapon buff can be laid on. */
+	attacks: Attack[];
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
 	effectsFor(key: string, scopes?: Set<string>): RollEffects;
 	removeLinkedEffect(ref: string): void;
@@ -99,7 +107,7 @@ export class SpellCasting {
 	/** Casting applies the spell's OWN effect tokens (EFX-2): they become a runtime effect on self,
 	 *  expiring per the spell's duration text; linked via `source: r.ref` so dropping/replacing
 	 *  concentration (or re-casting = refresh) removes/replaces it. No tokens → no-op. */
-	private applySpellEffect(r: SpellRow, slotLevel: number) {
+	private applySpellEffect(r: SpellRow, slotLevel: number, weapon: string | null) {
 		const c = this.host.character;
 		const spell = this.host.graph?.get(r.ref);
 		const tokens = tokensOf(spell);
@@ -112,17 +120,15 @@ export class SpellCasting {
 		// `flat_bonus:hp_max+5` gets an ADDITIONAL `flat_bonus:hp_max+delta` per slot above base. hp_max
 		// is a fold target, so the two tokens sum cleanly (no string-surgery over the base token).
 		const hpMaxDelta = this.upcastFlatDelta(r, slotLevel, 'hp_max');
-		// Item 7 (Magic Weapon): an `enhancement` upcast is the whole magic-weapon bonus (+1/+2/+3 by
-		// slot). The engine has no per-instance weapon target, so the buff is spawned as WEAPON-SCOPED
-		// flat_bonus:attack/damage (melee+ranged → every weapon, but NOT spell attacks); the scope also
-		// routes the flat through computeAttacks' scoped-fold (rollEffectsFor skips weapon-scoped flats).
-		// Limitation: it lands on ALL the caster's weapons, not just the one touched (per-instance targeting
-		// is the deferred roller work) — surfaced as a labelled effect the player sees.
+		// Magic Weapon: an `enhancement` upcast is the whole bonus (+1/+2/+3 by slot), scoped to the ONE
+		// weapon the player touched — `cast` settles which before anything is spent.
 		const enhance = this.upcastFlatDelta(r, slotLevel, 'enhancement');
+		if (enhance > 0 && weapon === null)
+			toast(t('combat.notice.noWeaponToEnchant', { name: r.name }));
 		const effects = [
 			...tokens,
 			...(hpMaxDelta > 0 ? [`flat_bonus:hp_max+${hpMaxDelta}`] : []),
-			...(enhance > 0 ? enhancementTokens(enhance) : []),
+			...(enhance > 0 && weapon !== null ? enhancementTokens(enhance, weapon) : []),
 		];
 		if (!c || (!effects.length && !r.concentration)) return;
 		this.host.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
@@ -527,6 +533,41 @@ export class SpellCasting {
 	hasCastChoice = (r: SpellRow): boolean =>
 		this.castableSlots(r).length > 1 || this.castablePools(r).length > 0;
 
+	/** The cast waiting on the weapon-picker (drives the `enchantweapon` overlay menu). */
+	enchanting = $state<{ r: SpellRow; opts: CastOptions } | null>(null);
+	/** What a magic-weapon buff can be laid on: each weapon the character attacks with, once. Magic
+	 *  weapons are not filtered out — the rule is the player's to apply, and the app cannot tell. */
+	get enchantableWeapons(): Attack[] {
+		const seen = new Set<string>();
+		return this.host.attacks.filter((a) => {
+			if (a.id === UNARMED_STRIKE_ID || seen.has(a.id)) return false;
+			seen.add(a.id);
+			return true;
+		});
+	}
+	/** A magic-weapon buff lands on ONE weapon, so which one is settled BEFORE anything is spent: with
+	 *  a single weapon there is nothing to ask, with several the picker opens and the cast waits
+	 *  (`null`), with none the cast goes ahead and says so. Any other spell passes straight through. */
+	private settleWeapon(r: SpellRow, e: Event, opts: CastOptions): { weapon: string | null } | null {
+		if (opts.weapon !== undefined) return { weapon: opts.weapon };
+		if (this.upcastFlatDelta(r, opts.slot ?? r.level, 'enhancement') <= 0) return { weapon: null };
+		const weapons = this.enchantableWeapons;
+		if (weapons.length > 1) {
+			this.enchanting = { r, opts };
+			this.host.openMenu('enchantweapon', e);
+			return null;
+		}
+		return { weapon: weapons[0]?.id ?? null };
+	}
+	/** Finish the waiting cast on the picked weapon, then close the picker. */
+	enchantWith = (weaponId: string, e: Event) => {
+		const pending = this.enchanting;
+		if (!pending) return;
+		this.host.overlay = null;
+		this.enchanting = null;
+		this.cast(pending.r, e, { ...pending.opts, weapon: weaponId });
+	};
+
 	/** The spell whose upcast slot-picker is open (drives the `upcast` overlay menu — item 1). */
 	upcastSpell = $state<SpellRow | null>(null);
 	/** Open the slot-picker for a leveled spell (the ⇡ affordance), anchored under the click. */
@@ -565,13 +606,15 @@ export class SpellCasting {
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.
-	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean; slot?: number; pool?: string }) => {
+	cast = (r: SpellRow, e: Event, opts: CastOptions = {}) => {
+		const settled = this.settleWeapon(r, e, opts);
+		if (!settled) return;
 		const play = this.host.character?.play;
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
 		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
 		// pact casters spend nothing; the action-economy check below stays combat-only.
 		const ritual =
-			opts?.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
+			opts.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
 		const paid = this.payForCast(r, ritual, opts);
 		if (!paid) return;
 		const slot = paid.slot;
@@ -593,7 +636,7 @@ export class SpellCasting {
 			if (prior && prior !== r.ref) this.host.removeLinkedEffect(prior);
 			this.host.character.play.concentration = r.ref;
 		}
-		this.applySpellEffect(r, slotLevel);
+		this.applySpellEffect(r, slotLevel, settled.weapon);
 		this.rollSpellCast(r, e, ritual, slotLevel);
 	};
 

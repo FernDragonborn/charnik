@@ -110,6 +110,10 @@ falls off a phone screen.
 - **A resisted hit says what it will take before you press Damage.** Pick the type and type the
   amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable —
   instead of leaving you to watch the HP bar.
+- **Magic Weapon enchants the weapon you touch.** Casting it asks which weapon when you carry more
+  than one, before anything is spent, and only that weapon's attack and damage go up. It used to
+  raise nothing at all: a cast's own additions — Magic Weapon's bonus, the extra hit points an
+  upcast Aid grants — were dropped on the way to the sheet. Both now land.
 - **A long duration reads as time, not as a count of rounds.** An effect with eight hours left says
   "8 h", a 7th-level Geas "365 days"; a countdown that no longer divides evenly says "≈8 h" rather
   than "4799 rds". Combat-length durations stay in rounds.

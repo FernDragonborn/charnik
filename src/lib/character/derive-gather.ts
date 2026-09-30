@@ -185,10 +185,13 @@ class EffectGatherer {
 			// catalog row PROPAGATES and the name re-localizes. Fall back to the baked `effects`/`label` for
 			// a catalog-less custom effect OR an orphaned ref (deleted/disabled); an orphan is flagged like
 			// any missing ref (still applied from the bake, never silently dropped).
+			// Only a CATALOG entry's tokens are read live. A cast's carrier names its SPELL as the source,
+			// and what the cast baked — an upcast's extra `hp_max`, the weapon a Magic Weapon touched — is
+			// not in the spell row at all, so reading the row would drop exactly what the slot bought.
 			const live = eff.source ? this.graph.get(eff.source) : undefined;
 			const liveActive = live !== undefined && this.isActive(live);
 			if (eff.source && !liveActive) this.missing.push(eff.source);
-			const tokens = liveActive ? tokensOf(live) : eff.effects;
+			const tokens = liveActive && live.type === 'effect' ? tokensOf(live) : eff.effects;
 			const label = liveActive ? rowName(live) : eff.label;
 			if (tokens.length) this.active.push({ source: label, layer: 'condition', tokens });
 		}
