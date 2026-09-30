@@ -64,11 +64,14 @@
 			<li>
 				<a href={dev('characters-write')}>Characters · portraits, backups and drafts on the disk</a>
 			</li>
+			<li>
+				<a href={dev('storage-edges')}>Storage edges · junctions, held files, the move, plugins</a>
+			</li>
 		</ul>
 		<p class="hint">
-			The first only reads and reaches GitHub. The other two write, inside a throwaway pack and a
-			throwaway character they delete afterwards, and never touch the network. All three leave a
-			report in your data folder.
+			The first only reads and reaches GitHub. The others write, inside throwaway folders they
+			delete afterwards, and never touch the network. Storage edges also needs shell fixtures
+			(docs/internals/tooling.md). Every probe leaves a report in your data folder.
 		</p>
 	</section>
 </div>

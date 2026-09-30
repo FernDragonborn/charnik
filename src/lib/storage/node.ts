@@ -36,8 +36,14 @@ export class NodeStorage implements Storage {
 		const full = this.abs(path);
 		await fsMkdir(dirname(full), { recursive: true });
 		const tmp = `${full}.tmp-${process.pid}-${Date.now()}`;
-		await writeFile(tmp, data);
-		await rename(tmp, full);
+		try {
+			await writeFile(tmp, data);
+			await rename(tmp, full);
+		} catch (e) {
+			// a failed rename leaves the temp sibling behind; the original error is the one to surface
+			await rm(tmp, { force: true }).catch(() => {});
+			throw e;
+		}
 	}
 	async exists(path: string): Promise<boolean> {
 		return existsSync(this.abs(path));

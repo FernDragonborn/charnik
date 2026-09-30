@@ -144,6 +144,9 @@ throw chip fits; «замовляння» fits the spell row.
 
 ### Under the hood
 
+- **A save Windows refuses no longer leaves a temp file in your folder.** When another program holds
+  a file open — a sync client, an antivirus scan, an editor — the save fails as it should, and now
+  takes its half-written `.tmp-` sibling with it instead of leaving it there for good.
 - **The dev server follows the content repo.** A CSV edited in the pack reaches the running app and
   reloads it, instead of staying invisible until the next build.
 - **The screenshot harness sees a phone**, and a probe fails on anything that overflows at 393 or

@@ -26,7 +26,10 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > widen it lives in Rust, not in the capability file.
    >
    > - `pick_data_dir` opens the OS folder dialog and records the picked path in `GrantedDirs` — a
-   >   session set the renderer cannot write to. Only a human click puts a path in it.
+   >   session set the renderer cannot write to. Only a human click, or the saved pointer re-granted
+   >   at startup, puts a path in it. The second means every folder INSIDE the current data folder
+   >   passes the test below: that widens nothing, since it is already in scope, but it is why a
+   >   probe must never let a data-folder move succeed.
    > - `set_data_dir` persists a path to the pointer **only if it is, or is under, a path in that
    >   set**, so page JS cannot persist an arbitrary directory for a silent grant next launch. It
    >   also rejects any path containing `..`: `Path::starts_with` compares whole components and `..`

@@ -37,27 +37,12 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
 
 - [x] **AUDIT-COVERAGE · closed.** Every finding of the September audit was closed with it; what
   outlived it was the COVERAGE, and that has now been split: the one surface it never ran is
-  DESKTOP-PROBE below, and the reading habit it proved — one reader per subsystem, three at a time,
+  now run by the two desktop probes (`../internals/tooling.md` ▸ Verifying on the real desktop
+  app), and the reading habit it proved — one reader per subsystem, three at a time,
   each told to read `AGENTS.md` and the subsystem doc first, to REPRODUCE every finding rather than
   infer it, and to report CONFIRMED · SUSPECTED · RULED OUT · **NOT YET CHECKED** — is in
   `../internals/testing.md`'s territory rather than a tracker item. The write-up itself is
   `docs/audit-sep-09.md` in git, at the commit that removed it.
-
-- [ ] **DESKTOP-PROBE · the desktop half of storage is reasoned, not RUN.** `AGENTS.md` ▸ Verifying
-  signs filesystem work off on the real app, and this is the list that never got there: the
-  data-folder move end to end, `walkTree`'s symlink skip against a real junction, the photo write,
-  the backup ring under a Windows rename refusal, `deleteCharacter` against an open handle, and
-  plugin discovery over the Tauri `Storage` (case-folding against `NAMESPACE_RE`, a plugin folder
-  inside a watched pack). A `MemoryStorage` test proves none of it: a fake overwrites happily where
-  Windows refuses to rename a directory onto an existing one, and designs here depend on that.
-  **The character half is WRITTEN and waiting to be run** — `/dev/characters-write`, in the dev index
-  beside `/dev/packs-write`. Open it inside `pnpm tauri dev` and read the verdict, or the report it
-  leaves in the data folder: it covers the portrait write, both backup rings and the restore,
-  `readCharacterFiles`, and the draft filename encoding against a real Windows name, and it says out
-  loud what it cannot reach.
-  **What cannot be probed at all** is the data-folder move, because `set_data_dir` refuses a path the
-  native picker did not choose — only its copy, verify and rollback halves can be driven. The picker
-  itself is out of reach of any driver (`../internals/testing.md`).
 
 - [x] **LOG-COVERAGE · the paths where the app talks to something it does not control now log.**
   Four `logger.*` calls became coverage of the five paths the item named, and the shape of the fix is

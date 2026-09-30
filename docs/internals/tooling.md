@@ -287,6 +287,27 @@ read the report. `/dev/packs-write` is the worked example.
   explicitly, or windows accumulate and several probe instances fight over the same scratch folder
   and produce nonsense.
 - Probe writes go in a **dot-prefixed** folder (`content/.probe-pack`) so pack discovery ignores them.
+  A character id cannot take the dot — `newCharacter` refuses anything but a slug — so a probe
+  character is a plain slug it deletes at the end (`zz-probe-character`).
+- **Editing a probe while the app shows it reruns it** (HMR remounts the page), and killing the app
+  mid-run leaves that run's throwaway files behind. Edit, let it finish, or clean up by hand.
+- **Stopping a background `pnpm dev` or `pnpm tauri dev` can leave its vite alive**, still holding
+  the port, so the next run walks to 5174 while `devUrl` still names 5173 — and serves you from the
+  orphan. List what is listening on 5173–5175 before starting and after stopping.
+
+**`/dev/storage-edges` needs shell fixtures**, because a webview can neither make a junction nor hold
+a file open from another process. In the data folder, before starting the app:
+
+- `.probe-walk/real/a.txt`, plus two junctions (`mklink /J`): `.probe-walk/loop` → `.probe-walk`,
+  and `.probe-walk/out` → any folder outside the data folder.
+- `characters/.probe-locked/character.json` and `.probe-migrate-src/{locked.bin,free.txt}`, with
+  `character.json` and `locked.bin` held open by another process for the run
+  (`[IO.File]::Open(path, 'Open', 'ReadWrite', 'None')` in PowerShell).
+
+Remove the junctions with `rmdir`, never a recursive delete, which would follow them. The probe drives
+the move's refusal, copy failure and rollback; it cannot drive the verify failure or a successful
+move — a success would repoint the real data folder (`security.md` ▸ Where the desktop sandbox is
+actually decided), so the probe proves its source unreadable before it moves anything.
 - `Storage.watch` returns its unsubscribe synchronously but **attaches asynchronously** — measure
   after a delay or you get a reassuring zero.
 - **A permission is not a feature.** Granting `fs:allow-watch` does not make `watch` exist:

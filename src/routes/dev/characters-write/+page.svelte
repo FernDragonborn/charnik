@@ -36,8 +36,9 @@
 		type DraftTarget,
 	} from '$lib/drafts/store';
 
-	/** Not a slug any roster of the user's can hold — a leading dot, and the probe deletes it anyway. */
-	const ID = '.probe-character';
+	/** A valid slug — `newCharacter` refuses anything else, a leading dot included — named so no roster
+	 *  of the user's is likely to hold it, and deleted at the end either way. */
+	const ID = 'zz-probe-character';
 	const DIR = `characters/${ID}`;
 	const REPORT = 'characters-write-probe.txt';
 
@@ -188,14 +189,13 @@
 		);
 		check('nothing landed in the unreadable pile', (await findUnreadableDrafts(s)).length === 0);
 
-		// --- 6. what this probe CANNOT reach, said out loud -----------------------------------------
-		// A handle held open by another process needs that other process; the folder picker is an OS
-		// dialog outside any webview (`testing.md`); a junction for `walkTree`'s symlink skip is a
-		// filesystem fixture rather than an app run. Naming them is what keeps the next reader from
-		// assuming this probe covered them.
+		// --- 6. what this probe does NOT cover, said out loud ---------------------------------------
+		// A file held open by another process and a junction for `walkTree` need shell fixtures, so
+		// they are `/dev/storage-edges`'s. The folder picker is an OS dialog outside any webview
+		// (`testing.md`). Naming them keeps the next reader from assuming this probe covered them.
 		say('');
-		say('not reachable from here: a file held open by another process, the native folder picker,');
-		say('and a junction for walkTree — the first two need a second process, the third a fixture.');
+		say('not covered here: a held file and a junction (/dev/storage-edges, with shell fixtures),');
+		say('and the native folder picker, which no driver can reach.');
 
 		// deleteCharacter is the last thing, so a failure above still has its folder to inspect
 		await deleteCharacter(s, ID);

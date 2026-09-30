@@ -298,8 +298,16 @@ export class TauriStorage implements Storage {
 		const full = await this.abs(path);
 		await fsMkdir(await this.parent(full), { recursive: true });
 		const tmp = `${full}.tmp-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-		await writeFile(tmp, data);
-		await fsRename(tmp, full);
+		try {
+			await writeFile(tmp, data);
+			await fsRename(tmp, full);
+		} catch (e) {
+			// Windows refuses the rename onto a file another process holds open, and the temp sibling
+			// would stay in the user's folder for good. Best-effort: the original error is the one to
+			// surface, and a temp that cannot be removed either is no worse than before.
+			await fsRemove(tmp).catch(() => {});
+			throw e;
+		}
 	}
 	async exists(path: string): Promise<boolean> {
 		return fsExists(await this.abs(path));
