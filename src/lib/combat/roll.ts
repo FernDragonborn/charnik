@@ -161,6 +161,12 @@ export type RollLogEntry = Rolled & {
 	at?: number;
 	/** What was changed about this roll after it landed, as facts rather than as a sentence. */
 	amendments?: RollAmendment[];
+	/** The lowest d20 face that was a critical hit FOR THIS ROLL — stamped only on an attack, and only
+	 *  when it is not the RAW 20, so every line ever written reads as 20 and the capped file pays
+	 *  nothing for the ordinary case. It belongs to the roll for the same reason an amendment is facts:
+	 *  a Champion's 19 was a crit when they threw it, and levelling up afterwards must not rewrite what
+	 *  the log says happened. `RollRow` reads it to decide the gold. */
+	critThreshold?: number;
 	/** A condition decided this one instead of the die (paralyzed → auto-fail its STR/DEX save), so no
 	 *  die was thrown. A FACT beside the roll's name rather than a word inside it: the name is already
 	 *  a catalog key, an entry holds one, and "Save — auto-fail" written into `log.jsonl` would freeze
@@ -184,6 +190,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	label: string;
 	labelKey?: string;
 	labelValues?: Record<string, SaidValue>;
+	critThreshold?: number;
 	note?: string;
 	noteParts?: SaidText[];
 	at?: number;
@@ -210,6 +217,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.noteParts !== undefined ? { noteParts: e.noteParts } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),
+	...(e.critThreshold !== undefined ? { critThreshold: e.critThreshold } : {}),
 	...(e.amendments ? { amendments: e.amendments } : {}),
 	...(e.outcome ? { outcome: e.outcome } : {}),
 	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),

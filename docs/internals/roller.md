@@ -98,6 +98,15 @@ modifier gains nothing, which is the half of the rule tables get wrong.
 **A crit is never inferred from a natural 20.** The same 20 is a crit on an attack and just a 20 on a
 check, and a crit happens without one. The tracker surfaces; it does not rule.
 
+**What the roll DOES carry is the face that was as good as a 20 for that character** —
+`RollLogEntry.critThreshold`, a Champion's 19 or 18, written only when it is not the RAW 20 so every
+line ever recorded already reads correctly. It decides the GOLD and nothing else, which is what makes
+it compatible with the rule above. The record carries it rather than the view looking it up, for the
+same reason a roll's name is a catalog key: levelling up must not rewrite what the log says happened.
+**A roll is stamped when it threw a d20 AND rolled damage**, which is the app's whole definition of an
+attack and is asked once, at the record (`RollJournal.stampCritThreshold`), rather than in each of the
+five places the view draws the cue.
+
 ## Lines, roles, and instances
 
 A roll is built as LINES, and a line's `ROLLER_ROLE` decides what it is for:

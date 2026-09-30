@@ -27,6 +27,7 @@
 	} from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
+	import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
 	import { _ } from '$lib/i18n';
 	import { damageTypeLabel } from '$lib/combat/attacks';
 	import { AUTO_OUTCOME, rollNameOf, sayRollName } from '$lib/combat/roll';
@@ -82,6 +83,15 @@
 	const tone = (c: RolledDie) =>
 		c.value === c.sides ? 'max' : c.value === 1 ? 'min' : ('' as const);
 	const face = (c: RolledDie) => `${c.sign < 0 ? '−' : ''}${c.value}`;
+
+	/**
+	 * Did this roll's d20 come up as good as a 20 FOR THIS CHARACTER? The gold cue, and the reason it is
+	 * not `=== 20`: a Champion crits on 19 (or 18), which the record carries per roll so a re-read line
+	 * still says what was true when it was thrown. Absent means the RAW 20 — every roll that is not an
+	 * attack, and every attack by anyone else.
+	 */
+	const critical = (a: RollToastAttack) =>
+		a.natural !== undefined && a.natural >= (a.critThreshold ?? CRIT_THRESHOLD_MAX);
 
 	/** Which chip of an attack is THE d20 that decided it — the first positive one, matching what
 	 *  `amendWithAdvantage` picks. -1 when the roll has no d20 to amend. */
@@ -256,10 +266,8 @@
 			{#each attacks as a, i (i)}
 				{#if model.tested}{@render hitDice(a)}{/if}
 				{#if twoPart}
-					<span
-						class="roll-to-hit-total"
-						class:nat-20={a.natural === 20}
-						class:nat-1={a.natural === 1}>{a.subtotal}</span
+					<span class="roll-to-hit-total" class:nat-20={critical(a)} class:nat-1={a.natural === 1}
+						>{a.subtotal}</span
 					>
 				{/if}
 				{#if model.damaging}
@@ -271,11 +279,7 @@
 						{/if}
 					</span>
 				{/if}
-				<span
-					class="roll-total big-total"
-					class:nat-20={a.natural === 20}
-					class:nat-1={a.natural === 1}
-				>
+				<span class="roll-total big-total" class:nat-20={critical(a)} class:nat-1={a.natural === 1}>
 					{#if !model.damaging}{shown(a.subtotal)}{:else if a.natural === 1}<span class="roll-miss"
 							>{$_('roller.miss')}</span
 						>{:else}{a.damageTotal}{/if}
@@ -291,8 +295,7 @@
 		<div class="roll-lanes">
 			{#each attacks as a, i (i)}
 				<div class="roll-lane">
-					{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
-						>{/if}
+					{#if multi}<span class="roll-attack-index" class:nat-20={critical(a)}>{i + 1}</span>{/if}
 					{#if model.tested}
 						<div class="roll-box">
 							<span class="roll-caption eyebrow"
@@ -301,7 +304,7 @@
 							<span class="roll-answer">
 								<span
 									class="roll-answer-sum"
-									class:nat-20={a.natural === 20}
+									class:nat-20={critical(a)}
 									class:nat-1={a.natural === 1}>{shown(a.subtotal)}</span
 								>
 								<span class="roll-formula">{@render hitDice(a)}</span>
@@ -315,9 +318,7 @@
 								{#if a.natural === 1}
 									<span class="roll-answer-sum nat-1 roll-miss">{$_('roller.miss')}</span>
 								{:else}
-									<span class="roll-answer-sum" class:nat-20={a.natural === 20}
-										>{a.damageTotal}</span
-									>
+									<span class="roll-answer-sum" class:nat-20={critical(a)}>{a.damageTotal}</span>
 									<span class="roll-formula">
 										{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
 									</span>

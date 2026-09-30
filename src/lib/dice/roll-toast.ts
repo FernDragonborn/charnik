@@ -59,10 +59,14 @@ export interface RollToastAttack {
 	modParts?: FlatPart[];
 	/** What the to-hit (or, with no damage, the roll itself) came to. */
 	subtotal: number;
-	/** The natural face of the d20. 20 tints the line gold, 1 calls it a miss. Deliberately NOT
-	 *  called a crit: the same 20 is a crit on an attack and just a 20 on a check, and the toast
-	 *  doesn't know which (play-tracker surfaces, never rules). */
+	/** The natural face of the d20. `critThreshold` and above tints the line gold, 1 calls it a miss.
+	 *  Deliberately NOT called a crit: the same 20 is a crit on an attack and just a 20 on a check, and
+	 *  the toast doesn't know which (play-tracker surfaces, never rules). */
 	natural?: number;
+	/** The lowest face that was as good as a 20 on THIS roll — a Champion's 19. Absent means the RAW 20,
+	 *  which is every roll that is not an attack and every attack by anyone else. Carried rather than
+	 *  looked up, so a log line re-read next level still says what was true when it was thrown. */
+	critThreshold?: number;
 	damage: RollToastDamage[];
 	/** This line's damage sum — shown per line only when several attacks share the toast. */
 	damageTotal: number;
@@ -152,7 +156,10 @@ const damagePart = (part: TypedRoll): RollToastDamage => ({
 });
 
 /** One completed roll (+ the damage that followed it) → one attack line. */
-function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
+function attackLine(
+	roll: Rolled & Pick<RollLogEntry, 'critThreshold'>,
+	damage: TypedRoll[],
+): RollToastAttack {
 	// the deciding d20 leads the line, so it reads left-to-right as the dice were rolled; it lives
 	// apart from the pool because which of a pair counts is a question of how the roll is READ
 	const kept = keptD20(roll);
@@ -166,6 +173,7 @@ function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
 		...(roll.modParts ? { modParts: roll.modParts } : {}),
 		subtotal: roll.total,
 		...(natural !== undefined ? { natural } : {}),
+		...(roll.critThreshold !== undefined ? { critThreshold: roll.critThreshold } : {}),
 		damage: damage.map(damagePart),
 		damageTotal: damageTotal(damage),
 	};

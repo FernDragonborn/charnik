@@ -1523,6 +1523,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function passiveScore` — Passive score = 10 + the check bonus (no roll).
 - `function initiative` — Initiative = DEX modifier (feats/effects add more later).
 - `function attacksPerAction` — * How many attacks one Attack action makes.
+- `const CRIT_THRESHOLD_MAX` — * The lowest d20 face that can be a critical hit.
+- `function critThreshold`
 - `function spellSaveDC` — Spell save DC = 8 + proficiency + spellcasting-ability modifier.
 - `function spellAttackBonus` — Spell attack bonus = proficiency + spellcasting-ability modifier.
 - `function unarmoredAC` — Unarmored AC = 10 + DEX modifier.
@@ -1817,4 +1819,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1092 exports across 147 modules · 74 duplicate suspects._
+_47 tokens · 86 global classes · 54 components · 1094 exports across 147 modules · 74 duplicate suspects._

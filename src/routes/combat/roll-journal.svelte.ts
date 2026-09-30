@@ -19,7 +19,9 @@ import {
 	type BonusDie,
 	type DieMods,
 	type Rolled,
+	naturalOf,
 } from '$lib/rules/dice';
+import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
 import { toastRoll } from '$lib/dice/roll-toast';
 import { DiceTray } from '$lib/dice/dice-tray.svelte';
 import type { SaidText, SaidValue } from '$lib/util/say';
@@ -130,7 +132,29 @@ export class RollJournal {
 	constructor(
 		private readonly persist?: (entry: RollLogEntry) => void,
 		private readonly persistRevision?: (entry: RollLogEntry) => void,
+		/** This character's crit threshold right now, for `stampCritThreshold`. A getter, because the
+		 *  sheet is rebuilt on every play-state change and the journal outlives each one. */
+		private readonly critThreshold: () => number = () => CRIT_THRESHOLD_MAX,
 	) {}
+
+	/**
+	 * Record what face would have crit, on the rolls where the question means anything.
+	 *
+	 * **What makes a roll an attack here is that it threw a d20 AND rolled damage.** Nothing else in
+	 * the app does both: a check, a save and initiative throw the die and deal nothing; a save-DC spell
+	 * and a hit-die deal dice and throw no d20. Asked once at the record rather than five times in the
+	 * view, and the producers stay ignorant — every path into the log passes through here or
+	 * `recordRolls`, including the tray's own Roll button, which builds its entries itself.
+	 *
+	 * Written only when it is NOT the RAW 20: absent means 20, so every line ever written already says
+	 * the right thing and the capped file pays nothing for the ordinary character.
+	 */
+	private stampCritThreshold = (entry: RollLogEntry): RollLogEntry => {
+		if (entry.critThreshold !== undefined) return entry;
+		if (naturalOf(entry) === undefined || !entry.damage?.length) return entry;
+		const threshold = this.critThreshold();
+		return threshold >= CRIT_THRESHOLD_MAX ? entry : { ...entry, critThreshold: threshold };
+	};
 
 	/** Restore the log from a prior session's persisted history (newest-first, capped). */
 	seed = (entries: RollLogEntry[]) => {
@@ -206,13 +230,15 @@ export class RollJournal {
 		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
 		opts: { at?: number; damage?: TypedRoll[]; noteParts?: SaidText[] } = {},
 	): RollLogEntry =>
-		entryOf({
-			...nameFields(name),
-			r,
-			at: opts.at ?? Date.now(),
-			...(opts.damage ? { damage: opts.damage } : {}),
-			...(opts.noteParts ? { noteParts: opts.noteParts } : {}),
-		});
+		this.stampCritThreshold(
+			entryOf({
+				...nameFields(name),
+				r,
+				at: opts.at ?? Date.now(),
+				...(opts.damage ? { damage: opts.damage } : {}),
+				...(opts.noteParts ? { noteParts: opts.noteParts } : {}),
+			}),
+		);
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
@@ -269,7 +295,8 @@ export class RollJournal {
 	recordRolls = (entries: RollLogEntry[]): void => {
 		if (!entries.length) return;
 		const group = entries.length > 1 ? crypto.randomUUID() : undefined;
-		const action = group ? entries.map((e) => ({ ...e, group })) : entries;
+		// stamped here too, because the TRAY builds its entries itself rather than through `entryFor`
+		const action = entries.map((e) => this.stampCritThreshold(group ? { ...e, group } : e));
 		this.log = [...action, ...this.log].slice(0, ROLL_LOG_MAX);
 		for (const entry of action) this.persist?.(entry);
 		toastRoll(action);

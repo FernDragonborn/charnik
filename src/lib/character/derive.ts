@@ -61,6 +61,9 @@ export interface CharacterSheet {
 	tools: ToolProficiency[];
 	ac: Computed;
 	initiative: Computed;
+	/** The lowest d20 face that can be a critical hit — 20 for everyone RAW, lower for a Champion. It
+	 *  decides the roll's HIGHLIGHT, never whether a hit crits (that stays the player's call). */
+	critThreshold: Computed;
 	speed: Computed;
 	/** Fly / swim speeds — base 0 (no SRD species grants one); effects (`set_override:speed.fly:60`
 	 *  — the Fly spell, magic items) are the source. Rendered only when nonzero. */

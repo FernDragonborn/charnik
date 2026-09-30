@@ -137,6 +137,21 @@ export function attacksPerAction(): Computed {
 	return computed([baseContribution(1)], { min: 1 });
 }
 
+/**
+ * The lowest d20 face that can be a critical hit. RAW it is 20 for everyone; the Champion's Improved
+ * and Superior Critical LOWER it (`set_override:crit_threshold:<n>:cap` — "unless already lower"),
+ * which is also what keeps the two features from stacking into 17.
+ *
+ * It decides a HIGHLIGHT and never an outcome. Whether a hit crits stays the player's call
+ * (`RollerLine.crit`), because a natural 20 is not always a crit and a crit happens without one — so
+ * this says "that face is as good as a 20 for you", which is the sentence a Champion's sheet owes them
+ * and the one it could not previously form.
+ */
+export const CRIT_THRESHOLD_MAX = 20;
+export function critThreshold(): Computed {
+	return computed([baseContribution(CRIT_THRESHOLD_MAX)], { min: 2, max: CRIT_THRESHOLD_MAX });
+}
+
 /** Spell save DC = 8 + proficiency + spellcasting-ability modifier. */
 export function spellSaveDC(args: { ability: Ability; score: number; level: number }): Computed {
 	return computed([

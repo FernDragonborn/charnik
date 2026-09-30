@@ -264,15 +264,13 @@ position and are given per wave, because most of them were learned the hard way.
   weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
   never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
   control before it can mean anything.
-- **The short queue, and it is an ORDER rather than a wave.** Three items whose homes are the waves
+- **The short queue, and it is an ORDER rather than a wave.** Two items whose homes are the waves
   below; this says which one is picked up next, because a session rarely closes more than two or
   three of them. An item leaves this list when it closes, and nothing is moved between waves for it.
-  1. **CRIT-THRESHOLD** — `mechanics.md` ▸ FEATURE-PASSIVES. A numeric target and six comparisons
-     against a literal 20; it is what both Champion crit features wait on.
-  2. **The `partial` rung carrying its own rounding and label** — 2014 Remarkable Athlete rounds UP,
+  1. **The `partial` rung carrying its own rounding and label** — 2014 Remarkable Athlete rounds UP,
      and saying it with Jack of All Trades' rung would be a wrong number wearing another feature's
      name.
-  3. **MASTERY-HALF's tail** — Graze, Nick and Vex as tokens; the other five as `note:` with the
+  2. **MASTERY-HALF's tail** — Graze, Nick and Vex as tokens; the other five as `note:` with the
      reason, since they act on a creature the app does not model.
 
   **Deliberately not in the queue, though they came out of the same pass:** RULES-TEXT and the

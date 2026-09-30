@@ -74,7 +74,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // "advantage on saving throws against spells", "advantage on saves to avoid the Poisoned condition"
 // — say it in tokens (`ac.ranged`, `saves.spell`, `saves.magical`, `saves.poisoned`) rather than only
 // as prose. An install left at v17 reads eleven magic items as doing nothing.
-export const CONTENT_SEED_VERSION = 18;
+// v19: both Champion crit features say which d20 face crits FOR THEM (`crit_threshold`, 19 then 18)
+// rather than only as prose. An install left at v18 has a Champion whose 19 is highlighted as an
+// ordinary number, which is the one thing the archetype is for.
+export const CONTENT_SEED_VERSION = 19;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

@@ -266,6 +266,37 @@ describe('shipped class feature · Perfect Focus auto-regain on initiative (rega
 });
 
 /*
+ * Both Champion crit features are numbers rather than prose now, and they are the only shipped
+ * consumer of `crit_threshold` — parameterized over both editions, because each states the same
+ * faces in its own words and a converter that dropped one would leave the other passing.
+ */
+describe('shipped class feature · Improved / Superior Critical (crit_threshold)', () => {
+	const championAt = async (system: '5e' | '5.5e', pack: string, source: string, level: number) => {
+		const c = charOf(source, system, 'fighter', level);
+		const [only] = c.build.classes;
+		if (only) only.subclass = `subclass:${source}:champion`;
+		return deriveSheet(c, await loadEdition(pack)).critThreshold.value;
+	};
+
+	for (const [system, pack, source] of [
+		['5e', 'srd-2014', 'SRD 5.1'],
+		['5.5e', 'srd-2024', 'SRD 5.2.1'],
+	] as const) {
+		it(`${system}: 20 before level 3, 19 from Improved, 18 from Superior`, async () => {
+			expect(await championAt(system, pack, source, 2)).toBe(20);
+			expect(await championAt(system, pack, source, 3)).toBe(19);
+			// …and at 15 BOTH features are active: `cap` takes the lower, so they cannot stack into 17
+			expect(await championAt(system, pack, source, 15)).toBe(18);
+		});
+	}
+
+	it('a fighter of another archetype still crits on 20 only', async () => {
+		const c = charOf('SRD 5.2.1', '5.5e', 'fighter', 15);
+		expect(deriveSheet(c, await loadEdition('srd-2024')).critThreshold.value).toBe(20);
+	});
+});
+
+/*
  * Survivor's Heroic Rally is the shipped `on_event` hook: a turn-start heal that only exists while
  * the character is Bloodied and standing. Both halves are content — the trigger and the guard — so a
  * wiped token or a reworded guard fails HERE rather than in a fight.

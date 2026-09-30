@@ -32,6 +32,7 @@ import {
 import {
 	initiative as initiativeOf,
 	attacksPerAction as attacksPerActionBase,
+	critThreshold as critThresholdBase,
 	carryingCapacity,
 	type Ability,
 } from '../rules/core';
@@ -230,6 +231,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		tools,
 		ac,
 		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), facts),
+		critThreshold: applyEffects('crit_threshold', critThresholdBase(), facts),
 		speed,
 		flySpeed: movementOf('speed.fly'),
 		swimSpeed: movementOf('speed.swim'),

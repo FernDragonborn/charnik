@@ -16,6 +16,7 @@ import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/d
 import { localizedName } from '$lib/content/detail';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
+import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
 import { FeatureView } from './feature-view.svelte';
@@ -84,6 +85,7 @@ class CombatVM {
 	journal = new RollJournal(
 		(e) => this.persistRoll(e),
 		(e) => this.persistRevision(e),
+		() => this.sheet?.critThreshold.value ?? CRIT_THRESHOLD_MAX,
 	);
 	/** Panel-layout subsystem (columns, collapse, drag) — persists the arrangement onto the character. */
 	layout = new PanelLayout(

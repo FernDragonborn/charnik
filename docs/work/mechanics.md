@@ -290,15 +290,26 @@ stay semi-manual.
     feature rows carry it across the two editions, and `petrified` lost the `note:` that was
     standing in for it. It SAYS the immunity (a chip on the defences strip, in both the builder and
     play) and does not refuse an application: the ruling at the table is the player's.
-  - **Blocked on a fold target that does not exist yet — down to the crit threshold.** `extra_attack`
+  - **DONE — every one of these shipped its token, the crit threshold last.** `extra_attack`
     (EXTRA-ATTACK), `unarmored_defense` and `draconicbloodline_draconic_ancestry` (a `set_override`
-    on `ac` says the formula) and `reliable_talent` (RELIABLE-TALENT) all shipped their tokens; what
-    is left is `champion_improved_critical` / `champion_superior_critical`, which need a
-    CRIT-THRESHOLD target. **That one is not a wrong number, because the app never decides a crit** —
-    `RollResult.crit` is set by the player on purpose ("a natural 20 is not always a crit, and a crit
-    happens without one"), and the roller only HIGHLIGHTS a natural 20 as deciding. So a Champion's
-    19 is a highlight the sheet cannot yet offer, not arithmetic it gets wrong: the work is a
-    `crit_threshold` numeric target plus the four or five places that compare `=== 20`.
+    on `ac` says the formula) and `reliable_talent` (RELIABLE-TALENT) went first;
+    `champion_improved_critical` / `champion_superior_critical` waited on CRIT-THRESHOLD and now
+    carry `set_override:crit_threshold:19:cap` and `:18:cap` in both editions — `cap` ("unless
+    already lower") is what keeps a level-15 Champion at 18 rather than stacking to 17.
+    **It decides a HIGHLIGHT and never an outcome**, which is why it could be built at all: whether a
+    hit crits stays `RollerLine.crit`, the player's own call ("a natural 20 is not always a crit, and
+    a crit happens without one"). What the sheet could not previously say is "that face is as good as
+    a 20 for YOU", and it says it now.
+    **The roll RECORDS the threshold it was thrown at** (`RollLogEntry.critThreshold`, written only
+    when it is not 20), so a log line re-read after the next level-up still says what was true. The
+    stamp asks one question at the record instead of five in the view: **a roll that threw a d20 AND
+    rolled damage is an attack**, and nothing else in the app is both — a check, a save and initiative
+    throw and deal nothing, a save-DC spell and a hit die deal and throw nothing. Both funnels stamp
+    (`entryFor` and `recordRolls`), because the dice tray builds its entries itself.
+    **Known narrowing, said out loud:** both features are weapon-only in their own text (2024 adds
+    Unarmed Strikes) and `crit_threshold` takes no scope, so a multiclassed Champion's SPELL attack
+    would be highlighted too. Each row ships the limit as a `note:` rather than pretending otherwise;
+    scoping it is SCOPED-BONUS's shape, not this item's.
   - **Blocked on SCOPED-BONUS reaching spells.** "Add your <ability> modifier to the damage of X":
     2024 `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
     (evocation spells), `oath_of_devotion_sacred_weapon` and 2014 `oathofdevotion_channel_divinity`

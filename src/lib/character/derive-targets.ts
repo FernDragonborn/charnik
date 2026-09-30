@@ -41,6 +41,9 @@ const NUMERIC_TARGETS = new Set<string>([
 	'damage',
 	'spell_dc',
 	'spell_attack',
+	// the lowest d20 face that can crit — LOWERED by an effect (Champion), never raised, which is why
+	// the shipped tokens are `set_override:crit_threshold:<n>:cap`
+	'crit_threshold',
 	'action',
 	'bonus',
 	'reaction',

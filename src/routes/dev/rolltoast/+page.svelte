@@ -84,6 +84,27 @@
 			},
 		},
 		{
+			title: "a Champion's 19 — gold, because the ROLL carries the threshold it was thrown at",
+			entry: {
+				label: 'Greataxe',
+				expr: 'd20(19) +9',
+				total: 28,
+				natural: 19,
+				critThreshold: 19,
+				damage: [{ type: 'slashing', expr: 'd12(8) +5', total: 13 }],
+			},
+		},
+		{
+			title: 'the same 19 for anybody else — an ordinary hit, no gold',
+			entry: {
+				label: 'Greataxe',
+				expr: 'd20(19) +9',
+				total: 28,
+				natural: 19,
+				damage: [{ type: 'slashing', expr: 'd12(8) +5', total: 13 }],
+			},
+		},
+		{
 			title: 'a second damage type — its own glyph in the same line, not a second line',
 			entry: {
 				label: 'Flame Tongue',

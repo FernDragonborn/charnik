@@ -12,7 +12,8 @@ vi.mock('$lib/dice/roll-toast', () => ({ toastRoll }));
 const { RollJournal } = await import('./roll-journal.svelte');
 const { MenuOverlay } = await import('./menu-overlay.svelte');
 const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('$lib/dice/roller');
-const { ADVANTAGE_MODE } = await import('$lib/rules/dice');
+const { ADVANTAGE_MODE, DIE_ROLE } = await import('$lib/rules/dice');
+type TypedRoll = import('$lib/combat/roll').TypedRoll;
 
 let journal: InstanceType<typeof RollJournal>;
 beforeEach(() => {
@@ -196,5 +197,61 @@ describe('recordRolls', () => {
 		journal.recordRolls([]);
 		expect(journal.log).toHaveLength(0);
 		expect(toastRoll).not.toHaveBeenCalled();
+	});
+});
+
+/*
+ * CRIT-THRESHOLD. The roll RECORDS what face was as good as a 20 when it was thrown, so a log line
+ * re-read after the Champion levels up still says what happened — and so the five places the view
+ * used to compare `=== 20` have one fact to read instead of a rule to re-derive.
+ */
+describe('crit threshold', () => {
+	/** A d20 that landed on `face`, with damage when it was an attack. */
+	const thrown = (face: number, damage?: TypedRoll[]) => ({
+		expr: `d20 = ${face}`,
+		dice: [],
+		d20s: [
+			{ sides: 20, sign: 1 as const, value: face, face, detail: String(face), role: DIE_ROLE.pool },
+		],
+		advantage: ADVANTAGE_MODE.neither,
+		mod: 0,
+		total: face,
+		...(damage ? { damage } : {}),
+	});
+	const slash: TypedRoll[] = [
+		{
+			type: 'slashing',
+			expr: '1d12',
+			dice: [],
+			d20s: [],
+			advantage: ADVANTAGE_MODE.neither,
+			mod: 3,
+			total: 10,
+		},
+	];
+	const champion = () => new RollJournal(undefined, undefined, () => 19);
+
+	it('stamps an attack — a d20 AND damage is the only thing in the app that is both', () => {
+		const j = champion();
+		expect(
+			j.entryFor({ text: 'Greataxe' }, thrown(19, slash), { damage: slash }).critThreshold,
+		).toBe(19);
+	});
+
+	it('says nothing about a check or a save: a 19 there is just a 19', () => {
+		const j = champion();
+		expect(j.entryFor({ text: 'Stealth' }, thrown(19)).critThreshold).toBeUndefined();
+	});
+
+	it('says nothing when the threshold is the RAW 20 — absent already means 20', () => {
+		expect(
+			journal.entryFor({ text: 'Greataxe' }, thrown(20, slash), { damage: slash }).critThreshold,
+		).toBeUndefined();
+	});
+
+	it('stamps what the TRAY built too, which never passes through entryFor', () => {
+		const j = champion();
+		j.recordRolls([{ label: 'Greataxe', at: 1, ...thrown(19, slash) }]);
+		expect(j.log[0]?.critThreshold).toBe(19);
 	});
 });
