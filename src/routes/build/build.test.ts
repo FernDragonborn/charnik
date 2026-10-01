@@ -47,11 +47,11 @@ async function graphOf(): Promise<ContentGraph> {
 			`gifted,5.5e,${S},Gifted,origin,"str,dex",,,,`
 		].join('\n'),
 		'backgrounds_srd.csv': [
-			'id,systems,source,name_en,skills,origin_feat,origin_feat_spell_list',
-			`scholar,5.5e,${S},Scholar,"arcana,history",skilled,`,
-			`prodigy,5.5e,${S},Prodigy,,gifted,`,
+			'id,systems,source,name_en,skills,origin_feat,origin_feat_spell_list,tools',
+			`scholar,5.5e,${S},Scholar,"arcana,history",skilled,,quill`,
+			`prodigy,5.5e,${S},Prodigy,,gifted,,`,
 			// the SRD's "Magic Initiate (Cleric)" shape: the background names which list
-			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard`
+			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard,`
 		].join('\n'),
 		'species_srd.csv': [
 			'id,systems,source,name_en,effects,size,speed,creature_type,skill_choice,feat_choice',
@@ -873,7 +873,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
 		];
 		expect(build.skillPicks.expertiseCap).toBe(2);
-		for (const skill of ['acrobatics', 'stealth']) build.skillPicks.toggleSkill(skill);
+		for (const skill of ['acrobatics', 'stealth'] as const) build.skillPicks.toggleSkill(skill);
 		for (const skill of ['acrobatics', 'stealth']) build.skillPicks.toggleExpertise(skill);
 		expect(build.skillPicks.expertiseUsed).toBe(2);
 
@@ -907,6 +907,28 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.skills).not.toContain('arcana');
 		// and the sheet says proficient all the same
 		expect(build.sheet?.skills.arcana.prof).toBe('proficient');
+	});
+
+	it('a grant refuses the toggle its row still offers — a locked row is reachable, so the press is too', () => {
+		build.draft.backgroundId = `background:${S}:scholar`; // arcana + history, and a tool
+		build.draft.speciesId = `species:${S}:gifted_kin`;
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
+		];
+		build.skillPicks.toggleSpeciesSkill('stealth');
+
+		build.skillPicks.toggleSkill('arcana'); // the background's
+		expect(build.skillPicks.grantedByFeature('stealth')).toBe(true);
+		build.skillPicks.toggleSkill('stealth'); // the species'
+		expect(build.draft.skills).toEqual([]);
+
+		build.toggleTool('quill');
+		expect(build.draft.selectedTools).toEqual([]);
+		// a skill the player picked is theirs to drop, whatever else also grants it
+		build.skillPicks.toggleSkill('perception');
+		expect(build.skillPicks.grantedByFeature('perception')).toBe(false);
+		build.skillPicks.toggleSkill('perception');
+		expect(build.draft.skills).toEqual([]);
 	});
 
 	it('the species skill grant is capped, and at the cap a click replaces the oldest pick', () => {

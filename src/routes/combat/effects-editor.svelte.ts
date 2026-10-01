@@ -172,6 +172,58 @@ export class EffectsEditor {
 			.sort((a, b) => a.label.localeCompare(b.label, app.activeLocale));
 	});
 
+	/**
+	 * How a picker row stands on this character: what the picker OWNS, and what is on them anyway.
+	 *
+	 * The switch may only take away what the picker could have put there. A catalog row owns what
+	 * carries its own ref; a condition owns a BARE application of itself, never a spell's carrier that
+	 * applies the same condition among its own tokens — that one holds the concentration, and ending
+	 * it belongs to the panel where the cost is visible, not to a list that reads as a reference.
+	 *
+	 * A condition is recognised by the TOKEN it carries rather than by its label, since the label is
+	 * content and a translated pack would stop the switch recognising its own condition. Only the
+	 * FOREIGN test falls back to the label, where a miss costs a hint rather than a wrong action.
+	 */
+	presenceOf = (choice: StateChoice): { owned: EffectInstance[]; foreign: EffectInstance[] } => {
+		const live = this.host().character?.play.effects ?? [];
+		const isOwn = (e: EffectInstance) =>
+			choice.conditionId
+				? e.effects.length === 1 && conditionIdOf(e) === choice.conditionId
+				: e.source === choice.ref;
+		const isSame = (e: EffectInstance) =>
+			choice.conditionId ? conditionIdOf(e) === choice.conditionId : e.label === choice.label;
+		return { owned: live.filter(isOwn), foreign: live.filter((e) => !isOwn(e) && isSame(e)) };
+	};
+	/**
+	 * Every row is a SWITCH, because every row is a state you are in or are not.
+	 *
+	 * That is not a house preference: the SRD draws exactly one distinction here — a binary state
+	 * versus a ladder, and it names the single ladder (Exhaustion) as cumulative in its own text. The
+	 * ladder is `max_level > 1` and never reaches this list, so everything that does is binary. A "+"
+	 * offering a second instance offered what `dedupeRuntimeEffects` then takes away.
+	 *
+	 * Off removes EVERY instance, not one: a save written while the "+" existed can hold two, and a
+	 * switch that took one away would still read "on" after the click.
+	 */
+	toggleState = (choice: StateChoice) => {
+		const { owned, foreign } = this.presenceOf(choice);
+		if (owned.length) {
+			for (const instance of owned) this.removeEffect(instance.iid);
+			return;
+		}
+		// held by a spell or an item: the row says so, and a second instance beside it is refused
+		if (foreign.length) return;
+		this.addEffect({
+			label: choice.label,
+			tokens: choice.tokens,
+			positive: !choice.harmful,
+			// the ROW's own clock or none. A blank `duration_rounds` is the row saying "until removed"
+			// (cover lasts while you are behind the wall), and it must not be overwritten with a default
+			durationRounds: choice.durationRounds ?? 0,
+			ref: choice.ref,
+		});
+	};
+
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
 	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
 	newEffectDuration = $state(10);

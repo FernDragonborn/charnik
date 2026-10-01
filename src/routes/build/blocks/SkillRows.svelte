@@ -30,26 +30,25 @@
 				{@const auto = b.skillPicks.autoSkills.includes(skill)}
 				{@const picked = b.draft.skills.includes(skill)}
 				{@const comp = b.sheet?.skills[skill]}
-				<!-- A FEATURE granted this one (Diamond Soul's kin, an item, a species trait): the sheet
-				     says a rung the draft never picked and no background gave, so the row is locked on
-				     and says why — the alternative is a skill that looks pickable, un-picks to no
-				     effect, and reads as a bug. `partial` (Jack of All Trades) is NOT a lock: it grants
-				     nothing to un-pick and the skill stays yours to train. -->
-				{@const granted =
-					!auto && !picked && (comp?.prof === 'proficient' || comp?.prof === 'expertise')}
+				{@const granted = b.skillPicks.grantedByFeature(skill)}
 				{@const on = auto || granted || picked}
 				{@const pickable = b.skillPicks.pickable(skill)}
 				{@const expert = b.draft.expertise.includes(skill)}
 				{@const pas = b.sheet?.passives[skill]}
+				{@const lockedBy = auto
+					? $_('build.skills.fromBackgroundHint')
+					: granted
+						? $_('build.skills.fromFeatureHint')
+						: ''}
 				<div class="skill" class:on class:dim={!on && !pickable}>
+					<!-- a row locked ON is `aria-disabled`, never `disabled`: it has a reason to give, and
+					     only a control that takes hover and focus can give it (ui.md ▸ rule 10). A skill
+					     off the class list has no sentence of its own, so it stays out of the tab ring. -->
 					<button
 						class="name"
-						disabled={auto || granted || (!on && !pickable)}
-						title={auto
-							? $_('build.skills.fromBackgroundHint')
-							: granted
-								? $_('build.skills.fromFeatureHint')
-								: ''}
+						disabled={!on && !pickable}
+						aria-disabled={lockedBy ? true : undefined}
+						use:provenance={lockedBy}
 						onclick={() => b.skillPicks.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert class:partial={comp?.prof === 'partial'}></i>
@@ -108,10 +107,11 @@
 		font-size: var(--font-size-sm);
 		cursor: pointer;
 	}
-	.name:hover:not(:disabled) {
+	.name:hover:not(:disabled, [aria-disabled='true']) {
 		background: var(--color-surface-2);
 	}
-	.name:disabled {
+	.name:disabled,
+	.name[aria-disabled='true'] {
 		cursor: default;
 	}
 	.name:focus-visible {

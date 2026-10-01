@@ -183,7 +183,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
 | `.inv-row` | components.css |  |
-| `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its `title` says why. |
+| `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its popover says why. |
 | `.is-open` | components.css |  |
 | `.loading` | components.css | --- full-view loading / empty state --- |
 | `.meta-key` | GenericHead.svelte :global |  |

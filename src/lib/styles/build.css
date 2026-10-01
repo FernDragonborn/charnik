@@ -333,8 +333,12 @@
 	color: var(--color-text);
 	cursor: pointer;
 }
-.build-page .pick-chip:hover:not(:disabled) {
+.build-page .pick-chip:hover:not(:disabled, [aria-disabled='true']) {
 	border-color: var(--color-border-strong);
+}
+/* locked on by something that is not a pick: it answers a hover with its reason, not with a press */
+.build-page .pick-chip[aria-disabled='true'] {
+	cursor: default;
 }
 .build-page .pick-chip.on {
 	background: var(--color-good-soft);

@@ -265,8 +265,10 @@ good", so they are pinned here and every component follows them.
     (`src/routes/build/draft.ts`) is the one implementation, and `SkillPicks.toggleSkill` follows it for
     the Strict class-skill cap. A chip blocked for a *different* reason — another slot already grants
     that skill, a skill carried in from a level-up — is dimmed and blocked, which is a statement
-    rather than a silence. It is blocked with `aria-disabled` and a `title`, never `disabled`: a
-    disabled control takes neither hover nor focus, so the reason it carries can never be read. The
+    rather than a silence. It is blocked with `aria-disabled` and its reason in the popover (rule 3),
+    never `disabled`: a disabled control takes neither hover nor focus, so the reason it carries can
+    never be read. The same holds for a control locked ON by a grant — a background's skill or tool
+    keeps its lit look and says who granted it. The
     refusal itself belongs in the view-model, where every caller meets it (`.is-blocked` in
     `components.css` is what dimmed looks like, shared by the builder and the play sheet). The same
     rule covers a play-sheet ability whose window is shut: it stays clickable and says why, and when

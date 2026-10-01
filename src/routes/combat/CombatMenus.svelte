@@ -5,36 +5,26 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { provenance } from '$lib/actions/provenance';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import {
-		titleCase,
-		ABIL,
-		MOD_TARGETS,
-		modTargetKey,
-		conditionIdOf,
-		attackName,
-	} from '$lib/combat/helpers';
+	import { titleCase, ABIL, MOD_TARGETS, modTargetKey, attackName } from '$lib/combat/helpers';
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import Switch from '$lib/components/Switch.svelte';
 	import { COINS } from '$lib/rules/currency';
 	import { FEATURE_PRESET } from '$lib/character/features';
 	import { localizedName } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
-	import type { StateChoice } from './effects-editor.svelte';
-	import type { EffectInstance } from '$lib/character/schema';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
-	const character = $derived(combat.character);
 	const { setTempHp, togglePassive } = combat;
 	const { addCustomModifier } = combat.effects;
-	const { addEffect } = combat.effects;
 
 	/** The add-state menu's own filter. The catalog is user-extendable content AND now holds the
 	 *  conditions too, so the box beside it is the only way the list stays navigable at size. */
@@ -45,57 +35,6 @@
 			? combat.effects.stateCatalog.filter((p) => p.label.toLowerCase().includes(q))
 			: combat.effects.stateCatalog;
 	});
-	/**
-	 * How a picker row stands on this character: what the picker OWNS, and what is on them anyway.
-	 *
-	 * The switch may only take away what the picker could have put there. A catalog row owns what
-	 * carries its own ref; a condition owns a BARE application of itself, never a spell's carrier that
-	 * applies the same condition among its own tokens — that one holds the concentration, and ending
-	 * it belongs to the panel where the cost is visible, not to a list that reads as a reference.
-	 *
-	 * A condition is recognised by the TOKEN it carries rather than by its label, since the label is
-	 * content and a translated pack would stop the switch recognising its own condition. Only the
-	 * FOREIGN test falls back to the label, where a miss costs a hint rather than a wrong action.
-	 */
-	function presenceOf(choice: StateChoice): { owned: EffectInstance[]; foreign: EffectInstance[] } {
-		const live = character?.play.effects ?? [];
-		const isOwn = (e: EffectInstance) =>
-			choice.conditionId
-				? e.effects.length === 1 && conditionIdOf(e) === choice.conditionId
-				: e.source === choice.ref;
-		const isSame = (e: EffectInstance) =>
-			choice.conditionId ? conditionIdOf(e) === choice.conditionId : e.label === choice.label;
-		return { owned: live.filter(isOwn), foreign: live.filter((e) => !isOwn(e) && isSame(e)) };
-	}
-	/**
-	 * Every row is a SWITCH, because every row is a state you are in or are not.
-	 *
-	 * That is not a house preference: the SRD draws exactly one distinction here — a binary state
-	 * versus a ladder, and it names the single ladder (Exhaustion) as cumulative in its own text. The
-	 * ladder is `max_level > 1` and never reaches this list, so everything that does is binary. A "+"
-	 * offering a second instance offered what `dedupeRuntimeEffects` then takes away.
-	 *
-	 * Off removes EVERY instance, not one: a save written while the "+" existed can hold two, and a
-	 * switch that took one away would still read "on" after the click.
-	 *
-	 * The menu never closes on a flip. Putting two states on yourself is one visit, and a click that
-	 * dismissed the surface it had just changed would make the same control behave two ways.
-	 */
-	function toggleState(choice: StateChoice, owned: EffectInstance[]) {
-		if (owned.length) {
-			for (const instance of owned) combat.effects.removeEffect(instance.iid);
-			return;
-		}
-		addEffect({
-			label: choice.label,
-			tokens: choice.tokens,
-			positive: !choice.harmful,
-			// the ROW's own clock or none. A blank `duration_rounds` is the row saying "until removed"
-			// (cover lasts while you are behind the wall), and it must not be overwritten with a default
-			durationRounds: choice.durationRounds ?? 0,
-			ref: choice.ref,
-		});
-	}
 
 	let popEl = $state<HTMLDivElement>();
 	let pos = $state<{
@@ -256,16 +195,21 @@
 			     content type, one act, and — since neither can be held twice — one control. The duration is
 			     NOT set here: it belongs to the effect once it is on you, where the panel already edits it,
 			     and a second owner here is what put "10 rds" on a row that ships none. -->
+			<!-- The menu never closes on a flip. Putting two states on yourself is one visit, and a click
+			     that dismissed the surface it had just changed would make the same control behave two
+			     ways. A row held from elsewhere is `aria-disabled`, never `disabled`: it has to take hover
+			     and focus to say where to end it (ui.md ▸ rule 10), and the editor refuses the press. -->
 			{#each matchingStates as p (p.conditionId ?? p.ref)}
-				{@const here = presenceOf(p)}
+				{@const here = combat.effects.presenceOf(p)}
 				{@const mine = here.owned.length > 0}
 				{@const elsewhere = !mine && here.foreign.length > 0}
 				<button
 					class="menu-row"
+					class:is-blocked={elsewhere}
 					aria-pressed={mine || elsewhere}
-					disabled={elsewhere}
-					title={elsewhere ? $_('combat.menu.stateHeldElsewhere') : null}
-					onclick={() => toggleState(p, here.owned)}
+					aria-disabled={elsewhere ? true : undefined}
+					use:provenance={elsewhere ? $_('combat.menu.stateHeldElsewhere') : ''}
+					onclick={() => combat.effects.toggleState(p)}
 				>
 					<span class="main">{p.label}</span><span class="toggle-track" class:on={mine || elsewhere}
 					></span>
@@ -659,11 +603,7 @@
 		background: var(--color-surface-2);
 	}
 	/* a row the picker does not own states a fact; it is not a control, so it does not offer one */
-	.menu-row:disabled {
-		cursor: default;
-		opacity: 0.6;
-	}
-	.menu-row:disabled:hover {
+	.menu-row.is-blocked:hover {
 		background: transparent;
 	}
 	.menu-row .main {

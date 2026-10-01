@@ -12,6 +12,7 @@
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
 	import OwnEntries from './OwnEntries.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	const b = build;
 
 	let query = $state('');
@@ -79,13 +80,14 @@
 	{#each b.toolList as row (row.effectiveId)}
 		{@const granted = b.backgroundTools.includes(row.id)}
 		{@const on = granted || b.draft.selectedTools.includes(row.id)}
-		<!-- a background's tool is locked on, the way its skills are: it is not a pick -->
+		<!-- a background's tool is locked on, the way its skills are: it is not a pick. `aria-disabled`
+		     so the chip can still be reached to say so (ui.md ▸ rule 10) -->
 		<button
 			class="pick-chip"
 			aria-pressed={on}
 			class:on
-			disabled={granted}
-			title={granted ? $_('build.tools.fromBackground') : undefined}
+			aria-disabled={granted ? true : undefined}
+			use:provenance={granted ? $_('build.tools.fromBackground') : ''}
 			onclick={() => b.toggleTool(row.id)}>{rowName(row)}</button
 		>
 	{:else}

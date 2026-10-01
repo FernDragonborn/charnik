@@ -9,7 +9,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
-import { SKILL_ABILITY } from '$lib/character/skills';
+import { SKILL_ABILITY, type SkillId } from '$lib/character/skills';
 import { expertiseBudget } from '$lib/build/derive';
 import { ANY_OPTION, splitList } from '$lib/content/schemas';
 import { toggleCapped } from './draft';
@@ -19,7 +19,14 @@ import type { BuildVM } from './build-view-model.svelte';
  *  the shape off the class costs no runtime cycle and cannot drift from it. */
 export type SkillPicksHost = Pick<
 	BuildVM,
-	'draft' | 'edit' | 'graph' | 'classRow' | 'backgroundRow' | 'speciesRow' | 'speciesOptionRow'
+	| 'draft'
+	| 'edit'
+	| 'graph'
+	| 'sheet'
+	| 'classRow'
+	| 'backgroundRow'
+	| 'speciesRow'
+	| 'speciesOptionRow'
 > & {
 	/** Named structurally rather than picked off `BuildVM`: `FeatsHost` picks `skillPicks` off the same
 	 *  class, and two Picks naming each other are a circular mapped type. */
@@ -67,9 +74,20 @@ export class SkillPicks {
 	speciesSkillTakenElsewhere = (skill: string): boolean =>
 		this.isProficientBeforeFeats(skill) || this.host().feats.featSkillPicks.includes(skill);
 
-	toggleSkill = (skill: string) => {
+	/** A FEATURE granted this one (Diamond Soul's kin, an item, a species trait): the sheet says a rung
+	 *  the draft never picked and no background gave, so the row is locked on — the alternative is a
+	 *  skill that looks pickable, un-picks to no effect, and reads as a bug. `partial` (Jack of All
+	 *  Trades) is NOT a lock: it grants nothing to un-pick and the skill stays yours to train. */
+	grantedByFeature = (skill: SkillId): boolean => {
+		if (this.autoSkills.includes(skill) || this.host().draft.skills.includes(skill)) return false;
+		const prof = this.host().sheet?.skills[skill].prof;
+		return prof === 'proficient' || prof === 'expertise';
+	};
+
+	toggleSkill = (skill: SkillId) => {
 		const draft = this.host().draft;
-		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
+		// granted by the background or by a feature: locked on, and the row says which
+		if (this.autoSkills.includes(skill) || this.grantedByFeature(skill)) return;
 		if (draft.skills.includes(skill)) {
 			if (this.host().edit && draft.strict && this.host().edit?.skills.has(skill)) {
 				toast(t('build.notice.strictTrainedSkill'));

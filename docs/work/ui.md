@@ -66,19 +66,21 @@
 - [~] **TITLE-POPOVER · an explanation appears where the pointer is, not where Windows decides.**
       The pass is done: every `title` that EXPLAINED a control or a value is the provenance popover
       now, and what a `title` may still be is [`../internals/ui.md`](../internals/ui.md) ▸ rule 3.
-      Three groups were left on purpose, each waiting on something that is not this mechanism:
+      Two groups were left on purpose, each waiting on something that is not this mechanism:
       - **The roller's own surfaces** — 13 in `RollRow`, 6 in `RollerLine`: which die a face came
         from, what a modifier is made of, why a pill is held. Each would become a tab stop, inside a
         toast that is gone in seconds and inside a line whose keyboard model is a caret walking
         tokens. That is a decision about the roller, taken with it.
-      - **Three reasons on a `disabled` control** — a skill a background grants (`SkillRows`), a tool
-        it grants (`LanguagesPane`), a state held from elsewhere (`CombatMenus`). A disabled control
-        takes neither hover nor focus, so no popover can reach it; each first becomes
-        `aria-disabled` with the refusal in its view-model (rule 10), and then the reason moves.
       - **A mark repeated on every row of a list** — the translation status, the proficiency dot,
         the save mark, the cast-time icon, an effect's reference-only note. A popover costs one tab
         stop per row to say the same sentence; these are the names of marks, and want a legend or an
         accessible name rather than a walk of eighteen stops.
+      One defect in the mechanism itself: **focus that SCROLLS closes the popover it opened.** A value
+      below the fold is scrolled into view by the browser when it takes focus, and the popover's own
+      scroll listener (`provenance.ts` ▸ `hide`) answers that scroll — so tabbing to an off-screen
+      value shows nothing, which is the half of rule 3 the action exists for. Measured in Playwright
+      on `/dev/inspector`: empty on a focused off-screen skill, the sentence once it is in view first.
+
       The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
       expands prose inside the row, with `title` on the button as a second, slower explanation of the
       button itself. Hover should open the prose where the pointer already is; whether the click

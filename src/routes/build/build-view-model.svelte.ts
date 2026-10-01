@@ -97,6 +97,7 @@ export class BuildVM {
 			: [...this.draft.selectedLanguages, ref];
 	};
 	toggleTool = (id: string) => {
+		if (this.backgroundTools.includes(id)) return; // background-granted, locked on
 		this.draft.selectedTools = this.draft.selectedTools.includes(id)
 			? this.draft.selectedTools.filter((x) => x !== id)
 			: [...this.draft.selectedTools, id];

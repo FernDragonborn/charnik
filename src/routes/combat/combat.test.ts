@@ -935,6 +935,28 @@ describe('CombatVM · stateCatalog uses the character system (CVM-bug2)', () => 
 	});
 });
 
+describe('CombatVM · the state picker switches only what it owns', () => {
+	it('adds a state, takes every instance of it off again, and refuses one held from elsewhere', async () => {
+		combat.graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		combat.character = character;
+		const prone = combat.effects.stateCatalog.find((c) => c.conditionId === 'prone');
+		if (!prone) throw new Error('the fixture ships no Prone row');
+
+		combat.effects.toggleState(prone);
+		expect(combat.effects.presenceOf(prone).owned).toHaveLength(1);
+		combat.effects.toggleState(prone);
+		expect(character.play.effects).toEqual([]);
+
+		// a spell's carrier applies the same condition among its own tokens: not the picker's to end,
+		// and not a reason to put a second one beside it
+		combat.effects.addEffect({ label: 'Grease', tokens: ['apply_condition:prone', 'note:slick'] });
+		expect(combat.effects.presenceOf(prone).foreign).toHaveLength(1);
+		combat.effects.toggleState(prone);
+		expect(character.play.effects.map((e) => e.label)).toEqual(['Grease']);
+	});
+});
+
 describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
 	it('blocks action/bonus/reaction while incapacitated, restores when it ends', async () => {
 		const graph = await graphOf();
