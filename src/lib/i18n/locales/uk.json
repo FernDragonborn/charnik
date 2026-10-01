@@ -97,35 +97,14 @@
 			"armour": "Броня",
 			"editLanguages": "Мови…",
 			"fly": "політ {feet} футів",
-			"attacked": {
-				"advantage": "атаки по вас — з перевагою",
-				"disadvantage": "атаки по вас — з поміхою"
-			},
-			"attackedScoped": {
-				"advantage": "атаки ({kind}) по вас — з перевагою",
-				"disadvantage": "атаки ({kind}) по вас — з поміхою"
-			},
-			"immuneTo": "імунітет: {type}",
 			"languages": "Мови",
 			"noResistances": "без опорів до шкоди",
 			"none": "немає",
 			"noneProficient": "без володінь",
-			"qualifiedBonus": "{amount} {stat} проти {kind}",
-			"qualifiedSwing": {
-				"advantage": "перевага для {stat} проти {kind}",
-				"disadvantage": "поміха для {stat} проти {kind}"
-			},
-			"qualifiedTarget": {
-				"ac": "КО",
-				"saves": "рятівних кидків"
-			},
-			"resists": "опір: {type}",
 			"saves": "Рятувальні кидки",
-			"sense": "{sense} {feet} футів",
 			"swim": "плавання {feet} футів",
 			"tools": "Інструменти",
 			"trained": "Володіння та стійкість",
-			"vulnerableTo": "вразливість: {type}",
 			"weapons": "Зброя"
 		},
 		"diff": {
@@ -920,10 +899,29 @@
 			"speed": "Швидкість"
 		},
 		"sensitivity": {
+			"ac": "КО",
+			"attacked": "Проти вас",
 			"immune": "Імунітет",
 			"resist": "Опір",
+			"saves": "Ряткидки",
 			"senses": "Чуття",
 			"vulnerable": "Вразливість"
+		},
+		"defense": {
+			"attacked": {
+				"advantage": "атаки: перевага",
+				"disadvantage": "атаки: поміха"
+			},
+			"attackedScoped": {
+				"advantage": "атаки ({kind}): перевага",
+				"disadvantage": "атаки ({kind}): поміха"
+			},
+			"bonus": "{amount} · проти {kind}",
+			"sense": "{sense} {feet} футів",
+			"swing": {
+				"advantage": "перевага · проти {kind}",
+				"disadvantage": "поміха · проти {kind}"
+			}
 		},
 		"skills": {
 			"profNone": "Без вправності",

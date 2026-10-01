@@ -221,7 +221,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (54)
+## Shared components (55)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -236,6 +236,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **DamageIcon** | `type`, `size` | A damage type's glyph. |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
+| **DefenseStrip** | `sheet`, `graph`, `system` |  |
 | **DiagnosticsModal** | `onDismiss` | The bug-report diagnostics step (audit DIAG-1). |
 | **DialogShell** | `titleId`, `title`, `subtitle`, `width`, `badge`, `onDismiss`, `children` | The shared attention-dialog shell: full-screen backdrop + the centred `.dialog` panel + the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
@@ -1837,4 +1838,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 54 components · 1105 exports across 149 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1105 exports across 149 modules · 75 duplicate suspects._

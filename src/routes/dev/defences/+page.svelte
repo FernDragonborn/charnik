@@ -16,6 +16,7 @@
 	import { onMount } from 'svelte';
 	import { build } from '../../build/build-view-model.svelte';
 	import SheetDefenses from '../../build/blocks/SheetDefenses.svelte';
+	import DefenseStrip from '$lib/components/DefenseStrip.svelte';
 	import '$lib/styles/build.css';
 
 	/** One item per chip kind, by the id its row has in the 2024 pack. An id the loaded content does
@@ -67,6 +68,12 @@
 
 	{#if ready}
 		<SheetDefenses />
+		<!-- the same strip at the width the play sheet gives it, where the groups run on one line -->
+		{#if build.sheet}
+			<div class="wide-strip">
+				<DefenseStrip sheet={build.sheet} graph={build.graph} system={build.draft.system} />
+			</div>
+		{/if}
 	{:else}
 		<p class="loading">Loading content...</p>
 	{/if}
@@ -85,5 +92,13 @@
 	}
 	.loading {
 		color: var(--color-text-dim);
+	}
+	.wide-strip {
+		container-type: inline-size;
+		margin-top: var(--space-4);
+		padding: var(--space-2-5) var(--space-4);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 	}
 </style>

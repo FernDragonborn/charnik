@@ -266,11 +266,9 @@ position and are given per wave, because most of them were learned the hard way.
   control before it can mean anything.
 - **The short queue, and it is an ORDER rather than a wave.** One item, and it is a design session
   rather than a commit.
-  1. **DEFENCE-STRIP** — `ui.md`. "What is true of your body" is implemented twice, and only the
-     builder's copy knows the qualified defences and the incoming-attack statements — so eleven
-     shipped magic items say nothing on the screen a player has open during the fight. The concept is
-     settled (one row, groups named for what MOVES, the qualifier in the chip); the `Saves` group has
-     not found its formatting, which is where the next variants start.
+  1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
+     MOVES and the qualifier in the chip; the `Saves` group has not found its formatting, which is
+     where the next variants start.
 
   **The queue's previous last item left it by being RE-SIZED rather than closed.** MASTERY-HALF's tail
   was queued as "Graze, Nick and Vex as tokens, the other five as `note:`", which presumed the eight

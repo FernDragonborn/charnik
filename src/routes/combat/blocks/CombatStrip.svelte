@@ -7,15 +7,13 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
-	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
+	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, whyPassive, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
 	import { sayText } from '$lib/util/say';
 	import { provenance } from '$lib/actions/provenance';
 	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
-	import { stateLabel } from '$lib/content/states';
-	import { app } from '$lib/stores/app.svelte';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);
@@ -27,42 +25,7 @@
 	// render) — past the cap we show a numeric counter instead of pips (B10).
 	const PIP_CAP = 20;
 
-	// a condition you cannot be given belongs on this strip: it is the same question — what happens
-	// to you when something happens TO you — and it joins the DAMAGE immunities under one "Immune"
-	// rather than standing under a second label saying the same word.
-	const conditionImmunities = $derived.by(() => {
-		const graph = combat.graph;
-		const system = combat.character?.system;
-		if (!graph || !system) return [];
-		return s.conditionImmunities.map((id) => stateLabel(graph, system, id, app.activeLocale));
-	});
-	// a sense joins the same strip: it is not a defence, but it is the same sentence the card is
-	// already making — what is true of your body — and a range is a chip like every other here
-	const senses = $derived(
-		Object.entries(s.senses)
-			.filter(([, comp]) => comp.value > 0)
-			.map(([name, comp]) => `${senseLabel(name, $_)} ${comp.value}`),
-	);
-	// DamageSensitivities as chip groups (resist / immune / vulnerable), only the non-empty ones —
-	// rendered as per-type pills instead of a bold run-on list. Labels are resolved HERE because the
-	// immune group mixes two vocabularies, and a chip should not have to know which it came from.
-	const defenseGroups = $derived(
-		[
-			{ bucket: 'resist', labels: s.damageSensitivities.resist.map((t) => damageTypeLabel(t, $_)) },
-			{
-				bucket: 'immune',
-				labels: [
-					...s.damageSensitivities.immune.map((t) => damageTypeLabel(t, $_)),
-					...conditionImmunities,
-				],
-			},
-			{
-				bucket: 'vulnerable',
-				labels: s.damageSensitivities.vulnerable.map((t) => damageTypeLabel(t, $_)),
-			},
-			{ bucket: 'senses', labels: senses },
-		].filter((g) => g.labels.length),
-	);
+	const system = $derived(combat.character?.system);
 </script>
 
 <div class="sectlab">
@@ -188,17 +151,10 @@
 			>
 		</div>
 
-		{#if defenseGroups.length}
+		{#if system && hasDefenseChips(s)}
 			<div class="senses-strip sensitivities-strip">
 				<span class="bar-label eyebrow">{$_('combat.section.sensitivities')}</span>
-				{#each defenseGroups as g (g.bucket)}
-					<span class="def-group">
-						<span class="def-label">{$_(`combat.sensitivity.${g.bucket}`)}</span>
-						{#each g.labels as label (label)}<span class="def-chip def-chip--{g.bucket}"
-								>{label}</span
-							>{/each}
-					</span>
-				{/each}
+				<DefenseStrip sheet={s} graph={combat.graph} {system} />
 			</div>
 		{/if}
 	</section>
@@ -432,46 +388,16 @@
 		border-color: var(--color-border-strong);
 		background: var(--color-surface-2);
 	}
-	/* DamageSensitivities: per-type PILLS, not a bold run-on list. One group per bucket (a muted label + its
-	   chips); the chip colour encodes protection — resist (teal outline) → immune (teal filled) →
-	   vulnerable (danger). Regular weight, semantic tokens only (theme-safe). */
-	.sensitivities-strip .def-group {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1-5);
+	/* the box `DefenseStrip` measures its one-group-per-line rule against; below that width the heading
+	   takes a line of its own, so the label column starts at the box's edge rather than after it */
+	.sensitivities-strip {
+		container-type: inline-size;
 	}
-	.sensitivities-strip .def-label {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-	}
-	.sensitivities-strip .def-chip {
-		font-family: var(--font-body);
-		font-weight: 400;
-		font-size: var(--font-size-xs);
-		line-height: 1.6;
-		padding: 1px var(--space-2);
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--color-border-strong);
-		color: var(--color-text);
-		text-transform: capitalize;
-	}
-	.sensitivities-strip .def-chip--resist {
-		border-color: var(--color-good-line);
-		color: var(--color-good);
-	}
-	.sensitivities-strip .def-chip--immune {
-		border-color: var(--color-good-line);
-		background: var(--color-good-soft);
-		color: var(--color-good);
-	}
-	.sensitivities-strip .def-chip--vulnerable {
-		border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
-		color: var(--color-danger);
-	}
-	/* a sense is neither good nor bad news, so it keeps the neutral chip and only the group label
-	   tells it apart from the defences beside it */
-	.sensitivities-strip .def-chip--senses {
-		color: var(--color-text-muted);
+	@media (max-width: 640px) {
+		.sensitivities-strip {
+			flex-direction: column;
+			align-items: stretch;
+			gap: var(--space-2);
+		}
 	}
 </style>

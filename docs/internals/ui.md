@@ -503,6 +503,18 @@ invisibly. Enlarge small hit areas with a transparent `::before` inset.
 A control that appears in more than one place is **one shared component**, not re-inlined per site.
 Copies drift. The language switch is `LangSwitcher.svelte`, used by the topbar and by dialogs alike.
 
+**What is true of a character's body is one strip, `DefenseStrip`**, mounted by the play sheet and by
+the builder's card alike — a statement the builder shows is one the player still has in front of them
+during the fight it is for. Its groups name **what moves**: a damage bucket (`Resist`, `Immune`,
+`Vulnerable`), YOUR number or YOUR roll (`AC`, `Saves` — the `target` a `QualifiedDefense` carries),
+and one group whose die is somebody else's (`Against you` — an `IncomingAttack` has no target at all,
+which is the point of the type). **The case a statement holds in goes in the chip, never in the
+label**: a qualified defence and an incoming attack can both be "only against spells", so a scope
+cannot be what tells two groups apart. A chip carries no `text-transform` — the label that builds the
+string owns its capitals, and a sentence must not be capitalised per word. Below 560px of its own box
+(a container query, because the builder's card is narrow on a wide screen) each group takes a line
+behind a fixed label column; the host owns that box and its heading.
+
 **Every full-screen dialog, modal, or banner carries `LangSwitcher` in its top-right corner. No
 exceptions.** It can appear before the user has reached the topbar switch, or while covering it, so
 it may be the only text on screen — someone who cannot read the current locale must still be able to

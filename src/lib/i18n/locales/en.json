@@ -97,35 +97,14 @@
 			"armour": "Armour",
 			"editLanguages": "Languages…",
 			"fly": "fly {feet} ft",
-			"attacked": {
-				"advantage": "attacks against you have advantage",
-				"disadvantage": "attacks against you have disadvantage"
-			},
-			"attackedScoped": {
-				"advantage": "{kind} attacks against you have advantage",
-				"disadvantage": "{kind} attacks against you have disadvantage"
-			},
-			"immuneTo": "immune to {type}",
 			"languages": "Languages",
 			"noResistances": "no damage resistances",
 			"none": "none",
 			"noneProficient": "none proficient",
-			"qualifiedBonus": "{amount} {stat} vs {kind}",
-			"qualifiedSwing": {
-				"advantage": "advantage on {stat} vs {kind}",
-				"disadvantage": "disadvantage on {stat} vs {kind}"
-			},
-			"qualifiedTarget": {
-				"ac": "AC",
-				"saves": "saves"
-			},
-			"resists": "resists {type}",
 			"saves": "Saving throws",
-			"sense": "{sense} {feet} ft",
 			"swim": "swim {feet} ft",
 			"tools": "Tools",
 			"trained": "Trained & resistant",
-			"vulnerableTo": "vulnerable to {type}",
 			"weapons": "Weapons"
 		},
 		"diff": {
@@ -920,10 +899,29 @@
 			"speed": "Speed"
 		},
 		"sensitivity": {
+			"ac": "AC",
+			"attacked": "Against you",
 			"immune": "Immune",
 			"resist": "Resist",
+			"saves": "Saves",
 			"senses": "Senses",
 			"vulnerable": "Vulnerable"
+		},
+		"defense": {
+			"attacked": {
+				"advantage": "attacks: advantage",
+				"disadvantage": "attacks: disadvantage"
+			},
+			"attackedScoped": {
+				"advantage": "{kind} attacks: advantage",
+				"disadvantage": "{kind} attacks: disadvantage"
+			},
+			"bonus": "{amount} · against {kind}",
+			"sense": "{sense} {feet} ft",
+			"swing": {
+				"advantage": "advantage · against {kind}",
+				"disadvantage": "disadvantage · against {kind}"
+			}
 		},
 		"skills": {
 			"profNone": "Not proficient",

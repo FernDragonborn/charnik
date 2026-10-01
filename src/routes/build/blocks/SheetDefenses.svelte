@@ -12,12 +12,10 @@
 	import { abilityShortLabel, signed, titleCase } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
 	import { provenance } from '$lib/actions/provenance';
-	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
+	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
 	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
 	import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 	import { splitList } from '$lib/content/schemas';
-	import { stateLabel } from '$lib/content/states';
-	import { app } from '$lib/stores/app.svelte';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -58,36 +56,6 @@
 			.filter(Boolean)
 			.join(' · '),
 	);
-	const defenses = $derived(s?.damageSensitivities ?? { resist: [], immune: [], vulnerable: [] });
-	const hasDefenses = $derived(
-		defenses.resist.length + defenses.immune.length + defenses.vulnerable.length > 0
-	);
-	// a sense is a name plus a range, which is the chip this card already speaks in (fly, swim)
-	const senses = $derived(Object.entries(s?.senses ?? {}).filter(([, comp]) => comp.value > 0));
-	// a condition you cannot be given reads as a defence chip like a damage immunity, because to a
-	// player it is one — same card, same question: what is true of your body
-	/** What an attacker rolling at you gets. Stated beside the other facts about your body, because
-	 *  that is what it is — no roll on this sheet changes, since we never roll the monster's dice. */
-	const incoming = $derived(s?.incomingAttacks ?? []);
-	/** What is true only in a case. Stated, never folded: the app cannot tell what a save is against,
-	 *  and "+2 AC against ranged" is not +2 AC. */
-	const qualified = $derived(s?.qualifiedDefenses ?? []);
-	/** The word for a qualifier, in the NOUN position a "vs {kind}" slot needs — "vs spells". Open
-	 *  vocabulary like a damage type: a pack may write its own, and one nobody has translated reads as
-	 *  its author wrote it. */
-	const qualifierLabel = (scope: string) => $_(`qualifier.${scope}`, { default: scope });
-	/** …and the same qualifier where it MODIFIES a noun — "spell attacks against you". English needs a
-	 *  different word in the two positions ("vs spells", but "spell attacks"), which one vocabulary
-	 *  cannot give; Ukrainian parenthesises the qualifier instead, so its two entries agree. Same open
-	 *  vocabulary, same fallback to whatever the author wrote. */
-	const qualifierAttributive = (scope: string) =>
-		$_(`qualifierAttributive.${scope}`, { default: scope });
-
-	const conditionImmunities = $derived.by(() => {
-		const graph = b.graph;
-		if (!s || !graph) return [];
-		return s.conditionImmunities.map((id) => stateLabel(graph, b.draft.system, id, app.activeLocale));
-	});
 </script>
 
 {#if s}
@@ -121,66 +89,23 @@
 				<b>{$_('build.defenses.tools')}</b><span>{tools || DASH}</span>
 				<b>{$_('build.defenses.languages')}</b><span>{languages || DASH}</span>
 			</div>
+			<!-- the same strip the play sheet draws, so a statement the builder shows is one the player
+			     still has in front of them during the fight it is for -->
+			{#if hasDefenseChips(s)}
+				<div class="defense-strip">
+					<DefenseStrip sheet={s} graph={b.graph} system={b.draft.system} />
+				</div>
+			{/if}
 			<div class="chips tags">
-				<!-- fly/swim moved here when the passive-senses card went: they are things you shrug off
-				     gravity or water with, and this card is already "what is true of your body". -->
+				<!-- fly/swim sit here rather than in the strip: they are movement, which the play sheet
+				     says on its Speed tile, and this card is the builder's only place for them -->
 				{#if s.flySpeed.value}<span class="tag gold"
 						>{$_('build.defenses.fly', { values: { feet: s.flySpeed.value } })}</span
 					>{/if}
 				{#if s.swimSpeed.value}<span class="tag gold"
 						>{$_('build.defenses.swim', { values: { feet: s.swimSpeed.value } })}</span
 					>{/if}
-				{#each senses as [name, comp] (name)}<span
-						class="tag gold"
-						use:provenance={why(comp, $_)}
-						>{$_('build.defenses.sense', {
-							values: { sense: senseLabel(name, $_), feet: comp.value },
-						})}</span
-					>{/each}
-				{#each conditionImmunities as label (label)}<span class="tag gold"
-						>{$_('build.defenses.immuneTo', { values: { type: label } })}</span
-					>{/each}
-				{#each qualified as q (q.source + q.target + q.scope)}<span
-						class="tag"
-						class:gold={q.swing !== 'disadvantage'}
-						class:accent={q.swing === 'disadvantage'}
-						title={q.source}
-						>{$_(
-							q.amount === undefined
-								? `build.defenses.qualifiedSwing.${q.swing}`
-								: 'build.defenses.qualifiedBonus',
-							{
-								values: {
-									stat: $_(`build.defenses.qualifiedTarget.${q.target}`, { default: q.target }),
-									kind: qualifierLabel(q.scope),
-									amount: signed(q.amount ?? 0),
-								},
-							},
-						)}</span
-					>{/each}
-				{#each incoming as a (a.source + a.swing + (a.scope ?? ''))}<span
-						class="tag"
-						class:gold={a.swing === 'disadvantage'}
-						class:accent={a.swing === 'advantage'}
-						title={a.source}
-						>{$_(
-							a.scope
-								? `build.defenses.attackedScoped.${a.swing}`
-								: `build.defenses.attacked.${a.swing}`,
-							{ values: { kind: qualifierAttributive(a.scope ?? '') } },
-						)}</span
-					>{/each}
-				{#if hasDefenses}
-					{#each defenses.resist as d (d)}<span class="tag gold"
-							>{$_('build.defenses.resists', { values: { type: damageTypeLabel(d, $_) } })}</span
-						>{/each}
-					{#each defenses.immune as d (d)}<span class="tag gold"
-							>{$_('build.defenses.immuneTo', { values: { type: damageTypeLabel(d, $_) } })}</span
-						>{/each}
-					{#each defenses.vulnerable as d (d)}<span class="tag accent"
-							>{$_('build.defenses.vulnerableTo', { values: { type: damageTypeLabel(d, $_) } })}</span
-						>{/each}
-				{:else if !conditionImmunities.length && !incoming.length && !qualified.length}
+				{#if !hasDefenseChips(s)}
 					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>
 				{/if}
 				<button
@@ -230,6 +155,11 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
+	}
+	/* the box `DefenseStrip` measures its one-group-per-line rule against */
+	.defense-strip {
+		container-type: inline-size;
+		margin-top: var(--space-2-5);
 	}
 	/* layout is the global .chips; what stays here is where this one sits */
 	.tags {

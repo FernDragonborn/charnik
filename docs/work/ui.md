@@ -87,47 +87,18 @@
   because looking at variants turned it from a styling question into a question about what the strip
   is a list OF.
 
-- [ ] **DEFENCE-STRIP · what is true of your body is ONE row, and its groups name what moves.**
-  Two things are wrong at once, and the second is why the first is not a five-minute fix.
-
-  **There are two implementations.** The play sheet has `sensitivities-strip` (`CombatStrip.svelte`),
-  which groups: a `def-label` then its chips — `Resist · fire`, `Immune · poison`. The builder has a
-  flat `.tags` row (`SheetDefenses.svelte`) with no grouping at all. They know different SETS, too:
-  only the builder reads `qualifiedDefenses` and `incomingAttacks`, so the eleven shipped items that
-  grant one say nothing on the screen a player actually has open at the table. A Cloak of Displacement
-  explains itself to whoever is building the character and stays silent during the fight it is for.
-  **The better row is the COMBAT one** — it already answers "are these different kinds of statement"
-  with a label, which is the thing the builder's flat list cannot do. So the builder adopts it, not
-  the other way round.
-
-  **The axis the groups sort on is WHOSE DIE IT IS**, and the types already say so. A
-  `QualifiedDefense` carries `target: 'ac' | 'saves'` — it moves YOUR number or YOUR roll.
-  An `IncomingAttack` carries no target at all, and that absence is the whole point of the type: the
-  die is the attacker's, which is why `attacked` is a channel of its own rather than a scope on
-  `attack` (it would otherwise land on the swing you throw).
-
-  **A qualifier is NOT that axis, and a first pass at the labels got this wrong.** "Only vs" was tried
-  as the group name for a qualified defence, and it reads well until you notice `IncomingAttack.scope`
-  exists too — Spellguard Shield is `disadvantage:attacked.spell`, which is equally "only vs spells".
-  The scope belongs in the CHIP, as the case, and never in the group label, which is for the subject.
-
-  **So each group names what moves**, and the one whose subject is somebody else says so:
+- [~] **DEFENCE-STRIP · the `Saves` group has not found its form.** The strip itself is one
+  component now (`DefenseStrip`, the contract is [`../internals/ui.md`](../internals/ui.md) ▸ Shared
+  controls and dialogs), so the builder and the play sheet say the same things and a Cloak of
+  Displacement is on the screen during the fight it is for. What ships for `Saves` is the shape that
+  was close enough for the idea to read:
 
   ```
-  Resist        fire
-  Immune        poison · charmed
-  AC            +2 · against ranged attacks
   Saves         advantage · against spells
                 advantage · against magical effects
-  Against you   attacks: disadvantage
-                spell attacks: disadvantage
-  Senses        darkvision 60 ft
   ```
 
-  **OPEN, and the reason this is a session rather than a commit: the `Saves` group is not formatted
-  right yet.** The shape above is close enough that the idea reads, and it is still wrong — two rows
-  under one label, each a swing plus a case, is the part that has not found its form. Everything else
-  here is settled. Next variants start from `Saves`.
+  It is still wrong — two rows under one label, each a swing plus a case. Next variants start here.
 
   **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
   open with the same word. `advantage · against spells` and `advantage · against magical effects`
@@ -142,17 +113,9 @@
     senses (`advantage-mark`, a `chevron-up`/`chevron-down` beside the number), so the vocabulary is
     shipped and a player has already learnt it on the row above.
 
-  **Two defects found while rendering it, both cheap and both real:**
-  - `.def-chip` sets `text-transform: capitalize`, so the play sheet already reads "Darkvision 60 Ft",
-    and the moment a chip can be a whole sentence it would capitalise every word of one. The capital
-    belongs to the label that builds the string, not to a blunt CSS rule.
-  - A group is `[label + chips]` on one line, which stops working at 393px once a chip is a sentence:
-    the label splits across two words and the chip wraps mid-phrase. One group per line (a full-width
-    group with a fixed label column) fixes both, and it is one rule.
-
-  The variants are `design-preview/defence-chips-variants.html` with `_defence-variants.png` and
-  `_defence-variants-narrow.png` beside them; `/dev/defences` is the live state, already in `shot.mjs`
-  at both widths.
+  The variants that settled the rest are `design-preview/defence-chips-variants.html`; `/dev/defences`
+  is the live state — the builder's card and the strip at play-sheet width — in `shot.mjs` at both
+  widths.
 
 - [x] **PANEL-COLLAPSE-PERSIST · a collapsed panel stays collapsed.** `ui.panelsCollapsed` holds the
   ids that are folded away, the way `actionsHidden` holds the ids that are hidden — additive, absent
