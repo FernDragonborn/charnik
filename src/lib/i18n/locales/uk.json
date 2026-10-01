@@ -499,6 +499,9 @@
 			"cantAfford": "Недостатньо: {resource}"
 		},
 		"attacks": {
+			"extraAttack": "{name}: додаткова атака — {weapon}",
+			"extraAttackBonus": "Додаткова атака — бонусна дія. Шкода {damage}.",
+			"extraAttackFree": "Додаткова атака — у складі дії «Атака». Шкода {damage}.",
 			"finesseSwap": "Фінес — замах цією; натисніть, щоб {other}",
 			"noteAttackBonus": "{amount} до атаки",
 			"noteDamageBonus": "{amount} до шкоди",
@@ -690,6 +693,7 @@
 				"tempHpSlot": "{name} — тимч. ОЖ (комірка {slot})"
 			},
 			"spellAttack": "{name} (атака закляттям)",
+			"attackExtra": "{name} — {property}",
 			"attackNumbered": "{name} {index}/{count}"
 		},
 		"menu": {
@@ -763,6 +767,7 @@
 			"notEnoughResource": "Бракує «{resource}» для «{name}»",
 			"restToRecharge": "Відновіть відпочинком.",
 			"notEnoughResourceBody": "Лишилось {left} · коштує {cost}. Відновіть відпочинком.",
+			"extraAttackMade": "{name} — цього ходу вже зроблено",
 			"noSlotLeft": "Цього ходу {slot} не лишилось",
 			"nextTurnToRefresh": "Натисніть «Наступний хід», щоб оновити.",
 			"resourceRestoredTo": "«{resource}» відновлено — тепер {count}",

@@ -24,7 +24,8 @@ import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout, PANEL_MOVE } from './panel-layout.svelte';
-import { UNARMED_STRIKE_ID, numberedAttackRollName, attackNotes } from '$lib/combat/attacks';
+import { UNARMED_STRIKE_ID, attackNotes } from '$lib/combat/attacks';
+import { numberedAttackRollName } from '$lib/combat/attack-names';
 
 const S = 'SRD 5.2.1';
 

@@ -11,7 +11,7 @@
  * derive issue, and its writers degrade to inert notes — never an iterate-to-fixpoint loop
  * (plugins.md §8.4, PLAN "State model").
  */
-import { ISSUE_KEY } from './token-parser';
+import { ISSUE_KEY, grantsExtraAttack } from './token-parser';
 import { recordOf } from '../util/records';
 import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
@@ -310,13 +310,14 @@ class Resolver {
 				);
 			else if (
 				inst.parsed.kind === EFFECT_KIND.grantValue ||
+				(inst.parsed.extraAttack !== undefined && grantsExtraAttack(inst.parsed.extraAttack)) ||
 				reads(inst, ATTACK_MOD_VAR, 'guard') ||
 				reads(inst, ATTACK_MOD_VAR, 'value')
 			)
 				condemn(
 					inst,
 					ISSUE_KEY.attackOnly,
-					`${EFFECT_KIND.grantValue} and "${ATTACK_MOD_VAR}" are read on a weapon property, where there is an attack`,
+					`${EFFECT_KIND.grantValue}, a granting ${EFFECT_KIND.extraAttack} and "${ATTACK_MOD_VAR}" are read on a weapon property, where there is an attack`,
 				);
 		}
 	}

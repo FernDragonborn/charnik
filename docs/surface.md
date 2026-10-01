@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (75)
+## Duplicate suspects (76)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -63,6 +63,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `id` ×2 — src/lib/content/homebrew.ts · src/routes/combat/action-executor.svelte.ts
+- `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
@@ -463,7 +464,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (136 modules)
+## Library functions & types (137 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -757,6 +758,24 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface StandardAction` — A standard combat action row (Dash, Hide, Grapple…).
 - `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
 
+### `src/lib/combat/attack-names.ts`
+
+- `const attackRollName` — The attack's name as a ROLL records it: the key when this attack is one of the app's own (the * Unarmed Strike), the …
+- `const numberedAttackRollName` — The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
+- `const extraAttackRollName` — An extra attack's name as a roll records it: the weapon, then the property that grants the * attack.
+- `const extraAttackMark` — The mark an extra attack leaves on the turn once it is made — one per weapon and per granting * property, because RAW…
+
+### `src/lib/combat/attack-properties.ts`
+
+- `interface WeaponMastery` — A mastery property as a row prints it.
+- `interface StatedValue` — One number a weapon property states about an attack, under the id its token gave it.
+- `type ExtraAttackCost` — What an extra attack costs the turn: a Bonus Action, or nothing — it rides the Attack action.
+- `interface ExtraAttack` — One more attack a weapon's property lets the character make this turn.
+- `const masteryText` — The mastery's own words on the row: its name, then each number it states.
+- `const carriesProperty` — Does a weapon carry this property — as a plain tag, or as the mastery its tag names — and every * tag the scope asks …
+- `interface AttackPropertiesInput` — What `attackProperties` is asked about: one weapon, and the attack made with it.
+- `function attackProperties` — Everything this weapon's properties say about one attack.
+
 ### `src/lib/combat/attacks.ts`
 
 - `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
@@ -765,13 +784,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function attackNotes` — An attack row's notes as one line, in the reader's language.
 - `interface Attack` — A weapon/unarmed attack row.
 - `const attackName` — What to print for an attack.
-- `const attackRollName` — The attack's name as a ROLL records it: the key when this attack is one of the app's own (the * Unarmed Strike), the …
-- `const numberedAttackRollName` — The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
 - `const damageTypeLabel` — What a damage type is CALLED.
 - `const senseLabel` — A sense id → the reader's word for it.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
+- `type ExtraAttackRow` — An extra attack as its row offers it: what it is, and what it rolls for damage.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
@@ -882,13 +900,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
-
-### `src/lib/combat/weapon-mastery.ts`
-
-- `interface WeaponMastery` — A mastery property as a row prints it.
-- `interface StatedValue` — One number a weapon property states about an attack, under the id its token gave it.
-- `function masteryFor` — One weapon's mastery for an attack made with the ability modifier `mod`, plus the tokens on its * row that say nothin…
-- `const masteryText` — The mastery's own words on the row: its name, then each number it states.
 
 ### `src/lib/components/damage-glyphs.ts`
 
@@ -1399,7 +1410,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export TargetCheck`
 - `re-export ResourceDef`
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
-- `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
 - `function applyEffects`
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 
@@ -1462,11 +1472,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
 - `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
+- `interface ExtraAttackRule` — One `extra_attack` statement: what it says about the extra attack `property` grants.
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
 - `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `const emptyFacts`
+- `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
 
 ### `src/lib/effects/plugin-host.ts`
 
@@ -1513,6 +1525,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
 - `re-export RechargePolicy` — The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep importing it from the…
 - `type DamageSensitivity`
+- `const EXTRA_ATTACK_WORD` — The closed vocabulary an `extra_attack` token speaks in.
+- `type ExtraAttackWord`
+- `const grantsExtraAttack` — Does this statement GRANT the attack, rather than re-price or adjust one another row grants?
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
@@ -1877,4 +1892,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1135 exports across 152 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1146 exports across 153 modules · 76 duplicate suspects._

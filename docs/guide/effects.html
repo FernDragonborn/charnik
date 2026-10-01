@@ -672,7 +672,7 @@
 				<dd>Optional. A yes/no question about the character. No guard means always.</dd>
 				<dt class="pt-kind">kind</dt>
 				<dd>
-					What sort of change this is. There are 23, all in §5 — you cannot invent a new one, and
+					What sort of change this is. There are 24, all in §5 — you cannot invent a new one, and
 					Charnik will tell you it has never heard of it.
 				</dd>
 				<dt class="pt-target">target</dt>
@@ -822,6 +822,11 @@ not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_
 		<div class="kind-name">grant_value</div>
 		<div class="kind-form"><code><span class="g-kind">grant_value</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">[</span><span class="g-punc">.</span><span class="g-punc">&lt;</span><span class="g-slot">qualifier</span><span class="g-punc">&gt;</span><span class="g-punc">]</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span></code></div>
 		<div class="kind-desc">A named number the row states about one attack — what a miss still deals (<code>miss_damage</code>), the DC of a save the hit forces (<code>save_dc.con</code>). It changes nothing: the attack row prints it beside the property's name. Works on a weapon property's row; anywhere else there is no attack to state it for, and it is flagged.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">extra_attack</div>
+		<div class="kind-form"><code><span class="g-kind">extra_attack</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">property</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-lit">same</span><span class="g-punc">|</span><span class="g-lit">other</span><span class="g-punc">|</span><span class="g-lit">bonus</span><span class="g-punc">|</span><span class="g-lit">free</span><span class="g-punc">|</span><span class="g-lit">modifier</span><span class="g-punc">&gt;</span><span class="g-punc">[</span><span class="g-punc">,</span>…<span class="g-punc">]</span><span class="g-punc">[</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">scope</span><span class="g-punc">&gt;</span><span class="g-punc">]</span></code></div>
+		<div class="kind-desc">The extra attack a weapon property allows. <code>same</code> or <code>other</code> grants it (with this weapon again, or while a second weapon with the property is in hand), <code>bonus</code> or <code>free</code> is what it costs, <code>modifier</code> keeps your ability modifier on its damage. Light is <code>extra_attack:light:bonus,other</code>; Nick, on its own row, is <code>extra_attack:light:free</code>. The sheet offers it as a button beside the attack, once a turn.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">damage_sensitivity</div>

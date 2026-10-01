@@ -90,7 +90,7 @@ of this page is vocabulary.
 [ guard ? ] flat_bonus : target +|- value
 ```
 
-- **`kind`** — what sort of change this is. There are 23, all listed in §5. You cannot invent a new
+- **`kind`** — what sort of change this is. There are 24, all listed in §5. You cannot invent a new
   one; Charnik will tell you it has never heard of it.
 - **`target`** — what the change lands on: a stat, a roll, a skill. Listed in §6.
 - **`value`** — how much, when the kind needs one. A whole number, a dice term like `2d6`, or a
@@ -175,6 +175,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 | `grant_resource` | `grant_resource:<id>:<max>:<recharge>` | A pool with a size and a way back: `short`, `long`, `short_one`, `consumable`, `other`, or one carrying an amount like `long(2)` or `dawn(1d6+1)`. Rage, ki, an item's charges. |
 | `grant_roll` | `grant_roll:<id>:<expr>` | A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap. |
 | `grant_value` | `grant_value:<id>[.<qualifier>]:<expr>` | A named number the row states about one attack — what a miss still deals (`miss_damage`), the DC of a save the hit forces (`save_dc.con`). It changes nothing: the attack row prints it beside the property's name. Works on a weapon property's row; anywhere else there is no attack to state it for, and it is flagged. |
+| `extra_attack` | `extra_attack:<property>:<word>[,<word>…][:<scope>]` | The extra attack a weapon property allows. `same` or `other` grants it (with this weapon again, or while a second weapon with the property is in hand), `bonus` or `free` is what it costs, `modifier` keeps your ability modifier on its damage. Light is `extra_attack:light:bonus,other`; Nick, on its own row, is `extra_attack:light:free`. The sheet offers it as a button beside the attack, once a turn. |
 | `damage_sensitivity` | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | How this character meets one damage type. Immunity beats vulnerability beats resistance. The type is free-form, so a pack may name its own. |
 | `condition_immunity` | `condition_immunity:<id>` | A condition that cannot be put on this character — write the condition's own id (`charmed`, `frightened`, `poisoned`). It shows on the sheet beside the damage defences. A word no condition row carries works too, which is how 2014's "immune to disease" is said. |
 | `apply_condition` | `apply_condition:<id>` | Apply a condition row, whose own effects then take hold. Expands one level only, so conditions cannot chain forever. |

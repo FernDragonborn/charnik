@@ -107,7 +107,9 @@ describe('weapon mastery · the attack row says it only when the character may u
 describe('weapon mastery · every property a weapon names says what it does', () => {
 	it('2024 ships the eight properties, and no weapon names a ninth', async () => {
 		const graph = await loadPacks('srd-2024');
-		const rows = graph.list('weapon_property', { system: '5.5e' });
+		// the type also holds the plain properties a rule hangs on (Light); a mastery is one a
+		// weapon's `mastery:` tag names
+		const rows = graph.list('weapon_property', { system: '5.5e' }).filter((r) => r.id !== 'light');
 		expect(rows.map((r) => r.id).sort()).toEqual([
 			'cleave',
 			'graze',
@@ -129,9 +131,9 @@ describe('weapon mastery · every property a weapon names says what it does', ()
 		expect([...named].sort()).toEqual(rows.map((r) => r.id).sort());
 	});
 
-	it('2014 has no such rule, so it ships no such rows', async () => {
+	it('2014 has no mastery rule, so the one property it describes is Light', async () => {
 		const graph = await loadPacks('srd-2014');
-		expect(graph.list('weapon_property', { system: '5e' })).toEqual([]);
+		expect(graph.list('weapon_property', { system: '5e' }).map((r) => r.id)).toEqual(['light']);
 	});
 
 	it('a drilled weapon carries the property under its own name, with the row that explains it', async () => {
@@ -204,5 +206,112 @@ describe('weapon mastery · a property that states a number states it for this a
 		const row = await rowWith('cleave');
 		expect(row?.meta.mastery?.values).toEqual([]);
 		expect(row?.notes ?? []).toEqual([]);
+	});
+});
+
+/*
+ * The extra attack a weapon's property allows, per edition. SRD 5.1 ▸ Combat ▸ Two-Weapon Fighting:
+ * "attack with a light melee weapon … use a bonus action to attack with a different light melee
+ * weapon … You don't add your ability modifier to the damage of the bonus attack, unless that
+ * modifier is negative." SRD 5.2.1 says the same of the Light property without the word melee, lets
+ * Nick make it "part of the Attack action instead of as a Bonus Action", gives Cleave an attack of
+ * its own with the same weapon, and has Two-Weapon Fighting put the modifier back.
+ */
+describe('weapon properties · the extra attack a weapon allows', () => {
+	/** A fighter with STR 16 (+3) wielding the given weapons; `drilled` are the kinds mastered. */
+	const rowsFor = async (
+		pack: 'srd-2014' | 'srd-2024',
+		weapons: [id: string, qty: number][],
+		{ drilled = [] as string[], feats = [] as string[] } = {},
+	) => {
+		const [source, system] =
+			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
+		const graph = await loadPacks(pack);
+		const c = newCharacter('grog', 'Grog', system);
+		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = weapons.map(([id, qty]) => ({
+			item: `item:${source}:${id}`,
+			qty,
+			equipped: true,
+			attuned: false,
+		}));
+		c.build.masteries = drilled;
+		c.build.feats = feats.map((id) => `feat:${source}:${id}`);
+		const character = characterSchema.parse(c);
+		return computeAttacks(character, deriveSheet(character, graph), graph);
+	};
+	const extraOf = (rows: Awaited<ReturnType<typeof rowsFor>>, id: string) =>
+		rows.find((a) => a.id === id)?.extras?.[0];
+
+	it.each(['srd-2014', 'srd-2024'] as const)(
+		'%s: one Light weapon allows nothing; a second one allows a Bonus Action attack without the modifier',
+		async (pack) => {
+			expect(extraOf(await rowsFor(pack, [['handaxe', 1]]), 'handaxe')).toBeUndefined();
+
+			const rows = await rowsFor(pack, [
+				['handaxe', 1],
+				['club', 1],
+			]);
+			const handaxe = rows.find((a) => a.id === 'handaxe');
+			expect(handaxe?.damageParts[0]?.mod).toBe(3);
+			expect(extraOf(rows, 'handaxe')).toMatchObject({
+				property: 'light',
+				name: 'Light',
+				cost: 'bonus',
+				addsModifier: false,
+			});
+			expect(extraOf(rows, 'handaxe')?.damageParts[0]?.mod).toBe(0);
+			// two of one kind are two weapons
+			expect(extraOf(await rowsFor(pack, [['handaxe', 2]]), 'handaxe')).toBeDefined();
+		},
+	);
+
+	it('2014 asks for two light MELEE weapons, so a hand crossbow is no partner', async () => {
+		const rows = await rowsFor('srd-2014', [
+			['handaxe', 1],
+			['crossbow_hand', 1],
+		]);
+		expect(extraOf(rows, 'handaxe')).toBeUndefined();
+		expect(extraOf(rows, 'crossbow_hand')).toBeUndefined();
+	});
+
+	it('2024: a drilled Nick makes the Light attack free, and names it', async () => {
+		const weapons: [string, number][] = [
+			['dagger', 1],
+			['handaxe', 1],
+		];
+		expect(extraOf(await rowsFor('srd-2024', weapons), 'dagger')?.cost).toBe('bonus');
+		const drilled = await rowsFor('srd-2024', weapons, { drilled: ['dagger'] });
+		expect(extraOf(drilled, 'dagger')).toMatchObject({
+			property: 'light',
+			name: 'Nick',
+			cost: 'free',
+		});
+		expect(extraOf(drilled, 'handaxe')?.cost).toBe('bonus'); // the handaxe is not the Nick weapon
+	});
+
+	it('2024: Cleave is an extra attack with the same weapon, once it is drilled', async () => {
+		expect(extraOf(await rowsFor('srd-2024', [['greataxe', 1]]), 'greataxe')).toBeUndefined();
+		const rows = await rowsFor('srd-2024', [['greataxe', 1]], { drilled: ['greataxe'] });
+		expect(extraOf(rows, 'greataxe')).toMatchObject({ property: 'cleave', cost: 'free' });
+		expect(extraOf(rows, 'greataxe')?.damageParts[0]?.mod).toBe(0);
+	});
+
+	it('2024: Two-Weapon Fighting puts the modifier back on the Light attack, and not on Cleave', async () => {
+		const light = await rowsFor(
+			'srd-2024',
+			[
+				['handaxe', 1],
+				['club', 1],
+			],
+			{ feats: ['two_weapon_fighting'] },
+		);
+		expect(extraOf(light, 'handaxe')?.damageParts[0]?.mod).toBe(3);
+		const cleave = await rowsFor('srd-2024', [['greataxe', 1]], {
+			drilled: ['greataxe'],
+			feats: ['two_weapon_fighting'],
+		});
+		expect(extraOf(cleave, 'greataxe')?.damageParts[0]?.mod).toBe(0);
 	});
 });

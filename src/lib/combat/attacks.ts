@@ -13,7 +13,13 @@ import {
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
 import { weaponPropertyRows } from '$lib/content/weapon-properties';
-import { masteryFor, masteryText, type WeaponMastery } from './weapon-mastery';
+import {
+	attackProperties,
+	carriesProperty,
+	masteryText,
+	type ExtraAttack,
+	type WeaponMastery,
+} from './attack-properties';
 import { needsAttunement } from '$lib/character/inventory';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -21,8 +27,6 @@ import type { CharacterSheet } from '$lib/character/derive';
 import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
-import type { RollName } from './roll';
-import type { SaidValue } from '$lib/util/say';
 import { parseToken, isWeaponOwnBonus, resolveEffectValue } from '$lib/effects/token-parser';
 import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
 import { effectTag } from './effects-view';
@@ -107,6 +111,10 @@ export interface Attack {
 	 *  is written. A weapon with no choice to make carries nothing, so the control cannot appear where
 	 *  pressing it would mean nothing. */
 	finesse?: { kindId: string; ability: Ability };
+	/** The extra attacks this weapon's properties let the character make this turn — Light's with a
+	 *  second Light weapon in hand, Cleave's on a hit. Each is offered BESIDE the row, never rolled
+	 *  for the player. Omitted when there are none. */
+	extras?: ExtraAttackRow[];
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). Read through
 	 *  `attackNotes`. Omitted when the row has nothing to explain. */
@@ -118,41 +126,6 @@ export interface Attack {
  *  Takes the translator rather than importing one, like `skillLabel`. */
 export const attackName = (attack: Attack, t: (key: string) => string): string =>
 	attack.nameKey ? t(attack.nameKey) : attack.name;
-
-/** The attack's name as a ROLL records it: the key when this attack is one of the app's own (the
- *  Unarmed Strike), the row's word when it is content. Text stays beside the key as the fallback, so
- *  a log written today still reads on a build that has lost the catalog entry.
- *
- *  Why a key at all: `log.jsonl` outlives the language it was written in, and the one attack whose
- *  name is not data was frozen into whatever language rolled it. */
-export const attackRollName = (attack: Attack, t: (key: string) => string): RollName =>
-	attack.nameKey ? { text: t(attack.nameKey), key: attack.nameKey } : { text: attack.name };
-
-/** The same name inside a numbered strike ("Unarmed Strike 1/2"), for an action that makes several.
- *  The NUMBER goes in the frame and the name rides as a value, so the name is still resolved when the
- *  line is read — and the frame is a numbering, not a grammatical composition. */
-export const numberedAttackRollName = (
-	attack: Attack,
-	t: (key: string) => string,
-	index: number,
-	count: number,
-): RollName => ({
-	text: `${attackName(attack, t)} ${index}/${count}`,
-	key: NUMBERED_ATTACK_KEY,
-	values: {
-		name: attack.nameKey ? catalogWord(attack.nameKey) : attack.name,
-		index,
-		count,
-	},
-});
-
-/** A catalog key as a `SaidValue` — `{catalog, id}` is `catalog.id`, so a key splits at its last dot. */
-const catalogWord = (key: string): SaidValue => {
-	const dot = key.lastIndexOf('.');
-	return { catalog: key.slice(0, dot), id: key.slice(dot + 1) };
-};
-
-const NUMBERED_ATTACK_KEY = 'combat.log.attackNumbered';
 
 /** The trailing damage-type word(s) of a segment ("1d8 +3 slashing" → "slashing"), or "" if none. */
 function segmentType(segment: string): string {
@@ -271,6 +244,18 @@ export function weaponBonus(
 		...(notes.length ? { notes } : {}),
 	};
 }
+
+/** An extra attack as its row offers it: what it is, and what it rolls for damage. */
+export type ExtraAttackRow = ExtraAttack & { damageParts: DamagePart[] };
+
+/** The row's own damage with the ability modifier taken back off the PRIMARY part, where it was
+ *  added — only a positive one, since RAW keeps a negative modifier on the extra attack. */
+const extraAttackRow = (extra: ExtraAttack, parts: DamagePart[], mod: number): ExtraAttackRow => ({
+	...extra,
+	damageParts: parts.map((part, i) =>
+		i === 0 && !extra.addsModifier ? { ...part, mod: part.mod - Math.max(0, mod) } : part,
+	),
+});
 
 /** What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can
  *  do ("martial melee · versatile 1d10"). */
@@ -450,6 +435,24 @@ function damageUnreadNote(parts: ReturnType<typeof parseDamageParts>) {
 	});
 }
 
+/** Every weapon in hand, resolved once — a magic weapon carries only what it adds, and the rest
+ *  (category, properties, base damage) comes from the mundane row its `base_item_id` names — plus
+ *  the one question a property asks across them: is a SECOND wielded weapon carrying it? Two of one
+ *  kind are two weapons. */
+function wieldedWeapons(character: Character, graph: ContentGraph) {
+	const wielded = character.build.inventory.flatMap((inv) => {
+		const row = inv.equipped ? graph.get(inv.item) : undefined;
+		if (row?.type !== 'item' || row.data.category !== 'weapon') return [];
+		return [{ inv, row, item: resolveItem(graph, row, inv.base) }];
+	});
+	const isPaired = (property: string, scope: string | undefined): boolean =>
+		wielded.reduce(
+			(count, w) => count + (carriesProperty(w.item.tags, property, scope) ? w.inv.qty : 0),
+			0,
+		) >= 2;
+	return { wielded, isPaired };
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -468,14 +471,9 @@ export function computeAttacks(
 	// is the kind: a +1 Greataxe is still a Greataxe
 	const masteries = new Set(character.build.masteries ?? []);
 	const propertyRows = weaponPropertyRows(graph, character.system);
+	const { wielded, isPaired } = wieldedWeapons(character, graph);
 	const out: Attack[] = [];
-	for (const inv of character.build.inventory) {
-		if (!inv.equipped) continue;
-		const row = graph.get(inv.item);
-		if (row?.type !== 'item' || row.data.category !== 'weapon') continue;
-		// a magic weapon carries only what it adds; the rest — category, properties, base damage —
-		// comes from the mundane row its `base_item_id` names
-		const item = resolveItem(graph, row, inv.base);
+	for (const { inv, row, item } of wielded) {
 		// the kind, not the row: a +1 Rapier is a Rapier, so one answer covers every copy of it
 		const finesse = item.tags.has(ITEM_TAG.finesse);
 		const { ability, mod } = attackAbility(
@@ -519,16 +517,19 @@ export function computeAttacks(
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
 		const parts = parseDamageParts(item.damage);
 		const damageNote = damageUnreadNote(parts);
-		const drilled = masteries.has(item.kindId)
-			? masteryFor(propertyRows, item.tags.get(ITEM_TAG.mastery) ?? '', {
-					mod,
-					ctx: sheet.castCtx ?? NO_VARS,
-					locale,
-				})
-			: { unread: [] };
+		const properties = attackProperties({
+			rows: propertyRows,
+			tags: item.tags,
+			mastered: masteries.has(item.kindId),
+			mod,
+			rules: sheet.facts.extraAttackRules,
+			isPaired,
+			ctx: sheet.castCtx ?? NO_VARS,
+			locale,
+		});
 		const notes = [
 			...(w.notes ?? []),
-			...drilled.unread.map((token) => ({ token })),
+			...properties.unread.map((token) => ({ token })),
 			...scoped.notes,
 			...scopedDamage.notes,
 			notProfNote,
@@ -548,9 +549,12 @@ export function computeAttacks(
 			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
 			damageParts,
-			meta: metaTags(item.tags, drilled.mastery),
+			meta: metaTags(item.tags, properties.mastery),
 			scopes: [...scopeSet],
 			...(finesse ? { finesse: { kindId: item.kindId, ability } } : {}),
+			...(properties.extras.length
+				? { extras: properties.extras.map((extra) => extraAttackRow(extra, damageParts, mod)) }
+				: {}),
 			...(notes.length ? { notes } : {}),
 		});
 	}

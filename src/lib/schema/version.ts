@@ -96,7 +96,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // spells "prepared".
 // v27: Graze and Topple state the number their rule gives a formula for (`grant_value`). An install
 // left at v26 names the property and leaves the arithmetic to the player.
-export const CONTENT_SEED_VERSION = 27;
+// v28: the Light property has a row in both packs and states its extra attack; Cleave, Nick and
+// 2024 Two-Weapon Fighting say what they do to one. A new 2014 file, `weapon_properties_srd.csv`.
+export const CONTENT_SEED_VERSION = 28;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

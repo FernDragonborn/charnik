@@ -16,6 +16,7 @@ export * from './roll';
 export * from './defense';
 export * from './effects-view';
 export * from './attacks';
+export * from './attack-names';
 export * from './spells';
 export * from './actions';
 export * from './constants';

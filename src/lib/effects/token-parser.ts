@@ -40,6 +40,14 @@ export const EFFECT_KIND = {
 	// value is an L2 expression and may read `attack_mod`, which only an attack can answer — so the
 	// kind is read where a weapon is (its mastery property's row) and nowhere else.
 	grantValue: 'grant_value',
+	// `extra_attack:<property>:<word>[,<word>…][:<scope>]` — one statement about the extra attack a
+	// weapon PROPERTY lets you make, keyed by that property so several rows can speak of the same
+	// attack. The words are a closed set (`EXTRA_ATTACK_WORD`): `same` / `other` GRANT it — with
+	// this weapon again (Cleave), or with this weapon while another one carrying the property is in
+	// the other hand (Light) — `bonus` / `free` say what it costs, and `modifier` puts the ability
+	// modifier back on its damage, which the attack otherwise leaves off. So Light grants, Nick
+	// re-prices the same attack, and Two-Weapon Fighting restores the modifier: three rows, one kind.
+	extraAttack: 'extra_attack',
 	// `damage_sensitivity:<relation>:<type>` — how this character RELATES to one damage type. One
 	// kind rather than three, because the three relations are one axis (a damage multiplier: x0, x1/2,
 	// x2), so "immunity outranks vulnerability outranks resistance" stays a comparison inside a kind.
@@ -111,6 +119,22 @@ const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KI
 export type { RechargePolicy };
 export type DamageSensitivity = 'resist' | 'immune' | 'vulnerable';
 
+/** The closed vocabulary an `extra_attack` token speaks in. */
+export const EXTRA_ATTACK_WORD = {
+	/** made with the SAME weapon again (Cleave) */
+	same: 'same',
+	/** made with this weapon while ANOTHER carrying the property is wielded (Light) */
+	other: 'other',
+	bonus: 'bonus',
+	free: 'free',
+	modifier: 'modifier',
+} as const;
+export type ExtraAttackWord = (typeof EXTRA_ATTACK_WORD)[keyof typeof EXTRA_ATTACK_WORD];
+const EXTRA_ATTACK_WORDS: ReadonlySet<string> = new Set(Object.values(EXTRA_ATTACK_WORD));
+/** Does this statement GRANT the attack, rather than re-price or adjust one another row grants? */
+export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
+	words.includes(EXTRA_ATTACK_WORD.same) || words.includes(EXTRA_ATTACK_WORD.other);
+
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
  *  a bonus/override is only STORED and rendered as a scalar → a generous finite guard is enough (a
  *  +1e6 AC is silly, not dangerous); a resource `max` DRIVES the pip render loop (see AUDIT B10) →
@@ -175,6 +199,8 @@ export interface ParsedEffect {
 	/** on_event: the executor action token to run when `target`'s event fires, verbatim (it carries its
 	 *  own `:` and may hold an L2 formula — `heal:5+con_mod` — resolved at derive like every other). */
 	action?: string;
+	/** extra_attack: what the token says about the attack `target`'s property grants. */
+	extraAttack?: ExtraAttackWord[];
 	raw: string;
 }
 
@@ -322,6 +348,18 @@ const parseGrantValue: KindParser = (rest, raw, kind) => {
 	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
 };
 
+const parseExtraAttack: KindParser = (rest, raw, kind) => {
+	// `extra_attack:<property>:<word>[,<word>…][:<scope>]`. An unknown word leaves the whole token
+	// unparsed: a rule half-read is a rule misapplied, and the author can see an inert one.
+	const m = /^([a-z][a-z0-9_]*):([a-z]+(?:,[a-z]+)*)(?::([a-z0-9_,]+))?$/i.exec(rest.trim());
+	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+	const words = m[2].toLowerCase().split(',');
+	if (!words.every((w): w is ExtraAttackWord => EXTRA_ATTACK_WORDS.has(w)))
+		return { kind: 'unknown', raw };
+	const scope = m[3]?.toLowerCase();
+	return { kind, target: m[1].toLowerCase(), extraAttack: words, raw, ...(scope ? { scope } : {}) };
+};
+
 const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
 	// `damage_sensitivity:<relation>:<type>`. A missing relation is malformed, not a default: an
 	// author who meant immunity and typed one segment gets an inert note they can see, rather than a
@@ -451,6 +489,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.halve]: parseTargetOnly,
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
 	[EFFECT_KIND.grantValue]: parseGrantValue,
+	[EFFECT_KIND.extraAttack]: parseExtraAttack,
 	[EFFECT_KIND.damageSensitivity]: parseDamageSensitivity,
 	[EFFECT_KIND.grantResource]: parseGrantResource,
 	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,

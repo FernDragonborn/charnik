@@ -200,9 +200,7 @@ stay semi-manual.
   constant (identical both editions — not a data-driven win, YAGNI); **SMELL-2** `deriveHealth` is
   single-open + `characterName` is a display-only label — keying it by `c.id` is dead flexibility;
   loose `z.record` play-state keys stay un-branded (see `docs/internals/characters.md` ▸ Play-state modelling);
-  **`two_weapon_fighting`** stays text — `computeAttacks` adds the ability mod to every weapon's
-  damage, so the off-hand penalty the style REMOVES was never modelled and there is nothing to
-  encode; **2014 `grappler`** stays text — it is relational ("advantage against a creature grappled
+  **2014 `grappler`** stays text — it is relational ("advantage against a creature grappled
   by you") and the app has no target model.
 - [ ] **COMPANION · no data model exists for a bound creature** — a familiar, a steed, a beast
   companion, a summon. Not a missing panel: there is nothing in the character schema for a creature

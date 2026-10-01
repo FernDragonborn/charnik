@@ -6,7 +6,8 @@
 import { pluginCtx, carrier } from '../../test-support/plugin-fixtures';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { parseToken, EFFECT_KIND, type EffectIssue } from './token-parser';
-import { applyEffects, collectFacts, mergeFacts } from './apply';
+import { applyEffects, collectFacts } from './apply';
+import { mergeFacts } from './facts';
 import { computed } from '../rules/pipeline';
 import {
 	expandPluginEffects,

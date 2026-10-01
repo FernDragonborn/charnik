@@ -645,13 +645,22 @@ describe('deriveSheet aggregator', () => {
 			{
 				iid: '1',
 				label: 'Misplaced',
-				effects: ['grant_value:save_dc.con:8+proficiency_bonus', 'flat_bonus:ac+attack_mod'],
+				effects: [
+					'grant_value:save_dc.con:8+proficiency_bonus',
+					'flat_bonus:ac+attack_mod',
+					// a GRANT needs a weapon to be granted to; a re-pricing is the character's to state
+					'extra_attack:cleave:free,same',
+					'extra_attack:light:modifier',
+				],
 				positive: true,
 			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(before);
-		expect(s.deriveIssues.filter((i) => i.key === ISSUE_KEY.attackOnly)).toHaveLength(2);
+		expect(s.deriveIssues.filter((i) => i.key === ISSUE_KEY.attackOnly)).toHaveLength(3);
+		expect(s.facts.extraAttackRules).toEqual([
+			{ property: 'light', words: ['modifier'], source: 'Misplaced' },
+		]);
 	});
 
 	it('A3: no speed penalty when STR meets the armor requirement', () => {

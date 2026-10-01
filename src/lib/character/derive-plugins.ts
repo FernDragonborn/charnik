@@ -7,7 +7,8 @@
 import { abilityModifier, effectiveHpMax, type Ability } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { Character } from './schema';
-import { applyEffects, mergeFacts, collectFacts, type EffectFacts } from '../effects/apply';
+import { applyEffects, collectFacts, type EffectFacts } from '../effects/apply';
+import { mergeFacts } from '../effects/facts';
 import type { ActiveEffect, EffectCtx, EffectIssue } from '../effects/token-parser';
 import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
 import { CONDITION_FLAG_ALIASES } from '../effects/expression-parser';

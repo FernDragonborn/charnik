@@ -130,6 +130,13 @@ export class TurnEconomy {
 	 *  does not say which — so the sheet offers the marker and the player decides what it means. */
 	isRollUsed = (id: string): boolean =>
 		(this.getCharacter()?.play.turn.usedRolls ?? []).includes(id);
+	/** Record that something once-per-turn was done — the app's own mark, for an act it performed
+	 *  itself (an extra attack). Out of combat there is no turn to hold it, so nothing is marked. */
+	markUsed = (id: string) => {
+		const c = this.getCharacter();
+		if (c?.play.inCombat && !c.play.turn.usedRolls.includes(id))
+			c.play.turn.usedRolls = [...c.play.turn.usedRolls, id];
+	};
 	toggleRollUsed = (id: string) => {
 		const turn = this.getCharacter()?.play.turn;
 		if (!turn) return;

@@ -174,6 +174,18 @@ describe('parseToken (bounded vocabulary)', () => {
 			target: 'skill.stealth',
 		});
 	});
+	it('extra_attack: a property, a closed set of words, an optional scope', () => {
+		expect(parseToken('extra_attack:light:bonus,other:melee')).toMatchObject({
+			kind: 'extra_attack',
+			target: 'light',
+			extraAttack: ['bonus', 'other'],
+			scope: 'melee',
+		});
+		expect(parseToken('extra_attack:light:modifier')).toMatchObject({ extraAttack: ['modifier'] });
+		// a word outside the vocabulary leaves the whole token unread, never half-applied
+		expect(parseToken('extra_attack:light:bonus,twice').kind).toBe('unknown');
+	});
+
 	it('grant_value: a named number with an optional qualifier, its value an expression', () => {
 		expect(parseToken('grant_value:save_dc.con:8+attack_mod+proficiency_bonus')).toMatchObject({
 			kind: 'grant_value',

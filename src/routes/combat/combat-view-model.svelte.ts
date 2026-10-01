@@ -30,6 +30,7 @@ import {
 	preparedTalliesByClass,
 	skillRollTarget,
 	type Attack,
+	type ExtraAttackRow,
 	type StandardAction,
 } from '$lib/combat/helpers';
 import { RollJournal } from './roll-journal.svelte';
@@ -224,6 +225,9 @@ class CombatVM {
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
 	attackRoll = (at: Attack, e: Event) =>
 		this.inventory.shoot(at.id, e, () => this.rolls.attackRoll(at, e));
+	/** An extra attack fires like any other shot: what it spends in ammunition waits on the roll. */
+	extraAttackRoll = (at: Attack, extra: ExtraAttackRow, e: Event) =>
+		this.inventory.shoot(at.id, e, () => this.rolls.extraAttackRoll(at, extra, e));
 	/** What the dice tray hands its completed rolls to — the log, plus the weapon-attack reroll offer. */
 	recordTrayRolls = (...a: Parameters<SheetRolls['recordTrayRolls']>) =>
 		this.rolls.recordTrayRolls(...a);

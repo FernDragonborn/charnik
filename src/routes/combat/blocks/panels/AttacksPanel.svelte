@@ -4,7 +4,17 @@
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { signed } from '$lib/combat/helpers';
-	import { attackMeta, attackName, attackNotes, formatDamageParts } from '$lib/combat/attacks';
+	import {
+		attackMeta,
+		attackName,
+		attackNotes,
+		formatDamageParts,
+		type ExtraAttackRow,
+	} from '$lib/combat/attacks';
+	import { extraAttackMark } from '$lib/combat/attack-names';
+	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
+	import { localizedName } from '$lib/content/detail';
+	import Icon from '$lib/components/Icon.svelte';
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import { describedPlainProse } from '$lib/content/overrides.svelte';
@@ -17,6 +27,24 @@
 	// the player's own order, applied where it is a view concern; the VM hands over the rows the
 	// character actually has, and this reconciles them against what was arranged
 	const attacks = $derived(combat.layout.ordered(ROW_PANEL.attacks, combat.attacks, (a) => a.id));
+
+	/** What an extra attack's control says on hover and on focus: what it costs, what it rolls, and
+	 *  the rule's own text — or, once it is made, why it will not fire again this turn. */
+	const extraExplanation = (extra: ExtraAttackRow, made: boolean): string =>
+		[
+			made
+				? $_('combat.notice.extraAttackMade', { values: { name: extra.name } })
+				: $_(
+						extra.cost === EXTRA_ATTACK_WORD.bonus
+							? 'combat.attacks.extraAttackBonus'
+							: 'combat.attacks.extraAttackFree',
+						{ values: { damage: formatDamageParts(extra.damageParts, $_) } },
+					),
+			...extra.rows.map(
+				(row) =>
+					`${localizedName(row, app.activeLocale)}. ${describedPlainProse(row, app.activeLocale)}`,
+			),
+		].join('\n');
 
 	/** What the row says on hover and on focus: its notes, then what its mastery property does —
 	 *  one line each, so the word on the row is never the whole of what the player is told. */
@@ -125,6 +153,25 @@
 						><span class="fin-ab" class:on={fin.ability === 'dex'}>{$_('abilityShort.dex')}</span>
 					</button>
 				{/if}
+				<!-- EXTRA ATTACKS: one more swing the weapon's own properties allow this turn — Light's with
+				     a second Light weapon in hand, Cleave's after a hit. BESIDE the row, like the grip: it
+				     is a second thing the player may do, not a mode of the first. Once made, it stays
+				     reachable and says why it will not fire again (ui.md ▸ rule 10). -->
+				{#each at.extras ?? [] as extra (extra.property)}
+					{@const made = combat.economy.isRollUsed(extraAttackMark(at, extra))}
+					<button
+						class="extra-attack"
+						class:is-blocked={made}
+						aria-disabled={made ? true : undefined}
+						aria-label={$_('combat.attacks.extraAttack', {
+							values: { name: extra.name, weapon: attackName(at, $_) },
+						})}
+						use:provenance={extraExplanation(extra, made)}
+						onclick={(e) => combat.extraAttackRoll(at, extra, e)}
+					>
+						<Icon name="plus" size={11} />{extra.name}
+					</button>
+				{/each}
 			</div>
 		{/if}
 	{/each}
@@ -156,7 +203,27 @@
 		color: var(--color-accent-bright);
 	}
 	.finesse-swap:hover,
-	.finesse-swap:focus-visible {
+	.finesse-swap:focus-visible,
+	.extra-attack:hover,
+	.extra-attack:focus-visible {
 		border-color: var(--color-accent);
+	}
+	/* An extra attack: the same quiet weight as the grip beside it, and gold because it is something
+	   the turn SPENDS — the colour every other spendable thing on this sheet wears. */
+	.extra-attack {
+		flex: none;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		padding: 2px var(--space-1-5);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		letter-spacing: 0.04em;
+		color: var(--color-resource);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
 	}
 </style>

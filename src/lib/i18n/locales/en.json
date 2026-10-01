@@ -499,6 +499,9 @@
 			"cantAfford": "Not enough {resource}"
 		},
 		"attacks": {
+			"extraAttack": "{name}: an extra attack with {weapon}",
+			"extraAttackBonus": "Extra attack — a Bonus Action. Damage {damage}.",
+			"extraAttackFree": "Extra attack — part of the Attack action. Damage {damage}.",
 			"finesseSwap": "Finesse — swung with this; tap for {other}",
 			"noteAttackBonus": "{amount} attack",
 			"noteDamageBonus": "{amount} damage",
@@ -690,6 +693,7 @@
 				"tempHpSlot": "{name} temp HP (slot {slot})"
 			},
 			"spellAttack": "{name} (spell attack)",
+			"attackExtra": "{name} — {property}",
 			"attackNumbered": "{name} {index}/{count}"
 		},
 		"menu": {
@@ -763,6 +767,7 @@
 			"notEnoughResource": "Not enough {resource} for {name}",
 			"restToRecharge": "Rest to recharge.",
 			"notEnoughResourceBody": "{left} left · costs {cost}. Rest to recharge.",
+			"extraAttackMade": "{name} — already made this turn",
 			"noSlotLeft": "No {slot} left this turn",
 			"nextTurnToRefresh": "Press “Next turn” to refresh.",
 			"resourceRestoredTo": "{resource} restored — now {count}",

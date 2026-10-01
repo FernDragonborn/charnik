@@ -8,7 +8,7 @@
  * re-scan of raw tokens. The one resolve stage that produces the effect list lives in
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
-import { ISSUE_KEY } from './token-parser';
+import { ISSUE_KEY, grantsExtraAttack } from './token-parser';
 import { computed, NOTE_KEY, type Computed, type Contribution, type Note } from '../rules/pipeline';
 import { titleCase } from '../util/format';
 import { evalExpression, lintExpression } from './expression-evaluator';
@@ -242,6 +242,19 @@ class FactsCollector {
 				// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass reports
 				// every plugin token itself, so counting it as unknown too would double the panel entry.
 				break;
+			case EFFECT_KIND.extraAttack:
+				// a statement that only re-prices or adjusts an attack a weapon grants is the character's
+				// to make; one that GRANTS it needs a weapon, and falls through with the stated numbers
+				if (p.target && p.extraAttack && !grantsExtraAttack(p.extraAttack)) {
+					this.facts.extraAttackRules.push({
+						property: p.target,
+						words: p.extraAttack,
+						source: eff.source,
+						...(p.scope ? { scope: p.scope } : {}),
+					});
+					break;
+				}
+			// eslint-disable-next-line no-fallthrough -- a grant with no weapon, like a number with no attack
 			case EFFECT_KIND.grantValue:
 			// a stated number belongs to an attack and is read there; one that reaches the SHEET's
 			// facts has nowhere to be said, so it is shown as the text it is rather than vanishing
@@ -348,47 +361,6 @@ export function collectFacts(
 	isTargetSupported?: TargetValidator,
 ): EffectFacts {
 	return new FactsCollector(ctx, issues, isTargetSupported).collect(effects);
-}
-
-/**
- * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned
- * tokens become synthetic effects, collected separately, then merged. Arrays concatenate;
- * condition/resource ids dedupe; resource pools keep the largest max per id and, at an equal max, the
- * faster recharge — the same rule `collectFacts` itself applies within one pass.
- */
-export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
-	base.numeric.push(...extra.numeric);
-	base.blockedBonuses.push(...extra.blockedBonuses);
-	base.advantage.push(...extra.advantage);
-	base.disadvantage.push(...extra.disadvantage);
-	base.autoFail.push(...extra.autoFail);
-	base.autoSucceed.push(...extra.autoSucceed);
-	base.proficiencies.push(...extra.proficiencies);
-	base.damageSensitivities.push(...extra.damageSensitivities);
-	base.conditionImmunities.push(...extra.conditionImmunities);
-	for (const r of extra.rolls)
-		if (!base.rolls.some((b) => b.id === r.id && b.source === r.source)) base.rolls.push(r);
-	base.rerolls.push(...extra.rerolls);
-	base.minDie.push(...extra.minDie);
-	base.unknown.push(...extra.unknown);
-	base.pluginNotes.push(...extra.pluginNotes);
-	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
-	base.breaksConcentration ||= extra.breaksConcentration;
-	base.damageReroll.push(...extra.damageReroll);
-	base.initiativeRegain.push(...extra.initiativeRegain);
-	base.onEvent.push(...extra.onEvent);
-	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
-	for (const def of extra.resources) {
-		const prev = base.resources.find((r) => r.id === def.id);
-		if (!prev) base.resources.push(def);
-		// the SAME rule `pushResource` applies within one pass, including the equal-max tie-break on the
-		// faster recharge — compared here by max alone, a plugin's faster policy silently lost
-		else if (
-			def.max > prev.max ||
-			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
-		)
-			base.resources[base.resources.indexOf(prev)] = def;
-	}
 }
 
 /**

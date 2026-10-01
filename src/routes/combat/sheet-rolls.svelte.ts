@@ -7,7 +7,9 @@
  */
 import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
-import { attackRollName } from '$lib/combat/attacks';
+import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
+import type { ExtraAttackRow } from '$lib/combat/attacks';
+import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
@@ -179,12 +181,43 @@ export class SheetRolls {
 	 *  False when the turn could not pay for it, so what rides on the shot (its ammunition) waits. */
 	attackRoll = (at: Attack, e: Event): boolean => {
 		if (!this.host().economy.trySpendStrike()) return false;
+		this.rollStrike(at, attackRollName(at, t), e);
+		return true;
+	};
+
+	/**
+	 * Make one of a weapon's EXTRA attacks (Light's, Cleave's): the row's own to-hit, the damage the
+	 * property leaves it, and the cost the property names — a Bonus Action, or nothing when it rides
+	 * the Attack action. Once per turn, which the turn remembers; a second press says so rather than
+	 * rolling. False when it could not be paid for, so what rides on the shot waits.
+	 */
+	extraAttackRoll = (at: Attack, extra: ExtraAttackRow, e: Event): boolean => {
+		const economy = this.host().economy;
+		const mark = extraAttackMark(at, extra);
+		if (economy.isRollUsed(mark)) {
+			toast(t('combat.notice.extraAttackMade', { name: extra.name }), {
+				description: t('combat.notice.nextTurnToRefresh'),
+			});
+			return false;
+		}
+		if (extra.cost === EXTRA_ATTACK_WORD.bonus && !economy.trySpend('bonus')) return false;
+		economy.markUsed(mark);
+		this.rollStrike(
+			{ ...at, damageParts: extra.damageParts },
+			extraAttackRollName(at, extra, t),
+			e,
+		);
+		return true;
+	};
+
+	/** One strike, already paid for: a tap rolls it, Shift-click opens the tray on its to-hit. */
+	private rollStrike(at: Attack, name: RollName, e: Event): void {
 		const { fx, parts, hasDmg } = this.attackSpec(at);
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
 				{
-					...nameFields(attackRollName(at, t)),
+					...nameFields(name),
 					test: {
 						dice: { 20: 1 },
 						mod: at.toHit,
@@ -197,11 +230,10 @@ export class SheetRolls {
 				},
 				e,
 			);
-			return true;
+			return;
 		}
-		this.rollAttackNow(at);
-		return true;
-	};
+		this.rollAttackNow(at, name);
+	}
 
 	/**
 	 * Roll one attack instantly, charging NOTHING: no turn slot, no tray. What an action that makes

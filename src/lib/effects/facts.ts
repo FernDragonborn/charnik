@@ -3,10 +3,12 @@
  * derive builds once and every consumer reads — stat folds, the roll path, proficiency/defense/
  * resource scans, the action economy. The fact types + the `emptyFacts` seed + `matchesTarget` (the
  * target-fan-out predicate) live here as a leaf so both the collector (apply.ts) and any consumer can
- * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts.
+ * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts;
+ * `mergeFacts` sits here beside the seed, because adding a field to the object means adding it to both.
  */
 import type { Layer } from '../rules/pipeline';
-import type { DamageSensitivity, PlayEvent, RechargePolicy } from './token-parser';
+import { rechargeRank } from '../rules/recharge';
+import type { DamageSensitivity, ExtraAttackWord, PlayEvent, RechargePolicy } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`→`skill.*`, `ability_checks`→both the skill checks and the BARE ability
@@ -56,6 +58,16 @@ export interface RollMod {
 	 *  `two_handed,melee`. The roll path applies the fact only for a weapon carrying every tag; a
 	 *  non-weapon roll (no scope set supplied) skips scoped facts entirely. */
 	scope?: string;
+}
+
+/** One `extra_attack` statement: what it says about the extra attack `property` grants. */
+export interface ExtraAttackRule {
+	property: string;
+	words: ExtraAttackWord[];
+	/** Tags the weapon must carry for the statement to apply (ALL of them). */
+	scope?: string;
+	/** The row that says it, by name — what the control is called when this row shaped it. */
+	source: string;
 }
 
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated
@@ -176,6 +188,10 @@ export interface EffectFacts {
 	onEvent: { event: PlayEvent; action: string; source: string }[];
 	rerolls: RollMod[];
 	minDie: RollMod[];
+	/** `extra_attack` statements made by the CHARACTER rather than by a weapon — a feature that
+	 *  re-prices or adjusts the extra attack a property grants (2024 Two-Weapon Fighting puts the
+	 *  ability modifier back on the Light property's). Read where the attack rows are built. */
+	extraAttackRules: ExtraAttackRule[];
 	unknown: { source: string; token: string }[];
 	/** Plain-text notes returned by plugin handlers (plugins.md §4.3) — panel display only,
 	 *  rendered as TEXT (PLG-SEC 3). Filled by the plugin pre-pass, empty otherwise. */
@@ -202,6 +218,49 @@ export const emptyFacts = (): EffectFacts => ({
 	onEvent: [],
 	rerolls: [],
 	minDie: [],
+	extraAttackRules: [],
 	unknown: [],
 	pluginNotes: [],
 });
+
+/**
+ * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned
+ * tokens become synthetic effects, collected separately, then merged. Arrays concatenate;
+ * condition/resource ids dedupe; resource pools keep the largest max per id and, at an equal max, the
+ * faster recharge — the same rule `collectFacts` itself applies within one pass.
+ */
+export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
+	base.numeric.push(...extra.numeric);
+	base.blockedBonuses.push(...extra.blockedBonuses);
+	base.advantage.push(...extra.advantage);
+	base.disadvantage.push(...extra.disadvantage);
+	base.autoFail.push(...extra.autoFail);
+	base.autoSucceed.push(...extra.autoSucceed);
+	base.proficiencies.push(...extra.proficiencies);
+	base.damageSensitivities.push(...extra.damageSensitivities);
+	base.conditionImmunities.push(...extra.conditionImmunities);
+	for (const r of extra.rolls)
+		if (!base.rolls.some((b) => b.id === r.id && b.source === r.source)) base.rolls.push(r);
+	base.rerolls.push(...extra.rerolls);
+	base.minDie.push(...extra.minDie);
+	base.extraAttackRules.push(...extra.extraAttackRules);
+	base.unknown.push(...extra.unknown);
+	base.pluginNotes.push(...extra.pluginNotes);
+	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
+	base.breaksConcentration ||= extra.breaksConcentration;
+	base.damageReroll.push(...extra.damageReroll);
+	base.initiativeRegain.push(...extra.initiativeRegain);
+	base.onEvent.push(...extra.onEvent);
+	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
+	for (const def of extra.resources) {
+		const prev = base.resources.find((r) => r.id === def.id);
+		if (!prev) base.resources.push(def);
+		// the SAME rule `pushResource` applies within one pass, including the equal-max tie-break on the
+		// faster recharge — compared here by max alone, a plugin's faster policy silently lost
+		else if (
+			def.max > prev.max ||
+			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
+		)
+			base.resources[base.resources.indexOf(prev)] = def;
+	}
+}

@@ -20,7 +20,7 @@
   `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
   because of these blocks, and that comes out with them.
 
-- [~] **MASTERY-HALF · weapon mastery. The picks and the rules text ship; three properties still want a mechanic.**
+- [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature
   unlocks that KIND of weapon for you.
@@ -42,15 +42,43 @@
   **Two of them state a number** — Graze the damage a miss still deals, Topple the DC of the save it
   forces — and the row prints it (`grant_value`, `../internals/effects.md` ▸ §2). Graze's token reads
   `max(0,attack_mod)`: RAW names the modifier and says nothing of a negative one, and damage that
-  heals is the reading nobody plays, so that is RAI and said here. **What is left wants a mechanic**:
-  - **Nick** moves the Light property's extra attack from a Bonus Action into the Attack action. The
-    turn economy has no notion of that extra attack to move.
-  - **Vex** gives Advantage on the next attack against ONE creature. It is relational, and the app
-    has no target — the argument that keeps 2014 Grappler prose.
-  Cleave, Push, Sap, Slow and Topple act on a creature the app does not model and stay text for the
-  same reason Favored Enemy does.
+  heals is the reading nobody plays, so that is RAI and said here.
+  **Two of them are an extra attack**, and so is the Light property in both editions: `extra_attack`
+  on the property's row, offered as a control beside the attack row, costing what the row says and
+  marked once made (`combat/attack-properties.ts`, `SheetRolls.extraAttackRoll`). Light grants it,
+  a drilled Nick makes it free, Cleave grants its own, 2024 Two-Weapon Fighting keeps the modifier.
+  **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
+  **What is left, in the order it is worth doing:**
+  1. **The builder does not show an extra attack.** `SheetAttacks` prints the row and not
+     `Attack.extras`, so the row a player builds is not yet the row they play. A line in the Notes
+     cell is the size of it.
+  2. **The control's LOOK is unconfirmed.** `design-preview/extra-attack-control.png` is what ships:
+     a gold `+ Name` beside the row, after the finesse grip. It was looked at once and picked by
+     nobody; PICK-CONTROL-STUDY (`ui.md`) is where the house pattern for a per-row control is owed.
+  3. **The Bonus Action path was driven by test, not by hand.** The live check pressed Nick's free
+     attack by keyboard (no slot spent, the mark set, the log line `Dagger — Nick`, the control
+     blocked afterwards with its reason). Light's Bonus Action spend is covered by `trySpend` and
+     the unit tests, and wants one press in the running app.
+  4. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
+     fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
+     names (`mechanics.md`).
+  5. **An item's article says `Mastery: vex` and nothing more.** The detail view's Mastery cell
+     prints the word; the attack row and the picker explain it, the compendium does not.
+  6. **A weapon's other properties have no rows.** Only Light does, because only Light had a rule
+     to carry. Finesse, Heavy, Reach, Thrown, Versatile, Loading, Two-Handed and Ammunition are
+     defined in each SRD's Properties section and would read the same way.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
+- [ ] **SRD-TRANSCRIPTION · the scripts that wrote this cycle's rows were not kept.** Rows were
+  transcribed from the local SRD sources (`tools/srd-src/`, gitignored) by one-off scripts that read
+  the source text and refuse to write when the sentence a token stands on is gone. Each lives only
+  as its CSV diff and a content-repo commit message quoting the sentence: the 29 ritual tags of
+  SRD 5.1, `ritual_source` and `prepare_style` on the classes, the weapon-property rows and their
+  tokens, the climb-speed tokens, `skill_choice_kinds` and Magic Initiate's `ritual_source`.
+  Conversion belongs in a producer sibling (`../internals/content.md` ▸ Where the shipped data
+  comes from), and the maintainer has put that sibling AFTER the engine work. Until it exists a
+  re-run is a re-write: whoever regenerates a pack must carry these columns across, and the app
+  repo's content tests are what fail if they do not.
 - [ ] **RULES-TEXT · the packs carry the SRD's ROWS and none of its rules chapters.** Both packs hold
   spells, items, monsters, classes, species, feats, backgrounds, languages and states — every
   row-shaped thing — and nothing else, because a converter that walks rows produces rows. So text
