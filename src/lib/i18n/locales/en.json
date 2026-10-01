@@ -150,7 +150,7 @@
 			"noSlots": "No feat or ASI level reached yet.",
 			"halfFeatAsk": "{feat} — where does its +1 go?",
 			"skillGrant": "Skills — choose {chosen}/{cap}",
-			"toolsNote": "(tools aren't modelled yet)",
+			"toolsNote": "(a tool instead of a skill is picked in the Languages pane, and is not counted here)",
 			"spellListAsk": "Spells — which list?",
 			"spellListFixed": "Spells — from the {list} list",
 			"spellAbilityAsk": "Cast with which ability?",

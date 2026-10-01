@@ -50,9 +50,9 @@ export interface ActiveRollSource {
  * The catalog is the `effect` type AND the `condition` type, so a homebrew row a user drops into a
  * CSV is typeable in the roller with no code change. Both, because to a ROLL there is no difference:
  * Poisoned is disadvantage on the attack exactly as Bless is +1d4 on it, and a player reaching for
- * "poisoned" does not know which of our two CSVs it was authored in. (That the two are separate types
- * at all is the merge tracked in docs/work/mechanics.md ▸ CONDEFF.) A condition's own tokens are read here, not its
- * `apply_condition:` wrapper — the wrapper says "you have it", and a line wants what it DOES.
+ * "poisoned" does not know which of our two CSVs it was authored in. A condition's own tokens are
+ * read here, not its `apply_condition:` wrapper — the wrapper says "you have it", and a line wants
+ * what it DOES.
  *
  * Damage types come from the glyph list, which is the set the app can DRAW; a type it has never heard
  * of still works, it just arrives as a word the line takes at face value (see `wordPill`).
