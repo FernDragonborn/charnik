@@ -9,14 +9,14 @@
 		attackMeta,
 		attackName,
 		attackNotes,
+		attackPropertyRows,
 		computeAttacks,
 		formatDamageParts,
 		type Attack,
 	} from '$lib/combat/attacks';
 	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
-	import { localizedName } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
-	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { describedRules } from '$lib/content/overrides.svelte';
 	import { provenance } from '$lib/actions/provenance';
 	import { signed } from '$lib/util/format';
 	const b = build;
@@ -42,17 +42,10 @@
 	/** What the cell says on hover and on focus: each property it names, in the rule's own text — a
 	 *  row once, though a drilled Nick is both the mastery and what shaped the Light attack. */
 	const notesExplanation = (a: Attack): string =>
-		[
-			...new Set([
-				...(a.meta.mastery?.row ? [a.meta.mastery.row] : []),
-				...(a.extras ?? []).flatMap((extra) => extra.rows),
-			]),
-		]
-			.map(
-				(row) =>
-					`${localizedName(row, app.activeLocale)}. ${describedPlainProse(row, app.activeLocale)}`,
-			)
-			.join('\n');
+		describedRules(
+			[...attackPropertyRows(a), ...(a.extras ?? []).flatMap((extra) => extra.rows)],
+			app.activeLocale,
+		);
 
 	const attacks = $derived(
 		b.sheet && b.graph ? computeAttacks(b.assembled, b.sheet, b.graph, app.activeLocale) : []

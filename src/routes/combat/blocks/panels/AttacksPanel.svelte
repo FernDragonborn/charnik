@@ -8,16 +8,16 @@
 		attackMeta,
 		attackName,
 		attackNotes,
+		attackPropertyRows,
 		formatDamageParts,
 		type ExtraAttackRow,
 	} from '$lib/combat/attacks';
 	import { extraAttackMark } from '$lib/combat/attack-names';
 	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
-	import { localizedName } from '$lib/content/detail';
 	import Icon from '$lib/components/Icon.svelte';
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
-	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { describedRules } from '$lib/content/overrides.svelte';
 	import { app } from '$lib/stores/app.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
@@ -40,21 +40,13 @@
 							: 'combat.attacks.extraAttackFree',
 						{ values: { damage: formatDamageParts(extra.damageParts, $_) } },
 					),
-			...extra.rows.map(
-				(row) =>
-					`${localizedName(row, app.activeLocale)}. ${describedPlainProse(row, app.activeLocale)}`,
-			),
+			describedRules(extra.rows, app.activeLocale),
 		].join('\n');
 
-	/** What the row says on hover and on focus: its notes, then what its mastery property does —
+	/** What the row says on hover and on focus: its notes, then what each property it names does —
 	 *  one line each, so the word on the row is never the whole of what the player is told. */
 	const rowExplanation = (at: Attack): string =>
-		[
-			attackNotes(at, $_),
-			at.meta.mastery?.row
-				? `${at.meta.mastery.name}. ${describedPlainProse(at.meta.mastery.row, app.activeLocale)}`
-				: '',
-		]
+		[attackNotes(at, $_), describedRules(attackPropertyRows(at), app.activeLocale)]
 			.filter(Boolean)
 			.join('\n');
 

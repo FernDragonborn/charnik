@@ -39,6 +39,12 @@
   **Each property says what it does.** The eight are `weapon_property` rows — a name and SRD 5.2.1's
   own sentence, keyed by the word the weapon's tag carries (`../internals/content.md` ▸ A column, or a
   tag) — and the attack row and the mastery picker print the name and explain it on hover and focus.
+  **So does every plain property**, in both editions: Ammunition, Finesse, Heavy, Light, Loading,
+  Reach, Thrown, Two-Handed and Versatile from each SRD's Properties section, and 2014's Special.
+  Range is defined there too and has no row, because no weapon carries it as a word — its numbers
+  ride on `thrown` and `ammunition`. An item's article explains its Mastery and Properties cells
+  from those rows, in the compendium and in every picker that shows the article
+  (`design-preview/item-article-properties.png`).
   **Two of them state a number** — Graze the damage a miss still deals, Topple the DC of the save it
   forces — and the row prints it (`grant_value`, `../internals/effects.md` ▸ §2). Graze's token reads
   `max(0,attack_mod)`: RAW names the modifier and says nothing of a negative one, and damage that
@@ -59,11 +65,12 @@
   2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
      names (`mechanics.md`).
-  3. **An item's article says `Mastery: vex` and nothing more.** The detail view's Mastery cell
-     prints the word; the attack row and the picker explain it, the compendium does not.
-  4. **A weapon's other properties have no rows.** Only Light does, because only Light had a rule
-     to carry. Finesse, Heavy, Reach, Thrown, Versatile, Loading, Two-Handed and Ammunition are
-     defined in each SRD's Properties section and would read the same way.
+  3. **Heavy states a disadvantage its row only says.** 2024: on attack rolls with the weapon when
+     Strength (melee) or Dexterity (ranged) is under 13; 2014: for a Small creature. Both are a
+     guarded `disadvantage` read per attack, which `attack-properties.ts` does not read yet — it
+     reads `grant_value` and `extra_attack` and shows any other kind as its token.
+  4. **An attack row explains only the property it prints**, which is the weapon's first. The
+     article explains all of them; the row's sub-line has room for one.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
 - [ ] **SRD-TRANSCRIPTION · the scripts that wrote this cycle's rows were not kept.** Rows were

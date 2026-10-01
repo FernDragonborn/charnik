@@ -5,14 +5,11 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
-import {
-	buildDetail,
-	contentLabel,
-	entryMeta,
-	localizedName,
-	type DetailModel,
-} from '$lib/content/detail';
+import { buildDetail, localizedName, type DetailModel } from '$lib/content/detail';
+import { contentLabel, entryMeta } from '$lib/content/entry-list';
 import { describedPlainProse } from '$lib/content/overrides.svelte';
+import { content } from '$lib/content/store.svelte';
+import { weaponPropertyRowsFor } from '$lib/content/weapon-properties';
 import type { Translate } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { costSaid } from '$lib/rules/currency';
@@ -72,9 +69,17 @@ export function filterByName<T extends LoadedRow>(rows: T[], query: string): T[]
  *
  * `buildDetail` takes a locale because the compendium and the translator pass their own; everything
  * in the builder means "the one the user is reading", and four places said so a character at a time.
+ * An item's article explains its property words from the loaded content, like the compendium's.
  */
 export const rowDetail = (row: LoadedRow | undefined, type: ContentType): DetailModel | null =>
-	row ? buildDetail(row, type, undefined, app.activeLocale) : null;
+	row
+		? buildDetail(row, type, {
+				locale: app.activeLocale,
+				...(content.graph && row.type === 'item'
+					? { propertyRows: weaponPropertyRowsFor(content.graph, row) }
+					: {}),
+			})
+		: null;
 
 /**
  * A skill id as a person reads it. The catalog is the source; `titleCase` is the fallback so a

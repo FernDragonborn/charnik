@@ -20,6 +20,7 @@ import { getUserStorage } from '$lib/storage/provider';
 import { logger } from '$lib/diag/logger';
 import type { LoadedRow } from './loader';
 import { localizedProse, plainProse, stripProse } from './prose';
+import { localizedName } from './detail';
 
 /** Which store a row's own words live in. */
 export const OVERRIDE_SCOPE = { character: 'character', install: 'install' } as const;
@@ -217,3 +218,11 @@ export const describedPlainProse = (row: LoadedRow, locale: string): string => {
 	const own = overrides.textFor(row.effectiveId, locale);
 	return own === undefined ? plainProse(row, locale) : stripProse(own);
 };
+
+/** What several rows say, each under its own name and on its own line — the explanation a surface
+ *  gives on hover and on focus for the words it prints (a weapon's properties, an extra attack's
+ *  rules). A row named twice is said once. */
+export const describedRules = (rows: readonly LoadedRow[], locale: string): string =>
+	[...new Set(rows)]
+		.map((row) => `${localizedName(row, locale)}. ${describedPlainProse(row, locale)}`)
+		.join('\n');

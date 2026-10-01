@@ -45,7 +45,12 @@ falls off a phone screen.
   written and nothing read it, because the property does nothing until a feature unlocks that kind
   of weapon for you. That feature is here: a capped chip pane off the Attacks card, offered only to
   the classes that grant it, and the attack row prints the mastery exactly when a pick unlocks it. A
-  multiclass sums its grants.
+  multiclass sums its grants. Graze and Topple print the number their rule works out, and the extra
+  attack a property allows — Light's with a second Light weapon, Nick's free one, Cleave's — is a
+  control beside the row that costs what the rule says, once a turn.
+- **Every weapon property says what it does**, in both editions: hover or tab to the word on an
+  attack row, or to the Properties and Mastery cells of the item's article, and the SRD's own text
+  for Finesse, Heavy, Reach, Thrown and the rest is there.
 - **Tool proficiencies, and the check that rides them.** A tool check is the ability check plus your
   proficiency bonus, built ON the folded ability check — so Guidance, exhaustion and every effect
   that touches ability checks reach it for free. 2024 rows name the ability; 5e rows do not, so the

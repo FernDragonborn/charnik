@@ -6,7 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { walkOptions, optionDomId } from '$lib/util/option-walk';
 	import type { Snippet } from 'svelte';
-	import type { Entry } from '$lib/content/detail';
+	import type { Entry } from '$lib/content/entry-list';
 
 	let {
 		groups,

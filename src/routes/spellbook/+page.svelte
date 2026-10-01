@@ -18,7 +18,8 @@
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 	import { rowName, type LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
-	import { buildDetail, groupEntries, toEntryGroups } from '$lib/content/detail';
+	import { buildDetail } from '$lib/content/detail';
+	import { groupEntries, toEntryGroups } from '$lib/content/entry-list';
 	import { app } from '$lib/stores/app.svelte';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
@@ -91,7 +92,7 @@
 	});
 
 	const detail = $derived(
-		selected ? buildDetail(selected, 'spell', undefined, app.activeLocale) : null,
+		selected ? buildDetail(selected, 'spell', { locale: app.activeLocale }) : null,
 	);
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
 	const sheet = $derived(graph && character ? deriveSheet(character, graph, isRowActive) : null);

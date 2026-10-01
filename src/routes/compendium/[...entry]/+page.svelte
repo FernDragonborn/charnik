@@ -14,10 +14,11 @@
 		buildDetail,
 		sourceLabel,
 		compendiumEntryPath,
-		toEntryGroups,
 		localizedName,
 	} from '$lib/content/detail';
+	import { toEntryGroups } from '$lib/content/entry-list';
 	import { getSpellAccess } from '$lib/content/spellAccess';
+	import { weaponPropertyRowsFor } from '$lib/content/weapon-properties';
 	import {
 		groupingsFor,
 		facetFor,
@@ -256,12 +257,20 @@
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
 	});
 	const detail = $derived(
-		selected ? buildDetail(selected, selectedType, availableTo, contentLocale) : null,
+		selected
+			? buildDetail(selected, selectedType, {
+					locale: contentLocale,
+					...(availableTo ? { availableTo } : {}),
+					...(graph && selected.type === 'item'
+						? { propertyRows: weaponPropertyRowsFor(graph, selected) }
+						: {}),
+				})
+			: null,
 	);
 	// editor mode = a two-panel BEFORE | AFTER: the current rendered article (read-only) beside the
 	// editable form, so you see the original next to your changes.
 	const editorBefore = $derived(
-		editRow ? buildDetail(editRow, editRow.type, undefined, contentLocale) : null,
+		editRow ? buildDetail(editRow, editRow.type, { locale: contentLocale }) : null,
 	);
 	// the editor is a 3-column view — ask the shell for the full viewport width (like translate);
 	// cleared when editing ends or the page unmounts.

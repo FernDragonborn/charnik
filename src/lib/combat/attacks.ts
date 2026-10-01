@@ -12,7 +12,7 @@ import {
 } from '$lib/rules/proficiency';
 import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
 import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
-import { weaponPropertyRows } from '$lib/content/weapon-properties';
+import { weaponPropertyRows, type WeaponPropertyRow } from '$lib/content/weapon-properties';
 import {
 	attackProperties,
 	carriesProperty,
@@ -265,11 +265,18 @@ export interface AttackMeta {
 	kinds: string[];
 	/** The weapon's first property, name and value (`['versatile', '1d10']`). */
 	property?: [name: string, value: string];
+	/** The row that says what that property does, when a pack has one — what the surface explains
+	 *  the word with. */
+	propertyRow?: WeaponPropertyRow;
 	/** The weapon's mastery property, set ONLY when this character has drilled this kind of
 	 *  weapon — RAW the property does nothing until a feature unlocks it, so a row that printed it
 	 *  unconditionally would be offering something the character cannot do (MASTERY-HALF). */
 	mastery?: WeaponMastery;
 }
+
+/** The rows behind the property words an attack row prints — its first property, then its mastery. */
+export const attackPropertyRows = ({ meta }: Attack): WeaponPropertyRow[] =>
+	[meta.propertyRow, meta.mastery?.row].filter((row) => row !== undefined);
 
 /** An attack row's sub-line, in the reader's language. A tag's NAME is a vocabulary and reads from
  *  the catalog; its VALUE is data (`versatile 1d10`, `thrown 20/60`) and passes through untranslated. */
@@ -288,11 +295,21 @@ export function attackMeta({ meta }: Attack, translate?: Translate): string {
 
 /** The tags an attack row's sub-line reads, gathered off the weapon. `mastered` is whether THIS
  *  character may use the weapon's mastery property — the tag alone never means they can. */
-function metaTags(tags: ItemTags, mastery: WeaponMastery | undefined): AttackMeta {
+function metaTags(
+	tags: ItemTags,
+	mastery: WeaponMastery | undefined,
+	rows: ReadonlyMap<string, WeaponPropertyRow>,
+): AttackMeta {
 	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
 	const kinds = kindOrder.filter((t) => tags.has(t));
 	const property = [...tags].find(([name]) => !kinds.includes(name) && name !== ITEM_TAG.mastery);
-	return { kinds, ...(property ? { property } : {}), ...(mastery ? { mastery } : {}) };
+	const propertyRow = property && rows.get(property[0]);
+	return {
+		kinds,
+		...(property ? { property } : {}),
+		...(propertyRow ? { propertyRow } : {}),
+		...(mastery ? { mastery } : {}),
+	};
 }
 
 /**
@@ -549,7 +566,7 @@ export function computeAttacks(
 			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
 			damageParts,
-			meta: metaTags(item.tags, properties.mastery),
+			meta: metaTags(item.tags, properties.mastery, propertyRows),
 			scopes: [...scopeSet],
 			...(finesse ? { finesse: { kindId: item.kindId, ability } } : {}),
 			...(properties.extras.length

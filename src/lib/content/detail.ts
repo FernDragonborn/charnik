@@ -1,14 +1,13 @@
 /*
  * Pure "content → view" helpers shared by the Compendium and the Spellbook (both are the
  * same two-pane shape: a grouped list + a wiki detail rendered from the CSV row). No Svelte —
- * unit-testable. The components (WikiDetail / EntryList) just render these models.
+ * unit-testable. This is the DETAIL half, which WikiDetail renders; the list half is `entry-list.ts`.
  */
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { abilityShortLabel, asText, signed, titleCase } from '$lib/util/format';
+import { asText, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import { costSaid } from '$lib/rules/currency';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
-import type { Translate } from '$lib/i18n';
 import { cellText, localizedCell } from './prose';
 import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
@@ -61,12 +60,24 @@ const BARE_TAG_VALUE: Record<string, string> = {
 const tagWord = (name: string): SaidText => ({ key: `itemTag.${name}`, fallback: name });
 
 /** An item's `tags` cell → meta cells. A tag's VALUE is data unless it is itself a tag word
- *  (`armor:heavy`), which the same lookup covers: `mastery:nick` finds no entry and reads "nick". */
-function tagCells(raw: unknown): MetaCell[] {
+ *  (`armor:heavy`), which the same lookup covers: `mastery:nick` finds no entry and reads "nick".
+ *
+ *  A property word a pack DESCRIBES (`propertyRows`, word → its `weapon_property` row) brings that
+ *  row with its cell: the mastery reads as the row's own name, and the cell can say what each word
+ *  in it does. */
+function tagCells(
+	raw: unknown,
+	propertyRows: ReadonlyMap<string, LoadedRow>,
+	locale: string,
+): MetaCell[] {
 	const labelled: MetaCell[] = [];
 	const properties: string[] = [];
+	const propertyRules: LoadedRow[] = [];
 	for (const [name, value] of parseItemTags(raw)) {
-		if (CELL_TAGS.has(name))
+		const rule = propertyRows.get(name === ITEM_TAG.mastery ? value : name);
+		if (name === ITEM_TAG.mastery && rule)
+			labelled.push([tagWord(name), localizedName(rule, locale), [rule]]);
+		else if (CELL_TAGS.has(name))
 			labelled.push([
 				tagWord(name),
 				value
@@ -78,10 +89,13 @@ function tagCells(raw: unknown): MetaCell[] {
 						}
 					: { key: BARE_TAG_VALUE[name] ?? 'contentValue.yes', fallback: 'Yes' },
 			]);
-		else properties.push(value ? `${titleCase(name)} (${value})` : titleCase(name));
+		else {
+			properties.push(value ? `${titleCase(name)} (${value})` : titleCase(name));
+			if (rule) propertyRules.push(rule);
+		}
 	}
 	return properties.length
-		? [[fieldLabel('properties'), properties.join(', ')], ...labelled]
+		? [[fieldLabel('properties'), properties.join(', '), propertyRules], ...labelled]
 		: labelled;
 }
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
@@ -101,8 +115,9 @@ export const localizedName = (row: LoadedRow, locale: string): string =>
 const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
 /** One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when
- *  the word is the app's own vocabulary, the row's own text when it is data. */
-export type MetaCell = [label: SaidText, value: Said];
+ *  the word is the app's own vocabulary, the row's own text when it is data — and, where the words
+ *  in it are defined by rows of their own, those rows, for the view to explain the cell with. */
+export type MetaCell = [label: SaidText, value: Said, explainedBy?: LoadedRow[]];
 
 interface AbilityScore {
 	/** The ability id (`str`) — `abilityShortLabel` gives it the reader's word for it. */
@@ -224,15 +239,6 @@ function buildSpell(
 	};
 }
 
-/** A row in the left-pane list (name + meta sub-line + the underlying content row). */
-export interface Entry<T> {
-	id: string;
-	name: string;
-	meta: string;
-	edition: string; // "5e" | "5.5e" | "5e · 5.5e" — shown dimmed when >1 edition is active
-	row: T;
-}
-
 /** Deep-link path to a compendium entry. `source` is IN the path (encoded) because a slug is unique
  *  only per TYPE, not across sources/editions ("fireball" exists in both 5e and 5.5e) — so the unique
  *  identity is type:source:id. `base` is the app base path ('' on desktop, the repo subpath on Pages).
@@ -269,6 +275,8 @@ export interface DetailModel {
 	/** The row this was built from (`type:source:id`) — what a per-row preference is keyed by, and
 	 *  what tells two editions of the same article apart. */
 	rowId: string;
+	/** The content locale the article was built in — what the view reads any further prose in. */
+	locale: string;
 	eyebrow: Said[]; // "Level 3" + "Evocation" (spell), or the type name — joined by the view
 	title: string;
 	abilities: AbilityScore[]; // monster STR..CHA block (empty otherwise)
@@ -322,19 +330,30 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 	};
 }
 
-/** Build the right-pane wiki detail model for a content row. `availableTo` (for spells) comes
- *  from the reverse access index, supplied by the caller that has the graph. */
+/** What `buildDetail` is told beyond the row — each of it by a caller that has the graph. */
+export interface DetailContext {
+	locale?: string;
+	/** For a spell: the classes that can take it, from the reverse access index. */
+	availableTo?: SpellModel['availableTo'];
+	/** For an item: property word → the `weapon_property` row that says what it does, in the item's
+	 *  own edition (`weaponPropertyRowsFor`). */
+	propertyRows?: ReadonlyMap<string, LoadedRow>;
+}
+
+const NO_PROPERTY_ROWS: ReadonlyMap<string, LoadedRow> = new Map();
+
+/** Build the right-pane wiki detail model for a content row. */
 export function buildDetail(
 	row: LoadedRow,
 	type: ContentType,
-	availableTo?: SpellModel['availableTo'],
-	locale = 'en',
+	{ locale = 'en', availableTo, propertyRows = NO_PROPERTY_ROWS }: DetailContext = {},
 ): DetailModel {
 	const d = row.data;
 	// fields every type's DetailModel shares (title/prose/attribution); the branch adds its own
 	// eyebrow/meta/higherLevel + the dedicated monster/spell block.
 	const common = {
 		rowId: row.effectiveId,
+		locale,
 		title: localized(d, 'name', locale),
 		abilities: [] as AbilityScore[],
 		bodyHtml: localized(d, 'text', locale),
@@ -383,7 +402,7 @@ export function buildDetail(
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.flatMap(([k, v]): MetaCell[] =>
 			k === 'tags'
-				? tagCells(v)
+				? tagCells(v, propertyRows, locale)
 				: k === 'cost'
 					? [[fieldLabel(k), costSaid(v)]]
 					: [
@@ -399,110 +418,4 @@ export function buildDetail(
 		meta,
 		higherLevel: localized(d, 'higher_level', locale),
 	};
-}
-
-/** "60 feet" → "60 ft". The one safe swap on free SRD text, and it is on every single row. */
-const shortRange = (s: string): string => s.replace(/\bfeet\b/i, 'ft').replace(/-foot\b/i, '-ft');
-
-/** The casting time both editions spell for a plain action — 2014 writes "1 action", 2024 "Action". */
-const PLAIN_ACTION = /^(1\s+)?action$/i;
-
-/**
- * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
- *
- * The catalog is the source and the value itself is the fallback, exactly like `skillLabel`: these
- * columns are OPEN enums, so a homebrew pack's ninth school has to read as a name rather than as a
- * missing key. Takes the translator, because this module has no locale of its own.
- */
-export const contentLabel = (catalog: string, value: unknown, t: Translate): string => {
-	// through `asText`, not `String`: a column whose cell holds a list or an object stringifies to
-	// "[object Object]", which would then be looked up as a key and printed as one
-	const key = asText(value);
-	return key ? t(`${catalog}.${key}`, { default: titleCase(key) }) : '';
-};
-
-/** The small sub-line under an entry's name in the list. */
-export function entryMeta(row: LoadedRow, t: Translate): string {
-	if (row.type === 'spell') {
-		const d = row.data;
-		const casting = String(d.casting_time ?? '');
-		return [
-			contentLabel('spellSchool', d.school, t),
-			// A plain action is the default and true of most spells — printing it on every row is
-			// noise, while a bonus action or a reaction is exactly what decides whether a spell is
-			// castable this turn. Only the unusual casting time earns the space.
-			PLAIN_ACTION.test(casting) ? '' : casting,
-			d.range ? shortRange(String(d.range)) : '',
-			d.damage ? String(d.damage) : '',
-			d.resolution === 'save' && d.save_ability
-				? t('entryMeta.save', {
-						// the ability's short name is a catalog entry, so a save reads "ряткидок МУД" rather
-						// than an upper-cased English id — the same resolution the spell panel's chip makes
-						values: {
-							ability: abilityShortLabel(String(d.save_ability).toLowerCase(), t),
-						},
-					})
-				: '',
-			d.resolution === 'attack' ? t('entryMeta.attack') : '',
-			d.concentration ? t('entryMeta.concentration') : '',
-			d.ritual ? t('entryMeta.ritual') : '',
-		]
-			.filter(Boolean)
-			.join(' · ');
-	}
-	// The `in` checks read only the columns a row's type actually has — no cast onto the union.
-	const data = row.data;
-	return [
-		'category' in data ? contentLabel(categoryCatalog(row.type), data.category, t) : '',
-		'rarity' in data ? contentLabel('itemRarity', data.rarity, t) : '',
-	]
-		.filter(Boolean)
-		.join(' · ');
-}
-
-/** Which catalog a `category` column is spelled in — the column name is shared, the vocabulary is
- *  not: an item's category is a kind of thing, a feat's is when you may take it. */
-const categoryCatalog = (type: ContentType): string =>
-	type === 'feat' ? 'featCategory' : 'itemCategory';
-
-/** Project grouped rows into the EntryList model: each group's rows become display Entries (id, name
- *  via `nameOf`, meta, edition, row). Shared by the compendium + spellbook lists so the row projection
- *  stays identical; the caller supplies the grouping and the name source (localized vs English). */
-export function toEntryGroups(
-	groups: { label: string; rows: LoadedRow[] }[],
-	nameOf: (row: LoadedRow) => string,
-	t: Translate,
-): { label: string; entries: Entry<LoadedRow>[] }[] {
-	return groups.map((g) => ({
-		label: g.label,
-		entries: g.rows.map((r) => ({
-			id: r.effectiveId,
-			name: nameOf(r),
-			meta: entryMeta(r, t),
-			edition: editionLabel(r.systems),
-			row: r,
-		})),
-	}));
-}
-
-/** Group entries for the list — spells by level, everything else as one flat group. */
-export function groupEntries(
-	rows: LoadedRow[],
-	type: ContentType,
-	t: Translate,
-): { label: string; rows: LoadedRow[] }[] {
-	if (type !== 'spell') return [{ label: '', rows }];
-	const byLevel = new Map<number, LoadedRow[]>();
-	for (const r of rows) {
-		const level = r.type === 'spell' ? Number(r.data.level) : 0;
-		const bucket = byLevel.get(level) ?? [];
-		bucket.push(r);
-		byLevel.set(level, bucket);
-	}
-	return [...byLevel.keys()]
-		.sort((a, b) => a - b)
-		.map((level) => ({
-			label: level === 0 ? t('spellLevel.cantrips') : t('spellLevel.group', { values: { level } }),
-			rows: byLevel.get(level) ?? [],
-		}));
 }

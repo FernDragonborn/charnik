@@ -7,6 +7,8 @@
 	import { _ } from '$lib/i18n';
 	import { say, sayText } from '$lib/util/say';
 	import type { DetailModel } from '$lib/content/detail';
+	import { describedRules } from '$lib/content/overrides.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import type { WikiEditDraft } from './wikiEdit';
 	import EditableTitle from './EditableTitle.svelte';
 
@@ -40,8 +42,10 @@
 {/if}
 {#if detail.meta.length}
 	<div class="detail-meta">
-		{#each detail.meta as [k, v] (k.key)}
-			<div class="meta-cell">
+		{#each detail.meta as [k, v, explainedBy] (k.key)}
+			<!-- a cell whose words are defined by rows of their own says what they do on hover and on
+			     focus: `Mastery: Vex` alone is a word, not a rule -->
+			<div class="meta-cell" use:provenance={describedRules(explainedBy ?? [], detail.locale)}>
 				<div class="meta-key eyebrow">{sayText(k, $_)}</div>
 				<div class="meta-value">{say(v, $_)}</div>
 			</div>

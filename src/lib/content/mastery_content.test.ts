@@ -14,9 +14,21 @@ import { masteryBudget } from '../build/derive';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { attackMeta, computeAttacks } from '../combat/attacks';
-import { ITEM_TAG, parseItemTags } from './item-tags';
+import { ITEM_TAG, parseItemTags, weaponCategoryOf } from './item-tags';
 
 const S = 'SRD 5.2.1';
+/** The plain weapon properties both editions define and a weapon's tags name. */
+const PLAIN_PROPERTIES = [
+	'ammunition',
+	'finesse',
+	'heavy',
+	'light',
+	'loading',
+	'reach',
+	'thrown',
+	'two_handed',
+	'versatile',
+];
 const entry = (classId: string, level: number) => [
 	{ classId: `class:${S}:${classId}`, subclassId: null, level },
 ];
@@ -107,9 +119,11 @@ describe('weapon mastery · the attack row says it only when the character may u
 describe('weapon mastery · every property a weapon names says what it does', () => {
 	it('2024 ships the eight properties, and no weapon names a ninth', async () => {
 		const graph = await loadPacks('srd-2024');
-		// the type also holds the plain properties a rule hangs on (Light); a mastery is one a
-		// weapon's `mastery:` tag names
-		const rows = graph.list('weapon_property', { system: '5.5e' }).filter((r) => r.id !== 'light');
+		// the type also holds the plain properties (Light, Finesse, …); a mastery is one a weapon's
+		// `mastery:` tag names
+		const rows = graph
+			.list('weapon_property', { system: '5.5e' })
+			.filter((r) => !PLAIN_PROPERTIES.includes(r.id));
 		expect(rows.map((r) => r.id).sort()).toEqual([
 			'cleave',
 			'graze',
@@ -131,10 +145,39 @@ describe('weapon mastery · every property a weapon names says what it does', ()
 		expect([...named].sort()).toEqual(rows.map((r) => r.id).sort());
 	});
 
-	it('2014 has no mastery rule, so the one property it describes is Light', async () => {
-		const graph = await loadPacks('srd-2014');
-		expect(graph.list('weapon_property', { system: '5e' }).map((r) => r.id)).toEqual(['light']);
-	});
+	/*
+	 * The plain properties, from each SRD's own Properties section (SRD 5.1 ▸ Equipment ▸ Weapon
+	 * Properties, SRD 5.2.1 ▸ Equipment ▸ Properties). Range is defined there too and ships no row:
+	 * no weapon carries it as a word — the numbers ride on `thrown` and `ammunition`.
+	 */
+	it.each([
+		['srd-2014', '5e', [...PLAIN_PROPERTIES, 'special'].sort()],
+		['srd-2024', '5.5e', PLAIN_PROPERTIES],
+	] as const)(
+		'%s: every property word a weapon carries is described, and nothing else is',
+		async (pack, system, plain) => {
+			const graph = await loadPacks(pack);
+			const rows = graph.list('weapon_property', { system });
+			const masteries = system === '5.5e' ? 8 : 0; // 2014 has no mastery rule
+			expect(rows).toHaveLength(plain.length + masteries);
+			expect(rows.map((r) => r.id)).toEqual(expect.arrayContaining([...plain]));
+			for (const row of rows) expect(row.data.text_en, row.id).toBeTruthy();
+
+			const kinds: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
+			// the mundane weapons: a magic one inherits these words from its base row
+			const carried = new Set(
+				graph
+					.list('item', { system })
+					.map((r) => parseItemTags(r.data.tags))
+					.filter((tags) => weaponCategoryOf(tags) !== undefined)
+					.flatMap((tags) => [...tags.keys()])
+					.filter((word) => !kinds.includes(word) && word !== ITEM_TAG.mastery),
+			);
+			// `ammo` says WHICH ammunition a weapon fires — a pointer at an item, not a property
+			carried.delete(ITEM_TAG.ammo);
+			expect([...carried].sort()).toEqual([...plain]);
+		},
+	);
 
 	it('a drilled weapon carries the property under its own name, with the row that explains it', async () => {
 		const graph = await loadPacks('srd-2024');

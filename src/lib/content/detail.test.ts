@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { say, type Said } from '$lib/util/say';
-import { sourceLabel, editionLabel, buildDetail, entryMeta } from './detail';
+import { sourceLabel, editionLabel, buildDetail } from './detail';
+import { entryMeta } from './entry-list';
 import { row } from './test-utils';
 
 describe('sourceLabel', () => {
@@ -55,6 +56,37 @@ describe('buildDetail', () => {
 		]);
 	});
 
+	it('item: a property word a pack describes brings its row, and the mastery reads as its name', () => {
+		const vex = row(
+			{ id: 'vex', name_en: 'Vex', name_uk: 'Докука', text_en: '…' },
+			'weapon_property',
+		);
+		const light = row({ id: 'light', name_en: 'Light', text_en: '…' }, 'weapon_property');
+		const dagger = row(
+			{ name_en: 'Dagger', category: 'weapon', tags: 'simple, light, thrown:20/60, mastery:vex' },
+			'item',
+		);
+		const cells = (locale: string) =>
+			buildDetail(dagger, 'item', {
+				locale,
+				propertyRows: new Map([
+					['vex', vex],
+					['light', light],
+				]),
+			}).meta.map(([k, v, rows]) => [k.key, say(v), rows ?? []]);
+
+		expect(cells('uk')).toContainEqual(['itemTag.mastery', 'Докука', [vex]]);
+		// every described word in the Properties cell, and only those
+		expect(cells('en')).toContainEqual([
+			'contentField.properties',
+			'Simple, Light, Thrown (20/60)',
+			[light],
+		]);
+		// a word no pack describes still prints as itself, with nothing behind it
+		const bare = buildDetail(dagger, 'item').meta.find(([k]) => k.key === 'itemTag.mastery');
+		expect(bare && [say(bare[1]), bare[2]]).toEqual(['Vex', undefined]);
+	});
+
 	it('locale-aware: prose reads <base>_<loc>, falls back to _en, then a bare column', () => {
 		const d = {
 			name_en: 'Fireball',
@@ -66,16 +98,16 @@ describe('buildDetail', () => {
 			level: '3',
 			school: 'evocation',
 		};
-		const uk = buildDetail(row(d), 'spell', undefined, 'uk');
+		const uk = buildDetail(row(d), 'spell', { locale: 'uk' });
 		expect(uk.title).toBe('Вогняна куля');
 		expect(uk.bodyHtml).toBe('Яскравий промінь…');
 		expect(uk.spell?.material).toBe('bat guano'); // bare fallback when no _uk/_en
 
-		const en = buildDetail(row(d), 'spell', undefined, 'en');
+		const en = buildDetail(row(d), 'spell', { locale: 'en' });
 		expect(en.title).toBe('Fireball');
 
 		// missing target locale → English fallback, never empty
-		const de = buildDetail(row(d), 'spell', undefined, 'de');
+		const de = buildDetail(row(d), 'spell', { locale: 'de' });
 		expect(de.title).toBe('Fireball');
 	});
 
@@ -83,8 +115,7 @@ describe('buildDetail', () => {
 		const detail = buildDetail(
 			row({ name_en: 'Alert', name_uk: 'Пильність', text_uk: 'опис', category: 'origin' }, 'feat'),
 			'feat',
-			undefined,
-			'uk',
+			{ locale: 'uk' },
 		);
 		expect(detail.title).toBe('Пильність');
 		expect(detail.meta.map(([k]) => k.key)).not.toContain('contentField.name_uk');

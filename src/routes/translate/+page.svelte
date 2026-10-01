@@ -14,7 +14,8 @@
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { hasProse, type ContentType } from '$lib/content/schemas';
-	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
+	import { buildDetail, editionLabel } from '$lib/content/detail';
+	import { entryMeta, type Entry } from '$lib/content/entry-list';
 	import { groupingsFor, groupRows, byDisplayName } from '$lib/content/grouping';
 	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
 	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '$lib/content/schemas';
@@ -125,10 +126,10 @@
 
 	// the two rendered models: English source (read-only) + target (editable draft binds to prose)
 	const sourceDetail = $derived(
-		selected ? buildDetail(selected, selectedType, undefined, sourceLocale) : null,
+		selected ? buildDetail(selected, selectedType, { locale: sourceLocale }) : null,
 	);
 	const targetDetail = $derived(
-		selected ? buildDetail(selected, selectedType, undefined, targetLocale) : null,
+		selected ? buildDetail(selected, selectedType, { locale: targetLocale }) : null,
 	);
 
 	// draft = the raw target-locale prose of the selected row; reset whenever the row or locale changes.

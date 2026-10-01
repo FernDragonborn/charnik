@@ -151,7 +151,9 @@ weapon has the property; the row holds its name and the rule's own text, so the 
 it (`content/weapon-properties.ts`). A word with no row still prints as itself. The type holds a
 mastery (`vex`) and a plain property (`light`) alike — whatever word a weapon's tags carry — and a
 row's `effects` are read per ATTACK for the weapon that carries the word, never gathered onto the
-character (`combat/attack-properties.ts`).
+character (`combat/attack-properties.ts`). An item's ARTICLE explains its words from the rows of
+the item's own edition, not the browsing one (`weaponPropertyRowsFor`): the cell carries the rows
+and the view says them on hover and focus (`describedRules`).
 
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸

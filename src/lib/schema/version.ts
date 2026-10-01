@@ -98,7 +98,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // left at v26 names the property and leaves the arithmetic to the player.
 // v28: the Light property has a row in both packs and states its extra attack; Cleave, Nick and
 // 2024 Two-Weapon Fighting say what they do to one. A new 2014 file, `weapon_properties_srd.csv`.
-export const CONTENT_SEED_VERSION = 28;
+// v29: the plain weapon properties each SRD defines (Finesse, Heavy, Reach, Thrown, …) have rows in
+// both packs. An install left at v28 explains Light and no other property a weapon carries.
+export const CONTENT_SEED_VERSION = 29;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

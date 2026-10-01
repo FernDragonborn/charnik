@@ -313,6 +313,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function bindOpenCharacter` — * Track the character whose own words apply, taking a SNAPSHOT of their map rather than the * character's own `$state…
 - `const describedProse` — A row's prose as the READER should see it: their own words when they wrote some, the shipped * text otherwise.
 - `const describedPlainProse` — The same words with their markdown STRIPPED — for the sheets that print prose as running text.
+- `const describedRules` — What several rows say, each under its own name and on its own line — the explanation a surface * gives on hover and o…
 
 ### `src/lib/content/packs.svelte.ts`
 
@@ -464,7 +465,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (137 modules)
+## Library functions & types (138 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -791,6 +792,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `type ExtraAttackRow` — An extra attack as its row offers it: what it is, and what it rolls for damage.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
+- `const attackPropertyRows` — The rows behind the property words an attack row prints — its first property, then its mastery.
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
 - `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
@@ -921,16 +923,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type MetaCell` — One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when * the word is the ap…
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
-- `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
 - `function compendiumEntryPath` — Deep-link path to a compendium entry.
 - `function sourceLabel`
 - `function editionLabel` — Format a row's `systems` array as a short edition label.
 - `interface DetailModel`
+- `interface DetailContext` — What `buildDetail` is told beyond the row — each of it by a caller that has the graph.
 - `function buildDetail` — Build the right-pane wiki detail model for a content row.
-- `const contentLabel` — * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
-- `function entryMeta` — The small sub-line under an entry's name in the list.
-- `function toEntryGroups` — Project grouped rows into the EntryList model: each group's rows become display Entries (id, name * via `nameOf`, met…
-- `function groupEntries` — Group entries for the list — spells by level, everything else as one flat group.
 
 ### `src/lib/content/disk.ts`
 
@@ -939,6 +937,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function isProtectedFromOverwrite` — * May the app overwrite this on-disk file, or is it the user's now?
 - `function isProtectedText` — The same question asked of bytes already in hand — for a caller that has just read the file for * another reason (the…
+
+### `src/lib/content/entry-list.ts`
+
+- `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
+- `const contentLabel` — * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
+- `function entryMeta` — The small sub-line under an entry's name in the list.
+- `function toEntryGroups` — Project grouped rows into the EntryList model: each group's rows become display Entries (id, name * via `nameOf`, met…
+- `function groupEntries` — Group entries for the list — spells by level, everything else as one flat group.
 
 ### `src/lib/content/grouping.ts`
 
@@ -1291,6 +1297,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type WeaponPropertyRow`
 - `function weaponPropertyRows` — Property word → its row, for one edition.
+- `function weaponPropertyRowsFor` — Property word → its row, for the edition one ITEM row is written in — an article explains its * words by its own edit…
 
 ### `src/lib/demo/sheet.ts`
 
@@ -1892,4 +1899,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1146 exports across 153 modules · 76 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1150 exports across 154 modules · 76 duplicate suspects._
