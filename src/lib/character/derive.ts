@@ -65,10 +65,12 @@ export interface CharacterSheet {
 	 *  decides the roll's HIGHLIGHT, never whether a hit crits (that stays the player's call). */
 	critThreshold: Computed;
 	speed: Computed;
-	/** Fly / swim speeds — base 0 (no SRD species grants one); effects (`set_override:speed.fly:60`
-	 *  — the Fly spell, magic items) are the source. Rendered only when nonzero. */
+	/** Fly / swim / climb speeds — base 0 (no SRD species grants one); effects are the source, as a
+	 *  literal (`set_override:speed.swim:40`) or as the walking speed itself
+	 *  (`set_override:speed.climb:speed:floor`). Rendered only when nonzero. */
 	flySpeed: Computed;
 	swimSpeed: Computed;
+	climbSpeed: Computed;
 	/** Senses and how far each reaches, keyed by the bare name (`darkvision`). Discovered from the
 	 *  effects that grant one rather than fixed, because a sense NAME is open vocabulary; two sources
 	 *  take the greater range (the rows say `:floor`), so a Goggles-wearing dwarf reads 120, not 180. */

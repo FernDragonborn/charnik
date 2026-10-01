@@ -97,13 +97,16 @@
 				</div>
 			{/if}
 			<div class="chips tags">
-				<!-- fly/swim sit here rather than in the strip: they are movement, which the play sheet
-				     says on its Speed tile, and this card is the builder's only place for them -->
+				<!-- fly/swim/climb sit here rather than in the strip: they are movement, which the play
+				     sheet says on its Speed tile, and this card is the builder's only place for them -->
 				{#if s.flySpeed.value}<span class="tag gold"
 						>{$_('build.defenses.fly', { values: { feet: s.flySpeed.value } })}</span
 					>{/if}
 				{#if s.swimSpeed.value}<span class="tag gold"
 						>{$_('build.defenses.swim', { values: { feet: s.swimSpeed.value } })}</span
+					>{/if}
+				{#if s.climbSpeed.value}<span class="tag gold"
+						>{$_('build.defenses.climb', { values: { feet: s.climbSpeed.value } })}</span
 					>{/if}
 				{#if !hasDefenseChips(s)}
 					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>

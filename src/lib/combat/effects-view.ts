@@ -89,6 +89,7 @@ const TARGET: Record<string, { key: string; en: string }> = {
 	speed: { key: 'combat.tag.speed', en: 'Speed' },
 	'speed.fly': { key: 'combat.tag.speedFly', en: 'Fly speed' },
 	'speed.swim': { key: 'combat.tag.speedSwim', en: 'Swim speed' },
+	'speed.climb': { key: 'combat.tag.speedClimb', en: 'Climb speed' },
 	hp_max: { key: 'combat.tag.hpMax', en: 'Max HP' },
 	attack: { key: 'combat.tag.attack', en: 'Attack' },
 	damage: { key: 'combat.tag.damage', en: 'Damage' },

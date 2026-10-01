@@ -276,7 +276,8 @@ Two distinct counts, easy to conflate:
 
 ### 4.4 Target keys
 
-`ac` · `initiative` · `speed` · `speed.fly` · `speed.swim` · `hp_max` · `attack` · `damage` ·
+`ac` · `initiative` · `speed` · `speed.fly` · `speed.swim` · `speed.climb` · `hp_max` · `attack` ·
+`damage` ·
 `spell_dc` · `spell_attack` · `save.<str|dex|con|int|wis|cha>` · `skill.<skill-id>` (the 18 SRD
 ids) · `passive.<skill-id>` (any of the 18 — every check has a passive form, not only the three
 senses the strip highlights) · the action-economy keys `action` · `bonus` · `reaction` (a

@@ -46,8 +46,13 @@ import {
 	type EffectIssue,
 	type ActiveEffect,
 	ctxOf,
+	parseToken,
+	resolveEffectValue,
 } from '../effects/token-parser';
-import { applyEffects, type EffectFacts } from '../effects/apply';
+import { applyEffects, type EffectFacts, type NumericFact } from '../effects/apply';
+import { NO_VARS, withWalkingSpeed, type ExprContext } from '../effects/context';
+import { collectExprVariables } from '../effects/expression-evaluator';
+import { MOVEMENT_MODE_PREFIX, WALKING_SPEED_VAR } from '../effects/expression-parser';
 import { suggestClosest } from '../util/suggest';
 import { deriveSpellcasting, type Spellcasting } from './spellcasting';
 import { computed, type Computed, type System } from '../rules/pipeline';
@@ -140,6 +145,36 @@ function applyArmorSpellBlock({
 	});
 }
 
+/**
+ * The facts the movement modes fold from: every numeric fact as it stands, except a movement mode
+ * whose value reads the walking speed, which is resolved HERE against a ctx that finally knows it.
+ * The first collection read that variable as absent, so such a fact arrives holding 0.
+ *
+ * Resolved against the base ctx, not the carrying effect's own: a fact does not keep its effect, and
+ * the two things an effect scopes (`spellcasting_mod`, `item_bonus`) have no place in a speed.
+ */
+function movementModeFacts(facts: EffectFacts, ctx: ExprContext): EffectFacts {
+	const numeric = facts.numeric.map((fact): NumericFact => {
+		if (!fact.target.startsWith(MOVEMENT_MODE_PREFIX)) return fact;
+		const parsed = parseToken(fact.token);
+		if (!parsed.valueExpr || !collectExprVariables(parsed.valueExpr).includes(WALKING_SPEED_VAR))
+			return fact;
+		const { target, op, layer, source, token } = fact;
+		const value = resolveEffectValue(parsed, ctx);
+		return {
+			target,
+			op,
+			layer,
+			source,
+			token,
+			...(value.amount !== undefined
+				? { amount: value.amount }
+				: { error: value.error ?? 'no value' }),
+		};
+	});
+	return { ...facts, numeric };
+}
+
 /** What the resolve stage produced — the state every phase below reads. */
 interface ResolvedState {
 	effCtx: EffectCtx;
@@ -205,22 +240,25 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	// through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).
 	const maxHp = applyEffects('hp_max', maxHpBase, facts);
 
+	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
+	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
+	// upcast (UPCAST §5). Always present now — built from base state even with auto-calc off (the toggle
+	// gates effect LAYERS, not spell mechanics like upcast; N6).
+	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
+
 	const speed = deriveSpeed(statInputs, speciesRow, baseSpeed, equippedArmor);
-	// fly/swim: no SRD species grants a base, so the fold starts at 0 and effects are the source
-	const movementOf = (key: 'speed.fly' | 'speed.swim') =>
-		applyEffects(key, computed([], { min: 0 }), facts);
+	// the movement modes: no SRD species grants a base, so the fold starts at 0 and effects are the
+	// source. They fold from their own facts, because a mode stated as "equal to your Speed" takes
+	// its number from the speed folded on the line above.
+	const movementFacts = movementModeFacts(facts, withWalkingSpeed(baseCtx ?? NO_VARS, speed.value));
+	const movementOf = (key: `${typeof MOVEMENT_MODE_PREFIX}${'fly' | 'swim' | 'climb'}`) =>
+		applyEffects(key, computed([], { min: 0 }), movementFacts);
 
 	const damageSensitivities = deriveDamageSensitivities(facts);
 	const conditionImmunities = deriveConditionImmunities(facts);
 	const incomingAttacks = deriveIncomingAttacks(facts);
 	const qualifiedDefenses = deriveQualifiedDefenses(facts);
 	const senses = deriveSenses(facts);
-
-	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
-	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
-	// upcast (UPCAST §5). Always present now — built from base state even with auto-calc off (the toggle
-	// gates effect LAYERS, not spell mechanics like upcast; N6).
-	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
 
 	return {
 		level,
@@ -234,6 +272,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		speed,
 		flySpeed: movementOf('speed.fly'),
 		swimSpeed: movementOf('speed.swim'),
+		climbSpeed: movementOf('speed.climb'),
 		maxHp,
 		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),

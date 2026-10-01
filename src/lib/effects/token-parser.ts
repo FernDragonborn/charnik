@@ -616,6 +616,7 @@ export const ISSUE_KEY = {
 	unreadableResourceMax: 'effectIssue.unreadableResourceMax',
 	pluginFailed: 'effectIssue.pluginFailed',
 	dependencyCycle: 'effectIssue.dependencyCycle',
+	misplacedWalkingSpeed: 'effectIssue.misplacedWalkingSpeed',
 	unreadableGuard: 'effectIssue.unreadableGuard',
 	rolledAbilityScore: 'effectIssue.rolledAbilityScore',
 	unreadableAbilityChange: 'effectIssue.unreadableAbilityChange',

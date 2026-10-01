@@ -26,6 +26,16 @@
 	const PIP_CAP = 20;
 
 	const system = $derived(combat.character?.system);
+
+	/** The ways of moving this character has beyond walking — said under the walking speed, in the
+	 *  builder card's own words, and only the ones that are not zero. */
+	const movementModes = $derived(
+		[
+			{ key: 'build.defenses.fly', speed: s.flySpeed },
+			{ key: 'build.defenses.swim', speed: s.swimSpeed },
+			{ key: 'build.defenses.climb', speed: s.climbSpeed },
+		].filter((mode) => mode.speed.value > 0),
+	);
 </script>
 
 <div class="sectlab">
@@ -70,7 +80,12 @@
 			<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
 			     one inside it is dropped and the metric hugs the "ft" -->
 			<div class="tile-value">{s.speed.value} ft <small>({metres(s.speed.value)})</small></div>
-			<div class="tile-text">{$_('combat.section.baseWalk')}</div>
+			<div class="tile-text">
+				{[
+					$_('combat.section.baseWalk'),
+					...movementModes.map((mode) => $_(mode.key, { values: { feet: mode.speed.value } })),
+				].join(' · ')}
+			</div>
 		</div>
 
 		{#if s.resources.length}

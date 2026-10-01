@@ -592,6 +592,45 @@ describe('deriveSheet aggregator', () => {
 		expect(s.speed.trace.some((t) => t.amount === -10 && /STR 15/.test(t.source))).toBe(true);
 	});
 
+	it('a movement mode may be stated as the walking speed, and a literal one still stands', () => {
+		const c = wizard(); // STR 10 < plate STR 15 → walks 20
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.play.effects = [
+			{
+				iid: '1',
+				label: 'Gloves',
+				effects: ['set_override:speed.climb:speed:floor', 'set_override:speed.swim:speed:floor'],
+				positive: true,
+			},
+			{ iid: '2', label: 'Ring', effects: ['set_override:speed.swim:40'], positive: true },
+			{ iid: '3', label: 'Half', effects: ['set_override:speed.fly:speed/2'], positive: true },
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.speed.value).toBe(20);
+		expect(s.climbSpeed.value).toBe(20);
+		expect(s.swimSpeed.value).toBe(40); // the ring's literal 40 beats a floor of 20
+		expect(s.flySpeed.value).toBe(10);
+		expect(s.deriveIssues.map((i) => i.key)).not.toContain(ISSUE_KEY.misplacedWalkingSpeed);
+	});
+
+	it('`speed` read anywhere but a movement mode is refused rather than read as 0', () => {
+		const c = wizard();
+		c.play.effects = [];
+		const before = deriveSheet(characterSchema.parse(c), graph).ac.value;
+		c.play.effects = [
+			{
+				iid: '1',
+				label: 'Misplaced',
+				effects: ['flat_bonus:ac+speed/10', 'speed >= 30 ? flat_bonus:ac+1'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.value).toBe(before);
+		const refused = s.deriveIssues.filter((i) => i.key === ISSUE_KEY.misplacedWalkingSpeed);
+		expect(refused).toHaveLength(2);
+	});
+
 	it('A3: no speed penalty when STR meets the armor requirement', () => {
 		const c = wizard();
 		c.build.abilities.str = 15; // meets plate STR 15

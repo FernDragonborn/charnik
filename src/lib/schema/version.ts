@@ -85,7 +85,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v21: 2014 Hold Monster takes one more creature per slot above 5th, as its text and 2024's row say.
 // v22: 2024 Skilled says its three picks reach tools (`skill_choice_kinds`). An install left at v21
 // offers skills only.
-export const CONTENT_SEED_VERSION = 22;
+// v23: the rows that state a Climb or Swim Speed "equal to your Speed" fold it (two 2014 items, three
+// 2024 items, Roving and Second-Story Work). An install left at v22 reads those as a note.
+export const CONTENT_SEED_VERSION = 23;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

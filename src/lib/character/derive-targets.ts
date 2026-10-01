@@ -35,6 +35,7 @@ const NUMERIC_TARGETS = new Set<string>([
 	'speed',
 	'speed.fly',
 	'speed.swim',
+	'speed.climb',
 	'initiative',
 	'attack',
 	'attacks',

@@ -85,10 +85,11 @@
   player applies it by hand. Grouped by the gap, because the gap is the work — the rows follow for
   free once it closes.
 
-  **Five gaps are closed, and their grammar is `../internals/effects.md` ▸ Targets:** a qualifier on
+  **Six gaps are closed, and their grammar is `../internals/effects.md` ▸ Targets:** a qualifier on
   a defence (`ac.ranged`, `saves.spell`), a choice the item asks per instance (`choice_options` +
   `item_choice`, 5.5e only — see 2b), a bonus stated as a range (`bonus_choice` + `item_bonus`), a
-  sense (`senses.<name>`), and attack rolls made against you (`attacked`). The roll-time control
+  sense (`senses.<name>`), attack rolls made against you (`attacked`), and a movement mode stated
+  as the walking speed (`speed.climb`, and the `speed` variable a mode's value may read). The roll-time control
   that would APPLY a qualified defence is deliberately not built: it needs the player to say what a
   save is against, which is a design question of its own.
 
@@ -109,23 +110,6 @@
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated
      `rarity: very_rare` stands — wrong for a +1 and a +2. It is a browsing fact, not a number on a
      sheet, and it is the row's own column rather than the answer's.
-
-  4. **A climb speed — the ~8-line sizing was wrong, and the measurement is why.** The plan was one
-     entry in `NUMERIC_TARGETS`, one `CharacterSheet` field off the existing `movementOf`, a third
-     chip in `SheetDefenses`. That is still true, and it would ship a target **no shipped row can
-     use**: grepped across both packs, EVERY climbing-speed row says "equal to your walking speed" —
-     Slippers of Spider Climbing, Cloak of Arachnida, Potion of Climbing, Gloves of Swimming and
-     Climbing, in both editions. There is not one literal value to point the target at, so the
-     8 lines would be a mechanism with no first consumer, which is exactly what the release gate
-     exists to stop.
-     **So the work is the RELATION, not the target**, and it is a pipeline-ordering problem rather
-     than a vocabulary one. `set_override:speed.climb:speed` needs the character's effective walking
-     speed in the L2 ctx, and the ctx is built during RESOLVE while `deriveSpeed` runs after it (it
-     needs the facts). `base_speed` is the species' figure before effects, so a character under
-     Longstrider or in heavy armour would read wrong — a wrong number, which is worse than the note
-     these rows carry today. Whoever picks this up decides between a second fact pass for the
-     movement targets (they already fold after `deriveSpeed`, so re-collecting with an augmented ctx
-     is the cheap shape) and leaving the sentence to prose.
 
   **The rows that stay prose, each for a reason the vocabulary cannot fix by growing a word:**
   - *Shield of Missile Attraction* wants resistance qualified by the SOURCE of the damage rather than

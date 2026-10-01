@@ -96,6 +96,7 @@
 			"all": "all",
 			"armour": "Armour",
 			"editLanguages": "Languages…",
+			"climb": "climb {feet} ft",
 			"fly": "fly {feet} ft",
 			"languages": "Languages",
 			"noResistances": "no damage resistances",
@@ -1007,6 +1008,7 @@
 			"speed": "Speed",
 			"speedFly": "Fly speed",
 			"speedSwim": "Swim speed",
+			"speedClimb": "Climb speed",
 			"spellAttack": "Spell attack",
 			"spellDc": "Spell DC",
 			"unresolved": "{target} (unresolved)"
@@ -1334,6 +1336,7 @@
 	"effectIssue": {
 		"armorBlocksCasting": "Not proficient with {category} armour — spellcasting blocked.",
 		"dependencyCycle": "This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.",
+		"misplacedWalkingSpeed": "This effect reads your walking speed somewhere Charnik cannot know it yet, so it is left out of the sheet. Only a movement speed (fly, swim, climb) can be set from your walking speed.",
 		"duplicateClassFeature": "Two content packs both provide this class feature. Charnik applied it once, not twice — pick which copy you want in Settings ▸ Content to make the choice explicit.",
 		"noPreparedCount": "Charnik doesn’t know how many spells {class} prepares at level {level} in {system}, so it shows none — this edition gives no formula to work it out from. Add the count for that level to the class’s casting table in your content.",
 		"pluginFailed": "This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.",

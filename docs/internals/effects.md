@@ -109,7 +109,8 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 ### Targets
 
 `matchesTarget` (`apply.ts`) matches an exact key OR a group that fans out. Specific keys:
-`ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `hp_max`, `attack`, `attacked`, `damage`,
+`ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `speed.climb`, `hp_max`, `attack`,
+`attacked`, `damage`,
 `spell_dc`, `spell_attack`, `crit_threshold`, `save.<ability>`, `save.death`, `skill.<id>`,
 `passive.<skill>`,
 plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets** (fan out):
@@ -274,6 +275,12 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
 - **Build/derived numbers:** `level`, `proficiency_bonus`, `<ability>_mod`/`<ability>_score`,
   `class_level.<id>`, `spellcasting_mod` (the active/carrying class's casting stat), `base_speed`
   (species walking speed, pre-effect).
+- **Movement-mode only:** `speed` — the walking speed AFTER effects, readable in exactly one
+  place: the value of a `speed.<mode>` target (`set_override:speed.climb:speed:floor`, "a Climb
+  Speed equal to your Speed"). The sheet folds its walking speed after the resolve stage, so the
+  assemble re-resolves those facts against it (`derive-assemble.ts` ▸ `movementModeFacts`). A guard,
+  or a value aimed at any other target, cannot be given the number: the resolver leaves that token
+  inert and raises `misplacedWalkingSpeed` rather than letting it read 0.
 - **Item-scoped:** `item_bonus` — the `+N` the PLAYER answered for the carried item whose row this
   token is on, scoped to that effect the way `spellcasting_mod` is scoped to a class. 0 everywhere
   else, including on the same row before it is answered: the SRD prints ONE "Weapon, +1, +2, or +3"
@@ -304,7 +311,8 @@ the guard has no else branch.
   **floored** (5e "round down" default); `ceil()`/`round()` are the explicit opt-in.
 - **Read boundary (cycle rule):** an expression may read base/build values + dependency-resolved
   play-state, but NEVER the post-effect DERIVED value of the stat it modifies. `base_speed` is the
-  deliberate exception (species input, not derived speed).
+  deliberate exception (species input, not derived speed), and `speed` is not one: a movement
+  mode is a different stat from the walking speed it reads, and nothing else may read it.
 - **One `ctx`, shared with L3:** the build/play split — build vars read `ctx.build`, guard vars
   read the dependency-resolved `ctx.play` (`makeExprContext` over live getters into the resolve
   state, not a frozen copy).

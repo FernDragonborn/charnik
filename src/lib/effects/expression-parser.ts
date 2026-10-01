@@ -18,6 +18,14 @@ const MAX_LENGTH = 512;
 
 /* ─────────────────────────── whitelist (enforced at parse) ─────────────────────────── */
 
+/** The walking speed AFTER effects. It exists only once the sheet's own speed has folded, which is
+ *  after the resolve stage — so it is readable in exactly one place, the value of a movement mode
+ *  (`set_override:speed.climb:speed`, "a Climb Speed equal to your Speed"), and the resolver turns
+ *  away a token that reads it anywhere else. */
+export const WALKING_SPEED_VAR = 'speed';
+/** A movement mode is a sub-target of the walking speed: `speed.fly`, `speed.swim`, `speed.climb`. */
+export const MOVEMENT_MODE_PREFIX = 'speed.';
+
 /** Exact-name numeric variables (the build/derived + play numbers). Ability mod/score names are
  *  generated from ABILITIES so they can never drift out of sync. */
 const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
@@ -25,6 +33,7 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'proficiency_bonus',
 	'spellcasting_mod',
 	'base_speed',
+	WALKING_SPEED_VAR,
 	// ITEM-SCOPED: the +N the player answered for the carried item this token is on. 0 everywhere
 	// else, including on the same row before it is answered — the app never picks a bonus for them.
 	'item_bonus',

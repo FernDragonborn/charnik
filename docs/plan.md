@@ -266,10 +266,9 @@ position and are given per wave, because most of them were learned the hard way.
   of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): the climb speed, which is NOT the
-  8-line target it was sized as — no shipped row states a literal range, so the work is the "equal to
-  your walking speed" relation — and the 2014 half of the per-instance choice, which is unsourced
-  rather than unwritten: that pack ships zero item tables while twelve of its rows point at one.
+  **One piece is left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): the 2014 half of the per-instance
+  choice, which is unsourced rather than unwritten — that pack ships zero item tables while twelve of
+  its rows point at one.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

@@ -1380,6 +1380,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function withCastSlot` — Wrap a sheet ctx with the CAST-EPHEMERAL upcast vars (UPCAST §4): the `slot` a spell is cast from * and its own `spel…
 - `const NO_VARS` — A ctx that answers nothing — the base for a caller that has exactly one variable to supply * and no character state a…
 - `function withItemBonus` — The same ctx with `item_bonus` pointed at ONE carried item's answer — the `+1/+2/+3` rows, whose * number is the play…
+- `function withWalkingSpeed` — The same ctx with `speed` answered — the walking speed after effects, which only the assemble * stage knows.
 - `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
 
 ### `src/lib/effects/dependency-graph.ts`
@@ -1409,6 +1410,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/expression-parser.ts`
 
+- `const WALKING_SPEED_VAR` — The walking speed AFTER effects.
+- `const MOVEMENT_MODE_PREFIX` — A movement mode is a sub-target of the walking speed: `speed.fly`, `speed.swim`, `speed.climb`.
 - `const CONDITION_FLAG_ALIASES` — Sugar boolean flags that are pure aliases for `has_condition.<id>`.
 - `const ENUM_VARS` — Enum-typed variables → their allowed literal values.
 - `const ORDERED_ENUMS` — Enums whose members have a meaningful order (so `<`/`>` compare by index).
@@ -1840,4 +1843,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1107 exports across 149 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1110 exports across 149 modules · 75 duplicate suspects._

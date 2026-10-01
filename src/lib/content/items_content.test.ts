@@ -189,6 +189,30 @@ describe('shipped magic items · effects column is engine-valid', () => {
 				expect(byId('robe_of_eyes')?.[0]).toBe('advantage:skill.perception');
 			});
 
+			it('a Climb Speed "equal to your Speed" follows the walking speed, whatever moved it', async () => {
+				const g = await loadPacks(path);
+				const slippers = g.list('item').find((r) => r.id === 'slippers_of_spider_climbing');
+				expect(slippers?.data.effects).toEqual(['set_override:speed.climb:speed:floor']);
+				const cloak = g.list('item').find((r) => r.id === 'cloak_of_arachnida')?.data.effects;
+				expect(cloak).toContain('set_override:speed.climb:speed:floor');
+
+				const climbWith = (extra: string[]) => {
+					const c = newCharacter('probe', 'Probe', edition);
+					c.play.effects = [
+						{ iid: 's', label: 'Slippers', effects: slippers?.data.effects ?? [], positive: true },
+						{ iid: 'x', label: 'Other', effects: extra, positive: true },
+					];
+					const s = deriveSheet(characterSchema.parse(c), g);
+					return { walk: s.speed.value, climb: s.climbSpeed.value };
+				};
+				const plain = climbWith([]);
+				expect(plain.climb).toBe(plain.walk);
+				expect(plain.walk).toBeGreaterThan(0);
+				// the species' figure would have been wrong here: the effect moves the walking speed
+				const faster = climbWith(['flat_bonus:speed+10']);
+				expect(faster).toEqual({ walk: plain.walk + 10, climb: plain.walk + 10 });
+			});
+
 			it('Bracers of Defense carry the no-armour-no-shield GUARD, not a bare +2 AC', async () => {
 				const g = await loadEdition(path);
 				const [token] =

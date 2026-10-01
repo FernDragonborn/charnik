@@ -873,7 +873,8 @@ not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_
 			<p>
 				<strong>Stats and rolls:</strong> <code>ac</code> · <code>hp_max</code> ·
 				<code>initiative</code> · <code>speed</code> · <code>speed.fly</code> ·
-				<code>speed.swim</code> · <code>attack</code> · <code>attacks</code> (how many you get) ·
+				<code>speed.swim</code> · <code>speed.climb</code> · <code>attack</code> ·
+				<code>attacks</code> (how many you get) ·
 				<code>attacked</code> (what an attacker rolling at <em>you</em> gets) · <code>damage</code> ·
 				<code>spell_dc</code> · <code>spell_attack</code> · <code>crit_threshold</code> (the lowest
 				d20 face that crits for you) · <code>action</code> · <code>bonus</code> ·
@@ -982,6 +983,13 @@ disadvantage:attacked.spell        <span class="cmt">Spellguard Shield</span></c
 				<code>class_level.&lt;id&gt;</code> · <code>spellcasting_mod</code> ·
 				<code>base_speed</code> · <code>&lt;ability&gt;_mod</code> and
 				<code>&lt;ability&gt;_score</code> for each of <code>str dex con int wis cha</code>.
+			</p>
+			<p>
+				<strong>Only when setting a fly, swim or climb speed:</strong> <code>speed</code> — your
+				walking speed after everything that changes it.
+				<code>set_override:speed.climb:speed:floor</code> is "a Climb Speed equal to your Speed".
+				Anywhere else the token is left out and flagged, because the walking speed is not known yet
+				there.
 			</p>
 			<p>
 				Ability names are always spelled out with what you want from them — <code>dex_mod</code>, not

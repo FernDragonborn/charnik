@@ -198,7 +198,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 ## 6 · What you can point an effect at
 
 **Stats and rolls:** `ac` · `hp_max` · `initiative` · `speed` · `speed.fly` · `speed.swim` ·
-`attack` · `attacks` (how many you get) · `damage` · `spell_dc` · `spell_attack` · `action` ·
+`speed.climb` · `attack` · `attacks` (how many you get) · `damage` · `spell_dc` · `spell_attack` · `action` ·
 `bonus` · `reaction` · any ability by name (`str` … `cha`).
 
 **Senses:** `senses.darkvision` · `senses.truesight` · `senses.blindsight` · `senses.tremorsense`
@@ -262,6 +262,10 @@ formula is *data* that travels to the roller, so the same formula always reads t
 
 **About the build:** `level` · `proficiency_bonus` · `class_level.<id>` · `spellcasting_mod` ·
 `base_speed` · `<ability>_mod` and `<ability>_score` for each of `str dex con int wis cha`.
+
+**Only when setting a fly, swim or climb speed:** `speed` — your walking speed after everything
+that changes it. `set_override:speed.climb:speed:floor` is "a Climb Speed equal to your Speed".
+Anywhere else the token is left out and flagged, because the walking speed is not known yet there.
 
 **About the item the token is on:** `item_bonus` — the `+1`, `+2` or `+3` the player said their copy
 of this item is. Write the rungs your row offers in its `bonus_choice` column (`1,2,3`, or
