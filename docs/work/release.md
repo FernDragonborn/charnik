@@ -100,4 +100,7 @@
     than the next advisory expires without saying so. Widen the existing line; do not add a second.
   - **An override is only worth adding once the upstream bump is ruled out** — a pin that restates
     what the tree already resolves outlives its advisory and misleads the next reader.
+  - **A transitive one whose parent's range already admits the patched version is a stale lockfile**,
+    not a missing pin: `pnpm update <name>` moves it (`devalue`, under `svelte` and `@sveltejs/kit`),
+    and nothing is written to `overrides`.
   Pages deploy recovery is still open.
