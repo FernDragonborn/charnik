@@ -9,6 +9,9 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { itemTagLabel } from '$lib/content/item-tags';
+	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { provenance } from '$lib/actions/provenance';
+	import { app } from '$lib/stores/app.svelte';
 	const b = build;
 
 	const cap = $derived(b.masteryPicks.cap);
@@ -30,8 +33,18 @@
 			{#each options as row (row.effectiveId)}
 				{@const id = row.data.id}
 				{@const mastery = b.masteryPicks.propertyOf(id)}
-				<button class="pick-chip" class:on={picks.includes(id)} onclick={() => b.masteryPicks.toggle(id)}>
-					{rowName(row)}<span class="prop gold">{itemTagLabel(mastery, $_)}</span>
+				{@const rule = b.masteryPicks.propertyRowOf(id)}
+				<!-- the chip says what the property DOES on hover and on focus: it is what the weapon is
+				     being picked for, and a bare word is not a reason to pick anything -->
+				<button
+					class="pick-chip"
+					class:on={picks.includes(id)}
+					use:provenance={rule ? describedPlainProse(rule, app.activeLocale) : ''}
+					onclick={() => b.masteryPicks.toggle(id)}
+				>
+					{rowName(row)}<span class="prop gold"
+						>{rule ? rowName(rule) : itemTagLabel(mastery, $_)}</span
+					>
 				</button>
 			{/each}
 		</div>

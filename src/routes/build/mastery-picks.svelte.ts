@@ -14,6 +14,7 @@ import { weaponProfGrants } from '$lib/combat/attacks';
 import { isWeaponProficient } from '$lib/rules/proficiency';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from '$lib/content/item-tags';
 import type { LoadedRowByType } from '$lib/content/loader';
+import { weaponPropertyRows, type WeaponPropertyRow } from '$lib/content/weapon-properties';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
 
@@ -61,6 +62,15 @@ export class MasteryPicks {
 		const row = this.options.find((r) => r.data.id === weaponId);
 		return row ? (parseItemTags(row.data.tags).get(ITEM_TAG.mastery) ?? '') : '';
 	};
+
+	/** The rows that say what each property does, by its word. */
+	private propertyRows = $derived.by(() => {
+		const graph = this.host().graph;
+		return graph ? weaponPropertyRows(graph, this.host().draft.system) : new Map();
+	});
+	/** The row describing one weapon's mastery property, when a pack has one. */
+	propertyRowOf = (weaponId: string): WeaponPropertyRow | undefined =>
+		this.propertyRows.get(this.propertyOf(weaponId));
 
 	/** Toggle a weapon kind. Capped like every other capped picker here: at the cap a click REPLACES
 	 *  the oldest, because nothing on screen says to un-pick first (ui.md §10). */

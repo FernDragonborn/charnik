@@ -144,6 +144,12 @@ never belonged to the grant — `bardic_inspiration` is granted by two features 
 token segment nor a column on the granting row. The engine keeps `titleCase(id)` as the fallback: a
 name is something content ADDS, and it is translated like any other prose.
 
+**What a weapon property DOES is a row of its own**, in the `weapon_property` content type, keyed by
+the word the weapon's tag carries: `mastery:vex` on the item, `vex` on the row. The tag says which
+weapon has the property; the row holds its name and the rule's own text, so the words are the pack's
+(and translatable) rather than a catalog entry, and a surface that prints the property can explain
+it (`content/weapon-properties.ts`). A word with no row still prints as itself.
+
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸
 resolveItem`).
@@ -339,7 +345,7 @@ English fallback is the contract.
 ## Where the shipped data comes from
 
 Game data is converted from a real CC-BY source, never authored from memory. That conversion happens
-in a producer sibling, not here; what this repository sees is the pack, which checks its own 34 files
+in a producer sibling, not here; what this repository sees is the pack, which checks its own 35 files
 against a manifest of row counts (`charnik-content-srd` ▸ `check.mjs`).
 
 - **5.5e = SRD 5.2.1** — `downfallx/dnd-5e-srd-markdown`.

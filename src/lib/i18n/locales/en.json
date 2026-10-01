@@ -1257,7 +1257,8 @@
 		"spell": "Spell",
 		"spell_lists": "Spell lists",
 		"spell_slots": "Spell slots",
-		"subclass": "Subclass"
+		"subclass": "Subclass",
+		"weapon_property": "Weapon property"
 	},
 	"contentValue": {
 		"concentrationFor": "Concentration · {duration}",

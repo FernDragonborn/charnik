@@ -7,6 +7,8 @@
 	import { attackMeta, attackName, attackNotes, formatDamageParts } from '$lib/combat/attacks';
 	import { why } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
+	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { app } from '$lib/stores/app.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
@@ -15,6 +17,18 @@
 	// the player's own order, applied where it is a view concern; the VM hands over the rows the
 	// character actually has, and this reconciles them against what was arranged
 	const attacks = $derived(combat.layout.ordered(ROW_PANEL.attacks, combat.attacks, (a) => a.id));
+
+	/** What the row says on hover and on focus: its notes, then what its mastery property does —
+	 *  one line each, so the word on the row is never the whole of what the player is told. */
+	const rowExplanation = (at: Attack): string =>
+		[
+			attackNotes(at, $_),
+			at.meta.mastery?.row
+				? `${at.meta.mastery.name}. ${describedPlainProse(at.meta.mastery.row, app.activeLocale)}`
+				: '',
+		]
+			.filter(Boolean)
+			.join('\n');
 
 	/* The order of these rows is the player's — the list itself is derived from what they wield, so
 	   the order lives on `ui.rowOrder` and is reconciled against the live rows on every read. The
@@ -77,7 +91,7 @@
 				<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
 				<button
 					class="combat-row"
-					use:provenance={attackNotes(at, $_)}
+					use:provenance={rowExplanation(at)}
 					onclick={(e) => combat.attackRoll(at, e)}
 				>
 					<span class="row-name">{attackName(at, $_)}</span><span class="combat-row-hint"

@@ -243,9 +243,8 @@ position and are given per wave, because most of them were learned the hard way.
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting, which is
      where the next variants start.
 
-  **Deliberately not in a wave:** RULES-TEXT, the 2014 item tables and the eight weapon-mastery
-  EFFECTS — 38 weapons carry a `mastery:<name>` tag and no row in either pack says what one DOES.
-  All three are a producer sibling's output, not this repo's.
+  **Deliberately not in a wave:** RULES-TEXT and the 2014 item tables.
+  Both are transcription from the SRD, not app work.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the dice tray, the chrome the
@@ -254,8 +253,8 @@ position and are given per wave, because most of them were learned the hard way.
 - **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
   FEATURE-PASSIVES naming shape 1 and N2b (Wild Shape) no longer blocked on data — the attacks column
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
-  can turn into actually lives. MASTERY-HALF's remaining half sits here: the eight mastery EFFECTS,
-  most of which act on a creature the app does not model. A17 sits here as well: ritual casting
+  can turn into actually lives. MASTERY-HALF's tail sits here: Graze, Nick and Vex, each a
+  mechanic the app does not have yet rather than a token it could be given. A17 sits here as well: ritual casting
   ships for every class, and what is left is the two casters whose grant is not a class's — a feat's
   spells, and a 2014 warlock's Pact of the Tome.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap

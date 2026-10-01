@@ -463,7 +463,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (134 modules)
+## Library functions & types (135 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -773,6 +773,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
+- `interface WeaponMastery` — A mastery property as a row prints it.
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
 - `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
@@ -1268,6 +1269,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const affectsContent` — * Is this path worth a rebuild?
 - `function startContentWatcher` — Start watching `<dataDir>/content` (desktop only; no-op off desktop or if already watching).
 - `function stopContentWatcher` — Stop watching (call on teardown / before re-pointing at a new data folder).
+
+### `src/lib/content/weapon-properties.ts`
+
+- `type WeaponPropertyRow`
+- `function weaponPropertyRows` — Property word → its row, for one edition.
 
 ### `src/lib/demo/sheet.ts`
 
@@ -1863,4 +1869,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1127 exports across 150 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1130 exports across 151 modules · 75 duplicate suspects._

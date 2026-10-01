@@ -20,7 +20,7 @@
   `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
   because of these blocks, and that comes out with them.
 
-- [~] **MASTERY-HALF · weapon mastery. The CHARACTER half is built; the eight EFFECTS are not.**
+- [~] **MASTERY-HALF · weapon mastery. The picks and the rules text ship; three properties still want a mechanic.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature
   unlocks that KIND of weapon for you.
@@ -36,20 +36,19 @@
   **Multiclass grants SUM**, and that is RAW rather than a convenience: the 2024 multiclassing rules
   name their exceptions (Extra Attack, Spellcasting, alternative AC) and Weapon Mastery is not one of
   them, so a Fighter 1 / Barbarian 1 drills five kinds.
-  **What is left is the eight mastery EFFECTS, and they are BLOCKED on data this repo may not write.**
-  The tail was queued as "Graze, Nick and Vex as tokens, the other five as `note:` with the reason",
-  which presumed the eight properties exist as rows to carry a token or a note. They do not. Counted,
-  not remembered: **38** 2024 weapons carry a `mastery:<name>` tag naming **8** distinct properties,
-  and **no row in either pack states what any of them does** — there is no masteries table, and the
-  names appear nowhere but inside those tags.
-  So the player sees the bare word `vex` on their attack row with no way to learn what it means, which
-  is the release gate's third clause (shipped content that visibly does nothing) rather than a wrong
-  number. Writing the eight sentences here is the one thing `AGENTS.md` forbids outright — game data
-  is transcribed from a real CC-BY source, never authored — and turning the SRD's prose into columns
-  is a producer sibling's output that a human reads as a CSV diff, like RULES-TEXT beside it.
-  **What the tail becomes, once the rows exist:** Graze, Nick and Vex touch the character's own
-  numbers and are the ones worth a token; Cleave, Push, Sap, Slow and Topple act on a creature the app
-  does not model and stay `note:` by the same argument that keeps Favored Enemy prose.
+  **Each property says what it does.** The eight are `weapon_property` rows — a name and SRD 5.2.1's
+  own sentence, keyed by the word the weapon's tag carries (`../internals/content.md` ▸ A column, or a
+  tag) — and the attack row and the mastery picker print the name and explain it on hover and focus.
+  **What is left is the three that touch the character's own numbers, and none of them fits a kind
+  the vocabulary has**, so each is a mechanic before it is a token:
+  - **Graze** deals the attack's ability modifier on a MISS. The app records no miss, so it wants a
+    control on the roll the way `damage_reroll` has one.
+  - **Nick** moves the Light property's extra attack from a Bonus Action into the Attack action. The
+    turn economy has no notion of that extra attack to move.
+  - **Vex** gives Advantage on the next attack against ONE creature. It is relational, and the app
+    has no target — the argument that keeps 2014 Grappler prose.
+  Cleave, Push, Sap, Slow and Topple act on a creature the app does not model and stay text for the
+  same reason Favored Enemy does.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
 - [ ] **RULES-TEXT · the packs carry the SRD's ROWS and none of its rules chapters.** Both packs hold

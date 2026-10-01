@@ -13,6 +13,8 @@
 		formatDamageParts,
 	} from '$lib/combat/attacks';
 	import { app } from '$lib/stores/app.svelte';
+	import { describedPlainProse } from '$lib/content/overrides.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { signed } from '$lib/util/format';
 	const b = build;
 
@@ -67,7 +69,14 @@
 					<b class="aname" role="cell">{attackName(a, $_)}</b>
 					<span class="hit" role="cell">{signed(a.toHit)}</span>
 					<span class="dmg" role="cell">{formatDamageParts(a.damageParts, $_)}</span>
-					<span class="ameta" role="cell">{[attackMeta(a, $_), attackNotes(a, $_)].filter(Boolean).join(' · ')}</span>
+					<!-- the cell explains the mastery it names: the word alone says nothing a player can use -->
+					<span
+						class="ameta"
+						role="cell"
+						use:provenance={a.meta.mastery?.row
+							? describedPlainProse(a.meta.mastery.row, app.activeLocale)
+							: ''}>{[attackMeta(a, $_), attackNotes(a, $_)].filter(Boolean).join(' · ')}</span
+					>
 				</div>
 			{/each}
 		</div>

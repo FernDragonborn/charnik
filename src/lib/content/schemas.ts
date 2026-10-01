@@ -582,6 +582,11 @@ const resourceOptionSchema = namedRow.extend({
  */
 const resourceSchema = namedRow;
 
+/** What a weapon property DOES, keyed by the word a weapon's tag carries: `mastery:vex` on the
+ *  item, `vex` here. A name and the rule's own text, like `resource` — the tag says which weapon
+ *  has the property, this row is where a player reads what it means. */
+const weaponPropertySchema = namedRow;
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -602,6 +607,7 @@ export const CONTENT_TYPES = {
 	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' },
 	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' },
 	resource: { schema: resourceSchema, filebase: 'resources' },
+	weapon_property: { schema: weaponPropertySchema, filebase: 'weapon_properties' },
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -623,6 +629,7 @@ const LOOKUP_TYPES = new Set<ContentType>([
 	'spell_lists',
 	'resource_option', // named, but a linked spend-table — not a browsable article
 	'resource', // a pool's display name; its rules text lives on the feature that grants it
+	'weapon_property', // read where the weapon is — the attack row, the mastery picker
 ]);
 
 /** A browsable content type (an ARTICLE: shows in compendium + search). */

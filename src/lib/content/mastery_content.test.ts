@@ -13,7 +13,7 @@ import { loadPacks } from '../../test-support/real-content';
 import { masteryBudget } from '../build/derive';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
-import { computeAttacks } from '../combat/attacks';
+import { attackMeta, computeAttacks } from '../combat/attacks';
 import { ITEM_TAG, parseItemTags } from './item-tags';
 
 const S = 'SRD 5.2.1';
@@ -78,7 +78,7 @@ describe('weapon mastery · the attack row says it only when the character may u
 		const greataxe = graph.get(`item:${S}:greataxe`);
 		const shipped =
 			greataxe?.type === 'item' ? parseItemTags(greataxe.data.tags).get(ITEM_TAG.mastery) : '';
-		expect(rowFor()?.meta.mastery).toBe(shipped);
+		expect(rowFor()?.meta.mastery?.id).toBe(shipped);
 	});
 
 	it('a weapon whose only property IS the mastery advertises nothing until it is drilled', async () => {
@@ -96,5 +96,61 @@ describe('weapon mastery · the attack row says it only when the character may u
 
 		character.build.masteries = ['mace'];
 		expect(rowFor()?.meta.mastery).toBeTruthy();
+	});
+});
+
+/*
+ * What a mastery property DOES is the pack's own text: SRD 5.2.1 ▸ Equipment ▸ Mastery Properties
+ * defines eight, and every `mastery:<word>` a weapon carries must find its definition — a word with
+ * no row is a player reading `vex` on their attack row with no way to learn what it means.
+ */
+describe('weapon mastery · every property a weapon names says what it does', () => {
+	it('2024 ships the eight properties, and no weapon names a ninth', async () => {
+		const graph = await loadPacks('srd-2024');
+		const rows = graph.list('weapon_property', { system: '5.5e' });
+		expect(rows.map((r) => r.id).sort()).toEqual([
+			'cleave',
+			'graze',
+			'nick',
+			'push',
+			'sap',
+			'slow',
+			'topple',
+			'vex',
+		]);
+		for (const row of rows) expect(row.data.text_en, row.id).toBeTruthy();
+
+		const named = new Set(
+			graph
+				.list('item', { system: '5.5e' })
+				.map((r) => parseItemTags(r.data.tags).get(ITEM_TAG.mastery))
+				.filter((word): word is string => !!word),
+		);
+		expect([...named].sort()).toEqual(rows.map((r) => r.id).sort());
+	});
+
+	it('2014 has no such rule, so it ships no such rows', async () => {
+		const graph = await loadPacks('srd-2014');
+		expect(graph.list('weapon_property', { system: '5e' })).toEqual([]);
+	});
+
+	it('a drilled weapon carries the property under its own name, with the row that explains it', async () => {
+		const graph = await loadPacks('srd-2024');
+		const character = characterSchema.parse(newCharacter('grog', 'Grog', '5.5e'));
+		character.build.classes = [{ class: `class:${S}:barbarian`, level: 1 }];
+		character.build.inventory = [
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
+		];
+		character.build.masteries = ['greataxe'];
+		const row = computeAttacks(character, deriveSheet(character, graph), graph).find(
+			(a) => a.id === 'greataxe',
+		);
+		const rule = graph
+			.list('weapon_property', { system: '5.5e' })
+			.find((r) => r.id === row?.meta.mastery?.id);
+		expect(rule).toBeDefined();
+		expect(row?.meta.mastery).toEqual({ id: rule?.id, name: rule?.data.name_en, row: rule });
+		// the row prints the property's NAME, not the tag's bare word
+		expect(row && attackMeta(row)).toContain(String(rule?.data.name_en));
 	});
 });

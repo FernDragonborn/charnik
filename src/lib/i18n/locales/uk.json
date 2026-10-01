@@ -1257,7 +1257,8 @@
 		"spell": "Закляття",
 		"spell_lists": "Списки заклять",
 		"spell_slots": "Комірки заклять",
-		"subclass": "Підклас"
+		"subclass": "Підклас",
+		"weapon_property": "Властивість зброї"
 	},
 	"contentValue": {
 		"concentrationFor": "Концентрація · {duration}",
