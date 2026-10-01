@@ -39,7 +39,7 @@ function popoverElement(): HTMLDivElement {
 		// a popover is placed against a rectangle that scrolling moves out from under it; captured, so
 		// a panel scrolling inside the page counts as much as the page itself. Bound to the ELEMENT,
 		// not to each value: one open popover means one listener, not one per number on the sheet.
-		window.addEventListener('scroll', hide, true);
+		window.addEventListener('scroll', followOrHide, true);
 		window.addEventListener('resize', hide);
 	}
 	return popover;
@@ -62,6 +62,18 @@ function place(node: HTMLElement, tip: HTMLDivElement): void {
 function hide(): void {
 	popover?.classList.remove('is-open');
 	openFor = null;
+}
+
+/** A value that holds FOCUS keeps its popover through a scroll, and the popover follows it: the
+ *  browser scrolls a focused value into view, so that scroll belongs to the same act that opened the
+ *  popover, and closing on it leaves a keyboard nothing to read below the fold. A hovered value
+ *  closes — the pointer no longer rests on what it explained — and so does one scrolled off screen. */
+function followOrHide(): void {
+	if (!openFor || !popover) return;
+	const at = openFor.getBoundingClientRect();
+	const isInView = at.bottom > 0 && at.top < window.innerHeight;
+	if (isInView && openFor.contains(document.activeElement)) place(openFor, popover);
+	else hide();
 }
 
 function show(node: HTMLElement, text: string): void {

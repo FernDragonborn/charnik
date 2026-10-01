@@ -75,12 +75,6 @@
         the save mark, the cast-time icon, an effect's reference-only note. A popover costs one tab
         stop per row to say the same sentence; these are the names of marks, and want a legend or an
         accessible name rather than a walk of eighteen stops.
-      One defect in the mechanism itself: **focus that SCROLLS closes the popover it opened.** A value
-      below the fold is scrolled into view by the browser when it takes focus, and the popover's own
-      scroll listener (`provenance.ts` ▸ `hide`) answers that scroll — so tabbing to an off-screen
-      value shows nothing, which is the half of rule 3 the action exists for. Measured in Playwright
-      on `/dev/inspector`: empty on a focused off-screen skill, the sentence once it is in view first.
-
       The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
       expands prose inside the row, with `title` on the button as a second, slower explanation of the
       button itself. Hover should open the prose where the pointer already is; whether the click

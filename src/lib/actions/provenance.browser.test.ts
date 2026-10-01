@@ -60,6 +60,52 @@ describe('provenance (ui.md ▸ UX pattern contract, rule 3)', () => {
 		expect(document.activeElement).toBe(node);
 	});
 
+	it('a focused value below the fold keeps the popover its own scroll-into-view would close', async () => {
+		const spacer = document.createElement('div');
+		spacer.style.height = `${window.innerHeight * 3}px`;
+		document.body.append(spacer);
+		const node = mountValue();
+		cleanup = provenance(node, 'Armor +11')?.destroy;
+
+		const scrolled = new Promise((resolve) =>
+			window.addEventListener('scroll', resolve, { once: true }),
+		);
+		node.focus();
+		await scrolled;
+		expect(window.scrollY).toBeGreaterThan(0);
+		expect(isOpen()).toBe(true);
+		// it followed the value rather than standing where the value was before the scroll
+		const tip = popover()?.getBoundingClientRect();
+		const at = node.getBoundingClientRect();
+		expect(
+			Math.abs((tip?.bottom ?? 0) - at.top) < 12 || Math.abs((tip?.top ?? 0) - at.bottom) < 12,
+		).toBe(true);
+
+		// scrolled off screen, there is nothing left for it to stand beside
+		const away = new Promise((resolve) =>
+			window.addEventListener('scroll', resolve, { once: true }),
+		);
+		window.scrollTo(0, 0);
+		await away;
+		expect(isOpen()).toBe(false);
+	});
+
+	it('a hovered value closes on scroll: the pointer no longer rests on it', async () => {
+		const spacer = document.createElement('div');
+		spacer.style.height = `${window.innerHeight * 3}px`;
+		const node = mountValue();
+		document.body.append(spacer);
+		cleanup = provenance(node, 'Armor +11')?.destroy;
+		enter(node);
+		expect(isOpen()).toBe(true);
+		const scrolled = new Promise((resolve) =>
+			window.addEventListener('scroll', resolve, { once: true }),
+		);
+		window.scrollTo(0, 40);
+		await scrolled;
+		expect(isOpen()).toBe(false);
+	});
+
 	it('empty provenance is no provenance: no tab stop, no description, nothing to open', () => {
 		const node = mountValue();
 		const handle = provenance(node, '');

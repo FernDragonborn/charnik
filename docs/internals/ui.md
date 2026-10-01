@@ -235,6 +235,10 @@ good", so they are pinned here and every component follows them.
    row's reason and a resource's recharge are all this popover. **Pressing a CONTROL closes it**: a
    press does something, often opening a menu exactly where the popover stands. A plain value's
    stays open through a tap, because on touch a tap is the only way to open it.
+   **A scroll closes a HOVERED popover and moves a FOCUSED one**: focusing a value below the fold
+   makes the browser scroll it into view, and a popover that closed on that scroll would say
+   nothing to exactly the keyboard user it exists for. It follows the value until the value leaves
+   the viewport.
    **What a `title` may still be:** the NAME of an icon-only control (beside the same `aria-label`),
    and a value's own text where the box truncates it (a path). Never an explanation — and never a
    popover on a `disabled` control, which takes neither hover nor focus (rule 10 says what to use).
