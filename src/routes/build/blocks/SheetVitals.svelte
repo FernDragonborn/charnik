@@ -24,7 +24,7 @@
 			>
 		</div>
 		{#if s.hitDice.length}
-			<div class="tile" title={$_('build.vitals.hitDiceHint')}>
+			<div class="tile" use:provenance={$_('build.vitals.hitDiceHint')}>
 				<b>{s.hitDice.map((h) => `${h.max}${h.die}`).join(' · ')}</b><small>{$_('build.vitals.hitDice')}</small>
 			</div>
 		{/if}

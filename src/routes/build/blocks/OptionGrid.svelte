@@ -11,6 +11,7 @@
 	// Keyboard-first (ui.md §5): ↑/↓ move the highlight, Home/End jump, Enter is a left click. Walking
 	// only ever highlights — an open card follows the highlight, but nothing commits on the way past.
 	import { _ } from '$lib/i18n';
+	import { provenance } from '$lib/actions/provenance';
 	import type { Snippet } from 'svelte';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
@@ -105,7 +106,7 @@
 				role="option"
 				aria-selected={isTaken(row.effectiveId)}
 				aria-disabled={why ? true : undefined}
-				title={why}
+				use:provenance={why}
 				class:is-active={row.effectiveId === previewId}
 				class:is-taken={isTaken(row.effectiveId)}
 				class:is-blocked={!!why}

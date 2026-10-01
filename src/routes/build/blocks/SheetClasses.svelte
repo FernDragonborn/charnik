@@ -3,6 +3,7 @@
 	// necessarily built at level 1, so the feature list is the proof: every level up to this one is
 	// listed, plus the next few, so nothing arrives unexplained and nothing is silently skipped.
 	import Icon from '$lib/components/Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { rowDetail, rowText, savesLabel } from '../rows';
@@ -121,7 +122,7 @@
 					aria-label={$_('build.classes.lowerLevel', named)}
 					aria-disabled={lowerBlocked ? true : undefined}
 					class:is-blocked={lowerBlocked}
-					title={lowerBlocked ? $_('build.strictSettled') : undefined}
+					use:provenance={lowerBlocked ? $_('build.strictSettled') : ''}
 					onclick={() => b.classRows.bumpClassLevel(i, -1)}><Icon name="minus" size={12} /></button
 				>
 				<span class="base">{cls.level}</span>
@@ -132,7 +133,8 @@
 					class="icon-button"
 					class:is-blocked={removeBlocked}
 					aria-disabled={removeBlocked ? true : undefined}
-					title={removeBlocked ? $_('build.strictSettled') : $_('build.classes.removeClass')}
+					title={removeBlocked ? undefined : $_('build.classes.removeClass')}
+					use:provenance={removeBlocked ? $_('build.strictSettled') : ''}
 					aria-label={$_('build.classes.removeClass')}
 					onclick={() => b.classRows.removeClass(i)}><Icon name="x" size={12} /></button
 				>

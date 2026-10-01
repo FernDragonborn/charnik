@@ -91,7 +91,7 @@
 							<button
 								type="button"
 								class="resource-use"
-								title={$_('combat.resource.useOneTitle', {
+								use:provenance={$_('combat.resource.useOneTitle', {
 									values: {
 										name: r.name,
 										recharge: sayText(rechargeLabel(r.recharge), $_),
@@ -139,7 +139,6 @@
 					<i>{$_(`skillName.${p.key}`)}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={!isAdv}
-							title={sourceText(advDis, $_)}
 							><Icon name={isAdv ? 'chevron-up' : 'chevron-down'} size={12} /></span
 						>{/if}
 				</span>

@@ -6,6 +6,7 @@
 	// <html> by the root layout — so a choice here is live AND survives a reload. (The system a NEW
 	// character is built under is chosen on the Build page, not here.)
 	import Icon, { type IconName } from '../Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
 	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
 	import { LOCALES, _ } from '$lib/i18n';
@@ -81,7 +82,7 @@
 			<button
 				class="pill-btn"
 				class:accent={app.critMethod === method}
-				title={$_(`settings.general.critHint.${method}`)}
+				use:provenance={$_(`settings.general.critHint.${method}`)}
 				onclick={() => (app.critMethod = method)}
 				>{$_(`settings.general.critName.${method}`)}</button
 			>

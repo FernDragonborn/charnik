@@ -6,6 +6,7 @@
 	// not something is ticking, and a bar that came and went with the player's buffs was a control they
 	// could not reach for when they wanted it.
 	import Icon from '$lib/components/Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '$lib/i18n';
 
@@ -26,7 +27,7 @@
 			type="button"
 			class="step"
 			onclick={() => combat.economy.advanceTime(rounds)}
-			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
+			use:provenance={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
 		>
 	{/each}
 	<!-- Dawn and dusk are BOUNDARIES, not durations: a wand recharges at dawn, and the app has no
@@ -37,7 +38,7 @@
 			type="button"
 			class="step boundary"
 			onclick={() => combat.resources.passBoundary('dawn')}
-			title={$_('combat.timeSkip.newDayHint')}
+			use:provenance={$_('combat.timeSkip.newDayHint')}
 			><Icon name="sun" size={12} /> {$_('combat.timeSkip.newDay')}</button
 		>
 	{/if}
@@ -46,7 +47,7 @@
 			type="button"
 			class="step boundary"
 			onclick={() => combat.resources.passBoundary('dusk')}
-			title={$_('combat.timeSkip.nightfallHint')}
+			use:provenance={$_('combat.timeSkip.nightfallHint')}
 			><Icon name="moon" size={12} /> {$_('combat.timeSkip.nightfall')}</button
 		>
 	{/if}

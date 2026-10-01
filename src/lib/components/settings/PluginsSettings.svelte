@@ -4,6 +4,7 @@
 	// switch, and a refresh re-scan. Desktop-only (PLG-SEC 21) — the web build shows an explainer.
 	// Broken folders are listed with their problem, never silently skipped.
 	import Icon from '../Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
 	import {
 		plugins,
@@ -121,7 +122,7 @@
 					{#if plugins.prefs.consent[p.namespace] !== undefined}
 						<button
 							class="pill-btn"
-							title={$_('settings.plugins.forgetTitle')}
+							use:provenance={$_('settings.plugins.forgetTitle')}
 							onclick={() => forgetPlugin(p.namespace)}>{$_('settings.plugins.forget')}</button
 						>
 					{/if}

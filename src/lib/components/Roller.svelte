@@ -7,6 +7,7 @@
 	// irregular silhouette it leaves is fine. An ad-hoc roll is this same tray with an empty body —
 	// not a second screen, and not a mode.
 	import RollerLine from './RollerLine.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { DICE } from '$lib/combat/helpers';
 	import { _ } from '$lib/i18n';
 	import type { RollLogEntry } from '$lib/combat/roll';
@@ -53,7 +54,7 @@
 			<button
 				type="button"
 				class="roller-die-btn ghost"
-				title={$_('roller.addModifier')}
+				use:provenance={$_('roller.addModifier')}
 				onclick={diceTray.addMod}>{$_('roller.modButton')}</button
 			>
 		</div>
@@ -100,7 +101,7 @@
 			type="button"
 			class="roller-roll"
 			class:muted={!diceTray.rollable}
-			title={$_(diceTray.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
+			use:provenance={$_(diceTray.rollable ? 'roller.rollHint' : 'roller.notAccounted')}
 			onclick={fire}>{$_('roller.roll')}</button
 		>
 	</div>

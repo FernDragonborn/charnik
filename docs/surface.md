@@ -38,6 +38,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
+- `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
@@ -71,7 +72,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
-- `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte

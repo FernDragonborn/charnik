@@ -74,7 +74,7 @@ function show(node: HTMLElement, text: string): void {
 	openFor = node;
 }
 
-export const provenance: Action<HTMLElement, string> = (node, initial) => {
+export const provenance: Action<HTMLElement, string | null | undefined> = (node, initial) => {
 	// the description travels with the VALUE, not with the shared popover: a screen reader reads it
 	// on focus whether or not the popover is what showed it
 	const label = document.createElement('span');
@@ -90,7 +90,8 @@ export const provenance: Action<HTMLElement, string> = (node, initial) => {
 
 	/** Empty provenance is no provenance: nothing to read, so no tab stop and no description either.
 	 *  A value can arrive before the sheet that explains it, so this is re-decided on every update. */
-	const describe = (next: string) => {
+	const describe = (given: string | null | undefined) => {
+		const next = given ?? '';
 		text = next;
 		label.textContent = next;
 		if (next && !label.isConnected) {
@@ -117,6 +118,12 @@ export const provenance: Action<HTMLElement, string> = (node, initial) => {
 	const close = () => {
 		if (openFor === node) hide();
 	};
+	// A CONTROL's press does something — often opens a menu exactly where the popover stands — so
+	// the explanation gives way to it. A plain value has no press of its own, and on touch a tap is
+	// the only way to open its popover at all, so that one stays.
+	const onClick = () => {
+		if (!ownsTabStop) close();
+	};
 	const onKeydown = (e: KeyboardEvent) => {
 		// Escape dismisses without moving focus — the ordinary way out of a tooltip you have read
 		if (e.key === 'Escape' && openFor === node) {
@@ -130,10 +137,11 @@ export const provenance: Action<HTMLElement, string> = (node, initial) => {
 	node.addEventListener('pointerleave', close);
 	node.addEventListener('focusin', open);
 	node.addEventListener('focusout', close);
+	node.addEventListener('click', onClick);
 	node.addEventListener('keydown', onKeydown);
 
 	return {
-		update(next: string) {
+		update(next: string | null | undefined) {
 			describe(next);
 			if (openFor !== node) return;
 			if (text) show(node, text);
@@ -145,6 +153,7 @@ export const provenance: Action<HTMLElement, string> = (node, initial) => {
 			node.removeEventListener('pointerleave', close);
 			node.removeEventListener('focusin', open);
 			node.removeEventListener('focusout', close);
+			node.removeEventListener('click', onClick);
 			node.removeEventListener('keydown', onKeydown);
 			describe('');
 		},

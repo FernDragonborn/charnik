@@ -78,7 +78,7 @@
 		<input class="nameinput" placeholder={$_('build.namePlaceholder')} bind:value={b.draft.name} />
 	</label>
 
-	<span class="level" title={$_('build.levelTotal')}>
+	<span class="level" use:provenance={$_('build.levelTotal')}>
 		<b>{b.sheet?.level ?? b.classRows.totalLevel}</b>
 		<small>{$_('build.levelMeta', { values: { bonus: signed(b.sheet?.proficiencyBonus ?? 2) } })}</small>
 	</span>
@@ -136,13 +136,13 @@
 			class:on={b.draft.shortRestMode === 'dice'}
 			aria-pressed={b.draft.shortRestMode === 'dice'}
 			onclick={() => (b.draft.shortRestMode = 'dice')}
-			title={$_('build.shortRestDiceHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestDice')}</button
+			use:provenance={$_('build.shortRestDiceHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestDice')}</button
 		>
 		<button
 			class:on={b.draft.shortRestMode === 'half'}
 			aria-pressed={b.draft.shortRestMode === 'half'}
 			onclick={() => (b.draft.shortRestMode = 'half')}
-			title={$_('build.shortRestHalfHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestHalf')}</button
+			use:provenance={$_('build.shortRestHalfHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestHalf')}</button
 		>
 	</div>
 </header>

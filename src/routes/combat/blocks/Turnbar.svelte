@@ -3,6 +3,7 @@
 	// pip slots, the movement tracker, and Next turn. Reads the `combat` view-model; the non-null
 	// character comes in as a prop (for the per-slot spent counts in `play.turn`).
 	import Icon from '$lib/components/Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 	import { range } from '$lib/combat/helpers';
@@ -68,7 +69,7 @@
 		type="button"
 		class="turn-slot move"
 		onclick={() => combat.economy.spendMove(5)}
-		title={$_('combat.turn.moveHint')}
+		use:provenance={$_('combat.turn.moveHint')}
 		aria-label={moveLabel}
 	>
 		<Icon name="footprints" size={13} /> <span class="slot-label">{$_('combat.turn.move')}</span>

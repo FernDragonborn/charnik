@@ -10,6 +10,7 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '$lib/i18n';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
@@ -24,7 +25,7 @@
 		class="toggle combat-toggle"
 		class:on={c.play.inCombat}
 		onclick={combat.toggleCombat}
-		title={$_('combat.controls.combatHint')}
+		use:provenance={$_('combat.controls.combatHint')}
 		><Icon name="swords" />
 		{$_('combat.controls.combat')}
 		<span class="toggle-state">{state(c.play.inCombat)}</span></button
@@ -37,7 +38,7 @@
 			class="toggle"
 			class:on={shield.entry.equipped}
 			onclick={() => combat.inventory.equip(shield.entry.item)}
-			title={$_('combat.controls.shieldHint')}
+			use:provenance={$_('combat.controls.shieldHint')}
 			><Icon name="shield" />
 			{$_('combat.controls.shield')}
 			<span class="toggle-state">{state(shield.entry.equipped)}</span></button
@@ -52,7 +53,7 @@
 			<button
 				class="toggle concentration on"
 				onclick={combat.rollConcentrationSave}
-				title={$_('combat.controls.concentrationHint')}
+				use:provenance={$_('combat.controls.concentrationHint')}
 				><Icon name="target" />
 				{$_('combat.controls.concentration')}
 				<span class="toggle-state">{conc.label}</span></button
@@ -72,7 +73,7 @@
 	<button
 		class="toggle rest"
 		onclick={(e) => combat.startShortRest(e)}
-		title={$_(
+		use:provenance={$_(
 			combat.shortRestMode === 'half'
 				? 'combat.controls.shortHintHalf'
 				: 'combat.controls.shortHintDice',

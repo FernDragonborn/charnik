@@ -3,6 +3,7 @@
 	// actions (Show/hide-filtered), feature-granted rollables (Sneak Attack, Bardic Inspiration…) and
 	// resource spend-options (Ki → Flurry) with a cost chip. Three kinds, one order the player owns.
 	import Icon from '$lib/components/Icon.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
 	import { dndzone } from 'svelte-dnd-action';
@@ -144,7 +145,7 @@
 					class="combat-row"
 					class:is-blocked={blocked}
 					aria-disabled={blocked}
-					title={!o.available
+					use:provenance={!o.available
 						? $_('combat.actions.unavailable')
 						: broke
 							? $_('combat.actions.cantAfford', { values: { resource: o.resourceName } })

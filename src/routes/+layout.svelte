@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$lib/styles/app.css';
+	import { provenance } from '$lib/actions/provenance';
 	import favicon from '$lib/assets/favicon.svg';
 	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
@@ -322,7 +323,7 @@
 		type="button"
 		class="feedback"
 		onclick={() => (showDiagnostics = true)}
-		title={$_('feedback.title')}
+		use:provenance={$_('feedback.title')}
 		aria-label={$_('feedback.link')}
 	>
 		<Icon name="bug" size={13} />

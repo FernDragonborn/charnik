@@ -77,7 +77,7 @@
 				<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
 				<button
 					class="combat-row"
-					title={attackNotes(at, $_) || undefined}
+					use:provenance={attackNotes(at, $_)}
 					onclick={(e) => combat.attackRoll(at, e)}
 				>
 					<span class="row-name">{attackName(at, $_)}</span><span class="combat-row-hint"

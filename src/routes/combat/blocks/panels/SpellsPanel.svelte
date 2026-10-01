@@ -36,7 +36,7 @@
 		     this block, and that copy is its own i18n domain (docs/internals/ui.md ▸ Error copy) -->
 		<div
 			class="armor-block"
-			title={$_('combat.spells.armorBlockNote', {
+			use:provenance={$_('combat.spells.armorBlockNote', {
 				values: { category: $_(`armorCategory.${combat.armorBlock.category}`) },
 			})}
 		>

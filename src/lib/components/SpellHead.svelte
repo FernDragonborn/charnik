@@ -3,6 +3,7 @@
 	// chips), and the effect/casting strip. Structural stats are read-only; only the title is editable
 	// (translate). Prose lives BELOW in ArticleProse; the dispatcher (WikiDetail) stacks them.
 	import { _ } from '$lib/i18n';
+	import { provenance } from '$lib/actions/provenance';
 	import { say, sayText } from '$lib/util/say';
 	import type { DetailModel, SpellModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
@@ -82,7 +83,7 @@
 				<div class="stat-value">
 					{#each spell.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
 								class="homebrew-mark"
-								title={$_('compendium.grantedClassSide')}>+</span
+								use:provenance={$_('compendium.grantedClassSide')}>+</span
 							>{/if}{/each}
 				</div>
 			</div>

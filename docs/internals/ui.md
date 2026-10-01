@@ -204,7 +204,13 @@ good", so they are pinned here and every component follows them.
    describes it, rather than adding an affordance to two dozen unrelated layouts to say one thing.
    The same action carries any other hover-and-focus explanation, so there is one popover on the
    sheet rather than two lookalikes — the upcast ⇡ hands it the whole slot ladder, which is why the
-   popover renders one line per newline (`white-space: pre-line`).
+   popover renders one line per newline (`white-space: pre-line`). A hint on a button, a blocked
+   row's reason and a resource's recharge are all this popover. **Pressing a CONTROL closes it**: a
+   press does something, often opening a menu exactly where the popover stands. A plain value's
+   stays open through a tap, because on touch a tap is the only way to open it.
+   **What a `title` may still be:** the NAME of an icon-only control (beside the same `aria-label`),
+   and a value's own text where the box truncates it (a path). Never an explanation — and never a
+   popover on a `disabled` control, which takes neither hover nor focus (rule 10 says what to use).
 4. **Any value is click-to-edit** — a manual override is available at any time, independent of
    whether auto-calculation is on.
 5. **Lists are keyboard-navigable**: ↑/↓ move a highlight, **Enter is identical to a left click**,

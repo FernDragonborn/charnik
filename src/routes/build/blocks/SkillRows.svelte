@@ -59,7 +59,7 @@
 						<button
 							class="x2"
 							class:on={expert}
-							title={$_('build.skills.expertiseHint')}
+							use:provenance={$_('build.skills.expertiseHint')}
 							onclick={() => b.skillPicks.toggleExpertise(skill)}>×2</button
 						>
 					{/if}

@@ -4,6 +4,7 @@
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
 	// as props. The dnd grid that hosts these cards stays in the page.
 	import { tick } from 'svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import Icon from '$lib/components/Icon.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import { base } from '$app/paths';
@@ -78,7 +79,7 @@
 				class:off={!c.play.autoCalc}
 				aria-pressed={c.play.autoCalc}
 				onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
-				title={`${autoCalcLabel} — ${$_('combat.panel.autoCalcHint')}`}
+				use:provenance={`${autoCalcLabel} — ${$_('combat.panel.autoCalcHint')}`}
 				aria-label={autoCalcLabel}><Icon name="zap" size={13} /></button
 			>
 		</span>
