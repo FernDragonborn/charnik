@@ -35,21 +35,6 @@ shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki 
 die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
 stay semi-manual.
 
-- [x] **N1 · Inventory view.** The combat panel (`pid: 'inventory'`): qty stepper, equip / attune
-  (cap 3 — Strict blocks, Free allows and says so), "use" on a consumable, and the weight →
-  carrying-capacity bar. **What must survive:** money is its OWN thing (N6), never an inventory row;
-  ADDING an item stays in the builder, because that is a search through hundreds of rows while the
-  panel is the four verbs play needs; item charges live in RECHARGE-3, not here.
-- [x] **DEMO-1 · Showcase demo character.** **Karroth the Red**, id `karroth` —
-  Tiefling · Soldier · **Warlock 5 (Fiend) × Barbarian 3 (Berserker)**, SRD-only, derives clean
-  against the real shipped SRD 5.2.1 graph. It seeds first-run on web AND desktop, so it IS the first
-  impression of the system's scope — keep it deriving clean. `recreateDemoCharacter()` restores it;
-  Settings ▸ Data has the button.
-  **What this pairing does NOT exercise** (so nobody assumes the demo covers it): `casterLevel` is 0
-  for the barbarian half, so pact-pool-alongside-shared-slot math is never hit; Unarmored Defense and
-  the Eldritch Invocations are untokenized, both waiting on N2; and a base Warlock has **no Ritual
-  Casting**, so the `R` badge cannot appear here without Book of Ancient Secrets — demo rituals on a
-  Wizard/Cleric aspect instead, and with a REAL shipped SRD ritual, never a hand-authored one.
 - [ ] **N2 · Class-feature engine ("features as data").** The three shapes above, in the order
   1→3→2. Wild Shape carved out as N2b: it is a stat-block REPLACEMENT, not one of the shapes.
   Superiority dice: extend the grammar —
@@ -57,10 +42,8 @@ stay semi-manual.
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
-  attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
-  Attacks panel shows ×N — carved out as EXTRA-ATTACK below, because it blocks 0.7.0 and the rest
-  of N2 does not. The fold ALREADY gathers feature tokens (`derive-gather` ▸
-  `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
+  attacks via the existing `bonusDice` path. Extra Attack is built (`../internals/effects.md` ▸
+  Targets). The fold ALREADY gathers feature tokens (`derive-gather` ▸ `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
   class-feature row works the day it is written — FEATURE-PASSIVES is written against that. What is
   still owed here is the content-schema column bump for shapes 2 and 3.
   **The measurement that sizes shape 3, so it is not re-taken:** of the shipped class-feature rows
@@ -71,7 +54,7 @@ stay semi-manual.
   Divinity, Font of Magic, Wild Shape, Indomitable, Arcane Recovery, Mystic Arcanum, Stunning Strike.
   The Resources block discovers pools from the engine, so each appears the moment content encodes it;
   the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`, `ki`,
-  `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come through the converters**
+  `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come from a producer sibling**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
 - [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
@@ -108,111 +91,6 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [x] **STACK-RAW · the same-effect rule is enforced whole.** RAW is quoted in
-  `../internals/effects.md` ▸ Two of the same thing, and it is SRD rather than DMG: SRD 5.1 states it
-  under Spellcasting ▸ Casting a Spell ("Combining Magical Effects") and SRD 5.2.1 under Casting
-  Spells ("Combining Spell Effects"), with two Clerics casting Bless as its own example.
-  `dedupeRuntimeEffects` (`effects/resolver.ts`) now keys on the NAME alone and keeps the MOST POTENT
-  instance, with the MOST RECENT winning a tie — the two clauses it followed most of the way.
-  **Potency had to be defined, and the definition is the interesting half:** the sum of the
-  MAGNITUDES of the literal amounts an instance's tokens declare. Magnitude rather than the signed
-  value, because the more potent Bane is the one that takes more off, and signed arithmetic ranked it
-  as the weaker. A value that is not a literal yet — an L2 expression, a die — counts 0, because the
-  fold has not run at dedupe time and there is no ctx to resolve one against; the instances then tie
-  and recency decides, which is what the rule's own example wants.
-  **The limit is stated rather than implied:** `+1d4` against `+1d6` under one name ties where RAW
-  would rank them, and no shipped row produces that pair.
-  **What it is NOT about:** `set` folding by most potent (`rules/pipeline.ts`) answers a different
-  question — two differently named sources setting one TARGET — on which RAW says nothing general.
-
-- [x] **STATE-LIST-BINARY · the state picker offers a behaviour the engine refuses.** A row it calls
-  a catalog entry wears a "+" and adds another instance; the resolver then dedupes that instance
-  away, so the second row sits in the panel moving no number. And the split it draws — toggle for a
-  condition, "+" for anything else — asks `kind`, which says which FILE a row came from rather than
-  how it behaves: `half_cover` is not a condition, cannot sensibly be held twice, and gets the "+".
-  **The fact that decides this is already in the data and already RAW-grounded.** `max_level` is 1
-  for a binary state and >1 for a ladder, which is the only distinction the SRD itself draws —
-  Exhaustion is the one condition either edition calls cumulative, and it says so in its own text.
-  Every row the picker offers has `max_level` 1 (a ladder is excluded from the list by
-  `content/states.ts` already), so **every row is a toggle** and the "+" has no case left.
-  **A second wrong number rides on the same predicate:** the row shows
-  `durationRounds ?? newEffectDuration`, so `half_cover`, which deliberately ships an EMPTY
-  `duration_rounds`, displays the stepper's 10 rounds. A blank cell means "until removed" and must
-  read as one.
-  **The stepper itself then has no job in the picker:** an active effect's duration is already
-  editable where the effect lives (`EffectsPanel`'s `duration-select`), so the picker is a second
-  owner of one fact — and the one that is wrong. The row's own `duration_rounds` seeds the clock
-  when it is switched on; blank seeds none. The custom-effect form keeps its own duration field,
-  because that one genuinely makes a new thing.
-  **DONE.** One flat list, one row shape — a label and a switch. The stepper left the picker, the
-  "+" and the duration pill with it, and three CSS rules and four message keys went with them: the
-  change removes more than it adds. The switch owns only what the picker put there (a catalog row by
-  its own ref, a condition by a BARE application of itself), so a spell's carrier is never dropped by
-  a list that reads as a reference — a state held from elsewhere shows as on, dimmed, and says where
-  to end it. Driven in chromium: every state row reports the same shape, the menu stays open under a
-  flip, and Half cover lands on the panel reading `∞` instead of 10 rounds.
-  The alternatives it was picked from: `design-preview/_addstate-now.png` (before), `_addstate-a3.png`,
-  `_addstate-b.png`, `_addstate-c.png`; the result is `_addstate-final.png`.
-
-- [x] **PROF-GRANT · `grant_proficiency` has data, and its target namespace reaches equipment.**
-  The token could only ever say a save or a skill, and no shipped row said even that. Both halves
-  shipped together, because the saves alone would have left the design question open.
-
-  **The namespace it grants in is its own** (`docs/internals/effects.md` ▸ Targets): abilities and
-  `save.<ability>` plus the `saves` GROUP, skills, `armor.<category>` and `weapon.<category|item_id>`.
-  Equipment is binary — there is no expertise in wearing plate — and it folds ON TOP of the class
-  columns via `withGrantedProfs`, which leaves an UNCONSTRAINED character unconstrained: a lenient
-  (undeclared) class must never be turned constrained by a grant. A specific weapon id is open
-  vocabulary for the same reason a damage type is — `derive-targets.ts` has no graph to check an id
-  against, and a mistyped category cannot be told from an id it has never heard of. Armour has no ids,
-  so it stays closed and spell-checked.
-
-  **`grant_proficiency:saves` is one token, not six.** "Proficiency in all saving throws" is one
-  sentence in the rules; six tokens would be data the source does not have.
-
-  **Shipped rows that now say it rather than only printing it:** 2014 Diamond Soul + 2024 Disciplined
-  Survivor (`saves`) · Slippery Mind (2014 Wisdom, 2024 Wisdom AND Charisma — the editions differ) ·
-  2014 Life Domain's Bonus Proficiency (`armor.heavy`, so plate stops blocking the cleric's spells) ·
-  2014 Dwarven Combat Training and High Elf's Elf Weapon Training (four weapon ids each — the elf's
-  belong to `high_elf`, since the base `elf` row's text blob merely reprints the subrace section) ·
-  2014 Keen Senses and Menacing (Perception / Intimidation). `class_features_content.test.ts` asserts
-  each, non-vacuously — the negative case is asserted beside the positive one.
-
-  **Still prose, deliberately:** every grant that is a CHOICE (2024 Divine Order and Primal Order,
-  College of Lore, the 2024 elf's one-of-three Keen Senses) waits on the chooser, not on this token.
-  Qualified grants stay text — Stonecunning's doubled bonus applies only to stonework-origin History
-  checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the 2024 Sun
-  Blade's grant is conditional on already being proficient with longswords.
-
-- [x] **EXTRA-ATTACK · a level-5 martial attacks twice.** `attacksPerAction` is a folded value
-  like every other number: base one from the rules core, raised by `set_override:attacks:<n>:floor`
-  on the feature row, with its trace. **A SET with a floor, not an add** — RAW lists Extra Attack
-  among the features with special multiclassing rules, so a fighter 5 / barbarian 5 attacks twice
-  and two additive tokens would have quietly made it three. The 2014 fighter carries its whole
-  ladder in one row (`step(class_level.fighter, 5->2, 11->3, 20->4)`), 2024 splits it across three
-  rows that each raise the floor. The builder had been showing this number from its own sum over raw
-  facts, which bypassed the fold; both views read the one value now. The 2014 paladin had no Extra
-  Attack ROW at all — its SRD heading reads "Extra A ttack", an OCR artifact, so the converter's
-  name lookup never matched — and the row is transcribed in.
-- [x] **RAGE-SCOPE · Rage damage is a Strength bonus, and the editions mean different things by it.**
-  It ships as a broad `flat_bonus:damage+2`, so it pays out on any attack. RAW is narrower and the
-  two editions are NOT the same sentence: 2014 is "when you make a melee weapon attack usingStrength",
-  2024 is "When you make an attack using Strength—with either a weapon or an Unarmed Strike" (no
-  melee, and unarmed named). So this is two tokens, not one shared one. Player consensus is
-  unanimous and matches RAW — a finesse weapon swung with Dexterity gets nothing — so there is no
-  table choice to offer here, unlike most RAW/RAI splits.
-  Shipped as `damage.melee,str` (2014) and `damage.str` (2024). It needed two grammar pieces that
-  did not exist: an attack now carries the ABILITY it resolved from among its scopes (`attackAbility`
-  in `combat/attacks.ts`, extracted so the rule has one home), and a scope may be a comma-separated
-  list the roll path requires ALL of — which it already matched that way, only the parser refused to
-  accept one.
-- [x] **FINESSE-ABILITY · a finesse weapon asks which ability it swings with.** What must not be
-  re-litigated: the choice is keyed by weapon KIND (a +1 Rapier is a Rapier), an ABSENT key means
-  "whichever modifier is higher" so no save needs migrating, and the control renders only where there
-  is a choice to make. The reason it is not cosmetic is the one to keep: the ability an attack
-  resolves from is an effect SCOPE, so Rage pays out on a rapier swung with Strength and not on the
-  same rapier swung with Dexterity — which is why the silent `Math.max` was sometimes picking the
-  worse number. The same shape recurs for any feature that keys off an ability rather than a weapon.
 - [ ] **GWF-2014 · Great Weapon Fighting is a REROLL in 2014 and a floor in 2024, and only one of
   them ships.** 2024 says "treat any 1 or 2 on a damage die as a 3" and carries
   `min_die:damage:two_handed,melee:3`. 2014 says "you can reroll the die and **must use the new roll**"
@@ -225,98 +103,12 @@ stay semi-manual.
   chooser, same shape as the 2024 fighting-style feats already have. Once they are, the token is
   `reroll:damage:two_handed,melee:2` and the edition divergence is said rather than smoothed.
 
-- [x] **VOCAB-CONSUMERS · every effect kind has a shipped row, or a stated reason not to.** Three
-  times this cycle a kind was built, documented with a named example, and shipped with NOTHING using
-  it: `grant_proficiency` (0 rows → 22), the ladder's `partial` rung (built down to the trace label,
-  no producer), and `min_die` on a d20 (Reliable Talent was its documented example and was prose).
-  Each was found by accident — twice by a maintainer asking a question.
-  **So it is a test now**, not a habit: `class_features_content.test.ts` walks every shipped row in
-  both packs and asserts that the set of kinds with no user equals a pinned list, each entry carrying
-  its reason. `plugin` is user-authored by definition, `auto_succeed` has no RAW consumer (its mirror
-  `auto_fail` has 16, all conditions), and `reroll` waits on GWF-2014 above. Gaining a user is now a
-  deliberate edit to that list; losing the last one fails loudly.
-  **The same question one level down is asked too:** a kind can be consumed while its TARGET is not,
-  so a token parses, folds onto nothing, and only content-health mentions it — at runtime, to a user
-  who did not write the row. B13's `isEffectTargetSupported` could always answer that; nothing had
-  ever asked it of OUR data. A second assertion walks the same rows and expects an empty list.
-
-- [x] **RELIABLE-TALENT · a rogue stops rolling under 10 where the rule says so.** `min_die` was
-  built with Reliable Talent as its named example and shipped with no d20 consumer at all: the rows
-  said "you can treat a d20 roll of 9 or lower as a 10" in both editions and an 11th-level rogue
-  rolling a 3 kept the 3. Found by a maintainer mixing it up with Jack of All Trades, which is the
-  cheapest kind of find and the reason to say what a feature does out loud.
-
-  **What it needed was one fact the roll did not carry.** RAW keys off "an ability check that lets you
-  add your proficiency bonus", and a skill roll passed no scopes, so `min_die:skills:10` would have
-  floored every check including the untrained ones — over-granting, which is the failure this whole
-  gate is about. The skill roll now passes ONE scope, `proficient`, meaning exactly that sentence, and
-  the shipped token is `min_die:skills:proficient:10`. Expertise carries the scope too; Jack of All
-  Trades' `partial` rung does not — 2024 says "uses one of your skill proficiencies", and a skill you
-  are untrained in is not one.
-
-  **`roll`'s key and its scopes became one argument** (`RollTarget`), because they answer one question
-  and because a fifth positional parameter is a type. A bare string still works, so every other call
-  site reads as it did.
-
-  **Not covered, and stated rather than implied:** 2024's Reliable Talent also names TOOL
-  proficiencies, which `TOOLS` has not modelled yet, so the tool half waits there.
-
 - [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",
-  "score a critical hit on"). Every row below carries no token today. Grouped by what it is waiting
-  on, because only the first group is pure content:
+  "score a critical hit on"). Every row writable against the targets that exist carries its token;
+  what is left is grouped by what it waits on:
 
-  - **Writable against the targets that exist — DONE, every row carries its token.** Checked against
-    both shipped packs rather than against this list: `danger_sense` (`advantage:save.dex` under its
-    own condition guard, and the guards DIFFER by edition — 2014 also excludes blinded and deafened) ·
-    `fast_movement` and 2024 `roving` (`armor_type!=heavy ? flat_bonus:speed+10`) ·
-    `unarmored_movement` (the `step()` ladder under the no-armour-no-shield guard, MONK-MOVEMENT) ·
-    `feral_instinct` and 2024 `champion_remarkable_athlete` (`advantage:initiative`, and the 2024
-    Champion adds `advantage:skill.athletics`).
-    **2014 `champion_remarkable_athlete` SHIPS TOO, once the rung stopped being one feature's.** It
-    adds half proficiency ROUNDED UP to STR/DEX/CON checks, where `partial` was `Math.floor(prof / 2)`
-    labelled "Jack of All Trades" — the wrong number wearing another feature's name, twice over. The
-    rung now carries both: `partial_up` rounds the other way, and the trace names the granting row.
-    **The rounding is not a second RUNG**, and that is the decision worth keeping: the two sit at the
-    same tier, draw the same dot and differ by at most 1, so a ladder member that behaved identically
-    everywhere but one arithmetic line would be a tier nobody could see. It rides beside the rung.
-    **Its target had to exist too** — `check.<ability>`, every check that ability makes, the bare one
-    and its skills alike, because the rules call both a Strength check. A bare ability in this kind's
-    target slot already meant the SAVE.
-    What reads the grants is `character/granted-proficiency.ts` now: one module, because it is one
-    question asked from both ends, and because `derive-stats.ts` was over its line budget.
-    Two rows that were listed here are NOT shape 1 and moved: 2024 `superior_defense` spends 3 Focus
-    Points for a minute of resistance, so it is an activated ability with a duration, not a passive;
-    `pact_boon` is a choice of three, so it waits on `choose_n` with the rest of the choices below.
-    2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no target, no
-    enemy to test against, and the Features panel already prints the sentence.
-  - **DONE — a condition is a defence bucket now.** `condition_immunity:<id>` names a state ROW
-    rather than a new closed vocabulary, which is what let 2014's "immune to disease" ship too: the
-    slot is free-form the way a damage type is, and a word no row carries reads as itself. Eight
-    feature rows carry it across the two editions, and `petrified` lost the `note:` that was
-    standing in for it. It SAYS the immunity (a chip on the defences strip, in both the builder and
-    play) and does not refuse an application: the ruling at the table is the player's.
-  - **DONE — every one of these shipped its token, the crit threshold last.** `extra_attack`
-    (EXTRA-ATTACK), `unarmored_defense` and `draconicbloodline_draconic_ancestry` (a `set_override`
-    on `ac` says the formula) and `reliable_talent` (RELIABLE-TALENT) went first;
-    `champion_improved_critical` / `champion_superior_critical` waited on CRIT-THRESHOLD and now
-    carry `set_override:crit_threshold:19:cap` and `:18:cap` in both editions — `cap` ("unless
-    already lower") is what keeps a level-15 Champion at 18 rather than stacking to 17.
-    **It decides a HIGHLIGHT and never an outcome**, which is why it could be built at all: whether a
-    hit crits stays `RollerLine.crit`, the player's own call ("a natural 20 is not always a crit, and
-    a crit happens without one"). What the sheet could not previously say is "that face is as good as
-    a 20 for YOU", and it says it now.
-    **The roll RECORDS the threshold it was thrown at** (`RollLogEntry.critThreshold`, written only
-    when it is not 20), so a log line re-read after the next level-up still says what was true. The
-    stamp asks one question at the record instead of five in the view: **a roll that threw a d20 AND
-    rolled damage is an attack**, and nothing else in the app is both — a check, a save and initiative
-    throw and deal nothing, a save-DC spell and a hit die deal and throw nothing. Both funnels stamp
-    (`entryFor` and `recordRolls`), because the dice tray builds its entries itself.
-    **Known narrowing, said out loud:** both features are weapon-only in their own text (2024 adds
-    Unarmed Strikes) and `crit_threshold` takes no scope, so a multiclassed Champion's SPELL attack
-    would be highlighted too. Each row ships the limit as a `note:` rather than pretending otherwise;
-    scoping it is SCOPED-BONUS's shape, not this item's.
   - **Blocked on SCOPED-BONUS reaching spells.** "Add your <ability> modifier to the damage of X":
     2024 `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
     (evocation spells), `oath_of_devotion_sacred_weapon` and 2014 `oathofdevotion_channel_divinity`
@@ -328,7 +120,17 @@ stay semi-manual.
     to test the condition against; surfacing the text is the honest behaviour.
   - **A choice, so it waits on `choose_n`** (N2 shape 3): `fiendish_resilience` and 2024
     `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
-    change.
+    change — and `pact_boon`, a choice of three. The same wait holds every proficiency that is a
+    CHOICE: 2024 Divine Order and Primal Order, College of Lore, the 2024 elf's one-of-three Keen
+    Senses.
+  - **Not shape 1 at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
+    resistance — an activated ability with a duration (shape 2, and EXCEPT-DAMAGE for what it
+    resists). 2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no
+    target and no enemy to test against. The Gnomish Lineages stay prose too — each grants cantrips
+    and a prepared spell, and no token grants a spell.
+  - **Qualified grants stay text**: Stonecunning's doubled bonus applies only to stonework-origin
+    History checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the
+    2024 Sun Blade's grant is conditional on already being proficient with longswords.
 
 - [ ] **N2b · Wild Shape = stat-block replacement.** A druid has no working Wild Shape at all.
   Model: `play.form = {monsterRef, formHp} | null`; deriveSheet branches — physical
@@ -342,226 +144,32 @@ stay semi-manual.
   "no flying or SWIMMING speed"; 2024 has no swim gate at all and keeps a Known Forms list you swap on
   a long rest. Shaping costs an Action in 2014 and a Bonus Action in 2024.
 
-  **Writing the spec turned up four CONTENT blockers; the FORMS are no longer one of them:**
-  - **DONE — a form exists and can attack.** `monsters_srd.csv` carries an `attacks` column in both
-    editions, and the beasts are there: 69 at CR ≤ 1 in 2014 (67 of them with attacks) and 64 in 2024
-    (63 with attacks). So a 2014 druid has legal forms from level 2, which is what the count read as
-    zero before the appendices shipped. Primal Strike is unblocked with them.
+  **The forms exist and can attack** — `monsters_srd.csv` carries an `attacks` column in both
+  editions, with 69 beasts at CR ≤ 1 in 2014 and 64 in 2024. Three CONTENT blockers are left:
   - No `wild_shape` row exists in either `resources_srd.csv`, and `druid_wild_shape` carries neither
     a `resource` nor an `effects` value — there is no pool to spend.
   - The 2024 uses-per-level ladder lives in the Druid Features table, which is shipped nowhere; two is
     the only number the content supports, and inventing the rest is the failure AGENTS.md names first.
     2014 needs no ladder (flat two until 20).
   - A grammar gap, smaller: `grant_resource:<id>:<max>:<recharge>` cannot say 2024's split recharge
-    (one back on a short rest, all on a long) — RECHARGE-3's `{trigger, amount}` model is where that
+    (one back on a short rest, all on a long) — the `{trigger, amount}` recharge model is where that
     lands.
   - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
         `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
         restore, so it waits on the model above rather than on the mechanism, which is shipped.
-- [x] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
-  — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
-  progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;
-  converter-preserved like `effects`). Build sums the active-feature grants → `expertiseCap`;
-  Strict enforces (Free doesn't), and the skills card head reads `expertise N/M`. Wizard "Scholar"
-  (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
-  restriction, so encoding it would over-permit. Unit + real-content tests both editions.
-  **Screenshot-verified on a Rogue 6 with a background** (`design-preview/rogue-expertise-cap.png`):
-  the counter walks 0/4 to 4/4 and holds there. At the cap the doubling control is NOT disabled —
-  `toggleCapped` REPLACES the oldest pick, the way every other capped picker in the builder behaves,
-  so the count stays 4 and the ring moves. (b)+(c) are ONE grammar step: the L1
-  vocab grows a proficiency LEVEL in the third segment — `grant_proficiency:skill.<id>:partial` and
-  `:expertise`, defaulting to `proficient` when absent, so every existing token keeps parsing. That
-  makes Jack of All Trades a content row (the partial type and `skillCheck`'s partial argument already
-  exist and nothing calls them) and lets the builder show an effect-granted skill as locked-on
-  instead of silently proficient. The same third segment is what `TOOLS` reuses;
-  (d) **DONE (2026-08-02):** the combat SkillsPanel already showed the proficient/expertise
-  tiers (filled / ringed dot) with `why()` provenance on the row hover; added the 4th tier —
-  a faded `half` dot (color-mix on `--color-resource`, scaffolding until a half-prof producer
-  lands per (c)) — and a friendly per-tier tooltip on the dot. Combat baseline 0px (reachable
-  tiers render identically; the `on` split is behaviour-identical for none/proficient/expertise).
-  **(b)+(c) DONE — the rung has a producer, and the builder reads the ladder.** The rung is an
-  optional LEADING word (`grant_proficiency:[half|proficient|expertise:]<target>`) rather than the
-  third segment this item once planned: the `expertise:` prefix already shipped, so extending it
-  keeps ONE shape and every token written before the rung existed still parses as `proficient`.
-  **Jack of All Trades is a content row** in both editions — `grant_proficiency:partial:skills`, where
-  `skills` is a group target fanned out in the one place that reads the facts. RAW's "that doesn't
-  already include your proficiency bonus" needs no second rule: the rungs combine by MAX, so a skill
-  already proficient keeps proficiency and the half rung simply loses.
-  **The builder shows the ladder, not just the pick.** A skill the sheet says is proficient that the
-  draft never picked and no background gave is locked on and says "Granted by a feature" — the
-  alternative is a row that looks pickable, un-picks to nothing, and reads as a bug. `half` is
-  deliberately NOT a lock: it grants nothing to un-pick and the skill stays yours to train. The faded
-  partial dot is the play sheet's own, so one tier looks like one tier in both views.
-  **The rung is `partial`, not `half`.** A rung sits BEFORE its target, so `half:skills` reads as
-  "proficiency in half the skills"; and "half" reads as a REDUCTION, while this rung is a GAIN — a
-  lesser proficiency, never a cut-down one. `halved` was tried and rejected for the same reason.
-  Renamed through the ladder type, `PROF_ORDER`, `skillCheck`'s argument, both dots' CSS and the two
-  catalog keys, because it is one fact and one fact has one name.
-  **Screenshot-verified on a level-2 bard** (every skill −1 → 0, every passive 9 → 10,
-  `design-preview/joat-half-proficiency.png`) and on a 2014 elf, whose Keen Senses locks Perception.
-
-### EXPR · L2 value-expression layer — BUILT (design → docs/internals/effects.md §3)
-
-The bounded L2 formula layer (value expressions + condition guards, the type/resolution rules, the
-worked examples, conditions/exhaustion-as-data) is **shipped** and its normative design lives in
-[`effects.md`](../internals/effects.md) §3–§4. Delivered across EXPR-1..5 + CONDITIONS-1 (2026-07-17/19):
-parser+evaluator (`expression-parser.ts` / `expression-evaluator.ts`), value expressions in tokens,
-condition guards + the ONE resolve stage (`resolveActiveEffects`, `dependency-graph.ts`), the
-dependency-order DAG (ability scores fold through the pipeline — A10), the typed-facts output
-(`collectFacts`), cantrip scaling, the roll-manip L1 tail (`reroll`/`min_die`, `d20_tests`,
-`speed.fly/swim`, `spell_dc`/`spell_attack`, `save.death`), and all 15 standard conditions carrying
-mechanical `effects` tokens in both editions. AUDIT SPEC2–SPEC7 (grammar / type / resolution
-decisions) are recorded in effects.md §3; git holds the per-phase log.
-
-### PLG · Plugin sandbox (L3 expressiveness) — BUILT (design → docs/internals/plugins.md)
-
-The QuickJS-in-WASM plugin layer is **shipped** (PLG-1..3, 2026-07-19): the registry + native
-handlers, the quickjs-emscripten (quickjs-NG sync) sandbox with the full PLG-SEC containment
-(zero-capability context, 5 ms / 8 MB budgets, JSON-string boundary, length-prefixed SHA-256
-consent hash stored OUTSIDE the dataDir, fail-closed counter, desktop-only), and the normative
-[`plugins.md`](../internals/plugins.md) (`api: 1`) — all in `src/lib/effects/plugin-*`. Plugin-token failures
-surface via `deriveIssues` → content health. The design decisions, the PLG-SEC containment
-checklist, the state model (three channels) and the authoritative derive stage-list are the
-design-of-record in [`plugins.md`](../internals/plugins.md) and [`effects.md`](../internals/effects.md) §4/§6 (AUDIT
-SPEC1 / SPEC8 / SPEC9 map there); git holds the per-phase log. Open tails: the dedicated
-plugin-dependency notification view + portability / version awareness (fresh-eyes review #2).
-
----
-
-- [x] **CONDEFF · one content type for conditions and effects.** Poisoned IS disadvantage on the
-  attack the same way Bless is, and that they were two content TYPES was an authoring accident the
-  player and the pack author were both made to know about. One type now (`effect`), with a `kind`
-  open enum and `src/lib/content/states.ts` as the ONE place that answers "which is this row", so no
-  consumer re-derives the split. The picker is one list too: the kind decides only how a row behaves
-  once it is in it — a condition toggles, anything else adds another instance
-  (`docs/internals/ui.md` ▸ Panels).
-  **`negative` is gone, replaced by `valence`** (`harmful` | `helpful` | `neutral`, blank reads
-  neutral): its default was inverted between the two old types, so merging it meant picking whose
-  default won for every row of the other. A `v2 → v3` content migration carries an older row's
-  boolean across, and the converters emit the enum.
-  **On disk it cost a pack author nothing.** `conditions_*.csv` keeps its name, its header and its
-  rows: the filename and the old `#content-type: condition` are both ALIASES of the merged type
-  (`TYPE_ALIASES`), and a file that resolves through one stamps `kind: condition` on rows that do not
-  carry the column. Shipped files changed only where the data changed — `negative` → `valence`.
-  **The identity had to give, and gave in the right place**: `rage` exists as both a condition and a
-  catalog entry, so the merged type scopes its slug by KIND rather than by type. Every saved
-  reference (`condition:SRD 5.2.1:rage`) still resolves, because a kind is spelled the way the type
-  it replaced was.
-  **The converter trap died with it.** `convert.mjs` used to regenerate `conditions_srd.csv` from the
-  SRD alone, dropping `max_level` and the authored Rage row — the reason the docs carried a standing
-  "never re-run a converter to re-stamp". Both converters now read what the file already says and
-  keep it (`existingRowsById`).
-
-- [x] **B25 / RV4 · Subclass-caster spell list.** The seam is DATA, not a class-name branch: a
-  `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
-  off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out
-  of the index — never silently given a list. EK/AT are PHB, not SRD, so coverage lives in fixtures.
-- [x] **D16 · generalized player-choice model.** Half-feat ability-choice, Skilled's skill grants and
-  Magic Initiate's spells all ask through the same `FeatSubChoices` block, keyed by a slot key or by
-  `ORIGIN_SLOT_KEY`. Skilled's TOOL half moved out to `TOOLS`, which is a model, not a choice.
-  **§D, the spell grant, is a caster PROFILE rather than a fourth kind of grant** — RAW the feat names
-  the ability its spells are cast with, which is the whole of what a profile decides, so modelled as
-  one the ordinary machinery does the rest: the builder's picker gets a section with the feat's own
-  caps, `casterForSpell` attributes the picks to it, and the sheet reads their DC off the chosen
-  ability instead of off whichever class happened to be first. A Fighter who took it casts.
-  Three columns say it (`spell_choice` as `level:count` pairs, `spell_choice_lists`,
-  `spell_choice_ability`), so a homebrew feat of the same shape needs no code. Repeatable works: each
-  instance is its own slot, its own list and its own profile, and Strict refuses a list already taken.
-  **Deliberately not built: the free cast.** "Cast it once without a spell slot, regain on a Long
-  Rest" is a pool plus a way to SPEND it on a cast, and the cast path knows only slots — a
-  `grant_resource` shipped today would be a pip nothing can spend, which is the half-done shape the
-  0.7.0 gate exists to stop. It is `FEAT-FREE-CAST` below.
-- [x] **FEAT-FREE-CAST · a spell you may cast once without a slot.** Magic Initiate's level-1 spell,
-  and the same sentence on several magic items. The pool was already expressible
-  (`grant_resource:<id>:1:long`); what did not exist was SPENDING it, so a pip could be clicked down
-  by hand and would never be what paid for the spell. It is a cast-time SOURCE choice now —
-  `cast(r, e, { pool })` spends one use and no slot, and the picker that offered slot levels offers
-  the pools beside them.
-  **The player names the pool, because nothing in the data links one to a spell.** There is no
-  `grant_spell`, no `cast:` action verb, and no column saying which pool a given spell may spend —
-  so the picker lists every pool with a use left and the feat's own text, which the player is
-  reading, decides. That is the tracker's standing rule rather than a shortcut: the app does not hold
-  enough game state to decide correctly. Narrowing it to a DECLARED pool later is a filter on this
-  same control, not a different one, and it would want vocabulary that does not exist yet.
-  **Reserve-before-commit holds.** The pool is spent and gated on BEFORE the action economy is
-  touched, the way a slot is reserved first: an exhausted pool, or a pool this character does not
-  have, blocks the whole cast rather than casting for free. Six tests pin that, and the path is
-  driven in the app — rage 2 → 1 with the slot untouched.
-  **What the picker had to grow:** `castableSlots` is empty for a spell with ONE slot option, so a
-  pool beside it is already a choice the affordance has to offer — and the menu spells that implied
-  option out as its own row, or the ordinary way to cast would have vanished behind the picker.
-- [x] **TOOLS · a tool proficiency, and that is the whole mechanic.** `build.tools` holds bare `tool`
-  item ids, `grant_proficiency:tool.<id>` grants one from a class, feat or item, and `toolCheck`
-  builds the roll: the ability check the player is making, plus the proficiency bonus. Nothing else —
-  no crafting, no downtime. It rides the ability's OWN folded check rather than a parallel one, so
-  Guidance, exhaustion and every `ability_checks` effect reach a tool check for free, and the
-  `proficient` scope makes Reliable Talent floor it exactly as RAW floors it.
-  **What the packs did not have** turned out to be the tools themselves: neither edition shipped a
-  single `tool` row. Both do now — 25 in 2024 and 36 in 2014 — and the edition divergence lands as a
-  tag rather than a branch: 5.2.1 prints an Ability per tool, so the row carries `ability:<abl>`; 5.1
-  says tool use is tied to no single ability, so its rows carry none and the sheet ASKS, keeping the
-  answer for the session and never writing it to the character (the same kit carves with STR and
-  forges with DEX). A typed tool stays in `customTools`, printing as a proficiency with no check.
-  Unblocks Skilled's tool half in D16.
-- [x] **RECHARGE-3 · item charges, and the `{trigger, amount}` recharge they earn.** The model is
-  BUILT (`rules/recharge.ts`, `docs/internals/effects.md` ▸ How a pool comes back): triggers
-  `short|long|dawn|dusk|consumable|other` with an optional amount (`dawn(1d6+1)`), the one-word
-  policies as sugar over it (`short_one` = `short(1)`), the rest path reading the model instead of
-  branching on words, and a **Dawn / Dusk** control in the pass-time bar shown only when this
-  character has such a pool. **No `charges` column**: a charged item says
-  `grant_resource:<id>:<charges>:<trigger(amount)>` in its own `effects` cell and gets the whole
-  resource subsystem — pips, spend, chip, rest — for nothing.
-  - [x] **Shipped charged items as the first consumers.** Eyes of Charming, Pipes of Haunting and
-        Gem of Seeing in both editions, Mace of Terror in 2024, each saying its pool in its own
-        `effects` cell — `grant_resource:<id>:3:dawn(1d3)`, or a bare `dawn` for the one that
-        regains all of them. Authored by asserting each row's own prose states both the count and the
-        recharge sentence before writing the token, so a converter re-run that changes the text fails
-        the authoring script instead of leaving a token that outlived its item.
-        2014's **Mace of Terror was skipped and is no longer**: its text began mid-item ("The mace
-        regains 1d3 expended charges…") with the count truncated away, which ITEM-TEXT-2014 turned out
-        to be — the extractor dropping the paragraph, not the source lacking it. The row reads whole
-        and carries its pool.
-  - [x] **Every charged item that states a pool now says it** — 54 rows across the two packs (every
-        wand, most staves, the rings, the trident), generated from the sentence stating the count and
-        the recharge and read back one by one against it. A RANDOM starting pool ("1d8 + 1 charges")
-        is deliberately not matched — the vocabulary takes a literal max — and an item with no
-        recharge in its text says `consumable` rather than borrowing a dawn nobody wrote.
-- [ ] **RECHARGE-TAIL · the damage-path and rest mechanics left over from the recharge work.** Each is
-  small, each fires on an existing path, and none blocks the others.
-  - [x] **Champion Heroic Rally — a turn-start heal**, and the trigger dimension generalized with it:
-        `on_event:<event>:<action>` crosses a closed event set with the executor verbs, so the third
-        trigger costs a name and a fire site rather than a token. The event set holds only what the app
-        FIRES (`turn_start`: Next turn, and entering combat — round 1 is the first turn); an unfired
-        name would parse and then never happen. "Only while Bloodied" needed no condition slot of its
-        own — it is the ordinary L2 guard, and the shipped row says
-        `is_bloodied and hp>=1 ? on_event:turn_start:heal:5+con_mod` in both editions. Arbitrary event
-        LOGIC stays L3 plugin `onEvent`: widening L1 past a bounded vocabulary is a security property.
-        `regain_on_initiative` keeps its own token — "top up TO n" is not one of the verbs.
-  - [x] **Concentration: several saves for one lump of EQUAL projectiles — REJECTED, not built.**
-        The reasoning that must not be re-opened lives beside the rule it is about
-        (`internals/characters.md` ▸ A tracker surfaces, it never decides).
-  - [ ] **Massive Damage / System Shock** — ≥ half max HP in one instance → DC 15 CON → the System
-        Shock table. **DMG-optional, NOT SRD**, so it can only ever ship as a toggle beside
-        encumbrance, never as core rows or shipped data. Opening it means opening the category
-        "optional DMG rules", which is the actual decision. (SRD overkill instant death is separate
-        and already built.)
-  - [x] **A long rest is eight hours, and it was outlasting everything.** A rest expires the timed
-        effects it OUTLASTS, and the short rest compared correctly against its own hour while the long
-        rest simply removed every timed effect there was. So a long rest ended a 24-hour Water
-        Breathing and a 30-day Geas — the app deciding a duration the rules had already decided. Both
-        rests read their own length off `REST_HOURS` now (1 and 8), so the rule is one comparison and
-        the two cannot drift apart. What this was wrong for is the durations a PLAYER types and
-        the hours-long ones a Dominate upcast gives its concentration carrier.
+- [ ] **PLG-TAILS · two things the plugin layer still owes its user.** A dedicated view for a
+  character that depends on a plugin which is missing or not consented to — today it surfaces only as
+  derive issues in content health — and portability: what a character carrying plugin tokens says on
+  an install without the plugin, or with another version of it. The layer itself is
+  `../internals/plugins.md`.
 - [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved
   for a bonus TYPE, `docs/internals/compatibility.md` §4) and keeps the weapon vocabulary out of L1.
   A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
   scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
-  field, so there is one shape downstream. What is left is the two CONSUMERS:
-  - [x] **Rage's damage, RAW** — done as RAGE-SCOPE above: 2014 `damage.melee,str`, 2024
-        `damage.str`, and the two grammar pieces it needed (an attack carries the ability it
-        resolved from; a scope may be a comma-separated list).
+  field, so there is one shape downstream. Rage's damage reads it in both editions; what is left is
+  the other consumer:
   - [ ] **Agonizing Blast.** It is NOT the one content row it was billed as: the packs carry a
         single `warlock_eldritch_invocations` row and no row per invocation, in either edition, so
         there is nothing to hang `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the
@@ -570,8 +178,10 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
-  the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
+- **A17 ritual/pact residual** — two nuances the spellcasting model keeps expressible and the sheet
+  does not yet enforce: a pure warlock's slot gating, and a ritual's SOURCE (a wizard rituals from the
+  spellbook unprepared, a prepared caster only what is prepared — `../internals/rules-core.md` ▸
+  Spellcasting). Minor.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart
@@ -605,85 +215,7 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   the player's to EDIT — every score, HP and attack stays writable, because a bound creature drifts
   from its statblock the moment a table plays it. So the model is an editable overlay over a monster
   ref, never a read-only pointer at one.
-- [x] **UBUG-1 · Short rest heals via Hit Dice** — `1d<die> + CON`, min 1 HP, player picks how
-  many. Long-rest HD recovery is edition-divergent (2014 half, 2024 all).
-- [x] **UBUG-5 · Every resource change is announced** — spend and restore both toast.
-- [x] **UBUG-6 · Casting spends a slot.** Lowest available leveled slot, blocked with a toast when
-  none remain, in and out of combat; cantrips spend nothing and a RITUAL cast spends none (gated on
-  the class's ritual-casting eligibility). Warlock pact slots are their own pool + pip strip.
-- [x] **UPCAST · Structured spell-upcasting engine.** One
-  `upcast` column on `spells.csv`, `kind:formula` tokens parsed by the existing effect grammar.
-  **Locked decisions, kept because later work could undo them by accident:** (1) combining is a
-  DELTA for structured kinds (`base+delta`, base is the single source) and ABSOLUTE for
-  count/duration; `inf` only ever appears in `duration`, so `base+inf` cannot happen by construction.
-  (2) `cantripDieMultiplier` (the 5/11/17 tier) is NOT folded into `upcast` — the cantrip tier is a
-  uniform system rule keyed on character level, `upcast` is per-spell data keyed on slot; merging
-  them would be a regression dressed as a dedup. (3) Upcast is NOT gated on the auto-calc toggle:
-  that toggle gates effect-MODIFIER layers, not a spell's own mechanic. (4) Conjure* tables and
-  meta-rules (Dispel Magic, Globe) stay prose `higher_level` — a permanent exclusion, not a gap.
-  **Open tails that had no other home:**
-  - [x] **UPCAST-AUTHORING (was N8) · the upcast cell is BUILT, not typed.** `UpcastBuilder` under the
-        raw field in `EditContentForm`: pick what scales, how it scales, and the amount, and the token
-        it will write is shown before it is added — seeing `damage:per_slot(1d6)` is what teaches the
-        grammar the raw field still accepts. The composed token is read back through the LOADER's own
-        parser, so the form cannot offer what the app would refuse. The raw field stays: a `step()`
-        ladder, a typed sub-slot and a guard are all wider than the two shapes here, and prose
-        `higher_level` is still the fallback for a spell whose scaling is not a formula at all.
-- [x] **CONCENTRATION · timer + end-points.** The model — a ref plus a carrier effect — is
-  `docs/internals/characters.md` ▸ Concentration is a REF, not a clock. The CON save on damage is a
-  toast REMINDER, never an auto-drop. Duration canon is rounds.
-- [x] **UBUG-8 · Resources are used like spells** — the name is a "use one" button, the pips stay
-  for manual restore. Action economy is deliberately not wired here (resources carry no action-cost
-  data); see UBUG-16 for where that landed.
-- [x] **UBUG-13 · Level-up re-offered an ASI and double-applied it.** Root cause worth remembering:
-  only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping, so a
-  restored slot could re-derive its boost a second time.
-  The re-PICK half has the same root: the reconciliation subtracts what the SAVE's own picks granted
-  (`EditContext.loaded`), never what the live ones grant — measured against the live picks, moving a
-  saved ASI to another ability left the old one with nothing to cancel against.
-- [x] **UBUG-14 · A long rest clears one level of Exhaustion.** SRD-verified; the 2024 text's "has
-  also ingested some food and drink" applies unconditionally because rations are not modelled.
-- [x] **UBUG-15 · Death is modelled, and there is a dead screen.** One typed `play.death: {cause}`
-  (an OPEN cause enum, not a `dead` boolean) and ONE `die(cause)` seam every lethal rule lands on.
-  The two SRD interpretations behind it live at that seam in code (`combat-view-model.svelte.ts`): instant death
-  runs the 5.1 text in BOTH editions because 5.2.1 omits the chapter carrying it, and revive drops
-  one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal 6 would kill
-  you again on the spot. The dead screen is deliberately **not dismissible by backdrop or Escape** —
-  a roster link is the other way out, so a dead character cannot lock the player out.
-- [x] **UBUG-16 · abilities cost their action or bonus action.** What a resource chip does with
-  one spend option versus several is `docs/internals/actions.md` ▸ §2. `gain_action` raises the
-  per-turn MAX (`play.turn.grantedActions`) rather than refunding a spent action — play-state on
-  purpose, because `slotMax` only folds effect facts when auto-calc is on and a feature the player
-  activated by hand must not silently do nothing.
 ## Builder and character
-- [x] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
-  `kind: subrace|lineage|legacy|ancestry`, `option_label`, effects) + 2014 converter emitting the 4
-  SRD subraces (Hill Dwarf/High Elf/Lightfoot/Rock Gnome, each with its own ASI) + loader
-  longest-filebase fix so `species_options_*` isn't mis-read as `species`. P2 DONE: builder 2nd
-  picker (shown when the chosen species has options, per-edition label from `option_label`) +
-  `build.speciesOption` gathered in derive (effects cascade like the species'). P3 DONE:
-  every 2024 species that asks which branch you belong to now has its rows, and the converter reads
-  the THREE SHAPES the SRD writes them in rather than flattening them: a 4-column table (Elf, Tiefling),
-  a PAIRED table read across (Dragonborn's Dragon · Damage Type), and a `**Name.**` prose list (Gnome,
-  Goliath). 24 rows.
-  **The benefits are effects where the source states one.** A Draconic Ancestor resists the damage
-  type its own table COLUMN names — the species' Damage Resistance trait says "you have Resistance to
-  the damage type determined by your Draconic Ancestry", so the token is the source's own statement
-  and the shape hands it over rather than mining a sentence this converter just wrote. Each Giant
-  Ancestry benefit is `grant_resource:<id>:proficiency_bonus:long`, which is what its trait's lead-in
-  says once for all six. The Gnomish Lineages stay prose: both grant cantrips and a prepared spell,
-  and there is no token for either.
-  **The count assert earned its keep** — Giant Ancestry has six options, not the eight the first pass
-  guessed, and `assertCount` refused to write the file.
-  **A live bug fell out of the re-run:** `effectsFromTraits` still emitted `resist_immune:`, the name
-  retired in the `damage_sensitivity` rename. Nothing had re-run the converter since, so the next
-  regeneration would have silently swapped three tiefling resistances for a token the engine no
-  longer knows. Renamed at the source.
-- [x] **Half-Elf +1/+1 choice** (5e) — data-driven, no class-name branching.
-- [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
-  (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
-  combat shows a ringed dot; the Strict cap is N4 (a).
-- [x] **Languages** — a `language` content type (16 SRD rows), granted by species/background.
 - [~] **Level-up flow** — the sheet's "▲ Level up" control NAVIGATES to the builder in level-up
   mode (`?levelup=<slug>`), which hydrates the draft from the saved character; the sheet only decides
   whether to offer the control. The in-place "+1 and a toast telling you to open the builder" path it
@@ -699,81 +231,8 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
   Character Advancement table sits inside `schoolofevocation_character_advancement`, a class-feature
   row the converter glued onto the Evocation school. A threshold row of its own is a producer-sibling
   fix, and 2024 ships none.
-- [x] **Inventory/equipment at build** — an Inventory card on the build page.
-## Effects vocabulary
-- [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
-  amount) → `flat_bonus` token, applied live via the reactive sheet.
-- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/internals/effects.md`.
-- [x] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
-  rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
-  re-run, like class_features); **Alert (2024)** encoded faithfully =
-  `flat_bonus:initiative+proficiency_bonus` (real-content test). **The honest remainder is BLOCKED,
-  not just unauthored** — most shipped SRD feats don't map onto the bounded vocab:
-  - **Half-feat ability-CHOICE UI — DONE (2026-08-02):** `ability_choice` feat column (`str,dex`
-    Grappler / `any` Epic Boons, converter-preserved), `slotFeatAbility[slotKey]` draft field, an
-    ability picker under a slot that holds a half-feat (defaults to the first option), +1 folded into
-    `abilityBoosts`. Epic Boons reach 30 for free — the derive already clamps ability scores at 30
-    (A10), so no bespoke cap-override was needed (regular ASI is equally un-20-capped in this lenient
-    model). Live-verified (Grappler L4 → STR/DEX picker). Grappler's grapple mechanics stay text.
-  - **The vocabulary caught up with most of that list.** Weapon-type-conditional bonuses are
-    SCOPED-BONUS (`archery` ships `flat_bonus:attack:ranged+2`), armour-gated ones are the ordinary L2
-    guard (`defense` ships `armor_type != none ? flat_bonus:ac+1`), and once-per-turn damage rerolls
-    are their own marker plus `min_die` (`savage_attacker` → `damage_reroll`,
-    `great_weapon_fighting` → two `min_die:damage:<scope>:3`). All four are shipped rows.
-  - **What is genuinely left is two OTHER items' work, not this one's:** Magic Initiate's spell grants
-    are D16's last piece, and Skilled's tool half is TOOLS. Nothing about a feat's stat or skill bonus
-    is open any more.
-- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/plugins.md`.
 ## Spellcasting
-- [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
-  into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
-  item N/day are one shape); `sheet.resources`; combat "Resources" strip with click-to-spend pips +
-  Short/Long **rest** buttons (recharge by type; long resets slots+HP, short returns pact slots).
-  **Class resources are encoded** — the shipped rows carry `rage`, `focus` (2024's ki), `second_wind`,
-  `action_surge`, `bardic_inspiration`, `persistent_rage` and `uncanny_metabolism`, each as a
-  `grant_resource` on its own feature row with the count as an L2 `step(...)` over class level. Haste
-  and Action Surge feed the action-economy pips through `flat_bonus:action` (the `effects_srd` Haste
-  row does exactly that).
-  Remaining: **`grant_slot:<level>`** — Mystic Arcanum puts an extra SLOT into the pools rather than a
-  resource, and no token says that. One consumer, so it waits for a second.
-
-- [x] **PLAYTEST-SHIELD · a wielded shield is worth +2 AC, and the sheet said 0.** `deriveAc`
-  (`character/derive-stats.ts`) takes the shield's +2 from `character.play.shieldRaised` — a combat
-  toggle — and its own comment says that flag is "the single source for it, not the inventory equipped
-  flag". So equipping a shield in the builder changes no number, which is what the playtest reported
-  and what RAW disagrees with: 5e has no "raise your shield" action, a shield you wield gives +2 while
-  you wield it. The play toggle is not wrong to EXIST (a shield can be stowed mid-fight, and the app
-  cannot know), but it should default from what is equipped rather than be the only source. Nothing in
-  `docs/internals/` settled this, so it was an implementation shortcut and not a closed decision.
-  **Done, by deleting the flag rather than defaulting it.** A shield in hand IS inventory state, so
-  `play.shieldRaised` is gone and `deriveAc` reads the equipped shield — at the AC its own row
-  declares, which makes a +1 shield worth 3 and a row with no `ac` tag worth nothing, the same rule
-  armour already followed. The Combat toolbar's Shield toggle is now that row's equip button under
-  another name, and it is absent for a character carrying no shield, where it used to offer a phantom
-  +2. Old saves keep parsing: zod strips the dropped key.
-
-- [x] **PLAYTEST-SPECIES-GRANTS · a species can give an ability boost and nothing else.** It can give
-  two more things now, and both are a CHOICE — a FIXED grant is what `effects` has always been for.
-  The vocabulary only: no SRD species uses either column, and the species that makes this shape famous
-  is PHB, in no CC-BY source, so whoever wants it writes it in their own pack (`AGENTS.md` ▸ Inventing
-  game data).
-  - **`skill_choice`** — how many skill proficiencies of the player's choice the species grants. The
-    same column `feat.skill_choice` already carried, on the other kind of row that grants one. Its
-    picks land in `build.speciesSkills`, a list of its OWN: a species grant counted against the class
-    cap would silently cost the player a proficiency, which is the bug the separate `featSkills` list
-    exists to avoid. Asked as chips in the Skills pane, capped the way every capped picker here is (at
-    the cap a click replaces the oldest).
-  - **`feat_choice`** — `any`, or a comma list of feat ids to choose between, the same "list or
-    keyword" grammar `ability_choice` uses. That keyword is `ANY_OPTION` now rather than three
-    separate bare `'any'` literals.
-    The feat rides the EXISTING slot machinery under a reserved key (`SPECIES_SLOT_KEY`), so
-    everything a filled slot then asks — a half-feat's +1, a Skilled-shaped feat's skills, a
-    Magic-Initiate-shaped one's list — works with no second implementation. What the species slot does
-    NOT offer is the ability improvement: that is what a LEVEL offers, and a species grant spent on one
-    is a grant the species never made. It has its own row on the feats card, its own to-do line, and
-    counts as taken, so a level slot cannot spend the same non-repeatable feat twice.
-  - **A variant species is a row, not a settings shelf.** `SPECIES_OPTION_KINDS` gains `variant`
-    beside subrace/lineage/legacy/ancestry, so a trait set offered BESIDE the usual one — the shape an
-    optional rule takes here — says what it is in the data, and the builder offers it where the trait
-    it stands in for is granted. Both new columns sit on `species_option` as well as `species`, which
-    is where a variant usually carries them.
+- [~] **Resource subsystem · an extra spell SLOT has no token.** Pools, their pips, the spend
+  path and both rests are built (`../internals/effects.md` ▸ How a pool comes back). What is missing
+  is `grant_slot:<level>`: Mystic Arcanum puts an extra SLOT into the pools rather than a resource,
+  and no token says that. One consumer, so it waits for a second.

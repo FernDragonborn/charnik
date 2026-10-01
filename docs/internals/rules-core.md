@@ -98,6 +98,25 @@ Express per-class rules as descriptor columns: `caster_share` (`full` / `half` /
 `prepare_style`, `spell_ability`, `ritual`. Non-spell class mechanics — Infusions, Crimson Rite, Rage,
 Ki — are **resources** granted by tokens.
 
+**A grant that grows with level is ONE row with a `level:count` ladder** — `expertise_slots`
+(`1:2,6:2` for a Rogue) and `mastery_slots` (`1:3,4:1,10:1,16:1` for a 2024 Fighter), both read by
+`slotsGrantedAtLevel`. Strict enforces the cap and Free does not; at the cap a click replaces the
+oldest pick (`ui.md` ▸ rule 10). Multiclass mastery grants SUM, which is RAW rather than a convenience:
+the 2024 multiclassing rules name their exceptions and Weapon Mastery is not one. A grant the count
+cannot express honestly is left out rather than over-permitted — the Wizard's one expertise from a
+restricted list is not encoded. A feat that raises one of several abilities says so in
+`ability_choice` (`str,dex`, or `any`), the same "list or keyword" grammar a species' `feat_choice`
+uses.
+
+**What a weapon swings with, and what a shield is worth, come from the row in the hand.** A finesse
+weapon's ability is the player's choice, keyed by weapon KIND (a +1 Rapier is a Rapier); an absent key
+means "whichever modifier is higher", and the control shows only where there is a choice. It is not
+cosmetic: the ability an attack resolves from is an effect SCOPE, so Rage pays out on a rapier swung
+with Strength and not with Dexterity — which is why a silent `Math.max` sometimes picked the worse
+number. A shield gives the AC its own row declares while it is EQUIPPED: there is no "raised" flag,
+because 5e has no such action, so a +1 shield is worth 3 and the play sheet's Shield toggle is that
+row's equip button.
+
 Validate the architecture against real non-SRD classes: **Artificer** (half-caster rounding up, plus
 Infusions) and **Blood Hunter** (martial with hemocraft resources, and a Profane Soul subclass that
 is a pact-like caster). Truly exotic logic the bounded vocabulary cannot express belongs in the
@@ -109,9 +128,26 @@ plugin sandbox, never in baked-in code.
 `{id, spellLevel?, max, recharge}`, so class slots are pools keyed by level recharging on a long
 rest, pact slots recharge on a short one, and a Mystic Arcanum or an item's "3/day" is the same shape
 without a spell level. The UI renders level-tagged pools as pips and the rest as trackers. Anything
-"N/day" is therefore `grant_resource:<id>:<max>:<recharge>`, a spell says how it is paid for
-(`cast_via: slot | resource:<id> | at-will`), and `grant_slot:<level>` covers the rare artifact that
-grants a real slot.
+"N/day" is therefore `grant_resource:<id>:<max>:<recharge>`.
+
+**What pays for a cast is chosen at the cast.** `cast(r, e, { pool })` spends one use of a pool and no
+slot, and the picker that offers slot levels offers the pools beside them — which is how "cast it once
+without a spell slot" (Magic Initiate, and the same sentence on several items) is paid. **The player
+names the pool, because nothing in the data links one to a spell**: there is no column saying which
+pool a given spell may spend, so the picker lists every pool with a use left and the feat's own text
+decides. The pool is spent and gated on BEFORE the action economy is touched, the way a slot is
+reserved first, so an exhausted pool blocks the whole cast rather than casting for free. Narrowing the
+list to a DECLARED pool later is a filter on that same control. An extra real SLOT (Mystic Arcanum)
+has no token yet (`work/mechanics.md` ▸ Resource subsystem).
+
+**Upcasting is one `upcast` column of `kind:formula` tokens**, parsed by the effect grammar. Four
+things about it are settled. Combining is a DELTA for structured kinds (`base + delta`, the base being
+the single source) and ABSOLUTE for a count or a duration — `inf` only ever appears in `duration`, so
+`base + inf` cannot happen by construction. The cantrip tier (5/11/17) is NOT folded into `upcast`:
+it is a uniform system rule keyed on character level, where `upcast` is per-spell data keyed on the
+slot. Upcast is NOT gated on the auto-calc toggle, which gates effect-modifier layers and not a
+spell's own mechanic. And the Conjure tables and the meta-rules (Dispel Magic, Globe of
+Invulnerability) stay prose `higher_level` — a permanent exclusion, not a gap.
 
 **Multiclass slots are the SUM, never the senior class**: Σ full levels + Σ⌊half/2⌋ + Σ⌊third/3⌋
 (`half-up` rounds up, which is all Artificer needs), indexed into the ONE full table. **Warlock

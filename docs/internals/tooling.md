@@ -339,12 +339,3 @@ content repo directly and go GREEN while the browser shows the old numbers, so t
 has a bug the tests deny. So a screenshot of freshly-authored content taken against a server started
 before the plugin existed, or with `vite dev` invoked past `predev`, is evidence about the old copy;
 `node tools/build-static-content.mjs` re-vendors by hand.
-
-**A converter run rewrites its WHOLE edition, and the packs have moved on since the last one.** Each
-converter re-emits every file it owns, so a run to fix one file also reverts every column the packs
-grew afterwards: `conditions_srd.csv`'s `max_level`, `spells_srd.csv`'s `upcast` — that one is not
-theoretical, the 2014 converter still emits the pre-`upcast` column set. The `effects` column is the
-exception, preserved by id (`existingEffectsById`), and so are the `expertise_slots` grants.
-So: run the converter, then `git checkout` in the CONTENT repo every file you did not mean to
-change, and read the diff of the one you did before committing it. `pnpm restamp` is for a hand-edit;
-a converter run is for a real content change.

@@ -270,14 +270,9 @@ position and are given per wave, because most of them were learned the hard way.
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting, which is
      where the next variants start.
 
-  **The queue's previous last item left it by being RE-SIZED rather than closed.** MASTERY-HALF's tail
-  was queued as "Graze, Nick and Vex as tokens, the other five as `note:`", which presumed the eight
-  mastery properties exist as rows. They do not: 38 weapons carry a `mastery:<name>` tag naming 8
-  properties and no row in either pack says what one DOES. So it is blocked on the same
-  producer-sibling output as RULES-TEXT, and it now sits in `work/content.md` saying so.
-
-  **Deliberately not in a wave, out of the same pass:** RULES-TEXT and the 2014 item tables (both a
-  producer sibling's work, not this repo's).
+  **Deliberately not in a wave:** RULES-TEXT, the 2014 item tables and the eight weapon-mastery
+  EFFECTS — 38 weapons carry a `mastery:<name>` tag and no row in either pack says what one DOES.
+  All three are a producer sibling's output, not this repo's.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the dice tray, the chrome the
@@ -296,19 +291,10 @@ position and are given per wave, because most of them were learned the hard way.
   of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **The senses are BUILT** (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 5) — `senses.<name>`, folding by
-  the greater range, on 24 rows across both editions. What that pass also measured is that the climb
-  speed is NOT the 8-line target it was sized as: no shipped row states a literal range, so the
-  target would have no consumer, and the real work is the "equal to your walking speed" relation.
-  **The `+1/+2/+3` rows are BUILT** the way they were decided — one row each, with the number as a
-  per-instance answer (`item_bonus`, `bonus_choice`) rather than three rows. **Ring of Resistance is
-  BUILT too**, as the same shape pointed at a word: `choice_options` and `item_choice`, a
-  SUBSTITUTION rather than a variable because a damage type lands in a target slot, where nothing is
-  evaluated. What that pass measured is that 5.1 cannot have it yet — the 2014 pack ships **zero**
-  item tables in 419 rows while twelve of its rows point at one, so the options are unsourced rather
-  than unwritten, and taking them from the 2024 table would mix editions. That count is now its own
-  item (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 2b) because it reaches eleven rows this wave never
-  touches.
+  **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): the climb speed, which is NOT the
+  8-line target it was sized as — no shipped row states a literal range, so the work is the "equal to
+  your walking speed" relation — and the 2014 half of the per-instance choice, which is unsourced
+  rather than unwritten: that pack ships zero item tables while twelve of its rows point at one.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
@@ -318,8 +304,7 @@ position and are given per wave, because most of them were learned the hard way.
   HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
   COMPANION (research first).
 
-**Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
-`UBUG-22` was the last one and is closed.)_
+**Out of band — do these when next in the area, don't schedule them into a wave:** _(empty)_
 
 ## Verification
 Automated coverage and conventions live in [testing.md] (suites map to phases; run

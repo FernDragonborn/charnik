@@ -39,6 +39,18 @@ the opposite of `character.json`, which is migrated forward. Two things are neve
 holding no decision yet (opening the builder must not litter the data folder), and any edit of an
 existing character, whose own save is already the record. Creating the character deletes the draft.
 
+## The demo character
+
+**Karroth the Red** (id `karroth`) — Tiefling · Soldier · Warlock 5 (Fiend) × Barbarian 3
+(Berserker), SRD-only — seeds first-run on web AND desktop, so it is the first impression of the
+system's scope: keep it deriving clean against the shipped 5.2.1 graph. `recreateDemoCharacter()`
+restores it, and Settings ▸ Data has the button.
+
+**What the pairing does NOT exercise**, so nobody assumes the demo covers it: `casterLevel` is 0 for
+the barbarian half, so pact-pool-beside-shared-slot math is never hit; and a base Warlock has no
+Ritual Casting, so the `R` badge cannot appear on it — demo rituals on a Wizard or Cleric, and with a
+real shipped SRD ritual, never a hand-authored one.
+
 ## Three parts, and the split is load-bearing
 
 `src/lib/character/schema.ts` divides a character into `build`, `play`, and `ui`.
@@ -121,6 +133,19 @@ is `V | undefined`. That is the **honest** type. Branding the key to a finite un
 type claim a value is defined when the runtime slot is absent, for a near-zero gain and a migration.
 This is a carve-out, not debt to fix later.
 
+**Death is one typed fact, `play.death: {cause}`** — an open cause enum rather than a `dead` boolean —
+and every lethal rule lands on ONE `die(cause)` seam. Two readings live at that seam: instant death
+runs the SRD 5.1 text in BOTH editions, because 5.2.1 omits the chapter carrying it, and a revive
+drops one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal sixth level
+would kill the character again on the spot. The dead screen is deliberately not dismissible by
+backdrop or Escape; the roster link is the other way out, so a dead character cannot lock a player in.
+
+**What a level-up slot granted is stored per SLOT, not only flattened.** With only the flattened
+`abilityBoosts`/`feats` saved, a restored slot re-derived its boost a second time. The same root
+decides a re-pick: the reconciliation subtracts what the SAVE's own picks granted
+(`EditContext.loaded`), never what the live ones grant — measured against the live picks, moving a
+saved ability improvement left the old one with nothing to cancel against.
+
 **Concentration is a REF, not a clock.** `play.concentration` names a spell, and its timer lives on
 an ordinary carrier effect in `play.effects` — so editing that effect's `durationRounds` IS editing
 the concentration, and expiry, display and removal are the paths that already exist. A concentration
@@ -145,9 +170,18 @@ turn — so it cannot decide correctly even when it wants to. And forcing breaks
 concentration prompt on every Damage press fires again when someone enters 72, then 71, then +1 to
 fix it.
 
+Two play-sheet switches are this rule and nothing else. **Ammunition is counted only if the table
+counts it** (`ui.trackAmmunition`, off by default): a shot spends one from the stack it fires, and
+only once the turn has paid for it. 5.5e matches the weapon's `ammo:<kind>` to the stack's; SRD 5.1
+never says which ammunition a weapon fires, so there any stack qualifies and several ask which. Out
+of stock says so and rolls anyway. **A granted roll's "used this turn" mark is set by the PLAYER**
+(`play.turn.usedRolls`, cleared by Next turn) and never by rolling: only some granted rolls are
+once-per-turn, the content does not say which, and a mark that appeared on its own would invent a
+limit.
+
 In practice: a conditional ability is always listed and greyed when unavailable, never hidden, so its
-existence is never news. Highlighting it the moment its window opens is the other half and is not
-built (`plan.md` ▸ RECHARGE-TAIL). A mandatory save — concentration on damage — is an on-demand
+existence is never news — and the moment its window opens the sheet says so, in a notice naming it.
+A mandatory save — concentration on damage — is an on-demand
 button beside its indicator, like the death-save button at 0 HP, carrying a suggested but editable
 DC. Prefer *event → reminder* over an auto-mutating event bus.
 

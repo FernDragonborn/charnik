@@ -119,6 +119,14 @@ plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets
 - `d20_tests` → every d20-based roll (saves, skills, `attack`, `initiative`) — the 2024
   exhaustion penalty rides this one group.
 
+**`attacks` is how many attacks the Attack action makes**, a folded value like every other: base one
+from the rules core, raised by `set_override:attacks:<n>:floor` on the feature row, with its trace. A
+SET with a floor and not an add — RAW lists Extra Attack among the features that do not stack across
+classes, so a fighter 5 / barbarian 5 attacks twice, and two additive tokens would quietly make it
+three. **`crit_threshold` decides a HIGHLIGHT and never an outcome** (`roller.md` ▸ Crits): it takes
+`:cap` ("unless already lower"), and it takes no scope, so a row whose own text is weapon-only ships
+that limit as a `note:` rather than pretending otherwise.
+
 **`senses.<name>` is a range, and its NAME is open vocabulary.** The SRD says four — darkvision,
 truesight, blindsight, tremorsense — and a pack may name its own, so the target is accepted by
 GRAMMAR (`derive-targets.ts` ▸ `SENSE_TARGET`) rather than by a membership list, exactly as a damage

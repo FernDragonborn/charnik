@@ -66,6 +66,12 @@ a spell being concentrated on, an item — reads as on and is not a control, wit
 to end it. Ending a spell is the panel's, where the cost is visible: a list that reads as a
 reference must not quietly drop concentration.
 
+**The Features panel reads `character/features.ts`, not the sheet's effect list.** The gather keeps
+only rows carrying effect TOKENS, and most features are pure prose, so they never reach it. Class
+features, species traits, the background and feats are separate sections and never one blob; each
+row is a native `<details>`, which is everything a read-only list needs. `activeClassFeatures` lives
+there too, so the builder and the play sheet share one gate instead of two that drift.
+
 **The inventory view is a card grid, not a list.** Items are cards in sections (equipped and attuned,
 weapons, consumables, gear, treasure), each with a category icon, the key stat, quantity, and its
 equipped or attuned badge — because an item is recognised by kind at a glance, where a spell is found
@@ -161,6 +167,11 @@ Hoisting a `.field` input base once bled onto `.field` form-row wrappers across 
 specific names for global utilities (`.text-field`, `.dialog-card`, never `.field` / `.row` /
 `.item`), and keep exact values when migrating so the pixel diff stays at zero.
 
+**A class name is verbose, self-evident, kebab-case, and carries its feature's prefix.** What stays
+short on purpose: a word already self-evident inside its component (`.pip`, `.move`, `.dice`,
+`.filled`), the `class:strip` shorthands, and any name produced in the script (`tone()` →
+`max`/`min`) — renaming those is a JS change, not a class change.
+
 ## A narrow window
 
 A phone, or a desktop window dragged small — the same thing, and `MobileWarning` says out loud that
@@ -183,8 +194,14 @@ strip both at 640px): that number is a fact about the box's min-content, never a
 - **A locale is where a row stops fitting.** Ukrainian labels run wider than English, so a header
   that pairs a translated title with a `nowrap` button wraps rather than waiting for a threshold.
 
-**Verified by `tools/visual/narrow.mjs`**, not by `shot.mjs` — that one renders at 1280 only. See
-`tooling.md` ▸ Visual regression.
+- **A content table scrolls inside itself.** A class feature's spell table is wider than a phone, and
+  every ancestor inherits the overflow, so the renderer gives a table its own `overflow-x` scroller.
+
+**Verified by `tools/visual/narrow.mjs`** — overflow and a hit-tested tap-target census — and by
+`shot.mjs`, which captures every state at 393 as well as 1280 (the `@393` files), so a narrow
+regression is a pixel diff too. Several interaction states do not reach their `ready` selector at 393
+and are announced as skipped: a state the harness cannot reach is never captured as the wrong screen.
+See `tooling.md` ▸ Visual regression.
 
 ## The UX pattern contract
 
@@ -634,6 +651,10 @@ falls back to English rather than showing the key; sorting goes through `Intl.Co
 active locale, because an alphabet is not ASCII order; and an RTL locale is served by setting `dir`,
 not by a second stylesheet.
 
+**A scan for literal English is a hint, not the check.** The regions a scan misses are found by
+driving the app in Ukrainian and reading the screen — a text run followed by `{` hid three strings
+from a rule written to find them.
+
 `src/lib/i18n/catalogs.test.ts` is the guard: every bundled locale must carry the same keys as
 English, no value may be blank, and a placeholder used in one locale must exist in every other. A key
 added to English and forgotten elsewhere otherwise renders an English sentence inside an otherwise
@@ -669,6 +690,10 @@ sentence, which is copy and will be rewritten.
 
 Keyboard navigation is there from the start: correct Tab and Shift+Tab order, visible focus, ARIA
 roles and labels.
+
+**Every dialog traps focus** (`trapFocus`) and hands it back to what opened it. Two things are
+deliberately NOT trapped: `CommandPalette`, which restores focus itself — a second restorer fights
+it — and the combat popovers, which are anchored menus rather than modals.
 
 The command palette has two scopes. **`Ctrl+K` is global** — all content and every character.
 **`Ctrl+Shift+K` is local** — a search of the active character's own spells, items, features,

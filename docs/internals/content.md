@@ -87,8 +87,8 @@ The rule for every schema change:
 
 > **A column when its emptiness is a hole. A tag when its absence means "does not apply."**
 
-`weight_lb` is blank on most items — a hole, because the converter never extracted it, and somebody
-should. `str_min` is blank on a dagger because daggers have no Strength requirement. The first is a
+`weight_lb` is blank on most items — a hole, because nothing ever extracted it from the source, and
+somebody should. `str_min` is blank on a dagger because daggers have no Strength requirement. The first is a
 column with a bug; the second was never column-shaped.
 
 `cost` on a magic item is neither: it is blank because no price EXISTS to transcribe. Neither SRD
@@ -102,7 +102,10 @@ is why it is the axis the picker filters magic on, with a blank `rarity` meaning
   what "everything in tags" fails at.
 - **A compound field stays a column even where it would fit.** `damage` is `1d6 slashing; 1d4
   radiant` — its own internal structure, carrying the separators a tag list uses. Same class as
-  `effects`. A fact that has grown a grammar is not a tag, however sparse it is.
+  `effects`. A fact that has grown a grammar is not a tag, however sparse it is. A monster's
+  `attacks` is the same kind: `<name>:<+hit>:<reach or range>:<dice> <type>[, <dice> <type>]`, joined
+  by `; `, where a second damage part exists only where the source says "plus" — every other number
+  later in the sentence is an alternative (a versatile grip, a swarm at half HP) or a condition.
 - **What a tag costs**, worst first: zod stops validating it (`ac: optInt` rejects `"eleven"` by
   column name; `ac:eleven` inside a tag list is just a string), so **a bad tag value must surface in
   content health**, never a silent zero; the header stops advertising that the fact exists (an empty
@@ -134,6 +137,12 @@ SUBSTITUTION rather than a variable, because a damage type lands in a target slo
 is evaluated — `damage_sensitivity:resist:item_choice` becomes `damage_sensitivity:resist:fire`
 before the token is parsed. An unanswered row grants nothing: the token is dropped rather than folded
 onto the placeholder, while every other token on the row still applies.
+
+**A resource pool's NAME is a row of its own**, in the `resource` content type, resolved id → name
+once per derive (`character/resource-names.ts`) so a pool and its spend-options cannot disagree. It
+never belonged to the grant — `bardic_inspiration` is granted by two features — so it is neither a
+token segment nor a column on the granting row. The engine keeps `titleCase(id)` as the fallback: a
+name is something content ADDS, and it is translated like any other prose.
 
 A magic item points at the mundane row it is built from with **`base_item_id`**: the base's tags go
 underneath, the item's own win by name, resolved in one place (`content/resolved-item.ts ▸
@@ -214,16 +223,21 @@ So after any hand-edit, run **`pnpm restamp <file.csv>`**. It is a thin CLI over
 and one stamped from the UI come out byte-identical. It rewrites the hash and `updated_at`, fills in
 `id` and `schema` if absent, and preserves BOM and line endings.
 
-**Never re-run a converter just to re-stamp.** It regenerates every row of every file it owns, so it
-churns files you did not mean to change and moves their `updated_at`. Converters are for real content
-changes; if one touches a file you did not mean to change, `git checkout` it. A converter stamps its
-own output.
+**The app re-stamps a file it did not create, and only because the user asked.** The neighbouring
+rule — the app writes only files it owns — exists so a hand-edit is never silently clobbered; here
+the user has confirmed, and only the stamp lines move. Without it a drifted file could not be fixed
+from inside the app at all, in a project built for people who have no terminal. **"Don't ask again"
+is content-editing mode** (`app.contentEditingMode`): it adopts a hand-edit instead of asking and
+mutes both prompts, and it is reachable again in Settings ▸ Content health, because an answer must
+not be a door that locks behind you. Auto-adoption skips a pack mid-swap — an apply re-checks disk
+state before its rename, so a stamp landing then would cancel the user's update. The web build
+detects both conditions and lists them in content health but does NOT prompt: a dialog whose only
+button cannot work is worse than no dialog.
 
-What a re-run no longer does is LOSE anything. Each converter reads what its file already says and
-keeps what the SRD does not state: a condition's `max_level` and an authored row (Rage), a spell's
-`classes`, `upcast` and hand-filled healing `damage`, a feat's and a magic item's `effects`. It also
-repairs a name the 5.1 source split mid-word ("See I nvisibility", "Gladiato r"), which is what used
-to silently RENAME two rows on every run and orphan the references to them.
+**A file declaring a schema this build has never heard of is a content-health warning, and its rows
+still load** — flagged beats silently reinterpreted. `CONTENT_MIGRATIONS` (`content/migrations.ts`)
+is the registry that makes the version mean something; the unit is a FILE, the version is declared
+once in its header, and absent means current, so a hand-authored CSV is never asked to migrate.
 
 `src/lib/content/content_stamps.test.ts` fails if any shipped CSV is unstamped or drifted.
 
@@ -266,11 +280,61 @@ fills in — nobody is ever required to open a file by hand.
 The file watcher does **not** suppress the app's own writes, and does not need to: `reloadContent()`
 only reads, so a homebrew save costs at worst one redundant re-read. The one callback that does write
 back, `autoAdoptDrift`, terminates because a re-stamped file no longer drifts. A CSV edited directly
-on disk is picked up in real time; only the changed file is reparsed, and a manual refresh is the
-fallback.
+on disk is picked up in real time, and a manual refresh is the fallback. The WHOLE graph reloads —
+about 90 ms for both shipped packs — because `articles`, `byEffectiveId`, locale discovery and
+`resolveRefs` all span files; a per-file reparse was measured and is not worth building. The watcher
+filters on `isPackFile`, the predicate that decides what a pack ships, so an editor's temp files cost
+nothing.
 
 Note the asymmetry with the content repo: a shipped pack's files are **LF and no BOM**. BOM and CRLF
 are for CSVs the app writes into the user's data folder.
+
+## Authoring from the UI
+
+Every listed type authors through ONE editable-article form (`EditContentForm`): schema-driven fields
+→ a validated row → the homebrew write above, into `content/homebrew/<type>_hb.csv`, merged into the
+graph as an extra content root. A homebrew file is stamped with the `#content-*` header like any
+other (default licence `Custom`), so the app's own files never trip the metadata or drift dialogs.
+
+**A row whose content lives in a second table lists it.** A class, a subclass, a species and a
+resource say almost nothing on their own row, so the article shows the rows joined to it and offers
+to write one more with the join columns already filled (`LinkedRows`, over the pure
+`linked-tables.ts`) — a foreign key is an id nobody can guess, which is why "switch type, click add,
+type `subclass_id` by hand" does not count as authoring it. Four links: `class`→`class_feature` (only
+the rows no subclass claims), `subclass`→`class_feature` (carrying the parent's `class_id`),
+`species`→`species_option`, `resource`→`resource_option`. A fifth is a row in `LINKED_TABLES`. The
+list is also how a linked row is REACHED to be edited or deleted.
+
+**Editing a shipped row FORKS it to homebrew** — same id, `source=Homebrew` — and the shipped file is
+never touched, so it survives the next pack update and keeps its attribution. The editor is the
+current article beside the same form Add uses, so every widget and every validation is shared.
+`upsertHomebrewRow` replaces the same-id row and keeps columns beyond the schema, so localized prose
+survives an edit. **An override SORTS, it does not hide**: the homebrew row floats above the original
+in every group (`homebrewFirst`) and both coexist, which is what source-namespaced identity promises;
+choosing one is `collisions.json`.
+
+**An unsaved form is a draft file**, restored when the form reopens for any reason. One
+self-contained JSON per draft under `drafts/`, discovered by scanning — no index, by the rule above.
+The file carries its own target (`type`, `source`, `id`, a locale for a translation, or a GUID for a
+row that does not exist yet), so the filename is only a safe unique name. A draft is ephemeral, so on
+a schema-version mismatch it is DISCARDED rather than migrated — and the user is told, because
+losing work silently is the surprise. A draft whose target resolves to no row is an ORPHAN, and the
+dialog for it offers reassign, keep-as-new and delete. **Reassign re-points and resumes; it writes
+nothing** until the user saves, and where the chosen target already has a draft the user picks which
+survives after opening either. Every draft, orphans included, is reachable from the Drafts pane. A
+draft whose `sourceHash` no longer matches its row is kept and flagged. The web demo cannot save, so
+it does not cache.
+
+**A cell with a grammar is BUILT, not typed.** A spell's `upcast` has `UpcastBuilder` under the raw
+field: pick what scales, how, and by how much, and the token it will write is shown before it is
+added — seeing `damage:per_slot(1d6)` is what teaches the grammar the raw field still accepts. The
+composed token is read back through the LOADER's own parser, so the form cannot offer what the app
+would refuse. The raw field stays, because a `step()` ladder and a guard are wider than the builder.
+
+**A translation's state is a column**, `loc_status_<locale>`, an open enum
+(`not_started|machine|started|reviewed`) whose members drive the marker and the control — add one and
+it appears. A PARTLY filled translation is a loader warning; a row with none is silent, because the
+English fallback is the contract.
 
 ## Where the shipped data comes from
 
@@ -353,8 +417,8 @@ of it, the column is the only truth, and this repository only ever sees the down
 There is **no live exception left in `src/`**. The last one was an item's `item_type`, which held a
 category for mundane gear (`martial melee`) and a prose phrase for magic items (`weapon (any sword
 that deals slashing damage)`) — three readers sniffed substrings out of it, so a magic weapon had no
-properties, no damage dice and no fighting-style scopes. ITEM-TAGS replaced it with the `tags` column
-and `base_item_id` (`docs/plan.md`); the phrase is now read once, upstream, into a column.
+properties, no damage dice and no fighting-style scopes. The `tags` column and `base_item_id`
+replaced it; the phrase is now read once, upstream, into a column.
 
 ## The content repo
 
