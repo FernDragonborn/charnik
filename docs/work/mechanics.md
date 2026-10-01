@@ -178,10 +178,22 @@ stay semi-manual.
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- **A17 ritual/pact residual** — two nuances the spellcasting model keeps expressible and the sheet
-  does not yet enforce: a pure warlock's slot gating, and a ritual's SOURCE (a wizard rituals from the
-  spellbook unprepared, a prepared caster only what is prepared — `../internals/rules-core.md` ▸
-  Spellcasting). Minor.
+- [ ] **A17 · no shipped class can cast a ritual, and the column that would let one cannot say
+  enough.** The ritual-cast control is gated on `classes.ritual`, and neither pack's
+  `classes_srd.csv` has that column — so `ritualCasting` is false for every shipped character in both
+  editions and the control never renders outside a test fixture. Three things are owed, in this order:
+  - **The column's shape.** `ritual` is a boolean, and the SRD states three cases, not two. Quoted
+    from the 2014 pack's own rows: a bard rituals "any bard spell you know", a cleric and a druid one
+    they "have … prepared", a wizard one "in your spellbook. You don't need to have the spell
+    prepared". The third case is a policy, so the column is an open enum (`AGENTS.md` ▸ Taste).
+  - **The rows.** 2014 states all four in `<class>_spellcasting`. 2024 ships one sentence, the
+    wizard's `wizard_ritual_adept`; whatever lets every other 2024 caster cast a ritual is in a rules
+    chapter no pack carries (`work/content.md` ▸ RULES-TEXT), so that half is unsourced, not unwritten.
+  - **The gate is per CLASS, not per character.** `ritualCasting` is true when ANY caster class has
+    it, so a wizard's feature would offer a sorcerer's spell as a ritual; it wants the class the
+    spell is cast AS (`casterForSpell`), and the source rule beside it.
+  The same file is missing `prepare_style`, which then defaults to `prepared` for every class — the
+  2014 known casters included. Its effect on the sheet is not measured.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart

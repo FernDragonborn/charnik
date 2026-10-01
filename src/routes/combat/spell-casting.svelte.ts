@@ -164,7 +164,7 @@ export class SpellCasting {
 	}
 
 	/** Reserve a leveled spell slot for a non-ritual cast (A17): the slot key to spend, `null` for
-	 *  nothing to spend (cantrip / pure-pact / ritual), or blocked (+ a toast) when none remain.
+	 *  nothing to spend (cantrip / non-caster / ritual), or blocked (+ a toast) when none remain.
 	 *  Reserve-before-commit so a block returns BEFORE the action economy is touched.
 	 *  A typed result rather than a `'blocked'` STRING sentinel: in `string | null | 'blocked'` the
 	 *  literal is swallowed by `string`, so nothing stopped a caller from forgetting the check. */
@@ -191,7 +191,7 @@ export class SpellCasting {
 	}
 
 	/** What pays for this cast, settled BEFORE anything is committed: the slot key to spend later, or
-	 *  `null` for a cast that spends no slot (cantrip / pure pact / ritual / a pool). `undefined` means
+	 *  `null` for a cast that spends no slot (cantrip / non-caster / ritual / a pool). `undefined` means
 	 *  it cannot be paid for and the cast must not happen — the action economy is not touched, nothing
 	 *  is applied, and whichever half refused has already said so.
 	 *
@@ -611,8 +611,8 @@ export class SpellCasting {
 		if (!settled) return;
 		const play = this.host.character?.play;
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
-		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
-		// pact casters spend nothing; the action-economy check below stays combat-only.
+		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). A cantrip spends
+		// nothing and a pure warlock spends a pact slot; the action-economy check below stays combat-only.
 		const ritual =
 			opts.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
 		const paid = this.payForCast(r, ritual, opts);
