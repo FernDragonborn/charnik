@@ -178,22 +178,48 @@ stay semi-manual.
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- [ ] **A17 · no shipped class can cast a ritual, and the column that would let one cannot say
-  enough.** The ritual-cast control is gated on `classes.ritual`, and neither pack's
-  `classes_srd.csv` has that column — so `ritualCasting` is false for every shipped character in both
-  editions and the control never renders outside a test fixture. Three things are owed, in this order:
-  - **The column's shape.** `ritual` is a boolean, and the SRD states three cases, not two. Quoted
-    from the 2014 pack's own rows: a bard rituals "any bard spell you know", a cleric and a druid one
-    they "have … prepared", a wizard one "in your spellbook. You don't need to have the spell
-    prepared". The third case is a policy, so the column is an open enum (`AGENTS.md` ▸ Taste).
-  - **The rows.** 2014 states all four in `<class>_spellcasting`. 2024 ships one sentence, the
-    wizard's `wizard_ritual_adept`; whatever lets every other 2024 caster cast a ritual is in a rules
-    chapter no pack carries (`work/content.md` ▸ RULES-TEXT), so that half is unsourced, not unwritten.
-  - **The gate is per CLASS, not per character.** `ritualCasting` is true when ANY caster class has
-    it, so a wizard's feature would offer a sorcerer's spell as a ritual; it wants the class the
-    spell is cast AS (`casterForSpell`), and the source rule beside it.
-  The same file is missing `prepare_style`, which then defaults to `prepared` for every class — the
-  2014 known casters included. Its effect on the sheet is not measured.
+- [ ] **A17 · no shipped character can cast a ritual, in either edition.** The control exists
+  (`SpellsPanel` ▸ `ritual-cast`, and `cast({ ritual: true })` spends no slot) and three gaps keep
+  it off every real sheet. Counted, not remembered:
+  - **No class says it can.** The control is gated on `classes.ritual`, and neither pack's
+    `classes_srd.csv` has that column, so `ritualCasting` is false for every shipped class. It
+    renders only against a test fixture that carries the column.
+  - **2014 has no ritual SPELL either.** 0 of 319 rows in `srd-2014/spells_srd.csv` are tagged
+    (`ritual` is `false` on every one, and no other column holds the word), against 29 of 339 in
+    2024. The 2014 class rows speak of "the ritual tag" and no spell carries it — the same loss as
+    that pack's item tables (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 2b).
+  - **A boolean cannot state the rule.** Quoted from the 2014 pack's own `<class>_spellcasting`
+    rows: a bard rituals "any bard spell you know", a cleric and a druid one they "have … prepared",
+    a wizard one "in your spellbook. You don't need to have the spell prepared". 2024 ships one
+    sentence, `wizard_ritual_adept`, which says the same of the spellbook; whatever lets any other
+    2024 caster cast a ritual is in a rules chapter no pack carries (`work/content.md` ▸ RULES-TEXT).
+
+  **The work, in the order it unblocks itself:**
+  1. **The column — a maintainer decision before any code.** Proposed: a new `ritual_source` on
+     `classes`, an open enum of `prepared` | `spellbook`, blank for a class with no ritual casting.
+     A known caster's known spells are its prepared ones, so the bard is `prepared`. A NEW name
+     rather than a wider `ritual`: `spells.ritual` is a different fact under the same word, and the
+     homebrew editor keys its checkbox on the field NAME (`homebrew.ts` ▸ `BOOL_FIELDS`), so one
+     name cannot be a boolean on a spell and an enum on a class. A homebrew class still carrying
+     `ritual: true` reads as `prepared`.
+  2. **The app half — about six files, and it needs no shipped row to be tested.** The caster
+     profile carries the source instead of the character carrying one flag (`spellcasting.ts`), so
+     the gate is the class the spell is cast AS (`casterForSpell`): today `ritualCasting` is true when
+     ANY class has it, and a wizard's feature would offer a sorcerer's spell as a ritual. The control
+     and the cast then ask the same question — `prepared` offers it on a prepared row, `spellbook`
+     on any row of that class — in `SpellsPanel`, `spell-casting.svelte.ts` and the builder's
+     `SheetSpells` tag; `schemas.ts` and `homebrew.ts` take the column. Both editions, asserted.
+  3. **The rows — a producer sibling's output, like every mechanic stated in SRD prose.** 2014: four
+     class cells, each sourced by the sentence quoted above, and the spell tags re-converted from
+     SRD 5.1. 2024: the wizard's cell is sourced; every other class waits on the rule being found in
+     SRD 5.2.1 rather than recalled.
+
+  Until 3 lands the release gate's third clause holds: 29 shipped spells carry a tag nothing a
+  shipped character has can read.
+  **Not this item:** a pure warlock's slot gating, which it used to name, is built — `slotToSpend`
+  falls through to the pact pool and is tested. And `classes_srd.csv` is missing `prepare_style`
+  too, which then defaults to `prepared` for every class, the 2014 known casters included; its
+  effect on the sheet is not measured.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart

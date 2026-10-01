@@ -255,7 +255,9 @@ position and are given per wave, because most of them were learned the hard way.
   FEATURE-PASSIVES naming shape 1 and N2b (Wild Shape) no longer blocked on data — the attacks column
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
   can turn into actually lives. MASTERY-HALF's remaining half sits here: the eight mastery EFFECTS,
-  most of which act on a creature the app does not model.
+  most of which act on a creature the app does not model. A17 sits here as well: ritual casting
+  has its control and no shipped class or 2014 spell that reaches it, so its first step is a column
+  decision and its last is a producer's.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
