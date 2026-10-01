@@ -175,6 +175,18 @@ function movementModeFacts(facts: EffectFacts, ctx: ExprContext): EffectFacts {
 	return { ...facts, numeric };
 }
 
+/** The movement modes: no SRD species grants a base, so each fold starts at 0 and effects are the
+ *  source. `ctx` is the one that knows the walking speed, which is why this runs after it folds. */
+function deriveMovementModes(
+	facts: EffectFacts,
+	ctx: ExprContext,
+): Pick<CharacterSheet, 'flySpeed' | 'swimSpeed' | 'climbSpeed'> {
+	const movementFacts = movementModeFacts(facts, ctx);
+	const speedOf = (mode: 'fly' | 'swim' | 'climb') =>
+		applyEffects(`${MOVEMENT_MODE_PREFIX}${mode}`, computed([], { min: 0 }), movementFacts);
+	return { flySpeed: speedOf('fly'), swimSpeed: speedOf('swim'), climbSpeed: speedOf('climb') };
+}
+
 /** What the resolve stage produced — the state every phase below reads. */
 interface ResolvedState {
 	effCtx: EffectCtx;
@@ -247,12 +259,6 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
 
 	const speed = deriveSpeed(statInputs, speciesRow, baseSpeed, equippedArmor);
-	// the movement modes: no SRD species grants a base, so the fold starts at 0 and effects are the
-	// source. They fold from their own facts, because a mode stated as "equal to your Speed" takes
-	// its number from the speed folded on the line above.
-	const movementFacts = movementModeFacts(facts, withWalkingSpeed(baseCtx ?? NO_VARS, speed.value));
-	const movementOf = (key: `${typeof MOVEMENT_MODE_PREFIX}${'fly' | 'swim' | 'climb'}`) =>
-		applyEffects(key, computed([], { min: 0 }), movementFacts);
 
 	const damageSensitivities = deriveDamageSensitivities(facts);
 	const conditionImmunities = deriveConditionImmunities(facts);
@@ -270,9 +276,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), facts),
 		critThreshold: applyEffects('crit_threshold', critThresholdBase(), facts),
 		speed,
-		flySpeed: movementOf('speed.fly'),
-		swimSpeed: movementOf('speed.swim'),
-		climbSpeed: movementOf('speed.climb'),
+		...deriveMovementModes(facts, withWalkingSpeed(baseCtx ?? NO_VARS, speed.value)),
 		maxHp,
 		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),
