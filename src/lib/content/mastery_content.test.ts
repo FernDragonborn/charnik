@@ -149,8 +149,60 @@ describe('weapon mastery · every property a weapon names says what it does', ()
 			.list('weapon_property', { system: '5.5e' })
 			.find((r) => r.id === row?.meta.mastery?.id);
 		expect(rule).toBeDefined();
-		expect(row?.meta.mastery).toEqual({ id: rule?.id, name: rule?.data.name_en, row: rule });
+		expect(row?.meta.mastery).toMatchObject({ id: rule?.id, name: rule?.data.name_en, row: rule });
 		// the row prints the property's NAME, not the tag's bare word
 		expect(row && attackMeta(row)).toContain(String(rule?.data.name_en));
+	});
+});
+
+/*
+ * Two properties state a NUMBER about the attack, and SRD 5.2.1 gives each its formula: Graze deals
+ * "damage … equal to the ability modifier you used to make the attack roll", Topple forces "a
+ * Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your
+ * Proficiency Bonus)". The row prints the number, worked out for the weapon it is on.
+ */
+describe('weapon mastery · a property that states a number states it for this attack', () => {
+	/** A level-1 fighter with STR 16 (+3) and DEX 12 (+1), wielding and drilled in one weapon. */
+	const rowWith = async (mastery: string) => {
+		const graph = await loadPacks('srd-2024');
+		const weapon = graph
+			.list('item', { system: '5.5e' })
+			.find(
+				(r) =>
+					parseItemTags(r.data.tags).get(ITEM_TAG.mastery) === mastery &&
+					parseItemTags(r.data.tags).has(ITEM_TAG.melee) &&
+					!parseItemTags(r.data.tags).has(ITEM_TAG.finesse),
+			);
+		expect(weapon, `a melee weapon with ${mastery}`).toBeDefined();
+		const c = newCharacter('grog', 'Grog', '5.5e');
+		c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [
+			{ item: weapon?.effectiveId ?? '', qty: 1, equipped: true, attuned: false },
+		];
+		c.build.masteries = [weapon?.id ?? ''];
+		const character = characterSchema.parse(c);
+		const row = computeAttacks(character, deriveSheet(character, graph), graph).find(
+			(a) => a.id === weapon?.id,
+		);
+		expect(row, 'the weapon is an attack row').toBeDefined();
+		return row;
+	};
+
+	it('Graze states the damage a miss still deals: the ability modifier of the attack', async () => {
+		const row = await rowWith('graze');
+		expect(row?.meta.mastery?.values).toEqual([{ id: 'miss_damage', amount: 3 }]);
+		expect(row && attackMeta(row)).toMatch(/Graze Miss Damage 3$/);
+	});
+
+	it('Topple states the DC of the save it forces: 8 + that modifier + the proficiency bonus', async () => {
+		const row = await rowWith('topple');
+		expect(row?.meta.mastery?.values).toEqual([{ id: 'save_dc.con', amount: 13 }]);
+	});
+
+	it('a property with nothing to compute states no number', async () => {
+		const row = await rowWith('cleave');
+		expect(row?.meta.mastery?.values).toEqual([]);
+		expect(row?.notes ?? []).toEqual([]);
 	});
 });

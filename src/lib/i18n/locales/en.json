@@ -1338,6 +1338,7 @@
 	"effectIssue": {
 		"armorBlocksCasting": "Not proficient with {category} armour — spellcasting blocked.",
 		"dependencyCycle": "This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.",
+		"attackOnly": "This effect states a number about one attack, so it only works on a weapon property. Here there is no attack to state it for, and it is left out of the sheet.",
 		"misplacedWalkingSpeed": "This effect reads your walking speed somewhere Charnik cannot know it yet, so it is left out of the sheet. Only a movement speed (fly, swim, climb) can be set from your walking speed.",
 		"duplicateClassFeature": "Two content packs both provide this class feature. Charnik applied it once, not twice — pick which copy you want in Settings ▸ Content to make the choice explicit.",
 		"noPreparedCount": "Charnik doesn’t know how many spells {class} prepares at level {level} in {system}, so it shows none — this edition gives no formula to work it out from. Add the count for that level to the class’s casting table in your content.",
@@ -2049,6 +2050,10 @@
 		"cantrips": "Cantrips",
 		"group": "{level, selectordinal, one {#st level} two {#nd level} few {#rd level} other {#th level}}",
 		"nth": "{level, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+	},
+	"statedValue": {
+		"miss_damage": "{value}",
+		"save_dc": "{qualifier} DC {value}"
 	},
 	"spellResolution": {
 		"attack": "Attack roll",

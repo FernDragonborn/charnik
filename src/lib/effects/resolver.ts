@@ -16,7 +16,7 @@ import { recordOf } from '../util/records';
 import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
 import { collectExprVariables, evalExpression, type ExprContext } from './expression-evaluator';
-import { MOVEMENT_MODE_PREFIX, WALKING_SPEED_VAR } from './expression-parser';
+import { ATTACK_MOD_VAR, MOVEMENT_MODE_PREFIX, WALKING_SPEED_VAR } from './expression-parser';
 import {
 	EFFECT_KIND,
 	MAX_RESOURCE_MAX,
@@ -205,7 +205,7 @@ class Resolver {
 			cyclic: this.cyclic,
 		} = buildDependencyOrder(this.insts));
 		this.condemnCyclicWriters();
-		this.condemnMisplacedSpeedReads();
+		this.condemnMisplacedReads();
 		const writersByNode = this.groupWritersByNode();
 		this.foldNodesInOrder(writersByNode);
 		// plain (non-writing) tokens: guards read the FINAL state
@@ -271,25 +271,53 @@ class Resolver {
 		}
 	}
 
-	/** `speed` is the walking speed after effects, and that number does not exist yet: the sheet
-	 *  folds it after this stage. The VALUE of a movement mode may read it, because the assemble
-	 *  re-resolves exactly that; a guard, or a value aimed anywhere else, would read 0 and put a wrong
-	 *  number on the sheet — so the token goes inert and says so instead. */
-	private condemnMisplacedSpeedReads(): void {
-		const reads = (expr: string | undefined): boolean =>
-			expr !== undefined && collectExprVariables(expr).includes(WALKING_SPEED_VAR);
+	/**
+	 * Two things a token on the SHEET cannot be given, and what happens to one that asks.
+	 *
+	 * `speed` is the walking speed after effects, and that number does not exist yet: the sheet folds
+	 * it after this stage. The VALUE of a movement mode may read it, because the assemble re-resolves
+	 * exactly that; a guard, or a value aimed anywhere else, would read 0.
+	 *
+	 * `attack_mod`, and the `grant_value` kind that states a number about one attack, belong to a
+	 * weapon: they are read where an attack is put together, and here there is no attack to ask.
+	 *
+	 * Either way the token is turned into a NOTE of itself and reported. Kept verbatim it would still
+	 * be a token of a kind the fold knows — `set_override:ac:speed` would set AC to 0 — so the only
+	 * inert form of a well-formed token is its own text.
+	 */
+	private condemnMisplacedReads(): void {
+		const reads = (inst: Inst, name: string, where: 'guard' | 'value'): boolean => {
+			const exprs =
+				where === 'guard' ? [inst.guard] : [inst.parsed.valueExpr, inst.parsed.resource?.maxExpr];
+			return exprs.some((e) => e !== undefined && collectExprVariables(e).includes(name));
+		};
+		const condemn = (inst: Inst, key: string, detail: string) => {
+			this.issues.push({ source: sourceOf(inst), token: inst.raw, key, detail });
+			inst.disposition = 'inert';
+			inst.raw = `${EFFECT_KIND.note}:${inst.raw}`;
+		};
 		for (const inst of this.insts) {
 			if (inst.disposition !== 'pending') continue;
-			const inValue = reads(inst.parsed.valueExpr) || reads(inst.parsed.resource?.maxExpr);
 			const onMovementMode = inst.parsed.target?.startsWith(MOVEMENT_MODE_PREFIX) === true;
-			if (!reads(inst.guard) && (!inValue || onMovementMode)) continue;
-			inst.disposition = 'inert';
-			this.issues.push({
-				source: sourceOf(inst),
-				token: inst.raw,
-				key: ISSUE_KEY.misplacedWalkingSpeed,
-				detail: `"${WALKING_SPEED_VAR}" is readable only as the value of a ${MOVEMENT_MODE_PREFIX}<mode> target`,
-			});
+			if (
+				reads(inst, WALKING_SPEED_VAR, 'guard') ||
+				(reads(inst, WALKING_SPEED_VAR, 'value') && !onMovementMode)
+			)
+				condemn(
+					inst,
+					ISSUE_KEY.misplacedWalkingSpeed,
+					`"${WALKING_SPEED_VAR}" is readable only as the value of a ${MOVEMENT_MODE_PREFIX}<mode> target`,
+				);
+			else if (
+				inst.parsed.kind === EFFECT_KIND.grantValue ||
+				reads(inst, ATTACK_MOD_VAR, 'guard') ||
+				reads(inst, ATTACK_MOD_VAR, 'value')
+			)
+				condemn(
+					inst,
+					ISSUE_KEY.attackOnly,
+					`${EFFECT_KIND.grantValue} and "${ATTACK_MOD_VAR}" are read on a weapon property, where there is an attack`,
+				);
 		}
 	}
 

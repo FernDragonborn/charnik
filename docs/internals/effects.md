@@ -96,6 +96,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `grant_proficiency`          | `grant_proficiency:[<rung>:]<target>`                   | Grant a rung of the proficiency ladder — `partial` (half, rounded down: Jack of All Trades) · `partial_up` (the same rung rounding up: 2014 Remarkable Athlete) · `proficient` (the default when the word is absent) · `expertise`. Sources combine by MAX, so "expertise without proficiency" is unrepresentable and a rung never lowers one already held. |
 | `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day/an item's charges), `recharge` = a trigger, optionally with an amount: `short` · `long` · `short_one` · `consumable` · `other` · `dawn(1d6+1)` · `long(2)`. `max` is cost-capped (`MAX_RESOURCE_MAX`). See §How a pool comes back below. |
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
+| `grant_value`                | `grant_value:<id>[.<qualifier>]:<expr>`                 | A named NUMBER the row states about ONE attack: what a miss still deals (`miss_damage` — Graze), the DC of the save a hit forces (`save_dc.con` — Topple). STATED, never folded — the attack row prints it beside the property's name. Read where a weapon is (its mastery property's `weapon_property` row, `combat/weapon-mastery.ts`); on the sheet it has no attack to be stated for and goes inert with `attackOnly`. The id is open vocabulary, worded by the `statedValue.<id>` catalog family. |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `condition_immunity`         | `condition_immunity:<id>`                               | A condition this character cannot be given (2024 Aura of Courage → Frightened). The id REFERENCES a state row, so it is free-form like a damage type — which is also what lets 2014's `condition_immunity:disease` say a word no row carries. It states what is true of the body and folds onto the Defenses strip beside the damage defenses; it does not refuse an application, because the ruling at the table is the player's (`characters.md` ▸ A tracker surfaces, it never decides). |
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
@@ -280,7 +281,13 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
   Speed equal to your Speed"). The sheet folds its walking speed after the resolve stage, so the
   assemble re-resolves those facts against it (`derive-assemble.ts` ▸ `movementModeFacts`). A guard,
   or a value aimed at any other target, cannot be given the number: the resolver leaves that token
-  inert and raises `misplacedWalkingSpeed` rather than letting it read 0.
+  inert and raises `misplacedWalkingSpeed` rather than letting it read 0. **Inert means the token
+  becomes a `note:` of its own text**: kept verbatim it would still be a kind the fold knows, and
+  `set_override:ac:speed` would set AC to the 0 it read.
+- **Attack-scoped:** `attack_mod` — the ability modifier ONE attack resolved from (Strength or
+  Dexterity, whichever that weapon swings with). Only an attack can answer it, so it is readable
+  where a weapon property's tokens are evaluated for the weapon that carries it; a sheet-wide token
+  that reads it is left inert with `attackOnly`, for the same reason `speed` is turned away.
 - **Item-scoped:** `item_bonus` — the `+N` the PLAYER answered for the carried item whose row this
   token is on, scoped to that effect the way `spellcasting_mod` is scoped to a class. 0 everywhere
   else, including on the same row before it is answered: the SRD prints ONE "Weapon, +1, +2, or +3"

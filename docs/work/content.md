@@ -39,10 +39,10 @@
   **Each property says what it does.** The eight are `weapon_property` rows — a name and SRD 5.2.1's
   own sentence, keyed by the word the weapon's tag carries (`../internals/content.md` ▸ A column, or a
   tag) — and the attack row and the mastery picker print the name and explain it on hover and focus.
-  **What is left is the three that touch the character's own numbers, and none of them fits a kind
-  the vocabulary has**, so each is a mechanic before it is a token:
-  - **Graze** deals the attack's ability modifier on a MISS. The app records no miss, so it wants a
-    control on the roll the way `damage_reroll` has one.
+  **Two of them state a number** — Graze the damage a miss still deals, Topple the DC of the save it
+  forces — and the row prints it (`grant_value`, `../internals/effects.md` ▸ §2). Graze's token reads
+  `max(0,attack_mod)`: RAW names the modifier and says nothing of a negative one, and damage that
+  heals is the reading nobody plays, so that is RAI and said here. **What is left wants a mechanic**:
   - **Nick** moves the Light property's extra attack from a Bonus Action into the Attack action. The
     turn economy has no notion of that extra attack to move.
   - **Vex** gives Advantage on the next attack against ONE creature. It is relational, and the app

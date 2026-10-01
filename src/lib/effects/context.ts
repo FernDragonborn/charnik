@@ -10,7 +10,12 @@
  * resolver returns `undefined` for a name it doesn't carry rather than guessing.
  */
 import { ABILITY_IDS, type Ability, type ArmorType } from '../rules/core';
-import { splitDottedName, CONDITION_FLAG_ALIASES, WALKING_SPEED_VAR } from './expression-parser';
+import {
+	splitDottedName,
+	ATTACK_MOD_VAR,
+	CONDITION_FLAG_ALIASES,
+	WALKING_SPEED_VAR,
+} from './expression-parser';
 import { type ExprContext } from './expression-evaluator';
 export type { ExprContext } from './expression-evaluator';
 
@@ -174,6 +179,16 @@ export function withItemBonus(base: ExprContext, bonus: number): ExprContext {
 export function withWalkingSpeed(base: ExprContext, speed: number): ExprContext {
 	return {
 		number: (name) => (name === WALKING_SPEED_VAR ? speed : base.number(name)),
+		boolean: (name) => base.boolean(name),
+		enum: (name) => base.enum(name),
+	};
+}
+
+/** The same ctx with `attack_mod` answered — the ability modifier one attack resolved from, which
+ *  exists only while that attack is being put together. */
+export function withAttackMod(base: ExprContext, mod: number): ExprContext {
+	return {
+		number: (name) => (name === ATTACK_MOD_VAR ? mod : base.number(name)),
 		boolean: (name) => base.boolean(name),
 		enum: (name) => base.enum(name),
 	};

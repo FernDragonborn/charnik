@@ -94,7 +94,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v26: every class says whether it knows or prepares its spells (`prepare_style`), and 2024 Magic
 // Initiate rituals the spell it keeps prepared. An install left at v25 calls a 2014 bard's known
 // spells "prepared".
-export const CONTENT_SEED_VERSION = 26;
+// v27: Graze and Topple state the number their rule gives a formula for (`grant_value`). An install
+// left at v26 names the property and leaves the arithmetic to the player.
+export const CONTENT_SEED_VERSION = 27;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

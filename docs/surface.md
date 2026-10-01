@@ -463,7 +463,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (135 modules)
+## Library functions & types (136 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -773,7 +773,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
-- `interface WeaponMastery` — A mastery property as a row prints it.
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
 - `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
@@ -883,6 +882,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
+
+### `src/lib/combat/weapon-mastery.ts`
+
+- `interface WeaponMastery` — A mastery property as a row prints it.
+- `interface StatedValue` — One number a weapon property states about an attack, under the id its token gave it.
+- `function masteryFor` — One weapon's mastery for an attack made with the ability modifier `mod`, plus the tokens on its * row that say nothin…
+- `const masteryText` — The mastery's own words on the row: its name, then each number it states.
 
 ### `src/lib/components/damage-glyphs.ts`
 
@@ -1407,6 +1413,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const NO_VARS` — A ctx that answers nothing — the base for a caller that has exactly one variable to supply * and no character state a…
 - `function withItemBonus` — The same ctx with `item_bonus` pointed at ONE carried item's answer — the `+1/+2/+3` rows, whose * number is the play…
 - `function withWalkingSpeed` — The same ctx with `speed` answered — the walking speed after effects, which only the assemble * stage knows.
+- `function withAttackMod` — The same ctx with `attack_mod` answered — the ability modifier one attack resolved from, which * exists only while th…
 - `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
 
 ### `src/lib/effects/dependency-graph.ts`
@@ -1437,6 +1444,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/expression-parser.ts`
 
 - `const WALKING_SPEED_VAR` — The walking speed AFTER effects.
+- `const ATTACK_MOD_VAR` — The ability modifier ONE attack resolved from — Strength or Dexterity, whichever that weapon * swings with.
 - `const MOVEMENT_MODE_PREFIX` — A movement mode is a sub-target of the walking speed: `speed.fly`, `speed.swim`, `speed.climb`.
 - `const CONDITION_FLAG_ALIASES` — Sugar boolean flags that are pure aliases for `has_condition.<id>`.
 - `const ENUM_VARS` — Enum-typed variables → their allowed literal values.
@@ -1869,4 +1877,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1130 exports across 151 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1135 exports across 152 modules · 75 duplicate suspects._

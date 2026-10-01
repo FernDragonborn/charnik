@@ -32,6 +32,7 @@ export const EFFECT_KINDS = [
 	'disadvantage',
 	'grant_proficiency',
 	'grant_roll',
+	'grant_value',
 	'damage_sensitivity',
 	'apply_condition',
 	'condition_immunity',
@@ -586,9 +587,10 @@ const resourceOptionSchema = namedRow.extend({
 const resourceSchema = namedRow;
 
 /** What a weapon property DOES, keyed by the word a weapon's tag carries: `mastery:vex` on the
- *  item, `vex` here. A name and the rule's own text, like `resource` — the tag says which weapon
- *  has the property, this row is where a player reads what it means. */
-const weaponPropertySchema = namedRow;
+ *  item, `vex` here. A name and the rule's own text — the tag says which weapon has the property,
+ *  this row is where a player reads what it means. Its `effects` are read per ATTACK, for the weapon
+ *  that carries the property, never gathered onto the whole character. */
+const weaponPropertySchema = baseRow;
 
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 

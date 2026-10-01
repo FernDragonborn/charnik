@@ -629,6 +629,29 @@ describe('deriveSheet aggregator', () => {
 		expect(s.ac.value).toBe(before);
 		const refused = s.deriveIssues.filter((i) => i.key === ISSUE_KEY.misplacedWalkingSpeed);
 		expect(refused).toHaveLength(2);
+
+		// a SET is the case that matters: left as a token it would set AC to the 0 it reads
+		c.play.effects = [
+			{ iid: '1', label: 'Misplaced', effects: ['set_override:ac:speed'], positive: true },
+		];
+		expect(deriveSheet(characterSchema.parse(c), graph).ac.value).toBe(before);
+	});
+
+	it('a number about one attack is refused on the sheet, where there is no attack', () => {
+		const c = wizard();
+		c.play.effects = [];
+		const before = deriveSheet(characterSchema.parse(c), graph).ac.value;
+		c.play.effects = [
+			{
+				iid: '1',
+				label: 'Misplaced',
+				effects: ['grant_value:save_dc.con:8+proficiency_bonus', 'flat_bonus:ac+attack_mod'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.value).toBe(before);
+		expect(s.deriveIssues.filter((i) => i.key === ISSUE_KEY.attackOnly)).toHaveLength(2);
 	});
 
 	it('A3: no speed penalty when STR meets the armor requirement', () => {

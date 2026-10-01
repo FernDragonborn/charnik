@@ -90,7 +90,7 @@ of this page is vocabulary.
 [ guard ? ] flat_bonus : target +|- value
 ```
 
-- **`kind`** — what sort of change this is. There are 21, all listed in §5. You cannot invent a new
+- **`kind`** — what sort of change this is. There are 23, all listed in §5. You cannot invent a new
   one; Charnik will tell you it has never heard of it.
 - **`target`** — what the change lands on: a stat, a roll, a skill. Listed in §6.
 - **`value`** — how much, when the kind needs one. A whole number, a dice term like `2d6`, or a
@@ -174,6 +174,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 | `grant_proficiency` | `grant_proficiency:[<rung>:]<target>` | Proficiency, at one of the rungs: `partial` (half your bonus, rounded down — Jack of All Trades), `partial_up` (the same half, rounded up — 2014 Remarkable Athlete), `proficient` (the default when you write no rung), `expertise`. Rungs combine by taking the highest, so a grant never demotes what a character already has. The trace names YOUR feature, whatever the rung. |
 | `grant_resource` | `grant_resource:<id>:<max>:<recharge>` | A pool with a size and a way back: `short`, `long`, `short_one`, `consumable`, `other`, or one carrying an amount like `long(2)` or `dawn(1d6+1)`. Rage, ki, an item's charges. |
 | `grant_roll` | `grant_roll:<id>:<expr>` | A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap. |
+| `grant_value` | `grant_value:<id>[.<qualifier>]:<expr>` | A named number the row states about one attack — what a miss still deals (`miss_damage`), the DC of a save the hit forces (`save_dc.con`). It changes nothing: the attack row prints it beside the property's name. Works on a weapon property's row; anywhere else there is no attack to state it for, and it is flagged. |
 | `damage_sensitivity` | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | How this character meets one damage type. Immunity beats vulnerability beats resistance. The type is free-form, so a pack may name its own. |
 | `condition_immunity` | `condition_immunity:<id>` | A condition that cannot be put on this character — write the condition's own id (`charmed`, `frightened`, `poisoned`). It shows on the sheet beside the damage defences. A word no condition row carries works too, which is how 2014's "immune to disease" is said. |
 | `apply_condition` | `apply_condition:<id>` | Apply a condition row, whose own effects then take hold. Expands one level only, so conditions cannot chain forever. |
@@ -266,6 +267,10 @@ formula is *data* that travels to the roller, so the same formula always reads t
 **Only when setting a fly, swim or climb speed:** `speed` — your walking speed after everything
 that changes it. `set_override:speed.climb:speed:floor` is "a Climb Speed equal to your Speed".
 Anywhere else the token is left out and flagged, because the walking speed is not known yet there.
+
+**Only on a weapon property:** `attack_mod` — the ability modifier the attack with that weapon
+uses. `grant_value:save_dc.con:8+attack_mod+proficiency_bonus` is Topple's "DC 8 plus the ability
+modifier used to make the attack roll and your Proficiency Bonus".
 
 **About the item the token is on:** `item_bonus` — the `+1`, `+2` or `+3` the player said their copy
 of this item is. Write the rungs your row offers in its `bonus_choice` column (`1,2,3`, or

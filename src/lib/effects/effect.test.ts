@@ -174,6 +174,19 @@ describe('parseToken (bounded vocabulary)', () => {
 			target: 'skill.stealth',
 		});
 	});
+	it('grant_value: a named number with an optional qualifier, its value an expression', () => {
+		expect(parseToken('grant_value:save_dc.con:8+attack_mod+proficiency_bonus')).toMatchObject({
+			kind: 'grant_value',
+			target: 'save_dc.con',
+			valueExpr: '8+attack_mod+proficiency_bonus',
+		});
+		expect(parseToken('grant_value:miss_damage:max(0, attack_mod)')).toMatchObject({
+			kind: 'grant_value',
+			target: 'miss_damage',
+		});
+		expect(parseToken('grant_value:miss_damage').kind).toBe('unknown'); // a name with no number
+	});
+
 	it('grant_proficiency carries ONE ladder level and canonicalizes a skill. prefix', () => {
 		expect(parseToken('grant_proficiency:stealth')).toMatchObject({
 			target: 'stealth',

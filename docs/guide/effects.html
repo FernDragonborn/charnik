@@ -672,7 +672,7 @@
 				<dd>Optional. A yes/no question about the character. No guard means always.</dd>
 				<dt class="pt-kind">kind</dt>
 				<dd>
-					What sort of change this is. There are 22, all in §5 — you cannot invent a new one, and
+					What sort of change this is. There are 23, all in §5 — you cannot invent a new one, and
 					Charnik will tell you it has never heard of it.
 				</dd>
 				<dt class="pt-target">target</dt>
@@ -817,6 +817,11 @@ not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_
 		<div class="kind-name">grant_roll</div>
 		<div class="kind-form"><code><span class="g-kind">grant_roll</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span></code></div>
 		<div class="kind-desc">A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">grant_value</div>
+		<div class="kind-form"><code><span class="g-kind">grant_value</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">[</span><span class="g-punc">.</span><span class="g-punc">&lt;</span><span class="g-slot">qualifier</span><span class="g-punc">&gt;</span><span class="g-punc">]</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">A named number the row states about one attack — what a miss still deals (<code>miss_damage</code>), the DC of a save the hit forces (<code>save_dc.con</code>). It changes nothing: the attack row prints it beside the property's name. Works on a weapon property's row; anywhere else there is no attack to state it for, and it is flagged.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">damage_sensitivity</div>
@@ -990,6 +995,12 @@ disadvantage:attacked.spell        <span class="cmt">Spellguard Shield</span></c
 				<code>set_override:speed.climb:speed:floor</code> is "a Climb Speed equal to your Speed".
 				Anywhere else the token is left out and flagged, because the walking speed is not known yet
 				there.
+			</p>
+			<p>
+				<strong>Only on a weapon property:</strong> <code>attack_mod</code> — the ability modifier
+				the attack with that weapon uses.
+				<code>grant_value:save_dc.con:8+attack_mod+proficiency_bonus</code> is Topple's "DC 8 plus
+				the ability modifier used to make the attack roll and your Proficiency Bonus".
 			</p>
 			<p>
 				Ability names are always spelled out with what you want from them — <code>dex_mod</code>, not

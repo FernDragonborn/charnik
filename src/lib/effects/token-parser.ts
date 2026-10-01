@@ -34,6 +34,12 @@ export const EFFECT_KIND = {
 	// Inspiration die). The expr is an L2 value expression (composes with `step()`/`d`); derive
 	// resolves it to a dice formula string for a rollable chip → the DiceTrayRequest seam (EFX-ROLL).
 	grantRoll: 'grant_roll',
+	// `grant_value:<id>[.<qualifier>]:<expr>` — a named NUMBER the row states about one attack: what
+	// a miss still deals (`miss_damage` — Graze), the DC of the save a hit forces (`save_dc.con` —
+	// Topple). STATED, never folded: nothing on the sheet moves, the attack row says the number. The
+	// value is an L2 expression and may read `attack_mod`, which only an attack can answer — so the
+	// kind is read where a weapon is (its mastery property's row) and nowhere else.
+	grantValue: 'grant_value',
 	// `damage_sensitivity:<relation>:<type>` — how this character RELATES to one damage type. One
 	// kind rather than three, because the three relations are one axis (a damage multiplier: x0, x1/2,
 	// x2), so "immunity outranks vulnerability outranks resistance" stays a comparison inside a kind.
@@ -308,6 +314,14 @@ const parseGrantRoll: KindParser = (rest, raw, kind) => {
 	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
 };
 
+const parseGrantValue: KindParser = (rest, raw, kind) => {
+	// `grant_value:<id>[.<qualifier>]:<expr>` — the id is snake with one optional dotted qualifier
+	// (`save_dc.con`), the expr is the colon-free L2 value slot.
+	const m = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(rest.trim());
+	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
+};
+
 const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
 	// `damage_sensitivity:<relation>:<type>`. A missing relation is malformed, not a default: an
 	// author who meant immunity and typed one segment gets an inert note they can see, rather than a
@@ -436,6 +450,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.blockBonus]: parseTargetOnly,
 	[EFFECT_KIND.halve]: parseTargetOnly,
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
+	[EFFECT_KIND.grantValue]: parseGrantValue,
 	[EFFECT_KIND.damageSensitivity]: parseDamageSensitivity,
 	[EFFECT_KIND.grantResource]: parseGrantResource,
 	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,
@@ -617,6 +632,7 @@ export const ISSUE_KEY = {
 	pluginFailed: 'effectIssue.pluginFailed',
 	dependencyCycle: 'effectIssue.dependencyCycle',
 	misplacedWalkingSpeed: 'effectIssue.misplacedWalkingSpeed',
+	attackOnly: 'effectIssue.attackOnly',
 	unreadableGuard: 'effectIssue.unreadableGuard',
 	rolledAbilityScore: 'effectIssue.rolledAbilityScore',
 	unreadableAbilityChange: 'effectIssue.unreadableAbilityChange',

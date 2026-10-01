@@ -23,6 +23,10 @@ const MAX_LENGTH = 512;
  *  (`set_override:speed.climb:speed`, "a Climb Speed equal to your Speed"), and the resolver turns
  *  away a token that reads it anywhere else. */
 export const WALKING_SPEED_VAR = 'speed';
+/** The ability modifier ONE attack resolved from — Strength or Dexterity, whichever that weapon
+ *  swings with. Only an attack can answer it, so it is readable where a weapon's own row or its
+ *  mastery property is evaluated; the resolver turns away a token that reads it on the sheet. */
+export const ATTACK_MOD_VAR = 'attack_mod';
 /** A movement mode is a sub-target of the walking speed: `speed.fly`, `speed.swim`, `speed.climb`. */
 export const MOVEMENT_MODE_PREFIX = 'speed.';
 
@@ -34,6 +38,7 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'spellcasting_mod',
 	'base_speed',
 	WALKING_SPEED_VAR,
+	ATTACK_MOD_VAR,
 	// ITEM-SCOPED: the +N the player answered for the carried item this token is on. 0 everywhere
 	// else, including on the same row before it is answered — the app never picks a bonus for them.
 	'item_bonus',

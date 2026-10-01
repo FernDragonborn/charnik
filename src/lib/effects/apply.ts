@@ -242,6 +242,10 @@ class FactsCollector {
 				// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass reports
 				// every plugin token itself, so counting it as unknown too would double the panel entry.
 				break;
+			case EFFECT_KIND.grantValue:
+			// a stated number belongs to an attack and is read there; one that reaches the SHEET's
+			// facts has nowhere to be said, so it is shown as the text it is rather than vanishing
+			// eslint-disable-next-line no-fallthrough -- the same visible fate as an unknown token
 			case 'unknown':
 				this.facts.unknown.push({ source: eff.source, token });
 				break;
