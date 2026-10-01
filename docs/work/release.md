@@ -94,17 +94,14 @@
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
 - [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
   `docs/internals/security.md`.
-- [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides; **re-audited 2026-08-09**
-  (it had drifted to 9 findings): dompurify + @sveltejs/kit bumped, five more transitive dev-only
-  packages pinned the same way → `pnpm audit` clean again. Re-check it periodically; it drifts silently.
-  **Re-audited 2026-09-07** before the 0.7.0 tag: four HIGH findings, all `fast-uri` reached through
-  `stylelint > table > ajv`. The existing override still read `fast-uri@<3.1.5`, so the advisory's own
-  4.x range walked straight past it — a pin narrower than the next advisory is a pin that expires
-  silently. Widened to `<4.1.3` and clean again.
-  **Re-audited 2026-09-15** at the 0.7.0 cut: three moderate + one HIGH, all dev-only. The vitest
-  family went to 4.1.11 for the `@vitest/mocker` path traversal — a DIRECT dep, so package.json, not
-  an override. The other two (`colord` via stylelint, `smol-toml` via knip) needed nothing: the
-  dependabot group bump carried stylelint and knip far enough that both resolved patched on their
-  own. **An override is only worth adding once the upstream bump is ruled out** — a pin that restates
-  what the tree already resolves is the kind that outlives its advisory and misleads the next reader.
-  Pages deploy recovery still open.
+- **AUDIT-DRIFT · `pnpm audit` is clean, and it drifts silently — re-run it before every tag.** Three
+  rules the re-audits keep proving:
+  - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
+    family).
+  - **A transitive one is pinned in `pnpm-workspace.yaml` ▸ `overrides`, and the pin's range must
+    reach the advisory's own.** An override reading `fast-uri@<3.1.5` let a 4.x advisory walk
+    straight past it, and `brace-expansion@<5.0.9` did the same for three later ones — a pin narrower
+    than the next advisory expires without saying so. Widen the existing line; do not add a second.
+  - **An override is only worth adding once the upstream bump is ruled out** — a pin that restates
+    what the tree already resolves outlives its advisory and misleads the next reader.
+  Pages deploy recovery is still open.
