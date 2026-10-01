@@ -91,7 +91,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // spells SRD 5.1 tags as rituals carry the tag. An install left at v23 offers no ritual cast at all.
 // v25: the eight 2024 mastery properties say what they do — a new file, `weapon_properties_srd.csv`.
 // An install left at v24 prints `vex` on an attack row and nothing about it.
-export const CONTENT_SEED_VERSION = 25;
+// v26: every class says whether it knows or prepares its spells (`prepare_style`), and 2024 Magic
+// Initiate rituals the spell it keeps prepared. An install left at v25 calls a 2014 bard's known
+// spells "prepared".
+export const CONTENT_SEED_VERSION = 26;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

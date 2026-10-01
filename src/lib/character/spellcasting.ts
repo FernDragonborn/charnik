@@ -330,7 +330,9 @@ function featCasterProfiles(
 			maxSpellLevel: leveled.reduce((n, g) => Math.max(n, g.level), 0),
 			accessSpellIds: listRow ? access.spellIdsForClass(listRow.effectiveId) : [],
 			isPact: false,
-			ritualSource: null, // a feat teaches spells; it grants no ritual casting
+			// the feat's own statement: SRD 5.2.1 lets any spellcaster ritual a spell they have
+			// prepared, and a feat that keeps its spell always prepared says so on its row
+			ritualSource: feat.data.ritual_source ?? null,
 		});
 	}
 	return out;
@@ -422,9 +424,14 @@ export function deriveSpellcasting({
 	const featProfiles = featCasterProfiles(character, graph, access, statsFor);
 
 	if (sources.length === 0)
-		return { classes: featProfiles, pools: [], casterLevel: 0, ritualCasting: false };
+		return {
+			classes: featProfiles,
+			pools: [],
+			casterLevel: 0,
+			ritualCasting: featProfiles.some((p) => p.ritualSource !== null),
+		};
 
-	const ritualCasting = sources.some((p) => p.ritualSource !== null);
+	const ritualCasting = [...sources, ...featProfiles].some((p) => p.ritualSource !== null);
 
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
 	const shared = sources.filter((p) => p.caster !== 'pact');

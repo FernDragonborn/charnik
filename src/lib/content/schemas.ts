@@ -362,6 +362,9 @@ const featSchema = baseRow.extend({
 	/** Which abilities may cast §D's spells, as a comma list (`int,wis,cha`) or `any` — the same
 	 *  grammar `ability_choice` uses. The pick drives this profile's save DC and attack. */
 	spell_choice_ability: optStr,
+	/** Which of §D's spells this feat casts as rituals (`RITUAL_SOURCE`); blank = none. A feat is a
+	 *  caster profile of its own, so it answers for its own spells the way a class does for its. */
+	ritual_source: RitualSourceColumn,
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive

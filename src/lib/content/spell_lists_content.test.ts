@@ -136,3 +136,68 @@ describe.each([
 		});
 	},
 );
+
+/*
+ * The two tails of the same rule. A FEAT that teaches a spell is a caster of its own: SRD 5.2.1's
+ * Magic Initiate says "You always have that spell prepared", and the general rule lets any
+ * spellcaster ritual a prepared spell — so the feat's row states `prepared`, and a Fighter who took
+ * it rituals its spell. And whether a class KNOWS its spells or PREPARES them is each class's own
+ * heading: SRD 5.1 prints "Spells Known of 1st Level and Higher" for four classes and "Preparing and
+ * Casting Spells" for four; SRD 5.2.1 prints "Prepared Spells of Level 1+" for all eight.
+ */
+describe('how a class holds its spells, as shipped', () => {
+	const stylesOf = async (pack: string, system: '5e' | '5.5e') =>
+		Object.fromEntries(
+			(await loadPacks(pack))
+				.list('class', { system })
+				.flatMap((r) => (r.data.prepare_style ? [[r.id, r.data.prepare_style]] : [])),
+		);
+
+	it('2014: four classes know their spells and four prepare them', async () => {
+		expect(await stylesOf('srd-2014', '5e')).toEqual({
+			bard: 'known',
+			ranger: 'known',
+			sorcerer: 'known',
+			warlock: 'known',
+			cleric: 'prepared',
+			druid: 'prepared',
+			paladin: 'prepared',
+			wizard: 'prepared',
+		});
+	});
+
+	it('2024: every caster class prepares', async () => {
+		const styles = await stylesOf('srd-2024', '5.5e');
+		expect(Object.keys(styles).sort()).toEqual(
+			['bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard'].sort(),
+		);
+		expect(new Set(Object.values(styles))).toEqual(new Set(['prepared']));
+	});
+
+	it('2024 Magic Initiate rituals its own spell, on a character with no caster class', async () => {
+		const source = 'SRD 5.2.1';
+		const graph = await loadPacks('srd-2024');
+		const feat = `feat:${source}:magic_initiate`;
+		const row = graph.get(feat);
+		expect(row?.type === 'feat' ? row.data.ritual_source : null).toBe(RITUAL_SOURCE.prepared);
+
+		const c = newCharacter('probe', 'Probe', '5.5e');
+		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.feats = [feat];
+		c.build.featSpells = [{ feat, key: 'origin', list: 'wizard', ability: 'int' }];
+		c.build.spells = [
+			{ spell: `spell:${source}:detect_magic`, prepared: true, alwaysPrepared: false },
+		];
+		const character = characterSchema.parse(c);
+		const sheet = deriveSheet(character, graph);
+		expect(sheet.spellcasting.ritualCasting).toBe(true);
+		const rows = buildSpellGroups({
+			character,
+			sheet,
+			graph,
+			groupBy: 'level',
+			pinned: {},
+		}).flatMap((group) => group.rows);
+		expect(rows.map((r) => [r.id, r.ritualCast])).toEqual([['detect_magic', true]]);
+	});
+});

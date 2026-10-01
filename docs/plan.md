@@ -255,8 +255,7 @@ position and are given per wave, because most of them were learned the hard way.
   and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
   can turn into actually lives. MASTERY-HALF's tail sits here: Graze, Nick and Vex, each a
   mechanic the app does not have yet rather than a token it could be given. A17 sits here as well: ritual casting
-  ships for every class, and what is left is the two casters whose grant is not a class's — a feat's
-  spells, and a 2014 warlock's Pact of the Tome.
+  ships, and what is left is a 2014 warlock's Pact of the Tome, which waits on the boon being a choice.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
   attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one

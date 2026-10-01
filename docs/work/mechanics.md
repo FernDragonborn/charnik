@@ -178,19 +178,12 @@ stay semi-manual.
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- [ ] **A17 · two casters still cannot ritual what their rules let them.** Ritual casting ships:
-  every class says what it rituals from (`ritual_source`), both packs carry their SRD's 29 ritual
-  tags, and the rule is `../internals/rules-core.md` ▸ Spellcasting. What is left is narrower:
-  - **A spell a FEAT teaches.** SRD 5.2.1 states the rule for any spellcaster ("To cast a spell as a
-    Ritual, a spellcaster must have it prepared"), and a Magic Initiate spell is always prepared —
-    but a feat's caster profile carries no ritual source, so such a spell is never offered. The
-    source is a column on the feat row, like the three `spell_choice*` ones it already has.
-  - **2014 Pact of the Tome.** `warlock_pact_boon` is one row holding three boons as prose, so
-    nothing can say "this warlock rituals" until the boon is a choice (N2 shape 3). The subclass
-    column that would carry it for a subclass-shaped grant is built and has no shipped row.
-
-  **Not this item:** `classes_srd.csv` is missing `prepare_style`, which then defaults to `prepared`
-  for every class, the 2014 known casters included; its effect on the sheet is not measured.
+- [ ] **A17 · a 2014 warlock's Pact of the Tome cannot ritual.** Ritual casting ships for every
+  class and for a spell a feat teaches: `ritual_source` on the class, subclass or feat row, both
+  packs' 29 ritual tags, and the rule in `../internals/rules-core.md` ▸ Spellcasting. The one caster
+  left is the Tome warlock: `warlock_pact_boon` is one row holding three boons as prose, so nothing
+  can say "this warlock rituals" until the boon is a choice (N2 shape 3). The subclass column that
+  would carry a subclass-shaped grant is built and has no shipped row.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart
@@ -233,13 +226,6 @@ stay semi-manual.
   actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
-- [ ] **ORIGIN-FEAT-REACH · no shipped character can take Skilled.** Its chooser is built — three
-  picks over skills and tools, off `skill_choice` and `skill_choice_kinds` — and nothing shipped
-  reaches it. Counted: the 2024 pack ships four origin feats and four backgrounds, the backgrounds
-  grant `magic_initiate` twice, `alert` and `savage_attacker`, and `featOptionsFor` leaves
-  origin feats out of a level's slot. So Skilled arrives only through a homebrew background or
-  species. Whether a level's feat slot may hold an origin feat is a rules question to answer from
-  SRD 5.2.1's own feat text, not from memory.
 - [ ] **XP-TRACKING · the spec's optional XP mode has a field and nothing else.** `plan.md` ▸
   Character lifecycle puts it in scope: a `levelingMode` (`milestone` | `xp`) toggle, level derived
   from the XP thresholds in `xp` mode. What exists is `build.xp`, optional in the schema and read by
