@@ -71,6 +71,8 @@
 			"colToHit": "Влучання",
 			"colDamage": "Шкода",
 			"colNotes": "Нотатки",
+			"extraAttackBonus": "{name}: атака бонусною дією, {damage}",
+			"extraAttackFree": "{name}: додаткова атака в дії «Атака», {damage}",
 			"empty": "Нічого не екіпіровано — вдягніть зброю у «Спорядженні», і рядки атак зʼявляться тут."
 		},
 		"classes": {

@@ -71,6 +71,8 @@
 			"colToHit": "To hit",
 			"colDamage": "Damage",
 			"colNotes": "Notes",
+			"extraAttackBonus": "{name}: Bonus Action attack, {damage}",
+			"extraAttackFree": "{name}: extra attack in the Attack action, {damage}",
 			"empty": "Nothing equipped yet — equip a weapon in Equipment and its attack rows appear here."
 		},
 		"classes": {

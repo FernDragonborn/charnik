@@ -47,24 +47,21 @@
   on the property's row, offered as a control beside the attack row, costing what the row says and
   marked once made (`combat/attack-properties.ts`, `SheetRolls.extraAttackRoll`). Light grants it,
   a drilled Nick makes it free, Cleave grants its own, 2024 Two-Weapon Fighting keeps the modifier.
+  The builder's Attacks card says the same attack in its Notes cell — who grants it, what it costs,
+  what it rolls — with the rules' text on hover and focus (`design-preview/builder-extra-attack.png`).
+  Both costs are driven in the running app: a free one spends no slot, a Bonus Action one spends
+  the pip and is refused with its reason when the pip is already gone.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left, in the order it is worth doing:**
-  1. **The builder does not show an extra attack.** `SheetAttacks` prints the row and not
-     `Attack.extras`, so the row a player builds is not yet the row they play. A line in the Notes
-     cell is the size of it.
-  2. **The control's LOOK is unconfirmed.** `design-preview/extra-attack-control.png` is what ships:
+  1. **The control's LOOK is unconfirmed.** `design-preview/extra-attack-control.png` is what ships:
      a gold `+ Name` beside the row, after the finesse grip. It was looked at once and picked by
      nobody; PICK-CONTROL-STUDY (`ui.md`) is where the house pattern for a per-row control is owed.
-  3. **The Bonus Action path was driven by test, not by hand.** The live check pressed Nick's free
-     attack by keyboard (no slot spent, the mark set, the log line `Dagger — Nick`, the control
-     blocked afterwards with its reason). Light's Bonus Action spend is covered by `trySpend` and
-     the unit tests, and wants one press in the running app.
-  4. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
+  2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
      names (`mechanics.md`).
-  5. **An item's article says `Mastery: vex` and nothing more.** The detail view's Mastery cell
+  3. **An item's article says `Mastery: vex` and nothing more.** The detail view's Mastery cell
      prints the word; the attack row and the picker explain it, the compendium does not.
-  6. **A weapon's other properties have no rows.** Only Light does, because only Light had a rule
+  4. **A weapon's other properties have no rows.** Only Light does, because only Light had a rule
      to carry. Finesse, Heavy, Reach, Thrown, Versatile, Loading, Two-Handed and Ammunition are
      defined in each SRD's Properties section and would read the same way.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip

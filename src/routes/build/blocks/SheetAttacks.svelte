@@ -11,12 +11,48 @@
 		attackNotes,
 		computeAttacks,
 		formatDamageParts,
+		type Attack,
 	} from '$lib/combat/attacks';
+	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
+	import { localizedName } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
 	import { describedPlainProse } from '$lib/content/overrides.svelte';
 	import { provenance } from '$lib/actions/provenance';
 	import { signed } from '$lib/util/format';
 	const b = build;
+
+	/** The Notes cell: what kind of attack it is, what was folded into it, then each extra attack its
+	 *  properties allow — the play sheet offers those as controls, and here there is nothing to press. */
+	const notesText = (a: Attack): string =>
+		[
+			attackMeta(a, $_),
+			attackNotes(a, $_),
+			...(a.extras ?? []).map((extra) =>
+				$_(
+					extra.cost === EXTRA_ATTACK_WORD.bonus
+						? 'build.attacks.extraAttackBonus'
+						: 'build.attacks.extraAttackFree',
+					{ values: { name: extra.name, damage: formatDamageParts(extra.damageParts, $_) } },
+				),
+			),
+		]
+			.filter(Boolean)
+			.join(' · ');
+
+	/** What the cell says on hover and on focus: each property it names, in the rule's own text — a
+	 *  row once, though a drilled Nick is both the mastery and what shaped the Light attack. */
+	const notesExplanation = (a: Attack): string =>
+		[
+			...new Set([
+				...(a.meta.mastery?.row ? [a.meta.mastery.row] : []),
+				...(a.extras ?? []).flatMap((extra) => extra.rows),
+			]),
+		]
+			.map(
+				(row) =>
+					`${localizedName(row, app.activeLocale)}. ${describedPlainProse(row, app.activeLocale)}`,
+			)
+			.join('\n');
 
 	const attacks = $derived(
 		b.sheet && b.graph ? computeAttacks(b.assembled, b.sheet, b.graph, app.activeLocale) : []
@@ -69,13 +105,9 @@
 					<b class="aname" role="cell">{attackName(a, $_)}</b>
 					<span class="hit" role="cell">{signed(a.toHit)}</span>
 					<span class="dmg" role="cell">{formatDamageParts(a.damageParts, $_)}</span>
-					<!-- the cell explains the mastery it names: the word alone says nothing a player can use -->
-					<span
-						class="ameta"
-						role="cell"
-						use:provenance={a.meta.mastery?.row
-							? describedPlainProse(a.meta.mastery.row, app.activeLocale)
-							: ''}>{[attackMeta(a, $_), attackNotes(a, $_)].filter(Boolean).join(' · ')}</span
+					<!-- the cell explains the properties it names: the word alone says nothing a player can use -->
+					<span class="ameta" role="cell" use:provenance={notesExplanation(a)}
+						>{notesText(a)}</span
 					>
 				</div>
 			{/each}
