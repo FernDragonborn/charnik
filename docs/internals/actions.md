@@ -75,6 +75,10 @@ still landing on an existing system per the table above:
 | `note:<text>` | a log/toast line |
 | `a;b;c` (a `;`-list) | **MULTI-action** — run each sub-token in order on ONE activation (Uncanny Metabolism = `restore_resource:focus;heal:<MA die>+monk_level`). Cost + turn slot are still validated once, up front (all-or-nothing). Ceiling: a `note:` can't contain `;` (it's the separator). |
 
+**A verb lands on a system that EXISTS, so some class actions stay a `note:` on purpose.** Patient
+Defense and Step of the Wind grant the Dodge, Disengage and Dash ACTIONS, and the app models none of
+the three — a verb for them would be a play-state channel invented for one row.
+
 > **`rest` constraint.** A consumable that GRANTS a rest (a potion = a `grant_resource` with charges +
 > a `resource_option` whose `action` is `rest:short|long`) uses recharge **`consumable`** — a one-use /
 > N-charge item whose charges are consumed and never refill on a rest (so the long rest it triggers

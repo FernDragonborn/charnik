@@ -1,7 +1,7 @@
 /*
  * The diagnostics wrapper around a `Storage` — every mutation leaves a breadcrumb and every failure
  * leaves an error, so a bug report says what the app was doing to the filesystem when it broke
- * (docs/work/code-quality.md ▸ LOG-COVERAGE).
+ * (docs/internals/overview.md ▸ Storage is the only way to touch a file).
  *
  * MUTATIONS ONLY. A failed read is ordinary control flow here — `backupCharacter` reads to find out
  * whether there is anything to back up, `loadCharacter` reads to find out whether a save exists — so

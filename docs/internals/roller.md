@@ -187,7 +187,10 @@ so a per-instance target and a per-instance advantage do not exist.
   when EVERY term means something arithmetic on its own. `+d4?` therefore still arrives whole and
   still blocks, and `dm's-luck` stays one label instead of a word plus an unrollable `-luck`.
 - **The caret is in the line.** ← / Ctrl+Z / Ctrl+arrow walk it token by token, and typing inserts
-  where it stands.
+  where it stands. Enter finishes what is pending, and with nothing pending it rolls.
+- **A pill that opens a menu says so with the app's own chevron** — the one the duration select and
+  the base-item chooser wear, quiet until the pointer is on it — rather than a cue invented for one
+  pill. A damage-type pill without it was being found by accident.
 - **The language you type in is not the language the UI is in.** A name matches across every localized
   `name_*` a row carries and against the key; the menu SHOWS the interface locale's name; the pill and
   the log keep the key. An exact name two candidates share stays unresolved rather than guessed.

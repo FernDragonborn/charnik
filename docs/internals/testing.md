@@ -54,6 +54,18 @@ engine disabled (identical shape; trace = base-only when off).
   Verifying that path needs a manual `pnpm tauri dev` run (or a future `tauri-driver` E2E + an
   OS-level dialog automator). So "no driver for the S2 dialog" means *this layer*, not "no driver".
 
+## Auditing a subsystem by reading
+One reader per subsystem, three at a time, each told to read `AGENTS.md` and the subsystem's own doc
+first, to REPRODUCE every finding rather than infer it, and to report in four buckets: CONFIRMED ·
+SUSPECTED · RULED OUT · **NOT YET CHECKED**. The last bucket is the one that makes the next audit
+cheaper. The surface reading cannot reach — the real desktop app — is run by the two `/dev/` probes
+(`tooling.md` ▸ Verifying on the real desktop app).
+
+Two shapes of a returned `null` are worth looking for every time, because most `null`s are honest
+values and these are not: a `null` that means the OPPOSITE of nothing (it became a named state —
+`UNCONSTRAINED`, `OPEN_VOCAB`), and a `null` that swallows a REFUSAL (it became a reported
+`ApplyResult`).
+
 ## Measured once, not a standing gate
 Seven detection methods were run across the whole suite. The findings are applied; what stays here is
 what the measurements **rule out**, so nobody spends the hours again on a question already answered.

@@ -2,8 +2,8 @@
 	// DEV-ONLY LIVE PROBE — character persistence on a real filesystem.
 	//
 	// Its sibling `/dev/packs-write` proves the pack APPLY path over a real OS; this one proves the
-	// half beside it that the September audit read and reasoned about but never RAN
-	// (`work/code-quality.md` ▸ AUDIT-COVERAGE): the portrait write, the rotating backup rings and the
+	// half beside it that reading the code reasons about and never RUNS
+	// (`internals/testing.md` ▸ Auditing a subsystem by reading): the portrait write, the rotating backup rings and the
 	// restore that reads them, `readCharacterFiles`, and the draft filename encoding — which is the
 	// one that failed outright on Windows, because `encodeURIComponent` leaves `*` alone and Windows
 	// refuses it in a name.

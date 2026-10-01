@@ -45,6 +45,18 @@ READS are deliberately silent: a missing file is how half the app asks whether o
 logging those would bury the writes that went wrong. Paths are redacted first (`redactPath`), because
 a `characters/` slug is taken from the character's NAME.
 
+**The app logs where it talks to something it does not control, and each such path has ONE call.**
+Besides the storage wrapper: every pack REFUSAL goes through `fail()`
+(`remote/pack-update-state.svelte.ts`), with the milestones that are not failures as lines of their
+own; plugin discovery and consent (the scan's count, a consent granted with its code hash or revoked,
+the kill switch, every `loadError`); a character save refused or failing validation or migration, a
+backup ring that has stopped being written, and a restore naming its snapshot; and the seed, with the
+versions it moves between and how many files it kept as the user's own. **Play-state mutation is
+deliberately NOT logged** — a rest or a spend is the character's own record, not a diagnostic.
+`Platform`/`detectPlatform` live in `storage/platform.ts` rather than in the provider because
+`diag/logger.ts` asks which platform it is on, and the provider importing the logger back would be a
+cycle.
+
 - **Desktop** — Tauri fs, scoped by capabilities to the data directory and content roots, with
   traversal rejected.
 - **Tests** — a node and in-memory implementation.

@@ -3,9 +3,6 @@
 > Tracker. Packaging, distribution channels, dependencies and their advisories. The ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [x] **REL-1 · Linux release build** — `release.yml` matrix (ubuntu + windows, `max-parallel: 1`
-  so the legs merge into one release). AppImage is the auto-updatable target, `.deb` a plain
-  installer; rpm omitted (no `rpmbuild` on the runners), macOS deferred on notarization.
 - [ ] **DISTRIBUTION-EXPANSION · ship through the platform package managers**, beyond GitHub
   Releases, so users install and update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
@@ -13,14 +10,15 @@
   - **Flathub** (Linux) — Flatpak manifest; widest cross-distro reach, one channel for all Linux.
     Note the **sandbox**: Charnik reads/writes arbitrary content dataDirs, so wire XDG **portals** /
     `--filesystem` perms or the data-move + custom roots break.
-  - **AppImage** (Linux) — built + PUBLISHED by `release.yml` (REL-1 done); the portable, zero-install,
-    self-updating target. `tauri.linux.conf.json` also emits a `.deb` alongside it.
+  - **AppImage** (Linux) — built + PUBLISHED by `release.yml` (a ubuntu + windows matrix with
+    `max-parallel: 1`, so the legs merge into one release); the portable, zero-install,
+    self-updating target. `tauri.linux.conf.json` also emits a `.deb` alongside it. No rpm: the
+    runners have no `rpmbuild`.
   - **WinGet** (Windows) — YAML manifest PR to `winget-pkgs`; standard Win10/11 channel.
   - **Chocolatey** (Windows) — nuspec package; broader/older Win audience.
   - **Homebrew Cask** (macOS) — **out of scope for now**: no macOS build host to compile on, so no
-    artifact to ship. Revisit if a mac runner/notarization appears (blocked on same as REL-1 macOS).
-  Most of these consume the Release artifacts, so they hang off REL-1 (need Linux + eventual mac
-  builds published first). **Order: WinGet → AUR → Choco → Flathub** — reach per hour of work, with
+    artifact to ship. Revisit if a mac runner/notarization appears.
+  **Order: WinGet → AUR → Choco → Flathub** — reach per hour of work, with
   Flathub last because its cost is not the manifest but the sandbox: arbitrary dataDirs need portals
   or a broad `--filesystem`, which is exactly what reviewers push back on.
   **This is its own session, and it is blocked on ACCOUNTS, not on code.** Every manifest can be
@@ -92,8 +90,6 @@
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
-  `docs/internals/security.md`.
 - **AUDIT-DRIFT · `pnpm audit` is clean, and it drifts silently — re-run it before every tag.** Three
   rules the re-audits keep proving:
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
