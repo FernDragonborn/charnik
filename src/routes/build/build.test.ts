@@ -697,6 +697,13 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(spec?.blockedKey?.(`feat:${S}:tough`)).toBeNull();
 	});
 
+	it("a level's feat slot offers every category, an origin feat included", () => {
+		// SRD 5.2.1 ▸ Feats: with no category named, "you can choose from any category" — so Skilled,
+		// which no shipped background grants, is still a feat a character can take
+		const menu = build.feats.featOptionsFor(4).map((f) => f.id);
+		expect(menu).toEqual(expect.arrayContaining(['skilled', 'alert', 'tough']));
+	});
+
 	it('a granted origin feat asks its own choices, and they land on the character (B13)', () => {
 		build.draft.backgroundId = `background:${S}:scholar`;
 		expect(build.feats.originFeatRef).toBe(`feat:${S}:skilled`);

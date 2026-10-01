@@ -144,14 +144,16 @@ export class FeatSlots {
 		...this.featSlots.map((s) => s.key),
 		...(this.speciesGrantsFeat ? [SPECIES_SLOT_KEY] : []),
 	]);
-	/** Feat options that make sense for a slot at `level`: origin feats are background-only, and
-	 *  epic boons only unlock at level 19+. (Not a hard block — just the right menu per slot.) */
+	/** Feat options that make sense for a slot at `level`. Every category is on the menu — SRD 5.2.1 ▸
+	 *  Feats: "If you're instructed to choose a feat and no category is specified, you can choose from
+	 *  any category", and a level's slot is "another feat of your choice for which you qualify" — so an
+	 *  origin feat a background did not grant is still takeable. Epic boons only unlock at level 19+,
+	 *  which is their own prerequisite. (Not a hard block — just the right menu per slot.) */
 	featOptionsFor = (level: number): LoadedRow[] =>
 		this.host().featList.filter((f) => {
 			// the plain ASI is offered as its own dedicated slot option, not as a feat row
 			if (f.id === ASI_FEAT_ID) return false;
 			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
-			if (cat === FEAT_CATEGORY.origin) return false;
 			if (cat === FEAT_CATEGORY.epicBoon) return level >= EPIC_BOON_MIN_LEVEL;
 			return true;
 		});
