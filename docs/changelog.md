@@ -63,6 +63,10 @@ falls off a phone screen.
 - **A long rest is eight hours, not forever.** It used to clear every timed effect there was, so a
   night's sleep ended a 24-hour Water Breathing and a 30-day Geas. Both rests now measure against
   their own length.
+- **A 2014 long rest asks which Hit Dice come back.** The 2014 rules return half of them and let you
+  choose; the app chose for you, largest first. A barbarian 3 / wizard 3 with all six spent now picks
+  between its d12s and its d6s, with the old answer already filled in. Asked only when there is a
+  choice — a single-class character, and every 2024 one, rests on one press as before.
 
 ### The roller
 
@@ -120,6 +124,14 @@ falls off a phone screen.
 - **A long duration reads as time, not as a count of rounds.** An effect with eight hours left says
   "8 h", a 7th-level Geas "365 days"; a countdown that no longer divides evenly says "≈8 h" rather
   than "4799 rds". Combat-length durations stay in rounds.
+- **What an item does to your defences is on the play sheet.** "+2 AC against ranged attacks",
+  "advantage on saves against spells", "attacks against you have disadvantage" — eleven shipped items
+  say one of these, and they said it only in the builder, to whoever was assembling the character. The
+  play sheet's Defences row carries them now, grouped by what they move: AC, Saves, and Against you.
+- **An explanation opens where you point, and where you tab.** The hint on a toggle, the reason a row
+  is blocked, what a resource recharges on and where it came from, an attack's notes — these waited a
+  second and then appeared as a system tooltip a keyboard could never reach. They open at once, under
+  the control, on hover and on focus alike.
 - **Numbers no longer run into their labels.** A picker's category said "Weapon2", hit points said
   "38/ 73", a boosted ability said "STR+1".
 
