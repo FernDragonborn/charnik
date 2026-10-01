@@ -232,7 +232,8 @@ function casterProfileFor(
 		)
 			return null;
 		owner = chosenSubclass;
-		accessRef = chosenSubclass.effectiveId;
+		// the ref the BUILD holds, which is what the access index is keyed by
+		accessRef = entry.subclass ?? chosenSubclass.effectiveId;
 		ownerId = chosenSubclass.id;
 	}
 
