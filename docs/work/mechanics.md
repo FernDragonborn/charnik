@@ -178,33 +178,19 @@ stay semi-manual.
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- [ ] **A17 · no shipped character can cast a ritual, in either edition.** The engine half is
-  built: `ritual_source` on a class and on a subclass (`prepared` | `spellbook`, the subclass's own
-  statement winning), carried on the caster profile, and asked of the class a spell is cast AS —
-  `canCastAsRitual` is the one rule the row's control and the cast both read
-  (`../internals/rules-core.md` ▸ Spellcasting). What keeps it off every real sheet is DATA, counted
-  and not remembered:
-  - **No shipped row says it can.** Neither pack's `classes_srd.csv` or `subclasses_srd.csv` carries
-    `ritual_source`, so the control renders only against a fixture or a homebrew class.
-  - **2014 has no ritual SPELL either.** 0 of 319 rows in `srd-2014/spells_srd.csv` are tagged
-    (`ritual` is `false` on every one, and no other column holds the word), against 29 of 339 in
-    2024. The 2014 class rows speak of "the ritual tag" and no spell carries it — the same loss as
-    that pack's item tables (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 2b).
+- [ ] **A17 · two casters still cannot ritual what their rules let them.** Ritual casting ships:
+  every class says what it rituals from (`ritual_source`), both packs carry their SRD's 29 ritual
+  tags, and the rule is `../internals/rules-core.md` ▸ Spellcasting. What is left is narrower:
+  - **A spell a FEAT teaches.** SRD 5.2.1 states the rule for any spellcaster ("To cast a spell as a
+    Ritual, a spellcaster must have it prepared"), and a Magic Initiate spell is always prepared —
+    but a feat's caster profile carries no ritual source, so such a spell is never offered. The
+    source is a column on the feat row, like the three `spell_choice*` ones it already has.
+  - **2014 Pact of the Tome.** `warlock_pact_boon` is one row holding three boons as prose, so
+    nothing can say "this warlock rituals" until the boon is a choice (N2 shape 3). The subclass
+    column that would carry it for a subclass-shaped grant is built and has no shipped row.
 
-  **The rows are a producer sibling's output, like every mechanic stated in SRD prose.** 2014: four
-  class cells, each sourced by a sentence in that pack's own `<class>_spellcasting` rows — a bard
-  rituals "any bard spell you know", a cleric and a druid one they "have … prepared", a wizard one
-  "in your spellbook. You don't need to have the spell prepared" — and the spell tags re-converted
-  from SRD 5.1. 2024: the wizard's cell is sourced by `wizard_ritual_adept`; whatever lets any other
-  2024 caster cast a ritual is in a rules chapter no pack carries (`work/content.md` ▸ RULES-TEXT),
-  and waits on being found in SRD 5.2.1 rather than recalled.
-
-  Until those rows land the release gate's third clause holds: 29 shipped spells carry a tag nothing
-  a shipped character has can read.
-  **Not this item:** a pure warlock's slot gating, which it used to name, is built — `slotToSpend`
-  falls through to the pact pool and is tested. And `classes_srd.csv` is missing `prepare_style`
-  too, which then defaults to `prepared` for every class, the 2014 known casters included; its
-  effect on the sheet is not measured.
+  **Not this item:** `classes_srd.csv` is missing `prepare_style`, which then defaults to `prepared`
+  for every class, the 2014 known casters included; its effect on the sheet is not measured.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart

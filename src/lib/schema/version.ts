@@ -87,7 +87,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // offers skills only.
 // v23: the rows that state a Climb or Swim Speed "equal to your Speed" fold it (two 2014 items, three
 // 2024 items, Roving and Second-Story Work). An install left at v22 reads those as a note.
-export const CONTENT_SEED_VERSION = 23;
+// v24: ritual casting reaches a shipped sheet — every class says what it rituals from, and the 29
+// spells SRD 5.1 tags as rituals carry the tag. An install left at v23 offers no ritual cast at all.
+export const CONTENT_SEED_VERSION = 24;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

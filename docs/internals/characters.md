@@ -47,9 +47,9 @@ system's scope: keep it deriving clean against the shipped 5.2.1 graph. `recreat
 restores it, and Settings ▸ Data has the button.
 
 **What the pairing does NOT exercise**, so nobody assumes the demo covers it: `casterLevel` is 0 for
-the barbarian half, so pact-pool-beside-shared-slot math is never hit; and a base Warlock has no
-Ritual Casting, so the `R` badge cannot appear on it — demo rituals on a Wizard or Cleric, and with a
-real shipped SRD ritual, never a hand-authored one.
+the barbarian half, so pact-pool-beside-shared-slot math is never hit; and none of its five spells
+carries the Ritual tag, so the `R` badge does not appear on it — demo a ritual by adding a real
+shipped SRD one, never a hand-authored one.
 
 ## Three parts, and the split is load-bearing
 

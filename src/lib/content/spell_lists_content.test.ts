@@ -11,6 +11,10 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
+import { characterSchema, newCharacter } from '../character/schema';
+import { deriveSheet } from '../character/derive';
+import { buildSpellGroups } from '../combat/spells';
+import { RITUAL_SOURCE } from './schemas';
 
 /** class id → how many spells SRD 5.1 lists for it. */
 const SRD_5_1_LIST_SIZE: Record<string, number> = {
@@ -57,3 +61,78 @@ describe('SRD 5.1 class spell lists (shipped)', () => {
 		expect([...byLevel].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 	});
 });
+
+/*
+ * Ritual casting as SHIPPED. Which spells are rituals is each SRD's own tag; who may cast one, and
+ * from what, is each SRD's own sentence — so both are asserted literally, per edition.
+ *
+ * SRD 5.1 says it per class, in that class's Spellcasting feature: a bard "any bard spell you know",
+ * a cleric and a druid one they "have … prepared", a wizard one "in your spellbook"; no other class
+ * has the feature. SRD 5.2.1 says it once, for everyone (Spells ▸ Casting Time ▸ Rituals: "To cast a
+ * spell as a Ritual, a spellcaster must have it prepared"), and Wizard ▸ Ritual Adept lifts the
+ * preparation for a spell in the spellbook.
+ */
+describe.each([
+	{
+		system: '5e',
+		pack: 'srd-2014',
+		source: 'SRD 5.1',
+		rituals: 29,
+		sources: { bard: 'prepared', cleric: 'prepared', druid: 'prepared', wizard: 'spellbook' },
+		// a 2014 sorcerer has no ritual casting at all, prepared or not
+		without: 'sorcerer',
+	},
+	{
+		system: '5.5e',
+		pack: 'srd-2024',
+		source: 'SRD 5.2.1',
+		rituals: 29,
+		sources: {
+			bard: 'prepared',
+			cleric: 'prepared',
+			druid: 'prepared',
+			paladin: 'prepared',
+			ranger: 'prepared',
+			sorcerer: 'prepared',
+			warlock: 'prepared',
+			wizard: 'spellbook',
+		},
+		// a class that casts nothing has nothing to cast as a ritual
+		without: 'fighter',
+	},
+] as const)(
+	'ritual casting as shipped ($pack)',
+	({ system, pack, source, rituals, sources, without }) => {
+		it('carries the SRD ritual tags, and each class says what it rituals from', async () => {
+			const graph = await loadPacks(pack);
+			expect(graph.list('spell', { system }).filter((r) => r.data.ritual)).toHaveLength(rituals);
+			const stated = Object.fromEntries(
+				graph
+					.list('class', { system })
+					.flatMap((r) => (r.data.ritual_source ? [[r.id, r.data.ritual_source]] : [])),
+			);
+			expect(stated).toEqual(sources);
+		});
+
+		it('a shipped wizard rituals Detect Magic unprepared; a shipped cleric only once prepared', async () => {
+			const graph = await loadPacks(pack);
+			const offered = (classId: string, prepared: boolean): boolean => {
+				const c = newCharacter('probe', 'Probe', system);
+				c.build.classes = [{ class: `class:${source}:${classId}`, level: 3 }];
+				c.build.spells = [
+					{ spell: `spell:${source}:detect_magic`, prepared, alwaysPrepared: false },
+				];
+				const character = characterSchema.parse(c);
+				const sheet = deriveSheet(character, graph);
+				return buildSpellGroups({ character, sheet, graph, groupBy: 'level', pinned: {} })
+					.flatMap((group) => group.rows)
+					.some((row) => row.ritualCast);
+			};
+			expect(sources.wizard).toBe(RITUAL_SOURCE.spellbook);
+			expect(offered('wizard', false)).toBe(true);
+			expect(offered('cleric', false)).toBe(false);
+			expect(offered('cleric', true)).toBe(true);
+			expect(offered(without, true)).toBe(false);
+		});
+	},
+);
