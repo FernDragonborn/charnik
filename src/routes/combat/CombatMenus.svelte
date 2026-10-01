@@ -197,6 +197,29 @@
 	});
 </script>
 
+<!-- one Hit-Die size with a stepper: the short rest spends them, the long rest (SRD 5.1) chooses
+     which come back, and both ask "how many of THIS size" the same way -->
+{#snippet hitDieRow(row: {
+	die: string;
+	count: string;
+	picked: number;
+	canMore: boolean;
+	step: (delta: number) => void;
+})}
+	<div class="hitdice-row">
+		<span class="hitdice-name">{row.die} <small>{row.count}</small></span>
+		<div class="hitdice-steppers">
+			<button class="pill-btn" disabled={row.picked <= 0} onclick={() => row.step(-1)}
+				><Icon name="minus" size={12} label={$_('combat.menu.dieFewer')} /></button
+			>
+			<span class="hitdice-pick">{row.picked}</span>
+			<button class="pill-btn" disabled={!row.canMore} onclick={() => row.step(1)}
+				><Icon name="plus" size={12} label={$_('combat.menu.dieMore')} /></button
+			>
+		</div>
+	</div>
+{/snippet}
+
 {#if overlay}
 	<div
 		bind:this={popEl}
@@ -520,24 +543,13 @@
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
 			{#if combat.hitDice.length}
 				{#each combat.hitDice as h (h.die)}
-					<div class="hitdice-row">
-						<span class="hitdice-name">{h.die} <small>{h.left}/{h.max}</small></span>
-						<div class="hitdice-steppers">
-							<button
-								class="pill-btn"
-								disabled={(combat.hdPick[h.die] ?? 0) <= 0}
-								onclick={() => combat.hdPickInc(h.die, -1)}
-								><Icon name="minus" size={12} label={$_('combat.menu.dieFewer')} /></button
-							>
-							<span class="hitdice-pick">{combat.hdPick[h.die] ?? 0}</span>
-							<button
-								class="pill-btn"
-								disabled={(combat.hdPick[h.die] ?? 0) >= h.left}
-								onclick={() => combat.hdPickInc(h.die, 1)}
-								><Icon name="plus" size={12} label={$_('combat.menu.dieMore')} /></button
-							>
-						</div>
-					</div>
+					{@render hitDieRow({
+						die: h.die,
+						count: `${h.left}/${h.max}`,
+						picked: combat.hdPick[h.die] ?? 0,
+						canMore: (combat.hdPick[h.die] ?? 0) < h.left,
+						step: (delta) => combat.hdPickInc(h.die, delta),
+					})}
 				{/each}
 				<p class="note" style="padding: 4px 13px">
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
@@ -558,6 +570,29 @@
 					>
 				</div>
 			{/if}
+		{:else if overlay.kind === 'restlong'}
+			{@const rests = combat.rests}
+			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.longRestTitle')}</div>
+			{#each rests.hitDice.filter((h) => h.spent > 0) as h (h.die)}
+				{@render hitDieRow({
+					die: h.die,
+					count: $_('combat.menu.hitDiceSpent', { values: { count: h.spent } }),
+					picked: rests.hdRecover[h.die] ?? 0,
+					canMore:
+						(rests.hdRecover[h.die] ?? 0) < h.spent && rests.hdRecoverCount < rests.hdRecoverBudget,
+					step: (delta) => rests.hdRecoverInc(h.die, delta),
+				})}
+			{/each}
+			<p class="note" style="padding: 4px 13px">
+				{$_('combat.menu.longRestNote', {
+					values: { count: rests.hdRecoverCount, budget: rests.hdRecoverBudget },
+				})}
+			</p>
+			<div class="field" style="padding: 0 13px 4px">
+				<button class="submit-btn" onclick={rests.commitLongRest}
+					>{$_('combat.menu.takeLongRest')}</button
+				>
+			</div>
 		{/if}
 	</div>
 {/if}

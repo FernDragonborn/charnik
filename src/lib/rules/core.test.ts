@@ -14,6 +14,7 @@ import {
 	maxHpForClass,
 	carryingCapacity,
 	hitDiceRecoveredOnLongRest,
+	hitDiceRecovery,
 	ABILITY_SCORE_CLAMP,
 } from './core';
 import { NOTE_KEY } from './pipeline';
@@ -179,6 +180,21 @@ describe('edition divergence', () => {
 		expect(hitDiceRecoveredOnLongRest('5.5e', 8)).toBe(8);
 		expect(hitDiceRecoveredOnLongRest('5.5e', 1)).toBe(1);
 		expect(hitDiceRecoveredOnLongRest('5e', 0)).toBe(0); // no dice → nothing
+	});
+
+	it('which Hit Dice a long rest returns: the choice, clamped — else largest first', () => {
+		const pools = [
+			{ die: 'd12', max: 3 },
+			{ die: 'd6', max: 3 },
+		];
+		const spent = { d12: 3, d6: 2 };
+		expect(hitDiceRecovery(pools, spent, 3)).toEqual({ d12: 3 });
+		expect(hitDiceRecovery(pools, spent, 4)).toEqual({ d12: 3, d6: 1 });
+		expect(hitDiceRecovery(pools, spent, 3, { d12: 1, d6: 2 })).toEqual({ d12: 1, d6: 2 });
+		// a choice cannot return a die that was never spent, nor more than the budget
+		expect(hitDiceRecovery(pools, spent, 3, { d12: 1, d6: 9 })).toEqual({ d12: 1, d6: 2 });
+		expect(hitDiceRecovery(pools, spent, 2, { d12: 3, d6: 2 })).toEqual({ d12: 2 });
+		expect(hitDiceRecovery(pools, {}, 3)).toEqual({});
 	});
 });
 

@@ -545,9 +545,6 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
         encumbrance, never as core rows or shipped data. Opening it means opening the category
         "optional DMG rules", which is the actual decision. (SRD overkill instant death is separate
         and already built.)
-  - [ ] **2014 long rest recovers HALF your Hit Dice and the app picks them largest-first**; RAW lets
-        the player choose which. Visible on a multiclass d12+d6 pool. A picker if anyone asks — 2024
-        recovers all and is unaffected.
   - [x] **A long rest is eight hours, and it was outlasting everything.** A rest expires the timed
         effects it OUTLASTS, and the short rest compared correctly against its own hour while the long
         rest simply removed every timed effect there was. So a long rest ended a 24-hour Water

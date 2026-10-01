@@ -102,7 +102,7 @@ Combat is the view that has them. Which field to open first:
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
 | `resources`   | `resource-tracker` | slot and resource pips, and what each rest recharges              |
-| `rests`       | `rest-controls`    | the short rest as the player performs it — Hit Dice and their HP  |
+| `rests`       | `rest-controls`    | a rest as the player performs it — the Hit Dice it asks about     |
 | `economy`     | `turn-economy`     | action/bonus/reaction pips, movement, the turn, entering combat   |
 | `effects`     | `effects-editor`   | the effects and conditions on the sheet, and their round timers   |
 | `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |

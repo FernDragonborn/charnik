@@ -263,6 +263,32 @@ export function hitDiceRecoveredOnLongRest(system: System, total: number): numbe
 	return system === '5.5e' ? total : Math.max(1, Math.floor(total / 2));
 }
 
+/**
+ * Which spent Hit Dice a long rest gives back, as die size → count, never more than `budget` in all
+ * and never more of a size than is spent.
+ *
+ * RAW the PLAYER chooses which dice return when the rest cannot return them all (SRD 5.1, a
+ * multiclass d12 + d6 pool). `wanted` is that choice; without one the largest dice come back first
+ * (`pools` arrive largest-first), which is the pre-filled answer the picker opens on. A choice is
+ * clamped rather than trusted, so a stale one cannot return a die that was never spent.
+ */
+export function hitDiceRecovery(
+	pools: readonly { die: string; max: number }[],
+	spent: Readonly<Record<string, number>>,
+	budget: number,
+	wanted?: Readonly<Record<string, number>>,
+): Record<string, number> {
+	const back: Record<string, number> = {};
+	let left = Math.max(0, budget);
+	for (const pool of pools) {
+		const out = Math.max(0, Math.min(spent[pool.die] ?? 0, pool.max));
+		const n = Math.max(0, Math.min(out, left, wanted ? (wanted[pool.die] ?? 0) : out));
+		if (n > 0) back[pool.die] = n;
+		left -= n;
+	}
+	return back;
+}
+
 /** HP restored by a `half` short rest (the ½-max-HP house/video-game variant): half the maximum,
  *  rounded down. Not RAW — a per-character opt-in (`ui.shortRestMode === 'half'`). Pure. */
 export function shortRestHalfHeal(maxHp: number): number {

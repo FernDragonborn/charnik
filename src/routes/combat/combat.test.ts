@@ -1893,6 +1893,57 @@ describe('CombatVM · Hit Dice', () => {
 		combat.resources.rest('long');
 		expect(combat.resources.hitDiceSpent('d8')).toBe(2);
 	});
+
+	/** SRD 5.1 returns HALF the Hit Dice and the player says which — only a question when the pool
+	 *  mixes sizes. Barbarian 3 / Wizard 3 has six dice, so three come back. */
+	describe('2014 long rest over a mixed pool', () => {
+		const mixed = async (spent: Record<string, number>): Promise<Character> => {
+			combat.graph = await makeTempContentRoot({
+				'classes_srd.csv': [
+					'id,systems,source,name_en,hit_die,saves',
+					'barbarian,5e,SRD 5.1,Barbarian,d12,"str,con"',
+					'wizard,5e,SRD 5.1,Wizard,d6,"int,wis"',
+				].join('\n'),
+			});
+			const c = newCharacter('rook', 'Rook', '5e');
+			c.build.classes = [
+				{ class: 'class:SRD 5.1:barbarian', level: 3 },
+				{ class: 'class:SRD 5.1:wizard', level: 3 },
+			];
+			c.play.hitDiceSpent = spent;
+			combat.character = c;
+			return c;
+		};
+
+		it('asks which dice return, pre-filled largest-first, and honours the answer', async () => {
+			const c = await mixed({ d12: 3, d6: 3 });
+			combat.rests.startLongRest(noModifiers);
+			// the press opens the picker (a DOM overlay, so not visible to a node test) and takes NO rest
+			expect(c.play.hitDiceSpent).toEqual({ d12: 3, d6: 3 });
+			expect(combat.rests.hdRecover).toEqual({ d12: 3 }); // what it used to do unasked
+
+			combat.rests.hdRecoverInc('d6', 1);
+			expect(combat.rests.hdRecover.d6 ?? 0).toBe(0); // the budget of 3 is already chosen
+			combat.rests.hdRecoverInc('d12', -2);
+			combat.rests.hdRecoverInc('d6', 5);
+			expect(combat.rests.hdRecover).toEqual({ d12: 1, d6: 2 }); // clamped to the room left
+
+			combat.rests.commitLongRest();
+			expect(c.play.hitDiceSpent).toEqual({ d12: 2, d6: 1 });
+		});
+
+		it('does not ask when every spent die fits the budget, or they are one size', async () => {
+			const fits = await mixed({ d12: 1, d6: 2 });
+			combat.rests.startLongRest(noModifiers);
+			expect(fits.play.hitDiceSpent).toEqual({ d12: 0, d6: 0 }); // taken on the press
+
+			const oneSize = await mixed({ d6: 3 });
+			oneSize.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 6 }];
+			oneSize.play.hitDiceSpent = { d6: 5 };
+			combat.rests.startLongRest(noModifiers);
+			expect(oneSize.play.hitDiceSpent).toEqual({ d6: 2 });
+		});
+	});
 });
 
 /*

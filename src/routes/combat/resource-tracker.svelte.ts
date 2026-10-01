@@ -14,7 +14,7 @@ import {
 	ROUNDS_PER_UNIT,
 	titleCase,
 } from '$lib/combat/helpers';
-import { effectiveHpMax, hitDiceRecoveredOnLongRest } from '$lib/rules/core';
+import { effectiveHpMax, hitDiceRecoveredOnLongRest, hitDiceRecovery } from '$lib/rules/core';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
 import { rechargeCount } from '$lib/effects/recharge-amount';
@@ -24,6 +24,13 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 /** How long a rest TAKES, in hours — RAW in both editions, and the only thing that decides which
  *  round-timed effects it outlasts. */
 const REST_HOURS = { short: 1, long: 8 } as const;
+
+/** What the player decided about a rest before taking it. Every part is optional: a rest nobody
+ *  chose for takes the default each part documents. */
+export interface RestChoice {
+	/** Which spent Hit Dice a long rest returns, die size → count (`rules/core` ▸ `hitDiceRecovery`). */
+	hitDice?: Record<string, number>;
+}
 
 export class ResourceTracker {
 	constructor(
@@ -243,10 +250,21 @@ export class ResourceTracker {
 	hasBoundaryPool = (trigger: 'dawn' | 'dusk'): boolean =>
 		(this.getSheet()?.resources ?? []).some((r) => r.recharge.trigger === trigger);
 
+	/** How many spent Hit Dice a long rest may return to this character, whichever sizes they are. */
+	get longRestHitDiceBudget(): number {
+		const c = this.getCharacter();
+		const pools = this.getSheet()?.hitDice ?? [];
+		if (!c) return 0;
+		return hitDiceRecoveredOnLongRest(
+			c.system,
+			pools.reduce((n, h) => n + h.max, 0),
+		);
+	}
+
 	/** The long-rest-only half of `rest`: slots, HP, concentration, Hit Dice and Exhaustion. Split out
 	 *  because it's the only branch that touches five subsystems, and inlining it pushed `rest` past the
 	 *  complexity budget. */
-	private applyLongRest = (c: Character, sheet: CharacterSheet) => {
+	private applyLongRest = (c: Character, sheet: CharacterSheet, choice: RestChoice) => {
 		c.play.spellSlotsSpent = {};
 		// full HP is the EFFECTIVE max (A14): a manual max does not silence an `hp_max` effect, so a
 		// long rest must fill to the same number heal and the bar clamp to
@@ -257,20 +275,19 @@ export class ResourceTracker {
 		};
 		c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
 		// effect in play.effects (e.g. Hold Person on an enemy) — A13
-		// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). Recover
-		// largest-die-first (pools are sorted so) up to the recovered count; a deterministic v1 of
-		// the "player picks which" RAW choice (upgrade to a picker later).
-		const totalHd = sheet.hitDice.reduce((n, h) => n + h.max, 0);
-		let recover = hitDiceRecoveredOnLongRest(c.system, totalHd);
+		// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). WHICH dice is the
+		// player's call where the rest cannot return them all; a rest nobody chose for (an action's
+		// `rest:long`, a pool of one size) takes the largest first.
+		const back = hitDiceRecovery(
+			sheet.hitDice,
+			c.play.hitDiceSpent,
+			this.longRestHitDiceBudget,
+			choice.hitDice,
+		);
 		const hdSpent = { ...c.play.hitDiceSpent };
 		for (const h of sheet.hitDice) {
-			if (recover <= 0) break;
-			const spent = Math.max(0, Math.min(hdSpent[h.die] ?? 0, h.max));
-			const back = Math.min(spent, recover);
-			if (back > 0) {
-				hdSpent[h.die] = spent - back;
-				recover -= back;
-			}
+			const regained = back[h.die] ?? 0;
+			if (regained > 0) hdSpent[h.die] = Math.min(hdSpent[h.die] ?? 0, h.max) - regained;
 		}
 		c.play.hitDiceSpent = hdSpent;
 		// RAW both editions: a Long Rest removes ONE Exhaustion level (2024 glossary "Removing
@@ -285,7 +302,7 @@ export class ResourceTracker {
 	 *  round-timed effects the rest outlives — a rest is a duration, so it outlasts what runs out
 	 *  inside it and NOT what is still running after. Indefinite effects (no duration) persist —
 	 *  those are curses/manual states the player removes explicitly. */
-	rest = (kind: 'short' | 'long') => {
+	rest = (kind: 'short' | 'long', choice: RestChoice = {}) => {
 		const c = this.getCharacter();
 		const sheet = this.getSheet();
 		if (!c || !sheet) return;
@@ -304,7 +321,7 @@ export class ResourceTracker {
 		}
 		c.play.resourcesSpent = spent;
 		if (kind === 'long') {
-			this.applyLongRest(c, sheet);
+			this.applyLongRest(c, sheet, choice);
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
 			delete slots[PACT_SLOT_KEY]; // warlock pact slots return on a short rest

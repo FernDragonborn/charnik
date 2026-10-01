@@ -23,6 +23,7 @@ export type MenuKind =
 	| 'enchantweapon'
 	| 'ammo'
 	| 'restshort'
+	| 'restlong'
 	| 'coins';
 
 /** Why the character died — the dead banner's subtitle, one key per `play.death.cause`. Catalog

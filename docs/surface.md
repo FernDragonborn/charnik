@@ -1550,6 +1550,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function armoredAC` — Armored AC = armor base + capped DEX.
 - `const DIE_MAX`
 - `function hitDiceRecoveredOnLongRest` — Hit Dice recovered at the end of a LONG rest — an SRD-verified EDITION divergence: 5e (SRD 5.1) * regains half the to…
+- `function hitDiceRecovery` — * Which spent Hit Dice a long rest gives back, as die size → count, never more than `budget` in all * and never more …
 - `function shortRestHalfHeal` — HP restored by a `half` short rest (the ½-max-HP house/video-game variant): half the maximum, * rounded down.
 - `function maxHpForClass` — Max HP for one class (SRD fixed values).
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
@@ -1838,4 +1839,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1105 exports across 149 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1106 exports across 149 modules · 75 duplicate suspects._

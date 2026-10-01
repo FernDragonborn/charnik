@@ -374,8 +374,11 @@ same fact spelled in two places is the drift this vocabulary exists to avoid.
 
 Two patterns still living in their own subsystems, on purpose:
 
-1. **Partial-on-long** — Hit Dice regain HALF your level on a long rest. It rides the hit-dice
-   subsystem, not this model: its spend/restore math is its own.
+1. **Partial-on-long** — SRD 5.1 Hit Dice regain HALF your level on a long rest (5.2.1 regains them
+   all). It rides the hit-dice subsystem, not this model: its spend/restore math is its own. WHICH
+   dice return is the player's choice wherever the rest cannot return them all and the pool mixes
+   sizes — the Long button then opens a picker pre-filled largest-first (`rules/core` ▸
+   `hitDiceRecovery`), and a rest nobody chose for (an action's `rest:long`) takes that default.
 2. **Event-based regain** — 2024's "when you roll Initiative, regain … until you have N" is an
    EVENT, not a recharge policy. It keeps its own token, `regain_on_initiative:<resource>:<n>`,
    auto-applied on combat-enter with a toast: "top up TO n" is not one of the executor verbs, and

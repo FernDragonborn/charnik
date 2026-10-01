@@ -80,7 +80,7 @@
 	>
 	<button
 		class="toggle rest"
-		onclick={() => combat.resources.rest('long')}
+		onclick={(e) => combat.rests.startLongRest(e)}
 		title={$_('combat.controls.longHint')}><Icon name="tent" /> {$_('combat.controls.long')}</button
 	>
 	<button class="toggle dice" onclick={openDice}
