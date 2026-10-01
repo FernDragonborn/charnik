@@ -9,7 +9,11 @@ import { localizedName } from '$lib/content/detail';
 import type { RowData } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { casterForSpell } from '$lib/character/spellcasting';
+import {
+	canCastAsRitual,
+	casterForSpell,
+	type SpellcastingClass,
+} from '$lib/character/spellcasting';
 // re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 export { casterForSpell };
 import { parseDamageParts, type DamagePart } from './attacks';
@@ -45,6 +49,10 @@ export interface SpellRow {
 	level: number;
 	/** Ritual-taggable — only these can be cast as a ritual (no slot). Not all spells qualify (SRD). */
 	ritual: boolean;
+	/** May THIS character cast it as a ritual as things stand — the tag, the class it is cast as, and
+	 *  that class's rule about preparation (`canCastAsRitual`). What the row's control and the cast
+	 *  itself both ask, so the two cannot disagree. */
+	ritualCast: boolean;
 	summary: string;
 	resolution: '' | 'hit' | 'save' | 'auto' | 'temp';
 	/** Catalog key for the result chip ('' for utility) — the panel words it. */
@@ -278,7 +286,11 @@ export function buildSpellGroups({
 	const all: SpEntry[] = character.build.spells
 		.map((sp) => ({
 			sp,
-			row: spellRow(graph, sp.spell, prepState(sp), { charLevel: sheet?.level ?? 1, locale }),
+			row: spellRow(graph, sp.spell, prepState(sp), {
+				charLevel: sheet?.level ?? 1,
+				locale,
+				caster: casterForSpell(sheet, sp.spell),
+			}),
 		}))
 		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));
@@ -355,7 +367,16 @@ export function spellRow(
 	prep: SpellRow['prepState'],
 	/** How the row READS: the character level cantrip dice scale with, and the locale its name is said
 	 *  in. One object, because two trailing scalars is where a parameter list stops being readable. */
-	{ charLevel = 1, locale = 'en' }: { charLevel?: number; locale?: string } = {},
+	{
+		charLevel = 1,
+		locale = 'en',
+		caster,
+	}: {
+		charLevel?: number;
+		locale?: string;
+		/** The class the spell is cast as — whose ritual casting, if any, the row answers for. */
+		caster?: Pick<SpellcastingClass, 'ritualSource'> | undefined;
+	} = {},
 ): SpellRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
@@ -382,6 +403,7 @@ export function spellRow(
 		upcast: d.upcast ?? '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
+		ritualCast: canCastAsRitual(caster, { ritual: d.ritual ?? false, isPrepared: prep !== '' }),
 		prepState: prep,
 	};
 }

@@ -3,7 +3,8 @@ import { ISSUE_KEY } from '../effects/token-parser';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { deriveSheet } from './derive';
-import { casterForSpell } from './spellcasting';
+import { canCastAsRitual, casterForSpell } from './spellcasting';
+import { buildSpellGroups } from '../combat/spells';
 import { characterSchema, newCharacter, type Character } from './schema';
 
 /*
@@ -364,5 +365,116 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 			];
 		});
 		expect(deriveSheet(none, g).spellcasting.classes).toEqual([]);
+	});
+});
+
+/*
+ * Ritual casting is a fact about the CLASS a spell is cast as — and about its subclass, which may
+ * grant it to a class that has none. Asserted in both editions: the rule is the same shape in each,
+ * and the engine must not have learned it from one.
+ */
+describe.each([
+	['5e', 'SRD 5.1'],
+	['5.5e', 'SRD 5.2.1'],
+] as const)('ritual casting follows the class the spell is cast as (%s)', (system, source) => {
+	let g: ContentGraph;
+	const row = (cells: string) => cells.replaceAll('SYS', system).replaceAll('SRC', source);
+	beforeAll(async () => {
+		const store = new MemoryStorage();
+		await store.write(
+			'a/classes_srd.csv',
+			[
+				`${CLASS},ritual_source,ritual`,
+				row('wizard,SYS,SRC,wizard,d6,"int,wis",full,int,spellbook,'),
+				row('cleric,SYS,SRC,cleric,d8,"wis,cha",full,wis,prepared,'),
+				row('sorcerer,SYS,SRC,sorcerer,d6,"con,cha",full,cha,,'),
+				row('warlock,SYS,SRC,warlock,d8,"wis,cha",pact,cha,,'),
+				// a homebrew class written before the column existed: the boolean still means something
+				row('skald,SYS,SRC,skald,d8,"dex,cha",full,cha,,true'),
+			].join('\n'),
+		);
+		await store.write(
+			'a/subclasses_srd.csv',
+			[
+				'id,systems,source,name_en,class_id,ritual_source',
+				row('tome_keeper,SYS,SRC,Tome Keeper,warlock,spellbook'),
+				row('fiend,SYS,SRC,Fiend,warlock,'),
+			].join('\n'),
+		);
+		await store.write(
+			'a/spells_srd.csv',
+			[
+				'id,systems,source,name_en,level,school,casting_time,range,components,duration,concentration,ritual,classes',
+				row(
+					'omen,SYS,SRC,Omen,1,divination,action,self,V S,instant,false,true,"wizard,cleric,warlock,skald"',
+				),
+				row('whisper,SYS,SRC,Whisper,1,divination,action,self,V S,instant,false,true,sorcerer'),
+				row(
+					'spark,SYS,SRC,Spark,1,evocation,action,60 feet,V S,instant,false,false,"wizard,cleric"',
+				),
+			].join('\n'),
+		);
+		g = await loadContent(store, ['a']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+	});
+
+	const ref = (type: string, id: string) => `${type}:${source}:${id}`;
+	/** A character of the given classes holding one spell, prepared or not. */
+	const caster = (
+		classes: { id: string; subclass?: string }[],
+		spell: string,
+		prepared: boolean,
+	): Character => {
+		const c = newCharacter('x', 'X', system);
+		c.build.classes = classes.map(({ id, subclass }) => ({
+			class: ref('class', id),
+			level: 3,
+			...(subclass ? { subclass: ref('subclass', subclass) } : {}),
+		}));
+		c.build.spells = [{ spell: ref('spell', spell), prepared, alwaysPrepared: false }];
+		return characterSchema.parse(c);
+	};
+	/** What the play sheet's row says: may it be cast as a ritual right now? */
+	const offered = (c: Character): boolean => {
+		const sheet = deriveSheet(c, g);
+		const rows = buildSpellGroups({ character: c, sheet, graph: g, groupBy: 'level', pinned: {} });
+		return rows.flatMap((group) => group.rows).some((r) => r.ritualCast);
+	};
+
+	it('a spellbook caster rituals a spell it has not prepared', () => {
+		expect(offered(caster([{ id: 'wizard' }], 'omen', false))).toBe(true);
+	});
+
+	it('a prepared caster rituals only what it has prepared', () => {
+		expect(offered(caster([{ id: 'cleric' }], 'omen', false))).toBe(false);
+		expect(offered(caster([{ id: 'cleric' }], 'omen', true))).toBe(true);
+	});
+
+	it('a spell that carries no ritual tag is never one, whoever casts it', () => {
+		expect(offered(caster([{ id: 'wizard' }], 'spark', true))).toBe(false);
+	});
+
+	it("one class's ritual casting does not reach a spell cast as another", () => {
+		const c = caster([{ id: 'wizard' }, { id: 'sorcerer' }], 'whisper', true);
+		const sheet = deriveSheet(c, g);
+		expect(sheet.spellcasting.ritualCasting).toBe(true); // the wizard half has it
+		expect(casterForSpell(sheet, ref('spell', 'whisper'))?.classId).toBe('sorcerer');
+		expect(offered(c)).toBe(false);
+	});
+
+	it('a subclass grants ritual casting to a class that has none', () => {
+		expect(offered(caster([{ id: 'warlock' }], 'omen', true))).toBe(false);
+		expect(offered(caster([{ id: 'warlock', subclass: 'fiend' }], 'omen', true))).toBe(false);
+		expect(offered(caster([{ id: 'warlock', subclass: 'tome_keeper' }], 'omen', false))).toBe(true);
+	});
+
+	it('a class still written with the `ritual` boolean reads as prepared', () => {
+		const sheet = deriveSheet(caster([{ id: 'skald' }], 'omen', true), g);
+		expect(sheet.spellcasting.classes[0]?.ritualSource).toBe('prepared');
+		expect(offered(caster([{ id: 'skald' }], 'omen', false))).toBe(false);
+	});
+
+	it('the rule itself: no caster, no ritual', () => {
+		expect(canCastAsRitual(undefined, { ritual: true, isPrepared: true })).toBe(false);
 	});
 });

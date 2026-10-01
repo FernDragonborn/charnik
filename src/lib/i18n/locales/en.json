@@ -1145,6 +1145,7 @@
 		"name": "Name",
 		"origin_feat_spell_list": "Feat spell list",
 		"prepare_style": "Prepare style",
+		"ritual_source": "Rituals from",
 		"primary_ability": "Primary ability",
 		"properties": "Properties",
 		"range": "Range",

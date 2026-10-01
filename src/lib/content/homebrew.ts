@@ -30,6 +30,7 @@ import {
 	CASTER_TYPES,
 	CASTER_SHARES,
 	PREPARE_STYLES,
+	RITUAL_SOURCES,
 	SCHOOLS,
 	RESOLUTIONS,
 	ITEM_CATEGORIES,
@@ -61,6 +62,7 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	caster: CASTER_TYPES,
 	caster_share: CASTER_SHARES,
 	prepare_style: PREPARE_STYLES,
+	ritual_source: RITUAL_SOURCES,
 	school: SCHOOLS,
 	resolution: RESOLUTIONS,
 	category: ITEM_CATEGORIES,
@@ -111,6 +113,7 @@ const LABELS: Record<string, string> = {
 	caster_share: 'Caster share (multiclass)',
 	caster_from_level: 'Casting from level',
 	prepare_style: 'Prepare style',
+	ritual_source: 'Rituals from',
 };
 const label = (name: string): string => LABELS[name] ?? titleCase(name);
 
@@ -187,18 +190,22 @@ function columnsWithExtras(
 
 /** Every editable field for a type, in schema order, with the input kind the form should render. */
 export function fieldsFor(type: ContentType): FieldDesc[] {
-	return columnsFor(type)
-		.filter((name) => name !== 'source') // source is fixed to Homebrew
-		.map((name) => {
-			const options = optionsOf(type, name);
-			return {
-				name,
-				label: label(name),
-				kind: kindOf(type, name),
-				...(options ? { options } : {}),
-				required: name === 'name_en' || name === 'systems',
-			};
-		});
+	return (
+		columnsFor(type)
+			.filter((name) => name !== 'source') // source is fixed to Homebrew
+			// a class's `ritual` is the column `ritual_source` replaces: still read, no longer offered
+			.filter((name) => !(type === 'class' && name === 'ritual'))
+			.map((name) => {
+				const options = optionsOf(type, name);
+				return {
+					name,
+					label: label(name),
+					kind: kindOf(type, name),
+					...(options ? { options } : {}),
+					required: name === 'name_en' || name === 'systems',
+				};
+			})
+	);
 }
 
 /** A blank draft for a type (all cells empty; systems defaults to nothing until the user picks). */

@@ -357,8 +357,7 @@ export class SpellCasting {
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
 		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). A cantrip spends
 		// nothing and a pure warlock spends a pact slot; the action-economy check below stays combat-only.
-		const ritual =
-			opts.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
+		const ritual = opts.ritual === true && r.ritualCast;
 		const paid = this.payForCast(r, ritual, opts);
 		if (!paid) return;
 		const slot = paid.slot;

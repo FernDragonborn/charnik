@@ -12,6 +12,7 @@
 import type { ArmorCategory } from '$lib/content/item-tags';
 import { ISSUE_KEY } from '$lib/effects/token-parser';
 import type { ContentGraph, LoadedRowOf } from '../content/loader';
+import { RITUAL_SOURCE, type RitualSource } from '../content/schemas';
 import { getSpellAccess, type SpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
@@ -45,6 +46,24 @@ export interface SpellcastingClass {
 	/** Spell effectiveIds this class can pick (the access map). */
 	accessSpellIds: string[];
 	isPact: boolean;
+	/** Which of this class's spells it casts as rituals, or `null` when it has no ritual casting. Per
+	 *  CLASS, because a ritual is cast as the class the spell is cast as: a wizard's spellbook does
+	 *  not make a sorcerer's spell a ritual. */
+	ritualSource: RitualSource | null;
+}
+
+/**
+ * May this spell be cast as a ritual by the class it is cast AS? The spell must carry the ritual tag
+ * and the class must have ritual casting; then `prepared` asks for it to be prepared (a known
+ * caster's known spells are), and `spellbook` asks for nothing more — every spell on the sheet under
+ * that class is in its book.
+ */
+export function canCastAsRitual(
+	caster: Pick<SpellcastingClass, 'ritualSource'> | undefined,
+	spell: { ritual: boolean; isPrepared: boolean },
+): boolean {
+	if (!spell.ritual || !caster?.ritualSource) return false;
+	return caster.ritualSource === RITUAL_SOURCE.spellbook || spell.isPrepared;
 }
 
 /** The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a
@@ -73,9 +92,8 @@ export interface Spellcasting {
 	pools: CastPool[];
 	/** The shared multiclass caster level (0 for a pure warlock). */
 	casterLevel: number;
-	/** Has the Ritual Casting class feature (any class with `class.ritual` — Wizard/Cleric/Druid/Bard;
-	 *  NOT Warlock by default). Gates the ritual-cast affordance (AUDIT E7/A17). The Book of Ancient
-	 *  Secrets invocation that grants a warlock ritual casting is a choice-group feature — deferred. */
+	/** Does ANY of the classes above cast rituals — what the builder's summary says. Whether one
+	 *  spell may be cast as one is `canCastAsRitual`, asked of the class that spell is cast as. */
 	ritualCasting: boolean;
 	/** B9: set when the character wears armor they lack proficiency with — RAW you can't cast
 	 *  spells while doing so. The UI shows this as a rule-based block (the PLAN's canonical
@@ -178,7 +196,7 @@ interface CasterProfile {
 	ownerId: string;
 	/** The build ref (`class:…`/`subclass:…`) used as identity + for the spell-access lookup. */
 	accessRef: string;
-	ritual: boolean;
+	ritualSource: RitualSource | null;
 }
 
 /** Resolve a build class into its caster profile, or null if it doesn't cast. Which ROW owns the
@@ -192,35 +210,30 @@ function casterProfileFor(
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
 
-	// the row that OWNS the casting + the identity/ritual bits that DON'T come from the shared columns
+	const subclassRow = entry.subclass == null ? undefined : graph.get(entry.subclass);
+	const chosenSubclass = subclassRow?.type === 'subclass' ? subclassRow : undefined;
+	// the row that OWNS the casting + the identity bits that DON'T come from the shared columns
 	let owner: LoadedRowOf<'class'> | LoadedRowOf<'subclass'>;
 	let accessRef: string;
 	let ownerId: string;
-	let ritual: boolean;
 	if (classCasts(classRow)) {
 		// base-class caster (Wizard/Cleric/Sorcerer/Warlock/…)
 		owner = classRow;
 		accessRef = entry.class;
 		ownerId = classRow.id;
-		ritual = classRow.data.ritual === true;
 	} else {
 		// else a casting SUBCLASS whose caster columns are filled + which is online at its grant level.
 		// `class_casting`/`slot_table`/spell-list access all key off the SUBCLASS id (a homebrew author
 		// adds them there). Which LIST it draws is the subclass row's `spell_list` column — RAW an EK
 		// casts off the Wizard list, and the access index resolves that (B25, spellAccess.ts).
-		const subclassRef = entry.subclass;
-		if (subclassRef == null) return null;
-		const subRow = graph.get(subclassRef);
 		if (
-			subRow?.type !== 'subclass' ||
-			subRow.data.caster == null ||
-			entry.level < (subRow.data.caster_from_level ?? 1)
+			chosenSubclass?.data.caster == null ||
+			entry.level < (chosenSubclass.data.caster_from_level ?? 1)
 		)
 			return null;
-		owner = subRow;
-		accessRef = subclassRef;
-		ownerId = subRow.id;
-		ritual = false; // subclass schema carries no ritual column
+		owner = chosenSubclass;
+		accessRef = chosenSubclass.effectiveId;
+		ownerId = chosenSubclass.id;
 	}
 
 	// both class + subclass rows share these caster-descriptor columns → one construction
@@ -235,7 +248,12 @@ function casterProfileFor(
 		className: classRow.data.name_en,
 		ownerId,
 		accessRef,
-		ritual,
+		// the subclass's own statement wins, then the class's; a class still written with the boolean
+		// reads as `prepared`
+		ritualSource:
+			chosenSubclass?.data.ritual_source ??
+			classRow.data.ritual_source ??
+			(classRow.data.ritual ? RITUAL_SOURCE.prepared : null),
 	};
 }
 
@@ -311,6 +329,7 @@ function featCasterProfiles(
 			maxSpellLevel: leveled.reduce((n, g) => Math.max(n, g.level), 0),
 			accessSpellIds: listRow ? access.spellIdsForClass(listRow.effectiveId) : [],
 			isPact: false,
+			ritualSource: null, // a feat teaches spells; it grants no ritual casting
 		});
 	}
 	return out;
@@ -404,9 +423,7 @@ export function deriveSpellcasting({
 	if (sources.length === 0)
 		return { classes: featProfiles, pools: [], casterLevel: 0, ritualCasting: false };
 
-	// E7: the character can ritual-cast iff ANY caster source carries Ritual Casting (Wizard/Cleric/
-	// Druid/Bard; not base Warlock, and not a subclass caster by default).
-	const ritualCasting = sources.some((p) => p.ritual);
+	const ritualCasting = sources.some((p) => p.ritualSource !== null);
 
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
 	const shared = sources.filter((p) => p.caster !== 'pact');
@@ -444,6 +461,7 @@ export function deriveSpellcasting({
 			maxSpellLevel: maxSpellLevel(ownCounts),
 			accessSpellIds: access.spellIdsForClass(p.accessRef),
 			isPact,
+			ritualSource: p.ritualSource,
 		};
 	});
 

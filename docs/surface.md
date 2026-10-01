@@ -463,7 +463,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (133 modules)
+## Library functions & types (134 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -742,6 +742,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/spellcasting.ts`
 
 - `interface SpellcastingClass`
+- `function canCastAsRitual` — * May this spell be cast as a ritual by the class it is cast AS?
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a * multiclass caster has o…
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
@@ -1156,17 +1157,36 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RestampFailure` — One file that could not be re-stamped, with the reason — surfaced, never swallowed.
 - `function restampFiles` — * The IO half: re-stamp each file through the `Storage` seam (atomic temp→rename in the real impls).
 
+### `src/lib/content/schema-cells.ts`
+
+- `const blankToUndef` — Empty / missing cell → undefined (so optional fields fall back, EN i18n, etc.).
+- `function splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
+- `const optStr`
+- `const reqStr`
+- `const optNum`
+- `const optInt`
+- `const bool`
+- `const csvList` — A CSV list cell → a validated array: split via the shared `splitList` (trim + drop empties), then * validate with `sc…
+- `const boolDefault` — A boolean cell that defaults to `d` when the cell is blank/missing (the common flag shape).
+- `const enumDefault` — An enum cell that defaults to `d` when the cell is blank/missing — `boolDefault`'s sibling.
+- `const idField` — `id` is a local slug; effective identity is `source:id`, built by the loader.
+- `const systemsField` — `systems` = comma list over SYSTEMS, e.g.
+- `const effectsField` — A `;`-separated list of effect tokens.
+
 ### `src/lib/content/schemas.ts`
 
 - `re-export SYSTEMS`
 - `const EFFECT_KINDS` — Bounded effect vocabulary — the only kinds the engine understands.
-- `function splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
+- `re-export splitList`
 - `re-export SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `re-export ABILITIES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `const HIT_DICE`
 - `const CASTER_TYPES`
 - `const CASTER_SHARES`
 - `const PREPARE_STYLES`
+- `const RITUAL_SOURCE` — * Which of its spells a class — or a subclass — may cast as a RITUAL, as the SRD states it per class: * `prepared` is…
+- `type RitualSource`
+- `const RITUAL_SOURCES`
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
@@ -1843,4 +1863,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1110 exports across 149 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1127 exports across 150 modules · 75 duplicate suspects._

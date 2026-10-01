@@ -99,9 +99,9 @@
 									fill={pinned[r.ref] ? 'currentColor' : 'none'}
 								/></button
 							>
-							{#if r.ritual && s.spellcasting.ritualCasting}
-								<!-- ritual cast: no spell slot (A17). Only shown when the character HAS ritual casting
-								     (E7 — Wizard/Cleric/Druid/Bard; not base Warlock). The name casts normally. -->
+							{#if r.ritualCast}
+								<!-- ritual cast: no spell slot (A17). Offered when the class this spell is cast as
+								     may cast it as a ritual as things stand. The name casts normally. -->
 								<button
 									class="ritual-cast"
 									title={$_('combat.spells.castRitual')}

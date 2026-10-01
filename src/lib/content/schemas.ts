@@ -10,12 +10,11 @@
  * Localization is L2 suffixed columns (name_xx / text_xx); only en/uk are seeded, more can
  * be added without code changes (the loader discovers *_<lang> columns).
  *
- * `effects` is a `;`-separated list of tokens (see effectsField). The effect ENGINE interprets
+ * `effects` is a `;`-separated list of tokens (see `effectsField` in `schema-cells.ts`). The effect ENGINE interprets
  * them (src/lib/effects/, optional/removable) — the schema only SPLITS the cell into tokens and
  * never rejects one (B12): an unknown/future token degrades to an inert note downstream, so
  * vocabulary growth never breaks older rows.
  */
-import { asText } from '../util/format';
 import { z } from 'zod';
 import { SYSTEMS } from '../rules/pipeline';
 
@@ -49,79 +48,23 @@ export const EFFECT_KINDS = [
 	'plugin',
 ] as const;
 
-// --- CSV-cell coercion helpers (every cell arrives as a string) ---------------
+import {
+	blankToUndef,
+	splitList,
+	optStr,
+	reqStr,
+	optNum,
+	optInt,
+	bool,
+	csvList,
+	boolDefault,
+	enumDefault,
+	idField,
+	systemsField,
+	effectsField,
+} from './schema-cells';
 
-/** Empty / missing cell → undefined (so optional fields fall back, EN i18n, etc.). */
-const blankToUndef = (v: unknown) => (v === '' || v == null ? undefined : v);
-
-/** Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items. Already-parsed
- *  arrays pass through stringified. The one splitter shared by build/content code. */
-export function splitList(v: unknown): string[] {
-	if (Array.isArray(v)) return v.map(String);
-	if (v == null || v === '') return [];
-	return asText(v)
-		.split(/[,;]/)
-		.map((s) => s.trim())
-		.filter(Boolean);
-}
-
-const optStr = z.preprocess(blankToUndef, z.string().optional());
-const reqStr = z.string().min(1);
-const optNum = z.preprocess(blankToUndef, z.coerce.number().optional());
-const optInt = z.preprocess(blankToUndef, z.coerce.number().int().optional());
-const bool = z.preprocess(
-	(v) => (typeof v === 'string' ? ['true', '1', 'yes', 'y'].includes(v.toLowerCase()) : !!v),
-	z.boolean(),
-);
-
-/** A CSV list cell → a validated array: split via the shared `splitList` (trim + drop empties), then
- *  validate with `schema`. `map` transforms each token before validation (Number for a numeric list).
- *  An already-parsed array value passes straight to `schema`. */
-const csvList = <T extends z.ZodTypeAny>(schema: T, map: (s: string) => unknown = (s) => s) =>
-	z.preprocess((v) => (typeof v === 'string' ? splitList(v).map(map) : v), schema);
-
-/** A boolean cell that defaults to `d` when the cell is blank/missing (the common flag shape). */
-const boolDefault = (d: boolean) =>
-	z.preprocess((v) => (v === '' || v == null ? d : v), bool).default(d);
-
-/** An enum cell that defaults to `d` when the cell is blank/missing — `boolDefault`'s sibling.
- *
- *  A bare `.default()` fires only for a MISSING key, and a CSV has no missing keys: every column of
- *  every row exists, saying "not provided" with an empty cell. So a defaulted enum without this
- *  rejects the blank cell it was given a default for, which is how the authoring form — which fills
- *  every column of a new row with `''` — could not save a row at all. */
-const enumDefault = <V extends string>(schema: z.ZodType<V>, d: V) =>
-	z.preprocess((v) => (v === '' || v == null ? d : v), schema).default(d);
-
-/** `id` is a local slug; effective identity is `source:id`, built by the loader. */
-const idField = z
-	.string()
-	.min(1)
-	.regex(/^[a-z0-9][a-z0-9_]*$/, 'id must be a lowercase snake_case slug (a-z 0-9 _)');
-
-/** `systems` = comma list over SYSTEMS, e.g. "5e" | "5.5e" | "5e,5.5e". */
-const systemsField = csvList(z.array(z.enum(SYSTEMS)).min(1));
-
-/** `Array.isArray` narrows an `unknown` to `any[]` — a TS quirk that re-opens the value this parse
- *  boundary exists to close. Kept local: the effects column is the only place we take an array off a
- *  cell that may already have been parsed once. */
-const isUnknownArray = (v: unknown): v is unknown[] => Array.isArray(v);
-
-/** A `;`-separated list of effect tokens. The loader NEVER rejects a token (B12): an unknown or
- *  not-yet-understood token (an L2 guard that starts with a condition not a kind, a `plugin:` token,
- *  a future `reroll:`/`min_die:` kind) is kept VERBATIM and degrades to an inert text note when the
- *  engine interprets it (`parseToken` → `unknown`), never a killed row — so vocabulary growth is
- *  additive, not a breaking change for older apps. Classifying/flagging an unknown token is the
- *  effect engine's job (and a downstream content-health pass, which may import `$lib/effects`), NOT
- *  the schema's — the schema deliberately stays independent of the removable engine. */
-const effectsField = z.preprocess((v) => {
-	if (v === '' || v == null) return [];
-	if (isUnknownArray(v)) return v; // elements stay `unknown`; the schema below says they're strings
-	return asText(v)
-		.split(';')
-		.map((s) => s.trim())
-		.filter(Boolean);
-}, z.array(z.string()).default([]));
+export { splitList }; // the one list splitter, called by its schema's name everywhere it is used
 
 /** Fields every content row carries. Spread into each type via `.extend`. `systems` and `source` are
  *  OPTIONAL on the row because they are normally declared once in the file's `#content-*:` header and
@@ -151,6 +94,15 @@ export const HIT_DICE = ['d6', 'd8', 'd10', 'd12'] as const;
 export const CASTER_TYPES = ['full', 'half', 'third', 'pact', 'none'] as const;
 export const CASTER_SHARES = ['full', 'half', 'half_up', 'third', 'none'] as const;
 export const PREPARE_STYLES = ['prepared', 'known'] as const;
+/**
+ * Which of its spells a class — or a subclass — may cast as a RITUAL, as the SRD states it per class:
+ * `prepared` is "a spell you have prepared" (a known caster's known spells are its prepared ones),
+ * `spellbook` is "in your spellbook; you don't need to have the spell prepared". Blank is a class
+ * with no ritual casting at all.
+ */
+export const RITUAL_SOURCE = { prepared: 'prepared', spellbook: 'spellbook' } as const;
+export type RitualSource = (typeof RITUAL_SOURCE)[keyof typeof RITUAL_SOURCE];
+export const RITUAL_SOURCES = Object.values(RITUAL_SOURCE);
 export const SCHOOLS = [
 	'abjuration',
 	'conjuration',
@@ -232,6 +184,7 @@ const CasterType = z.enum(CASTER_TYPES);
  *  third=⌊/3⌋, none=0 (pact contributes nothing to the shared pool). */
 const CasterShare = z.enum(CASTER_SHARES);
 const PrepareStyle = z.enum(PREPARE_STYLES);
+const RitualSourceColumn = z.preprocess(blankToUndef, z.enum(RITUAL_SOURCES).optional());
 const School = z.enum(SCHOOLS);
 /** How a spell/attack resolves against a target. */
 const Resolution = z.enum(RESOLUTIONS);
@@ -301,7 +254,11 @@ const classSchema = baseRow.extend({
 	caster_share: z.preprocess(blankToUndef, CasterShare.optional()),
 	/** Spellcasting shape: prepared (choose from a set each rest) vs known (fixed learned list). */
 	prepare_style: z.preprocess(blankToUndef, PrepareStyle.optional()),
-	/** Can cast ritual-tagged spells (source of rituals varies by class — see rules layer). */
+	/** Which spells this class casts as rituals (`RITUAL_SOURCE`); blank = it cannot. A subclass
+	 *  that states its own overrides this — see `subclass.ritual_source`. */
+	ritual_source: RitualSourceColumn,
+	/** The column `ritual_source` replaces, still read so a homebrew class written with it keeps
+	 *  its rituals: `true` with no `ritual_source` reads as `prepared`. Not offered by the editor. */
 	ritual: boolDefault(false),
 	/** Id of the `spell_slots` table this class uses (e.g. `full`, `pact`, or a homebrew id). */
 	slot_table: optStr,
@@ -352,6 +309,9 @@ const subclassSchema = baseRow.extend({
 	prepare_style: z.preprocess(blankToUndef, PrepareStyle.optional()),
 	slot_table: optStr,
 	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
+	/** Ritual casting as THIS SUBCLASS has it, overriding its class's `ritual_source`: the way a
+	 *  class with no ritual casting gains it through one subclass, or a subclass caster has its own. */
+	ritual_source: RitualSourceColumn,
 	/** Class level at which this subclass's spellcasting comes online (e.g. 3 for EK/AT). */
 	caster_from_level: optInt,
 	/** Which class's spell LIST this subclass draws from — a comma list of bare class ids (B25).
