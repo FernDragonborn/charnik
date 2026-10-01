@@ -217,6 +217,12 @@ export const FEAT_CATEGORY = {
 } as const;
 export const FEAT_CATEGORIES = Object.values(FEAT_CATEGORY);
 
+/** What a proficiency choice-grant may be answered with — the words `feat.skill_choice_kinds` lists. */
+export const PROFICIENCY_CHOICE_KIND = {
+	skill: 'skill',
+	tool: 'tool',
+} as const;
+
 const Size = z.enum(SIZES);
 const Ability = z.enum(ABILITIES);
 const HitDie = z.enum(HIT_DICE);
@@ -379,10 +385,13 @@ const featSchema = baseRow.extend({
 	 *  comma list (`str,dex` — Grappler) or `any` (all six — Epic Boons). Empty = not a half-feat.
 	 *  The builder shows an ability picker and folds the +1 into `abilityBoosts`. */
 	ability_choice: optStr,
-	/** §C choice-grant: how many SKILL proficiencies of the player's choice this feat grants (Skilled
-	 *  = 3). The builder shows a "pick N skills" picker, folded into `build.featSkills`. NB SRD Skilled
-	 *  reads "skills OR tools"; tools aren't modelled yet (skills-only — flagged deviation). */
+	/** §C choice-grant: how many proficiencies of the player's choice this feat grants (Skilled = 3).
+	 *  The builder shows a "pick N" chooser; skills fold into `build.featSkills`. */
 	skill_choice: optInt,
+	/** What §C's choice may be answered with, as a comma list of `PROFICIENCY_CHOICE_KIND` words.
+	 *  Blank = skills only; `skill,tool` is Skilled's "any combination of three skills or tools",
+	 *  where a picked tool lands in `build.tools`. A list, so a third kind is a word and not a column. */
+	skill_choice_kinds: optStr,
 	/** §D choice-grant: the spells this feat teaches, as `level:count` pairs (Magic Initiate =
 	 *  `0:2,1:1` — two cantrips and one level-1 spell). The feat becomes a caster profile of its own,
 	 *  so the counts ARE its cantrip/known caps and the ordinary spell picker asks the question. */

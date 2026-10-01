@@ -78,16 +78,23 @@
 <span class="eyebrow">{$_('build.tools.label')}</span>
 <div class="chips" role="group" aria-label={$_('build.tools.label')}>
 	{#each b.toolList as row (row.effectiveId)}
-		{@const granted = b.backgroundTools.includes(row.id)}
+		{@const fromBackground = b.backgroundTools.includes(row.id)}
+		{@const fromFeat = !fromBackground && b.feats.featToolPicks.includes(row.id)}
+		{@const granted = fromBackground || fromFeat}
 		{@const on = granted || b.draft.selectedTools.includes(row.id)}
-		<!-- a background's tool is locked on, the way its skills are: it is not a pick. `aria-disabled`
-		     so the chip can still be reached to say so (ui.md ▸ rule 10) -->
+		<!-- a background's tool is locked on, the way its skills are: it is not a pick. So is one a
+		     feat's choice granted — it is un-picked where it was picked. `aria-disabled` so the chip can
+		     still be reached to say so (ui.md ▸ rule 10) -->
 		<button
 			class="pick-chip"
 			aria-pressed={on}
 			class:on
 			aria-disabled={granted ? true : undefined}
-			use:provenance={granted ? $_('build.tools.fromBackground') : ''}
+			use:provenance={fromBackground
+				? $_('build.tools.fromBackground')
+				: fromFeat
+					? $_('build.tools.fromFeat')
+					: ''}
 			onclick={() => b.toggleTool(row.id)}>{rowName(row)}</button
 		>
 	{:else}

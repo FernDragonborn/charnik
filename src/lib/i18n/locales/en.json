@@ -150,7 +150,8 @@
 			"noSlots": "No feat or ASI level reached yet.",
 			"halfFeatAsk": "{feat} — where does its +1 go?",
 			"skillGrant": "Skills — choose {chosen}/{cap}",
-			"toolsNote": "(a tool instead of a skill is picked in the Languages pane, and is not counted here)",
+			"skillOrToolGrant": "Skills or tools — choose {chosen}/{cap}",
+			"proficiencyHeldElsewhere": "You already have this proficiency from another source.",
 			"spellListAsk": "Spells — which list?",
 			"spellListFixed": "Spells — from the {list} list",
 			"spellAbilityAsk": "Cast with which ability?",
@@ -431,7 +432,8 @@
 		"tools": {
 			"label": "tool proficiencies",
 			"none": "No tools in the loaded content.",
-			"fromBackground": "granted by your background"
+			"fromBackground": "granted by your background",
+			"fromFeat": "granted by a feat — change it on the feat"
 		}
 	},
 	"coinName": {
@@ -1153,6 +1155,7 @@
 		"senses": "Senses",
 		"size": "Size",
 		"skill_choice": "Skills granted",
+		"skill_choice_kinds": "Kinds granted",
 		"skills": "Skills",
 		"skills_choose": "Skill choices",
 		"skills_from": "Skill list",

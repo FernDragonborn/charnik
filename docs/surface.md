@@ -1176,6 +1176,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ANY_OPTION` — * The wildcard a choice column takes instead of a list: `skills_from`, `ability_choice` and * `feat_choice` all read …
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
+- `const PROFICIENCY_CHOICE_KIND` — What a proficiency choice-grant may be answered with — the words `feat.skill_choice_kinds` lists.
 - `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry), plus * `variant` — a trait set …
 - `const ROW_KIND` — What a state row IS.
 - `const VALENCE` — Whether a state is something you WANT.
@@ -1839,4 +1840,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1106 exports across 149 modules · 75 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1107 exports across 149 modules · 75 duplicate suspects._

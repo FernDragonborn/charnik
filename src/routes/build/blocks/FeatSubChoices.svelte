@@ -12,6 +12,8 @@
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
 	import { SKILL_ABILITY } from '$lib/character/skills';
+	import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
+	import { provenance } from '$lib/actions/provenance';
 	const b = build;
 	const SKILLS = Object.keys(SKILL_ABILITY);
 
@@ -21,6 +23,7 @@
 	const ref = $derived(b.feats.featRefFor(choiceKey));
 	const halfOpts = $derived(ref && ref !== ASI ? b.feats.halfFeatOptionsFor(choiceKey) : []);
 	const skillCount = $derived(ref && ref !== ASI ? b.feats.featSkillCountOf(ref) : 0);
+	const offersTools = $derived(ref && ref !== ASI ? b.feats.featChoiceOffersTools(ref) : false);
 	const picks = $derived(b.feats.slotFeatSkillsFor(choiceKey));
 	/* §D. Only the two questions the feat itself asks — WHICH list and WHICH ability. The spells then
 	   come off the Spells pane, because a chosen list makes this feat a caster profile like any other
@@ -95,31 +98,45 @@
 	{/if}
 {/if}
 
+{#snippet proficiencyChip(pick: string, label: string)}
+	{@const on = picks.includes(pick)}
+	<!-- blocked only by ANOTHER source already granting it. Being at the cap is not a block: a click
+	     there replaces the oldest pick, so the grant is never a dead end. `aria-disabled`, so the chip
+	     can still be reached to say why (ui.md ▸ rule 10); the refusal itself is the view-model's. -->
+	{@const blocked = b.draft.strict && b.feats.featSkillTakenElsewhere(choiceKey, pick) && !on}
+	<button
+		class="pick-chip"
+		aria-pressed={on}
+		class:on
+		class:dim={blocked}
+		aria-disabled={blocked ? true : undefined}
+		use:provenance={blocked ? $_('build.feats.proficiencyHeldElsewhere') : ''}
+		onclick={() => b.feats.toggleSlotFeatSkill(choiceKey, pick, skillCount)}
+	>
+		{label}
+	</button>
+{/snippet}
+
 {#if skillCount > 0}
 	<div class="alloc">
 		<span class="eyebrow">
-			{$_('build.feats.skillGrant', {
+			{$_(offersTools ? 'build.feats.skillOrToolGrant' : 'build.feats.skillGrant', {
 				values: { chosen: Math.min(picks.length, skillCount), cap: skillCount }
 			})}
-			<span class="gold">{$_('build.feats.toolsNote')}</span>
 		</span>
 		<div class="chips">
 			{#each SKILLS as skill (skill)}
-				{@const on = picks.includes(skill)}
-				<!-- blocked only by ANOTHER slot already granting it. Being at the cap is not a block:
-				     a click there replaces the oldest pick, so the grant is never a dead end. -->
-				{@const blocked =
-					b.draft.strict && b.feats.featSkillTakenElsewhere(choiceKey, skill) && !on}
-				<button
-					class="pick-chip"
-					class:on
-					class:dim={blocked}
-					disabled={blocked}
-					onclick={() => b.feats.toggleSlotFeatSkill(choiceKey, skill, skillCount)}
-				>
-					{skillLabel(skill, $_)}
-				</button>
+				{@render proficiencyChip(skill, skillLabel(skill, $_))}
 			{/each}
 		</div>
+		{#if offersTools}
+			<!-- the same grant, the same count: a tool taken here is one of the feat's picks, which is
+			     what the SRD's "any combination of skills or tools" says -->
+			<div class="chips" role="group" aria-label={$_('build.tools.label')}>
+				{#each b.toolList as row (row.effectiveId)}
+					{@render proficiencyChip(`${TOOL_PREFIX}${row.id}`, rowName(row))}
+				{/each}
+			</div>
+		{/if}
 	</div>
 {/if}

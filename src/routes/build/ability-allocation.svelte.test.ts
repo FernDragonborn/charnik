@@ -55,6 +55,7 @@ function setup(over: Partial<DraftState> = {}, edit: EditContext | null = null) 
 		speciesOptionRow: undefined,
 		row: () => undefined,
 		featList: [],
+		ownedTools: [],
 		get backgroundRow() {
 			return rows.background;
 		},

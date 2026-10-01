@@ -97,7 +97,8 @@ export class BuildVM {
 			: [...this.draft.selectedLanguages, ref];
 	};
 	toggleTool = (id: string) => {
-		if (this.backgroundTools.includes(id)) return; // background-granted, locked on
+		// granted by the background or by a feat's choice: locked on, and un-picked where it was picked
+		if (this.backgroundTools.includes(id) || this.feats.featToolPicks.includes(id)) return;
 		this.draft.selectedTools = this.draft.selectedTools.includes(id)
 			? this.draft.selectedTools.filter((x) => x !== id)
 			: [...this.draft.selectedTools, id];
@@ -338,6 +339,9 @@ export class BuildVM {
 	/** Tools the background grants outright — always proficient, never a pick, exactly like the
 	 *  skills beside them in the same row. */
 	backgroundTools = $derived(splitList(this.backgroundRow?.data.tools));
+	/** The tools this character holds apart from any feat's choice — what such a choice must not
+	 *  spend a pick on again. */
+	ownedTools = $derived([...new Set([...this.backgroundTools, ...this.draft.selectedTools])]);
 
 	/** Skill proficiencies and expertise — the class list, the background's grants, and the two capped
 	 *  pickers over them. See skill-picks.svelte.ts. */
@@ -424,7 +428,7 @@ export class BuildVM {
 				featSpells: { ...this.draft.slotFeatSpells }
 			},
 			languages: [...this.draft.selectedLanguages],
-			tools: [...new Set([...this.backgroundTools, ...this.draft.selectedTools])],
+			tools: [...new Set([...this.ownedTools, ...this.feats.featToolPicks])],
 			customLanguages: [...this.draft.customLanguages],
 			customTools: [...this.draft.customTools],
 			inventory: this.draft.inventory.map((i) => ({ ...i })),

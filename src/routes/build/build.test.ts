@@ -32,7 +32,7 @@ async function graphOf(): Promise<ContentGraph> {
 			`expertise,5.5e,${S},Expertise,rogue,1,"1:2,6:2"`
 		].join('\n'),
 		'feats_srd.csv': [
-			'id,systems,source,name_en,category,ability_choice,skill_choice,spell_choice,spell_choice_lists,spell_choice_ability',
+			'id,systems,source,name_en,category,ability_choice,skill_choice,spell_choice,spell_choice_lists,spell_choice_ability,skill_choice_kinds',
 			`alert,5.5e,${S},Alert,general,,,,,`,
 			`tough,5.5e,${S},Tough,general,,,,,`,
 			// two half-feats with DISJOINT +1 options, and a third overlapping one: what a slot keeps
@@ -40,7 +40,7 @@ async function graphOf(): Promise<ContentGraph> {
 			`wide,5.5e,${S},Wide Reader,general,"int,cha",,,,`,
 			`grappler,5.5e,${S},Grappler,general,"str,dex",,,,`,
 			`lore,5.5e,${S},Lore Keeper,general,"cha,wis",,,,`,
-			`skilled,5.5e,${S},Skilled,origin,,3,,,`,
+			`skilled,5.5e,${S},Skilled,origin,,3,,,,"skill,tool"`,
 			// §D: a spell-teaching feat, once as a free choice of list and once pinned by a background
 			`initiate,5.5e,${S},Initiate,origin,,,"0:2,1:1","wizard,rogue","int,wis"`,
 			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
@@ -712,6 +712,44 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			expect.arrayContaining(['stealth', 'athletics', 'survival'])
 		);
 		expect(build.todos.map((t) => t.kind)).not.toContain('originFeat');
+	});
+
+	it("Skilled's choice reaches tools, counted against the same three", () => {
+		build.draft.backgroundId = `background:${S}:scholar`; // grants Skilled, and the quill
+		expect(build.feats.featChoiceOffersTools(build.feats.originFeatRef)).toBe(true);
+		expect(build.feats.featChoiceOffersTools(`feat:${S}:alert`)).toBe(false);
+
+		for (const pick of ['stealth', 'tool.lute', 'tool.drum'])
+			build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, pick, 3);
+		expect(build.feats.originChoicesOwed).toBe(0);
+		expect(build.assembled.build.featSkills).toEqual(['stealth']);
+		expect(build.assembled.build.tools).toEqual(expect.arrayContaining(['quill', 'lute', 'drum']));
+
+		// one cap over both kinds: a fourth pick replaces the oldest, whichever kind that was
+		build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, 'tool.flute', 3);
+		expect(build.assembled.build.featSkills).toEqual([]);
+		expect(build.assembled.build.tools).toEqual(expect.arrayContaining(['lute', 'drum', 'flute']));
+
+		// Strict refuses a tool the character already holds — the background's own
+		build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, 'tool.quill', 3);
+		expect(build.feats.slotFeatSkillsFor(ORIGIN_SLOT_KEY)).not.toContain('tool.quill');
+		// and the Languages pane cannot drop a tool the feat granted: it is un-picked on the feat
+		build.toggleTool('lute');
+		expect(build.assembled.build.tools).toContain('lute');
+	});
+
+	it("a tool a feat granted comes back as the feat's pick, so un-picking it takes it off", () => {
+		build.draft.name = 'Tinker';
+		build.draft.backgroundId = `background:${S}:scholar`;
+		build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, 'tool.lute', 3);
+		build.toggleTool('drum'); // a free pick of the player's own
+		build.hydrate(characterSchema.parse(build.assembled));
+		expect(build.draft.selectedTools).toEqual(['quill', 'drum']);
+		expect(build.feats.featToolPicks).toEqual(['lute']);
+
+		build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, 'tool.lute', 3);
+		expect(build.assembled.build.tools).not.toContain('lute');
+		expect(build.assembled.build.tools).toContain('drum');
 	});
 
 	it('a feat-granted skill counts as proficient, so expertise on it is offered and survives assemble', () => {

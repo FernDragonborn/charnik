@@ -262,14 +262,13 @@ stay semi-manual.
   actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
-- [ ] **SKILLED-TOOLS · a feat that grants "skills or tools" offers skills only.** The shipped 2024
-  Skilled row says "any combination of three skills or tools"; its chooser counts three SKILLS, so a
-  player who wants a tool takes it in the Languages pane (where tools are free to add) and is left
-  with a choice the builder still calls owed. The row's own note says so rather than hiding it.
-  What it needs: the feat row saying its choice reaches tools (a column, authored against the row's
-  own text like every other), a per-slot tool pick beside `slotFeatSkills` counted against the SAME
-  cap, and `build.tools` receiving it — the tool model itself (`build.tools`, `toolCheck`, the
-  shipped tool rows) is built.
+- [ ] **ORIGIN-FEAT-REACH · no shipped character can take Skilled.** Its chooser is built — three
+  picks over skills and tools, off `skill_choice` and `skill_choice_kinds` — and nothing shipped
+  reaches it. Counted: the 2024 pack ships four origin feats and four backgrounds, the backgrounds
+  grant `magic_initiate` twice, `alert` and `savage_attacker`, and `featOptionsFor` leaves
+  origin feats out of a level's slot. So Skilled arrives only through a homebrew background or
+  species. Whether a level's feat slot may hold an origin feat is a rules question to answer from
+  SRD 5.2.1's own feat text, not from memory.
 - [ ] **XP-TRACKING · the spec's optional XP mode has a field and nothing else.** `plan.md` ▸
   Character lifecycle puts it in scope: a `levelingMode` (`milestone` | `xp`) toggle, level derived
   from the XP thresholds in `xp` mode. What exists is `build.xp`, optional in the schema and read by

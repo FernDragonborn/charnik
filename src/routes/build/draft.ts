@@ -15,6 +15,7 @@ import {
 	type Character,
 	type ShortRestMode,
 } from '$lib/character/schema';
+import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
 import type { ContentType } from '$lib/content/schemas';
 import {
 	baseAbilities,
@@ -356,7 +357,14 @@ export function draftFromCharacter(char: Character): DraftState {
 		expertise: [...char.build.expertise],
 		masteries: [...(char.build.masteries ?? [])],
 		selectedLanguages: [...char.build.languages],
-		selectedTools: [...char.build.tools],
+		// a tool a feat's choice granted comes back through its slot's picks, not as a free pick —
+		// or un-picking it in the feat would leave it on the character
+		selectedTools: char.build.tools.filter(
+			(id) =>
+				!Object.values(char.build.slotPicks.featSkills).some((picks) =>
+					picks.includes(`${TOOL_PREFIX}${id}`),
+				),
+		),
 		customLanguages: [...char.build.customLanguages],
 		customTools: [...char.build.customTools],
 		selectedSpells: char.build.spells.map((s) => s.spell),

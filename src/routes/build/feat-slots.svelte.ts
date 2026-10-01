@@ -13,7 +13,13 @@ import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
 import { featSpellGrants, type FeatSpellGrant } from '$lib/character/spellcasting';
 import { asiFeatLevels, EPIC_BOON_MIN_LEVEL } from '$lib/build/rules';
-import { ANY_OPTION, FEAT_CATEGORY, splitList } from '$lib/content/schemas';
+import {
+	ANY_OPTION,
+	FEAT_CATEGORY,
+	PROFICIENCY_CHOICE_KIND,
+	splitList,
+} from '$lib/content/schemas';
+import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
 import {
 	asiPickCount,
 	toggleCapped,
@@ -28,7 +34,14 @@ import type { AsiShape } from './draft';
  *  than re-described, so the two cannot drift apart. `import type` is erased, so no runtime cycle. */
 export type FeatsHost = Pick<
 	BuildVM,
-	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'speciesRow' | 'speciesOptionRow' | 'row'
+	| 'draft'
+	| 'graph'
+	| 'featList'
+	| 'backgroundRow'
+	| 'speciesRow'
+	| 'speciesOptionRow'
+	| 'row'
+	| 'ownedTools'
 > & {
 	/** Named structurally, not picked: `SkillPicksHost` names `feats` and two Picks that name each
 	 *  other off the same class are a circular mapped type. This is the one member asked for here. */
@@ -214,45 +227,76 @@ export class FeatSlots {
 	 *  species' one, so the card's counter says the same total the list below it shows. */
 	filledSlots = $derived(this.choiceKeys.filter((key) => this.host().draft.slotFeats[key]).length);
 
-	// --- §C skill choice-grant (Skilled: pick N skill proficiencies) ------------
+	// --- §C proficiency choice-grant (Skilled: pick N skills, or tools) ----------
 	// Data-driven off the feat's `skill_choice` column (author-set count, no feat-id hardcode), so a
-	// homebrew Skilled/Prodigy Just Works. NB SRD Skilled is "skills OR tools", and this chooser
-	// offers skills only — a RAW deviation the row's note says out loud (docs/work/mechanics.md ▸
-	// SKILLED-TOOLS).
-	/** How many skills a feat REF grants by choice (0 = not a choice-grant feat). */
+	// homebrew Skilled/Prodigy Just Works. `skill_choice_kinds` says whether the choice reaches tools
+	// too (SRD 5.2.1 Skilled: "any combination of three skills or tools").
+	//
+	// ONE ordered list per slot holds both kinds — a skill by its bare id, a tool as `tool.<id>`, the
+	// name `grant_proficiency` gives it. One list, because the cap is one number over both and a click
+	// at the cap replaces the OLDEST pick (ui.md ▸ rule 10), which two lists cannot order.
+	/** How many proficiencies a feat REF grants by choice (0 = not a choice-grant feat). */
 	featSkillCountOf = (ref: string | null | undefined): number => {
 		if (!ref || ref === ASI) return 0;
 		return Number(rowOfType(this.host().graph?.get(ref), 'feat')?.data.skill_choice ?? 0) || 0;
 	};
-	/** The chosen skills for a choice-grant key (a feat slot key, or {@link ORIGIN_SLOT_KEY}). */
+	/** Does this feat's choice reach TOOLS as well as skills? */
+	featChoiceOffersTools = (ref: string | null | undefined): boolean => {
+		if (!ref || ref === ASI) return false;
+		const kinds = rowOfType(this.host().graph?.get(ref), 'feat')?.data.skill_choice_kinds;
+		return splitList(kinds).includes(PROFICIENCY_CHOICE_KIND.tool);
+	};
+	/** The chosen proficiencies for a choice-grant key (a feat slot key, or {@link ORIGIN_SLOT_KEY}). */
 	slotFeatSkillsFor = (key: string): string[] => this.host().draft.slotFeatSkills[key] ?? [];
-	/** Toggle a skill in a slot's §C picks, capped at the feat's grant count. */
-	toggleSlotFeatSkill = (key: string, skill: string, cap: number) => {
+	/** Toggle a pick in a slot's §C list, capped at the feat's grant count. Strict refuses one the
+	 *  character already has from elsewhere; the refusal lives here, where every caller meets it. */
+	toggleSlotFeatSkill = (key: string, pick: string, cap: number) => {
+		const picks = this.slotFeatSkillsFor(key);
+		if (this.host().draft.strict && !picks.includes(pick) && this.featSkillTakenElsewhere(key, pick))
+			return;
 		this.host().draft.slotFeatSkills = {
 			...this.host().draft.slotFeatSkills,
-			[key]: toggleCapped(this.slotFeatSkillsFor(key), skill, cap)
+			[key]: toggleCapped(picks, pick, cap)
 		};
 	};
-	/** Strict-mode guard: a skill already proficient from ANOTHER source (class/background pick or a
-	 *  different feat's grant) is a wasted pick — disable it in Strict, allow it in Free. */
-	featSkillTakenElsewhere = (key: string, skill: string): boolean => {
-		if (this.host().skillPicks.isProficientBeforeFeats(skill)) return true;
+	/** Strict-mode guard: a proficiency already held from ANOTHER source (a class/background pick, a
+	 *  tool taken in the Languages pane, or a different feat's grant) is a wasted pick — blocked in
+	 *  Strict, allowed in Free. */
+	featSkillTakenElsewhere = (key: string, pick: string): boolean => {
+		const heldAlready = pick.startsWith(TOOL_PREFIX)
+			? this.host().ownedTools.includes(pick.slice(TOOL_PREFIX.length))
+			: this.host().skillPicks.isProficientBeforeFeats(pick);
+		if (heldAlready) return true;
 		return Object.entries(this.host().draft.slotFeatSkills).some(
-			([k, list]) => k !== key && list.includes(skill)
+			([k, list]) => k !== key && list.includes(pick)
 		);
 	};
-	/** Every §C-granted skill across all slots + the origin feat (deduped, each capped to its grant),
-	 *  folded into `build.featSkills` at assemble. Stale picks (feat/count changed) are trimmed here. */
-	featSkillPicks = $derived.by<string[]>(() => {
+	/** Every §C pick that still counts, across all slots + the origin feat: each slot capped to its
+	 *  feat's grant, and a tool dropped where the feat does not offer tools. Stale picks (feat or count
+	 *  changed) are trimmed here rather than lingering in the character. */
+	private featChoicePicks = $derived.by<string[]>(() => {
 		const out = new Set<string>();
-		const take = (key: string, count: number) => {
-			for (const s of this.slotFeatSkillsFor(key).slice(0, count)) out.add(s);
+		const take = (key: string, ref: string | null | undefined) => {
+			const offersTools = this.featChoiceOffersTools(ref);
+			const valid = this.slotFeatSkillsFor(key).filter(
+				(pick) => offersTools || !pick.startsWith(TOOL_PREFIX),
+			);
+			for (const pick of valid.slice(0, this.featSkillCountOf(ref))) out.add(pick);
 		};
-		for (const key of this.choiceKeys)
-			take(key, this.featSkillCountOf(this.host().draft.slotFeats[key]));
-		take(ORIGIN_SLOT_KEY, this.featSkillCountOf(this.originFeatRef));
+		for (const key of this.choiceKeys) take(key, this.host().draft.slotFeats[key]);
+		take(ORIGIN_SLOT_KEY, this.originFeatRef);
 		return [...out];
 	});
+	/** The §C-granted SKILLS, folded into `build.featSkills` at assemble. */
+	featSkillPicks = $derived.by<string[]>(() =>
+		this.featChoicePicks.filter((pick) => !pick.startsWith(TOOL_PREFIX)),
+	);
+	/** The §C-granted TOOLS as bare tool ids, folded into `build.tools` at assemble. */
+	featToolPicks = $derived.by<string[]>(() =>
+		this.featChoicePicks
+			.filter((pick) => pick.startsWith(TOOL_PREFIX))
+			.map((pick) => pick.slice(TOOL_PREFIX.length)),
+	);
 	/**
 	 * How many choices the granted origin feat still owes — its unpicked skills, plus its +1 if the
 	 * background handed over a half-feat and nothing has been assigned.

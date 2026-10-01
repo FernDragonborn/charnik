@@ -537,6 +537,9 @@ describe('shipped feat effects (real content)', () => {
 		};
 		expect(skillChoiceOf('skilled')).toBe(3);
 		expect(skillChoiceOf('alert')).toBeUndefined();
+		// SRD 5.2.1 Skilled: "any combination of three skills or tools of your choice"
+		const skilled = g.get('feat:SRD 5.2.1:skilled');
+		expect(skilled?.type === 'feat' ? skilled.data.skill_choice_kinds : null).toBe('skill,tool');
 	});
 
 	it('§B: Great Weapon Fighting encodes a two-handed/versatile-melee damage floor (min_die 3)', async () => {

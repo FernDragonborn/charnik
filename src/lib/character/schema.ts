@@ -113,7 +113,8 @@ const slotPicksSchema = z.object({
 		.default({}),
 	/** slot key → the half-feat +1 ability choice (Grappler STR/DEX, Epic Boon any). */
 	featAbility: z.record(z.string(), z.enum(ABILITIES)).default({}),
-	/** slot key → §C feat skill-grant picks (Skilled). */
+	/** slot key → §C feat proficiency-grant picks (Skilled), in the order they were made: a skill by
+	 *  its bare id, a tool as `tool.<id>`. */
 	featSkills: z.record(z.string(), z.array(z.string())).default({}),
 	/** slot key → §D feat spell-grant answers (Magic Initiate's list + casting ability). */
 	featSpells: z.record(z.string(), featSpellChoice).default({}),
