@@ -123,52 +123,25 @@ cp/sp/ep/gp/pp. **Optional appearance** (age, height, weight, eyes, skin, hair, 
 **Separate sections — NOT one blob**: Class features · Species traits · Feats ·
 Armor/weapon proficiencies · Tool proficiencies · Languages — each its own section.
 
-**Attacks — proficiency model (AUDIT A7/B9 — ✅ RESOLVED 2026-07-21):** `classes` now carry
-`weapon_profs`/`armor_profs` (normalized categories + specific weapon ids), populated RAW from the
-SRD by the converters. Pure `rules/proficiency.ts` gates `computeAttacks` (a non-proficient weapon
-drops the proficiency bonus + a note) and drives B9 (worn armor you lack proficiency with →
-`spellcasting.armorBlock` + a deriveIssue + a red rule-block banner on the spells panel). LENIENT
-fallback preserved: a class (or set of classes) that declares no prof column stays proficient with
-everything — old homebrew is never wrong-downward.
+**Attacks — proficiency model:** `classes` carry `weapon_profs`/`armor_profs` (normalized
+categories + specific weapon ids). A weapon you lack proficiency with drops the proficiency bonus and
+says so; worn armour you lack proficiency with blocks spellcasting and says so. A class that declares
+no proficiency column stays proficient with everything — old homebrew is never wrong-downward.
 
 ### Compendium / browser
 - Browse every content type. **Search respects active system, or across both** when the
   user picks "all". Sort/filter: spells by level/school/(class, casting time…); generic
-  sort/filter elsewhere. **DONE** (groupings: level/school/source/A–Z + school/source facets +
-  edition; the parenthetical class/casting-time spell facets remain an optional nice-to-have).
-- **Content-health view**: diagnostics over loaded content — broken references, missing
-  translations, ID collisions, malformed rows. Valuable since content is user-edited.
-  **DONE (commit `bfe3df0`)** — Settings ▸ Content health, over `graph.issues`/`metaIssues`/`driftItems`.
-- **Two-dimensional source filtering + collision resolution — DONE (commit `bfe3df0`).** Settings ▸
-  Sources (per-source + per-file enable toggles; a row shows iff file AND source enabled) and ▸
-  Collisions (same `type:id` overlapping an edition → keep-all / keep-one = the collisions.json
-  resolution). Browse-layer only via `sources.svelte.ts`'s persisted `sourceConfig` + pure `isRowActive`/
-  `detectCollisions` — the loader/core graph is untouched, so it's live + never drops data. The
-  homebrew fork-override (Editor mode) is the same mechanism (keep-all, homebrew sorts on top).
-- **Settings ▸ Themes (custom themes) — CORE DONE, extras PLANNED.** Users author their own
-  color themes without a rebuild. **Architecture:** the design-token contract (`tokens.css`) is
-  semantic (`--color-surface`/`-text`/`-accent`/`-resource`…), switched by `data-theme` on `<html>`;
-  `ThemeId` is open-typed; the **runtime injector** (`customThemes.ts`, commit `2336546`) turns a
-  `{id, name, tokens}` into a `[data-theme=id]` `<style>`, wired into the layout effect over the
-  persisted `app.customThemes`, so a registered theme activates live like dark/light. A **strict
-  sanitizer** (unit-tested) allows only known themeable token names + a color/length value grammar —
-  user-file values can't inject CSS.
-  - [x] **Themes tab UI** (commit `4423e9d`) — `ThemesSettings.svelte`: lists built-in + custom
-    themes as swatched cards; clone a built-in → editable custom theme; pick / duplicate / delete.
-  - [x] **Editor** — token→value form over `THEMEABLE_TOKENS`, seeded self-contained from the base
-    via `snapshotBaseTokens` (a custom `[data-theme]` cannot inherit another theme by cascade).
-  - [x] **Persistence + portability** — a theme is a file: one tagged JSON per theme under `themes/`
-    in the data dir through the `Storage` seam (`styles/themeFiles.ts`), which is what makes it
-    copyable, hand-editable and shareable like a content pack, plus export/import of a single theme
-    in the Themes tab. Files are the source of truth at startup; every load re-sanitizes, because a
-    file on disk is untrusted input. The app-store copy stays as the live array the injector reads
-    and as the one-time migration source for themes written before this.
-  - **Theme scope is COLOURS ONLY.** Density, roundness and type stay app-owned even though
-    font-size/radius/tracking are tokenized and could be exposed. A theme that can move spacing turns
-    every layout into N layouts nobody screenshots, and nobody has asked. This is also why the px
-    spacing guard is not worth building: with colours-only themes an off-scale `14px` breaks nothing.
-  - [x] **Guard** — stylelint `color-no-hex` (tokens.css exempt) keeps new hardcoded colours from
-    leaking past the token layer and silently breaking themes.
+  sort/filter elsewhere (groupings: level/school/source/A–Z + school/source facets + edition; the
+  class and casting-time spell facets are an optional nice-to-have).
+- **Content-health view** (Settings ▸ Content health): diagnostics over loaded content — broken
+  references, missing translations, ID collisions, malformed rows. Valuable since content is
+  user-edited.
+- **Two-dimensional source filtering + collision resolution.** Settings ▸ Sources (per-source and
+  per-file switches; a row shows iff its file AND its source are enabled) and ▸ Collisions (the same
+  `type:id` overlapping an edition → keep-all / keep-one, the `collisions.json` resolution). It is
+  browse-layer only — the loader's graph is untouched, so it is live and never drops data.
+- **Settings ▸ Themes.** Users author their own colour themes without a rebuild: clone a built-in,
+  edit its tokens, export or import one as a file. Colours only — `internals/ui.md` ▸ Theming.
 
 ### Custom content types (add + persist via UI forms)
 Species (+subraces), Backgrounds, Classes, Subclasses, Class features (per level),
@@ -196,7 +169,7 @@ items. Each may carry **effects** (bounded vocab).
   so it doesn't bloat it; capped/rotated).
 - **Runtime switches, no restart**: language · **active system (5e↔5.5e) for browsing/
   creation** · theme (light/dark + custom). **Live CSV reload** via file watcher
-  (debounced; reparse changed file only; manual refresh fallback).
+  (debounced; manual refresh fallback).
 - **System is a property of the CHARACTER, not a free toggle.** A built character is
   **bound to the system it was created in** (stored in its JSON) and always renders in
   it — you don't reinterpret a 5e character as 5.5e. The active-system switch only sets

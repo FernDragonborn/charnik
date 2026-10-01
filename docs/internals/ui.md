@@ -138,6 +138,16 @@ font-size, or radius — a literal does not respond to `[data-theme=…]`, so it
 custom theme, and Charnik ships user-authored themes (Settings ▸ Themes → runtime injector →
 `[data-theme=id]`; the themeable list is `THEMEABLE_TOKENS` in `customThemes.ts`).
 
+**A custom theme is a file**: one tagged JSON per theme under `themes/` in the data dir, through the
+`Storage` seam (`styles/themeFiles.ts`), which is what makes it copyable, hand-editable and shareable
+like a content pack; the Themes tab clones a built-in, edits token → value over `THEMEABLE_TOKENS`,
+and exports or imports one. A custom `[data-theme]` cannot inherit another by cascade, so a clone is
+seeded self-contained (`snapshotBaseTokens`). Files are the source of truth at startup and **every
+load re-sanitizes** — only known token names, only a colour or length grammar — because a file on
+disk is untrusted input and must not be able to inject CSS. **A theme's scope is COLOURS ONLY.**
+Density, roundness and type stay app-owned even though they are tokenized: a theme that can move
+spacing turns every layout into N layouts nobody screenshots.
+
 A genuinely new shade is a **semantic** token added to *both* theme blocks (`:root` dark and
 `[data-theme='light']`). Alpha tints are `color-mix(in srgb, var(--token) N%, transparent)`, which
 themes for free. Stylelint holds three of the lines itself — `color-no-hex`, and a px ban on
