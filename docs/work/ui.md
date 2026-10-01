@@ -164,7 +164,13 @@
       expands prose inside the row, with `title` on the button as a second, slower explanation of the
       button itself. Hover should open the prose where the pointer already is; whether the click
       toggle survives beside it is the one open question here, and it is answered with rendered
-      variants, not in this paragraph.
+      variants, not in this paragraph. They are rendered, on the live sheet with a real row's prose,
+      and wait for the pick: `design-preview/_info-now-click-expands.png` (today),
+      `_info-A-hover-on-the-mark.png` (the ⓘ opens the prose on hover and focus; a click either pins
+      it inline as now, or does nothing — the picture is the same, the choice is what a click means)
+      and `_info-C-hover-on-the-name.png` (the effect's NAME is the trigger, as rule 3 has a value
+      explain itself, and the ⓘ leaves the row). One thing every variant needs that the popover
+      does not have: it renders text, and this prose is Markdown.
 
 - [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
   `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same
