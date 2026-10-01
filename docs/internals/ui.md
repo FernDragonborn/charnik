@@ -103,7 +103,8 @@ Combat is the view that has them. Which field to open first:
 | field         | file               | owns                                                             |
 | ------------- | ------------------ | ---------------------------------------------------------------- |
 | `hp`          | `hit-points`       | damage, healing, temp HP, the concentration banner, death saves   |
-| `casting`     | `spell-casting`    | slot reservation, upcast, a cast's rolls and tokens, prepared     |
+| `casting`     | `spell-casting`    | slot reservation, upcast, a cast's tokens, prepared; its rolls are `spell-cast-rolls` |
+| `concentration` | `concentration`  | which spell is held, and every way it ends                        |
 | `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |

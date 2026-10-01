@@ -17,6 +17,7 @@ import { localizedName } from '$lib/content/detail';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
+import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
 import { FeatureView } from './feature-view.svelte';
@@ -55,14 +56,15 @@ import { MenuOverlay, type OpenOverlay } from './menu-overlay.svelte';
 import { RestControls } from './rest-controls.svelte';
 import { HitPoints } from './hit-points.svelte';
 import { InventoryTracker } from './inventory.svelte';
+import { Concentration } from './concentration';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
 /**
- * D1 — under the 400-line lint since the menus, the short rest and HP+death moved to subsystems
- * beside it. What is left is the character (load, sheet, level-up), the display derivations the
- * panels read, concentration's lifecycle, and one accessor per moved name.
+ * D1 — under the 400-line lint because each unit with a name of its own is a subsystem beside it.
+ * What is left is the character (load, sheet, level-up), the display derivations the panels read,
+ * and one accessor per moved name.
  *
  * **The accessors are the point, not clutter.** `hpMax` and `die` are declared on two sibling
  * subsystems' host interfaces, five panels destructure `openMenu`, the markup two-way binds
@@ -389,52 +391,20 @@ class CombatVM {
 			: undefined;
 		return row ? localizedName(row, app.activeLocale) : '';
 	});
-	/** The spell currently concentrated on (resolved to a display label), or null. Reads the schema's
-	 *  `play.concentration` ref — set on cast, cleared by tapping the indicator. */
-	conc = $derived.by<{ ref: string; label: string } | null>(() => {
-		const ref = this.character?.play.concentration;
-		if (!ref) return null;
-		const row = this.graph?.get(ref);
-		return { ref, label: row ? localizedName(row, app.activeLocale) : ref };
-	});
-	/** Remove the cast-applied effect linked to a spell ref (`source === ref`) — dropping or
-	 *  replacing concentration takes the spell's own buff down with it. */
-	removeLinkedEffect(ref: string) {
-		const c = this.character;
-		if (c) c.play.effects = c.play.effects.filter((e) => e.source !== ref);
+	/** Which spell is held, and what ends it — see concentration.ts. */
+	concentration = new Concentration(() => this);
+	/* The concentration verbs stay ON the view-model: casting and HP declare them on their host
+	   interfaces, and the Controls bar, the Effects panel and the tests call them here. */
+	get conc() {
+		return this.concentration.conc;
 	}
-	/** The player ENDING it on purpose — the chip's ✕ and the Effects panel's badge. It says so,
-	 *  because all that happens on screen is a chip disappearing, and the press one step above the ✕
-	 *  is a save: a spell dropped deliberately and a spell lost to a bad roll must not look alike.
-	 *  `clearConcentration` stays the silent primitive every other path uses (0 HP, a replacing cast,
-	 *  a rest) — those are consequences of something the player already saw. */
-	endConcentrationByHand = () => {
-		const label = this.conc?.label;
-		this.clearConcentration();
-		if (label) toast(t('combat.notice.concentrationEnded', { spell: label }));
-	};
-	/** Stop concentrating — the state change alone, with nothing said about it. */
-	clearConcentration = () => {
-		const c = this.character;
-		if (!c) return;
-		if (c.play.concentration) this.removeLinkedEffect(c.play.concentration);
-		c.play.concentration = null;
-		this.pendingConcentrationSave = null; // no spell → no owed save (B4 banner dismisses)
-	};
-	/** A state forbids Concentration — a `blocks_concentration` marker is live on the sheet (RAW Rage:
-	 *  "you can't maintain Concentration"). DATA-DRIVEN (the token, authored on the Rage condition), not a
-	 *  hardcoded id, so any homebrew state carrying the marker behaves the same. */
-	cantConcentrate = $derived(this.sheet?.facts.breaksConcentration ?? false);
-	/** RAW: dropping to 0 HP, becoming incapacitated, OR gaining a `blocks_concentration` state (Rage)
-	 *  ENDS concentration (CONCENTRATION-PLAN §7). Called reactively from the combat page so it fires the
-	 *  instant HP hits 0 (Damage), an incapacitating condition lands, or Rage is entered. Idempotent —
-	 *  a no-op once concentration is already gone. */
-	endConcentrationIfBroken = () => {
-		const c = this.character;
-		if (!c?.play.concentration) return;
-		if (c.play.hp.current <= 0 || this.economy.incapacitated || this.cantConcentrate)
-			this.clearConcentration();
-	};
+	get cantConcentrate(): boolean {
+		return this.concentration.cantConcentrate;
+	}
+	removeLinkedEffect = (ref: string) => this.concentration.removeLinkedEffect(ref);
+	endConcentrationByHand = () => this.concentration.endByHand();
+	clearConcentration = () => this.concentration.clear();
+	endConcentrationIfBroken = () => this.concentration.endIfBroken();
 
 	/** What this character HAS, to read — the Features panel's whole model. Not derived from the
 	 *  sheet's effect list: a feature made purely of prose carries no effect tokens and never reaches
@@ -463,25 +433,11 @@ class CombatVM {
 		void saveCharacterGuarded(c);
 	};
 
-	// --- level-up: advance an existing character's class by one level ---------------------------
 	/** Total character level across all classes. */
 	totalLevel = $derived(this.character?.build.classes.reduce((n, c) => n + c.level, 0) ?? 0);
-	/** Can still gain a level (hard cap 20 total). */
-	canLevelUp = $derived(this.totalLevel < 20 && (this.character?.build.classes.length ?? 0) > 0);
-	/** A ref's display name in the active locale, or `fallback` when the row is gone. The sheet reads a
-	 *  content name the way every other surface does (F9) — printing `name_en` made the same dagger two
-	 *  different words on one screen. */
-	private nameOf(ref: string, fallback: string): string {
-		const row = this.graph?.get(ref);
-		return row ? localizedName(row, app.activeLocale) : fallback;
-	}
-	/** The character's classes with their live names, for the level-up menu. */
-	levelUpClasses = $derived.by(() =>
-		(this.character?.build.classes ?? []).map((c, i) => ({
-			index: i,
-			level: c.level,
-			name: this.nameOf(c.class, 'Class'),
-		})),
+	/** Can still gain a level — what decides whether the sheet offers the control at all. */
+	canLevelUp = $derived(
+		this.totalLevel < MAX_CHARACTER_LEVEL && (this.character?.build.classes.length ?? 0) > 0,
 	);
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -501,7 +457,7 @@ class CombatVM {
 			);
 		else toast(t('combat.notice.actionUsed', { name: t(a.nameKey) }));
 	};
-	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */
+	/** Spell casting (slots, upcast, the rolls a cast makes) — see spell-casting.svelte.ts. */
 	casting = new SpellCasting(this);
 	/* The casting API stays ON the view-model: it is the boundary the markup and the behavioural
 	   tests are written against (ui.md ▸ Splitting a large view), and moving 434 lines of implementation out is no reason to

@@ -6,11 +6,7 @@
 The lint gate and what it measures are `../internals/tooling.md`; how a subsystem is audited is
 `../internals/testing.md` ▸ Auditing a subsystem by reading.
 
-- [ ] **LINT-LENGTH · two view-model files are over the line budget, and the gate says so on every
-  run.** `combat-view-model.svelte.ts` at 412 lines and `spell-casting.svelte.ts` at 466, against 400.
-  A warning that always prints is one nobody reads. The answer for a view-model has always been a
-  seam and not denser code (`../internals/ui.md` ▸ Splitting a large view), so each wants a
-  subsystem named for what it owns rather than a trim.
+Nothing is open.
 
 **Won't-do, recorded so they are not re-audited as debt:**
 

@@ -1,67 +1,37 @@
 /*
- * Spell casting — slot reservation, upcast evaluation, the spell's own effect tokens, the
- * attack/save/damage rolls a cast produces, and the prepared toggle. One of the subsystems the
- * combat view-model delegates to (docs/internals/ui.md ▸ Splitting a large view).
+ * Spell casting — slot reservation, upcast evaluation, the spell's own effect tokens, and the
+ * prepared toggle. One of the subsystems the combat view-model delegates to
+ * (docs/internals/ui.md ▸ Splitting a large view). The rolls a cast makes are `rolls`
+ * (`spell-cast-rolls.ts`), which reads what a slot adds back through this class.
  *
  * It reads the host through a narrow interface rather than importing the view-model class, so
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
 import { toast } from 'svelte-sonner';
 import { t, translator, type Translate } from '$lib/i18n';
-import { sayText, type SaidText } from '$lib/util/say';
+import { sayText } from '$lib/util/say';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
-import { rollPool } from '$lib/rules/dice';
-import { NOTE_KEY, nameFields, type RollName } from '$lib/combat/roll';
-import {
-	SPELL_OUTCOME,
-	saidNote,
-	spellRollName,
-	upcastPreview,
-	type SpellOutcomeKind,
-} from './spell-roll-name';
+import { NOTE_KEY } from '$lib/combat/roll';
+import { upcastPreview } from './spell-roll-name';
 import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { SpellcastingClass } from '$lib/character/spellcasting';
 import type { ResourceDef } from '$lib/effects/facts';
 import {
-	wantsTray,
 	durationToRounds,
-	netAdvantage,
-	NO_ROLL_EFFECTS,
-	type RollEffects,
 	enhancementTokens,
 	casterForSpell,
 	canTogglePreparedFor,
-	formatDamageParts,
-	rollDamageParts,
-	dealsDamage,
-	dieModsOf,
 	type DamagePart,
-	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
 	type Attack,
 	UNARMED_STRIKE_ID,
 } from '$lib/combat/helpers';
-import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import type { ExprContext } from '$lib/effects/expression-evaluator';
-import { evalUpcast, combinePools } from '$lib/effects/upcast';
-
-/** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
- *  `damage:cold:…` routes to the cold part), the slot it came out of, and the provenance the roll
- *  records about it (item 4). */
-type UpcastCast = {
-	deltas: DamagePart[];
-	/** The slot it was cast from, when that is ABOVE the spell's own level. Absent at the base slot,
-	 *  which is what decides whether the roll's name carries a "(slot N)" at all. */
-	upcastSlot?: number;
-	/** The roll's provenance as FACTS — said at the card, never written into `log.jsonl` as English
-	 *  (`internals/roller.md` ▸ Conventions). */
-	noteParts: SaidText[];
-};
+import { evalUpcast } from '$lib/effects/upcast';
+import { SpellCastRolls, type CastRollsHost, type UpcastFlatKind } from './spell-cast-rolls';
 
 /** The outcome of reserving a spell slot: the slot key to spend (`null` = nothing to spend), or
  *  blocked because none remain. Two SHAPES rather than a `'blocked'` string beside the key, so a
@@ -74,12 +44,10 @@ type CastOptions = { ritual?: boolean; slot?: number; pool?: string; weapon?: st
 
 /** What casting needs from the sheet around it. A narrow structural interface rather than the VM
  *  class, so this module does not import the thing that imports it. */
-export interface CastingHost {
+export interface CastingHost extends CastRollsHost {
 	character: Character | null;
-	sheet: CharacterSheet | null;
 	graph: ContentGraph | null;
 	round: number;
-	journal: RollJournal;
 	economy: TurnEconomy;
 	/** The pool half of a cast (FEAT-FREE-CAST) — what it takes to pay with one, and nothing else. */
 	resources: {
@@ -90,19 +58,15 @@ export interface CastingHost {
 	/** The attacks the sheet shows — the weapons a magic-weapon buff can be laid on. */
 	attacks: Attack[];
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
-	effectsFor(key: string, scopes?: Set<string>): RollEffects;
 	removeLinkedEffect(ref: string): void;
-	openRoll(spec: RollSpec, e: Event): void;
-	openMenu(kind: MenuKind, e: Event): void;
 }
 
-/** What a cast is IN SCOPE of, so a bonus can name one spell (`flat_bonus:damage.eldritch_blast+3`,
- *  Agonizing Blast) instead of every roll the character makes. The spell's own id — the same
- *  vocabulary a weapon's id and its tags use, because a scope is a name, not an enum. */
-const spellScopes = (r: SpellRow): Set<string> => new Set([r.id]);
-
 export class SpellCasting {
-	constructor(private host: CastingHost) {}
+	/** The rolls a cast makes. Built in the constructor, where `host` is already assigned. */
+	private rolls: SpellCastRolls;
+	constructor(private host: CastingHost) {
+		this.rolls = new SpellCastRolls(host, this);
+	}
 
 	/** Casting applies the spell's OWN effect tokens (EFX-2): they become a runtime effect on self,
 	 *  expiring per the spell's duration text; linked via `source: r.ref` so dropping/replacing
@@ -220,43 +184,6 @@ export class SpellCasting {
 		return slot != null ? Number(slot) : baseLevel;
 	}
 
-	/** The roll half of a cast: an attack spell rolls its TO-HIT (attack-keyed effects) then queued
-	 *  damage; a damage/heal spell rolls its dice (auto = healing + spellcasting mod); a no-roll cast
-	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
-	/** Attack spell (r.resolution === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
-	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
-	/** A spell's typed damage parts for the roll path (item 2): base parts (`r.damageParts`) with the
-	 *  upcast deltas folded in BY TYPE — an untyped delta (`damage:per_slot`) onto the primary part, a
-	 *  typed one (`damage:cold:per_slot` — Ice Knife) onto the part sharing its type, or as its OWN new
-	 *  part when the base can't supply that type (N4/N9: Web adds fire to a fire-less base). `primaryFx`
-	 *  (damage effects, or the heal's spellcasting-mod flat) rides the PRIMARY part only — RAW adds a
-	 *  damage bonus / the ability mod once, to the base, never to a second type's dice. */
-	private spellDamageParts(
-		r: SpellRow,
-		primaryFx: RollEffects,
-		deltas: DamagePart[],
-	): DamagePartSpec[] {
-		const parts: DamagePart[] = r.damageParts.map((p) => ({
-			pool: { ...p.pool },
-			mod: p.mod,
-			type: p.type,
-		}));
-		for (const d of deltas) {
-			const idx = d.type ? parts.findIndex((p) => p.type === d.type) : 0;
-			const hit = idx >= 0 ? parts[idx] : undefined;
-			if (hit) {
-				const merged = combinePools(hit.pool, hit.mod, d.pool, d.mod);
-				parts[idx] = { pool: merged.pool, mod: merged.flat, type: hit.type };
-			} else parts.push({ pool: { ...d.pool }, mod: d.mod, type: d.type });
-		}
-		return parts.map((p, i) => ({
-			dice: p.pool,
-			mod: p.mod + (i === 0 ? primaryFx.flat : 0),
-			type: p.type,
-			...(i === 0 ? { bonusDice: primaryFx.bonusDice, mods: primaryFx } : {}),
-		}));
-	}
-
 	/** The ephemeral cast ctx for evaluating a spell's `upcast` (§4/§5): the post-derive sheet ctx
 	 *  wrapped with the cast-only `{slot, spell_level}` vars, AND `spellcasting_mod` re-pointed at the
 	 *  class the spell is CAST AS (`casterForSpell`) rather than the primary caster — so a formula
@@ -286,11 +213,7 @@ export class SpellCasting {
 	 *  `enhancement` bonus a magic-weapon buff confers at this slot (Magic Weapon +1/+2/+3 — an
 	 *  `absolute` kind, so the formula already gives the full value). Broken tokens degrade (toast),
 	 *  never a wrong number (H11). */
-	private upcastFlatDelta(
-		r: SpellRow,
-		slotLevel: number,
-		kind: 'hp_max' | 'temp_hp' | 'enhancement',
-	): number {
+	upcastFlatDelta(r: SpellRow, slotLevel: number, kind: UpcastFlatKind): number {
 		let acc = 0;
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
@@ -310,7 +233,7 @@ export class SpellCasting {
 	 *  (castCtx is always present — upcast isn't gated on auto-calc). count/area/duration are handled
 	 *  elsewhere. A zero delta (base slot) is dropped so it adds no phantom part. A broken formula
 	 *  degrades (toast + base only, H11), never silently-wrong dice. */
-	private upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
+	upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
 		const out: DamagePart[] = [];
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
@@ -322,185 +245,6 @@ export class SpellCasting {
 			out.push({ pool: res.pool, mod: res.flat, type: res.type ?? '' });
 		}
 		return out;
-	}
-
-	private rollSpellAttack(
-		r: SpellRow,
-		e: Event,
-		caster: SpellcastingClass,
-		cast: { up: UpcastCast; times: number },
-	): void {
-		const { up, times } = cast;
-		const scopes = spellScopes(r);
-		const fx = this.host.effectsFor('attack', scopes);
-		const dmgFx = this.host.effectsFor('damage', scopes);
-		const toHit = caster.attack.value + fx.flat;
-		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
-		const hasDmg = dealsDamage(parts);
-		// The spell's own name and nothing appended: the card already says TO HIT above the number, so
-		// "(spell attack)" restated in the label what the row's own captions say — and it said it twice
-		// over on an action that throws more than once. A weapon attack has always logged just its name.
-		const label = { text: r.name };
-		if (wantsTray(e)) {
-			this.host.openRoll(
-				{
-					// the NAME as fields, never a finished sentence: the tray carries the key and its values
-					// into the recorded row, so a roll sent through the tray reads in the language the log is
-					// READ in — the same record the instant path below writes
-					...nameFields(label),
-					test: {
-						dice: { 20: 1 },
-						mod: toHit,
-						advantage: netAdvantage(fx),
-						bonusDice: fx.bonusDice,
-						mods: dieModsOf(fx),
-					},
-					...(hasDmg ? { damage: parts } : {}),
-					// the tray's note is an editable PILL — the moment provenance lands there it is the
-					// player's own text, so it is said once here rather than carried as facts
-					...(saidNote(up.noteParts) ? { note: saidNote(up.noteParts) } : {}),
-					...(times > 1 ? { times } : {}),
-				},
-				e,
-			);
-		} else {
-			// N beams = N separate attacks, each with its own to-hit and its own damage — one action, so
-			// one toast, N log lines. This used to roll ONE and ask the player to roll the rest by hand.
-			this.host.journal.pushVolley(
-				label,
-				times,
-				() => ({
-					r: rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
-					...(hasDmg ? { damage: rollDamageParts(parts) } : {}),
-				}),
-				up.noteParts,
-			);
-		}
-	}
-
-	/** The typed roll parts + kind label for a non-attack cast: a `save` deals damage, `auto` heals,
-	 *  `temp` grants temporary HP. A DICE heal (Cure Wounds "1d8 + mod") adds the spellcasting mod; a
-	 *  FLAT heal (Heal's 70) and temp HP (False Life) do NOT — in SRD the ability mod rides dice-valued
-	 *  HEALING only (item 6). Damage effects never ride a heal / temp-HP roll, so its "primary fx" is
-	 *  just that mod (0 for temp) as a flat. temp HP scales via its OWN `temp_hp` upcast delta, damage /
-	 *  heal via the typed damage/heal delta pool (item 3). */
-	private spellOutcomeParts(
-		r: SpellRow,
-		caster: SpellcastingClass | undefined,
-		up: UpcastCast,
-		slotLevel: number,
-	): { parts: DamagePartSpec[]; kind: SpellOutcomeKind } {
-		const heal = r.resolution === 'auto';
-		const temp = r.resolution === 'temp';
-		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
-		const healMod =
-			heal && healDice && caster ? (this.host.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-		const primaryFx: RollEffects =
-			heal || temp
-				? { ...NO_ROLL_EFFECTS, flat: healMod }
-				: this.host.effectsFor('damage', spellScopes(r));
-		const tempDelta = temp ? this.upcastFlatDelta(r, slotLevel, 'temp_hp') : 0;
-		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
-		return {
-			parts: this.spellDamageParts(r, primaryFx, deltas),
-			kind: temp ? SPELL_OUTCOME.tempHp : heal ? SPELL_OUTCOME.healing : SPELL_OUTCOME.damage,
-		};
-	}
-
-	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
-		const caster =
-			casterForSpell(this.host.sheet, r.ref) ?? this.host.sheet?.spellcasting.classes[0];
-		// the upcast contribution + its provenance tag (B8): when actually upcast, the suffix names the
-		// slot AND what it added ("(slot 5 · +2d6)") — reusing castPreview — so the roll log / toast
-		// explains the boosted total instead of a bare number.
-		const preview = slotLevel > r.level ? this.castPreview(r, slotLevel) : '';
-		const deltas = this.upcastDamageParts(r, slotLevel);
-		// item 4: a fuller provenance line for the roll log — the boosted dice split into base + upcast,
-		// so a bigger total is explained ("8d6 fire base + 2d6 fire @ slot 5"), not just tagged with the slot.
-		// a damage string the parse could not fully read is a CONTENT defect, and it rides the same
-		// provenance line rather than waiting to be noticed as a total that came out short
-		const unread = r.damageParts.flatMap((p) => p.issues ?? []);
-		const noteParts: SaidText[] = [
-			...(deltas.length && r.damageParts.length
-				? [
-						{
-							key: NOTE_KEY.upcast,
-							values: {
-								base: formatDamageParts(r.damageParts),
-								added: formatDamageParts(deltas),
-								slot: slotLevel,
-							},
-						},
-					]
-				: []),
-			...(preview ? [{ key: NOTE_KEY.upcastPreview, values: { preview } }] : []),
-			...(unread.length
-				? [{ key: NOTE_KEY.damageUnread, values: { fragments: { list: unread } } }]
-				: []),
-		];
-		const up: UpcastCast = {
-			deltas,
-			...(slotLevel > r.level ? { upcastSlot: slotLevel } : {}),
-			noteParts,
-		};
-		if (r.resolution === 'hit' && caster) {
-			this.rollSpellAttack(r, e, caster, { up, times: this.volleyOf(r, slotLevel) });
-			return;
-		}
-		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
-		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
-			this.rollDamageEntry(spellRollName(r.name, kind, up.upcastSlot), parts, e, up.noteParts);
-		} else {
-			// a cast with no roll (buff/utility): a bare log marker, not a rolled total. The spell's own
-			// name is DATA and rides as a value; whether it was a ritual picks the whole phrase, because
-			// a parenthetical tacked onto a translated sentence is not one a translator can move.
-			const suffix = ritual ? ' (ritual)' : '';
-			this.host.journal.logMarker({
-				text: `Cast ${r.name}${suffix}`,
-				key: ritual ? 'combat.log.castRitual' : 'combat.log.cast',
-				values: { name: r.name },
-			});
-			toast(t('combat.notice.castSpell', { name: r.name, suffix }));
-		}
-	}
-
-	/** Roll a spell's damage/heal from its typed parts: the FIRST part is the primary (rolled + shown as
-	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). A tray
-	 *  intent (`wantsTray(e)` — Shift-click) opens the prefilled tray instead of rolling instantly
-	 *  (queuing the rest as its follow-up). */
-	private rollDamageEntry(
-		name: RollName,
-		parts: DamagePartSpec[],
-		e: Event,
-		noteParts: SaidText[],
-	): void {
-		const [primary, ...rest] = parts;
-		if (!primary) return;
-		if (wantsTray(e)) {
-			// EVERY part is damage — there is no d20 here. The tray used to put the primary part on the
-			// pool it built the to-hit from, which under the roller's line model would give a Fireball an
-			// advantage toggle and a to-hit total.
-			const note = saidNote(noteParts);
-			// a spell's NAME is data and the phrase around it is a key — both travel, on this path too
-			this.host.journal.prefill({
-				...nameFields(name),
-				damage: parts,
-				...(note ? { note } : {}),
-			});
-			this.host.openMenu('dice', e);
-		} else {
-			this.host.journal.pushRoll(
-				// a spell's NAME is DATA — a content row's own word; the phrase around it is a key
-				name,
-				rollPool(primary.dice, {
-					...(primary.mods ?? {}),
-					mod: primary.mod,
-					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
-				}),
-				rest.length ? rollDamageParts(rest) : undefined,
-				noteParts,
-			);
-		}
 	}
 
 	/** Every slot level this spell can be cast from right now (the upcast picker's options; a UI can
@@ -637,13 +381,13 @@ export class SpellCasting {
 			this.host.character.play.concentration = r.ref;
 		}
 		this.applySpellEffect(r, slotLevel, settled.weapon);
-		this.rollSpellCast(r, e, ritual, slotLevel);
+		this.rolls.rollSpellCast(r, e, ritual, slotLevel);
 	};
 
 	/** How many instances this cast fires — Eldritch Blast's beams at level 5. A `count` upcast result
 	 *  IS a volley, which the roller rolls (`×N`, one action, N records). It used to be a toast asking
 	 *  the player to roll the rest by hand, because the per-instance roller did not exist yet. */
-	private volleyOf(r: SpellRow, slotLevel: number): number {
+	volleyOf(r: SpellRow, slotLevel: number): number {
 		for (const res of this.evalUpcastAt(r, slotLevel))
 			if (!('error' in res) && res.kind === 'count' && res.flat > 1) return res.flat;
 		return 1;
@@ -671,6 +415,4 @@ export class SpellCasting {
 		}
 		if (sp) sp.prepared = !sp.prepared;
 	};
-
-	// attacks (equipped weapons + Unarmed Strike) — pure builder in helpers
 }
