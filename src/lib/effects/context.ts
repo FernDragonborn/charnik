@@ -80,34 +80,25 @@ function abilityNumber(name: string, build: BuildVars): number | undefined {
 	return m[2] === 'mod' ? build.abilityMods[ab] : build.abilityScores[ab];
 }
 
+/** The scalar numeric variables, each as how it is read. A play variable reads 0 with no play state. */
+const SCALAR_NUMBERS: Record<string, (build: BuildVars, play?: PlayVars) => number> = {
+	level: (build) => build.level,
+	proficiency_bonus: (build) => build.proficiencyBonus,
+	spellcasting_mod: (build) => build.spellcastingMod,
+	base_speed: (build) => build.baseSpeed,
+	// 0 outside an item that was answered: a `+1/+2/+3` row whose player has not said which one
+	// they found grants nothing, rather than the app choosing the smallest for them
+	item_bonus: () => 0,
+	hp: (_, play) => play?.hp ?? 0,
+	hp_max: (_, play) => play?.hpMax ?? 0,
+	temp_hp: (_, play) => play?.tempHp ?? 0,
+	exhaustion: (_, play) => play?.exhaustion ?? 0,
+	hp_percent: (_, play) => (play && play.hpMax > 0 ? Math.floor((play.hp / play.hpMax) * 100) : 0),
+};
+
 /** The scalar numeric variables (`level`, `hp`, `hp_percent`, …) → value, or undefined. */
 function scalarNumber(name: string, build: BuildVars, play?: PlayVars): number | undefined {
-	switch (name) {
-		case 'level':
-			return build.level;
-		case 'proficiency_bonus':
-			return build.proficiencyBonus;
-		case 'spellcasting_mod':
-			return build.spellcastingMod;
-		case 'base_speed':
-			return build.baseSpeed;
-		// 0 outside an item that was answered: a `+1/+2/+3` row whose player has not said which one
-		// they found grants nothing, rather than the app choosing the smallest for them
-		case 'item_bonus':
-			return 0;
-		case 'hp':
-			return play?.hp ?? 0;
-		case 'hp_max':
-			return play?.hpMax ?? 0;
-		case 'temp_hp':
-			return play?.tempHp ?? 0;
-		case 'exhaustion':
-			return play?.exhaustion ?? 0;
-		case 'hp_percent':
-			return play && play.hpMax > 0 ? Math.floor((play.hp / play.hpMax) * 100) : 0;
-		default:
-			return undefined;
-	}
+	return own(SCALAR_NUMBERS, name)?.(build, play);
 }
 
 /**

@@ -419,6 +419,36 @@ export function weaponProfGrants(
 	);
 }
 
+/** What a weapon's own tokens add to its own attack — nothing until an attunement it requires is
+ *  held. The one variable those tokens may read is which `+N` the player said this copy is. */
+function ownWeaponBonus(
+	effects: Parameters<typeof weaponBonus>[0],
+	item: ReturnType<typeof resolveItem>,
+	inv: Character['build']['inventory'][number],
+): ReturnType<typeof weaponBonus> {
+	if (needsAttunement(item) && !inv.attuned)
+		return {
+			attack: 0,
+			damage: 0,
+			notes: [attackNote(ATTACK_NOTE.notAttuned, 'Not attuned — its magic does nothing')],
+		};
+	return weaponBonus(
+		effects,
+		inv.bonus === undefined ? undefined : withItemBonus(NO_VARS, inv.bonus),
+	);
+}
+
+/** A damage string the parse could not fully read is a CONTENT defect, and it must be visible on the
+ *  sheet rather than at the moment the number comes out one short. */
+function damageUnreadNote(parts: ReturnType<typeof parseDamageParts>) {
+	const unread = parts.flatMap((p) => p.issues ?? []);
+	if (!unread.length) return undefined;
+	const fragments = unread.map((u) => `“${u}”`).join(', ');
+	return attackNote(ATTACK_NOTE.damageUnread, `Damage not fully read — ${fragments} ignored`, {
+		fragments,
+	});
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -461,18 +491,7 @@ export function computeAttacks(
 		// The weapon's own bonus never reaches the global facts (D9 keeps it on this row), so the gate
 		// the gather applies to every other item has to be applied here too — and SAID, because an
 		// inactive +1 is indistinguishable from a weapon that never had one.
-		const attunementHeld = !needsAttunement(item) || inv.attuned;
-		// the one variable this weapon's own tokens may read: which `+N` the player said it is
-		const w = attunementHeld
-			? weaponBonus(
-					row.data.effects,
-					inv.bonus === undefined ? undefined : withItemBonus(NO_VARS, inv.bonus),
-				)
-			: {
-					attack: 0,
-					damage: 0,
-					notes: [attackNote(ATTACK_NOTE.notAttuned, 'Not attuned — its magic does nothing')],
-				};
+		const w = ownWeaponBonus(row.data.effects, item, inv);
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
@@ -497,15 +516,7 @@ export function computeAttacks(
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
 		const parts = parseDamageParts(item.damage);
-		// a damage string the parse could not fully read is a CONTENT defect, and it must be visible
-		// on the sheet rather than at the moment the number comes out one short
-		const unread = parts.flatMap((p) => p.issues ?? []);
-		const unreadList = unread.map((u) => `“${u}”`).join(', ');
-		const damageNote = unread.length
-			? attackNote(ATTACK_NOTE.damageUnread, `Damage not fully read — ${unreadList} ignored`, {
-					fragments: unreadList,
-				})
-			: undefined;
+		const damageNote = damageUnreadNote(parts);
 		const notes = [
 			...(w.notes ?? []),
 			...scoped.notes,
