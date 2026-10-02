@@ -63,6 +63,13 @@ const wantsTray = { shiftKey: true } as unknown as Event;
 
 // the cast layer composes its roll NAMES and its upcast preview through the catalog, so a node test
 // with no locale would see keys instead of the composition it is asserting on
+// The roll log is a rolling window of the last hundred lines, and the VM is one shared instance:
+// a test that counts what it added must start from an empty log, or the window drops the lines it
+// is counting.
+beforeEach(() => {
+	combat.journal.log = [];
+});
+
 beforeAll(async () => {
 	await startI18n('en');
 	void locale.set('en');

@@ -71,19 +71,18 @@ stay semi-manual.
   **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
   and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
 
-- [ ] **DAMAGE-TYPE-UI · taking damage names a type, and says what the defence does before the
-  press, but no more than that.** `damageTypeOptions` offers the types this character has any
-  defence for, `applyDamageSensitivity` halves, doubles or zeroes accordingly, and
-  `HitPoints.damagePreview` shows the result under the picker ("Resistant: 13 → 6") while the amount
-  is still being typed. What is left:
-  - **Nothing records damage TAKEN.** The roll journal holds rolls; a Damage press changes hit points
-    and writes no entry anywhere, so there is no log that could say what the damage was. Offering
-    every type in the picker buys nothing until such a record exists — a type with no defence
-    resolves exactly as untyped — so it waits for the record rather than coming first.
-  - **One press is one type.** A hit that deals two types (a flame tongue's slashing + fire against a
-    creature resistant to one of them) has no form, and that is the case a tracker exists for.
-  A play-tracker SUGGESTS and never auto-applies, so the shape is a pre-filled answer the player
-  confirms, not a computed total applied for them.
+- [~] **DAMAGE-TYPE-UI · a hit says what it was, and one press takes more than one type; its LOOK was picked by nobody.**
+  A Damage press records each part in the roll log — how much, of what type, and the defense that
+  changed the number — and a `+` beside the type picker adds a further part with its own amount and
+  type, so a flame tongue's slashing and fire are ONE hit: each part meets its own defense, and temp
+  HP, the concentration save and instant death are asked of the total
+  (`../internals/characters.md` ▸ A tracker surfaces). The picker offers every damage type, the
+  defended ones first. What is left:
+  - **The second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
+    an amount, a type and an ✕ under the first picker. It adds a control to a panel the playtest
+    already called crowded, so it wants looking at with COMBAT-RAIL rather than on its own.
+  - **Healing is not recorded.** The log says what was taken and not what was restored; a Heal
+    press is the same kind of fact and has no line.
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all

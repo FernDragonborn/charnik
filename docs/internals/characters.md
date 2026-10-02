@@ -218,6 +218,13 @@ disappearing and the press one step above it is a save — a spell dropped on pu
 to a bad roll must not look alike. Every other way it ends stays silent: 0 HP, an incapacitating
 state, a replacing cast and a rest are all consequences of something the player just watched happen.
 
+**A hit is one event, however many types it deals.** The Damage press takes a list of parts — the
+number field and its type, plus any the player added — and each part meets its own defense before
+they are summed; temp HP, the concentration save and instant death are then asked ONCE, of the
+total, because that is what one hit is. Each part leaves a line in the roll log saying what it was
+(`combat.log.damageTaken*`: a key and its values, the type after a separator rather than inside the
+phrase), which is the only record of what the damage WAS — the hit points say what was left.
+
 **Several saves for one lump of equal projectiles is deliberately not built.** Magic Missile's darts
 each raise their own save in 2014; the way to say that is to press Damage once per dart, which is the
 same path different SOURCES already take. A segmented "how many saves" control would stand on the

@@ -629,6 +629,8 @@
 			"proficiency": "Володіння"
 		},
 		"hp": {
+			"addDamageType": "Додати до цього удару ще один тип шкоди",
+			"removeDamageType": "Прибрати цей тип шкоди",
 			"concentrationCheck": "Перевірка концентрації",
 			"concentrationDc": "СК рятівного кидка на концентрацію",
 			"damage": "Шкода",
@@ -701,6 +703,13 @@
 			"weight": "{carried} / {capacity} фунтів"
 		},
 		"log": {
+			"damageTaken": "Отримано шкоди: {final}",
+			"damageTakenTyped": "Отримано шкоди: {final} · {type}",
+			"damageTakenDefended": {
+				"immune": "Отримано шкоди: {final} із {raw} · {type} · імунітет",
+				"resist": "Отримано шкоди: {final} із {raw} · {type} · опір",
+				"vulnerable": "Отримано шкоди: {final} із {raw} · {type} · вразливість"
+			},
 			"cast": "Накладено {name}",
 			"castRitual": "Накладено {name} (ритуал)",
 			"dismiss": "Закрити",

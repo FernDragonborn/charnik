@@ -24,6 +24,8 @@ import { effectiveHpMax } from '$lib/rules/core';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { RollJournal } from './roll-journal.svelte';
+import type { RollName } from '$lib/combat/roll';
+import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
@@ -38,6 +40,43 @@ export interface DamagePreview {
 	raw: number;
 	final: number;
 	bucket: Exclude<SensitivityBucket, null>;
+}
+
+/** One typed part of a hit as the player enters it. */
+export interface DamagePartInput {
+	amount: number;
+	type: string | null;
+}
+
+/** The same part against the character's defenses. */
+interface ResolvedDamagePart {
+	raw: number;
+	type: string | null;
+	final: number;
+	bucket: SensitivityBucket;
+}
+
+/**
+ * What a part of a hit is CALLED in the log: a catalog key and its values, never a sentence, so the
+ * record reads in the language it is read in. The type stands after a separator as a label rather
+ * than inside the phrase — a noun set into a frame is what breaks in an inflected language — and a
+ * defense that changed the number has a sentence of its own.
+ */
+function damageTakenName({ raw, type, final, bucket }: ResolvedDamagePart): RollName {
+	if (!type)
+		return { text: `Damage taken: ${final}`, key: 'combat.log.damageTaken', values: { final } };
+	const typeWord = { catalog: 'damageType', id: type };
+	return bucket
+		? {
+				text: `Damage taken: ${final} of ${raw} · ${type} (${bucket})`,
+				key: `combat.log.damageTakenDefended.${bucket}`,
+				values: { final, raw, type: typeWord },
+			}
+		: {
+				text: `Damage taken: ${final} · ${type}`,
+				key: 'combat.log.damageTakenTyped',
+				values: { final, type: typeWord },
+			};
 }
 
 /** What the HP rules need from the sheet around them. */
@@ -94,12 +133,13 @@ export class HitPoints {
 		const p = this.host().character?.play;
 		if (p && p.hp.current > this.hpMax) p.hp.current = this.hpMax;
 	};
-	/** The damage types the character has ANY defense for — the only ones worth offering in the
-	 *  type picker (any other type resolves identically to untyped). Empty → no picker shown. */
+	/** The damage types a hit can be said to be: the ones this character has a defense for first —
+	 *  those change the number — then the rest of the game's types, which change only what the log
+	 *  records the damage as. */
 	get damageTypeOptions(): string[] {
 		const d = this.host().sheet?.damageSensitivities;
-		if (!d) return [];
-		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
+		const defended = d ? [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort() : [];
+		return [...defended, ...DAMAGE_TYPES.filter((type) => !defended.includes(type))];
 	}
 	/** The number field as a whole, non-negative amount of hit points. */
 	private get enteredAmount(): number {
@@ -109,10 +149,34 @@ export class HitPoints {
 	 *  player sees "12 → 6" rather than finding out from the HP bar. Null when the defence changes
 	 *  nothing — no type, no defence against it, or no amount yet. */
 	get damagePreview(): DamagePreview | null {
-		const raw = this.enteredAmount;
-		const defenses = this.host().sheet?.damageSensitivities ?? NO_DEFENSES;
-		const { final, bucket } = applyDamageSensitivity(raw, this.damageType, defenses);
+		return this.previewOf({ amount: this.hpAmount, type: this.damageType });
+	}
+	/** The same answer for any one part of the hit. */
+	previewOf = (part: DamagePartInput): DamagePreview | null => {
+		const { raw, final, bucket } = this.resolve(part);
 		return raw > 0 && bucket ? { raw, final, bucket } : null;
+	};
+
+	/**
+	 * The FURTHER parts of the hit being entered, when it deals more than one type — a flame tongue's
+	 * slashing and its fire. The number field and the type picker above are the first part; each of
+	 * these is another amount with its own type, and its own defense. One press takes them all as ONE
+	 * hit: temp HP, the concentration save and instant death are asked of the total. Cleared by the
+	 * press, like the crit answer.
+	 */
+	moreParts = $state<DamagePartInput[]>([]);
+	addPart = () => {
+		this.moreParts = [...this.moreParts, { amount: 1, type: null }];
+	};
+	removePart = (index: number) => {
+		this.moreParts = this.moreParts.filter((_, i) => i !== index);
+	};
+
+	/** One part of a hit against this character's defenses: what was dealt, what it takes. */
+	private resolve(part: DamagePartInput): ResolvedDamagePart {
+		const raw = Math.max(0, Math.round(part.amount || 0));
+		const defenses = this.host().sheet?.damageSensitivities ?? NO_DEFENSES;
+		return { raw, type: part.type, ...applyDamageSensitivity(raw, part.type, defenses) };
 	}
 	/** Was the hit that is being entered a CRITICAL? Only asked at 0 HP, where it is the difference
 	 *  between one death-save failure and two — the Damage button has no attack behind it to read
@@ -162,10 +226,16 @@ export class HitPoints {
 	damage = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
-		const raw = this.enteredAmount;
-		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
-		const defenses = this.host().sheet?.damageSensitivities ?? NO_DEFENSES;
-		const taken = applyDamageSensitivity(raw, this.damageType, defenses).final;
+		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering) —
+		// each part against its own type, and the hit is their sum.
+		const parts = [{ amount: this.hpAmount, type: this.damageType }, ...this.moreParts].map(
+			(part) => this.resolve(part),
+		);
+		const taken = parts.reduce((sum, part) => sum + part.final, 0);
+		// what the damage WAS is recorded, part by part: the hit points only say what was left
+		for (const part of parts)
+			if (part.raw > 0) this.host().journal.logMarker(damageTakenName(part));
+		this.moreParts = [];
 		let n = taken;
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;

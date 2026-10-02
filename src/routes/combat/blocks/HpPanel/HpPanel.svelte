@@ -66,9 +66,10 @@
 			{$_('combat.hp.wasCritical')}
 		</label>
 	{/if}
-	{#if combat.damageTypeOptions.length}
-		<!-- B20: only shown when the sheet HAS a defense — picks the incoming damage's type so
-		     resist (½) / immune (0) / vulnerable (×2) apply. Untyped = plain damage. -->
+	<!-- B20: what the incoming damage IS. A type the sheet has a defense for changes the number —
+	     resist (½) / immune (0) / vulnerable (×2) — and those are listed first; any other is what the
+	     log records the hit as. Untyped = plain damage. -->
+	<div class="hp-type-row">
 		<select
 			class="hp-damage-type"
 			bind:value={combat.damageType}
@@ -79,18 +80,53 @@
 				<option value={t}>{damageTypeLabel(t, $_)}</option>
 			{/each}
 		</select>
-		<!-- what the press WILL take, before it is pressed: a tracker surfaces and the player confirms -->
-		<p class="hp-damage-preview" aria-live="polite">
-			{#if combat.hp.damagePreview}
-				{@const preview = combat.hp.damagePreview}
+		<!-- a hit of two types is ONE hit: each part meets its own defense, the press takes the sum -->
+		<button
+			class="hp-part-add"
+			onclick={combat.hp.addPart}
+			title={$_('combat.hp.addDamageType')}
+			aria-label={$_('combat.hp.addDamageType')}><Icon name="plus" size={12} /></button
+		>
+	</div>
+	{#each combat.hp.moreParts as part, index (index)}
+		<div class="hp-type-row">
+			<input
+				class="hp-number part"
+				type="number"
+				min="0"
+				bind:value={part.amount}
+				aria-label={$_('combat.hp.hpAmount')}
+			/>
+			<select
+				class="hp-damage-type"
+				bind:value={part.type}
+				aria-label={$_('combat.hp.damageTypeLabel')}
+			>
+				<option value={null}>{$_('combat.hp.untyped')}</option>
+				{#each combat.damageTypeOptions as t (t)}
+					<option value={t}>{damageTypeLabel(t, $_)}</option>
+				{/each}
+			</select>
+			<button
+				class="hp-part-add"
+				onclick={() => combat.hp.removePart(index)}
+				title={$_('combat.hp.removeDamageType')}
+				aria-label={$_('combat.hp.removeDamageType')}><Icon name="x" size={12} /></button
+			>
+		</div>
+	{/each}
+	<!-- what the press WILL take, before it is pressed: a tracker surfaces and the player confirms -->
+	<p class="hp-damage-preview" aria-live="polite">
+		{#each [combat.hp.damagePreview, ...combat.hp.moreParts.map(combat.hp.previewOf)] as preview, index (index)}
+			{#if preview}
 				<span class={preview.final < preview.raw ? 'less' : 'more'}
 					>{$_(`combat.hp.damagePreview.${preview.bucket}`, {
 						values: { raw: preview.raw, final: preview.final },
 					})}</span
 				>
 			{/if}
-		</p>
-	{/if}
+		{/each}
+	</p>
 	<!-- B4: concentration-save banner — a thin, persistent bar shown while a CON save is DUE after
 	     taking damage while concentrating. Suggested-but-editable DC, and the PLAYER rolls it; a miss
 	     ends the spell, which is RAW and not a choice (hit-points.svelte.ts ▸ rollConcentrationSave).
@@ -321,9 +357,42 @@
 	.hp-damage-preview .more {
 		color: var(--color-danger);
 	}
-	.hp-damage-type {
+	/* the type, and the control that adds a second one, on one line; a further part repeats the line
+	   with its own amount in front */
+	.hp-type-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
 		margin-top: var(--space-1-5);
-		width: 100%;
+	}
+	/* a further part's amount: as wide as a damage number, so its type keeps the rest of the line */
+	.hp-number.part {
+		flex: none;
+		width: calc(1.5 * var(--space-8));
+	}
+	.hp-part-add {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-1);
+		border-radius: var(--radius);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-muted);
+		cursor: pointer;
+	}
+	.hp-part-add:hover,
+	.hp-part-add:focus-visible {
+		border-color: var(--color-accent);
+		color: var(--color-text);
+	}
+	.hp-damage-preview span + span {
+		margin-inline-start: var(--space-2);
+	}
+	.hp-damage-type {
+		flex: 1;
+		min-width: 0;
 		padding: var(--space-1) var(--space-2);
 		font-size: var(--font-size-xs);
 		border-radius: var(--radius);

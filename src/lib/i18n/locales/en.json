@@ -629,6 +629,8 @@
 			"proficiency": "Proficiency"
 		},
 		"hp": {
+			"addDamageType": "Add another damage type to this hit",
+			"removeDamageType": "Remove this damage type",
 			"concentrationCheck": "Concentration check",
 			"concentrationDc": "Concentration save DC",
 			"damage": "Damage",
@@ -701,6 +703,13 @@
 			"weight": "{carried} / {capacity} lb"
 		},
 		"log": {
+			"damageTaken": "Damage taken: {final}",
+			"damageTakenTyped": "Damage taken: {final} · {type}",
+			"damageTakenDefended": {
+				"immune": "Damage taken: {final} of {raw} · {type} · immune",
+				"resist": "Damage taken: {final} of {raw} · {type} · resisted",
+				"vulnerable": "Damage taken: {final} of {raw} · {type} · vulnerable"
+			},
 			"cast": "Cast {name}",
 			"castRitual": "Cast {name} (ritual)",
 			"dismiss": "Dismiss",
