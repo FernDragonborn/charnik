@@ -13,7 +13,7 @@ import { loadPacks } from '../../test-support/real-content';
 import { masteryBudget } from '../build/derive';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
-import { attackMeta, computeAttacks } from '../combat/attacks';
+import { attackMeta, attackNotes, computeAttacks } from '../combat/attacks';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from './item-tags';
 
 const S = 'SRD 5.2.1';
@@ -356,5 +356,64 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 			feats: ['two_weapon_fighting'],
 		});
 		expect(extraOf(cleave, 'greataxe')?.damageParts[0]?.mod).toBe(0);
+	});
+});
+
+/*
+ * Heavy, per edition. SRD 5.2.1: "You have Disadvantage on attack rolls with a Heavy weapon if it's
+ * a Melee weapon and your Strength score isn't at least 13 or if it's a Ranged weapon and your
+ * Dexterity score isn't at least 13." SRD 5.1: "Small creatures have disadvantage on attack rolls
+ * with heavy weapons."
+ */
+describe('weapon properties · Heavy puts disadvantage on the attacks its rule names', () => {
+	const modesOf = async (
+		pack: 'srd-2014' | 'srd-2024',
+		weapon: string,
+		{ str = 10, dex = 10, species = '', autoCalc = true } = {},
+	) => {
+		const [source, system] =
+			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
+		const graph = await loadPacks(pack);
+		const c = newCharacter('grog', 'Grog', system);
+		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.abilities = { str, dex, con: 10, int: 10, wis: 10, cha: 10 };
+		if (species) c.build.species = `species:${source}:${species}`;
+		c.build.inventory = [
+			{ item: `item:${source}:${weapon}`, qty: 1, equipped: true, attuned: false },
+		];
+		c.play.autoCalc = autoCalc;
+		const character = characterSchema.parse(c);
+		const row = computeAttacks(character, deriveSheet(character, graph), graph).find(
+			(a) => a.id === weapon,
+		);
+		expect(row, `${weapon} is an attack row`).toBeDefined();
+		return row?.rollModes ?? [];
+	};
+	const heavy = [{ mode: 'disadvantage', source: 'Heavy' }];
+
+	it('2024: a melee one asks for Strength 13, a ranged one for Dexterity 13', async () => {
+		expect(await modesOf('srd-2024', 'greataxe', { str: 12, dex: 18 })).toEqual(heavy);
+		expect(await modesOf('srd-2024', 'greataxe', { str: 13, dex: 8 })).toEqual([]);
+		expect(await modesOf('srd-2024', 'longbow', { str: 18, dex: 12 })).toEqual(heavy);
+		expect(await modesOf('srd-2024', 'longbow', { str: 8, dex: 13 })).toEqual([]);
+		// a weapon that is not Heavy is asked nothing
+		expect(await modesOf('srd-2024', 'dagger', { str: 8, dex: 8 })).toEqual([]);
+	});
+
+	it('2014: a Small creature, whatever its Strength', async () => {
+		expect(await modesOf('srd-2014', 'greataxe', { str: 18, species: 'halfling' })).toEqual(heavy);
+		expect(await modesOf('srd-2014', 'greataxe', { str: 8, species: 'human' })).toEqual([]);
+	});
+
+	it('the row says it, and the effects switch turns it off with every other effect', async () => {
+		const graph = await loadPacks('srd-2024');
+		const c = newCharacter('grog', 'Grog', '5.5e');
+		c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+		c.build.abilities = { str: 8, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }];
+		const character = characterSchema.parse(c);
+		const row = computeAttacks(character, deriveSheet(character, graph), graph)[0];
+		expect(row && attackNotes(row)).toBe('Disadvantage (Heavy)');
+		expect(await modesOf('srd-2024', 'greataxe', { str: 8, autoCalc: false })).toEqual([]);
 	});
 });

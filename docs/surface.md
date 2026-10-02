@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (76)
+## Duplicate suspects (77)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -85,6 +85,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
+- `says` ×2 — src/lib/combat/attack-properties.ts · src/routes/combat/sheet-rolls.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
@@ -772,6 +773,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface StatedValue` — One number a weapon property states about an attack, under the id its token gave it.
 - `type ExtraAttackCost` — What an extra attack costs the turn: a Bonus Action, or nothing — it rides the Attack action.
 - `interface ExtraAttack` — One more attack a weapon's property lets the character make this turn.
+- `interface AttackRollMode` — How a property makes attacks with its weapon roll, and which property says so.
 - `const masteryText` — The mastery's own words on the row: its name, then each number it states.
 - `const carriesProperty` — Does a weapon carry this property — as a plain tag, or as the mastery its tag names — and every * tag the scope asks …
 - `interface AttackPropertiesInput` — What `attackProperties` is asked about: one weapon, and the attack made with it.
@@ -1899,4 +1901,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1150 exports across 154 modules · 76 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1151 exports across 154 modules · 77 duplicate suspects._

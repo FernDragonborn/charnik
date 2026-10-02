@@ -4,9 +4,10 @@
  *
  * A property is a `weapon_property` content row keyed by the word the weapon's tag carries, and its
  * tokens are read HERE, per attack, never gathered onto the whole character: `grant_value` states a
- * number about the attack (Graze's damage on a miss, the DC Topple forces) and `extra_attack` says
- * the weapon lets you make one more. Both are evaluated with `attack_mod` answered, which is the one
- * thing the sheet-wide derive cannot know.
+ * number about the attack (Graze's damage on a miss, the DC Topple forces), `extra_attack` says
+ * the weapon lets you make one more, and `advantage` / `disadvantage` on `attack` is how attacks
+ * with this weapon roll (Heavy, for a wielder its rule names). All are evaluated with `attack_mod`
+ * answered, which is the one thing the sheet-wide derive cannot know.
  *
  * One unit because every answer here comes off the same rows and none of it changes the attack
  * itself: a property is said, or offered, never folded. A token of any other kind means nothing on
@@ -67,6 +68,15 @@ export interface ExtraAttack {
 	addsModifier: boolean;
 }
 
+/** The d20 Test target a property's roll mode is read on: attacks made with its weapon. */
+const ATTACK_TARGET = 'attack';
+
+/** How a property makes attacks with its weapon roll, and which property says so. */
+export interface AttackRollMode {
+	mode: typeof EFFECT_KIND.advantage | typeof EFFECT_KIND.disadvantage;
+	source: string;
+}
+
 /** A stated value as the row prints it: `statedValue.<id>` words the families the SRD has
  *  (`3` for a miss's damage, `CON DC 14` for a forced save), and an id no catalog knows reads as
  *  its own name beside the number. A dotted qualifier is the ability where it names one. */
@@ -89,12 +99,14 @@ export const masteryText = (mastery: WeaponMastery, translate?: Translate): stri
 interface RowStatements {
 	values: StatedValue[];
 	rules: ExtraAttackRule[];
+	/** Roll modes, each with the tags its weapon must carry (`attack.melee`). */
+	modes: (AttackRollMode & { scope?: string })[];
 	unread: string[];
 }
 
 /** Read one property row for an attack. `note:` is prose the row already shows as its text. */
 function statementsOf(row: WeaponPropertyRow, name: string, ctx: ExprContext): RowStatements {
-	const out: RowStatements = { values: [], rules: [], unread: [] };
+	const out: RowStatements = { values: [], rules: [], modes: [], unread: [] };
 	for (const raw of row.data.effects) {
 		const { guard, token } = splitGuard(raw);
 		const parsed = parseToken(token);
@@ -106,6 +118,14 @@ function statementsOf(row: WeaponPropertyRow, name: string, ctx: ExprContext): R
 		if (parsed.kind === EFFECT_KIND.extraAttack && parsed.target && parsed.extraAttack) {
 			const { target: property, extraAttack: words, scope } = parsed;
 			out.rules.push({ property, words, source: name, ...(scope ? { scope } : {}) });
+			continue;
+		}
+		if (
+			(parsed.kind === EFFECT_KIND.advantage || parsed.kind === EFFECT_KIND.disadvantage) &&
+			parsed.target === ATTACK_TARGET
+		) {
+			const { kind: mode, scope } = parsed;
+			out.modes.push({ mode, source: name, ...(scope ? { scope } : {}) });
 			continue;
 		}
 		const amount =
@@ -150,6 +170,7 @@ export interface AttackPropertiesInput {
 export function attackProperties(input: AttackPropertiesInput): {
 	mastery?: WeaponMastery;
 	extras: ExtraAttack[];
+	modes: AttackRollMode[];
 	unread: string[];
 } {
 	const { rows, tags, mod, locale } = input;
@@ -202,6 +223,11 @@ export function attackProperties(input: AttackPropertiesInput): {
 	return {
 		...(mastery ? { mastery } : {}),
 		extras,
+		modes: read.flatMap((r) =>
+			r.modes
+				.filter((mode) => inScope(tags, mode.scope))
+				.map(({ mode, source }) => ({ mode, source })),
+		),
 		// a number stated by a plain property has no word on the row to stand beside, so it is shown
 		// as the token it is — the same visible fate as any other kind this site does not read
 		unread: read.flatMap((r) =>

@@ -505,6 +505,8 @@
 			"extraAttackBonus": "Додаткова атака — бонусна дія. Шкода {damage}.",
 			"extraAttackFree": "Додаткова атака — у складі дії «Атака». Шкода {damage}.",
 			"finesseSwap": "Фінес — замах цією; натисніть, щоб {other}",
+			"noteAdvantage": "Перевага ({source})",
+			"noteDisadvantage": "Перешкода ({source})",
 			"noteAttackBonus": "{amount} до атаки",
 			"noteDamageBonus": "{amount} до шкоди",
 			"noteDamageUnread": "Шкоду прочитано не повністю — {fragments} проігноровано",

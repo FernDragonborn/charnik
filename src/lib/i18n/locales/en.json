@@ -505,6 +505,8 @@
 			"extraAttackBonus": "Extra attack — a Bonus Action. Damage {damage}.",
 			"extraAttackFree": "Extra attack — part of the Attack action. Damage {damage}.",
 			"finesseSwap": "Finesse — swung with this; tap for {other}",
+			"noteAdvantage": "Advantage ({source})",
+			"noteDisadvantage": "Disadvantage ({source})",
 			"noteAttackBonus": "{amount} attack",
 			"noteDamageBonus": "{amount} damage",
 			"noteDamageUnread": "Damage not fully read — {fragments} ignored",

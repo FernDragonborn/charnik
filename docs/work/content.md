@@ -57,6 +57,9 @@
   what it rolls — with the rules' text on hover and focus (`design-preview/builder-extra-attack.png`).
   Both costs are driven in the running app: a free one spends no slot, a Bonus Action one spends
   the pip and is refused with its reason when the pip is already gone.
+  **Heavy is a roll mode**: a guarded `disadvantage:attack` on the property's row, read per attack
+  — under Strength 13 for a melee weapon and Dexterity 13 for a ranged one in 2024, for a Small
+  creature in 2014. The row says `Disadvantage (Heavy)` and the tap rolls with it.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left, in the order it is worth doing:**
   1. **The control's LOOK is unconfirmed.** `design-preview/extra-attack-control.png` is what ships:
@@ -65,11 +68,7 @@
   2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
      names (`mechanics.md`).
-  3. **Heavy states a disadvantage its row only says.** 2024: on attack rolls with the weapon when
-     Strength (melee) or Dexterity (ranged) is under 13; 2014: for a Small creature. Both are a
-     guarded `disadvantage` read per attack, which `attack-properties.ts` does not read yet — it
-     reads `grant_value` and `extra_attack` and shows any other kind as its token.
-  4. **An attack row explains only the property it prints**, which is the weapon's first. The
+  3. **An attack row explains only the property it prints**, which is the weapon's first. The
      article explains all of them; the row's sub-line has room for one.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.

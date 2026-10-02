@@ -17,6 +17,7 @@ import {
 	attackProperties,
 	carriesProperty,
 	masteryText,
+	type AttackRollMode,
 	type ExtraAttack,
 	type WeaponMastery,
 } from './attack-properties';
@@ -27,7 +28,12 @@ import type { CharacterSheet } from '$lib/character/derive';
 import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
-import { parseToken, isWeaponOwnBonus, resolveEffectValue } from '$lib/effects/token-parser';
+import {
+	EFFECT_KIND,
+	parseToken,
+	isWeaponOwnBonus,
+	resolveEffectValue,
+} from '$lib/effects/token-parser';
 import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
@@ -61,6 +67,8 @@ const ATTACK_NOTE = {
 	noBaseWeapon: 'combat.attacks.noteNoBaseWeapon',
 	notAttuned: 'combat.attacks.noteNotAttuned',
 	damageUnread: 'combat.attacks.noteDamageUnread',
+	advantage: 'combat.attacks.noteAdvantage',
+	disadvantage: 'combat.attacks.noteDisadvantage',
 } as const;
 
 /** One line of provenance under an attack row. A rule `Note` carries its catalog key beside the
@@ -115,6 +123,10 @@ export interface Attack {
 	 *  second Light weapon in hand, Cleave's on a hit. Each is offered BESIDE the row, never rolled
 	 *  for the player. Omitted when there are none. */
 	extras?: ExtraAttackRow[];
+	/** How this weapon's own properties make its attacks roll (Heavy's disadvantage), which the roll
+	 *  path adds to whatever the sheet's effects say. Each is on the row as a note. Omitted when
+	 *  there are none. */
+	rollModes?: AttackRollMode[];
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). Read through
 	 *  `attackNotes`. Omitted when the row has nothing to explain. */
@@ -452,6 +464,12 @@ function damageUnreadNote(parts: ReturnType<typeof parseDamageParts>) {
 	});
 }
 
+/** A property's roll mode as the row says it: which way, and which property. */
+const rollModeNote = ({ mode, source }: AttackRollMode): Note =>
+	mode === EFFECT_KIND.advantage
+		? attackNote(ATTACK_NOTE.advantage, `Advantage (${source})`, { source })
+		: attackNote(ATTACK_NOTE.disadvantage, `Disadvantage (${source})`, { source });
+
 /** Every weapon in hand, resolved once — a magic weapon carries only what it adds, and the rest
  *  (category, properties, base damage) comes from the mundane row its `base_item_id` names — plus
  *  the one question a property asks across them: is a SECOND wielded weapon carrying it? Two of one
@@ -544,8 +562,11 @@ export function computeAttacks(
 			ctx: sheet.castCtx ?? NO_VARS,
 			locale,
 		});
+		// a property's roll mode is an effect like any other, so the effects switch turns it off too
+		const rollModes = character.play.autoCalc ? properties.modes : [];
 		const notes = [
 			...(w.notes ?? []),
+			...rollModes.map(rollModeNote),
 			...properties.unread.map((token) => ({ token })),
 			...scoped.notes,
 			...scopedDamage.notes,
@@ -572,6 +593,7 @@ export function computeAttacks(
 			...(properties.extras.length
 				? { extras: properties.extras.map((extra) => extraAttackRow(extra, damageParts, mod)) }
 				: {}),
+			...(rollModes.length ? { rollModes } : {}),
 			...(notes.length ? { notes } : {}),
 		});
 	}

@@ -1008,6 +1008,12 @@ disadvantage:attacked.spell        <span class="cmt">Spellguard Shield</span></c
 				the ability modifier used to make the attack roll and your Proficiency Bonus".
 			</p>
 			<p>
+				A weapon property can also say how attacks with its weapon roll:
+				<code>advantage:attack</code> or <code>disadvantage:attack</code>, with a guard for when.
+				<code>str_score&lt;13 ? disadvantage:attack.melee</code> is Heavy — the part after the dot is
+				a tag the weapon must carry too.
+			</p>
+			<p>
 				Ability names are always spelled out with what you want from them — <code>dex_mod</code>, not
 				<code>dex</code>. A bare ability name is an error on purpose, because "dexterity" alone does
 				not say modifier or score.

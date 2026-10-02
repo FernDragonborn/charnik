@@ -9,7 +9,7 @@ import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
 import type { ExtraAttackRow } from '$lib/combat/attacks';
-import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
+import { EFFECT_KIND, EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
@@ -298,7 +298,14 @@ export class SheetRolls {
 		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
 		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
 		const scopes = new Set(at.scopes);
-		const fx = this.effectsFor('attack', scopes);
+		const sheetFx = this.effectsFor('attack', scopes);
+		// what this weapon's own properties say of its attacks (Heavy) joins what the sheet says
+		const says = (mode: string) => (at.rollModes ?? []).some((own) => own.mode === mode);
+		const fx = {
+			...sheetFx,
+			advantage: sheetFx.advantage || says(EFFECT_KIND.advantage),
+			disadvantage: sheetFx.disadvantage || says(EFFECT_KIND.disadvantage),
+		};
 		const dmgFx = this.effectsFor('damage', scopes);
 		// The FLAT halves of both axes are already in the row (`computeAttacks` folds them where the
 		// weapon is known), so picking them up here would count them twice — and it is why the row can

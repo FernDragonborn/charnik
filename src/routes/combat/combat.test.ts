@@ -1218,6 +1218,15 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.journal.log.length).toBe(before + 1);
 	});
 
+	it("an attack rolls with what its weapon's own property says of it (Heavy)", () => {
+		const row = combat.attacks.find((a) => a.id === 'dagger')!;
+		combat.attackRoll(
+			{ ...row, rollModes: [{ mode: 'disadvantage', source: 'Heavy' }] },
+			noModifiers,
+		);
+		expect(combat.journal.log[0]!.advantage).toBe('disadvantage');
+	});
+
 	it('a standard action rolls its check with the skill effects the skills panel uses', () => {
 		// the Hide action IS a Stealth check: one check must not roll two ways depending on which panel
 		// the player tapped it in (2014 exhaustion L1 rides `ability_checks`)

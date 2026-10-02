@@ -273,6 +273,10 @@ Anywhere else the token is left out and flagged, because the walking speed is no
 uses. `grant_value:save_dc.con:8+attack_mod+proficiency_bonus` is Topple's "DC 8 plus the ability
 modifier used to make the attack roll and your Proficiency Bonus".
 
+A weapon property can also say how attacks with its weapon roll: `advantage:attack` or
+`disadvantage:attack`, with a guard for when. `str_score<13 ? disadvantage:attack.melee` is Heavy —
+the part after the dot is a tag the weapon must carry too.
+
 **About the item the token is on:** `item_bonus` — the `+1`, `+2` or `+3` the player said their copy
 of this item is. Write the rungs your row offers in its `bonus_choice` column (`1,2,3`, or
 `uncommon:1,rare:2,very_rare:3` if your book states a rarity for each), and the number reads 0 until
