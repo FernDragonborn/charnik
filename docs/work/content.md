@@ -62,14 +62,19 @@
   creature in 2014. The row says `Disadvantage (Heavy)` and the tap rolls with it.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left, in the order it is worth doing:**
-  1. **The control's LOOK is unconfirmed.** `design-preview/extra-attack-control.png` is what ships:
-     a gold `+ Name` beside the row, after the finesse grip. It was looked at once and picked by
-     nobody; PICK-CONTROL-STUDY (`ui.md`) is where the house pattern for a per-row control is owed.
+  1. **The control's LOOK waits on a pick between three rendered variants**, each at rest and once
+     made (`design-preview/_extra-attack-{A-chip,B-subrow,C-pip}[-made].png`). A is what ships: a
+     gold `+ Name` beside the row, after the finesse grip. B is a row of its own under the weapon
+     that says the cost and the damage on its face, where A keeps both behind a hover. C is A's
+     chip wearing the pip of the turn-bar slot it spends — the Bonus Action triangle, or the Action
+     dot for an attack that rides the Attack action — instead of a plus. It is an ACTION, not a
+     two-state choice, so PICK-CONTROL-STUDY (`ui.md`) does not settle it.
   2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
      names (`mechanics.md`).
-  3. **An attack row explains only the property it prints**, which is the weapon's first. The
-     article explains all of them; the row's sub-line has room for one.
+  3. **An attack row prints only the weapon's first property.** It explains all of them on hover
+     and focus, as the article does; the sub-line has room for one word, and which words earn the
+     space is a layout question for COMBAT-RAIL's session.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
 - [ ] **SRD-TRANSCRIPTION · shipped rows are typed by hand from the SRD, and nothing parses it.**

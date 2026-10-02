@@ -13,7 +13,7 @@ import { loadPacks } from '../../test-support/real-content';
 import { masteryBudget } from '../build/derive';
 import { newCharacter, characterSchema } from '../character/schema';
 import { deriveSheet } from '../character/derive';
-import { attackMeta, attackNotes, computeAttacks } from '../combat/attacks';
+import { attackMeta, attackNotes, attackPropertyRows, computeAttacks } from '../combat/attacks';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from './item-tags';
 
 const S = 'SRD 5.2.1';
@@ -415,5 +415,22 @@ describe('weapon properties · Heavy puts disadvantage on the attacks its rule n
 		const row = computeAttacks(character, deriveSheet(character, graph), graph)[0];
 		expect(row && attackNotes(row)).toBe('Disadvantage (Heavy)');
 		expect(await modesOf('srd-2024', 'greataxe', { str: 8, autoCalc: false })).toEqual([]);
+	});
+});
+
+describe('weapon properties · an attack row can explain every property its weapon carries', () => {
+	it('a dagger brings the rows of all three plain properties, and its mastery once drilled', async () => {
+		const graph = await loadPacks('srd-2024');
+		const rowsOf = (drilled: string[]) => {
+			const c = newCharacter('grog', 'Grog', '5.5e');
+			c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+			c.build.inventory = [{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }];
+			c.build.masteries = drilled;
+			const character = characterSchema.parse(c);
+			const row = computeAttacks(character, deriveSheet(character, graph), graph)[0];
+			return row ? attackPropertyRows(row).map((r) => r.id) : [];
+		};
+		expect(rowsOf([])).toEqual(['finesse', 'light', 'thrown']);
+		expect(rowsOf(['dagger'])).toEqual(['finesse', 'light', 'thrown', 'nick']);
 	});
 });

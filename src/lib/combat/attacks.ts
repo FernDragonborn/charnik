@@ -277,18 +277,21 @@ export interface AttackMeta {
 	kinds: string[];
 	/** The weapon's first property, name and value (`['versatile', '1d10']`). */
 	property?: [name: string, value: string];
-	/** The row that says what that property does, when a pack has one — what the surface explains
-	 *  the word with. */
-	propertyRow?: WeaponPropertyRow;
+	/** The rows that say what the weapon's plain properties do, for each one a pack describes — the
+	 *  sub-line has room to print one property, and the surface explains them all. */
+	propertyRows: WeaponPropertyRow[];
 	/** The weapon's mastery property, set ONLY when this character has drilled this kind of
 	 *  weapon — RAW the property does nothing until a feature unlocks it, so a row that printed it
 	 *  unconditionally would be offering something the character cannot do (MASTERY-HALF). */
 	mastery?: WeaponMastery;
 }
 
-/** The rows behind the property words an attack row prints — its first property, then its mastery. */
-export const attackPropertyRows = ({ meta }: Attack): WeaponPropertyRow[] =>
-	[meta.propertyRow, meta.mastery?.row].filter((row) => row !== undefined);
+/** The rows behind an attack's properties — the plain ones in the weapon's own order, then its
+ *  mastery. */
+export const attackPropertyRows = ({ meta }: Attack): WeaponPropertyRow[] => [
+	...meta.propertyRows,
+	...(meta.mastery?.row ? [meta.mastery.row] : []),
+];
 
 /** An attack row's sub-line, in the reader's language. A tag's NAME is a vocabulary and reads from
  *  the catalog; its VALUE is data (`versatile 1d10`, `thrown 20/60`) and passes through untranslated. */
@@ -314,12 +317,14 @@ function metaTags(
 ): AttackMeta {
 	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
 	const kinds = kindOrder.filter((t) => tags.has(t));
-	const property = [...tags].find(([name]) => !kinds.includes(name) && name !== ITEM_TAG.mastery);
-	const propertyRow = property && rows.get(property[0]);
+	const properties = [...tags].filter(
+		([name]) => !kinds.includes(name) && name !== ITEM_TAG.mastery,
+	);
+	const property = properties[0];
 	return {
 		kinds,
 		...(property ? { property } : {}),
-		...(propertyRow ? { propertyRow } : {}),
+		propertyRows: properties.flatMap(([name]) => rows.get(name) ?? []),
 		...(mastery ? { mastery } : {}),
 	};
 }
@@ -407,7 +412,7 @@ function unarmedStrike(sheet: CharacterSheet, prof: number, strMod: number): Att
 		toHit: strMod + prof + unarmedScoped.amount,
 		scopes: [...unarmedScopes],
 		damageParts: [{ pool: {}, mod: 1 + strMod + unarmedDamage.amount, type: 'bludgeoning' }],
-		meta: { kinds: [ITEM_TAG.melee] },
+		meta: { kinds: [ITEM_TAG.melee], propertyRows: [] },
 		...(unarmedScoped.notes.length || unarmedDamage.notes.length
 			? { notes: [...unarmedScoped.notes, ...unarmedDamage.notes] }
 			: {}),

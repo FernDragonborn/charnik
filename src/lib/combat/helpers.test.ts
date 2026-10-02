@@ -267,7 +267,7 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 			name: 'X',
 			toHit: 0,
 			damageParts: [],
-			meta: { kinds: [] },
+			meta: { kinds: [], propertyRows: [] },
 			scopes: [],
 			notes: [
 				{ text: '+1 attack', key: 'combat.attacks.noteAttackBonus', params: { amount: '+1' } },
@@ -292,7 +292,11 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 			toHit: 0,
 			damageParts: [],
 			scopes: [],
-			meta: { kinds: ['martial', 'melee'], property: ['versatile', '1d10'] as [string, string] },
+			meta: {
+				kinds: ['martial', 'melee'],
+				propertyRows: [],
+				property: ['versatile', '1d10'] as [string, string],
+			},
 		};
 		const uk: Translate = (key, o) =>
 			({
