@@ -48,6 +48,11 @@ falls off a phone screen.
   multiclass sums its grants. Graze and Topple print the number their rule works out, and the extra
   attack a property allows — Light's with a second Light weapon, Nick's free one, Cleave's — is a
   control beside the row that costs what the rule says, once a turn.
+- **Heavy weapons roll with the disadvantage their rule names** — under Strength 13 (or Dexterity
+  13 for a ranged one) in 2024, for a Small creature in 2014 — and the attack row says so.
+- **2014 magic items carry their tables.** Twelve items said "see the table" over nothing — Wand of
+  Wonder, Bag of Beans, Bag of Tricks, both staffs and the rest. A 2014 Ring of Resistance, Armor of
+  Resistance and Dragon Scale Mail now ask which damage type yours is, and resist it.
 - **Every weapon property says what it does**, in both editions: hover or tab to the word on an
   attack row, or to the Properties and Mastery cells of the item's article, and the SRD's own text
   for Finesse, Heavy, Reach, Thrown and the rest is there.

@@ -360,6 +360,10 @@ against a manifest of row counts (`charnik-content-srd` ▸ `check.mjs`).
 
 Tag every row by the SRD it came from; never claim both editions unverified.
 
+**What a pack is missing is typed by hand from the SRD, never parsed out of it.** A row, a table or
+a token is written by reading the local source (`tools/srd-src/`) and typing what it says; the
+content-repo commit quotes the sentence it stands on, and the app repo pins the result with a test.
+
 **A source's typography is not evidence, and a name becomes an id.** Extracted text splits words
 where the layout did — SRD 5.1 prints "See I nvisibility" and "Extra A ttack" — so whatever matches a
 name against a source, or derives an id from one, repairs the spacing before it compares. The cost is

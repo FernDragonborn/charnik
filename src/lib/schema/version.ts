@@ -101,7 +101,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v29: the plain weapon properties each SRD defines (Finesse, Heavy, Reach, Thrown, …) have rows in
 // both packs. An install left at v28 explains Light and no other property a weapon carries.
 // v30: Heavy puts its disadvantage on the attacks its rule names — by score in 2024, by size in 2014.
-export const CONTENT_SEED_VERSION = 30;
+// v31: twelve 2014 magic items carry the tables their text points at, and the three whose resistance
+// is the type of the copy somebody found ask for it. An install left at v30 reads "see the table"
+// over nothing.
+export const CONTENT_SEED_VERSION = 31;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

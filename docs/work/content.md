@@ -72,15 +72,17 @@
      article explains all of them; the row's sub-line has room for one.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
-- [ ] **SRD-TRANSCRIPTION · the scripts that wrote this cycle's rows were not kept.** Rows were
-  transcribed from the local SRD sources (`tools/srd-src/`, gitignored) by one-off scripts that read
-  the source text and refuse to write when the sentence a token stands on is gone. Each lives only
-  as its CSV diff and a content-repo commit message quoting the sentence: the 29 ritual tags of
-  SRD 5.1, `ritual_source` and `prepare_style` on the classes, the weapon-property rows and their
-  tokens, the climb-speed tokens, `skill_choice_kinds` and Magic Initiate's `ritual_source`.
-  Conversion belongs in a producer sibling (`../internals/content.md` ▸ Where the shipped data
-  comes from), and the maintainer has put that sibling AFTER the engine work. Until it exists a
-  re-run is a re-write: whoever regenerates a pack must carry these columns across, and the app
+- [ ] **SRD-TRANSCRIPTION · shipped rows are typed by hand from the SRD, and nothing parses it.**
+  The local sources are `tools/srd-src/` (gitignored): SRD 5.1 as PDF, HTML and text, SRD 5.2.1 as
+  Markdown. A row or a token is written by reading the source and typing what it says, and the
+  content-repo commit quotes the sentence it stands on. A script may do what is purely structural
+  — add an empty column to every row — and never reads the SRD.
+  **A source's layout is not its text.** The HTML and text conversions of SRD 5.1 split words and
+  sentences where the page did ("hit po ints", a paragraph ending mid-sentence at a column break)
+  and flatten dashes; repair those against the PDF while typing.
+  A producer sibling that converts whole chapters is put AFTER the engine work by the maintainer
+  (`../internals/content.md` ▸ Where the shipped data comes from). Until it exists a re-run is a
+  re-write: whoever regenerates a pack must carry the hand-typed columns across, and the app
   repo's content tests are what fail if they do not.
 - [ ] **RULES-TEXT · the packs carry the SRD's ROWS and none of its rules chapters.** Both packs hold
   spells, items, monsters, classes, species, feats, backgrounds, languages and states — every
@@ -117,24 +119,24 @@
 
   **Six gaps are closed, and their grammar is `../internals/effects.md` ▸ Targets:** a qualifier on
   a defence (`ac.ranged`, `saves.spell`), a choice the item asks per instance (`choice_options` +
-  `item_choice`, 5.5e only — see 2b), a bonus stated as a range (`bonus_choice` + `item_bonus`), a
+  `item_choice`), a bonus stated as a range (`bonus_choice` + `item_bonus`), a
   sense (`senses.<name>`), attack rolls made against you (`attacked`), and a movement mode stated
   as the walking speed (`speed.climb`, and the `speed` variable a mode's value may read). The roll-time control
   that would APPLY a qualified defence is deliberately not built: it needs the player to say what a
   save is against, which is a design question of its own.
 
-  2b. **The 2014 pack ships no item TABLES at all**, and twelve rows point at one. Counted rather than
-     remembered: `srd-2014/items_srd.csv` contains zero `<table>` in 419 rows, against 37 of 420 in
-     2024, and twelve 2014 rows say "see the table" / "from the options below" with nothing under
-     them — `armor_of_resistance`, `bag_of_beans`, `bag_of_tricks`, `carpet_of_flying`,
-     `dragon_scale_mail`, `luck_blade`, `manual_of_golems`, `potion_of_resistance`,
-     `sphere_of_annihilation`, `staff_of_power`, `staff_of_the_magi`, `wand_of_wonder`. This is the
-     same loss the 2014 spell lists had: the conversion that pack was produced from keeps only some
-     of each page's columns. So the 2014 half of piece 2 is not "unwritten", it
-     is **unsourced** — filling `choice_options` from the 2024 table would mix one edition's data
-     into the other, which `compatibility.md` §3b forbids by name. Transcribe the tables from
-     `SRD_CC_v5.1.pdf` (a producer sibling's job, the way the spell lists were), then the three rows
-     follow for free.
+  2b. **Sixteen 2014 items still point at a table the pack does not carry.** The twelve rows whose
+     text says "see the table" have theirs, typed by hand from SRD 5.1 as the HTML the 2024 pack
+     uses, and the three whose resistance is a per-instance choice fold it (Ring and Armor of
+     Resistance, Dragon Scale Mail — each from its OWN edition's table, `compatibility.md` §3b).
+     What is left is the items SRD 5.1 prints a table for and whose text never says so: Apparatus
+     of the Crab, Belt of Giant Strength, Candle of Invocation, Cube of Force (two), Deck of
+     Illusions, Deck of Many Things (and its Avatar of Death), Efreeti Bottle, Elemental Gem,
+     Feather Token, Figurine of Wondrous Power, Horn of Valhalla, Iron Flask, Necklace of Prayer
+     Beads, Potion of Giant Strength, Potion of Healing, Ring of Shooting Stars, Robe of Useful
+     Items and Spell Scroll. Counted off the source's own markup, not remembered. Belt of Giant
+     Strength, the two potions and Spell Scroll are the ones whose table holds NUMBERS a row
+     would fold; do those first.
 
   3. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated

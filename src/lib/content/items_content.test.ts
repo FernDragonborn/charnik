@@ -462,3 +462,77 @@ describe('a magic weapon pays out on ITSELF · D9, and the gather keeps it that 
 		expect(sheet.facts.numeric.some((f) => f.target === 'saves' && f.amount === 1)).toBe(true);
 	});
 });
+
+/*
+ * The item whose resistance is a type the one somebody FOUND names. Each SRD prints the options as a
+ * table inside the row — a d10 of ten damage types for the ring and the armor, ten dragons naming
+ * five types for the scale mail — and `choice_options` lists exactly the types that table prints.
+ */
+describe('shipped magic items · a resistance the player answers for, in both editions', () => {
+	const TEN = 'acid,cold,fire,force,lightning,necrotic,poison,psychic,radiant,thunder';
+	const ROWS = [
+		['ring_of_resistance', TEN],
+		['armor_of_resistance', TEN],
+		['dragon_scale_mail', 'acid,cold,fire,lightning,poison'],
+	] as const;
+
+	describe.each([
+		['srd-2014', 'SRD 5.1', '5e'],
+		['srd-2024', 'SRD 5.2.1', '5.5e'],
+	] as const)('%s', (pack, source, system) => {
+		it.each(ROWS)(
+			'%s offers the types its own table prints, and folds the answer',
+			async (id, options) => {
+				const graph = await loadPacks(pack);
+				const row = graph.get(`item:${source}:${id}`);
+				expect(row?.type === 'item' && row.data.choice_options).toBe(options);
+				// the table the options are read off is in the row, in the reader's sight
+				const text = row?.type === 'item' ? String(row.data.text_en) : '';
+				expect(text).toContain('<table>');
+				for (const option of options.split(','))
+					expect(text.toLowerCase()).toContain(`>${option}<`);
+
+				const worn = (choice?: string) => {
+					const c = newCharacter('w', 'Wearer', system);
+					c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+					c.build.inventory = [
+						{
+							item: `item:${source}:${id}`,
+							qty: 1,
+							equipped: true,
+							attuned: true,
+							...(choice === undefined ? {} : { choice }),
+						},
+					];
+					return deriveSheet(characterSchema.parse(c), graph).damageSensitivities.resist;
+				};
+				expect(worn()).toEqual([]);
+				expect(worn('fire')).toEqual(['fire']);
+			},
+		);
+	});
+
+	it('2014 ships the tables its rows point at', async () => {
+		const graph = await loadPacks('srd-2014');
+		const tables = (id: string) => {
+			const row = graph.get(`item:SRD 5.1:${id}`);
+			return (String(row?.type === 'item' ? row.data.text_en : '').match(/<table>/g) ?? []).length;
+		};
+		expect(
+			[
+				'armor_of_resistance',
+				'bag_of_beans',
+				'bag_of_tricks',
+				'carpet_of_flying',
+				'dragon_scale_mail',
+				'manual_of_golems',
+				'potion_of_resistance',
+				'ring_of_resistance',
+				'sphere_of_annihilation',
+				'staff_of_power',
+				'staff_of_the_magi',
+				'wand_of_wonder',
+			].map(tables),
+		).toEqual([1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+	});
+});
