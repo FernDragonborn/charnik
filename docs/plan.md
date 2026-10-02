@@ -243,8 +243,7 @@ position and are given per wave, because most of them were learned the hard way.
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting, which is
      where the next variants start.
 
-  **Deliberately not in a wave:** RULES-TEXT and the 2014 item tables.
-  Both are transcription from the SRD, not app work.
+  **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the dice tray, the chrome the
@@ -263,8 +262,8 @@ position and are given per wave, because most of them were learned the hard way.
   of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **One piece is left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): sixteen 2014 items whose SRD entry
-  prints a table the pack does not carry yet.
+  **One piece is left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
+  book and several at the table — a Belt of Giant Strength's variety sets the number.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

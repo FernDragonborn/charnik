@@ -58,8 +58,10 @@ falls off a phone screen.
   control beside the row that costs what the rule says, once a turn.
 - **Heavy weapons roll with the disadvantage their rule names** — under Strength 13 (or Dexterity
   13 for a ranged one) in 2024, for a Small creature in 2014 — and the attack row says so.
-- **2014 magic items carry their tables.** Twelve items said "see the table" over nothing — Wand of
-  Wonder, Bag of Beans, Bag of Tricks, both staffs and the rest. A 2014 Ring of Resistance, Armor of
+- **2014 magic items carry their tables.** Items said "see the table" over nothing — Wand of
+  Wonder, Bag of Beans, Bag of Tricks, both decks, both staffs and the rest; all thirty-four tables
+  are in. Six items the 2014 pack never had at all are there too: Belt of Giant Strength, Figurine of
+  Wondrous Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll. A 2014 Ring of Resistance, Armor of
   Resistance and Dragon Scale Mail now ask which damage type yours is, and resist it.
 - **Every weapon property says what it does**, in both editions: hover or tab to the word on an
   attack row, or to the Properties and Mastery cells of the item's article, and the SRD's own text

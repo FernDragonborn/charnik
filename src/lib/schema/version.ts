@@ -107,7 +107,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v32: a druid's Wild Shape is a pool with a form to assume — its uses, which beasts a level allows,
 // and whose hit points are counted, in both packs. An install left at v31 has a druid whose Wild
 // Shape is a paragraph.
-export const CONTENT_SEED_VERSION = 32;
+// v33: every table SRD 5.1 prints inside a magic item is in the 2014 pack, the six items whose
+// rarity varies have rows, and the Deck of Many Things reads through to its last card.
+export const CONTENT_SEED_VERSION = 33;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

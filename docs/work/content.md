@@ -130,18 +130,17 @@
   that would APPLY a qualified defence is deliberately not built: it needs the player to say what a
   save is against, which is a design question of its own.
 
-  2b. **Sixteen 2014 items still point at a table the pack does not carry.** The twelve rows whose
-     text says "see the table" have theirs, typed by hand from SRD 5.1 as the HTML the 2024 pack
-     uses, and the three whose resistance is a per-instance choice fold it (Ring and Armor of
-     Resistance, Dragon Scale Mail — each from its OWN edition's table, `compatibility.md` §3b).
-     What is left is the items SRD 5.1 prints a table for and whose text never says so: Apparatus
-     of the Crab, Belt of Giant Strength, Candle of Invocation, Cube of Force (two), Deck of
-     Illusions, Deck of Many Things (and its Avatar of Death), Efreeti Bottle, Elemental Gem,
-     Feather Token, Figurine of Wondrous Power, Horn of Valhalla, Iron Flask, Necklace of Prayer
-     Beads, Potion of Giant Strength, Potion of Healing, Ring of Shooting Stars, Robe of Useful
-     Items and Spell Scroll. Counted off the source's own markup, not remembered. Belt of Giant
-     Strength, the two potions and Spell Scroll are the ones whose table holds NUMBERS a row
-     would fold; do those first.
+  2b. **The 2014 pack carries every table SRD 5.1 prints inside a magic item** — thirty-four, typed
+     by hand as the HTML the 2024 pack uses and pinned by count — and the six items whose rarity
+     "varies", which the pack had no row for at all: Belt of Giant Strength, Figurine of Wondrous
+     Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll. What that
+     leaves is vocabulary, and it is the same in BOTH editions: a row that is one entry in the book
+     and several items at the table. A Belt of Giant Strength sets Strength to a number its VARIETY
+     states, an Ioun Stone does a different thing per stone, and neither `bonus_choice` (a `+N`
+     capped at ten) nor `choice_options` (a word substituted into a target) says "this variety
+     sets 23". Until one does, those rows are text in both packs.
+     The Deck of Many Things' Avatar of Death is a stat block SRD 5.1 prints inside the item; the
+     pack carries the item's text and not the stat block.
 
   3. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated

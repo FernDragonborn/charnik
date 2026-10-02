@@ -512,27 +512,78 @@ describe('shipped magic items · a resistance the player answers for, in both ed
 		);
 	});
 
-	it('2014 ships the tables its rows point at', async () => {
+	it('2014 ships the tables SRD 5.1 prints inside its magic items', async () => {
 		const graph = await loadPacks('srd-2014');
 		const tables = (id: string) => {
 			const row = graph.get(`item:SRD 5.1:${id}`);
 			return (String(row?.type === 'item' ? row.data.text_en : '').match(/<table>/g) ?? []).length;
 		};
-		expect(
-			[
-				'armor_of_resistance',
-				'bag_of_beans',
-				'bag_of_tricks',
-				'carpet_of_flying',
-				'dragon_scale_mail',
-				'manual_of_golems',
-				'potion_of_resistance',
-				'ring_of_resistance',
-				'sphere_of_annihilation',
-				'staff_of_power',
-				'staff_of_the_magi',
-				'wand_of_wonder',
-			].map(tables),
-		).toEqual([1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+		const EXPECTED: Record<string, number> = {
+			apparatus_of_the_crab: 1,
+			armor_of_resistance: 1,
+			bag_of_beans: 1,
+			bag_of_tricks: 3,
+			belt_of_giant_strength: 1,
+			candle_of_invocation: 1,
+			carpet_of_flying: 1,
+			cube_of_force: 2,
+			deck_of_illusions: 1,
+			deck_of_many_things: 1,
+			dragon_scale_mail: 1,
+			efreeti_bottle: 1,
+			elemental_gem: 1,
+			feather_token: 1,
+			// the Giant Fly's ability scores, the one stat block SRD 5.1 prints inside an item
+			figurine_of_wondrous_power: 1,
+			horn_of_valhalla: 1,
+			iron_flask: 1,
+			manual_of_golems: 1,
+			necklace_of_prayer_beads: 1,
+			potion_of_giant_strength: 1,
+			potion_of_resistance: 1,
+			potions_of_healing: 1,
+			ring_of_resistance: 1,
+			ring_of_shooting_stars: 1,
+			robe_of_useful_items: 1,
+			sphere_of_annihilation: 1,
+			spell_scroll: 1,
+			staff_of_power: 1,
+			staff_of_the_magi: 1,
+			wand_of_wonder: 1,
+		};
+		expect(Object.fromEntries(Object.keys(EXPECTED).map((id) => [id, tables(id)]))).toEqual(
+			EXPECTED,
+		);
+		// and no item table anywhere else in the pack: 34 in all
+		const all = graph
+			.list('item', { system: '5e' })
+			.reduce((n, row) => n + (String(row.data.text_en).match(/<table>/g) ?? []).length, 0);
+		expect(all).toBe(Object.values(EXPECTED).reduce((a, b) => a + b, 0));
+	});
+
+	/*
+	 * SRD 5.1 prints six magic items whose rarity "varies", and each is one entry there: Belt of
+	 * Giant Strength, Figurine of Wondrous Power, Ioun Stone, Potion of Giant Strength, Potion of
+	 * Healing and Spell Scroll. Their rarity column is blank, because the entry states one per variety.
+	 */
+	it('2014 ships the six magic items whose rarity varies', async () => {
+		const graph = await loadPacks('srd-2014');
+		for (const id of [
+			'belt_of_giant_strength',
+			'figurine_of_wondrous_power',
+			'ioun_stone',
+			'potion_of_giant_strength',
+			'potions_of_healing',
+			'spell_scroll',
+		]) {
+			const row = graph.get(`item:SRD 5.1:${id}`);
+			expect(row?.type === 'item' && row.data.text_en, id).toBeTruthy();
+			expect(row?.type === 'item' ? row.data.rarity : 'missing', id).toBeUndefined();
+		}
+		// the Deck of Many Things reads through to its last card
+		const deck = graph.get('item:SRD 5.1:deck_of_many_things');
+		expect(deck?.type === 'item' && String(deck.data.text_en)).toContain(
+			'The Void. This black card',
+		);
 	});
 });
