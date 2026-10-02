@@ -341,6 +341,34 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 		expect(extraOf(rows, 'greataxe')?.damageParts[0]?.mod).toBe(0);
 	});
 
+	/*
+	 * SRD 5.1 ▸ Fighter ▸ Fighting Style ▸ Two-Weapon Fighting: "you can add your ability modifier to
+	 * the damage of the second attack." The 2014 styles are prose inside one class-feature row, so no
+	 * shipped row can carry the token — a player says it with an effect of their own until they are.
+	 */
+	it('2014: an effect the player adds puts the modifier back, as the Two-Weapon Fighting style does', async () => {
+		const graph = await loadPacks('srd-2014');
+		const c = newCharacter('grog', 'Grog', '5e');
+		c.build.classes = [{ class: 'class:SRD 5.1:fighter', level: 1 }];
+		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [{ item: 'item:SRD 5.1:handaxe', qty: 2, equipped: true, attuned: false }];
+		const extraMod = () => {
+			const character = characterSchema.parse(c);
+			return extraOf(computeAttacks(character, deriveSheet(character, graph), graph), 'handaxe')
+				?.damageParts[0]?.mod;
+		};
+		expect(extraMod()).toBe(0);
+		c.play.effects = [
+			{
+				iid: 't',
+				label: 'Two-Weapon Fighting',
+				effects: ['extra_attack:light:modifier'],
+				positive: true,
+			},
+		];
+		expect(extraMod()).toBe(3);
+	});
+
 	it('2024: Two-Weapon Fighting puts the modifier back on the Light attack, and not on Cleave', async () => {
 		const light = await rowsFor(
 			'srd-2024',

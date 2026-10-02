@@ -71,7 +71,7 @@
      two-state choice, so PICK-CONTROL-STUDY (`ui.md`) does not settle it.
   2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
-     names (`mechanics.md`).
+     names and sizes (`mechanics.md`). A player's own effect carrying the token folds today.
   3. **An attack row prints only the weapon's first property.** It explains all of them on hover
      and focus, as the article does; the sub-line has room for one word, and which words earn the
      space is a layout question for COMBAT-RAIL's session.

@@ -103,6 +103,32 @@ stay semi-manual.
   chooser, same shape as the 2024 fighting-style feats already have. Once they are, the token is
   `reroll:damage:two_handed,melee:2` and the edition divergence is said rather than smoothed.
 
+  **Sized, by reading rather than recalling.** SRD 5.1 prints fourteen style options under three
+  class features — six for the Fighter, four each for the Paladin and the Ranger, six distinct
+  styles between them — and they are options OF a feature, not feats: 2014's feats are an optional
+  rule, and a style offered in an ASI slot would be a rule that edition does not have. So the home
+  is an option row with a parent, the shape `species_option` already is, plus a count to pick; that
+  shape is 65 references across 21 files today, which is the honest size of a second one, and a new
+  content type is not a backwards-compatible change (`../internals/content.md`). It is N2 shape 3
+  and is built once, for Metamagic and the Invocations with it.
+  **Until then a 2014 player says a style with an effect of their own**: a homebrew effect row
+  carrying `extra_attack:light:modifier` (Two-Weapon Fighting) or `reroll:damage:two_handed,melee:2`
+  folds like any other, and `mastery_content.test.ts` pins the first.
+
+- [ ] **FIGHTING-STYLE-SLOT · a 2024 class feature that grants a feat opens no slot for it.** Feat
+  slots come from three places — a class's `asi_levels`, a species' `feat_choice`, a background's
+  origin feat — and none of them is a class FEATURE. So a 2024 Fighter 1 reads "you gain a Fighting
+  Style feat of your choice" and has nowhere to choose it: the four Fighting Style feats ship with
+  their tokens, and the first slot that offers them is level 4, where taking one costs the Ability
+  Score Improvement. The same holds for the Champion's second one (level 7), the Paladin's and the
+  Ranger's (level 2).
+  **The smallest model** is the column the species already has: `feat_choice` on the class-feature
+  row, read by `FeatSlots` into one more slot whose menu is that list. It is deliberately NOT
+  built without a sign-off, because it answers for 2024 the question N2 shape 3 asks for both
+  editions, and two answers to "a feature offers a choice" is the thing to avoid. The Paladin's and
+  Ranger's alternative ("instead of choosing one of those feats, you can choose the option below")
+  is not a feat and needs shape 3 either way.
+
 - [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",
