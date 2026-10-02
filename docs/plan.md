@@ -251,9 +251,8 @@ position and are given per wave, because most of them were learned the hard way.
   add-item picker wears, and a narrow layout that is usable rather than finished. First, because
   each one is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
-  FEATURE-PASSIVES naming shape 1 and N2b (Wild Shape) no longer blocked on data — the attacks column
-  and the 116 creatures of SRD 5.1's two appendices ship, which is where every animal a 2014 druid
-  can turn into actually lives. MASTERY-HALF's tail sits here: the look of the extra attack's
+  FEATURE-PASSIVES naming shape 1, and N2b's tail — a druid assumes a form in both editions, and
+  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the look of the extra attack's
   control, the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
   ships, and what is left is a 2014 warlock's Pact of the Tome, which waits on the boon being a choice.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap

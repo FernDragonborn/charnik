@@ -100,6 +100,9 @@ export interface Spellcasting {
 	 *  "why is casting blocked" hover). Absent = not blocked. */
 	/** The worn armor and its WEIGHT class — the sentence about it is the view's to say. */
 	armorBlock?: { source: string; category: ArmorCategory };
+	/** Set while the character is in a form that cannot cast (Wild Shape, before Beast Spells): the
+	 *  stat block's name, for the same kind of rule-based block the armor one is. */
+	formBlock?: { source: string };
 }
 
 /** Does this class row cast spells at all? The ONE place the `caster !== 'none'` sentinel is compared,

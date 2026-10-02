@@ -218,6 +218,11 @@ const TAG_FORMATTERS: Partial<
 			event: say(tr, `combat.playEvent.${p.target}`, p.target.replace(/_/g, ' ')),
 			action: p.action,
 		}),
+	// one sentence of a form's rules: the form it speaks of is the readable part, the sentence itself
+	// is in the granting feature's own text
+	[EFFECT_KIND.form]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.form', `form · ${titleCase(p.target)}`, { target: titleCase(p.target) }),
 	// a handler REFERENCE — the namespace is the readable part; args are opaque machine input
 	[EFFECT_KIND.plugin]: (p, tr) =>
 		p.plugin &&

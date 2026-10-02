@@ -23,6 +23,7 @@ import type { SheetRolls } from './sheet-rolls.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
+import type { FormShift } from './form-shift.svelte';
 
 /** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
 const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
@@ -41,10 +42,20 @@ export interface ExecutorHost {
 	economy: TurnEconomy;
 	resources: ResourceTracker;
 	effects: EffectsEditor;
+	forms: FormShift;
 	/** The character's attack rows, and the way to fire one — what `attack:` resolves against. */
 	attacks: Attack[];
 	rolls: SheetRolls;
 }
+
+/** The verb that assumes a form, and the one that asks a question before anything is paid. */
+const ASSUME_FORM = 'assume_form';
+
+/** The form an option's action assumes (`assume_form:<id>`), or null when it assumes none. */
+const formAssumedBy = (action: string): string | null => {
+	const [verb, id] = action.split(':');
+	return verb === ASSUME_FORM && id ? id.trim() : null;
+};
 
 /** How many strikes one action may fire. RAW's largest is a handful; the cap is against a content
  *  typo (`attack:dagger:200`) turning one click into two hundred log lines. */
@@ -85,8 +96,21 @@ export class ActionExecutor {
 			});
 			return;
 		}
-		if (slot) this.host().economy.trySpend(slot); // both spends succeed — validated above
-		this.host().resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
+		const pay = () => {
+			if (slot) this.host().economy.trySpend(slot); // both spends succeed — validated above
+			this.host().resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
+		};
+		// assuming a form asks WHICH one first, and backing out of that question costs nothing: the use
+		// and the turn slot are paid when it is answered
+		const form = formAssumedBy(opt.action);
+		if (form) {
+			this.host().forms.ask(form, (monster) => {
+				pay();
+				this.host().forms.assume(form, monster);
+			});
+			return;
+		}
+		pay();
 		this.runAction(opt.name, opt.action);
 	};
 

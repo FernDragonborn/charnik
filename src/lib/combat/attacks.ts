@@ -288,10 +288,8 @@ export interface AttackMeta {
 
 /** The rows behind an attack's properties — the plain ones in the weapon's own order, then its
  *  mastery. */
-export const attackPropertyRows = ({ meta }: Attack): WeaponPropertyRow[] => [
-	...meta.propertyRows,
-	...(meta.mastery?.row ? [meta.mastery.row] : []),
-];
+export const attackPropertyRows = ({ meta }: Attack): WeaponPropertyRow[] =>
+	[...meta.propertyRows, meta.mastery?.row].filter((row) => row !== undefined);
 
 /** An attack row's sub-line, in the reader's language. A tag's NAME is a vocabulary and reads from
  *  the catalog; its VALUE is data (`versatile 1d10`, `thrown 20/60`) and passes through untranslated. */
@@ -299,7 +297,10 @@ export function attackMeta({ meta }: Attack, translate?: Translate): string {
 	const property = meta.property;
 	return [
 		meta.kinds.map((t) => itemTagLabel(t, translate)).join(' '),
-		property ? [itemTagLabel(property[0], translate), property[1]].filter(Boolean).join(' ') : '',
+		// a property with no NAME is a bare value (a form attack's reach), printed as written
+		property
+			? [property[0] && itemTagLabel(property[0], translate), property[1]].filter(Boolean).join(' ')
+			: '',
 		// the mastery reads as its own NAME and not as `mastery: vex`: it is the thing the player
 		// chose this weapon for, and the tag name adds nothing they do not already know
 		meta.mastery ? masteryText(meta.mastery, translate) : '',

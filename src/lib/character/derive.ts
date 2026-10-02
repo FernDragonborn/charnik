@@ -41,6 +41,8 @@ import { collectFacts, type EffectFacts, type ResourceDef } from '../effects/app
 import { resolveActiveEffects } from '../effects/resolver';
 import type { Spellcasting } from './spellcasting';
 import { baseResolveState } from './derive-context';
+import { activeForm, withoutForm, type MonsterRow } from './forms';
+import { rowName } from '../content/loader';
 import { computed, type Computed } from '../rules/pipeline';
 
 // SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
@@ -141,7 +143,14 @@ export function deriveSheet(
 
 	const setup = prepareDerive(character, graph);
 	const { level, proficiencyBonus: prof, abilityBase, classLevels } = setup;
-	const { hpMaxBaseFor, expandCondition, makeCtx } = setup;
+	const { expandCondition, makeCtx } = setup;
+	// A form replaces Constitution and leaves the character's hit points alone, so while one is
+	// assumed the hit-point base is worked out from the Constitution they have WITHOUT it.
+	const form = activeForm(character, graph, isActive);
+	const ownCon = form
+		? deriveSheet(withoutForm(character), graph, isActive).abilities.con.score.value
+		: undefined;
+	const hpMaxBaseFor = ownCon === undefined ? setup.hpMaxBaseFor : () => setup.hpMaxBaseFor(ownCon);
 
 	// The ONE resolve stage (effects/dependency-graph.ts): dependency-ordered guards, A10 ability pipeline,
 	// condition expansion — every consumer below reads its output.
@@ -193,7 +202,7 @@ export function deriveSheet(
 			issues,
 		});
 
-	return assembleSheet({
+	const sheet = assembleSheet({
 		character,
 		graph,
 		isActive,
@@ -202,4 +211,34 @@ export function deriveSheet(
 		missing,
 		issues,
 	});
+	return form ? inForm(sheet, form.row, form.state) : sheet;
+}
+
+/**
+ * What being in a form changes about the sheet that is NOT a number the form's own tokens fold:
+ * whose hit points are being counted, and whether spells can be cast.
+ *
+ * A form with hit points of its own (`hpBefore` is the character's, waiting) counts the stat
+ * block's: its maximum is the row's `hp` and nothing else, because "you assume the beast's hit
+ * points" leaves no room for the character's own bonuses to them.
+ */
+function inForm(
+	sheet: CharacterSheet,
+	row: MonsterRow,
+	state: NonNullable<Character['play']['form']>,
+): CharacterSheet {
+	const source = rowName(row);
+	const casts = sheet.facts.forms.find((rules) => rules.id === state.id)?.casts ?? false;
+	const ownHp = state.hpBefore !== undefined && row.data.hp != null;
+	return {
+		...sheet,
+		...(ownHp
+			? {
+					maxHp: computed([{ source, layer: 'override', op: 'set', amount: Number(row.data.hp) }], {
+						min: 1,
+					}),
+				}
+			: {}),
+		spellcasting: casts ? sheet.spellcasting : { ...sheet.spellcasting, formBlock: { source } },
+	};
 }

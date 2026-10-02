@@ -98,6 +98,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `grant_value`                | `grant_value:<id>[.<qualifier>]:<expr>`                 | A named NUMBER the row states about ONE attack: what a miss still deals (`miss_damage` — Graze), the DC of the save a hit forces (`save_dc.con` — Topple). STATED, never folded — the attack row prints it beside the property's name. Read where a weapon is (its mastery property's `weapon_property` row, `combat/attack-properties.ts`); on the sheet it has no attack to be stated for and goes inert with `attackOnly`. The id is open vocabulary, worded by the `statedValue.<id>` catalog family. |
 | `extra_attack`               | `extra_attack:<property>:<word>[,<word>…][:<scope>]`    | One statement about the EXTRA ATTACK a weapon property lets you make, keyed by that property so several rows can speak of one attack. The words are closed (`EXTRA_ATTACK_WORD`): `same` / `other` GRANT it — with this weapon again (Cleave), or with this weapon while another carrying the property is wielded (Light) — `bonus` / `free` say what it costs the turn, `modifier` puts the ability modifier back on its damage, which the attack otherwise leaves off unless negative. Light grants (`light:bonus,other`), Nick re-prices the same attack (`light:free`), Two-Weapon Fighting restores the modifier (`light:modifier`). A grant is read per weapon (`combat/attack-properties.ts`) and offered as a control beside the attack row, once per turn; a statement that only re-prices or adjusts may sit on a feature and reaches `facts.extraAttackRules`. The optional scope is tags the weapon — and its partner — must carry (`:melee`, SRD 5.1). |
+| `form`                       | `form:<id>:<word>[:<value>]`                            | One statement about a FORM a feature lets the character assume (Wild Shape), keyed by the form's id so several rows can speak of one form. The words are closed (`FORM_WORD`); see ▸ A form below. |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `condition_immunity`         | `condition_immunity:<id>`                               | A condition this character cannot be given (2024 Aura of Courage → Frightened). The id REFERENCES a state row, so it is free-form like a damage type — which is also what lets 2014's `condition_immunity:disease` say a word no row carries. It states what is true of the body and folds onto the Defenses strip beside the damage defenses; it does not refuse an application, because the ruling at the table is the player's (`characters.md` ▸ A tracker surfaces, it never decides). |
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
@@ -238,6 +239,42 @@ slot evaluates nothing. Unanswered, the token is DROPPED rather than folded onto
 the same "the app does not choose on the player's behalf" that makes an unanswered `item_bonus` read
 0 — and every other token on the row still applies, so Dragon Scale Mail's own `+1` to AC folds
 while its resistance waits.
+
+### A form
+
+**A form is a stat block the character wears, and its rules are the granting feature's own
+sentences.** `form:<id>:<word>[:<value>]` says one of them; the facts add them up per form id
+(`facts.forms`), so the feature that grants the form and a later one that changes it (Beast Spells)
+speak of the same thing, the way `extra_attack` rows do.
+
+| Word | Value | Says |
+| --- | --- | --- |
+| `creature` | a word | the creature type an eligible stat block has — matched as the type or its first word, so `beast (dinosaur)` is a beast and `swarm of tiny beasts` is not |
+| `max_cr` | L2 | the highest Challenge Rating eligible. Read EXACT, the one value that is: `1/4` is a rating, not zero |
+| `without` | a word | a movement mode an eligible stat block may not have (`fly`, `swim`); guard it to lift it by level |
+| `own_hp` | — | the form has the stat block's hit points, and the character's wait behind them |
+| `temp_hp` | L2 | Temporary Hit Points gained on assuming it — the higher stands, never both |
+| `known` | L2 | how many forms are chosen ahead of time (`build.forms`); absent means any eligible one |
+| `hours` | L2 | how long the form lasts, which becomes its clock |
+| `casts` | — | spells can be cast in the form |
+
+A rule the feature does not state limits nothing. A value that does not resolve is surfaced
+(`unreadableFormValue`) and that one sentence is skipped — an unread limit is not a limit of zero.
+
+**What the stat block does is ordinary tokens.** `character/forms.ts` ▸ `formStatTokens` turns the
+monster row into `set_override` on Strength, Dexterity, Constitution, Armor Class and the speeds,
+and a `:floor` on each save, skill and sense the stat block lists — both editions' "use the higher
+of the two". They ride a carrier effect at the `condition` layer, so every number a form moves
+names the creature in its trace, and the effects switch drops them with every other layer.
+
+**Hit points are the one thing a form's tokens do not say.** A form replaces Constitution and
+leaves the character's hit points alone, so while one is assumed the hit-point base is worked out
+from the Constitution the character has WITHOUT it (one extra derive, only while shaped). A form
+with `own_hp` then counts the stat block's instead, as an override-layer set, so neither the
+character's own bonuses nor a maximum set by hand reach it.
+
+**Assuming one is a verb** — `assume_form:<id>` on a resource option (`actions.md` §2) — and the
+play-state is `play.form` plus the carrier (`characters.md` ▸ Play-state modelling).
 
 A known-kind token whose target is outside the vocabulary is kept **inert** and surfaced as a
 `unknown target "<t>" for <kind>` content-health issue (with a `util/suggest.ts` "did you mean?",

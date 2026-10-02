@@ -13,6 +13,7 @@ import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import { resolveItem } from '../content/resolved-item';
 import { needsAttunement } from './inventory';
+import { formStatTokens } from './forms';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
@@ -188,10 +189,18 @@ class EffectGatherer {
 			// Only a CATALOG entry's tokens are read live. A cast's carrier names its SPELL as the source,
 			// and what the cast baked — an upcast's extra `hp_max`, the weapon a Magic Weapon touched — is
 			// not in the spell row at all, so reading the row would drop exactly what the slot bought.
+			// A FORM's carrier names its stat block, and that row IS the whole of what the form does, so
+			// it is read live like a catalog entry: a corrected stat block reaches a druid already shaped.
 			const live = eff.source ? this.graph.get(eff.source) : undefined;
 			const liveActive = live !== undefined && this.isActive(live);
 			if (eff.source && !liveActive) this.missing.push(eff.source);
-			const tokens = liveActive && live.type === 'effect' ? tokensOf(live) : eff.effects;
+			const tokens = !liveActive
+				? eff.effects
+				: live.type === 'effect'
+					? tokensOf(live)
+					: live.type === 'monster'
+						? formStatTokens(live)
+						: eff.effects;
 			const label = liveActive ? rowName(live) : eff.label;
 			if (tokens.length) this.active.push({ source: label, layer: 'condition', tokens });
 		}

@@ -44,6 +44,13 @@
 			{$_('combat.spells.castingBlocked', { values: { armor: combat.armorBlock.source } })}
 		</div>
 	{/if}
+	{#if combat.formBlock}
+		<!-- the same kind of rule-based block, for the same reason: the player sees WHY before they try -->
+		<div class="armor-block" use:provenance={$_('combat.spells.formBlockNote')}>
+			<Icon name="triangle-alert" size={13} />
+			{$_('combat.spells.formBlocked', { values: { form: combat.formBlock.source } })}
+		</div>
+	{/if}
 	<div class="spell-rows">
 		{#each spellGroups as g (g.key)}
 			<div class="spgroup">

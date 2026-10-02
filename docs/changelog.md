@@ -41,6 +41,14 @@ falls off a phone screen.
 
 ### Rules that were missing
 
+- **Wild Shape.** A druid had a paragraph where the feature should be. Now the uses are a pool —
+  two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
+  your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the
+  beast's body: its Strength, Dexterity, Constitution, Armor Class, speeds and attacks, with every
+  number naming the creature when you ask it why. Your mind stays yours. In 2014 the hit points
+  shown are the beast's and yours wait behind them, with damage the form cannot hold carried over;
+  in 2024 you keep your own and gain Temporary Hit Points equal to your druid level. The form has
+  its clock, blocks casting until Beast Spells, and ends from its chip as a Bonus Action.
 - **Weapon mastery (2024).** Every 2024 weapon has carried its mastery property since the pack was
   written and nothing read it, because the property does nothing until a feature unlocks that kind
   of weapon for you. That feature is here: a capped chip pane off the Attacks card, offered only to

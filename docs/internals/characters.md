@@ -152,11 +152,21 @@ the concentration, and expiry, display and removal are the paths that already ex
 spell always gets a carrier even when it has no tokens, which is what gives Hold Person and Web a
 timer at all. Giving concentration its own clock needs a display proxy and a second expiry path.
 
+**A form is a REF too, for the same reason.** `play.form` names a stat block and the form whose
+rules granted it; the numbers and the clock live on a carrier effect in `play.effects` whose `source`
+is that same monster ref. So a form shows in the Effects panel with its timer, passing time expires
+it and its ✕ ends it on the paths that already exist, and `FormShift.sync` finishes the leaving for
+all of them. `hpBefore` is present exactly when the form has hit points of its own (2014 Wild
+Shape): the character's own current HP, waiting, while `hp.current` counts the form's — which is
+why damage, healing and the bar need no second pool. Damage the form cannot hold ends it and lands
+on the character, RAW's own example. The forms a character KNOWS are `build.forms`, by form id.
+
 **A runtime effect's `source` decides where its tokens are read from, by the row's TYPE.** An entry
 added from the state catalog (an `effect` row) is read LIVE, so a fix to the catalog reaches effects
 already on a character. A cast's carrier also names its spell as the `source`, but its tokens are
 what the CAST baked — an upcast's extra `hp_max`, the weapon Magic Weapon touched — none of which is
-in the spell row, so a carrier is always read from its own `effects`.
+in the spell row, so a carrier is always read from its own `effects`. A form's carrier names a
+`monster` row, and that row IS all the form does, so it is read live like a catalog entry.
 
 ## A tracker surfaces, it never decides
 

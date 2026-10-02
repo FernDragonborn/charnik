@@ -21,6 +21,7 @@
 	import Abilities from './blocks/Abilities.svelte';
 	import PanelCard from './blocks/PanelCard.svelte';
 	import DeathScreen from './blocks/DeathScreen.svelte';
+	import FormDialog from './blocks/FormDialog.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import NoCharacter from '$lib/components/NoCharacter.svelte';
 
@@ -56,6 +57,12 @@
 	// (replaced by the next spell, a long rest, an expiring carrier).
 	$effect(() => {
 		combat.syncPendingConcentration();
+	});
+
+	// …and a form goes with the effect that carries it: its ✕, its clock running out and a rest all
+	// remove that effect without knowing it was a form.
+	$effect(() => {
+		combat.forms.sync();
 	});
 
 	// A conditional ability's window opening is a thing that HAPPENS, and the sheet is where it is
@@ -166,6 +173,7 @@
 		{/each}
 	</section>
 	<CombatMenus />
+	<FormDialog />
 	{#if c.play.death}
 		<DeathScreen cause={c.play.death.cause} />
 	{/if}

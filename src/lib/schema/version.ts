@@ -104,7 +104,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v31: twelve 2014 magic items carry the tables their text points at, and the three whose resistance
 // is the type of the copy somebody found ask for it. An install left at v30 reads "see the table"
 // over nothing.
-export const CONTENT_SEED_VERSION = 31;
+// v32: a druid's Wild Shape is a pool with a form to assume — its uses, which beasts a level allows,
+// and whose hit points are counted, in both packs. An install left at v31 has a druid whose Wild
+// Shape is a paragraph.
+export const CONTENT_SEED_VERSION = 32;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

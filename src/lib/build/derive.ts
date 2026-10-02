@@ -267,6 +267,7 @@ type TodoKind =
 	| 'spells'
 	| 'feat'
 	| 'masteries'
+	| 'forms'
 	| 'originFeat';
 
 export interface BuildTodo {
@@ -308,6 +309,8 @@ export interface BuildTodoInput {
 	speciesSkillsOwed: number;
 	/** Weapon kinds the 2024 class grants a mastery pick for and the player has not chosen. */
 	masteriesOwed: number;
+	/** Forms a feature has the character choose ahead of time (2024 Wild Shape) and not yet chosen. */
+	formsOwed: number;
 	/** The background's granted origin feat and how many choices it still asks for. A grant nobody is
 	 *  told about is a grant thrown away — Skilled hands out three skills or none. */
 	originFeat: { name: string; owed: number };
@@ -400,6 +403,13 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 			kind: 'masteries',
 			key: 'masteries',
 			values: { count: d.masteriesOwed },
+			required: true,
+		});
+	if (d.formsOwed > 0)
+		out.push({
+			kind: 'forms',
+			key: 'forms',
+			values: { count: d.formsOwed },
 			required: true,
 		});
 	for (const slot of d.openFeatSlots)

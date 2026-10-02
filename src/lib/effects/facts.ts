@@ -70,6 +70,50 @@ export interface ExtraAttackRule {
 	source: string;
 }
 
+/**
+ * A form the character may assume, as every `form` statement about it adds up (Wild Shape). The
+ * numbers are resolved; an absent one was not stated, and what a rule does not state is not
+ * assumed — an absent `maxCr` limits nothing, an absent `known` means forms are not chosen ahead.
+ */
+export interface FormRules {
+	id: string;
+	/** The row that first spoke of the form — what the form is CALLED on the sheet. */
+	source: string;
+	/** The creature type an eligible stat block has (`beast`). */
+	creature?: string;
+	/** The highest Challenge Rating eligible, as a number (1/4 is 0.25). */
+	maxCr?: number;
+	/** Movement modes an eligible stat block may not have. */
+	without: string[];
+	/** The form has its own hit points, the stat block's. */
+	ownHp: boolean;
+	/** Temporary Hit Points gained on assuming it. */
+	tempHp?: number;
+	/** How many forms the character knows, where they are chosen ahead of time. */
+	known?: number;
+	/** How long the form lasts, in hours. */
+	hours?: number;
+	/** Spells can be cast in the form. */
+	casts: boolean;
+}
+
+/** What one or more statements say about a form — every field optional, because one token says one. */
+export type FormStatement = Partial<Omit<FormRules, 'id' | 'source'>>;
+
+/** Add what further statements say about the SAME form onto what is known (in place): a stated
+ *  value replaces an unstated one, a ban joins the bans, and a yes stays a yes. */
+export function addFormStatement(rules: FormRules, said: FormStatement): void {
+	if (said.creature !== undefined) rules.creature = said.creature;
+	if (said.maxCr !== undefined) rules.maxCr = said.maxCr;
+	if (said.tempHp !== undefined) rules.tempHp = said.tempHp;
+	if (said.known !== undefined) rules.known = said.known;
+	if (said.hours !== undefined) rules.hours = said.hours;
+	for (const mode of said.without ?? [])
+		if (!rules.without.includes(mode)) rules.without.push(mode);
+	rules.ownHp ||= said.ownHp ?? false;
+	rules.casts ||= said.casts ?? false;
+}
+
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated
  *  against the derive ctx, so every consumer folds a NUMBER (or rides a dice formula), never
  *  re-parses/re-evaluates. Exactly one of `amount`/`diceFormula`/`error` is set. */
@@ -192,6 +236,8 @@ export interface EffectFacts {
 	 *  re-prices or adjusts the extra attack a property grants (2024 Two-Weapon Fighting puts the
 	 *  ability modifier back on the Light property's). Read where the attack rows are built. */
 	extraAttackRules: ExtraAttackRule[];
+	/** The forms this character may assume (`form`), one entry per form id. */
+	forms: FormRules[];
 	unknown: { source: string; token: string }[];
 	/** Plain-text notes returned by plugin handlers (plugins.md §4.3) — panel display only,
 	 *  rendered as TEXT (PLG-SEC 3). Filled by the plugin pre-pass, empty otherwise. */
@@ -219,6 +265,7 @@ export const emptyFacts = (): EffectFacts => ({
 	rerolls: [],
 	minDie: [],
 	extraAttackRules: [],
+	forms: [],
 	unknown: [],
 	pluginNotes: [],
 });
@@ -244,6 +291,11 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.rerolls.push(...extra.rerolls);
 	base.minDie.push(...extra.minDie);
 	base.extraAttackRules.push(...extra.extraAttackRules);
+	for (const form of extra.forms) {
+		const known = base.forms.find((f) => f.id === form.id);
+		if (known) addFormStatement(known, form);
+		else base.forms.push(form);
+	}
 	base.unknown.push(...extra.unknown);
 	base.pluginNotes.push(...extra.pluginNotes);
 	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];

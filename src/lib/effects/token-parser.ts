@@ -96,6 +96,11 @@ export const EFFECT_KIND = {
 	// rather than folded into it: "top up TO n" is not one of the executor verbs, and spelling it as one
 	// would mean a verb that only ever appears here.
 	regainOnInitiative: 'regain_on_initiative',
+	// `form:<id>:<word>[:<value>]` — one statement about a FORM a feature lets the character assume
+	// (Wild Shape), keyed by the form's id so several rows can speak of one form: the feature that
+	// grants it says which stat blocks are eligible and what happens to hit points, and a later
+	// feature (Beast Spells) adds one more sentence. The words are a closed set (`FORM_WORD`).
+	form: 'form',
 	// EVENT HOOK (`on_event:<event>:<action>`): when <event> happens to this character, run <action> —
 	// one of the bounded executor verbs (docs/internals/actions.md §2), the same set a resource-option
 	// spends into. Two bounded vocabularies crossed, so a third trigger costs a name in `PLAY_EVENT`
@@ -134,6 +139,45 @@ const EXTRA_ATTACK_WORDS: ReadonlySet<string> = new Set(Object.values(EXTRA_ATTA
 /** Does this statement GRANT the attack, rather than re-price or adjust one another row grants? */
 export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
 	words.includes(EXTRA_ATTACK_WORD.same) || words.includes(EXTRA_ATTACK_WORD.other);
+
+/**
+ * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, two a bare
+ * word, two nothing at all:
+ *  - `creature:<type>` — the creature type an eligible stat block has (`beast`)
+ *  - `max_cr:<expr>` — the highest Challenge Rating eligible; a fraction is written as one (`1/4`)
+ *  - `without:<mode>` — a movement mode an eligible stat block may NOT have (`fly`, `swim`)
+ *  - `own_hp` — the form has hit points of its own, the stat block's, and the character's wait
+ *  - `temp_hp:<expr>` — Temporary Hit Points gained on assuming it
+ *  - `known:<expr>` — how many forms the character knows, where they are chosen ahead of time
+ *  - `hours:<expr>` — how long the form lasts
+ *  - `casts` — spells can be cast in the form
+ */
+export const FORM_WORD = {
+	creature: 'creature',
+	maxCr: 'max_cr',
+	without: 'without',
+	ownHp: 'own_hp',
+	tempHp: 'temp_hp',
+	known: 'known',
+	hours: 'hours',
+	casts: 'casts',
+} as const;
+export type FormWord = (typeof FORM_WORD)[keyof typeof FORM_WORD];
+/** What each word is followed by. */
+const FORM_WORD_VALUE: Record<FormWord, 'expression' | 'word' | 'none'> = {
+	creature: 'word',
+	max_cr: 'expression',
+	without: 'word',
+	own_hp: 'none',
+	temp_hp: 'expression',
+	known: 'expression',
+	hours: 'expression',
+	casts: 'none',
+};
+const isFormWord = (word: string): word is FormWord => word in FORM_WORD_VALUE;
+/** Does this form word carry an L2 expression? What the linter asks before reading the value. */
+export const formWordTakesExpression = (word: FormWord): boolean =>
+	FORM_WORD_VALUE[word] === 'expression';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
  *  a bonus/override is only STORED and rendered as a scalar → a generous finite guard is enough (a
@@ -201,6 +245,9 @@ export interface ParsedEffect {
 	action?: string;
 	/** extra_attack: what the token says about the attack `target`'s property grants. */
 	extraAttack?: ExtraAttackWord[];
+	/** form: what the token says about the form `target` names — the word, and its value where the
+	 *  word takes one (an L2 expression or a bare word, as `FORM_WORD` says). */
+	form?: { word: FormWord; value?: string };
 	raw: string;
 }
 
@@ -360,6 +407,26 @@ const parseExtraAttack: KindParser = (rest, raw, kind) => {
 	return { kind, target: m[1].toLowerCase(), extraAttack: words, raw, ...(scope ? { scope } : {}) };
 };
 
+const parseForm: KindParser = (rest, raw, kind) => {
+	// `form:<id>:<word>[:<value>]`. A word that is missing its value, or carries one it does not
+	// take, leaves the token unparsed for the same reason an unknown `extra_attack` word does.
+	const m = /^([a-z][a-z0-9_]*):([a-z_]+)(?::(.+))?$/i.exec(rest.trim());
+	const word = m?.[2]?.toLowerCase() ?? '';
+	if (!m?.[1] || !isFormWord(word)) return { kind: 'unknown', raw };
+	const takes = FORM_WORD_VALUE[word];
+	const written = m[3]?.trim();
+	if ((takes === 'none') !== (written === undefined)) return { kind: 'unknown', raw };
+	if (takes === 'word' && !/^[a-z][a-z0-9_]*$/i.test(written ?? ''))
+		return { kind: 'unknown', raw };
+	const value = takes === 'word' ? written?.toLowerCase() : written;
+	return {
+		kind,
+		target: m[1].toLowerCase(),
+		form: { word, ...(value !== undefined ? { value } : {}) },
+		raw,
+	};
+};
+
 const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
 	// `damage_sensitivity:<relation>:<type>`. A missing relation is malformed, not a default: an
 	// author who meant immunity and typed one segment gets an inert note they can see, rather than a
@@ -490,6 +557,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
 	[EFFECT_KIND.grantValue]: parseGrantValue,
 	[EFFECT_KIND.extraAttack]: parseExtraAttack,
+	[EFFECT_KIND.form]: parseForm,
 	[EFFECT_KIND.damageSensitivity]: parseDamageSensitivity,
 	[EFFECT_KIND.grantResource]: parseGrantResource,
 	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,
@@ -668,6 +736,7 @@ export const ISSUE_KEY = {
 	unreadableOptionCost: 'effectIssue.unreadableOptionCost',
 	unrollableValue: 'effectIssue.unrollableValue',
 	unreadableResourceMax: 'effectIssue.unreadableResourceMax',
+	unreadableFormValue: 'effectIssue.unreadableFormValue',
 	pluginFailed: 'effectIssue.pluginFailed',
 	dependencyCycle: 'effectIssue.dependencyCycle',
 	misplacedWalkingSpeed: 'effectIssue.misplacedWalkingSpeed',

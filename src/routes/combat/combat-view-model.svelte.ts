@@ -24,7 +24,6 @@ import { FeatureView } from './feature-view.svelte';
 import {
 	GROUP_MODES,
 	type GroupMode,
-	computeAttacks,
 	standardActions,
 	buildSpellGroups,
 	preparedTalliesByClass,
@@ -58,6 +57,8 @@ import { RestControls } from './rest-controls.svelte';
 import { HitPoints } from './hit-points.svelte';
 import { InventoryTracker } from './inventory.svelte';
 import { Concentration } from './concentration';
+import { FormShift } from './form-shift.svelte';
+import { sheetAttacks } from '$lib/combat/form-attacks';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -494,7 +495,7 @@ class CombatVM {
 
 	attacks = $derived.by<Attack[]>(() =>
 		this.character && this.sheet && this.graph
-			? computeAttacks(this.character, this.sheet, this.graph, app.activeLocale)
+			? sheetAttacks(this.character, this.sheet, this.graph, app.activeLocale)
 			: [],
 	);
 
@@ -530,6 +531,10 @@ class CombatVM {
 	// row's own `effects` tokens and registers the id in facts.conditions (what the economy + guards
 	/** Effects & conditions (catalog, durations, exhaustion) — see effects.svelte.ts. */
 	effects = new EffectsEditor(() => this);
+	/** The form the character is in, and assuming or leaving one — see form-shift.svelte.ts. */
+	forms = new FormShift(() => this);
+	// in a form that cannot cast, the Spells panel says so — the same kind of block as the armor one
+	formBlock = $derived(this.sheet?.spellcasting.formBlock);
 }
 
 /** The single shared Combat view-model instance. */

@@ -15,6 +15,7 @@
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
 	const shield = $derived(combat.inventory.shield);
+	const form = $derived(combat.forms.current);
 	const { openDice } = combat;
 	/** Every toggle's state pill reads the same two words. */
 	const state = (on: boolean) => $_(on ? 'combat.controls.on' : 'combat.controls.off');
@@ -64,6 +65,31 @@
 					onclick={combat.endConcentrationByHand}
 					title={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					aria-label={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					><Icon name="x" size={12} /></button
+				>
+			</span>
+		</span>
+	{/if}
+	<!-- The form the character is in. The chip only SAYS it; leaving the form is the ✕ that drops out
+	     of it, the same step away the concentration chip keeps its own end — a form is a use spent,
+	     and one stray press must not undo it. -->
+	{#if form}
+		<span class="conc-chip">
+			<span
+				class="toggle on form"
+				use:provenance={form.hpBefore === undefined
+					? $_('combat.controls.formHint')
+					: $_('combat.controls.formHintOwnHp', { values: { hp: form.hpBefore } })}
+				><Icon name="paw-print" />
+				{$_('combat.controls.form')}
+				<span class="toggle-state">{form.name}</span></span
+			>
+			<span class="conc-drop">
+				<button
+					class="conc-end"
+					onclick={combat.forms.revert}
+					title={$_('combat.controls.formLeave', { values: { name: form.name } })}
+					aria-label={$_('combat.controls.formLeave', { values: { name: form.name } })}
 					><Icon name="x" size={12} /></button
 				>
 			</span>
@@ -183,6 +209,10 @@
 	.toggle.concentration.on .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
+	}
+	/* a chip that is not a button: it states the form, and the control hangs under it */
+	.toggle.form {
+		cursor: default;
 	}
 	.toggle.dice {
 		background: var(--color-accent-deep);

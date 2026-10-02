@@ -42,6 +42,7 @@
 	import Footprints from '@lucide/svelte/icons/footprints';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Moon from '@lucide/svelte/icons/moon';
+	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Recycle from '@lucide/svelte/icons/recycle';
@@ -95,6 +96,7 @@
 		footprints: Footprints,
 		'key-round': KeyRound,
 		moon: Moon,
+		'paw-print': PawPrint,
 		pencil: Pencil,
 		plus: Plus,
 		recycle: Recycle,

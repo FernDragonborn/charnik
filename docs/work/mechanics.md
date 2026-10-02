@@ -158,31 +158,36 @@ stay semi-manual.
     History checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the
     2024 Sun Blade's grant is conditional on already being proficient with longswords.
 
-- [ ] **N2b · Wild Shape = stat-block replacement.** A druid has no working Wild Shape at all.
-  Model: `play.form = {monsterRef, formHp} | null`; deriveSheet branches — physical
-  scores/AC/attacks/speed from the (already-typed) monster row, mental stays own; an isolated
-  removable seam like effects; the editions diverge (2024 = temp HP + a known-forms list).
-  **The per-edition spec is written and lives in [`../research/wild-shape.md`](../research/wild-shape.md)**,
-  every statement quoted from that edition's own shipped SRD text. Read it before modelling: the two
-  editions diverge more than the shared name suggests. 2014 REPLACES your hit points with the beast's
-  pool and carries excess damage over; 2024 leaves your HP alone and grants temporary HP equal to your
-  druid level — so `formHp` is a 2014-only field, not a shared one. 2014 gates forms by CR and by
-  "no flying or SWIMMING speed"; 2024 has no swim gate at all and keeps a Known Forms list you swap on
-  a long rest. Shaping costs an Action in 2014 and a Bonus Action in 2024.
-
-  **The forms exist and can attack** — `monsters_srd.csv` carries an `attacks` column in both
-  editions, with 69 beasts at CR ≤ 1 in 2014 and 64 in 2024. Three CONTENT blockers are left:
-  - No `wild_shape` row exists in either `resources_srd.csv`, and `druid_wild_shape` carries neither
-    a `resource` nor an `effects` value — there is no pool to spend.
-  - The 2024 uses-per-level ladder lives in the Druid Features table, which is shipped nowhere; two is
-    the only number the content supports, and inventing the rest is the failure AGENTS.md names first.
-    2014 needs no ladder (flat two until 20).
-  - A grammar gap, smaller: `grant_resource:<id>:<max>:<recharge>` cannot say 2024's split recharge
-    (one back on a short rest, all on a long) — the `{trigger, amount}` recharge model is where that
-    lands.
-  - [ ] **Wild Shape must be TRACKED before its event siblings work.** Evergreen Wild Shape (the
-        `regain_on_initiative` auto sibling of Perfect Focus and Superior Inspiration) has no pool to
-        restore, so it waits on the model above rather than on the mechanism, which is shipped.
+- [~] **N2b · Wild Shape. A druid assumes a form in both editions; the tail is what the form's rules say beyond the body.**
+  The pool, the eligible stat blocks, whose hit points are counted, the form's clock, its attacks and
+  the casting block ship, each stated by the feature's own `form` tokens
+  (`../internals/effects.md` ▸ A form) and proven against both packs. The per-edition spec is
+  [`../research/wild-shape.md`](../research/wild-shape.md). What is left, in the order it is worth doing:
+  1. **The five other things a 2024 use buys.** Wild Companion, Wild Resurgence (both directions),
+     Land's Aid, Nature's Sanctuary and Nature Magician each "expend a use of Wild Shape" for
+     something that is not a form. Three are resource options with a `note:`; the two that trade a
+     use for a spell slot need a verb that grants a slot, which is the `grant_slot` gap under
+     Spellcasting. The pool is real, so the chip already lets a player spend a use by hand —
+     except that with ONE option the chip runs it, so until these rows exist the hand-spend is the
+     pip, not the chip.
+  2. **Primal Strike** (2024 Elemental Fury) rides "a Beast form's attack", and a form attack
+     carries no scope for a bonus to name. A scope word for form attacks is the size of it.
+  3. **A form's senses are added, never taken away.** 2014: "you can't use any of your special
+     senses, such as darkvision, unless your new form also has that sense". The stat block's senses
+     fold as floors; removing the druid's own needs a way to say "no sense but these", which
+     `set_override` on a floor-folded target cannot.
+  4. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
+     keeps working. Nothing is modelled: a worn item's bonus still folds, and the form's SET of
+     Armor Class is what stands over an armor's.
+  5. **The involuntary exits are the player's to press.** Dropping to 0 in a 2014 form reverts and
+     carries the excess; Incapacitated (2024), unconscious and dead do not end the form on their own.
+  6. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
+     made ahead of time; the rest itself offers nothing.
+  7. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
+     block's listed modifier standing as a floor — the same number in every shipped beast, and RAI
+     where a homebrew stat block lists a proficiency its modifier does not show.
+  8. **The play sheet's Armor Class line prints a SET as `+13`**, the way it prints an add. A set
+     wants its own mark there; the trace on hover is right.
 - [ ] **PLG-TAILS · two things the plugin layer still owes its user.** A dedicated view for a
   character that depends on a plugin which is missing or not consented to — today it surfaces only as
   derive issues in content health — and portability: what a character carrying plugin tokens says on

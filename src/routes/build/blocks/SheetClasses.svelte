@@ -53,6 +53,18 @@
 		<span class="eyebrow">{$_('build.classes.title')}</span>
 		<span class="spacer"></span>
 		<span class="trail">{$_('build.classes.featureCount', { values: { count: gained.length } })}</span>
+		{#if b.formPicks.cap > 0}
+			<!-- only where a feature has forms chosen ahead of time (2024 Wild Shape); the count is on
+			     the button because an unfinished grant is a choice nobody would go looking for -->
+			<button
+				class="pill-btn"
+				class:accent={b.inspector.isOpen({ id: 'forms' })}
+				onclick={() => b.inspector.toggle({ id: 'forms' })}
+				>{$_('build.forms.picks', {
+					values: { chosen: b.formPicks.chosen, cap: b.formPicks.cap }
+				})}</button
+			>
+		{/if}
 		<button class="pill-btn" onclick={() => b.classRows.addClass()} disabled={!b.classRows.canRaiseLevel}>
 			<Icon name="plus" size={12} /> {$_('build.classes.multiclass')}
 		</button>

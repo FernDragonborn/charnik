@@ -288,6 +288,13 @@
 		"shortRestDiceHint": "Short rest: spend Hit Dice to heal (by the book)",
 		"shortRestHalf": "½ HP",
 		"shortRestHalfHint": "Short rest: heal half your max HP (house/video-game style)",
+		"forms": {
+			"picks": "forms {chosen}/{cap}",
+			"hint": "Pick the forms you know. These are the ones you can assume on the play sheet.",
+			"none": "Nothing this character has asks for forms to be chosen ahead of time.",
+			"rating": "CR {rating}",
+			"body": "AC {ac} · {hp} hit points · {speed}"
+		},
 		"masteries": {
 			"picks": "mastery {chosen}/{cap}",
 			"hint": "Pick the kinds of weapon you have drilled. The attack row prints the property once the kind is yours.",
@@ -336,6 +343,8 @@
 			"abilitiesTitle": "Ability scores",
 			"abilitiesBlurb": "The six numbers everything else is built from. Pick how they are generated, then allocate — every boost that lands on them is listed underneath.",
 			"skillsTitle": "Skills & expertise",
+			"formsTitle": "Known forms",
+			"formsBlurb": "The forms you have learned to assume. Your level sets how many you know and how dangerous they may be, and you may swap one whenever you finish a Long Rest.",
 			"masteriesTitle": "Weapon mastery",
 			"masteriesBlurb": "Your training lets you use the mastery property of a few KINDS of weapon. Every 2024 weapon has one; it does nothing until one of these picks unlocks it, and you may re-drill on a Long Rest.",
 			"skillsBlurb": "Your class offers a list to choose from; your background grants its own for free. Expertise doubles proficiency on a skill you already have.",
@@ -409,6 +418,7 @@
 			"featIn": "Level {level} ({class}): take a feat or raise an ability.",
 			"speciesFeat": "{species}: choose the feat it grants.",
 			"speciesSkills": "{count, plural, one {Choose # more skill from your species.} other {Choose # more skills from your species.}}",
+			"forms": "{count, plural, one {Choose # more known form.} other {Choose # more known forms.}}",
 			"masteries": "{count, plural, one {Choose # more weapon mastery.} other {Choose # more weapon masteries.}}",
 			"originFeat": "{feat}: {count, plural, one {# choice} other {# choices}} still to make.",
 			"cantrips": "{count, plural, one {Choose # more cantrip.} other {Choose # more cantrips.}}",
@@ -525,6 +535,10 @@
 			"shieldHint": "Holding it is what gives the AC — this equips and stows the shield you carry.",
 			"concentration": "Concentration",
 			"concentrationHint": "Roll a concentration save",
+			"form": "Form",
+			"formHint": "Your body is this creature's; your mind and your hit points are your own.",
+			"formHintOwnHp": "The hit points shown are this form's. Your own ({hp}) wait until you leave it.",
+			"formLeave": "Leave the {name} form (a Bonus Action)",
 			"short": "Short",
 			"shortHintDice": "Short rest — spend Hit Dice to heal",
 			"shortHintHalf": "Short rest — heal half your max HP",
@@ -598,6 +612,12 @@
 			"pinned": "Pinned",
 			"speciesTraits": "Species traits",
 			"unpin": "Unpin"
+		},
+		"forms": {
+			"choose": "Choose the form to assume. Nothing is spent until you take one.",
+			"none": "There is no form to assume yet. If your forms are chosen ahead of time, choose them in the builder.",
+			"rating": "Challenge Rating {rating}",
+			"search": "Search forms"
 		},
 		"hero": {
 			"level": "Level",
@@ -822,6 +842,9 @@
 			"noConcentration": "{name} cast, but you can’t hold Concentration right now",
 			"noConcentrationBody": "A Rage (or a similar state) ends Concentration.",
 			"effectExpired": "{label} — expired",
+			"formBroken": "{name} form ends at 0 hit points",
+			"formBrokenBody": "{excess, plural, =0 {No damage carries over to you.} other {# damage carries over to you.}}",
+			"formLeft": "You leave the {name} form",
 			"incapacitated": "Incapacitated",
 			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions.",
 			"cantripsAlwaysKnown": "Cantrips are always known — you never prepare them.",
@@ -956,6 +979,8 @@
 		"spells": {
 			"alwaysPrepared": "always prepared",
 			"armorBlockNote": "Not proficient with {category} armour — spellcasting blocked",
+			"formBlocked": "Casting blocked — you are in {form} form",
+			"formBlockNote": "You can't cast spells in this form. A spell you have already cast keeps going, and so does your concentration on it.",
 			"attackBonus": "attack",
 			"attackRoll": "attack roll",
 			"autoHit": "auto",
@@ -1000,6 +1025,7 @@
 			"damage": "Damage",
 			"damageReroll": "may reroll damage",
 			"disadvantage": "disadv · {target}",
+			"form": "form · {target}",
 			"grantRoll": "roll · {target}",
 			"halve": "{target} ×½",
 			"hpMax": "Max HP",
@@ -1362,6 +1388,7 @@
 		"unreadableOptionCondition": "Charnik cannot tell when this option is meant to be available, so it is always offered. Check the condition on the row.",
 		"unreadableOptionCost": "This option does not say how much it costs in a way Charnik understands, so it is not offered. The cost has to be a whole number, or “x” for “you choose how many”.",
 		"unreadableOptionEffect": "Charnik could not work out what this option heals or rolls, so it is offered with the formula exactly as written.",
+		"unreadableFormValue": "Charnik could not read a number this form's rule states, so that part of the rule is not applied. Correct the value in the row.",
 		"unreadableResourceMax": "Charnik could not work out how many uses this gives, so it is not shown in the resource tracker. Correct the count in the row and it will appear.",
 		"unrollableValue": "This should offer something to roll, but its formula does not work out to dice or a number — so no roll is offered."
 	},

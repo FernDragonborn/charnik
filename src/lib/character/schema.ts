@@ -149,6 +149,10 @@ const buildSchema = z.object({
 	 *  weapon mastery and ships no grant, so this stays empty there. Re-chosen at level-up like every
 	 *  other picked option (RAW swaps one on a Long Rest, which is the same edit). */
 	masteries: z.array(z.string()).default([]),
+	/** The forms this character KNOWS, as monster refs keyed by the form's id (`wild_shape`) — for a
+	 *  feature whose forms are chosen ahead of time (2024 Wild Shape's Known Forms). A feature that
+	 *  names no count keeps nothing here: 2014 allows any eligible beast the druid has seen. */
+	forms: z.record(z.string(), z.array(ref)).default({}),
 	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, keyed by weapon KIND — a +1
 	 *  Rapier is a Rapier, the same key `masteries` uses. RAW hands the player this choice; the app
 	 *  defaults to the bigger modifier and only stores an entry once they have said otherwise, so an
@@ -240,6 +244,16 @@ const playSchema = z.object({
 	effects: z.array(effectInstance).default([]),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
+	/** The FORM the character is in (Wild Shape), or null. Like concentration it is a ref, not a
+	 *  clock: the stat block's numbers and the form's timer ride an ordinary carrier effect in
+	 *  `effects` whose `source` is the same monster ref (`character/forms.ts`). `id` names the form
+	 *  whose rules granted it (`wild_shape`). `hpBefore` is present exactly when the form has hit
+	 *  points of its own (2014): the character's own current HP, waiting, while `hp.current` counts
+	 *  the form's. */
+	form: z
+		.object({ id: slug, monster: ref, hpBefore: z.number().int().optional() })
+		.nullable()
+		.default(null),
 	/** Effects-auto engine on. Off → derived stats drop their effect layers (flat bonuses,
 	 *  advantage, conditions) and show base values only (docs/plan.md effects global toggle). */
 	autoCalc: z.boolean().default(true),

@@ -168,6 +168,8 @@ export interface DraftState {
 	expertise: string[];
 	/** Weapon kinds drilled for their mastery property, as bare weapon ids (`build.masteries`). */
 	masteries: string[];
+	/** Forms chosen ahead of time, as monster refs by form id (`build.forms`). */
+	forms: Record<string, string[]>;
 	selectedLanguages: string[];
 	/** Tool proficiencies picked from the content (bare `tool` item ids) — `build.tools`. */
 	selectedTools: string[];
@@ -225,6 +227,7 @@ export function blankDraft(): DraftState {
 		boostPicks: [],
 		skills: [],
 		masteries: [],
+		forms: {},
 		expertise: [],
 		selectedLanguages: [],
 		selectedTools: [],
@@ -295,6 +298,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	skills: z.array(z.string()).catch(() => []),
 	expertise: z.array(z.string()).catch(() => []),
 	masteries: z.array(z.string()).catch(() => []),
+	forms: z.record(z.string(), z.array(z.string())).catch(() => ({})),
 	selectedLanguages: z.array(z.string()).catch(() => []),
 	selectedTools: z.array(z.string()).catch(() => []),
 	customLanguages: z.array(z.string()).catch(() => []),
@@ -356,6 +360,9 @@ export function draftFromCharacter(char: Character): DraftState {
 		speciesSkills: [...(char.build.speciesSkills ?? [])],
 		expertise: [...char.build.expertise],
 		masteries: [...(char.build.masteries ?? [])],
+		forms: Object.fromEntries(
+			Object.entries(char.build.forms ?? {}).map(([id, refs]) => [id, [...refs]]),
+		),
 		selectedLanguages: [...char.build.languages],
 		// a tool a feat's choice granted comes back through its slot's picks, not as a free pick —
 		// or un-picking it in the feat would leave it on the character

@@ -238,40 +238,23 @@ the new form is physically capable" caveat (2024 retains class features uncondit
 
 ---
 
-## WHAT THE APP MODEL NEEDS
+## HOW THE APP MODELS IT
 
-Given N2b's `play.form = {monsterRef, formHp} | null` plus a `deriveSheet` branch.
+Every rule above that the app applies is stated by the feature row's own tokens, so the two editions
+differ in their CSV and not in code (`../internals/effects.md` ▸ A form):
 
-| Spec point | Data / model need | Status in shipped content |
-| --- | --- | --- |
-| §1 uses | A resource pool `wild_shape`, 2 uses, short+long recharge (2014) vs 1-on-short/all-on-long (2024) | **MISSING.** No `wild_shape` id in either `resources_srd.csv` (2014: rage, bardic_inspiration, second_wind, action_surge, ki; 2024: those minus ki plus focus, persistent_rage, uncanny_metabolism). `druid_wild_shape.resource` and `.effects` are **both empty** in both editions. A `grant_resource:wild_shape:2:short`-shaped token must be authored **through the converter from this SRD text**, never by hand. |
-| §1 2024 recharge | The `grant_resource` grammar is `id:count:recharge` — it cannot express "1 back on a short rest, all on a long rest" | **Grammar gap.** Needs a partial-regain segment or a per-resource `short_regain` column. |
-| §1 2024 per-level uses | A level→uses progression | **NOT IN SRD / NOT IN CONTENT.** The Druid Features table is not shipped in any file. Ship 2 at every level and surface "the SRD does not state the higher-level counts" — do not fill it from memory. |
-| §1 alternate spends (2024) | Wild Shape as a currency for 5 non-transform sinks, plus slot↔use conversion in both directions | No druid rows in `resource_options_srd.csv` (it carries monk `focus` options only). Needs those rows **and** a slot↔resource conversion the effect vocabulary does not have. |
-| §2 HP (2014) | `play.form.formHp = {current, max}` with `max` = the row's `hp`; druid's own current HP frozen; overflow applied after the revert | `monsters.hp` is `optInt` — **supported**. `hp_formula` ("2d8 + 2") is a string, rollable but parsed nowhere today. |
-| §2 HP (2024) | **`formHp` is the wrong field here.** 2024 needs `tempHp += druidLevel` on the existing pool and nothing more | Supported — temp HP already exists in play state. This is the load-bearing branch: `formHp` must be optional and edition-driven, not intrinsic to `play.form`. |
-| §3 CR gate | Compare `cr` against 1/4, 1/2, 1 by level | `monsters.cr` is `optStr` with fractions. A fraction-aware comparator does not exist in `src/lib` today. |
-| §3 movement gate | Detect fly (both editions) and swim (2014 only) | `speed` is a **free string**, and case differs across editions (2014 `"swim 40 ft."`, 2024 `"Swim 30 ft."`). No structured movement column. A case-insensitive substring match on a declared column is the only option — narrow and defensible, but it is not a typed field. |
-| §3 "Beast stat blocks" | Filter on `creature_type` | Free-form: real 2024 values include `beast`, `beast (dinosaur)`, `swarm of tiny beasts`. Prefix match needed; the swarm question is **NOT IN SRD**. |
-| §3 the 2014 roster | Any legal form at all | **Supported** (BEAST-DATA). The 2014 pack ships 317 creatures, 74 of them beasts at CR ≤ 1: SRD 5.1's animals were all in the two appendices, which had never been converted. |
-| §4 replaced scores | STR/DEX/CON, AC, speed from the row | `str`…`cha` and `ac` are `optInt` — **supported**. |
-| §4 attacks | The form's attacks with to-hit and damage | **Supported** (BEAST-DATA). `attacks` is a column in both editions — `<name>:<+hit>:<reach or range>:<dice> <type>`, attacks joined by `; ` — written by the converters, which are the only things allowed to read a value out of the SRD's sentences. |
-| §4 skills / saves | Union of the druid's proficiencies with the creature's, higher wins | `skills` is a free string (`"Perception +5, Stealth +4"`) that must be parsed into `skill → bonus` to compare. 2024 has typed `str_save`…`cha_save` (`optInt`); 2014 carries the same `str_save`…`cha_save` columns since BEAST-DATA, so the "higher creature bonus" comparison has data on both sides in both editions. |
-| §4 senses (2014) | Suppress the druid's own darkvision unless the form has it | `senses` is a free string, and the druid's own senses are not modelled as a suppressible set. |
-| §4 legendary / lair ban (2014) | Nothing to enforce — no column, and no CR ≤ 1 beast carries them | No code needed; a note in the form panel covers it. |
-| §5 duration | `floor(level/2)` hours (2014 explicit, 2024 unstated rounding) | Derivable from build level. Wants a `play.form` expiry; the existing timer machinery is `durationRounds` on effects — hours are a different scale, so this is a new clock or an explicit "no timer, revert manually". |
-| §5 revert triggers | 2014: voluntary, expiry, unconscious, 0 HP, death. 2024: voluntary, expiry, re-shape, Incapacitated, death | `incapacitated` ships as a 2024 condition row, `unconscious` in both, and 0 HP is already play state — so a watcher has everything it needs. Per AGENTS ("surfaces and suggests; never auto-applies") these should prompt, not force. |
-| §6 equipment | Per-item three-way state: fall / merge / worn | **Not modelled** — inventory rows have no form-state field. Since the SRD's granularity is ambiguous anyway, one form-wide choice plus a note is the honest minimum. |
-| §7 casting | Block casting while `play.form` is set; unblock at L18 with the edition's own exception; concentration explicitly survives | Detection is by feature id (`druid_beast_spells`, `druid_archdruid`); both rows ship with **no effect token**, so this is a feature-id branch unless tokens are authored. Spell rows do carry a `material` column, so the 2024 "cost specified" test has something to read — but deciding whether a cost is specified still means parsing that string. |
-| §7 Primal Strike | +1d8 / +2d8 on "a Beast form's attack" | Entirely gated on the attacks blocker above. |
-| §8 Known Forms (2024) | `build.wildShapeForms: monsterRef[]`, capped 4/6/8 by level, one swap per Long Rest | **New build-state field.** It belongs in `build`, not `play` — it is a choice, not runtime state — but the long-rest swap is then a build edit triggered from play, which the build/play split (`docs/internals/characters.md`: "A long rest only ever edits `play`") deliberately makes hard. Decide that seam before coding. |
+| Spec point | Where it is said |
+| --- | --- |
+| §1 uses and recharge | `grant_resource:wild_shape:…` — 2014 `step(class_level.druid, 2->2, 20->inf):short`; 2024 the Druid Features ladder `2->2, 6->3, 17->4` with `short_one` |
+| §1 Evergreen Wild Shape | `regain_on_initiative:wild_shape:1` on the 2024 Archdruid |
+| §2 hit points | `form:wild_shape:own_hp` (2014) · `form:wild_shape:temp_hp:class_level.druid` (2024) |
+| §3 CR and movement | `form:wild_shape:max_cr:step(…, 2->1/4, 4->1/2, 8->1)` and guarded `without:fly` / `without:swim` |
+| §3 "Beast stat blocks" | `form:wild_shape:creature:beast` — `beast (dinosaur)` is one, `swarm of tiny beasts` is not (RAI: the SRD does not say) |
+| §4 replaced and retained | the stat block's STR/DEX/CON, AC and speeds are SET; its saves, skills and senses are FLOORS (`character/forms.ts`) |
+| §4 attacks | the monster row's `attacks` column, read whole (`combat/form-attacks.ts`) |
+| §5 duration and transform cost | `form:wild_shape:hours:floor(class_level.druid/2)`; the resource option's `action_type` — `action` in 2014, `bonus_action` in 2024 |
+| §7 casting | blocked while shaped, lifted by `form:wild_shape:casts` on Beast Spells |
+| §8 Known Forms | `form:wild_shape:known:step(…, 2->4, 4->6, 8->8)`, chosen in the builder into `build.forms` |
 
-**Model verdict for N2b:** `play.form = {monsterRef, formHp} | null` fits **2014** and is wrong for
-**2024**, which has no second HP pool at all — 2024 needs `{monsterRef}` plus a temp-HP grant on the
-existing pool, and a `build.wildShapeForms` list beside it. Make `formHp` optional and edition-driven
-rather than intrinsic to the form object.
-
-**One content blocker is left:** no `wild_shape` resource row exists in either edition, so there is
-no pool to spend. The other two are closed — `monsters_srd.csv` states every stat block's `attacks`,
-and the 2014 pack has its animals (BEAST-DATA) — so a finished Wild Shape can now be demonstrated
-against shipped content in BOTH editions, which is what this spec was blocked on.
+The 2024 duration's rounding is not stated; `floor` is the edition's general rule and is RAI here.
+What the app does not model is listed, in order, under N2b in `../work/mechanics.md`.

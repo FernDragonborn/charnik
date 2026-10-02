@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (77)
+## Duplicate suspects (78)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -93,6 +93,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
 - `TOOL_PREFIX` ×2 — src/lib/character/derive-targets.ts · src/lib/character/granted-proficiency.ts
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
+- `WALK` ×2 — src/lib/character/forms.ts · src/routes/dev/storage-edges/+page.svelte
 
 **Identical one-liner body, different names:**
 
@@ -466,7 +467,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (138 modules)
+## Library functions & types (141 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -650,6 +651,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type FeaturePreset`
 - `interface CharacterFeature` — One thing a character HAS, as the sheet reads it.
 - `function characterFeatures` — Every feature, trait and feat a character has, in reading order: class features by level, then * what their origin ga…
+
+### `src/lib/character/forms.ts`
+
+- `type MonsterRow`
+- `function challengeRating` — A Challenge Rating as a number — `1/4` is 0.25.
+- `function formStatTokens` — What assuming this stat block does to the sheet, as effect tokens.
+- `function isEligibleForm` — Is this stat block one the form's rules allow?
+- `function activeForm` — The form a character is in, resolved: its stat block and the play-state that says so.
+- `function withoutForm` — The character as they are with the form set aside: no form, and none of the effect that carries * it.
 
 ### `src/lib/character/granted-proficiency.ts`
 
@@ -839,6 +849,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function sayRounds` — * Rounds → the words a table uses: "30 days", "8 h", "10 min", "7 rds".
 - `function durationToRounds` — Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" → * 600, "2 rounds" → 2.
 - `const EFFECT_DURATION_PRESETS` — The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
+
+### `src/lib/combat/form-attacks.ts`
+
+- `function sheetAttacks` — The attack rows a character has RIGHT NOW: the form's while they are in one, their own weapons * and fists otherwise.
 
 ### `src/lib/combat/helpers.ts`
 
@@ -1482,12 +1496,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface ExtraAttackRule` — One `extra_attack` statement: what it says about the extra attack `property` grants.
+- `interface FormRules` — * A form the character may assume, as every `form` statement about it adds up (Wild Shape).
+- `type FormStatement` — What one or more statements say about a form — every field optional, because one token says one.
+- `function addFormStatement` — Add what further statements say about the SAME form onto what is known (in place): a stated * value replaces an unsta…
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
 - `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `const emptyFacts`
 - `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
+
+### `src/lib/effects/form-statements.ts`
+
+- `function collectFormStatement` — One `form` statement, added to what is already known of that form.
 
 ### `src/lib/effects/plugin-host.ts`
 
@@ -1537,6 +1558,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const EXTRA_ATTACK_WORD` — The closed vocabulary an `extra_attack` token speaks in.
 - `type ExtraAttackWord`
 - `const grantsExtraAttack` — Does this statement GRANT the attack, rather than re-price or adjust one another row grants?
+- `const FORM_WORD` — * The closed vocabulary a `form` token speaks in.
+- `type FormWord`
+- `const formWordTakesExpression` — Does this form word carry an L2 expression?
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
@@ -1901,4 +1925,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1151 exports across 154 modules · 77 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1165 exports across 157 modules · 78 duplicate suspects._

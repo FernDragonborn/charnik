@@ -8,7 +8,8 @@
  * re-scan of raw tokens. The one resolve stage that produces the effect list lives in
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
-import { ISSUE_KEY, grantsExtraAttack } from './token-parser';
+import { ISSUE_KEY, formWordTakesExpression, grantsExtraAttack } from './token-parser';
+import { collectFormStatement } from './form-statements';
 import { computed, NOTE_KEY, type Computed, type Contribution, type Note } from '../rules/pipeline';
 import { titleCase } from '../util/format';
 import { evalExpression, lintExpression } from './expression-evaluator';
@@ -237,6 +238,19 @@ class FactsCollector {
 				break;
 			case EFFECT_KIND.grantResource:
 				this.pushResource(p, eff, token);
+				break;
+			case EFFECT_KIND.form:
+				collectFormStatement(this.facts.forms, p, {
+					source: eff.source,
+					ctx: ctxOf(this.ctx, eff),
+					unreadable: (detail) =>
+						this.issues?.push({
+							source: eff.source,
+							token,
+							key: ISSUE_KEY.unreadableFormValue,
+							detail,
+						}),
+				});
 				break;
 			case EFFECT_KIND.plugin:
 				// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass reports
@@ -487,6 +501,7 @@ export function lintEffectTokens(tokens: string[]): string[] {
 		// one — it was the single L2 slot nothing looked at, one segment over from the max that is lit
 		if (p.resource && p.resource.recharge.amount !== RECHARGE_ALL)
 			exprs.push(p.resource.recharge.amount);
+		if (p.form?.value && formWordTakesExpression(p.form.word)) exprs.push(p.form.value);
 		// an `on_event` action's own formula (`heal:5+con_mod`) is an L2 expression too — the fifth slot,
 		// asked through the same function the evaluator uses so the two cannot drift apart again
 		if (p.action) exprs.push(...actionFormulas(p.action));

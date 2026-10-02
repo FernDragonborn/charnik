@@ -49,6 +49,8 @@ export interface HitPointsHost {
 	overlay: OpenOverlay | null;
 	/** Stop concentrating — a failed save's confirmed Drop takes the spell's own effect down with it. */
 	clearConcentration(): void;
+	/** The form the character is in, which may have hit points of its own to take a hit first. */
+	forms: { overflow(damage: number): number | null };
 }
 
 export class HitPoints {
@@ -168,6 +170,9 @@ export class HitPoints {
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;
 		n -= soaked;
+		// a form with hit points of its own takes the hit first; what it cannot hold ends the form
+		// and lands on the character, whose own hit points are what the rest of this reads
+		n = this.host().forms.overflow(n) ?? n;
 		const before = p.hp.current;
 		p.hp.current = Math.max(0, before - n);
 		// INSTANT DEATH (SRD 5.1 "Instant Death", verified): damage reduces you to 0 AND the damage
