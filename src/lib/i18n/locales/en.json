@@ -623,6 +623,9 @@
 			"level": "Level",
 			"levelUp": "Level up",
 			"levelUpTo": "Level up to {level}",
+			"levelEarned": "You have the experience for level {level} — level up",
+			"milestone": "Milestone",
+			"xp": "XP",
 			"proficiency": "Proficiency"
 		},
 		"hp": {
@@ -764,6 +767,12 @@
 			"takeShortRestSpend": "Take short rest · spend {count}",
 			"tempHpNote": "Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.",
 			"tempHpTitle": "Set temporary HP",
+			"xpTitle": "Levelling",
+			"xpTrack": "Count experience points",
+			"xpGain": "Experience points to add",
+			"xpAdd": "Add",
+			"xpNote": "A negative number takes experience away. Reaching the next level's total marks the level as earned; you take it in the builder, as always.",
+			"milestoneNote": "This character levels when the table says so. Turn the count on to track experience points instead.",
 			"toggleSign": "Toggle bonus / penalty",
 			"untilRemoved": "Until removed",
 			"untilRemovedLong": "∞ until removed",
@@ -1292,6 +1301,7 @@
 		"spell": "Spell",
 		"spell_lists": "Spell lists",
 		"spell_slots": "Spell slots",
+		"advancement": "Advancement",
 		"subclass": "Subclass",
 		"weapon_property": "Weapon property"
 	},

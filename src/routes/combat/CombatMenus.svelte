@@ -184,6 +184,34 @@
 				</div>
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>
 			</div>
+		{:else if overlay.kind === 'experience'}
+			<div class="menu-panel">
+				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.xpTitle')}</div>
+				<div class="coin-weight">
+					<Switch
+						on={combat.experience.mode === 'xp'}
+						title={$_('combat.menu.xpTrack')}
+						onclick={() =>
+							combat.experience.setMode(combat.experience.mode === 'xp' ? 'milestone' : 'xp')}
+					/>
+					<span class="main">{$_('combat.menu.xpTrack')}</span>
+				</div>
+				{#if combat.experience.mode === 'xp'}
+					<div class="field">
+						<input
+							type="number"
+							aria-label={$_('combat.menu.xpGain')}
+							bind:value={combat.experience.gain}
+						/>
+						<button class="submit-btn" onclick={combat.experience.add}
+							>{$_('combat.menu.xpAdd')}</button
+						>
+					</div>
+				{/if}
+				<p class="note">
+					{$_(combat.experience.mode === 'xp' ? 'combat.menu.xpNote' : 'combat.menu.milestoneNote')}
+				</p>
+			</div>
 		{:else if overlay.kind === 'addstate'}
 			<div class="search">
 				<span class="search-icon"><Icon name="search" size={13} /></span><input

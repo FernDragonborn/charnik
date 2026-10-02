@@ -541,6 +541,14 @@ const classCastingSchema = z.object({
 	prepared_known: optInt,
 });
 
+/** The XP total at which a character reaches a level — one row per level of the edition's
+ *  Character Advancement table. Read only where a character tracks experience. */
+const advancementSchema = z.object({
+	...lookupBase,
+	level: z.coerce.number().int().min(1),
+	xp: z.coerce.number().int().min(0),
+});
+
 /** Additive class→spell access join (`class_id`,`spell_id`), so a homebrew class grants access to
  *  existing spells without editing the shipped spell rows. Unioned with inline `spells.classes`. */
 const spellListsSchema = z.object({
@@ -615,6 +623,7 @@ export const CONTENT_TYPES = {
 	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' },
 	resource: { schema: resourceSchema, filebase: 'resources' },
 	weapon_property: { schema: weaponPropertySchema, filebase: 'weapon_properties' },
+	advancement: { schema: advancementSchema, filebase: 'advancement' },
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -637,6 +646,7 @@ const LOOKUP_TYPES = new Set<ContentType>([
 	'resource_option', // named, but a linked spend-table — not a browsable article
 	'resource', // a pool's display name; its rules text lives on the feature that grants it
 	'weapon_property', // read where the weapon is — the attack row, the mastery picker
+	'advancement', // the XP a level takes; no name, no text
 ]);
 
 /** A browsable content type (an ARTICLE: shows in compendium + search). */

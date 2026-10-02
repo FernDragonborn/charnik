@@ -14,10 +14,13 @@
 	import { systemShortLabel } from '$lib/rules/pipeline';
 	import HpPanel from './HpPanel/HpPanel.svelte';
 	import Exhaustion from './Exhaustion.svelte';
+	import { app } from '$lib/stores/app.svelte';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const className = $derived(combat.className);
 	const speciesName = $derived(combat.speciesName);
+	const xp = $derived(combat.experience.progress);
+	const number = (n: number) => n.toLocaleString(app.activeLocale);
 </script>
 
 <section class="hero">
@@ -41,7 +44,10 @@
 				{#if combat.canLevelUp}
 					<button
 						class="levelup"
-						title={$_('combat.hero.levelUpTo', { values: { level: s.level + 1 } })}
+						class:due={xp?.levelDue}
+						title={$_(xp?.levelDue ? 'combat.hero.levelEarned' : 'combat.hero.levelUpTo', {
+							values: { level: s.level + 1 },
+						})}
 						onclick={async () => {
 							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
 							void goto(`${base}/build?levelup=${c.id}`);
@@ -58,6 +64,19 @@
 					'combat.hero.proficiency',
 				)}
 				<b>{signed(s.proficiencyBonus)}</b>
+				<!-- How this character levels, and — where they count it — their experience. ONE control: it
+				     says which way they level, opens the place that changes it, and is where XP is added, so
+				     a table that levels by milestone sees one quiet word and nothing else. -->
+				·
+				<button class="levelup xp" onclick={(e) => combat.openMenu('experience', e)}>
+					{#if xp}
+						{$_('combat.hero.xp')}
+						<b>{number(xp.xp)}</b>
+						{#if xp.next !== undefined}/ {number(xp.next)}{/if}
+					{:else}
+						{$_('combat.hero.milestone')}
+					{/if}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -122,7 +141,15 @@
 		cursor: pointer;
 	}
 	.levelup:hover b,
-	.levelup:focus-visible b {
+	.levelup:focus-visible b,
+	.levelup.xp:hover,
+	.levelup.xp:focus-visible {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	/* the level has been EARNED and not yet taken: the number wears the accent until it is */
+	.levelup.due b {
+		color: var(--color-accent-bright);
 		text-decoration: underline;
 		text-underline-offset: 3px;
 	}

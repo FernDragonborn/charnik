@@ -109,7 +109,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Shape is a paragraph.
 // v33: every table SRD 5.1 prints inside a magic item is in the 2014 pack, the six items whose
 // rarity varies have rows, and the Deck of Many Things reads through to its last card.
-export const CONTENT_SEED_VERSION = 33;
+// v34: each pack ships its Character Advancement table as `advancement_srd.csv` — a new file — and
+// the 2014 Evocation school no longer carries that table as a class feature.
+export const CONTENT_SEED_VERSION = 34;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

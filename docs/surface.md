@@ -467,7 +467,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (141 modules)
+## Library functions & types (142 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -739,6 +739,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
+- `const LEVELING_MODES` — How a character levels (per-character rules variant): `milestone` = the table says when, and XP * is not counted; `xp…
+- `type LevelingMode`
 - `const characterSchema`
 - `type Character`
 - `type CharacterPlay`
@@ -1612,6 +1614,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function languageSearchText` — All searchable text for a code (native + English + Ukrainian names + the code), lower-cased — so the * picker finds a…
 - `function addableLanguages` — Languages from {@link LANGUAGES} that aren't in `have` yet — the "add a language" menu, sorted by * native name.
 
+### `src/lib/rules/advancement.ts`
+
+- `interface LevelThreshold` — One row of an advancement table: the XP total at which a level is reached.
+- `function levelEarned` — The level an XP total has earned: the highest level whose threshold it meets.
+- `const xpToReach` — The XP total at which a level is reached, or undefined when the table has no row for it — past * the last level there…
+
 ### `src/lib/rules/core.ts`
 
 - `const ABILITY_IDS` — The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare.
@@ -1925,4 +1933,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1165 exports across 157 modules · 78 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1170 exports across 158 modules · 78 duplicate suspects._

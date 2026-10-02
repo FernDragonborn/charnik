@@ -86,9 +86,10 @@ grammar, the derive pipeline, the state model, and the reasons behind each — i
 - **Multiclass** (in scope, incl. spellcasting): ability prereqs, partial proficiencies
   on entry, HP per class, ASI count by total level, **multiclass spell-slot table**,
   per-class spell save DC / prepared lists, Pact Magic kept separate.
-- **XP tracking** — **fully optional**: a `xp` field + a `levelingMode`
-  (`milestone` | `xp`) toggle. In `xp` mode, level derives from XP thresholds and
-  accumulated XP is tracked. Milestone mode ignores XP.
+- **XP tracking** — **fully optional**: `play.xp` + a per-character `ui.levelingMode`
+  (`milestone` | `xp`). In `xp` mode accumulated XP is tracked against the edition's own
+  advancement table and the sheet marks a level as EARNED; taking it is the level-up flow, because
+  a level asks questions only the builder can take answers to. Milestone mode ignores XP.
 
 ### Play-state tracking
 - HP current/temp/max, hit dice used, **death saves**, exhaustion.

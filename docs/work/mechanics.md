@@ -255,13 +255,6 @@ stay semi-manual.
   actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
-- [ ] **XP-TRACKING · the spec's optional XP mode has a field and nothing else.** `plan.md` ▸
-  Character lifecycle puts it in scope: a `levelingMode` (`milestone` | `xp`) toggle, level derived
-  from the XP thresholds in `xp` mode. What exists is `build.xp`, optional in the schema and read by
-  nothing. The thresholds are SRD data, and the 2014 pack carries them only by accident: the
-  Character Advancement table sits inside `schoolofevocation_character_advancement`, a class-feature
-  row the converter glued onto the Evocation school. A threshold row of its own is a producer-sibling
-  fix, and 2024 ships none.
 ## Spellcasting
 - [~] **Resource subsystem · an extra spell SLOT has no token.** Pools, their pips, the spend
   path and both rests are built (`../internals/effects.md` ▸ How a pool comes back). What is missing

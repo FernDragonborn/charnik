@@ -196,8 +196,6 @@ const buildSchema = z.object({
 	/** Photo file name (sibling of character.json — NOT base64 in the JSON). */
 	photo: z.string().optional(),
 	notes: z.string().default(''),
-	/** Optional XP (level-up can be milestone instead). */
-	xp: z.number().int().min(0).optional(),
 });
 
 // --- runtime / play-state -----------------------------------------------------
@@ -241,6 +239,11 @@ const playSchema = z.object({
 	 *  earned every session and answers a different question than a stack of arrows
 	 *  (`rules/currency.ts`). Absent key = none of that coin. */
 	currency: z.record(z.string(), z.number().int().min(0)).default({}),
+	/** Experience points earned. Play-state for the reason the purse is: it is gained at the table,
+	 *  session by session, and nothing about who the character IS changes when it moves — the level it
+	 *  has earned is a level-up the player still takes in the builder. Counted only where the
+	 *  character tracks it (`ui.levelingMode`). */
+	xp: z.number().int().min(0).default(0),
 	effects: z.array(effectInstance).default([]),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
@@ -318,6 +321,12 @@ const playSchema = z.object({
 export const SHORT_REST_MODES = ['dice', 'half'] as const;
 export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
 
+/** How a character levels (per-character rules variant): `milestone` = the table says when, and XP
+ *  is not counted; `xp` = experience points are tracked against the edition's advancement table.
+ *  An OPEN enum — a third way to level is a member, not a boolean. */
+export const LEVELING_MODES = ['milestone', 'xp'] as const;
+export type LevelingMode = (typeof LEVELING_MODES)[number];
+
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */
 const uiSchema = z
 	.object({
@@ -355,6 +364,9 @@ const uiSchema = z
 		 *  the short-rest popover); `half` = the popular non-book variant (heal ½ max HP, no dice — the
 		 *  Baldur's Gate 3 model). Default `dice` (ship SRD-faithful); old saves without it migrate there. */
 		shortRestMode: z.enum(SHORT_REST_MODES).default('dice'),
+		/** How this character levels. `milestone` by default: XP is optional in both editions' play, and
+		 *  a counter nobody asked for is one more thing on the sheet. */
+		levelingMode: z.enum(LEVELING_MODES).default('milestone'),
 		/** Standard actions hidden from the Actions panel, by action id. Stored here and not on the
 		 *  view-model: a hidden row that came back on the next launch was a preference the app kept
 		 *  forgetting, while a hidden SPELL had always survived — one question, two answers. */
@@ -384,6 +396,7 @@ const uiSchema = z
 		featuresPinned: [],
 		textOverrides: {},
 		shortRestMode: 'dice',
+		levelingMode: 'milestone',
 		coinsHidden: [],
 		coinWeight: false,
 		trackAmmunition: false,

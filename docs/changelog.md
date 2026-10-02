@@ -41,6 +41,10 @@ falls off a phone screen.
 
 ### Rules that were missing
 
+- **Experience points, if your table counts them.** The line under your name says how you level —
+  `Milestone`, or your XP against what the next level takes — and opens the place to switch between
+  the two and add what you earned. Reaching the total marks the level as earned; you take it in the
+  builder as always. Off by default, and a milestone table sees one quiet word.
 - **Wild Shape.** A druid had a paragraph where the feature should be. Now the uses are a pool —
   two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
   your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the

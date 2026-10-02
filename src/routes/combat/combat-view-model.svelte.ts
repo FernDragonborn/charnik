@@ -58,6 +58,7 @@ import { HitPoints } from './hit-points.svelte';
 import { InventoryTracker } from './inventory.svelte';
 import { Concentration } from './concentration';
 import { FormShift } from './form-shift.svelte';
+import { Experience } from './experience.svelte';
 import { sheetAttacks } from '$lib/combat/form-attacks';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
@@ -531,6 +532,8 @@ class CombatVM {
 	// row's own `effects` tokens and registers the id in facts.conditions (what the economy + guards
 	/** Effects & conditions (catalog, durations, exhaustion) — see effects.svelte.ts. */
 	effects = new EffectsEditor(() => this);
+	/** Experience points, where this character counts them — see experience.svelte.ts. */
+	experience = new Experience(() => this);
 	/** The form the character is in, and assuming or leaving one — see form-shift.svelte.ts. */
 	forms = new FormShift(() => this);
 	// in a form that cannot cast, the Spells panel says so — the same kind of block as the armor one

@@ -75,6 +75,12 @@ their purse. Money is play-state and not an inventory row: a stack of arrows ans
 carry", a purse answers "what can I afford", and the only thing the two share is weight — which a
 character counts only if their table does (`ui.coinWeight`, off by default).
 
+**Experience points are play-state too**, for the purse's reason: they are earned at the table,
+session by session. `play.xp` is counted only where the character tracks it (`ui.levelingMode`,
+`milestone` by default), against the pack's `advancement` rows for the character's own edition
+(`rules/advancement.ts`). Reaching a threshold marks the level as earned on the sheet and never
+takes it — a tracker surfaces, and a level-up is the builder's.
+
 **`ui` is neither** — which panels are shown, in what order, the per-character build mode, and the
 descriptions this character reads in the player's own words (`textOverrides`, one of the two scopes in
 [content.md](content.md) ▸ The words a player puts over ours). It survives a reset of play, because

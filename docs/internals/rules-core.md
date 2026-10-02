@@ -122,6 +122,11 @@ Infusions) and **Blood Hunter** (martial with hemocraft resources, and a Profane
 is a pact-like caster). Truly exotic logic the bounded vocabulary cannot express belongs in the
 plugin sandbox, never in baked-in code.
 
+**The XP a level takes is a table, per edition** — `advancement` rows (`level`, `xp`), one file per
+pack, read by `rules/advancement.ts`, whose only rule is each SRD's own sentence: a total that equals
+or exceeds a threshold has reached that level. A pack with no table gives no answer, never another
+edition's (`compatibility.md` §3b).
+
 ## Spellcasting, in one mechanism
 
 **A slot IS a resource.** One "castable pool" engine covers everything: a pool is
