@@ -109,12 +109,23 @@
   A sibling gap of the same kind: 2014's missing item tables (MAGIC-ITEM-VOCAB ▸ 2b).
 
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
-  block the loader; each raises fidelity where the UI later wants a structured filter. In priority
-  order: species ability bonuses as `effects` (`flat_bonus:con+2`) rather than only prose — 5e on
-  the species, 5.5e on the background; a monster's `saving_throws`, `damage_resist/immune`,
-  `condition_immune`, `legendary_actions` and `proficiency_bonus`, all of which live in `text_en`
-  today; and `resource` on class features (rage and ki counts), currently unparsed. Each arrives
-  through a `schemaVersion` migration, and each number comes from the producer, never from memory.
+  block the loader; each raises fidelity where the UI later wants a structured filter. Ability
+  bonuses ship as data (2014 species `effects` + `boost_choice`, 2024 backgrounds
+  `ability_choices`), and a monster's saves, resistances, immunities, vulnerabilities, senses and
+  skills are columns in both packs. What is left, in order — every value typed by hand from the
+  local source (SRD-TRANSCRIPTION):
+  - **2014 condition immunities have nowhere to live.** SRD 5.1 prints the line on 89 stat blocks;
+    the 2014 pack keeps it for six swarms, in prose, and has dropped it for the rest. The 2024 pack
+    carries it inside `immunities`, after a `;` — the 2014 rows take the same shape.
+  - **116 rows of the 2014 pack repeat their stat block in `text_en`** — the beasts of the
+    Miscellaneous Creatures appendix and the NPCs open with size, AC, hit points, speed, the ability
+    table and the lines down to Challenge, all of which their columns already say. Deleting those
+    lines waits for the point above: the swarms' condition immunities and the archmage's
+    `Damage Resistance damage from spells` (which no column can say today) exist only there.
+  - **Legendary actions are prose in both packs** (2014: 23 rows, 2024: 30); nothing reads them
+    yet. A proficiency bonus needs no column — it follows from `cr`.
+  - **`resource` on class features is an empty column nothing reads**, in both packs: a feature's
+    pool and its count are `grant_resource` tokens. The column and its schema field go.
 - [ ] **MAGIC-ITEM-VOCAB · the magic items that are still prose, and the vocabulary each one wants —
   0.8.0.** Everything the bounded vocabulary can already SAY is folded (239 rows). What is left is
   not unauthored: it is items whose text states a real, passive, mechanical benefit that the

@@ -19,6 +19,14 @@
 	const pips = [0, 1, 2];
 </script>
 
+<!-- what a part of a hit can be said to be: untyped, then every type, the defended ones first -->
+{#snippet typeOptions()}
+	<option value={null}>{$_('combat.hp.untyped')}</option>
+	{#each combat.damageTypeOptions as t (t)}
+		<option value={t}>{damageTypeLabel(t, $_)}</option>
+	{/each}
+{/snippet}
+
 <div class="hitpoints">
 	<!-- redesigned main row: readout (label · number · bar) LEFT, adjust controls RIGHT -->
 	<div class="hp-main">
@@ -75,10 +83,7 @@
 			bind:value={combat.damageType}
 			aria-label={$_('combat.hp.damageTypeLabel')}
 		>
-			<option value={null}>{$_('combat.hp.untyped')}</option>
-			{#each combat.damageTypeOptions as t (t)}
-				<option value={t}>{damageTypeLabel(t, $_)}</option>
-			{/each}
+			{@render typeOptions()}
 		</select>
 		<!-- a hit of two types is ONE hit: each part meets its own defense, the press takes the sum -->
 		<button
@@ -102,10 +107,7 @@
 				bind:value={part.type}
 				aria-label={$_('combat.hp.damageTypeLabel')}
 			>
-				<option value={null}>{$_('combat.hp.untyped')}</option>
-				{#each combat.damageTypeOptions as t (t)}
-					<option value={t}>{damageTypeLabel(t, $_)}</option>
-				{/each}
+				{@render typeOptions()}
 			</select>
 			<button
 				class="hp-part-add"

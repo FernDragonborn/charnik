@@ -111,7 +111,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // rarity varies have rows, and the Deck of Many Things reads through to its last card.
 // v34: each pack ships its Character Advancement table as `advancement_srd.csv` — a new file — and
 // the 2014 Evocation school no longer carries that table as a class feature.
-export const CONTENT_SEED_VERSION = 34;
+// v35: four 2014 monster cells the source prints and the pack had empty — two swarms' resistances,
+// and the hit points of the druid and the spy.
+export const CONTENT_SEED_VERSION = 35;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;
