@@ -24,6 +24,7 @@
 	import FormDialog from './blocks/FormDialog.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import NoCharacter from '$lib/components/NoCharacter.svelte';
+	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
 
 	// The page is a thin shell: it renders the area blocks and owns only the draggable panel grid
 	// (which needs the dnd wiring). Everything else lives in the `combat` view-model + blocks/.
@@ -135,6 +136,8 @@
 		{/if}
 		<Playbar />
 	</div>
+
+	<PluginNeeds issues={s.deriveIssues} />
 
 	<CombatStrip {s} />
 

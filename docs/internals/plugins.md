@@ -40,6 +40,16 @@ A `plugin:` token whose plugin is missing, disabled, over budget, or errored **d
 inert text note** on the effects panel — exactly like any unknown token. A plugin can never
 break the sheet.
 
+**The sheet says which plugins it is missing, where it is read.** A degraded token leaves the
+numbers short and the sheet standing, which is quiet — a character built on one install and opened
+on another simply lacks what the plugin added. So the play sheet and the builder carry one line
+naming each plugin the character's own tokens call for and are not getting, with the one word that
+says what stands in the way (`effects/plugin-needs.ts` ▸ `PLUGIN_NEED`): not installed, not
+reviewed, its code changed, disabled, every plugin switched off, its folder unloadable, it ran and
+gave nothing usable — or, on the web demo, that plugins run in the desktop app only. It is read off
+the derive's issues, so it is true of the character on screen, and it links to Settings ▸ Plugins
+wherever there is something there to do. `/dev/plugins` renders every state.
+
 A plugin token may carry an L2 condition guard like any other token
 (`is_raging ? plugin:namespace:handlerName`): the guard is evaluated by the resolve stage BEFORE the plugin
 pre-pass, so a guarded-off token never reaches your handler.
@@ -636,7 +646,7 @@ globalThis.handlers = {
 
 | Symptom                                    | Cause / fix                                                                  |
 | ------------------------------------------ | ---------------------------------------------------------------------------- |
-| Token shows as plain text on the panel     | Plugin missing/disabled, `namespace` ≠ folder name, or handler `handlerName` not registered  |
+| Token shows as plain text on the panel     | Plugin missing/disabled, `namespace` ≠ folder name, or handler `handlerName` not registered — the line above the sheet's stats names the plugin and which of these it is |
 | "disabled — code changed" after an edit    | Hash-pinned consent (§6.3): re-enable in Settings                            |
 | "over budget"                              | Handler too slow — precompute in args, simplify; 5 ms is a LOT of arithmetic |
 | "invalid result"                           | Violated §4.3 (layer/op/caps/finite numbers) — the whole result is rejected  |

@@ -4,6 +4,8 @@
 	// plugins in every status — broken / needs-consent / code-changed / disabled / enabled — to
 	// exercise the list AND the consent dialog in a plain browser. Open /dev/plugins.
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
+	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
+	import { ISSUE_KEY, type EffectIssue } from '$lib/effects/token-parser';
 	import { plugins } from '$lib/effects/plugin-store.svelte';
 	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 	import { titleCase } from '$lib/util/format';
@@ -62,9 +64,26 @@
 	plugins.loadErrors = {
 		'exploit-dice': 'main.js failed to load: SyntaxError: unexpected token (line 12)',
 	};
+
+	// what a sheet says when it counts on each of those — plus one nobody installed
+	const sheetIssues: EffectIssue[] = [
+		'my-homebrew',
+		'exploit-dice',
+		'old-friend',
+		'sleepy',
+		'broken-one',
+		'never-installed',
+	].map((namespace) => ({
+		source: 'Exploit Die',
+		token: `plugin:${namespace}:exploit-die`,
+		key: ISSUE_KEY.pluginFailed,
+	}));
 </script>
 
 <div class="page">
+	<h1>Dev preview · what a sheet says of its plugins</h1>
+	<PluginNeeds issues={sheetIssues} />
+	<PluginNeeds issues={sheetIssues.slice(-1)} />
 	<h1>Dev preview · Settings ▸ Plugins</h1>
 	<PluginsSettings />
 </div>

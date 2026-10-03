@@ -224,7 +224,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (55)
+## Shared components (56)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -267,6 +267,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
+| **PluginNeeds** | `issues` | The plugins a sheet counts on and is not getting, said where the sheet is read. |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/plugins.md §6): discovered plugin list |
 | **Portrait** | `source`, `size`, `alt` | A character's face, wherever a character is shown. |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
@@ -467,7 +468,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (143 modules)
+## Library functions & types (144 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1526,6 +1527,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function savePluginPrefs`
 - `function isRunnable` — Is this discovered plugin runnable under the given prefs?
 
+### `src/lib/effects/plugin-needs.ts`
+
+- `const PLUGIN_NEED` — Why a plugin the sheet names is not contributing.
+- `type PluginNeedState`
+- `interface PluginNeed`
+- `interface PluginAvailability` — What of the plugin store this reads.
+- `function pluginNeeds` — Every plugin the sheet's issues name as not contributing, once each, in the order met.
+
 ### `src/lib/effects/plugin-registry.ts`
 
 - `interface PluginCtx`
@@ -1945,4 +1954,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1179 exports across 159 modules · 78 duplicate suspects._
+_47 tokens · 86 global classes · 56 components · 1184 exports across 160 modules · 78 duplicate suspects._

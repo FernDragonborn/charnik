@@ -181,11 +181,14 @@ stay semi-manual.
   6. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
      block's listed modifier standing as a floor — the same number in every shipped beast, and RAI
      where a homebrew stat block lists a proficiency its modifier does not show.
-- [ ] **PLG-TAILS · two things the plugin layer still owes its user.** A dedicated view for a
-  character that depends on a plugin which is missing or not consented to — today it surfaces only as
-  derive issues in content health — and portability: what a character carrying plugin tokens says on
-  an install without the plugin, or with another version of it. The layer itself is
-  `../internals/plugins.md`.
+- [~] **PLG-TAILS · a sheet cannot tell that a plugin is a DIFFERENT VERSION of the one it was
+  built with.** The sheet names each plugin it counts on and is not getting, and why
+  (`../internals/plugins.md` §1), which covers a character opened on an install without the plugin.
+  What it cannot say is "this is version 2 and you built against 1": nothing records which version a
+  character was built with, and the plugin is found by namespace alone. Recording it is a field in
+  the character file, so it is a save-format decision before it is code — what is written (the
+  version, or the consent hash), when (at save, or when a token first resolves), and what a mismatch
+  does besides being said.
 - [~] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything.** The GRAMMAR is BUILT and
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved

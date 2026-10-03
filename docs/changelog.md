@@ -174,6 +174,9 @@ falls off a phone screen.
   the control, on hover and on focus alike.
 - **Numbers no longer run into their labels.** A picker's category said "Weapon2", hit points said
   "38/ 73", a boosted ability said "STR+1".
+- **A sheet says which plugins it is missing.** A character that counts on a plugin you have not
+  installed, reviewed or enabled used to lose those numbers without a word. The sheet and the
+  builder now name each one and what stands in the way, with a link to Settings ▸ Plugins.
 
 ### On a phone
 

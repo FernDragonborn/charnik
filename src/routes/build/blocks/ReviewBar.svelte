@@ -3,6 +3,7 @@
 	// character. Each unfinished line is a LINK to the control that fixes it — a list of complaints
 	// you can't act on is just nagging.
 	import Icon from '$lib/components/Icon.svelte';
+	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
@@ -37,6 +38,7 @@
 				{$_('build.review.missingContent', { values: { list: b.sheet.missing.join(', ') } })}
 			</p>
 		{/if}
+		<PluginNeeds issues={b.sheet?.deriveIssues ?? []} />
 	</div>
 
 	<button class="create" disabled={!b.canCreate || b.saving} onclick={create}>

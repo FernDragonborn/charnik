@@ -1988,6 +1988,20 @@
 			"review": "Review & enable…",
 			"forget": "Forget",
 			"forgetTitle": "Forget this plugin — enabling it again asks for your review",
+			"needs": {
+				"title": "{count, plural, one {This sheet counts on a plugin that is not running} other {This sheet counts on plugins that are not running}}",
+				"open": "Open Settings ▸ Plugins",
+				"state": {
+					"unsupported": "plugins run in the desktop app only",
+					"missing": "not installed",
+					"broken": "its folder cannot be loaded",
+					"needs_consent": "not reviewed yet",
+					"code_changed": "its code changed — review it again",
+					"disabled": "disabled",
+					"kill_switch": "all plugins are switched off",
+					"failed": "gave no usable answer"
+				}
+			},
 			"status": {
 				"broken": "Broken",
 				"needsConsent": "Not reviewed",
