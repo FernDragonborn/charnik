@@ -118,7 +118,8 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v37: each Wild Shape row states what ends the form without being asked — unconscious in 2014,
 // Incapacitated in 2024.
 // v38: Sneak Attack's roll says it is once per turn, in both packs.
-export const CONTENT_SEED_VERSION = 38;
+// v39: class features lose their `resource` column, which was empty and read by nothing.
+export const CONTENT_SEED_VERSION = 39;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

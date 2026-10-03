@@ -131,7 +131,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (86)
+## Global CSS classes (87)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -188,6 +188,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.inv-row` | components.css |  |
 | `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its popover says why. |
 | `.is-open` | components.css |  |
+| `.is-prose` | components.css | a content row's PROSE: its paragraphs are elements, so runs of whitespace mean nothing and the first and last of them… |
 | `.loading` | components.css | --- full-view loading / empty state --- |
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
@@ -489,6 +490,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/actions/provenance.ts`
 
+- `type Explanation` — * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown, * so it is said as…
 - `const provenance`
 
 ### `src/lib/actions/trapFocus.ts`
@@ -1954,4 +1956,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 56 components · 1184 exports across 160 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1185 exports across 160 modules · 78 duplicate suspects._

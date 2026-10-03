@@ -123,8 +123,6 @@
     `Damage Resistance damage from spells` (which no column can say today) exist only there.
   - **Legendary actions are prose in both packs** (2014: 23 rows, 2024: 30); nothing reads them
     yet. A proficiency bonus needs no column — it follows from `cr`.
-  - **`resource` on class features is an empty column nothing reads**, in both packs: a feature's
-    pool and its count are `grant_resource` tokens. The column and its schema field go.
 - [ ] **MAGIC-ITEM-VOCAB · the magic items that are still prose, and the vocabulary each one wants —
   0.8.0.** Everything the bounded vocabulary can already SAY is folded (239 rows). What is left is
   not unauthored: it is items whose text states a real, passive, mechanical benefit that the

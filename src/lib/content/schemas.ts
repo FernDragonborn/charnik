@@ -284,8 +284,6 @@ const classSchema = baseRow.extend({
 const classFeatureSchema = baseRow.extend({
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
-	/** Optional named resource the feature grants (e.g. "rage", "ki"); count via effects. */
-	resource: optStr,
 	subclass_id: optStr,
 	/** N4a: skill-expertise CHOICES this feature unlocks, as `level:count` pairs so ONE feature row can
 	 *  carry a progressive grant (SRD models Rogue Expertise as a single L1 row that also grants +2 at
