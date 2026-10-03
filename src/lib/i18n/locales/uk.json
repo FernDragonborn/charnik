@@ -1179,6 +1179,7 @@
 		"base_item_id": "Базовий предмет",
 		"caster_from_level": "Накладання з рівня",
 		"caster_share": "Частка закляттяра (мультиклас)",
+		"condition_immunities": "Імунітет до станів",
 		"casting_time": "Час накладання",
 		"category": "Категорія",
 		"class_id": "Клас",

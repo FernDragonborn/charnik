@@ -110,17 +110,13 @@
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
   block the loader; each raises fidelity where the UI later wants a structured filter. Ability
   bonuses ship as data (2014 species `effects` + `boost_choice`, 2024 backgrounds
-  `ability_choices`), and a monster's saves, resistances, immunities, vulnerabilities, senses and
-  skills are columns in both packs. What is left, in order — every value typed by hand from the
-  local source (SRD-TRANSCRIPTION):
-  - **2014 condition immunities have nowhere to live.** SRD 5.1 prints the line on 89 stat blocks;
-    the 2014 pack keeps it for six swarms, in prose, and has dropped it for the rest. The 2024 pack
-    carries it inside `immunities`, after a `;` — the 2014 rows take the same shape.
-  - **116 rows of the 2014 pack repeat their stat block in `text_en`** — the beasts of the
-    Miscellaneous Creatures appendix and the NPCs open with size, AC, hit points, speed, the ability
-    table and the lines down to Challenge, all of which their columns already say. Deleting those
-    lines waits for the point above: the swarms' condition immunities and the archmage's
-    `Damage Resistance damage from spells` (which no column can say today) exist only there.
+  `ability_choices`), and a monster's saves, resistances, immunities, condition immunities,
+  vulnerabilities, senses and skills are columns. What is left, in order — every value typed by
+  hand from the local source (SRD-TRANSCRIPTION):
+  - **An Armor Class's own note has no column.** "13 (natural armor)", "12 (15 with mage armor)":
+    `ac` is a number. The 116 appendix rows of the 2014 pack keep that one line at the top of their
+    text, which is all that is left of the stat block they used to repeat there; the 201 chapter
+    rows, and the 2024 pack, do not carry the note at all.
   - **Legendary actions are prose in both packs** (2014: 23 rows, 2024: 30); nothing reads them
     yet. A proficiency bonus needs no column — it follows from `cr`.
 - [ ] **MAGIC-ITEM-VOCAB · the magic items that are still prose, and the vocabulary each one wants —

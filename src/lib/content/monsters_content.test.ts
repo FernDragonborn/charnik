@@ -86,4 +86,36 @@ describe('shipped monsters', () => {
 		expect(byId('awakened_tree')?.data.vulnerabilities).toBe('fire');
 		expect(byId('awakened_tree')?.data.resistances).toBe('bludgeoning, piercing');
 	});
+
+	it('2014 states condition immunities on their own line, as SRD 5.1 prints them', async () => {
+		const g = await loadEdition('srd-2014');
+		const rows = g.list('monster');
+		const byId = (id: string) => rows.find((r) => r.id === id);
+		// SRD 5.1 prints "Condition Immunities" on 89 stat blocks
+		expect(rows.filter((r) => r.data.condition_immunities)).toHaveLength(89);
+		// Clay Golem: "Damage Immunities acid, poison, psychic; bludgeoning, piercing, and slashing from
+		// nonmagical attacks that aren't adamantine" — the `;` is that line's own, which is why the
+		// conditions cannot share its cell
+		expect(byId('clay_golem')?.data.immunities).toContain('psychic; bludgeoning');
+		expect(byId('clay_golem')?.data.condition_immunities).toBe(
+			'charmed, exhaustion, frightened, paralyzed, petrified, poisoned',
+		);
+		expect(byId('doppelganger')?.data.condition_immunities).toBe('charmed');
+	});
+
+	it('a 2014 row does not repeat in its text what its columns say', async () => {
+		const g = await loadEdition('srd-2014');
+		const repeated = g.list('monster').filter((r) =>
+			// a stat line as the page prints it — a label and its value, not a sentence that opens
+			// with the same word (the Avatar of Death's hit points are half its summoner's)
+			/^(Hit Points \d|Speed \d|Senses |Challenge \d|Condition Immunities )/m.test(
+				r.data.text_en ?? '',
+			),
+		);
+		expect(repeated.map((r) => r.id)).toEqual([]);
+		// the one header line a column cannot hold stays: an Armor Class's own note
+		expect(g.list('monster').find((r) => r.id === 'wolf')?.data.text_en).toMatch(
+			/^Armor Class 13 \(natural armor\)/,
+		);
+	});
 });

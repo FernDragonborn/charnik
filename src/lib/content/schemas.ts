@@ -486,6 +486,11 @@ const monsterSchema = baseRow.extend({
 	cr: optStr, // "10" | "1/2" | "1/8" | "0"
 	resistances: optStr,
 	immunities: optStr,
+	/** The CONDITIONS a creature is immune to, where its source prints them on a line of their own.
+	 *  SRD 5.1 does, and its "Damage Immunities" line already uses `;` between its own groups, so
+	 *  the two cannot share a cell there. SRD 5.2.1 prints ONE "Immunities" line — damage, `;`,
+	 *  conditions — and its pack keeps that line whole in `immunities`. Each mirrors its source. */
+	condition_immunities: optStr,
 	vulnerabilities: optStr,
 	gear: optStr,
 	senses: optStr,

@@ -121,7 +121,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v39: class features lose their `resource` column, which was empty and read by nothing.
 // v40: both packs carry the Avatar of Death, the stat block each SRD prints inside the Deck of Many
 // Things.
-export const CONTENT_SEED_VERSION = 40;
+// v41: the 2014 monsters carry their condition immunities in a column of their own, and the 116
+// appendix rows no longer open their text with the stat block their columns already state.
+export const CONTENT_SEED_VERSION = 41;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

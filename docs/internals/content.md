@@ -106,6 +106,12 @@ is why it is the axis the picker filters magic on, with a blank `rarity` meaning
   `attacks` is the same kind: `<name>:<+hit>:<reach or range>:<dice> <type>[, <dice> <type>]`, joined
   by `; `, where a second damage part exists only where the source says "plus" — every other number
   later in the sentence is an alternative (a versatile grip, a swarm at half HP) or a condition.
+- **A pack mirrors the lines its SOURCE prints, and the two editions print different ones.** SRD 5.1
+  gives a creature a "Damage Immunities" line and a "Condition Immunities" line, and the first
+  already separates its own groups with `;` ("acid, poison, psychic; bludgeoning … from nonmagical
+  attacks"), so the 2014 pack has `immunities` and `condition_immunities`. SRD 5.2.1 prints ONE
+  "Immunities" line — damage, `;`, conditions — and the 2024 pack keeps it whole in `immunities`.
+  Splitting the 2024 line, or joining the 2014 two, would be this repo deciding what a source meant.
 - **What a tag costs**, worst first: zod stops validating it (`ac: optInt` rejects `"eleven"` by
   column name; `ac:eleven` inside a tag list is just a string), so **a bad tag value must surface in
   content health**, never a silent zero; the header stops advertising that the fact exists (an empty

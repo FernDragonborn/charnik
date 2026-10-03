@@ -204,6 +204,9 @@ in a short desktop window, which hit the same bug.
 - **Three 2014 spells had half an "At Higher Levels"**, with the rest stuck to the end of their
   description — Moonbeam, Dominate Beast and Create Undead. Moonbeam's 2014 damage now scales with the
   slot, as that sentence says.
+- **2014 creatures say which conditions they are immune to.** SRD 5.1 prints the line on 89 stat
+  blocks and the pack had kept it for six, in prose. And the beasts and NPCs of its appendices no
+  longer open their text with the stat block the page already shows above it.
 - **The Avatar of Death has a stat block**, in both packs — the one each SRD prints inside the Deck
   of Many Things, which the compendium could show only as that item's prose.
 

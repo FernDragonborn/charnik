@@ -326,7 +326,12 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		abilities,
 		hasSaves,
 		band: [...pair('senses'), ...pair('skills'), ...pair('languages'), ...pair('gear')],
-		defenses: [...pair('resistances'), ...pair('immunities'), ...pair('vulnerabilities')],
+		defenses: [
+			...pair('resistances'),
+			...pair('immunities'),
+			...pair('condition_immunities'),
+			...pair('vulnerabilities'),
+		],
 	};
 }
 
