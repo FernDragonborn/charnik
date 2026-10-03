@@ -25,6 +25,7 @@ import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
 import type { FormShift } from './form-shift.svelte';
+import type { InventoryTracker } from './inventory.svelte';
 
 /** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
 const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
@@ -47,6 +48,8 @@ export interface ExecutorHost {
 	/** The character's attack rows, and the way to fire one — what `attack:` resolves against. */
 	attacks: Attack[];
 	rolls: SheetRolls;
+	/** What a shot spends, when the table counts ammunition. */
+	inventory: Pick<InventoryTracker, 'shoot'>;
 }
 
 /** The verb that assumes a form, and the one that asks a question before anything is paid. */
@@ -349,12 +352,21 @@ export class ActionExecutor {
 		// numbered, because two identical entries in the log are indistinguishable otherwise — and
 		// which of the two Flurry strikes hit is exactly what the player is reading the log for.
 		// Handed over as ONE action: the strikes then share a group and a toast, and each keeps an
-		// identity of its own for an amendment to match on.
-		this.host().rolls.rollAttacks(
-			at,
-			Array.from({ length: count }, (_, i) =>
-				count > 1 ? numberedAttackRollName(at, t, i + 1, count) : attackRollName(at, t),
-			),
+		// identity of its own for an amendment to match on. Fired through the inventory like a tap on
+		// the Attacks panel, so a weapon that fires ammunition spends one per strike.
+		this.host().inventory.shoot(
+			at.id,
+			null,
+			() => {
+				this.host().rolls.rollAttacks(
+					at,
+					Array.from({ length: count }, (_, i) =>
+						count > 1 ? numberedAttackRollName(at, t, i + 1, count) : attackRollName(at, t),
+					),
+				);
+				return true;
+			},
+			count,
 		);
 	}
 

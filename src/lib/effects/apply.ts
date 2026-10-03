@@ -311,6 +311,7 @@ class FactsCollector {
 				source: eff.source,
 				label: titleCase(p.target),
 				formula,
+				...(p.rollLimit ? { limit: p.rollLimit } : {}),
 			});
 	}
 

@@ -467,7 +467,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (142 modules)
+## Library functions & types (143 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1558,12 +1558,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
 - `re-export RechargePolicy` — The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep importing it from the…
 - `type DamageSensitivity`
-- `const EXTRA_ATTACK_WORD` — The closed vocabulary an `extra_attack` token speaks in.
-- `type ExtraAttackWord`
-- `const grantsExtraAttack` — Does this statement GRANT the attack, rather than re-price or adjust one another row grants?
-- `const FORM_WORD` — * The closed vocabulary a `form` token speaks in.
-- `type FormWord`
-- `const formWordTakesExpression` — Does this form word carry an L2 expression?
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
@@ -1582,6 +1576,21 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
+
+### `src/lib/effects/token-words.ts`
+
+- `const EXTRA_ATTACK_WORD` — The closed vocabulary an `extra_attack` token speaks in.
+- `type ExtraAttackWord`
+- `const EXTRA_ATTACK_WORDS`
+- `const grantsExtraAttack` — Does this statement GRANT the attack, rather than re-price or adjust one another row grants?
+- `const ROLL_LIMIT` — How often a granted roll may be made, where its rule says so.
+- `type RollLimit`
+- `const isRollLimit`
+- `const FORM_WORD` — * The closed vocabulary a `form` token speaks in.
+- `type FormWord`
+- `const FORM_WORD_VALUE` — What each word is followed by.
+- `const isFormWord`
+- `const formWordTakesExpression` — Does this form word carry an L2 expression?
 
 ### `src/lib/effects/upcast.ts`
 
@@ -1936,4 +1945,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1173 exports across 158 modules · 78 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1179 exports across 159 modules · 78 duplicate suspects._

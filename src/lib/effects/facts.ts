@@ -8,7 +8,13 @@
  */
 import type { Layer } from '../rules/pipeline';
 import { rechargeRank } from '../rules/recharge';
-import type { DamageSensitivity, ExtraAttackWord, PlayEvent, RechargePolicy } from './token-parser';
+import type {
+	DamageSensitivity,
+	ExtraAttackWord,
+	PlayEvent,
+	RechargePolicy,
+	RollLimit,
+} from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`→`skill.*`, `ability_checks`→both the skill checks and the BARE ability
@@ -166,6 +172,8 @@ interface RollFact {
 	source: string;
 	label: string;
 	formula: string;
+	/** How often the roll may be made, when its rule says (`turn` — Sneak Attack). */
+	limit?: RollLimit;
 }
 /** A condition the character cannot be given (`condition_immunity`). `id` is a state row's id,
  *  or a word no row carries (2014 says "immune to disease", and disease is not a condition). */

@@ -190,10 +190,13 @@ Two play-sheet switches are this rule and nothing else. **Ammunition is counted 
 counts it** (`ui.trackAmmunition`, off by default): a shot spends one from the stack it fires, and
 only once the turn has paid for it. 5.5e matches the weapon's `ammo:<kind>` to the stack's; SRD 5.1
 never says which ammunition a weapon fires, so there any stack qualifies and several ask which. Out
-of stock says so and rolls anyway. **A granted roll's "used this turn" mark is set by the PLAYER**
-(`play.turn.usedRolls`, cleared by Next turn) and never by rolling: only some granted rolls are
-once-per-turn, the content does not say which, and a mark that appeared on its own would invent a
-limit.
+of stock says so and rolls anyway. An action that makes attacks (`attack:<weapon>:<n>`) fires through
+the same path, one from the stack per strike. **A granted roll's "used this turn" mark sets itself
+only where the row says the roll is once per turn** (`grant_roll:…:turn`, Sneak Attack), at the
+moment the roll lands — a tray put away unrolled used nothing. For every other granted roll the mark
+is the player's, and it is theirs to lift either way (`play.turn.usedRolls`, cleared by Next turn):
+a marked roll still rolls, because "once per turn" is not "once per round" and the app sees only the
+character's own turn.
 
 In practice: a conditional ability is always listed and greyed when unavailable, never hidden, so its
 existence is never news — and the moment its window opens the sheet says so, in a notice naming it.

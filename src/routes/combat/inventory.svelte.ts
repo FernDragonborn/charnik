@@ -41,7 +41,8 @@ import type { MenuKind } from '$lib/combat/helpers';
 
 /** The anchored menu a shot asks "which stack" through. */
 export interface InventoryMenus {
-	open(kind: MenuKind, e: Event): void;
+	/** Under the trigger that asked, or centred when nothing on screen did (`null`). */
+	open(kind: MenuKind, e: Event | null): void;
 	close(): void;
 }
 
@@ -304,15 +305,19 @@ export class InventoryTracker {
 		if (build) build.finesseAbility[kindId] = ability;
 	};
 
-	/** Spend one. The last one leaves the list, so a used-up stack does not linger as a zero row. */
-	use = (ref: string) => {
+	/** Spend one — or `count`, never more than the stack holds. The last one leaves the list, so a
+	 *  used-up stack does not linger as a zero row. */
+	use = (ref: string, count = 1) => {
 		const c = this.getCharacter();
 		if (!c) return;
 		const row = this.rows.find((r) => r.entry.item === ref);
-		this.write(useOne(c.build.inventory, ref));
+		const spent = Math.min(count, row?.entry.qty ?? count);
+		let list = c.build.inventory;
+		for (let i = 0; i < spent; i++) list = useOne(list, ref);
+		this.write(list);
 		if (row)
 			toast(t('combat.notice.usedItem', { name: row.name }), {
-				description: t('combat.notice.itemsLeft', { count: row.entry.qty - 1 }),
+				description: t('combat.notice.itemsLeft', { count: row.entry.qty - spent }),
 			});
 	};
 	/** Whether a shot spends what it fires (`ui.trackAmmunition`, off by default). */
@@ -337,29 +342,32 @@ export class InventoryTracker {
 		return ammunitionStacks(fired, carried).map((s) => s.row);
 	};
 
-	/** A shot waiting on "which stack", and the shot itself. */
-	shotPending = $state<{ stacks: InventoryRow[]; fire: () => boolean } | null>(null);
+	/** A shot waiting on "which stack": the shot itself, and how many it fires. */
+	shotPending = $state<{ stacks: InventoryRow[]; fire: () => boolean; shots: number } | null>(null);
 
 	/**
 	 * Fire, and spend what was fired — only once the shot actually happened, so an attack the turn
 	 * could not pay for costs no arrow. With tracking off, or a weapon that fires nothing, this is just
 	 * the shot. One stack is the one; several ask first; none says so and fires anyway — the tracker
 	 * keeps the count, it does not take the bow out of the player's hands.
+	 *
+	 * `shots` is how many one press fires — an action that makes several attacks is one press. `e` is
+	 * the trigger the "which stack" menu hangs under, or null when no control on screen fired it.
 	 */
-	shoot = (weaponId: string, e: Event, fire: () => boolean) => {
+	shoot = (weaponId: string, e: Event | null, fire: () => boolean, shots = 1) => {
 		const stacks = this.tracksAmmunition ? this.ammunitionFor(weaponId) : undefined;
 		if (!stacks) {
 			fire();
 			return;
 		}
 		if (stacks.length > 1) {
-			this.shotPending = { stacks, fire };
+			this.shotPending = { stacks, fire, shots };
 			this.menus.open('ammo', e);
 			return;
 		}
 		const only = stacks[0];
 		if (!fire()) return;
-		if (only) this.use(only.entry.item);
+		if (only) this.use(only.entry.item, shots);
 		else toast(t('combat.notice.noAmmunition'));
 	};
 
@@ -369,6 +377,6 @@ export class InventoryTracker {
 		if (!pending) return;
 		this.shotPending = null;
 		this.menus.close();
-		if (pending.fire()) this.use(ref);
+		if (pending.fire()) this.use(ref, pending.shots);
 	};
 }

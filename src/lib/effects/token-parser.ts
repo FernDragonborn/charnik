@@ -15,6 +15,15 @@ import type { SaidText } from '$lib/util/say';
 import type { Layer } from '../rules/pipeline';
 import { parseRecharge, type RechargePolicy } from '../rules/recharge';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
+import {
+	EXTRA_ATTACK_WORDS,
+	FORM_WORD_VALUE,
+	isFormWord,
+	isRollLimit,
+	type ExtraAttackWord,
+	type FormWord,
+	type RollLimit,
+} from './token-words';
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
 export const EFFECT_KIND = {
@@ -124,63 +133,16 @@ const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KI
 export type { RechargePolicy };
 export type DamageSensitivity = 'resist' | 'immune' | 'vulnerable';
 
-/** The closed vocabulary an `extra_attack` token speaks in. */
-export const EXTRA_ATTACK_WORD = {
-	/** made with the SAME weapon again (Cleave) */
-	same: 'same',
-	/** made with this weapon while ANOTHER carrying the property is wielded (Light) */
-	other: 'other',
-	bonus: 'bonus',
-	free: 'free',
-	modifier: 'modifier',
-} as const;
-export type ExtraAttackWord = (typeof EXTRA_ATTACK_WORD)[keyof typeof EXTRA_ATTACK_WORD];
-const EXTRA_ATTACK_WORDS: ReadonlySet<string> = new Set(Object.values(EXTRA_ATTACK_WORD));
-/** Does this statement GRANT the attack, rather than re-price or adjust one another row grants? */
-export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
-	words.includes(EXTRA_ATTACK_WORD.same) || words.includes(EXTRA_ATTACK_WORD.other);
-
-/**
- * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, three a bare
- * word, two nothing at all:
- *  - `creature:<type>` — the creature type an eligible stat block has (`beast`)
- *  - `max_cr:<expr>` — the highest Challenge Rating eligible; a fraction is written as one (`1/4`)
- *  - `without:<mode>` — a movement mode an eligible stat block may NOT have (`fly`, `swim`)
- *  - `own_hp` — the form has hit points of its own, the stat block's, and the character's wait
- *  - `temp_hp:<expr>` — Temporary Hit Points gained on assuming it
- *  - `known:<expr>` — how many forms the character knows, where they are chosen ahead of time
- *  - `hours:<expr>` — how long the form lasts
- *  - `casts` — spells can be cast in the form
- *  - `ends_when:<state>` — a state row's id that ends the form the moment the character has it
- */
-export const FORM_WORD = {
-	creature: 'creature',
-	maxCr: 'max_cr',
-	without: 'without',
-	ownHp: 'own_hp',
-	tempHp: 'temp_hp',
-	known: 'known',
-	hours: 'hours',
-	casts: 'casts',
-	endsWhen: 'ends_when',
-} as const;
-export type FormWord = (typeof FORM_WORD)[keyof typeof FORM_WORD];
-/** What each word is followed by. */
-const FORM_WORD_VALUE: Record<FormWord, 'expression' | 'word' | 'none'> = {
-	creature: 'word',
-	max_cr: 'expression',
-	without: 'word',
-	own_hp: 'none',
-	temp_hp: 'expression',
-	known: 'expression',
-	hours: 'expression',
-	casts: 'none',
-	ends_when: 'word',
-};
-const isFormWord = (word: string): word is FormWord => word in FORM_WORD_VALUE;
-/** Does this form word carry an L2 expression? What the linter asks before reading the value. */
-export const formWordTakesExpression = (word: FormWord): boolean =>
-	FORM_WORD_VALUE[word] === 'expression';
+export {
+	EXTRA_ATTACK_WORD,
+	grantsExtraAttack,
+	ROLL_LIMIT,
+	FORM_WORD,
+	formWordTakesExpression,
+	type ExtraAttackWord,
+	type RollLimit,
+	type FormWord,
+} from './token-words';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
  *  a bonus/override is only STORED and rendered as a scalar → a generous finite guard is enough (a
@@ -251,6 +213,8 @@ export interface ParsedEffect {
 	/** form: what the token says about the form `target` names — the word, and its value where the
 	 *  word takes one (an L2 expression or a bare word, as `FORM_WORD` says). */
 	form?: { word: FormWord; value?: string };
+	/** grant_roll: how often the roll may be made, when its rule limits it. */
+	rollLimit?: RollLimit;
 	raw: string;
 }
 
@@ -384,10 +348,20 @@ const parseSetOverride: KindParser = (rest, raw, kind) => {
 const parseTargetOnly: KindParser = (rest, raw, kind) => ({ kind, target: rest.trim(), raw });
 
 const parseGrantRoll: KindParser = (rest, raw, kind) => {
-	// `grant_roll:<id>:<expr>` — id is snake (readable), expr is the colon-free L2 value slot.
-	const m = /^([a-z0-9][a-z0-9_]*):(.+)$/i.exec(rest.trim());
+	// `grant_roll:<id>:<expr>[:<limit>]` — id is snake (readable), expr is the colon-free L2 value
+	// slot, and the limit is how often the roll may be made. An unknown limit leaves the whole token
+	// unparsed: a limit half-read is a roll offered more often than its rule allows.
+	const m = /^([a-z0-9][a-z0-9_]*):([^:]+)(?::([a-z_]+))?$/i.exec(rest.trim());
 	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
-	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
+	const limit = m[3]?.toLowerCase();
+	if (limit !== undefined && !isRollLimit(limit)) return { kind: 'unknown', raw };
+	return {
+		kind,
+		target: m[1].toLowerCase(),
+		valueExpr: m[2].trim(),
+		...(limit ? { rollLimit: limit } : {}),
+		raw,
+	};
 };
 
 const parseGrantValue: KindParser = (rest, raw, kind) => {

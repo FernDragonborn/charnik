@@ -515,6 +515,21 @@ describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
 		});
 	});
 
+	it('reads how often the roll may be made, and carries it onto the fact', () => {
+		const tok = 'grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6:turn';
+		expect(parseToken(tok)).toMatchObject({
+			kind: 'grant_roll',
+			valueExpr: 'ceil(class_level.rogue/2) d 6',
+			rollLimit: 'turn',
+		});
+		const facts = collectFacts([{ source: 'Sneak Attack', layer: 'feature', tokens: [tok] }], ctx);
+		expect(facts.rolls[0]).toMatchObject({ formula: '3d6', limit: 'turn' });
+	});
+
+	it('a limit it does not know leaves the token unread rather than unlimited', () => {
+		expect(parseToken('grant_roll:sneak_attack:1d6:fortnight').kind).toBe('unknown');
+	});
+
 	it('dedupes the same (id, source) to one rollable (A11)', () => {
 		const tok = 'grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6';
 		const facts = collectFacts(

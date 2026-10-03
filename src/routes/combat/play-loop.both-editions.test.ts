@@ -23,6 +23,7 @@ import { newCharacter, type Character } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { spellRow } from '$lib/combat/helpers';
+import { rollFormula as rollOf } from '$lib/rules/dice';
 
 const EDITIONS = [
 	{ system: '5.5e', pack: 'srd-2024', source: 'SRD 5.2.1' },
@@ -148,6 +149,68 @@ for (const { system, pack, source } of EDITIONS) {
 			character.ui.trackAmmunition = false;
 			combat.attackRoll(longbow, noModifiers);
 			expect(qty(arrows)).toBe(19); // off: a shot is only a shot
+		});
+
+		it('an action that makes attacks spends one from the stack per strike', async () => {
+			const character = await play('fighter', 5);
+			const item = (id: string, qty: number) => ({
+				item: `item:${source}:${id}`,
+				qty,
+				equipped: true,
+				attuned: false,
+			});
+			character.build.inventory = [item('longbow', 1), item('arrows', 20)];
+			character.ui.trackAmmunition = true;
+			character.play.effects = [
+				{ iid: 'v', label: 'grant', effects: ['grant_resource:volley:2:short'], positive: true },
+			];
+			combat.activateResourceOption({
+				id: 'volley',
+				resourceId: 'volley',
+				resourceName: 'Volley',
+				name: 'Volley',
+				description: '',
+				action: 'attack:longbow:3',
+				actionType: 'action',
+				cost: 1,
+				available: true,
+			});
+			expect(character.build.inventory.find((e) => e.item === `item:${source}:arrows`)?.qty).toBe(
+				17,
+			);
+			expect(combat.journal.log.slice(0, 3).every((e) => e.damage !== undefined)).toBe(true);
+		});
+
+		it('Sneak Attack marks itself used where the roll lands, and the mark is the player’s to lift', async () => {
+			const character = await play('rogue', 5);
+			combat.toggleCombat();
+			const sneak = combat.featureRolls.find((r) => r.id === 'sneak_attack');
+			expect(sneak).toMatchObject({ formula: '3d6', limit: 'turn' });
+			if (!sneak) return;
+			expect(combat.economy.isRollUsed(sneak.id)).toBe(false);
+
+			const landed = { ...combat.journal.entryFor({ text: sneak.label }, rollOf('3d6')) };
+			combat.recordTrayRolls([landed]);
+			expect(combat.economy.isRollUsed(sneak.id)).toBe(true);
+
+			combat.economy.toggleRollUsed(sneak.id);
+			expect(combat.economy.isRollUsed(sneak.id)).toBe(false);
+			combat.recordTrayRolls([landed]);
+			combat.nextTurn();
+			expect(character.play.turn.usedRolls).toEqual([]);
+			combat.toggleCombat();
+		});
+
+		it('a roll its row does not limit marks nothing', async () => {
+			await play('bard', 5);
+			combat.toggleCombat();
+			const die = combat.featureRolls.find((r) => r.id === 'bardic_inspiration');
+			expect(die).toBeDefined();
+			expect(die?.limit).toBeUndefined();
+			if (!die) return;
+			combat.recordTrayRolls([combat.journal.entryFor({ text: die.label }, rollOf(die.formula))]);
+			expect(combat.economy.isRollUsed(die.id)).toBe(false);
+			combat.toggleCombat();
 		});
 
 		it('a caster spends a slot on a leveled spell and nothing on a cantrip', async () => {

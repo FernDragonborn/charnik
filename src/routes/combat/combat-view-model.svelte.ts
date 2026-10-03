@@ -124,7 +124,11 @@ class CombatVM {
 		() => this.character,
 		() => this.graph,
 		() => this.sheet,
-		{ open: (kind, e) => this.openMenu(kind, e), close: () => (this.overlay = null) },
+		{
+			// an action that makes attacks has no trigger to hang the menu under
+			open: (kind, e) => (e ? this.openMenu(kind, e) : this.menus.openMenuCentered(kind)),
+			close: () => (this.overlay = null),
+		},
 	);
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
 	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all

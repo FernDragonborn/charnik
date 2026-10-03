@@ -11,14 +11,6 @@
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
-- [ ] **N5 · Two tails of the play sheet's adjacent gaps.** Both rules are
-  [`../internals/characters.md`](../internals/characters.md) ▸ A tracker surfaces, it never decides.
-  - [ ] **An action that makes attacks does not spend ammunition.** Only the Attacks panel's shot
-        does; `attack:<weapon>:<n>` fires the same roll and counts nothing. No shipped action fires a
-        ranged weapon, so nothing is wrong today — it becomes a wrong count the day one does.
-  - [ ] **The "used this turn" mark cannot set itself.** It is the player's to set because the
-        content does not say which granted rolls are once-per-turn; automating it is a column on the
-        row first, and then one line where the roll lands.
 - [~] **DEFENCE-STRIP · the `Saves` group has not found its form.** The strip itself is one
   component now (`DefenseStrip`, the contract is [`../internals/ui.md`](../internals/ui.md) ▸ Shared
   controls and dialogs), so the builder and the play sheet say the same things and a Cloak of

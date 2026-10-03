@@ -9,7 +9,7 @@ import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
 import type { ExtraAttackRow } from '$lib/combat/attacks';
-import { EFFECT_KIND, EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
+import { EFFECT_KIND, EXTRA_ATTACK_WORD, ROLL_LIMIT } from '$lib/effects/token-parser';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
@@ -287,6 +287,13 @@ export class SheetRolls {
 	recordTrayRolls = (entries: RollLogEntry[]) => {
 		this.host().journal.recordRolls(entries);
 		const entry = entries[0];
+		// a granted roll whose rule is "once per turn" is marked where it LANDS, not where the tray
+		// opened: a tray put away unrolled used nothing. The mark stays the player's to lift — the same
+		// roll is theirs again on someone else's turn, which the app does not see.
+		const limited = this.host().sheet?.facts.rolls.find(
+			(roll) => roll.limit === ROLL_LIMIT.turn && roll.label === entry?.label,
+		);
+		if (limited) this.host().economy.markUsed(limited.id);
 		if (!this.host().journal.weaponAttack || !entry || entry.at === undefined) return;
 		const savage = this.savageOffer(this.host().journal.diceTray.damageSpecs[0], entry.damage);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, at: entry.at };

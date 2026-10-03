@@ -815,8 +815,8 @@ not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_
 	</div>
 	<div class="kind">
 		<div class="kind-name">grant_roll</div>
-		<div class="kind-form"><code><span class="g-kind">grant_roll</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span></code></div>
-		<div class="kind-desc">A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap.</div>
+		<div class="kind-form"><code><span class="g-kind">grant_roll</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">expr</span><span class="g-punc">&gt;</span><span class="g-punc">[:</span><span class="g-punc">&lt;</span><span class="g-slot">limit</span><span class="g-punc">&gt;</span><span class="g-punc">]</span></code></div>
+		<div class="kind-desc">A named die the feature lets you roll — Sneak Attack, Bardic Inspiration. It becomes a chip you can tap. Add <code>:turn</code> when the rule says "once per turn": the sheet then marks the roll used when it is made, and clears the mark on the next turn.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">grant_value</div>

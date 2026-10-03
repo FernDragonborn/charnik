@@ -112,9 +112,10 @@
 						<span class="row-name">{r.label}</span><span class="combat-row-hint">{r.formula}</span>
 						<span class="combat-row-desc">{r.source}</span>
 					</button>
-					<!-- "used this turn" is the PLAYER's mark: only some granted rolls are once-per-turn (Sneak
-					     Attack is), the content does not say which, and a marker that set itself would invent a
-					     limit. Shown only while a turn is being tracked, because that is what clears it. -->
+					<!-- "used this turn" sets itself only for a roll whose row SAYS it is once per turn (Sneak
+					     Attack), where the roll lands; for every other it is the player's mark, and it is theirs
+					     to lift either way. Shown only while a turn is being tracked, because that is what
+					     clears it. -->
 					{#if combat.character?.play.inCombat}
 						<button
 							class="used-mark"
