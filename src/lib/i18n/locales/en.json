@@ -710,6 +710,7 @@
 				"resist": "Damage taken: {final} of {raw} · {type} · resisted",
 				"vulnerable": "Damage taken: {final} of {raw} · {type} · vulnerable"
 			},
+			"hitPointsRestored": "Hit points restored: {restored}",
 			"cast": "Cast {name}",
 			"castRitual": "Cast {name} (ritual)",
 			"dismiss": "Dismiss",

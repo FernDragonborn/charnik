@@ -103,4 +103,3 @@
   - **A transitive one whose parent's range already admits the patched version is a stale lockfile**,
     not a missing pin: `pnpm update <name>` moves it (`devalue`, under `svelte` and `@sveltejs/kit`),
     and nothing is written to `overrides`.
-  Pages deploy recovery is still open.

@@ -263,8 +263,9 @@ position and are given per wave, because most of them were learned the hard way.
   of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
   grammar, and grammar wants a release of its own.
 
-  **One piece is left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
-  book and several at the table — a Belt of Giant Strength's variety sets the number.
+  **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
+  book and several at the table — a Belt of Giant Strength's variety sets the number — and the
+  `+1/+2/+3` rows' own `rarity`, which states one rung for all three.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

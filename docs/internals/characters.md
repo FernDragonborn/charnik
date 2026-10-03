@@ -223,7 +223,9 @@ number field and its type, plus any the player added — and each part meets its
 they are summed; temp HP, the concentration save and instant death are then asked ONCE, of the
 total, because that is what one hit is. Each part leaves a line in the roll log saying what it was
 (`combat.log.damageTaken*`: a key and its values, the type after a separator rather than inside the
-phrase), which is the only record of what the damage WAS — the hit points say what was left.
+phrase), which is the only record of what the damage WAS — the hit points say what was left. A Heal
+press leaves the same kind of line (`combat.log.hitPointsRestored`), for what came BACK rather than
+what was entered: healing past the maximum is lost, and a press that restored nothing records nothing.
 
 **Several saves for one lump of equal projectiles is deliberately not built.** Magic Missile's darts
 each raise their own save in 2014; the way to say that is to press Damage once per dart, which is the

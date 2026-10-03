@@ -77,12 +77,10 @@ stay semi-manual.
   type, so a flame tongue's slashing and fire are ONE hit: each part meets its own defense, and temp
   HP, the concentration save and instant death are asked of the total
   (`../internals/characters.md` ▸ A tracker surfaces). The picker offers every damage type, the
-  defended ones first. What is left:
-  - **The second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
-    an amount, a type and an ✕ under the first picker. It adds a control to a panel the playtest
-    already called crowded, so it wants looking at with COMBAT-RAIL rather than on its own.
-  - **Healing is not recorded.** The log says what was taken and not what was restored; a Heal
-    press is the same kind of fact and has no line.
+  defended ones first. A Heal press records what it restored. What is left:
+  **the second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
+  an amount, a type and an ✕ under the first picker. It adds a control to a panel the playtest
+  already called crowded, so it wants looking at with COMBAT-RAIL rather than on its own.
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all

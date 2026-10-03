@@ -278,11 +278,21 @@ export class HitPoints {
 		}
 	};
 	/** Heal by the entered amount. Leaving 0 HP clears the death-save track, but that is not written
-	 *  here — `syncDyingState` owns it for every way hit points come back. */
+	 *  here — `syncDyingState` owns it for every way hit points come back. The log records what came
+	 *  BACK rather than what was entered: healing past the maximum is lost, and the line says so by
+	 *  being smaller. */
 	heal = () => {
 		const p = this.host().character?.play;
 		if (!p) return;
-		p.hp.current = Math.min(this.hpMax, p.hp.current + this.enteredAmount);
+		const before = p.hp.current;
+		p.hp.current = Math.min(this.hpMax, before + this.enteredAmount);
+		const restored = p.hp.current - before;
+		if (restored > 0)
+			this.host().journal.logMarker({
+				text: `Hit points restored: ${restored}`,
+				key: 'combat.log.hitPointsRestored',
+				values: { restored },
+			});
 	};
 
 	/**

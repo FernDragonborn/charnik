@@ -106,7 +106,6 @@
   the source is a PDF, mining it is prose work, and what lands here is a CSV diff a human reads.
   What has to be decided first is the row SHAPE — a rules chapter is nested sections, not the flat
   `id, name, text` every current type is, and flattening it wrongly is harder to undo than to design.
-  A sibling gap of the same kind: 2014's missing item tables (MAGIC-ITEM-VOCAB ▸ 2b).
 
 - [ ] **STRUCTURE-FROM-TEXT · facts that still sit in prose and would be better as columns.** None
   block the loader; each raises fidelity where the UI later wants a structured filter. Ability
@@ -141,19 +140,20 @@
   that would APPLY a qualified defence is deliberately not built: it needs the player to say what a
   save is against, which is a design question of its own.
 
-  2b. **The 2014 pack carries every table SRD 5.1 prints inside a magic item** — thirty-four, typed
-     by hand as the HTML the 2024 pack uses and pinned by count — and the six items whose rarity
-     "varies", which the pack had no row for at all: Belt of Giant Strength, Figurine of Wondrous
-     Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll. What that
-     leaves is vocabulary, and it is the same in BOTH editions: a row that is one entry in the book
-     and several items at the table. A Belt of Giant Strength sets Strength to a number its VARIETY
-     states, an Ioun Stone does a different thing per stone, and neither `bonus_choice` (a `+N`
-     capped at ten) nor `choice_options` (a word substituted into a target) says "this variety
-     sets 23". Until one does, those rows are text in both packs.
+  **Two pieces are left:**
+
+  1. **A row that is one entry in the book and several items at the table**, the same in BOTH
+     editions. The 2014 pack carries every table SRD 5.1 prints inside a magic item — thirty-four,
+     typed by hand as the HTML the 2024 pack uses and pinned by count — and the six items whose
+     rarity "varies": Belt of Giant Strength, Figurine of Wondrous Power, Ioun Stone, Potion of
+     Giant Strength, Potions of Healing and Spell Scroll. A Belt of Giant Strength sets Strength to
+     a number its VARIETY states, an Ioun Stone does a different thing per stone, and neither
+     `bonus_choice` (a `+N` capped at ten) nor `choice_options` (a word substituted into a target)
+     says "this variety sets 23". Until one does, those rows are text in both packs.
      The Deck of Many Things' Avatar of Death is a stat block SRD 5.1 prints inside the item; the
      pack carries the item's text and not the stat block.
 
-  3. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
+  2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated
      `rarity: very_rare` stands — wrong for a +1 and a +2. It is a browsing fact, not a number on a
      sheet, and it is the row's own column rather than the answer's.

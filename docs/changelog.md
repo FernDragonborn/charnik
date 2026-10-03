@@ -49,6 +49,7 @@ falls off a phone screen.
   and what your resistance did to it — and the type picker offers every damage type, yours first. A
   hit that deals two types is one press: add the second with the `+` beside the picker, and each
   part meets its own defense while temporary hit points and the concentration save see the total.
+  Healing leaves a line too, for the hit points that actually came back.
 - **Wild Shape.** A druid had a paragraph where the feature should be. Now the uses are a pool —
   two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
   your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the

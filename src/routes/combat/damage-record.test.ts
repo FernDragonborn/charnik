@@ -113,6 +113,22 @@ describe('damage · one hit, two types', () => {
 	});
 });
 
+describe('healing · the record it leaves', () => {
+	it('says what came back, which is less than what was entered at the maximum', () => {
+		c.play.hp.current = combat.hpMax - 4;
+		combat.hpAmount = 10;
+		combat.heal();
+		expect(c.play.hp.current).toBe(combat.hpMax);
+		expect(recorded()).toEqual([['combat.log.hitPointsRestored', { restored: 4 }]]);
+	});
+
+	it('nothing is recorded for a heal that restored nothing', () => {
+		combat.hpAmount = 10;
+		combat.heal();
+		expect(recorded()).toEqual([]);
+	});
+});
+
 describe('damage · the types on offer', () => {
 	it('lists what the character has a defense for first, then every other type', () => {
 		const options = combat.damageTypeOptions;

@@ -710,6 +710,7 @@
 				"resist": "Отримано шкоди: {final} із {raw} · {type} · опір",
 				"vulnerable": "Отримано шкоди: {final} із {raw} · {type} · вразливість"
 			},
+			"hitPointsRestored": "Відновлено хітів: {restored}",
 			"cast": "Накладено {name}",
 			"castRitual": "Накладено {name} (ритуал)",
 			"dismiss": "Закрити",
