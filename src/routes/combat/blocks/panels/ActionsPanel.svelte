@@ -150,7 +150,8 @@
 						? $_('combat.actions.unavailable')
 						: broke
 							? $_('combat.actions.cantAfford', { values: { resource: o.resourceName } })
-							: o.description}
+							: // the row's own prose, which is Markdown like every other content text
+								{ markdown: o.description }}
 					onclick={() => combat.activateResourceOption(o)}
 				>
 					<span class="row-name">{o.name}</span>

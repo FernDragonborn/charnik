@@ -840,6 +840,17 @@ svg.hand-drawn {
 .provenance-popover.is-open {
 	display: block;
 }
+/* a content row's PROSE: its paragraphs are elements, so runs of whitespace mean nothing and the
+   first and last of them must not add air to the popover's own padding */
+.provenance-popover.is-prose {
+	white-space: normal;
+}
+.provenance-popover.is-prose > :first-child {
+	margin-top: 0;
+}
+.provenance-popover.is-prose > :last-child {
+	margin-bottom: 0;
+}
 /* the same text as an accessible description. Hidden outright rather than clipped: it must not
    participate in layout OR in overflow, and `aria-describedby` reads a hidden element by design. */
 .provenance-description {

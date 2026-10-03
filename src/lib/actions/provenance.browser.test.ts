@@ -122,6 +122,30 @@ describe('provenance (ui.md ▸ UX pattern contract, rule 3)', () => {
 		expect(isOpen()).toBe(true);
 	});
 
+	it('a content row’s prose is rendered as Markdown, sanitized, and described in plain words', () => {
+		const node = mountValue();
+		cleanup = provenance(node, {
+			markdown: 'Regain **2d6** Hit Points.\n\n<img src=x onerror="window.pwned = 1">',
+		})?.destroy;
+		enter(node);
+		expect(popover()?.classList.contains('is-prose')).toBe(true);
+		expect(popover()?.querySelector('strong')?.textContent).toBe('2d6');
+		expect(popover()?.querySelector('[onerror]')).toBeNull();
+		const description = document.getElementById(node.getAttribute('aria-describedby') ?? '');
+		expect(description?.textContent).toBe('Regain 2d6 Hit Points.');
+	});
+
+	it('a plain string is never read as markup, and takes the prose class back off', () => {
+		const node = mountValue();
+		const handle = provenance(node, { markdown: '**bold**' });
+		cleanup = handle?.destroy;
+		enter(node);
+		handle?.update?.('<b>AC</b> **13**');
+		expect(popover()?.classList.contains('is-prose')).toBe(false);
+		expect(popover()?.querySelector('b')).toBeNull();
+		expect(popover()?.textContent).toBe('<b>AC</b> **13**');
+	});
+
 	it('leaves a control the tab stop it already had, and gives back what it took', () => {
 		const button = document.createElement('button');
 		document.body.append(button);

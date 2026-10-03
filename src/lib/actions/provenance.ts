@@ -1,5 +1,6 @@
 import type { Action } from 'svelte/action';
 import { FOCUSABLE } from './trapFocus';
+import { renderContentMarkdown } from '$lib/content/markdown';
 
 /*
  * The provenance popover: how an auto-calculated value explains itself (docs/internals/ui.md ▸ The
@@ -15,6 +16,30 @@ import { FOCUSABLE } from './trapFocus';
  * hover AND on focus. That is the APG tooltip pattern, and it asks for no new gesture: a value you
  * can reach explains itself when you reach it.
  */
+
+/**
+ * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown,
+ * so it is said as `{ markdown }` and goes through the one sanitizing renderer every other surface
+ * uses. A plain string is never read as markup, whatever it contains.
+ */
+export type Explanation = string | { markdown: string } | null | undefined;
+
+/** An explanation ready to show: its words for a screen reader, and its markup when it is prose. */
+interface Said {
+	text: string;
+	html: string | null;
+}
+const NOTHING: Said = { text: '', html: null };
+
+function sayOf(given: Explanation): Said {
+	if (!given) return NOTHING;
+	if (typeof given === 'string') return { text: given, html: null };
+	if (!given.markdown) return NOTHING;
+	const html = renderContentMarkdown(given.markdown);
+	const holder = document.createElement('div');
+	holder.innerHTML = html;
+	return { text: holder.textContent.trim(), html };
+}
 
 /** Gap between the value and its popover — the anchored menus' own offset (`menu-overlay`). */
 const GAP_PX = 6;
@@ -76,9 +101,12 @@ function followOrHide(): void {
 	else hide();
 }
 
-function show(node: HTMLElement, text: string): void {
+function show(node: HTMLElement, said: Said): void {
 	const tip = popoverElement();
-	tip.textContent = text;
+	// prose wraps as paragraphs; a breakdown keeps its one line per newline
+	tip.classList.toggle('is-prose', said.html !== null);
+	if (said.html === null) tip.textContent = said.text;
+	else tip.innerHTML = said.html;
 	// shown before it is placed: an element has no measurable size until it is laid out, and the
 	// alternative — placing it from the previous value's coordinates — is a flash in the wrong spot
 	tip.classList.add('is-open');
@@ -86,7 +114,7 @@ function show(node: HTMLElement, text: string): void {
 	openFor = node;
 }
 
-export const provenance: Action<HTMLElement, string | null | undefined> = (node, initial) => {
+export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 	// the description travels with the VALUE, not with the shared popover: a screen reader reads it
 	// on focus whether or not the popover is what showed it
 	const label = document.createElement('span');
@@ -98,13 +126,13 @@ export const provenance: Action<HTMLElement, string | null | undefined> = (node,
 	label.id = `provenance-${++described}`;
 	/** Did WE make this a tab stop? A value that is already a control keeps the one it had. */
 	let ownsTabStop = false;
-	let text = '';
+	let said = NOTHING;
 
 	/** Empty provenance is no provenance: nothing to read, so no tab stop and no description either.
 	 *  A value can arrive before the sheet that explains it, so this is re-decided on every update. */
-	const describe = (given: string | null | undefined) => {
-		const next = given ?? '';
-		text = next;
+	const describe = (given: Explanation) => {
+		said = sayOf(given);
+		const next = said.text;
 		label.textContent = next;
 		if (next && !label.isConnected) {
 			node.append(label);
@@ -125,7 +153,7 @@ export const provenance: Action<HTMLElement, string | null | undefined> = (node,
 	};
 
 	const open = () => {
-		if (text) show(node, text);
+		if (said.text) show(node, said);
 	};
 	const close = () => {
 		if (openFor === node) hide();
@@ -153,10 +181,10 @@ export const provenance: Action<HTMLElement, string | null | undefined> = (node,
 	node.addEventListener('keydown', onKeydown);
 
 	return {
-		update(next: string | null | undefined) {
+		update(next: Explanation) {
 			describe(next);
 			if (openFor !== node) return;
-			if (text) show(node, text);
+			if (said.text) show(node, said);
 			else hide();
 		},
 		destroy() {
