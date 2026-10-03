@@ -119,7 +119,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Incapacitated in 2024.
 // v38: Sneak Attack's roll says it is once per turn, in both packs.
 // v39: class features lose their `resource` column, which was empty and read by nothing.
-export const CONTENT_SEED_VERSION = 39;
+// v40: both packs carry the Avatar of Death, the stat block each SRD prints inside the Deck of Many
+// Things.
+export const CONTENT_SEED_VERSION = 40;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

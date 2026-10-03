@@ -148,8 +148,6 @@
      a number its VARIETY states, an Ioun Stone does a different thing per stone, and neither
      `bonus_choice` (a `+N` capped at ten) nor `choice_options` (a word substituted into a target)
      says "this variety sets 23". Until one does, those rows are text in both packs.
-     The Deck of Many Things' Avatar of Death is a stat block SRD 5.1 prints inside the item; the
-     pack carries the item's text and not the stat block.
 
   2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated

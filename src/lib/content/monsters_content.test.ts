@@ -64,7 +64,8 @@ describe('shipped monsters', () => {
 	it('2014 carries the appendices, so a druid at level 2 has forms to take', async () => {
 		const g = await loadEdition('srd-2014');
 		const rows = g.list('monster');
-		expect(rows).toHaveLength(317); // 201 chapter + 95 appendix MM-A + 21 MM-B
+		// 201 chapter + 95 appendix MM-A + 21 MM-B + the Avatar of Death, printed inside a magic item
+		expect(rows).toHaveLength(318);
 		const beasts = rows.filter((r) => r.data.creature_type.includes('beast'));
 		const shapeable = beasts.filter((r) => ['0', '1/8', '1/4'].includes(r.data.cr ?? ''));
 		// RAW a 2014 druid takes CR 1/4 at level 2; the pack used to offer exactly none

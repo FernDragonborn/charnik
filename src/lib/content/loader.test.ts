@@ -224,7 +224,9 @@ describe('loader — real content', () => {
 			const g = await loadPacks('srd-2024', 'srd-2014');
 			expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 			expect(g.list('spell').length).toBe(339 + 319);
-			expect(g.list('monster').length).toBe(330 + 317); // 5.1 = 201 chapter + 116 appendix
+			// 5.1 = 201 chapter + 116 appendix; each edition + 1 for the Avatar of Death, the stat block
+			// its SRD prints inside the Deck of Many Things
+			expect(g.list('monster').length).toBe(331 + 318);
 			// E1: 5.5e languages exist now (SRD 5.2.1: 10 Standard + 9 Rare) alongside 2014's 16
 			expect(g.list('language').length).toBe(19 + 16);
 			expect(g.list('language', { system: '5.5e' }).length).toBe(19);
