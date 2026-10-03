@@ -4,7 +4,7 @@
  * Pure.
  */
 import { ordinal, titleCase } from '$lib/util/format';
-import type { ContentGraph } from '$lib/content/loader';
+import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { localizedName } from '$lib/content/detail';
 import type { RowData } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
@@ -53,7 +53,11 @@ export interface SpellRow {
 	 *  that class's rule about preparation (`canCastAsRitual`). What the row's control and the cast
 	 *  itself both ask, so the two cannot disagree. */
 	ritualCast: boolean;
+	/** The dice a cast rolls, as written (""2d10 fire""); empty for a spell that rolls none. */
 	summary: string;
+	/** The row's own effect tokens — what a spell that rolls nothing is captioned from
+	 *  (`effects-view` ▸ `effectsCaption`). */
+	effectTokens: string[];
 	resolution: '' | 'hit' | 'save' | 'auto' | 'temp';
 	/** Catalog key for the result chip ('' for utility) — the panel words it. */
 	resolutionLabelKey: string;
@@ -95,23 +99,6 @@ export interface SpellGroup {
 /** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
 const castingIcon = (ct: string): SpellRow['castTimeIcon'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
-
-/** Short effect summary for a non-damage spell (curated, falls back to "utility"). */
-function effectHint(d: RowData<'spell'>): string {
-	const name = d.name_en ?? '';
-	if (/self/i.test(d.range ?? '') && /step|door|teleport/i.test(name)) return 'teleport';
-	if (/counter/i.test(name)) return 'negate spell';
-	if (/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(name))
-		return (
-			{
-				'mage hand': 'utility',
-				'mage armor': 'set AC 13',
-				fly: 'fly 60 ft',
-				'mirror image': '3 duplicates',
-			}[name.toLowerCase()] ?? 'utility'
-		);
-	return 'utility';
-}
 
 /** A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its
  *  own cap. */
@@ -391,7 +378,8 @@ export function spellRow(
 		// spell was two different words on one screen
 		name: localizedName(row, locale),
 		level: lvl,
-		summary: dmg || effectHint(d),
+		summary: dmg,
+		effectTokens: tokensOf(row),
 		resolution: SP_RES_CHIP[res] ?? '',
 		resolutionLabelKey: SP_RES_LABEL_KEY[res] ?? '',
 		...(res === 'save' && d.save_ability ? { resolutionAbility: String(d.save_ability) } : {}),

@@ -27,6 +27,9 @@ export const SENSE_PREFIX = 'senses.';
 /** The one target that is not a die this character throws: what an ATTACKER rolling at them gets. */
 export const INCOMING_ATTACK_TARGET = 'attacked';
 const SENSE_TARGET = /^senses\.[a-z][a-z0-9_]{0,31}$/;
+/** The death saving throw: a save no ability owns, so it is not one of `SAVE_TARGETS` (nothing is
+ *  proficient in it), and a roll the sheet does make — Beacon of Hope's advantage lands on it. */
+const DEATH_SAVE_TARGET = 'save.death';
 
 const NUMERIC_TARGETS = new Set<string>([
 	...ABILITIES,
@@ -53,6 +56,7 @@ const NUMERIC_TARGETS = new Set<string>([
 	// passive Stealth…), not only the three senses the strip highlights.
 	...Object.keys(SKILL_ABILITY).map((s) => `passive.${s}`),
 	...SAVE_TARGETS,
+	DEATH_SAVE_TARGET,
 	...SKILL_TARGETS,
 ]);
 // roll-matched kinds (advantage/disadvantage/auto_*/reroll/min_die): the keys `matchesTarget` fans
@@ -68,6 +72,7 @@ const ROLL_TARGETS = new Set<string>([
 	'initiative',
 	'd20_tests',
 	...SAVE_TARGETS,
+	DEATH_SAVE_TARGET,
 	...SKILL_TARGETS,
 ]);
 // grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep

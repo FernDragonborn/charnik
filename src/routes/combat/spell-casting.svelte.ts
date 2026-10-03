@@ -17,6 +17,7 @@ import type { Character } from '$lib/character/schema';
 import type { ResourceDef } from '$lib/effects/facts';
 import {
 	durationToRounds,
+	effectsCaption,
 	enhancementTokens,
 	casterForSpell,
 	canTogglePreparedFor,
@@ -28,7 +29,7 @@ import {
 } from '$lib/combat/helpers';
 import type { TurnEconomy } from './turn-economy.svelte';
 import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
+import { NO_VARS, withCastSlot, withSpellcastingMod, withWalkingSpeed } from '$lib/effects/context';
 import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { evalUpcast } from '$lib/effects/upcast';
 import { SpellCastRolls, type CastRollsHost, type UpcastFlatKind } from './spell-cast-rolls';
@@ -347,6 +348,16 @@ export class SpellCasting {
 			.filter(({ preview }) => preview)
 			.map(({ slot, preview }) => translate(NOTE_KEY.upcastPreview, { values: { slot, preview } }))
 			.join('\n');
+
+	/** What a spell that rolls nothing DOES, from its own effect tokens and resolved against this
+	 *  sheet — Mage Armor reads as the character's number, Spider Climb as their speed. Empty for a
+	 *  row that carries no tokens, which the panel words as plain utility. */
+	caption = (r: SpellRow, translate?: Translate): string =>
+		effectsCaption(
+			r.effectTokens,
+			withWalkingSpeed(this.host.sheet?.castCtx ?? NO_VARS, this.host.sheet?.speed.value ?? 0),
+			translate,
+		);
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.

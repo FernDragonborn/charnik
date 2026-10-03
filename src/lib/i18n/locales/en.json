@@ -999,6 +999,7 @@
 		},
 		"spells": {
 			"alwaysPrepared": "always prepared",
+			"utility": "utility",
 			"armorBlockNote": "Not proficient with {category} armour — spellcasting blocked",
 			"formBlocked": "Casting blocked — you are in {form} form",
 			"formBlockNote": "You can't cast spells in this form. A spell you have already cast keeps going, and so does your concentration on it.",

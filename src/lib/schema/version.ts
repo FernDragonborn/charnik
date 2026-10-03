@@ -123,7 +123,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Things.
 // v41: the 2014 monsters carry their condition immunities in a column of their own, and the 116
 // appendix rows no longer open their text with the stat block their columns already state.
-export const CONTENT_SEED_VERSION = 41;
+// v42: 22 spells of the 2024 pack and 21 of the 2014 one carry the effect their own text states on
+// its target — Mage Armor, Shield, Bless, Haste, Fly and the rest. An install left at v41 casts
+// them and nothing on the sheet moves.
+export const CONTENT_SEED_VERSION = 42;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

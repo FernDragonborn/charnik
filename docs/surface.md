@@ -40,6 +40,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
+- `says` ×3 — src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -85,7 +86,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
-- `says` ×2 — src/lib/combat/attack-properties.ts · src/routes/combat/sheet-rolls.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
@@ -840,6 +840,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function whyPassive` — * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `function effectTagResolved` — Panel tag for a token, preferring the DERIVE-RESOLVED value when the token's value is an L2 * EXPRESSION — `effectTag…
+- `function effectsCaption` — * What a row's effect tokens DO, as one short line — the caption of a spell that rolls no damage * ("AC = 15", "Fly s…
 - `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).
 - `function describeDerivedEffects` — * B14: the effects panel's read-only "from items & features" view.
 - `function noteText` — The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against * you, auto-crit, se…
@@ -1956,4 +1957,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1185 exports across 160 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1186 exports across 160 modules · 78 duplicate suspects._

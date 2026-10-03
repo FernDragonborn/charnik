@@ -152,6 +152,15 @@ learn, which reads the class's own table. A Long Rest takes it away: Font of Mag
 slots it creates, Wild Resurgence is silent, and a slot that outlived every rest would be a permanent
 one — RAI.
 
+**A cast leaves the spell's own `effects` on the CASTER**, as a carrier effect that lasts the
+spell's duration and holds its concentration, so ending either ends both. A spell row therefore
+carries a token only for an effect its own text states on its target — Mage Armor's base AC,
+Shield's +5 — and a spell whose effect needs a choice or a word the vocabulary lacks stays prose
+(`work/content.md` ▸ E4). The model is self-only: a spell laid on someone else still lands here.
+**The row of a spell that rolls nothing is captioned from those tokens**, resolved against the sheet
+(`combat/effects-view.ts` ▸ `effectsCaption`): "AC = 15" is this character's Mage Armor. No list of
+spell names says what a spell does; a row with no tokens reads as utility.
+
 **Upcasting is one `upcast` column of `kind:formula` tokens**, parsed by the effect grammar. Four
 things about it are settled. Combining is a DELTA for structured kinds (`base + delta`, the base being
 the single source) and ABSOLUTE for a count or a duration — `inf` only ever appears in `duration`, so

@@ -178,9 +178,27 @@
   Instant Fortress, Apparatus of the Crab, Iron Flask), and summon items (Horn of Valhalla, Deck of
   Many Things). These are complete as prose.
 
-- [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
-  `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
-  so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [~] **E4 · the spells whose effect is still only prose.** A cast leaves the spell's own effect
+  tokens on the caster (`../internals/rules-core.md` ▸ Spellcasting), and the row of a spell that
+  rolls nothing is captioned from those tokens, resolved against the sheet
+  (`combat/effects-view.ts` ▸ `effectsCaption`) — so a spell says what it does because its data
+  does, and the hardcoded name list that used to say it is gone. 25 spells of the 2024 pack and 24
+  of the 2014 one carry tokens, each typed from the sentence of its own text that states it.
+  What is left, grouped by what each waits on:
+  - **A choice made at the cast.** Enhance Ability (which ability), Protection from Energy and
+    Fire Shield (which damage type), Enlarge/Reduce (which of the two): the token would need the
+    answer the way an item's `item_choice` does, and a cast asks nothing yet.
+  - **A word the vocabulary lacks.** Haste doubles Speed and no kind multiplies but `halve`;
+    Heroism's Temporary Hit Points each turn want an executor verb that gives them; 2014 Stoneskin
+    resists NONMAGICAL damage; Protection from Poison's advantage is against one condition; Jump,
+    Freedom of Movement, Death Ward and Sanctuary state rules about events the app does not see.
+  - **A spell cast on SOMEONE ELSE still lands on the caster.** The model is "a cast applies to
+    self" and the carrier is also what holds concentration, so a Bless laid on three allies shows
+    its d4 on the caster's own rolls until the effects switch or a re-cast says otherwise. Saying
+    who a cast is for is a control on the cast, and wants a design before it is a column.
+  - **`castingIcon` and `durationToRounds` still read English out of a column's text** ("bonus",
+    "1 minute"). Both read a declared column and neither a description, so no number is mined from
+    prose; they are English-only, which a pack in another language would meet first.
 - **Won't-do, recorded so they are not re-audited:** **B11**, a size cap on `Storage.read()` — the
   path that mattered is capped where a pack is fetched (`MAX_REMOTE_BYTES`, `MAX_PACK_FILES`,
   `MAX_PACK_BYTES`, `MAX_PREFETCH_BYTES` in `content/remote/types.ts`), and what is left would guard
@@ -188,16 +206,3 @@
   a cap rejects legitimately large homebrew; **B24**, incremental per-file reparse — a full reload
   of both shipped packs is about 90 ms, and `articles`, `byEffectiveId`, locale discovery and
   `resolveRefs` all span files.
-- **UBUG-9 · Spell-block summary caption is weak for non-damage spells (think about).** The bold
-  caption per spell row (`SpRow.spe` = `dmg || effectHint(row.data)`) is great for damage (`1d10 fire`)
-  but for the rest it's mostly a flat "utility" — except a few HAND-CURATED cases (`effectHint`
-  hardcodes `mage hand`→"utility", a self-range teleport→"teleport" so Misty Step reads well, etc.).
-  Goal: that descriptive style EVERYWHERE (Misty Step "teleport", Mage Armor "set AC 13", Bless
-  "+1d4 attacks & saves"…), not a generic "utility". This is AUDIT **D6** (`effectHint` hardcodes
-  spell names, EN-only, against the data-driven grain). **Idea to explore:** derive the caption from
-  the spell's EFFECT TOKENS via the existing engine (parse `flat_bonus`/`set_override`/`apply_condition`/
-  `speed`… into a short human phrase) instead of a hardcoded name list — the engine already parses these
-  into typed facts, so a `factsToSummary(facts)` could render "set AC 13" / "+1d4 saves" / "teleport"
-  data-drivenly + localized. Blocked partly by **E4** (most SRD spells still ship EMPTY `effects`
-  columns — no tokens to summarize yet); until encoded, a per-spell content `summary_*` column is the
-  fallback. Cross-ref D6 + E4.

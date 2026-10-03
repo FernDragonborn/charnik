@@ -13,7 +13,14 @@ import {
 	type Translate,
 } from '$lib/rules/pipeline';
 import { abilityShortLabel, titleCase, signed } from '$lib/util/format';
-import { parseToken, EFFECT_KIND, type RechargePolicy } from '$lib/effects/token-parser';
+import {
+	parseToken,
+	resolveEffectValue,
+	splitGuard,
+	EFFECT_KIND,
+	type RechargePolicy,
+} from '$lib/effects/token-parser';
+import type { ExprContext } from '$lib/effects/expression-evaluator';
 import type { EffectFacts, NumericFact } from '$lib/effects/apply';
 import type { EffectInstance } from '$lib/character/schema';
 import type { SkillId } from '$lib/character/skills';
@@ -278,6 +285,44 @@ export function effectTagResolved(
 	return f ? numericFactTag(f, translate) : effectTag(token, translate);
 }
 
+const SET_OP = { floor: 'floor', cap: 'cap' } as const;
+
+/**
+ * What a row's effect tokens DO, as one short line — the caption of a spell that rolls no damage
+ * ("AC = 15", "Fly speed ≥ 60", "adv · all saves"). Read off the tokens the row carries, so a spell
+ * says what it does because its data does, in the reader's language, and a row with no tokens says
+ * nothing rather than a guess.
+ *
+ * A value written as an expression is RESOLVED against `ctx` where one is given — Mage Armor's
+ * `13+dex_mod` reads as this character's number — and a token whose value does not resolve falls
+ * back to its literal tag. The guard is dropped: the caption says what the spell does, not when.
+ */
+export function effectsCaption(
+	tokens: readonly string[],
+	ctx?: ExprContext,
+	translate?: Translate,
+): string {
+	const tags = tokens.map((raw) => {
+		const { token } = splitGuard(raw);
+		const p = parseToken(token);
+		const numeric = p.kind === EFFECT_KIND.flatBonus || p.kind === EFFECT_KIND.setOverride;
+		if (!numeric || !p.target || !p.valueExpr) return effectTag(token, translate);
+		const value = resolveEffectValue(p, ctx);
+		if (value.amount === undefined && !value.diceFormula) return effectTag(token, translate);
+		return numericFactTag(
+			{
+				target: p.target,
+				op: p.kind === EFFECT_KIND.flatBonus ? 'add' : p.setMode ? SET_OP[p.setMode] : 'set',
+				...(value.amount !== undefined ? { amount: value.amount } : {}),
+				...(value.diceFormula ? { diceFormula: value.diceFormula } : {}),
+			},
+			translate,
+		);
+	});
+	// a comma, not the · a tag already uses inside itself ("adv · DEX save")
+	return [...new Set(tags)].join(', ');
+}
+
 /** One source's derived contributions, as short display tags (B14). */
 export interface DerivedEffectGroup {
 	source: string;
@@ -286,7 +331,10 @@ export interface DerivedEffectGroup {
 
 /** A short tag for a numeric fact, formatted from the FACT FIELDS (never re-parsing the token — the
  *  D7 invariant): "AC +1" / "Speed = 0" / "INT ≥ 19" / "hp_max ×½" / "attack +1d6". */
-function numericFactTag(f: NumericFact, translate?: Translate): string {
+function numericFactTag(
+	f: Pick<NumericFact, 'target' | 'op' | 'amount' | 'diceFormula'>,
+	translate?: Translate,
+): string {
 	const t = targetLabel(f.target, translate);
 	if (f.amount !== undefined) {
 		if (f.op === 'set') return `${t} = ${f.amount}`;

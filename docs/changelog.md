@@ -204,6 +204,13 @@ in a short desktop window, which hit the same bug.
 - **Three 2014 spells had half an "At Higher Levels"**, with the rest stuck to the end of their
   description — Moonbeam, Dominate Beast and Create Undead. Moonbeam's 2014 damage now scales with the
   slot, as that sentence says.
+- **Casting a buff changes the sheet.** Mage Armor, Shield, Shield of Faith, Barkskin, Bless, Haste,
+  Fly, Longstrider, Spider Climb, Invisibility, Blur, Stoneskin, Foresight and a dozen more now
+  carry the effect their own text states, in both editions, so the number moves when you cast and
+  goes back when the spell ends. In the spell list such a spell says what it does — "AC = 15" for
+  your Mage Armor — where it used to say "utility".
+- **Advantage on death saving throws works.** Beacon of Hope grants it, and the sheet used to
+  discard it.
 - **2014 creatures say which conditions they are immune to.** SRD 5.1 prints the line on 89 stat
   blocks and the pack had kept it for six, in prose. And the beasts and NPCs of its appendices no
   longer open their text with the stat block the page already shows above it.

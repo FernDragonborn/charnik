@@ -15,6 +15,12 @@
 	const pinned = $derived(combat.pinned);
 	const { cast, togglePrepared } = combat;
 	const { slotClick } = combat.resources;
+
+	type Row = (typeof combat.spellGroups)[number]['rows'][number];
+	/** What a spell row says of itself: the dice a cast rolls; failing that, what its own tokens say
+	 *  it does; failing that, the one word left for a spell whose row states neither. */
+	const says = (r: Row): string =>
+		r.summary || combat.casting.caption(r, $_) || $_('combat.spells.utility');
 </script>
 
 {#if s.spellcasting.classes.length}
@@ -116,7 +122,9 @@
 								>
 							{/if}
 						</span>
-						<span class="spell-summary">{r.summary}</span>
+						<!-- a `title` for the one thing rule 3 leaves it: the cell's own text, where the
+						     column cuts it short (Haste says three things) -->
+						<span class="spell-summary" title={says(r)}>{says(r)}</span>
 						{#if r.resolution}<span class="resolution-tag {r.resolution}"
 								>{$_(r.resolutionLabelKey, {
 									...(r.resolutionAbility
