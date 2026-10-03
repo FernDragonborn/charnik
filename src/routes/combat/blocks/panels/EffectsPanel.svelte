@@ -79,7 +79,10 @@
 				{@const note = noteText(tok)}
 				{#if note}
 					<span class="effect-tag effect-tag--note" title={$_('combat.effects.referenceOnly')}
-						>ⓘ {note}</span
+						><span aria-hidden="true">ⓘ</span><span class="visually-hidden"
+							>{$_('combat.effects.referenceOnly')}:</span
+						>
+						{note}</span
 					>
 				{:else}
 					<span class="effect-tag effect-tag--{polarity}"

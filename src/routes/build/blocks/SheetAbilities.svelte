@@ -41,7 +41,9 @@
 			</span>
 			<span class="mod">{block ? signed(block.mod) : ''}</span>
 			{#if block?.saveProficient}<span class="save" title={$_('build.vitals.saveProficient')}
-					>{$_('build.vitals.save', { values: { mod: signed(block.save.value) } })}</span
+					>{$_('build.vitals.save', { values: { mod: signed(block.save.value) } })}<span
+						class="visually-hidden">, {$_('build.vitals.saveProficient')}</span
+					></span
 				>{/if}
 		</button>
 	{/each}

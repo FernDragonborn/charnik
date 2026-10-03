@@ -275,7 +275,7 @@
 				{#snippet leading(e)}
 					{@const st = locStatus(e.row.data, e.row.sourceLang, targetLocale)}
 					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}
-						><Icon name={LOC_MARK[st]} size={12} /></span
+						><Icon name={LOC_MARK[st]} size={12} label={$_(`translate.status.${st}`)} /></span
 					>
 				{/snippet}
 			</EntryList>

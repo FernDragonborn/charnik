@@ -58,15 +58,11 @@
 - [~] **TITLE-POPOVER · an explanation appears where the pointer is, not where Windows decides.**
       The pass is done: every `title` that EXPLAINED a control or a value is the provenance popover
       now, and what a `title` may still be is [`../internals/ui.md`](../internals/ui.md) ▸ rule 3.
-      Two groups were left on purpose, each waiting on something that is not this mechanism:
-      - **The roller's own surfaces** — 13 in `RollRow`, 6 in `RollerLine`: which die a face came
-        from, what a modifier is made of, why a pill is held. Each would become a tab stop, inside a
-        toast that is gone in seconds and inside a line whose keyboard model is a caret walking
-        tokens. That is a decision about the roller, taken with it.
-      - **A mark repeated on every row of a list** — the translation status, the proficiency dot,
-        the save mark, the cast-time icon, an effect's reference-only note. A popover costs one tab
-        stop per row to say the same sentence; these are the names of marks, and want a legend or an
-        accessible name rather than a walk of eighteen stops.
+      One group was left on purpose, waiting on something that is not this mechanism:
+      **the roller's own surfaces** — 13 in `RollRow`, 6 in `RollerLine`: which die a face came
+      from, what a modifier is made of, why a pill is held. Each would become a tab stop, inside a
+      toast that is gone in seconds and inside a line whose keyboard model is a caret walking
+      tokens. That is a decision about the roller, taken with it.
       The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
       expands prose inside the row, with `title` on the button as a second, slower explanation of the
       button itself. Hover should open the prose where the pointer already is; whether the click
@@ -76,8 +72,8 @@
       `_info-A-hover-on-the-mark.png` (the ⓘ opens the prose on hover and focus; a click either pins
       it inline as now, or does nothing — the picture is the same, the choice is what a click means)
       and `_info-C-hover-on-the-name.png` (the effect's NAME is the trigger, as rule 3 has a value
-      explain itself, and the ⓘ leaves the row). One thing every variant needs that the popover
-      does not have: it renders text, and this prose is Markdown.
+      explain itself, and the ⓘ leaves the row). The popover renders the prose these need:
+      `use:provenance={{ markdown }}`.
 
 - [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
   `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same

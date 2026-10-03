@@ -56,6 +56,10 @@
 								class:expertise={sk.prof === 'expertise'}
 								title={$_(PROF_LABEL[sk.prof])}
 							></i>
+							<!-- the dot is a mark, and a mark with only a `title` says nothing to a screen reader;
+							     an untrained skill says nothing either way, eighteen times over -->
+							{#if sk.prof !== 'none'}<span class="visually-hidden">{$_(PROF_LABEL[sk.prof])}</span
+								>{/if}
 							<span class="skill-name"
 								>{$_(`skillName.${skill}`, { default: titleCase(skill) })}</span
 							>

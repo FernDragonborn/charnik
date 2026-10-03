@@ -240,6 +240,15 @@ good", so they are pinned here and every component follows them.
    makes the browser scroll it into view, and a popover that closed on that scroll would say
    nothing to exactly the keyboard user it exists for. It follows the value until the value leaves
    the viewport.
+   **A content row's PROSE is said as `{ markdown }`**, never as a string: it goes through the one
+   sanitizing renderer the articles use (`content/markdown.ts`), and its plain words are what a
+   screen reader is given. A string is never read as markup, whatever it contains — a spend
+   option's description is prose, a breakdown is not.
+   **A mark repeated on every row is NAMED, not explained** — the proficiency dot, the cast-time
+   icon, a translation's status, a save's proficiency, an effect's reference-only note. A popover
+   there costs one tab stop per row to say the same sentence eighteen times, so the mark carries
+   an accessible name instead (`aria-label`, an `Icon`'s `label`, or `.visually-hidden` text inside
+   a control whose name is its content), and its `title` stays as that same name for a pointer.
    **What a `title` may still be:** the NAME of an icon-only control (beside the same `aria-label`),
    and a value's own text where the box truncates it (a path). Never an explanation — and never a
    popover on a `disabled` control, which takes neither hover nor focus (rule 10 says what to use).

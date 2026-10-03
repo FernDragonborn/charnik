@@ -132,6 +132,7 @@
 								)}<button
 									class="cast-icon"
 									title={when}
+									aria-label={when}
 									onclick={() => toast($_('combat.notice.castingTime', { values: { when } }))}
 									><Icon
 										name={r.castTimeIcon === 'react' ? 'corner-down-left' : 'zap'}
