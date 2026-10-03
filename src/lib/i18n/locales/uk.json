@@ -846,6 +846,7 @@
 			"resourceUsedUnlimited": "витрачено {used} · ∞",
 			"resourceSpent": "{name} — витрачено {cost} «{resource}»",
 			"resourceFullyRestored": "{name} — відновлено повністю",
+			"slotGained": "Отримано комірку заклять {level} рівня",
 			"restRestored": "{kind} відпочинок — ресурси відновлено",
 			"exhaustionChanged": "Виснаження {from} → {to}",
 			"noHitDice": "Кубиків здоров’я {die} не лишилось",

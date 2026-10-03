@@ -71,6 +71,8 @@ still landing on an existing system per the table above:
 | `gain_action` | one ADDITIONAL action this turn (Action Surge) — `play.turn.grantedActions`, which raises the per-turn max. Never a refund of a spent action: surging before you act must be worth a whole action, not nothing. It lives in play-state rather than as a `flat_bonus:action+1` effect because a grant is a one-turn fact and must still work with effects-auto off. |
 | `rest:short` / `rest:long` | **take that rest** — the SAME system the rest buttons use (recharge pools by type, reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). Models a Potion of Angelic Slumber / a rest-granting spell. |
 | `restore_resource:<id>` | regain ALL uses of a pool — `ResourceTracker.restoreAll` (Persistent Rage, Uncanny Metabolism) |
+| `spend_resource:<id>[:<n>]` | **spend `n` uses (default 1) of ANOTHER pool** — the one the option's own `cost` does not name. A feature that pays out of a pool a different feature owns and is itself limited says both: Wild Resurgence's cost is its once-a-rest gate, and its action spends the use of Wild Shape. Checked with the cost, BEFORE anything is paid, so a pool that cannot cover it refuses the whole action. |
+| `gain_slot:<level>` | **one more spell slot of that level** — `play.spellSlotsGained`, counted into the slot pools the cast and the pips read (`rules-core.md` ▸ Spellcasting). It is a slot, not a restored one: it stands above the table's count until a Long Rest. |
 | `attack:<weapon id>[:<count>]` | **make `count` attacks** (default 1) with that weapon, through the ORDINARY attack path (`SheetRolls.rollAttackNow`) — same to-hit, magic bonus, Rage damage and scoped effects as a tap on the Attacks panel. Flurry of Blows is `attack:unarmed_strike:2`. The weapon is its **bare content id**, never its display name, so the token survives a translated sheet; `unarmed_strike` names the fists, which have no row. Charges **no turn slot of its own** — the option's `action_type` already paid for the whole flurry. A weapon the character has not equipped is **surfaced by toast**, because an action that rolls nothing is the bug this verb exists to remove. Capped at 12 strikes, against a content typo rather than against a rule. |
 | `assume_form:<form id>` | **assume a form** whose rules the character's features state (`effects.md` ▸ A form) — Wild Shape. The one verb that ASKS before anything is paid: the picker opens on the eligible stat blocks, and the resource use and the turn slot are spent when one is taken, so backing out costs nothing. Taking one sets `play.form`, hands over hit points as the form's rules say, and adds the carrier effect whose clock is the form's. A form already worn is left first. |
 | `note:<text>` | a log/toast line |
@@ -116,7 +118,11 @@ Core rules (owned HERE, restated for authors in plugins.md):
 using the resource IS that action, so the chip runs `activateResourceOption`: validate → spend →
 charge the turn slot → run the token. With several options or none it only decrements — there is no
 single action to infer, and that doubles as the honest escape hatch for spending a resource on
-something unmodelled. An L2 `available` guard is enforced INSIDE `activateResourceOption`, never as
+something unmodelled. **Only the pool's OWN options are counted.** An option another feature gives
+on the pool carries that feature's id in `granted_by` — Wild Companion, Land's Aid and Nature's
+Sanctuary each spend a use of Wild Shape — and it is offered only to a character who has the
+feature: absent otherwise, never greyed, because greyed is for a window that can open. Those are
+further uses of the pool, so they do not stop the chip from being what the pool exists for. An L2 `available` guard is enforced INSIDE `activateResourceOption`, never as
 a `disabled` attribute, so no caller can route around it.
 
 ## 3. The event vocabulary (pinned)

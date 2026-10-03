@@ -233,6 +233,9 @@ const playSchema = z.object({
 	hitDiceSpent: z.record(z.string(), z.number().int().min(0)).default({}),
 	/** Spell slots spent, keyed by slot level "1".."9" (+ "pact" for warlock). */
 	spellSlotsSpent: z.record(z.string(), z.number().int().min(0)).default({}),
+	/** Spell slots a feature GAVE on top of the table's, keyed by slot level "1".."9" (the `gain_slot`
+	 *  verb — Wild Resurgence). They are slots like any other until a Long Rest takes them away. */
+	spellSlotsGained: z.record(z.string(), z.number().int().min(0)).default({}),
 	/** Class/feature resource uses spent, keyed by resource id (rage, ki…). */
 	resourcesSpent: z.record(z.string(), z.number().int().min(0)).default({}),
 	/** The purse, keyed by coin id (`cp`…`pp`). Play-state, not an inventory row: money is spent and

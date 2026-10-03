@@ -1760,6 +1760,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function maxSpellLevel` — Highest spell level with at least one slot (0 = no leveled slots).
 - `function cantripDieMultiplier` — Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and * 2024, so no per-syst…
 - `function preparedCap` — * The prepared/known set SIZE.
+- `const MAX_SLOT_LEVEL` — The highest spell level a slot can be.
+- `function withGainedSlots` — * The table's slot counts plus the slots a feature gave on top of them (`play.spellSlotsGained`).
 - `function slotPools` — Turn a slot-count array into one castable pool per non-empty spell level.
 - `interface PreparableSpell` — A prepared-spell entry (the two flags the cap logic reads).
 - `function preparedLeveledCount` — Spells that count toward the prepared CAP: leveled + toggled-on.
@@ -1933,4 +1935,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1170 exports across 158 modules · 78 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1172 exports across 158 modules · 78 duplicate suspects._

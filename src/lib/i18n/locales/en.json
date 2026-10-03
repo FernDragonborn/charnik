@@ -846,6 +846,7 @@
 			"resourceUsedUnlimited": "{used} used · ∞",
 			"resourceSpent": "{name} — spent {cost} {resource}",
 			"resourceFullyRestored": "{name} — fully restored",
+			"slotGained": "Gained a level {level} spell slot",
 			"restRestored": "{kind} rest — resources restored",
 			"exhaustionChanged": "Exhaustion {from} → {to}",
 			"noHitDice": "No {die} Hit Dice left",

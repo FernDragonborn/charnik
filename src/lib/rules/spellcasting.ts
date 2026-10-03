@@ -235,6 +235,29 @@ export function preparedCap(
 	return Math.max(1, opts.abilityMod + eff);
 }
 
+/** The highest spell level a slot can be. */
+export const MAX_SLOT_LEVEL = 9;
+
+/**
+ * The table's slot counts plus the slots a feature gave on top of them (`play.spellSlotsGained`).
+ * A gained slot is a slot of that level and nothing less: it is spent, upcast into and shown like
+ * the table's own. What it does not do is raise the level of spell a caster can LEARN — that reads
+ * the class's table, never this sum.
+ */
+export function withGainedSlots(
+	counts: readonly number[],
+	gained: Readonly<Record<string, number>>,
+): number[] {
+	const out = [...counts];
+	for (let level = 1; level <= MAX_SLOT_LEVEL; level++) {
+		const extra = gained[String(level)] ?? 0;
+		if (extra <= 0) continue;
+		while (out.length < level) out.push(0);
+		out[level - 1] = (out[level - 1] ?? 0) + extra;
+	}
+	return out;
+}
+
 /** Turn a slot-count array into one castable pool per non-empty spell level. */
 export function slotPools(
 	counts: readonly number[],

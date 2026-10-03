@@ -58,6 +58,11 @@ falls off a phone screen.
   shown are the beast's and yours wait behind them, with damage the form cannot hold carried over;
   in 2024 you keep your own and gain Temporary Hit Points equal to your druid level. The form has
   its clock, blocks casting until Beast Spells, and ends from its chip as a Bonus Action.
+- **What else a use of Wild Shape buys (2024).** Wild Companion, Land's Aid and Nature's Sanctuary
+  are actions that spend a use, the last two only for a Circle of the Land druid. Wild Resurgence
+  turns a use into a level 1 spell slot once per Long Rest — one more pip than your table gives,
+  gone at the next Long Rest. Spending a slot for a use is still two pips set by hand, and Nature
+  Magician is not modelled yet.
 - **Weapon mastery (2024).** Every 2024 weapon has carried its mastery property since the pack was
   written and nothing read it, because the property does nothing until a feature unlocks that kind
   of weapon for you. That feature is here: a capped chip pane off the Attacks card, offered only to

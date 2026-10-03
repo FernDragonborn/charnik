@@ -142,8 +142,15 @@ names the pool, because nothing in the data links one to a spell**: there is no 
 pool a given spell may spend, so the picker lists every pool with a use left and the feat's own text
 decides. The pool is spent and gated on BEFORE the action economy is touched, the way a slot is
 reserved first, so an exhausted pool blocks the whole cast rather than casting for free. Narrowing the
-list to a DECLARED pool later is a filter on that same control. An extra real SLOT (Mystic Arcanum)
-has no token yet (`work/mechanics.md` ▸ Resource subsystem).
+list to a DECLARED pool later is a filter on that same control.
+
+**A slot a feature GIVES is counted, not restored.** "Give yourself a level 1 spell slot" (Wild
+Resurgence) is the `gain_slot:<level>` verb: `play.spellSlotsGained` is added to the table's counts
+where the pools are built (`rules/spellcasting` ▸ `withGainedSlots`), so the pips, the cast picker and
+upcasting all see one more slot of that level. It does not raise the level of spell a caster can
+learn, which reads the class's own table. A Long Rest takes it away: Font of Magic says so of the
+slots it creates, Wild Resurgence is silent, and a slot that outlived every rest would be a permanent
+one — RAI.
 
 **Upcasting is one `upcast` column of `kind:formula` tokens**, parsed by the effect grammar. Four
 things about it are settled. Combining is a DELTA for structured kinds (`base + delta`, the base being

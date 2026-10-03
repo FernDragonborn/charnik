@@ -51,10 +51,10 @@ stay semi-manual.
   Order · Primal Order · Epic Boon have no column a picker could read, and a panel for them today
   would be a lie — they are blocked on the `choice_group` / `choose_n` columns, not on UI.
   Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
-  Divinity, Font of Magic, Wild Shape, Indomitable, Arcane Recovery, Mystic Arcanum, Stunning Strike.
-  The Resources block discovers pools from the engine, so each appears the moment content encodes it;
-  the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`, `ki`,
-  `focus`, `persistent_rage`, `uncanny_metabolism`. **These rows come from a producer sibling**
+  Divinity, Font of Magic, Indomitable, Arcane Recovery, Mystic Arcanum, Natural Recovery, Stunning
+  Strike. The Resources block discovers pools from the engine, so each appears the moment content
+  encodes it; the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`,
+  `ki`, `focus`, `persistent_rage`, `uncanny_metabolism`, `wild_shape`, `wild_resurgence`. **These rows come from a producer sibling**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
 - [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
@@ -160,13 +160,11 @@ stay semi-manual.
   the casting block ship, each stated by the feature's own `form` tokens
   (`../internals/effects.md` ▸ A form) and proven against both packs. The per-edition spec is
   [`../research/wild-shape.md`](../research/wild-shape.md). What is left, in the order it is worth doing:
-  1. **The five other things a 2024 use buys.** Wild Companion, Wild Resurgence (both directions),
-     Land's Aid, Nature's Sanctuary and Nature Magician each "expend a use of Wild Shape" for
-     something that is not a form. Three are resource options with a `note:`; the two that trade a
-     use for a spell slot need a verb that grants a slot, which is the `grant_slot` gap under
-     Spellcasting. The pool is real, so the chip already lets a player spend a use by hand —
-     except that with ONE option the chip runs it, so until these rows exist the hand-spend is the
-     pip, not the chip.
+  1. **Two of the things a 2024 use buys.** Wild Companion, Land's Aid, Nature's Sanctuary and the
+     use-for-a-slot half of Wild Resurgence ship as options (`../internals/actions.md` ▸ §2). What
+     is left trades in the other direction or in bulk, and both are under Spellcasting below:
+     Wild Resurgence's first half spends a spell SLOT for a use, and Nature Magician turns several
+     uses into one slot.
   2. **Primal Strike** (2024 Elemental Fury) rides "a Beast form's attack", and a form attack
      carries no scope for a bonus to name. A scope word for form attacks is the size of it.
   3. **A form's senses are added, never taken away.** 2014: "you can't use any of your special
@@ -253,7 +251,22 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
-- [~] **Resource subsystem · an extra spell SLOT has no token.** Pools, their pips, the spend
-  path and both rests are built (`../internals/effects.md` ▸ How a pool comes back). What is missing
-  is `grant_slot:<level>`: Mystic Arcanum puts an extra SLOT into the pools rather than a resource,
-  and no token says that. One consumer, so it waits for a second.
+- [~] **Resource subsystem · a slot can be gained; it cannot yet be the PRICE.** Pools, their pips,
+  the spend path, both rests and a slot a feature gives (`gain_slot`, `../internals/rules-core.md` ▸
+  Spellcasting) are built. What is left, in the order it is worth doing:
+  1. **A spell slot as what an option costs.** Wild Resurgence: "if you have no uses of Wild Shape
+     left, you can give yourself one use by expending a spell slot"; Wild Companion takes "a spell
+     slot or a use". An option's cost names a POOL, and which slot to give up is the player's
+     choice, so this is the cast's slot picker reached from an option, plus a verb that gives ONE
+     use back (`restore_resource` gives all). The window is sayable today:
+     `resource.wild_shape==0` in `available`.
+  2. **Nature Magician: several uses become one slot**, "each use contributing 2 spell levels".
+     The cost is `x`, which the schema reads and no control lets a player pick — every option is
+     activated with an amount of 1 — and the action would have to read that amount
+     (`gain_slot:2*x`), while an action's formula is resolved at derive, before any amount exists.
+  3. **Mystic Arcanum is a pool, not a slot** — both SRDs say "cast … once without expending a
+     spell slot", which is the pool a cast already offers to pay from. What blocks it is not a
+     token: the level of spell a warlock may learn reads the Pact Magic table, which stops at 5,
+     so there is no way to choose the level 6 spell the arcanum is. Natural Recovery's free cast
+     and the slot recovery of Arcane Recovery are the same two shapes: a pool that is sayable
+     today, and slots a player already restores by their pips.

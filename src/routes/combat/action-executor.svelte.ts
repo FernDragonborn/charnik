@@ -14,6 +14,7 @@ import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
+import { MAX_SLOT_LEVEL } from '$lib/rules/spellcasting';
 import { PLAY_EVENT, type PlayEvent } from '$lib/effects/token-parser';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import { type Attack } from '$lib/combat/attacks';
@@ -57,6 +58,27 @@ const formAssumedBy = (action: string): string | null => {
 	return verb === ASSUME_FORM && id ? id.trim() : null;
 };
 
+/** The verb that spends from a pool the option's own cost does not name. */
+const SPEND_RESOURCE = 'spend_resource';
+
+/** One `spend_resource:<id>[:<n>]` an action carries. */
+interface FurtherSpend {
+	resource: string;
+	count: number;
+}
+
+/** Every further spend an action's verbs ask for, read before any of them runs so the whole action
+ *  can be refused while nothing is paid (actions.md §2 ▸ All-or-nothing). */
+const furtherSpendsOf = (action: string): FurtherSpend[] =>
+	action
+		.split(';')
+		.map((token) => token.trim().split(':'))
+		.filter(([verb, id]) => verb === SPEND_RESOURCE && !!id)
+		.map(([, id = '', count]) => ({
+			resource: id.trim(),
+			count: Math.max(1, Number(count) || 1),
+		}));
+
 /** How many strikes one action may fire. RAW's largest is a handful; the cap is against a content
  *  typo (`attack:dagger:200`) turning one click into two hundred log lines. */
 const MAX_ATTACKS_PER_ACTION = 12;
@@ -84,6 +106,19 @@ export class ActionExecutor {
 			toast(
 				t('combat.notice.notEnoughResource', {
 					resource: this.host().resources.resourceName(opt.resourceId),
+					name: opt.name,
+				}),
+				{ description: t('combat.notice.restToRecharge') },
+			);
+			return;
+		}
+		const short = furtherSpendsOf(opt.action).find(
+			(spend) => this.host().resources.remainingFor(spend.resource) < spend.count,
+		);
+		if (short) {
+			toast(
+				t('combat.notice.notEnoughResource', {
+					resource: this.host().resources.resourceName(short.resource),
 					name: opt.name,
 				}),
 				{ description: t('combat.notice.restToRecharge') },
@@ -121,9 +156,14 @@ export class ActionExecutor {
 	 *  a counter down while healing nothing and charging no Bonus Action (UBUG-16).
 	 *  A pool with SEVERAL options (Focus → Flurry / Patient Defense / Step of the Wind) has no single
 	 *  action to infer, and a pool with none has nothing to run: both stay a plain decrement, which is
-	 *  also the honest escape hatch for spending a point on something the app doesn't model. */
+	 *  also the honest escape hatch for spending a point on something the app doesn't model.
+	 *  Only the pool's OWN options are counted: what another feature lets the pool pay for (Wild
+	 *  Companion out of Wild Shape) is a further use of it, and does not stop the chip from being
+	 *  the thing the pool exists for. */
 	useResourceOrEnter = (id: string, max: number) => {
-		const options = (this.host().sheet?.resourceOptions ?? []).filter((o) => o.resourceId === id);
+		const options = (this.host().sheet?.resourceOptions ?? []).filter(
+			(o) => o.resourceId === id && o.grantedBy === undefined,
+		);
 		const [only] = options;
 		if (options.length === 1 && only) this.activateResourceOption(only);
 		else this.host().resources.useResource(id, max);
@@ -252,6 +292,16 @@ export class ActionExecutor {
 		restore_resource: (_name, arg) => {
 			// regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
 			if (arg) this.host().resources.restoreAll(arg);
+		},
+		[SPEND_RESOURCE]: (_name, arg) => {
+			// affordability was settled before the option paid for anything (`furtherSpendsOf`)
+			for (const spend of furtherSpendsOf(`${SPEND_RESOURCE}:${arg}`))
+				this.host().resources.spendFrom(spend.resource, spend.count);
+		},
+		gain_slot: (_name, arg) => {
+			const level = Number(arg);
+			if (Number.isInteger(level) && level >= 1 && level <= MAX_SLOT_LEVEL)
+				this.host().resources.gainSlot(level);
 		},
 		rest: (name, arg) => {
 			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,

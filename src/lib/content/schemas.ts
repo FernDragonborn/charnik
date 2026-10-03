@@ -561,7 +561,8 @@ const spellListsSchema = z.object({
  *  Keyed by `resource_id` (a grant_resource id — a FLAT namespace, not a content ref). `cost` is an
  *  L2 value expression (`1`, `spell_level`, or `x` = player-picked variable spend); `action` is a
  *  bounded token (apply_condition / apply_effect:<id> / heal / roll / attack:<weapon id>[:<count>] /
- *  gain_action / rest:short|long / restore_resource:<id> / note); `action_type`
+ *  gain_action / rest:short|long / restore_resource:<id> / spend_resource:<id>[:<n>] /
+ *  gain_slot:<level> / note); `action_type`
  *  places it in the turn economy.
  *  Carries name/text (shown in the picker) but is NOT a browsable article. */
 const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
@@ -580,6 +581,10 @@ const resourceOptionSchema = namedRow.extend({
 	// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
 	// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
 	available: optStr,
+	// the bare id of the feature, feat or trait that GIVES this option, when that is not the row
+	// granting the pool: Land's Aid spends a use of Wild Shape, and only a Circle of the Land druid
+	// has it. Empty → whoever has the pool has the option.
+	granted_by: optStr,
 });
 
 /**

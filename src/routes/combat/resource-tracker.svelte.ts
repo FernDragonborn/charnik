@@ -162,6 +162,28 @@ export class ResourceTracker {
 		return true;
 	};
 
+	/** Spend `count` uses of a pool as PART of an action that already said what it is — the
+	 *  `spend_resource:<id>[:<n>]` verb, for a feature that pays out of a pool another feature owns
+	 *  (Wild Resurgence spends a use of Wild Shape). Silent, and unchecked: the executor refuses the
+	 *  whole action before anything is paid when the pool cannot cover it. */
+	spendFrom = (id: string, count: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: this.resourceSpent(id) + count };
+	};
+
+	/** Give the character one more spell slot of `level` — the `gain_slot:<level>` verb. */
+	gainSlot = (level: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		const key = String(level);
+		c.play.spellSlotsGained = {
+			...c.play.spellSlotsGained,
+			[key]: (c.play.spellSlotsGained[key] ?? 0) + 1,
+		};
+		toast(t('combat.notice.slotGained', { level }));
+	};
+
 	/** Regain ALL expended uses of a pool (spent → 0) — the `restore_resource:<id>` action verb.
 	 *  RAW: Persistent Rage "regain all expended uses of Rage", Uncanny Metabolism "regain all expended
 	 *  Focus Points". `id` is a flat resource id (not a content ref), like `grant_resource`'s. */
@@ -266,6 +288,10 @@ export class ResourceTracker {
 	 *  complexity budget. */
 	private applyLongRest = (c: Character, sheet: CharacterSheet, choice: RestChoice) => {
 		c.play.spellSlotsSpent = {};
+		// a slot a feature gave lasts until the rest that would have refilled it anyway. Font of
+		// Magic's text says so ("vanishes when you finish a Long Rest"); Wild Resurgence's is silent,
+		// and a slot that outlived every rest would be a permanent one — RAI
+		c.play.spellSlotsGained = {};
 		// full HP is the EFFECTIVE max (A14): a manual max does not silence an `hp_max` effect, so a
 		// long rest must fill to the same number heal and the bar clamp to
 		c.play.hp = {

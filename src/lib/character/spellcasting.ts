@@ -26,6 +26,7 @@ import {
 	maxSpellLevel,
 	preparedCap,
 	slotPools,
+	withGainedSlots,
 	type CastPool,
 	type CasterShare,
 	type SlotTable,
@@ -426,10 +427,16 @@ export function deriveSpellcasting({
 	// feat profiles are built BEFORE the "no caster class" exit rather than behind it
 	const featProfiles = featCasterProfiles(character, graph, access, statsFor);
 
+	// a slot a feature gave is a slot whoever holds it, so it is counted before the "no caster class"
+	// exit as well as after
+	const gained = character.play.spellSlotsGained;
+	const sharedPools = (counts: readonly number[]): CastPool[] =>
+		slotPools(withGainedSlots(counts, gained), { idPrefix: 'slot', recharge: 'long' });
+
 	if (sources.length === 0)
 		return {
 			classes: featProfiles,
-			pools: [],
+			pools: sharedPools([]),
 			casterLevel: 0,
 			ritualCasting: featProfiles.some((p) => p.ritualSource !== null),
 		};
@@ -446,7 +453,7 @@ export function deriveSpellcasting({
 	} else if (shared.length > 1) {
 		sharedCounts = slotCountsFor(slotTable(graph, 'full', systems), casterLevel);
 	}
-	const pools: CastPool[] = slotPools(sharedCounts, { idPrefix: 'slot', recharge: 'long' });
+	const pools: CastPool[] = sharedPools(sharedCounts);
 
 	const classes: SpellcastingClass[] = sources.map((p) => {
 		const isPact = p.caster === 'pact';

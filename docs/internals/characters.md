@@ -133,8 +133,8 @@ point twice: a wand regaining `1d6+1` charges at dawn showed that the enum was t
 trenchcoat, and it became `{trigger, amount}` with every word kept as sugar
 (`docs/internals/effects.md` ▸ How a pool comes back) — nothing on disk moved.
 
-The partial maps (`abilityBoosts`, `spellSlotsSpent`, `hitDiceSpent`, `resourcesSpent`,
-`panelColumns`) deliberately stay `z.record(z.string())` under `noUncheckedIndexedAccess`, so a read
+The partial maps (`abilityBoosts`, `spellSlotsSpent`, `spellSlotsGained`, `hitDiceSpent`,
+`resourcesSpent`, `panelColumns`) deliberately stay `z.record(z.string())` under `noUncheckedIndexedAccess`, so a read
 is `V | undefined`. That is the **honest** type. Branding the key to a finite union would make the
 type claim a value is defined when the runtime slot is absent, for a near-zero gain and a migration.
 This is a carve-out, not debt to fix later.

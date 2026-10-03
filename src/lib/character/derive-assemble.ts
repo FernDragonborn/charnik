@@ -290,6 +290,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({
 			graph,
+			character,
 			resourceIds: new Set(facts.resources.map((r) => r.id)),
 			poolNames,
 			system,
