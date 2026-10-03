@@ -73,6 +73,8 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				ownHp: true,
 				hours: 1,
 				casts: false,
+				// "You automatically revert if you fall unconscious, drop to 0 hit points, or die."
+				endsWhen: ['unconscious'],
 			},
 		]);
 		expect(at(4).facts.forms[0]).toMatchObject({ maxCr: 0.5, without: ['fly'], hours: 2 });
@@ -101,6 +103,8 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				known: 4,
 				hours: 1,
 				casts: false,
+				// "until you use Wild Shape again, have the Incapacitated condition, or die"
+				endsWhen: ['incapacitated'],
 			},
 		]);
 		expect(at(4).facts.forms[0]).toMatchObject({ maxCr: 0.5, known: 6, tempHp: 4 });
@@ -148,6 +152,7 @@ describe('Wild Shape · which stat blocks a level allows', () => {
 				without: [],
 				ownHp: false,
 				casts: false,
+				endsWhen: [],
 			}),
 		);
 		const types = new Set(beasts.map((row) => row.data.creature_type));

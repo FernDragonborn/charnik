@@ -147,12 +147,31 @@ export class FormShift {
 	 * A form whose carrier is gone has ended — the Effects panel's ✕, the clock running out, a rest.
 	 * Those paths remove an effect and know nothing of forms, so this is where the rest of the
 	 * leaving happens. Reactive and idempotent, like the concentration sync beside it.
+	 *
+	 * So is a form its own rules END: "You automatically revert if you fall unconscious, drop to 0 hit
+	 * points, or die" (SRD 5.1), "until you … have the Incapacitated condition, or die" (SRD 5.2.1).
+	 * Neither leaves a choice, so it is applied and said, the way a broken concentration is. The
+	 * states are the feature's `ends_when` statements, and death answers for all of them. 0 hit
+	 * points is NOT one: it ends a form that has hit points of its own, because those are what ran
+	 * out, and SRD 5.2.1 — whose druid keeps their own — does not name it.
 	 */
 	sync = (): void => {
 		const play = this.host().character?.play;
 		const form = play?.form;
-		if (play && form && !play.effects.some((effect) => effect.source === form.monster))
+		if (!play || !form) return;
+		if (!play.effects.some((effect) => effect.source === form.monster)) {
 			this.leave();
+			return;
+		}
+		const endsWhen = this.rulesOf(form.id)?.endsWhen ?? [];
+		const has = this.host().sheet?.facts.conditions ?? [];
+		const stated =
+			endsWhen.length > 0 && (!!play.death || endsWhen.some((state) => has.includes(state)));
+		const spent = form.hpBefore !== undefined && play.hp.current <= 0;
+		if (!stated && !spent) return;
+		const name = this.current?.name ?? '';
+		this.leave();
+		toast(t('combat.notice.formEnded', { name }));
 	};
 
 	/**
@@ -182,4 +201,5 @@ const lifted = (rules: FormRules): FormRules => ({
 	without: [],
 	ownHp: rules.ownHp,
 	casts: rules.casts,
+	endsWhen: rules.endsWhen,
 });

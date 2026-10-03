@@ -253,6 +253,7 @@ differ in their CSV and not in code (`../internals/effects.md` ▸ A form):
 | §4 replaced and retained | the stat block's STR/DEX/CON, AC and speeds are SET; its saves, skills and senses are FLOORS (`character/forms.ts`) |
 | §4 attacks | the monster row's `attacks` column, read whole (`combat/form-attacks.ts`) |
 | §5 duration and transform cost | `form:wild_shape:hours:floor(class_level.druid/2)`; the resource option's `action_type` — `action` in 2014, `bonus_action` in 2024 |
+| §5 what ends it unasked | `form:wild_shape:ends_when:unconscious` (2014) · `…:ends_when:incapacitated` (2024); death answers for both, and 0 hit points ends only the 2014 form, whose hit points are its own |
 | §7 casting | blocked while shaped, lifted by `form:wild_shape:casts` on Beast Spells |
 | §8 Known Forms | `form:wild_shape:known:step(…, 2->4, 4->6, 8->8)`, chosen in the builder into `build.forms` |
 

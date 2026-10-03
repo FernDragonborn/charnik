@@ -95,6 +95,8 @@ export interface FormRules {
 	hours?: number;
 	/** Spells can be cast in the form. */
 	casts: boolean;
+	/** The states that end the form (`unconscious`, `incapacitated`) — state rows' ids. */
+	endsWhen: string[];
 }
 
 /** What one or more statements say about a form — every field optional, because one token says one. */
@@ -110,6 +112,8 @@ export function addFormStatement(rules: FormRules, said: FormStatement): void {
 	if (said.hours !== undefined) rules.hours = said.hours;
 	for (const mode of said.without ?? [])
 		if (!rules.without.includes(mode)) rules.without.push(mode);
+	for (const state of said.endsWhen ?? [])
+		if (!rules.endsWhen.includes(state)) rules.endsWhen.push(state);
 	rules.ownHp ||= said.ownHp ?? false;
 	rules.casts ||= said.casts ?? false;
 }

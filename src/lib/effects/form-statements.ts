@@ -27,7 +27,14 @@ export function collectFormStatement(
 	if (!said) return;
 	let rules = forms.find((f) => f.id === p.target);
 	if (!rules) {
-		rules = { id: p.target, source: origin.source, without: [], ownHp: false, casts: false };
+		rules = {
+			id: p.target,
+			source: origin.source,
+			without: [],
+			ownHp: false,
+			casts: false,
+			endsWhen: [],
+		};
 		forms.push(rules);
 	}
 	addFormStatement(rules, said);
@@ -39,6 +46,7 @@ function formStatement(
 ): FormStatement | undefined {
 	if (word === FORM_WORD.creature) return value ? { creature: value } : undefined;
 	if (word === FORM_WORD.without) return value ? { without: [value] } : undefined;
+	if (word === FORM_WORD.endsWhen) return value ? { endsWhen: [value] } : undefined;
 	if (word === FORM_WORD.ownHp) return { ownHp: true };
 	if (word === FORM_WORD.casts) return { casts: true };
 	const r = ctx

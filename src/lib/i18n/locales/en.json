@@ -864,6 +864,7 @@
 			"effectExpired": "{label} — expired",
 			"formBroken": "{name} form ends at 0 hit points",
 			"formBrokenBody": "{excess, plural, =0 {No damage carries over to you.} other {# damage carries over to you.}}",
+			"formEnded": "The {name} form ends",
 			"formLeft": "You leave the {name} form",
 			"incapacitated": "Incapacitated",
 			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions.",

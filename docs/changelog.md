@@ -54,10 +54,12 @@ falls off a phone screen.
   two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
   your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the
   beast's body: its Strength, Dexterity, Constitution, Armor Class, speeds and attacks, with every
-  number naming the creature when you ask it why. Your mind stays yours. In 2014 the hit points
+  number naming the creature when you ask it why — and a number the beast SETS reads `= 13`, not
+  `+13`. Your mind stays yours. In 2014 the hit points
   shown are the beast's and yours wait behind them, with damage the form cannot hold carried over;
   in 2024 you keep your own and gain Temporary Hit Points equal to your druid level. The form has
-  its clock, blocks casting until Beast Spells, and ends from its chip as a Bonus Action.
+  its clock, blocks casting until Beast Spells, and ends from its chip as a Bonus Action — or on its
+  own when its rules say so: falling unconscious or dying in 2014, Incapacitated or dying in 2024.
 - **What else a use of Wild Shape buys (2024).** Wild Companion, Land's Aid and Nature's Sanctuary
   are actions that spend a use, the last two only for a Circle of the Land druid. Wild Resurgence
   turns a use into a level 1 spell slot once per Long Rest — one more pip than your table gives,

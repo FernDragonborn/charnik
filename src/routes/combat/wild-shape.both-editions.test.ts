@@ -114,6 +114,76 @@ describe.each(['5e', '5.5e'] as const)('Wild Shape at the table · %s', (system)
 	});
 });
 
+/*
+ * SRD 5.1 — "You automatically revert if you fall unconscious, drop to 0 hit points, or die."
+ * SRD 5.2.1 — "until you use Wild Shape again, have the Incapacitated condition, or die."
+ */
+describe('Wild Shape at the table · what ends the form without being asked', () => {
+	const gain = (condition: string) =>
+		combat.effects.addEffect({
+			label: condition,
+			tokens: [`apply_condition:${condition}`],
+			positive: false,
+		});
+
+	it.each(['5e', '5.5e'] as const)('%s: falling unconscious ends it', async (system) => {
+		const c = await druid(system);
+		const own = c.play.hp.current;
+		combat.forms.assume('wild_shape', wolfOf(system));
+		gain('unconscious');
+		combat.forms.sync();
+		expect(c.play.form).toBeNull();
+		expect(c.play.hp.current).toBe(own);
+	});
+
+	it('Stunned ends a 2024 form, which names Incapacitated, and not a 2014 one, which names unconscious', async () => {
+		const modern = await druid('5.5e');
+		combat.forms.assume('wild_shape', wolfOf('5.5e'));
+		gain('stunned');
+		combat.forms.sync();
+		expect(modern.play.form).toBeNull();
+
+		const classic = await druid('5e');
+		combat.forms.assume('wild_shape', wolfOf('5e'));
+		gain('stunned');
+		combat.forms.sync();
+		expect(classic.play.form).not.toBeNull();
+	});
+
+	it.each(['5e', '5.5e'] as const)('%s: death ends it', async (system) => {
+		const c = await druid(system);
+		combat.forms.assume('wild_shape', wolfOf(system));
+		combat.hp.die('exhaustion');
+		combat.forms.sync();
+		expect(c.play.form).toBeNull();
+	});
+
+	it('0 hit points ends a 2014 form, whose hit points are its own, however they got there', async () => {
+		const c = await druid('5e');
+		const own = c.play.hp.current;
+		combat.forms.assume('wild_shape', wolfOf('5e'));
+		c.play.hp.current = 0;
+		combat.forms.sync();
+		expect(c.play.form).toBeNull();
+		expect(c.play.hp.current).toBe(own);
+	});
+
+	it('0 hit points does not end a 2024 form: SRD 5.2.1 names Incapacitated and death, and no more', async () => {
+		const c = await druid('5.5e');
+		combat.forms.assume('wild_shape', wolfOf('5.5e'));
+		c.play.hp.current = 0;
+		combat.forms.sync();
+		expect(c.play.form).not.toBeNull();
+	});
+
+	it.each(['5e', '5.5e'] as const)('%s: a healthy druid stays shaped', async (system) => {
+		const c = await druid(system);
+		combat.forms.assume('wild_shape', wolfOf(system));
+		combat.forms.sync();
+		expect(c.play.form).not.toBeNull();
+	});
+});
+
 describe('Wild Shape at the table · whose hit points', () => {
 	it('2014: the beast’s take the hit, and what they cannot hold carries over', async () => {
 		const c = await druid('5e');

@@ -25,6 +25,7 @@ import {
 	conditionIdOf,
 	effectTag,
 	why,
+	contributionText,
 	effectTagResolved,
 	pipClick,
 	groupEffects,
@@ -385,6 +386,18 @@ describe('why — a contribution the ENGINE wrote reads through the translator t
 				'provenance.source.abilityScore.dex': `СПР ${String(o?.values?.score)}`,
 			})[key] ?? key;
 		expect(why(computed, t)).toBe('мод. СПР +3 (СПР 16), Cloak of Protection +1');
+	});
+});
+
+describe('contributionText — a value that sets the number is not an addend', () => {
+	const from = (op: 'add' | 'set' | 'floor' | 'cap', amount: number) =>
+		contributionText({ source: 'Wolf', layer: 'override', op, amount });
+
+	it('an addend carries its sign; a set, a floor and a cap carry their symbol and the bare value', () => {
+		expect(from('add', 2)).toBe('Wolf +2');
+		expect(from('set', 13)).toBe('Wolf = 13');
+		expect(from('floor', 19)).toBe('Wolf ≥ 19');
+		expect(from('cap', 20)).toBe('Wolf ≤ 20');
 	});
 });
 

@@ -832,6 +832,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/combat/effects-view.ts`
 
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
+- `function contributionText` — One contribution as a reader meets it: who, and what they did to the number.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function whyPassive` — * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
@@ -1935,4 +1936,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 86 global classes · 55 components · 1172 exports across 158 modules · 78 duplicate suspects._
+_47 tokens · 86 global classes · 55 components · 1173 exports across 158 modules · 78 duplicate suspects._

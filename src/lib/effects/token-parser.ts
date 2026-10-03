@@ -141,7 +141,7 @@ export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
 	words.includes(EXTRA_ATTACK_WORD.same) || words.includes(EXTRA_ATTACK_WORD.other);
 
 /**
- * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, two a bare
+ * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, three a bare
  * word, two nothing at all:
  *  - `creature:<type>` — the creature type an eligible stat block has (`beast`)
  *  - `max_cr:<expr>` — the highest Challenge Rating eligible; a fraction is written as one (`1/4`)
@@ -151,6 +151,7 @@ export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
  *  - `known:<expr>` — how many forms the character knows, where they are chosen ahead of time
  *  - `hours:<expr>` — how long the form lasts
  *  - `casts` — spells can be cast in the form
+ *  - `ends_when:<state>` — a state row's id that ends the form the moment the character has it
  */
 export const FORM_WORD = {
 	creature: 'creature',
@@ -161,6 +162,7 @@ export const FORM_WORD = {
 	known: 'known',
 	hours: 'hours',
 	casts: 'casts',
+	endsWhen: 'ends_when',
 } as const;
 export type FormWord = (typeof FORM_WORD)[keyof typeof FORM_WORD];
 /** What each word is followed by. */
@@ -173,6 +175,7 @@ const FORM_WORD_VALUE: Record<FormWord, 'expression' | 'word' | 'none'> = {
 	known: 'expression',
 	hours: 'expression',
 	casts: 'none',
+	ends_when: 'word',
 };
 const isFormWord = (word: string): word is FormWord => word in FORM_WORD_VALUE;
 /** Does this form word carry an L2 expression? What the linter asks before reading the value. */

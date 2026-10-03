@@ -864,6 +864,7 @@
 			"effectExpired": "{label} — завершився",
 			"formBroken": "Форма «{name}» спадає на 0 хітах",
 			"formBrokenBody": "{excess, plural, =0 {Шкода на вас не переходить.} other {На вас переходить # шкоди.}}",
+			"formEnded": "Форма «{name}» спадає",
 			"formLeft": "Ви полишили форму «{name}»",
 			"incapacitated": "Недієздатність",
 			"incapacitatedBody": "Не можна робити дії, бонусні дії чи реакції.",

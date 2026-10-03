@@ -257,6 +257,7 @@ speak of the same thing, the way `extra_attack` rows do.
 | `known` | L2 | how many forms are chosen ahead of time (`build.forms`); absent means any eligible one |
 | `hours` | L2 | how long the form lasts, which becomes its clock |
 | `casts` | — | spells can be cast in the form |
+| `ends_when` | a word | a state row's id that ends the form the moment the character has it — `unconscious` (SRD 5.1), `incapacitated` (SRD 5.2.1). Death answers for every state named. Applied, not offered: neither text leaves a choice (`characters.md` ▸ A tracker surfaces) |
 
 A rule the feature does not state limits nothing. A value that does not resolve is surfaced
 (`unreadableFormValue`) and that one sentence is skipped — an unread limit is not a limit of zero.
@@ -271,7 +272,9 @@ names the creature in its trace, and the effects switch drops them with every ot
 leaves the character's hit points alone, so while one is assumed the hit-point base is worked out
 from the Constitution the character has WITHOUT it (one extra derive, only while shaped). A form
 with `own_hp` then counts the stat block's instead, as an override-layer set, so neither the
-character's own bonuses nor a maximum set by hand reach it.
+character's own bonuses nor a maximum set by hand reach it. Those hit points reaching 0 END the
+form, by damage or by a number typed in — they are what ran out. A form without `own_hp` is not
+ended by 0 hit points: SRD 5.2.1 names Incapacitated and death, and no more.
 
 **Assuming one is a verb** — `assume_form:<id>` on a resource option (`actions.md` §2) — and the
 play-state is `play.form` plus the carrier (`characters.md` ▸ Play-state modelling).

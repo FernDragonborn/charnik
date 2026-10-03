@@ -10,10 +10,18 @@
 	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
-	import { why, whyPassive, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
+	import {
+		why,
+		whyPassive,
+		contributionText,
+		signed,
+		metres,
+		range,
+		rechargeLabel,
+	} from '$lib/combat/helpers';
 	import { sayText } from '$lib/util/say';
 	import { provenance } from '$lib/actions/provenance';
-	import { sourceText, SOURCE_KEY } from '$lib/rules/pipeline';
+	import { SOURCE_KEY } from '$lib/rules/pipeline';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);
@@ -55,7 +63,7 @@
 			<div class="tile-key">{$_('combat.section.armorClass')}</div>
 			<div class="tile-value">{s.ac.value}</div>
 			<div class="tile-text">
-				{s.ac.trace.map((x) => `${sourceText(x, $_)} ${signed(x.amount)}`).join(' ')}
+				{s.ac.trace.map((x) => contributionText(x, $_)).join(' ')}
 			</div>
 		</button>
 		<button

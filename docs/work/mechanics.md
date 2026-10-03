@@ -165,8 +165,10 @@ stay semi-manual.
      is left trades in the other direction or in bulk, and both are under Spellcasting below:
      Wild Resurgence's first half spends a spell SLOT for a use, and Nature Magician turns several
      uses into one slot.
-  2. **Primal Strike** (2024 Elemental Fury) rides "a Beast form's attack", and a form attack
-     carries no scope for a bonus to name. A scope word for form attacks is the size of it.
+  2. **Primal Strike** (2024 Elemental Fury) is one of TWO options the feature offers, so it waits
+     on N2 shape 3 like every other choice. What it is once chosen is sayable: "once on each of
+     your turns when you hit … you can cause the target to take an extra 1d8" is a granted roll
+     limited to a turn, the shape Sneak Attack has, and it needs no scope for a form's attacks.
   3. **A form's senses are added, never taken away.** 2014: "you can't use any of your special
      senses, such as darkvision, unless your new form also has that sense". The stat block's senses
      fold as floors; removing the druid's own needs a way to say "no sense but these", which
@@ -174,15 +176,11 @@ stay semi-manual.
   4. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
      keeps working. Nothing is modelled: a worn item's bonus still folds, and the form's SET of
      Armor Class is what stands over an armor's.
-  5. **The involuntary exits are the player's to press.** Dropping to 0 in a 2014 form reverts and
-     carries the excess; Incapacitated (2024), unconscious and dead do not end the form on their own.
-  6. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
+  5. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
      made ahead of time; the rest itself offers nothing.
-  7. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
+  6. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
      block's listed modifier standing as a floor — the same number in every shipped beast, and RAI
      where a homebrew stat block lists a proficiency its modifier does not show.
-  8. **The play sheet's Armor Class line prints a SET as `+13`**, the way it prints an add. A set
-     wants its own mark there; the trace on hover is right.
 - [ ] **PLG-TAILS · two things the plugin layer still owes its user.** A dedicated view for a
   character that depends on a plugin which is missing or not consented to — today it surfaces only as
   derive issues in content health — and portability: what a character carrying plugin tokens says on

@@ -32,17 +32,24 @@ const OP_SYMBOL: Record<Contribution['op'], string> = {
 	cap: '≤',
 };
 
+/** One contribution as a reader meets it: who, and what they did to the number. An addend carries
+ *  its sign; a value that SETS or bounds the number carries the op's symbol and the bare value — a
+ *  Wolf's Armor Class is `= 13`, and `+13` would say it was added to something. */
+export function contributionText(t: Contribution, translate?: Translate): string {
+	const symbol = OP_SYMBOL[t.op];
+	return `${sourceText(t, translate)} ${symbol ? `${symbol} ${t.amount}` : signed(t.amount)}`;
+}
+
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`
  *  (svelte-i18n's `$format`) to localize the rule notes; without it every note renders its EN text
  *  verbatim (the B18 invariant — structure changed, EN output byte-for-byte unchanged). */
 export function why(c: Computed, translate?: Translate): string {
-	const opSym = (op: Contribution['op']): string => (OP_SYMBOL[op] ? `${OP_SYMBOL[op]} ` : '');
 	const parts = c.trace
 		// a comparison op says something even at 0; a plain addend of 0 says nothing
 		.filter((t) => t.amount !== 0 || OP_SYMBOL[t.op] !== '')
 		.map((t) => {
 			const detail = sourceNoteText(t, translate);
-			return `${sourceText(t, translate)} ${opSym(t.op)}${signed(t.amount)}${detail ? ` (${detail})` : ''}`;
+			return `${contributionText(t, translate)}${detail ? ` (${detail})` : ''}`;
 		});
 	return (
 		(parts.join(', ') || '—') +

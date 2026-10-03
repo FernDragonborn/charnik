@@ -115,7 +115,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // and the hit points of the druid and the spy.
 // v36: a 2024 druid's use of Wild Shape buys Wild Companion, Land's Aid, Nature's Sanctuary and
 // Wild Resurgence's spell slot — four option rows, a `granted_by` column and the Wild Resurgence pool.
-export const CONTENT_SEED_VERSION = 36;
+// v37: each Wild Shape row states what ends the form without being asked — unconscious in 2014,
+// Incapacitated in 2024.
+export const CONTENT_SEED_VERSION = 37;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;
