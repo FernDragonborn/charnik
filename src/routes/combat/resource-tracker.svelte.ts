@@ -44,13 +44,19 @@ const spendOf = (opt: ResourceOption, amount: number): OptionSpend => ({
 	says: opt.action.startsWith(NOTE_ACTION) ? opt.action.slice(NOTE_ACTION.length) : opt.description,
 });
 
+/** What this subsystem needs from the sheet around it. */
+export interface ResourceTrackerHost {
+	character: Character | null;
+	sheet: CharacterSheet | null;
+	/** Carry out a play-state action on the open character; false when it was refused. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
+}
+
 export class ResourceTracker {
-	constructor(
-		private getCharacter: () => Character | null,
-		private getSheet: () => CharacterSheet | null,
-		/** Carry out a play-state action on the open character; false when it was refused. */
-		private act: (action: (character: Character, ctx: PlayContext) => PlayOutcome) => boolean,
-	) {}
+	constructor(private host: () => ResourceTrackerHost) {}
+	private getCharacter = () => this.host().character;
+	private getSheet = () => this.host().sheet;
+	private act: ResourceTrackerHost['act'] = (action) => this.host().act(action);
 
 	/** The open character and its sheet together, or null while either is missing. */
 	private get open(): { c: Character; sheet: CharacterSheet } | null {

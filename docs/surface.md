@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (153 modules)
+## Library functions & types (154 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -850,7 +850,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function groupEffects` — Split active effects into the three panel sections.
 - `const rechargeLabel` — What a recharge chip SAYS: the boundary, plus the amount when it is not the whole pool.
 - `const remainingRounds` — Rounds an effect has left at the given round counter (null = indefinite, floor 0).
-- `function endConcentrationCarriedBy` — * An effect leaving the sheet takes its concentration WITH it.
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
 - `const ROUNDS_PER_UNIT` — Rounds in one of the units a duration is said in — 1 round = 6 seconds.
 - `function sayRounds` — * Rounds → the words a table uses: "30 days", "8 h", "10 min", "7 rds".
@@ -1642,6 +1641,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function endConcentration` — Stop concentrating: the ref goes, and the spell's own effect with it.
 - `function dropEffects` — * Take effects off the character — and the concentration with them, when one of them was carrying * it.
 
+### `src/lib/play/conditions.ts`
+
+- `const isIncapacitated` — Incapacitated → no actions, bonus actions or reactions, and no concentration.
+
 ### `src/lib/play/effects.ts`
 
 - `interface NewEffect` — An effect to put on the character.
@@ -1721,7 +1724,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/play/turn.ts`
 
-- `const isIncapacitated` — Incapacitated → no actions, bonus actions or reactions.
+- `function turnSlotMax` — * How many pips each slot has this turn: one, plus what standing effects add (Haste → +1 action, a * `flat_bonus:<slo…
+- `function canSpendTurnSlot` — Is a pip of this slot free right now?
+- `function setTurnPip` — Press a turn pip: a free one spends up to it, a spent one restores down to it.
+- `function spendMove` — Spend a step of movement, clamped to the speed.
+- `const resetMove`
+- `function spendTurnSlot` — * In combat, spend one pip of a slot, or refuse when there is none: incapacitated is a hard block * with its own sent…
+- `function spendStrike` — Spend the turn cost of ONE weapon strike.
+- `function nextTurn` — End the turn: every slot fresh, the round counter one on, and whatever ran out expired.
+- `function advanceTime` — Pass time OUT of combat — `rounds` of six seconds each — and expire what ran out, so a ten-round * Bless cast outside…
+- `function markRollUsed` — Record that something once-per-turn was done.
+- `function toggleRollUsed` — The player's own mark on a granted roll, on or off.
+- `function toggleCombat` — Enter or leave combat.
 
 ### `src/lib/rules/advancement.ts`
 
@@ -2045,4 +2059,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1247 exports across 169 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1258 exports across 170 modules · 78 duplicate suspects._

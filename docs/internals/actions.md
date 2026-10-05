@@ -190,7 +190,7 @@ with no screen calls the same function and gets the same character.
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
 
-Hit points, effects, exhaustion, concentration, pools and rests are built this way. The other
+Hit points, effects, exhaustion, concentration, pools, rests and the turn are built this way. The other
 subsystems still write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).

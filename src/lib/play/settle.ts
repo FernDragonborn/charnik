@@ -11,7 +11,7 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { endConcentration } from './concentration';
 import type { PlayContext, PlayOutcome } from './outcome';
-import { isIncapacitated } from './turn';
+import { isIncapacitated } from './conditions';
 
 /** One rule's consequence can be another's cause — concentration ending takes an `hp_max` effect
  *  down, which lowers the maximum. More passes than rules is a loop in the rules themselves. */

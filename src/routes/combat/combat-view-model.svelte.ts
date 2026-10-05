@@ -104,16 +104,9 @@ class CombatVM {
 		},
 	);
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
-	economy = new TurnEconomy(
-		() => this.character,
-		() => this.sheet,
-	);
+	economy = new TurnEconomy(() => this);
 	/** Resource/rest subsystem (spell slots, resource pips, short/long rests). */
-	resources = new ResourceTracker(
-		() => this.character,
-		() => this.sheet,
-		(action) => this.act(action),
-	);
+	resources = new ResourceTracker(() => this);
 	/** HP, damage/healing and death — see hit-points.svelte.ts. */
 	hp = new HitPoints(() => this);
 	/** Which features show, which are pinned, and the presets that set both — see feature-view.svelte.ts. */
