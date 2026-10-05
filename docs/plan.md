@@ -248,7 +248,7 @@ position and are given per wave, because most of them were learned the hard way.
      CONSENT-OUT-OF-REACH, which is not small: plugin consent moves behind a Rust command.
   3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
-     designed together and A17 brings the smallest form of N2's shape 3 with it.
+     designed together and A17 brings the smallest form of N2's feature choice with it.
   4. **The looks** — MASTERY-HALF's extra-attack control and TITLE-POPOVER's ⓘ are picked and
      wait to be built; DEFENCE-STRIP's `Saves` group has three directions named and none drawn, so
      it is rendered first and picked from seeing them; ADD-ITEM-SURFACE becomes a popover.
@@ -271,8 +271,8 @@ position and are given per wave, because most of them were learned the hard way.
   its tail is ADD-ITEM-SURFACE and MOBILE-ALPHA — the chrome the add-item picker wears, and a
   narrow layout that is usable rather than finished. First, because
   each one is a player already standing in front of it.
-- **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
-  FEATURE-PASSIVES naming shape 1, and N2b's tail — a druid assumes a form in both editions, and
+- **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
+  FEATURE-PASSIVES naming the passive kind, and N2b's tail — a druid assumes a form in both editions, and
   what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the look of the extra attack's
   control, the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
   ships, and what is left is a 2014 warlock's Pact of the Tome, which waits on the boon being a choice.

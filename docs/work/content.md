@@ -146,15 +146,22 @@
      a number its VARIETY states, an Ioun Stone does a different thing per stone, and neither
      `bonus_choice` (a `+N` capped at ten) nor `choice_options` (a word substituted into a target)
      says "this variety sets 23". Until one does, those rows are text in both packs.
-     **The direction being explored:** a variety is an OPTION of the row with tokens of its own —
-     the shape N2 names shape 3 for class features (a Pact Boon, a 2014 Fighting Style), asked
-     here of an inventory row instead of the build. One mechanism for both, and a variety's own
-     `rarity` would settle piece 2 as well.
+     **The direction:** a variety is an OPTION of the row with tokens of its own —
+     what N2 calls a feature CHOICE (a Pact Boon, a 2014 Fighting Style), asked
+     here of an inventory row instead of the build. One mechanism for both, and an option's own
+     `rarity` settles piece 2 as well. The first session on it MEASURES and drafts the columns —
+     what reads `choice_options` and `bonus_choice` today, what the builder's slot pattern
+     already gives — and writes no code.
 
   2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated
      `rarity: very_rare` stands — wrong for a +1 and a +2. It is a browsing fact, not a number on a
-     sheet, and it is the row's own column rather than the answer's.
+     sheet, and it is the row's own column rather than the answer's. The 2024 rows already state a
+     rarity per rung inside `bonus_choice` (`uncommon:1,rare:2,very_rare:3`; armor one step up),
+     so there the fault is only that the article shows the row's column. **Re-read the 2014
+     entries against the SRD 5.1 PDF before believing "only the numbers"** — the maintainer's
+     reading of the rule is one rarity step per plus in both editions, and a conversion that lost
+     a parenthesis would look exactly like this.
 
   **The rows that stay prose, each for a reason the vocabulary cannot fix by growing a word:**
   - *Shield of Missile Attraction* wants resistance qualified by the SOURCE of the damage rather than

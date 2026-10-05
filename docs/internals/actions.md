@@ -149,7 +149,7 @@ maneuver exactly as they add a spell, source-namespaced and behind the same per-
 
 ## 4. Consumers, in build order
 
-1. **Native activatable actions (N2 shape 2) — the 90% case, no sandbox.** An action is DATA: its
+1. **Native activatable actions (N2's action kind) — the 90% case, no sandbox.** An action is DATA: its
    activation IS a static intent (spend + effects + cost + rolls) read from content columns and
    executed by the host on click. This ships first and exercises the executor.
 2. **Plugin `onUse` (`api: 2`).** A sandbox handler computes the intent from `(token, ctx)` —

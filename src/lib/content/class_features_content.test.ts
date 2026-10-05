@@ -192,7 +192,7 @@ describe('shipped Rage damage is scoped to Strength, per edition (RAGE-SCOPE)', 
 	});
 });
 
-describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
+describe('shipped Rage buff · Enter Rage (N2 · a feature action)', () => {
 	// Derive a barbarian WITH the rage condition applied (what "Enter Rage" → apply_effect:rage does).
 	const raging = (g: ContentGraph, source: string, system: '5e' | '5.5e', level: number) => {
 		const c = barbarian(source, system, level);

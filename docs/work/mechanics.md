@@ -5,21 +5,21 @@
 > and [`../internals/characters.md`](../internals/characters.md); the ORDER is [`plan.md`](../plan.md) ▸
 > Implementation order.
 
-## The three shapes a class feature reduces to
+## The three kinds a class feature reduces to: passive, action, choice
 
 Roadmap work, not defects. **An item id is stable — never renumber one**: ids are how items in the
 other `work/` files, and comments in the code, refer to these.
 
-Core insight: PHB class features reduce to THREE data shapes, and the engine for two of them
-already exists — (1) passive modifier tokens (blocked only on the fold gathering them), (2) activatable
-actions = COMPOSITION of existing systems (`economy.trySpend` + `resourcesSpent` + `addEffect`
+Core insight: PHB class features reduce to THREE kinds, and the engine for two of them
+already exists — a **passive** (modifier tokens on the row, folded like any other), an **action**
+(activatable) = COMPOSITION of existing systems (`economy.trySpend` + `resourcesSpent` + `addEffect`
 with duration + `rollPool` — no new engine, new `class_features` columns: activation slot,
-resource cost, applied tokens, duration, roll), (3) choice groups (`choice_group` + `choose_n`
-columns; generalizes the builder's slotFeats pattern; chosen rows then behave as 1/2).
+resource cost, applied tokens, duration, roll), and a **choice** (`choice_group` + `choose_n` columns; generalizes the builder's slotFeats
+pattern; a chosen row then behaves as a passive or an action).
 Level scaling stays formula-free: per-level `class_features` rows re-grant (monk die d6→d12,
 superiority d8→d12) — the table is already keyed by level; L2 expressions not needed for ~90%
 of PHB. **Acceptance: FULL PHB integration — every feature of every PHB
-class must be EXPRESSIBLE via one of the three shapes (or explicitly marked manual-text
+class must be EXPRESSIBLE via one of the three kinds (or explicitly marked manual-text
 fallback) — PLUS the tier-1 homebrew set:** this sizes the vocabulary, it does not authorize
 authoring PHB rows; what SHIPS stays SRD. The homebrew set is Blood Hunter (Mercer;
 D&D-Beyond-hosted, the most-played homebrew), Gunslinger (Mercer), Pugilist (Ben Hoffman),
@@ -35,8 +35,8 @@ shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki 
 die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
 stay semi-manual.
 
-- [ ] **N2 · Class-feature engine ("features as data").** The three shapes above, in the order
-  1→3→2. Wild Shape carved out as N2b: it is a stat-block REPLACEMENT, not one of the shapes.
+- [ ] **N2 · Class-feature engine ("features as data").** The three kinds above, in the order
+  passive → choice → action. Wild Shape carved out as N2b: it is a stat-block REPLACEMENT, not one of the shapes.
   Superiority dice: extend the grammar —
   `grant_resource:superiority-dice:4:d8:short` (die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
@@ -45,8 +45,8 @@ stay semi-manual.
   attacks via the existing `bonusDice` path. Extra Attack is built (`../internals/effects.md` ▸
   Targets). The fold ALREADY gathers feature tokens (`derive-gather` ▸ `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
   class-feature row works the day it is written — FEATURE-PASSIVES is written against that. What is
-  still owed here is the content-schema column bump for shapes 2 and 3.
-  **The measurement that sizes shape 3, so it is not re-taken:** of the shipped class-feature rows
+  still owed here is the content-schema column bump for the action and choice kinds.
+  **The measurement that sizes the choice kind, so it is not re-taken:** of the shipped class-feature rows
   in both editions, only a handful carry any effect token. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
   Order · Primal Order · Epic Boon have no column a picker could read, and a panel for them today
   would be a lie — they are blocked on the `choice_group` / `choose_n` columns, not on UI.
@@ -106,7 +106,7 @@ stay semi-manual.
   rule, and a style offered in an ASI slot would be a rule that edition does not have. So the home
   is an option row with a parent, the shape `species_option` already is, plus a count to pick; that
   shape is 65 references across 21 files today, which is the honest size of a second one, and a new
-  content type is not a backwards-compatible change (`../internals/content.md`). It is N2 shape 3
+  content type is not a backwards-compatible change (`../internals/content.md`). It is N2's choice kind
   and is built once, for Metamagic and the Invocations with it.
   **Until then a 2014 player says a style with an effect of their own**: a homebrew effect row
   carrying `extra_attack:light:modifier` (Two-Weapon Fighting) or `reroll:damage:two_handed,melee:2`
@@ -121,12 +121,12 @@ stay semi-manual.
   Ranger's (level 2).
   **The smallest model** is the column the species already has: `feat_choice` on the class-feature
   row, read by `FeatSlots` into one more slot whose menu is that list. It is deliberately NOT
-  built without a sign-off, because it answers for 2024 the question N2 shape 3 asks for both
+  built without a sign-off, because it answers for 2024 the question N2's choice kind asks for both
   editions, and two answers to "a feature offers a choice" is the thing to avoid. The Paladin's and
   Ranger's alternative ("instead of choosing one of those feats, you can choose the option below")
-  is not a feat and needs shape 3 either way.
+  is not a feat and needs the choice kind either way.
 
-- [ ] **FEATURE-PASSIVES · the shape-1 features, named.** N2 says shape 1 is a passive token; this
+- [ ] **FEATURE-PASSIVES · the passive features, named.** N2 says the passive kind is a token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",
   "score a critical hit on"). Every row writable against the targets that exist carries its token;
@@ -141,13 +141,13 @@ stay semi-manual.
     `lands_stride`, `hunter_defensive_tactics`, `holy_nimbus`, `thief_supreme_sneak`, 2024
     `studied_attacks`, `precise_hunter`, `innate_sorcery`. The app has no enemy and no turn history
     to test the condition against; surfacing the text is the honest behaviour.
-  - **A choice, so it waits on `choose_n`** (N2 shape 3): `fiendish_resilience` and 2024
+  - **A choice, so it waits on `choose_n`** (N2's choice kind): `fiendish_resilience` and 2024
     `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
     change — and `pact_boon`, a choice of three. The same wait holds every proficiency that is a
     CHOICE: 2024 Divine Order and Primal Order, College of Lore, the 2024 elf's one-of-three Keen
     Senses.
-  - **Not shape 1 at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
-    resistance — an activated ability with a duration (shape 2, and EXCEPT-DAMAGE for what it
+  - **Not the passive kind at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
+    resistance — an activated ability with a duration (the action kind, and EXCEPT-DAMAGE for what it
     resists). 2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no
     target and no enemy to test against. The Gnomish Lineages stay prose too — each grants cantrips
     and a prepared spell, and no token grants a spell.
@@ -166,7 +166,7 @@ stay semi-manual.
      Wild Resurgence's first half spends a spell SLOT for a use, and Nature Magician turns several
      uses into one slot.
   2. **Primal Strike** (2024 Elemental Fury) is one of TWO options the feature offers, so it waits
-     on N2 shape 3 like every other choice. What it is once chosen is sayable: "once on each of
+     on N2's choice kind like every other choice. What it is once chosen is sayable: "once on each of
      your turns when you hit … you can cause the target to take an extra 1d8" is a granted roll
      limited to a turn, the shape Sneak Attack has, and it needs no scope for a form's attacks.
   3. **A form's senses are added, never taken away.** 2014: "you can't use any of your special
@@ -201,7 +201,7 @@ stay semi-manual.
         single `warlock_eldritch_invocations` row and no row per invocation, in either edition, so
         there is nothing to hang `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the
         invocation rows (the 2014 source names Agonizing Blast exactly once, under a heading the
-        converter does not emit) and the chooser that picks two of them, which is N2 shape 3.
+        converter does not emit) and the chooser that picks two of them, which is N2's choice kind.
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
@@ -209,8 +209,8 @@ stay semi-manual.
   class and for a spell a feat teaches: `ritual_source` on the class, subclass or feat row, both
   packs' 29 ritual tags, and the rule in `../internals/rules-core.md` ▸ Spellcasting. The one caster
   left is the Tome warlock: `warlock_pact_boon` is one row holding three boons as prose, so nothing
-  can say "this warlock rituals" until the boon is a choice (N2 shape 3). **It ships in 0.8.0, so
-  the choice does too — at least for this one row:** the smallest form of shape 3 that lets one
+  can say "this warlock rituals" until the boon is a choice (N2's choice kind). **It ships in 0.8.0, so
+  the choice does too — at least for this one row:** the smallest form of a feature choice that lets one
   class-feature row offer named options, each with its own tokens, and stores the pick in the
   build. SIZE it before starting; the same shape is what MAGIC-ITEM-VOCAB's varieties ask for on
   an inventory row, and the two are designed together or the second one is built twice. The subclass column that
@@ -311,8 +311,9 @@ stay semi-manual.
   name and never used as a path. Inventory rows and class rows get an instance id of their own in
   the SAME migration, for the same reason an effect has `iid`: a message or an undo has to name
   "that potion", and a position in an array names whatever sits there by the time it arrives.
-  A schema bump with a migration that mints what is missing. Which GUID is the one open choice —
-  random (v4, what `crypto.randomUUID` gives and every `iid` already is) or time-ordered (v7).
+  A schema bump with a migration that mints what is missing. The ids are random
+  (UUID v4, what `crypto.randomUUID` gives and every `iid` already is): the array holds the
+  order, and a time-ordered id would tell every peer when the character was made.
 - [ ] **EFFECT-IID-UNIQUE · two effects may carry one `iid`.** The schema asks only that it is
   non-empty (`character/schema.ts` ▸ `effectInstance`), the Effects panel keys its lists by it, and
   `removeEffect` filters by it — so a hand-edited or imported save with a repeated `iid` breaks the
