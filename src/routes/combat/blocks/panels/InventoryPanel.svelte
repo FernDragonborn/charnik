@@ -34,7 +34,7 @@
 	   list stands in until the drop, and the drop is what the character hears about. */
 	let dragging = $state<{ id: string; row: InventoryRow }[] | null>(null);
 	/* the item carries its ROW — see `AttacksPanel` for what a lookup by id cost the shadow item */
-	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.item, row })));
+	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.iid, row })));
 </script>
 
 <div class="load">
@@ -129,9 +129,9 @@
 			>
 				<RowGrip
 					panel="inventory"
-					id={row.entry.item}
+					id={row.entry.iid}
 					name={row.name}
-					onmove={(by) => inv.move(row.entry.item, by)}
+					onmove={(by) => inv.move(row.entry.iid, by)}
 				/>
 				<span class="nm">{row.name}</span>
 				{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
@@ -152,7 +152,7 @@
 							value={row.entry.bonus ?? ''}
 							onchange={(e) =>
 								inv.setBonus(
-									row.entry.item,
+									row.entry.iid,
 									e.currentTarget.value ? Number(e.currentTarget.value) : undefined,
 								)}
 						>
@@ -181,7 +181,7 @@
 						>
 						<select
 							value={row.entry.choice ?? ''}
-							onchange={(e) => inv.setChoice(row.entry.item, e.currentTarget.value)}
+							onchange={(e) => inv.setChoice(row.entry.iid, e.currentTarget.value)}
 						>
 							<option value="">{$_('combat.inventory.choiceNone')}</option>
 							{#each row.choiceOptions as option (option)}
@@ -197,7 +197,7 @@
 						>
 						<select
 							value={row.entry.base ?? ''}
-							onchange={(e) => inv.setBase(row.entry.item, e.currentTarget.value)}
+							onchange={(e) => inv.setBase(row.entry.iid, e.currentTarget.value)}
 						>
 							<option value="">{$_('combat.inventory.baseItemNone')}</option>
 							{#each inv.baseOptionsFor(row.entry.item) as opt (opt.ref)}
@@ -210,20 +210,20 @@
 					<span class="stepper">
 						<button
 							aria-label={$_('combat.inventory.fewer', { values: { name: row.name } })}
-							onclick={() => inv.bump(row.entry.item, -1)}
+							onclick={() => inv.bump(row.entry.iid, -1)}
 						>
 							<Icon name="minus" size={11} />
 						</button>
 						<span class="base">{row.entry.qty}</span>
 						<button
 							aria-label={$_('combat.inventory.more', { values: { name: row.name } })}
-							onclick={() => inv.bump(row.entry.item, 1)}
+							onclick={() => inv.bump(row.entry.iid, 1)}
 						>
 							<Icon name="plus" size={11} />
 						</button>
 					</span>
 					{#if row.consumable}
-						<button class="pill-btn" onclick={() => inv.use(row.entry.item)}
+						<button class="pill-btn" onclick={() => inv.use(row.entry.iid)}
 							>{$_('combat.inventory.use')}</button
 						>
 					{/if}
@@ -231,7 +231,7 @@
 						<button
 							class="pill-btn"
 							class:accent={row.entry.equipped}
-							onclick={() => inv.equip(row.entry.item)}
+							onclick={() => inv.equip(row.entry.iid)}
 							title={$_(
 								row.entry.equipped ? 'combat.inventory.unequipHint' : 'combat.inventory.equipHint',
 							)}
@@ -243,7 +243,7 @@
 						<button
 							class="pill-btn"
 							class:accent={row.entry.attuned}
-							onclick={() => inv.attune(row.entry.item)}
+							onclick={() => inv.attune(row.entry.iid)}
 							title={$_(
 								row.entry.attuned ? 'combat.inventory.unattuneHint' : 'combat.inventory.attuneHint',
 							)}

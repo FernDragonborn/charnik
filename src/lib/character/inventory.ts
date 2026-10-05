@@ -46,35 +46,45 @@ export const carriedWeight = (
 	weightOf: (ref: string, base?: string) => number,
 ): number => list.reduce((lb, entry) => lb + weightOf(entry.item, entry.base) * entry.qty, 0);
 
+/*
+ * A row is named by its own `iid`, never by the item it holds: two rows may hold the same item — a
+ * file edited by hand, two rings that resist different things — and a change to one of them is a
+ * change to that one. Only `addItem` and `removeItemsOf` speak of the ITEM, because a picker's
+ * question is "do you carry this", which is a question about every row at once.
+ */
 const withEntry = (
 	list: InventoryList,
-	ref: string,
+	iid: string,
 	change: (entry: InventoryEntry) => InventoryEntry,
-): InventoryEntry[] => list.map((entry) => (entry.item === ref ? change(entry) : entry));
+): InventoryEntry[] => list.map((entry) => (entry.iid === iid ? change(entry) : entry));
 
 export const addItem = (list: InventoryList, ref: string): InventoryEntry[] =>
 	!ref || list.some((entry) => entry.item === ref)
 		? [...list]
 		: [...list, inventoryRow({ item: ref })];
 
-export const removeItem = (list: InventoryList, ref: string): InventoryEntry[] =>
+export const removeItem = (list: InventoryList, iid: string): InventoryEntry[] =>
+	list.filter((entry) => entry.iid !== iid);
+
+/** Stop carrying an item altogether — every row of it. The way back out of `addItem`. */
+export const removeItemsOf = (list: InventoryList, ref: string): InventoryEntry[] =>
 	list.filter((entry) => entry.item !== ref);
 
-export const bumpQty = (list: InventoryList, ref: string, by: number): InventoryEntry[] =>
-	withEntry(list, ref, (entry) => ({ ...entry, qty: Math.max(1, entry.qty + by) }));
+export const bumpQty = (list: InventoryList, iid: string, by: number): InventoryEntry[] =>
+	withEntry(list, iid, (entry) => ({ ...entry, qty: Math.max(1, entry.qty + by) }));
 
-export const toggleEquipped = (list: InventoryList, ref: string): InventoryEntry[] =>
-	withEntry(list, ref, (entry) => ({ ...entry, equipped: !entry.equipped }));
+export const toggleEquipped = (list: InventoryList, iid: string): InventoryEntry[] =>
+	withEntry(list, iid, (entry) => ({ ...entry, equipped: !entry.equipped }));
 
 /** Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can
  *  be over the cap. The caller decides what to do about that (Strict blocks, Free allows). */
-export const toggleAttuned = (list: InventoryList, ref: string): InventoryEntry[] =>
-	withEntry(list, ref, (entry) => ({ ...entry, attuned: !entry.attuned }));
+export const toggleAttuned = (list: InventoryList, iid: string): InventoryEntry[] =>
+	withEntry(list, iid, (entry) => ({ ...entry, attuned: !entry.attuned }));
 
 /** Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which
  *  would read as "carried" on every surface that counts rows. */
-export const useOne = (list: InventoryList, ref: string): InventoryEntry[] => {
-	const entry = list.find((e) => e.item === ref);
+export const useOne = (list: InventoryList, iid: string): InventoryEntry[] => {
+	const entry = list.find((e) => e.iid === iid);
 	if (!entry) return [...list];
-	return entry.qty > 1 ? bumpQty(list, ref, -1) : removeItem(list, ref);
+	return entry.qty > 1 ? bumpQty(list, iid, -1) : removeItem(list, iid);
 };

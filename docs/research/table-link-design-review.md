@@ -574,6 +574,11 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### F-07 — Duplicate effect ids from a peer break the keyed lists that render them
 
+- **Status:** closed for a local file, and driven: effect ids, inventory row ids and class row
+  ids are each made unique when a character is read, inventory rows are keyed and addressed by
+  their own id, and a weapon on two rows gets two keys (`docs/internals/characters.md` ▸
+  Identities). What a peer's ids mean locally is still the wire schema's to say.
+
 - **Kind:** present. **Severity:** medium. **Confidence:** medium (Svelte's behaviour on a duplicate
   key is unverified here: it throws in development; production behaviour was not driven).
 - **Evidence.** `src/routes/combat/blocks/panels/EffectsPanel.svelte:149,172` key the buff and
@@ -844,6 +849,17 @@ the app's own directories, are each refused (`docs/internals/security.md` §2). 
 there for a different reason than on Windows, where config and data are the same folder. There is
 no macOS build to drive. S-07's form submit is closed at the sanitiser and by `form-action 'none'`.
 
+**2 · What a transport crate brings into the log.** Measured with iroh 1.3.0 in a scratch crate.
+`tracing`'s `log` feature IS on: `noq-udp` enables it by default (`tracing-log`) and arrives
+through `netwatch`, and Cargo unifies features, so with no tracing subscriber installed every
+`tracing` event in the process becomes a `log` record. An endpoint that binds and then sits idle
+for six seconds put records under 71 level-and-target pairs into a process-global logger —
+`rustls`, `hyper_util`, `reqwest`, `noq`, `portmapper` and iroh's own — and `INFO iroh::endpoint`,
+which a release build's level lets through, names the endpoint's id. The app's sink takes the
+page's lines and its own crate's and drops the rest (`docs/internals/security.md` §2), so none of
+it reaches the file or the page as things stand; a table-link module that logs under the app's
+own target is where that has to be held again.
+
 **3 · What page script can do with `process`, `updater` and `http`.** Read in the installed
 plugins' own sources, not driven:
 
@@ -888,6 +904,22 @@ of the app — into the builder on a character it names — and can do nothing o
 - The one `Object.assign` over a parsed save (`store.svelte.ts` ▸ `putIntoActive`) copies the
   top-level keys of a `z.object` result, whose keys are the schema's.
 
+**6 · Svelte on duplicate keys, in production.** It throws there too. A production build given a
+character with one item on two inventory rows raised `each_key_duplicate` and the inventory panel
+was not drawn at all — the same as under the dev server, with a shorter message. So a duplicate
+key is never a cosmetic fault, and no list may be keyed by something a file or a peer supplies
+without it being made unique first. The local lists are (F-07). Not measured: a 10⁵-row keyed
+list.
+
+**9 · Build cost — the half one Windows machine can answer.** iroh 1.3.0 declares
+`rust-version = "1.91"`; the app's `Cargo.toml` says 1.77.2 and would have to say so too. The
+release workflow builds on `dtolnay/rust-toolchain@stable`, which is past it. A minimal binary
+that binds an endpoint has 243 crates in its dependency tree, 107 of them ones the app does not
+already build. Clean, on this machine: 1 min 30 s for a debug build, 2 min 18 s for a release
+one, and a stripped release executable of 12.7 MB — an upper bound on what it adds, since the
+crates the two share are counted in it. Not measured: Linux and macOS, an incremental build, and
+the installer's size with it inside the real app.
+
 **13 · An inert derive mode — and why the question may not need its answer.** What the interface
 carries is decided as the RESULT: a player's app derives its own sheet and the GM's renders it,
 deriving nothing from a peer's tokens (`docs/work/release.md` ▸ TABLE-LINK-SEAM). Held to, there
@@ -901,16 +933,11 @@ whether a formula in a save can be made expensive within the L2 caps.
 
 ### Still open
 
-2. **`cargo tree -e features -i tracing`** in a scratch crate with `tauri-plugin-log` and `iroh`,
-   then read a session's log file for endpoint ids and addresses (S-04).
-6. **Svelte's production behaviour on duplicate keys** (F-07) and on a 10⁵-row keyed list.
 7. **iroh on mobile.** Background limits on Android and iOS, the local-network permission prompt on
    iOS, whether `fast-apple-datapath` can be left off without cost, App Store review of a QUIC
    endpoint that accepts inbound connections.
 8. **n0's public relays as a dependency.** Terms, rate limits, what they log, and what the app does
    when they are unreachable — measured from two real networks.
-9. **Build cost.** Clean and incremental build time and installer size with iroh, on all targets,
-   and whether the Rust 1.91 floor breaks any current CI image.
 10. **Cross-version wire compatibility** between two iroh minors, as a CI job.
 11. **Key storage per platform.** Keychain, Credential Manager, Secret Service, Android Keystore —
     what Tauri mobile can reach, and what a backup or a folder sync carries.

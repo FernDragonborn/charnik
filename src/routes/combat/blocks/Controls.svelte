@@ -38,7 +38,7 @@
 		<button
 			class="toggle"
 			class:on={shield.entry.equipped}
-			onclick={() => combat.inventory.equip(shield.entry.item)}
+			onclick={() => combat.inventory.equip(shield.entry.iid)}
 			use:provenance={$_('combat.controls.shieldHint')}
 			><Icon name="shield" />
 			{$_('combat.controls.shield')}

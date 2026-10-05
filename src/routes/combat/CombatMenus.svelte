@@ -476,8 +476,8 @@
 			{@const pending = combat.inventory.shotPending}
 			{#if pending}
 				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.ammoTitle')}</div>
-				{#each pending.stacks as stack (stack.entry.item)}
-					<button class="menu-row" onclick={() => combat.inventory.shootFrom(stack.entry.item)}>
+				{#each pending.stacks as stack (stack.entry.iid)}
+					<button class="menu-row" onclick={() => combat.inventory.shootFrom(stack.entry.iid)}>
 						<span class="main">{stack.name}</span>
 						<span class="meta">×{stack.entry.qty}</span>
 					</button>

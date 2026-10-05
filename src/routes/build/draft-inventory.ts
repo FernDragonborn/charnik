@@ -14,6 +14,7 @@ import {
 	bumpQty,
 	isEquippable,
 	removeItem,
+	removeItemsOf,
 	toggleEquipped,
 } from '$lib/character/inventory';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
@@ -32,12 +33,14 @@ export class DraftInventory {
 		this.host().draft.inventory = next;
 	}
 
+	// the picker speaks of an ITEM — take it, put it back; a row on the sheet is spoken of by its own id
 	add = (ref: string): void => this.put(addItem(this.host().draft.inventory, ref));
-	remove = (ref: string): void => this.put(removeItem(this.host().draft.inventory, ref));
-	bumpQty = (ref: string, by: number): void =>
-		this.put(bumpQty(this.host().draft.inventory, ref, by));
-	toggleEquipped = (ref: string): void =>
-		this.put(toggleEquipped(this.host().draft.inventory, ref));
+	putBack = (ref: string): void => this.put(removeItemsOf(this.host().draft.inventory, ref));
+	remove = (row: string): void => this.put(removeItem(this.host().draft.inventory, row));
+	bumpQty = (row: string, by: number): void =>
+		this.put(bumpQty(this.host().draft.inventory, row, by));
+	toggleEquipped = (row: string): void =>
+		this.put(toggleEquipped(this.host().draft.inventory, row));
 
 	/** An item as the sheet reads it — its own tags plus whatever it inherits from its base item. The
 	 *  graph lives on the host, so no component resolves an item itself and reads a +1 plate's AC off

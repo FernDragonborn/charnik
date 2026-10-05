@@ -11,6 +11,7 @@ import { setAutoCalc } from './effects';
 import {
 	attune,
 	changeQuantity,
+	disownItem,
 	dropItem,
 	ownItem,
 	reorderInventory,
@@ -62,25 +63,27 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 		return c;
 	};
 	const entryOf = (c: Character, id: string) => c.build.inventory.find((e) => e.item === item(id));
+	/** The row a character carries that item on, by the row's own id — what an action is told. */
+	const rowOf = (c: Character, id: string) => entryOf(c, id)?.iid ?? '';
 
 	it('a shield in hand is counted by the Armor Class, and taken off it is not', () => {
 		const c = carrying('shield');
 		const bare = derive(c).ac.value;
-		const armed = toggleEquip(c, { item: item('shield') }, ctx).character;
+		const armed = toggleEquip(c, { row: rowOf(c, 'shield') }, ctx).character;
 		expect(derive(armed).ac.value).toBe(bare + 2);
-		expect(derive(toggleEquip(armed, { item: item('shield') }, ctx).character).ac.value).toBe(bare);
+		expect(derive(toggleEquip(armed, { row: rowOf(c, 'shield') }, ctx).character).ac.value).toBe(
+			bare,
+		);
 		expect(entryOf(c, 'shield')?.equipped).toBe(false);
 	});
 
 	it('owning, counting, using up and putting back', () => {
 		const c = carrying('dagger');
-		const more = changeQuantity(
-			ownItem(c, { item: item('torch') }, ctx).character,
-			{ item: item('torch'), by: 2 },
-			ctx,
-		).character;
+		const owned = ownItem(c, { item: item('torch') }, ctx).character;
+		const torch = rowOf(owned, 'torch');
+		const more = changeQuantity(owned, { row: torch, by: 2 }, ctx).character;
 		expect(entryOf(more, 'torch')?.qty).toBe(3);
-		const used = useItem(more, { item: item('torch'), count: 2 }, ctx);
+		const used = useItem(more, { row: torch, count: 2 }, ctx);
 		expect(entryOf(used.character, 'torch')?.qty).toBe(1);
 		expect(used.notices[0]).toMatchObject({
 			description: { values: { count: 1 } },
@@ -88,10 +91,12 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 		});
 		// the last one leaves the list, and a count past the stack spends only what is there
 		expect(
-			entryOf(useItem(used.character, { item: item('torch'), count: 9 }, ctx).character, 'torch'),
+			entryOf(useItem(used.character, { row: torch, count: 9 }, ctx).character, 'torch'),
 		).toBeUndefined();
 		expect(
-			dropItem(more, { item: item('dagger') }, ctx).character.build.inventory.map((e) => e.item),
+			dropItem(more, { row: rowOf(more, 'dagger') }, ctx).character.build.inventory.map(
+				(e) => e.item,
+			),
 		).toEqual([item('torch')]);
 	});
 
@@ -99,27 +104,27 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 		const c = carrying('dagger', 'shield', 'torch', 'rope');
 		c.build.inventory = c.build.inventory.map((e, i) => ({ ...e, attuned: i < 3 }));
 		c.ui.strict = true;
-		const wall = attune(c, { item: item('rope') }, ctx);
+		const wall = attune(c, { row: rowOf(c, 'rope') }, ctx);
 		expect(wall.refused).toBe(true);
 		expect(wall.character).toBe(c);
-		const free = attune({ ...c, ui: { ...c.ui, strict: false } }, { item: item('rope') }, ctx);
+		const free = attune({ ...c, ui: { ...c.ui, strict: false } }, { row: rowOf(c, 'rope') }, ctx);
 		expect(entryOf(free.character, 'rope')?.attuned).toBe(true);
 		expect(free.notices[0]?.text).toMatchObject({ key: 'combat.notice.overAttunement' });
-		expect(entryOf(attune(c, { item: item('dagger') }, ctx).character, 'dagger')?.attuned).toBe(
+		expect(entryOf(attune(c, { row: rowOf(c, 'dagger') }, ctx).character, 'dagger')?.attuned).toBe(
 			false,
 		);
 	});
 
 	it('an answer a row asks for is kept on the entry, and taking it back removes it', () => {
 		const c = carrying('dagger');
-		const ref = item('dagger');
+		const row = rowOf(c, 'dagger');
 		const answered = setItemChoice(
 			setItemBonus(
-				setItemBase(c, { item: ref, base: item('shield') }, ctx).character,
-				{ item: ref, bonus: 2 },
+				setItemBase(c, { row, base: item('shield') }, ctx).character,
+				{ row, bonus: 2 },
 				ctx,
 			).character,
-			{ item: ref, choice: 'fire' },
+			{ row, choice: 'fire' },
 			ctx,
 		).character;
 		expect(entryOf(answered, 'dagger')).toMatchObject({
@@ -128,18 +133,41 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 			choice: 'fire',
 		});
 		const cleared = setItemChoice(
-			setItemBonus(setItemBase(answered, { item: ref }, ctx).character, { item: ref }, ctx)
-				.character,
-			{ item: ref },
+			setItemBonus(setItemBase(answered, { row }, ctx).character, { row }, ctx).character,
+			{ row },
 			ctx,
 		).character;
 		// the row it was before it was asked anything — the same row, by its own id
 		expect(entryOf(cleared, 'dagger')).toEqual(entryOf(c, 'dagger'));
 	});
 
+	it('the same item on two rows is two rows: a change to one leaves the other alone', () => {
+		const c = carrying('dagger');
+		const first = c.build.inventory[0];
+		if (!first) throw new Error('carrying a dagger');
+		const twice = {
+			...c,
+			build: { ...c.build, inventory: [first, inventoryRow({ item: first.item })] },
+		};
+		const [one, other] = twice.build.inventory.map((e) => e.iid);
+		const armed = toggleEquip(twice, { row: other ?? '' }, ctx).character.build.inventory;
+		expect(armed.map((e) => e.equipped)).toEqual([first.equipped, !first.equipped]);
+		const more = changeQuantity(twice, { row: one ?? '', by: 4 }, ctx).character.build.inventory;
+		expect(more.map((e) => e.qty)).toEqual([5, 1]);
+		expect(
+			dropItem(twice, { row: one ?? '' }, ctx).character.build.inventory.map((e) => e.iid),
+		).toEqual([other]);
+		// the picker's "put it back" is about the ITEM, and takes both
+		expect(disownItem(twice, { item: first.item }, ctx).character.build.inventory).toEqual([]);
+	});
+
 	it('a reorder keeps what it was not told about, at the end', () => {
 		const c = carrying('dagger', 'shield', 'torch');
-		const order = reorderInventory(c, { items: [item('torch'), item('dagger')] }, ctx).character;
+		const order = reorderInventory(
+			c,
+			{ rows: [rowOf(c, 'torch'), rowOf(c, 'dagger')] },
+			ctx,
+		).character;
 		expect(order.build.inventory.map((e) => e.item)).toEqual([
 			item('torch'),
 			item('dagger'),

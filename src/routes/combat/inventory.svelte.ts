@@ -22,6 +22,7 @@ import {
 import {
 	attune,
 	changeQuantity,
+	disownItem,
 	dropItem,
 	ownItem,
 	reorderInventory,
@@ -198,27 +199,27 @@ export class InventoryTracker {
 	 *  is one fact here and not a play flag beside it that could disagree. */
 	shield = $derived(this.rows.find((r) => r.item?.row.data.category === 'shield'));
 
-	equip = (item: string) => this.act((c, ctx) => toggleEquip(c, { item }, ctx));
+	equip = (row: string) => this.act((c, ctx) => toggleEquip(c, { row }, ctx));
 
 	/** Attune / un-attune. Un-attuning is always allowed; a fourth item is blocked in Strict and
 	 *  allowed with a note in Free (`$lib/play/inventory` ▸ `attune`). */
-	attune = (item: string) => this.act((c, ctx) => attune(c, { item }, ctx));
+	attune = (row: string) => this.act((c, ctx) => attune(c, { row }, ctx));
 
-	bump = (item: string, by: number) => this.act((c, ctx) => changeQuantity(c, { item, by }, ctx));
+	bump = (row: string, by: number) => this.act((c, ctx) => changeQuantity(c, { row, by }, ctx));
 
 	/** Reorder what the character carries. The inventory ARRAY is the order — nothing new is stored,
 	 *  and a reorder persists the way every other inventory edit does. */
-	reorder = (items: string[]) => this.act((c, ctx) => reorderInventory(c, { items }, ctx));
+	reorder = (rows: string[]) => this.act((c, ctx) => reorderInventory(c, { rows }, ctx));
 
 	/** The same reorder by keyboard — one step up or down, for the people a drag excludes. */
-	move = (ref: string, by: -1 | 1) => {
-		const order = this.list.map((entry) => entry.item);
-		const at = order.indexOf(ref);
+	move = (row: string, by: -1 | 1) => {
+		const order = this.list.map((entry) => entry.iid);
+		const at = order.indexOf(row);
 		const to = at + by;
 		if (at < 0 || to < 0 || to >= order.length) return;
 		const swapped = order[to];
 		if (swapped === undefined) return;
-		order[to] = ref;
+		order[to] = row;
 		order[at] = swapped;
 		this.reorder(order);
 	};
@@ -227,7 +228,9 @@ export class InventoryTracker {
 	 *  still decides what a character owns, and this is the same act reached from where you notice it
 	 *  — a looted item mid-session. Quantity beyond the first is `bump`'s job. */
 	add = (item: string) => this.act((c, ctx) => ownItem(c, { item }, ctx));
-	remove = (item: string) => this.act((c, ctx) => dropItem(c, { item }, ctx));
+	/** Stop carrying an item altogether — what the picker's second press on a taken row means. */
+	putBack = (item: string) => this.act((c, ctx) => disownItem(c, { item }, ctx));
+	remove = (row: string) => this.act((c, ctx) => dropItem(c, { row }, ctx));
 
 	/** Every mundane item a template could BE, of the same kind as the template asking: a weapon
 	 *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks
@@ -251,17 +254,16 @@ export class InventoryTracker {
 
 	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
 	 *  off every number it was folding into. */
-	setBonus = (item: string, bonus: number | undefined) =>
-		this.act((c, ctx) => setItemBonus(c, { item, ...(bonus === undefined ? {} : { bonus }) }, ctx));
+	setBonus = (row: string, bonus: number | undefined) =>
+		this.act((c, ctx) => setItemBonus(c, { row, ...(bonus === undefined ? {} : { bonus }) }, ctx));
 
 	/** Answer "which type is this one" for a carried item — the ring's gemstone. */
-	setChoice = (item: string, choice: string) =>
-		this.act((c, ctx) => setItemChoice(c, { item, choice }, ctx));
+	setChoice = (row: string, choice: string) =>
+		this.act((c, ctx) => setItemChoice(c, { row, choice }, ctx));
 
 	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
 	 *  one rather than silently keeping the last pick. */
-	setBase = (item: string, base: string) =>
-		this.act((c, ctx) => setItemBase(c, { item, base }, ctx));
+	setBase = (row: string, base: string) => this.act((c, ctx) => setItemBase(c, { row, base }, ctx));
 
 	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, the fifth play-time verb on
 	 *  something carried. Keyed by the weapon KIND, so a +1 Rapier and a plain one answer together —
@@ -273,7 +275,7 @@ export class InventoryTracker {
 	};
 
 	/** Spend one — or `count`, never more than the stack holds. */
-	use = (item: string, count = 1) => this.act((c, ctx) => useItem(c, { item, count }, ctx));
+	use = (row: string, count = 1) => this.act((c, ctx) => useItem(c, { row, count }, ctx));
 	/** Whether a shot spends what it fires (`ui.trackAmmunition`, off by default). */
 	get tracksAmmunition(): boolean {
 		return this.getCharacter()?.ui.trackAmmunition ?? false;
@@ -321,16 +323,16 @@ export class InventoryTracker {
 		}
 		const only = stacks[0];
 		if (!fire()) return;
-		if (only) this.use(only.entry.item, shots);
+		if (only) this.use(only.entry.iid, shots);
 		else toast(t('combat.notice.noAmmunition'));
 	};
 
 	/** Finish the waiting shot from the stack the player picked. */
-	shootFrom = (ref: string) => {
+	shootFrom = (row: string) => {
 		const pending = this.shotPending;
 		if (!pending) return;
 		this.shotPending = null;
 		this.menus.close();
-		if (pending.fire()) this.use(ref, pending.shots);
+		if (pending.fire()) this.use(row, pending.shots);
 	};
 }

@@ -709,6 +709,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const carriedWeight` — Total carried weight in pounds.
 - `const addItem`
 - `const removeItem`
+- `const removeItemsOf` — Stop carrying an item altogether — every row of it.
 - `const bumpQty`
 - `const toggleEquipped`
 - `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
@@ -944,6 +945,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ROW_PANEL` — The panels that keep a stored row order — compared against these, never a bare string.
 - `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
 - `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
+- `function uniqueRowKeys` — * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same * weapon can stan…
 
 ### `src/lib/combat/spells.ts`
 
@@ -1742,7 +1744,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/play/inventory.ts`
 
 - `const toggleEquip` — Put on or take off — a shield in hand is what the Armor Class counts.
-- `const ownItem` — Own one more of something, and put one back.
+- `const ownItem` — Start carrying an item, and stop carrying it altogether — the two a picker asks for, which * speak of the ITEM.
+- `const disownItem`
 - `const dropItem`
 - `const changeQuantity` — Change how many of a stack are carried.
 - `const reorderInventory` — * Reorder what is carried.
@@ -2145,4 +2148,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1306 exports across 180 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1309 exports across 180 modules · 84 duplicate suspects._

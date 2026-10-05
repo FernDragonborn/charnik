@@ -143,7 +143,9 @@ for (const { system, pack, source } of EDITIONS) {
 				// 5.1's longbow could fire either stack as far as its data knows, so the player picks
 				expect(combat.inventory.shotPending?.stacks.length).toBe(2);
 				expect(qty(arrows)).toBe(20); // nothing spent while it asks
-				combat.inventory.shootFrom(`item:${source}:${arrows}`);
+				combat.inventory.shootFrom(
+					character.build.inventory.find((e) => e.item === `item:${source}:${arrows}`)?.iid ?? '',
+				);
 			}
 			expect(qty(arrows)).toBe(19);
 			expect(qty(bullets)).toBe(20);

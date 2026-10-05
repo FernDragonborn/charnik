@@ -86,7 +86,7 @@
 			{previewId}
 			takenIds={carried}
 			onpreview={(id) => (previewId = id)}
-			ontake={(id) => (carried.includes(id) ? inv.remove(id) : inv.add(id))}
+			ontake={(id) => (carried.includes(id) ? inv.putBack(id) : inv.add(id))}
 			{detail}
 			placeholder={$_('build.inventory.search')}
 		>

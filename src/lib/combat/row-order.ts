@@ -41,3 +41,18 @@ export function movedOrder(ids: readonly string[], id: string, by: -1 | 1): stri
 	order[at] = swapped;
 	return order;
 }
+
+/**
+ * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same
+ * weapon can stand on two inventory rows. The first holder keeps the id as it is, so a saved order
+ * still finds it; a repeat gets `<id>#2`, `#3`. A keyed list given the same key twice does not
+ * render one row short: it takes the whole panel down.
+ */
+export function uniqueRowKeys(ids: readonly string[]): string[] {
+	const seen = new Map<string, number>();
+	return ids.map((id) => {
+		const nth = (seen.get(id) ?? 0) + 1;
+		seen.set(id, nth);
+		return nth === 1 ? id : `${id}#${nth}`;
+	});
+}

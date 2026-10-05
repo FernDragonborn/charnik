@@ -209,6 +209,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
 
 ### Playing
 
+- **A character whose file lists one item on two rows opens.** The inventory panel, and the
+  attacks beside it, used to vanish whole; each row is now its own, to equip, count and drop.
 - **An item is added from play**, with the same picker the builder uses, and what you own is written
   where it belongs — the character's inventory, wherever you happened to notice it. The picker
   opens beside the button that asked for it, with the sheet still readable around it.

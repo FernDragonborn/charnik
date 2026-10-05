@@ -528,19 +528,19 @@ describe('rotating backups (B3)', () => {
 
 describe('inventory operations (shared by the builder draft and the play sheet)', () => {
 	const list = [
-		inventoryRow({ item: 'item:S:potion', qty: 2, equipped: false, attuned: false }),
-		inventoryRow({ item: 'item:S:cloak', qty: 1, equipped: true, attuned: true }),
+		inventoryRow({ iid: 'potion', item: 'item:S:potion', qty: 2, equipped: false, attuned: false }),
+		inventoryRow({ iid: 'cloak', item: 'item:S:cloak', qty: 1, equipped: true, attuned: true }),
 	];
 
 	it('using one of a stack decrements it; using the last one drops the row', () => {
-		expect(useOne(list, 'item:S:potion').find((e) => e.item === 'item:S:potion')?.qty).toBe(1);
+		expect(useOne(list, 'potion').find((e) => e.item === 'item:S:potion')?.qty).toBe(1);
 		// a used-up stack must LEAVE, or every surface that counts rows still counts it as carried
-		const emptied = useOne(useOne(list, 'item:S:potion'), 'item:S:potion');
+		const emptied = useOne(useOne(list, 'potion'), 'potion');
 		expect(emptied.some((e) => e.item === 'item:S:potion')).toBe(false);
 	});
 
 	it('quantity never goes below one — dropping the last is `remove`, not a zero row', () => {
-		expect(bumpQty(list, 'item:S:cloak', -5).find((e) => e.item === 'item:S:cloak')?.qty).toBe(1);
+		expect(bumpQty(list, 'cloak', -5).find((e) => e.item === 'item:S:cloak')?.qty).toBe(1);
 	});
 
 	it('weight counts the whole stack, not the row', () => {
@@ -549,7 +549,7 @@ describe('inventory operations (shared by the builder draft and the play sheet)'
 
 	it('attunement is counted from the entries, so the cap can be judged anywhere', () => {
 		expect(attunedCount(list)).toBe(1);
-		expect(attunedCount(toggleAttuned(list, 'item:S:potion'))).toBe(2);
+		expect(attunedCount(toggleAttuned(list, 'potion'))).toBe(2);
 	});
 });
 

@@ -22,7 +22,7 @@
 	import { dndzone } from 'svelte-dnd-action';
 	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
-	import { ROW_PANEL } from '$lib/combat/row-order';
+	import { ROW_PANEL, uniqueRowKeys } from '$lib/combat/row-order';
 	import type { Attack } from '$lib/combat/attacks';
 	// the player's own order, applied where it is a view concern; the VM hands over the rows the
 	// character actually has, and this reconciles them against what was arranged
@@ -58,7 +58,8 @@
 	   and a copy brings the row with it — where a lookup by id found nothing for the shadow, rendered
 	   no child for it, and left the library marking a NEIGHBOUR as the placeholder: the row beside the
 	   one you picked up went invisible for the length of the drag. */
-	const items = $derived(dragging ?? attacks.map((at) => ({ id: at.id, at })));
+	const keys = $derived(uniqueRowKeys(attacks.map((at) => at.id)));
+	const items = $derived(dragging ?? attacks.map((at, n) => ({ id: keys[n] ?? at.id, at })));
 	// one Attack action, N attacks — a property of the character, so it is stated once above the
 	// rows rather than repeated on each. Silent at one, which is everybody without the feature.
 	const perAction = $derived(combat.sheet?.attacksPerAction);

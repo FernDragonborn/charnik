@@ -13,6 +13,7 @@ import {
 	attunedCount,
 	bumpQty,
 	removeItem,
+	removeItemsOf,
 	toggleAttuned,
 	toggleEquipped,
 	useOne,
@@ -34,36 +35,40 @@ const listAction =
 		settled(quietly(withInventory(character, change(character.build.inventory, intent))), ctx);
 
 /** Put on or take off — a shield in hand is what the Armor Class counts. */
-export const toggleEquip = listAction<{ item: string }>((list, { item }) =>
-	toggleEquipped(list, item),
+export const toggleEquip = listAction<{ row: string }>((list, { row }) =>
+	toggleEquipped(list, row),
 );
 
-/** Own one more of something, and put one back. */
+/** Start carrying an item, and stop carrying it altogether — the two a picker asks for, which
+ *  speak of the ITEM. `dropItem` is one row leaving. */
 export const ownItem = listAction<{ item: string }>((list, { item }) => addItem(list, item));
-export const dropItem = listAction<{ item: string }>((list, { item }) => removeItem(list, item));
+export const disownItem = listAction<{ item: string }>((list, { item }) =>
+	removeItemsOf(list, item),
+);
+export const dropItem = listAction<{ row: string }>((list, { row }) => removeItem(list, row));
 
 /** Change how many of a stack are carried. */
-export const changeQuantity = listAction<{ item: string; by: number }>((list, { item, by }) =>
-	bumpQty(list, item, by),
+export const changeQuantity = listAction<{ row: string; by: number }>((list, { row, by }) =>
+	bumpQty(list, row, by),
 );
 
 /**
- * Reorder what is carried. The inventory ARRAY is the order. Refs the caller does not name keep
+ * Reorder what is carried. The inventory ARRAY is the order. Rows the caller does not name keep
  * their places at the end rather than being dropped: a list rebuilt from a drag is the view's idea
  * of the list, and the character's is the one that counts.
  */
-export const reorderInventory = listAction<{ items: readonly string[] }>((list, { items }) => {
-	const byRef = new Map(list.map((entry) => [entry.item, entry]));
-	const moved = items.flatMap((ref) => byRef.get(ref) ?? []);
-	return [...moved, ...list.filter((entry) => !items.includes(entry.item))];
+export const reorderInventory = listAction<{ rows: readonly string[] }>((list, { rows }) => {
+	const byRow = new Map(list.map((entry) => [entry.iid, entry]));
+	const moved = rows.flatMap((iid) => byRow.get(iid) ?? []);
+	return [...moved, ...list.filter((entry) => !rows.includes(entry.iid))];
 });
 
 /** One carried entry changed, the rest as they were. */
-const forItem = (
+const forRow = (
 	list: readonly InventoryEntry[],
-	item: string,
+	row: string,
 	change: (entry: InventoryEntry) => InventoryEntry,
-): InventoryEntry[] => list.map((entry) => (entry.item === item ? change(entry) : entry));
+): InventoryEntry[] => list.map((entry) => (entry.iid === row ? change(entry) : entry));
 
 /*
  * The answers a carried row can be asked for. Taking one back (no value) takes whatever it granted
@@ -71,19 +76,18 @@ const forItem = (
  */
 
 /** Which mundane item a template IS ("Weapon (Any Melee Weapon)"). */
-export const setItemBase = listAction<{ item: string; base?: string }>((list, { item, base }) =>
-	forItem(list, item, ({ base: _was, ...rest }) => (base ? { ...rest, base } : rest)),
+export const setItemBase = listAction<{ row: string; base?: string }>((list, { row, base }) =>
+	forRow(list, row, ({ base: _was, ...rest }) => (base ? { ...rest, base } : rest)),
 );
 /** Which of the bonuses a `+1/+2/+3` row offers this one is. */
-export const setItemBonus = listAction<{ item: string; bonus?: number }>((list, { item, bonus }) =>
-	forItem(list, item, ({ bonus: _was, ...rest }) =>
+export const setItemBonus = listAction<{ row: string; bonus?: number }>((list, { row, bonus }) =>
+	forRow(list, row, ({ bonus: _was, ...rest }) =>
 		bonus === undefined ? rest : { ...rest, bonus },
 	),
 );
 /** Which of a row's options this one is — a Ring of Resistance's damage type. */
-export const setItemChoice = listAction<{ item: string; choice?: string }>(
-	(list, { item, choice }) =>
-		forItem(list, item, ({ choice: _was, ...rest }) => (choice ? { ...rest, choice } : rest)),
+export const setItemChoice = listAction<{ row: string; choice?: string }>((list, { row, choice }) =>
+	forRow(list, row, ({ choice: _was, ...rest }) => (choice ? { ...rest, choice } : rest)),
 );
 
 /**
@@ -93,11 +97,11 @@ export const setItemChoice = listAction<{ item: string; choice?: string }>(
  */
 export function attune(
 	character: Character,
-	{ item }: { item: string },
+	{ row }: { row: string },
 	ctx: PlayContext,
 ): PlayOutcome {
 	const list = character.build.inventory;
-	const entry = list.find((carried) => carried.item === item);
+	const entry = list.find((carried) => carried.iid === row);
 	if (!entry) return quietly(character);
 	const over = !entry.attuned && attunedCount(list) >= ATTUNEMENT_CAP;
 	if (over && character.ui.strict)
@@ -113,7 +117,7 @@ export function attune(
 		};
 	return settled(
 		{
-			...quietly(withInventory(character, toggleAttuned(list, item))),
+			...quietly(withInventory(character, toggleAttuned(list, row))),
 			notices: over
 				? [
 						{
@@ -131,14 +135,14 @@ export function attune(
  *  used-up stack does not linger as a zero row. */
 export function useItem(
 	character: Character,
-	{ item, count = 1 }: { item: string; count?: number },
+	{ row, count = 1 }: { row: string; count?: number },
 	ctx: PlayContext,
 ): PlayOutcome {
-	const entry = character.build.inventory.find((carried) => carried.item === item);
+	const entry = character.build.inventory.find((carried) => carried.iid === row);
 	if (!entry) return quietly(character);
 	const spent = Math.min(count, entry.qty);
 	let list: InventoryEntry[] = [...character.build.inventory];
-	for (let i = 0; i < spent; i++) list = useOne(list, item);
+	for (let i = 0; i < spent; i++) list = useOne(list, row);
 	return settled(
 		{
 			...quietly(withInventory(character, list)),
@@ -146,7 +150,7 @@ export function useItem(
 				{
 					text: { key: 'combat.notice.usedItem' },
 					description: { key: 'combat.notice.itemsLeft', values: { count: entry.qty - spent } },
-					rows: { name: item },
+					rows: { name: entry.item },
 				},
 			],
 		},

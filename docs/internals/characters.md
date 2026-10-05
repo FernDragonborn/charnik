@@ -79,6 +79,15 @@ keys (`build.slotPicks`, `<rowId>:<level>`). Rows are made in one place each (`s
 `inventoryRow`, `classRow`), a row missing its id is given one when the file is read, and two rows
 sharing one are told apart on read, the first keeping its own.
 
+**An inventory row is spoken of by its `iid` in every action** — equip, attune, count, use, drop,
+reorder, and the three answers a row can be asked for (`$lib/play/inventory`). Two rows may hold
+the same item: a file edited by hand, or two rings that resist different things. Only a picker
+speaks of the ITEM, because "do you carry this" is a question about every row at once
+(`ownItem`, `disownItem`). An attack is named for its weapon, so the same weapon on two rows gives
+two attacks of one id: the list keys them apart (`combat/row-order.ts` ▸ `uniqueRowKeys`), since
+a keyed list handed one key twice does not draw a row short — in a production build as in
+development it throws, and the panel is gone.
+
 All of them are random rather than time-ordered: the array holds the order, and an id that sorts by
 time would tell every peer when the character was made.
 
