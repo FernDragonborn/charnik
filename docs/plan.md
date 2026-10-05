@@ -249,8 +249,9 @@ position and are given per wave, because most of them were learned the hard way.
   3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together and A17 brings the smallest form of N2's feature choice with it.
-  4. **The looks** — MASTERY-HALF's extra-attack control, TITLE-POPOVER's ⓘ and DEFENCE-STRIP's
-     `Saves` group are picked and wait to be built; ADD-ITEM-SURFACE becomes a popover; and
+  4. **The looks** — MASTERY-HALF's extra-attack control and TITLE-POPOVER's ⓘ are picked and
+     wait to be built; DEFENCE-STRIP is out with a designer and is built from what comes back;
+     ADD-ITEM-SURFACE becomes a popover; and
      DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the hit-point bar — is
      redrawn, because what ships reads badly.
   5. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.

@@ -22,18 +22,16 @@
                 advantage · against magical effects
   ```
 
-  It is still wrong — two rows under one label, each a swing plus a case. **The pick is the
-  MARK:** the triangle the roller already draws for advantage and disadvantage, in place of the
-  swing word — the shared `.advantage-cue-up` / `.advantage-cue-down` of `styles/components.css`,
-  not a new glyph and not a chevron — then the case (`▲ against spells`). `CombatStrip` marks a
-  passive sense with a chevron for the same fact; it moves to the triangle in the same change,
-  so advantage has one mark in the app.
-  Advantage is GREEN (`--color-good`), not the gold a conditional statement wears elsewhere;
-  disadvantage keeps the danger colour. The word leaves the chip, so it goes where a mark's
-  meaning must still be reachable: the chip's accessible name and its popover. The same rule
-  holds for every group that states a swing, so `Against you` is redrawn with it rather than
-  left saying the word. The variants it was picked from are
-  `design-preview/_saves-variants.html`.
+  It is still wrong — two rows under one label, each a swing plus a case. **It goes to a designer, and nothing
+  about its form is decided.** Four redraws were rendered and each failed on the same thing from
+  a different side: the swing word in front makes two chips open alike; the swing hoisted into
+  the label breaks on a mixed group and on Ukrainian cases; a triangle for the swing disagrees
+  with a good/bad colour wherever the die is somebody else's (`Against you`); and a triangle on
+  your own rolls only leaves two neighbouring groups saying one fact in two forms. What they
+  established, and the brief carries: gold-for-conditional and red-for-bad are two scales on one
+  row; fill means two things; the case is content and cannot become an icon. The brief is
+  `design-preview/_defence-strip-brief.html` — what the strip must say, what was tried, the
+  requirements, and what may change (everything but the content, chips included).
 
   **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
   open with the same word. `advantage · against spells` and `advantage · against magical effects`
