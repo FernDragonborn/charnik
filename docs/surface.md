@@ -1431,6 +1431,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function resolveActionFormula` — Resolve the L2 values inside an action token.
 - `function actionFormulas` — Every L2 expression slot inside an action token (a `;`-separated multi-action carries one per verb).
+- `const isResolvedFormula` — * Is this the formula of a `heal:` / `roll:` verb as the resolver left it — dice and numbers only?
 
 ### `src/lib/effects/apply.ts`
 
@@ -2111,4 +2112,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1291 exports across 176 modules · 79 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1292 exports across 176 modules · 79 duplicate suspects._

@@ -817,6 +817,8 @@
 			"restTakenFor": "{name} — {kind} відпочинок узято",
 			"nothingToAttack": "{name} — немає чим атакувати",
 			"nothingToAttackBody": "Ця дія атакує зброєю «{id}», а такої у вас не споряджено.",
+			"actionUnresolved": "{name} — нічого не кинуто",
+			"actionUnresolvedBody": "Формулу «{formula}» не вдалося обчислити. Що з нею не так, показує «Стан вмісту».",
 			"effectMissing": "«{name}» не може подіяти",
 			"effectMissingBody": "Вона застосовує «{id}», але ефекту з такою назвою не завантажено — додайте його у свій файл ефектів або виправте назву в опції.",
 			"castingTime": "Час накладання: {when}",

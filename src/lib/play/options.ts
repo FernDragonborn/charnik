@@ -9,6 +9,7 @@
 import { rollFormula } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
 import { MAX_SLOT_LEVEL } from '$lib/rules/spellcasting';
+import { isResolvedFormula } from '$lib/effects/action-token';
 import type { ActionSlot } from '$lib/combat/roll';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
@@ -133,12 +134,29 @@ const applyCatalogEffect: Verb = (character, run, arg, ctx) => {
 };
 
 /**
+ * A `heal:` / `roll:` whose formula did not resolve does not run. The derive already raised the
+ * issue where content is inspected; this says it where the player pressed, because a press that does
+ * nothing reads as the app being broken, and a roll of whatever dice the parser could find in the
+ * raw text reads as a result.
+ */
+const unresolved = (character: Character, run: ActionRun, formula: string): PlayOutcome => ({
+	...quietly(character),
+	notices: [
+		{
+			text: { key: 'combat.notice.actionUnresolved', values: { name: run.name } },
+			description: { key: 'combat.notice.actionUnresolvedBody', values: { formula } },
+		},
+	],
+});
+
+/**
  * The verb table — one entry per bounded token in actions.md §2. A verb whose argument is missing
  * or malformed does nothing.
  */
 const VERBS: Record<string, Verb> = {
 	heal: (character, run, arg, ctx) => {
 		if (!arg) return quietly(character);
+		if (!isResolvedFormula(arg)) return unresolved(character, run, arg);
 		const rolled = rollFormula(arg, ctx.rng);
 		const hp = character.play.hp;
 		const max = effectiveHpMax(hp.max ?? null, ctx.derive(character).maxHp);
@@ -161,13 +179,14 @@ const VERBS: Record<string, Verb> = {
 			ctx,
 		);
 	},
-	roll: (character, run, arg, ctx) =>
-		arg
-			? {
-					...quietly(character),
-					log: [{ name: { text: run.name }, rolled: rollFormula(arg, ctx.rng) }],
-				}
-			: quietly(character),
+	roll: (character, run, arg, ctx) => {
+		if (!arg) return quietly(character);
+		if (!isResolvedFormula(arg)) return unresolved(character, run, arg);
+		return {
+			...quietly(character),
+			log: [{ name: { text: run.name }, rolled: rollFormula(arg, ctx.rng) }],
+		};
+	},
 	apply_condition: (character, run, arg, ctx) =>
 		arg
 			? addEffect(

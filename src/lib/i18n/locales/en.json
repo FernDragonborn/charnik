@@ -817,6 +817,8 @@
 			"restTakenFor": "{name} — {kind} rest taken",
 			"nothingToAttack": "{name} — nothing to attack with",
 			"nothingToAttackBody": "It makes an attack with “{id}”, and you have no such weapon equipped.",
+			"actionUnresolved": "{name} — nothing was rolled",
+			"actionUnresolvedBody": "Its formula “{formula}” could not be worked out. Content health says what is wrong with it.",
 			"effectMissing": "{name} can’t take effect",
 			"effectMissingBody": "It applies “{id}”, and no effect by that name is loaded — add it to your effects file, or correct the name on the option.",
 			"castingTime": "Casting time: {when}",

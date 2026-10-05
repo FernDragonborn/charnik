@@ -51,9 +51,22 @@ export function actionFormulas(action: string): string[] {
 		.filter((f): f is string => f !== null);
 }
 
+/** A formula as the resolver writes it: dice terms and whole numbers joined by signs, nothing else. */
+const RESOLVED_FORMULA = /^-?(\d+d\d+|\d+)([+-](\d+d\d+|\d+))*$/;
+
+/**
+ * Is this the formula of a `heal:` / `roll:` verb as the resolver left it — dice and numbers only?
+ * An expression that did not resolve is kept raw (`1d10+no_such_var`), and a dice parser
+ * handed that rolls the `1d10` it can find: a number that looks right and is not. Whoever runs the
+ * verb asks this first.
+ */
+export const isResolvedFormula = (formula: string): boolean =>
+	RESOLVED_FORMULA.test(formula.replace(/\s+/g, ''));
+
 /** Resolve ONE action sub-token's L2 value: `heal:` / `roll:` carry a formula
  *  (`1d10+class_level.fighter` → `1d10+5`); `apply_condition:` / `note:` / `restore_resource:` pass
- *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue (executor no-ops). */
+ *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue, and the verb
+ *  does not run (`isResolvedFormula`). */
 function resolveOneActionFormula(
 	action: string,
 	ctx: ExprContext | undefined,

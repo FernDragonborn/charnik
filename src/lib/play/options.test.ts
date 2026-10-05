@@ -139,6 +139,27 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(missing.notices[0]?.text).toMatchObject({ key: 'combat.notice.effectMissing' });
 	});
 
+	it('a formula that did not resolve is not rolled, and says so where it was pressed', () => {
+		const c = build('fighter', 3);
+		for (const verb of ['heal', 'roll']) {
+			const run = { name: 'Probe', action: `${verb}:1d10+no_such_var`, effectRounds: 0 };
+			const out = runAction(c, run, ctx());
+			expect(out.character).toBe(c);
+			expect(out.log).toEqual([]);
+			expect(out.notices[0]).toMatchObject({
+				text: { key: 'combat.notice.actionUnresolved', values: { name: 'Probe' } },
+				description: { values: { formula: '1d10+no_such_var' } },
+			});
+		}
+		// what the resolver writes — dice, numbers, signs, spaces — still runs
+		const healed = runAction(
+			c,
+			{ name: 'Probe', action: 'heal: 1d4 + 2', effectRounds: 0 },
+			ctx(0),
+		);
+		expect(healed.character.play.hp.current).toBe(5 + 1 + 2);
+	});
+
 	it('entering combat starts round 1, and ending a turn starts the next', () => {
 		const resting = build('fighter', 3, (x) => {
 			x.play.inCombat = false;
