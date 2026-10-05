@@ -170,6 +170,13 @@ sentences became numbers, and a security pass closed what a page inside the wind
   window can repoint where your data lives.
 - **A dice formula is capped as a whole**, at a thousand dice. A formula built to stall the app —
   from a shared pack — could ask for millions.
+- **On Linux, a data folder you chose yourself works in full.** The app keeps a few files of its
+  own under dot-prefixed names, and in a folder outside Documents each of them was refused — so
+  content was re-seeded on every launch and pack updates had nowhere to stage.
+- **First run no longer needs a Documents folder.** A Linux system without one left the app on an
+  empty window; it proposes a folder in your home instead.
+- **Confirm on first run takes the folder it proposes.** Without opening the picker first, the
+  proposed folder was refused and the dialog simply stayed.
 - **Allowing a plugin to run is asked by your system, not by the page.** After the review, a
   native dialog names the plugin and its code fingerprint, in your language, and only a yes there
   is recorded — where nothing running inside the window can write it. Plugins you had enabled

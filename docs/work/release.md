@@ -106,13 +106,6 @@
   measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
   holds a separate key for each table, so nothing links two tables and a key that is online says
   nothing about the person outside that table — which is why every call takes a table id.
-- [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
-  denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
-  two folders through `open_app_dir`. Linux is the other platform a release ships to — there is no
-  macOS build — and there config and data are different directories. Outcome: under WSL on the
-  maintainer's machine, a `/dev/` probe shows the data folder reading and writing, a portrait
-  loading, both folders opening, a second launch handing over, and a write onto
-  `<appConfig>/config.json` refused.
 - [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Fourteen, listed
   under "What to research next" in `research/table-link-design-review.md`, each one able to change
   the design: what page script can do with the `process`, `updater` and `http` permissions; routes

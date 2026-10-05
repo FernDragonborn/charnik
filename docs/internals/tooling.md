@@ -295,6 +295,24 @@ read the report. `/dev/packs-write` is the worked example.
   the port, so the next run walks to 5174 while `devUrl` still names 5173 — and serves you from the
   orphan. List what is listening on 5173–5175 before starting and after stopping.
 
+**The Linux build is run under WSL, with the frontend built on Windows.** `node_modules` holds
+Windows binaries, so vite does not run there — but the app does not need it to:
+
+- A `/dev/` page is hidden outside the dev server (`routes/dev/+layout.svelte`), so the probe's
+  build lifts that gate for one `pnpm build` and puts it back.
+- In WSL: `cargo build --features tauri/custom-protocol`, which embeds `../build` instead of
+  asking a dev server for it, with `CARGO_TARGET_DIR` on the Linux filesystem (the repo is on
+  `/mnt/`, where a build crawls) and `TAURI_CONFIG='{"app":{"windows":[{…,"url":"dev/<probe>"}]}}'`
+  to open on the probe. No `tauri-cli` is needed; a first build is about three minutes and 5 GB.
+- Run it with `HOME`, `XDG_CONFIG_HOME` and `XDG_DATA_HOME` pointed under `/tmp`, so a probe that
+  accepts a data folder writes its pointer there and not into the real home. Whether the system
+  HAS a Documents folder is a file, `$XDG_CONFIG_HOME/user-dirs.dirs` — run both with and without.
+- Nothing reads a window there, so a probe says each line through `logger.info` as well and the
+  answer is grepped out of stdout; a report in the data folder cannot be written when the thing
+  under test is whether the data folder can be written.
+- From Git Bash, `wsl.exe -- bash /mnt/c/…` has its path rewritten to `C:/Program Files/Git/mnt/…`
+  and fails as "no such file" with exit 0. Set `MSYS_NO_PATHCONV=1` and pass one quoted `bash -c`.
+
 **`/dev/storage-edges` needs shell fixtures**, because a webview can neither make a junction nor hold
 a file open from another process. In the data folder, before starting the app:
 

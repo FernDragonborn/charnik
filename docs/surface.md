@@ -2054,7 +2054,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/storage/tauri.ts`
 
 - `function setDataDirOverride` — Persist a user-chosen data dir to the pointer.
-- `function defaultDataDir` — The proposed default data dir (`<Documents>/charnik`) shown in the first-run picker.
+- `function defaultDataDir` — The proposed default data dir shown in the first-run picker: `<Documents>/charnik`, or under * the home folder on a s…
 - `function applySavedDataDir` — Re-grant the saved data folder (outside the static scope) on startup and return it, or null on * first run.
 - `function pickDataDir` — Open the OS folder picker (in Rust) — the pick is grant-scoped there and its path returned, or * null if cancelled.
 - `function currentDataDir` — The active data dir (the saved choice or the default) — for display in settings.

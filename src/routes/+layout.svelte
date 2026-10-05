@@ -244,7 +244,8 @@
 	}
 
 	async function confirmDataDir(dir: string) {
-		await setDataDirOverride(dir); // dir was picker-chosen (already granted in Rust); this persists it
+		// picker-chosen (already granted in Rust), or the proposal itself, which Rust accepts unpicked
+		await setDataDirOverride(dir);
 
 		firstRunDefault = null;
 		await loadContentStore();

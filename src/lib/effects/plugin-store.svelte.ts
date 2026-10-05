@@ -29,6 +29,7 @@ import {
 	type PluginEvaluator,
 } from './plugin-registry';
 import { logger } from '$lib/diag/logger';
+import { errText } from '$lib/util/format';
 
 interface PluginsState {
 	/** Plugins exist on the desktop build only. */
@@ -63,7 +64,14 @@ export function usePluginPrefsStore(store: PluginPrefsStore): void {
 /** Run one change against the record and take what it then holds. With no store there is nothing
  *  to change, which is the web build. */
 async function record(change: (store: PluginPrefsStore) => Promise<PluginPrefs>): Promise<void> {
-	if (prefsStore) plugins.prefs = await change(prefsStore);
+	if (!prefsStore) return;
+	try {
+		plugins.prefs = await change(prefsStore);
+	} catch (e) {
+		// the record is as it was, and so is the copy: nothing gained a permission it did not have.
+		// Said in the log because the row on screen not moving is all the page can otherwise show.
+		logger.error('plugins: the consent record could not be changed', { error: errText(e) });
+	}
 }
 
 let evaluatorHandle: { dispose(): void } | null = null;

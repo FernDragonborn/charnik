@@ -25,6 +25,9 @@
 		}
 	},
 	"plugins": {
+		"fs": {
+			"requireLiteralLeadingDot": false
+		},
 		"updater": {
 			"endpoints": [
 				"https://github.com/FernDragonborn/charnik/releases/latest/download/latest.json"

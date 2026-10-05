@@ -24,7 +24,7 @@ import {
 	rename as fsRename,
 	watchImmediate,
 } from '@tauri-apps/plugin-fs';
-import { documentDir, join } from '@tauri-apps/api/path';
+import { join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
@@ -59,9 +59,11 @@ async function resolveDataDir(): Promise<string> {
 	return (await readDataDirOverride()) ?? defaultDataDir();
 }
 
-/** The proposed default data dir (`<Documents>/charnik`) shown in the first-run picker. */
-export async function defaultDataDir(): Promise<string> {
-	return join(await documentDir(), DATA_DIR_NAME);
+/** The proposed default data dir shown in the first-run picker: `<Documents>/charnik`, or under
+ *  the home folder on a system that declares no Documents. Rust's answer, because it is also the one
+ *  folder `set_data_dir` accepts without a pick — two computations of it would be two answers. */
+export function defaultDataDir(): Promise<string> {
+	return invoke<string>('proposed_data_dir');
 }
 
 /** Re-grant the saved data folder (outside the static scope) on startup and return it, or null on

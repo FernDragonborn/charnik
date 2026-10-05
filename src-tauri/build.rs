@@ -11,6 +11,7 @@ const APP_COMMANDS: &[&str] = &[
     "saved_data_dir",
     "apply_saved_data_dir",
     "open_app_dir",
+    "proposed_data_dir",
     "plugin_prefs",
     "grant_plugin_consent",
     "forget_plugins",

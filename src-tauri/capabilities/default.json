@@ -10,6 +10,7 @@
 		"allow-saved-data-dir",
 		"allow-apply-saved-data-dir",
 		"allow-open-app-dir",
+		"allow-proposed-data-dir",
 		"allow-plugin-prefs",
 		"allow-grant-plugin-consent",
 		"allow-forget-plugins",

@@ -23,6 +23,9 @@ serde_json = "1.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+# Escapes a granted folder's path before it is written into a scope pattern (lib.rs ▸
+# `allow_dot_paths`); the same crate, at the same version, tauri matches scopes with.
+glob = "0.3"
 tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
 # `watch` is a CARGO FEATURE, not just a permission: the plugin registers its `watch`/`unwatch`

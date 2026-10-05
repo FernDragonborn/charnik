@@ -17,11 +17,40 @@ mod plugin_consent;
 #[derive(Default)]
 struct GrantedDirs(Mutex<HashSet<PathBuf>>);
 
+/// Let a granted folder hold dot-prefixed files on Unix, where the grant above does not reach them.
+///
+/// `fs_scope().allow_directory` writes into the fs plugin's RUNTIME scope, which tauri always builds
+/// with the Unix default — a `**` that does not match a name starting with a dot — and which the
+/// plugin's own `requireLiteralLeadingDot` setting never reaches. The app keeps files of its own
+/// under such names (`content/.seed-version`, `.pack-cache`), so in a folder the user picked every
+/// one of them was refused. A capability's scope DOES honour the setting, so the same folder is
+/// also granted as one: the same paths, to the same window, under the same static denies.
+#[cfg(unix)]
+fn allow_dot_paths(app: &tauri::AppHandle, dir: &std::path::Path) -> Result<(), String> {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    dir.hash(&mut hasher);
+    // a path is not a pattern: `[`, `*` and `?` in a folder's name mean themselves
+    let folder = glob::Pattern::escape(&dir.to_string_lossy());
+    let capability = serde_json::json!({
+        "identifier": format!("granted-data-dir-{:x}", hasher.finish()),
+        "windows": ["main"],
+        "permissions": [{
+            "identifier": "fs:scope",
+            "allow": [{ "path": folder }, { "path": format!("{folder}/**") }],
+        }],
+    });
+    app.add_capability(capability.to_string())
+        .map_err(|e| e.to_string())
+}
+
 /// Grant the fs plugin recursive access to `dir` and remember it as a trusted root.
 fn grant_and_record(app: &tauri::AppHandle, dir: PathBuf) -> Result<(), String> {
     app.fs_scope()
         .allow_directory(&dir, true)
         .map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    allow_dot_paths(app, &dir)?;
     app.state::<GrantedDirs>()
         .0
         .lock()
@@ -51,6 +80,24 @@ fn read_saved(app: &tauri::AppHandle) -> Option<String> {
         .map(|s| s.to_string())
 }
 
+/// The folder proposed on first run: `<Documents>/charnik`. A Linux system need not HAVE a Documents
+/// folder — it is declared by `xdg-user-dirs`, which a minimal install or a bare window manager never
+/// ran, and then the lookup fails outright — so there it is `<home>/charnik`, which always resolves.
+fn default_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let path = app.path();
+    path.document_dir()
+        .or_else(|_| path.home_dir())
+        .map(|parent| parent.join("charnik"))
+        .map_err(|e| e.to_string())
+}
+
+/// The first-run proposal, for the page to show. Rust owns it so that the folder the page proposes
+/// and the folder `set_data_dir` will accept unpicked are one answer.
+#[tauri::command]
+fn proposed_data_dir(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(default_data_dir(&app)?.to_string_lossy().into_owned())
+}
+
 /// Open the native folder picker; on a pick, grant + record it and return its path (None on cancel).
 /// The dialog runs in Rust so the returned path is a genuine user choice, not renderer-supplied.
 #[tauri::command]
@@ -64,8 +111,11 @@ fn pick_data_dir(app: tauri::AppHandle) -> Result<Option<String>, String> {
 }
 
 /// Persist a data dir to the pointer — but ONLY if it (or a parent of it) was chosen via the picker
-/// this session, so JS can't persist an arbitrary path for a silent startup grant next launch. The
-/// exact path (which may be a `<picked>/charnik` child) is also scoped now.
+/// this session, or it is the app's own first-run proposal, so JS can't persist an arbitrary path
+/// for a silent startup grant next launch. The proposal is trusted because Rust computes it: the
+/// page can ask for that one folder and no other, and pressing Confirm on first run without opening
+/// the picker is asking for exactly it. The exact path (which may be a `<picked>/charnik` child) is
+/// also scoped now.
 #[tauri::command]
 fn set_data_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
     let dir = PathBuf::from(&path);
@@ -84,7 +134,8 @@ fn set_data_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
         .lock()
         .map_err(|e| e.to_string())?
         .iter()
-        .any(|g| dir == *g || dir.starts_with(g));
+        .any(|g| dir == *g || dir.starts_with(g))
+        || default_data_dir(&app).is_ok_and(|proposed| dir == proposed);
     if !trusted {
         return Err("data dir was not chosen via the folder picker".into());
     }
@@ -135,11 +186,7 @@ fn open_app_dir(app: tauri::AppHandle, which: String) -> Result<(), String> {
     let dir = match which.as_str() {
         "data" => match read_saved(&app) {
             Some(saved) => PathBuf::from(saved),
-            None => app
-                .path()
-                .document_dir()
-                .map_err(|e| e.to_string())?
-                .join("charnik"),
+            None => default_data_dir(&app)?,
         },
         "logs" => app.path().app_log_dir().map_err(|e| e.to_string())?,
         _ => return Err("unknown app folder".into()),
@@ -208,6 +255,7 @@ pub fn run() {
             saved_data_dir,
             apply_saved_data_dir,
             open_app_dir,
+            proposed_data_dir,
             plugin_consent::plugin_prefs,
             plugin_consent::grant_plugin_consent,
             plugin_consent::forget_plugins,

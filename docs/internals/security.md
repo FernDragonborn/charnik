@@ -41,7 +41,18 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    >   set**, so page JS cannot persist an arbitrary directory for a silent grant next launch. It
    >   also rejects any path containing `..`: `Path::starts_with` compares whole components and `..`
    >   is an ordinary one, so `<picked>/../../Windows` would otherwise read as a descent from the
-   >   pick.
+   >   pick. **One path needs no pick: the first-run proposal**, `<Documents>/charnik`, which Rust
+   >   computes itself (`proposed_data_dir`) — so the page can ask for that folder and no other,
+   >   and Confirm on first run without opening the picker is asking for exactly it. Where a Linux
+   >   system declares no Documents folder (`xdg-user-dirs` never ran) the proposal is
+   >   `<home>/charnik`, which is outside the static scope and reachable only once it is accepted.
+   > - **A granted folder is granted twice on Unix**, because the fs plugin's runtime scope —
+   >   where `allow_directory` writes — is always built with the Unix default, a `**` that does
+   >   not match a name starting with a dot, and the plugin's own `requireLiteralLeadingDot`
+   >   setting never reaches it. The app keeps files of its own under such names
+   >   (`content/.seed-version`, `.pack-cache`), so the same folder is also added as a runtime
+   >   capability, whose scope does honour the setting (`lib.rs` ▸ `allow_dot_paths`). The static
+   >   denies stand over both.
    > - `apply_saved_data_dir` re-grants the saved path at startup **with no check**, which is sound
    >   only because the pointer file is Rust-owned and `set_data_dir` is the one thing that writes it.
    >
@@ -62,6 +73,12 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > script's reach — the pointer today, pairing state and keys later — goes in those directories,
    > written by a Rust command. `open_app_dir` is the same rule for the file manager: the page
    > says `data` or `logs`, Rust resolves the folder, and the opener's `open_path` is not granted.
+   >
+   > **Verified on Windows and on Linux** (under WSL): the data folder reads and writes, a
+   > dot-prefixed file included; a portrait loads; both folders open; a second launch hands over;
+   > and a write, a read, a copy and a rename onto the pointer, and a write anywhere in the app's
+   > own directories, are each refused. On Linux `$APPDATA` and `$APPLOCALDATA` are one directory
+   > and `$APPCONFIG` another. There is no macOS build.
    >
    > **The app's own commands are under the ACL like a plugin's.** `build.rs` declares every
    > command `lib.rs` registers (`AppManifest::commands`), which gives each an `allow-<command>`
