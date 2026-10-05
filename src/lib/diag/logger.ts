@@ -135,9 +135,8 @@ export async function initDiag(): Promise<void> {
 export async function openLogDir(): Promise<void> {
 	if (detectPlatform() !== Platform.Desktop) return;
 	try {
-		const { appLogDir } = await import('@tauri-apps/api/path');
-		const { openPath } = await import('@tauri-apps/plugin-opener');
-		await openPath(await appLogDir());
+		const { invoke } = await import('@tauri-apps/api/core');
+		await invoke('open_app_dir', { which: 'logs' });
 	} catch (e) {
 		logger.warn('diag: could not open log dir', { error: errText(e) });
 	}

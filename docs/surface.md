@@ -1707,6 +1707,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DieMods` — Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is * their consumer).
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
+- `const MAX_DICE_PER_FORMULA` — …and for a whole formula.
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't * one.
 - `function parseSignedDice` — Every dice term of a string, split by its sign: the added ones as a pool ({sides: count}), the * SUBTRACTED ones as s…
 - `const parseDicePool` — The ADDED dice terms of a string as a pool.
@@ -1957,4 +1958,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1186 exports across 160 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1187 exports across 160 modules · 78 duplicate suspects._

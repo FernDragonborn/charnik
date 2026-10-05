@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
+use tauri_plugin_opener::OpenerExt;
 
 /// The set of directories the USER has chosen this session (via the native folder picker) or that we
 /// re-granted from our own persisted pointer at startup — the ONLY paths the fs scope may be extended
@@ -101,17 +102,49 @@ fn saved_data_dir(app: tauri::AppHandle) -> Result<Option<String>, String> {
     Ok(read_saved(&app))
 }
 
+/// May a path read back from the pointer be granted? The pointer is ours, but a grant is recursive
+/// and silent, so what it names is checked rather than believed: an absolute path, with no `..`, that
+/// is a folder INSIDE a drive or filesystem root and never the root itself. A pointer that fails is
+/// treated as absent, which lands the app on first run instead of on somebody's whole disk.
+fn is_grantable(dir: &std::path::Path) -> bool {
+    dir.is_absolute()
+        && !dir.components().any(|c| matches!(c, Component::ParentDir))
+        && dir.components().any(|c| matches!(c, Component::Normal(_)))
+}
+
 /// Startup: re-grant the saved data dir (read from our own pointer) and return it, or None on first
 /// run. The path comes from Rust-read state, never from the renderer.
 #[tauri::command]
 fn apply_saved_data_dir(app: tauri::AppHandle) -> Result<Option<String>, String> {
     match read_saved(&app) {
-        Some(saved) => {
+        Some(saved) if is_grantable(&PathBuf::from(&saved)) => {
             grant_and_record(&app, PathBuf::from(&saved))?;
             Ok(Some(saved))
         }
-        None => Ok(None),
+        _ => Ok(None),
     }
+}
+
+/// Show one of the app's OWN folders in the OS file manager: `data` (the saved data dir, else the
+/// default `<Documents>/charnik`) or `logs`. The renderer names which, never where — an `open_path`
+/// that took a path from page script would hand any file on disk to its default program.
+#[tauri::command]
+fn open_app_dir(app: tauri::AppHandle, which: String) -> Result<(), String> {
+    let dir = match which.as_str() {
+        "data" => match read_saved(&app) {
+            Some(saved) => PathBuf::from(saved),
+            None => app
+                .path()
+                .document_dir()
+                .map_err(|e| e.to_string())?
+                .join("charnik"),
+        },
+        "logs" => app.path().app_log_dir().map_err(|e| e.to_string())?,
+        _ => return Err("unknown app folder".into()),
+    };
+    app.opener()
+        .open_path(dir.to_string_lossy(), None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -135,7 +168,21 @@ pub fn run() {
         std::env::set_var("EGL_PLATFORM", "x11");
     }
 
-    let builder = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+
+    // One process per data folder. Every save writes a whole `character.json` from memory, so a second
+    // window is a second writer that overwrites the first without either knowing; the second launch
+    // hands over to the window that is already open instead. Registered FIRST, as the plugin asks, so
+    // nothing else has started by the time it decides.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.set_focus();
+        }
+    }));
+
+    let builder = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         // Content-pack update checks/downloads. The HTTP *client* lives here in Rust, never in the
@@ -156,7 +203,8 @@ pub fn run() {
             pick_data_dir,
             set_data_dir,
             saved_data_dir,
-            apply_saved_data_dir
+            apply_saved_data_dir,
+            open_app_dir
         ])
         .setup(|app| {
             // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win

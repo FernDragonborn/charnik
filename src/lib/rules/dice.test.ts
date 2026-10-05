@@ -21,7 +21,7 @@ import {
 	type Rng,
 	type Rolled,
 } from './dice';
-import { parseSignedDice } from './dice';
+import { parseSignedDice, MAX_DICE_PER_FORMULA } from './dice';
 import { rngSequence } from '../../test-support/rng';
 
 describe('parseDiceTerm', () => {
@@ -54,6 +54,31 @@ describe('parseDicePool', () => {
 		});
 		// the unicode minus `signed()` writes counts the same, and a `+` term is an ordinary pool die
 		expect(parseSignedDice('1d8 − 1d4 + 1d6').negative).toEqual([{ count: 1, sides: 4, sign: -1 }]);
+	});
+});
+
+describe('parseSignedDice (the whole formula is capped, not only each term)', () => {
+	const total = (formula: string): number => {
+		const { pool, negative } = parseSignedDice(formula);
+		return (
+			Object.values(pool).reduce((n, c) => n + c, 0) + negative.reduce((n, d) => n + d.count, 0)
+		);
+	};
+
+	it('caps dice spread across many die sizes', () => {
+		const formula = Array.from({ length: 50 }, (_, i) => `1000d${i + 2}`).join('+');
+		expect(total(formula)).toBe(MAX_DICE_PER_FORMULA);
+	});
+
+	it('caps a subtracted term written many times', () => {
+		expect(total('-1000d6'.repeat(50))).toBe(MAX_DICE_PER_FORMULA);
+	});
+
+	it('leaves a real formula alone', () => {
+		expect(parseSignedDice('40d6+2d8-1d4')).toEqual({
+			pool: { 6: 40, 8: 2 },
+			negative: [{ count: 1, sides: 4, sign: -1 }],
+		});
 	});
 });
 

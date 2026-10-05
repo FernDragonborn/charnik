@@ -271,3 +271,31 @@ stay semi-manual.
      so there is no way to choose the level 6 spell the arcanum is. Natural Recovery's free cast
      and the slot recovery of Arcane Recovery are the same two shapes: a pool that is sayable
      today, and slots a player already restores by their pips.
+
+- [ ] **PLAY-REDUCERS · a play-state action is a function with arguments, not a view-model method
+  that reads a form field.** `HitPoints.damage()` takes nothing and reads the number the player is
+  typing; the rules that follow a change — clamp HP to max, reset death saves above 0, drop an owed
+  concentration save, leave a form, end concentration at 0 HP — are `$effect`s in
+  `routes/combat/+page.svelte`, so they hold only while that route is mounted. Outcome: each action
+  is a pure `(character, sheet, intent) → character` in `src/lib`, taking the intent shape
+  `internals/actions.md` §2 already specifies, with those invariants inside it; the view-model
+  builds an intent from its fields and calls the same function. Constraints: no behaviour change —
+  the combat tests pass untouched; the roll log is an output of the function, not a side effect
+  inside it; an action never accepts a token string or a dice formula from its caller beyond what
+  the catalog row it names carries. Acceptance: every verb of `CombatVM` that mutates `play` is
+  callable from a node test with no component mounted, and the five route-level effects are gone.
+- [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from
+  whichever in-memory copy calls `saveCharacter`, by the combat autosave, three immediate saves, the
+  spellbook, the text-override binding, the builder, snapshot restore and demo re-creation — with no
+  ordering between them and no revision. Two overlapping saves can land out of order, and the
+  builder writes back the `play` it loaded when it opened. Outcome: a per-character queue that
+  serialises every mutation and every write; a `rev` in the file, incremented per write and checked
+  before one; the builder saves `build` only, merged over the file as it is at save time; a save
+  updates its own roster entry instead of re-reading every character. Constraint: the roll log's
+  per-slug chain (`repository.ts` ▸ `appendChains`) is the pattern, extended rather than copied.
+- [ ] **CHARACTER-UID · a character has an identity that survives leaving the machine.** `id` is a
+  slug of the name plus four hex digits and doubles as the folder name; restore re-anchors it to the
+  folder. Outcome: a random 128-bit `uid`, minted once, stored in the file, never derived from the
+  name and never used as a path. Inventory rows and class rows get an instance id of their own for
+  the same reason an effect has `iid`. A schema bump with a migration that mints what is missing.
+

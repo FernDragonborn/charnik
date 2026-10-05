@@ -104,6 +104,21 @@ falls off a phone screen.
   between its d12s and its d6s, with the old answer already filled in. Asked only when there is a
   choice — a single-class character, and every 2024 one, rests on one press as before.
 
+### Safer by default
+
+- **Settings ▸ "open data folder" and "open log folder" open them.** Both buttons did nothing on
+  the desktop app.
+- **Opening Charnik twice brings the first window forward** instead of starting a second copy. Two
+  copies saved over each other's characters without either saying so.
+- **A description cannot draw a form or restyle the app.** Homebrew and pack prose keeps its
+  emphasis, lists, tables and links; a `<form>`, a `<style>` block and inline `style` are dropped —
+  nothing in them ran, but they could imitate one of Charnik's own dialogs. One shipped row loses a
+  coloured heading with it.
+- **The app's own settings folder is out of the page's reach**, so nothing rendered inside the
+  window can repoint where your data lives.
+- **A dice formula is capped as a whole**, at a thousand dice. A formula built to stall the app —
+  from a shared pack — could ask for millions.
+
 ### The roller
 
 - **A roll card that says which number you read out loud.** Each answer — to hit, and each damage

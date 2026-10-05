@@ -226,6 +226,9 @@ export interface DieMods {
  *  legal values. Terms beyond them are clamped, not rejected, so a typo still rolls something. */
 export const MAX_DICE_PER_TERM = 1000;
 export const MAX_DIE_SIDES = 1000;
+/** …and for a whole formula. The per-term cap alone bounds nothing: a formula may name a thousand
+ *  die sizes, or subtract the same term a thousand times, and each is capped separately. */
+export const MAX_DICE_PER_FORMULA = 1000;
 
 /** Roll one die with `sides` faces. */
 const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);
@@ -265,11 +268,14 @@ const DICE_TERM = /([+\-−]?)\s*(\d*)d(\d+)/gi;
 export function parseSignedDice(s: string): { pool: Record<number, number>; negative: BonusDie[] } {
 	const pool: Record<number, number> = {};
 	const negative: BonusDie[] = [];
+	let budget = MAX_DICE_PER_FORMULA;
 	for (const m of s.matchAll(DICE_TERM)) {
+		if (budget <= 0) break;
 		const sides = Math.min(Number(m[3]), MAX_DIE_SIDES);
-		const count = Math.min(m[2] ? Number(m[2]) : 1, MAX_DICE_PER_TERM);
+		const count = Math.min(m[2] ? Number(m[2]) : 1, MAX_DICE_PER_TERM, budget);
+		budget -= count;
 		if (m[1] === '-' || m[1] === '−') negative.push({ count, sides, sign: -1 });
-		else pool[sides] = Math.min((pool[sides] ?? 0) + count, MAX_DICE_PER_TERM);
+		else pool[sides] = (pool[sides] ?? 0) + count;
 	}
 	return { pool, negative };
 }

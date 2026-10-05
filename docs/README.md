@@ -46,5 +46,7 @@ Open the one whose subject you are about to touch, before the recommendation and
 
 Design research sits in [research/](research/) — including
 [Wild Shape](research/wild-shape.md), the per-edition spec N2b is built from, every line quoted from
-the shipped SRD text, and the [table link threat model](research/table-link-threats.md), the attack
-catalog the networked GM↔player spec must answer.
+the shipped SRD text, the [table link threat model](research/table-link-threats.md), the attack
+catalog the networked GM↔player spec must answer, and its companion
+[design review](research/table-link-design-review.md): what the existing code does once a network
+input exists, the ways the module can be built wrong, and the decisions a spec takes first.

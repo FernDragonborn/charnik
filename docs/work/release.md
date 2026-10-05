@@ -86,6 +86,26 @@
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
 ## Security and dependencies
+- [ ] **TABLE-LINK-SEAM · the interface the table link will implement, and the implementation that
+  does nothing.** Outcome: a `TableLink` interface beside `Storage`, with a no-op implementation that
+  the web build and every build without the Cargo feature use; a test that the app boots and plays
+  on the no-op. Around it, the three things that are cheap now and a breaking change later:
+  **app commands are declared in the ACL** (`build.rs` ▸ `AppManifest::commands`, with an `allow-*`
+  permission per command in the capability — today the five commands in `lib.rs` are callable from
+  any local webview whatever the capability's `windows` list says); **the log sink takes only the
+  app's own targets** (`tauri-plugin-log` installs the process-global logger with no filter, so a
+  dependency's `tracing` output reaches the file, and the `Webview` target hands it to page script);
+  and **a fifth exempt path in the Tauri import fence**, the first one where Rust pushes events
+  into the webview. Constraints: no socket is opened and no dependency on a transport is added;
+  removing the feature removes the capability file, the commands and the JS seam together.
+- [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
+  `research/table-link-threats.md` (what the layer can do to a user) and
+  `research/table-link-design-review.md` (what the existing code does with a network input, and the
+  thirteen decisions listed under "Decisions the spec must make"). The ones that change the
+  architecture: who computes a sheet the GM looks at; that a GM request names catalog ids and never
+  carries tokens or free formulas; a star of direct connections rather than gossip; which relays an
+  endpoint may dial; where keys and approvals live. It also rewrites `internals/security.md`'s
+  threat model, which says "no network" in the present tense.
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have

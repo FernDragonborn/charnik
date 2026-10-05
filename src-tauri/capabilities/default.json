@@ -5,27 +5,15 @@
 	"windows": ["main"],
 	"permissions": [
 		"core:default",
-		"fs:default",
+		"fs:read-all",
+		"fs:write-all",
+		"fs:deny-default",
 		"dialog:default",
 		"opener:default",
-		"opener:allow-open-path",
 		"opener:allow-reveal-item-in-dir",
 		"updater:default",
 		"process:default",
 		"log:default",
-		"fs:allow-appdata-read-recursive",
-		"fs:allow-appdata-write-recursive",
-		"fs:allow-appdata-meta-recursive",
-		"fs:allow-appconfig-read-recursive",
-		"fs:allow-appconfig-meta-recursive",
-		"fs:allow-document-read-recursive",
-		"fs:allow-document-write-recursive",
-		"fs:allow-document-meta-recursive",
-		"fs:allow-watch",
-		"fs:allow-unwatch",
-		"fs:allow-rename",
-		"fs:allow-mkdir",
-		"fs:allow-remove",
 		{
 			"identifier": "http:default",
 			"allow": [
@@ -36,13 +24,14 @@
 		},
 		{
 			"identifier": "fs:scope",
-			"allow": [
-				{ "path": "$APPDATA" },
-				{ "path": "$APPDATA/**" },
+			"allow": [{ "path": "$DOCUMENT/charnik" }, { "path": "$DOCUMENT/charnik/**" }],
+			"deny": [
 				{ "path": "$APPCONFIG" },
 				{ "path": "$APPCONFIG/**" },
-				{ "path": "$DOCUMENT/charnik" },
-				{ "path": "$DOCUMENT/charnik/**" }
+				{ "path": "$APPDATA" },
+				{ "path": "$APPDATA/**" },
+				{ "path": "$APPLOCALDATA" },
+				{ "path": "$APPLOCALDATA/**" }
 			]
 		}
 	]

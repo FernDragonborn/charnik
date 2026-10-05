@@ -6,6 +6,19 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
+/**
+ * What prose may NOT carry, on top of DOMPurify's defaults. The defaults stop script; they keep
+ * markup that deceives — a `<form>` posting a typed password to a stranger, a `<style>` element or a
+ * `style` attribute drawing over the app's own dialogs — and that is as much a way to hurt a reader
+ * as code is. Prose needs none of it: emphasis, lists, tables and links are the whole vocabulary.
+ * `class` stays because the renderer below adds its own.
+ */
+const PROSE_POLICY = {
+	FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
+	FORBID_ATTR: ['style'],
+};
+const sanitize = (html: string): string => DOMPurify.sanitize(html, PROSE_POLICY);
+
 // Some content mixes Markdown with raw HTML tables. marked won't process Markdown that sits
 // inside/right after an HTML block, so: force blank lines around <table> (so the following text
 // parses as Markdown), then mop up emphasis left literal inside table cells.
@@ -31,7 +44,7 @@ export function renderContentMarkdown(md: string): string {
 		.replace(/([.!?:”’"')\]])(<br\s*\/?>)/g, '$1$2<span class="prose-break"></span>')
 		.replace(/<table>/g, '<div class="prose-table-scroll"><table>')
 		.replace(/<\/table>/g, '</table></div>');
-	return DOMPurify.sanitize(html);
+	return sanitize(html);
 }
 
 /**
@@ -54,5 +67,5 @@ export function renderContentMarkdownInline(md: string): string {
  *  of any string that could be user-authored — incl. i18n catalog strings, since a user can drop in a
  *  new locale JSON at runtime (the i18n invariant), so those are NOT trusted (ARCH-3). */
 export function sanitizeHtml(html: string): string {
-	return DOMPurify.sanitize(html);
+	return sanitize(html);
 }

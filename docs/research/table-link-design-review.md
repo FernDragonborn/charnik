@@ -6,7 +6,11 @@ can do to a user; this one asks what the existing code does once a network input
 the module can be built wrong. It covers twelve security findings (S), eleven architectural ones
 (F), what the earlier catalog misses, and the decisions a spec has to take first.
 
-**Progress:** complete. Own findings, comparison with the prior review, published work, the
+**Progress:** complete. Four findings carry a **Status** line: the defects that did not wait for
+the module are fixed. The rest is planned as the 0.8.0 seams wave (`docs/plan.md`), which ships no
+networking.
+
+**Written:** Own findings, comparison with the prior review, published work, the
 independent citation check and the open research list are all written.
 
 **The five that matter most.**
@@ -77,6 +81,8 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 ## Findings
 
 ### S-01 — The data-folder pointer is writable from the webview on Windows and macOS
+
+- **Status:** closed in the app, and driven on a Windows install. The capability denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA` and no longer uses `fs:default`, whose scope over the app directories is global and was enough on its own to keep the pointer writable — removing the `appdata` permissions alone changed nothing. `apply_saved_data_dir` refuses a root. A probe on the running app had write, rename and copy onto `config.json` all refused. macOS is unverified.
 
 - **Kind:** present. **Severity:** high. **Confidence:** high (source-read; not yet driven on a real install).
 - **Hypothesis.** Script running in the webview can rewrite `<appConfig>/config.json` and so choose
@@ -215,6 +221,8 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### S-06 — The dice roller has per-term caps but no formula-length or total-dice cap
 
+- **Status:** closed. `MAX_DICE_PER_FORMULA` caps a formula at 1000 dice across all terms. The executor still runs an action whose L2 formula failed to resolve; with the cap that is a wrong roll, not a freeze.
+
 - **Kind:** present. **Severity:** high (remote freeze, and the result is persisted). **Confidence:**
   high — measured.
 - **Hypothesis.** A GM roll request is a dice formula. `rollFormula` bounds each term (1000 dice,
@@ -240,6 +248,8 @@ given only the claim and the source; its verdicts are in *Citation check* at the
   run.
 
 ### S-07 — Sanitised prose can still carry a form, a full-window overlay, global CSS and remote images
+
+- **Status:** closed for the form, the `<style>` element and the `style` attribute (`PROSE_POLICY` at the one sanitising seam); `form-action 'none'`, `base-uri` and `object-src` are in the desktop CSP and in a `<meta>` on the web build. Remote images still survive sanitising: blocked on desktop by `img-src`, and by the same directive on the web now. `class` and `data-*` attributes remain allowed.
 
 - **Kind:** present. **Severity:** high (ticket and credential phishing inside the trusted window;
   UI redress of an approval dialog). **Confidence:** high — measured against the shipped versions.
@@ -325,6 +335,8 @@ given only the claim and the source; its verdicts are in *Citation check* at the
   F-02 for the general form.
 
 ### F-02 — `character.json` has no single writer, no revision and no merge; every save is a whole-object overwrite
+
+- **Status:** the single-instance guard is in (a second launch focuses the open window; confirmed on Windows). Everything else here is open as CHARACTER-WRITER in `docs/work/mechanics.md`.
 
 - **Kind:** present. **Severity:** high. **Confidence:** high.
 - **Hypothesis.** The file has at least seven writers and no ordering between them. Each takes a
@@ -744,10 +756,9 @@ the one that changes the plan: the first table-link milestone is a refactor with
    inert mode. F-06 puts the choice to the spec.
 2. **Its W6 lists "open paths" among what XSS can do.** At tauri-plugin-opener 2.5.5,
    `is_path_allowed` requires a matching scope entry, and the capability grants
-   `opener:allow-open-path` with none — so every `open_path` is refused. That is good for security
-   and probably means Settings ▸ "open data folder" and "open log folder" do nothing
-   (`src/lib/storage/tauri.ts:95-97`, `src/lib/diag/logger.ts:135-144`). Unverified on a running
-   app; worth one click.
+   `opener:allow-open-path` with none — so every `open_path` is refused. That was good for security
+   and meant Settings ▸ "open data folder" and "open log folder" did nothing — confirmed on the
+   running app, and fixed by a Rust command that opens only the app's own two folders.
 3. **Its P9 is right and marked `[inference]`; it can be `[code]`.** The directory identity on
    Windows and macOS is in the locked crate sources (S-01). It also stops short of the consequence:
    the pointer is re-granted recursively at next launch with no check, so the write is a grant of

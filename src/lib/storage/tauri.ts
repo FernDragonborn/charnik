@@ -26,7 +26,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
-import { openPath, openUrl } from '@tauri-apps/plugin-opener';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
 import { errText } from '../util/format';
@@ -91,9 +91,10 @@ export async function pickTargetDataDir(): Promise<string | null> {
 	return join(parent, DATA_DIR_NAME);
 }
 
-/** Open the active data folder in the OS file manager (shows content/ + characters/). */
+/** Open the active data folder in the OS file manager (shows content/ + characters/). Rust resolves
+ *  the folder itself: the page says WHICH of the app's folders, never a path. */
 export async function openDataDir(): Promise<void> {
-	await openPath(await resolveDataDir());
+	await invoke('open_app_dir', { which: 'data' });
 }
 
 /** Hand an external URL to the OS browser. Lives here because this is the module the architecture

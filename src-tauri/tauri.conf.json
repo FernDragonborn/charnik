@@ -21,7 +21,7 @@
 			}
 		],
 		"security": {
-			"csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'"
+			"csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; form-action 'none'; base-uri 'none'; object-src 'none'"
 		}
 	},
 	"plugins": {

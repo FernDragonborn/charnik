@@ -70,7 +70,8 @@ literally called charnik — never `%APPDATA%\io.github.ferndragonborn.charnik`.
 that path in a dialog and lets the user pick another; the answer goes in a tiny pointer config at
 `appConfigDir()/config.json` (`{ dataDir }`), the one app-managed file they never edit, and
 resolution is pointer-then-default. Settings ▸ Data shows the path, re-picks it, and reveals it in
-the OS file manager. Capabilities statically allow `$DOCUMENT/charnik/**` and `$APPCONFIG/**`; a
+the OS file manager — Rust opens it, since the page may name WHICH app folder and never a path.
+Capabilities statically allow `$DOCUMENT/charnik/**` and nothing of the app's own directories; a
 folder the user picks anywhere else is granted at runtime by a Rust command
 (`app.fs_scope().allow_directory`), re-applied on every startup for a saved custom path.
 

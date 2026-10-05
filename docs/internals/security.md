@@ -12,8 +12,14 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
   `plugin-updater` in Rust) — not a server, and not webview `fetch`. It listens on no port
   and is governed by the **updater capability**, not the CSP.
 - **Content is untrusted input** — it may come from strangers (shared packs, imports).
-- **Assumption**: personal desktop use; not multi-tenant. Concurrency clobber is largely
-  moot (one instance) but writes are still atomic + mtime-guarded.
+- **Assumption**: personal desktop use; not multi-tenant. One instance is ENFORCED on desktop
+  (`tauri-plugin-single-instance`: a second launch focuses the open window), because every save
+  writes a whole `character.json` from memory and a second process would be a second writer.
+  Writes are atomic; nothing compares an mtime or a revision before writing, so a folder-sync tool
+  that changes a character under a running app loses to the next save.
+- **A networked module is planned and none ships.** The table link's threat model and the design
+  review beside it are `docs/research/table-link-*.md`; every statement here about "no network"
+  holds until that module exists, and is rewritten in the change that adds it.
 
 ## Decisions / controls
 1. **No HTTP server.** Tauri loads the SPA from a bundled protocol in the webview; the
@@ -38,8 +44,23 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > - `apply_saved_data_dir` re-grants the saved path at startup **with no check**, which is sound
    >   only because the pointer file is Rust-owned and `set_data_dir` is the one thing that writes it.
    >
+   > - The saved path is checked before it is granted (`is_grantable`): absolute, no `..`, and a
+   >   folder inside a drive or filesystem root rather than the root. A pointer that fails reads as
+   >   absent, so the app lands on first run.
+   >
    > The pointer lives beside the app config, not in the data folder — so a restored backup cannot
    > arrive pointing somewhere new, the same posture consent hashes take (§4).
+   >
+   > **The webview has no capability over the app's own directories.** `$APPCONFIG` and `$APPDATA`
+   > are ONE directory on Windows and macOS (`dirs` returns the roaming app-data folder, or
+   > Application Support, for both), so a write grant on either is a write grant on the pointer.
+   > The capability therefore DENIES both, with `$APPLOCALDATA`: the fs scope is
+   > `$DOCUMENT/charnik` plus whatever folder Rust granted. `fs:default` is not used, because it
+   > carries a scope over every app directory that is global — it applies to the write commands
+   > another permission enables, not only to the reads it names. Anything that must be out of page
+   > script's reach — the pointer today, pairing state and keys later — goes in those directories,
+   > written by a Rust command. `open_app_dir` is the same rule for the file manager: the page
+   > says `data` or `logs`, Rust resolves the folder, and the opener's `open_path` is not granted.
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
    > **Precisely** (checked 2026-08-12): the Tauri and memory impls call the shared
@@ -65,8 +86,12 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
      no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
    Every layer keeps the `{value, trace, notes}` contract so contributions stay explainable.
 5. **Webview hardening.** Strict Tauri **CSP** — `default-src 'self'` (webview may only load
-   its own bundled resources) plus `script-src 'self' 'wasm-unsafe-eval'` and
-   `style-src 'self' 'unsafe-inline'`. The `'wasm-unsafe-eval'` is **required** because the
+   its own bundled resources) plus `script-src 'self' 'wasm-unsafe-eval'`,
+   `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:` (a portrait is a blob URL),
+   and three directives `default-src` does NOT stand in for: `form-action 'none'`,
+   `base-uri 'none'`, `object-src 'none'`. The WEB build carries the last four as a `<meta>`
+   (`vite.config.ts` ▸ `csp`) — Pages cannot send a header, and a `default-src` in that meta
+   would also be enforced inside the desktop webview and cut Tauri's IPC channel. The `'wasm-unsafe-eval'` is **required** because the
    app instantiates WebAssembly (`xxhash-wasm` for content hashing today; the QuickJS effects
    sandbox later); it permits WASM compilation only, **not** general `eval`. Without it
    `default-src 'self'` blocks `WebAssembly.instantiate` and content fails to load. The
@@ -78,6 +103,12 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    low-risk — content is data, never HTML, so there's no injection path to abuse it. No remote content loading; no inline
    script; external links open in the OS browser, not the app webview. CSP governs the
    **webview's** network only; it does **not** cover the updater (see below).
+   > **Prose may not deceive either.** DOMPurify's defaults stop script and keep a `<form>`, a
+   > `<style>` element and the `style` attribute — enough to post a typed password to a stranger
+   > or draw a fake dialog over the app. The one sanitising seam (`content/markdown.ts` ▸
+   > `PROSE_POLICY`) forbids all three, with the form controls; `form-action 'none'` is the second
+   > line behind it. `class` stays allowed because the renderer adds its own.
+   >
    > **How, since content prose IS rendered HTML** (`ArticleProse` runs `{@html}` over
    > marked+DOMPurify, which strips anything executable and correctly keeps `<a href>`): ONE
    > capture-phase click listener in the root layout sends every cross-origin link to
@@ -144,7 +175,9 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > distinguishes "contains plugins" from "changes their bytes", and the consent dialog names the
    > pack, since the user did not place that folder themselves.
 8. **Parsing safety.** Vetted parsers (`papaparse`, `JSON.parse`); row/cell/file **size
-   caps** to avoid memory blowups; malformed rows → health view, not a crash.
+   caps** to avoid memory blowups; malformed rows → health view, not a crash. A dice formula is
+   capped as a WHOLE (`MAX_DICE_PER_FORMULA`), not only per term: a formula may name a thousand
+   die sizes, and each term's own cap bounds none of that.
 9. **Minimal Rust surface.** Prefer official audited plugins; keep custom Tauri commands
    few and narrow (each is native attack surface).
 10. **No secrets, no telemetry.** FOSS; nothing phones home.
