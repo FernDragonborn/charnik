@@ -832,21 +832,77 @@ the one that changes the plan: the first table-link milestone is a refactor with
 
 ## What to research next
 
-Not investigated here; each is a question whose answer could change the design.
+Each is a question whose answer could change the design. A question keeps its number: other
+documents refer to it by that.
 
-1. **Run the two unproven chains on a real install.** S-01 end to end on Windows and macOS (write
-   the pointer, relaunch, read outside the data folder), and the S-07 form submit on each webview.
-   Both are source-read here; neither was driven.
+### Answered
+
+**1 · The two unproven chains, on a real install.** S-01 is driven on Windows and on Linux (under
+WSL): a write, a read, a copy and a rename onto `<appConfig>/config.json`, and a write anywhere in
+the app's own directories, are each refused (`docs/internals/security.md` §2). On Linux
+`$APPDATA` and `$APPLOCALDATA` are one directory and `$APPCONFIG` another, so the deny list holds
+there for a different reason than on Windows, where config and data are the same folder. There is
+no macOS build to drive. S-07's form submit is closed at the sanitiser and by `form-action 'none'`.
+
+**3 · What page script can do with `process`, `updater` and `http`.** Read in the installed
+plugins' own sources, not driven:
+
+- `process:default` is `allow-exit` and `allow-restart`. Script in the page can quit or relaunch
+  the app whenever it likes.
+- `updater:default` is the whole flow — check, download, install — and **`check` takes its
+  `proxy`, its `headers`, its `target` and `allow_downgrades` from the page**
+  (`tauri-plugin-updater` ▸ `commands.rs` ▸ `check`). The artifact is still verified against the
+  pinned minisign key, so a proxy cannot forge a build; what it CAN do, with `allow_downgrades`,
+  is serve an older release that was genuinely signed. Script in the page can therefore put the
+  user on any past version, silently, and relaunch into it. → UPDATER-FROM-PAGE.
+- `http:default`'s scope is a URL pattern and nothing else: the method is whatever the page says,
+  and of the request headers only the fetch spec's forbidden ones are dropped, which
+  `Authorization` is not. The capability allows `https://api.github.com/repos/*`, so script in
+  the page can `POST` to an attacker's repository with the attacker's own token — an issue, a
+  comment, a file — and that is a write channel out of the app that the CSP never sees, since the
+  client is in Rust. → HTTP-ANY-METHOD.
+
+**4 · Routes that act on a URL alone.** None writes. `/build?edit=`, `?levelup=` and `?draft=`
+choose what the builder opens and nothing is saved until a field changes; `/settings?tab=`,
+`/translate?type=&source=&id=&locale=` and `/compendium/<entry>` choose what is shown;
+`?dev-update` is read only under the dev server. The `/dev/*` probes are bundled into a release
+build and do NOT run there: their layout renders nothing outside the dev server, so no probe's
+`onMount` exists to fire. So an `<a href>` in sanitised prose can move the reader to another screen
+of the app — into the builder on a character it names — and can do nothing on arrival.
+
+**5 · zod on hostile shapes** (zod 4.6.2, measured against `characterSchema`):
+
+- A `__proto__` key in a `z.record` is DROPPED, at every depth tried, and `Object.prototype` is
+  not polluted. A top-level `__proto__` and any unknown key are stripped by `z.object`.
+- **`constructor` is accepted as a record key** and round-trips to disk. It is also a valid
+  content id (`slug`), so a pack that names a resource `constructor` makes
+  `play.resourcesSpent[id]` read `Object.prototype.constructor` — a function — on every character
+  that has NOT spent it. Every partial map in `docs/internals/characters.md` ▸ Play-state
+  modelling is read this way. → RECORD-OWN-KEYS.
+- Nothing walks an unknown value: 5 000 levels of nesting under a key the schema does not name
+  parse and are discarded.
+- **Nothing is bounded.** 200 000 effects validate in about 190 ms, a 20 MB `notes` string
+  validates, `hp.current` takes `Number.MAX_SAFE_INTEGER` and an inventory `qty` takes `1e15`.
+  The local file is the user's own and that is the right posture for it; it is the measurement
+  behind the separate, capped wire schema the review already asks for (S-08).
+- The one `Object.assign` over a parsed save (`store.svelte.ts` ▸ `putIntoActive`) copies the
+  top-level keys of a `z.object` result, whose keys are the schema's.
+
+**13 · An inert derive mode — and why the question may not need its answer.** What the interface
+carries is decided as the RESULT: a player's app derives its own sheet and the GM's renders it,
+deriving nothing from a peer's tokens (`docs/work/release.md` ▸ TABLE-LINK-SEAM). Held to, there
+is no foreign character to derive. What reading the pipeline shows, for the day that changes:
+`deriveSheet` gathers tokens from the character FILE as well as from content — every
+`play.effects[].effects` entry is a token the save itself supplies — so a foreign save brings its
+own vocabulary with it; `on_event` is folded into `facts.onEvent` and acts only when the combat
+layer fires it, never during the derive; and the one switch the derive has is the character's own
+`play.autoCalc`. Not checked here: where a `plugin:` token meets the registered evaluator, and
+whether a formula in a save can be made expensive within the L2 caps.
+
+### Still open
+
 2. **`cargo tree -e features -i tracing`** in a scratch crate with `tauri-plugin-log` and `iroh`,
    then read a session's log file for endpoint ids and addresses (S-04).
-3. **What page script can do with `process:default` and `updater:default`.** Whether XSS can force a
-   relaunch or drive an update check, and whether `tauri-plugin-http`'s scope limits methods — a
-   POST to `api.github.com` is an exfiltration channel the CSP does not see.
-4. **Internal deep links in sanitised prose.** `<a href>` to a same-origin route is left to the
-   router. Audit every route for an action taken from the URL alone (`/build?…`, the `/dev/*`
-   probes that ship in release builds).
-5. **zod behaviour on hostile shapes** in the installed version: `__proto__` keys in each
-   `z.record`, deep nesting, and whether any `Object.assign`/deep-merge touches parsed saves.
 6. **Svelte's production behaviour on duplicate keys** (F-07) and on a 10⁵-row keyed list.
 7. **iroh on mobile.** Background limits on Android and iOS, the local-network permission prompt on
    iOS, whether `fast-apple-datapath` can be left off without cost, App Store review of a QUIC
@@ -860,7 +916,5 @@ Not investigated here; each is a question whose answer could change the design.
     what Tauri mobile can reach, and what a backup or a folder sync carries.
 12. **Pairing ceremonies.** Whether a short authentication string compared aloud is usable at a
     real table, against a QR scan in person; and what users do when the GM's key changes.
-13. **An inert derive mode.** What it takes to derive a foreign character with `on_event`,
-    `plugin:` and the executor disabled, and whether anything else in the pipeline acts on data.
 14. **Existing tools.** How other virtual tabletops and character trackers that sync player sheets
     to a GM handle authority, conflicts and griefing — their incident reports are free lessons.

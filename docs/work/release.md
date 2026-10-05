@@ -106,13 +106,32 @@
   measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
   holds a separate key for each table, so nothing links two tables and a key that is online says
   nothing about the person outside that table — which is why every call takes a table id.
-- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Fourteen, listed
-  under "What to research next" in `research/table-link-design-review.md`, each one able to change
-  the design: what page script can do with the `process`, `updater` and `http` permissions; routes
-  that act on a URL alone; zod on hostile shapes; Svelte on duplicate keys; iroh on mobile; n0's
-  public relays as a dependency; build cost and the Rust 1.91 floor; cross-version wire
-  compatibility; key storage per platform; pairing ceremonies; an inert derive mode; how other
-  tools handle authority and griefing. An input to TABLE-LINK-SPEC, not a blocker for the seams.
+- [ ] **UPDATER-FROM-PAGE · the page can run the updater, and choose its proxy and whether a
+  downgrade counts.** `updater:default` and `process:default` hand the webview the whole flow, and
+  the plugin's `check` takes `proxy`, `headers`, `target` and `allow_downgrades` from its caller
+  (`research/table-link-design-review.md` ▸ What to research next ▸ 3). The signature still holds,
+  so the worst a script in the page can do is move the user to an older, genuinely signed release
+  and relaunch into it — which is every bug that release had. Outcome: the check and the install
+  are Rust commands that take no arguments, progress reaches the chip as events, and neither
+  plugin's permission is in the capability. `lib/update/updater.svelte.ts` is the only caller.
+- [ ] **HTTP-ANY-METHOD · the pack fetcher's capability allows any method and any header.** The
+  http scope is a URL pattern: `https://api.github.com/repos/*` is as open to a `POST` carrying
+  somebody's token as to the `GET` the pack updater sends (same section, same item). Outcome: the
+  fetch is a Rust command that sends `GET` with the two headers the updater needs (`If-None-Match`,
+  `Accept`), keeps the size caps it has (`content/remote/tauri-fetch.ts`), and `http:default`
+  leaves the capability. `RemoteFetcher` is already the seam, so nothing above it moves.
+- [ ] **RECORD-OWN-KEYS · a partial map read by a content id answers for `constructor`.** A
+  `z.record` keeps the key and `slug` allows the id, so `play.resourcesSpent['constructor']` on a
+  character who has not spent that pool is `Object`'s own constructor rather than nothing (same
+  section ▸ 5). Outcome: one reader for the partial maps that asks `Object.hasOwn` first, used
+  wherever one is indexed by an id content supplies; a test with a resource named `constructor`.
+- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Nine of the
+  fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
+  each one able to change the design: what `tracing` output a transport crate brings into the log;
+  Svelte on duplicate keys; iroh on mobile; n0's public relays as a dependency; build cost and the
+  Rust 1.91 floor; cross-version wire compatibility; key storage per platform; pairing ceremonies;
+  how other tools handle authority and griefing. The five answered there are the ones this
+  repository could answer about itself. An input to TABLE-LINK-SPEC, not a blocker for the seams.
 - [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
   `research/table-link-threats.md` (what the layer can do to a user) and
   `research/table-link-design-review.md` (what the existing code does with a network input, and the
