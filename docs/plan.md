@@ -250,7 +250,8 @@ position and are given per wave, because most of them were learned the hard way.
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together and A17 brings the smallest form of N2's feature choice with it.
   4. **The looks** — MASTERY-HALF's extra-attack control and TITLE-POPOVER's ⓘ are picked and
-     wait to be built; DEFENCE-STRIP is out with a designer and is built from what comes back;
+     wait to be built; DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+     from that mock;
      ADD-ITEM-SURFACE becomes a popover; and
      DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the hit-point bar — is
      redrawn, because what ships reads badly.
@@ -261,11 +262,11 @@ position and are given per wave, because most of them were learned the hard way.
   Magician), SCOPED-BONUS's Agonizing Blast, E4, MOBILE-ALPHA's tap
   targets, and TABLE-LINK-RESEARCH with TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
   or shipped content that does nothing — the three clauses above.
-- **The short queue, and it is an ORDER rather than a wave.** One item, and it is a design session
-  rather than a commit.
+- **The short queue, and it is an ORDER rather than a wave.** One item, and it is the maintainer's
+  to do rather than a commit.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
-     MOVES and the qualifier in the chip; the `Saves` group has not found its formatting, which is
-     where the next variants start.
+     MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
+     maintainer redraws the mock, and nothing is built until it exists.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 

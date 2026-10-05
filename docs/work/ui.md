@@ -22,8 +22,8 @@
                 advantage · against magical effects
   ```
 
-  It is still wrong — two rows under one label, each a swing plus a case. **It goes to a designer, and nothing
-  about its form is decided.** Four redraws were rendered and each failed on the same thing from
+  It is still wrong — two rows under one label, each a swing plus a case. **The maintainer redraws
+  the mock, and nothing about its form is decided until that mock exists.** Four redraws were rendered and each failed on the same thing from
   a different side: the swing word in front makes two chips open alike; the swing hoisted into
   the label breaks on a mixed group and on Ukrainian cases; a triangle for the swing disagrees
   with a good/bad colour wherever the die is somebody else's (`Against you`); and a triangle on
