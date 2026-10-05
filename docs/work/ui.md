@@ -33,19 +33,6 @@
   `design-preview/_defence-strip-brief.html` — what the strip must say, what was tried, the
   requirements, and what may change (everything but the content, chips included).
 
-  **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
-  open with the same word. `advantage · against spells` and `advantage · against magical effects`
-  share their first half, and the half that differs is at the end, where the eye arrives last. `AC`
-  reads cleanly beside them precisely because it leads with the number. So the group puts what is
-  COMMON in front and what is DISTINCT behind — which is the wrong way round for a list of two.
-  Three directions worth rendering, cheapest first:
-  - **Lead with the case** — `against spells · advantage`. One reordering, nothing else moves.
-  - **Hoist the swing into the label** — `Saves · advantage` then `spells`, `magical effects`. Reads
-    tightest, and breaks the moment one row is a disadvantage.
-  - **Say the swing as a MARK rather than a word** — `CombatStrip` already does this for passive
-    senses (`advantage-mark`, a `chevron-up`/`chevron-down` beside the number), so the vocabulary is
-    shipped and a player has already learnt it on the row above.
-
   The variants that settled the rest are `design-preview/defence-chips-variants.html`; `/dev/defences`
   is the live state — the builder's card and the strip at play-sheet width — in `shot.mjs` at both
   widths.
