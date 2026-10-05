@@ -240,10 +240,10 @@ position and are given per wave, because most of them were learned the hard way.
   control before it can mean anything.
 - **Before 0.8.0 is tagged.** The list a release is checked against, in the order it is worked.
   Everything else in this section is either already in 0.8.0 or rides to a later one.
-  1. **The seams** — CHARACTER-UID, then TABLE-LINK-SEAM (the TABLE-LINK-SEAMS wave below says
-     why). They land on the play-state actions and the one writer per character, which are built
+  1. **The seam** — TABLE-LINK-SEAM (the TABLE-LINK-SEAMS wave below says why). It lands on the
+     play-state actions, the one writer per character and the identities, which are built
      (`internals/actions.md` ▸ Where a mutation lives, `internals/characters.md` ▸ One writer per
-     character), so they go first and the rest lands on them.
+     character, ▸ Identities), so it goes first and the rest lands on it.
   2. **What the security pass left** — CONSENT-OUT-OF-REACH, which is not small: plugin consent
      moves behind a Rust command.
   3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
@@ -292,9 +292,10 @@ position and are given per wave, because most of them were learned the hard way.
   does NOT ship in 0.8.0, and no line of networking does. What ships is the set of seams the module
   will stand on, each of which is worth having with no network at all, in this order because each
   one is what the next is tested through: the play-state actions as functions something other than
-  a click can call and one writer per open character, which are built (`internals/actions.md` ▸
-  Where a mutation lives, `internals/characters.md` ▸ One writer per character), then
-  CHARACTER-UID and TABLE-LINK-SEAM (the interface, with the implementation that does nothing).
+  a click can call, one writer per open character and an identity that survives leaving the
+  machine, which are built (`internals/actions.md` ▸ Where a mutation lives,
+  `internals/characters.md` ▸ One writer per character, ▸ Identities), then TABLE-LINK-SEAM (the
+  interface, with the implementation that does nothing).
   The order is a security argument, not tidiness: a network input bolted onto view-model methods
   that read the player's own form fields has nowhere safe to enter
   (`research/table-link-design-review.md` ▸ F-03). The transport, pairing and the wire format are

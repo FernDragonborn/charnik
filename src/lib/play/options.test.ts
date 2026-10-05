@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { rngSequence } from '../../test-support/rng';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { enterOrLeaveCombat, startNextTurn } from './events';
@@ -43,7 +43,7 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 
 	function build(cls: string, level: number, edit: (c: Character) => void = () => {}): Character {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:${cls}`, level }];
+		c.build.classes = [classRow({ class: `class:${source}:${cls}`, level })];
 		c.build.abilities = { str: 14, dex: 14, con: 14, int: 10, wis: 16, cha: 10 };
 		c.play.hp.current = 5;
 		c.play.inCombat = true;

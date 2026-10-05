@@ -278,13 +278,3 @@ stay semi-manual.
      so there is no way to choose the level 6 spell the arcanum is. Natural Recovery's free cast
      and the slot recovery of Arcane Recovery are the same two shapes: a pool that is sayable
      today, and slots a player already restores by their pips.
-
-- [ ] **CHARACTER-UID · a character has an identity that survives leaving the machine.** `id` is a
-  slug of the name plus four hex digits and doubles as the folder name; restore re-anchors it to the
-  folder. Outcome: a random 128-bit `uid`, minted once, stored in the file, never derived from the
-  name and never used as a path. Inventory rows and class rows get an instance id of their own in
-  the SAME migration, for the same reason an effect has `iid`: a message or an undo has to name
-  "that potion", and a position in an array names whatever sits there by the time it arrives.
-  A schema bump with a migration that mints what is missing. The ids are random
-  (UUID v4, what `crypto.randomUUID` gives and every `iid` already is): the array holds the
-  order, and a time-ordered id would tell every peer when the character was made.

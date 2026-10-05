@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter } from './schema';
+import { newCharacter, classRow } from './schema';
 import { characterFeatures, FEATURE_SECTION } from './features';
 import { gatherEffects } from './derive-gather';
 import type { ContentGraph } from '../content/loader';
@@ -17,7 +17,7 @@ const warlock = () => {
 	const c = newCharacter('valen', 'Valen', '5.5e');
 	c.build.species = `species:${S}:elf`;
 	c.build.background = `background:${S}:sage`;
-	c.build.classes = [{ class: `class:${S}:warlock`, level: 3 }];
+	c.build.classes = [classRow({ class: `class:${S}:warlock`, level: 3 })];
 	return c;
 };
 

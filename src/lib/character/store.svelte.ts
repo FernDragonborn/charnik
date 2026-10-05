@@ -223,6 +223,7 @@ export async function resolveConflict(choice: ConflictChoice): Promise<void> {
 		const copy: Character = {
 			...$state.snapshot(mine),
 			id: await uniqueCharacterId(storage, slugify(mine.build.name)),
+			uid: crypto.randomUUID(), // a second character, not the first one twice
 			rev: 0,
 		};
 		copy.build.name = t('character.conflict.copyName', { name: mine.build.name });

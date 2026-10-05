@@ -19,7 +19,7 @@ vi.mock('svelte-sonner', () => ({
 
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from '$lib/content/loader';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { spellRow } from '$lib/combat/helpers';
@@ -50,7 +50,7 @@ for (const { system, pack, source } of EDITIONS) {
 			combat.graph = graph;
 			const c = newCharacter('probe', 'Probe', system);
 			c.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
-			c.build.classes = [{ class: `class:${source}:${classId}`, level }];
+			c.build.classes = [classRow({ class: `class:${source}:${classId}`, level })];
 			c.build.abilities = { str: 14, dex: 14, con: 14, int: 14, wis: 14, cha: 14 };
 			combat.character = c;
 			return c;
@@ -113,12 +113,13 @@ for (const { system, pack, source } of EDITIONS) {
 
 		it('with ammunition tracked, a shot spends from the stack it fires — asking when it cannot tell', async () => {
 			const character = await play('fighter', 5);
-			const carried = (id: string, qty: number) => ({
-				item: `item:${source}:${id}`,
-				qty,
-				equipped: true,
-				attuned: false,
-			});
+			const carried = (id: string, qty: number) =>
+				inventoryRow({
+					item: `item:${source}:${id}`,
+					qty,
+					equipped: true,
+					attuned: false,
+				});
 			// 5.1 names its ammunition rows differently and never says which one a weapon fires
 			const [arrows, bullets] =
 				system === '5e' ? ['arrows', 'sling_bullets'] : ['arrows', 'bullets_sling'];
@@ -154,12 +155,13 @@ for (const { system, pack, source } of EDITIONS) {
 
 		it('an action that makes attacks spends one from the stack per strike', async () => {
 			const character = await play('fighter', 5);
-			const item = (id: string, qty: number) => ({
-				item: `item:${source}:${id}`,
-				qty,
-				equipped: true,
-				attuned: false,
-			});
+			const item = (id: string, qty: number) =>
+				inventoryRow({
+					item: `item:${source}:${id}`,
+					qty,
+					equipped: true,
+					attuned: false,
+				});
 			character.build.inventory = [item('longbow', 1), item('arrows', 20)];
 			character.ui.trackAmmunition = true;
 			character.play.effects = [
@@ -281,7 +283,7 @@ describe('play loop · where the editions really differ', () => {
 		for (const { system, pack, source } of EDITIONS) {
 			combat.graph = await loadPacks(pack);
 			const c = newCharacter('monk', 'Monk', system);
-			c.build.classes = [{ class: `class:${source}:monk`, level: 5 }];
+			c.build.classes = [classRow({ class: `class:${source}:monk`, level: 5 })];
 			combat.character = c;
 			const pool = combat.sheet?.resources.find((r) => r.id === 'ki' || r.id === 'focus');
 			ids.push(pool?.id ?? 'none');

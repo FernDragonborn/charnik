@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { rngSequence } from '../../test-support/rng';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import {
@@ -59,7 +59,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 	/** A level-5 fighter at full hit points, frozen. */
 	function fighter(edit: (c: Character) => void = () => {}): Character {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 5 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 5 })];
 		c.build.abilities = { str: 14, dex: 14, con: 14, int: 10, wis: 10, cha: 10 };
 		c.play.hp.current = maxOf(c);
 		edit(c);
@@ -195,7 +195,7 @@ describe('hit-point actions · a hit that breaks a form', () => {
 	it('carries the excess to the character, counted against their own maximum', () => {
 		const wolf = 'monster:SRD 5.1:wolf';
 		const c = newCharacter('fern', 'Fern', '5e');
-		c.build.classes = [{ class: 'class:SRD 5.1:druid', level: 4 }];
+		c.build.classes = [classRow({ class: 'class:SRD 5.1:druid', level: 4 })];
 		c.build.abilities = { str: 8, dex: 12, con: 14, int: 10, wis: 16, cha: 10 };
 		const derive = (character: Character) => deriveSheet(character, graphs['5e']);
 		const own = hitPointMaximum(c, derive(c));

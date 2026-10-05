@@ -164,7 +164,10 @@ export async function restoreCharacterBackup(
 	// through `saveCharacter`, so the restore is checkpointed into the ring like any other write and
 	// the id is re-anchored to the folder it is landing in (a hand-copied snapshot may carry another)
 	// — and as an `overwrite`, because a snapshot is by definition not the file's current revision
-	const restored = { ...res.character, id };
+	// — and it stays the character it is being put back as: a snapshot from before characters had a
+	// `uid` was just given a new one by its migration, and a hand-copied one may carry another's
+	const live = await loadCharacter(storage, id);
+	const restored = { ...res.character, id, uid: live.character?.uid ?? res.character.uid };
 	await saveCharacter(storage, restored, SAVE_MODE.overwrite);
 	return { ok: true, character: restored };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { newCharacter } from '$lib/character/schema';
+import { newCharacter, classRow } from '$lib/character/schema';
 import { buildDiagnostics, summarizeCharacter, formatBundle } from './bundle';
 import { LogLevel, type LogEntry } from './logger';
 
@@ -8,8 +8,8 @@ function characterWithPii() {
 	const c = newCharacter('slug-1', 'Sir Reginald Fluffington III', '5e');
 	c.build.notes = 'secret backstory: my email is me@example.com';
 	c.build.classes = [
-		{ class: 'phb:wizard', level: 3, subclass: 'phb:evocation' },
-		{ class: 'phb:fighter', level: 2 },
+		classRow({ class: 'phb:wizard', level: 3, subclass: 'phb:evocation' }),
+		classRow({ class: 'phb:fighter', level: 2 }),
 	];
 	c.build.species = 'phb:elf';
 	c.build.background = 'phb:sage';

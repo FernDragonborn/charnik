@@ -13,7 +13,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 
 const EDITIONS = [
@@ -25,7 +25,7 @@ describe.each(EDITIONS)('experience · $system', ({ system, pack, source }) => {
 	async function fighter(level: number): Promise<Character> {
 		combat.graph = await loadPacks(pack);
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level })];
 		combat.character = c;
 		return combat.character;
 	}

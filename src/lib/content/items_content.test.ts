@@ -3,7 +3,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { parseToken, splitGuard } from '../effects/token-parser';
 import { readPackFile, loadPacks } from '../../test-support/real-content';
-import { newCharacter, characterSchema } from '../character/schema';
+import { newCharacter, characterSchema, classRow, inventoryRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 import { UNARMED_STRIKE_ID } from '../combat/attacks';
@@ -231,7 +231,9 @@ describe('shipped charged items · the first consumers of the two-axis recharge 
 	const poolOf = async (dir: string, source: string, system: '5e' | '5.5e', id: string) => {
 		const graph = await loadPacks(dir);
 		const c = newCharacter('vex', 'Vex', system);
-		c.build.inventory = [{ item: `item:${source}:${id}`, qty: 1, equipped: true, attuned: true }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${source}:${id}`, qty: 1, equipped: true, attuned: true }),
+		];
 		const sheet = deriveSheet(characterSchema.parse(c), graph);
 		return sheet.resources.find((r) => r.id === id);
 	};
@@ -268,14 +270,16 @@ describe('shipped magic items · the third tranche (the +N families)', () => {
 	const withItem = async (dir: string, source: string, system: '5e' | '5.5e', ids: string[]) => {
 		const graph = await loadPacks(dir);
 		const c = newCharacter('vax', 'Vax', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 5 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 5 })];
 		c.build.abilities = { str: 16, dex: 10, con: 12, int: 10, wis: 10, cha: 10 };
-		c.build.inventory = ids.map((id) => ({
-			item: `item:${source}:${id}`,
-			qty: 1,
-			equipped: true,
-			attuned: true,
-		}));
+		c.build.inventory = ids.map((id) =>
+			inventoryRow({
+				item: `item:${source}:${id}`,
+				qty: 1,
+				equipped: true,
+				attuned: true,
+			}),
+		);
 		const parsed = characterSchema.parse(c);
 		const sheet = deriveSheet(parsed, graph);
 		return { sheet, attacks: computeAttacks(parsed, sheet, graph) };
@@ -317,10 +321,15 @@ describe('shipped magic items · the third tranche (the +N families)', () => {
 			const graph = await loadPacks(dir);
 			const conWith = (score: number) => {
 				const c = newCharacter('grog', 'Grog', sys);
-				c.build.classes = [{ class: `class:${src}:fighter`, level: 1 }];
+				c.build.classes = [classRow({ class: `class:${src}:fighter`, level: 1 })];
 				c.build.abilities = { str: 10, dex: 10, con: score, int: 10, wis: 10, cha: 10 };
 				c.build.inventory = [
-					{ item: `item:${src}:belt_of_dwarvenkind`, qty: 1, equipped: true, attuned: true },
+					inventoryRow({
+						item: `item:${src}:belt_of_dwarvenkind`,
+						qty: 1,
+						equipped: true,
+						attuned: true,
+					}),
 				];
 				return deriveSheet(characterSchema.parse(c), graph).abilities.con.score.value;
 			};
@@ -337,12 +346,17 @@ describe('shipped magic items · the third tranche (the +N families)', () => {
 		async (d, src, sys) => {
 			const graph = await loadPacks(d);
 			const c = newCharacter('vex', 'Vex', sys);
-			c.build.classes = [{ class: `class:${src}:wizard`, level: 5 }]; // no martial weapons
+			c.build.classes = [classRow({ class: `class:${src}:wizard`, level: 5 })]; // no martial weapons
 			c.build.abilities = { str: 10, dex: 16, con: 12, int: 16, wis: 10, cha: 10 };
 			c.build.inventory = [
-				{ item: `item:${src}:bracers_of_archery`, qty: 1, equipped: true, attuned: true },
-				{ item: `item:${src}:longbow`, qty: 1, equipped: true, attuned: false },
-				{ item: `item:${src}:dagger`, qty: 1, equipped: true, attuned: false },
+				inventoryRow({
+					item: `item:${src}:bracers_of_archery`,
+					qty: 1,
+					equipped: true,
+					attuned: true,
+				}),
+				inventoryRow({ item: `item:${src}:longbow`, qty: 1, equipped: true, attuned: false }),
+				inventoryRow({ item: `item:${src}:dagger`, qty: 1, equipped: true, attuned: false }),
 			];
 			const parsed = characterSchema.parse(c);
 			const sheet = deriveSheet(parsed, graph);
@@ -394,7 +408,12 @@ describe('shipped magic items · every one of them has its description', () => {
 		const graph = await loadPacks('srd-2014');
 		const c = newCharacter('vex', 'Vex', '5e');
 		c.build.inventory = [
-			{ item: 'item:SRD 5.1:wand_of_fireballs', qty: 1, equipped: true, attuned: true },
+			inventoryRow({
+				item: 'item:SRD 5.1:wand_of_fireballs',
+				qty: 1,
+				equipped: true,
+				attuned: true,
+			}),
 		];
 		expect(
 			deriveSheet(characterSchema.parse(c), graph).resources.find(
@@ -417,8 +436,8 @@ describe('a magic weapon pays out on ITSELF · D9, and the gather keeps it that 
 	 * longsword beside it, the bare fists, and the magic weapon itself a second time at the roll. */
 	const fighterWith = (inventory: { item: string; equipped: boolean; attuned: boolean }[]) => {
 		const c = newCharacter('f', 'F', '5.5e');
-		c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
-		c.build.inventory = inventory.map((e) => ({ ...e, qty: 1 }));
+		c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 })];
+		c.build.inventory = inventory.map((e) => inventoryRow({ ...e, qty: 1 }));
 		return characterSchema.parse(c);
 	};
 	const ref = (id: string) => `item:SRD 5.2.1:${id}`;
@@ -494,15 +513,15 @@ describe('shipped magic items · a resistance the player answers for, in both ed
 
 				const worn = (choice?: string) => {
 					const c = newCharacter('w', 'Wearer', system);
-					c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+					c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 					c.build.inventory = [
-						{
+						inventoryRow({
 							item: `item:${source}:${id}`,
 							qty: 1,
 							equipped: true,
 							attuned: true,
 							...(choice === undefined ? {} : { choice }),
-						},
+						}),
 					];
 					return deriveSheet(characterSchema.parse(c), graph).damageSensitivities.resist;
 				};

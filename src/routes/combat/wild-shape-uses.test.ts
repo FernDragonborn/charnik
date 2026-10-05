@@ -14,7 +14,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 
@@ -31,11 +31,11 @@ async function druid(level: number, circle = false): Promise<Character> {
 	combat.graph = await loadPacks('srd-2024');
 	const c = newCharacter('fern', 'Fern', '5.5e');
 	c.build.classes = [
-		{
+		classRow({
 			class: `class:${S}:druid`,
 			level,
 			...(circle ? { subclass: `subclass:${S}:circle_of_the_land` } : {}),
-		},
+		}),
 	];
 	c.build.abilities = { str: 8, dex: 12, con: 14, int: 10, wis: 16, cha: 10 };
 	c.build.forms = { wild_shape: [`monster:${S}:wolf`] };

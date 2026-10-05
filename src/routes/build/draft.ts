@@ -12,9 +12,11 @@ import {
 	ABILITIES,
 	SHORT_REST_MODES,
 	SYSTEMS,
+	inventoryEntry,
 	type Character,
 	type ShortRestMode,
 } from '$lib/character/schema';
+import { moveSlotKeysToRow } from '$lib/character/migrations';
 import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
 import type { ContentType } from '$lib/content/schemas';
 import {
@@ -112,9 +114,10 @@ interface SlotMaps {
 /**
  * Give every row an id, moving the slot keys of any row that has none.
  *
- * Drafts and characters saved before rows had ids key their slots by the row's INDEX, so a row
- * getting `rowId` now takes its `0:4`, `0:8` … with it. Runs on both read paths; a row that already
- * carries an id is left alone, so this costs one pass and never fires twice.
+ * A draft stored before rows had ids keys its slots by the row's INDEX, so a row getting `rowId`
+ * now takes its `0:4`, `0:8` … with it. A row that already carries an id is left alone, so this
+ * costs one pass and never fires twice. A saved character needs none of it: its own migration does
+ * the same move (`character/migrations.ts`).
  */
 function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
 	// one element type, so a write into any of them is a write of that map's own value type — the
@@ -129,14 +132,7 @@ function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
 	rows.forEach((row, index) => {
 		if (row.rowId) return;
 		row.rowId = crypto.randomUUID();
-		for (const map of maps)
-			for (const key of Object.keys(map)) {
-				const [prefix, level] = key.split(':');
-				if (prefix !== String(index) || !level) continue;
-				// the row's own key, under the number it used to be
-				map[`${row.rowId}:${level}`] = map[key];
-				delete map[key];
-			}
+		moveSlotKeysToRow(maps, index, row.rowId);
 	});
 }
 
@@ -309,16 +305,9 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	slotFeatSkills: slotMapSchemas.skills.catch(() => ({})),
 	slotFeatSpells: slotMapSchemas.spells.catch(() => ({})),
 	selectedSpells: z.array(z.string()).catch(() => []),
-	inventory: z
-		.array(
-			z.object({
-				item: z.string(),
-				qty: z.number().int().catch(1),
-				equipped: z.boolean().catch(false),
-				attuned: z.boolean().catch(false),
-			}),
-		)
-		.catch(() => []),
+	// the character's own row, whole: a row cut down to the four fields a mundane item has would
+	// resume a draft without the base, the bonus and the choice the player had answered
+	inventory: z.array(inventoryEntry).catch(() => []),
 	notes: z.string().catch(''),
 });
 
@@ -346,9 +335,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		backgroundId: char.build.background ?? null,
 		classes: char.build.classes.length
 			? char.build.classes.map((c) => ({
-					// a save from before rows had ids leaves this blank, and `adoptRowIds` below both
-					// mints one and moves that row's slot keys onto it
-					rowId: c.rowId ?? '',
+					rowId: c.rowId,
 					classId: c.class,
 					subclassId: c.subclass ?? null,
 					level: c.level
@@ -385,17 +372,11 @@ export function draftFromCharacter(char: Character): DraftState {
 		slotFeatSpells: { ...char.build.slotPicks.featSpells },
 		notes: char.build.notes,
 		photo: char.build.photo ?? null,
-		inventory: char.build.inventory.map((i) => ({
-			item: i.item,
-			qty: i.qty,
-			equipped: i.equipped,
-			attuned: i.attuned, // preserve attunement through the builder round-trip (D15)
-			// …and WHICH weapon a template magic item is: without it a level-up strips the base, and the
-			// Flame Tongue loses its dice, its damage type and the proficiency its category granted
-			...(i.base ? { base: i.base } : {})
-		}))
+		// every row whole — its identity, its attunement, and what the player answered for THIS
+		// instance: without `base` a level-up strips a Flame Tongue of its dice, and without `bonus`
+		// and `choice` a Weapon +2 and a Ring of Resistance come back granting nothing
+		inventory: char.build.inventory.map((i) => ({ ...i }))
 	};
-	adoptRowIds(draft.classes, draft);
 	return draft;
 }
 

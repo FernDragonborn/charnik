@@ -15,7 +15,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, characterSchema, type Character } from '../character/schema';
+import { newCharacter, characterSchema, type Character, classRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { isEligibleForm, type MonsterRow } from '../character/forms';
 import type { ContentGraph } from './loader';
@@ -30,7 +30,7 @@ type Pack = keyof typeof EDITIONS;
 function druid(pack: Pack, level: number): Character {
 	const { source, system } = EDITIONS[pack];
 	const c = newCharacter('fern', 'Fern', system);
-	c.build.classes = [{ class: `class:${source}:druid`, level }];
+	c.build.classes = [classRow({ class: `class:${source}:druid`, level })];
 	c.build.abilities = { str: 8, dex: 12, con: 16, int: 10, wis: 16, cha: 10 };
 	return characterSchema.parse(c);
 }

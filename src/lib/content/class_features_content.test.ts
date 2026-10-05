@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { type ContentGraph } from './loader';
 import { loadPacks } from '../../test-support/real-content';
-import { ABILITIES, newCharacter, characterSchema, type Character } from '../character/schema';
+import {
+	ABILITIES,
+	newCharacter,
+	characterSchema,
+	type Character,
+	classRow,
+	inventoryRow,
+} from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
@@ -19,7 +26,7 @@ const loadEdition = (pack: string): Promise<ContentGraph> => loadPacks(pack);
 
 function charOf(source: string, system: '5e' | '5.5e', classId: string, level: number): Character {
 	const c = newCharacter('grog', 'Grog', system);
-	c.build.classes = [{ class: `class:${source}:${classId}`, level }];
+	c.build.classes = [classRow({ class: `class:${source}:${classId}`, level })];
 	return characterSchema.parse(c);
 }
 const barbarian = (source: string, system: '5e' | '5.5e', level: number) =>
@@ -488,7 +495,7 @@ describe('shipped feat effects (real content)', () => {
 		const g = await loadEdition('srd-2024');
 		const sheetWith = (feats: string[]) => {
 			const c = newCharacter('grog', 'Grog', '5.5e');
-			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }]; // PB +3 at level 5
+			c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 })]; // PB +3 at level 5
 			c.build.feats = feats;
 			return deriveSheet(characterSchema.parse(c), g);
 		};
@@ -501,11 +508,16 @@ describe('shipped feat effects (real content)', () => {
 		const g = await loadEdition('srd-2024');
 		const ac = (feats: string[], armored: boolean) => {
 			const c = newCharacter('grog', 'Grog', '5.5e');
-			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 1 }];
+			c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 1 })];
 			c.build.feats = feats;
 			if (armored)
 				c.build.inventory = [
-					{ item: 'item:SRD 5.2.1:leather_armor', qty: 1, equipped: true, attuned: false },
+					inventoryRow({
+						item: 'item:SRD 5.2.1:leather_armor',
+						qty: 1,
+						equipped: true,
+						attuned: false,
+					}),
 				];
 			return deriveSheet(characterSchema.parse(c), g).ac;
 		};
@@ -624,8 +636,8 @@ describe('shipped Extra Attack · the Attack action makes more than one (EXTRA-A
 		const g = await loadEdition('srd-2024');
 		const c = newCharacter('grog', 'Grog', '5.5e');
 		c.build.classes = [
-			{ class: 'class:SRD 5.2.1:fighter', level: 5 },
-			{ class: 'class:SRD 5.2.1:barbarian', level: 5 },
+			classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 }),
+			classRow({ class: 'class:SRD 5.2.1:barbarian', level: 5 }),
 		];
 		expect(deriveSheet(characterSchema.parse(c), g).attacksPerAction.value).toBe(2);
 	});
@@ -717,9 +729,11 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		const cleric = (subclass?: string) => {
 			const c = newCharacter('pike', 'Pike', '5e');
 			c.build.classes = [
-				{ class: 'class:SRD 5.1:cleric', level: 1, ...(subclass ? { subclass } : {}) },
+				classRow({ class: 'class:SRD 5.1:cleric', level: 1, ...(subclass ? { subclass } : {}) }),
 			];
-			c.build.inventory = [{ item: 'item:SRD 5.1:plate', qty: 1, equipped: true, attuned: false }];
+			c.build.inventory = [
+				inventoryRow({ item: 'item:SRD 5.1:plate', qty: 1, equipped: true, attuned: false }),
+			];
 			return deriveSheet(characterSchema.parse(c), g).spellcasting.armorBlock;
 		};
 		// non-vacuous: the same plate on a domainless cleric still blocks (cleric = light/medium)
@@ -731,10 +745,10 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		const g = await loadEdition('srd-2014');
 		const notesFor = (speciesId: string) => {
 			const c = newCharacter('grog', 'Grog', '5e');
-			c.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 1 }]; // no martial weapons
+			c.build.classes = [classRow({ class: 'class:SRD 5.1:wizard', level: 1 })]; // no martial weapons
 			c.build.species = `species:SRD 5.1:${speciesId}`;
 			c.build.inventory = [
-				{ item: 'item:SRD 5.1:warhammer', qty: 1, equipped: true, attuned: false },
+				inventoryRow({ item: 'item:SRD 5.1:warhammer', qty: 1, equipped: true, attuned: false }),
 			];
 			const parsed = characterSchema.parse(c);
 			const warhammer = computeAttacks(parsed, deriveSheet(parsed, g), g).find(
@@ -764,7 +778,7 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 			// and RAW's "that doesn't already include your proficiency bonus" is the ladder's MAX, not a
 			// second rule: a skill the player picked stays proficient rather than being dragged to half
 			const picked = newCharacter('scanlan', 'Scanlan', sys);
-			picked.build.classes = [{ class: `class:${src}:bard`, level: 2 }];
+			picked.build.classes = [classRow({ class: `class:${src}:bard`, level: 2 })];
 			picked.build.skills = ['athletics'];
 			const sheet = deriveSheet(characterSchema.parse(picked), g);
 			expect([sheet.skills.athletics.prof, sheet.skills.arcana.prof]).toEqual([
@@ -778,7 +792,7 @@ describe('shipped proficiency grants · PROF-GRANT', () => {
 		const g = await loadEdition('srd-2014');
 		const of = (speciesId: string, skill: 'perception' | 'intimidation') => {
 			const c = newCharacter('vax', 'Vax', '5e');
-			c.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 1 }];
+			c.build.classes = [classRow({ class: 'class:SRD 5.1:wizard', level: 1 })];
 			c.build.species = `species:SRD 5.1:${speciesId}`;
 			return deriveSheet(characterSchema.parse(c), g).skills[skill].prof;
 		};
@@ -792,7 +806,7 @@ describe('shipped species options · the 2024 in-species choices', () => {
 	const sheetOf = async (speciesId: string, optionId: string) => {
 		const graph = await loadPacks('srd-2024');
 		const c = newCharacter('kaz', 'Kaz', '5.5e');
-		c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 1 }];
+		c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 1 })];
 		c.build.species = `species:SRD 5.2.1:${speciesId}`;
 		c.build.speciesOption = `species_option:SRD 5.2.1:${optionId}`;
 		return deriveSheet(characterSchema.parse(c), graph);
@@ -834,7 +848,7 @@ describe('shipped Reliable Talent · a rogue stops rolling under 10 where it cou
 	])('%s: the floor applies to a proficient check and to no other', async (dir, src, sys) => {
 		const graph = await loadEdition(dir);
 		const c = newCharacter('vax', 'Vax', sys);
-		c.build.classes = [{ class: `class:${src}:rogue`, level: 11 }];
+		c.build.classes = [classRow({ class: `class:${src}:rogue`, level: 11 })];
 		c.build.skills = ['stealth'];
 		const sheet = deriveSheet(characterSchema.parse(c), graph);
 		// the scope the roll site passes is "this check adds your proficiency bonus"
@@ -844,7 +858,7 @@ describe('shipped Reliable Talent · a rogue stops rolling under 10 where it cou
 		expect(floorOn('arcana', false)).toBeUndefined(); // untrained — RAW gives it nothing
 		// and it is the ROGUE's, not everyone's
 		const bard = newCharacter('scanlan', 'Scanlan', sys);
-		bard.build.classes = [{ class: `class:${src}:bard`, level: 11 }];
+		bard.build.classes = [classRow({ class: `class:${src}:bard`, level: 11 })];
 		bard.build.skills = ['stealth'];
 		const bardSheet = deriveSheet(characterSchema.parse(bard), graph);
 		expect(

@@ -407,6 +407,9 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### F-04 — Every save re-reads and re-validates the whole roster and rotates the global recompute key
 
+- **Status:** the roster half is closed — a save puts its own line into the roster
+  (`docs/internals/characters.md` ▸ One writer per character). Rate-limiting a peer is the spec's.
+
 - **Kind:** present. **Severity:** medium. **Confidence:** high.
 - **Hypothesis.** A save costs a full roster scan. That is fine at human speed and becomes a storm
   when a peer sets the rate.
@@ -421,6 +424,9 @@ given only the claim and the source; its verdicts are in *Citation check* at the
   messages per peer in Rust, before they reach the webview.
 
 ### F-05 — A character has no identity that survives leaving the machine
+
+- **Status:** closed for the file — `uid`, and an id on every inventory and class row
+  (`docs/internals/characters.md` ▸ Identities). Binding `(endpoint id, uid)` is the spec's.
 
 - **Kind:** spec. **Severity:** high. **Confidence:** high.
 - **Hypothesis.** "The same character" across GM and player has nothing to stand on. The only id is

@@ -11,7 +11,9 @@ import { getUserStorage } from '$lib/storage/provider';
 import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
 import { loadCharacter, readCharacterPhoto } from '$lib/character/repository';
 import { type ContentGraph } from '$lib/content/loader';
-import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
+import { characterSchema, newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
+import { migrate, CHARACTER_SCHEMA_VERSION } from '$lib/schema/version';
+import { CHARACTER_MIGRATIONS } from '$lib/character/migrations';
 import { build, ASI } from './build-view-model.svelte';
 import { newClassRow, ORIGIN_SLOT_KEY, SPECIES_SLOT_KEY } from './draft';
 import { targetForTodo, sameTarget } from './inspector-specs';
@@ -71,7 +73,7 @@ async function graphOf(): Promise<ContentGraph> {
 function savedCharacter(): Character {
 	const c = newCharacter('valen', 'Valen', '5.5e');
 	c.build.species = `species:${S}:hardy`;
-	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
+	c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 3 })];
 	c.build.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
 	c.build.skills = ['arcana', 'history'];
 	c.build.languages = [`language:${S}:common`];
@@ -148,13 +150,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('preserves item attunement through the hydrate → assemble round-trip (D15)', () => {
 		const saved = savedCharacter();
 		saved.build.inventory = [
-			{ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true }
+			inventoryRow({ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true })
 		];
 		build.hydrate(characterSchema.parse(saved));
 		const out = build.assembled;
-		expect(out.build.inventory).toEqual([
-			{ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true }
-		]);
+		expect(out.build.inventory).toEqual(saved.build.inventory);
 	});
 
 	it('a round trip with NOTHING clicked changes no play-side decision the save recorded', () => {
@@ -162,7 +162,10 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		// magic item IS), then every prepared flag were each lost by a mapper that copies field by field
 		const saved = savedCharacter();
 		saved.build.inventory = [
-			{ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: true, base: `item:${S}:longsword` }
+			inventoryRow({ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: true, base: `item:${S}:longsword` }),
+			// what the player answered for THIS instance: which +N it is, which damage type it resists
+			inventoryRow({ item: `item:${S}:weapon_1_2_or_3`, base: `item:${S}:dagger`, bonus: 2 }),
+			inventoryRow({ item: `item:${S}:ring_of_resistance`, attuned: true, choice: 'fire' })
 		];
 		saved.build.spells = [
 			{ spell: `spell:${S}:fireball`, prepared: false, alwaysPrepared: false }, // put away by the player
@@ -597,7 +600,6 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 	it('a character saved when slot keys named a row index still restores its slots (S4)', () => {
 		const saved = savedCharacter();
-		saved.build.classes = [{ class: `class:${S}:wizard`, level: 4 }]; // no rowId: an older save
 		saved.build.slotPicks = {
 			feats: { '0:4': ASI },
 			asi: { '0:4': { shape: '2', picks: ['con'] } },
@@ -605,9 +607,17 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			featSkills: {},
 			featSpells: {},
 		};
+		// as the file was written: schema v3, and a class row with no id of its own
+		const older = {
+			...saved,
+			schemaVersion: 3,
+			build: { ...saved.build, classes: [{ class: `class:${S}:wizard`, level: 4 }] },
+		};
 		build.reset();
 		build.graph = graph;
-		build.hydrate(characterSchema.parse(saved));
+		build.hydrate(
+			characterSchema.parse(migrate(older, CHARACTER_MIGRATIONS, CHARACTER_SCHEMA_VERSION)),
+		);
 
 		const key = build.feats.featSlots.find((s) => s.level === 4)?.key ?? '';
 		expect(key).not.toBe('0:4'); // the row has an id now

@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { addEffect, removeEffects } from './effects';
@@ -46,7 +46,7 @@ describe.each(['5e', '5.5e'] as const)('form actions · %s', (system) => {
 	/** A level-4 druid at full hit points, in combat. */
 	function druid(): Character {
 		const c = newCharacter('fern', 'Fern', system);
-		c.build.classes = [{ class: `class:${source}:druid`, level: 4 }];
+		c.build.classes = [classRow({ class: `class:${source}:druid`, level: 4 })];
 		c.build.abilities = { str: 8, dex: 12, con: 14, int: 10, wis: 16, cha: 10 };
 		c.play.hp.current = ctx.derive(c).maxHp.value;
 		c.play.inCombat = true;

@@ -11,7 +11,7 @@
  */
 import { ITEM_TAG } from '$lib/content/item-tags';
 import type { ResolvedItem } from '$lib/content/resolved-item';
-import type { Character } from './schema';
+import { inventoryRow, type Character } from './schema';
 
 export type InventoryEntry = Character['build']['inventory'][number];
 export type InventoryList = readonly InventoryEntry[];
@@ -55,7 +55,7 @@ const withEntry = (
 export const addItem = (list: InventoryList, ref: string): InventoryEntry[] =>
 	!ref || list.some((entry) => entry.item === ref)
 		? [...list]
-		: [...list, { item: ref, qty: 1, equipped: false, attuned: false }];
+		: [...list, inventoryRow({ item: ref })];
 
 export const removeItem = (list: InventoryList, ref: string): InventoryEntry[] =>
 	list.filter((entry) => entry.item !== ref);

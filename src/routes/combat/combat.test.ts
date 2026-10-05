@@ -15,7 +15,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
 import type { ResourceOption } from '$lib/character/derive';
 import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
@@ -350,7 +350,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		character = newCharacter('mage', 'Mage', '5.5e');
 		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		character.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 16, cha: 10 };
-		character.build.classes = [{ class: `class:${S}:wizard`, level: 5 }];
+		character.build.classes = [classRow({ class: `class:${S}:wizard`, level: 5 })];
 		combat.graph = graph;
 		combat.character = character;
 	});
@@ -463,12 +463,14 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	const magicWeaponCarrier = () =>
 		character.play.effects.find((ef) => ef.source === `spell:${S}:magic_weapon`);
 	const carry = (...ids: string[]) =>
-		(character.build.inventory = ids.map((id) => ({
-			item: `item:${S}:${id}`,
-			qty: 1,
-			equipped: true,
-			attuned: false,
-		})));
+		(character.build.inventory = ids.map((id) =>
+			inventoryRow({
+				item: `item:${S}:${id}`,
+				qty: 1,
+				equipped: true,
+				attuned: false,
+			}),
+		));
 
 	it('Magic Weapon: one weapon is the one touched, and only it takes the bonus', () => {
 		carry('dagger');
@@ -1015,13 +1017,13 @@ describe('CombatVM · S2 split net', () => {
 		graph = await graphOf();
 		character = newCharacter('valen', 'Valen', '5.5e');
 		character.play.hp = { current: 20, max: 20, temp: 0 };
-		character.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
+		character.build.classes = [classRow({ class: `class:${S}:wizard`, level: 3 })];
 		character.build.spells = [
 			{ spell: `spell:${S}:fire_bolt`, prepared: true, alwaysPrepared: false },
 			{ spell: `spell:${S}:bless`, prepared: true, alwaysPrepared: false },
 		];
 		character.build.inventory = [
-			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }),
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -1801,7 +1803,7 @@ describe('CombatVM · on_event hooks (Champion Heroic Rally)', () => {
 describe('CombatVM · Hit Dice', () => {
 	const charAt = (system: '5e' | '5.5e', level: number): Character => {
 		const c = newCharacter('rook', 'Rook', system);
-		c.build.classes = [{ class: `class:SRD:${'fighter'}`, level }]; // no row → d8 pool of `level`
+		c.build.classes = [classRow({ class: `class:SRD:${'fighter'}`, level })]; // no row → d8 pool of `level`
 		c.play.hp = { current: 5, max: 30, temp: 0 };
 		return c;
 	};
@@ -1891,8 +1893,8 @@ describe('CombatVM · Hit Dice', () => {
 			});
 			const c = newCharacter('rook', 'Rook', '5e');
 			c.build.classes = [
-				{ class: 'class:SRD 5.1:barbarian', level: 3 },
-				{ class: 'class:SRD 5.1:wizard', level: 3 },
+				classRow({ class: 'class:SRD 5.1:barbarian', level: 3 }),
+				classRow({ class: 'class:SRD 5.1:wizard', level: 3 }),
 			];
 			c.play.hitDiceSpent = spent;
 			combat.character = c;
@@ -1922,7 +1924,7 @@ describe('CombatVM · Hit Dice', () => {
 			expect(fits.play.hitDiceSpent).toEqual({ d12: 0, d6: 0 }); // taken on the press
 
 			const oneSize = await mixed({ d6: 3 });
-			oneSize.build.classes = [{ class: 'class:SRD 5.1:wizard', level: 6 }];
+			oneSize.build.classes = [classRow({ class: 'class:SRD 5.1:wizard', level: 6 })];
 			oneSize.play.hitDiceSpent = { d6: 5 };
 			combat.rests.startLongRest(noModifiers);
 			expect(oneSize.play.hitDiceSpent).toEqual({ d6: 2 });
@@ -2060,7 +2062,7 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 	beforeEach(async () => {
 		combat.graph = await realGraph('srd-2024');
 		character = newCharacter('grog', 'Grog', '5.5e');
-		character.build.classes = [{ class: `class:${S}:barbarian`, level: 3 }];
+		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 3 })];
 		combat.character = character;
 	});
 
@@ -2105,7 +2107,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 	beforeEach(async () => {
 		combat.graph = await realGraph('srd-2024');
 		character = newCharacter('valen', 'Valen', '5.5e');
-		character.build.classes = [{ class: `class:${S}:fighter`, level: 5 }];
+		character.build.classes = [classRow({ class: `class:${S}:fighter`, level: 5 })];
 		character.play.hp = { current: 4, max: 40, temp: 0 };
 		combat.character = character;
 	});
@@ -2128,7 +2130,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 	});
 
 	it('the `available` guard is enforced by the EXECUTOR, not just greyed in the panel', () => {
-		character.build.classes = [{ class: `class:${S}:barbarian`, level: 15 }];
+		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 15 })];
 		const gate = (combat.sheet?.resourceOptions ?? []).find(
 			(o) => o.resourceId === 'persistent_rage',
 		);
@@ -2140,7 +2142,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 	});
 
 	it('says so when a conditional ability window OPENS, and not on the first look', () => {
-		character.build.classes = [{ class: `class:${S}:barbarian`, level: 15 }];
+		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 15 })];
 		const opened = () =>
 			(combat.sheet?.resourceOptions ?? []).find((o) => o.resourceId === 'persistent_rage')
 				?.available === true;
@@ -2161,7 +2163,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 	});
 
 	it('a pool with SEVERAL actions stays a manual counter — the player picks in Actions', () => {
-		character.build.classes = [{ class: `class:${S}:monk`, level: 5 }];
+		character.build.classes = [classRow({ class: `class:${S}:monk`, level: 5 })];
 		combat.economy.toggleCombat();
 		const opts = (combat.sheet?.resourceOptions ?? []).filter((o) => o.resourceId === 'focus');
 		expect(opts.length).toBeGreaterThan(1); // Flurry / Patient Defense / Step of the Wind
@@ -2340,7 +2342,7 @@ describe.each([
 	beforeEach(async () => {
 		combat.graph = await realGraph(pack);
 		character = newCharacter('kel', 'Kel', system);
-		character.build.classes = [{ class: `class:${source}:monk`, level: 5 }];
+		character.build.classes = [classRow({ class: `class:${source}:monk`, level: 5 })];
 		character.play.inCombat = true;
 		combat.character = character;
 	});

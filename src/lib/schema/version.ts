@@ -129,7 +129,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 export const CONTENT_SEED_VERSION = 42;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
-export const CHARACTER_SCHEMA_VERSION = 3;
+// v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row
+// saved while slot picks were keyed by its index takes those keys onto its id.
+export const CHARACTER_SCHEMA_VERSION = 4;
 
 export interface Versioned {
 	schemaVersion: number;

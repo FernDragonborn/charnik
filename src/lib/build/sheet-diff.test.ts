@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import { type ContentGraph } from '../content/loader';
-import { newCharacter, type Character } from '../character/schema';
+import { newCharacter, type Character, classRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { diffSheets } from './sheet-diff';
 import { socialBars } from './social';
@@ -29,7 +29,7 @@ async function graphOf(): Promise<ContentGraph> {
 
 function fighter(): Character {
 	const c = newCharacter('ilmar', 'Ilmar', '5.5e');
-	c.build.classes = [{ class: `class:${S}:fighter`, level: 5 }];
+	c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 5 })];
 	c.build.abilities = { str: 15, dex: 10, con: 14, int: 8, wis: 12, cha: 14 };
 	return c;
 }
@@ -45,8 +45,8 @@ describe('diffSheets', () => {
 		const g = await graphOf();
 		const duo = fighter();
 		duo.build.classes = [
-			{ class: `class:${S}:cleric`, level: 5 },
-			{ class: `class:${S}:wizard`, level: 3 },
+			classRow({ class: `class:${S}:cleric`, level: 5 }),
+			classRow({ class: `class:${S}:wizard`, level: 3 }),
 		];
 		const before = deriveSheet(duo, g);
 
@@ -54,8 +54,8 @@ describe('diffSheets', () => {
 		// positionally this said the wizard's DC got worse and never mentioned the cleric at all
 		const swapped = fighter();
 		swapped.build.classes = [
-			{ class: `class:${S}:fighter`, level: 5 },
-			{ class: `class:${S}:wizard`, level: 3 },
+			classRow({ class: `class:${S}:fighter`, level: 5 }),
+			classRow({ class: `class:${S}:wizard`, level: 3 }),
 		];
 		const rows = diffSheets(before, deriveSheet(swapped, g));
 

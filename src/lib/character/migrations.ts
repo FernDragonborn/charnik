@@ -68,8 +68,51 @@ const migrateV2toV3: Migration<Versioned> = (data) => ({
 	schemaVersion: 3,
 });
 
+/** Move the slot keys a class row owns under its INDEX (`0:4`) onto its id (`<rowId>:4`), in every
+ *  map given. Shared with the builder, whose stored drafts are keyed the same two ways. */
+export function moveSlotKeysToRow(
+	maps: Record<string, unknown>[],
+	index: number,
+	rowId: string,
+): void {
+	for (const map of maps)
+		for (const key of Object.keys(map)) {
+			const [prefix, level] = key.split(':');
+			if (prefix !== String(index) || !level) continue;
+			map[`${rowId}:${level}`] = map[key];
+			delete map[key];
+		}
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * v3→v4: identities. The character gets a `uid`, every inventory row an `iid`, and every class row
+ * the `rowId` its slot picks are keyed by — a row saved while those keys named its INDEX takes them
+ * with it. Whatever already carries an id keeps it.
+ */
+const migrateV3toV4: Migration<Versioned> = (data) => {
+	const d = data as unknown as Record<string, unknown>;
+	const build = isRecord(d.build) ? d.build : {};
+	const slotMaps = isRecord(build.slotPicks) ? Object.values(build.slotPicks).filter(isRecord) : [];
+	if (Array.isArray(build.classes))
+		build.classes = build.classes.map((row: unknown, index) => {
+			if (!isRecord(row) || (typeof row.rowId === 'string' && row.rowId !== '')) return row;
+			const rowId = crypto.randomUUID();
+			moveSlotKeysToRow(slotMaps, index, rowId);
+			return { ...row, rowId };
+		});
+	if (Array.isArray(build.inventory))
+		build.inventory = build.inventory.map((row: unknown) =>
+			isRecord(row) ? { iid: crypto.randomUUID(), ...row } : row,
+		);
+	return { uid: crypto.randomUUID(), ...d, build, schemaVersion: 4 } as unknown as Versioned;
+};
+
 /** Forward migrations keyed by the version they upgrade FROM. */
 export const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {
 	1: migrateV1toV2,
 	2: migrateV2toV3,
+	3: migrateV3toV4,
 };

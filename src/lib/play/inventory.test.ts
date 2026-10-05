@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { setAutoCalc } from './effects';
@@ -49,14 +49,16 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 	};
 	const carrying = (...ids: string[]) => {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 3 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 3 })];
 		c.play.hp.current = 10;
-		c.build.inventory = ids.map((id) => ({
-			item: item(id),
-			qty: 1,
-			equipped: false,
-			attuned: false,
-		}));
+		c.build.inventory = ids.map((id) =>
+			inventoryRow({
+				item: item(id),
+				qty: 1,
+				equipped: false,
+				attuned: false,
+			}),
+		);
 		return c;
 	};
 	const entryOf = (c: Character, id: string) => c.build.inventory.find((e) => e.item === item(id));
@@ -131,12 +133,8 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 			{ item: ref },
 			ctx,
 		).character;
-		expect(entryOf(cleared, 'dagger')).toEqual({
-			item: ref,
-			qty: 1,
-			equipped: false,
-			attuned: false,
-		});
+		// the row it was before it was asked anything — the same row, by its own id
+		expect(entryOf(cleared, 'dagger')).toEqual(entryOf(c, 'dagger'));
 	});
 
 	it('a reorder keeps what it was not told about, at the end', () => {

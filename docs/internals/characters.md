@@ -63,6 +63,28 @@ Three writes are never refused, because each IS the player choosing a state over
 snapshot restore, "Restore demo", and the dialog's own "keep mine" (`SAVE_MODE.overwrite`). A save
 puts its own line into the roster rather than re-reading every character.
 
+## Identities
+
+A character has **three names for three jobs**. `id` is the folder: a slug of the name plus four hex
+digits, re-anchored to whichever folder a restore lands in. `rev` counts writes. **`uid` is who the
+character IS** — a random UUID v4 minted once and stored in the file, never derived from the name
+and never used as a path, so it is the one that survives a rename, a restore and leaving the
+machine. A restored snapshot keeps the live file's `uid`; "save mine as a copy" mints a new one,
+because that is a second character.
+
+**A row has one too**, for the reason an effect has `iid`: a message or an undo has to name "that
+potion", and a position in an array names whatever sits there by the time it arrives. An inventory
+row carries `iid`; a class row carries `rowId`, the name it already had as the prefix of its slot
+keys (`build.slotPicks`, `<rowId>:<level>`). Rows are made in one place each (`schema.ts` ▸
+`inventoryRow`, `classRow`), a row missing its id is given one when the file is read, and two rows
+sharing one are told apart on read, the first keeping its own.
+
+All of them are random rather than time-ordered: the array holds the order, and an id that sorts by
+time would tell every peer when the character was made.
+
+**Nothing tells two folders with one `uid` apart.** A character folder copied by hand is two
+characters claiming one identity, and which of them is the copy is not something the files say.
+
 ## The unfinished one is a different kind of file
 
 A build in progress autosaves to `character-drafts/<guid>.json` — debounced by the build page, driven

@@ -11,7 +11,13 @@
  * and edited/persisted like any other, so a user can freely play with it in the builder — and
  * `recreateDemoCharacter()` restores it to this canonical state (the "Restore demo" action).
  */
-import { characterSchema, newCharacter, type Character } from '../character/schema';
+import {
+	characterSchema,
+	newCharacter,
+	type Character,
+	classRow,
+	inventoryRow,
+} from '../character/schema';
 import { PACT_SLOT_KEY } from '../rules/spellcasting';
 
 const S = 'SRD 5.2.1';
@@ -68,8 +74,12 @@ export function demoCharacter(): Character {
 	// Warlock is class[0] → the multiclass save set comes from IT only (wis, cha). Both classes are ≥3
 	// so each carries its subclass (subclass_level = 3 for both).
 	c.build.classes = [
-		{ class: `class:${S}:warlock`, level: 5, subclass: `subclass:${S}:fiend_patron` },
-		{ class: `class:${S}:barbarian`, level: 3, subclass: `subclass:${S}:path_of_the_berserker` },
+		classRow({ class: `class:${S}:warlock`, level: 5, subclass: `subclass:${S}:fiend_patron` }),
+		classRow({
+			class: `class:${S}:barbarian`,
+			level: 3,
+			subclass: `subclass:${S}:path_of_the_berserker`,
+		}),
 	];
 	// Base scores stay point-buy-legal (8–15); the background's ability boosts layer on top (kept
 	// separate so point-buy validation and the boost's provenance both survive).
@@ -83,10 +93,10 @@ export function demoCharacter(): Character {
 	// reroll (its `damage_reroll` marker → the post-roll Savage Attacker offer in combat).
 	c.build.feats = [`feat:${S}:alert`, `feat:${S}:savage_attacker`];
 	c.build.inventory = [
-		{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false },
-		{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // barbarian martial
-		{ item: `item:${S}:cloak_of_protection`, qty: 1, equipped: true, attuned: true }, // attunement
-		{ item: `item:${S}:handaxe`, qty: 2, equipped: false, attuned: false },
+		inventoryRow({ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }),
+		inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }), // barbarian martial
+		inventoryRow({ item: `item:${S}:cloak_of_protection`, qty: 1, equipped: true, attuned: true }), // attunement
+		inventoryRow({ item: `item:${S}:handaxe`, qty: 2, equipped: false, attuned: false }),
 	];
 	const spell = (id: string, prepared = true, alwaysPrepared = false) => ({
 		spell: `spell:${S}:${id}`,

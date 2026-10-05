@@ -5,7 +5,7 @@ import { loadContent, type ContentGraph } from '../content/loader';
 import { deriveSheet } from './derive';
 import { canCastAsRitual, casterForSpell } from './spellcasting';
 import { buildSpellGroups } from '../combat/spells';
-import { characterSchema, newCharacter, type Character } from './schema';
+import { characterSchema, newCharacter, type Character, classRow } from './schema';
 
 /*
  * End-to-end spellcasting derive (data → access → rules → per-class profile). Locks the L1 slot
@@ -68,7 +68,9 @@ const make = (build: (c: Character) => void): Character => {
 
 describe('deriveSpellcasting', () => {
 	it('single caster: own table, one profile, max spell level from slots', () => {
-		const wiz = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 5 }]));
+		const wiz = make(
+			(c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:wizard', level: 5 })]),
+		);
 		const sc = deriveSheet(wiz, graph).spellcasting;
 		expect(sc.classes).toHaveLength(1);
 		expect(sc.classes[0]!.ability).toBe('int');
@@ -80,7 +82,9 @@ describe('deriveSpellcasting', () => {
 
 	it('fills down a sparse class_casting table: L4 wizard uses the L3 row, not 0 (E5)', () => {
 		// the fixture defines wizard rows only at level 3 (prepared 6) and 5 (prepared 9) — no level 4
-		const wiz4 = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 4 }]));
+		const wiz4 = make(
+			(c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:wizard', level: 4 })]),
+		);
 		const sc = deriveSheet(wiz4, graph).spellcasting;
 		expect(sc.classes[0]!.preparedCap).toBe(6); // filled down from wizard_3, not a 0/formula gap
 	});
@@ -88,8 +92,8 @@ describe('deriveSpellcasting', () => {
 	it('multiclass: TWO DCs (L11), shared pool at summed level, per-class learnable max', () => {
 		const gish = make((c) => {
 			c.build.classes = [
-				{ class: 'class:SRD 5.2.1:wizard', level: 3 },
-				{ class: 'class:SRD 5.2.1:cleric', level: 2 },
+				classRow({ class: 'class:SRD 5.2.1:wizard', level: 3 }),
+				classRow({ class: 'class:SRD 5.2.1:cleric', level: 2 }),
 			];
 		});
 		const sc = deriveSheet(gish, graph).spellcasting;
@@ -104,7 +108,9 @@ describe('deriveSpellcasting', () => {
 	});
 
 	it('warlock: pact pool is separate (short rest, forced upcast), no shared level', () => {
-		const wl = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:warlock', level: 5 }]));
+		const wl = make(
+			(c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:warlock', level: 5 })]),
+		);
 		const sc = deriveSheet(wl, graph).spellcasting;
 		expect(sc.casterLevel).toBe(0); // pact excluded from shared level
 		expect(sc.classes[0]!.isPact).toBe(true);
@@ -165,7 +171,11 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 	const ek = (level: number): Character =>
 		make((c) => {
 			c.build.classes = [
-				{ class: 'class:SRD 5.2.1:fighter', level, subclass: 'subclass:SRD 5.2.1:eldritch_knight' },
+				classRow({
+					class: 'class:SRD 5.2.1:fighter',
+					level,
+					subclass: 'subclass:SRD 5.2.1:eldritch_knight',
+				}),
 			];
 		});
 
@@ -192,7 +202,9 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 	});
 
 	it('a plain Fighter 3 (no EK subclass) still does not cast', () => {
-		const plain = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 3 }]));
+		const plain = make(
+			(c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 3 })]),
+		);
 		expect(deriveSheet(plain, g).spellcasting.classes).toHaveLength(0);
 	});
 });
@@ -205,7 +217,7 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
  */
 describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls back to 5e math', () => {
 	const bard = (level: number) =>
-		make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:bard', level }]));
+		make((c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:bard', level })]));
 
 	it('caps at 0 instead of the 5e formula (CHA 16 + level 3 would have read 6)', () => {
 		const sheet = deriveSheet(bard(3), graph);
@@ -223,7 +235,9 @@ describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls
 	});
 
 	it('a class that DOES declare the table is untouched', () => {
-		const wiz = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 5 }]));
+		const wiz = make(
+			(c) => (c.build.classes = [classRow({ class: 'class:SRD 5.2.1:wizard', level: 5 })]),
+		);
 		const sheet = deriveSheet(wiz, graph);
 		expect(sheet.spellcasting.classes[0]?.preparedCap).toBe(9);
 		expect(sheet.deriveIssues.filter((i) => i.token.startsWith('class_casting:'))).toEqual([]);
@@ -285,7 +299,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 
 	it('a NON-caster who took it casts: the feat is the whole profile', () => {
 		const sc = deriveSheet(
-			withFeat([{ class: 'class:SRD 5.2.1:fighter', level: 5 }], {
+			withFeat([classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 })], {
 				key: 'r1:4',
 				list: 'wizard',
 				ability: 'cha',
@@ -308,7 +322,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 
 	it('the feat never displaces the class as the primary caster', () => {
 		const sc = deriveSheet(
-			withFeat([{ class: 'class:SRD 5.2.1:wizard', level: 5 }], {
+			withFeat([classRow({ class: 'class:SRD 5.2.1:wizard', level: 5 })], {
 				key: 'r1:4',
 				list: 'cleric',
 				ability: 'wis',
@@ -321,7 +335,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 
 	it('a spell off the feat list is cast AS the feat, not as the class', () => {
 		const sheet = deriveSheet(
-			withFeat([{ class: 'class:SRD 5.2.1:wizard', level: 5 }], {
+			withFeat([classRow({ class: 'class:SRD 5.2.1:wizard', level: 5 })], {
 				key: 'r1:4',
 				list: 'cleric',
 				ability: 'wis',
@@ -335,7 +349,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 	it('repeatable: two instances are two profiles with their own lists', () => {
 		const sc = deriveSheet(
 			withFeat(
-				[{ class: 'class:SRD 5.2.1:fighter', level: 8 }],
+				[classRow({ class: 'class:SRD 5.2.1:fighter', level: 8 })],
 				{ key: 'r1:4', list: 'wizard', ability: 'int' },
 				{ key: 'r1:8', list: 'cleric', ability: 'wis' },
 			),
@@ -349,7 +363,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 
 	it('an answer for a feat the character no longer has is residue, not a profile', () => {
 		const stale = make((c) => {
-			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
+			c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 })];
 			c.build.feats = []; // the feat was taken out; its answer was left behind
 			c.build.featSpells = [{ feat: MI, key: 'r1:4', list: 'wizard', ability: 'int' }];
 		});
@@ -358,7 +372,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 
 	it('a feat that teaches nothing makes no profile', () => {
 		const none = make((c) => {
-			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }];
+			c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 5 })];
 			c.build.feats = ['feat:SRD 5.2.1:alert'];
 			c.build.featSpells = [
 				{ feat: 'feat:SRD 5.2.1:alert', key: 'r1:4', list: 'wizard', ability: 'int' },
@@ -426,11 +440,13 @@ describe.each([
 		prepared: boolean,
 	): Character => {
 		const c = newCharacter('x', 'X', system);
-		c.build.classes = classes.map(({ id, subclass }) => ({
-			class: ref('class', id),
-			level: 3,
-			...(subclass ? { subclass: ref('subclass', subclass) } : {}),
-		}));
+		c.build.classes = classes.map(({ id, subclass }) =>
+			classRow({
+				class: ref('class', id),
+				level: 3,
+				...(subclass ? { subclass: ref('subclass', subclass) } : {}),
+			}),
+		);
 		c.build.spells = [{ spell: ref('spell', spell), prepared, alwaysPrepared: false }];
 		return characterSchema.parse(c);
 	};

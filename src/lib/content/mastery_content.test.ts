@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { masteryBudget } from '../build/derive';
-import { newCharacter, characterSchema } from '../character/schema';
+import { newCharacter, characterSchema, classRow, inventoryRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { attackMeta, attackNotes, attackPropertyRows, computeAttacks } from '../combat/attacks';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from './item-tags';
@@ -68,9 +68,9 @@ describe('weapon mastery · the attack row says it only when the character may u
 	it('a greataxe prints its mastery once the kind is drilled, and not before', async () => {
 		const graph = await loadPacks('srd-2024');
 		const character = characterSchema.parse(newCharacter('grog', 'Grog', '5.5e'));
-		character.build.classes = [{ class: `class:${S}:barbarian`, level: 1 }];
+		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 1 })];
 		character.build.inventory = [
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }),
 		];
 
 		const rowFor = () => {
@@ -96,9 +96,9 @@ describe('weapon mastery · the attack row says it only when the character may u
 	it('a weapon whose only property IS the mastery advertises nothing until it is drilled', async () => {
 		const graph = await loadPacks('srd-2024');
 		const character = characterSchema.parse(newCharacter('grog', 'Grog', '5.5e'));
-		character.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+		character.build.classes = [classRow({ class: `class:${S}:fighter`, level: 1 })];
 		character.build.inventory = [
-			{ item: `item:${S}:mace`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:mace`, qty: 1, equipped: true, attuned: false }),
 		];
 		const rowFor = () =>
 			computeAttacks(character, deriveSheet(character, graph), graph).find((a) => a.id === 'mace');
@@ -182,9 +182,9 @@ describe('weapon mastery · every property a weapon names says what it does', ()
 	it('a drilled weapon carries the property under its own name, with the row that explains it', async () => {
 		const graph = await loadPacks('srd-2024');
 		const character = characterSchema.parse(newCharacter('grog', 'Grog', '5.5e'));
-		character.build.classes = [{ class: `class:${S}:barbarian`, level: 1 }];
+		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 1 })];
 		character.build.inventory = [
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }),
 		];
 		character.build.masteries = ['greataxe'];
 		const row = computeAttacks(character, deriveSheet(character, graph), graph).find(
@@ -220,10 +220,10 @@ describe('weapon mastery · a property that states a number states it for this a
 			);
 		expect(weapon, `a melee weapon with ${mastery}`).toBeDefined();
 		const c = newCharacter('grog', 'Grog', '5.5e');
-		c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 1 })];
 		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
 		c.build.inventory = [
-			{ item: weapon?.effectiveId ?? '', qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: weapon?.effectiveId ?? '', qty: 1, equipped: true, attuned: false }),
 		];
 		c.build.masteries = [weapon?.id ?? ''];
 		const character = characterSchema.parse(c);
@@ -271,14 +271,16 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
 		const graph = await loadPacks(pack);
 		const c = newCharacter('grog', 'Grog', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
-		c.build.inventory = weapons.map(([id, qty]) => ({
-			item: `item:${source}:${id}`,
-			qty,
-			equipped: true,
-			attuned: false,
-		}));
+		c.build.inventory = weapons.map(([id, qty]) =>
+			inventoryRow({
+				item: `item:${source}:${id}`,
+				qty,
+				equipped: true,
+				attuned: false,
+			}),
+		);
 		c.build.masteries = drilled;
 		c.build.feats = feats.map((id) => `feat:${source}:${id}`);
 		const character = characterSchema.parse(c);
@@ -349,9 +351,11 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 	it('2014: an effect the player adds puts the modifier back, as the Two-Weapon Fighting style does', async () => {
 		const graph = await loadPacks('srd-2014');
 		const c = newCharacter('grog', 'Grog', '5e');
-		c.build.classes = [{ class: 'class:SRD 5.1:fighter', level: 1 }];
+		c.build.classes = [classRow({ class: 'class:SRD 5.1:fighter', level: 1 })];
 		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
-		c.build.inventory = [{ item: 'item:SRD 5.1:handaxe', qty: 2, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: 'item:SRD 5.1:handaxe', qty: 2, equipped: true, attuned: false }),
+		];
 		const extraMod = () => {
 			const character = characterSchema.parse(c);
 			return extraOf(computeAttacks(character, deriveSheet(character, graph), graph), 'handaxe')
@@ -403,11 +407,11 @@ describe('weapon properties · Heavy puts disadvantage on the attacks its rule n
 			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
 		const graph = await loadPacks(pack);
 		const c = newCharacter('grog', 'Grog', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 		c.build.abilities = { str, dex, con: 10, int: 10, wis: 10, cha: 10 };
 		if (species) c.build.species = `species:${source}:${species}`;
 		c.build.inventory = [
-			{ item: `item:${source}:${weapon}`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${source}:${weapon}`, qty: 1, equipped: true, attuned: false }),
 		];
 		c.play.autoCalc = autoCalc;
 		const character = characterSchema.parse(c);
@@ -436,9 +440,11 @@ describe('weapon properties · Heavy puts disadvantage on the attacks its rule n
 	it('the row says it, and the effects switch turns it off with every other effect', async () => {
 		const graph = await loadPacks('srd-2024');
 		const c = newCharacter('grog', 'Grog', '5.5e');
-		c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 1 })];
 		c.build.abilities = { str: 8, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
-		c.build.inventory = [{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }),
+		];
 		const character = characterSchema.parse(c);
 		const row = computeAttacks(character, deriveSheet(character, graph), graph)[0];
 		expect(row && attackNotes(row)).toBe('Disadvantage (Heavy)');
@@ -451,8 +457,10 @@ describe('weapon properties · an attack row can explain every property its weap
 		const graph = await loadPacks('srd-2024');
 		const rowsOf = (drilled: string[]) => {
 			const c = newCharacter('grog', 'Grog', '5.5e');
-			c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
-			c.build.inventory = [{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }];
+			c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 1 })];
+			c.build.inventory = [
+				inventoryRow({ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }),
+			];
 			c.build.masteries = drilled;
 			const character = characterSchema.parse(c);
 			const row = computeAttacks(character, deriveSheet(character, graph), graph)[0];

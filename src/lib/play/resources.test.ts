@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { rngSequence } from '../../test-support/rng';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
@@ -45,7 +45,7 @@ describe.each(['5e', '5.5e'] as const)('resource and rest actions · %s', (syste
 	/** A level-5 monk at 20 of their hit points, and the pool their class grants (Ki, or Focus). */
 	function monk(edit: (c: Character) => void = () => {}) {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:monk`, level: 5 }];
+		c.build.classes = [classRow({ class: `class:${source}:monk`, level: 5 })];
 		c.build.abilities = { str: 10, dex: 16, con: 14, int: 10, wis: 14, cha: 10 };
 		c.play.hp.current = 20;
 		edit(c);

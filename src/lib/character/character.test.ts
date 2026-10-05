@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { rehydrateLogEntry, type RollLogEntry } from '../combat/roll';
 import { ADVANTAGE_MODE, setAdvantage } from '../rules/dice';
-import { characterSchema, newCharacter, type Character } from './schema';
+import { characterSchema, newCharacter, type Character, classRow, inventoryRow } from './schema';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 import {
 	saveCharacter,
@@ -25,17 +25,17 @@ import {
 } from './repository';
 import { appendLog, LOG_KIND, reviseLog, logLineFor, readLog } from './log-repository';
 import { charactersReferencing } from '$lib/content/remote/diff';
-import { attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
+import { addItem, attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
 function sample(): Character {
 	const c = newCharacter('mirt', 'Mirt', '5.5e');
 	c.build.classes = [
-		{ class: 'class:SRD 5.2.1:wizard', level: 3, subclass: 'subclass:SRD 5.2.1:evoker' },
+		classRow({ class: 'class:SRD 5.2.1:wizard', level: 3, subclass: 'subclass:SRD 5.2.1:evoker' }),
 	];
 	c.build.abilities.int = 16;
 	c.build.skills = ['arcana', 'history'];
 	c.build.inventory = [
-		{ item: 'item:SRD 5.2.1:longsword', qty: 1, equipped: true, attuned: false },
+		inventoryRow({ item: 'item:SRD 5.2.1:longsword', qty: 1, equipped: true, attuned: false }),
 	];
 	c.build.spells = [{ spell: 'spell:SRD 5.2.1:fireball', prepared: true, alwaysPrepared: false }];
 	c.play.hp = { current: 14, temp: 0 };
@@ -528,8 +528,8 @@ describe('rotating backups (B3)', () => {
 
 describe('inventory operations (shared by the builder draft and the play sheet)', () => {
 	const list = [
-		{ item: 'item:S:potion', qty: 2, equipped: false, attuned: false },
-		{ item: 'item:S:cloak', qty: 1, equipped: true, attuned: true },
+		inventoryRow({ item: 'item:S:potion', qty: 2, equipped: false, attuned: false }),
+		inventoryRow({ item: 'item:S:cloak', qty: 1, equipped: true, attuned: true }),
 	];
 
 	it('using one of a stack decrements it; using the last one drops the row', () => {
@@ -550,6 +550,101 @@ describe('inventory operations (shared by the builder draft and the play sheet)'
 	it('attunement is counted from the entries, so the cap can be judged anywhere', () => {
 		expect(attunedCount(list)).toBe(1);
 		expect(attunedCount(toggleAttuned(list, 'item:S:potion'))).toBe(2);
+	});
+});
+
+describe('an identity that survives leaving the machine (CHARACTER-UID)', () => {
+	const FILE = 'characters/mirt/character.json';
+
+	it('mints a uid and row ids once, and every later read and write keeps them', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		expect(c.uid).toMatch(/^[0-9a-f-]{36}$/);
+		expect(c.uid).not.toContain('mirt'); // never derived from the name
+		await saveCharacter(s, c);
+		const first = (await loadCharacter(s, 'mirt')).character!;
+		await saveCharacter(s, first);
+		const second = (await loadCharacter(s, 'mirt')).character!;
+		expect(second.uid).toBe(c.uid);
+		expect(second.build.inventory.map((row) => row.iid)).toEqual(
+			c.build.inventory.map((row) => row.iid),
+		);
+		expect(second.build.classes.map((row) => row.rowId)).toEqual(
+			c.build.classes.map((row) => row.rowId),
+		);
+	});
+
+	it('v3→v4 gives an older save its ids, and a class row takes its slot keys with it', async () => {
+		const s = new MemoryStorage();
+		const { uid: _uid, ...current } = sample();
+		const v3 = {
+			...current,
+			schemaVersion: 3,
+			build: {
+				...current.build,
+				classes: [{ class: 'class:SRD 5.2.1:wizard', level: 4 }],
+				inventory: [{ item: 'item:SRD 5.2.1:longsword', qty: 1, equipped: true, attuned: false }],
+				slotPicks: {
+					feats: { '0:4': '__asi__', origin: 'feat:SRD 5.2.1:alert' },
+					asi: { '0:4': { shape: '2', picks: ['int'] } },
+					featAbility: {},
+					featSkills: {},
+					featSpells: {},
+				},
+			},
+		};
+		await s.write(FILE, JSON.stringify(v3));
+		const loaded = (await loadCharacter(s, 'mirt')).character!;
+		const rowId = loaded.build.classes[0]!.rowId;
+		expect(loaded.uid).toMatch(/^[0-9a-f-]{36}$/);
+		expect(loaded.build.inventory[0]!.iid).toMatch(/^[0-9a-f-]{36}$/);
+		expect(loaded.build.slotPicks.feats).toEqual({
+			[`${rowId}:4`]: '__asi__',
+			origin: 'feat:SRD 5.2.1:alert',
+		});
+		expect(Object.keys(loaded.build.slotPicks.asi)).toEqual([`${rowId}:4`]);
+	});
+
+	it('two rows sharing an id in a hand-edited file are told apart on read', () => {
+		const c = sample();
+		const twice = characterSchema.parse({
+			...c,
+			build: {
+				...c.build,
+				inventory: [
+					c.build.inventory[0],
+					{ ...c.build.inventory[0], item: 'item:SRD 5.2.1:dagger' },
+				],
+				classes: [c.build.classes[0], c.build.classes[0]],
+			},
+		});
+		expect(new Set(twice.build.inventory.map((row) => row.iid)).size).toBe(2);
+		expect(new Set(twice.build.classes.map((row) => row.rowId)).size).toBe(2);
+		expect(twice.build.inventory[0]!.iid).toBe(c.build.inventory[0]!.iid); // the first keeps its own
+	});
+
+	it('a restored snapshot is still the character it is put back as', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		await saveCharacter(s, c);
+		// a snapshot taken before characters had a uid: its migration mints one of its own
+		const { uid: _uid, ...older } = c;
+		await s.write(
+			'characters/mirt/character.bak.save.1.json',
+			JSON.stringify({ ...older, schemaVersion: 3 }),
+		);
+		const restored = await restoreCharacterBackup(
+			s,
+			'mirt',
+			'characters/mirt/character.bak.save.1.json',
+		);
+		expect(restored.character?.uid).toBe(c.uid);
+		expect((await loadCharacter(s, 'mirt')).character?.uid).toBe(c.uid);
+	});
+
+	it('a row added in play leaves with an id of its own', () => {
+		const added = addItem(sample().build.inventory, 'item:SRD 5.2.1:dagger');
+		expect(new Set(added.map((row) => row.iid)).size).toBe(2);
 	});
 });
 

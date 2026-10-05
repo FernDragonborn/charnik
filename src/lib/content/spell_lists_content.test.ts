@@ -11,7 +11,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { characterSchema, newCharacter } from '../character/schema';
+import { characterSchema, newCharacter, classRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { buildSpellGroups } from '../combat/spells';
 import { RITUAL_SOURCE } from './schemas';
@@ -118,7 +118,7 @@ describe.each([
 			const graph = await loadPacks(pack);
 			const offered = (classId: string, prepared: boolean): boolean => {
 				const c = newCharacter('probe', 'Probe', system);
-				c.build.classes = [{ class: `class:${source}:${classId}`, level: 3 }];
+				c.build.classes = [classRow({ class: `class:${source}:${classId}`, level: 3 })];
 				c.build.spells = [
 					{ spell: `spell:${source}:detect_magic`, prepared, alwaysPrepared: false },
 				];
@@ -182,7 +182,7 @@ describe('how a class holds its spells, as shipped', () => {
 		expect(row?.type === 'feat' ? row.data.ritual_source : null).toBe(RITUAL_SOURCE.prepared);
 
 		const c = newCharacter('probe', 'Probe', '5.5e');
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 		c.build.feats = [feat];
 		c.build.featSpells = [{ feat, key: 'origin', list: 'wizard', ability: 'int' }];
 		c.build.spells = [

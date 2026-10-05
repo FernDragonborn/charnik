@@ -162,6 +162,8 @@ describe('character store · a file changed outside the app (CHARACTER-WRITER)',
 		expect(characters.active).toBe(mine);
 		expect((await onDisk(mine.id))?.play.hp.current).toBe(7);
 		expect(characters.roster).toHaveLength(2);
+		// a second character, not the first one twice
+		expect((await onDisk(mine.id))?.uid).not.toBe((await onDisk('mira'))?.uid);
 	});
 
 	it("the builder's save leaves the open character and its play alone", async () => {

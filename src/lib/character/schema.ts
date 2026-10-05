@@ -26,6 +26,15 @@ import { ABILITY_IDS as ABILITIES } from '../rules/core';
 
 /** A content reference: `type:source:id` (loader effectiveId). */
 const ref = z.string().min(1);
+/** An identity of its own — for a character, an inventory row, a class row — so that a message or an
+ *  undo can name "that potion" rather than whatever sits at a position by the time it arrives.
+ *  Random (UUID v4), never derived from a name and never a path: the array holds the order, and a
+ *  time-ordered id would say when the thing was made. Minted where it is missing, which is what
+ *  gives one to a row a hand-edited file added. */
+const mintedId = z
+	.string()
+	.min(1)
+	.default(() => crypto.randomUUID());
 // underscore REQUIRED: `slugify` emits snake_case (E3) — without `_` here every multi-word
 // character name failed validation and refused to save; hyphens stay accepted for pre-E3 saves
 const slug = z
@@ -45,9 +54,9 @@ const classEntry = z.object({
 	class: ref,
 	level: z.number().int().min(1).max(20),
 	subclass: ref.optional(),
-	/** The row's own identity, which `slotPicks` is keyed by. Absent on saves written while the keys
-	 *  named a row INDEX — the builder gives those rows an id and moves their keys onto it. */
-	rowId: z.string().optional(),
+	/** The row's own identity, which `slotPicks` is keyed by. A save written while the keys named a
+	 *  row INDEX is given one by its migration, which moves the keys onto it (`migrations.ts`). */
+	rowId: mintedId,
 });
 
 /** The tallest exhaustion ladder a character may carry. The DATA owns the real ceiling (a condition
@@ -60,7 +69,8 @@ export const EXHAUSTION_MAX = 20;
  *  homebrew row may offer more, and finite so a saved number cannot be arbitrary. */
 export const MAX_ITEM_BONUS = 10;
 
-const inventoryEntry = z.object({
+export const inventoryEntry = z.object({
+	iid: mintedId,
 	item: ref,
 	qty: z.number().int().min(1).default(1),
 	equipped: z.boolean().default(false),
@@ -127,7 +137,7 @@ const buildSchema = z.object({
 	speciesOption: ref.optional(),
 	background: ref.optional(),
 	/** ≥1 for a built character; empty is allowed mid-creation. */
-	classes: z.array(classEntry).default([]),
+	classes: z.array(classEntry).default([]).transform(withUniqueRowIds),
 	abilities: abilityScores,
 	/** Proficient skill ids (e.g. "athletics"). */
 	skills: z.array(z.string()).default([]),
@@ -191,7 +201,7 @@ const buildSchema = z.object({
 	 *  into `tools` above and gets the check. */
 	customLanguages: z.array(z.string()).default([]),
 	customTools: z.array(z.string()).default([]),
-	inventory: z.array(inventoryEntry).default([]),
+	inventory: z.array(inventoryEntry).default([]).transform(withUniqueIids),
 	spells: z.array(spellEntry).default([]),
 	/** Photo file name (sibling of character.json — NOT base64 in the JSON). */
 	photo: z.string().optional(),
@@ -219,16 +229,25 @@ const effectInstance = z.object({
 
 /**
  * An effect's `iid` is how the Effects panel keys its rows and how one is taken off, so two effects
- * sharing one break the list and make a single ✕ remove both. Nothing the app writes repeats an id,
- * but a file edited by hand or put together elsewhere can — so a repeat is given an id of its own
- * every time a character is read. The first holder keeps the one it has.
+ * sharing one break the list and make a single ✕ remove both — and an inventory row's `iid` and a
+ * class row's `rowId` are identities for the same reason. Nothing the app writes repeats an id, but
+ * a file edited by hand or put together elsewhere can — so a repeat is given an id of its own every
+ * time a character is read. The first holder keeps the one it has.
  */
-function withUniqueIids<Effect extends { iid: string }>(effects: Effect[]): Effect[] {
+function withUniqueIids<Row extends { iid: string }>(rows: Row[]): Row[] {
 	const seen = new Set<string>();
-	return effects.map((effect) => {
-		const repeated = seen.has(effect.iid);
-		seen.add(effect.iid);
-		return repeated ? { ...effect, iid: crypto.randomUUID() } : effect;
+	return rows.map((row) => {
+		const repeated = seen.has(row.iid);
+		seen.add(row.iid);
+		return repeated ? { ...row, iid: crypto.randomUUID() } : row;
+	});
+}
+function withUniqueRowIds<Row extends { rowId: string }>(rows: Row[]): Row[] {
+	const seen = new Set<string>();
+	return rows.map((row) => {
+		const repeated = seen.has(row.rowId);
+		seen.add(row.rowId);
+		return repeated ? { ...row, rowId: crypto.randomUUID() } : row;
 	});
 }
 
@@ -427,6 +446,7 @@ const uiSchema = z
 export const characterSchema = z.object({
 	schemaVersion: z.number().int().default(CHARACTER_SCHEMA_VERSION),
 	id: slug,
+	uid: mintedId,
 	/** How many times this file has been written. Each write states the next one, and a copy whose
 	 *  `rev` is not the file's is a copy of an older file (`repository.ts` ▸ `saveCharacter`). */
 	rev: z.number().int().min(0).default(0),
@@ -435,6 +455,11 @@ export const characterSchema = z.object({
 	play: playSchema,
 	ui: uiSchema,
 });
+
+/** The one place a class row or an inventory row is made, so each leaves with an identity of its
+ *  own. Takes what the file may omit and answers the row as a character holds it. */
+export const classRow = (row: z.input<typeof classEntry>) => classEntry.parse(row);
+export const inventoryRow = (row: z.input<typeof inventoryEntry>) => inventoryEntry.parse(row);
 
 export type Character = z.infer<typeof characterSchema>;
 export type CharacterPlay = z.infer<typeof playSchema>;

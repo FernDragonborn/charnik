@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
@@ -41,7 +41,7 @@ describe.each(['5e', '5.5e'] as const)('cast actions · %s', (system) => {
 	/** A caster of one class at 30 hit points, out of combat. */
 	function caster(cls: string, level: number, edit: (c: Character) => void = () => {}): Character {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:${cls}`, level }];
+		c.build.classes = [classRow({ class: `class:${source}:${cls}`, level })];
 		c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 16, cha: 16 };
 		c.play.hp = { current: 30, max: 30, temp: 0 };
 		edit(c);

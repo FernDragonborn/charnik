@@ -11,7 +11,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 
 const S = 'SRD 5.2.1';
@@ -20,7 +20,7 @@ let c: Character;
 beforeEach(async () => {
 	combat.graph = await loadPacks('srd-2024');
 	const fresh = newCharacter('probe', 'Probe', '5.5e');
-	fresh.build.classes = [{ class: `class:${S}:fighter`, level: 5 }];
+	fresh.build.classes = [classRow({ class: `class:${S}:fighter`, level: 5 })];
 	fresh.build.abilities = { str: 14, dex: 14, con: 14, int: 10, wis: 10, cha: 10 };
 	combat.character = fresh;
 	c = combat.character;

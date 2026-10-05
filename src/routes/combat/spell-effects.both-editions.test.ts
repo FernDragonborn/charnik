@@ -11,7 +11,7 @@ vi.mock('svelte-sonner', () => ({
 
 import { loadPacks } from '../../test-support/real-content';
 import { tokensOf } from '$lib/content/loader';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { spellRow } from '$lib/combat/helpers';
@@ -36,7 +36,7 @@ for (const { system, pack, source } of EDITIONS) {
 			combat.graph = await loadPacks(pack);
 			const c = newCharacter('probe', 'Probe', system);
 			c.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
-			c.build.classes = [{ class: `class:${source}:wizard`, level: 17 }];
+			c.build.classes = [classRow({ class: `class:${source}:wizard`, level: 17 })];
 			c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
 			combat.character = c;
 			return combat.character;

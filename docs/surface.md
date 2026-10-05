@@ -716,6 +716,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/migrations.ts`
 
+- `function moveSlotKeysToRow` — Move the slot keys a class row owns under its INDEX (`0:4`) onto its id (`<rowId>:4`), in every * map given.
 - `const CHARACTER_MIGRATIONS` — Forward migrations keyed by the version they upgrade FROM.
 
 ### `src/lib/character/photo.ts`
@@ -768,12 +769,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const abilityScores`
 - `const EXHAUSTION_MAX` — The tallest exhaustion ladder a character may carry.
 - `const MAX_ITEM_BONUS` — The ceiling on a `+N` item's chosen bonus.
+- `const inventoryEntry`
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
 - `const LEVELING_MODES` — How a character levels (per-character rules variant): `milestone` = the table says when, and XP * is not counted; `xp…
 - `type LevelingMode`
 - `const characterSchema`
+- `const classRow` — The one place a class row or an inventory row is made, so each leaves with an identity of its * own.
+- `const inventoryRow`
 - `type Character`
 - `type CharacterPlay`
 - `type CharacterUi`
@@ -2140,4 +2144,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1310 exports across 178 modules · 81 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1314 exports across 178 modules · 81 duplicate suspects._

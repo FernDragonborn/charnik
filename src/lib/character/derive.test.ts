@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ContentGraph } from '../content/loader';
-import { ABILITIES, characterSchema, newCharacter, type Character } from './schema';
+import {
+	ABILITIES,
+	characterSchema,
+	newCharacter,
+	type Character,
+	classRow,
+	inventoryRow,
+} from './schema';
 import { deriveSheet } from './derive';
 import { TABLE_CHOSEN_ABILITY, toolCheck } from './derive-stats';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
@@ -94,9 +101,11 @@ async function graphOf(): Promise<ContentGraph> {
 function wizard(): Character {
 	const c = newCharacter('mordenkainen', 'Mordenkainen', '5.5e');
 	c.build.species = `species:${S}:hardy`;
-	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
+	c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 3 })];
 	c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
-	c.build.inventory = [{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }];
+	c.build.inventory = [
+		inventoryRow({ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }),
+	];
 	c.play.effects = [
 		{ iid: '1', label: 'Shield of Faith', effects: ['flat_bonus:ac+2'], positive: true },
 	];
@@ -130,7 +139,7 @@ describe('deriveSheet aggregator', () => {
 
 	it('RES-NAME: a pool is named by content, and falls back to the id when nothing names it', () => {
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2
+		c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 2 })]; // Arcane Ward at L2
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the content row wins over the engine's title-cased id — which is the whole point: a pool's
 		// name is not derivable from its key (the shipped case is `focus` → "Focus Points")
@@ -141,7 +150,7 @@ describe('deriveSheet aggregator', () => {
 
 	it('B15: a disabled class_feature row stops contributing (feature loop respects the filter)', () => {
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2
+		c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 2 })]; // Arcane Ward at L2
 		const parsed = characterSchema.parse(c);
 		expect(deriveSheet(parsed, graph).resources.some((r) => r.id === 'arcane_ward')).toBe(true);
 		const filtered = deriveSheet(parsed, graph, (row) => row.id !== 'arcane_ward');
@@ -150,7 +159,9 @@ describe('deriveSheet aggregator', () => {
 
 	it('B9: wearing armor you lack proficiency with blocks spellcasting + flags an issue', () => {
 		const c = wizard(); // wizard declares armor_profs=light
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.spellcasting.armorBlock?.source).toBe('Plate Armor');
 		expect(s.spellcasting.armorBlock?.category).toBe('heavy');
@@ -164,7 +175,9 @@ describe('deriveSheet aggregator', () => {
 
 	it('PROF-GRANT: grant_proficiency:armor.heavy lifts the block a class column would keep', () => {
 		const c = wizard(); // wizard declares armor_profs=light
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		c.play.effects = [
 			{
 				iid: 'd',
@@ -217,7 +230,7 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 };
 		c.build.inventory = [
-			{ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: false }),
 		];
 		const blank = characterSchema.parse(c);
 		const bare = computeAttacks(blank, deriveSheet(blank, graph), graph)[0]!;
@@ -226,13 +239,13 @@ describe('deriveSheet aggregator', () => {
 
 		// the player says which weapon it is, and the row inherits everything the base states
 		c.build.inventory = [
-			{
+			inventoryRow({
 				item: `item:${S}:flame_tongue`,
 				qty: 1,
 				equipped: true,
 				attuned: false,
 				base: `item:${S}:greataxe`,
-			},
+			}),
 		];
 		const chosen = characterSchema.parse(c);
 		const armed = computeAttacks(chosen, deriveSheet(chosen, graph), graph)[0]!;
@@ -245,13 +258,13 @@ describe('deriveSheet aggregator', () => {
 	it('an item that REQUIRES attunement grants nothing while merely equipped', () => {
 		const c = wizard();
 		// Flame Tongue carries `attunement` and `flat_bonus:damage+2`; a chosen base makes it a real weapon
-		const entry = {
+		const entry = inventoryRow({
 			item: `item:${S}:flame_tongue`,
 			qty: 1,
 			equipped: true,
 			attuned: false,
 			base: `item:${S}:greataxe`,
-		};
+		});
 		c.build.inventory = [entry];
 		const equipped = characterSchema.parse(c);
 		const equippedRow = computeAttacks(equipped, deriveSheet(equipped, graph), graph)[0]!;
@@ -259,7 +272,7 @@ describe('deriveSheet aggregator', () => {
 		expect(equippedRow.damageParts[0]?.pool).toEqual({ 12: 1 });
 		expect(attackNotes(equippedRow)).toContain('Not attuned');
 
-		c.build.inventory = [{ ...entry, attuned: true }];
+		c.build.inventory = [inventoryRow({ ...entry, attuned: true })];
 		const worn = characterSchema.parse(c);
 		const attunedRow = computeAttacks(worn, deriveSheet(worn, graph), graph)[0]!;
 		expect(attackNotes(attunedRow)).not.toContain('Not attuned');
@@ -267,7 +280,7 @@ describe('deriveSheet aggregator', () => {
 
 		// …and an item that needs NO attunement still works on equip alone
 		c.build.inventory = [
-			{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }),
 		];
 		expect(deriveSheet(characterSchema.parse(c), graph).ac.value).toBeGreaterThan(10);
 	});
@@ -275,13 +288,13 @@ describe('deriveSheet aggregator', () => {
 	it('ITEM-TEMPLATES: a chosen base gives an ARMOUR template its AC, not only a weapon its dice', () => {
 		const c = wizard();
 		c.build.inventory = [
-			{
+			inventoryRow({
 				item: `item:${S}:adamantine_armor`,
 				qty: 1,
 				equipped: true,
 				attuned: false,
 				base: `item:${S}:plate_armor`,
-			},
+			}),
 		];
 		// the template with a base chosen wears exactly as well as the base itself; without the base it
 		// states no `ac` at all and the character stands there unarmoured
@@ -306,7 +319,9 @@ describe('deriveSheet aggregator', () => {
 
 	it('ITEM-TEMPLATES: a weapon that does no damage is NOT a template — a net is still a net', () => {
 		const c = wizard();
-		c.build.inventory = [{ item: `item:${S}:net`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:net`, qty: 1, equipped: true, attuned: false }),
+		];
 		const parsed = characterSchema.parse(c);
 		const net = computeAttacks(parsed, deriveSheet(parsed, graph), graph)[0]!;
 		expect(attackNotes(net)).not.toContain('Base weapon not set');
@@ -316,8 +331,8 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard(); // weapon_profs="dagger,quarterstaff" — no martial/greataxe
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
 		c.build.inventory = [
-			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }),
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }),
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -333,8 +348,8 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard(); // weapon_profs="dagger,quarterstaff" — no martial/greataxe
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
 		c.build.inventory = [
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
-			{ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }),
+			inventoryRow({ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false }),
 		];
 		c.play.effects = [
 			{
@@ -352,12 +367,12 @@ describe('deriveSheet aggregator', () => {
 
 	it('§A: Archery (`flat_bonus:attack:ranged+2`) folds into ranged weapons only, not melee', () => {
 		const c = newCharacter('robin', 'Robin', '5.5e'); // fighter — proficient with martial weapons
-		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 3 })];
 		c.build.abilities = { str: 14, dex: 14, con: 12, int: 10, wis: 10, cha: 10 }; // STR +2, DEX +2
 		c.build.feats = [`feat:${S}:archery`];
 		c.build.inventory = [
-			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false },
-			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }),
+			inventoryRow({ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }),
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -373,12 +388,12 @@ describe('deriveSheet aggregator', () => {
 
 	it('§B: Great Weapon Fighting floors the damage dice of a two-handed melee weapon only', () => {
 		const c = newCharacter('greta', 'Greta', '5.5e'); // fighter — martial weapon proficiency
-		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 3 })];
 		c.build.abilities = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
 		c.build.feats = [`feat:${S}:great_weapon_fighting`];
 		c.build.inventory = [
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // two-handed melee
-			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }, // two-handed RANGED
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }), // two-handed melee
+			inventoryRow({ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }), // two-handed RANGED
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -391,11 +406,11 @@ describe('deriveSheet aggregator', () => {
 
 	it('SCOPED-BONUS: a scoped damage bonus reaches the weapons it names and nothing else', () => {
 		const c = newCharacter('greta', 'Greta', '5.5e');
-		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 3 })];
 		c.build.abilities = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
 		c.build.inventory = [
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // melee
-			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }, // ranged
+			inventoryRow({ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }), // melee
+			inventoryRow({ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }), // ranged
 		];
 		// the two things the qualifier slot could never say: a whole CATEGORY, and ONE weapon
 		c.play.effects = [
@@ -418,7 +433,9 @@ describe('deriveSheet aggregator', () => {
 	it('BUG-DMG-1: a multi-type weapon yields one damage part per type; the ability mod folds into the primary part only', () => {
 		const c = wizard();
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
-		c.build.inventory = [{ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const sunblade = computeAttacks(characterSchema.parse(c), s, graph).find(
 			(a) => a.name === 'Sun Blade',
@@ -433,7 +450,7 @@ describe('deriveSheet aggregator', () => {
 
 	it('piece 3: resolves spend-options for a GRANTED resource; int + `x` costs; drops others', () => {
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2 grants `arcane_ward`
+		c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 2 })]; // Arcane Ward at L2 grants `arcane_ward`
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const opts = s.resourceOptions;
 		// only options for a resource the character HAS (arcane_ward), never the wizard-less `ki`
@@ -453,7 +470,7 @@ describe('deriveSheet aggregator', () => {
 
 	it('an `available` guard (is_combat_start) greys the option out of combat, opens it at initiative', () => {
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // grants arcane_ward + its options
+		c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 2 })]; // grants arcane_ward + its options
 		// out of combat → the gated option is present but NOT available (greyed); ungated ones are
 		const out = deriveSheet(characterSchema.parse(c), graph);
 		expect(out.resourceOptions.find((o) => o.id === 'ward_ready')?.available).toBe(false);
@@ -468,7 +485,7 @@ describe('deriveSheet aggregator', () => {
 
 	it('piece 3: resolves a heal:/roll: action formula at derive (heal:1d10+class_level.X → concrete dice)', () => {
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2 → class_level.wizard = 2
+		c.build.classes = [classRow({ class: `class:${S}:wizard`, level: 2 })]; // Arcane Ward at L2 → class_level.wizard = 2
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the L2 value inside the action is resolved once at derive, like a resource max, so the executor
 		// just rolls a ready formula (no live-eval at spend time)
@@ -483,8 +500,8 @@ describe('deriveSheet aggregator', () => {
 	it('hit-dice pools: multiclass pools same die size, keeps different sizes separate, largest first', () => {
 		const c = wizard();
 		c.build.classes = [
-			{ class: `class:${S}:wizard`, level: 3 }, // d6
-			{ class: `class:${S}:fighter`, level: 5 }, // d10
+			classRow({ class: `class:${S}:wizard`, level: 3 }), // d6
+			classRow({ class: `class:${S}:fighter`, level: 5 }), // d10
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.hitDice).toEqual([
@@ -543,8 +560,8 @@ describe('deriveSheet aggregator', () => {
 		c.build.saves = []; // no builder-written saves → derive falls back to the first class
 		// Fighter 1 (starting) / Wizard 3 — RAW grants Fighter saves only (STR, CON), NOT Wizard's
 		c.build.classes = [
-			{ class: `class:${S}:fighter`, level: 1 },
-			{ class: `class:${S}:wizard`, level: 3 },
+			classRow({ class: `class:${S}:fighter`, level: 1 }),
+			classRow({ class: `class:${S}:wizard`, level: 3 }),
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// level 4 → prof +2. STR 10(+0), CON 14(+2 w/ Hardy), INT 16(+3), WIS 10(+0)
@@ -586,7 +603,9 @@ describe('deriveSheet aggregator', () => {
 
 	it('A3: heavy armor over the STR requirement drops speed 10 ft, traced', () => {
 		const c = wizard(); // STR 10 < plate STR 15
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.speed.value).toBe(20); // 30 − 10
 		expect(s.speed.trace.some((t) => t.amount === -10 && /STR 15/.test(t.source))).toBe(true);
@@ -594,7 +613,9 @@ describe('deriveSheet aggregator', () => {
 
 	it('a movement mode may be stated as the walking speed, and a literal one still stands', () => {
 		const c = wizard(); // STR 10 < plate STR 15 → walks 20
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		c.play.effects = [
 			{
 				iid: '1',
@@ -666,14 +687,18 @@ describe('deriveSheet aggregator', () => {
 	it('A3: no speed penalty when STR meets the armor requirement', () => {
 		const c = wizard();
 		c.build.abilities.str = 15; // meets plate STR 15
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.speed.value).toBe(30);
 	});
 
 	it('A4: stealth-disadvantage armor imposes disadvantage on Stealth (roll + hover note)', () => {
 		const c = wizard();
-		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.facts.disadvantage.some((d) => d.target === 'skill.stealth')).toBe(true);
 		expect(s.skills.stealth.notes?.some((n) => /disadvantage/i.test(n.text))).toBe(true);
@@ -748,7 +773,7 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.build.inventory = [
 			...c.build.inventory,
-			{ item: `item:${S}:shield`, qty: 1, equipped: true, attuned: false },
+			inventoryRow({ item: `item:${S}:shield`, qty: 1, equipped: true, attuned: false }),
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(17); // leather 11 + DEX 2 + shield 2 + faith 2
@@ -759,7 +784,7 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.build.inventory = [
 			...c.build.inventory,
-			{ item: `item:${S}:shield`, qty: 1, equipped: false, attuned: false },
+			inventoryRow({ item: `item:${S}:shield`, qty: 1, equipped: false, attuned: false }),
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(15); // leather 11 + DEX 2 + faith 2
@@ -1052,7 +1077,9 @@ describe('deriveSheet aggregator', () => {
 		expect(plain.abilities.dex.save.trace.map((t) => t.source)).not.toContain('Sculpt Spells');
 
 		const c = wizard();
-		c.build.classes = [{ class: `class:${S}:wizard`, level: 3, subclass: `subclass:${S}:evoker` }];
+		c.build.classes = [
+			classRow({ class: `class:${S}:wizard`, level: 3, subclass: `subclass:${S}:evoker` }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the subclass row's own tokens + its L2 feature apply; its L14 feature does not
 		expect(s.skills.arcana.trace.map((t) => t.source)).toContain('Evoker');
@@ -1097,7 +1124,7 @@ describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 			name: 'Kwai',
 			build: {
 				species: `species:${S}:ward`,
-				classes: [{ class: `class:${S}:monk`, level }],
+				classes: [classRow({ class: `class:${S}:monk`, level })],
 				abilities: { str: 12, dex: 16, con: 12, int: 10, wis: 14, cha: 10 },
 			},
 		});
@@ -1140,7 +1167,7 @@ describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 			name: 'Grog',
 			build: {
 				species: `species:${S}:brute`,
-				classes: [{ class: `class:${S}:barbarian`, level: 5 }],
+				classes: [classRow({ class: `class:${S}:barbarian`, level: 5 })],
 				abilities: { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 },
 			},
 			play: {
@@ -1203,7 +1230,7 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 			name: 'Grog',
 			build: {
 				species: `species:${S}:brute`,
-				classes: [{ class: `class:${S}:barbarian`, level: 5 }],
+				classes: [classRow({ class: `class:${S}:barbarian`, level: 5 })],
 				abilities: { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 },
 			},
 			play: {
@@ -1304,7 +1331,7 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 	function odd(species = 'odd'): Character {
 		const c = newCharacter('odd', 'Odd', '5.5e');
 		c.build.species = `species:${S}:${species}`;
-		c.build.classes = [{ class: `class:${S}:monk`, level: 8 }];
+		c.build.classes = [classRow({ class: `class:${S}:monk`, level: 8 })];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 		return c;
 	}
@@ -1330,7 +1357,9 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 	it('applies set_override on a score (Headband of Intellect) with provenance', async () => {
 		const g = await abilityGraph();
 		const c = odd();
-		c.build.inventory = [{ item: `item:${S}:headband`, qty: 1, equipped: true, attuned: false }];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${S}:headband`, qty: 1, equipped: true, attuned: false }),
+		];
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.abilities.int.score.value).toBe(19);
 		expect(s.abilities.int.mod).toBe(4);
@@ -1351,16 +1380,16 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		});
 		const worn = (bonus?: number) => {
 			const c = newCharacter('p', 'Plus', '5.5e');
-			c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
+			c.build.classes = [classRow({ class: `class:${S}:monk`, level: 1 })];
 			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 			c.build.inventory = [
-				{
+				inventoryRow({
 					item: `item:${S}:plus_armor`,
 					qty: 1,
 					equipped: true,
 					attuned: false,
 					...(bonus === undefined ? {} : { bonus }),
-				},
+				}),
 			];
 			return deriveSheet(characterSchema.parse(c), g);
 		};
@@ -1386,16 +1415,16 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		});
 		const worn = (choice?: string) => {
 			const c = newCharacter('d', 'Druid', '5.5e');
-			c.build.classes = [{ class: `class:${S}:druid`, level: 1 }];
+			c.build.classes = [classRow({ class: `class:${S}:druid`, level: 1 })];
 			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 			c.build.inventory = [
-				{
+				inventoryRow({
 					item: `item:${S}:dragon_mail`,
 					qty: 1,
 					equipped: true,
 					attuned: false,
 					...(choice === undefined ? {} : { choice }),
-				},
+				}),
 			];
 			return deriveSheet(characterSchema.parse(c), g);
 		};
@@ -1426,11 +1455,11 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 			].join('\n'),
 		});
 		const c = newCharacter('r', 'Rue', '5.5e');
-		c.build.classes = [{ class: `class:${S}:rogue`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${S}:rogue`, level: 1 })];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 		c.build.inventory = [
-			{ item: `item:${S}:cloak`, qty: 1, equipped: true, attuned: true },
-			{ item: `item:${S}:guard`, qty: 1, equipped: true, attuned: true },
+			inventoryRow({ item: `item:${S}:cloak`, qty: 1, equipped: true, attuned: true }),
+			inventoryRow({ item: `item:${S}:guard`, qty: 1, equipped: true, attuned: true }),
 		];
 		const sheet = deriveSheet(characterSchema.parse(c), g);
 		expect(sheet.incomingAttacks).toEqual([
@@ -1458,11 +1487,11 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 			].join('\n'),
 		});
 		const c = newCharacter('c', 'Cleric', '5.5e');
-		c.build.classes = [{ class: `class:${S}:cleric`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${S}:cleric`, level: 1 })];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 		c.build.inventory = [
-			{ item: `item:${S}:arrow_shield`, qty: 1, equipped: true, attuned: true },
-			{ item: `item:${S}:mantle`, qty: 1, equipped: true, attuned: true },
+			inventoryRow({ item: `item:${S}:arrow_shield`, qty: 1, equipped: true, attuned: true }),
+			inventoryRow({ item: `item:${S}:mantle`, qty: 1, equipped: true, attuned: true }),
 		];
 		const sheet = deriveSheet(characterSchema.parse(c), g);
 		// the statements are THERE
@@ -1497,16 +1526,16 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		});
 		const swung = (bonus?: number) => {
 			const c = newCharacter('f', 'Fighter', '5.5e');
-			c.build.classes = [{ class: `class:${S}:fighter`, level: 1 }];
+			c.build.classes = [classRow({ class: `class:${S}:fighter`, level: 1 })];
 			c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 			c.build.inventory = [
-				{
+				inventoryRow({
 					item: `item:${S}:plus_sword`,
 					qty: 1,
 					equipped: true,
 					attuned: false,
 					...(bonus === undefined ? {} : { bonus }),
-				},
+				}),
 			];
 			const sheet = deriveSheet(characterSchema.parse(c), g);
 			return computeAttacks(characterSchema.parse(c), sheet, g);
@@ -1560,8 +1589,8 @@ describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () 
 		const g = await multiGraph();
 		const c = newCharacter('multi', 'Multi', '5.5e');
 		c.build.classes = [
-			{ class: `class:${S}:wizard`, level: 3 }, // primary caster (higher level)
-			{ class: `class:${S}:cleric`, level: 2 },
+			classRow({ class: `class:${S}:wizard`, level: 3 }), // primary caster (higher level)
+			classRow({ class: `class:${S}:cleric`, level: 2 }),
 		];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 14, cha: 10 };
 		// a runtime (unscoped) token: primary caster = wizard → INT +3
@@ -1590,7 +1619,7 @@ describe('deriveSheet · set_override with a dice value degrades to a note', () 
 			].join('\n'),
 		});
 		const c = newCharacter('x', 'X', '5.5e');
-		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
+		c.build.classes = [classRow({ class: `class:${S}:monk`, level: 1 })];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 		c.play.effects = [
 			{ iid: 'd', label: 'Weird', effects: ['set_override:ac:1d6'], positive: true },
@@ -1635,9 +1664,11 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 			id: 'x',
 			name: 'X',
 			build: {
-				classes: [{ class: `class:${S}:monk`, level: 1 }],
+				classes: [classRow({ class: `class:${S}:monk`, level: 1 })],
 				abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
-				inventory: [{ item: `item:${S}:cursed_ring`, qty: 1, equipped: true, attuned: false }],
+				inventory: [
+					inventoryRow({ item: `item:${S}:cursed_ring`, qty: 1, equipped: true, attuned: false }),
+				],
 			},
 		});
 	}
@@ -1697,7 +1728,7 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 			id: 'gandalf',
 			name: 'Gandalf',
 			build: {
-				classes: [{ class: `class:${S}:wizard`, level: 1 }],
+				classes: [classRow({ class: `class:${S}:wizard`, level: 1 })],
 				abilities: { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 },
 			},
 		});
@@ -1743,7 +1774,7 @@ describe('RV2: a same-(class,level,id) feature from two active sources folds ONC
 			id: 'gandalf',
 			name: 'Gandalf',
 			build: {
-				classes: [{ class: `class:${S}:wizard`, level: 1 }],
+				classes: [classRow({ class: `class:${S}:wizard`, level: 1 })],
 				abilities: { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 },
 			},
 		});

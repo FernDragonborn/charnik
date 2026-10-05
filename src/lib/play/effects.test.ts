@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import {
@@ -42,7 +42,7 @@ describe.each(['5e', '5.5e'] as const)('effect actions · %s', (system) => {
 
 	function fighter(edit: (c: Character) => void = () => {}): Character {
 		const c = newCharacter('probe', 'Probe', system);
-		c.build.classes = [{ class: `class:${source}:fighter`, level: 5 }];
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 5 })];
 		c.build.abilities = { str: 14, dex: 14, con: 14, int: 10, wis: 10, cha: 10 };
 		c.play.hp = { current: 30, max: 30, temp: 0 };
 		edit(c);
