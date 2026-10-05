@@ -115,6 +115,18 @@
   directories); granting consent is a native dialog, not a webview modal. Constraints: existing
   consents migrate once and are not silently dropped; the web demo, which loads no plugins, is
   unaffected. `research/table-link-design-review.md` ▸ S-03.
+  The ground is laid: an app command is under the ACL (`internals/security.md` §2), so the three
+  this needs — read the record, grant consent, set a switch — each arrive with a permission.
+  **Two decisions are the maintainers' before a line is written, because each is the ceremony
+  itself:**
+  1. **Who words the native dialog.** Rust has no catalogs, so either it composes a fixed English
+     sentence around the namespace and the hash — which a Ukrainian reader meets untranslated —
+     or the page passes the localized text, and then page script chooses what the user is asked,
+     which is the thing the dialog exists to take away from it.
+  2. **What migrating an existing consent costs the user.** Copying `charnik:plugins` out of
+     `localStorage` into the Rust-owned record with no question is the hole itself, reached once:
+     a script plants the record and the migration blesses it. Asking natively once per consented
+     plugin closes it and greets every existing user with a dialog per plugin on the first launch.
 - [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
   denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
   two folders through `open_app_dir`. Linux is the other platform a release ships to — there is no
