@@ -81,9 +81,15 @@ stay semi-manual.
   **the second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
   an amount, a type and an ✕ under the first picker. **The whole of how a hit's type is chosen
   and shown on the hit-point bar is redrawn for 0.8.0** — the maintainer's reading of what ships
-  is that it is plainly bad, so it does not wait for COMBAT-RAIL. Rendered variants first, on the
-  live bar with a typed hit, a defended one and a two-type one; the mechanics underneath do not
-  change.
+  is that it is plainly bad, so it does not wait for COMBAT-RAIL. The mechanics underneath do not
+  change. **Three variants are rendered and wait on a pick**, each on the bar with a typed hit, a
+  defended one and a two-type one (`design-preview/_damage-type-A.png`, `-B`, `-C`): **A** — every
+  part of the hit is a row in the controls column, amount beside type, and the Damage button says
+  the total after defences; **B** — the types the sheet has a defence for are chips under the bar
+  with what each does (`Fire ½`, `Poison 0`), every other type one step away behind `Other`;
+  **C** — the hit is one line under the bar, `Take 8 slashing + 6 fire → 3`, and the column keeps
+  only Heal and a Damage button that says the total. All three put the total ON the button, which
+  is the one thing the three have in common and the current bar lacks.
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
