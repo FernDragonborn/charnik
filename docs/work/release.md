@@ -141,7 +141,12 @@
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- **AUDIT-DRIFT · `pnpm audit` is clean, and it drifts silently — re-run it before every tag.** Three
+- **DEP-2 · `braces <=3.0.3` high advisory** (GHSA-vfj7-8cjw-p6xm, stack exhaustion on a crafted
+  pattern) — transitive under `stylelint` only (`fast-glob` / `globby` → `micromatch`), so it runs
+  at lint time over patterns this repo wrote and ships in no build. The advisory names `3.0.4` as
+  patched and the registry's latest is `3.0.3`, so there is nothing to pin: when `3.0.4` is
+  published `pnpm update braces` moves it, `micromatch`'s range already admits it.
+- **AUDIT-DRIFT · `pnpm audit` reports DEP-2 and nothing else, and it drifts silently — re-run it before every tag.** Three
   rules the re-audits keep proving:
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
     family).
