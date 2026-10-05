@@ -911,6 +911,19 @@ key is never a cosmetic fault, and no list may be keyed by something a file or a
 without it being made unique first. The local lists are (F-07). Not measured: a 10⁵-row keyed
 list.
 
+**8 · n0's public relays as a dependency — what n0 itself says.** Their own documentation
+(<https://docs.iroh.computer/relays/rate-limiting>, read 2026-10-05): the public relays are "free,
+open to every iroh endpoint" and rate-limited per connection; "the exact rate limits aren't
+published today, as they get tuned as needed"; a limited connection "stays open and traffic keeps
+moving, just slower than usual"; and, in so many words, "Do not rely on it for production
+workloads, especially if your application is sensitive to rate limiting, uptime, or relay software
+version." No uptime or version promise is made and nothing is said about what a relay logs. The
+alternatives it names are shared relays (fewer tenants, higher limits), dedicated ones (no other
+tenants, no limits) and a self-hosted relay, where limiting is off unless configured. So the
+`N0` preset is a development default by its owner's own description, and "which relays an
+endpoint may dial" is a decision the spec cannot leave at the default. Not measured: behaviour
+from two real networks when the relays are unreachable.
+
 **9 · Build cost — the half one Windows machine can answer.** iroh 1.3.0 declares
 `rust-version = "1.91"`; the app's `Cargo.toml` says 1.77.2 and would have to say so too. The
 release workflow builds on `dtolnay/rust-toolchain@stable`, which is past it. A minimal binary
@@ -936,11 +949,19 @@ whether a formula in a save can be made expensive within the L2 caps.
 7. **iroh on mobile.** Background limits on Android and iOS, the local-network permission prompt on
    iOS, whether `fast-apple-datapath` can be left off without cost, App Store review of a QUIC
    endpoint that accepts inbound connections.
-8. **n0's public relays as a dependency.** Terms, rate limits, what they log, and what the app does
-   when they are unreachable — measured from two real networks.
+   *Leads, from other projects' issue trackers and not verified here:* an iOS client that closes
+   its endpoint when the app backgrounds and binds again on return; a report of dials left
+   unresolved for hours after an iOS reconnect; Android clients that keep a session alive with a
+   foreground service.
 10. **Cross-version wire compatibility** between two iroh minors, as a CI job.
 11. **Key storage per platform.** Keychain, Credential Manager, Secret Service, Android Keystore —
     what Tauri mobile can reach, and what a backup or a folder sync carries.
+    *One first-party fact so far* (<https://v2.tauri.app/plugin/stronghold/>, read 2026-10-05):
+    Tauri's Stronghold plugin lists all five platforms, Android and iOS included, needs Rust 1.90,
+    and does not hold its own password — the app supplies one and a function that turns it into
+    32 bytes, and the plugin's ready-made argon2 variant keeps its salt in the app's local data
+    directory. So it encrypts a vault and moves the question to where the password lives; it is
+    not the OS keychain.
 12. **Pairing ceremonies.** Whether a short authentication string compared aloud is usable at a
     real table, against a QR scan in person; and what users do when the GM's key changes.
 14. **Existing tools.** How other virtual tabletops and character trackers that sync player sheets

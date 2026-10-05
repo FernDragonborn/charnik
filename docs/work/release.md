@@ -115,12 +115,12 @@
   and relaunch into it — which is every bug that release had. Outcome: the check and the install
   are Rust commands that take no arguments, progress reaches the chip as events, and neither
   plugin's permission is in the capability. `lib/update/updater.svelte.ts` is the only caller.
-- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Six of the
+- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Five of the
   fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
-  each one able to change the design: iroh on mobile; n0's public relays as a dependency;
-  cross-version wire compatibility; key storage per platform; pairing ceremonies; how other tools
-  handle authority and griefing. The eight answered there are the ones this repository and one
-  machine could answer. An input to TABLE-LINK-SPEC, not a blocker for the seams.
+  each one able to change the design: iroh on mobile; cross-version wire compatibility; key
+  storage per platform; pairing ceremonies; how other tools handle authority and griefing. The
+  nine answered there are the ones this repository, one machine and n0's own documentation could
+  answer. An input to TABLE-LINK-SPEC, not a blocker for the seams.
 - [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
   `research/table-link-threats.md` (what the layer can do to a user) and
   `research/table-link-design-review.md` (what the existing code does with a network input, and the
