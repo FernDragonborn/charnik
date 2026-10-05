@@ -14,6 +14,7 @@ import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry'
 import { CONDITION_FLAG_ALIASES } from '../effects/expression-parser';
 import { isEffectTargetSupported } from './derive-targets';
 import type { Computed } from '../rules/pipeline';
+import { countAt } from '../util/records';
 
 /** Remaining-count map for the plugin ctx: max − spent per resource, own-or-zero guarded (the id is
  *  content-controlled, so a bare index could read an Object.prototype member — same guard as context). */
@@ -23,8 +24,7 @@ function pluginResources(
 ): Record<string, number> {
 	return Object.fromEntries(
 		facts.resources.map((r) => {
-			const spent = Object.hasOwn(resourcesSpent, r.id) ? (resourcesSpent[r.id] ?? 0) : 0;
-			return [r.id, Math.max(0, r.max - spent)];
+			return [r.id, Math.max(0, r.max - countAt(resourcesSpent, r.id))];
 		}),
 	);
 }

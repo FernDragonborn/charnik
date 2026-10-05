@@ -22,6 +22,7 @@ import { dropEffects } from './concentration';
 import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { hitDiceSpent } from './resources';
 import { settled } from './settle';
+import { countAt } from '$lib/util/records';
 
 export type RestKind = 'short' | 'long';
 
@@ -107,7 +108,7 @@ export function rest(
 		else {
 			const count = rechargeCount(back, sheet.castCtx, ctx.rng);
 			if (count !== null)
-				resourcesSpent[pool.id] = Math.max(0, (resourcesSpent[pool.id] ?? 0) - count);
+				resourcesSpent[pool.id] = Math.max(0, countAt(resourcesSpent, pool.id) - count);
 		}
 	}
 	let play: CharacterPlay = { ...before, resourcesSpent };

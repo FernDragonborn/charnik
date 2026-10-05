@@ -16,3 +16,16 @@ export const recordOf = <K extends string, V>(
 	keys: readonly K[],
 	valueFor: (key: K) => V,
 ): Record<K, V> => Object.fromEntries(keys.map((k) => [k, valueFor(k)])) as Record<K, V>;
+
+/**
+ * The count a partial map holds under `key`, where the key is one CONTENT names — a resource id.
+ *
+ * A plain object answers for every name its prototype has, so `counts['constructor']` on a map
+ * that holds no such entry is `Object`'s own constructor rather than nothing, and `constructor` is
+ * a perfectly valid content id. Asking whether the key is the map's OWN is the whole of the fix;
+ * a map indexed only by a closed set of keys (an ability, a slot level) has no need of it.
+ */
+export const countAt = (
+	counts: Readonly<Record<string, number>> | undefined,
+	key: string,
+): number => (counts && Object.hasOwn(counts, key) ? (counts[key] ?? 0) : 0);

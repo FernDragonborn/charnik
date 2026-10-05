@@ -17,6 +17,7 @@ import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from 
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
 import { collectExprVariables, evalExpression, type ExprContext } from './expression-evaluator';
 import { ATTACK_MOD_VAR, MOVEMENT_MODE_PREFIX, WALKING_SPEED_VAR } from './expression-parser';
+import { countAt } from '../util/records';
 import {
 	EFFECT_KIND,
 	MAX_RESOURCE_MAX,
@@ -460,7 +461,7 @@ class Resolver {
 				clamped > (this.state.resourceMax[id] ?? 0)
 			) {
 				this.state.resourceMax[id] = clamped;
-				this.state.resources[id] = Math.max(0, clamped - (this.args.resourcesSpent?.[id] ?? 0));
+				this.state.resources[id] = Math.max(0, clamped - countAt(this.args.resourcesSpent, id));
 			}
 		}
 	}

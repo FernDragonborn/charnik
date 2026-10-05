@@ -72,6 +72,27 @@ describe.each(['5e', '5.5e'] as const)('resource and rest actions · %s', (syste
 		expect(refused.character).toBe(empty);
 	});
 
+	it('a pool named for something every object has holds only what was spent of it', () => {
+		// `constructor` is a valid content id, and a plain map answers for it without being asked
+		const { c } = monk((x) => {
+			x.play.effects = [
+				{
+					iid: 'homebrew',
+					label: 'Homebrew',
+					effects: ['grant_resource:constructor:2:long'],
+					positive: true,
+				},
+			];
+		});
+		const sheet = derive(c);
+		expect(sheet.resources.find((pool) => pool.id === 'constructor')?.max).toBe(2);
+		expect(resourceLeft(c, sheet, 'constructor')).toBe(2);
+		const used = useResource(c, { id: 'constructor', max: 2 }, ctx());
+		expect(resourceLeft(used.character, derive(used.character), 'constructor')).toBe(1);
+		const rested = rest(used.character, { kind: 'long' }, ctx());
+		expect(resourceLeft(rested.character, derive(rested.character), 'constructor')).toBe(2);
+	});
+
 	it('an option is paid for at its cost, and refused whole when the pool cannot cover it', () => {
 		const { c, pool } = monk((x) => (x.play.resourcesSpent = {}));
 		expect(canAfford(c, derive(c), flurry(pool.id, 1))).toBe(true);

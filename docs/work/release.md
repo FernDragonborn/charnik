@@ -120,11 +120,6 @@
   fetch is a Rust command that sends `GET` with the two headers the updater needs (`If-None-Match`,
   `Accept`), keeps the size caps it has (`content/remote/tauri-fetch.ts`), and `http:default`
   leaves the capability. `RemoteFetcher` is already the seam, so nothing above it moves.
-- [ ] **RECORD-OWN-KEYS · a partial map read by a content id answers for `constructor`.** A
-  `z.record` keeps the key and `slug` allows the id, so `play.resourcesSpent['constructor']` on a
-  character who has not spent that pool is `Object`'s own constructor rather than nothing (same
-  section ▸ 5). Outcome: one reader for the partial maps that asks `Object.hasOwn` first, used
-  wherever one is indexed by an id content supplies; a test with a resource named `constructor`.
 - [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Nine of the
   fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
   each one able to change the design: what `tracing` output a transport crate brings into the log;

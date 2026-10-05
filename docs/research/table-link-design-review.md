@@ -877,8 +877,8 @@ of the app — into the builder on a character it names — and can do nothing o
 - **`constructor` is accepted as a record key** and round-trips to disk. It is also a valid
   content id (`slug`), so a pack that names a resource `constructor` makes
   `play.resourcesSpent[id]` read `Object.prototype.constructor` — a function — on every character
-  that has NOT spent it. Every partial map in `docs/internals/characters.md` ▸ Play-state
-  modelling is read this way. → RECORD-OWN-KEYS.
+  that has NOT spent it — unless the read asks whether the key is the map's own, which the one
+  map content indexes now does (`util/records.ts` ▸ `countAt`).
 - Nothing walks an unknown value: 5 000 levels of nesting under a key the schema does not name
   parse and are discarded.
 - **Nothing is bounded.** 200 000 effects validate in about 190 ms, a 20 MB `notes` string

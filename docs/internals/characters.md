@@ -199,6 +199,12 @@ is `V | undefined`. That is the **honest** type. Branding the key to a finite un
 type claim a value is defined when the runtime slot is absent, for a near-zero gain and a migration.
 This is a carve-out, not debt to fix later.
 
+**A map indexed by an id CONTENT names is read through `countAt`** (`util/records.ts`), which asks
+whether the key is the map's own. A plain object answers for every name its prototype has, and
+`constructor` is a valid content id: read bare, a pool of that name had `Object`'s constructor
+spent from it and showed `NaN` uses left. Only `resourcesSpent` is indexed this way — the other
+maps are keyed by a closed set, an ability or a slot level.
+
 **Death is one typed fact, `play.death: {cause}`** — an open cause enum rather than a `dead` boolean —
 and every lethal rule lands on ONE `die(cause)` seam. Two readings live at that seam: instant death
 runs the SRD 5.1 text in BOTH editions, because 5.2.1 omits the chapter carrying it, and a revive

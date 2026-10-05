@@ -11,6 +11,7 @@ import { rechargeCount } from '$lib/effects/recharge-amount';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { SaidText } from '$lib/util/say';
+import { countAt } from '$lib/util/records';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { settled } from './settle';
 
@@ -27,7 +28,7 @@ export const resourceName = (sheet: CharacterSheet, id: string): string =>
 /** Spent count for a pool, CLAMPED to what the sheet grants: after a feature is removed or its max
  *  drops, the stored count can exceed the live max, or name a pool that is gone (max 0). */
 export function resourceSpent(character: Character, sheet: CharacterSheet, id: string): number {
-	const stored = character.play.resourcesSpent[id] ?? 0;
+	const stored = countAt(character.play.resourcesSpent, id);
 	return Math.max(0, Math.min(stored, poolOf(sheet, id)?.max ?? 0));
 }
 
@@ -247,7 +248,7 @@ export function restoreResourceUpTo(
 ): PlayOutcome {
 	const pool = poolOf(ctx.derive(character), id);
 	if (!pool) return quietly(character);
-	const spent = character.play.resourcesSpent[id] ?? 0;
+	const spent = countAt(character.play.resourcesSpent, id);
 	return settled(
 		quietly(withSpent(character, id, Math.min(spent, Math.max(0, pool.max - upTo)))),
 		ctx,

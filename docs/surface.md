@@ -2125,6 +2125,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/util/records.ts`
 
 - `const recordOf` — * Build a `Record<K, V>` that has EVERY key in `keys`, computing each value from its key.
+- `const countAt` — * The count a partial map holds under `key`, where the key is one CONTENT names — a resource id.
 
 ### `src/lib/util/say.ts`
 
@@ -2144,4 +2145,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1305 exports across 180 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1306 exports across 180 modules · 84 duplicate suspects._
