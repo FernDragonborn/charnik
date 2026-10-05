@@ -970,17 +970,17 @@
 		"defense": {
 			"attacked": {
 				"advantage": "атаки: перевага",
-				"disadvantage": "атаки: поміха"
+				"disadvantage": "атаки: завада"
 			},
 			"attackedScoped": {
 				"advantage": "атаки ({kind}): перевага",
-				"disadvantage": "атаки ({kind}): поміха"
+				"disadvantage": "атаки ({kind}): завада"
 			},
 			"bonus": "{amount} · проти {kind}",
 			"sense": "{sense} {feet} футів",
 			"swing": {
 				"advantage": "перевага · проти {kind}",
-				"disadvantage": "поміха · проти {kind}"
+				"disadvantage": "завада · проти {kind}"
 			}
 		},
 		"skills": {
