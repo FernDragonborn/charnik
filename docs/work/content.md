@@ -62,7 +62,9 @@
   creature in 2014. The row says `Disadvantage (Heavy)` and the tap rolls with it.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left, in the order it is worth doing:**
-  1. **The control's LOOK waits on a pick between three rendered variants**, each at rest and once
+  1. **The control is variant B: a row of its own under the weapon**, saying the cost and the
+     damage on its face rather than behind a hover (`design-preview/_extra-attack-B-subrow[-made].png`).
+     What ships today is A, so this is a build, not a pick. The three variants, each at rest and once
      made (`design-preview/_extra-attack-{A-chip,B-subrow,C-pip}[-made].png`). A is what ships: a
      gold `+ Name` beside the row, after the finesse grip. B is a row of its own under the weapon
      that says the cost and the damage on its face, where A keeps both behind a hover. C is A's

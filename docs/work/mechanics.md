@@ -293,6 +293,14 @@ stay semi-manual.
   before one; the builder saves `build` only, merged over the file as it is at save time; a save
   updates its own roster entry instead of re-reading every character. Constraint: the roll log's
   per-slug chain (`repository.ts` ▸ `appendChains`) is the pattern, extended rather than copied.
+  **When the file on disk is not the one the app last wrote** — a sync tool, an editor, a restore
+  by hand — the write is refused and a dialog asks, one that a click on the backdrop does not
+  close: something outside Charnik changed this character, and the player picks which state wins
+  (theirs, the file's, or theirs saved as a copy). Detected by the `rev` and the file's mtime
+  before each write, and by watching `characters/` the way `content/` is watched. **Not a lock:**
+  holding the file open would stop the sync tools, backups and the player's own editor from
+  reading a file the product says is theirs, and the atomic temp→rename write replaces the file
+  rather than writing into it.
 - [ ] **CHARACTER-UID · a character has an identity that survives leaving the machine.** `id` is a
   slug of the name plus four hex digits and doubles as the folder name; restore re-anchors it to the
   folder. Outcome: a random 128-bit `uid`, minted once, stored in the file, never derived from the

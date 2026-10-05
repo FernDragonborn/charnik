@@ -247,11 +247,10 @@ position and are given per wave, because most of them were learned the hard way.
      PROSE-POLICY-TAIL. Each is small, and each is a way a file somebody else wrote misbehaves.
   3. **MAGIC-ITEM-VOCAB's two pieces** — the row that is several items at the table, and the range
      rows' `rarity`.
-  4. **The looks that wait on a pick** — DEFENCE-STRIP's `Saves` group, MASTERY-HALF's extra-attack
-     control, TITLE-POPOVER's ⓘ. The variants for the last two are rendered; the first has three
-     directions named and none drawn. A pick closes each in one sitting.
-  5. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on macOS and
-     Linux.
+  4. **The looks** — MASTERY-HALF's extra-attack control and TITLE-POPOVER's ⓘ are picked and
+     wait to be built; DEFENCE-STRIP's `Saves` group has three directions named and none drawn, so
+     it is rendered first and picked from seeing them.
+  5. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature

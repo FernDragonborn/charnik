@@ -22,7 +22,9 @@
                 advantage · against magical effects
   ```
 
-  It is still wrong — two rows under one label, each a swing plus a case. Next variants start here.
+  It is still wrong — two rows under one label, each a swing plus a case. Next: RENDER the three
+  directions below, at both widths and in both locales, and put them to the maintainer; nothing is
+  chosen before they are seen.
 
   **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
   open with the same word. `advantage · against spells` and `advantage · against magical effects`
@@ -66,9 +68,12 @@
       The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
       expands prose inside the row, with `title` on the button as a second, slower explanation of the
       button itself. Hover should open the prose where the pointer already is; whether the click
-      toggle survives beside it is the one open question here, and it is answered with rendered
-      variants, not in this paragraph. They are rendered, on the live sheet with a real row's prose,
-      and wait for the pick: `design-preview/_info-now-click-expands.png` (today),
+      toggle survives beside it was the open question, and it is answered: **variant A**
+      (`_info-A-hover-on-the-mark.png`). The ⓘ opens the prose on hover and on focus. A CLICK on
+      the ⓘ pins it: the popover then stays through pointer-leave and blur, so its text can be
+      selected and copied, and closes on the next click anywhere OUTSIDE its own box — a click
+      inside is a selection, never a dismissal — or on Escape. Pinned is a state only that click
+      enters. The variants it was picked from, on the live sheet with a real row's prose: `design-preview/_info-now-click-expands.png` (today),
       `_info-A-hover-on-the-mark.png` (the ⓘ opens the prose on hover and focus; a click either pins
       it inline as now, or does nothing — the picture is the same, the choice is what a click means)
       and `_info-C-hover-on-the-name.png` (the effect's NAME is the trigger, as rule 3 has a value

@@ -88,7 +88,8 @@
 ## Security and dependencies
 - [ ] **TABLE-LINK-SEAM · the interface the table link will implement, and the implementation that
   does nothing.** Outcome: a `TableLink` interface beside `Storage`, with a no-op implementation that
-  the web build and every build without the Cargo feature use; a test that the app boots and plays
+  the web build and every build without the Cargo feature use — the web demo never joins a table, so
+  the interface may assume a participant owns a character file; a test that the app boots and plays
   on the no-op. Around it, the three things that are cheap now and a breaking change later:
   **app commands are declared in the ACL** (`build.rs` ▸ `AppManifest::commands`, with an `allow-*`
   permission per command in the capability — today the five commands in `lib.rs` are callable from
@@ -116,10 +117,11 @@
   `research/table-link-design-review.md` ▸ S-07.
 - [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
   denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
-  two folders through `open_app_dir`. Outcome: on macOS and on Linux — where config and data are
-  different directories — a `/dev/` probe shows the data folder reading and writing, a portrait
+  two folders through `open_app_dir`. Linux is the other platform a release ships to — there is no
+  macOS build — and there config and data are different directories. Outcome: under WSL on the
+  maintainer's machine, a `/dev/` probe shows the data folder reading and writing, a portrait
   loading, both folders opening, a second launch handing over, and a write onto
-  `<appConfig>/config.json` refused. Before the next release that ships to those platforms.
+  `<appConfig>/config.json` refused.
 - [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Fourteen, listed
   under "What to research next" in `research/table-link-design-review.md`, each one able to change
   the design: what page script can do with the `process`, `updater` and `http` permissions; routes
