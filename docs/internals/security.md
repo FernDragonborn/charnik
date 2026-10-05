@@ -107,7 +107,12 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > `<style>` element and the `style` attribute — enough to post a typed password to a stranger
    > or draw a fake dialog over the app. The one sanitising seam (`content/markdown.ts` ▸
    > `PROSE_POLICY`) forbids all three, with the form controls; `form-action 'none'` is the second
-   > line behind it. `class` stays allowed because the renderer adds its own.
+   > line behind it. The same seam, and it is the only one — the inline fragment and a catalog
+   > string go through it too — keeps a `class` only when the renderer wrote it, drops every
+   > `data-*`, and lets an element FETCH only what travels with the page: a `data:` image or a path
+   > on the app's own origin. A remote `<img>` or `<svg><image>` is a request to a stranger's
+   > server the moment a row is read, and `img-src` is a second line behind that rule rather than
+   > the only thing in front of it. A link keeps its address: following it is the reader's act.
    >
    > **How, since content prose IS rendered HTML** (`ArticleProse` runs `{@html}` over
    > marked+DOMPurify, which strips anything executable and correctly keeps `<a href>`): ONE

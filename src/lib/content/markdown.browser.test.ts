@@ -36,6 +36,36 @@ describe('renderContentMarkdown', () => {
 		expect(html).toContain('over');
 	});
 
+	// A source prose names is fetched the moment the row is read. Only what travels with the page is
+	// let through; a link is not a fetch and keeps its address.
+	it('loads only what travels with the page, and leaves a link its address', () => {
+		const html = renderContentMarkdown(
+			'<img alt="remote" src="https://evil.example/pixel.png">' +
+				'<img alt="inline" src="data:image/png;base64,iVBORw0KGgo=">' +
+				'<img alt="own" src="/content/portrait.png">' +
+				'<img alt="set" srcset="https://evil.example/2x.png 2x">' +
+				'<svg><image href="https://evil.example/in.svg" /></svg>' +
+				'<a href="https://example.com/rules">rules</a>',
+		);
+		expect(html).not.toContain('evil.example');
+		expect(html).toContain('alt="remote"');
+		expect(html).toContain('src="data:image/png;base64,iVBORw0KGgo="');
+		expect(html).toContain('src="/content/portrait.png"');
+		expect(html).toContain('href="https://example.com/rules"');
+	});
+
+	it('drops data attributes and every class but the renderer’s own', () => {
+		const html = renderContentMarkdown(
+			'<p class="dialog-shell prose-break danger" data-action="delete">text</p>' +
+				'<table><tr class="heading"><td>a</td></tr></table>',
+		);
+		expect(html).not.toContain('data-action');
+		expect(html).not.toContain('dialog-shell');
+		expect(html).not.toContain('heading');
+		expect(html).toContain('class="prose-break"');
+		expect(html).toContain('class="prose-table-scroll"');
+	});
+
 	it('keeps the classes the renderer adds itself', () => {
 		expect(renderContentMarkdown('<table><tr><td>a</td></tr></table>')).toContain(
 			'class="prose-table-scroll"',
@@ -51,6 +81,17 @@ describe('renderContentMarkdownInline', () => {
 			'<strong>Ghouls</strong>',
 		);
 		expect(renderContentMarkdownInline('as _Magic Missile_')).toContain('<em>Magic Missile</em>');
+	});
+
+	it('holds the inline fragment to the same policy as the article body', () => {
+		const html = renderContentMarkdownInline(
+			'a pinch of <form action="https://evil.example"><input></form>' +
+				'<b style="position:fixed" class="danger" data-x="1">salt</b>' +
+				'<img src="https://evil.example/p.png">',
+		);
+		for (const gone of ['<form', '<input', 'style=', 'class=', 'data-x', 'evil.example'])
+			expect(html).not.toContain(gone);
+		expect(html).toContain('<b>salt</b>');
 	});
 
 	it('stays inline — a one-line callout gets no block wrapper', () => {

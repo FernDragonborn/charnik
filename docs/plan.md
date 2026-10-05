@@ -243,9 +243,8 @@ position and are given per wave, because most of them were learned the hard way.
   1. **The seams** — CHARACTER-WRITER, CHARACTER-UID, TABLE-LINK-SEAM, in that order (the
      TABLE-LINK-SEAMS wave below says why). They land on the play-state actions, which are built
      (`internals/actions.md` ▸ Where a mutation lives), so they go first and the rest lands on them.
-  2. **What the security pass left** — PROSE-POLICY-TAIL, small, and a way a file somebody else
-     wrote misbehaves; and CONSENT-OUT-OF-REACH, which is not small: plugin consent moves behind a
-     Rust command.
+  2. **What the security pass left** — CONSENT-OUT-OF-REACH, which is not small: plugin consent
+     moves behind a Rust command.
   3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together and A17 brings the smallest form of N2's feature choice with it.
@@ -311,7 +310,7 @@ position and are given per wave, because most of them were learned the hard way.
   COMPANION (research first).
 
 **Out of band — do these when next in the area, don't schedule them into a wave:**
-CONSENT-OUT-OF-REACH, PROSE-POLICY-TAIL. Two are tied to a
+CONSENT-OUT-OF-REACH. Two are tied to a
 date instead: SANDBOX-OTHER-PLATFORMS before the next release that ships to macOS or Linux, and
 TABLE-LINK-RESEARCH before TABLE-LINK-SPEC is written.
 

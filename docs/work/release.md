@@ -115,13 +115,6 @@
   directories); granting consent is a native dialog, not a webview modal. Constraints: existing
   consents migrate once and are not silently dropped; the web demo, which loads no plugins, is
   unaffected. `research/table-link-design-review.md` ▸ S-03.
-- [ ] **PROSE-POLICY-TAIL · what the sanitiser still lets through.** A remote `<img>`, an
-  `<svg><image href>` and the `class` / `data-*` attributes survive
-  (`content/markdown.ts` ▸ `PROSE_POLICY`). `img-src` is what stops the request today, so one CSP
-  edit would reopen it. Outcome: remote image sources are dropped at the seam (a hook that keeps
-  `data:` and same-origin only); `data-*` is off; `class` is limited to the two names the renderer
-  adds itself. Check first that no shipped row and no theme relies on a class in prose.
-  `research/table-link-design-review.md` ▸ S-07.
 - [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
   denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
   two folders through `open_app_dir`. Linux is the other platform a release ships to — there is no

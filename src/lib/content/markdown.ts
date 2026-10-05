@@ -6,17 +6,57 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
+/** The classes the renderer below adds itself — the only ones prose may carry. */
+const RENDERER_CLASSES: readonly string[] = ['prose-break', 'prose-table-scroll'];
+
 /**
  * What prose may NOT carry, on top of DOMPurify's defaults. The defaults stop script; they keep
  * markup that deceives — a `<form>` posting a typed password to a stranger, a `<style>` element or a
  * `style` attribute drawing over the app's own dialogs — and that is as much a way to hurt a reader
  * as code is. Prose needs none of it: emphasis, lists, tables and links are the whole vocabulary.
- * `class` stays because the renderer below adds its own.
+ *
+ * `data-*` goes because the app's own scripts read data attributes and prose has no business
+ * setting one. `srcset` goes whole: it is a list of sources, and the rule about sources below is
+ * about one.
  */
 const PROSE_POLICY = {
 	FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-	FORBID_ATTR: ['style'],
+	FORBID_ATTR: ['style', 'srcset'],
+	ALLOW_DATA_ATTR: false,
 };
+
+/** The attributes that make an element FETCH something. A link's `href` is not one: following it is
+ *  the reader's own act, and `util/links.ts` decides where it opens. */
+const FETCHING_ATTRIBUTES: readonly string[] = ['src', 'poster', 'href', 'xlink:href'];
+const LINK_TAG = 'A';
+
+/** May prose load this? Only what travels with the page: an inline `data:` image, or a path on the
+ *  app's own origin. A remote source is a request to a stranger's server the moment the row is read
+ *  — who opened which article, and when — whatever the page's CSP says today. */
+function isOwnSource(value: string): boolean {
+	const url = value.trim();
+	if (/^data:/i.test(url)) return true;
+	try {
+		return new URL(url, window.location.href).origin === window.location.origin;
+	} catch {
+		// not a URL the browser can resolve, so not one it can fetch either
+		return false;
+	}
+}
+
+// One hook for the two rules a tag or attribute list cannot say: a class is kept only if the
+// renderer wrote it, and a fetching attribute only if what it names is the page's own.
+if (DOMPurify.isSupported)
+	DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+		if (data.attrName === 'class') {
+			const kept = data.attrValue.split(/\s+/).filter((name) => RENDERER_CLASSES.includes(name));
+			data.attrValue = kept.join(' ');
+			data.keepAttr = kept.length > 0;
+		} else if (FETCHING_ATTRIBUTES.includes(data.attrName) && node.nodeName !== LINK_TAG) {
+			data.keepAttr = isOwnSource(data.attrValue);
+		}
+	});
+
 const sanitize = (html: string): string => DOMPurify.sanitize(html, PROSE_POLICY);
 
 // Some content mixes Markdown with raw HTML tables. marked won't process Markdown that sits
@@ -55,7 +95,7 @@ export function renderContentMarkdown(md: string): string {
  */
 export function renderContentMarkdownInline(md: string): string {
 	const html = marked.parseInline(md, { async: false });
-	return DOMPurify.sanitize(
+	return sanitize(
 		html
 			.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
 			.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>'),
