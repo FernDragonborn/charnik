@@ -78,7 +78,7 @@
 				class="icon-button auto-calc"
 				class:off={!c.play.autoCalc}
 				aria-pressed={c.play.autoCalc}
-				onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
+				onclick={combat.effects.toggleAutoCalc}
 				use:provenance={`${autoCalcLabel} — ${$_('combat.panel.autoCalcHint')}`}
 				aria-label={autoCalcLabel}><Icon name="zap" size={13} /></button
 			>

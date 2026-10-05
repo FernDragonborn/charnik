@@ -114,7 +114,7 @@ Combat is the view that has them. Which field to open first:
 | `economy`     | `turn-economy`     | the turn's pips and movement as panels read them; the actions are `$lib/play/turn` |
 | `forms`       | `form-shift`       | the form picker: which stat blocks are offered and the question asked; assuming and leaving are `$lib/play/form-shift` |
 | `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `$lib/play/effects` |
-| `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |
+| `inventory`   | `inventory`        | what is carried as the panel reads it, and firing a shot; equip, attune, count and use are `$lib/play/inventory` |
 | `featureView` | `feature-view`     | which features are shown, which are pinned, and in what order     |
 | `layout`      | `panel-layout`     | the two panel columns, their order, and what is collapsed         |
 | `menus`       | `menu-overlay`     | where a dropdown opens, and the one dice-tray seam every roll uses |

@@ -14,6 +14,7 @@ import {
 	bumpEffectDuration,
 	exhaustionLadder,
 	removeEffects,
+	setAutoCalc,
 	setEffectDuration,
 	setExhaustion,
 	type NewEffect,
@@ -85,6 +86,8 @@ export class EffectsEditor {
 		const { graph, character } = this.host();
 		return graph && character ? exhaustionLadder(character, graph) : 0;
 	});
+	/** Flip effects-auto for this character. */
+	toggleAutoCalc = () => this.host().act((c, ctx) => setAutoCalc(c, { on: !c.play.autoCalc }, ctx));
 	setExhaustion = (level: number): void =>
 		this.host().act((c, ctx) => setExhaustion(c, { level }, ctx));
 	/** A condition's rules text (English, consistent with the panel's other content labels), looked up

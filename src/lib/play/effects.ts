@@ -92,6 +92,15 @@ export function bumpEffectDuration(
 	return setEffectDuration(character, { iid, rounds: left + delta }, ctx);
 }
 
+/** Effects-auto on or off. Off drops every effect layer from the sheet — a maximum an effect was
+ *  raising goes with it — so the switch settles like any other change. */
+export const setAutoCalc = (
+	character: Character,
+	{ on }: { on: boolean },
+	ctx: PlayContext,
+): PlayOutcome =>
+	settled(quietly({ ...character, play: { ...character.play, autoCalc: on } }), ctx);
+
 /** Stop concentrating: the ref goes, and the effect the spell left with it. */
 export const stopConcentrating = (character: Character, ctx: PlayContext): PlayOutcome =>
 	settled(quietly({ ...character, play: endConcentration(character.play) }), ctx);

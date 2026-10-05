@@ -115,16 +115,11 @@ class CombatVM {
 		() => this.features,
 	);
 	/** What is carried, and the play-time verbs on it (equip, attune, qty, use) — N1. */
-	inventory = new InventoryTracker(
-		() => this.character,
-		() => this.graph,
-		() => this.sheet,
-		{
-			// an action that makes attacks has no trigger to hang the menu under
-			open: (kind, e) => (e ? this.openMenu(kind, e) : this.menus.openMenuCentered(kind)),
-			close: () => (this.overlay = null),
-		},
-	);
+	inventory = new InventoryTracker(() => this, {
+		// an action that makes attacks has no trigger to hang the menu under
+		open: (kind, e) => (e ? this.openMenu(kind, e) : this.menus.openMenuCentered(kind)),
+		close: () => (this.overlay = null),
+	});
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
 	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
 	   of them from here (ui.md ▸ Splitting a large view). */

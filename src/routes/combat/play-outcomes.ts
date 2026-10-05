@@ -74,9 +74,9 @@ export class PlayOutcomes {
 	};
 
 	/**
-	 * Apply the rules that follow a change in play-state to whatever wrote it. An action settles
-	 * itself; this is for the verbs that still write the character directly, and it is what the
-	 * combat page runs reactively for them.
+	 * Ask the rules that follow a change again, with no action behind it. An action settles itself;
+	 * this is for a sheet that changed under an untouched character — content reloaded, a source
+	 * switched — and it is what the combat page runs reactively.
 	 */
 	settle = (): void => {
 		const { character, sheet, graph } = this.host();

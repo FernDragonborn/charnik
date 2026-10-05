@@ -4,27 +4,35 @@
  * CombatVM the way the resource tracker and the turn economy are; CombatVM composes it as
  * `combat.inventory`, passing getters for the reactive character / graph / sheet.
  *
- * The list semantics live in `$lib/character/inventory` (shared with the builder). What is here is
- * the reactive projection the panel renders and the two rules that only apply at play time: the
- * attunement cap, and using a consumable up.
+ * The list semantics live in `$lib/character/inventory` (shared with the builder), and what each
+ * press DOES is a pure action in `$lib/play/inventory`. What is here is the reactive projection the
+ * panel renders, and firing a shot — which stack it spends, asked when there are several.
  */
 import { toast } from 'svelte-sonner';
 import { t, translator } from '$lib/i18n';
 import {
-	addItem,
-	removeItem,
 	ATTUNEMENT_CAP,
 	attunedCount,
-	bumpQty,
 	carriedWeight,
 	isConsumable,
 	isEquippable,
 	needsAttunement,
-	toggleAttuned,
-	toggleEquipped,
-	useOne,
 	type InventoryEntry,
 } from '$lib/character/inventory';
+import {
+	attune,
+	changeQuantity,
+	dropItem,
+	ownItem,
+	reorderInventory,
+	setCoin,
+	setItemBase,
+	setItemBonus,
+	setItemChoice,
+	toggleEquip,
+	useItem,
+} from '$lib/play/inventory';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { say } from '$lib/util/say';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
@@ -76,13 +84,24 @@ export interface BaseItemOption {
 	name: string;
 }
 
+/** What the inventory needs from the sheet around it. */
+export interface InventoryHost {
+	character: Character | null;
+	graph: ContentGraph | null;
+	sheet: CharacterSheet | null;
+	/** Carry out a play-state action on the open character; false when it was refused. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
+}
+
 export class InventoryTracker {
 	constructor(
-		private getCharacter: () => Character | null,
-		private getGraph: () => ContentGraph | null,
-		private getSheet: () => CharacterSheet | null,
+		private host: () => InventoryHost,
 		private menus: InventoryMenus,
 	) {}
+	private getCharacter = () => this.host().character;
+	private getGraph = () => this.host().graph;
+	private getSheet = () => this.host().sheet;
+	private act: InventoryHost['act'] = (action) => this.host().act(action);
 
 	private resolve = (ref: string, base?: string): ResolvedItem | undefined => {
 		const graph = this.getGraph();
@@ -148,11 +167,7 @@ export class InventoryTracker {
 		const hidden = c.ui.coinsHidden;
 		c.ui.coinsHidden = hidden.includes(id) ? hidden.filter((x) => x !== id) : [...hidden, id];
 	};
-	setCoin = (id: string, count: number) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		c.play.currency = { ...c.play.currency, [id]: Math.max(0, Math.floor(count)) };
-	};
+	setCoin = (coin: string, count: number) => this.act((c) => setCoin(c, { coin, count }));
 	coinOf = (id: string): number => this.purse[id] ?? 0;
 
 	/** Whether this character's load counts their money (`ui.coinWeight`, off by default). */
@@ -178,57 +193,22 @@ export class InventoryTracker {
 	attuned = $derived.by(() => attunedCount(this.list));
 	attunementFull = $derived(this.attuned >= ATTUNEMENT_CAP);
 
-	private write = (next: InventoryEntry[]) => {
-		const c = this.getCharacter();
-		if (c) c.build.inventory = next;
-	};
-
 	/** The shield this character carries, if any. The Combat toolbar's Shield toggle is this row's
 	 *  equip button under another name: a shield in HAND is what the AC counts (`deriveAc`), so there
 	 *  is one fact here and not a play flag beside it that could disagree. */
 	shield = $derived(this.rows.find((r) => r.item?.row.data.category === 'shield'));
 
-	equip = (ref: string) => this.write(toggleEquipped(this.list, ref));
+	equip = (item: string) => this.act((c, ctx) => toggleEquip(c, { item }, ctx));
 
-	/**
-	 * Attune / un-attune. Un-attuning is always allowed. Attuning a fourth item is blocked in Strict
-	 * and allowed in Free, which is the same split the builder's caps use — Charnik is a tool, so the
-	 * mode the character was built in decides whether a cap is a wall or a note.
-	 */
-	attune = (ref: string) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		const entry = c.build.inventory.find((e) => e.item === ref);
-		if (!entry) return;
-		if (!entry.attuned && this.attunementFull) {
-			if (c.ui.strict) {
-				toast(t('combat.notice.attunementFull', { cap: ATTUNEMENT_CAP }), {
-					description: t('combat.notice.attunementFullBody'),
-				});
-				return;
-			}
-			toast(t('combat.notice.overAttunement', { cap: ATTUNEMENT_CAP }), {
-				description: t('combat.notice.overAttunementBody'),
-			});
-		}
-		this.write(toggleAttuned(c.build.inventory, ref));
-	};
+	/** Attune / un-attune. Un-attuning is always allowed; a fourth item is blocked in Strict and
+	 *  allowed with a note in Free (`$lib/play/inventory` ▸ `attune`). */
+	attune = (item: string) => this.act((c, ctx) => attune(c, { item }, ctx));
 
-	bump = (ref: string, by: number) => this.write(bumpQty(this.list, ref, by));
+	bump = (item: string, by: number) => this.act((c, ctx) => changeQuantity(c, { item, by }, ctx));
 
-	/**
-	 * Reorder what the character carries. The inventory ARRAY is the order — nothing new is stored,
-	 * and a reorder persists the way every other inventory edit does.
-	 *
-	 * Refs the caller does not name keep their places at the end rather than being dropped: a list
-	 * rebuilt from a drag is the view's idea of the list, and the character's is the one that counts.
-	 */
-	reorder = (refs: string[]) => {
-		const byRef = new Map(this.list.map((entry) => [entry.item, entry]));
-		const moved = refs.map((ref) => byRef.get(ref)).filter((e) => e !== undefined);
-		const rest = this.list.filter((entry) => !refs.includes(entry.item));
-		this.write([...moved, ...rest]);
-	};
+	/** Reorder what the character carries. The inventory ARRAY is the order — nothing new is stored,
+	 *  and a reorder persists the way every other inventory edit does. */
+	reorder = (items: string[]) => this.act((c, ctx) => reorderInventory(c, { items }, ctx));
 
 	/** The same reorder by keyboard — one step up or down, for the people a drag excludes. */
 	move = (ref: string, by: -1 | 1) => {
@@ -246,8 +226,8 @@ export class InventoryTracker {
 	/** Own one more of something, and put one back. Both are BUILD writes made from play: the builder
 	 *  still decides what a character owns, and this is the same act reached from where you notice it
 	 *  — a looted item mid-session. Quantity beyond the first is `bump`'s job. */
-	add = (ref: string) => this.write(addItem(this.list, ref));
-	remove = (ref: string) => this.write(removeItem(this.list, ref));
+	add = (item: string) => this.act((c, ctx) => ownItem(c, { item }, ctx));
+	remove = (item: string) => this.act((c, ctx) => dropItem(c, { item }, ctx));
 
 	/** Every mundane item a template could BE, of the same kind as the template asking: a weapon
 	 *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks
@@ -271,30 +251,17 @@ export class InventoryTracker {
 
 	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
 	 *  off every number it was folding into. */
-	setBonus = (ref: string, bonus: number | undefined) => {
-		const entry = this.list.find((e) => e.item === ref);
-		if (!entry) return;
-		if (bonus === undefined) delete entry.bonus;
-		else entry.bonus = bonus;
-	};
+	setBonus = (item: string, bonus: number | undefined) =>
+		this.act((c, ctx) => setItemBonus(c, { item, ...(bonus === undefined ? {} : { bonus }) }, ctx));
 
-	/** Answer "which type is this one" for a carried item — the ring's gemstone. Un-answering takes
-	 *  the defence back off the sheet rather than leaving the last pick standing. */
-	setChoice = (ref: string, choice: string) => {
-		const entry = this.list.find((e) => e.item === ref);
-		if (!entry) return;
-		if (choice) entry.choice = choice;
-		else delete entry.choice;
-	};
+	/** Answer "which type is this one" for a carried item — the ring's gemstone. */
+	setChoice = (item: string, choice: string) =>
+		this.act((c, ctx) => setItemChoice(c, { item, choice }, ctx));
 
 	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
 	 *  one rather than silently keeping the last pick. */
-	setBase = (ref: string, base: string) => {
-		const entry = this.getCharacter()?.build.inventory.find((e) => e.item === ref);
-		if (!entry) return;
-		if (base) entry.base = base;
-		else delete entry.base;
-	};
+	setBase = (item: string, base: string) =>
+		this.act((c, ctx) => setItemBase(c, { item, base }, ctx));
 
 	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, the fifth play-time verb on
 	 *  something carried. Keyed by the weapon KIND, so a +1 Rapier and a plain one answer together —
@@ -305,21 +272,8 @@ export class InventoryTracker {
 		if (build) build.finesseAbility[kindId] = ability;
 	};
 
-	/** Spend one — or `count`, never more than the stack holds. The last one leaves the list, so a
-	 *  used-up stack does not linger as a zero row. */
-	use = (ref: string, count = 1) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		const row = this.rows.find((r) => r.entry.item === ref);
-		const spent = Math.min(count, row?.entry.qty ?? count);
-		let list = c.build.inventory;
-		for (let i = 0; i < spent; i++) list = useOne(list, ref);
-		this.write(list);
-		if (row)
-			toast(t('combat.notice.usedItem', { name: row.name }), {
-				description: t('combat.notice.itemsLeft', { count: row.entry.qty - spent }),
-			});
-	};
+	/** Spend one — or `count`, never more than the stack holds. */
+	use = (item: string, count = 1) => this.act((c, ctx) => useItem(c, { item, count }, ctx));
 	/** Whether a shot spends what it fires (`ui.trackAmmunition`, off by default). */
 	get tracksAmmunition(): boolean {
 		return this.getCharacter()?.ui.trackAmmunition ?? false;

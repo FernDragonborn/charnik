@@ -42,8 +42,9 @@
 	// so a generic RollButton in a panel opens the real tray (not the instant-roll fallback).
 	onMount(combat.registerTray);
 
-	// The rules that follow a change in play-state (`$lib/play/settle`), for the verbs that still
-	// write the character directly. An action in `$lib/play` settles itself.
+	// A sheet can change with no action at all — content reloaded, a source or a plugin switched —
+	// and the rules that follow a change (`$lib/play/settle`) are asked again when it does. Every
+	// action settles itself; nothing a verb does relies on this.
 	$effect(() => {
 		combat.outcomes.settle();
 	});

@@ -470,7 +470,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (159 modules)
+## Library functions & types (160 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1662,6 +1662,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function removeEffects` — Take effects off by instance id — and the concentration one of them was carrying.
 - `function setEffectDuration` — * Set an effect's remaining duration to an exact number of rounds FROM NOW — the start is * re-anchored to the curren…
 - `function bumpEffectDuration` — Nudge an effect's REMAINING duration by a number of rounds.
+- `const setAutoCalc` — Effects-auto on or off.
 - `const stopConcentrating` — Stop concentrating: the ref goes, and the effect the spell left with it.
 - `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
 - `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
@@ -1703,6 +1704,20 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function die` — * Record a death.
 - `function revive` — * "I was revived" — the way back from death.
 - `function rollConcentrationSave` — * Roll a concentration save: CON save against `dc`, or against the RAW floor when the table asks for * one the app sa…
+
+### `src/lib/play/inventory.ts`
+
+- `const toggleEquip` — Put on or take off — a shield in hand is what the Armor Class counts.
+- `const ownItem` — Own one more of something, and put one back.
+- `const dropItem`
+- `const changeQuantity` — Change how many of a stack are carried.
+- `const reorderInventory` — * Reorder what is carried.
+- `const setItemBase` — Which mundane item a template IS ("Weapon (Any Melee Weapon)").
+- `const setItemBonus` — Which of the bonuses a `+1/+2/+3` row offers this one is.
+- `const setItemChoice` — Which of a row's options this one is — a Ring of Resistance's damage type.
+- `function attune` — * Attune, or stop.
+- `function useItem` — Spend one of a stack — or `count`, never more than it holds.
+- `function setCoin` — How many of one coin the purse holds.
 
 ### `src/lib/play/options.ts`
 
@@ -2096,4 +2111,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1279 exports across 175 modules · 79 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1291 exports across 176 modules · 79 duplicate suspects._

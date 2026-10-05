@@ -125,6 +125,11 @@ sentences became numbers, and a security pass closed what a page inside the wind
   choose; the app chose for you, largest first. A barbarian 3 / wizard 3 with all six spent now picks
   between its d12s and its d6s, with the old answer already filled in. Asked only when there is a
   choice — a single-class character, and every 2024 one, rests on one press as before.
+- **A cast you could not make costs nothing.** Paying for a spell from a pool — "cast it once
+  without a slot" — spent the use even when the turn had no action left to cast with. The cast is
+  now paid for whole or not at all.
+- **Damage that breaks a form carries over even when its stat block is no longer loaded.** With the
+  pack that held the beast switched off, the excess used to vanish as the form ended.
 
 ### Magic items
 
@@ -298,6 +303,10 @@ throw chip fits; «замовляння» fits the spell row.
   reloads it, instead of staying invisible until the next build.
 - **The screenshot harness sees a phone**, and a probe fails on anything that overflows at 393 or
   320px, in either locale.
+- **What happens to a character at the table no longer depends on which screen is open.** Damage,
+  healing, rests, effects, the turn, casting and what you carry are worked out in one place, and the
+  rules that follow a change — hit points never above their maximum, concentration ending at 0 hit
+  points, a form ending with its effect — hold there rather than in the play screen.
 - **A converter re-run no longer loses what the source does not state** — a spell's class list, its
   upcast, a hand-filled healing die.
 

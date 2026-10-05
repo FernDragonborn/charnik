@@ -162,9 +162,14 @@ A play-state action is a pure function in `src/lib/play`:
 `(character, intent, ctx) → { character, log, notices }`. It returns the character that results and
 never writes to the one it was given; the roll-log lines and the notices it would have raised come
 back as data. The view-model builds the intent from its form fields and carries the outcome out
-through one method, `CombatVM.act` (`play-outcomes.ts`) — the only place a result reaches the held character
-(`adoptCharacter`, in place, so only what moved re-renders), the roll log and the toasts. A caller
-with no screen calls the same function and gets the same character.
+through one method, `CombatVM.act` (`play-outcomes.ts`) — the only place a result reaches the held
+character (`adoptCharacter`, in place, so only what moved re-renders), the roll log and the toasts.
+A caller with no screen calls the same function and gets the same character.
+
+Every verb on the play sheet that changes what a character IS at the table is one: hit points and
+dying, effects and exhaustion, concentration, pools and spell slots, rests, the turn, forms,
+experience, a feature's spend-option and its verbs, the two events that fire features, a cast, and
+what is carried.
 
 - **`ctx.derive` is a function, not a sheet**, because an action can change what the sheet says in
   the middle of itself: a hit that breaks a form is finished against the character's own hit-point
@@ -172,40 +177,41 @@ with no screen calls the same function and gets the same character.
 - **The rules that follow a change live inside the action.** `settlePlay` (`play/settle.ts`) states
   each once — a form that has ended is left, concentration is ended by 0 HP, incapacitation or a
   state that forbids it, current HP never stands above the effective maximum, and no death-save
-  track survives above 0 HP — and runs at the end of
-  every action that can move one of their causes, re-deriving the sheet after each step until
-  nothing moves. A rule enforced by something that watches the screen holds only while that screen
-  is mounted.
-- **An action called from inside a flow that still writes the character directly settles in the
-  middle of that flow.** That is right for a step that stands on its own (an effect landing) and
-  wrong for one half of a swap, so a swap is ONE action: a re-cast takes the old effect down and
-  puts the new one up inside `castSpell`, and a clamp between the two would cost the hit points
-  the new one gives back.
+  track survives above 0 HP — and runs at the end of every action that can move one of their
+  causes, re-deriving the sheet after each step until nothing moves. A rule enforced by something
+  that watches the screen holds only while that screen is mounted.
+- **A swap is ONE action.** A re-cast takes the old effect down and puts the new one up inside
+  `castSpell`: settled between the two, a clamp would cost the hit points the new effect gives
+  back.
 - **An intent carries numbers and ids, never a token or a dice formula.** The dice are the
   action's own (`ctx.rng`), so a roll's provenance is the function that made it.
 - **An action is all-or-nothing, and says when it was nothing.** A pool that cannot pay, an empty
-  Hit Die — the outcome is `refused`, carries the notice, and its character is the one it was
-  given. `act` returns that as a boolean, so a caller with a further step reads it before taking
-  it. `chain` runs one action after another as ONE outcome, and stops at a refused first step.
+  Hit Die, a turn slot already spent — the outcome is `refused`, carries the notice, and its
+  character is the one it was given. `act` returns that as a boolean, so a caller with a further
+  step reads it before taking it. `chain` runs one action after another as ONE outcome, and stops
+  at a refused first step.
 - **A roll the player may build is the host's, and the action ASKS for it.** A strike made by an
   `attack:` verb and the rolls of a cast come back in the outcome's `asks`, and the sheet rolls
-  them through its own paths — the tray, the effects on the roll, ammunition. The action has paid for it, and nothing
-  about the result lands in play-state, so the roll is neither an argument (a caller would be
-  handing in a number it rolled) nor the action's own (the tray could not build it). A QUESTION is
-  the other thing asked: which stat block a form takes, and which weapon a spell is laid on, is
-  put before anything is paid, and the action is called again with the answer.
+  them through its own paths — the tray, the effects on the roll, ammunition. The action has paid
+  for the roll, and nothing about the result lands in play-state, so it is neither an argument (a
+  caller would be handing in a number it rolled) nor the action's own (the tray could not build
+  it). A QUESTION is the other thing asked: which stat block a form takes, and which weapon a
+  spell is laid on, is put before anything is paid, and the action is called again with the
+  answer.
 - **An option is reachable by id.** `activateOptionById` names it as a row is identified — its own
   id on the pool it spends — and reads everything else off the sheet. The sheet's own panels hand
   over the option they are showing.
 - **What is not play-state is not in the character.** A concentration save a hit left owed comes
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
-
-Hit points, effects, exhaustion, concentration, pools, rests, the turn, forms, experience, a
-feature's spend-option, the two events that fire features and a cast are built this way. The other
-subsystems still write the held character directly, and
-`PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
-(`work/mechanics.md` ▸ PLAY-REDUCERS).
+- **The inventory is build data and its play-time verbs are actions all the same**, because what
+  is equipped and attuned moves the sheet. What moves no rule stays a plain write in the
+  view-model: a view preference, a prepared mark, which ability a finesse weapon is swung with.
+- **The sheet can change with no action at all** — content reloaded, a source or a plugin
+  switched — and the combat page asks the same rules again when it does
+  (`PlayOutcomes.settle`, in an `$effect`). That is the one thing still enforced by a mounted
+  screen, and nothing a verb relies on: with no screen there is no reload to react to, and the next
+  action settles.
 
 ## 6. Relation to the resolve order
 

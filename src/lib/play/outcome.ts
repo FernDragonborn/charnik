@@ -124,10 +124,12 @@ export function chain(
  *
  * In place, because that object is the reactive one: every panel reads it, and replacing it would
  * re-derive and re-render the whole sheet for a change of three hit points. An action shares what it
- * did not change, so assigning each section back writes only the ones that moved.
+ * did not change, so assigning each key of the build and the play-state back writes only the ones
+ * that moved.
  */
 export function adoptCharacter(held: Character, next: Character): void {
 	if (next === held) return;
 	Object.assign(held.play, next.play);
-	Object.assign(held, { ...next, play: held.play });
+	Object.assign(held.build, next.build);
+	Object.assign(held, { ...next, play: held.play, build: held.build });
 }
