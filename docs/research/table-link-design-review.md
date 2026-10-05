@@ -117,6 +117,10 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### S-02 — App commands are callable from every local webview; the capability's `windows` list does not gate them
 
+- **Status:** closed. The commands are declared in `build.rs` and permitted per command in the
+  capability (`docs/internals/security.md` §2); a call without its permission is refused by name,
+  confirmed on Windows.
+
 - **Kind:** spec. **Severity:** medium (high once a second webview exists). **Confidence:** high.
 - **Hypothesis.** Table link will add `#[tauri::command]`s on the Rust side (connect, approve a join,
   send a proposal, read the ticket). Written the way the four existing commands are, they are not
@@ -151,6 +155,10 @@ given only the claim and the source; its verdicts are in *Citation check* at the
   `lib.rs:53-61`), not a webview modal the page can click for the user.
 
 ### S-04 — iroh's `tracing` output will reach the app's log file if the `tracing/log` bridge is on, and nothing redacts it
+
+- **Status:** the sink is closed — it takes the page's lines and this crate's, nothing else
+  (`docs/internals/security.md` §2). What a table-link module logs under its own target is the
+  spec's to bound.
 
 - **Kind:** spec. **Severity:** medium. **Confidence:** medium (mechanism read in source; which
   crate turns the feature on is unverified).

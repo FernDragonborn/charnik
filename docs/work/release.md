@@ -90,15 +90,15 @@
   does nothing.** Outcome: a `TableLink` interface beside `Storage`, with a no-op implementation that
   the web build and every build without the Cargo feature use — the web demo never joins a table, so
   the interface may assume a participant owns a character file; a test that the app boots and plays
-  on the no-op. Around it, the three things that are cheap now and a breaking change later:
-  **app commands are declared in the ACL** (`build.rs` ▸ `AppManifest::commands`, with an `allow-*`
-  permission per command in the capability — today the five commands in `lib.rs` are callable from
-  any local webview whatever the capability's `windows` list says); **the log sink takes only the
-  app's own targets** (`tauri-plugin-log` installs the process-global logger with no filter, so a
-  dependency's `tracing` output reaches the file, and the `Webview` target hands it to page script);
-  and **a fifth exempt path in the Tauri import fence**, the first one where Rust pushes events
-  into the webview. Constraints: no socket is opened and no dependency on a transport is added;
-  removing the feature removes the capability file, the commands and the JS seam together.
+  on the no-op. With it, **a fifth exempt path in the Tauri import fence**, the first one where
+  Rust pushes events into the webview. Constraints: no socket is opened and no dependency on a
+  transport is added; removing the feature removes the capability file, the commands and the JS
+  seam together. The ground it stands on is built: app commands are under the ACL and the log sink
+  takes only the app's own lines (`internals/security.md` §2), so a table-link command arrives
+  with a permission of its own.
+  **What it waits on is the list of calls.** The paragraph below says what the interface CARRIES;
+  which methods carry it — join, leave, publish, what a GM request looks like on arrival — is not
+  decided, and an interface written before that is a guess the spec then has to break.
   **What the interface carries, as far as it is decided:** the player's app derives its own sheet
   and publishes the RESULT — values with their traces — and the GM's app renders it and derives
   nothing from a peer's tokens. Sent as changes over a cached base, never whole each time: a

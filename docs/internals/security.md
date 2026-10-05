@@ -62,6 +62,18 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > script's reach — the pointer today, pairing state and keys later — goes in those directories,
    > written by a Rust command. `open_app_dir` is the same rule for the file manager: the page
    > says `data` or `logs`, Rust resolves the folder, and the opener's `open_path` is not granted.
+   >
+   > **The app's own commands are under the ACL like a plugin's.** `build.rs` declares every
+   > command `lib.rs` registers (`AppManifest::commands`), which gives each an `allow-<command>`
+   > permission, and the capability lists the ones the `main` window may call. An undeclared
+   > command is callable from any local webview whatever the capability's `windows` list says, so
+   > a new command is added in three places — the handler, `build.rs`, the capability — and a
+   > call without its permission is refused by name.
+   >
+   > **The log takes only what the app itself says.** `tauri-plugin-log` installs the
+   > process-global logger, so it is filtered to the page's own lines (`webview`) and this crate's:
+   > unfiltered, every dependency's output reaches the file, and the Webview target hands it to
+   > page script.
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
    > **Precisely** (checked 2026-08-12): the Tauri and memory impls call the shared

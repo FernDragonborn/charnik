@@ -218,6 +218,15 @@ pub fn run() {
                     } else {
                         log::LevelFilter::Info
                     })
+                    // Only what the app itself says: the page's lines arrive under `webview`, and
+                    // Rust's own under this crate's name. The plugin installs the process-global
+                    // logger, so unfiltered it also takes every dependency's output — the updater's
+                    // release notes, the HTTP client's connections — into the file, and through the
+                    // Webview target hands it to page script.
+                    .filter(|metadata| {
+                        let target = metadata.target();
+                        target.starts_with("webview") || target.starts_with(env!("CARGO_CRATE_NAME"))
+                    })
                     .target(tauri_plugin_log::Target::new(
                         tauri_plugin_log::TargetKind::Stdout,
                     ))

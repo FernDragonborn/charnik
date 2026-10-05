@@ -5,6 +5,11 @@
 	"windows": ["main"],
 	"permissions": [
 		"core:default",
+		"allow-pick-data-dir",
+		"allow-set-data-dir",
+		"allow-saved-data-dir",
+		"allow-apply-saved-data-dir",
+		"allow-open-app-dir",
 		"fs:read-all",
 		"fs:write-all",
 		"fs:deny-default",
