@@ -157,6 +157,11 @@ sentences became numbers, and a security pass closed what a page inside the wind
   the desktop app.
 - **Opening Charnik twice brings the first window forward** instead of starting a second copy. Two
   copies saved over each other's characters without either saying so.
+- **An ability whose formula is broken rolls nothing, and says so.** A homebrew `heal:` or `roll:`
+  with a misspelt variable used to roll whatever dice it could still read out of the text — a
+  number that looked like a result. It now tells you the formula could not be worked out.
+- **A character file with two effects under one id loads as two effects.** Edited by hand or put
+  together by another tool, such a file made one ✕ in the Effects panel remove both.
 - **A description cannot draw a form or restyle the app.** Homebrew and pack prose keeps its
   emphasis, lists, tables and links; a `<form>`, a `<style>` block and inline `style` are dropped —
   nothing in them ran, but they could imitate one of Charnik's own dialogs. One shipped row loses a

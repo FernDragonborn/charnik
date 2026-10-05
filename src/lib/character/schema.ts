@@ -217,6 +217,21 @@ const effectInstance = z.object({
 	startedRound: z.number().int().min(0).optional(),
 });
 
+/**
+ * An effect's `iid` is how the Effects panel keys its rows and how one is taken off, so two effects
+ * sharing one break the list and make a single ✕ remove both. Nothing the app writes repeats an id,
+ * but a file edited by hand or put together elsewhere can — so a repeat is given an id of its own
+ * every time a character is read. The first holder keeps the one it has.
+ */
+function withUniqueIids<Effect extends { iid: string }>(effects: Effect[]): Effect[] {
+	const seen = new Set<string>();
+	return effects.map((effect) => {
+		const repeated = seen.has(effect.iid);
+		seen.add(effect.iid);
+		return repeated ? { ...effect, iid: crypto.randomUUID() } : effect;
+	});
+}
+
 /** What killed the character. An OPEN enum — a new lethal rule (drowning, a homebrew doom clock) is a
  *  member, never another boolean on play-state. AGENTS.md ▸ Taste (open enums, never booleans) */
 const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
@@ -247,7 +262,7 @@ const playSchema = z.object({
 	 *  has earned is a level-up the player still takes in the builder. Counted only where the
 	 *  character tracks it (`ui.levelingMode`). */
 	xp: z.number().int().min(0).default(0),
-	effects: z.array(effectInstance).default([]),
+	effects: z.array(effectInstance).default([]).transform(withUniqueIids),
 	/** Spell ref currently concentrated on, or null. */
 	concentration: ref.nullable().default(null),
 	/** The FORM the character is in (Wild Shape), or null. Like concentration it is a ref, not a

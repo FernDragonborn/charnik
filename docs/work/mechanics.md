@@ -305,16 +305,3 @@ stay semi-manual.
   A schema bump with a migration that mints what is missing. The ids are random
   (UUID v4, what `crypto.randomUUID` gives and every `iid` already is): the array holds the
   order, and a time-ordered id would tell every peer when the character was made.
-- [ ] **EFFECT-IID-UNIQUE · two effects may carry one `iid`.** The schema asks only that it is
-  non-empty (`character/schema.ts` ▸ `effectInstance`), the Effects panel keys its lists by it, and
-  `removeEffect` filters by it — so a hand-edited or imported save with a repeated `iid` breaks the
-  keyed list and one ✕ removes every instance sharing it. Outcome: a save with duplicates loads,
-  with the repeats re-minted on read; nothing the app writes can produce one.
-  `research/table-link-design-review.md` ▸ F-07.
-- [ ] **UNRESOLVED-ACTION-RUNS · an action whose formula did not resolve is rolled anyway.**
-  `effects/action-token.ts` keeps the raw token when its L2 expression fails and says the executor
-  no-ops; `ActionExecutor` then hands that raw text to `rollFormula`, which rolls whatever dice
-  terms it can find in it. The formula cap makes that a wrong roll rather than a stall. Outcome: an
-  unresolved `heal:` / `roll:` does not run, and says so where the player pressed — the derive
-  issue is already raised, the press is what stays silent.
-  `research/table-link-design-review.md` ▸ S-06.

@@ -65,6 +65,27 @@ describe('character schema', () => {
 	});
 });
 
+describe('character schema · an effect instance is one thing', () => {
+	it('re-mints a repeated iid on read, and leaves the first holder its own', () => {
+		const c = newCharacter('valen', 'Valen', '5.5e');
+		const effect = (label: string) => ({ iid: 'same', label, effects: [], positive: true });
+		c.play.effects = [effect('first'), effect('second'), effect('third')];
+		const read = characterSchema.parse(c).play.effects;
+		expect(read.map((e) => e.label)).toEqual(['first', 'second', 'third']);
+		expect(read[0]?.iid).toBe('same');
+		expect(new Set(read.map((e) => e.iid)).size).toBe(3);
+	});
+
+	it('leaves ids that are already distinct alone', () => {
+		const c = newCharacter('valen', 'Valen', '5.5e');
+		c.play.effects = [
+			{ iid: 'a', label: 'A', effects: [], positive: true },
+			{ iid: 'b', label: 'B', effects: [], positive: true },
+		];
+		expect(characterSchema.parse(c).play.effects.map((e) => e.iid)).toEqual(['a', 'b']);
+	});
+});
+
 describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 	it('snakes content-ref id segments and skill ids on load, leaving source tags alone', async () => {
 		const s = new MemoryStorage();
