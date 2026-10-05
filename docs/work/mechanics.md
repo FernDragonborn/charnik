@@ -79,8 +79,11 @@ stay semi-manual.
   (`../internals/characters.md` ▸ A tracker surfaces). The picker offers every damage type, the
   defended ones first. A Heal press records what it restored. What is left:
   **the second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
-  an amount, a type and an ✕ under the first picker. It adds a control to a panel the playtest
-  already called crowded, so it wants looking at with COMBAT-RAIL rather than on its own.
+  an amount, a type and an ✕ under the first picker. **The whole of how a hit's type is chosen
+  and shown on the hit-point bar is redrawn for 0.8.0** — the maintainer's reading of what ships
+  is that it is plainly bad, so it does not wait for COMBAT-RAIL. Rendered variants first, on the
+  live bar with a typed hit, a defended one and a two-type one; the mechanics underneath do not
+  change.
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
