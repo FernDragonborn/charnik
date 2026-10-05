@@ -140,9 +140,55 @@
      **The direction:** a variety is an OPTION of the row with tokens of its own —
      what N2 calls a feature CHOICE (a Pact Boon, a 2014 Fighting Style), asked
      here of an inventory row instead of the build. One mechanism for both, and an option's own
-     `rarity` settles piece 2 as well. The first session on it MEASURES and drafts the columns —
-     what reads `choice_options` and `bonus_choice` today, what the builder's slot pattern
-     already gives — and writes no code.
+     `rarity` settles piece 2 as well.
+
+     **Measured, so it is not re-taken.**
+     - *What an inventory row can be answered with today.* Two fields on `inventoryEntry`, each
+       declared by a column on the item and each read in exactly one way: `bonus` (declared by
+       `bonus_choice`) is a NUMBER, handed to the row's own tokens as the `item_bonus` variable
+       (`effects/context.ts` ▸ `withItemBonus`, read at `derive-gather.ts` and `combat/attacks.ts`);
+       `choice` (declared by `choice_options`) is a WORD, substituted for the `item_choice` segment
+       of the row's tokens (`token-parser.ts` ▸ `withItemChoice`). Both are asked on the inventory
+       row (`routes/combat/inventory.svelte.ts`). Neither can carry tokens of its own, which is the
+       whole gap: "this variety sets 23" is a different TOKEN per answer, not a different word in
+       one.
+     - *What "an option of a row" already is.* Two content types, each naming its parent by a
+       column typed to it: `species_option` (`species_id`; 65 references across 21 files, picked
+       once into `build.speciesOption`) and `resource_option` (`resource_id`; 17 across 9, the
+       honest size of the next one). The builder's own slot pattern is narrower than its name:
+       `build.slotPicks` holds feats and nothing else, and what a class asks beyond feats is a flat
+       array of ids per question (`build.masteries`, `build.forms`).
+     - *The rows that would use it.* Items, the same in both packs: Belt of Giant Strength (five
+       varieties in its own table — type, Strength, rarity), Potion of Giant Strength (five),
+       Potions of Healing (four), Spell Scroll (ten), Figurine of Wondrous Power and Ioun Stone
+       (varieties as prose, no table). Class features whose options are in the row's prose: 2014
+       Fighting Style under three classes and the Champion's second, Metamagic (eight), Pact Boon
+       (three). Class features that NAME a choice whose options are not in the pack at all: the
+       Eldritch Invocations row of both editions, and 2024 Metamagic — those want rows typed
+       before they want a column.
+
+     **The draft — one content type, `option`, and it is a proposal until signed off:**
+
+     | column | what it says |
+     | --- | --- |
+     | `option_of` | the parent row as `<type>:<id>` (`item:belt_of_giant_strength`, `class_feature:warlock_pact_boon`), matched by edition and not by source, as `featuresForClass` matches a feature to its class — so a homebrew option attaches to an SRD row |
+     | `effects` | the option's own tokens, folded at the parent's layer with the parent's origin |
+     | `rarity` | an item variety's own rarity; blank inherits the parent's |
+     | `requires` | the id of another option the character must hold (an invocation that names a boon) |
+     | `level` | the class level an option opens at; blank is the parent's own |
+     | `ritual_source` | the column a class, subclass and feat row already carry, read by the same function |
+
+     The PARENT says how many: `choose` on a class-feature row, in the `level:count` grammar
+     `expertise_slots` and `mastery_slots` use and read by the same `slotsGrantedAtLevel`. An item
+     says nothing — an instance is one variety. The ANSWER lives where the parent's other answers
+     do: an inventory row's existing `choice` holds the option's id, and the build gains
+     `options`, feature id → option ids. `choice_options` stays as it is: a damage type is a
+     word the vocabulary already knows, and a row per word would be rows that say nothing.
+
+     **What it deliberately does not do.** It does not fold `species_option` into itself — that
+     type carries three columns of its own and a `kind`, and merging it is a migration with no
+     player-visible gain. It does not make a consumable act: a Potion of Healing's variety gives it
+     a name and a rarity on the row, and drinking stays the player's.
 
   2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated

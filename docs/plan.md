@@ -246,7 +246,9 @@ position and are given per wave, because most of them were learned the hard way.
      character, ▸ Identities), so it goes first and the rest lands on it.
   2. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
-     designed together and A17 brings the smallest form of N2's feature choice with it.
+     designed together — the columns are drafted (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
+     wait on a sign-off — and A17 brings the invocation rows with it, because SRD 5.1 puts the
+     Tome's rituals in an invocation rather than in the boon.
   3. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
      from that mock;
      ADD-ITEM-SURFACE becomes a popover; and

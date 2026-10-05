@@ -211,13 +211,17 @@ stay semi-manual.
 - [ ] **A17 · a 2014 warlock's Pact of the Tome cannot ritual.** Ritual casting ships for every
   class and for a spell a feat teaches: `ritual_source` on the class, subclass or feat row, both
   packs' 29 ritual tags, and the rule in `../internals/rules-core.md` ▸ Spellcasting. The one caster
-  left is the Tome warlock: `warlock_pact_boon` is one row holding three boons as prose, so nothing
-  can say "this warlock rituals" until the boon is a choice (N2's choice kind). **It ships in 0.8.0, so
-  the choice does too — at least for this one row:** the smallest form of a feature choice that lets one
-  class-feature row offer named options, each with its own tokens, and stores the pick in the
-  build. SIZE it before starting; the same shape is what MAGIC-ITEM-VOCAB's varieties ask for on
-  an inventory row, and the two are designed together or the second one is built twice. The subclass column that
-  would carry a subclass-shaped grant is built and has no shipped row.
+  left is the Tome warlock, and **the boon is not where SRD 5.1 puts the rituals.** Pact of the
+  Tome gives a Book of Shadows and three cantrips; what inscribes rituals in it is an INVOCATION,
+  Book of Ancient Secrets ("Prerequisite: Pact of the Tome feature … You can now inscribe magical
+  rituals in your Book of Shadows"). The boon's only ritual is the Chain's, and it is one spell
+  ("You learn the find familiar spell and can cast it as a ritual"). So this is two choices and a
+  link between them, not one row: the boon as a choice of three, the invocations as options —
+  which the pack does not carry at all, the row names them and lists none — and an option that
+  REQUIRES another. The shape is drafted with the item varieties it shares
+  (`content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1: `option_of`, `requires`, `ritual_source`). The invocation
+  rows are typed from the SRD like any other (`content.md` ▸ SRD-TRANSCRIPTION), and the same rows
+  are what SCOPED-BONUS's Agonizing Blast waits on.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart
