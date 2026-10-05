@@ -9,6 +9,7 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { anchored } from '$lib/actions/anchored';
 
 	let {
 		iid,
@@ -17,8 +18,6 @@
 		onclose,
 	}: { iid: string; rounds: number | null; anchor: HTMLElement; onclose: () => void } = $props();
 
-	let el = $state<HTMLDivElement>();
-	let pos = $state({ top: 0, left: 0 });
 	let custom = $state(false);
 	let customValue = $state(10);
 	// seed the custom input from the current duration when it's opened (avoids capturing the prop in $state)
@@ -26,49 +25,6 @@
 		customValue = rounds ?? 10;
 		custom = true;
 	}
-
-	/** Place the menu just below the control, right-aligned to it. `clamp` pulls it left/up when it
-	 *  would overflow the screen — for the OPENING placement only: while following a scroll it has to
-	 *  travel with its control, not pin itself to an edge the control has already left. */
-	function place(clamp: boolean): void {
-		if (!el) return;
-		const a = anchor.getBoundingClientRect();
-		const w = el.offsetWidth;
-		const h = el.offsetHeight;
-		const margin = 8;
-		let left = a.right - w;
-		let top = a.bottom + 6;
-		if (clamp) {
-			if (left < margin) left = margin;
-			if (top + h > window.innerHeight - margin) top = Math.max(margin, a.top - h - 6);
-		}
-		pos = { top, left };
-	}
-
-	// Re-placed on every scroll rather than closed by one: the menu belongs to the control it came
-	// from, so it travels with it. Capture phase, because the control may sit inside a panel that
-	// scrolls on its own and that scroll never reaches `window`.
-	//
-	// Closing is a listener too, not a full-screen catcher: a fixed catcher's scroll parent is the
-	// viewport, which does not scroll in this app, so it froze the page under the open menu.
-	$effect(() => {
-		if (!el) return; // reading it is also what re-runs this once the element exists
-		place(true);
-		const follow = () => place(false);
-		const reflow = () => place(true);
-		const closeOnOutside = (ev: PointerEvent) => {
-			const t = ev.target as Node;
-			if (!el?.contains(t) && !anchor.contains(t)) onclose();
-		};
-		window.addEventListener('scroll', follow, true);
-		window.addEventListener('resize', reflow);
-		window.addEventListener('pointerdown', closeOnOutside, true);
-		return () => {
-			window.removeEventListener('scroll', follow, true);
-			window.removeEventListener('resize', reflow);
-			window.removeEventListener('pointerdown', closeOnOutside, true);
-		};
-	});
 
 	function pick(value: number | null) {
 		combat.effects.setEffectDuration(iid, value ?? 0);
@@ -81,11 +37,10 @@
 </script>
 
 <div
-	bind:this={el}
 	class="dur-menu"
 	role="dialog"
 	aria-label={$_('combat.duration.menu')}
-	style="top:{pos.top}px; left:{pos.left}px"
+	use:anchored={{ anchor, onclose }}
 	use:dismissOnEscape={onclose}
 >
 	<div class="dur-step-row">

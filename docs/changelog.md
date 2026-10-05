@@ -200,7 +200,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
 ### Playing
 
 - **An item is added from play**, with the same picker the builder uses, and what you own is written
-  where it belongs — the character's inventory, wherever you happened to notice it.
+  where it belongs — the character's inventory, wherever you happened to notice it. The picker
+  opens beside the button that asked for it, with the sheet still readable around it.
 - **A price reads in the picker, on the inventory row and in the article**, in your own coin word,
   and a homebrew price the app cannot parse passes through as its author wrote it.
 - **The item pickers show a band of rarity, mundane first.** 5e ships 234 magic rows against 149

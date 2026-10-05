@@ -594,6 +594,16 @@ and wearing the shell hands it the whole apparatus of an alert: a flag badge ove
 subtitle explaining itself to somebody who already knows why they opened it, and no visible way out.
 That is its own surface, sharing the picker but not the chrome.
 
+**A step inside a panel is a POPOVER on the control that opened it** — adding an item from the
+inventory panel (`AddItemPopover`), an effect's duration menu. No backdrop and nothing dimmed: the
+sheet stays readable around it, a press anywhere else closes it, the control that opened it closes
+it again, and Escape closes one thing per press — the picker's card first, then the surface. The
+keyboard starts inside and goes back to the control. Placement is one action, `anchored`
+(`lib/actions`): below the control with right edges aligned, above it when there is no room below,
+and travelling with the control while the page scrolls. A floating part that lives in the body — a
+picker's card — is named to it as a companion, so a press there is not a press outside. Not being
+full-screen, a popover carries no `LangSwitcher`: the topbar's is still in reach.
+
 ## Icons are drawn, never typed
 
 A character that is **text** stays text: `−`, `≥`, `∞`, `×`, an arrow inside a sentence. A character

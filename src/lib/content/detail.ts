@@ -407,7 +407,9 @@ export function buildDetail(
 	// `rarity` can state only one of them, so where the ladder states each, the ladder is what is
 	// said — one cell per rung, in place of a single rarity that is wrong for the other two and of
 	// the column's raw grammar.
-	const rungs = parseBonusChoices(asText(d.bonus_choice)).filter((rung) => rung.rarity);
+	const rungs = parseBonusChoices('bonus_choice' in d ? asText(d.bonus_choice) : '').filter(
+		(rung) => rung.rarity,
+	);
 	if (rungs.length) for (const column of ['rarity', 'bonus_choice']) skip.add(column);
 	const rungCells = rungs.map((rung): MetaCell => [
 		{ key: 'contentField.rarityAtBonus', values: { bonus: rung.bonus } },

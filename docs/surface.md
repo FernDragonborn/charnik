@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (82)
+## Duplicate suspects (84)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -19,7 +19,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `say` ×8 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
-- `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/dev/storage-edges/+page.svelte
+- `place` ×6 — src/lib/actions/anchored.ts · src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `probe` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `REPORT` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
@@ -55,7 +55,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `cell` ×2 — src/lib/components/UpcastBuilder.svelte · src/lib/content/migrations.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
-- `closeOnOutside` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `closeOnOutside` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -64,7 +64,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `entryOf` ×2 — src/lib/components/EntryList.svelte · src/routes/combat/roll-journal.svelte.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
-- `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
+- `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
@@ -72,6 +73,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
+- `MARGIN` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
@@ -81,7 +83,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
-- `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `refusal` ×2 — src/lib/play/cast.ts · src/lib/play/turn.ts
 - `refuse` ×2 — src/lib/content/remote/pack-update-state.svelte.ts · src/lib/play/options.ts
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
@@ -483,7 +485,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (163 modules)
+## Library functions & types (164 modules)
+
+### `src/lib/actions/anchored.ts`
+
+- `interface AnchoredOptions`
+- `const anchored` — * Keep a `position: fixed` surface with the control that opened it: just below, right edges * aligned, and closed by …
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -2149,4 +2156,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1315 exports across 179 modules · 82 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1317 exports across 180 modules · 84 duplicate suspects._

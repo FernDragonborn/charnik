@@ -13,7 +13,7 @@
 	import { why } from '$lib/combat/helpers';
 	import { damageTypeLabel } from '$lib/combat/attacks';
 	import { provenance } from '$lib/actions/provenance';
-	import AddItemDialog from '../AddItemDialog.svelte';
+	import AddItemPopover from '../AddItemPopover.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
 	import RowGrip from '../RowGrip.svelte';
@@ -23,6 +23,7 @@
 	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
 	 *  panel's one control, and nothing else opens it. */
 	let adding = $state(false);
+	let addControl = $state<HTMLButtonElement>();
 
 	const rows = $derived(inv.rows);
 	// `why` returns the provenance SENTENCE (the action takes a string), '' when there is no sheet yet
@@ -86,7 +87,9 @@
 	<span class="eyebrow">{$_('combat.inventory.items')}</span>
 	<button
 		class="add-item"
-		onclick={() => (adding = true)}
+		bind:this={addControl}
+		aria-expanded={adding}
+		onclick={() => (adding = !adding)}
 		title={$_('combat.inventory.addItem')}
 		aria-label={$_('combat.inventory.addItem')}
 	>
@@ -259,8 +262,8 @@
 	{/each}
 </div>
 
-{#if adding}
-	<AddItemDialog onclose={() => (adding = false)} />
+{#if adding && addControl}
+	<AddItemPopover anchor={addControl} onclose={() => (adding = false)} />
 {/if}
 
 <style>

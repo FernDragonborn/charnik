@@ -680,7 +680,6 @@
 		},
 		"inventory": {
 			"addItem": "Add an item",
-			"addItemBody": "What the character owns is build data — this writes to it, so the item stays after the session.",
 			"attune": "Attune",
 			"attuneHint": "Attune to it",
 			"attuned": "attuned {count}/{cap}",

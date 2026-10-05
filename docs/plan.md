@@ -250,10 +250,8 @@ position and are given per wave, because most of them were learned the hard way.
      wait on a sign-off — and A17 brings the invocation rows with it, because SRD 5.1 puts the
      Tome's rituals in an invocation rather than in the boon.
   3. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
-     from that mock;
-     ADD-ITEM-SURFACE becomes a popover; and
-     DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the hit-point bar — is
-     redrawn, because what ships reads badly.
+     from that mock; and DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the
+     hit-point bar — is redrawn, because what ships reads badly.
   4. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
@@ -270,9 +268,8 @@ position and are given per wave, because most of them were learned the hard way.
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
-  its tail is ADD-ITEM-SURFACE and MOBILE-ALPHA — the chrome the add-item picker wears, and a
-  narrow layout that is usable rather than finished. First, because
-  each one is a player already standing in front of it.
+  its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
+  it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind, and N2b's tail — a druid assumes a form in both editions, and
   what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
