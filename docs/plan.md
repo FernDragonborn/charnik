@@ -243,20 +243,21 @@ position and are given per wave, because most of them were learned the hard way.
   1. **The seams** — PLAY-REDUCERS, CHARACTER-WRITER, CHARACTER-UID, TABLE-LINK-SEAM, in that
      order (the TABLE-LINK-SEAMS wave below says why). The largest piece of the release and the
      only one that touches every play-state verb, so it goes first and the rest lands on it.
-  2. **What the security pass left that is cheap** — EFFECT-IID-UNIQUE, UNRESOLVED-ACTION-RUNS,
-     PROSE-POLICY-TAIL. Each is small, and each is a way a file somebody else wrote misbehaves.
-  3. **MAGIC-ITEM-VOCAB's two pieces** — the row that is several items at the table, and the range
-     rows' `rarity`.
+  2. **What the security pass left** — EFFECT-IID-UNIQUE, UNRESOLVED-ACTION-RUNS,
+     PROSE-POLICY-TAIL, each small and each a way a file somebody else wrote misbehaves; and
+     CONSENT-OUT-OF-REACH, which is not small: plugin consent moves behind a Rust command.
+  3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
+     Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
+     designed together and A17 brings the smallest form of N2's shape 3 with it.
   4. **The looks** — MASTERY-HALF's extra-attack control and TITLE-POPOVER's ⓘ are picked and
      wait to be built; DEFENCE-STRIP's `Saves` group has three directions named and none drawn, so
-     it is rendered first and picked from seeing them.
+     it is rendered first and picked from seeing them; ADD-ITEM-SURFACE becomes a popover.
   5. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
-  Magician), SCOPED-BONUS's Agonizing Blast, A17's Pact of the Tome, E4, DAMAGE-TYPE-UI's look,
-  PLAYTEST-TRAY, ADD-ITEM-SURFACE, MOBILE-ALPHA's tap targets, CONSENT-OUT-OF-REACH, and
-  TABLE-LINK-RESEARCH with TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
+  Magician), SCOPED-BONUS's Agonizing Blast, E4, DAMAGE-TYPE-UI's look, MOBILE-ALPHA's tap
+  targets, and TABLE-LINK-RESEARCH with TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
   or shipped content that does nothing — the three clauses above.
 - **The short queue, and it is an ORDER rather than a wave.** One item, and it is a design session
   rather than a commit.
@@ -267,8 +268,8 @@ position and are given per wave, because most of them were learned the hard way.
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
-  its tail is PLAYTEST-TRAY, ADD-ITEM-SURFACE and MOBILE-ALPHA — the dice tray, the chrome the
-  add-item picker wears, and a narrow layout that is usable rather than finished. First, because
+  its tail is ADD-ITEM-SURFACE and MOBILE-ALPHA — the chrome the add-item picker wears, and a
+  narrow layout that is usable rather than finished. First, because
   each one is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three shapes, with
   FEATURE-PASSIVES naming shape 1, and N2b's tail — a druid assumes a form in both editions, and

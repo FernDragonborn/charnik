@@ -99,6 +99,13 @@
   and **a fifth exempt path in the Tauri import fence**, the first one where Rust pushes events
   into the webview. Constraints: no socket is opened and no dependency on a transport is added;
   removing the feature removes the capability file, the commands and the JS seam together.
+  **What the interface carries, as far as it is decided:** the player's app derives its own sheet
+  and publishes the RESULT — values with their traces — and the GM's app renders it and derives
+  nothing from a peer's tokens. Sent as changes over a cached base, never whole each time: a
+  portrait goes once, an inventory when it changes, hit points when they move. The byte counts are
+  measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
+  holds a separate key for each table, so nothing links two tables and a key that is online says
+  nothing about the person outside that table — which is why every call takes a table id.
 - [ ] **CONSENT-OUT-OF-REACH · plugin consent and the kill switch live where page script can write
   them.** `charnik:plugins` in `localStorage` (`effects/plugin-host.ts` ▸ `PREFS_KEY`) is outside the
   data folder, which is what stops a restored backup arriving pre-authorised — and inside the

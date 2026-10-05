@@ -209,7 +209,11 @@ stay semi-manual.
   class and for a spell a feat teaches: `ritual_source` on the class, subclass or feat row, both
   packs' 29 ritual tags, and the rule in `../internals/rules-core.md` ▸ Spellcasting. The one caster
   left is the Tome warlock: `warlock_pact_boon` is one row holding three boons as prose, so nothing
-  can say "this warlock rituals" until the boon is a choice (N2 shape 3). The subclass column that
+  can say "this warlock rituals" until the boon is a choice (N2 shape 3). **It ships in 0.8.0, so
+  the choice does too — at least for this one row:** the smallest form of shape 3 that lets one
+  class-feature row offer named options, each with its own tokens, and stores the pick in the
+  build. SIZE it before starting; the same shape is what MAGIC-ITEM-VOCAB's varieties ask for on
+  an inventory row, and the two are designed together or the second one is built twice. The subclass column that
   would carry a subclass-shaped grant is built and has no shipped row.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
@@ -304,8 +308,11 @@ stay semi-manual.
 - [ ] **CHARACTER-UID · a character has an identity that survives leaving the machine.** `id` is a
   slug of the name plus four hex digits and doubles as the folder name; restore re-anchors it to the
   folder. Outcome: a random 128-bit `uid`, minted once, stored in the file, never derived from the
-  name and never used as a path. Inventory rows and class rows get an instance id of their own for
-  the same reason an effect has `iid`. A schema bump with a migration that mints what is missing.
+  name and never used as a path. Inventory rows and class rows get an instance id of their own in
+  the SAME migration, for the same reason an effect has `iid`: a message or an undo has to name
+  "that potion", and a position in an array names whatever sits there by the time it arrives.
+  A schema bump with a migration that mints what is missing. Which GUID is the one open choice —
+  random (v4, what `crypto.randomUUID` gives and every `iid` already is) or time-ordered (v7).
 - [ ] **EFFECT-IID-UNIQUE · two effects may carry one `iid`.** The schema asks only that it is
   non-empty (`character/schema.ts` ▸ `effectInstance`), the Effects panel keys its lists by it, and
   `removeEffect` filters by it — so a hand-edited or imported save with a repeated `iid` breaks the

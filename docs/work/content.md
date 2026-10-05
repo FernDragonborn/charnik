@@ -146,6 +146,10 @@
      a number its VARIETY states, an Ioun Stone does a different thing per stone, and neither
      `bonus_choice` (a `+N` capped at ten) nor `choice_options` (a word substituted into a target)
      says "this variety sets 23". Until one does, those rows are text in both packs.
+     **The direction being explored:** a variety is an OPTION of the row with tokens of its own —
+     the shape N2 names shape 3 for class features (a Pact Boon, a 2014 Fighting Style), asked
+     here of an inventory row instead of the build. One mechanism for both, and a variety's own
+     `rarity` would settle piece 2 as well.
 
   2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
      one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated

@@ -87,6 +87,9 @@
   mismatch shows as concrete defects rather than as taste: a red flag badge over "Add an item", a
   language switcher inside it, a subtitle explaining that inventory is build data to someone who is
   mid-fight, no visible close, and the list running past the panel's bottom edge.
+  **The direction is a POPOVER anchored to the control that opened it**, not a dialog: adding an
+  item is a step inside the inventory panel, and the modal shell is what brought the badge, the
+  subtitle and the language switcher with it.
   **The picker is not the work; the presentation is.** Which means rendered variants before code
   (`AGENTS.md` ▸ Screenshots go in design-preview): a wide working dialog with no badge and no
   subtitle, a side drawer, or the compendium's own master-detail surface reached and returned from.
