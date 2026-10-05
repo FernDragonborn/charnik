@@ -6,6 +6,8 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
 use tauri_plugin_opener::OpenerExt;
 
+mod plugin_consent;
+
 /// The set of directories the USER has chosen this session (via the native folder picker) or that we
 /// re-granted from our own persisted pointer at startup — the ONLY paths the fs scope may be extended
 /// to. The renderer never hands us a path to grant directly (audit S2): granting flows only from a
@@ -199,12 +201,18 @@ pub fn run() {
 
     builder
         .manage(GrantedDirs::default())
+        .manage(plugin_consent::PluginRecord::default())
         .invoke_handler(tauri::generate_handler![
             pick_data_dir,
             set_data_dir,
             saved_data_dir,
             apply_saved_data_dir,
-            open_app_dir
+            open_app_dir,
+            plugin_consent::plugin_prefs,
+            plugin_consent::grant_plugin_consent,
+            plugin_consent::forget_plugins,
+            plugin_consent::set_plugin_enabled,
+            plugin_consent::set_plugin_kill_switch
         ])
         .setup(|app| {
             // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win
@@ -225,7 +233,8 @@ pub fn run() {
                     // Webview target hands it to page script.
                     .filter(|metadata| {
                         let target = metadata.target();
-                        target.starts_with("webview") || target.starts_with(env!("CARGO_CRATE_NAME"))
+                        target.starts_with("webview")
+                            || target.starts_with(env!("CARGO_CRATE_NAME"))
                     })
                     .target(tauri_plugin_log::Target::new(
                         tauri_plugin_log::TargetKind::Stdout,

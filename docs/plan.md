@@ -244,17 +244,15 @@ position and are given per wave, because most of them were learned the hard way.
      play-state actions, the one writer per character and the identities, which are built
      (`internals/actions.md` ▸ Where a mutation lives, `internals/characters.md` ▸ One writer per
      character, ▸ Identities), so it goes first and the rest lands on it.
-  2. **What the security pass left** — CONSENT-OUT-OF-REACH, which is not small: plugin consent
-     moves behind a Rust command.
-  3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
+  2. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together and A17 brings the smallest form of N2's feature choice with it.
-  4. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+  3. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
      from that mock;
      ADD-ITEM-SURFACE becomes a popover; and
      DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the hit-point bar — is
      redrawn, because what ships reads badly.
-  5. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.
+  4. **SANDBOX-OTHER-PLATFORMS** — last, because it verifies the build that ships, on Linux.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
@@ -309,10 +307,8 @@ position and are given per wave, because most of them were learned the hard way.
   HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
   COMPANION (research first).
 
-**Out of band — do these when next in the area, don't schedule them into a wave:**
-CONSENT-OUT-OF-REACH. Two are tied to a
-date instead: SANDBOX-OTHER-PLATFORMS before the next release that ships to macOS or Linux, and
-TABLE-LINK-RESEARCH before TABLE-LINK-SPEC is written.
+**Tied to a date rather than a wave:** SANDBOX-OTHER-PLATFORMS before the next release that ships
+to macOS or Linux, and TABLE-LINK-RESEARCH before TABLE-LINK-SPEC is written.
 
 ## Verification
 Automated coverage and conventions live in [testing.md] (suites map to phases; run

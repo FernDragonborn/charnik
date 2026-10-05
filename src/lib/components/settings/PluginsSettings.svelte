@@ -19,6 +19,7 @@
 	} from '$lib/effects/plugin-store.svelte';
 	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 	import PluginConsentDialog from './PluginConsentDialog.svelte';
+	import { app } from '$lib/stores/app.svelte';
 
 	let consentFor = $state<DiscoveredPlugin | null>(null);
 
@@ -46,7 +47,7 @@
 	}
 
 	async function acceptConsent() {
-		if (consentFor) await consentAndEnable(consentFor);
+		if (consentFor) await consentAndEnable(consentFor, app.activeLocale);
 		consentFor = null;
 	}
 </script>

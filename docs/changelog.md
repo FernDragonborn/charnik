@@ -170,6 +170,10 @@ sentences became numbers, and a security pass closed what a page inside the wind
   window can repoint where your data lives.
 - **A dice formula is capped as a whole**, at a thousand dice. A formula built to stall the app —
   from a shared pack — could ask for millions.
+- **Allowing a plugin to run is asked by your system, not by the page.** After the review, a
+  native dialog names the plugin and its code fingerprint, in your language, and only a yes there
+  is recorded — where nothing running inside the window can write it. Plugins you had enabled
+  before ask once more.
 - **A character changed by something other than Charnik is never silently overwritten.** A sync
   tool, a text editor or a backup put back by hand: the app notices the file is not the one it
   wrote, stops saving over it, and asks which state to keep — yours, the file's, or both, with

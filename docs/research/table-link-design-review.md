@@ -140,6 +140,9 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### S-03 — Plugin consent and the kill switch live in `localStorage`, inside the trust boundary they guard
 
+- **Status:** closed. The record is Rust's and consent is a native dialog
+  (`docs/internals/plugins.md` §6); what a table link stores takes the same seat.
+
 - **Kind:** present. **Severity:** medium. **Confidence:** high.
 - **Hypothesis.** "Stored outside the data folder" protects against a restored backup arriving
   pre-authorised. It does not protect against script in the webview, which can write the consent

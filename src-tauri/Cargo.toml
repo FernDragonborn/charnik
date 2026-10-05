@@ -16,6 +16,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.6.3", features = [] }
+# build.rs reads the UI's locale catalogs to compile the native consent dialog's words in.
+serde_json = "1.0"
 
 [dependencies]
 serde_json = "1.0"

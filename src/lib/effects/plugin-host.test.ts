@@ -3,7 +3,7 @@
  * the length-prefixed consent hash (§6.3), and the runnability gate (consent × enable × kill
  * switch). No sandbox involved — this is the trust plumbing around it.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import {
 	discoverPlugins,
@@ -11,8 +11,6 @@ import {
 	isRunnable,
 	emptyPrefs,
 	LOCAL_ORIGIN,
-	loadPluginPrefs,
-	savePluginPrefs,
 	pluginManifestSchema,
 	type DiscoveredPlugin,
 } from './plugin-host';
@@ -176,47 +174,5 @@ describe('pluginManifestSchema strictness', () => {
 			pluginManifestSchema.safeParse({ api: 1, namespace: 'x1', name: 'X', version: '0.1.0' })
 				.success,
 		).toBe(true);
-	});
-});
-
-describe('loadPluginPrefs — defensive parsing (corrupt/partial localStorage, PLG-T2)', () => {
-	// node has no localStorage; stub a minimal one so the parse branches (not just the guard) run
-	let store: Record<string, string>;
-	beforeEach(() => {
-		store = {};
-		(globalThis as { localStorage?: unknown }).localStorage = {
-			getItem: (k: string) => store[k] ?? null,
-			setItem: (k: string, v: string) => void (store[k] = v),
-			removeItem: (k: string) => void delete store[k],
-		};
-	});
-	afterEach(() => {
-		delete (globalThis as { localStorage?: unknown }).localStorage;
-	});
-
-	it('no stored value → empty prefs', () => {
-		expect(loadPluginPrefs()).toEqual(emptyPrefs());
-	});
-	it('corrupt JSON → empty prefs, never throws', () => {
-		store['charnik:plugins'] = '{not json';
-		expect(loadPluginPrefs()).toEqual(emptyPrefs());
-	});
-	it('partial object → missing halves fall back to the empty defaults', () => {
-		store['charnik:plugins'] = JSON.stringify({ enabled: { a: true } });
-		const p = loadPluginPrefs();
-		expect(p.enabled).toEqual({ a: true });
-		expect(p.consent).toEqual({});
-		expect(p.killSwitch).toBe(false);
-	});
-	it('non-object consent / a truthy-but-not-true killSwitch are sanitised', () => {
-		store['charnik:plugins'] = JSON.stringify({ consent: 'nope', killSwitch: 1 });
-		const p = loadPluginPrefs();
-		expect(p.consent).toEqual({});
-		expect(p.killSwitch).toBe(false); // only the literal `true` enables the kill switch
-	});
-	it('round-trips through save', () => {
-		const prefs = { consent: { a: 'h' }, enabled: { a: true }, killSwitch: true };
-		savePluginPrefs(prefs);
-		expect(loadPluginPrefs()).toEqual(prefs);
 	});
 });

@@ -106,27 +106,6 @@
   measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
   holds a separate key for each table, so nothing links two tables and a key that is online says
   nothing about the person outside that table — which is why every call takes a table id.
-- [ ] **CONSENT-OUT-OF-REACH · plugin consent and the kill switch live where page script can write
-  them.** `charnik:plugins` in `localStorage` (`effects/plugin-host.ts` ▸ `PREFS_KEY`) is outside the
-  data folder, which is what stops a restored backup arriving pre-authorised — and inside the
-  webview, so a script running there can write the consent record and the plugin folder in one go.
-  Outcome: the record is read and written by a Rust command and kept in a directory the capability
-  denies (`internals/security.md` §2 ▸ the webview has no capability over the app's own
-  directories); granting consent is a native dialog, not a webview modal. Constraints: existing
-  consents migrate once and are not silently dropped; the web demo, which loads no plugins, is
-  unaffected. `research/table-link-design-review.md` ▸ S-03.
-  The ground is laid: an app command is under the ACL (`internals/security.md` §2), so the three
-  this needs — read the record, grant consent, set a switch — each arrive with a permission.
-  **Two decisions are the maintainers' before a line is written, because each is the ceremony
-  itself:**
-  1. **Who words the native dialog.** Rust has no catalogs, so either it composes a fixed English
-     sentence around the namespace and the hash — which a Ukrainian reader meets untranslated —
-     or the page passes the localized text, and then page script chooses what the user is asked,
-     which is the thing the dialog exists to take away from it.
-  2. **What migrating an existing consent costs the user.** Copying `charnik:plugins` out of
-     `localStorage` into the Rust-owned record with no question is the hole itself, reached once:
-     a script plants the record and the migration blesses it. Asking natively once per consented
-     plugin closes it and greets every existing user with a dialog per plugin on the first launch.
 - [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
   denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
   two folders through `open_app_dir`. Linux is the other platform a release ships to — there is no

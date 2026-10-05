@@ -339,11 +339,23 @@ the keys documented here were rejected, and a rejected key takes the whole resul
 1. **Install** = put the folder under `<dataDir>/plugins/`, or install a content pack that carries
    one in its own `plugins/` subfolder (§2). Discovery is automatic for both; uninstalling a pack
    takes its plugins with it, because they are inside it.
-2. **Everything is disabled by default.** Enabling happens per plugin in Settings → Plugins,
-   behind a consent dialog showing the manifest.
+2. **Everything is disabled by default.** Enabling happens per plugin in Settings → Plugins, in
+   two steps: a review dialog showing the manifest, then **the consent itself, which is a native
+   dialog raised by Rust**. A modal the page draws can be pressed by the page, so the review is
+   where a person reads and the native dialog is where permission is given. It names the namespace
+   and the first sixteen digits of the code hash — the same sixteen the review shows.
+   **Its words are not the page's.** `src-tauri/build.rs` compiles them out of the UI's own locale
+   catalogs (`settings.plugins.nativeConsent`), one set per catalog it finds, so the page hands
+   over a locale code and never a sentence: it chooses the language of the question and nothing
+   about what is asked. A locale that is not bundled is asked in English.
 3. **Consent is per-machine and pinned to a CRYPTOGRAPHIC code hash**
    `(namespace, sha256(len(main.js) ‖ main.js ‖ len(plugin.json) ‖ plugin.json))`, stored OUTSIDE the
-   data folder — each file **length-prefixed** (8-byte big-endian byte count) so the two files are
+   data folder AND outside the webview's reach — `<appConfig>/plugins.json`, read and written only
+   by Rust commands (`src-tauri/src/plugin_consent.rs`), in a directory the capability denies
+   (`security.md` §2). The page holds a copy of the record and every change answers the record as
+   it then stands (`PluginPrefsStore`). What the page may do without a dialog only ever shrinks
+   it or chooses among what was allowed: forget a plugin, switch one off, switch one back on
+   where its consent still stands, flip the kill switch. Each file is **length-prefixed** (8-byte big-endian byte count) so the two files are
    domain-separated. A bare `main.js ‖ plugin.json` concatenation is ambiguous: bytes moved across
    the file boundary (shrink `main.js` by N, grow `plugin.json` by N) yield the SAME digest while
    both files differ — a length prefix makes the boundary part of what's signed, closing that seam.

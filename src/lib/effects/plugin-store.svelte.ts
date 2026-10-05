@@ -5,8 +5,9 @@
  *
  * Desktop-only (PLG-SEC 21): on web/headless `supported` stays false, nothing is discovered, and
  * the QuickJS sandbox module is never imported (dynamic import below) — the web bundle ships no
- * live sandbox path. Consent/enable prefs live in localStorage (app-side, OUTSIDE the dataDir —
- * PLG-SEC 12), so an imported data folder can carry plugin code but never its permission.
+ * live sandbox path. Consent/enable prefs are Rust's (`PluginPrefsStore`): OUTSIDE the dataDir —
+ * PLG-SEC 12 — so an imported data folder can carry plugin code but never its permission, and
+ * outside the webview's reach, so `plugins.prefs` is a copy of the record and never the record.
  *
  * `version` bumps whenever the evaluator set changes — sheet-deriving VMs read it so enabling /
  * disabling a plugin recomputes stats LIVE (no reload), matching the everything-from-the-UI
@@ -15,12 +16,11 @@
 import { detectPlatform, Platform, getUserStorage } from '../storage/provider';
 import {
 	discoverPlugins,
-	loadPluginPrefs,
-	savePluginPrefs,
 	isRunnable,
 	emptyPrefs,
 	type DiscoveredPlugin,
 	type PluginPrefs,
+	type PluginPrefsStore,
 } from './plugin-host';
 import {
 	registerPluginEvaluator,
@@ -53,6 +53,19 @@ export const plugins = $state<PluginsState>({
 	version: 0,
 });
 
+/** Where the record is kept. Set at `loadPlugins` on desktop — the one platform with plugins — and
+ *  by a test that stands in for it. */
+let prefsStore: PluginPrefsStore | null = null;
+export function usePluginPrefsStore(store: PluginPrefsStore): void {
+	prefsStore = store;
+}
+
+/** Run one change against the record and take what it then holds. With no store there is nothing
+ *  to change, which is the web build. */
+async function record(change: (store: PluginPrefsStore) => Promise<PluginPrefs>): Promise<void> {
+	if (prefsStore) plugins.prefs = await change(prefsStore);
+}
+
 let evaluatorHandle: { dispose(): void } | null = null;
 let loadStarted = false;
 /** Monotonic rebuild id. Toggling a plugin is a fold to the FINAL prefs (order-irrelevant, no
@@ -69,7 +82,9 @@ export async function loadPlugins(): Promise<void> {
 		plugins.loaded = true;
 		return;
 	}
-	plugins.prefs = loadPluginPrefs();
+	// dynamic, like the sandbox: the web bundle never loads a module that imports Tauri
+	prefsStore ??= (await import('./plugin-prefs-tauri')).tauriPluginPrefs;
+	await record((store) => store.read());
 	await refreshPlugins();
 	plugins.loaded = true;
 }
@@ -82,7 +97,7 @@ export async function refreshPlugins(): Promise<void> {
 		found: plugins.discovered.length,
 		broken: plugins.discovered.filter((p) => !p.ok).length,
 	});
-	forgetUndiscovered();
+	await forgetUndiscovered();
 	await rebuildEvaluator();
 }
 
@@ -96,18 +111,14 @@ export async function refreshPlugins(): Promise<void> {
  * possible statement that the permission is over. A failed scan never reaches here — `discoverPlugins`
  * throws rather than answering with an empty list.
  */
-function forgetUndiscovered(): void {
+async function forgetUndiscovered(): Promise<void> {
 	const present = new Set(plugins.discovered.map((p) => p.namespace));
 	const gone = [
 		...new Set([...Object.keys(plugins.prefs.consent), ...Object.keys(plugins.prefs.enabled)]),
 	].filter((ns) => !present.has(ns));
 	if (!gone.length) return;
 	logger.info('plugins: forgetting undiscovered', { namespaces: gone });
-	for (const ns of gone) {
-		delete plugins.prefs.consent[ns];
-		delete plugins.prefs.enabled[ns];
-	}
-	persist();
+	await record((store) => store.forget(gone));
 }
 
 /** Forget one plugin: its consent and its enablement go, so running it again asks again. The way OUT
@@ -115,9 +126,7 @@ function forgetUndiscovered(): void {
  *  re-enables it silently. */
 export async function forgetPlugin(namespace: string): Promise<void> {
 	logger.info('plugins: consent forgotten', { namespace });
-	delete plugins.prefs.consent[namespace];
-	delete plugins.prefs.enabled[namespace];
-	persist();
+	await record((store) => store.forget([namespace]));
 	await rebuildEvaluator();
 }
 
@@ -166,19 +175,23 @@ export function retryPlugins(): void {
 	plugins.version++;
 }
 
-function persist(): void {
-	savePluginPrefs(plugins.prefs);
-}
-
-/** The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable. */
-export async function consentAndEnable(p: DiscoveredPlugin): Promise<void> {
-	if (!p.ok || p.hash === undefined) return;
+/**
+ * The user accepted the review dialog for THIS plugin at THIS code hash → ask for the consent
+ * itself, which is Rust's native dialog and not a button this page drew. Answers whether it was
+ * given: a no leaves the record, and the plugin, exactly as they were.
+ */
+export async function consentAndEnable(p: DiscoveredPlugin, locale: string): Promise<boolean> {
+	const hash = p.hash;
+	if (!p.ok || hash === undefined) return false;
+	await record((store) => store.grant(p.namespace, hash, locale));
+	const granted = plugins.prefs.consent[p.namespace] === hash;
 	// consent to RUN CODE is the one decision worth being able to reconstruct afterwards
-	logger.info('plugins: consent granted', { namespace: p.namespace, hash: p.hash });
-	plugins.prefs.consent[p.namespace] = p.hash;
-	plugins.prefs.enabled[p.namespace] = true;
-	persist();
+	logger.info(granted ? 'plugins: consent granted' : 'plugins: consent refused', {
+		namespace: p.namespace,
+		hash,
+	});
 	await rebuildEvaluator();
+	return granted;
 }
 
 /**
@@ -196,17 +209,12 @@ export async function revokePackPlugins(pack: string): Promise<void> {
 	const mine = plugins.discovered.filter((p) => p.origin === pack).map((p) => p.namespace);
 	if (mine.length === 0) return;
 	logger.info('plugins: consent revoked with pack', { pack, namespaces: mine });
-	for (const namespace of mine) {
-		delete plugins.prefs.consent[namespace];
-		delete plugins.prefs.enabled[namespace];
-	}
-	persist();
+	await record((store) => store.forget(mine));
 	await rebuildEvaluator();
 }
 
 export async function disablePlugin(namespace: string): Promise<void> {
-	plugins.prefs.enabled[namespace] = false;
-	persist();
+	await record((store) => store.setEnabled(namespace, false));
 	await rebuildEvaluator();
 }
 
@@ -214,8 +222,7 @@ export async function disablePlugin(namespace: string): Promise<void> {
  *  is missing/stale — the caller must show the consent dialog instead. */
 export async function enableConsented(p: DiscoveredPlugin): Promise<boolean> {
 	if (!p.ok || p.hash === undefined || plugins.prefs.consent[p.namespace] !== p.hash) return false;
-	plugins.prefs.enabled[p.namespace] = true;
-	persist();
+	await record((store) => store.setEnabled(p.namespace, true));
 	await rebuildEvaluator();
 	return true;
 }
@@ -223,8 +230,7 @@ export async function enableConsented(p: DiscoveredPlugin): Promise<boolean> {
 /** The global "disable all plugins" kill switch (§6.4) — always works, survives restarts. */
 export async function setKillSwitch(on: boolean): Promise<void> {
 	logger.warn('plugins: kill switch', { on });
-	plugins.prefs.killSwitch = on;
-	persist();
+	await record((store) => store.setKillSwitch(on));
 	await rebuildEvaluator();
 }
 

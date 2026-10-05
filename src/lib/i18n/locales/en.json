@@ -2044,6 +2044,12 @@
 				"cancel": "Cancel",
 				"accept": "Enable plugin",
 				"url": "URL"
+			},
+			"nativeConsent": {
+				"title": "Charnik — allow a plugin to run?",
+				"body": "The plugin \"{namespace}\" is asking to run its code on this computer.\n\nCode fingerprint: {fingerprint}\n\nAllow it only if you just chose to enable this plugin in Settings.",
+				"allow": "Allow",
+				"deny": "Do not allow"
 			}
 		},
 		"sources": {

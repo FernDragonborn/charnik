@@ -74,6 +74,8 @@ export default ts.config(
 			// the content-pack fetcher: an HTTP client in Rust behind the RemoteFetcher seam, for the
 			// same reason storage/tauri.ts is exempt (SECURITY.md §5 — never webview fetch)
 			'src/lib/content/remote/tauri-fetch.ts',
+			// the plugin consent record: owned by Rust so page script cannot write it (SECURITY.md §4)
+			'src/lib/effects/plugin-prefs-tauri.ts',
 		],
 		rules: {
 			'no-restricted-imports': [

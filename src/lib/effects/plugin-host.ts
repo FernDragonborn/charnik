@@ -15,12 +15,12 @@
  * Consent = `(namespace, sha256(len(main.js) ‖ main.js ‖ len(plugin.json) ‖ plugin.json))`, each file
  * LENGTH-PREFIXED (8-byte big-endian) so bytes can't migrate across the file boundary and collide
  * (§6.3). SHA-256, not the content-drift xxh64 — consent is an adversarial trust gate. The record
- * is stored OUTSIDE the dataDir (localStorage, app-side) so a merged/imported "campaign backup"
- * can carry plugin CODE but never its permission.
+ * is stored OUTSIDE the dataDir so a merged/imported "campaign backup" can carry plugin CODE but
+ * never its permission, and outside the WEBVIEW's reach so page script cannot write it either
+ * (`PluginPrefsStore` below).
  */
 import { z } from 'zod';
 import type { Storage } from '../storage/types';
-import { readStored, writeStored } from '../util/persist';
 
 /** `main.js` size cap (docs/internals/plugins.md §2). */
 const MAX_MAIN_JS_BYTES = 256 * 1024;
@@ -231,20 +231,21 @@ export interface PluginPrefs {
 
 export const emptyPrefs = (): PluginPrefs => ({ consent: {}, enabled: {}, killSwitch: false });
 
-const PREFS_KEY = 'charnik:plugins';
-
-export function loadPluginPrefs(): PluginPrefs {
-	const p = readStored<Partial<PluginPrefs>>(PREFS_KEY);
-	if (!p) return emptyPrefs();
-	return {
-		consent: typeof p.consent === 'object' && p.consent !== null ? p.consent : {},
-		enabled: typeof p.enabled === 'object' && p.enabled !== null ? p.enabled : {},
-		killSwitch: p.killSwitch === true,
-	};
-}
-
-export function savePluginPrefs(prefs: PluginPrefs): void {
-	writeStored(PREFS_KEY, prefs);
+/**
+ * Where the record lives. Every call answers the record AS IT THEN STANDS, because the page does
+ * not hold it: on desktop it is Rust's, in a directory the webview has no capability over
+ * (`plugin-prefs-tauri.ts`), so nothing here can be written by script that got into the page.
+ */
+export interface PluginPrefsStore {
+	read(): Promise<PluginPrefs>;
+	/** Ask the user — in a native dialog, in `locale` — whether `namespace` may run the code that
+	 *  hashes to `hash`. Recorded and switched on only on a yes; a no answers the record unchanged. */
+	grant(namespace: string, hash: string, locale: string): Promise<PluginPrefs>;
+	/** Take consent and enablement away. Never asks: less permission needs nobody's leave. */
+	forget(namespaces: string[]): Promise<PluginPrefs>;
+	/** Switch one on or off. On holds only where a consent already stands. */
+	setEnabled(namespace: string, enabled: boolean): Promise<PluginPrefs>;
+	setKillSwitch(on: boolean): Promise<PluginPrefs>;
 }
 
 /** Is this discovered plugin runnable under the given prefs? (consented to EXACTLY these bytes,
