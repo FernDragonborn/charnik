@@ -52,6 +52,10 @@ export const anchored: Action<HTMLElement, AnchoredOptions> = (node, initial) =>
 		options.onclose();
 	};
 
+	// The first placement measures a surface whose body may not have laid out yet, so its clamp runs
+	// against a height of nothing; the same observer covers one that RESIZES while open.
+	const refit = new ResizeObserver(reflow);
+	refit.observe(node);
 	place(true);
 	window.addEventListener('scroll', follow, true);
 	window.addEventListener('resize', reflow);
@@ -62,6 +66,7 @@ export const anchored: Action<HTMLElement, AnchoredOptions> = (node, initial) =>
 			place(true);
 		},
 		destroy() {
+			refit.disconnect();
 			window.removeEventListener('scroll', follow, true);
 			window.removeEventListener('resize', reflow);
 			window.removeEventListener('pointerdown', closeOnOutside, true);
