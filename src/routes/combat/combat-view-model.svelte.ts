@@ -412,7 +412,6 @@ class CombatVM {
 	get cantConcentrate(): boolean {
 		return this.concentration.cantConcentrate;
 	}
-	removeLinkedEffect = (ref: string) => this.concentration.removeLinkedEffect(ref);
 	endConcentrationByHand = () => this.concentration.endByHand();
 	clearConcentration = () => this.concentration.clear();
 	endConcentrationIfBroken = this.syncDyingState;

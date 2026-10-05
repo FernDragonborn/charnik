@@ -81,6 +81,7 @@ describe('CombatVM · concentration (CVM-bug1)', () => {
 	beforeEach(async () => {
 		graph = await graphOf();
 		character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		combat.graph = graph;
 		combat.character = character;
 	});
@@ -116,6 +117,7 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 	beforeEach(async () => {
 		graph = await graphOf();
 		character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		combat.graph = graph;
 		combat.character = character;
 	});
@@ -175,6 +177,7 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 	beforeEach(async () => {
 		graph = await graphOf();
 		character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		combat.graph = graph;
 		combat.character = character;
 		combat.pendingConcentrationSave = null; // reset the singleton's transient UI between tests
@@ -345,6 +348,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	beforeEach(async () => {
 		graph = await casterGraphOf();
 		character = newCharacter('mage', 'Mage', '5.5e');
+		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		character.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 16, cha: 10 };
 		character.build.classes = [{ class: `class:${S}:wizard`, level: 5 }];
 		combat.graph = graph;
@@ -839,6 +843,7 @@ describe('CombatVM · a pool pays for a cast instead of a slot (FEAT-FREE-CAST)'
 	const withPool = async (max: number) => {
 		const graph = await graphOf();
 		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		character.play.autoCalc = true;
 		character.play.effects = [
 			{

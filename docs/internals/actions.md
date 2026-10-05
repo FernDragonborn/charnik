@@ -178,9 +178,9 @@ with no screen calls the same function and gets the same character.
   is mounted.
 - **An action called from inside a flow that still writes the character directly settles in the
   middle of that flow.** That is right for a step that stands on its own (an effect landing) and
-  wrong for one half of a swap — a re-cast takes the old effect down and puts the new one up, and
-  a clamp between the two would cost the hit points the new one gives back. Such a half stays a
-  direct write until its whole flow is one action.
+  wrong for one half of a swap, so a swap is ONE action: a re-cast takes the old effect down and
+  puts the new one up inside `castSpell`, and a clamp between the two would cost the hit points
+  the new one gives back.
 - **An intent carries numbers and ids, never a token or a dice formula.** The dice are the
   action's own (`ctx.rng`), so a roll's provenance is the function that made it.
 - **An action is all-or-nothing, and says when it was nothing.** A pool that cannot pay, an empty
@@ -188,12 +188,12 @@ with no screen calls the same function and gets the same character.
   given. `act` returns that as a boolean, so a caller with a further step reads it before taking
   it. `chain` runs one action after another as ONE outcome, and stops at a refused first step.
 - **A roll the player may build is the host's, and the action ASKS for it.** A strike made by an
-  `attack:` verb comes back in the outcome's `asks`, and the sheet rolls it through its own attack
-  path — the tray, the effects on the roll, ammunition. The action has paid for it, and nothing
+  `attack:` verb and the rolls of a cast come back in the outcome's `asks`, and the sheet rolls
+  them through its own paths — the tray, the effects on the roll, ammunition. The action has paid for it, and nothing
   about the result lands in play-state, so the roll is neither an argument (a caller would be
   handing in a number it rolled) nor the action's own (the tray could not build it). A QUESTION is
-  the other thing asked: which stat block a form takes is put before anything is paid, and the
-  action is called again with the answer.
+  the other thing asked: which stat block a form takes, and which weapon a spell is laid on, is
+  put before anything is paid, and the action is called again with the answer.
 - **An option is reachable by id.** `activateOptionById` names it as a row is identified — its own
   id on the pool it spends — and reads everything else off the sheet. The sheet's own panels hand
   over the option they are showing.
@@ -202,7 +202,7 @@ with no screen calls the same function and gets the same character.
   concentration it names ends.
 
 Hit points, effects, exhaustion, concentration, pools, rests, the turn, forms, experience, a
-feature's spend-option and the two events that fire features are built this way. The other
+feature's spend-option, the two events that fire features and a cast are built this way. The other
 subsystems still write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).

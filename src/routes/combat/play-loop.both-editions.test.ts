@@ -49,6 +49,7 @@ for (const { system, pack, source } of EDITIONS) {
 			graph = await loadPacks(pack);
 			combat.graph = graph;
 			const c = newCharacter('probe', 'Probe', system);
+			c.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 			c.build.classes = [{ class: `class:${source}:${classId}`, level }];
 			c.build.abilities = { str: 14, dex: 14, con: 14, int: 14, wis: 14, cha: 14 };
 			combat.character = c;

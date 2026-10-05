@@ -104,7 +104,7 @@ Combat is the view that has them. Which field to open first:
 | ------------- | ------------------ | ---------------------------------------------------------------- |
 | `hp`          | `hit-points`       | the hit being entered and the save it left owed; the rules are `$lib/play/hit-points` |
 | `outcomes`    | `play-outcomes`    | carrying a `$lib/play` action out: the held character, the log, the notices |
-| `casting`     | `spell-casting`    | slot reservation, upcast, a cast's tokens, prepared; its rolls are `spell-cast-rolls` |
+| `casting`     | `spell-casting`    | what a slot adds as panels and the roller read it, the slot / pool / weapon pickers, prepared; the cast is `$lib/play/cast`, its rolls `spell-cast-rolls` |
 | `concentration` | `concentration`  | which spell is held, and the player ending it; what else ends it is `$lib/play/settle` |
 | `executor`    | `action-executor`  | the names panels call to use a spend-option, enter combat, end a turn (`$lib/play/options`, `events`); the strikes and the form question an action asks for |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |

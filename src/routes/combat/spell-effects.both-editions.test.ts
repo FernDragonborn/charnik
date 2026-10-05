@@ -35,6 +35,7 @@ for (const { system, pack, source } of EDITIONS) {
 		async function caster(): Promise<Character> {
 			combat.graph = await loadPacks(pack);
 			const c = newCharacter('probe', 'Probe', system);
+			c.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 			c.build.classes = [{ class: `class:${source}:wizard`, level: 17 }];
 			c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
 			combat.character = c;

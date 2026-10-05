@@ -52,7 +52,7 @@ export class ActionExecutor {
 	) {
 		for (const ask of this.host().enact(action)?.asks ?? [])
 			if (ask.kind === PLAY_REQUEST.attack) this.makeAttacks(ask.name, ask.weapon, ask.count);
-			else this.host().forms.ask(ask.form, answer);
+			else if (ask.kind === PLAY_REQUEST.form) this.host().forms.ask(ask.form, answer);
 	}
 
 	/** Use a spend-option: resource cost and turn slot validated ALL-OR-NOTHING, both paid, its verbs

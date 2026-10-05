@@ -48,18 +48,26 @@ export interface PlayNotice {
 }
 
 /** What a request in `asks` is for. */
-export const PLAY_REQUEST = { attack: 'attack', form: 'form' } as const;
+export const PLAY_REQUEST = {
+	attack: 'attack',
+	form: 'form',
+	cast: 'cast',
+	weapon: 'weapon',
+} as const;
 
 /**
  * Something an action needs from its host before, or instead of, finishing.
  *
- * A strike is a ROLL, and a roll the player may build in the dice tray is the host's to make: the
- * action has paid for it, and nothing about the result lands in play-state. Which stat block a form
- * takes is a QUESTION, asked before anything is paid — the action is called again with the answer.
+ * A strike and a cast's rolls are ROLLS, and a roll the player may build in the dice tray is the
+ * host's to make: the action has paid for it, and nothing about the result lands in play-state.
+ * Which stat block a form takes, and which weapon a spell is laid on, are QUESTIONS, asked before
+ * anything is paid — the action is called again with the answer.
  */
 type PlayRequest =
 	| { kind: typeof PLAY_REQUEST.attack; weapon: string; count: number; name: string }
-	| { kind: typeof PLAY_REQUEST.form; form: string };
+	| { kind: typeof PLAY_REQUEST.form; form: string }
+	| { kind: typeof PLAY_REQUEST.cast; spell: string; ritual: boolean; slotLevel: number }
+	| { kind: typeof PLAY_REQUEST.weapon; spell: string };
 
 /** A concentration save a hit has made due: the DC, and the spell it is owed for. */
 export interface OwedConcentrationSave {

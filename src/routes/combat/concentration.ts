@@ -4,9 +4,8 @@
  * what ends it without being asked (0 HP, incapacitation, a state that forbids it) is
  * `$lib/play/settle`.
  *
- * The SAVE a hit asks for is not here: `HitPoints` owns the banner and the roll, and calls `clear`
- * when the save fails. ESTABLISHING concentration is not here either — that is the cast's own step
- * (`SpellCasting.cast`), which reads `cantConcentrate` and takes the prior spell's effect down.
+ * The SAVE a hit asks for is not here — `HitPoints` owns the banner — and ESTABLISHING
+ * concentration is the cast's own step (`$lib/play/cast`).
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
@@ -47,13 +46,6 @@ export class Concentration {
 	get cantConcentrate(): boolean {
 		return this.host().sheet?.facts.breaksConcentration ?? false;
 	}
-
-	/** Remove the cast-applied effect linked to a spell ref (`source === ref`) — dropping or
-	 *  replacing concentration takes the spell's own buff down with it. */
-	removeLinkedEffect = (ref: string) => {
-		const c = this.host().character;
-		if (c) c.play.effects = c.play.effects.filter((e) => e.source !== ref);
-	};
 
 	/** The player ENDING it on purpose — the chip's ✕ and the Effects panel's badge. It says so,
 	 *  because all that happens on screen is a chip disappearing, and the press one step above the ✕

@@ -286,17 +286,16 @@ stay semi-manual.
   outcome is carried out. `ctx.derive` stands where a `sheet` argument would: a hit that breaks a
   form is finished against a different hit-point maximum than it started with.
   **Done:** hit points, effects, exhaustion, concentration, pools, rests, the turn, forms,
-  experience, a feature's spend-option with its verbs, and the two events that fire features — and
-  with them every rule that follows a change: a form that has ended is left, concentration ends at
-  0 HP, on incapacitation or under a state that forbids it, current HP is clamped to the maximum,
-  and the death-save track resets above 0 HP.
-  **Left:** casting and the inventory, which still write the held character directly. For those
-  writers `routes/combat/+page.svelte` runs `combat.outcomes.settle()` in an `$effect`, which holds
-  only while that route is mounted.
+  experience, a feature's spend-option with its verbs, the two events that fire features, and a
+  cast — and with them every rule that follows a change: a form that has ended is left,
+  concentration ends at 0 HP, on incapacitation or under a state that forbids it, current HP is
+  clamped to the maximum, and the death-save track resets above 0 HP.
+  **Left:** the inventory, which still writes the held character directly. For it
+  `routes/combat/+page.svelte` runs `combat.outcomes.settle()` in an `$effect`, which holds only
+  while that route is mounted.
   **A roll the player may build is ASKED of the host** (`../internals/actions.md` ▸ Where a
-  mutation lives): the action pays and lands what it lands, and the strikes come back in the
-  outcome's `asks`. A cast is the same shape — what it pays and what it puts on the character is
-  the action, its attack and damage rolls are asked for.
+  mutation lives): the action pays and lands what it lands, and a strike or a cast's rolls come
+  back in the outcome's `asks`.
   Constraints: no behaviour change; an action never accepts a token string or a dice formula from
   its caller beyond what the catalog row it names carries. The combat tests are the proof, and they
   pass as written except where one asserted a state the route's effects would have corrected in
@@ -304,7 +303,7 @@ stay semi-manual.
   state the app can be in.
   Acceptance: every verb of `CombatVM` that mutates `play` is callable from a node test with no
   component mounted, and that route-level effect is gone.
-  **One subsystem at a time, each its own verified commit**, casting first. An invariant
+  **One subsystem at a time, each its own verified commit.** An invariant
   moves in the same commit as the verb it follows, so no commit leaves a rule enforced in neither
   place. The release waits for the last one.
 - [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from

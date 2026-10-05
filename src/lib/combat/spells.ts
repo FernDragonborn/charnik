@@ -97,7 +97,7 @@ export interface SpellGroup {
 }
 
 /** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
-const castingIcon = (ct: string): SpellRow['castTimeIcon'] =>
+export const castingIcon = (ct: string): SpellRow['castTimeIcon'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
 
 /** A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its

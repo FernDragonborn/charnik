@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (78)
+## Duplicate suspects (79)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -80,6 +80,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `refusal` ×2 — src/lib/play/cast.ts · src/lib/play/turn.ts
 - `refuse` ×2 — src/lib/content/remote/pack-update-state.svelte.ts · src/lib/play/options.ts
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
@@ -469,7 +470,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (158 modules)
+## Library functions & types (159 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -917,6 +918,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function enhancementTokens` — The effect tokens a magic-weapon buff (Magic Weapon) spawns for a `+n` enhancement bonus: `+n` to * attack AND damage…
 - `interface SpellRow` — A spell row in the spell block.
 - `interface SpellGroup` — A group of spells (Pinned / by level / by prepared / by school).
+- `const castingIcon` — Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus).
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `interface PrepareToggleInput` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
@@ -1635,6 +1637,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function languageSearchText` — All searchable text for a code (native + English + Ukrainian names + the code), lower-cased — so the * picker finds a…
 - `function addableLanguages` — Languages from {@link LANGUAGES} that aren't in `have` yet — the "add a language" menu, sorted by * native name.
 
+### `src/lib/play/cast.ts`
+
+- `interface UpcastSubject` — What a spell's `upcast` cell is read against: the row's ref, its own level and the cell.
+- `function upcastAt` — * A spell's `upcast` cell evaluated at a slot level — the ONE place the cast's context is built, so * the damage, dur…
+- `function enchantableWeapons` — What a magic-weapon buff can be laid on: each weapon the character attacks with, once.
+- `interface CastIntent` — How a cast is asked for.
+- `function castSpell` — * Cast a spell.
+
 ### `src/lib/play/concentration.ts`
 
 - `function endConcentration` — Stop concentrating: the ref goes, and the spell's own effect with it.
@@ -2086,4 +2096,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1273 exports across 174 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1279 exports across 175 modules · 79 duplicate suspects._
