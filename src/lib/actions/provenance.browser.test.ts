@@ -146,6 +146,67 @@ describe('provenance (ui.md ▸ UX pattern contract, rule 3)', () => {
 		expect(popover()?.textContent).toBe('<b>AC</b> **13**');
 	});
 
+	// The ⓘ of an effect: prose somebody wants to keep in front of them and copy from.
+	describe('a trigger that pins', () => {
+		const prose = { markdown: 'You have **Advantage** on the roll.', pin: true };
+		function mountInfo(): HTMLButtonElement {
+			const button = document.createElement('button');
+			button.textContent = 'ⓘ';
+			document.body.append(button);
+			return button;
+		}
+		const isPinned = () => popover()?.classList.contains('is-pinned') === true;
+
+		it('opens on hover like any other, and a press keeps it through leave and blur', () => {
+			const info = mountInfo();
+			cleanup = provenance(info, prose)?.destroy;
+			expect(info.getAttribute('aria-expanded')).toBe('false');
+			enter(info);
+			expect(isOpen()).toBe(true);
+			expect(isPinned()).toBe(false);
+			info.click();
+			leave(info);
+			info.dispatchEvent(new FocusEvent('focusout'));
+			expect(isOpen()).toBe(true);
+			expect(isPinned()).toBe(true);
+			expect(info.getAttribute('aria-expanded')).toBe('true');
+		});
+
+		it('a press inside it is a selection; a press outside, or Escape, lets it go', () => {
+			const info = mountInfo();
+			const elsewhere = mountValue();
+			cleanup = provenance(info, prose)?.destroy;
+			info.click();
+			popover()
+				?.querySelector('strong')
+				?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+			expect(isPinned()).toBe(true);
+			elsewhere.click();
+			expect(isOpen()).toBe(false);
+			expect(info.getAttribute('aria-expanded')).toBe('false');
+
+			info.click();
+			expect(isPinned()).toBe(true);
+			document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			expect(isOpen()).toBe(false);
+		});
+
+		it('a second press on the trigger lets it go, and a value passing under the pointer does not take it', () => {
+			const info = mountInfo();
+			const other = mountValue();
+			cleanup = provenance(info, prose)?.destroy;
+			const otherCleanup = provenance(other, 'Armor +11')?.destroy;
+			info.click();
+			enter(other);
+			expect(popover()?.textContent).toContain('Advantage');
+			info.click();
+			expect(isOpen()).toBe(false);
+			enter(other);
+			expect(popover()?.textContent).toBe('Armor +11');
+			otherCleanup?.();
+		});
+	});
+
 	it('leaves a control the tab stop it already had, and gives back what it took', () => {
 		const button = document.createElement('button');
 		document.body.append(button);

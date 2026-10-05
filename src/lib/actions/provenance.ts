@@ -21,24 +21,32 @@ import { renderContentMarkdown } from '$lib/content/markdown';
  * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown,
  * so it is said as `{ markdown }` and goes through the one sanitizing renderer every other surface
  * uses. A plain string is never read as markup, whatever it contains.
+ *
+ * `pin` is for prose somebody may want to KEEP in front of them — a condition's rules, a spell's
+ * text behind an ⓘ. A press on the trigger then pins the popover: it stays through pointer-leave
+ * and blur, its text can be selected and copied, and it goes on the next press anywhere outside its
+ * own box (a press inside is a selection, never a dismissal) or on Escape. Pinned is a state only
+ * that press enters; hover and focus open it exactly as they open any other.
  */
-export type Explanation = string | { markdown: string } | null | undefined;
+export type Explanation = string | { markdown: string; pin?: boolean } | null | undefined;
 
-/** An explanation ready to show: its words for a screen reader, and its markup when it is prose. */
+/** An explanation ready to show: its words for a screen reader, its markup when it is prose, and
+ *  whether a press on its trigger pins it. */
 interface Said {
 	text: string;
 	html: string | null;
+	pins: boolean;
 }
-const NOTHING: Said = { text: '', html: null };
+const NOTHING: Said = { text: '', html: null, pins: false };
 
 function sayOf(given: Explanation): Said {
 	if (!given) return NOTHING;
-	if (typeof given === 'string') return { text: given, html: null };
+	if (typeof given === 'string') return { text: given, html: null, pins: false };
 	if (!given.markdown) return NOTHING;
 	const html = renderContentMarkdown(given.markdown);
 	const holder = document.createElement('div');
 	holder.innerHTML = html;
-	return { text: holder.textContent.trim(), html };
+	return { text: holder.textContent.trim(), html, pins: given.pin === true };
 }
 
 /** Gap between the value and its popover — the anchored menus' own offset (`menu-overlay`). */
@@ -48,7 +56,30 @@ const EDGE_PX = 8;
 
 let popover: HTMLDivElement | null = null;
 let openFor: HTMLElement | null = null;
+/** The trigger whose popover is PINNED, or null. While one is, nothing else opens over it. */
+let pinnedFor: HTMLElement | null = null;
 let described = 0;
+
+/** A press anywhere but the pinned popover and its own trigger lets it go. The trigger is left out
+ *  because its press is the same gesture that pinned it, and it answers for itself. */
+function releaseOnOutsidePress(e: MouseEvent): void {
+	const pressed = e.target;
+	if (!(pressed instanceof Node)) return;
+	if (popover?.contains(pressed) || pinnedFor?.contains(pressed)) return;
+	hide();
+}
+/** Escape lets a pinned popover go from wherever focus is — it outlives its trigger's focus. */
+function releaseOnEscape(e: KeyboardEvent): void {
+	if (e.key === 'Escape') hide();
+}
+
+function pin(node: HTMLElement): void {
+	pinnedFor = node;
+	popover?.classList.add('is-pinned');
+	node.setAttribute('aria-expanded', 'true');
+	document.addEventListener('click', releaseOnOutsidePress, true);
+	document.addEventListener('keydown', releaseOnEscape, true);
+}
 
 /** The ONE popover element every traced value shares — only one is open at a time, so one exists.
  *  Re-attached rather than assumed present: whoever emptied the body around it did not mean to take
@@ -85,8 +116,14 @@ function place(node: HTMLElement, tip: HTMLDivElement): void {
 }
 
 function hide(): void {
-	popover?.classList.remove('is-open');
+	popover?.classList.remove('is-open', 'is-pinned');
+	if (pinnedFor) {
+		pinnedFor.setAttribute('aria-expanded', 'false');
+		document.removeEventListener('click', releaseOnOutsidePress, true);
+		document.removeEventListener('keydown', releaseOnEscape, true);
+	}
 	openFor = null;
+	pinnedFor = null;
 }
 
 /** A value that holds FOCUS keeps its popover through a scroll, and the popover follows it: the
@@ -97,7 +134,8 @@ function followOrHide(): void {
 	if (!openFor || !popover) return;
 	const at = openFor.getBoundingClientRect();
 	const isInView = at.bottom > 0 && at.top < window.innerHeight;
-	if (isInView && openFor.contains(document.activeElement)) place(openFor, popover);
+	const stays = pinnedFor === openFor || openFor.contains(document.activeElement);
+	if (isInView && stays) place(openFor, popover);
 	else hide();
 }
 
@@ -134,6 +172,9 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 		said = sayOf(given);
 		const next = said.text;
 		label.textContent = next;
+		// a trigger that pins says whether it has, the way any control that reveals something does
+		if (said.pins) node.setAttribute('aria-expanded', String(pinnedFor === node));
+		else node.removeAttribute('aria-expanded');
 		if (next && !label.isConnected) {
 			node.append(label);
 			node.setAttribute('aria-describedby', label.id);
@@ -153,16 +194,25 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 	};
 
 	const open = () => {
-		if (said.text) show(node, said);
+		// a pinned popover is being read; another value passing under the pointer does not take it
+		if (said.text && (!pinnedFor || pinnedFor === node)) show(node, said);
 	};
 	const close = () => {
-		if (openFor === node) hide();
+		if (openFor === node && pinnedFor !== node) hide();
 	};
 	// A CONTROL's press does something — often opens a menu exactly where the popover stands — so
 	// the explanation gives way to it. A plain value has no press of its own, and on touch a tap is
-	// the only way to open its popover at all, so that one stays.
+	// the only way to open its popover at all, so that one stays. A trigger that PINS is the third
+	// case: its press is what keeps the popover, and a second press lets it go.
 	const onClick = () => {
-		if (!ownsTabStop) close();
+		if (!said.pins) {
+			if (!ownsTabStop) close();
+		} else if (pinnedFor === node) hide();
+		else if (said.text) {
+			if (pinnedFor) hide();
+			show(node, said);
+			pin(node);
+		}
 	};
 	const onKeydown = (e: KeyboardEvent) => {
 		// Escape dismisses without moving focus — the ordinary way out of a tooltip you have read
@@ -188,7 +238,7 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 			else hide();
 		},
 		destroy() {
-			close();
+			if (openFor === node) hide();
 			node.removeEventListener('pointerenter', open);
 			node.removeEventListener('pointerleave', close);
 			node.removeEventListener('focusin', open);

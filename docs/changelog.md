@@ -202,7 +202,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
   the numbers you are comparing pushed apart between them.
 - **Every effect that has something to say carries its ⓘ** — a condition's rules text, the spell
   that granted the buff, or the words you typed for a custom one — and it opens in the language the
-  panel is already in.
+  panel is already in. It opens where the pointer is, on hover or on keyboard focus; press it and
+  the text stays put, so it can be read at length and copied, until you press somewhere else.
 - **A passive score explains itself.** All eighteen used to share one sentence about passive
   Perception, which says nothing about passive Athletics.
 - **A refused ability bump says why**, with its numbers: the step's cost, the 15 ceiling, the 8

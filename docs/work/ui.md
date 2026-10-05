@@ -59,20 +59,6 @@
       from, what a modifier is made of, why a pill is held. Each would become a tab stop, inside a
       toast that is gone in seconds and inside a line whose keyboard model is a caret walking
       tokens. That is a decision about the roller, taken with it.
-      The ⓘ is the one that changes SHAPE, not just mechanism: today it is a click-toggle that
-      expands prose inside the row, with `title` on the button as a second, slower explanation of the
-      button itself. Hover should open the prose where the pointer already is; whether the click
-      toggle survives beside it was the open question, and it is answered: **variant A**
-      (`_info-A-hover-on-the-mark.png`). The ⓘ opens the prose on hover and on focus. A CLICK on
-      the ⓘ pins it: the popover then stays through pointer-leave and blur, so its text can be
-      selected and copied, and closes on the next click anywhere OUTSIDE its own box — a click
-      inside is a selection, never a dismissal — or on Escape. Pinned is a state only that click
-      enters. The variants it was picked from, on the live sheet with a real row's prose: `design-preview/_info-now-click-expands.png` (today),
-      `_info-A-hover-on-the-mark.png` (the ⓘ opens the prose on hover and focus; a click either pins
-      it inline as now, or does nothing — the picture is the same, the choice is what a click means)
-      and `_info-C-hover-on-the-name.png` (the effect's NAME is the trigger, as rule 3 has a value
-      explain itself, and the ⓘ leaves the row). The popover renders the prose these need:
-      `use:provenance={{ markdown }}`.
 
 - [ ] **ADD-ITEM-SURFACE · adding an item from play is the right picker in the wrong chrome.**
   `AddItemDialog` mounts the builder's `SectionedPicker` — which is deliberate and stays, so the same

@@ -1,11 +1,11 @@
 <script lang="ts">
 	// Effects panel body: active effects grouped into Buffs / Debuffs / Resources (each row shows its
 	// mechanical tags, a duration dropdown + remove), then read-only sections for item/feature-derived
-	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu / info-expand
-	// local state and the per-effect row snippet.
+	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu local state
+	// and the per-effect row snippet.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
-	import ArticleProse from '$lib/components/ArticleProse.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
@@ -39,8 +39,6 @@
 	});
 	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
 	let durationMenu = $state<{ iid: string; anchor: HTMLElement } | null>(null);
-	// the condition effect whose rules text is expanded (the G2 info channel), by iid; single-open
-	let infoOpen = $state<string | null>(null);
 	const menuEffect = $derived(
 		durationMenu ? c.play.effects.find((e) => e.iid === durationMenu?.iid) : undefined,
 	);
@@ -93,12 +91,12 @@
 		</div>
 		<span class="effect-ctrl">
 			{#if infoText}
+				<!-- the prose opens where the pointer already is, on hover and on focus; a press pins it so
+				     it can be read at length and copied (ui.md ▸ rule 3) -->
 				<button
 					class="icon-button effect-info-btn"
-					class:on={infoOpen === e.iid}
-					title={$_('combat.effects.rulesText')}
-					aria-expanded={infoOpen === e.iid}
-					onclick={() => (infoOpen = infoOpen === e.iid ? null : e.iid)}>ⓘ</button
+					aria-label={$_('combat.effects.rulesText')}
+					use:provenance={{ markdown: infoText, pin: true }}>ⓘ</button
 				>
 			{/if}
 			<button
@@ -116,11 +114,6 @@
 			>
 		</span>
 	</div>
-	{#if infoText && infoOpen === e.iid}
-		<!-- reference prose is user-owned CSV: reuse ArticleProse so it renders Markdown/HTML through
-		     the same sanitize pipeline + styling as the compendium (UBUG-7) -->
-		<div class="effect-info-text"><ArticleProse bodyMarkdown={infoText} /></div>
-	{/if}
 {/snippet}
 
 {#if !c.play.effects.length && !derivedEffects.groups.length && !derivedEffects.unknown.length && !s.facts.pluginNotes.length}
@@ -443,23 +436,10 @@
 		color: var(--color-text-muted);
 	}
 	.effect-info-btn:hover,
-	.effect-info-btn.on {
+	.effect-info-btn:global([aria-expanded='true']) {
 		color: var(--color-resource);
 	}
-	/* the expanded condition rules text (G2 info channel) — reference prose under the row */
-	.effect-info-text {
-		margin: 0 0 var(--space-1-5);
-		padding: var(--space-1-5) var(--space-2);
-		color: var(--color-text-muted);
-		background: var(--color-surface-2);
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--color-border);
-	}
-	/* ArticleProse's .body trails a bottom margin on its last block — collapse it inside the chip */
-	.effect-info-text :global(.body > :last-child) {
-		margin-bottom: 0;
-	}
-	/* a plugin handler's explanatory note — same reference styling family as the info text */
+	/* a plugin handler's explanatory note */
 	.plugin-note {
 		margin: 0 0 var(--space-1);
 		font-size: var(--font-size-xs);

@@ -238,6 +238,12 @@ good", so they are pinned here and every component follows them.
    row's reason and a resource's recharge are all this popover. **Pressing a CONTROL closes it**: a
    press does something, often opening a menu exactly where the popover stands. A plain value's
    stays open through a tap, because on touch a tap is the only way to open it.
+   **Prose somebody wants to keep is PINNED by a press** (`{ markdown, pin: true }` — an effect's
+   ⓘ): hover and focus open it like any other, and a press on the trigger keeps it through
+   pointer-leave and blur, so its text can be selected and copied. It goes on the next press
+   anywhere outside its own box — a press inside is a selection, never a dismissal — on a second
+   press of the trigger, or on Escape. Pinned is a state only that press enters, and while one is
+   pinned no other value's popover opens over it. The trigger carries `aria-expanded`.
    **A scroll closes a HOVERED popover and moves a FOCUSED one**: focusing a value below the fold
    makes the browser scroll it into view, and a popover that closed on that scroll would say
    nothing to exactly the keyboard user it exists for. It follows the value until the value leaves
