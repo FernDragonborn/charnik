@@ -6,8 +6,8 @@
 > economy are things the TRACKING app needs with or without plugins, so the model is a CORE concern
 > and plugin hooks are THIN adapters returning this same shape. Where plugins.md §8 and this document
 > disagree, THIS document wins.
-> **Implementation:** `ActionExecutor.activateResourceOption` + `runAction`
-> (`src/routes/combat/action-executor.svelte.ts`), all-or-nothing validate→execute. What is still
+> **Implementation:** `activateOption` + `runAction` (`src/lib/play/options.ts`), all-or-nothing
+> validate→execute; `ActionExecutor` on the sheet is the names the panels call. What is still
 > open is the plugin `onUse`/`onEvent` hooks at `api: 2`.
 
 ## 1. The three state channels
@@ -22,7 +22,7 @@ Every state transition in play maps to exactly one channel:
 
 `passive` is implemented (the derive pipeline: DAG resolve → facts → fold; the L3 plugin
 `passive` hook rides it as a pre-pass). `onUse` is implemented for the native first slice (N2:
-`activateResourceOption` + `runAction`). `onEvent` is implemented for L1: an
+`activateOption` + `runAction`). `onEvent` is implemented for L1: an
 `on_event:<event>:<action>` token runs one of the executor verbs when a fired event happens
 (`turn_start` is the only member of the vocabulary, and it fires). The L3 PLUGIN `onEvent` hook —
 arbitrary handler logic on an event — remains deferred to `api: 2`, and that is the deferred write
@@ -115,7 +115,7 @@ Core rules (owned HERE, restated for authors in plugins.md):
   (Stunning Strike's condition on the target) degrades to `note:` + the DC, not an applied condition.
 
 **What a resource chip DOES depends on how many spend options the pool has.** With exactly ONE,
-using the resource IS that action, so the chip runs `activateResourceOption`: validate → spend →
+using the resource IS that action, so the chip runs `activateOption`: validate → spend →
 charge the turn slot → run the token. With several options or none it only decrements — there is no
 single action to infer, and that doubles as the honest escape hatch for spending a resource on
 something unmodelled. **Only the pool's OWN options are counted.** An option another feature gives
@@ -187,12 +187,22 @@ with no screen calls the same function and gets the same character.
   Hit Die — the outcome is `refused`, carries the notice, and its character is the one it was
   given. `act` returns that as a boolean, so a caller with a further step reads it before taking
   it. `chain` runs one action after another as ONE outcome, and stops at a refused first step.
+- **A roll the player may build is the host's, and the action ASKS for it.** A strike made by an
+  `attack:` verb comes back in the outcome's `asks`, and the sheet rolls it through its own attack
+  path — the tray, the effects on the roll, ammunition. The action has paid for it, and nothing
+  about the result lands in play-state, so the roll is neither an argument (a caller would be
+  handing in a number it rolled) nor the action's own (the tray could not build it). A QUESTION is
+  the other thing asked: which stat block a form takes is put before anything is paid, and the
+  action is called again with the answer.
+- **An option is reachable by id.** `activateOptionById` names it as a row is identified — its own
+  id on the pool it spends — and reads everything else off the sheet. The sheet's own panels hand
+  over the option they are showing.
 - **What is not play-state is not in the character.** A concentration save a hit left owed comes
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
 
-Hit points, effects, exhaustion, concentration, pools, rests, the turn, forms and experience are
-built this way. The other
+Hit points, effects, exhaustion, concentration, pools, rests, the turn, forms, experience, a
+feature's spend-option and the two events that fire features are built this way. The other
 subsystems still write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).

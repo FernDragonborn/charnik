@@ -24,6 +24,9 @@ export interface PlayContext {
 	/** The loaded content, for a rule that is a row's own column (the height of the exhaustion
 	 *  ladder) rather than something the sheet already states. */
 	graph: ContentGraph;
+	/** The reader's language, for the one thing an action bakes into play-state as words: the label
+	 *  an effect is listed under when its own row can no longer be found. */
+	locale: string;
 	/** The dice. Seeded in a test; the host's own otherwise. */
 	rng?: Rng;
 }
@@ -44,6 +47,20 @@ export interface PlayNotice {
 	rows?: Record<string, string>;
 }
 
+/** What a request in `asks` is for. */
+export const PLAY_REQUEST = { attack: 'attack', form: 'form' } as const;
+
+/**
+ * Something an action needs from its host before, or instead of, finishing.
+ *
+ * A strike is a ROLL, and a roll the player may build in the dice tray is the host's to make: the
+ * action has paid for it, and nothing about the result lands in play-state. Which stat block a form
+ * takes is a QUESTION, asked before anything is paid — the action is called again with the answer.
+ */
+type PlayRequest =
+	| { kind: typeof PLAY_REQUEST.attack; weapon: string; count: number; name: string }
+	| { kind: typeof PLAY_REQUEST.form; form: string };
+
 /** A concentration save a hit has made due: the DC, and the spell it is owed for. */
 export interface OwedConcentrationSave {
 	dc: number;
@@ -58,6 +75,8 @@ export interface PlayOutcome {
 	/** Present when the action left a concentration save owed. It is not play-state: it does not
 	 *  survive a reload, and the player may wave it off. */
 	concentrationSave?: OwedConcentrationSave;
+	/** What the host is asked to do now that the action has done its part. */
+	asks?: PlayRequest[];
 	/** The action did not happen — the pool was empty, the option is not offered — and the character
 	 *  is the one it was given. An action is all-or-nothing, so a caller with a further step to take
 	 *  reads this before taking it. */
@@ -82,11 +101,13 @@ export function chain(
 	if (first.refused) return first;
 	const second = next(first.character);
 	const owed = second.concentrationSave ?? first.concentrationSave;
+	const asks = [...(first.asks ?? []), ...(second.asks ?? [])];
 	return {
 		character: second.character,
 		log: [...first.log, ...second.log],
 		notices: [...first.notices, ...second.notices],
 		...(owed ? { concentrationSave: owed } : {}),
+		...(asks.length ? { asks } : {}),
 	};
 }
 

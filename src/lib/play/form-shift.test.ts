@@ -36,6 +36,7 @@ describe.each(['5e', '5.5e'] as const)('form actions · %s', (system) => {
 	const wolf = `monster:${source}:wolf`;
 	const ctx: PlayContext = {
 		derive: (character) => deriveSheet(character, graphs[system]),
+		locale: 'en',
 		// read when asked: the packs are loaded after this block is collected
 		get graph() {
 			return graphs[system];

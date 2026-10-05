@@ -64,7 +64,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
-- `id` ×2 — src/lib/content/homebrew.ts · src/routes/combat/action-executor.svelte.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
@@ -81,6 +80,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `refuse` ×2 — src/lib/content/remote/pack-update-state.svelte.ts · src/lib/play/options.ts
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (156 modules)
+## Library functions & types (158 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -888,7 +888,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollFormulaEntry` — * A formula that came from CONTENT (a monster's HP, a spell's damage) → the entry that rolls it, * carrying anything …
 - `const damageTotal` — Combined total across every typed damage part.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
-- `const ACTION_SLOT_LABEL` — What a slot is called in a sentence — "bonus" alone is not the name of anything at the table.
 - `const DICE` — The dice sizes offered in the roll tray.
 - `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
 - `const wantsTray` — A normal tap rolls instantly; Shift-click opens the prefilled roll tray.
@@ -1657,6 +1656,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
 - `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
 
+### `src/lib/play/events.ts`
+
+- `interface EventRun` — What an event is told: rounds an effect one of its hooks adds lasts when nothing states a length.
+- `function enterOrLeaveCombat` — Enter or leave combat.
+- `function startNextTurn` — End the turn and start the next one.
+
 ### `src/lib/play/experience.ts`
 
 - `function gainExperience` — Add experience points; a negative amount takes them away (a correction, or a card that says * so).
@@ -1689,11 +1694,21 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function revive` — * "I was revived" — the way back from death.
 - `function rollConcentrationSave` — * Roll a concentration save: CON save against `dc`, or against the RAW floor when the table asks for * one the app sa…
 
+### `src/lib/play/options.ts`
+
+- `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
+- `interface ActionRun` — What running an action is told besides its verbs.
+- `function runAction` — Run an action's RESOLVED verbs in order (a formula in one is already resolved at derive).
+- `interface OptionUse` — An option being used: which one, how much of an `x` cost, and — for one that assumes a form — * the stat block chosen…
+- `function activateOption` — * Use a spend-option.
+- `function activateOptionById` — * Use a spend-option named by the identity a row has — its own id on the pool it spends — which is * what a caller th…
+
 ### `src/lib/play/outcome.ts`
 
 - `interface PlayContext` — What an action reads besides the character.
 - `interface PlayLogLine` — One line for the roll log: a marker, or a roll when the action made one.
 - `interface PlayNotice` — Something to tell the player: a catalog sentence, or a row's own words as they are.
+- `const PLAY_REQUEST` — What a request in `asks` is for.
 - `interface OwedConcentrationSave` — A concentration save a hit has made due: the DC, and the spell it is owed for.
 - `interface PlayOutcome`
 - `const quietly` — An outcome that says nothing beyond the character.
@@ -2071,4 +2086,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1264 exports across 172 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1273 exports across 174 modules · 78 duplicate suspects._

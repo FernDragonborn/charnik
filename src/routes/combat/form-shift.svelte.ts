@@ -94,10 +94,13 @@ export class FormShift {
 	/** Assume a form (`$lib/play/form-shift`). The effect that carries it is labelled with the stat
 	 *  block's name as the reader has it. */
 	assume = (formId: string, monster: string): void => {
-		const row = this.host().graph?.get(monster);
-		if (!row) return;
-		const label = localizedName(row, app.activeLocale);
+		const label = this.nameOf(monster);
 		this.host().act((c, ctx) => assumeForm(c, { form: formId, monster, label }, ctx));
+	};
+	/** What a stat block is called in the reader's language — the label its effect is shown under. */
+	nameOf = (monster: string): string => {
+		const row = this.host().graph?.get(monster);
+		return row ? localizedName(row, app.activeLocale) : monster;
 	};
 
 	/** Leave the form by choice — a Bonus Action in both editions, which the turn has to have. */

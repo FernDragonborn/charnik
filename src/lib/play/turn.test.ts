@@ -36,6 +36,7 @@ describe.each(['5e', '5.5e'] as const)('turn actions · %s', (system) => {
 	const derive = (character: Character) => deriveSheet(character, graphs[system]);
 	const ctx: PlayContext = {
 		derive,
+		locale: 'en',
 		// read when asked: the packs are loaded after this block is collected
 		get graph() {
 			return graphs[system];

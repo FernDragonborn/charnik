@@ -36,6 +36,7 @@ describe.each(['5e', '5.5e'] as const)('effect actions · %s', (system) => {
 	const bless = `spell:${source}:bless`;
 	const ctx = (): PlayContext => ({
 		derive: (character) => deriveSheet(character, graphs[system]),
+		locale: 'en',
 		graph: graphs[system],
 	});
 

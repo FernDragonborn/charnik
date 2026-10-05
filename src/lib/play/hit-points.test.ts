@@ -50,6 +50,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 	const { source } = EDITIONS[system];
 	const ctx = (...draws: number[]): PlayContext => ({
 		derive: (character) => deriveSheet(character, graphs[system]),
+		locale: 'en',
 		graph: graphs[system],
 		...(draws.length ? { rng: rngSequence(...draws) } : {}),
 	});
@@ -204,7 +205,7 @@ describe('hit-point actions · a hit that breaks a form', () => {
 		const out = takeDamage(
 			frozen(c),
 			{ parts: [{ amount: 10, type: null }], crit: false },
-			{ derive, graph: graphs['5e'] },
+			{ derive, graph: graphs['5e'], locale: 'en' },
 		);
 		expect(out.character.play.form).toBeNull();
 		expect(out.character.play.effects).toEqual([]);

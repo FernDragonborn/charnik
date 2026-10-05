@@ -106,7 +106,7 @@ Combat is the view that has them. Which field to open first:
 | `outcomes`    | `play-outcomes`    | carrying a `$lib/play` action out: the held character, the log, the notices |
 | `casting`     | `spell-casting`    | slot reservation, upcast, a cast's tokens, prepared; its rolls are `spell-cast-rolls` |
 | `concentration` | `concentration`  | which spell is held, and the player ending it; what else ends it is `$lib/play/settle` |
-| `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |
+| `executor`    | `action-executor`  | the names panels call to use a spend-option, enter combat, end a turn (`$lib/play/options`, `events`); the strikes and the form question an action asks for |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
 | `resources`   | `resource-tracker` | the names panels call for slot and pool pips and rests (`$lib/play/resources`, `rests`); an ability's window opening |

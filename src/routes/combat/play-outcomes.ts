@@ -52,17 +52,25 @@ export class PlayOutcomes {
 				return character === held && sheet ? sheet : deriveSheet(character, graph, isRowActive);
 			},
 			graph,
+			locale: app.activeLocale,
 		};
 	}
+
+	/** Carry out a play-state action on the open character, and hand back what came of it — for a
+	 *  caller that has the outcome's `asks` to answer. Null when there is no sheet to act on. */
+	enact = (action: (character: Character, ctx: PlayContext) => PlayOutcome): PlayOutcome | null => {
+		const { character, sheet, graph } = this.host();
+		if (!character || !sheet || !graph) return null;
+		const outcome = action(character, this.context(graph));
+		this.commit(character, outcome);
+		return outcome;
+	};
 
 	/** Carry out a play-state action on the open character. False when it was refused, or there is
 	 *  no sheet to carry it out on. */
 	act = (action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean => {
-		const { character, sheet, graph } = this.host();
-		if (!character || !sheet || !graph) return false;
-		const outcome = action(character, this.context(graph));
-		this.commit(character, outcome);
-		return !outcome.refused;
+		const outcome = this.enact(action);
+		return !!outcome && !outcome.refused;
 	};
 
 	/**

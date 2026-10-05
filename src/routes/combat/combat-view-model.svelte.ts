@@ -255,6 +255,7 @@ class CombatVM {
 	 *  here because the subsystems declare it on their host interfaces. */
 	outcomes = new PlayOutcomes(() => this);
 	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
+	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
 	// drift; entering combat sets it to 1, Next turn advances it, and effect expiry reads it.

@@ -1,168 +1,81 @@
 /*
- * The N2 action EXECUTOR: what actually happens when a class feature's spend-option is used —
- * validate the resource cost and the turn slot all-or-nothing, deduct both, then run the action's
- * verbs. The verb set and the all-or-nothing rule are specified in docs/internals/actions.md §2; the rule that
- * matters most is that every verb lands on an EXISTING system rather than opening a new mutation
- * path into play-state.
- *
- * Entering combat and advancing a turn live here too, because both are EVENTS that fire features —
- * `regain_on_initiative` at initiative, `on_event` hooks at a turn start — and the tracker's
- * automatic mutations belong beside the other things that spend and restore.
+ * The N2 action executor on the sheet: the names the panels call to use a feature's spend-option,
+ * enter combat and end a turn. What each DOES is a pure action in `$lib/play/options` and
+ * `$lib/play/events` (docs/internals/actions.md §2); what stays here is what an action can only ASK
+ * for — the strikes an `attack:` verb makes, rolled through the sheet's own attack path, and the
+ * question an `assume_form:` verb puts before anything is paid.
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
-import { rollFormula } from '$lib/rules/dice';
-import { MAX_SLOT_LEVEL } from '$lib/rules/spellcasting';
-import { PLAY_EVENT, type PlayEvent } from '$lib/effects/token-parser';
-import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import { type Attack } from '$lib/combat/attacks';
 import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
-import type { RollJournal } from './roll-journal.svelte';
+import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
+import { activateOption } from '$lib/play/options';
+import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '$lib/play/outcome';
 import type { SheetRolls } from './sheet-rolls.svelte';
-import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
 import type { FormShift } from './form-shift.svelte';
 import type { InventoryTracker } from './inventory.svelte';
 
-/** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
-const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
-	action: 'action',
-	bonus_action: 'bonus',
-	reaction: 'reaction',
-	free: null,
-};
-
 /** What the executor needs from the sheet around it. */
 export interface ExecutorHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
-	hpMax: number;
-	journal: RollJournal;
-	economy: TurnEconomy;
 	resources: ResourceTracker;
-	effects: EffectsEditor;
-	forms: FormShift;
+	effects: Pick<EffectsEditor, 'newEffectDuration'>;
+	forms: Pick<FormShift, 'ask' | 'nameOf'>;
 	/** The character's attack rows, and the way to fire one — what `attack:` resolves against. */
 	attacks: Attack[];
 	rolls: SheetRolls;
 	/** What a shot spends, when the table counts ammunition. */
 	inventory: Pick<InventoryTracker, 'shoot'>;
+	/** Carry out a play-state action on the open character, and hand back what came of it. */
+	enact(action: (character: Character, ctx: PlayContext) => PlayOutcome): PlayOutcome | null;
 }
-
-/** The verb that assumes a form, and the one that asks a question before anything is paid. */
-const ASSUME_FORM = 'assume_form';
-
-/** The form an option's action assumes (`assume_form:<id>`), or null when it assumes none. */
-const formAssumedBy = (action: string): string | null => {
-	const [verb, id] = action.split(':');
-	return verb === ASSUME_FORM && id ? id.trim() : null;
-};
-
-/** The verb that spends from a pool the option's own cost does not name. */
-const SPEND_RESOURCE = 'spend_resource';
-
-/** One `spend_resource:<id>[:<n>]` an action carries. */
-interface FurtherSpend {
-	resource: string;
-	count: number;
-}
-
-/** Every further spend an action's verbs ask for, read before any of them runs so the whole action
- *  can be refused while nothing is paid (actions.md §2 ▸ All-or-nothing). */
-const furtherSpendsOf = (action: string): FurtherSpend[] =>
-	action
-		.split(';')
-		.map((token) => token.trim().split(':'))
-		.filter(([verb, id]) => verb === SPEND_RESOURCE && !!id)
-		.map(([, id = '', count]) => ({
-			resource: id.trim(),
-			count: Math.max(1, Number(count) || 1),
-		}));
-
-/** How many strikes one action may fire. RAW's largest is a handful; the cap is against a content
- *  typo (`attack:dagger:200`) turning one click into two hundred log lines. */
-const MAX_ATTACKS_PER_ACTION = 12;
 
 export class ActionExecutor {
-	/* Accessor, not an object — a $derived field initialiser runs before a constructor parameter
-	   property is assigned (same shape as TurnEconomy / FeatSlots / EffectsEditor). */
 	constructor(private host: () => ExecutorHost) {}
 
-	/** N2 executor (first slice): activate a resource spend-option. Validate the resource cost AND the
-	 *  turn slot ALL-OR-NOTHING (actions.md), then deduct both and run the action token. The turn cost
-	 *  was the piece-3 gap — spending an option (Flurry, Second Wind…) now actually consumes its
-	 *  action/bonus/reaction, not just the resource. */
-	activateResourceOption = (opt: ResourceOption, amount = 1) => {
-		if (!this.host().character) return;
-		const slot = ACTION_TYPE_SLOT[opt.actionType]; // null for a free action
-		// the `available` L2 guard is a RULE, not a UI state: ActionsPanel greys the row, but the
-		// resource chip reaches the same option, so the check belongs here where every caller passes
-		// (else a chip could fire Persistent Rage outside its combat-start window).
-		if (!opt.available) {
-			toast(t('combat.notice.notAvailable', { name: opt.name }));
-			return;
-		}
-		if (!this.host().resources.canAffordOption(opt, amount)) {
-			toast(
-				t('combat.notice.notEnoughResource', {
-					resource: this.host().resources.resourceName(opt.resourceId),
-					name: opt.name,
-				}),
-				{ description: t('combat.notice.restToRecharge') },
-			);
-			return;
-		}
-		const short = furtherSpendsOf(opt.action).find(
-			(spend) => this.host().resources.remainingFor(spend.resource) < spend.count,
+	/** Rounds an effect an action adds lasts when nothing states a length: the add-effect menu's own
+	 *  setting, so an action's effect and a hand-added one agree. */
+	private get effectRounds(): number {
+		return this.host().effects.newEffectDuration;
+	}
+
+	/** Carry out an action, then do what it asked of the host. */
+	private run(
+		action: (character: Character, ctx: PlayContext) => PlayOutcome,
+		answer: (monster: string) => void = () => {},
+	) {
+		for (const ask of this.host().enact(action)?.asks ?? [])
+			if (ask.kind === PLAY_REQUEST.attack) this.makeAttacks(ask.name, ask.weapon, ask.count);
+			else this.host().forms.ask(ask.form, answer);
+	}
+
+	/** Use a spend-option: resource cost and turn slot validated ALL-OR-NOTHING, both paid, its verbs
+	 *  run. An option that assumes a form opens the picker first and is used again with the answer, so
+	 *  backing out of the question costs nothing. */
+	activateResourceOption = (option: ResourceOption, amount = 1) => {
+		const effectRounds = this.effectRounds;
+		this.run(
+			(c, ctx) => activateOption(c, { option, amount, effectRounds }, ctx),
+			(monster) => {
+				const form = { monster, label: this.host().forms.nameOf(monster) };
+				this.run((c, ctx) => activateOption(c, { option, amount, effectRounds, form }, ctx));
+			},
 		);
-		if (short) {
-			toast(
-				t('combat.notice.notEnoughResource', {
-					resource: this.host().resources.resourceName(short.resource),
-					name: opt.name,
-				}),
-				{ description: t('combat.notice.restToRecharge') },
-			);
-			return;
-		}
-		if (slot && !this.host().economy.canSpend(slot)) {
-			toast(t('combat.notice.noSlotLeft', { slot: t(ACTION_SLOT_LABEL[slot]) }), {
-				description: t('combat.notice.nextTurnToRefresh'),
-			});
-			return;
-		}
-		const pay = () => {
-			if (slot) this.host().economy.trySpend(slot); // both spends succeed — validated above
-			this.host().resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
-		};
-		// assuming a form asks WHICH one first, and backing out of that question costs nothing: the use
-		// and the turn slot are paid when it is answered
-		const form = formAssumedBy(opt.action);
-		if (form) {
-			this.host().forms.ask(form, (monster) => {
-				pay();
-				this.host().forms.assume(form, monster);
-			});
-			return;
-		}
-		pay();
-		this.runAction(opt.name, opt.action);
 	};
 
 	/** The resource CHIP's primary "use one" gesture. When the pool has exactly ONE action-option, using
-	 *  the resource IS that action — so the chip runs it through the executor (validate → spend the pool
-	 *  → charge the turn slot → run the action token), identical to clicking the row in Actions. Any
-	 *  other split would lie: it was `apply_effect`-only before, so the Second Wind chip silently ticked
-	 *  a counter down while healing nothing and charging no Bonus Action (UBUG-16).
-	 *  A pool with SEVERAL options (Focus → Flurry / Patient Defense / Step of the Wind) has no single
-	 *  action to infer, and a pool with none has nothing to run: both stay a plain decrement, which is
-	 *  also the honest escape hatch for spending a point on something the app doesn't model.
-	 *  Only the pool's OWN options are counted: what another feature lets the pool pay for (Wild
-	 *  Companion out of Wild Shape) is a further use of it, and does not stop the chip from being
-	 *  the thing the pool exists for. */
+	 *  the resource IS that action — so the chip runs it through the executor, identical to clicking the
+	 *  row in Actions. A pool with SEVERAL options has no single action to infer, and a pool with none
+	 *  has nothing to run: both stay a plain decrement, which is also the honest escape hatch for
+	 *  spending a point on something the app doesn't model. Only the pool's OWN options are counted:
+	 *  what another feature lets the pool pay for (Wild Companion out of Wild Shape) is a further use
+	 *  of it, and does not stop the chip from being the thing the pool exists for. */
 	useResourceOrEnter = (id: string, max: number) => {
 		const options = (this.host().sheet?.resourceOptions ?? []).filter(
 			(o) => o.resourceId === id && o.grantedBy === undefined,
@@ -172,159 +85,12 @@ export class ActionExecutor {
 		else this.host().resources.useResource(id, max);
 	};
 
-	/** Enter/leave combat. Wraps `economy.toggleCombat` (which flips `inCombat` + resets the round) so
-	 *  that ENTERING combat = "rolling Initiative" also fires the auto event features. Round 1 IS the
-	 *  character's first turn, so `turn_start` fires here too — otherwise a turn-start feature would
-	 *  silently skip the first turn of every fight. */
-	toggleCombat = () => {
-		this.host().economy.toggleCombat();
-		if (this.host().character?.play.inCombat) {
-			this.fireInitiativeRegen();
-			this.fireEventHooks(PLAY_EVENT.turnStart);
-		}
-	};
+	/** Enter/leave combat — entering is rolling Initiative and the first turn's start. */
+	toggleCombat = () =>
+		this.run((c, ctx) => enterOrLeaveCombat(c, { effectRounds: this.effectRounds }, ctx));
 
-	/** Advance to your next turn. Wraps `economy.nextTurn` (which resets the pips, advances the round
-	 *  and expires timed effects) so the turn boundary is ONE call: whoever ends a turn also starts the
-	 *  next one, and a `turn_start` feature cannot be missed by a caller that forgot to fire it. */
-	nextTurn = () => {
-		this.host().economy.nextTurn();
-		this.fireEventHooks(PLAY_EVENT.turnStart);
-	};
-
-	/**
-	 * Run every `on_event` hook listening for `event` (2024 Champion's Heroic Rally at a turn start).
-	 * Both halves were settled at derive: the action's L2 formula is already resolved, and the hook's
-	 * L2 guard decided whether it is in this list at all — which is how "if you are Bloodied" is said
-	 * (`is_bloodied ? on_event:turn_start:heal:5+con_mod`), with no condition language of its own here.
-	 *
-	 * Auto-apply, the same call `regain_on_initiative` made: RAW these happen TO you, and a prompt at
-	 * every turn start would be worse than the tracker doing it. Gated on auto-calc like every other
-	 * automatic mutation. The verbs that change something visible announce it themselves (a `heal:`
-	 * toasts its roll), so there is no second notice layered on top; a hook whose verb is silent needs
-	 * that VERB to say something, which is a fix in one place rather than in every caller.
-	 */
-	private fireEventHooks(event: PlayEvent) {
-		if (!this.host().character?.play.autoCalc) return;
-		for (const hook of this.host().sheet?.facts.onEvent ?? [])
-			if (hook.event === event) this.runAction(hook.source, hook.action);
-	}
-
-	/** AUTO event on combat start ("when you roll Initiative"): every `regain_on_initiative` feature
-	 *  restores its pool up to N and NOTIFIES what happened — auto-apply + toast, the maintainer's call
-	 *  for these NO-CHOICE features (Perfect Focus → Focus 4, etc.), the tracker's first event-driven
-	 *  auto-mutation. Data-driven (any feature carrying the token fires; notice labelled from its name).
-	 *  Gated on auto-calc: with it OFF the player manages pools by hand, so the app doesn't touch them. */
-	private fireInitiativeRegen() {
-		const c = this.host().character;
-		if (!c?.play.autoCalc) return;
-		for (const r of this.host().sheet?.facts.initiativeRegain ?? []) {
-			const def = this.host().sheet?.resources.find((x) => x.id === r.id);
-			if (!def) continue;
-			const before = def.max - (c.play.resourcesSpent?.[r.id] ?? 0);
-			const after = this.host().resources.restoreUpTo(r.id, r.upTo);
-			if (after > before)
-				toast(r.source, {
-					description: t('combat.notice.resourceRestoredTo', {
-						resource: this.host().resources.resourceName(r.id),
-						count: after,
-					}),
-				});
-		}
-	}
-
-	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
-	 *  at derive). Each verb lands on an EXISTING system (actions.md §2 — no new mutation paths):
-	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
-	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
-	 *  (ref/valence/duration all read from the row), `gain_action` → one ADDITIONAL action this turn
-	 *  (Action Surge — a granted pip, never a refund), `rest:short|long` → take that rest
-	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
-	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
-	 *  Metabolism), `note:` → the spendOption toast. */
-	private runAction(name: string, action: string) {
-		// a `;`-separated action is a MULTI-action (Uncanny Metabolism = restore focus AND heal): run each
-		// sub-token in order on the ONE activation (cost + turn slot were validated once, up front).
-		for (const token of action.split(';')) {
-			const t = token.trim();
-			if (t) this.runOneAction(name, t);
-		}
-	}
-
-	/**
-	 * The verb table — one entry per bounded token in actions.md §2, each landing on an EXISTING
-	 * system (no new mutation paths). A table rather than an if-ladder because the ladder is what
-	 * grows: every verb added one more branch to one function, and the eleventh tipped it past what
-	 * anybody reads in one go. An entry that needs an argument checks for it; a verb whose argument
-	 * is missing does nothing, which is the same silence the ladder gave.
-	 */
-	private readonly VERBS: Record<string, (name: string, arg: string) => void> = {
-		heal: (name, arg) => {
-			const p = this.host().character?.play;
-			if (!p || !arg) return;
-			const r = rollFormula(arg);
-			p.hp.current = Math.min(this.host().hpMax, p.hp.current + Math.max(0, r.total));
-			this.host().journal.pushRoll(
-				{ text: `${name} — heal`, key: 'combat.log.heal', values: { name } },
-				r,
-			);
-		},
-		roll: (name, arg) => {
-			if (arg) this.host().journal.pushRoll({ text: name }, rollFormula(arg));
-		},
-		apply_condition: (name, arg) => {
-			if (arg)
-				this.host().effects.addEffect({
-					label: name,
-					tokens: [`apply_condition:${arg}`],
-					positive: false,
-				});
-		},
-		apply_effect: (name, arg) => {
-			if (arg) this.applyCatalogEffect(name, arg);
-		},
-		gain_action: () => {
-			// RAW: an ADDITIONAL action, i.e. one more pip this turn — not a refund of a spent one. It
-			// used to decrement `turn.action`, so surging BEFORE acting burnt a use for nothing.
-			const p = this.host().character?.play;
-			if (p) p.turn.grantedActions += 1;
-		},
-		attack: (name, arg) => {
-			if (arg) this.makeAttacks(name, arg);
-		},
-		restore_resource: (_name, arg) => {
-			// regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
-			if (arg) this.host().resources.restoreAll(arg);
-		},
-		[SPEND_RESOURCE]: (_name, arg) => {
-			// affordability was settled before the option paid for anything (`furtherSpendsOf`)
-			for (const spend of furtherSpendsOf(`${SPEND_RESOURCE}:${arg}`))
-				this.host().resources.spendFrom(spend.resource, spend.count);
-		},
-		gain_slot: (_name, arg) => {
-			const level = Number(arg);
-			if (Number.isInteger(level) && level >= 1 && level <= MAX_SLOT_LEVEL)
-				this.host().resources.gainSlot(level);
-		},
-		rest: (name, arg) => {
-			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
-			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
-			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
-			// refund its own charge (see actions.md §2).
-			if (arg !== 'short' && arg !== 'long') return;
-			this.host().resources.rest(arg);
-			toast(t('combat.notice.restTakenFor', { name, kind: t(`combat.restKind.${arg}`) }));
-		},
-	};
-
-	/** Run ONE resolved action verb (an action may hold several, `;`-joined — see `runAction`). */
-	private runOneAction(name: string, action: string) {
-		if (!this.host().character) return;
-		const sep = action.indexOf(':');
-		const verb = sep === -1 ? action : action.slice(0, sep);
-		const arg = sep === -1 ? '' : action.slice(sep + 1);
-		this.VERBS[verb]?.(name, arg);
-	}
+	/** End the turn and start the next one. */
+	nextTurn = () => this.run((c, ctx) => startNextTurn(c, { effectRounds: this.effectRounds }, ctx));
 
 	/**
 	 * `attack:<weapon id>[:<count>]` — UBUG-11. A class feature that says "make two Unarmed Strikes"
@@ -336,12 +102,7 @@ export class ActionExecutor {
 	 * translated sheet. An id the character isn't carrying is SURFACED: an action that silently rolls
 	 * nothing is the bug this verb exists to fix, so it must not become a quieter version of itself.
 	 */
-	private makeAttacks(name: string, arg: string) {
-		const sep = arg.lastIndexOf(':');
-		const hasCount = sep > 0 && /^\d+$/.test(arg.slice(sep + 1));
-		const id = (hasCount ? arg.slice(0, sep) : arg).trim().toLowerCase();
-		const asked = hasCount ? Number(arg.slice(sep + 1)) : 1;
-		const count = Math.min(Math.max(1, asked), MAX_ATTACKS_PER_ACTION);
+	private makeAttacks(name: string, id: string, count: number) {
 		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
 		if (!at) {
 			toast(t('combat.notice.nothingToAttack', { name }), {
@@ -368,33 +129,5 @@ export class ActionExecutor {
 			},
 			count,
 		);
-	}
-
-	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add
-	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, its valence sets
-	 *  buff/debuff, `duration_rounds` gives the timer (round-counter auto-expires it). Missing id →
-	 *  surface, not a silent no-op. Split out of `runOneAction` to keep its verb-dispatch under budget. */
-	private applyCatalogEffect(name: string, arg: string) {
-		const p = this.host().character?.play;
-		if (!p) return;
-		// a CONDITION carries no ref (its own token names it), so `?.` is also what keeps this verb
-		// pointed at the catalog half of the one list — `apply_condition:<id>` is the other token
-		const cat = this.host().effects.stateCatalog.find((eff) => eff.ref?.split(':').pop() === arg);
-		if (!cat) {
-			toast(t('combat.notice.effectMissing', { name }), {
-				description: t('combat.notice.effectMissingBody', { id: arg }),
-			});
-			return;
-		}
-		// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes
-		// (drop any live instance of the same catalog ref first), never adds a second Rage.
-		p.effects = p.effects.filter((e) => e.source !== cat.ref);
-		this.host().effects.addEffect({
-			label: cat.label,
-			tokens: cat.tokens,
-			positive: !cat.harmful,
-			ref: cat.ref,
-			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {}),
-		});
 	}
 }

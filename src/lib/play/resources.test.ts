@@ -37,6 +37,7 @@ describe.each(['5e', '5.5e'] as const)('resource and rest actions · %s', (syste
 	const derive = (character: Character) => deriveSheet(character, graphs[system]);
 	const ctx = (...draws: number[]): PlayContext => ({
 		derive,
+		locale: 'en',
 		graph: graphs[system],
 		...(draws.length ? { rng: rngSequence(...draws) } : {}),
 	});

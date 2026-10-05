@@ -26,23 +26,12 @@ import {
 	spendResource,
 	useResource,
 	type DayBoundary,
-	type OptionSpend,
 } from '$lib/play/resources';
+import { optionSpend } from '$lib/play/options';
 import { longRestHitDiceBudget, rest, type RestChoice, type RestKind } from '$lib/play/rests';
 import { titleCase } from '$lib/combat/helpers';
 
 export type { RestChoice };
-
-const NOTE_ACTION = 'note:';
-
-/** What an option takes from its pool this time (`x` priced at the amount the player picked), and
- *  what it says it does — a `note:` action IS that, in the row's own words. */
-const spendOf = (opt: ResourceOption, amount: number): OptionSpend => ({
-	resource: opt.resourceId,
-	cost: opt.cost === 'x' ? amount : opt.cost,
-	name: opt.name,
-	says: opt.action.startsWith(NOTE_ACTION) ? opt.action.slice(NOTE_ACTION.length) : opt.description,
-});
 
 /** What this subsystem needs from the sheet around it. */
 export interface ResourceTrackerHost {
@@ -104,12 +93,12 @@ export class ResourceTracker {
 	/** Piece 3: can this option be paid for right now? (`x` = a player-picked `amount`, ≥1.) */
 	canAffordOption = (opt: ResourceOption, amount = 1): boolean => {
 		const open = this.open;
-		return !!open && canAfford(open.c, open.sheet, spendOf(opt, amount));
+		return !!open && canAfford(open.c, open.sheet, optionSpend(opt, amount));
 	};
 	/** Piece 3: spend on an option — afford-check, deduct the cost, say what it does. Returns whether
 	 *  it went through. */
 	spendOption = (opt: ResourceOption, amount = 1): boolean =>
-		this.act((c, ctx) => spendOnOption(c, spendOf(opt, amount), ctx));
+		this.act((c, ctx) => spendOnOption(c, optionSpend(opt, amount), ctx));
 
 	/** Spend `count` uses of a pool as PART of an action that already said what it is — the
 	 *  `spend_resource:<id>[:<n>]` verb. */
