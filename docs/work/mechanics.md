@@ -285,12 +285,13 @@ stay semi-manual.
   change inside it, the roll log and the notices as outputs, and `CombatVM.act` as the one place an
   outcome is carried out. `ctx.derive` stands where a `sheet` argument would: a hit that breaks a
   form is finished against a different hit-point maximum than it started with. **Hit points,
-  effects, exhaustion, concentration, pools, rests and the turn are done**, and with them three of the rules
-  that follow a change: the clamp to the maximum, the death-save reset, and concentration ending at
-  0 HP, on incapacitation or under a state that forbids it.
-  What is left writes the held character directly, and what follows it are two `$effect`s in
-  `routes/combat/+page.svelte` that hold only while that route is mounted:
-  `combat.outcomes.settle()` (those three rules, for those writers) and leaving a form.
+  effects, exhaustion, concentration, pools, rests, the turn and forms are done**, and with them
+  every rule that follows a change: a form that has ended is left, concentration ends at 0 HP, on
+  incapacitation or under a state that forbids it, current HP is clamped to the maximum, and the
+  death-save track resets above 0 HP.
+  What is left writes the held character directly — the action executor, casting, the inventory
+  and experience — and for those writers `routes/combat/+page.svelte` still runs
+  `combat.outcomes.settle()` in an `$effect`, which holds only while that route is mounted.
   **One thing built so far is not the final shape:** `spendOnOption` is handed the option's cost
   and name by the executor, which still holds the option as an object. The intent names the
   option's id once the executor is an action itself, and the cost is read off the sheet there.
@@ -300,9 +301,9 @@ stay semi-manual.
   the running app — a rule now inside the action shows up there, and the test is restated on a
   state the app can be in.
   Acceptance: every verb of `CombatVM` that mutates `play` is callable from a node test with no
-  component mounted, and those two route-level effects are gone.
+  component mounted, and that route-level effect is gone.
   **Done one subsystem at a time, each its own verified commit** — the executor next, then
-  casting, forms and inventory. An invariant moves in the same
+  casting, the inventory and experience. An invariant moves in the same
   commit as the verb it follows, so no commit leaves a rule enforced in neither place. The release
   waits for the last one.
 - [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from

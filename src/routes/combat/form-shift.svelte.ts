@@ -4,15 +4,11 @@
  * A form is two things in play-state, the way concentration is: `play.form` says which stat block
  * and which rules, and an ordinary CARRIER effect in `play.effects` — its `source` the same monster
  * ref — carries the stat block's numbers and the form's clock. So the form shows in the Effects panel
- * with its timer, passing time expires it, and its ✕ ends it, all on paths that already exist; what
- * this module owns is the bookkeeping around those two: whose hit points are counted, and putting
- * them back.
+ * with its timer, passing time expires it, and its ✕ ends it, all on paths that already exist.
  *
- * The rules a form follows are DATA — the `form` statements of the feature that grants it
- * (`effects/facts.ts` ▸ `FormRules`) — so nothing here knows what a druid is.
+ * Whose hit points are counted, and putting them back, is `$lib/play/form-shift` and
+ * `$lib/play/settle`; what this module owns is the question the picker asks and what it offers.
  */
-import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
@@ -20,21 +16,17 @@ import { localizedName } from '$lib/content/detail';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { app } from '$lib/stores/app.svelte';
 import type { FormRules } from '$lib/effects/facts';
-import { activeForm, formStatTokens, isEligibleForm, type MonsterRow } from '$lib/character/forms';
-import { leaveForm } from '$lib/play/form';
-import type { TurnEconomy } from './turn-economy.svelte';
-import type { EffectsEditor } from './effects-editor.svelte';
-
-/** Rounds in an hour (a round is six seconds) — what turns a form's stated hours into its clock. */
-const ROUNDS_PER_HOUR = 600;
-
+import { activeForm, isEligibleForm, type MonsterRow } from '$lib/character/forms';
+import { assumeForm, leaveFormNow, revertForm } from '$lib/play/form-shift';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 /** What the form bookkeeping needs from the sheet around it. */
 export interface FormHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
 	graph: ContentGraph | null;
-	economy: TurnEconomy;
-	effects: EffectsEditor;
+	outcomes: { settle(): void };
+	/** Carry out a play-state action on the open character; false when it was refused. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
 }
 
 /** The open question: which stat block of these to assume, and what to do with the answer. */
@@ -99,77 +91,26 @@ export class FormShift {
 		};
 	};
 
-	/**
-	 * Assume a form. A form already worn is left first — both editions make a new shape replace the
-	 * old one. What the rules state then happens: a form with hit points of its own takes over the
-	 * count and the character's wait, Temporary Hit Points are gained (never stacked: the higher
-	 * stands), and the carrier effect starts the form's clock.
-	 */
+	/** Assume a form (`$lib/play/form-shift`). The effect that carries it is labelled with the stat
+	 *  block's name as the reader has it. */
 	assume = (formId: string, monster: string): void => {
-		const { character, graph } = this.host();
-		const rules = this.rulesOf(formId);
-		const row = graph?.get(monster);
-		if (!character || !rules || row?.type !== 'monster') return;
-		this.leave();
-		const play = character.play;
-		const ownHp = rules.ownHp && row.data.hp != null;
-		play.form = { id: formId, monster, ...(ownHp ? { hpBefore: play.hp.current } : {}) };
-		if (ownHp) play.hp.current = Number(row.data.hp);
-		if (rules.tempHp !== undefined) play.hp.temp = Math.max(play.hp.temp, rules.tempHp);
-		this.host().effects.addEffect({
-			label: localizedName(row, app.activeLocale),
-			tokens: formStatTokens(row),
-			positive: true,
-			ref: monster,
-			// 0 is "until removed", which is what a form with no stated length is
-			durationRounds: (rules.hours ?? 0) * ROUNDS_PER_HOUR,
-		});
+		const row = this.host().graph?.get(monster);
+		if (!row) return;
+		const label = localizedName(row, app.activeLocale);
+		this.host().act((c, ctx) => assumeForm(c, { form: formId, monster, label }, ctx));
 	};
 
 	/** Leave the form by choice — a Bonus Action in both editions, which the turn has to have. */
 	revert = (): void => {
-		const form = this.current;
-		if (!form || !this.host().economy.trySpend('bonus')) return;
-		this.leave();
-		toast(t('combat.notice.formLeft', { name: form.name }));
+		if (this.current) this.host().act(revertForm);
 	};
 
 	/** The form ends, however it ended. */
-	leave = (): void => {
-		const play = this.host().character?.play;
-		if (play) Object.assign(play, leaveForm(play));
-	};
+	leave = (): void => void this.host().act(leaveFormNow);
 
-	/**
-	 * A form whose carrier is gone has ended — the Effects panel's ✕, the clock running out, a rest.
-	 * Those paths remove an effect and know nothing of forms, so this is where the rest of the
-	 * leaving happens. Reactive and idempotent, like the concentration sync beside it.
-	 *
-	 * So is a form its own rules END: "You automatically revert if you fall unconscious, drop to 0 hit
-	 * points, or die" (SRD 5.1), "until you … have the Incapacitated condition, or die" (SRD 5.2.1).
-	 * Neither leaves a choice, so it is applied and said, the way a broken concentration is. The
-	 * states are the feature's `ends_when` statements, and death answers for all of them. 0 hit
-	 * points is NOT one: it ends a form that has hit points of its own, because those are what ran
-	 * out, and SRD 5.2.1 — whose druid keeps their own — does not name it.
-	 */
-	sync = (): void => {
-		const play = this.host().character?.play;
-		const form = play?.form;
-		if (!play || !form) return;
-		if (!play.effects.some((effect) => effect.source === form.monster)) {
-			this.leave();
-			return;
-		}
-		const endsWhen = this.rulesOf(form.id)?.endsWhen ?? [];
-		const has = this.host().sheet?.facts.conditions ?? [];
-		const stated =
-			endsWhen.length > 0 && (!!play.death || endsWhen.some((state) => has.includes(state)));
-		const spent = form.hpBefore !== undefined && play.hp.current <= 0;
-		if (!stated && !spent) return;
-		const name = this.current?.name ?? '';
-		this.leave();
-		toast(t('combat.notice.formEnded', { name }));
-	};
+	/** What ends a form without being asked is `$lib/play/settle`; this is that, under the name the
+	 *  behavioural tests call after writing play-state by hand. */
+	sync = (): void => this.host().outcomes.settle();
 }
 
 /** The rules with their limits lifted: only the creature type is kept. */

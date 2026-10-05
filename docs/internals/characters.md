@@ -161,8 +161,8 @@ timer at all. Giving concentration its own clock needs a display proxy and a sec
 **A form is a REF too, for the same reason.** `play.form` names a stat block and the form whose
 rules granted it; the numbers and the clock live on a carrier effect in `play.effects` whose `source`
 is that same monster ref. So a form shows in the Effects panel with its timer, passing time expires
-it and its ✕ ends it on the paths that already exist, and `FormShift.sync` finishes the leaving for
-all of them. `hpBefore` is present exactly when the form has hit points of its own (2014 Wild
+it and its ✕ ends it on the paths that already exist, and `settlePlay` (`$lib/play/settle`) finishes
+the leaving for all of them. `hpBefore` is present exactly when the form has hit points of its own (2014 Wild
 Shape): the character's own current HP, waiting, while `hp.current` counts the form's — which is
 why damage, healing and the bar need no second pool. Damage the form cannot hold ends it and lands
 on the character, RAW's own example. The forms a character KNOWS are `build.forms`, by form id.

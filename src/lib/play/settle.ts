@@ -3,14 +3,15 @@
  *
  * Each is a consequence RAW leaves no choice about, and each has several causes that know nothing of
  * it: hit points come back from a heal, a rest and a form; concentration breaks on a hit, a
- * condition and a rage. So they are stated once, here, and every action ends in `settled` — a rule
+ * condition and a rage; a form ends with its effect, a state or a death. So they are stated once, here, and every action ends in `settled` — a rule
  * enforced by something that watches a screen holds only while that screen is mounted.
  */
 import { effectiveHpMax } from '$lib/rules/core';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { endConcentration } from './concentration';
-import type { PlayContext, PlayOutcome } from './outcome';
+import { leaveForm } from './form';
+import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { isIncapacitated } from './conditions';
 
 /** One rule's consequence can be another's cause — concentration ending takes an `hp_max` effect
@@ -48,23 +49,61 @@ function endBrokenConcentration(character: Character, sheet: CharacterSheet): Ch
 }
 
 /**
- * Apply every rule until nothing moves, against the sheet as it stands after each step — a rule may
- * change what the sheet says. Returns the character it was given when there is nothing to do.
+ * A form that has ended is left. Its carrier effect gone is the form gone — the Effects panel's ✕,
+ * its clock running out and a rest all remove an effect and know nothing of forms — and that needs
+ * no saying. Its own rules ending it does: "You automatically revert if you fall unconscious, drop
+ * to 0 hit points, or die" (SRD 5.1), "until you … have the Incapacitated condition, or die" (SRD
+ * 5.2.1). The states are the feature's `ends_when` statements, and death answers for all of them.
+ * 0 hit points is NOT one of them: it ends a form that has hit points of its own, because those are
+ * what ran out, and SRD 5.2.1 — whose druid keeps their own — does not name it.
  */
-export function settlePlay(character: Character, ctx: PlayContext): Character {
+function endFinishedForm(character: Character, sheet: CharacterSheet): PlayOutcome {
+	const play = character.play;
+	const form = play.form;
+	if (!form) return quietly(character);
+	const left = { ...character, play: leaveForm(play) };
+	if (!play.effects.some((effect) => effect.source === form.monster)) return quietly(left);
+	const endsWhen = sheet.facts.forms.find((rules) => rules.id === form.id)?.endsWhen ?? [];
+	const stated =
+		endsWhen.length > 0 &&
+		(!!play.death || endsWhen.some((state) => sheet.facts.conditions.includes(state)));
+	const spent = form.hpBefore !== undefined && play.hp.current <= 0;
+	if (!stated && !spent) return quietly(character);
+	return {
+		...quietly(left),
+		notices: [{ text: { key: 'combat.notice.formEnded' }, rows: { name: form.monster } }],
+	};
+}
+
+/**
+ * Apply every rule until nothing moves, against the sheet as it stands after each step — a rule may
+ * change what the sheet says. The form goes first: one that ends at 0 hit points hands the
+ * character's own back, and concentration is then asked of those. The character in the outcome is
+ * the one it was given when there is nothing to do.
+ */
+export function settlePlay(character: Character, ctx: PlayContext): PlayOutcome {
 	let settling = character;
+	const notices: PlayNotice[] = [];
 	for (let pass = 0; pass < SETTLE_PASSES; pass++) {
 		const sheet = ctx.derive(settling);
-		const unbroken = endBrokenConcentration(settling, sheet);
+		const formed = endFinishedForm(settling, sheet);
+		notices.push(...formed.notices);
+		const unbroken =
+			formed.character === settling ? endBrokenConcentration(settling, sheet) : formed.character;
 		const next = unbroken === settling ? settleHitPoints(settling, sheet) : unbroken;
 		if (next === settling) break;
 		settling = next;
 	}
-	return settling;
+	return { ...quietly(settling), notices };
 }
 
 /** An action's result with the rules that follow it applied. */
 export function settled(outcome: PlayOutcome, ctx: PlayContext): PlayOutcome {
-	const character = settlePlay(outcome.character, ctx);
-	return character === outcome.character ? outcome : { ...outcome, character };
+	const after = settlePlay(outcome.character, ctx);
+	if (after.character === outcome.character) return outcome;
+	return {
+		...outcome,
+		character: after.character,
+		notices: [...outcome.notices, ...after.notices],
+	};
 }

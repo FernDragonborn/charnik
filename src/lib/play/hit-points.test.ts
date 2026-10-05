@@ -180,9 +180,9 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 
 	it('current hit points are pulled down to a maximum that dropped', () => {
 		const c = fighter((x) => (x.play.hp = { current: 40, max: 12, temp: 0 }));
-		expect(settlePlay(c, ctx()).play.hp.current).toBe(12);
+		expect(settlePlay(c, ctx()).character.play.hp.current).toBe(12);
 		const level = fighter();
-		expect(settlePlay(level, ctx())).toBe(level);
+		expect(settlePlay(level, ctx()).character).toBe(level);
 	});
 });
 

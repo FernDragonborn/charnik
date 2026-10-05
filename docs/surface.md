@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (154 modules)
+## Library functions & types (155 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1648,6 +1648,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/play/effects.ts`
 
 - `interface NewEffect` — An effect to put on the character.
+- `const effectInstanceOf` — The instance an effect is once it is on a character, its clock started at `round`.
 - `function addEffect` — Put an effect on the character.
 - `function removeEffects` — Take effects off by instance id — and the concentration one of them was carrying.
 - `function setEffectDuration` — * Set an effect's remaining duration to an exact number of rounds FROM NOW — the start is * re-anchored to the curren…
@@ -1655,6 +1656,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const stopConcentrating` — Stop concentrating: the ref goes, and the effect the spell left with it.
 - `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
 - `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
+
+### `src/lib/play/form-shift.ts`
+
+- `interface FormChoice` — Which form, which stat block, and what the stat block is called where the effect is shown.
+- `function assumeForm` — * Assume a form.
+- `const leaveFormNow` — The form ends: its carrier goes, and hit points that were waiting come back.
+- `function revertForm` — Leave the form by choice — a Bonus Action in both editions, which the turn has to have.
 
 ### `src/lib/play/form.ts`
 
@@ -2059,4 +2067,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1258 exports across 170 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1263 exports across 171 modules · 78 duplicate suspects._

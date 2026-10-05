@@ -48,12 +48,6 @@
 		combat.outcomes.settle();
 	});
 
-	// …and a form goes with the effect that carries it: its ✕, its clock running out and a rest all
-	// remove that effect without knowing it was a form.
-	$effect(() => {
-		combat.forms.sync();
-	});
-
 	// A conditional ability's window opening is a thing that HAPPENS, and the sheet is where it is
 	// noticed — the panel already greys a closed one, but nothing said when it stopped being closed.
 	$effect(() => {

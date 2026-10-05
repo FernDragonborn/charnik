@@ -170,8 +170,9 @@ with no screen calls the same function and gets the same character.
   the middle of itself: a hit that breaks a form is finished against the character's own hit-point
   maximum, where the sheet it started with still states the form's.
 - **The rules that follow a change live inside the action.** `settlePlay` (`play/settle.ts`) states
-  each once — current HP never above the effective maximum, no death-save track above 0 HP,
-  concentration ended by 0 HP, incapacitation or a state that forbids it — and runs at the end of
+  each once — a form that has ended is left, concentration is ended by 0 HP, incapacitation or a
+  state that forbids it, current HP never stands above the effective maximum, and no death-save
+  track survives above 0 HP — and runs at the end of
   every action that can move one of their causes, re-deriving the sheet after each step until
   nothing moves. A rule enforced by something that watches the screen holds only while that screen
   is mounted.
@@ -190,7 +191,7 @@ with no screen calls the same function and gets the same character.
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
 
-Hit points, effects, exhaustion, concentration, pools, rests and the turn are built this way. The other
+Hit points, effects, exhaustion, concentration, pools, rests, the turn and forms are built this way. The other
 subsystems still write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).

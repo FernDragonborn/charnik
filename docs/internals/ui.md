@@ -112,6 +112,7 @@ Combat is the view that has them. Which field to open first:
 | `resources`   | `resource-tracker` | the names panels call for slot and pool pips and rests (`$lib/play/resources`, `rests`); an ability's window opening |
 | `rests`       | `rest-controls`    | a rest's popovers — the Hit Dice it asks about; the rest itself is `$lib/play/rests` |
 | `economy`     | `turn-economy`     | the turn's pips and movement as panels read them; the actions are `$lib/play/turn` |
+| `forms`       | `form-shift`       | the form picker: which stat blocks are offered and the question asked; assuming and leaving are `$lib/play/form-shift` |
 | `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `$lib/play/effects` |
 | `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |
 | `featureView` | `feature-view`     | which features are shown, which are pinned, and in what order     |

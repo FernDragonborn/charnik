@@ -30,24 +30,24 @@ export interface NewEffect {
 	ref?: string | null;
 }
 
+/** The instance an effect is once it is on a character, its clock started at `round`. */
+export const effectInstanceOf = (spec: NewEffect, round: number): EffectInstance => ({
+	iid: crypto.randomUUID(),
+	label: spec.label,
+	effects: spec.tokens,
+	positive: spec.positive ?? true,
+	...(spec.ref ? { source: spec.ref } : {}),
+	// 0 or less → indefinite: the duration fields are absent, which is "until removed"
+	...(spec.durationRounds > 0
+		? { durationRounds: Math.round(spec.durationRounds), startedRound: round }
+		: {}),
+});
+
 /** Put an effect on the character. Its clock starts at the current round. */
 export function addEffect(character: Character, spec: NewEffect, ctx: PlayContext): PlayOutcome {
 	const play = character.play;
-	const instance: EffectInstance = {
-		iid: crypto.randomUUID(),
-		label: spec.label,
-		effects: spec.tokens,
-		positive: spec.positive ?? true,
-		...(spec.ref ? { source: spec.ref } : {}),
-		// 0 or less → indefinite: the duration fields are absent, which is "until removed"
-		...(spec.durationRounds > 0
-			? { durationRounds: Math.round(spec.durationRounds), startedRound: play.round }
-			: {}),
-	};
-	return settled(
-		quietly({ ...character, play: { ...play, effects: [...play.effects, instance] } }),
-		ctx,
-	);
+	const effects = [...play.effects, effectInstanceOf(spec, play.round)];
+	return settled(quietly({ ...character, play: { ...play, effects } }), ctx);
 }
 
 /** Take effects off by instance id — and the concentration one of them was carrying. */

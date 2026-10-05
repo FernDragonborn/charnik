@@ -17,7 +17,6 @@ import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { settlePlay } from '$lib/play/settle';
 import {
 	adoptCharacter,
-	quietly,
 	type OwedConcentrationSave,
 	type PlayContext,
 	type PlayNotice,
@@ -74,7 +73,7 @@ export class PlayOutcomes {
 	settle = (): void => {
 		const { character, sheet, graph } = this.host();
 		if (character && sheet && graph)
-			this.commit(character, quietly(settlePlay(character, this.context(graph))));
+			this.commit(character, settlePlay(character, this.context(graph)));
 	};
 
 	private commit(held: Character, outcome: PlayOutcome): void {

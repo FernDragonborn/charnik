@@ -34,7 +34,13 @@ beforeAll(async () => {
 describe.each(['5e', '5.5e'] as const)('turn actions · %s', (system) => {
 	const { source } = EDITIONS[system];
 	const derive = (character: Character) => deriveSheet(character, graphs[system]);
-	const ctx: PlayContext = { derive, graph: graphs[system] };
+	const ctx: PlayContext = {
+		derive,
+		// read when asked: the packs are loaded after this block is collected
+		get graph() {
+			return graphs[system];
+		},
+	};
 
 	/** A level-5 fighter (Extra Attack) at 30 hit points, in combat. */
 	function fighter(edit: (c: Character) => void = () => {}): Character {
