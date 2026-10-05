@@ -16,6 +16,8 @@ import type { CharacterSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { levelEarned, xpToReach, type LevelThreshold } from '$lib/rules/advancement';
+import { gainExperience } from '$lib/play/experience';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 
 /** What the XP counter needs from the sheet around it. */
 export interface ExperienceHost {
@@ -23,6 +25,8 @@ export interface ExperienceHost {
 	sheet: CharacterSheet | null;
 	graph: ContentGraph | null;
 	overlay: unknown;
+	/** Carry out a play-state action on the open character; false when it was refused. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
 }
 
 /** Where a character stands: what they have, the level it has earned, and what the next one takes. */
@@ -77,9 +81,7 @@ export class Experience {
 	/** Add the typed amount (a negative one takes XP away — a correction, or a card that says so).
 	 *  The total never goes below zero. */
 	add = (): void => {
-		const play = this.host().character?.play;
-		if (!play) return;
-		play.xp = Math.max(0, play.xp + Math.round(this.gain || 0));
+		this.host().act((c) => gainExperience(c, { amount: this.gain }));
 		this.host().overlay = null;
 	};
 }

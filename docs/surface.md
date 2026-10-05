@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (155 modules)
+## Library functions & types (156 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1657,6 +1657,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
 - `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
 
+### `src/lib/play/experience.ts`
+
+- `function gainExperience` — Add experience points; a negative amount takes them away (a correction, or a card that says * so).
+
 ### `src/lib/play/form-shift.ts`
 
 - `interface FormChoice` — Which form, which stat block, and what the stat block is called where the effect is shown.
@@ -2067,4 +2071,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1263 exports across 171 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1264 exports across 172 modules · 78 duplicate suspects._
