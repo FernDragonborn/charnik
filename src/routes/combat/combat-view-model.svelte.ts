@@ -421,7 +421,7 @@ class CombatVM {
 	removeLinkedEffect = (ref: string) => this.concentration.removeLinkedEffect(ref);
 	endConcentrationByHand = () => this.concentration.endByHand();
 	clearConcentration = () => this.concentration.clear();
-	endConcentrationIfBroken = () => this.concentration.endIfBroken();
+	endConcentrationIfBroken = this.syncDyingState;
 
 	/** What this character HAS, to read — the Features panel's whole model. Not derived from the
 	 *  sheet's effect list: a feature made purely of prose carries no effect tokens and never reaches

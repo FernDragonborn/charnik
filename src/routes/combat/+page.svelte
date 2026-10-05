@@ -42,9 +42,8 @@
 	// so a generic RollButton in a panel opens the real tray (not the instant-roll fallback).
 	onMount(combat.registerTray);
 
-	// The rules that follow a change in play-state — current HP never above the effective max, no
-	// death-save track above 0 HP, no owed concentration save for a spell no longer held — for the
-	// verbs that still write the character directly. An action in `$lib/play` settles itself.
+	// The rules that follow a change in play-state (`$lib/play/settle`), for the verbs that still
+	// write the character directly. An action in `$lib/play` settles itself.
 	$effect(() => {
 		combat.outcomes.settle();
 	});
@@ -59,12 +58,6 @@
 	// noticed — the panel already greys a closed one, but nothing said when it stopped being closed.
 	$effect(() => {
 		combat.resources.noticeOpenedWindows();
-	});
-
-	// CONCENTRATION-PLAN §7: reactively end concentration the instant HP hits 0 or an incapacitating
-	// condition lands (RAW). Reads hp + economy.incapacitated → re-runs when either changes.
-	$effect(() => {
-		combat.endConcentrationIfBroken();
 	});
 
 	// autosave play-state edits back to storage (debounced), so combat persists per character

@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (148 modules)
+## Library functions & types (151 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1640,6 +1640,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/play/concentration.ts`
 
 - `function endConcentration` — Stop concentrating: the ref goes, and the spell's own effect with it.
+- `function dropEffects` — * Take effects off the character — and the concentration with them, when one of them was carrying * it.
+
+### `src/lib/play/effects.ts`
+
+- `interface NewEffect` — An effect to put on the character.
+- `function addEffect` — Put an effect on the character.
+- `function removeEffects` — Take effects off by instance id — and the concentration one of them was carrying.
+- `function setEffectDuration` — * Set an effect's remaining duration to an exact number of rounds FROM NOW — the start is * re-anchored to the curren…
+- `function bumpEffectDuration` — Nudge an effect's REMAINING duration by a number of rounds.
+- `const stopConcentrating` — Stop concentrating: the ref goes, and the effect the spell left with it.
+- `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
+- `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
 
 ### `src/lib/play/form.ts`
 
@@ -1651,7 +1663,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolvedDamagePart` — The same part against the character's defenses.
 - `function resolveDamagePart` — One part of a hit against a set of defenses: what was dealt, what it takes.
 - `const hitPointMaximum` — The EFFECTIVE hit-point maximum: a manual max still has `hp_max` effects folded onto it (A14).
-- `function settleHitPoints` — * The two rules that follow a change in hit points, whoever made it.
 - `interface DamageIntent` — A hit: its parts, and whether it was a critical — which only matters to a body already at 0.
 - `function takeDamage` — * Take a hit.
 - `function heal` — Heal.
@@ -1672,6 +1683,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PlayOutcome`
 - `const quietly` — An outcome that says nothing beyond the character.
 - `function adoptCharacter` — * Write an action's result into the character object the sheet is holding.
+
+### `src/lib/play/settle.ts`
+
+- `function settlePlay` — * Apply every rule until nothing moves, against the sheet as it stands after each step — a rule may * change what the…
+- `function settled` — An action's result with the rules that follow it applied.
+
+### `src/lib/play/turn.ts`
+
+- `const isIncapacitated` — Incapacitated → no actions, bonus actions or reactions.
 
 ### `src/lib/rules/advancement.ts`
 
@@ -1995,4 +2015,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1212 exports across 164 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1223 exports across 167 modules · 78 duplicate suspects._

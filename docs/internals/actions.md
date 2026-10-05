@@ -169,17 +169,25 @@ with no screen calls the same function and gets the same character.
 - **`ctx.derive` is a function, not a sheet**, because an action can change what the sheet says in
   the middle of itself: a hit that breaks a form is finished against the character's own hit-point
   maximum, where the sheet it started with still states the form's.
-- **The rules that follow a change live inside the action.** `settleHitPoints` — current HP never
-  above the effective maximum, no death-save track above 0 HP — runs at the end of every action
-  that moves hit points or what their maximum depends on, against a sheet derived from the RESULT.
-  A rule enforced by something that watches the screen holds only while that screen is mounted.
+- **The rules that follow a change live inside the action.** `settlePlay` (`play/settle.ts`) states
+  each once — current HP never above the effective maximum, no death-save track above 0 HP,
+  concentration ended by 0 HP, incapacitation or a state that forbids it — and runs at the end of
+  every action that can move one of their causes, re-deriving the sheet after each step until
+  nothing moves. A rule enforced by something that watches the screen holds only while that screen
+  is mounted.
+- **An action called from inside a flow that still writes the character directly settles in the
+  middle of that flow.** That is right for a step that stands on its own (an effect landing) and
+  wrong for one half of a swap — a re-cast takes the old effect down and puts the new one up, and
+  a clamp between the two would cost the hit points the new one gives back. Such a half stays a
+  direct write until its whole flow is one action.
 - **An intent carries numbers and ids, never a token or a dice formula.** The dice are the
   action's own (`ctx.rng`), so a roll's provenance is the function that made it.
 - **What is not play-state is not in the character.** A concentration save a hit left owed comes
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
 
-Hit points are built this way. The other subsystems still write the held character directly, and
+Hit points, effects, exhaustion and concentration are built this way. The other subsystems still
+write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).
 

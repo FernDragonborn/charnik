@@ -284,18 +284,19 @@ stay semi-manual.
   lives: a pure `(character, intent, ctx) → outcome` in `src/lib/play`, the rules that follow a
   change inside it, the roll log and the notices as outputs, and `CombatVM.act` as the one place an
   outcome is carried out. `ctx.derive` stands where a `sheet` argument would: a hit that breaks a
-  form is finished against a different hit-point maximum than it started with. **Hit points are
-  done** — damage, healing, temp HP, both saves, the death-save track, dying and revival — with the
-  clamp to the maximum and the death-save reset inside them.
-  What is left writes the held character directly, and the rules that follow it are `$effect`s in
-  `routes/combat/+page.svelte` that hold only while that route is mounted: `combat.outcomes.settle()` (the
-  hit-point rules, for those writers), leaving a form, and ending concentration at 0 HP.
+  form is finished against a different hit-point maximum than it started with. **Hit points,
+  effects, exhaustion and concentration are done**, and with them three of the rules that follow a
+  change: the clamp to the maximum, the death-save reset, and concentration ending at 0 HP, on
+  incapacitation or under a state that forbids it.
+  What is left writes the held character directly, and what follows it are two `$effect`s in
+  `routes/combat/+page.svelte` that hold only while that route is mounted:
+  `combat.outcomes.settle()` (those three rules, for those writers) and leaving a form.
   Constraints: no behaviour change — the combat tests pass untouched; an action never accepts a
   token string or a dice formula from its caller beyond what the catalog row it names carries.
   Acceptance: every verb of `CombatVM` that mutates `play` is callable from a node test with no
-  component mounted, and those three route-level effects are gone.
-  **Done one subsystem at a time, each its own verified commit** — effects and concentration next,
-  then resources and rests, the turn, casting, forms and inventory. An invariant moves in the same
+  component mounted, and those two route-level effects are gone.
+  **Done one subsystem at a time, each its own verified commit** — resources and rests next,
+  then the turn, casting, forms and inventory. An invariant moves in the same
   commit as the verb it follows, so no commit leaves a rule enforced in neither place. The release
   waits for the last one.
 - [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from

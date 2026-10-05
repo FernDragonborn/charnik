@@ -14,7 +14,7 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
-import { settleHitPoints } from '$lib/play/hit-points';
+import { settlePlay } from '$lib/play/settle';
 import {
 	adoptCharacter,
 	quietly,
@@ -43,19 +43,20 @@ export class PlayOutcomes {
 
 	/** What an action reads besides the character: the sheet the screen is already showing for the
 	 *  open character, and a fresh one for any other state the action asks about. */
-	private context: PlayContext = {
-		derive: (character) => {
-			const { character: held, sheet, graph } = this.host();
-			if (character === held && sheet) return sheet;
-			if (!graph) throw new Error('a play-state action needs the content graph');
-			return deriveSheet(character, graph, isRowActive);
-		},
-	};
+	private context(graph: ContentGraph): PlayContext {
+		return {
+			derive: (character) => {
+				const { character: held, sheet } = this.host();
+				return character === held && sheet ? sheet : deriveSheet(character, graph, isRowActive);
+			},
+			graph,
+		};
+	}
 
 	/** Carry out a play-state action on the open character. */
 	act = (action: (character: Character, ctx: PlayContext) => PlayOutcome): void => {
-		const { character, sheet } = this.host();
-		if (character && sheet) this.commit(character, action(character, this.context));
+		const { character, sheet, graph } = this.host();
+		if (character && sheet && graph) this.commit(character, action(character, this.context(graph)));
 	};
 
 	/**
@@ -64,8 +65,9 @@ export class PlayOutcomes {
 	 * combat page runs reactively for them.
 	 */
 	settle = (): void => {
-		const { character, sheet } = this.host();
-		if (character && sheet) this.commit(character, quietly(settleHitPoints(character, sheet)));
+		const { character, sheet, graph } = this.host();
+		if (character && sheet && graph)
+			this.commit(character, quietly(settlePlay(character, this.context(graph))));
 	};
 
 	private commit(held: Character, outcome: PlayOutcome): void {

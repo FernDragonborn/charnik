@@ -17,10 +17,10 @@ import {
 	rollConcentrationSave,
 	rollDeathSave,
 	setDeathSavePip,
-	settleHitPoints,
 	takeDamage,
 } from './hit-points';
 import type { PlayContext } from './outcome';
+import { settlePlay } from './settle';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },
@@ -50,6 +50,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 	const { source } = EDITIONS[system];
 	const ctx = (...draws: number[]): PlayContext => ({
 		derive: (character) => deriveSheet(character, graphs[system]),
+		graph: graphs[system],
 		...(draws.length ? { rng: rngSequence(...draws) } : {}),
 	});
 	const maxOf = (c: Character) => hitPointMaximum(c, deriveSheet(c, graphs[system]));
@@ -179,10 +180,9 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 
 	it('current hit points are pulled down to a maximum that dropped', () => {
 		const c = fighter((x) => (x.play.hp = { current: 40, max: 12, temp: 0 }));
-		const sheet = deriveSheet(c, graphs[system]);
-		expect(settleHitPoints(c, sheet).play.hp.current).toBe(12);
+		expect(settlePlay(c, ctx()).play.hp.current).toBe(12);
 		const level = fighter();
-		expect(settleHitPoints(level, deriveSheet(level, graphs[system]))).toBe(level);
+		expect(settlePlay(level, ctx())).toBe(level);
 	});
 });
 
@@ -204,7 +204,7 @@ describe('hit-point actions · a hit that breaks a form', () => {
 		const out = takeDamage(
 			frozen(c),
 			{ parts: [{ amount: 10, type: null }], crit: false },
-			{ derive },
+			{ derive, graph: graphs['5e'] },
 		);
 		expect(out.character.play.form).toBeNull();
 		expect(out.character.play.effects).toEqual([]);

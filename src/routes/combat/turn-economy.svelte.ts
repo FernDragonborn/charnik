@@ -17,11 +17,7 @@ import {
 } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-
-/** The condition that zeroes the action economy (no Action, Bonus Action, or Reaction). A named seam
- *  (not a bare string compare) — paralyzed/stunned/petrified/unconscious reach it by chaining
- *  `apply_condition:incapacitated`, so this one id gates them all. */
-const INCAPACITATED_CONDITION_ID = 'incapacitated';
+import { isIncapacitated } from '$lib/play/turn';
 
 /** A turn with nothing spent yet — what `Next turn` and entering combat both reset to. */
 const freshTurn = (): Character['play']['turn'] => ({
@@ -45,8 +41,8 @@ export class TurnEconomy {
 	 *  Gated on effects-auto (off → no automatic block). */
 	incapacitated = $derived.by<boolean>(() => {
 		const c = this.getCharacter();
-		if (!c?.play.autoCalc) return false;
-		return this.getSheet()?.facts.conditions.includes(INCAPACITATED_CONDITION_ID) ?? false;
+		const sheet = this.getSheet();
+		return !!c && !!sheet && isIncapacitated(c, sheet);
 	});
 
 	// base 1 pip per slot + extras from standing effects (Haste → +1 action), rendered as more pips —

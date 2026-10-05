@@ -8,6 +8,7 @@
  */
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import type { ContentGraph } from '$lib/content/loader';
 import type { Rng, Rolled } from '$lib/rules/dice';
 import type { RollName } from '$lib/combat/roll';
 import type { SaidText } from '$lib/util/say';
@@ -20,6 +21,9 @@ export interface PlayContext {
 	 * the character's own hit-point maximum, not the form's.
 	 */
 	derive(character: Character): CharacterSheet;
+	/** The loaded content, for a rule that is a row's own column (the height of the exhaustion
+	 *  ladder) rather than something the sheet already states. */
+	graph: ContentGraph;
 	/** The dice. Seeded in a test; the host's own otherwise. */
 	rng?: Rng;
 }

@@ -1,18 +1,24 @@
 /*
- * Effects & conditions on the sheet: the quick-pick catalog, adding/removing a runtime effect,
- * its round timer, and exhaustion, which is a condition with a level.
+ * Effects & conditions on the sheet: the quick-pick catalog, the forms that add one, and the presses
+ * that put one on, take it off, or move its round timer. What each press DOES is a pure action in
+ * `$lib/play/effects`.
  *
  * "Conditions are merged into the Effects panel" is a design decision, not a coincidence — a
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
  * currently modifying the character, and ONE picker writes into it (docs/internals/content.md ▸
  * CONDEFF). That is why they are one module.
  */
+import type { Character, EffectInstance } from '$lib/character/schema';
 import {
-	EXHAUSTION_MAX,
-	type Character,
-	type DeathCause,
-	type EffectInstance,
-} from '$lib/character/schema';
+	addEffect,
+	bumpEffectDuration,
+	exhaustionLadder,
+	removeEffects,
+	setEffectDuration,
+	setExhaustion,
+	type NewEffect,
+} from '$lib/play/effects';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { ContentGraph } from '$lib/content/loader';
 import {
 	addableStateRows,
@@ -25,12 +31,7 @@ import { localizedName } from '$lib/content/detail';
 import { describedProse } from '$lib/content/overrides.svelte';
 import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import {
-	endConcentrationCarriedBy,
-	modTargetLabel,
-	remainingRounds,
-	type MenuKind,
-} from '$lib/combat/helpers';
+import { modTargetLabel, type MenuKind } from '$lib/combat/helpers';
 import { conditionIdOf } from '$lib/combat/effects-view';
 
 /** One row of the "+" picker. `conditionId` is what makes the two kinds behave differently once
@@ -48,9 +49,9 @@ export interface StateChoice {
 export interface EffectsHost {
 	character: Character | null;
 	graph: ContentGraph | null;
-	round: number;
 	overlay: { kind: MenuKind; top: number; left: number | null; right: number | null } | null;
-	die(cause: DeathCause): void;
+	/** Carry out a play-state action on the open character. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): void;
 }
 
 export class EffectsEditor {
@@ -79,27 +80,13 @@ export class EffectsEditor {
 	constructor(private host: () => EffectsHost) {}
 
 	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
-	 *  stepper hides). Data-driven cap (the row's `max_level`); a taller homebrew ladder Just Works. */
+	 *  stepper hides). */
 	exhaustionMax = $derived.by<number>(() => {
-		const graph = this.host().graph;
-		const system = this.host().character?.system;
-		if (!graph || !system) return 0;
-		const row = conditionRow(graph, system, 'exhaustion');
-		return row ? Number(row.data.max_level ?? 1) : 0;
+		const { graph, character } = this.host();
+		return graph && character ? exhaustionLadder(character, graph) : 0;
 	});
-	/** Set the exhaustion level, clamped to [0, max]. Play-state mutation (autosaves like HP). The TOP
-	 *  of the ladder is lethal — RAW "You die if your Exhaustion level is 6" (2024 glossary; 2014's
-	 *  level-6 row is likewise "Death"). The threshold is the DATA cap (`max_level`), so a homebrew
-	 *  ladder of a different height still kills at its own top. */
-	setExhaustion = (level: number): void => {
-		const p = this.host().character?.play;
-		if (!p) return;
-		// the data cap AND the schema's, because the two disagree above 20: a level the schema refuses
-		// makes every later save throw into a `void`, and the sheet keeps working as if nothing is wrong
-		const max = Math.min(this.exhaustionMax, EXHAUSTION_MAX);
-		p.exhaustion = Math.max(0, Math.min(max, Math.round(level)));
-		if (max > 0 && p.exhaustion >= max) this.host().die('exhaustion');
-	};
+	setExhaustion = (level: number): void =>
+		this.host().act((c, ctx) => setExhaustion(c, { level }, ctx));
 	/** A condition's rules text (English, consistent with the panel's other content labels), looked up
 	 *  by id — the G2 info channel: the "attacks against you have advantage", concealed, auto-crit
 	 *  parts a single-character sheet can't fold onto any stat still reach the player as reference. */
@@ -208,7 +195,7 @@ export class EffectsEditor {
 	toggleState = (choice: StateChoice) => {
 		const { owned, foreign } = this.presenceOf(choice);
 		if (owned.length) {
-			for (const instance of owned) this.removeEffect(instance.iid);
+			this.removeEffects(owned.map((instance) => instance.iid));
 			return;
 		}
 		// held by a spell or an item: the row says so, and a second instance beside it is refused
@@ -227,67 +214,19 @@ export class EffectsEditor {
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
 	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
 	newEffectDuration = $state(10);
-	addEffect = (spec: {
-		label: string;
-		tokens: string[];
-		/** Buff (true, default) vs debuff (false) — drives the Buffs/Debuffs split. */
-		positive?: boolean;
-		/** Rounds it lasts; 0/omitted → the add-effect menu's `newEffectDuration`. */
-		durationRounds?: number;
-		/** B17: the catalog ref (effectiveId) when added from the "+" catalog — stored so derive
-		 *  resolves the effect LIVE (fixes propagate); omitted for custom/GM effects (baked only). */
-		ref?: string | null;
-	}) => {
-		const character = this.host().character;
-		if (!character) return;
-		const durationRounds = spec.durationRounds ?? this.newEffectDuration;
-		// 0 / negative → indefinite: omit the duration fields entirely (schema: absent = until removed)
-		const duration =
-			durationRounds > 0
-				? { durationRounds: Math.round(durationRounds), startedRound: this.host().round }
-				: {};
-		character.play.effects = [
-			...character.play.effects,
-			{
-				iid: crypto.randomUUID(),
-				label: spec.label,
-				effects: spec.tokens,
-				positive: spec.positive ?? true,
-				...(spec.ref ? { source: spec.ref } : {}),
-				...duration,
-			},
-		];
-	};
-	/** Remove an active effect from the panel (the ✕) — and with it the concentration it was carrying,
-	 *  which used to survive its own effect and leave the sheet claiming a spell that was gone. */
-	removeEffect = (iid: string) => {
-		const c = this.host().character;
-		if (!c) return;
-		const gone = c.play.effects.filter((e) => e.iid === iid);
-		c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
-		endConcentrationCarriedBy(c.play, gone);
-	};
-	/** Set an active effect's remaining duration to an exact round count (typed into the panel field).
-	 *  The typed number means "rounds from NOW" — the start is re-anchored to the current round.
-	 *  0 / blank → indefinite: the duration fields are removed ("until removed"). */
-	setEffectDuration = (iid: string, rounds: number) => {
-		const c = this.host().character;
-		if (!c) return;
-		const n = Math.max(0, Math.round(rounds || 0));
-		c.play.effects = c.play.effects.map((e) => {
-			if (e.iid !== iid) return e;
-			if (n === 0) {
-				const { durationRounds: _d, startedRound: _s, ...rest } = e;
-				return rest;
-			}
-			return { ...e, durationRounds: n, startedRound: this.host().round };
-		});
-	};
-	/** Nudge an active effect's REMAINING duration by ±1 round from the panel. Dropping to 0 makes it
-	 *  indefinite again (the duration fields are removed), so − past 1 == "until removed". */
-	bumpEffectDuration = (iid: string, delta: number) => {
-		const e = this.host().character?.play.effects.find((x) => x.iid === iid);
-		const cur = e ? (remainingRounds(e, this.host().round) ?? 0) : 0;
-		this.setEffectDuration(iid, cur + delta);
-	};
+	addEffect = (spec: Omit<NewEffect, 'durationRounds'> & { durationRounds?: number }) =>
+		this.host().act((c, ctx) =>
+			addEffect(c, { ...spec, durationRounds: spec.durationRounds ?? this.newEffectDuration }, ctx),
+		);
+	private removeEffects = (iids: string[]) =>
+		this.host().act((c, ctx) => removeEffects(c, iids, ctx));
+	/** Remove an active effect from the panel (the ✕) — and with it the concentration it carried. */
+	removeEffect = (iid: string) => this.removeEffects([iid]);
+	/** Set an active effect's remaining duration to an exact round count (typed into the panel field):
+	 *  rounds from NOW, and 0 / blank → until removed. */
+	setEffectDuration = (iid: string, rounds: number) =>
+		this.host().act((c, ctx) => setEffectDuration(c, { iid, rounds }, ctx));
+	/** Nudge an active effect's REMAINING duration by ±1 round from the panel. */
+	bumpEffectDuration = (iid: string, delta: number) =>
+		this.host().act((c, ctx) => bumpEffectDuration(c, { iid, delta }, ctx));
 }

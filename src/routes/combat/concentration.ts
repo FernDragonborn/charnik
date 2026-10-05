@@ -1,8 +1,8 @@
 /*
- * Concentration — which spell is held, and everything that ends it: the player's own ✕, a replacing
- * cast, 0 HP, incapacitation, a state that forbids it. One unit because every one of those ends at
- * the same two writes — the ref cleared and the spell's carrier effect taken down — and a path that
- * did one without the other leaves a buff standing with no spell behind it.
+ * Concentration on the sheet — which spell is held, and the player ending it. Ending is two writes,
+ * the ref cleared and the spell's carrier effect taken down, and both are `$lib/play/concentration`;
+ * what ends it without being asked (0 HP, incapacitation, a state that forbids it) is
+ * `$lib/play/settle`.
  *
  * The SAVE a hit asks for is not here: `HitPoints` owns the banner and the roll, and calls `clear`
  * when the save fails. ESTABLISHING concentration is not here either — that is the cast's own step
@@ -15,14 +15,16 @@ import { localizedName } from '$lib/content/detail';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import { stopConcentrating } from '$lib/play/effects';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 
 /** What concentration needs from the sheet around it. */
 export interface ConcentrationHost {
 	character: Character | null;
 	graph: ContentGraph | null;
 	sheet: CharacterSheet | null;
-	economy: { incapacitated: boolean };
-	dismissConcentrationSave(): void;
+	/** Carry out a play-state action on the open character. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): void;
 }
 
 export class Concentration {
@@ -65,22 +67,5 @@ export class Concentration {
 	};
 
 	/** Stop concentrating — the state change alone, with nothing said about it. */
-	clear = () => {
-		const c = this.host().character;
-		if (!c) return;
-		if (c.play.concentration) this.removeLinkedEffect(c.play.concentration);
-		c.play.concentration = null;
-		this.host().dismissConcentrationSave(); // no spell → no owed save
-	};
-
-	/** RAW: dropping to 0 HP, becoming incapacitated, OR gaining a `blocks_concentration` state (Rage)
-	 *  ENDS concentration. Called reactively from the combat page so it fires the instant HP hits 0
-	 *  (Damage), an incapacitating condition lands, or Rage is entered. Idempotent — a no-op once
-	 *  concentration is already gone. */
-	endIfBroken = () => {
-		const { character, economy } = this.host();
-		if (!character?.play.concentration) return;
-		if (character.play.hp.current <= 0 || economy.incapacitated || this.cantConcentrate)
-			this.clear();
-	};
+	clear = () => this.host().act(stopConcentrating);
 }

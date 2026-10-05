@@ -6,9 +6,8 @@
  * One unit because they are one rule chain — damage decides instant death, makes the concentration
  * check due and drops you to 0, and the death-save track is what 0 HP leads to.
  *
- * An action that moves hit points, or what their maximum depends on, ends in `settleHitPoints`, so
- * the two rules that FOLLOW such a change hold wherever it came from, not only while a screen is
- * watching.
+ * An action that moves hit points, or what their maximum depends on, ends in `settled` (`./settle`),
+ * so the rules that FOLLOW such a change hold wherever it came from.
  */
 import { naturalOf, rollPool, type Rolled } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
@@ -26,6 +25,7 @@ import type { Character, CharacterPlay, DeathCause } from '$lib/character/schema
 import type { CharacterSheet } from '$lib/character/derive';
 import { endConcentration } from './concentration';
 import { leaveForm } from './form';
+import { settled } from './settle';
 import {
 	quietly,
 	type PlayContext,
@@ -93,42 +93,11 @@ function damageTakenName({ raw, type, final, bucket }: ResolvedDamagePart): Roll
 export const hitPointMaximum = (character: Character, sheet: CharacterSheet): number =>
 	effectiveHpMax(character.play.hp.max ?? null, sheet.maxHp);
 
-/**
- * The two rules that follow a change in hit points, whoever made it.
- *
- * Current hit points never stand above the effective maximum — an `hp_max` effect that expired (Aid)
- * or a manual max that was lowered pulls them down.
- *
- * And above 0 hit points nothing about dying is true, so the death-save track does not survive
- * there. RAW, both editions: "The number of both is reset to zero when you regain any hit points or
- * become stable". It is enforced here rather than at each of the several ways hit points go up — a
- * heal, a rest, a form handing them back — because those are open-ended and the state that depends
- * on them is one. A DEAD character is left alone: one can die at full hit points (exhaustion), and
- * their track is a record.
- *
- * Returns the character it was given when there is nothing to do.
- */
-export function settleHitPoints(character: Character, sheet: CharacterSheet): Character {
-	let play = character.play;
-	const max = hitPointMaximum(character, sheet);
-	if (play.hp.current > max) play = { ...play, hp: { ...play.hp, current: max } };
-	const tracked = play.deathSaves.successes > 0 || play.deathSaves.failures > 0;
-	if (!play.death && play.hp.current > 0 && tracked) play = notDying(play);
-	return play === character.play ? character : { ...character, play };
-}
-
 /** You are no longer dying: the death-save track resets. */
 const notDying = (play: CharacterPlay): CharacterPlay => ({
 	...play,
 	deathSaves: { successes: 0, failures: 0 },
 });
-
-/** An action's result with the rules that follow it applied — against the sheet as it stands NOW,
- *  since the action may have changed what the maximum is. */
-function settled(outcome: PlayOutcome, ctx: PlayContext): PlayOutcome {
-	const character = settleHitPoints(outcome.character, ctx.derive(outcome.character));
-	return character === outcome.character ? outcome : { ...outcome, character };
-}
 
 /** Record a death on the play-state. The first cause sticks: a character already dead is returned
  *  untouched and nothing is said twice. */

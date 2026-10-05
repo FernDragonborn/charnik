@@ -105,14 +105,14 @@ Combat is the view that has them. Which field to open first:
 | `hp`          | `hit-points`       | the hit being entered and the save it left owed; the rules are `$lib/play/hit-points` |
 | `outcomes`    | `play-outcomes`    | carrying a `$lib/play` action out: the held character, the log, the notices |
 | `casting`     | `spell-casting`    | slot reservation, upcast, a cast's tokens, prepared; its rolls are `spell-cast-rolls` |
-| `concentration` | `concentration`  | which spell is held, and every way it ends                        |
+| `concentration` | `concentration`  | which spell is held, and the player ending it; what else ends it is `$lib/play/settle` |
 | `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
 | `resources`   | `resource-tracker` | slot and resource pips, and what each rest recharges              |
 | `rests`       | `rest-controls`    | a rest as the player performs it — the Hit Dice it asks about     |
 | `economy`     | `turn-economy`     | action/bonus/reaction pips, movement, the turn, entering combat   |
-| `effects`     | `effects-editor`   | the effects and conditions on the sheet, and their round timers   |
+| `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `$lib/play/effects` |
 | `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |
 | `featureView` | `feature-view`     | which features are shown, which are pinned, and in what order     |
 | `layout`      | `panel-layout`     | the two panel columns, their order, and what is collapsed         |
