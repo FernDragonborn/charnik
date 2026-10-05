@@ -98,6 +98,35 @@
   and **a fifth exempt path in the Tauri import fence**, the first one where Rust pushes events
   into the webview. Constraints: no socket is opened and no dependency on a transport is added;
   removing the feature removes the capability file, the commands and the JS seam together.
+- [ ] **CONSENT-OUT-OF-REACH · plugin consent and the kill switch live where page script can write
+  them.** `charnik:plugins` in `localStorage` (`effects/plugin-host.ts` ▸ `PREFS_KEY`) is outside the
+  data folder, which is what stops a restored backup arriving pre-authorised — and inside the
+  webview, so a script running there can write the consent record and the plugin folder in one go.
+  Outcome: the record is read and written by a Rust command and kept in a directory the capability
+  denies (`internals/security.md` §2 ▸ the webview has no capability over the app's own
+  directories); granting consent is a native dialog, not a webview modal. Constraints: existing
+  consents migrate once and are not silently dropped; the web demo, which loads no plugins, is
+  unaffected. `research/table-link-design-review.md` ▸ S-03.
+- [ ] **PROSE-POLICY-TAIL · what the sanitiser still lets through.** A remote `<img>`, an
+  `<svg><image href>` and the `class` / `data-*` attributes survive
+  (`content/markdown.ts` ▸ `PROSE_POLICY`). `img-src` is what stops the request today, so one CSP
+  edit would reopen it. Outcome: remote image sources are dropped at the seam (a hook that keeps
+  `data:` and same-origin only); `data-*` is off; `class` is limited to the two names the renderer
+  adds itself. Check first that no shipped row and no theme relies on a class in prose.
+  `research/table-link-design-review.md` ▸ S-07.
+- [ ] **SANDBOX-OTHER-PLATFORMS · the capability change is verified on Windows only.** The fs scope
+  denies `$APPCONFIG`, `$APPDATA` and `$APPLOCALDATA`, `fs:default` is gone, and Settings opens its
+  two folders through `open_app_dir`. Outcome: on macOS and on Linux — where config and data are
+  different directories — a `/dev/` probe shows the data folder reading and writing, a portrait
+  loading, both folders opening, a second launch handing over, and a write onto
+  `<appConfig>/config.json` refused. Before the next release that ships to those platforms.
+- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Fourteen, listed
+  under "What to research next" in `research/table-link-design-review.md`, each one able to change
+  the design: what page script can do with the `process`, `updater` and `http` permissions; routes
+  that act on a URL alone; zod on hostile shapes; Svelte on duplicate keys; iroh on mobile; n0's
+  public relays as a dependency; build cost and the Rust 1.91 floor; cross-version wire
+  compatibility; key storage per platform; pairing ceremonies; an inert derive mode; how other
+  tools handle authority and griefing. An input to TABLE-LINK-SPEC, not a blocker for the seams.
 - [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
   `research/table-link-threats.md` (what the layer can do to a user) and
   `research/table-link-design-review.md` (what the existing code does with a network input, and the

@@ -285,7 +285,10 @@ position and are given per wave, because most of them were learned the hard way.
   HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
   COMPANION (research first).
 
-**Out of band — do these when next in the area, don't schedule them into a wave:** _(empty)_
+**Out of band — do these when next in the area, don't schedule them into a wave:**
+CONSENT-OUT-OF-REACH, PROSE-POLICY-TAIL, EFFECT-IID-UNIQUE, UNRESOLVED-ACTION-RUNS. Two are tied to a
+date instead: SANDBOX-OTHER-PLATFORMS before the next release that ships to macOS or Linux, and
+TABLE-LINK-RESEARCH before TABLE-LINK-SPEC is written.
 
 ## Verification
 Automated coverage and conventions live in [testing.md] (suites map to phases; run
