@@ -94,9 +94,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   is a pool the cast can be paid from, offered beside the slot levels, instead of a pip you clicked
   down by hand.
 - **Ritual casting.** A spell with the Ritual tag carries an `R`, and casting it as a ritual spends
-  no slot and takes ten minutes longer. Who may is asked of the class the spell is cast as: a wizard rituals from the spellbook
-  without preparing, a cleric or druid only what is prepared, and a feat's own spells by the feat's
-  rule. Both packs mark the SRD's 29 ritual spells. A 2014 warlock's Pact of the Tome does not
+  no slot and takes ten minutes longer. Who may is asked of the class the spell is cast as: a
+  wizard rituals from the spellbook without preparing, a cleric or druid only what is prepared,
+  and a feat's own spells by the feat's rule. Both packs mark the SRD's 29 ritual spells. A 2014 warlock's Pact of the Tome does not
   ritual yet.
 - **Known or prepared is the class's to say.** A 2014 bard's spells read as known, not prepared.
 - **Skilled takes tools as well as skills**, against the one count of three, and a feat slot from a
