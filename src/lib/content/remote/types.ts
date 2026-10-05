@@ -22,7 +22,9 @@ export interface RemoteFetcher {
 }
 
 /** Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB,
- *  and an unbounded read of a remote body is a memory-blowup waiting to happen (security.md §8). */
+ *  and an unbounded read of a remote body is a memory-blowup waiting to happen (security.md §8).
+ *  The desktop client enforces the same number where the body is read, in Rust (`MAX_BYTES`,
+ *  `src-tauri/src/remote.rs`); this one is what a fetcher written in JS holds itself to. */
 export const MAX_REMOTE_BYTES = 8 * 1024 * 1024;
 
 /**

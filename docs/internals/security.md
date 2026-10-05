@@ -168,9 +168,14 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > group in the source filter, with its own switch.
 
    > **BUILT (REL-4 slices 2–3): fetching content packs from a URL.** It goes through **Rust**
-   > (`tauri-plugin-http`, behind the `RemoteFetcher` seam), the same shape as the updater in §1,
-   > and **NOT** webview `fetch` — that would have meant relaxing §5's `connect-src`, i.e. trading
-   > a shipped invariant for convenience. Fetched CSVs are data, validated before use, and
+   > (`src-tauri/src/remote.rs`, behind the `RemoteFetcher` seam), the same shape as the updater
+   > in §1, and **NOT** webview `fetch` — that would have meant relaxing §5's `connect-src`, i.e.
+   > trading a shipped invariant for convenience. **The page is given two commands and no client**:
+   > a `GET` of a listing and a `GET` of a file, each to `api.github.com/repos/…` or
+   > `raw.githubusercontent.com` and nowhere else, following a redirect only to another such
+   > address, with a size ceiling and a time limit. The http plugin's own `fetch` is not exposed,
+   > because its scope is a URL pattern and the method and headers are the caller's — the same
+   > grant that read a pack could `POST` to a repository with somebody's token. Fetched CSVs are data, validated before use, and
    > **applying an update is always a user action**: a pack may be downloaded automatically, never
    > applied automatically, and nothing on a timer writes to disk.
    >

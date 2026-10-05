@@ -7,6 +7,7 @@ use tauri_plugin_fs::FsExt;
 use tauri_plugin_opener::OpenerExt;
 
 mod plugin_consent;
+mod remote;
 
 /// The set of directories the USER has chosen this session (via the native folder picker) or that we
 /// re-granted from our own persisted pointer at startup — the ONLY paths the fs scope may be extended
@@ -234,10 +235,6 @@ pub fn run() {
     let builder = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        // Content-pack update checks/downloads. The HTTP *client* lives here in Rust, never in the
-        // webview (docs/SECURITY.md §5 keeps `connect-src` shut); which hosts it may reach is
-        // declared in capabilities/default.json, not decided at runtime.
-        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init());
 
     // Self-update + relaunch only exist on desktop (no mobile/web target).
@@ -256,6 +253,8 @@ pub fn run() {
             apply_saved_data_dir,
             open_app_dir,
             proposed_data_dir,
+            remote::fetch_pack_text,
+            remote::fetch_pack_bytes,
             plugin_consent::plugin_prefs,
             plugin_consent::grant_plugin_consent,
             plugin_consent::forget_plugins,

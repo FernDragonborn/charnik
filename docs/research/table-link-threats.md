@@ -397,10 +397,8 @@ every permission in `src-tauri/capabilities/default.json` ([code]): read/write/r
 folder and `$APPDATA`; read all of `$APPCONFIG` (via both `fs:allow-appconfig-read-recursive` and `fs:default`) (and, on Windows and macOS, write it — P9); open any
 `http(s)`, `mailto:` or `tel:` URL in the OS ([doc Tauri opener]: `opener:default` includes
 `allow-default-urls`), open paths and reveal items; the `process` and `updater` defaults; HTTP
-requests through `plugin-http` to `https://api.github.com/repos/*` and
-`https://raw.githubusercontent.com/*` — the CSP does not govern plugin IPC, so this is a network
-channel the CSP does not close [inference: the scope limits URLs; whether methods such as POST are
-limited was not verified]; and — once the table link exists — every table command. Mitigation: **MUST** — table commands are narrow (B5): send a *typed* proposal to a *member
+requests to `https://api.github.com/repos/*` and `https://raw.githubusercontent.com/*` (`GET`
+only, through the app's own commands) — the CSP does not govern IPC, so this is a network channel the CSP does not close, held to reading by the commands themselves; and — once the table link exists — every table command. Mitigation: **MUST** — table commands are narrow (B5): send a *typed* proposal to a *member
 id from Rust state*; no "send bytes", no "dial address". **MUST** — destructive table actions (leave,
 remove member, change sharing) re-confirm in a native dialog. **MAY** — Tauri's isolation pattern,
 which intercepts IPC in a sandboxed iframe before it reaches the core [doc Tauri isolation] (notes
@@ -478,7 +476,7 @@ modal per network event.
 **E1 — The webview talking to the network directly.**
 `connect-src` falls back to `default-src` [spec CSP3 §6.8.3], so Charnik's `default-src 'self'`
 blocks `fetch`/WebSocket to other origins today. The CSP does not govern Tauri plugin IPC, so the
-webview still reaches GitHub through `plugin-http` (W6). Mitigation: **MUST** — keep the CSP; the
+webview still reaches GitHub through the app's pack-fetch commands (W6). Mitigation: **MUST** — keep the CSP; the
 table link lives in Rust and the CSP is not relaxed (the same choice `security.md` §7 made for pack
 downloads). **SHOULD** — review whether the webview needs the `http` capability at all, or whether
 pack fetching can be a narrow Rust command.

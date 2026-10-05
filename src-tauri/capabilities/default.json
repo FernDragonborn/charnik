@@ -11,6 +11,8 @@
 		"allow-apply-saved-data-dir",
 		"allow-open-app-dir",
 		"allow-proposed-data-dir",
+		"allow-fetch-pack-text",
+		"allow-fetch-pack-bytes",
 		"allow-plugin-prefs",
 		"allow-grant-plugin-consent",
 		"allow-forget-plugins",
@@ -25,14 +27,6 @@
 		"updater:default",
 		"process:default",
 		"log:default",
-		{
-			"identifier": "http:default",
-			"allow": [
-				{ "url": "https://api.github.com/repos/*" },
-				{ "url": "https://raw.githubusercontent.com/*" }
-			],
-			"deny": [{ "url": "http://**" }]
-		},
 		{
 			"identifier": "fs:scope",
 			"allow": [{ "path": "$DOCUMENT/charnik" }, { "path": "$DOCUMENT/charnik/**" }],

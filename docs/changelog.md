@@ -177,6 +177,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   empty window; it proposes a folder in your home instead.
 - **Confirm on first run takes the folder it proposes.** Without opening the picker first, the
   proposed folder was refused and the dialog simply stayed.
+- **The app can only READ from GitHub.** Checking and downloading a content pack went through a
+  network permission that allowed any kind of request to those addresses; it is two commands that
+  fetch and nothing else.
 - **Allowing a plugin to run is asked by your system, not by the page.** After the review, a
   native dialog names the plugin and its code fingerprint, in your language, and only a yes there
   is recorded — where nothing running inside the window can write it. Plugins you had enabled

@@ -36,7 +36,14 @@ tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 # Content-pack updates fetch over HTTPS from Rust, never webview `fetch` (docs/SECURITY.md §5).
+# Depended on for its HTTP client alone (`remote.rs`): the plugin is NOT initialised, so its `fetch`
+# command — any method, any header, to whatever the scope allows — does not exist for the page.
 tauri-plugin-http = "2"
+
+[dev-dependencies]
+# `remote.rs` builds a response by hand to test its size ceiling without a network.
+http = "1"
+tokio = { version = "1", features = ["macros", "rt"] }
 
 # Desktop-only: self-update from signed GitHub-release artifacts + relaunch after install.
 [target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]

@@ -857,10 +857,10 @@ plugins' own sources, not driven:
   user on any past version, silently, and relaunch into it. → UPDATER-FROM-PAGE.
 - `http:default`'s scope is a URL pattern and nothing else: the method is whatever the page says,
   and of the request headers only the fetch spec's forbidden ones are dropped, which
-  `Authorization` is not. The capability allows `https://api.github.com/repos/*`, so script in
-  the page can `POST` to an attacker's repository with the attacker's own token — an issue, a
-  comment, a file — and that is a write channel out of the app that the CSP never sees, since the
-  client is in Rust. → HTTP-ANY-METHOD.
+  `Authorization` is not. With `https://api.github.com/repos/*` allowed, script in the page could
+  `POST` to an attacker's repository with the attacker's own token — a write channel out of the
+  app that the CSP never sees, since the client is in Rust. The permission is no longer granted:
+  a pack is fetched by two commands that only `GET` (`docs/internals/security.md` §7).
 
 **4 · Routes that act on a URL alone.** None writes. `/build?edit=`, `?levelup=` and `?draft=`
 choose what the builder opens and nothing is saved until a field changes; `/settings?tab=`,

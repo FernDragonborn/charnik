@@ -39,7 +39,8 @@
   - **What actually blocks it is the capability, and no amount of TS solves that.** A Tauri
     capability is compiled into the binary and cannot be widened at runtime by config, by a pasted
     URL, or by a bug in the webview — which is exactly why it is the boundary (security.md §5/§7).
-    So today `src-tauri/capabilities/default.json` allows `api.github.com` +
+    The fetch commands' own allow-list is the same kind of thing one step in
+    (`src-tauri/src/remote.rs` ▸ `is_pack_host`): `api.github.com/repos/` +
     `raw.githubusercontent.com` and nothing else, and `checkRepo` answers `unsupported` for anything
     else. Widening it wholesale would hand any pasted URL the network, which is the one thing the
     seam exists to prevent.
@@ -114,12 +115,6 @@
   and relaunch into it — which is every bug that release had. Outcome: the check and the install
   are Rust commands that take no arguments, progress reaches the chip as events, and neither
   plugin's permission is in the capability. `lib/update/updater.svelte.ts` is the only caller.
-- [ ] **HTTP-ANY-METHOD · the pack fetcher's capability allows any method and any header.** The
-  http scope is a URL pattern: `https://api.github.com/repos/*` is as open to a `POST` carrying
-  somebody's token as to the `GET` the pack updater sends (same section, same item). Outcome: the
-  fetch is a Rust command that sends `GET` with the two headers the updater needs (`If-None-Match`,
-  `Accept`), keeps the size caps it has (`content/remote/tauri-fetch.ts`), and `http:default`
-  leaves the capability. `RemoteFetcher` is already the seam, so nothing above it moves.
 - [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Nine of the
   fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
   each one able to change the design: what `tracing` output a transport crate brings into the log;

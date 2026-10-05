@@ -69,6 +69,7 @@ name = "app"
 version = "0.7.0"
 dependencies = [
  "glob",
+ "http",
  "log",
  "serde",
  "serde_json",
@@ -82,6 +83,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
+ "tokio",
 ]
 
 [[package]]
