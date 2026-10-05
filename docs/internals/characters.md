@@ -25,6 +25,44 @@ rather than written over a working character. Restoring is itself a save, so the
 checkpointed on the way out as far as the `save` ring's throttle allows — what makes a wrong restore
 recoverable is the other snapshots, not that one.
 
+## One writer per character
+
+Every save of a character takes its turn on **one queue per character** (`repository.ts` ▸
+`enqueue`), and so does every append to its roll log: both files are rewritten whole by callers that
+fire and forget, so two overlapping writes would each start from the same "before". A save is
+validated when its turn comes, not when it was asked for, so the write that lands last is the state
+as it is last.
+
+The file states a **`rev`**, one higher on every write, and the copy that was saved is told which
+one it now is. That is what tells a copy of an older file from the current one: a play-loop save
+whose `rev` is not the file's is **refused**, and nothing is written.
+
+**The builder writes `build` and nothing else** — its build, plus the two authoring choices it folds
+into `ui` (`strict`, `shortRestMode`), merged over the file as it is at the moment of the save. A
+level-up in the middle of a session is the normal case, and the builder's own copy holds the `play`
+it opened with; written whole, it would put back hit points the table has since spent.
+
+**A file the app did not write is never written over without being asked about.** The repository
+remembers the text of each file as it was last adopted for editing or written, and a save that finds
+other bytes there is refused, as is one whose `rev` does not match. The bytes are compared rather
+than an mtime: a hand edit keeps the `rev`, a sync tool touches a date without changing a byte, and
+`Storage` reports a date only through a directory listing. On desktop `characters/` is watched the
+way `content/` is, so the question is raised when the file changes rather than at the next save.
+
+The question is a dialog a click on the backdrop does not close, with three answers
+(`store.svelte.ts` ▸ `resolveConflict`): the state on screen wins, the file's does, or both are kept
+— the screen's saved as a new character, which is the one left open. Whichever is taken goes **into
+the object the views already hold** (`putIntoActive`), and so does a restored snapshot: a view takes
+the open character once, on mount, so a replaced object would leave it saving the superseded one.
+
+**It is not a lock.** Holding the file open would stop a sync tool, a backup and the player's own
+editor from reading a file the product says is theirs, and the atomic temp → rename write replaces
+the file rather than writing into it.
+
+Three writes are never refused, because each IS the player choosing a state over the file's: a
+snapshot restore, "Restore demo", and the dialog's own "keep mine" (`SAVE_MODE.overwrite`). A save
+puts its own line into the roster rather than re-reading every character.
+
 ## The unfinished one is a different kind of file
 
 A build in progress autosaves to `character-drafts/<guid>.json` — debounced by the build page, driven

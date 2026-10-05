@@ -4,9 +4,10 @@
 	// Its sibling `/dev/packs-write` proves the pack APPLY path over a real OS; this one proves the
 	// half beside it that reading the code reasons about and never RUNS
 	// (`internals/testing.md` ▸ Auditing a subsystem by reading): the portrait write, the rotating backup rings and the
-	// restore that reads them, `readCharacterFiles`, and the draft filename encoding — which is the
+	// restore that reads them, `readCharacterFiles`, the draft filename encoding — which is the
 	// one that failed outright on Windows, because `encodeURIComponent` leaves `*` alone and Windows
-	// refuses it in a name.
+	// refuses it in a name — and the watcher on `characters/`, which has to tell somebody else's
+	// write from the events the app's own temp → rename save produces.
 	//
 	// A `MemoryStorage` test proves none of it: fakes overwrite happily, encode nothing, and accept
 	// every byte a name can hold.
@@ -17,6 +18,7 @@
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import {
 		backupCharacter,
+		CharacterConflictError,
 		deleteCharacter,
 		listCharacterBackups,
 		loadCharacter,
@@ -27,6 +29,14 @@
 		writeCharacterPhoto,
 	} from '$lib/character/repository';
 	import { newCharacter } from '$lib/character/schema';
+	import {
+		characters,
+		CONFLICT_CHOICE,
+		openCharacter,
+		resolveConflict,
+		saveCharacterToStore,
+		startCharacterWatcher,
+	} from '$lib/character/store.svelte';
 	import {
 		deleteDraft,
 		findUnreadableDrafts,
@@ -54,6 +64,13 @@
 	function check(what: string, ok: boolean, detail = ''): void {
 		if (!ok) failures += 1;
 		say(`${ok ? 'ok  ' : 'FAIL'} ${what}${detail === '' ? '' : ` — ${detail}`}`);
+	}
+
+	/** Wait for `done`, or for the whole of `ms` when there is nothing to wait FOR — the absence of
+	 *  an event is only evidence once the event has had time to arrive. */
+	async function settled(ms: number, done: () => boolean = () => false): Promise<void> {
+		for (let waited = 0; waited < ms && !done(); waited += 100)
+			await new Promise((r) => setTimeout(r, 100));
 	}
 
 	const bytes = (...n: number[]) => new Uint8Array(n);
@@ -189,7 +206,44 @@
 		);
 		check('nothing landed in the unreadable pile', (await findUnreadableDrafts(s)).length === 0);
 
-		// --- 6. what this probe does NOT cover, said out loud ---------------------------------------
+		// --- 6. somebody else writes the open character's file ---------------------------------------
+		// The watcher is what a fake cannot stand in for: a real write is temp → rename, the OS reports
+		// each step, and the app's OWN save must not read back as somebody else's.
+		const before = characters.active?.id ?? null;
+		startCharacterWatcher();
+		const open = await openCharacter(ID);
+		if (open) {
+			for (const hp of [3, 2, 1]) {
+				open.play.hp.current = hp;
+				await saveCharacterToStore(open);
+			}
+			await settled(1500);
+			check('the app’s own saves raise no question', characters.conflict === null);
+			const file = `${DIR}/character.json`;
+			await s.write(file, (await s.read(file)).replace('"Probe"', '"Probe by Another Hand"'));
+			await settled(3000, () => characters.conflict !== null);
+			check('a write from outside raises it with no save pressed', characters.conflict !== null);
+			open.play.hp.current = 9;
+			const refused = await saveCharacterToStore(open).then(
+				() => false,
+				(e: unknown) => e instanceof CharacterConflictError,
+			);
+			check('…and the next save is refused, not written', refused);
+			await resolveConflict(CONFLICT_CHOICE.file);
+			check(
+				'taking the file puts it on screen',
+				characters.active?.build.name === 'Probe by Another Hand',
+				characters.active?.build.name ?? 'no active character',
+			);
+			await settled(1500);
+			check('…and settles the question', characters.conflict === null);
+		} else check('the probe character opens', false);
+		// the probe borrowed the app's one open character; hand back whoever was there
+		characters.conflict = null;
+		if (before) await openCharacter(before);
+		else characters.active = null;
+
+		// --- 7. what this probe does NOT cover, said out loud ---------------------------------------
 		// A file held open by another process and a junction for `walkTree` need shell fixtures, so
 		// they are `/dev/storage-edges`'s. The folder picker is an OS dialog outside any webview
 		// (`testing.md`). Naming them keeps the next reader from assuming this probe covered them.

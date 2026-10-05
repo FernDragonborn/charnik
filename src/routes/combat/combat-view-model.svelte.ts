@@ -33,13 +33,8 @@ import {
 	type StandardAction,
 } from '$lib/combat/helpers';
 import { RollJournal } from './roll-journal.svelte';
-import {
-	appendLog,
-	reviseLog,
-	readLog,
-	logLineFor,
-	snapshotCharacterOnLaunch,
-} from '$lib/character/repository';
+import { snapshotCharacterOnLaunch } from '$lib/character/repository';
+import { appendLog, reviseLog, readLog, logLineFor } from '$lib/character/log-repository';
 import { getUserStorage } from '$lib/storage/provider';
 import { rehydrateLogEntry } from '$lib/combat/roll';
 import type { RollLogEntry } from '$lib/combat/helpers';

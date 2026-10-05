@@ -427,6 +427,9 @@ const uiSchema = z
 export const characterSchema = z.object({
 	schemaVersion: z.number().int().default(CHARACTER_SCHEMA_VERSION),
 	id: slug,
+	/** How many times this file has been written. Each write states the next one, and a copy whose
+	 *  `rev` is not the file's is a copy of an older file (`repository.ts` ▸ `saveCharacter`). */
+	rev: z.number().int().min(0).default(0),
 	system: z.enum(SYSTEMS),
 	build: buildSchema,
 	play: playSchema,

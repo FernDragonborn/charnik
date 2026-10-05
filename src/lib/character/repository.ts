@@ -9,94 +9,18 @@
  * past the caller (roster keeps listing the others).
  */
 import type { Storage, FileEntry } from '../storage/types';
-import {
-	migrate,
-	CHARACTER_SCHEMA_VERSION,
-	type Migration,
-	type Versioned,
-} from '../schema/version';
+import { migrate, CHARACTER_SCHEMA_VERSION, type Versioned } from '../schema/version';
+import { CHARACTER_MIGRATIONS } from './migrations';
 import { characterSchema, parseCharacter, type Character } from './schema';
 import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
 import { errText } from '../util/format';
 import { logger, redactPath } from '../diag/logger';
-// TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
-// the roll lives. Erased at build — no runtime edge from the character layer into combat.
-import type { RollLogEntry } from '../combat/roll';
-
-/** Snake-case the ID segment of a content ref `type:source:id` (only the id part — the `source`
- *  like "SRD 5.1" is display and left alone), or a bare skill id. Non-strings pass through. */
-const snakeRef = (ref: unknown): unknown => {
-	if (typeof ref !== 'string' || ref === '') return ref;
-	const i = ref.lastIndexOf(':');
-	return i === -1
-		? ref.replace(/-/g, '_')
-		: ref.slice(0, i + 1) + ref.slice(i + 1).replace(/-/g, '_');
-};
-const snakeRefs = (arr: unknown): unknown => (Array.isArray(arr) ? arr.map(snakeRef) : arr);
-
-/**
- * E3 migration (v1→v2): content ids became snake_case, so a saved character's REFS are rewritten.
- * Build refs (species/classes/subclass/feats/inventory/spells/background/languages) + skill/expertise
- * arrays + the concentration ref are snaked. Runtime `play.effects` tokens are left as-is (user-entered,
- * ambiguous with the `-` minus operator; the user re-adds them) — a pragmatic, safe scope.
- */
-const migrateV1toV2: Migration<Versioned> = (data) => {
-	const d = data as unknown as Record<string, unknown>;
-	const build = (d.build ?? {}) as Record<string, unknown>;
-	const play = (d.play ?? {}) as Record<string, unknown>;
-	for (const key of ['species', 'speciesOption', 'background'] as const)
-		if (typeof build[key] === 'string') build[key] = snakeRef(build[key]);
-	// `languages` holds `language:src:id` refs and predates the rename by twelve days — left out of
-	// this list, a v1 save silently lost every language whose id was kebab-cased
-	for (const key of ['feats', 'skills', 'expertise', 'languages'] as const)
-		build[key] = snakeRefs(build[key]);
-	// spells are `{spell: ref, …}` objects, not bare refs
-	if (Array.isArray(build.spells))
-		build.spells = build.spells.map((s) => {
-			const ss = s as Record<string, unknown>;
-			return { ...ss, spell: snakeRef(ss.spell) };
-		});
-	if (Array.isArray(build.classes))
-		build.classes = build.classes.map((c) => {
-			const cc = c as Record<string, unknown>;
-			return { ...cc, class: snakeRef(cc.class), subclass: snakeRef(cc.subclass) };
-		});
-	if (Array.isArray(build.inventory))
-		build.inventory = build.inventory.map((it) => {
-			const ii = it as Record<string, unknown>;
-			return { ...ii, item: snakeRef(ii.item) };
-		});
-	if (typeof play.concentration === 'string') play.concentration = snakeRef(play.concentration);
-	if (Array.isArray(play.effects))
-		play.effects = play.effects.map((e) => {
-			const ee = e as Record<string, unknown>;
-			return typeof ee.source === 'string' ? { ...ee, source: snakeRef(ee.source) } : ee;
-		});
-	return { ...d, build, play, schemaVersion: 2 } as unknown as Versioned;
-};
-
-/**
- * v2→v3: re-run the SAME ref-snaking. Why: the seeded DEMO character was written at v2 with
- * kebab refs (demo/sheet.ts predated the E3 id rename but was never migrated — it is built fresh,
- * so migrateV1toV2 never saw it). snakeRef is idempotent on already-snake ids, so re-running is
- * safe for every legitimate v2 save; only stale kebab refs change.
- */
-const migrateV2toV3: Migration<Versioned> = (data) => ({
-	...(migrateV1toV2(data) as unknown as Record<string, unknown>),
-	schemaVersion: 3,
-});
-
-/** Forward migrations keyed by the version they upgrade FROM. */
-const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {
-	1: migrateV1toV2,
-	2: migrateV2toV3,
-};
 
 const CHARACTERS_DIR = 'characters';
-const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;
+/** A character's own folder, relative to the data folder. */
+export const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;
 const fileOf = (slug: string) => `${dirOf(slug)}/character.json`;
-const logOf = (slug: string) => `${dirOf(slug)}/log.jsonl`;
 
 export interface LoadResult {
 	ok: boolean;
@@ -239,8 +163,10 @@ export async function restoreCharacterBackup(
 	logger.info('character: restoring snapshot', { snapshot: redactPath(path) });
 	// through `saveCharacter`, so the restore is checkpointed into the ring like any other write and
 	// the id is re-anchored to the folder it is landing in (a hand-copied snapshot may carry another)
-	await saveCharacter(storage, { ...res.character, id });
-	return { ok: true, character: { ...res.character, id } };
+	// — and as an `overwrite`, because a snapshot is by definition not the file's current revision
+	const restored = { ...res.character, id };
+	await saveCharacter(storage, restored, SAVE_MODE.overwrite);
+	return { ok: true, character: restored };
 }
 
 /** Character ids already launch-snapshotted this session — one snapshot per app run, not per open. */
@@ -257,27 +183,181 @@ export async function snapshotCharacterOnLaunch(storage: Storage, id: string): P
 	}
 }
 
-/** Write a character (validates first; refuses to persist an invalid one). Checkpoints the PREVIOUS
- *  saved state into the rotating `save` backup ring first (throttled — B3). */
-export async function saveCharacter(storage: Storage, character: Character): Promise<void> {
-	const res = characterSchema.safeParse(character);
-	if (!res.success) {
-		const issues = res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ');
-		// the one way a save can be refused rather than fail — worth a line of its own, because the
-		// user sees a toast and the reason is a schema path they have no way to report back
-		logger.error('character: refusing to save invalid', { issues });
-		throw new Error(`refusing to save invalid character: ${issues}`);
+/**
+ * One queue per character: every task that reads-then-writes a file in a character's folder runs
+ * after the one before it. `character.json` and `log.jsonl` are both rewritten whole, from callers
+ * that fire and forget, so two overlapping tasks would each read the same "before" and the later
+ * write would erase the earlier one. A task must not enqueue onto its own slug — it would wait for
+ * itself.
+ */
+const characterQueues = new Map<string, Promise<unknown>>();
+export function enqueue<T>(slug: string, task: () => Promise<T>): Promise<T> {
+	const prior = characterQueues.get(slug) ?? Promise.resolve();
+	const next = prior.catch(() => {}).then(task);
+	characterQueues.set(slug, next);
+	// drop the queue once it drains so the map doesn't retain a slug forever; the caller holds `next`
+	// and owns its rejection, this branch only tidies
+	void next
+		.finally(() => {
+			if (characterQueues.get(slug) === next) characterQueues.delete(slug);
+		})
+		.catch(() => {});
+	return next;
+}
+
+/**
+ * The text of each `character.json` as this app last read it for editing or wrote it, per storage.
+ * It is what "the file on disk is not the one the app last wrote" is asked of: a hand edit and a
+ * sync tool's copy both keep or reuse a `rev`, and the bytes are the one thing neither can match by
+ * accident. Compared rather than an mtime because `Storage` reports one only through a directory
+ * listing, a sync tool rewrites it without changing a byte, and the web store has none to trust.
+ */
+const heldFiles = new WeakMap<Storage, Map<string, string>>();
+function heldBy(storage: Storage): Map<string, string> {
+	let held = heldFiles.get(storage);
+	if (!held) heldFiles.set(storage, (held = new Map()));
+	return held;
+}
+
+/** How a write treats the file already on disk. */
+export const SAVE_MODE = {
+	/** The play loop: refused when the file moved on from the copy being saved. */
+	checked: 'checked',
+	/** The builder: only what the builder owns is written, over the file as it is right now. */
+	build: 'build',
+	/** A state the player chose over the file's — a restore, the demo, "keep mine". Never refused. */
+	overwrite: 'overwrite',
+} as const;
+export type SaveMode = (typeof SAVE_MODE)[keyof typeof SAVE_MODE];
+
+/** A save that was REFUSED because the file is not the one this copy came from. Carries what would
+ *  have been written, so whoever asks the player has it to offer. */
+export class CharacterConflictError extends Error {
+	constructor(readonly character: Character) {
+		super(`character "${character.id}" changed on disk since it was read`);
+		this.name = 'CharacterConflictError';
 	}
-	// snapshot the state we're about to overwrite (throttled), so a bad save is recoverable
+}
+
+/** The `rev` a stored file states, or `undefined` when it cannot be read as one — which is itself a
+ *  file this app did not write. */
+function revOf(raw: string): number | undefined {
 	try {
-		await backupCharacter(storage, character.id, 'save');
-	} catch (e) {
-		// best-effort — never block a save on a backup failure, but a recovery set that has silently
-		// stopped being written is exactly what nobody finds out until they need it
-		logger.warn('character: save backup failed', { error: errText(e) });
+		const rev = (JSON.parse(raw) as { rev?: unknown } | null)?.rev ?? 0;
+		return typeof rev === 'number' ? rev : undefined;
+	} catch {
+		return undefined;
 	}
-	await storage.mkdir(dirOf(character.id));
-	await storage.write(fileOf(character.id), JSON.stringify(res.data, null, 2));
+}
+
+/** What the builder owns of a character: the build, and the two authoring choices it folds into
+ *  `ui`. Everything else is the file's, because the table kept playing while the builder was open. */
+function mergeBuildOver(onDisk: Character, built: Character): Character {
+	return {
+		...onDisk,
+		build: built.build,
+		ui: { ...onDisk.ui, strict: built.ui.strict, shortRestMode: built.ui.shortRestMode },
+	};
+}
+
+/**
+ * Write a character (validates first; refuses to persist an invalid one), in its turn on the
+ * character's queue. Checkpoints the PREVIOUS saved state into the rotating `save` backup ring first
+ * (throttled — B3).
+ *
+ * Every write carries the next `rev`, and the copy handed in is told which one it now is. A
+ * `checked` write is refused with `CharacterConflictError` when the file states another `rev` than
+ * the copy does, and every write but `overwrite` is refused when the file's bytes are not the ones
+ * this app last held — nothing is written, and the caller asks the player which state wins.
+ */
+export function saveCharacter(
+	storage: Storage,
+	character: Character,
+	mode: SaveMode = SAVE_MODE.checked,
+): Promise<void> {
+	return enqueue(character.id, async () => {
+		// validated INSIDE the task, so a save that waited its turn writes the state as it is now
+		const res = characterSchema.safeParse(character);
+		if (!res.success) {
+			const issues = res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ');
+			// the one way a save can be refused rather than fail — worth a line of its own, because the
+			// user sees a toast and the reason is a schema path they have no way to report back
+			logger.error('character: refusing to save invalid', { issues });
+			throw new Error(`refusing to save invalid character: ${issues}`);
+		}
+		const id = res.data.id;
+		const held = heldBy(storage);
+		const current = (await storage.exists(fileOf(id))) ? await storage.read(fileOf(id)) : null;
+		let next = res.data;
+		let rev = next.rev;
+		if (current !== null) {
+			const onDisk = revOf(current);
+			if (mode === SAVE_MODE.build) {
+				const stored = readSavedCharacter(current).character;
+				if (stored) next = mergeBuildOver(stored, next);
+			}
+			const heldText = held.get(id);
+			const editedOutside = heldText !== undefined && heldText !== current;
+			const staleCopy = mode === SAVE_MODE.checked && onDisk !== next.rev;
+			if (mode !== SAVE_MODE.overwrite && (editedOutside || staleCopy)) {
+				logger.warn('character: save refused, the file changed', { editedOutside, staleCopy });
+				throw new CharacterConflictError(next);
+			}
+			rev = Math.max(onDisk ?? 0, next.rev);
+			// snapshot the state we're about to overwrite (throttled), so a bad save is recoverable
+			try {
+				await backupCharacter(storage, id, 'save');
+			} catch (e) {
+				// best-effort — never block a save on a backup failure, but a recovery set that has
+				// silently stopped being written is exactly what nobody finds out until they need it
+				logger.warn('character: save backup failed', { error: errText(e) });
+			}
+		}
+		const text = JSON.stringify({ ...next, rev: rev + 1 }, null, 2);
+		await storage.mkdir(dirOf(id));
+		await storage.write(fileOf(id), text);
+		held.set(id, text);
+		character.rev = rev + 1;
+	});
+}
+
+/**
+ * Load a character as the copy the app will EDIT: the same parse → migrate → validate, and the
+ * file's text is remembered as the state this app holds, so a later save can tell a file somebody
+ * else changed from the one it read. The roster and the builder read without adopting — neither
+ * holds the copy the play loop writes back.
+ */
+export function adoptCharacter(storage: Storage, slug: string): Promise<LoadResult> {
+	return enqueue(slug, async () => {
+		let raw: string;
+		try {
+			raw = await storage.read(fileOf(slug));
+		} catch {
+			heldBy(storage).delete(slug);
+			return { ok: false, error: `not found: ${slug}` };
+		}
+		heldBy(storage).set(slug, raw);
+		return readSavedCharacter(raw);
+	});
+}
+
+/** Has `character.json` stopped being the text this app holds? Asked when the folder watcher
+ *  reports a change, in the character's queue so the app's own write has finished being recorded.
+ *  A file that is gone, or one never adopted, is not a change to ask the player about. */
+export function characterChangedOutside(storage: Storage, slug: string): Promise<boolean> {
+	return enqueue(slug, async () => {
+		const heldText = heldBy(storage).get(slug);
+		if (heldText === undefined || !(await storage.exists(fileOf(slug)))) return false;
+		return (await storage.read(fileOf(slug))) !== heldText;
+	});
+}
+
+/** The slug a path under the data folder names, when that path is a character's own save. */
+export function characterSlugOfPath(path: string): string | null {
+	const parts = path.split(/[/\\]/);
+	return parts.length === 3 && parts[0] === CHARACTERS_DIR && parts[2] === 'character.json'
+		? (parts[1] ?? null)
+		: null;
 }
 
 /** The portrait's file name inside a character folder — one per character, so picking a new one
@@ -307,6 +387,24 @@ export function readCharacterPhoto(
 	name: string,
 ): Promise<Uint8Array> {
 	return storage.readBytes(`${dirOf(id)}/${name}`);
+}
+
+/** Give a second character its own copy of a portrait, under the same name. A portrait that cannot
+ *  be read is left behind: the copy renders without one, as the original would. */
+export async function copyCharacterPhoto(
+	storage: Storage,
+	from: string,
+	to: string,
+	name: string,
+): Promise<void> {
+	let bytes: Uint8Array;
+	try {
+		bytes = await readCharacterPhoto(storage, from, name);
+	} catch {
+		return;
+	}
+	await storage.mkdir(dirOf(to));
+	await storage.writeBytes(`${dirOf(to)}/${name}`, bytes);
 }
 
 /** Remove every portrait file in a character's folder (the way OUT of having one). Best-effort per
@@ -404,6 +502,17 @@ export async function readCharacterFiles(
 	return files.filter((f) => f.json !== '');
 }
 
+/** The roster line a character reads as — what a save updates in place of re-reading every file. */
+export function rosterEntryOf(c: Character): RosterEntry {
+	return {
+		id: c.id,
+		name: c.build.name,
+		system: c.system,
+		level: c.build.classes.reduce((n, cl) => n + cl.level, 0),
+		classes: c.build.classes.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`).join(' / '),
+	};
+}
+
 /** List the roster. Bad saves become entries with an `error` (they still show up). */
 export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 	if (!(await storage.exists(CHARACTERS_DIR))) return [];
@@ -413,18 +522,7 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 	const out = await Promise.all(
 		slugs.map(async (slug): Promise<RosterEntry> => {
 			const res = await loadCharacter(storage, slug);
-			if (res.ok && res.character) {
-				const c = res.character;
-				return {
-					id: c.id,
-					name: c.build.name,
-					system: c.system,
-					level: c.build.classes.reduce((n, cl) => n + cl.level, 0),
-					classes: c.build.classes
-						.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`)
-						.join(' / '),
-				};
-			}
+			if (res.ok && res.character) return rosterEntryOf(res.character);
 			return {
 				id: slug,
 				name: slug,
@@ -441,142 +539,6 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 /** Delete a character folder (character.json, log, photo). */
 export async function deleteCharacter(storage: Storage, slug: string): Promise<void> {
 	logger.info('character: deleting');
+	heldBy(storage).delete(slug);
 	await storage.remove(dirOf(slug));
-}
-
-// --- roll log (append-only sibling; kept out of character.json) ---------------
-
-/** The kinds of line `log.jsonl` holds. `roll` is the only one written today — see `LogEntry.kind`. */
-export const LOG_KIND = { roll: 'roll' } as const;
-type LogKind = (typeof LOG_KIND)[keyof typeof LOG_KIND];
-
-export interface LogEntry {
-	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21
-	/** What KIND of line this is. One member so far — every writer has always said `roll`, while the
-	 *  type advertised a taxonomy ("attack" | "save" | "check" | …) nothing ever wrote, so a reader
-	 *  could not trust it. A named member rather than a free string, per
-	 *  AGENTS.md ▸ Taste (open enums, never booleans): reviving the taxonomy means adding a member here, and every switch over it
-	 *  then fails to compile until it handles the new one. */
-	kind: LogKind;
-	label: string;
-	/** The COMPLETE in-session record: dice, per-type damage, the advantage pair, the provenance
-	 *  note. The line used to carry a flattened summary instead, so a reload silently returned a
-	 *  poorer log than the one on screen — an attack without its damage, an advantaged roll without
-	 *  its pair. Absent on lines written before that. */
-	roll?: RollLogEntry;
-	/** The flattened total + rendered expression. LEGACY: still written so a line stays readable by
-	 *  an older build, and still read for lines that predate `roll`. Nothing new should grow here. */
-	result?: number;
-	detail?: string;
-}
-
-/** The stored line for one completed roll: the WHOLE record, plus the flattened summary an older
- *  build reads. One builder, so an append and a revision can never write different shapes. */
-export function logLineFor(roll: RollLogEntry): LogEntry {
-	return {
-		t: roll.at ?? Date.now(),
-		kind: LOG_KIND.roll,
-		label: roll.label,
-		roll,
-		...(Number.isFinite(roll.total) ? { result: roll.total } : {}),
-		...(roll.expr ? { detail: roll.expr } : {}),
-	};
-}
-
-/** Cap on retained roll-log lines on disk — the log is a rolling history, not an archive, so it
- *  can't grow without bound (B4). Older lines drop off the front when the file exceeds this.
- *  100 is enough to reopen the app and see the session before, at ~30–66 KB (a structured attack
- *  line is 678 B, a plain save 296 B). It also bounds the cost of a ROLL: `writeLogLine` reads and
- *  rewrites the whole file on every append, so the cap is the per-roll IO too. Matches
- *  `ROLL_LOG_MAX`, the in-session cap — a memory log deeper than the disk one loses half of itself
- *  on reload with nothing said. */
-const LOG_MAX_LINES = 100;
-
-/** Per-slug append chain (BUG-4): `appendLog` is read-modify-write and fire-and-forget from the
- *  combat view, so two fast rolls would both read the same `prev` and the second write would clobber
- *  the first. Chaining each slug's appends serializes the read→write so entries can't race. */
-const appendChains = new Map<string, Promise<void>>();
-
-/** Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines
- *  past `LOG_MAX_LINES` so the file stays bounded. Serialized per slug so concurrent appends don't
- *  lose entries (BUG-4). */
-export function appendLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	const prior = appendChains.get(slug) ?? Promise.resolve();
-	const next = prior.catch(() => {}).then(() => writeLogLine(storage, slug, entry));
-	appendChains.set(slug, next);
-	// drop the chain once it drains so the map doesn't retain a slug forever
-	void next.finally(() => {
-		if (appendChains.get(slug) === next) appendChains.delete(slug);
-	});
-	return next;
-}
-
-async function writeLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	// "there is no log yet" and "the log is there and could not be read" are different answers, and the
-	// recovery for the first — rewrite the file from this one entry — destroys the second's hundred
-	// lines. `exists` is on the interface, so the branch can ask instead of assuming.
-	const path = logOf(slug);
-	const prev = (await storage.exists(path)) ? await storage.read(path) : '';
-	const lines = prev ? prev.split('\n').filter((l) => l.trim()) : [];
-	lines.push(JSON.stringify(entry));
-	const kept = lines.length > LOG_MAX_LINES ? lines.slice(lines.length - LOG_MAX_LINES) : lines;
-	await storage.write(logOf(slug), kept.join('\n') + '\n');
-}
-
-/** Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage
- *  applied after the fact, a reroll. Appending instead would record the same roll twice, and leaving
- *  it alone would mean the correction dies with the session. Runs on the same per-slug chain as
- *  `appendLog`, since both rewrite the whole file. No-op when the line has rotated off. */
-export function reviseLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	const prior = appendChains.get(slug) ?? Promise.resolve();
-	const next = prior.catch(() => {}).then(() => rewriteLogLine(storage, slug, entry));
-	appendChains.set(slug, next);
-	void next.finally(() => {
-		if (appendChains.get(slug) === next) appendChains.delete(slug);
-	});
-	return next;
-}
-
-async function rewriteLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	let prev: string;
-	try {
-		prev = await storage.read(logOf(slug));
-	} catch {
-		return; // no log yet — nothing to revise
-	}
-	const lines = prev.split('\n').filter((l) => l.trim());
-	const i = lines.findIndex((l) => l.includes(`"t":${entry.t}`) && parsedT(l) === entry.t);
-	if (i === -1) return;
-	lines[i] = JSON.stringify(entry);
-	await storage.write(logOf(slug), lines.join('\n') + '\n');
-}
-
-/** The `t` of one stored line, or NaN if it doesn't parse — the cheap `includes` above narrows the
- *  candidates, this confirms one (a damage total of 1755... could contain the digits by accident). */
-function parsedT(line: string): number {
-	try {
-		return (JSON.parse(line) as LogEntry).t;
-	} catch {
-		return NaN;
-	}
-}
-
-/** Read the whole roll log, newest first. Bad lines are skipped. */
-export async function readLog(storage: Storage, slug: string): Promise<LogEntry[]> {
-	let raw: string;
-	try {
-		raw = await storage.read(logOf(slug));
-	} catch {
-		return [];
-	}
-	const out: LogEntry[] = [];
-	for (const line of raw.split('\n')) {
-		if (!line.trim()) continue;
-		try {
-			out.push(JSON.parse(line) as LogEntry);
-		} catch {
-			/* skip corrupt line */
-		}
-	}
-	return out.reverse();
 }

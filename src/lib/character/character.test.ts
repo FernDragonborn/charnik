@@ -9,11 +9,6 @@ import {
 	loadCharacter,
 	listCharacters,
 	deleteCharacter,
-	appendLog,
-	LOG_KIND,
-	reviseLog,
-	logLineFor,
-	readLog,
 	backupCharacter,
 	listCharacterBackups,
 	restoreCharacterBackup,
@@ -22,7 +17,13 @@ import {
 	readCharacterPhoto,
 	removeCharacterPhotos,
 	readCharacterFiles,
+	adoptCharacter,
+	characterChangedOutside,
+	characterSlugOfPath,
+	CharacterConflictError,
+	SAVE_MODE,
 } from './repository';
+import { appendLog, LOG_KIND, reviseLog, logLineFor, readLog } from './log-repository';
 import { charactersReferencing } from '$lib/content/remote/diff';
 import { attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
@@ -549,5 +550,92 @@ describe('inventory operations (shared by the builder draft and the play sheet)'
 	it('attunement is counted from the entries, so the cap can be judged anywhere', () => {
 		expect(attunedCount(list)).toBe(1);
 		expect(attunedCount(toggleAttuned(list, 'item:S:potion'))).toBe(2);
+	});
+});
+
+describe('one writer per open character (CHARACTER-WRITER)', () => {
+	const FILE = 'characters/mirt/character.json';
+	const onDisk = async (s: MemoryStorage) => (await loadCharacter(s, 'mirt')).character!;
+
+	it('lands overlapping saves in the order they were asked for', async () => {
+		// the first save's read is the slow one: without the queue the second, faster save would
+		// write first and the older state would land last
+		class SlowFirstRead extends MemoryStorage {
+			#reads = 0;
+			override async exists(path: string): Promise<boolean> {
+				if (path === FILE && this.#reads++ === 0) await new Promise((r) => setTimeout(r, 20));
+				return super.exists(path);
+			}
+		}
+		const s = new SlowFirstRead();
+		const c = sample();
+		const first = saveCharacter(s, c);
+		c.play.hp.current = 1;
+		const second = saveCharacter(s, c);
+		await Promise.all([first, second]);
+		expect((await onDisk(s)).play.hp.current).toBe(1);
+		expect((await onDisk(s)).rev).toBe(2);
+	});
+
+	it('states the next rev on every write, and tells the copy which one it is', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		await saveCharacter(s, c);
+		await saveCharacter(s, c);
+		expect(c.rev).toBe(2);
+		expect((await onDisk(s)).rev).toBe(2);
+	});
+
+	it('refuses a copy of an older file, and writes nothing', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		await saveCharacter(s, c);
+		const stale = structuredClone(c);
+		c.play.hp.current = 9;
+		await saveCharacter(s, c);
+		stale.play.hp.current = 2;
+		await expect(saveCharacter(s, stale)).rejects.toBeInstanceOf(CharacterConflictError);
+		expect((await onDisk(s)).play.hp.current).toBe(9);
+	});
+
+	it('refuses to write over a file somebody else edited, even at the same rev', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		const mine = (await adoptCharacter(s, 'mirt')).character!;
+		expect(await characterChangedOutside(s, 'mirt')).toBe(false);
+		// a hand edit: the name moves, the rev does not
+		await s.write(FILE, (await s.read(FILE)).replace('"Mirt"', '"Mirt the Edited"'));
+		expect(await characterChangedOutside(s, 'mirt')).toBe(true);
+		mine.play.hp.current = 5;
+		await expect(saveCharacter(s, mine)).rejects.toBeInstanceOf(CharacterConflictError);
+		expect((await onDisk(s)).build.name).toBe('Mirt the Edited');
+		// the player's answer "mine wins" is the one write that is never refused
+		await saveCharacter(s, mine, SAVE_MODE.overwrite);
+		expect((await onDisk(s)).build.name).toBe('Mirt');
+		expect((await onDisk(s)).play.hp.current).toBe(5);
+		expect(await characterChangedOutside(s, 'mirt')).toBe(false);
+	});
+
+	it("writes the builder's build over the file's own play, not the play it opened with", async () => {
+		const s = new MemoryStorage();
+		const played = sample();
+		await saveCharacter(s, played);
+		const inBuilder = (await loadCharacter(s, 'mirt')).character!;
+		// the table plays on while the builder is open
+		played.play.hp.current = 3;
+		await saveCharacter(s, played);
+		inBuilder.build.abilities.int = 18;
+		await saveCharacter(s, inBuilder, SAVE_MODE.build);
+		const after = await onDisk(s);
+		expect(after.build.abilities.int).toBe(18);
+		expect(after.play.hp.current).toBe(3);
+		expect(after.rev).toBe(3);
+	});
+
+	it('names the character a watched path belongs to, and nothing else in the folder', () => {
+		expect(characterSlugOfPath('characters/mirt/character.json')).toBe('mirt');
+		expect(characterSlugOfPath('characters\\mirt\\character.json')).toBe('mirt');
+		expect(characterSlugOfPath('characters/mirt/log.jsonl')).toBeNull();
+		expect(characterSlugOfPath('characters/mirt/character.bak.save.1.json')).toBeNull();
 	});
 });

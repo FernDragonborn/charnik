@@ -317,6 +317,9 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### F-01 — The builder saves the `play` it loaded when it opened; a network change made meanwhile is reverted
 
+- **Status:** closed. The builder writes `build` over the file as it is at save time
+  (`docs/internals/characters.md` ▸ One writer per character).
+
 - **Kind:** present. **Severity:** high. **Confidence:** high.
 - **Hypothesis.** A level-up in the middle of a session is the normal case. The builder holds its own
   copy of the character, loaded from disk when it opened, and writes that copy's `play` and `ui`
@@ -336,7 +339,9 @@ given only the claim and the source; its verdicts are in *Citation check* at the
 
 ### F-02 — `character.json` has no single writer, no revision and no merge; every save is a whole-object overwrite
 
-- **Status:** the single-instance guard is in (a second launch focuses the open window; confirmed on Windows). Everything else here is open as CHARACTER-WRITER in `docs/work/mechanics.md`.
+- **Status:** closed. The single-instance guard is in (a second launch focuses the open window;
+  confirmed on Windows), and the queue, the `rev`, the check before a write and the watcher on
+  `characters/` are `docs/internals/characters.md` ▸ One writer per character.
 
 - **Kind:** present. **Severity:** high. **Confidence:** high.
 - **Hypothesis.** The file has at least seven writers and no ordering between them. Each takes a

@@ -18,7 +18,13 @@
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { bindOpenCharacter, overrides } from '$lib/content/overrides.svelte';
-	import { characters, saveCharacterGuarded } from '$lib/character/store.svelte';
+	import {
+		characters,
+		saveCharacterGuarded,
+		startCharacterWatcher,
+		stopCharacterWatcher,
+	} from '$lib/character/store.svelte';
+	import CharacterConflictDialog from '$lib/components/CharacterConflictDialog.svelte';
 	import {
 		autoCheckAllowed,
 		checkNow,
@@ -197,6 +203,7 @@
 		if (saved) {
 			await loadContentStore();
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
+			startCharacterWatcher(); // and ask, when the open character's file is written by someone else
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 			void syncThemes(); // load user themes from the data dir now it's granted
 			void overrides.load(getUserStorage());
@@ -214,6 +221,7 @@
 	});
 	onDestroy(() => {
 		stopContentWatcher();
+		stopCharacterWatcher();
 		stopErrorCapture?.();
 	});
 
@@ -241,6 +249,7 @@
 		firstRunDefault = null;
 		await loadContentStore();
 		startContentWatcher();
+		startCharacterWatcher();
 		void loadPlugins();
 		void syncThemes(); // data dir just chosen → load/seed themes there
 		void overrides.load(getUserStorage());
@@ -397,6 +406,8 @@
 <MobileWarning />
 
 <CommandPalette />
+
+<CharacterConflictDialog />
 
 {#if showDiagnostics}
 	<DiagnosticsModal onDismiss={() => (showDiagnostics = false)} />

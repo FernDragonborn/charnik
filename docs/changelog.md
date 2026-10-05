@@ -170,6 +170,12 @@ sentences became numbers, and a security pass closed what a page inside the wind
   window can repoint where your data lives.
 - **A dice formula is capped as a whole**, at a thousand dice. A formula built to stall the app —
   from a shared pack — could ask for millions.
+- **A character changed by something other than Charnik is never silently overwritten.** A sync
+  tool, a text editor or a backup put back by hand: the app notices the file is not the one it
+  wrote, stops saving over it, and asks which state to keep — yours, the file's, or both, with
+  yours saved as a copy. On desktop it asks the moment the file changes.
+- **Levelling up mid-session no longer puts back what the table spent.** The builder saves the
+  build and leaves hit points, slots and effects as they are in the file at that moment.
 
 ### The roller
 

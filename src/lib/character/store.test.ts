@@ -13,7 +13,11 @@ import {
 	removeCharacter,
 	ensureActiveCharacter,
 	recreateDemoCharacter,
+	saveBuildToStore,
+	resolveConflict,
+	CONFLICT_CHOICE,
 } from './store.svelte';
+import { loadCharacter } from './repository';
 import { newCharacter } from './schema';
 import { getUserStorage } from '$lib/storage/provider';
 import { DEMO_ID } from '$lib/demo/sheet';
@@ -27,6 +31,7 @@ beforeEach(async () => {
 	await loadRoster(); // may seed the demo on the very first run
 	for (const e of [...characters.roster]) await removeCharacter(e.id);
 	characters.active = null;
+	characters.conflict = null;
 });
 
 describe('character store · roster CRUD (CH10)', () => {
@@ -104,5 +109,71 @@ describe('character store · demo seed-once lifecycle', () => {
 		expect(demo.id).toBe(DEMO_ID);
 		expect(characters.roster.map((e) => e.id)).toContain(DEMO_ID);
 		expect(characters.active?.id).toBe(DEMO_ID);
+	});
+});
+
+describe('character store · a file changed outside the app (CHARACTER-WRITER)', () => {
+	const FILE = 'characters/mira/character.json';
+	/** Mira open with 7 hit points on screen, and a hand edit on disk that named her "Edited". */
+	async function conflicted() {
+		await saveCharacterToStore(newCharacter('mira', 'Mira', '5.5e'));
+		const mine = (await openCharacter('mira'))!;
+		const s = getUserStorage();
+		await s.write(FILE, (await s.read(FILE)).replace('"Mira"', '"Edited"'));
+		mine.play.hp.current = 7;
+		await expect(saveCharacterToStore(mine)).rejects.toThrow(/changed on disk/);
+		return mine;
+	}
+	const onDisk = async (id: string) => (await loadCharacter(getUserStorage(), id)).character;
+
+	it('a refused save opens the question, holding both states', async () => {
+		await conflicted();
+		expect(characters.conflict?.mine.play.hp.current).toBe(7);
+		expect(characters.conflict?.file.character?.build.name).toBe('Edited');
+		expect((await onDisk('mira'))?.build.name).toBe('Edited'); // nothing was written
+	});
+
+	it('"mine" writes the state on screen over the file', async () => {
+		const mine = await conflicted();
+		await resolveConflict(CONFLICT_CHOICE.mine);
+		expect(characters.conflict).toBeNull();
+		expect((await onDisk('mira'))?.build.name).toBe('Mira');
+		expect((await onDisk('mira'))?.play.hp.current).toBe(7);
+		mine.play.hp.current = 6; // and the copy on screen is writable again
+		await saveCharacterToStore(mine);
+		expect((await onDisk('mira'))?.play.hp.current).toBe(6);
+	});
+
+	it('"file" takes the file into the SAME object the views hold', async () => {
+		const mine = await conflicted();
+		await resolveConflict(CONFLICT_CHOICE.file);
+		expect(characters.active).toBe(mine);
+		expect(mine.build.name).toBe('Edited');
+		expect(mine.play.hp.current).toBe(0);
+		expect(characters.roster.map((e) => e.name)).toEqual(['Edited']);
+		await saveCharacterToStore(mine); // adopted, so the next save is not refused
+	});
+
+	it('"copy" keeps both: the file untouched, the screen saved as a new character and left open', async () => {
+		const mine = await conflicted();
+		await resolveConflict(CONFLICT_CHOICE.copy);
+		expect((await onDisk('mira'))?.build.name).toBe('Edited');
+		expect(mine.id).not.toBe('mira');
+		expect(characters.active).toBe(mine);
+		expect((await onDisk(mine.id))?.play.hp.current).toBe(7);
+		expect(characters.roster).toHaveLength(2);
+	});
+
+	it("the builder's save leaves the open character and its play alone", async () => {
+		await saveCharacterToStore(newCharacter('mira', 'Mira', '5.5e'));
+		const open = (await openCharacter('mira'))!;
+		const inBuilder = (await loadCharacter(getUserStorage(), 'mira')).character!;
+		open.play.hp.current = 4;
+		await saveCharacterToStore(open);
+		inBuilder.build.name = 'Mira the Levelled';
+		expect(await saveBuildToStore(inBuilder)).toBe(true);
+		expect(characters.active).toBe(open);
+		expect((await onDisk('mira'))?.play.hp.current).toBe(4);
+		expect(characters.roster.map((e) => e.name)).toEqual(['Mira the Levelled']);
 	});
 });

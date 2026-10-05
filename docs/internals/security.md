@@ -15,8 +15,9 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 - **Assumption**: personal desktop use; not multi-tenant. One instance is ENFORCED on desktop
   (`tauri-plugin-single-instance`: a second launch focuses the open window), because every save
   writes a whole `character.json` from memory and a second process would be a second writer.
-  Writes are atomic; nothing compares an mtime or a revision before writing, so a folder-sync tool
-  that changes a character under a running app loses to the next save.
+  Writes are atomic, serialised per character, and refused when the file is not the one the app
+  last held — a folder-sync tool that changes a character under a running app raises a question
+  instead of losing to the next save (`characters.md` ▸ One writer per character).
 - **A networked module is planned and none ships.** The table link's threat model and the design
   review beside it are `docs/research/table-link-*.md`; every statement here about "no network"
   holds until that module exists, and is rewritten in the change that adds it.

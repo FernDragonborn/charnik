@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (79)
+## Duplicate suspects (81)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -45,6 +45,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `adoptCharacter` ×2 — src/lib/character/repository.ts · src/lib/play/outcome.ts
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `because` ×2 — src/lib/actions/dragMotion.ts · src/lib/content/remote/pack-update-state.svelte.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
@@ -88,6 +89,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
+- `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
@@ -227,11 +229,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (56)
+## Shared components (57)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
 | **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `editable`, `draft` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
+| **CharacterConflictDialog** | — | "Something outside Charnik changed this character" — asked when a save was refused because |
 | **Chip** | `active`, `onclick`, `children` | A filter / tag chip. |
 | **ClassPicker** | `value`, `options`, `onChange` |  |
 | **CollisionManager** | — | Collision resolution (collisions.json, PLAN invariant). |
@@ -296,13 +299,20 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/store.svelte.ts`
 
+- `interface CharacterConflict` — A save the repository refused because `character.json` is not the file this app last held: the * state the player has…
 - `const characters`
 - `function loadRoster` — Load the roster; seeds the demo character on the FIRST ever run so there's something to play.
 - `function loadCharacterBySlug` — Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up).
 - `function ensureActiveCharacter` — The character every view (Combat / Spellbook) edits: the one opened from the Roster, or a sensible * default.
 - `function recreateDemoCharacter` — Reset the demo to a fresh build — overwrites the persisted demo save, makes it active, refreshes * the roster (also (…
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
-- `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
+- `function saveCharacterToStore` — Persist a character (create or update) and put its line in the roster.
+- `function saveBuildToStore` — The builder's save: its `build` over the file as it is at this moment, so what the table did * while the builder was …
+- `const CONFLICT_CHOICE` — What the player may answer a conflict with.
+- `type ConflictChoice`
+- `function resolveConflict` — * Settle an open conflict the way the player chose.
+- `function startCharacterWatcher` — Watch `characters/` the way `content/` is watched (desktop only — the web store has no folder * anyone else writes to…
+- `function stopCharacterWatcher`
 - `function saveCharacterGuarded` — * Persist a character and SAY SO when it does not happen.
 - `function restoreBackup` — * Put one of a character's snapshots back as its live save, and make what is on screen agree.
 - `function removeCharacter` — Delete a character and refresh the roster.
@@ -471,7 +481,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (160 modules)
+## Library functions & types (162 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -695,6 +705,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
 - `const useOne` — Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which * would read as "car…
 
+### `src/lib/character/log-repository.ts`
+
+- `const LOG_KIND` — The kinds of line `log.jsonl` holds.
+- `interface LogEntry`
+- `function logLineFor` — The stored line for one completed roll: the WHOLE record, plus the flattened summary an older * build reads.
+- `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
+- `function reviseLog` — Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage * applied after the fac…
+- `function readLog` — Read the whole roll log, newest first.
+
+### `src/lib/character/migrations.ts`
+
+- `const CHARACTER_MIGRATIONS` — Forward migrations keyed by the version they upgrade FROM.
+
 ### `src/lib/character/photo.ts`
 
 - `const PHOTO_MAX_EDGE` — Longest edge of a stored portrait.
@@ -706,6 +729,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/repository.ts`
 
+- `const dirOf` — A character's own folder, relative to the data folder.
 - `interface LoadResult`
 - `interface RosterEntry`
 - `function backupCharacter` — Snapshot the CURRENT `character.json` into the rotating ring for `tier`, then prune to the newest * N.
@@ -713,21 +737,24 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function listCharacterBackups` — * Every snapshot of one character, both rings merged, newest first — the READER the two writers * never had.
 - `function restoreCharacterBackup` — * Put one snapshot back as the live save.
 - `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
-- `function saveCharacter` — Write a character (validates first; refuses to persist an invalid one).
+- `function enqueue`
+- `const SAVE_MODE` — How a write treats the file already on disk.
+- `type SaveMode`
+- `class CharacterConflictError` — A save that was REFUSED because the file is not the one this copy came from.
+- `function saveCharacter` — * Write a character (validates first; refuses to persist an invalid one), in its turn on the * character's queue.
+- `function adoptCharacter` — * Load a character as the copy the app will EDIT: the same parse → migrate → validate, and the * file's text is remem…
+- `function characterChangedOutside` — Has `character.json` stopped being the text this app holds?
+- `function characterSlugOfPath` — The slug a path under the data folder names, when that path is a character's own save.
 - `function writeCharacterPhoto` — Write a character's portrait and return the name to store in `build.photo`.
 - `function readCharacterPhoto` — Read a stored portrait's bytes.
+- `function copyCharacterPhoto` — Give a second character its own copy of a portrait, under the same name.
 - `function removeCharacterPhotos` — Remove every portrait file in a character's folder (the way OUT of having one).
 - `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
 - `function readCharacterFiles` — * Every saved character as RAW json, keyed by slug.
+- `function rosterEntryOf` — The roster line a character reads as — what a save updates in place of re-reading every file.
 - `function listCharacters` — List the roster.
 - `function deleteCharacter` — Delete a character folder (character.json, log, photo).
-- `const LOG_KIND` — The kinds of line `log.jsonl` holds.
-- `interface LogEntry`
-- `function logLineFor` — The stored line for one completed roll: the WHOLE record, plus the flattened summary an older * build reads.
-- `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
-- `function reviseLog` — Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage * applied after the fac…
-- `function readLog` — Read the whole roll log, newest first.
 
 ### `src/lib/character/resource-names.ts`
 
@@ -2113,4 +2140,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 56 components · 1292 exports across 176 modules · 79 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1310 exports across 178 modules · 81 duplicate suspects._

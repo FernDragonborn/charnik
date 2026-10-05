@@ -35,7 +35,20 @@
 	"character": {
 		"notSaved": "This character isn't being saved",
 		"notSavedBody": "Charnik can't write to your data folder, so nothing since the last successful save is on disk. Check the folder still exists and has room — the next change tries again.",
-		"portraitOf": "Portrait of {name}"
+		"portraitOf": "Portrait of {name}",
+		"conflict": {
+			"title": "This character changed outside Charnik",
+			"subtitle": "Another program wrote the file of {name} while it was open here. Nothing has been overwritten — choose which state to keep.",
+			"mine": "On your screen",
+			"file": "In the file",
+			"summary": "Level {level} · {hp} hit points",
+			"unreadable": "The file can no longer be read: {error}",
+			"keepMine": "Keep mine",
+			"useFile": "Use the file",
+			"keepBoth": "Save mine as a copy",
+			"copyName": "{name} (copy)",
+			"failed": "That could not be saved"
+		}
 	},
 	"build": {
 		"abilities": {

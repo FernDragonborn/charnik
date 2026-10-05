@@ -17,7 +17,7 @@ import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import type { Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
-import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
+import { saveBuildToStore, openCharacter } from '$lib/character/store.svelte';
 import {
 	removeCharacterPhotos,
 	uniqueCharacterId,
@@ -622,7 +622,7 @@ export class BuildVM {
 				character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			}
 			await this.persistPhoto(character);
-			await saveCharacterToStore(character);
+			if (!(await saveBuildToStore(character))) return null;
 			// the draft became a character, so the unfinished copy has nothing left to be — and the
 			// session gives up its identity with it, or the autosave landing after Create (the photo
 			// write above is itself a draft mutation, which arms one) writes the draft back under the
