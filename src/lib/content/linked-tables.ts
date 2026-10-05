@@ -28,7 +28,7 @@ export interface LinkSpec {
 	seed?: Readonly<Record<string, string>>;
 }
 
-export const LINKED_TABLES: Partial<Record<ContentType, LinkSpec>> = {
+const LINKED_TABLES: Partial<Record<ContentType, LinkSpec>> = {
 	class: { child: 'class_feature', fk: 'class_id', unclaimed: 'subclass_id', seed: { level: '1' } },
 	subclass: {
 		child: 'class_feature',

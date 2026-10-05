@@ -265,7 +265,6 @@ export const AMENDMENT_KIND = {
 	 *  carries it, and a log must stay readable. */
 	d20Reroll: 'd20Reroll',
 } as const;
-export type AmendmentKind = (typeof AMENDMENT_KIND)[keyof typeof AMENDMENT_KIND];
 
 /**
  * One change made to a roll after it landed, as FACTS. It used to be an English sentence composed

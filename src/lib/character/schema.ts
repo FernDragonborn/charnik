@@ -67,7 +67,7 @@ export const EXHAUSTION_MAX = 20;
 
 /** The ceiling on a `+N` item's chosen bonus. The SRD stops at +3; the cap is higher so a
  *  homebrew row may offer more, and finite so a saved number cannot be arbitrary. */
-export const MAX_ITEM_BONUS = 10;
+const MAX_ITEM_BONUS = 10;
 
 export const inventoryEntry = z.object({
 	iid: mintedId,
@@ -361,7 +361,7 @@ export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
 /** How a character levels (per-character rules variant): `milestone` = the table says when, and XP
  *  is not counted; `xp` = experience points are tracked against the edition's advancement table.
  *  An OPEN enum — a third way to level is a member, not a boolean. */
-export const LEVELING_MODES = ['milestone', 'xp'] as const;
+const LEVELING_MODES = ['milestone', 'xp'] as const;
 export type LevelingMode = (typeof LEVELING_MODES)[number];
 
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */

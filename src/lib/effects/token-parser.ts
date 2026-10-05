@@ -141,7 +141,6 @@ export {
 	formWordTakesExpression,
 	type ExtraAttackWord,
 	type RollLimit,
-	type FormWord,
 } from './token-words';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
@@ -675,7 +674,7 @@ export const isWeaponOwnBonus = (token: string): boolean => {
  * grammar unchanged: every consumer downstream reads `damage_sensitivity:resist:fire`, and the
  * parse cache keys on the substituted string rather than on a template that means two things.
  */
-export const ITEM_CHOICE = 'item_choice';
+const ITEM_CHOICE = 'item_choice';
 
 /**
  * Point a carried item's tokens at the choice this instance was answered with.

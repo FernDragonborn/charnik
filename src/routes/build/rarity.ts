@@ -9,10 +9,10 @@ import { RARITIES } from '$lib/content/schemas';
 import { asText } from '$lib/util/format';
 
 export const RARITY_BAND = ['none', ...RARITIES] as const;
-export type RarityRung = (typeof RARITY_BAND)[number];
+type RarityRung = (typeof RARITY_BAND)[number];
 
 /** Where a row sits on the ladder; anything the schema does not know reads as mundane. */
-export const rarityIndex = (rarity: unknown): number => {
+const rarityIndex = (rarity: unknown): number => {
 	const at = RARITY_BAND.indexOf(asText(rarity) as RarityRung);
 	return at < 0 ? 0 : at;
 };

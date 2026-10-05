@@ -271,7 +271,7 @@ const extraAttackRow = (extra: ExtraAttack, parts: DamagePart[], mod: number): E
 
 /** What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can
  *  do ("martial melee · versatile 1d10"). */
-export interface AttackMeta {
+interface AttackMeta {
 	/** The kind tags, in a fixed order, so two weapons of the same kind never read differently
 	 *  because their CSV cells were written in another order. */
 	kinds: string[];

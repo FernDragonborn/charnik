@@ -44,13 +44,13 @@ export interface WeaponMastery {
 }
 
 /** One number a weapon property states about an attack, under the id its token gave it. */
-export interface StatedValue {
+interface StatedValue {
 	id: string;
 	amount: number;
 }
 
 /** What an extra attack costs the turn: a Bonus Action, or nothing — it rides the Attack action. */
-export type ExtraAttackCost = typeof EXTRA_ATTACK_WORD.bonus | typeof EXTRA_ATTACK_WORD.free;
+type ExtraAttackCost = typeof EXTRA_ATTACK_WORD.bonus | typeof EXTRA_ATTACK_WORD.free;
 
 /** One more attack a weapon's property lets the character make this turn. */
 export interface ExtraAttack {

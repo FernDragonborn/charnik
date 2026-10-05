@@ -40,7 +40,7 @@ const APPLY_CONDITION = 'apply_condition:';
  *  does. Such a row and the condition it names are one thing to the player: `rage` ships as both —
  *  the condition holding the mechanics, the catalog entry applying it with a duration — and in one
  *  list that reads as the same word twice. */
-export const appliedConditionId = (row: StateRow): string | null => {
+const appliedConditionId = (row: StateRow): string | null => {
 	const tokens = row.data.effects ?? [];
 	const only = tokens.length === 1 ? tokens[0] : undefined;
 	return only?.startsWith(APPLY_CONDITION) ? only.slice(APPLY_CONDITION.length) : null;

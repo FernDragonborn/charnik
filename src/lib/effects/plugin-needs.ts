@@ -28,7 +28,7 @@ export const PLUGIN_NEED = {
 	/** it runs, and did not return a usable answer */
 	failed: 'failed',
 } as const;
-export type PluginNeedState = (typeof PLUGIN_NEED)[keyof typeof PLUGIN_NEED];
+type PluginNeedState = (typeof PLUGIN_NEED)[keyof typeof PLUGIN_NEED];
 
 export interface PluginNeed {
 	namespace: string;

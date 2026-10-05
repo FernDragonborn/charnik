@@ -777,12 +777,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export ABILITIES`
 - `const abilityScores`
 - `const EXHAUSTION_MAX` — The tallest exhaustion ladder a character may carry.
-- `const MAX_ITEM_BONUS` — The ceiling on a `+N` item's chosen bonus.
 - `const inventoryEntry`
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
-- `const LEVELING_MODES` — How a character levels (per-character rules variant): `milestone` = the table says when, and XP * is not counted; `xp…
 - `type LevelingMode`
 - `const characterSchema`
 - `const classRow` — The one place a class row or an inventory row is made, so each leaves with an identity of its * own.
@@ -827,8 +825,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/combat/attack-properties.ts`
 
 - `interface WeaponMastery` — A mastery property as a row prints it.
-- `interface StatedValue` — One number a weapon property states about an attack, under the id its token gave it.
-- `type ExtraAttackCost` — What an extra attack costs the turn: a Bonus Action, or nothing — it rides the Attack action.
 - `interface ExtraAttack` — One more attack a weapon's property lets the character make this turn.
 - `interface AttackRollMode` — How a property makes attacks with its weapon roll, and which property says so.
 - `const masteryText` — The mastery's own words on the row: its name, then each number it states.
@@ -850,7 +846,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `type ExtraAttackRow` — An extra attack as its row offers it: what it is, and what it rolls for damage.
-- `interface AttackMeta` — What an attack row's sub-line is made of: what kind of weapon it is, then the first thing it can * do ("martial melee…
 - `const attackPropertyRows` — The rows behind an attack's properties — the plain ones in the weapon's own order, then its * mastery.
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
@@ -923,7 +918,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function actionRuns` — The roll log as the ACTIONS it recorded: consecutive entries sharing a `group` are one action's * throws, and everyth…
 - `const NOTE_KEY` — The catalog keys a roll's own provenance is recorded under — compared against a named constant * rather than a bare s…
 - `const AMENDMENT_KIND` — What KIND of change was made to a roll after it landed.
-- `type AmendmentKind`
 - `type RollAmendment` — * One change made to a roll after it landed, as FACTS.
 - `function amendedAdvantage` — The amendments a roll carries once it has been re-read at a different advantage.
 - `const withoutLegacyAmendment` — A roll's own note with any legacy amendment sentence removed — never the note itself, which is * provenance the roll …
@@ -985,7 +979,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/detail.ts`
 
 - `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
-- `type MetaCell` — One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when * the word is the ap…
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
 - `function compendiumEntryPath` — Deep-link path to a compendium entry.
@@ -1073,7 +1066,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/linked-tables.ts`
 
 - `interface LinkSpec`
-- `const LINKED_TABLES`
 - `const linkOf` — The linked table this row owns, if any.
 - `const linkedLevel` — A linked row's level, when its table has one (class features read in level order); else 0.
 - `function linkedRowsOf` — * The rows of `parent`'s linked table, in reading order.
@@ -1330,7 +1322,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isConditionRow` — A row the RULES name, as opposed to one the player adds.
 - `const conditionRows` — Every condition of this edition.
 - `const conditionRow` — One condition by id, or undefined — the lookup `apply_condition:<id>` resolves through.
-- `const appliedConditionId` — The condition this row PUTS ON the character, when putting it on is the whole of what the row * does.
 - `const pickerConditionId` — Which condition a picker row stands for — its own id, or the one it exists to apply.
 - `const addableStateRows` — Every state the "+" picker offers — conditions and catalog entries in ONE list.
 - `const stateLabel` — What to CALL a state, given a bare id.
@@ -1575,7 +1566,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/plugin-needs.ts`
 
 - `const PLUGIN_NEED` — Why a plugin the sheet names is not contributing.
-- `type PluginNeedState`
 - `interface PluginNeed`
 - `interface PluginAvailability` — What of the plugin store this reads.
 - `function pluginNeeds` — Every plugin the sheet's issues name as not contributing, once each, in the order met.
@@ -1630,7 +1620,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
 - `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
-- `const ITEM_CHOICE` — * The word a row writes where the PLAYER's answer goes — `damage_sensitivity:resist:item_choice` on * Ring of Resista…
 - `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
@@ -1875,7 +1864,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface Coin` — One denomination: its id (the key in `play.currency`) and what it is worth in copper.
 - `const COINS` — The five PHB coins, smallest first: the order they are shown in, and the order a conversion * walks.
-- `const COINS_PER_POUND` — Coins to the pound, RAW in both editions ("fifty coins weigh a pound"), regardless of metal.
 - `type Purse` — A purse as it is stored: coin id → how many.
 - `const coinCount` — How many coins in total, of every denomination — what the weight is computed from.
 - `const purseWeightLb` — What the purse weighs, in pounds.
@@ -2156,4 +2144,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1317 exports across 180 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1305 exports across 180 modules · 84 duplicate suspects._

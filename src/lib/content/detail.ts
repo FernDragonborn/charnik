@@ -117,7 +117,7 @@ const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}
 /** One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when
  *  the word is the app's own vocabulary, the row's own text when it is data — and, where the words
  *  in it are defined by rows of their own, those rows, for the view to explain the cell with. */
-export type MetaCell = [label: SaidText, value: Said, explainedBy?: LoadedRow[]];
+type MetaCell = [label: SaidText, value: Said, explainedBy?: LoadedRow[]];
 
 interface AbilityScore {
 	/** The ability id (`str`) — `abilityShortLabel` gives it the reader's word for it. */

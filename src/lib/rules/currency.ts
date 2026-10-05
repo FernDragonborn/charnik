@@ -29,7 +29,7 @@ export const COINS: readonly Coin[] = [
 ];
 
 /** Coins to the pound, RAW in both editions ("fifty coins weigh a pound"), regardless of metal. */
-export const COINS_PER_POUND = 50;
+const COINS_PER_POUND = 50;
 
 /** A purse as it is stored: coin id → how many. Partial on purpose — an absent key is none of that
  *  coin, which is what a character who has never seen platinum should cost to store. */
