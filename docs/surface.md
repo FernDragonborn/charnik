@@ -1048,7 +1048,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/item-tags.ts`
 
 - `type ItemTags` — Tag name → its value (`''` for a bare tag like `finesse`).
-- `interface BonusRung` — One rung of a `+1/+2/+3` row's ladder: the bonus, and the rarity the item HAS at it when its * own text says so (2024…
+- `interface BonusRung` — One rung of a `+1/+2/+3` row's ladder: the bonus, and the rarity the item HAS at it when its * own text says so — bot…
 - `function parseBonusChoices` — * `bonus_choice` — the bonuses a row offers, as `1,2,3` or `uncommon:1,rare:2,very_rare:3`.
 - `const ITEM_TAG`
 - `type ArmorWeight`

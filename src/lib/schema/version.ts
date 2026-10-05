@@ -126,7 +126,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v42: 22 spells of the 2024 pack and 21 of the 2014 one carry the effect their own text states on
 // its target — Mage Armor, Shield, Bless, Haste, Fly and the rest. An install left at v41 casts
 // them and nothing on the sheet moves.
-export const CONTENT_SEED_VERSION = 42;
+// v43: the 2014 `+1/+2/+3` rows state the rarity of each rung, as SRD 5.1 prints it beside the
+// number ("uncommon (+1), rare (+2), or very rare (+3)"). An install left at v42 shows all three
+// rungs of every such item as very rare.
+export const CONTENT_SEED_VERSION = 43;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

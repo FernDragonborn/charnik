@@ -190,15 +190,13 @@
      player-visible gain. It does not make a consumable act: a Potion of Healing's variety gives it
      a name and a rarity on the row, and drinking stays the player's.
 
-  2. **A wrong browsing fact left by the range rows.** `weapon_1_2_or_3` and its four siblings are
-     one row each, and SRD 5.1 prints only the numbers, so the 2014 rungs are bare and the row's stated
-     `rarity: very_rare` stands — wrong for a +1 and a +2. It is a browsing fact, not a number on a
-     sheet, and it is the row's own column rather than the answer's. The 2024 rows already state a
-     rarity per rung inside `bonus_choice` (`uncommon:1,rare:2,very_rare:3`; armor one step up),
-     so there the fault is only that the article shows the row's column. **Re-read the 2014
-     entries against the SRD 5.1 PDF before believing "only the numbers"** — the maintainer's
-     reading of the rule is one rarity step per plus in both editions, and a conversion that lost
-     a parenthesis would look exactly like this.
+  2. **A range row is filed under one rarity.** Both packs state a rarity per rung inside
+     `bonus_choice`, as each SRD prints it beside the number, and the article and the inventory
+     row say the rung's. What still reads the row's own `rarity` column is everything that files a
+     row in ONE place: the compendium's rarity grouping and facet, the picker's rarity band, the
+     list's sub-line. So `weapon_1_2_or_3` is found under Very Rare and not under Uncommon. A row
+     cannot stand in three groups without being three entries, which is piece 1's question — a
+     variety with a `rarity` of its own is what a list would file.
 
   **The rows that stay prose, each for a reason the vocabulary cannot fix by growing a word:**
   - *Shield of Missile Attraction* wants resistance qualified by the SOURCE of the damage rather than

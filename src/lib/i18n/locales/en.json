@@ -1225,6 +1225,7 @@
 		"properties": "Properties",
 		"range": "Range",
 		"rarity": "Rarity",
+		"rarityAtBonus": "Rarity at +{bonus}",
 		"recharge": "Recharge",
 		"resistances": "Resistances",
 		"resource_id": "Resource",

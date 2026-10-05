@@ -156,3 +156,26 @@ describe('entryMeta', () => {
 		expect(entryMeta(row({ school: 'chronomancy' }), fallback)).toBe('Chronomancy');
 	});
 });
+
+describe('a row that is one entry and several items says the rarity of each', () => {
+	const cellsOf = (data: Record<string, string>) =>
+		buildDetail(
+			row({ name_en: 'Weapon, +1, +2, or +3', category: 'weapon', ...data }, 'item'),
+			'item',
+		).meta.map(([label, value]) => [say(label), say(value)]);
+
+	it('one cell per rung, in place of the one rarity the row can state', () => {
+		const cells = cellsOf({ rarity: 'very_rare', bonus_choice: 'uncommon:1,rare:2,very_rare:3' });
+		expect(cells).toContainEqual(['contentField.rarityAtBonus', 'Uncommon']);
+		expect(cells).toContainEqual(['contentField.rarityAtBonus', 'Very Rare']);
+		expect(cells.filter(([label]) => label === 'contentField.rarityAtBonus')).toHaveLength(3);
+		expect(cells.map(([label]) => label)).not.toContain('Rarity');
+		expect(cells.map(([label]) => label)).not.toContain('Bonus Choice');
+	});
+
+	it('a ladder that states no rarity leaves the row its own', () => {
+		const cells = cellsOf({ rarity: 'rare', bonus_choice: '1,2,3' });
+		expect(cells.map(([label]) => label)).toContain('Rarity');
+		expect(cells.filter(([label]) => label === 'contentField.rarityAtBonus')).toHaveLength(0);
+	});
+});

@@ -26,9 +26,9 @@ export type ItemTags = ReadonlyMap<string, string>;
 /** The tag names the app itself compares against. Content may carry any others; they still reach
  *  effect scopes and the detail view, they just mean nothing to the rules. */
 /** One rung of a `+1/+2/+3` row's ladder: the bonus, and the rarity the item HAS at it when its
- *  own text says so (2024 prints "Uncommon (+1), Rare (+2), or Very Rare (+3)"; SRD 5.1 prints only
- *  the numbers, which are in the row's own name, so a 2014 rung carries no rarity and the row's
- *  stated one stands). */
+ *  own text says so — both SRDs print it beside the number ("uncommon (+1), rare (+2), or very rare
+ *  (+3)"). A rung with no rarity is a homebrew row that states only the numbers, and there the
+ *  row's own `rarity` stands. */
 export interface BonusRung {
 	bonus: number;
 	rarity?: string;

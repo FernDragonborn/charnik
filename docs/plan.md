@@ -287,7 +287,7 @@ position and are given per wave, because most of them were learned the hard way.
 
   **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
   book and several at the table — a Belt of Giant Strength's variety sets the number — and the
-  `+1/+2/+3` rows' own `rarity`, which states one rung for all three.
+  `+1/+2/+3` rows, which a list still files under one rarity.
 - **0.8.0 · TABLE-LINK-SEAMS.** The table link — a GM's app and the players' apps exchanging data —
   does NOT ship in 0.8.0, and no line of networking does. What ships is the set of seams the module
   will stand on, each of which is worth having with no network at all, in this order because each

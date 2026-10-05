@@ -1225,6 +1225,7 @@
 		"properties": "Властивості",
 		"range": "Дистанція",
 		"rarity": "Рідкісність",
+		"rarityAtBonus": "Рідкісність для +{bonus}",
 		"recharge": "Відновлення",
 		"resistances": "Опір",
 		"resource_id": "Ресурс",

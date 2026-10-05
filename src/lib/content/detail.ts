@@ -11,7 +11,7 @@ import type { ContentType, RowColumn } from '$lib/content/schemas';
 import { cellText, localizedCell } from './prose';
 import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
-import { ITEM_TAG, parseItemTags } from './item-tags';
+import { ITEM_TAG, parseBonusChoices, parseItemTags } from './item-tags';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -403,6 +403,16 @@ export function buildDetail(
 	// generic types carry no ability-score columns (only monster does, handled above), so the meta
 	// grid is the whole story here — every non-identity, non-prose column becomes a k/v cell.
 	const skip = new Set(COMMON);
+	// A `+1/+2/+3` row is one entry and three items, and its rarity is the rung's: the row's own
+	// `rarity` can state only one of them, so where the ladder states each, the ladder is what is
+	// said — one cell per rung, in place of a single rarity that is wrong for the other two and of
+	// the column's raw grammar.
+	const rungs = parseBonusChoices(asText(d.bonus_choice)).filter((rung) => rung.rarity);
+	if (rungs.length) for (const column of ['rarity', 'bonus_choice']) skip.add(column);
+	const rungCells = rungs.map((rung): MetaCell => [
+		{ key: 'contentField.rarityAtBonus', values: { bonus: rung.bonus } },
+		{ key: `itemRarity.${rung.rarity ?? ''}`, fallback: titleCase(rung.rarity ?? '') },
+	]);
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.flatMap(([k, v]): MetaCell[] =>
@@ -416,7 +426,8 @@ export function buildDetail(
 								asText(v) === 'true' ? { key: 'contentValue.yes', fallback: 'Yes' } : cellText(v),
 							],
 						],
-		);
+		)
+		.concat(rungCells);
 	return {
 		...common,
 		eyebrow: [{ key: `contentType.${type}`, fallback: titleCase(type) }],
