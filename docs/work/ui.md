@@ -22,10 +22,15 @@
                 advantage · against magical effects
   ```
 
-  It is still wrong — two rows under one label, each a swing plus a case. The three
-  directions below are rendered beside what ships, on the live `/dev/defences` page, in both
-  locales and at both widths, and wait for the pick:
-  `design-preview/_saves-variants-{en,uk}-{wide,narrow}.png`.
+  It is still wrong — two rows under one label, each a swing plus a case. **The pick is the
+  MARK:** a chevron in place of the swing word — up for advantage, down for disadvantage, the
+  mark `CombatStrip` already uses on a passive sense — then the case (`⌃ against spells`).
+  Advantage is GREEN (`--color-good`), not the gold a conditional statement wears elsewhere;
+  disadvantage keeps the danger colour. The word leaves the chip, so it goes where a mark's
+  meaning must still be reachable: the chip's accessible name and its popover. The same rule
+  holds for every group that states a swing, so `Against you` is redrawn with it rather than
+  left saying the word. The variants it was picked from are
+  `design-preview/_saves-variants.html`.
 
   **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
   open with the same word. `advantage · against spells` and `advantage · against magical effects`
