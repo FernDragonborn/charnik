@@ -279,22 +279,25 @@ stay semi-manual.
      and the slot recovery of Arcane Recovery are the same two shapes: a pool that is sayable
      today, and slots a player already restores by their pips.
 
-- [ ] **PLAY-REDUCERS · a play-state action is a function with arguments, not a view-model method
-  that reads a form field.** `HitPoints.damage()` takes nothing and reads the number the player is
-  typing; the rules that follow a change — clamp HP to max, reset death saves above 0, drop an owed
-  concentration save, leave a form, end concentration at 0 HP — are `$effect`s in
-  `routes/combat/+page.svelte`, so they hold only while that route is mounted. Outcome: each action
-  is a pure `(character, sheet, intent) → character` in `src/lib`, taking the intent shape
-  `internals/actions.md` §2 already specifies, with those invariants inside it; the view-model
-  builds an intent from its fields and calls the same function. Constraints: no behaviour change —
-  the combat tests pass untouched; the roll log is an output of the function, not a side effect
-  inside it; an action never accepts a token string or a dice formula from its caller beyond what
-  the catalog row it names carries. Acceptance: every verb of `CombatVM` that mutates `play` is
-  callable from a node test with no component mounted, and the five route-level effects are gone.
-  **Done one subsystem at a time, each its own verified commit** — hit points with the three
-  invariants that follow them, then effects and concentration, resources and rests, the turn,
-  casting, forms and inventory. An invariant moves in the same commit as the verb it follows, so
-  no commit leaves a rule enforced in neither place. The release waits for the last one.
+- [~] **PLAY-REDUCERS · a play-state action is a function with arguments, not a view-model method
+  that reads a form field.** The shape is built and is `../internals/actions.md` ▸ Where a mutation
+  lives: a pure `(character, intent, ctx) → outcome` in `src/lib/play`, the rules that follow a
+  change inside it, the roll log and the notices as outputs, and `CombatVM.act` as the one place an
+  outcome is carried out. `ctx.derive` stands where a `sheet` argument would: a hit that breaks a
+  form is finished against a different hit-point maximum than it started with. **Hit points are
+  done** — damage, healing, temp HP, both saves, the death-save track, dying and revival — with the
+  clamp to the maximum and the death-save reset inside them.
+  What is left writes the held character directly, and the rules that follow it are `$effect`s in
+  `routes/combat/+page.svelte` that hold only while that route is mounted: `combat.outcomes.settle()` (the
+  hit-point rules, for those writers), leaving a form, and ending concentration at 0 HP.
+  Constraints: no behaviour change — the combat tests pass untouched; an action never accepts a
+  token string or a dice formula from its caller beyond what the catalog row it names carries.
+  Acceptance: every verb of `CombatVM` that mutates `play` is callable from a node test with no
+  component mounted, and those three route-level effects are gone.
+  **Done one subsystem at a time, each its own verified commit** — effects and concentration next,
+  then resources and rests, the turn, casting, forms and inventory. An invariant moves in the same
+  commit as the verb it follows, so no commit leaves a rule enforced in neither place. The release
+  waits for the last one.
 - [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from
   whichever in-memory copy calls `saveCharacter`, by the combat autosave, three immediate saves, the
   spellbook, the text-override binding, the builder, snapshot restore and demo re-creation — with no

@@ -16,7 +16,7 @@ import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
 	wantsTray,
-	rollEffectsFor,
+	sheetRollEffects,
 	autoOutcome,
 	AUTO_OUTCOME,
 	netAdvantage,
@@ -94,8 +94,7 @@ export class SheetRolls {
 	effectsFor(key: string, scopes?: Set<string>): RollEffects {
 		const c = this.host().character;
 		const sheet = this.host().sheet;
-		if (!c || !c.play.autoCalc || !sheet) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(sheet.facts, key, scopes);
+		return c && sheet ? sheetRollEffects(c, sheet, key, scopes) : NO_ROLL_EFFECTS;
 	}
 
 	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the

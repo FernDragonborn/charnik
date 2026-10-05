@@ -156,7 +156,34 @@ maneuver exactly as they add a spell, source-namespaced and behind the same per-
    same shape, same validation, plus the sandbox caps (plugins.md §8.2).
 3. **Plugin `onEvent` (`api: 2+`).** Same intent, fired by the event vocabulary above.
 
-## 5. Relation to the resolve order
+## 5. Where a mutation lives
+
+A play-state action is a pure function in `src/lib/play`:
+`(character, intent, ctx) → { character, log, notices }`. It returns the character that results and
+never writes to the one it was given; the roll-log lines and the notices it would have raised come
+back as data. The view-model builds the intent from its form fields and carries the outcome out
+through one method, `CombatVM.act` (`play-outcomes.ts`) — the only place a result reaches the held character
+(`adoptCharacter`, in place, so only what moved re-renders), the roll log and the toasts. A caller
+with no screen calls the same function and gets the same character.
+
+- **`ctx.derive` is a function, not a sheet**, because an action can change what the sheet says in
+  the middle of itself: a hit that breaks a form is finished against the character's own hit-point
+  maximum, where the sheet it started with still states the form's.
+- **The rules that follow a change live inside the action.** `settleHitPoints` — current HP never
+  above the effective maximum, no death-save track above 0 HP — runs at the end of every action
+  that moves hit points or what their maximum depends on, against a sheet derived from the RESULT.
+  A rule enforced by something that watches the screen holds only while that screen is mounted.
+- **An intent carries numbers and ids, never a token or a dice formula.** The dice are the
+  action's own (`ctx.rng`), so a roll's provenance is the function that made it.
+- **What is not play-state is not in the character.** A concentration save a hit left owed comes
+  back beside the character (`concentrationSave`); the view-model holds it and drops it when the
+  concentration it names ends.
+
+Hit points are built this way. The other subsystems still write the held character directly, and
+`PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
+(`work/mechanics.md` ▸ PLAY-REDUCERS).
+
+## 6. Relation to the resolve order
 
 The read half (`passive`, conditional effects, dependency order, cycle = content bug) is already
 implemented and specified in plan.md (the derive stage list) and plugins.md §8.4 — this document

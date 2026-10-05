@@ -42,22 +42,11 @@
 	// so a generic RollButton in a panel opens the real tray (not the instant-roll fallback).
 	onMount(combat.registerTray);
 
-	// A14: when the effective max HP drops (an Aid / hp_max effect expired, or a manual max lowered),
-	// pull current down to it. Idempotent, so it settles in one pass without looping the autosave.
+	// The rules that follow a change in play-state — current HP never above the effective max, no
+	// death-save track above 0 HP, no owed concentration save for a spell no longer held — for the
+	// verbs that still write the character directly. An action in `$lib/play` settles itself.
 	$effect(() => {
-		combat.clampCurrentHp();
-	});
-
-	// …and the state that only means anything at 0 HP goes when HP does: the death-save track and
-	// the "was it a critical?" answer, whichever way the hit points came back.
-	$effect(() => {
-		combat.syncDyingState();
-	});
-
-	// …and an owed concentration save goes with the concentration it was owed for, however that ended
-	// (replaced by the next spell, a long rest, an expiring carrier).
-	$effect(() => {
-		combat.syncPendingConcentration();
+		combat.outcomes.settle();
 	});
 
 	// …and a form goes with the effect that carries it: its ✕, its clock running out and a rest all

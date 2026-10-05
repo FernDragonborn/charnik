@@ -88,6 +88,8 @@ link and a `404.html` SPA fallback.
 - **`src/lib/content`** — loading, merging, validating, hashing, and writing CSV. See `content.md`;
   external packs are in `packs.md`.
 - **`src/lib/character`** — the save schema and the derive pipeline. See `characters.md`.
+- **`src/lib/play`** — play-state actions as pure functions, with the rules that follow a change
+  inside them. See `actions.md` ▸ Where a mutation lives.
 - **`src/lib/storage`** — the interface and its three implementations.
 - **`src/lib/components`, `src/lib/styles`** — shared components and the one global stylesheet.
 - **`src/routes/<view>`** — a view-model class plus thin components; one that outgrows its file

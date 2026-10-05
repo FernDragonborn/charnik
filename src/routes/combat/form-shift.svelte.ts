@@ -21,6 +21,7 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import { app } from '$lib/stores/app.svelte';
 import type { FormRules } from '$lib/effects/facts';
 import { activeForm, formStatTokens, isEligibleForm, type MonsterRow } from '$lib/character/forms';
+import { leaveForm } from '$lib/play/form';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
 
@@ -133,14 +134,10 @@ export class FormShift {
 		toast(t('combat.notice.formLeft', { name: form.name }));
 	};
 
-	/** The form ends, however it ended: its carrier goes, and hit points that were waiting come back. */
+	/** The form ends, however it ended. */
 	leave = (): void => {
 		const play = this.host().character?.play;
-		const form = play?.form;
-		if (!play || !form) return;
-		play.effects = play.effects.filter((effect) => effect.source !== form.monster);
-		if (form.hpBefore !== undefined) play.hp.current = form.hpBefore;
-		play.form = null;
+		if (play) Object.assign(play, leaveForm(play));
 	};
 
 	/**
@@ -172,24 +169,6 @@ export class FormShift {
 		const name = this.current?.name ?? '';
 		this.leave();
 		toast(t('combat.notice.formEnded', { name }));
-	};
-
-	/**
-	 * Damage the form's own hit points cannot hold. RAW (SRD 5.1): "if you revert as a result of
-	 * dropping to 0 hit points, any excess damage carries over to your normal form." Returns the
-	 * excess to apply to the character, or null when the form holds the hit (or has no hit points
-	 * of its own to hold it with).
-	 */
-	overflow = (damage: number): number | null => {
-		const play = this.host().character?.play;
-		const form = this.current;
-		if (!play || form?.hpBefore === undefined || damage < play.hp.current) return null;
-		const excess = damage - play.hp.current;
-		this.leave();
-		toast(t('combat.notice.formBroken', { name: form.name }), {
-			description: t('combat.notice.formBrokenBody', { excess }),
-		});
-		return excess;
 	};
 }
 

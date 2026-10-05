@@ -1,0 +1,101 @@
+/*
+ * Carrying a play-state action out on the open character.
+ *
+ * An action is pure (`$lib/play`): it returns the character that results, the lines for the roll
+ * log and the notices. This is the one place that result reaches the world — the character the
+ * panels hold, the log, the toasts — so every action lands the same way whichever control built it.
+ */
+import { toast } from 'svelte-sonner';
+import { translator } from '$lib/i18n';
+import { app } from '$lib/stores/app.svelte';
+import { sayText, type SaidText } from '$lib/util/say';
+import { localizedName } from '$lib/content/detail';
+import { isRowActive } from '$lib/content/sources.svelte';
+import type { ContentGraph } from '$lib/content/loader';
+import type { Character } from '$lib/character/schema';
+import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
+import { settleHitPoints } from '$lib/play/hit-points';
+import {
+	adoptCharacter,
+	quietly,
+	type OwedConcentrationSave,
+	type PlayContext,
+	type PlayNotice,
+	type PlayOutcome,
+} from '$lib/play/outcome';
+import type { RollJournal } from './roll-journal.svelte';
+
+/** What carrying an outcome out needs from the sheet around it. */
+export interface PlayOutcomesHost {
+	character: Character | null;
+	sheet: CharacterSheet | null;
+	graph: ContentGraph | null;
+	journal: RollJournal;
+	hp: { pendingConcentrationSave: OwedConcentrationSave | null; dyingStopped(): void };
+}
+
+/** Is the death-save track holding anything? */
+const tracksDeathSaves = (character: Character): boolean =>
+	character.play.deathSaves.successes > 0 || character.play.deathSaves.failures > 0;
+
+export class PlayOutcomes {
+	constructor(private host: () => PlayOutcomesHost) {}
+
+	/** What an action reads besides the character: the sheet the screen is already showing for the
+	 *  open character, and a fresh one for any other state the action asks about. */
+	private context: PlayContext = {
+		derive: (character) => {
+			const { character: held, sheet, graph } = this.host();
+			if (character === held && sheet) return sheet;
+			if (!graph) throw new Error('a play-state action needs the content graph');
+			return deriveSheet(character, graph, isRowActive);
+		},
+	};
+
+	/** Carry out a play-state action on the open character. */
+	act = (action: (character: Character, ctx: PlayContext) => PlayOutcome): void => {
+		const { character, sheet } = this.host();
+		if (character && sheet) this.commit(character, action(character, this.context));
+	};
+
+	/**
+	 * Apply the rules that follow a change in play-state to whatever wrote it. An action settles
+	 * itself; this is for the verbs that still write the character directly, and it is what the
+	 * combat page runs reactively for them.
+	 */
+	settle = (): void => {
+		const { character, sheet } = this.host();
+		if (character && sheet) this.commit(character, quietly(settleHitPoints(character, sheet)));
+	};
+
+	private commit(held: Character, outcome: PlayOutcome): void {
+		const { hp, journal } = this.host();
+		const wasTracking = tracksDeathSaves(held);
+		adoptCharacter(held, outcome.character);
+		if (held.play.hp.current > 0 || (wasTracking && !tracksDeathSaves(held))) hp.dyingStopped();
+		for (const { name, rolled } of outcome.log)
+			if (rolled) journal.pushRoll(name, rolled);
+			else journal.logMarker(name);
+		for (const notice of outcome.notices) this.announce(notice);
+		if (outcome.concentrationSave) hp.pendingConcentrationSave = outcome.concentrationSave;
+		// an owed save belongs to the concentration it names, and goes when that one ends or is
+		// replaced — whichever writer of `play.concentration` did it
+		const owed = hp.pendingConcentrationSave;
+		if (owed && owed.spell !== held.play.concentration) hp.pendingConcentrationSave = null;
+	}
+
+	/** Say a notice in the reader's language, naming the content rows it points at. */
+	private announce(notice: PlayNotice): void {
+		const translate = translator();
+		const graph = this.host().graph;
+		const names = Object.fromEntries(
+			Object.entries(notice.rows ?? {}).map(([name, ref]) => {
+				const row = graph?.get(ref);
+				return [name, row ? localizedName(row, app.activeLocale) : ref];
+			}),
+		);
+		const said = (text: SaidText) =>
+			sayText({ ...text, values: { ...text.values, ...names } }, translate);
+		toast(said(notice.text), notice.description ? { description: said(notice.description) } : {});
+	}
+}

@@ -60,6 +60,7 @@ import { Concentration } from './concentration';
 import { FormShift } from './form-shift.svelte';
 import { Experience } from './experience.svelte';
 import { sheetAttacks } from '$lib/combat/form-attacks';
+import { PlayOutcomes } from './play-outcomes';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -172,9 +173,9 @@ class CombatVM {
 	damage = () => this.hp.damage();
 	heal = () => this.hp.heal();
 	setTempHp = () => this.hp.setTempHp();
-	clampCurrentHp = () => this.hp.clampCurrentHp();
-	syncDyingState = () => this.hp.syncDyingState();
-	syncPendingConcentration = () => this.hp.syncPendingConcentration();
+	/* `settle` under the names the behavioural tests call after writing play-state by hand. */
+	syncDyingState = () => this.outcomes.settle();
+	syncPendingConcentration = this.syncDyingState;
 	rollConcentrationSave = () => this.hp.rollConcentrationSave();
 	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();
 	deathSave = () => this.hp.deathSave();
@@ -246,6 +247,7 @@ class CombatVM {
 	}
 	graph = $derived(content.graph);
 	character = $state<Character | null>(null);
+
 	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…), the
 	 *  content graph, or the enabled-plugin set changes — so every play-state edit AND a plugin
 	 *  enable/disable reflect live in the derived stats. */
@@ -255,6 +257,11 @@ class CombatVM {
 			? deriveSheet(this.character, this.graph, isRowActive)
 			: null;
 	});
+
+	/** Carrying a play-state action out on the open character — see play-outcomes.ts. `act` stays
+	 *  here because the subsystems declare it on their host interfaces. */
+	outcomes = new PlayOutcomes(() => this);
+	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
 	// drift; entering combat sets it to 1, Next turn advances it, and effect expiry reads it.

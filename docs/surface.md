@@ -39,6 +39,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
+- `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `says` ×3 — src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
@@ -79,7 +80,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
-- `rather` ×2 — src/lib/dice/roll-lines.ts · src/lib/rules/proficiency.ts
 - `reflow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (144 modules)
+## Library functions & types (148 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -897,6 +897,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RollEffects` — What a roll target (e.g.
 - `const NO_ROLL_EFFECTS`
 - `function rollEffectsFor`
+- `const sheetRollEffects` — What a roll picks up from the effects on THIS character's sheet — none at all with effects-auto * off, which is what …
 - `const skillRollTarget` — What a skill check rolls AS: its effect key plus the scopes that narrow which effects apply.
 - `const dieModsOf` — Just the roll-MANIPULATION half of a `RollEffects` — the `DieMods` a die carries.
 - `const AUTO_OUTCOME` — The two outcomes a condition can force in place of a roll.
@@ -1636,6 +1637,42 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function languageSearchText` — All searchable text for a code (native + English + Ukrainian names + the code), lower-cased — so the * picker finds a…
 - `function addableLanguages` — Languages from {@link LANGUAGES} that aren't in `have` yet — the "add a language" menu, sorted by * native name.
 
+### `src/lib/play/concentration.ts`
+
+- `function endConcentration` — Stop concentrating: the ref goes, and the spell's own effect with it.
+
+### `src/lib/play/form.ts`
+
+- `function leaveForm` — The form ends, however it ended: its carrier goes, and hit points that were waiting come back.
+
+### `src/lib/play/hit-points.ts`
+
+- `interface DamagePart` — One typed part of a hit as it is dealt.
+- `interface ResolvedDamagePart` — The same part against the character's defenses.
+- `function resolveDamagePart` — One part of a hit against a set of defenses: what was dealt, what it takes.
+- `const hitPointMaximum` — The EFFECTIVE hit-point maximum: a manual max still has `hp_max` effects folded onto it (A14).
+- `function settleHitPoints` — * The two rules that follow a change in hit points, whoever made it.
+- `interface DamageIntent` — A hit: its parts, and whether it was a critical — which only matters to a body already at 0.
+- `function takeDamage` — * Take a hit.
+- `function heal` — Heal.
+- `function setTempHp` — Set Temporary Hit Points to an amount — set, never added: they do not stack.
+- `function rollDeathSave` — * Roll a death save: a d20 against 10, with whatever `save.death` picks up (Bless, exhaustion).
+- `interface DeathSavePip` — One pip of a death-save track, pressed by hand.
+- `function setDeathSavePip` — * Set a death-save track by hand (players track at the table too): pressing a pip fills to it, or * clears it when it…
+- `function die` — * Record a death.
+- `function revive` — * "I was revived" — the way back from death.
+- `function rollConcentrationSave` — * Roll a concentration save: CON save against `dc`, or against the RAW floor when the table asks for * one the app sa…
+
+### `src/lib/play/outcome.ts`
+
+- `interface PlayContext` — What an action reads besides the character.
+- `interface PlayLogLine` — One line for the roll log: a marker, or a roll when the action made one.
+- `interface PlayNotice` — Something to tell the player.
+- `interface OwedConcentrationSave` — A concentration save a hit has made due: the DC, and the spell it is owed for.
+- `interface PlayOutcome`
+- `const quietly` — An outcome that says nothing beyond the character.
+- `function adoptCharacter` — * Write an action's result into the character object the sheet is holding.
+
 ### `src/lib/rules/advancement.ts`
 
 - `interface LevelThreshold` — One row of an advancement table: the XP total at which a level is reached.
@@ -1958,4 +1995,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1187 exports across 160 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1212 exports across 164 modules · 78 duplicate suspects._

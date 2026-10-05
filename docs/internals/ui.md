@@ -102,7 +102,8 @@ Combat is the view that has them. Which field to open first:
 
 | field         | file               | owns                                                             |
 | ------------- | ------------------ | ---------------------------------------------------------------- |
-| `hp`          | `hit-points`       | damage, healing, temp HP, the concentration banner, death saves   |
+| `hp`          | `hit-points`       | the hit being entered and the save it left owed; the rules are `$lib/play/hit-points` |
+| `outcomes`    | `play-outcomes`    | carrying a `$lib/play` action out: the held character, the log, the notices |
 | `casting`     | `spell-casting`    | slot reservation, upcast, a cast's tokens, prepared; its rolls are `spell-cast-rolls` |
 | `concentration` | `concentration`  | which spell is held, and every way it ends                        |
 | `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |

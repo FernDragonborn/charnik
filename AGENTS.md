@@ -185,6 +185,8 @@ Content edits are commits in the content repo. App code is commits here. A build
   `expression-parser.ts` and `expression-evaluator.ts` (value expressions), `dependency-graph.ts` (the
   one resolve stage), `plugin-*.ts` (the sandbox). It joins the core at exactly one seam,
   `applyEffects`.
+- `src/lib/play` — play-state actions: pure `(character, intent, ctx) → outcome`, no Svelte, no
+  toast. A view-model builds the intent and carries the outcome out.
 - `src/lib/content` — loading, merging, validating, hashing, and writing CSV.
 - `src/lib/storage` — the `Storage` interface. Tauri fs at runtime, node/in-memory in tests, IndexedDB
   on web. All file IO goes through it.

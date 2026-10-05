@@ -23,6 +23,7 @@ import { sayText, type Said, type SaidText, type SaidValue } from '$lib/util/say
 import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
+import type { Character } from '$lib/character/schema';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -428,6 +429,16 @@ export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<str
 		if (matchesTarget(m.target, key) && scopeOk(m)) out.minDie = Math.max(out.minDie ?? 0, m.value);
 	return out;
 }
+
+/** What a roll picks up from the effects on THIS character's sheet — none at all with effects-auto
+ *  off, which is what makes the toggle restore plain rolls everywhere at once. */
+export const sheetRollEffects = (
+	character: Character,
+	sheet: CharacterSheet,
+	key: string,
+	scopes?: Set<string>,
+): RollEffects =>
+	character.play.autoCalc ? rollEffectsFor(sheet.facts, key, scopes) : NO_ROLL_EFFECTS;
 
 /** What a skill check rolls AS: its effect key plus the scopes that narrow which effects apply.
  *  `proficient` here means "this check adds your proficiency bonus" — RAW's own wording for Reliable
