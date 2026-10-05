@@ -11,7 +11,7 @@ import type { CharacterSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Rng, Rolled } from '$lib/rules/dice';
 import type { RollName } from '$lib/combat/roll';
-import type { SaidText } from '$lib/util/say';
+import type { Said } from '$lib/util/say';
 
 /** What an action reads besides the character. */
 export interface PlayContext {
@@ -34,11 +34,13 @@ export interface PlayLogLine {
 	rolled?: Rolled;
 }
 
-/** Something to tell the player. `rows` are content refs the sentence names — the value of that
- *  name is the row's own name in the reader's language, which only the caller has. */
+/** Something to tell the player: a catalog sentence, or a row's own words as they are. A
+ *  description may be several sentences, said one after another. `rows` are content refs the
+ *  sentences name — the value of that name is the row's own name in the reader's language, which
+ *  only the caller has. */
 export interface PlayNotice {
-	text: SaidText;
-	description?: SaidText;
+	text: Said;
+	description?: Said | readonly Said[];
 	rows?: Record<string, string>;
 }
 
@@ -56,6 +58,10 @@ export interface PlayOutcome {
 	/** Present when the action left a concentration save owed. It is not play-state: it does not
 	 *  survive a reload, and the player may wave it off. */
 	concentrationSave?: OwedConcentrationSave;
+	/** The action did not happen — the pool was empty, the option is not offered — and the character
+	 *  is the one it was given. An action is all-or-nothing, so a caller with a further step to take
+	 *  reads this before taking it. */
+	refused?: true;
 }
 
 /** An outcome that says nothing beyond the character. */
@@ -64,6 +70,25 @@ export const quietly = (character: Character): PlayOutcome => ({
 	log: [],
 	notices: [],
 });
+
+/**
+ * One action after another on the same character, as one outcome: the second starts from what the
+ * first left, and what both said is kept in order. A refused first step is where it ends.
+ */
+export function chain(
+	first: PlayOutcome,
+	next: (character: Character) => PlayOutcome,
+): PlayOutcome {
+	if (first.refused) return first;
+	const second = next(first.character);
+	const owed = second.concentrationSave ?? first.concentrationSave;
+	return {
+		character: second.character,
+		log: [...first.log, ...second.log],
+		notices: [...first.notices, ...second.notices],
+		...(owed ? { concentrationSave: owed } : {}),
+	};
+}
 
 /**
  * Write an action's result into the character object the sheet is holding.

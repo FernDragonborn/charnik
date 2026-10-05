@@ -16,13 +16,12 @@ vi.mock('svelte-sonner', () => ({
 import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
-import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
+import type { ResourceOption } from '$lib/character/derive';
 import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
-import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout, PANEL_MOVE } from './panel-layout.svelte';
 import { UNARMED_STRIKE_ID, attackNotes } from '$lib/combat/attacks';
 import { numberedAttackRollName } from '$lib/combat/attack-names';
@@ -707,6 +706,7 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 	});
 
 	it('a long rest ends concentration unconditionally, even with no linked effect (A13)', () => {
+		character.play.hp.current = 10; // at 0 HP nothing is concentrated on, rest or no rest
 		character.play.concentration = `spell:${S}:bless`; // no matching entry in play.effects
 		character.play.effects = [];
 		combat.resources.rest('short');
@@ -1459,66 +1459,6 @@ describe('CombatVM · S2 split net', () => {
 		expect(dur()).toBe(7);
 		combat.effects.setEffectDuration(iid, 0); // typed 0 → until removed
 		expect(dur()).toBeUndefined();
-	});
-});
-
-describe('ResourceTracker · piece 3 spend-options', () => {
-	const opt = (over: Partial<ResourceOption> = {}): ResourceOption => ({
-		id: 'flurry',
-		resourceId: 'ki',
-		resourceName: 'Ki',
-		name: 'Flurry of Blows',
-		description: '',
-		action: 'note:Make two Unarmed Strikes',
-		actionType: 'bonus_action',
-		cost: 1,
-		available: true,
-		...over,
-	});
-	const make = (spent: number, max: number) => {
-		const c = {
-			play: { resourcesSpent: { ki: spent } as Record<string, number> },
-		} as unknown as Character;
-		const sheet = {
-			resources: [
-				{
-					id: 'ki',
-					name: 'Ki',
-					max,
-					recharge: { trigger: 'short', amount: 'all' },
-					source: 'Monk',
-				},
-			],
-		} as unknown as CharacterSheet;
-		return {
-			t: new ResourceTracker(
-				() => c,
-				() => sheet,
-			),
-			c,
-		};
-	};
-
-	it('affords + spends when the pool can pay, deducting the cost', () => {
-		const { t, c } = make(0, 3);
-		expect(t.canAffordOption(opt())).toBe(true);
-		expect(t.spendOption(opt())).toBe(true);
-		expect(c.play.resourcesSpent.ki).toBe(1);
-	});
-
-	it('blocks + leaves the pool untouched when exhausted', () => {
-		const { t, c } = make(3, 3);
-		expect(t.canAffordOption(opt())).toBe(false);
-		expect(t.spendOption(opt())).toBe(false);
-		expect(c.play.resourcesSpent.ki).toBe(3);
-	});
-
-	it('`x` cost prices at the chosen amount (variable spend)', () => {
-		const { t, c } = make(0, 5);
-		expect(t.canAffordOption(opt({ cost: 'x' }), 3)).toBe(true);
-		expect(t.spendOption(opt({ cost: 'x' }), 3)).toBe(true);
-		expect(c.play.resourcesSpent.ki).toBe(3);
-		expect(t.canAffordOption(opt({ cost: 'x' }), 3)).toBe(false); // only 2 left
 	});
 });
 
@@ -2450,6 +2390,7 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 			label: 'Aid',
 			tokens: ['flat_bonus:hp_max+5'],
 			positive: true,
+			durationRounds: 0, // one the rest does not outlast: an expired one takes its 5 with it
 		});
 		expect(combat.hpMax).toBe(35); // what heal and the bar already use
 		combat.resources.rest('long');

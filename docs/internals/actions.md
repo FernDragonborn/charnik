@@ -182,12 +182,16 @@ with no screen calls the same function and gets the same character.
   direct write until its whole flow is one action.
 - **An intent carries numbers and ids, never a token or a dice formula.** The dice are the
   action's own (`ctx.rng`), so a roll's provenance is the function that made it.
+- **An action is all-or-nothing, and says when it was nothing.** A pool that cannot pay, an empty
+  Hit Die — the outcome is `refused`, carries the notice, and its character is the one it was
+  given. `act` returns that as a boolean, so a caller with a further step reads it before taking
+  it. `chain` runs one action after another as ONE outcome, and stops at a refused first step.
 - **What is not play-state is not in the character.** A concentration save a hit left owed comes
   back beside the character (`concentrationSave`); the view-model holds it and drops it when the
   concentration it names ends.
 
-Hit points, effects, exhaustion and concentration are built this way. The other subsystems still
-write the held character directly, and
+Hit points, effects, exhaustion, concentration, pools and rests are built this way. The other
+subsystems still write the held character directly, and
 `PlayOutcomes.settle` — run reactively by the combat page — applies the same rules after them
 (`work/mechanics.md` ▸ PLAY-REDUCERS).
 

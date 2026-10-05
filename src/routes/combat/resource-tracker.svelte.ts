@@ -1,212 +1,127 @@
 /*
  * The resource/rest subsystem of the Combat view-model: spell-slot pips, named resource pips (rage,
- * ki, item N/day…) and short/long rests (which recharge them + restore HP). All use the one
- * click-to-set pip model (pipClick). Split out of CombatVM so the consumables concern is one cohesive
- * unit; CombatVM composes it as `combat.resources`, passing getters for the reactive character + sheet.
+ * ki, item N/day…), a day's boundaries and the rests. What each press DOES is a pure action in
+ * `$lib/play/resources` and `$lib/play/rests`; this is the names the panels and the action executor
+ * call, and the one thing only a screen has — noticing that an ability's window has opened.
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { saveCharacterGuarded } from '$lib/character/store.svelte';
-import {
-	endConcentrationCarriedBy,
-	pipClick,
-	remainingRounds,
-	ROUNDS_PER_UNIT,
-	titleCase,
-} from '$lib/combat/helpers';
-import { effectiveHpMax, hitDiceRecoveredOnLongRest, hitDiceRecovery } from '$lib/rules/core';
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
-import { rechargeCount } from '$lib/effects/recharge-amount';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import {
+	canAfford,
+	gainSlot,
+	hitDiceSpent,
+	passBoundary,
+	resourceLeft,
+	resourceName,
+	resourceSpent,
+	restoreResource,
+	restoreResourceUpTo,
+	setResourcePip,
+	setSlotPip,
+	spendOnOption,
+	spendResource,
+	useResource,
+	type DayBoundary,
+	type OptionSpend,
+} from '$lib/play/resources';
+import { longRestHitDiceBudget, rest, type RestChoice, type RestKind } from '$lib/play/rests';
+import { titleCase } from '$lib/combat/helpers';
 
-/** How long a rest TAKES, in hours — RAW in both editions, and the only thing that decides which
- *  round-timed effects it outlasts. */
-const REST_HOURS = { short: 1, long: 8 } as const;
+export type { RestChoice };
 
-/** What the player decided about a rest before taking it. Every part is optional: a rest nobody
- *  chose for takes the default each part documents. */
-export interface RestChoice {
-	/** Which spent Hit Dice a long rest returns, die size → count (`rules/core` ▸ `hitDiceRecovery`). */
-	hitDice?: Record<string, number>;
-}
+const NOTE_ACTION = 'note:';
+
+/** What an option takes from its pool this time (`x` priced at the amount the player picked), and
+ *  what it says it does — a `note:` action IS that, in the row's own words. */
+const spendOf = (opt: ResourceOption, amount: number): OptionSpend => ({
+	resource: opt.resourceId,
+	cost: opt.cost === 'x' ? amount : opt.cost,
+	name: opt.name,
+	says: opt.action.startsWith(NOTE_ACTION) ? opt.action.slice(NOTE_ACTION.length) : opt.description,
+});
 
 export class ResourceTracker {
 	constructor(
 		private getCharacter: () => Character | null,
 		private getSheet: () => CharacterSheet | null,
+		/** Carry out a play-state action on the open character; false when it was refused. */
+		private act: (action: (character: Character, ctx: PlayContext) => PlayOutcome) => boolean,
 	) {}
 
+	/** The open character and its sheet together, or null while either is missing. */
+	private get open(): { c: Character; sheet: CharacterSheet } | null {
+		const c = this.getCharacter();
+		const sheet = this.getSheet();
+		return c && sheet ? { c, sheet } : null;
+	}
+
 	// tap a spell-slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
-	slotClick = (key: string, full: number, spent: number, i: number) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		c.play.spellSlotsSpent[key] = pipClick(spent, i, full);
+	slotClick = (key: string, full: number, spent: number, index: number) =>
+		this.act((c, ctx) => setSlotPip(c, { key, full, spent, index }, ctx));
+
+	/** What a pool is CALLED — never its id (UX-1). Public because the action executor blocks a spend
+	 *  with the same sentence. */
+	resourceName = (id: string): string => {
+		const sheet = this.getSheet();
+		return sheet ? resourceName(sheet, id) : titleCase(id);
 	};
 
-	/** The pool's definition on the live sheet, or undefined when nothing grants it any more. */
-	private defOf = (id: string) => this.getSheet()?.resources.find((r) => r.id === id);
-	/** What a pool is CALLED — never its id, which is a key, not a word the player has ever read (UX-1).
-	 *  Public because the action executor blocks a spend with the same sentence. The fallback matches
-	 *  the engine's (`titleCase`), so a pool nothing grants any more — a removed feature, a disabled
-	 *  source — reads like a pool rather than like a database key. */
-	resourceName = (id: string): string => this.defOf(id)?.name ?? titleCase(id);
-
-	/** Spent count for a resource, CLAMPED to what the current sheet actually grants. Persisted
-	 *  `resourcesSpent` is keyed by id and outlives the effect that granted it — so after a feature/
-	 *  plugin is removed or its max drops, the stored `spent` can exceed the live max (or reference a
-	 *  gone resource). Clamp to `[0, currentMax]` (an absent resource → max 0) so the sheet can never
-	 *  show a negative "left" or orphan pips. */
+	/** Spent count for a resource, clamped to what the current sheet actually grants. */
 	resourceSpent = (id: string): number => {
-		const stored = this.getCharacter()?.play.resourcesSpent[id] ?? 0;
-		return Math.max(0, Math.min(stored, this.defOf(id)?.max ?? 0));
+		const open = this.open;
+		return open ? resourceSpent(open.c, open.sheet, id) : 0;
 	};
-	/** Use ONE unit of a resource — the spell-cast analogue for named pools (UBUG-8): spend the next
-	 *  available unit, or BLOCK with a toast when exhausted (mirrors how a cast reserves + gates a spell
-	 *  slot). Fine-grained restore / arbitrary set stays on the pips (`resourceClick`).
-	 *  Returns whether it went through, because a cast paying from a pool has to know BEFORE it touches
-	 *  the action economy — the same reserve-before-commit rule `reserveSpellSlot` follows. */
-	useResource = (id: string, max: number): boolean => {
-		const c = this.getCharacter();
-		if (!c) return false;
-		const name = this.resourceName(id);
-		const before = this.resourceSpent(id);
-		if (before >= max) {
-			toast(t('combat.notice.resourceNoneLeft', { name }), {
-				description: t('combat.notice.rechargeOnRest'),
-			});
-			return false;
-		}
-		const after = before + 1;
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
-		// an unlimited pool (`inf` max) never runs out — count uses instead of a remaining total
-		toast(t('combat.notice.resourceUsed', { name }), {
-			description: Number.isFinite(max)
-				? t('combat.notice.resourceLeftOf', { left: max - after, max })
-				: t('combat.notice.resourceUsedUnlimited', { used: after }),
-		});
-		return true;
-	};
-	resourceClick = (id: string, max: number, i: number) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		const before = this.resourceSpent(id);
-		const after = pipClick(before, i, max);
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
-		if (after === before) return;
-		const name = this.resourceName(id);
-		toast(
-			t(after > before ? 'combat.notice.resourceUsed' : 'combat.notice.resourceRestoredName', {
-				name,
-			}),
-			{ description: t('combat.notice.resourceLeftOf', { left: max - after, max }) },
-		);
-	};
+	/** Use ONE unit of a resource, or block with a notice when it is exhausted. Returns whether it
+	 *  went through, because a cast paying from a pool has to know BEFORE it touches the action
+	 *  economy. */
+	useResource = (id: string, max: number): boolean =>
+		this.act((c, ctx) => useResource(c, { id, max }, ctx));
+	resourceClick = (id: string, max: number, index: number) =>
+		this.act((c, ctx) => setResourcePip(c, { id, max, index }, ctx));
 
-	/** Spent count for a hit-die pool, CLAMPED to the live max (same stale-state guard as
-	 *  `resourceSpent`: a shrunk/removed class can leave `hitDiceSpent` above the current max). */
+	/** Spent count for a hit-die pool, clamped to the live max. */
 	hitDiceSpent = (die: string): number => {
-		const stored = this.getCharacter()?.play.hitDiceSpent[die] ?? 0;
-		const max = this.getSheet()?.hitDice.find((h) => h.die === die)?.max ?? 0;
-		return Math.max(0, Math.min(stored, max));
+		const open = this.open;
+		return open ? hitDiceSpent(open.c, open.sheet, die) : 0;
 	};
 
 	/** Units left in a pool (max − spent). Public because a chip showing what a pool has left is the
-	 *  same question a spend-option's afford-check asks, and two subtractions of the same two numbers
-	 *  is how a pool comes to say different things in two places. */
+	 *  same question a spend-option's afford-check asks. */
 	remainingFor = (resourceId: string): number => {
-		const max = this.defOf(resourceId)?.max ?? 0;
-		return max - this.resourceSpent(resourceId);
+		const open = this.open;
+		return open ? resourceLeft(open.c, open.sheet, resourceId) : 0;
 	};
 	/** Piece 3: can this option be paid for right now? (`x` = a player-picked `amount`, ≥1.) */
 	canAffordOption = (opt: ResourceOption, amount = 1): boolean => {
-		const cost = opt.cost === 'x' ? amount : opt.cost;
-		return cost >= 1 && cost <= this.remainingFor(opt.resourceId);
+		const open = this.open;
+		return !!open && canAfford(open.c, open.sheet, spendOf(opt, amount));
 	};
-	/** Piece 3: spend on an option — afford-check, deduct the cost, surface the action. Returns whether
-	 *  it went through (a blocked spend toasts + returns false). `roll:`/`heal:` actions wire to the
-	 *  dice tray in a follow-up; v1 surfaces the `note:` text. */
-	spendOption = (opt: ResourceOption, amount = 1): boolean => {
-		const c = this.getCharacter();
-		if (!c) return false;
-		const cost = opt.cost === 'x' ? amount : opt.cost;
-		if (!this.canAffordOption(opt, amount)) {
-			toast(
-				t('combat.notice.notEnoughResource', {
-					resource: this.resourceName(opt.resourceId),
-					name: opt.name,
-				}),
-				{
-					description: t('combat.notice.notEnoughResourceBody', {
-						left: this.remainingFor(opt.resourceId),
-						cost,
-					}),
-				},
-			);
-			return false;
-		}
-		const before = this.resourceSpent(opt.resourceId);
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [opt.resourceId]: before + cost };
-		const desc = opt.action.startsWith('note:')
-			? opt.action.slice('note:'.length)
-			: opt.description;
-		toast(
-			t('combat.notice.resourceSpent', {
-				name: opt.name,
-				cost,
-				resource: this.resourceName(opt.resourceId),
-			}),
-			{ description: desc },
-		);
-		return true;
-	};
+	/** Piece 3: spend on an option — afford-check, deduct the cost, say what it does. Returns whether
+	 *  it went through. */
+	spendOption = (opt: ResourceOption, amount = 1): boolean =>
+		this.act((c, ctx) => spendOnOption(c, spendOf(opt, amount), ctx));
 
 	/** Spend `count` uses of a pool as PART of an action that already said what it is — the
-	 *  `spend_resource:<id>[:<n>]` verb, for a feature that pays out of a pool another feature owns
-	 *  (Wild Resurgence spends a use of Wild Shape). Silent, and unchecked: the executor refuses the
-	 *  whole action before anything is paid when the pool cannot cover it. */
-	spendFrom = (id: string, count: number) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: this.resourceSpent(id) + count };
-	};
+	 *  `spend_resource:<id>[:<n>]` verb. */
+	spendFrom = (id: string, count: number) =>
+		this.act((c, ctx) => spendResource(c, { id, count }, ctx));
 
 	/** Give the character one more spell slot of `level` — the `gain_slot:<level>` verb. */
-	gainSlot = (level: number) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		const key = String(level);
-		c.play.spellSlotsGained = {
-			...c.play.spellSlotsGained,
-			[key]: (c.play.spellSlotsGained[key] ?? 0) + 1,
-		};
-		toast(t('combat.notice.slotGained', { level }));
-	};
+	gainSlot = (level: number) => this.act((c, ctx) => gainSlot(c, { level }, ctx));
 
-	/** Regain ALL expended uses of a pool (spent → 0) — the `restore_resource:<id>` action verb.
-	 *  RAW: Persistent Rage "regain all expended uses of Rage", Uncanny Metabolism "regain all expended
-	 *  Focus Points". `id` is a flat resource id (not a content ref), like `grant_resource`'s. */
-	restoreAll = (id: string) => {
-		const c = this.getCharacter();
-		if (!c) return;
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: 0 };
-		const name = this.resourceName(id);
-		toast(t('combat.notice.resourceFullyRestored', { name }));
-	};
+	/** Regain ALL expended uses of a pool — the `restore_resource:<id>` action verb. */
+	restoreAll = (id: string) => this.act((c, ctx) => restoreResource(c, { id }, ctx));
 
-	/** Regain expended uses until at least `upTo` are AVAILABLE — never reduces what's there ("regain
-	 *  expended until you have N", Perfect Focus → Focus 4). Returns the resulting available count (for
-	 *  the caller's notice); no toast here (the auto-initiative path notifies with the feature name).
-	 *  No-op returning 0 when the pool is unknown. Silent unlike `restoreAll` — it's a system event. */
+	/** Regain expended uses until at least `upTo` are AVAILABLE. Returns the resulting available
+	 *  count (for the caller's notice), 0 when the pool is unknown. */
 	restoreUpTo = (id: string, upTo: number): number => {
-		const c = this.getCharacter();
-		const def = this.defOf(id);
-		if (!c || !def) return 0;
-		const spent = c.play.resourcesSpent?.[id] ?? 0;
-		const newSpent = Math.min(spent, Math.max(0, def.max - upTo)); // only restores (never raises spent)
-		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: newSpent };
-		return def.max - newSpent;
+		if (!this.getSheet()?.resources.some((r) => r.id === id)) return 0;
+		this.act((c, ctx) => restoreResourceUpTo(c, { id, upTo }, ctx));
+		return this.remainingFor(id);
 	};
 
 	/** What each spend-option's `available` guard said last time we looked. Plain, not `$state`: it is
@@ -231,150 +146,32 @@ export class ResourceTracker {
 		}
 	};
 
-	/**
-	 * A boundary that is not a rest: dawn, or dusk. Everything whose recharge fires there comes back —
-	 * a wand's "regains 1d6+1 charges daily at dawn" is rolled here, because that is when the table
-	 * rolls it.
-	 *
-	 * A CONTROL the player presses, never a clock the app runs: nothing here knows the hour, and a
-	 * long rest is eight hours from whenever it started, which is not dawn.
-	 */
-	passBoundary = (trigger: 'dawn' | 'dusk') => {
+	/** Written at once rather than by the debounced autosave: a rest or a new day is the kind of
+	 *  moment a player closes the app right after. */
+	saveNow = () => {
 		const c = this.getCharacter();
-		const sheet = this.getSheet();
-		if (!c || !sheet) return;
-		const spent = { ...c.play.resourcesSpent };
-		const said: string[] = [];
-		for (const r of sheet.resources) {
-			if (r.recharge.trigger !== trigger) continue;
-			const before = spent[r.id] ?? 0;
-			if (before === 0) continue; // nothing spent to give back — say nothing about it
-			if (r.recharge.amount === RECHARGE_ALL) {
-				spent[r.id] = 0;
-				said.push(t('combat.notice.rechargedAll', { name: r.name }));
-			} else {
-				const n = rechargeCount(r.recharge.amount, sheet.castCtx);
-				if (n === null) continue;
-				const left = Math.max(0, before - n);
-				spent[r.id] = left;
-				said.push(t('combat.notice.recharged', { name: r.name, count: before - left }));
-			}
-		}
-		c.play.resourcesSpent = spent;
-		void saveCharacterGuarded(c);
-		toast(t(`combat.timeSkip.${trigger === 'dawn' ? 'newDay' : 'nightfall'}`), {
-			description: said.length ? said.join(' · ') : t('combat.notice.nothingRecharged'),
-		});
+		if (c) void saveCharacterGuarded(c);
+	};
+
+	/** A boundary that is not a rest: dawn, or dusk. A CONTROL the player presses, never a clock the
+	 *  app runs. */
+	passBoundary = (trigger: DayBoundary) => {
+		if (this.act((c, ctx) => passBoundary(c, { trigger }, ctx))) this.saveNow();
 	};
 
 	/** Does this character have anything that comes back at that boundary? The control for it is shown
 	 *  only then — a button that can never do anything is a worse answer than no button. */
-	hasBoundaryPool = (trigger: 'dawn' | 'dusk'): boolean =>
+	hasBoundaryPool = (trigger: DayBoundary): boolean =>
 		(this.getSheet()?.resources ?? []).some((r) => r.recharge.trigger === trigger);
 
 	/** How many spent Hit Dice a long rest may return to this character, whichever sizes they are. */
 	get longRestHitDiceBudget(): number {
-		const c = this.getCharacter();
-		const pools = this.getSheet()?.hitDice ?? [];
-		if (!c) return 0;
-		return hitDiceRecoveredOnLongRest(
-			c.system,
-			pools.reduce((n, h) => n + h.max, 0),
-		);
+		const open = this.open;
+		return open ? longRestHitDiceBudget(open.c, open.sheet) : 0;
 	}
 
-	/** The long-rest-only half of `rest`: slots, HP, concentration, Hit Dice and Exhaustion. Split out
-	 *  because it's the only branch that touches five subsystems, and inlining it pushed `rest` past the
-	 *  complexity budget. */
-	private applyLongRest = (c: Character, sheet: CharacterSheet, choice: RestChoice) => {
-		c.play.spellSlotsSpent = {};
-		// a slot a feature gave lasts until the rest that would have refilled it anyway. Font of
-		// Magic's text says so ("vanishes when you finish a Long Rest"); Wild Resurgence's is silent,
-		// and a slot that outlived every rest would be a permanent one — RAI
-		c.play.spellSlotsGained = {};
-		// full HP is the EFFECTIVE max (A14): a manual max does not silence an `hp_max` effect, so a
-		// long rest must fill to the same number heal and the bar clamp to
-		c.play.hp = {
-			...c.play.hp,
-			current: effectiveHpMax(c.play.hp.max ?? null, sheet.maxHp),
-			temp: 0,
-		};
-		c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
-		// effect in play.effects (e.g. Hold Person on an enemy) — A13
-		// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). WHICH dice is the
-		// player's call where the rest cannot return them all; a rest nobody chose for (an action's
-		// `rest:long`, a pool of one size) takes the largest first.
-		const back = hitDiceRecovery(
-			sheet.hitDice,
-			c.play.hitDiceSpent,
-			this.longRestHitDiceBudget,
-			choice.hitDice,
-		);
-		const hdSpent = { ...c.play.hitDiceSpent };
-		for (const h of sheet.hitDice) {
-			const regained = back[h.die] ?? 0;
-			if (regained > 0) hdSpent[h.die] = Math.min(hdSpent[h.die] ?? 0, h.max) - regained;
-		}
-		c.play.hitDiceSpent = hdSpent;
-		// RAW both editions: a Long Rest removes ONE Exhaustion level (2024 glossary "Removing
-		// Exhaustion Levels"; 2014 "reduces a creature's exhaustion level by 1"). 2014 adds "provided
-		// the creature has also ingested some food and drink" — a tracker doesn't model rations, so we
-		// apply it unconditionally (RAI, the universal reading). Automatic in RAW → no player click.
-		c.play.exhaustion = Math.max(0, c.play.exhaustion - 1);
-	};
-
-	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
-	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
-	 *  round-timed effects the rest outlives — a rest is a duration, so it outlasts what runs out
-	 *  inside it and NOT what is still running after. Indefinite effects (no duration) persist —
-	 *  those are curses/manual states the player removes explicitly. */
-	rest = (kind: 'short' | 'long', choice: RestChoice = {}) => {
-		const c = this.getCharacter();
-		const sheet = this.getSheet();
-		if (!c || !sheet) return;
-		const exhaustionBefore = c.play.exhaustion;
-		const spent = { ...c.play.resourcesSpent };
-		for (const r of sheet.resources) {
-			// what this rest gives the pool back is the recharge model's call, not this loop's:
-			// `null` nothing, `'all'` the whole pool, otherwise an amount to roll or read
-			const back = restRecharge(r.recharge, kind);
-			if (back === null) continue;
-			if (back === RECHARGE_ALL) spent[r.id] = 0;
-			else {
-				const n = rechargeCount(back, sheet.castCtx);
-				if (n !== null) spent[r.id] = Math.max(0, (spent[r.id] ?? 0) - n);
-			}
-		}
-		c.play.resourcesSpent = spent;
-		if (kind === 'long') {
-			this.applyLongRest(c, sheet, choice);
-		} else {
-			const slots = { ...c.play.spellSlotsSpent };
-			delete slots[PACT_SLOT_KEY]; // warlock pact slots return on a short rest
-			c.play.spellSlotsSpent = slots;
-		}
-		// a rest expires an effect it OUTLASTS: compare rounds LEFT (not total duration) to the rest's
-		// own length (A12). A long rest is EIGHT HOURS, not forever: a 24-hour effect is still running
-		// when you get up, and wiping it was the app deciding a duration the rules had already decided.
-		const round = c.play.round;
-		const restRounds = REST_HOURS[kind] * (ROUNDS_PER_UNIT.hour ?? 0);
-		const outlived = (e: (typeof c.play.effects)[number]) => {
-			const left = remainingRounds(e, round);
-			return left != null && left <= restRounds;
-		};
-		endConcentrationCarriedBy(c.play, c.play.effects.filter(outlived));
-		c.play.effects = c.play.effects.filter((e) => !outlived(e));
-		void saveCharacterGuarded(c);
-		const lostExhaustion = exhaustionBefore > c.play.exhaustion;
-		toast(t('combat.notice.restRestored', { kind: t(`combat.restKind.${kind}`) }), {
-			...(lostExhaustion
-				? {
-						description: t('combat.notice.exhaustionChanged', {
-							from: exhaustionBefore,
-							to: c.play.exhaustion,
-						}),
-					}
-				: {}),
-		});
+	/** Take a rest (`$lib/play/rests`). */
+	rest = (kind: RestKind, choice: RestChoice = {}) => {
+		if (this.act((c, ctx) => rest(c, { kind, choice }, ctx))) this.saveNow();
 	};
 }

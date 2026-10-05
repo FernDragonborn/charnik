@@ -8,7 +8,7 @@
 import { toast } from 'svelte-sonner';
 import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import { sayText, type SaidText } from '$lib/util/say';
+import { sayText, type Said } from '$lib/util/say';
 import { localizedName } from '$lib/content/detail';
 import { isRowActive } from '$lib/content/sources.svelte';
 import type { ContentGraph } from '$lib/content/loader';
@@ -34,6 +34,9 @@ export interface PlayOutcomesHost {
 	hp: { pendingConcentrationSave: OwedConcentrationSave | null; dyingStopped(): void };
 }
 
+/** What stands between the sentences of one notice. */
+const SENTENCE_SEPARATOR = ' · ';
+
 /** Is the death-save track holding anything? */
 const tracksDeathSaves = (character: Character): boolean =>
 	character.play.deathSaves.successes > 0 || character.play.deathSaves.failures > 0;
@@ -53,10 +56,14 @@ export class PlayOutcomes {
 		};
 	}
 
-	/** Carry out a play-state action on the open character. */
-	act = (action: (character: Character, ctx: PlayContext) => PlayOutcome): void => {
+	/** Carry out a play-state action on the open character. False when it was refused, or there is
+	 *  no sheet to carry it out on. */
+	act = (action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean => {
 		const { character, sheet, graph } = this.host();
-		if (character && sheet && graph) this.commit(character, action(character, this.context(graph)));
+		if (!character || !sheet || !graph) return false;
+		const outcome = action(character, this.context(graph));
+		this.commit(character, outcome);
+		return !outcome.refused;
 	};
 
 	/**
@@ -96,8 +103,11 @@ export class PlayOutcomes {
 				return [name, row ? localizedName(row, app.activeLocale) : ref];
 			}),
 		);
-		const said = (text: SaidText) =>
-			sayText({ ...text, values: { ...text.values, ...names } }, translate);
-		toast(said(notice.text), notice.description ? { description: said(notice.description) } : {});
+		const said = (text: Said) =>
+			typeof text === 'string'
+				? text
+				: sayText({ ...text, values: { ...text.values, ...names } }, translate);
+		const description = [notice.description ?? []].flat().map(said).join(SENTENCE_SEPARATOR);
+		toast(said(notice.text), description ? { description } : {});
 	}
 }

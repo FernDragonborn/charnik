@@ -469,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (151 modules)
+## Library functions & types (153 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1678,11 +1678,41 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface PlayContext` — What an action reads besides the character.
 - `interface PlayLogLine` — One line for the roll log: a marker, or a roll when the action made one.
-- `interface PlayNotice` — Something to tell the player.
+- `interface PlayNotice` — Something to tell the player: a catalog sentence, or a row's own words as they are.
 - `interface OwedConcentrationSave` — A concentration save a hit has made due: the DC, and the spell it is owed for.
 - `interface PlayOutcome`
 - `const quietly` — An outcome that says nothing beyond the character.
+- `function chain` — * One action after another on the same character, as one outcome: the second starts from what the * first left, and w…
 - `function adoptCharacter` — * Write an action's result into the character object the sheet is holding.
+
+### `src/lib/play/resources.ts`
+
+- `type DayBoundary` — A boundary that is not a rest.
+- `const resourceName` — What a pool is CALLED — never its id, which is a key, not a word the player has ever read.
+- `function resourceSpent` — Spent count for a pool, CLAMPED to what the sheet grants: after a feature is removed or its max * drops, the stored c…
+- `const resourceLeft` — Units left in a pool (max − spent).
+- `function hitDiceSpent` — Spent count for a hit-die pool, clamped to the live max for the reason `resourceSpent` is.
+- `function setSlotPip` — Press a spell-slot pip: a filled one spends down to it, a spent one restores up to it.
+- `function useResource` — Use ONE unit of a pool, or refuse when it is empty — the way a cast reserves a spell slot.
+- `function setResourcePip` — Press a pool's pip: set the spent count the way a slot pip does, and say which way it moved.
+- `interface OptionSpend` — What a spend-option takes from its pool, and what it is called while it does.
+- `const canAfford` — Can a pool pay this many uses right now?
+- `function spendOnOption` — Pay an option's cost out of its pool, or refuse when the pool cannot cover it.
+- `function spendResource` — Spend `count` uses of a pool as PART of an action that already said what it is — a feature * paying out of a pool ano…
+- `function gainSlot` — One more spell slot of a level.
+- `function restoreResource` — Regain ALL expended uses of a pool.
+- `function restoreResourceUpTo` — Regain expended uses until at least `upTo` are AVAILABLE — never fewer than are there already * ("regain expended unt…
+- `function passBoundary` — * Dawn, or dusk.
+
+### `src/lib/play/rests.ts`
+
+- `type RestKind`
+- `interface RestChoice` — What the player decided about a rest before taking it.
+- `const longRestHitDiceBudget` — How many spent Hit Dice a long rest may return to this character, whichever sizes they are.
+- `function rest` — * Take a rest: recharge pools by what each one's recharge says of this rest, reset spell slots (long * = all, short =…
+- `function spendHitDie` — Spend one Hit Die of a size: roll it plus the Constitution modifier, heal a MINIMUM of 1 (RAW) * up to the maximum, a…
+- `function diceShortRest` — The RAW short rest: recharge, then spend each chosen Hit Die (die size → count).
+- `function halfShortRest` — The `half` short rest (a house variant): recharge and heal half the maximum, no Hit Dice spent.
 
 ### `src/lib/play/settle.ts`
 
@@ -2015,4 +2045,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 87 global classes · 56 components · 1223 exports across 167 modules · 78 duplicate suspects._
+_47 tokens · 87 global classes · 56 components · 1247 exports across 169 modules · 78 duplicate suspects._

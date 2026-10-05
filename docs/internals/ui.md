@@ -109,8 +109,8 @@ Combat is the view that has them. Which field to open first:
 | `executor`    | `action-executor`  | a feature's spend-option: its cost, its turn slot, its verbs      |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
-| `resources`   | `resource-tracker` | slot and resource pips, and what each rest recharges              |
-| `rests`       | `rest-controls`    | a rest as the player performs it — the Hit Dice it asks about     |
+| `resources`   | `resource-tracker` | the names panels call for slot and pool pips and rests (`$lib/play/resources`, `rests`); an ability's window opening |
+| `rests`       | `rest-controls`    | a rest's popovers — the Hit Dice it asks about; the rest itself is `$lib/play/rests` |
 | `economy`     | `turn-economy`     | action/bonus/reaction pips, movement, the turn, entering combat   |
 | `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `$lib/play/effects` |
 | `inventory`   | `inventory`        | equip, attune, count, use up — the play half of what is carried   |

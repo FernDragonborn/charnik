@@ -3,30 +3,26 @@
  * many Hit Dice to spend, spending one, and the two healing models (RAW dice, or the `half` house
  * variant). The long rest: which spent Hit Dice come back, where it cannot return them all.
  *
- * The recharge itself is NOT here — `ResourceTracker.rest` owns refilling pools and pact slots for
- * both rest lengths, and applies the long rest's Hit-Dice recovery. What this file owns is the
- * popovers and the HP arithmetic hanging off them, which is UI flow rather than resource
- * bookkeeping. Every path here ends in `rest(...)`, so the two halves cannot drift apart.
+ * What a rest DOES is not here — the recharge, the Hit Dice and the healing are pure actions in
+ * `$lib/play/rests`. What this file owns is the popovers: the choice being made, and the press that
+ * hands it over.
  */
-import { toast } from 'svelte-sonner';
-import { t } from '$lib/i18n';
-import { rollFormula } from '$lib/rules/dice';
-import { hitDiceRecovery, shortRestHalfHeal } from '$lib/rules/core';
+import { hitDiceRecovery } from '$lib/rules/core';
+import { diceShortRest, halfShortRest, spendHitDie } from '$lib/play/rests';
+import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { MenuKind } from '$lib/combat/helpers';
-import type { RollJournal } from './roll-journal.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
-/** What the short rest needs from the sheet around it. `hpMax` is the EFFECTIVE max (a manual max
- *  with `hp_max` effects folded on top), which only the view-model can answer. */
+/** What the rest controls need from the sheet around them. */
 export interface RestControlsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
-	hpMax: number;
-	journal: RollJournal;
 	resources: ResourceTracker;
+	/** Carry out a play-state action on the open character; false when it was refused. */
+	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
 	overlay: OpenOverlay | null;
 	openMenu(kind: MenuKind, e: Event): void;
 }
@@ -47,30 +43,8 @@ export class RestControls {
 			left: h.max - this.host().resources.hitDiceSpent(h.die),
 		}));
 	}
-	/** Spend one Hit Die of the given size (short-rest healing): roll the die + CON mod, heal a MINIMUM
-	 *  of 1 HP (RAW) clamped to max, log it, and mark the die spent. Blocked when that pool is empty. */
-	spendHitDie = (die: string) => {
-		const c = this.host().character;
-		const pool = this.host().sheet?.hitDice.find((h) => h.die === die);
-		if (!c || !pool) return;
-		if (pool.max - this.host().resources.hitDiceSpent(die) <= 0) {
-			toast(t('combat.notice.noHitDice', { die }), {
-				description: t('combat.notice.regainOnLongRest'),
-			});
-			return;
-		}
-		const conMod = this.host().sheet?.abilities.con.mod ?? 0;
-		const r = rollFormula(`1${die}${conMod >= 0 ? `+${conMod}` : conMod}`);
-		c.play.hp.current = Math.min(this.host().hpMax, c.play.hp.current + Math.max(1, r.total)); // min 1 HP/die
-		c.play.hitDiceSpent = {
-			...c.play.hitDiceSpent,
-			[die]: this.host().resources.hitDiceSpent(die) + 1,
-		};
-		this.host().journal.pushRoll(
-			{ text: `Hit Die ${die}`, key: 'combat.roll.hitDie', values: { die } },
-			r,
-		);
-	};
+	/** Spend one Hit Die of the given size (short-rest healing). */
+	spendHitDie = (die: string) => this.host().act((c, ctx) => spendHitDie(c, { die }, ctx));
 
 	/** The character's short-rest healing model (per-character rules variant; `dice` = RAW default). */
 	get shortRestMode(): ShortRestMode {
@@ -98,27 +72,16 @@ export class RestControls {
 	};
 	/** The `half` short rest (BG3 / house variant): recharge + heal ½ max HP, no Hit Dice spent. */
 	private doHalfShortRest() {
-		const p = this.host().character?.play;
-		if (!p) return;
-		this.host().resources.rest('short');
-		const heal = shortRestHalfHeal(this.host().hpMax);
-		p.hp.current = Math.min(this.host().hpMax, p.hp.current + heal);
-		this.host().journal.logMarker({
-			text: `Short rest — +${heal} HP (½ max)`,
-			key: 'combat.log.shortRestHalf',
-			values: { hp: heal },
-		});
-		toast(t('combat.notice.shortRestHealed', { hp: heal }));
+		if (this.host().act(halfShortRest)) this.host().resources.saveNow();
 	}
-	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (roll + CON, min 1 HP —
-	 *  each shows its own roll in the log), and close the picker. */
+	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (each shows its own roll
+	 *  in the log), and close the picker. */
 	commitShortRest = () => {
-		this.host().resources.rest('short');
-		for (const [die, count] of Object.entries(this.hdPick))
-			for (let i = 0; i < count; i++) this.spendHitDie(die);
+		const hitDice = this.hdPick;
+		if (this.host().act((c, ctx) => diceShortRest(c, { hitDice }, ctx)))
+			this.host().resources.saveNow();
 		this.hdPick = {};
 		this.host().overlay = null;
-		toast(t('combat.notice.shortRestTaken'));
 	};
 
 	/** Hit Dice the long rest will return, as the player has them chosen (die size → count). */

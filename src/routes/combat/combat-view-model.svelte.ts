@@ -112,6 +112,7 @@ class CombatVM {
 	resources = new ResourceTracker(
 		() => this.character,
 		() => this.sheet,
+		(action) => this.act(action),
 	);
 	/** HP, damage/healing and death — see hit-points.svelte.ts. */
 	hp = new HitPoints(() => this);
@@ -179,8 +180,7 @@ class CombatVM {
 	rollConcentrationSave = () => this.hp.rollConcentrationSave();
 	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();
 	deathSave = () => this.hp.deathSave();
-	toggleDeathSave = (...a: Parameters<HitPoints['toggleDeathSave']>) =>
-		this.hp.toggleDeathSave(...a);
+	toggleDeathSave: HitPoints['toggleDeathSave'] = (...a) => this.hp.toggleDeathSave(...a);
 	die = (...a: Parameters<HitPoints['die']>) => this.hp.die(...a);
 	revive = () => this.hp.revive();
 	/** The short-rest popover + Hit-Dice spending — see rest-controls.svelte.ts. */

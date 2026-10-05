@@ -118,6 +118,6 @@ describe.each(['5e', '5.5e'] as const)('effect actions · %s', (system) => {
 		});
 		const dead = setExhaustion(c, { level: 99 }, ctx());
 		expect(dead.character.play).toMatchObject({ exhaustion: top, death: { cause: 'exhaustion' } });
-		expect(dead.notices[0]?.text.key).toBe('combat.notice.died');
+		expect(dead.notices[0]?.text).toEqual({ key: 'combat.notice.died' });
 	});
 });
