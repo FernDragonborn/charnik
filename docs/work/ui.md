@@ -22,9 +22,10 @@
                 advantage · against magical effects
   ```
 
-  It is still wrong — two rows under one label, each a swing plus a case. Next: RENDER the three
-  directions below, at both widths and in both locales, and put them to the maintainer; nothing is
-  chosen before they are seen.
+  It is still wrong — two rows under one label, each a swing plus a case. The three
+  directions below are rendered beside what ships, on the live `/dev/defences` page, in both
+  locales and at both widths, and wait for the pick:
+  `design-preview/_saves-variants-{en,uk}-{wide,narrow}.png`.
 
   **What the render says the fault IS**, which is a starting hypothesis and not a decision: both chips
   open with the same word. `advantage · against spells` and `advantage · against magical effects`

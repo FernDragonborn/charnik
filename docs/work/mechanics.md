@@ -288,6 +288,10 @@ stay semi-manual.
   inside it; an action never accepts a token string or a dice formula from its caller beyond what
   the catalog row it names carries. Acceptance: every verb of `CombatVM` that mutates `play` is
   callable from a node test with no component mounted, and the five route-level effects are gone.
+  **Done one subsystem at a time, each its own verified commit** — hit points with the three
+  invariants that follow them, then effects and concentration, resources and rests, the turn,
+  casting, forms and inventory. An invariant moves in the same commit as the verb it follows, so
+  no commit leaves a rule enforced in neither place. The release waits for the last one.
 - [ ] **CHARACTER-WRITER · one writer per open character.** `character.json` is written whole, from
   whichever in-memory copy calls `saveCharacter`, by the combat autosave, three immediate saves, the
   spellbook, the text-override binding, the builder, snapshot restore and demo re-creation — with no
