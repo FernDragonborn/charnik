@@ -50,8 +50,8 @@
   `max(0,attack_mod)`: RAW names the modifier and says nothing of a negative one, and damage that
   heals is the reading nobody plays, so that is RAI and said here.
   **Two of them are an extra attack**, and so is the Light property in both editions: `extra_attack`
-  on the property's row, offered as a control beside the attack row, costing what the row says and
-  marked once made (`combat/attack-properties.ts`, `SheetRolls.extraAttackRoll`). Light grants it,
+  on the property's row, offered as a row of its own under the weapon that says its cost and its
+  damage on its face, costing what the row says and marked once made (`combat/attack-properties.ts`, `SheetRolls.extraAttackRoll`). Light grants it,
   a drilled Nick makes it free, Cleave grants its own, 2024 Two-Weapon Fighting keeps the modifier.
   The builder's Attacks card says the same attack in its Notes cell — who grants it, what it costs,
   what it rolls — with the rules' text on hover and focus (`design-preview/builder-extra-attack.png`).
@@ -62,19 +62,10 @@
   creature in 2014. The row says `Disadvantage (Heavy)` and the tap rolls with it.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left, in the order it is worth doing:**
-  1. **The control is variant B: a row of its own under the weapon**, saying the cost and the
-     damage on its face rather than behind a hover (`design-preview/_extra-attack-B-subrow[-made].png`).
-     What ships today is A, so this is a build, not a pick. The three variants, each at rest and once
-     made (`design-preview/_extra-attack-{A-chip,B-subrow,C-pip}[-made].png`). A is what ships: a
-     gold `+ Name` beside the row, after the finesse grip. B is a row of its own under the weapon
-     that says the cost and the damage on its face, where A keeps both behind a hover. C is A's
-     chip wearing the pip of the turn-bar slot it spends — the Bonus Action triangle, or the Action
-     dot for an attack that rides the Attack action — instead of a plus. It is an ACTION, not a
-     two-state choice, so PICK-CONTROL-STUDY (`ui.md`) does not settle it.
-  2. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
+  1. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
      fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
      names and sizes (`mechanics.md`). A player's own effect carrying the token folds today.
-  3. **An attack row prints only the weapon's first property.** It explains all of them on hover
+  2. **An attack row prints only the weapon's first property.** It explains all of them on hover
      and focus, as the article does; the sub-line has room for one word, and which words earn the
      space is a layout question for COMBAT-RAIL's session.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip

@@ -512,6 +512,8 @@
 		},
 		"attacks": {
 			"extraAttack": "{name}: додаткова атака — {weapon}",
+			"extraCostBonus": "Бонусна дія",
+			"extraCostFree": "у дії «Атака»",
 			"extraAttackBonus": "Додаткова атака — бонусна дія. Шкода {damage}.",
 			"extraAttackFree": "Додаткова атака — у складі дії «Атака». Шкода {damage}.",
 			"finesseSwap": "Фінес — замах цією; натисніть, щоб {other}",

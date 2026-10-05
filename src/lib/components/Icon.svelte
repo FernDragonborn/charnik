@@ -31,6 +31,7 @@
 	import CircleDot from '@lucide/svelte/icons/circle-dot';
 	import CircleX from '@lucide/svelte/icons/circle-x';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
+	import CornerDownRight from '@lucide/svelte/icons/corner-down-right';
 	import Download from '@lucide/svelte/icons/download';
 	import Flag from '@lucide/svelte/icons/flag';
 	import FlameKindling from '@lucide/svelte/icons/flame-kindling';
@@ -83,6 +84,7 @@
 		'circle-x': CircleX,
 		coins: Coins,
 		'corner-down-left': CornerDownLeft,
+		'corner-down-right': CornerDownRight,
 		download: Download,
 		flag: Flag,
 		/* a short rest is an hour by the fire, a long one is making camp — the two used to share the

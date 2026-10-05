@@ -95,7 +95,7 @@
 	{#each items as item (item.id)}
 		{@const at = item.at}
 		{#if at}
-			<div class="row-wrap">
+			<div class="row-wrap" class:has-extras={!!at.extras?.length}>
 				<RowGrip
 					panel={ROW_PANEL.attacks}
 					id={at.id}
@@ -108,46 +108,51 @@
 							by,
 						)}
 				/>
-				<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
-				<button
-					class="combat-row"
-					use:provenance={rowExplanation(at)}
-					onclick={(e) => combat.attackRoll(at, e)}
-				>
-					<span class="row-name">{attackName(at, $_)}</span><span class="combat-row-hint"
-						>{signed(at.toHit)}</span
-					>
-					<span class="combat-row-desc">{formatDamageParts(at.damageParts, $_)}</span><span
-						class="combat-row-marker">{attackMeta(at, $_)}</span
-					>
-				</button>
-				<!-- FINESSE-ABILITY: RAW hands the player this choice every swing, and the app used to take
-				     it silently. Rendered only where there IS a choice, and BESIDE the row rather than
-				     inside it — a control nested in a row-wide button is what cost the keyboard its walk
-				     the last time this shape was built. -->
-				{#if at.finesse}
-					{@const fin = at.finesse}
-					{@const other = fin.ability === 'str' ? 'dex' : 'str'}
+				<!-- the weapon's own line: the row and, where there is one, its grip. Its own box so an
+				     extra attack can stand UNDER it without the two sharing a line. -->
+				<div class="row-line">
+					<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
 					<button
-						class="finesse-swap"
-						onclick={() => combat.inventory.setFinesseAbility(fin.kindId, other)}
-						title={$_('combat.attacks.finesseSwap', {
-							values: { other: $_(`abilityName.${other}`) },
-						})}
-						aria-label={$_('combat.attacks.finesseSwap', {
-							values: { other: $_(`abilityName.${other}`) },
-						})}
+						class="combat-row"
+						use:provenance={rowExplanation(at)}
+						onclick={(e) => combat.attackRoll(at, e)}
 					>
-						<!-- BOTH abilities stand, the live one lit: showing only the current
-						     one made the control read as one more meta tag, and a player who
-						     never pressed it would never learn a choice was there. -->
-						<span class="fin-ab" class:on={fin.ability === 'str'}>{$_('abilityShort.str')}</span
-						><span class="fin-ab" class:on={fin.ability === 'dex'}>{$_('abilityShort.dex')}</span>
+						<span class="row-name">{attackName(at, $_)}</span><span class="combat-row-hint"
+							>{signed(at.toHit)}</span
+						>
+						<span class="combat-row-desc">{formatDamageParts(at.damageParts, $_)}</span><span
+							class="combat-row-marker">{attackMeta(at, $_)}</span
+						>
 					</button>
-				{/if}
+					<!-- FINESSE-ABILITY: RAW hands the player this choice every swing, and the app used to take
+					     it silently. Rendered only where there IS a choice, and BESIDE the row rather than
+					     inside it — a control nested in a row-wide button is what cost the keyboard its walk
+					     the last time this shape was built. -->
+					{#if at.finesse}
+						{@const fin = at.finesse}
+						{@const other = fin.ability === 'str' ? 'dex' : 'str'}
+						<button
+							class="finesse-swap"
+							onclick={() => combat.inventory.setFinesseAbility(fin.kindId, other)}
+							title={$_('combat.attacks.finesseSwap', {
+								values: { other: $_(`abilityName.${other}`) },
+							})}
+							aria-label={$_('combat.attacks.finesseSwap', {
+								values: { other: $_(`abilityName.${other}`) },
+							})}
+						>
+							<!-- BOTH abilities stand, the live one lit: showing only the current
+							     one made the control read as one more meta tag, and a player who
+							     never pressed it would never learn a choice was there. -->
+							<span class="fin-ab" class:on={fin.ability === 'str'}>{$_('abilityShort.str')}</span
+							><span class="fin-ab" class:on={fin.ability === 'dex'}>{$_('abilityShort.dex')}</span>
+						</button>
+					{/if}
+				</div>
 				<!-- EXTRA ATTACKS: one more swing the weapon's own properties allow this turn — Light's with
-				     a second Light weapon in hand, Cleave's after a hit. BESIDE the row, like the grip: it
-				     is a second thing the player may do, not a mode of the first. Once made, it stays
+				     a second Light weapon in hand, Cleave's after a hit. A row of its OWN under the weapon:
+				     it is a second thing the player may do, not a mode of the first, and it says what it
+				     costs and what it rolls on its face rather than behind a hover. Once made, it stays
 				     reachable and says why it will not fire again (ui.md ▸ rule 10). -->
 				{#each at.extras ?? [] as extra (extra.property)}
 					{@const made = combat.economy.isRollUsed(extraAttackMark(at, extra))}
@@ -161,7 +166,16 @@
 						use:provenance={extraExplanation(extra, made)}
 						onclick={(e) => combat.extraAttackRoll(at, extra, e)}
 					>
-						<Icon name="plus" size={11} />{extra.name}
+						<Icon name="corner-down-right" size={13} />
+						<span class="extra-name">{extra.name}</span>
+						<span class="extra-cost"
+							>{$_(
+								extra.cost === EXTRA_ATTACK_WORD.bonus
+									? 'combat.attacks.extraCostBonus'
+									: 'combat.attacks.extraCostFree',
+							)}</span
+						>
+						<span class="extra-damage">{formatDamageParts(extra.damageParts, $_)}</span>
 					</button>
 				{/each}
 			</div>
@@ -195,27 +209,49 @@
 		color: var(--color-accent-bright);
 	}
 	.finesse-swap:hover,
-	.finesse-swap:focus-visible,
-	.extra-attack:hover,
-	.extra-attack:focus-visible {
+	.finesse-swap:focus-visible {
 		border-color: var(--color-accent);
 	}
-	/* An extra attack: the same quiet weight as the grip beside it, and gold because it is something
-	   the turn SPENDS — the colour every other spendable thing on this sheet wears. */
+	.row-line {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: stretch;
+	}
+	/* a weapon with an extra attack is two lines: its own, and the attack under it */
+	.row-wrap.has-extras {
+		flex-direction: column;
+	}
+	/* An extra attack: a row of its own, hung under its weapon by the turn of the arrow. The name is
+	   gold because it is something the turn SPENDS — the colour every other spendable thing on this
+	   sheet wears — the cost sits beside it in the meta voice, and the damage stands where the
+	   weapon's own does. */
 	.extra-attack {
-		flex: none;
-		align-self: center;
-		display: inline-flex;
+		display: flex;
 		align-items: center;
-		gap: var(--space-1);
-		padding: 2px var(--space-1-5);
-		border-radius: var(--radius-sm);
+		gap: var(--space-2);
+		margin: 0 calc(-1 * var(--space-2));
+		padding: var(--space-1) var(--space-2) var(--space-2) var(--space-5);
+		border: 0;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--color-text-muted);
+		font-size: var(--font-size-xs);
+		text-align: start;
 		cursor: pointer;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-micro);
-		letter-spacing: 0.04em;
-		color: var(--color-resource);
+	}
+	.extra-attack:hover,
+	.extra-attack:focus-visible {
 		background: var(--color-surface-2);
-		border: 1px solid var(--color-border-strong);
+	}
+	.extra-name {
+		font-family: var(--font-display);
+		font-weight: 600;
+		color: var(--color-resource);
+	}
+	.extra-damage {
+		margin-inline-start: auto;
+		font-family: var(--font-mono);
+		color: var(--color-text);
 	}
 </style>

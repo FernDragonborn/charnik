@@ -248,8 +248,8 @@ position and are given per wave, because most of them were learned the hard way.
   3. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together and A17 brings the smallest form of N2's feature choice with it.
-  4. **The looks** — MASTERY-HALF's extra-attack control is picked and waits to be built;
-     DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built from that mock;
+  4. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+     from that mock;
      ADD-ITEM-SURFACE becomes a popover; and
      DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the hit-point bar — is
      redrawn, because what ships reads badly.
@@ -274,8 +274,7 @@ position and are given per wave, because most of them were learned the hard way.
   each one is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind, and N2b's tail — a druid assumes a form in both editions, and
-  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the look of the extra attack's
-  control, the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
+  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
   ships, and what is left is a 2014 warlock's Pact of the Tome, which waits on the boon being a choice.
 - **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
   each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged

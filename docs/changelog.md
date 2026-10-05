@@ -70,7 +70,7 @@ sentences became numbers, and a security pass closed what a page inside the wind
   the classes that grant it, and the attack row prints the mastery exactly when a pick unlocks it. A
   multiclass sums its grants. Graze and Topple print the number their rule works out, and the extra
   attack a property allows — Light's with a second Light weapon, Nick's free one, Cleave's — is a
-  control beside the row that costs what the rule says, once a turn.
+  row of its own under the weapon, saying what it costs and what it rolls, once a turn.
 - **A finesse weapon asks which ability swings it.** The rules give you the choice; the app took
   the bigger modifier and never said one existed — and a raging barbarian's rapier does more
   damage swung with Strength even when Dexterity is higher. The larger modifier is still the

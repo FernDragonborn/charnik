@@ -512,6 +512,8 @@
 		},
 		"attacks": {
 			"extraAttack": "{name}: an extra attack with {weapon}",
+			"extraCostBonus": "Bonus Action",
+			"extraCostFree": "in the Attack action",
 			"extraAttackBonus": "Extra attack — a Bonus Action. Damage {damage}.",
 			"extraAttackFree": "Extra attack — part of the Attack action. Damage {damage}.",
 			"finesseSwap": "Finesse — swung with this; tap for {other}",
