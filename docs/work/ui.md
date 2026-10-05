@@ -23,8 +23,11 @@
   ```
 
   It is still wrong — two rows under one label, each a swing plus a case. **The pick is the
-  MARK:** a chevron in place of the swing word — up for advantage, down for disadvantage, the
-  mark `CombatStrip` already uses on a passive sense — then the case (`⌃ against spells`).
+  MARK:** the triangle the roller already draws for advantage and disadvantage, in place of the
+  swing word — the shared `.advantage-cue-up` / `.advantage-cue-down` of `styles/components.css`,
+  not a new glyph and not a chevron — then the case (`▲ against spells`). `CombatStrip` marks a
+  passive sense with a chevron for the same fact; it moves to the triangle in the same change,
+  so advantage has one mark in the app.
   Advantage is GREEN (`--color-good`), not the gold a conditional statement wears elsewhere;
   disadvantage keeps the danger colour. The word leaves the chip, so it goes where a mark's
   meaning must still be reachable: the chip's accessible name and its popover. The same rule
