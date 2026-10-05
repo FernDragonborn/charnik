@@ -7,7 +7,8 @@ here is a player pointing at something: a number that did not move when they equ
 roll card they could not read out loud, a panel holding rows in an order that was not theirs. Three
 themes came back from it — **the sheet is yours to arrange**, **the rules that were quietly
 missing**, and **a card that says which number you read** — and under them, an app that no longer
-falls off a phone screen.
+falls off a phone screen. Beside the playtest, two things of the app's own: magic items that were
+sentences became numbers, and a security pass closed what a page inside the window could reach.
 
 ### The sheet is yours to arrange
 
@@ -20,8 +21,11 @@ falls off a phone screen.
   newest level granted, or one class's features — WRITE those same eyes rather than layering over
   them, so there is one answer to "is this shown" and undoing a preset is the same click as undoing
   a hand toggle. A pinned feature survives every preset.
-- **Hiding an action is remembered.** It used to be forgotten on reload, while hiding a spell
-  survived — one question with two answers.
+- **Hiding an action is remembered, and so is a panel you folded away.** Both used to be forgotten
+  on reload, while hiding a spell survived — one question with two answers.
+- **On a touch screen, hold a row still and it is yours to move.** A row is a tap target first, so
+  a finger that moves is scrolling; a ring fills while you hold, and the drag starts when it
+  closes.
 - **Auto-calculation is the Effects panel's power switch**, not a button in the bar you press every
   session. It sits on the head of the panel whose layers it turns off, quiet until you hover or tab
   to it, and stays visible and accented while it is OFF.
@@ -45,11 +49,6 @@ falls off a phone screen.
   `Milestone`, or your XP against what the next level takes — and opens the place to switch between
   the two and add what you earned. Reaching the total marks the level as earned; you take it in the
   builder as always. Off by default, and a milestone table sees one quiet word.
-- **A hit says what it was.** Taking damage writes a line in the roll log — how much, of what type,
-  and what your resistance did to it — and the type picker offers every damage type, yours first. A
-  hit that deals two types is one press: add the second with the `+` beside the picker, and each
-  part meets its own defense while temporary hit points and the concentration save see the total.
-  Healing leaves a line too, for the hit points that actually came back.
 - **Wild Shape.** A druid had a paragraph where the feature should be. Now the uses are a pool —
   two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
   your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the
@@ -72,13 +71,12 @@ falls off a phone screen.
   multiclass sums its grants. Graze and Topple print the number their rule works out, and the extra
   attack a property allows — Light's with a second Light weapon, Nick's free one, Cleave's — is a
   control beside the row that costs what the rule says, once a turn.
+- **A finesse weapon asks which ability swings it.** The rules give you the choice; the app took
+  the bigger modifier and never said one existed — and a raging barbarian's rapier does more
+  damage swung with Strength even when Dexterity is higher. The larger modifier is still the
+  default; the answer is kept per kind of weapon.
 - **Heavy weapons roll with the disadvantage their rule names** — under Strength 13 (or Dexterity
   13 for a ranged one) in 2024, for a Small creature in 2014 — and the attack row says so.
-- **2014 magic items carry their tables.** Items said "see the table" over nothing — Wand of
-  Wonder, Bag of Beans, Bag of Tricks, both decks, both staffs and the rest; all thirty-four tables
-  are in. Six items the 2014 pack never had at all are there too: Belt of Giant Strength, Figurine of
-  Wondrous Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll. A 2014 Ring of Resistance, Armor of
-  Resistance and Dragon Scale Mail now ask which damage type yours is, and resist it.
 - **Every weapon property says what it does**, in both editions: hover or tab to the word on an
   attack row, or to the Properties and Mastery cells of the item's article, and the SRD's own text
   for Finesse, Heavy, Reach, Thrown and the rest is there.
@@ -92,7 +90,31 @@ falls off a phone screen.
   the class cap, which it would otherwise silently cost you.
 - **A feat that teaches spells is a caster of its own.** Magic Initiate asked two questions nothing
   could take an answer to, so a character who took it learned nothing. A Fighter with Magic Initiate
-  casts now, with the DC read off the ability the feat names.
+  casts now, with the DC read off the ability the feat names — and the free casting the feat gives
+  is a pool the cast can be paid from, offered beside the slot levels, instead of a pip you clicked
+  down by hand.
+- **Ritual casting.** A spell with the Ritual tag carries an `R`, and casting it as a ritual spends
+  no slot and takes ten minutes longer. Who may is asked of the class the spell is cast as: a wizard rituals from the spellbook
+  without preparing, a cleric or druid only what is prepared, and a feat's own spells by the feat's
+  rule. Both packs mark the SRD's 29 ritual spells. A 2014 warlock's Pact of the Tome does not
+  ritual yet.
+- **Known or prepared is the class's to say.** A 2014 bard's spells read as known, not prepared.
+- **Skilled takes tools as well as skills**, against the one count of three, and a feat slot from a
+  level offers origin feats too — which is the only way Skilled could be taken at all.
+- **A Champion's 19 is a critical.** Improved and Superior Critical state the face that crits, in
+  both editions, and the roller highlights it. Whether the hit crits is still your call.
+- **Half proficiency rounds the way its feature says.** Jack of All Trades rounds down; 2014
+  Remarkable Athlete rounds up, and now ships with its own name in the breakdown.
+- **Immune to a condition is a fact on the sheet.** Aura of Courage, Mindless Rage and nine more
+  rows said it only in their text; the Defences row shows it beside the damage immunities. It
+  states the immunity and does not refuse the condition — the ruling is the table's.
+- **Senses.** Darkvision, Blindsight, Tremorsense and Truesight are stated with their range; two
+  sources give the greater one rather than adding up.
+- **A climb speed equal to your Speed** follows your walking speed after everything that changes
+  it, and the Speed tile names each mode.
+- **Two castings of the same effect do not stack.** The more potent one applies, the most recent
+  when they are equal — it used to be the first, and two castings at different strengths both
+  counted.
 - **The shield's +2 comes from the shield you are holding.** It used to come from a combat toggle
   beside the inventory, so equipping a shield in the builder changed no number at all — and a
   character carrying no shield could switch on a +2 out of nothing. A +1 shield is worth 3.
@@ -103,6 +125,26 @@ falls off a phone screen.
   choose; the app chose for you, largest first. A barbarian 3 / wizard 3 with all six spent now picks
   between its d12s and its d6s, with the old answer already filled in. Asked only when there is a
   choice — a single-class character, and every 2024 one, rests on one press as before.
+
+### Magic items
+
+- **A `+1, +2 or +3` item asks which one you found, and adds that number.** The SRD prints one
+  entry for all three, so ten rows carried a note and changed nothing. Unanswered adds nothing —
+  the app does not pick a +1 for you.
+- **A Ring of Resistance, Armor of Resistance and Dragon Scale Mail ask which damage type yours
+  is**, in both editions, and resist it.
+- **2014 magic items carry their tables.** Items said "see the table" over nothing — Wand of
+  Wonder, Bag of Beans, Bag of Tricks, both decks, both staffs and the rest; all thirty-four tables
+  are in. Six items the 2014 pack never had at all are there too: Belt of Giant Strength, Figurine of
+  Wondrous Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll.
+- **What an item does to your defences is on the play sheet.** "+2 AC against ranged attacks",
+  "advantage on saves against spells", "attacks against you have disadvantage" — eleven shipped items
+  say one of these, and they said it only in the builder, to whoever was assembling the character. The
+  play sheet's Defences row carries them now, grouped by what they move: AC, Saves, and Against you.
+- **Magic Weapon enchants the weapon you touch.** Casting it asks which weapon when you carry more
+  than one, before anything is spent, and only that weapon's attack and damage go up. It used to
+  raise nothing at all: a cast's own additions — Magic Weapon's bonus, the extra hit points an
+  upcast Aid grants — were dropped on the way to the sheet. Both now land.
 
 ### Safer by default
 
@@ -162,9 +204,21 @@ falls off a phone screen.
   field under a list most characters leave empty.
 - **The pass-time bar stops appearing and vanishing on its own**, and the level itself is the
   level-up control.
-- **A resisted hit says what it will take before you press Damage.** Pick the type and type the
-  amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable —
-  instead of leaving you to watch the HP bar.
+- **A hit says what it was, and what it will take before you press.** Pick the type and type the
+  amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable.
+  Taking the damage writes a line in the roll log — how much, of what type, and what your
+  resistance did to it — and the type picker offers every damage type, yours first. A
+  hit that deals two types is one press: add the second with the `+` beside the picker, and each
+  part meets its own defense while temporary hit points and the concentration save see the total.
+  Healing leaves a line too, for the hit points that actually came back.
+- **The concentration chip rolls the save; its ✕ ends the spell.** Pressing the chip used to end
+  concentration outright, with nothing to confirm it. Now the press is the Constitution save —
+  against the owed DC after damage, 10 otherwise — a failed save ends the spell without asking you
+  to confirm it, and dropping a spell on purpose is one step further away and says so.
+- **Conditions and effects are added from one list, and every row is a switch.** Two pickers asked
+  you to know a difference the rules do not draw: you are Poisoned, raging or behind cover, or you
+  are not. A state a spell is holding says so instead of offering a second copy, and Invisible or
+  Rage no longer file under Debuffs.
 - **Ammunition can be counted.** Switch it on in the inventory panel's menu and each shot spends one
   from the stack it fires — the right kind in 2024, your pick in 2014, whose weapons never say. Off by
   default, like coin weight: most tables do not count arrows. An action that makes several attacks
@@ -172,17 +226,9 @@ falls off a phone screen.
 - **Sneak Attack marks itself used.** Its rule is "once per turn", so the mark sets when the roll is
   made and clears on your next turn. It never refuses the roll — the same Sneak Attack is yours
   again on someone else's turn — and you can lift the mark by hand.
-- **Magic Weapon enchants the weapon you touch.** Casting it asks which weapon when you carry more
-  than one, before anything is spent, and only that weapon's attack and damage go up. It used to
-  raise nothing at all: a cast's own additions — Magic Weapon's bonus, the extra hit points an
-  upcast Aid grants — were dropped on the way to the sheet. Both now land.
 - **A long duration reads as time, not as a count of rounds.** An effect with eight hours left says
   "8 h", a 7th-level Geas "365 days"; a countdown that no longer divides evenly says "≈8 h" rather
   than "4799 rds". Combat-length durations stay in rounds.
-- **What an item does to your defences is on the play sheet.** "+2 AC against ranged attacks",
-  "advantage on saves against spells", "attacks against you have disadvantage" — eleven shipped items
-  say one of these, and they said it only in the builder, to whoever was assembling the character. The
-  play sheet's Defences row carries them now, grouped by what they move: AC, Saves, and Against you.
 - **An explanation opens where you point, and where you tab.** The hint on a toggle, the reason a row
   is blocked, what a resource recharges on and where it came from, an attack's notes — these waited a
   second and then appeared as a system tooltip a keyboard could never reach. They open at once, under
@@ -210,8 +256,6 @@ in a short desktop window, which hit the same bug.
   class tags gained, none lost.
 - **Ammunition rows** in both packs. 5e's own source never states which ammunition a weapon fires,
   so no row there claims one.
-- **A condition and an effect are one kind of thing**, which is what they always were. Applying
-  Invisible or Rage used to file them under Debuffs; a row says which it is now.
 - **Dominate Beast, Person and Monster last longer from a higher slot, and Geas lasts a year or for
   good**, in both editions: the upcast durations their own text states. Casting one below its first
   higher rung keeps the base duration.
@@ -243,6 +287,13 @@ throw chip fits; «замовляння» fits the spell row.
 - **A save Windows refuses no longer leaves a temp file in your folder.** When another program holds
   a file open — a sync client, an antivirus scan, an editor — the save fails as it should, and now
   takes its half-written `.tmp-` sibling with it instead of leaving it there for good.
+- **The log says where the app talks to something it does not control** — every write to your data
+  folder, a pack refused, a plugin that would not load, a save that failed validation — with
+  character names kept out of it. It is what a bug report attaches.
+- **Writing content: the effects guide is published**, in plain language first and then the whole
+  vocabulary, linked from the README. An older homebrew `class_features` file with a `resource`
+  column still loads; the column is ignored, since a feature's pool is its `grant_resource` token.
+- **Dependencies are clear of known advisories** as of this release.
 - **The dev server follows the content repo.** A CSV edited in the pack reaches the running app and
   reloads it, instead of staying invisible until the next build.
 - **The screenshot harness sees a phone**, and a probe fails on anything that overflows at 393 or
