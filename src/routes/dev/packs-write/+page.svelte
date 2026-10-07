@@ -27,11 +27,15 @@
 	} from '$lib/content/remote/install';
 	import { stampWithHash } from '$lib/content/hash';
 	import type { RemoteFetcher } from '$lib/content/remote/types';
+	import { discoverContentRoots } from '$lib/content/disk';
+	import { saveTranslation } from '$lib/content/translate';
 
 	/** Ignored by pack discovery (leading dot), so a crashed run can never load as content. */
 	const PACK = '.probe-pack';
 	const ROOT = `content/${PACK}`;
 	const REPORT = 'packs-write-probe.txt';
+	/** Where a replaced file holding translations is copied (`content/translation-carry.ts`). */
+	const BACKUPS = 'content-backups';
 	const REPO = { owner: 'probe', repo: 'probe', branch: 'main' };
 
 	let lines = $state<string[]>([]);
@@ -76,6 +80,14 @@
 	async function cleanup(): Promise<void> {
 		const s = getUserStorage();
 		for (const dir of [ROOT, `${ROOT}.new`, `${ROOT}.prev`]) await s.remove(dir).catch(() => {});
+		// only this probe's own copies: a run folder may hold a real pack's files beside them
+		for (const run of await s.list(BACKUPS).catch(() => [])) {
+			await s.remove(`${run.path}/${PACK}`).catch(() => {});
+			if ((await s.list(run.path).catch(() => [])).length === 0)
+				await s.remove(run.path).catch(() => {});
+		}
+		if ((await s.list(BACKUPS).catch(() => [])).length === 0)
+			await s.remove(BACKUPS).catch(() => {});
 	}
 
 	/** The pack as it stands before an update: one stamped CSV, a plugin two levels down, and a file
@@ -254,6 +266,51 @@
 		say(
 			`this filesystem ${folds ? 'FOLDS case (as assumed — the registry compares names case-insensitively)' : 'is case-SENSITIVE (the case-folded compare is then merely conservative)'}`,
 		);
+
+		// --- 8. a translation saved into the file survives the update that replaces it ---------------
+		// The merge is pure and tested in node; what only this disk can say is that the app's own
+		// atomic save, the copy aside into a folder OUTSIDE `content/`, and the swap all land together.
+		await cleanup();
+		const head = 'id,name_en,name_uk,text_en,text_uk';
+		await s.writeBytes(
+			`${ROOT}/a.csv`,
+			enc(
+				await stampWithHash(
+					new Map([['source', 'Probe']]),
+					`${head}
+fireball,Fireball,,Boom,`,
+				),
+			),
+		);
+		await saveTranslation(s, { root: ROOT, file: 'a.csv', id: 'fireball' }, 'uk', {
+			name: 'Вогняна куля',
+			text: 'Бум',
+		});
+		const translated = await s.read(`${ROOT}/a.csv`);
+		const moved = await stampWithHash(
+			new Map([['source', 'Probe']]),
+			`${head}
+fireball,Fireball,,A bigger boom,`,
+		);
+		const merged = await applyPackUpdate({
+			storage: s,
+			fetcher: localFetcher({ [`${PACK}/a.csv`]: moved }),
+			repo: REPO,
+			diff: await diffFor(await gitBlobSha(enc(moved))),
+		});
+		const after = await s.read(`${ROOT}/a.csv`);
+		check('an update over a translated file reported no error', merged.error === undefined);
+		check('the translation is still in the file', after.includes('Вогняна куля'));
+		check('and so is the new source text', after.includes('A bigger boom'));
+		check('the row is marked for another look', after.includes('outdated'));
+		const copies: string[] = [];
+		for (const run of await s.list(BACKUPS).catch(() => []))
+			if (await s.exists(`${run.path}/${PACK}/a.csv`)) copies.push(`${run.path}/${PACK}/a.csv`);
+		check('the replaced file was copied aside, once', copies.length === 1, copies.join(', '));
+		check('…byte for byte', copies[0] !== undefined && (await s.read(copies[0])) === translated);
+		// a translator's folder is a git working copy: `.git` sits beside the packs and must not be one
+		const roots = await discoverContentRoots(s);
+		check('a dot-folder in content/ is not a pack', !roots.includes(ROOT), roots.join(', '));
 	}
 </script>
 
