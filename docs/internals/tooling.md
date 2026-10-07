@@ -339,6 +339,17 @@ actually decided), so the probe proves its source unreadable before it moves any
 `tools/build-static-content.mjs` vendors content on predev and prebuild, `tools/restamp.ts` is
 `pnpm restamp`, and `tools/content-repo.mjs` resolves where the content repo is.
 
+**`pnpm import-translations <pull request number | git ref> --locale <code>`** takes a translator's
+work into the content repo: the translated cells of ONE locale, merged by row id into the pack's own
+files (`content.md` ▸ A translation survives the file being replaced). A pull request is fetched by
+number, from a fork as readily as from a branch. It commits nothing — read the diff, run the pack's
+`node check.mjs`, commit there. **Never press Merge on a translator's pull request**: one saved
+translation re-serialises the whole file, so their branch differs from the pack on every line and
+conflicts on all of them; the pull request is the handoff and the conversation, and it is closed
+with a link to the import commit. The tool names what the reviewer has to look at: a translation
+already in the pack that theirs replaced, a row whose English moved since they translated it (now
+marked `outdated`), and a row the pack no longer has.
+
 **The dev server serves the VENDORED copy, not the content repo.** `predev` copies the packs into
 `static/content/`, and vite serves that — the repo itself is outside the served root and the browser
 cannot reach it, which is also why a release carries the copy rather than a path. Keeping the two in

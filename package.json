@@ -8,6 +8,7 @@
 	"scripts": {
 		"content:static": "node tools/build-static-content.mjs",
 		"restamp": "tsx tools/restamp.ts",
+		"import-translations": "tsx tools/import-translations.ts",
 		"surface": "node tools/surface.mjs",
 		"predev": "node tools/build-static-content.mjs",
 		"dev": "vite dev",

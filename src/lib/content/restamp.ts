@@ -30,7 +30,7 @@ function fillMachineKeys(directives: Map<MetaKey, string>, today: string): void 
 /** Restore the file's original BOM/EOL style — `stampWithHash` always emits BOM + CRLF. The BOM goes
  *  by code point, not by a regex literal: an invisible character in a pattern lints as irregular
  *  whitespace and is a bad thing to have to trust (same call as `hash.ts`). */
-function matchStyle(stamped: string, original: string): string {
+export function matchStyle(stamped: string, original: string): string {
 	const hadBom = original.charCodeAt(0) === 0xfeff;
 	const body = hadBom || stamped.charCodeAt(0) !== 0xfeff ? stamped : stamped.slice(1);
 	return original.includes('\r\n') ? body : body.replace(/\r\n/g, '\n');
