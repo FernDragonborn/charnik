@@ -319,13 +319,26 @@ async function runApply(
 			pending.removedRows = [...new Set([...pending.removedRows, ...res.rowRemovals])].sort();
 			Object.assign(pending, await whoBreaks(pending.removedRows));
 		}
+		// The offer was described against a disk that has since moved — a translation saved in the
+		// meantime is enough. Describe it again from the listing already in hand, or the same refusal
+		// meets every later click: a manual check answers 304 before it looks at any pack.
+		if (res.movedLocally !== undefined) {
+			const fresh = await describeUpdate(pending.repo, pending.remote, pack);
+			if (fresh) updates.pending[pack] = fresh;
+			else {
+				delete updates.pending[pack];
+				forgetPending(pack);
+			}
+		}
 		return res;
 	}
+	// by NAME: a count says an update happened, and the question afterwards is always which file
 	logger.info('packs: update applied', {
 		pack,
-		written: res.written.length,
-		preserved: res.preserved.length,
-		removed: res.removed.length,
+		written: res.written,
+		preserved: res.preserved,
+		removed: res.removed,
+		merged: Object.keys(res.translations ?? {}),
 	});
 	// An update whose only entries are REMOVALS applies nothing unless removals were asked for.
 	// Clearing it then would report success for a no-op and hide the offer until the next check

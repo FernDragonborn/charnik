@@ -29,6 +29,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
+- `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
@@ -52,7 +53,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
-- `cell` ×2 — src/lib/components/UpcastBuilder.svelte · src/lib/content/migrations.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
 - `closeOnOutside` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
@@ -485,7 +485,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (164 modules)
+## Library functions & types (166 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1022,6 +1022,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function hashFile` — `xxh64:<hex>` of the normalised file.
 - `function fileHashState` — * Does this file still hash to what its own header claims?
 - `function stampWithHash` — * Assemble a content file and stamp its `#content-hash` in one step — the only supported way to * write one, because …
+- `function gitBlobSha` — `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA * in a tree listing d…
 
 ### `src/lib/content/homebrew.ts`
 
@@ -1089,8 +1090,17 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ContentIssue`
 - `interface ContentGraph`
 - `const LOCALE_TAG` — A BCP-47-ish locale code (guardrail vs phantom locales): a 2–3 letter base + optional subtags * (`pt-BR`).
+- `function isProseLocaleColumn` — Type guard for the re-attach: narrows a raw header to the prose-locale key type, so writing it onto * the typed `RowD…
+- `function isLocStatusColumn`
 - `interface ContentSource` — One content root paired with the storage it lives in.
 - `function loadContent` — Load + merge content.
+
+### `src/lib/content/locale-merge.ts`
+
+- `interface CarryReport` — What one merge did, by row id — the breadcrumb a log line and a report are built from.
+- `interface CarryResult`
+- `const touchedTranslations` — Did the merge find any translation at stake?
+- `function carryLocaleCells` — * Merge `local`'s translations into `incoming`.
 
 ### `src/lib/content/markdown.ts`
 
@@ -1154,7 +1164,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const localPath` — Where a pack's files live locally.
 - `const withinPack` — The part of a repo-relative path BELOW the pack folder (`srd-2024/spells.csv` → `spells.csv`).
 - `const localPathIn` — * Where one of a pack's files lives on THIS disk.
-- `function gitBlobSha` — `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA * in a tree listing d…
 - `const FILE_CHANGE`
 - `interface FileChange`
 - `interface PackDiff`
@@ -1236,6 +1245,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/restamp.ts`
 
+- `function matchStyle` — Restore the file's original BOM/EOL style — `stampWithHash` always emits BOM + CRLF.
 - `function restampText` — * The pure half: a content file's text in, the re-stamped text out.
 - `interface RestampFailure` — One file that could not be re-stamped, with the reason — surfaced, never swallowed.
 - `function restampFiles` — * The IO half: re-stamp each file through the `Storage` seam (atomic temp→rename in the real impls).
@@ -1344,6 +1354,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type TranslationDraft` — base → translated text for one locale (only provided bases are written).
 - `function saveTranslation` — Write `prose` for `locale` into `row`'s CSV file, in place (only the provided bases).
 - `function saveLocStatus` — Set the tracked localization `status` for `locale` on `row`, in place (the `loc_status_<locale>` * column).
+
+### `src/lib/content/translation-carry.ts`
+
+- `interface CarryRun` — One writer's pass over `content/`: what it merged, and where the files it replaced were copied.
+- `function beginCarryRun`
+- `function keepLocalTranslations` — * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there * carries transl…
+- `function finishCarryRun` — Close a run: say what it did, and drop the backup folders past the ones kept.
 
 ### `src/lib/content/watcher.ts`
 
@@ -2148,4 +2165,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1309 exports across 180 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1320 exports across 182 modules · 84 duplicate suspects._

@@ -46,7 +46,9 @@ An update check reads a **GitHub tree listing** and compares each file by its **
 file content moves until the user asks for it.
 
 That comparison only holds while the blob bytes are the disk bytes, which is why a pack repo must
-carry `.gitattributes` with `* -text` (`content.md`). It is also why `packsFromTree` must honour the
+carry `.gitattributes` with `* -text` (`content.md`). The one file whose bytes are deliberately NOT
+its upstream's is one holding translations, and it says which upstream it was built from in its own
+header (`#content-upstream`); that SHA is what is compared for it. It is also why `packsFromTree` must honour the
 API's **`truncated`** flag: a partial tree otherwise manufactures phantom "removed" entries for
 everything past the cut.
 
@@ -66,6 +68,14 @@ a fake (`tooling.md`).
 
 - **A file the user has changed is never overwritten.** The `#content-hash` overwrite guard decides
   that, and it applies here exactly as it applies to seeding.
+- **A translation in a file being replaced is merged into the incoming bytes**, after every refusal
+  and immediately before the swap, and the file it replaces is copied aside (`content.md` ▸ A
+  translation survives the file being replaced). The seed does the same, and it is the writer that
+  needs it most: an app update runs it at launch with no preview and no `<pack>.prev`.
+- **An offer the disk moved under is described again.** It is computed at the check or at launch and
+  applied whenever the click comes; a translation saved in between moves the file, the apply
+  refuses, and the refusal re-reads the disk against the listing already in hand. A manual check
+  cannot do that job — it answers `304` before it looks at any pack.
 - **The disk is settled before a throw escapes**, or the registry entry dies while the folders are
   half-swapped.
 - **A failed registry write reaches the user.** It used to be the one report nobody saw.

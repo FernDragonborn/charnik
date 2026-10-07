@@ -12,7 +12,8 @@
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
-	import { getUserStorage } from '$lib/storage/provider';
+	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { provenance } from '$lib/actions/provenance';
 	import { hasProse, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, editionLabel } from '$lib/content/detail';
 	import { entryMeta, type Entry } from '$lib/content/entry-list';
@@ -35,6 +36,8 @@
 	// shipped SRD isn't writable in the hosted demo). Not a bare platform gate — the real web build
 	// writes; only a demo flag (never desktop) opts out.
 	const demo = isReadOnlyContent();
+	// the guide describes files on a disk and a desktop tool; a browser has neither, and says so first
+	const canShareFiles = detectPlatform() === Platform.Desktop;
 
 	// persisted translate settings — the FROM/TO locales + type are restored when you re-enter the view.
 	const TSTATE_KEY = 'charnik:translate';
@@ -226,6 +229,7 @@
 		[LOC_STATUS.notStarted]: 'circle',
 		[LOC_STATUS.machine]: 'bot',
 		[LOC_STATUS.started]: 'circle-dot',
+		[LOC_STATUS.outdated]: 'triangle-alert',
 		[LOC_STATUS.reviewed]: 'check',
 	};
 
@@ -262,6 +266,19 @@
 				{#each types as t (t)}<option value={t}>{t}</option>{/each}
 			</select>
 			<span class="prog"><b>{reviewedCount}</b> / {pool.length} reviewed</span>
+			<!-- prose somebody keeps open while they do what it says, so a press pins it (ui.md ▸ rule 3) -->
+			<button
+				class="pill-btn"
+				use:provenance={{
+					markdown: canShareFiles
+						? $_('translate.contribute.guide')
+						: `${$_('translate.contribute.desktopOnly')}\n\n${$_('translate.contribute.guide')}`,
+					pin: true,
+				}}
+			>
+				<Icon name="book-open" size={13} />
+				{$_('translate.contribute.button')}
+			</button>
 		</div>
 
 		<div class="panes">
@@ -419,6 +436,9 @@
 	.loc-mark.started {
 		color: var(--color-resource);
 	}
+	.loc-mark.outdated {
+		color: var(--color-warning);
+	}
 	.loc-mark.reviewed {
 		color: var(--color-good);
 	}
@@ -465,6 +485,9 @@
 	}
 	.status-opt.cur.started {
 		color: var(--color-resource);
+	}
+	.status-opt.cur.outdated {
+		color: var(--color-warning);
 	}
 	.status-opt.cur.reviewed {
 		color: var(--color-good);

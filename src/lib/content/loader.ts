@@ -167,7 +167,7 @@ const PROSE_LOCALE_COL = new RegExp(`^(?:${PROSE_BASES.join('|')})_${LOCALE_TAG}
 
 /** Type guard for the re-attach: narrows a raw header to the prose-locale key type, so writing it onto
  *  the typed `RowData` needs no cast (the key is provably a `${ProseBase}_${string}`). */
-function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}` {
+export function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}` {
 	return PROSE_LOCALE_COL.test(column);
 }
 
@@ -175,7 +175,9 @@ function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}`
  *  them exactly like the prose columns (isProseLocaleColumn). The guard narrows the key to the
  *  `${typeof LOC_STATUS_COL_BASE}_${string}` template type so the re-attach writes onto `data` cast-free. */
 const LOC_STATUS_COL = new RegExp(`^${LOC_STATUS_COL_BASE}_${LOCALE_TAG}$`);
-function isLocStatusColumn(column: string): column is `${typeof LOC_STATUS_COL_BASE}_${string}` {
+export function isLocStatusColumn(
+	column: string,
+): column is `${typeof LOC_STATUS_COL_BASE}_${string}` {
 	return LOC_STATUS_COL.test(column);
 }
 

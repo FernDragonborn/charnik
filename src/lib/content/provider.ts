@@ -40,6 +40,7 @@ import {
 	unDismissMissing,
 } from './packs.svelte';
 import { logger } from '$lib/diag/logger';
+import { beginCarryRun, finishCarryRun, keepLocalTranslations } from './translation-carry';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
@@ -154,6 +155,7 @@ export async function restoreBundledPacks(packs: string[]): Promise<void> {
 	// Under the in-flight flag, like every other writer of `content/`: this brings a pack back file by
 	// file, and a watcher-driven rebuild landing in the middle would build a graph from half of it —
 	// while `forgetUninstalledPacks` reads the same still-changing listing to decide what was removed.
+	const run = beginCarryRun(user);
 	await duringPackWrite(async () => {
 		for (const pack of packs) {
 			const root = `${CONTENT_DIR}/${pack}`;
@@ -163,10 +165,14 @@ export async function restoreBundledPacks(packs: string[]): Promise<void> {
 				// for a pack that is ABSENT, so this normally finds nothing — but "normally" is not a
 				// guard, and a folder half-deleted by hand is exactly when it stops being true.
 				if ((await user.exists(path)) && (await isProtectedFromOverwrite(user, path))) continue;
-				await user.writeBytes(path, await bundled.readBytes(path));
+				await user.writeBytes(
+					path,
+					await keepLocalTranslations(run, path, await bundled.readBytes(path)),
+				);
 			}
 		}
 	});
+	await finishCarryRun(run);
 	unDismissMissing(packs);
 	resetContentGraph();
 }
@@ -207,6 +213,7 @@ export async function seedShippedContent(
 	});
 
 	const preserved: string[] = [];
+	const run = beginCarryRun(to);
 	for (const root of roots) {
 		// A pack the user UNINSTALLED stays uninstalled. A fresh data dir gets every bundled pack;
 		// after that the bundle only ever REFRESHES packs that are still there, so a bundled pack is
@@ -220,12 +227,15 @@ export async function seedShippedContent(
 				preserved.push(path); // user hand-edited this shipped file → keep their version
 				continue;
 			}
-			// writeBytes creates parent dirs + preserves exact bytes (BOM/CRLF intact)
-			await to.writeBytes(path, await from.readBytes(path));
+			// writeBytes creates parent dirs + preserves exact bytes (BOM/CRLF intact). A file holding
+			// translations is merged rather than replaced: an app update is the one writer here with no
+			// preview and no undo, so it is the last place a translation may be lost to.
+			await to.writeBytes(path, await keepLocalTranslations(run, path, await from.readBytes(path)));
 		}
 	}
+	await finishCarryRun(run);
 	await to.write(SEED_VERSION_FILE, String(shippedVersion));
-	logger.info('content: seed complete', { preserved: preserved.length });
+	logger.info('content: seed complete', { preserved });
 	return { preserved };
 }
 

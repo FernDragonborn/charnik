@@ -20,8 +20,9 @@ import {
 	type ProseBase,
 	type LocStatus,
 } from './schemas';
-import { parseContentDirectives } from './meta';
-import { stampWithHash } from './hash';
+import { HASH_STATE, parseContentDirectives } from './meta';
+import { fileHashState, gitBlobSha, stampWithHash } from './hash';
+import { HOMEBREW_ROOT } from './homebrew';
 
 /** Prose COVERAGE of a row into `locale` — purely "is the prose physically there?", derived from the
  *  cells. Feeds the l10n-status default (unset status → not_started/started) and the content-health
@@ -83,8 +84,19 @@ async function patchRowColumns(
 	who: string,
 ): Promise<void> {
 	const path = `${row.root}/${row.file}`;
-	const raw = await storage.read(path);
+	const bytes = await storage.readBytes(path);
+	const raw = new TextDecoder().decode(bytes);
 	const { directives, body } = parseContentDirectives(raw);
+	// The first edit of a pack file as it shipped: note WHICH file it was (`#content-upstream`), so
+	// the pack diff goes on comparing the upstream it came from rather than bytes that now hold a
+	// translation — otherwise translating a row is what raises an update offer. Homebrew has no
+	// upstream to name.
+	if (
+		row.root !== HOMEBREW_ROOT &&
+		!directives.has('upstream') &&
+		(await fileHashState(raw)) === HASH_STATE.match
+	)
+		directives.set('upstream', await gitBlobSha(bytes));
 	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
 	const rows = parsed.data;
 	const fields = parsed.meta.fields ? [...parsed.meta.fields] : [];

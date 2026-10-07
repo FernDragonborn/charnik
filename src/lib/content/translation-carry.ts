@@ -1,0 +1,92 @@
+/*
+ * The IO around `locale-merge.ts`: what every writer of `content/` does with the file it is about to
+ * replace.
+ *
+ * Three writers replace a pack file whole — a pack update (`remote/install.ts`), the bundled seed and
+ * the bundled restore (`provider.ts`) — and each of them goes through `keepLocalTranslations`, so a
+ * translation survives all three by the same rule rather than by three.
+ *
+ * **A file with translations at stake is copied aside before it is replaced.** The merge keeps what
+ * it can, and three things it cannot: a row the incoming file dropped or re-ided, a merge that is
+ * simply wrong, and the reader who wants to see what the text was. A log line cannot hold any of
+ * that — it carries ids, never prose (`diag/logger.ts` ▸ redaction) — so the copy is the only record.
+ * One run's copies share a folder under `content-backups/`, outside `content/`, where every folder
+ * is a pack.
+ */
+import { logger } from '$lib/diag/logger';
+import type { Storage } from '$lib/storage/types';
+import { CONTENT_DIR } from './disk';
+import { gitBlobSha } from './hash';
+import { carryLocaleCells, touchedTranslations, type CarryReport } from './locale-merge';
+
+const TRANSLATION_BACKUP_DIR = 'content-backups';
+/** Runs kept. A run is one update or one seed, so this is weeks of history, not megabytes of it. */
+const BACKUP_RUNS_KEPT = 10;
+
+/** One writer's pass over `content/`: what it merged, and where the files it replaced were copied. */
+export interface CarryRun {
+	storage: Storage;
+	/** `content-backups/<when>` — created by the first file that needs it. */
+	backupDir: string;
+	/** dataDir-relative path → what the merge did to that file */
+	files: Record<string, CarryReport>;
+}
+
+/** `2026-10-07T16-41-17` — sortable as text, and legal in a Windows folder name. */
+const runStamp = (now: Date): string => now.toISOString().slice(0, 19).replace(/:/g, '-');
+
+export function beginCarryRun(storage: Storage, now: Date = new Date()): CarryRun {
+	return { storage, backupDir: `${TRANSLATION_BACKUP_DIR}/${runStamp(now)}`, files: {} };
+}
+
+/**
+ * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there
+ * carries translations — then the merged file, with the one it replaces copied into the run's backup
+ * folder first.
+ */
+export async function keepLocalTranslations(
+	run: CarryRun,
+	path: string,
+	incoming: Uint8Array,
+): Promise<Uint8Array> {
+	if (!path.endsWith('.csv') || !(await run.storage.exists(path))) return incoming;
+	const localBytes = await run.storage.readBytes(path);
+	const decoder = new TextDecoder();
+	const { text, ...report } = await carryLocaleCells(
+		decoder.decode(incoming),
+		decoder.decode(localBytes),
+		{ upstream: await gitBlobSha(incoming) },
+	);
+	if (!touchedTranslations(report)) return incoming;
+	run.files[path] = report;
+	await run.storage.writeBytes(
+		`${run.backupDir}/${path.slice(CONTENT_DIR.length + 1)}`,
+		localBytes,
+	);
+	return report.carried.length > 0 || report.outdated.length > 0
+		? new TextEncoder().encode(text)
+		: incoming;
+}
+
+/** Close a run: say what it did, and drop the backup folders past the ones kept. */
+export async function finishCarryRun(run: CarryRun): Promise<void> {
+	const merged = Object.entries(run.files);
+	if (merged.length === 0) return;
+	for (const [file, report] of merged)
+		logger.info('content: translations carried', {
+			file,
+			carried: report.carried.length,
+			replaced: report.replaced,
+			outdated: report.outdated,
+			orphaned: report.orphaned,
+			backup: run.backupDir,
+		});
+	// best-effort: a backup folder that outlives its turn costs disk, and failing the update that
+	// just succeeded over it would cost the update
+	const runs = (await run.storage.list(TRANSLATION_BACKUP_DIR).catch(() => []))
+		.filter((entry) => entry.isDir)
+		.map((entry) => entry.path)
+		.sort()
+		.reverse();
+	for (const stale of runs.slice(BACKUP_RUNS_KEPT)) await run.storage.remove(stale).catch(() => {});
+}

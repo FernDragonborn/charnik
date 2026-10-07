@@ -2187,6 +2187,11 @@
 		"title": "Manage spells"
 	},
 	"translate": {
+		"contribute": {
+			"button": "How to contribute?",
+			"desktopOnly": "Sharing a translation works from the desktop app only: the web version has no access to files.",
+			"guide": "**Sharing your translation**\n\nYour translations are saved in files on your computer, in the `content` folder inside your Charnik data folder. They reach everyone else through GitHub Desktop. Not set up yet? Open an issue in the `charnik-content-srd` repository and we will help you prepare the folder.\n\n**Push often.** After a session, open GitHub Desktop, write one sentence about what you translated, press **Commit**, then **Push**. That is your backup. The first time, GitHub Desktop offers to create your own copy of the repository (a fork) — accept.\n\n**Open a pull request about every 30 translated descriptions** that you have re-read and marked \"Reviewed\". The number is rough: if a whole part is finished at 25 or at 40, send it as it is. While a pull request is open, do not create another — every later Push appears in it by itself. Ask your questions there too.\n\n**When we have taken your translations, the pull request is closed** with a comment from us. \"Closed\" here means accepted, not rejected. Create a new one for the next part. A notice about conflicts on its page is normal, and there is nothing to fix.\n\n**Don't press these unless you know what they do:**\n- **Discard all changes** — permanently erases translations you have not saved with Commit.\n- **Update from main**, **Pull** and **Sync fork** — mix your files with ours and almost always end in a conflict that is hard to untangle."
+		},
 		"from": "Translate from",
 		"into": "Into",
 		"notice": {
@@ -2202,6 +2207,7 @@
 			"not_started": "Not started",
 			"machine": "Machine translation",
 			"started": "Started",
+			"outdated": "Source changed",
 			"reviewed": "Reviewed"
 		}
 	},

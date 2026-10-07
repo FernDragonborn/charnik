@@ -27,6 +27,7 @@ export const META_KEYS = [
 	'schema',
 	'updated_at',
 	'hash',
+	'upstream',
 ] as const;
 
 export type MetaKey = (typeof META_KEYS)[number];

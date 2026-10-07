@@ -16,7 +16,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { checkRepo, parseGithubRepo, rawUrl, treeUrl } from '$lib/content/remote/github';
-import { gitBlobSha } from '$lib/content/remote/diff';
+import { gitBlobSha } from '$lib/content/hash';
 import { MAX_REMOTE_BYTES, type FetchResult, type RemoteFetcher } from '$lib/content/remote/types';
 
 /** The same seam the app uses, over node's fetch — the desktop one is the same shape in Rust. */

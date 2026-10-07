@@ -16,7 +16,8 @@
 	import { onMount } from 'svelte';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { listFilesRecursive } from '$lib/storage/walk';
-	import { FILE_CHANGE, gitBlobSha, type PackDiff } from '$lib/content/remote/diff';
+	import { FILE_CHANGE, type PackDiff } from '$lib/content/remote/diff';
+	import { gitBlobSha } from '$lib/content/hash';
 	import {
 		applyPackUpdate,
 		hasRollback,

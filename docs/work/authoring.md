@@ -5,6 +5,19 @@
 > [`../internals/content.md`](../internals/content.md) ▸ Authoring from the UI; the ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
+- [ ] **TRANSLATION-BACKUP-UI · the copies in `content-backups/` have a way in and no way out.**
+  A file holding translations is copied aside before a pack update or a seed replaces it
+  (`content.md` ▸ A translation survives the file being replaced), and putting one back is a manual
+  file copy — the one step in that flow that is not doable from the UI. What it needs: the runs
+  listed where the pack's "undo this update" already sits (Settings ▸ packs), with what each run
+  touched, and a restore that goes through the same swap as a rollback. `listCharacterBackups` /
+  `restoreCharacterBackup` are the shape to follow. About 60 lines plus the panel.
+- [ ] **ORPHANED-TRANSLATION · say which vanishing rows carry a translation, before the click.**
+  The apply already stops to name the rows an update drops from inside a changed file, and the merge
+  already knows which of them are translated (`CarryReport.orphaned`) — but only AFTER the user has
+  accepted, and the seed never asks at all. Run the merge as a dry pass at the row-removal prompt and
+  mark those rows in it; for the seed, a toast naming the count and the backup folder. Roughly 30
+  lines, most of it the panel.
 - [ ] **ITEM-AT-THE-TABLE · make a custom item from where you are holding it — its own design session.**
   A big goal, not a gap in the homebrew editor. That path authors a CONTENT ROW: you leave play, open
   the compendium, pick a type, fill a schema-driven form, and the row joins the graph for every

@@ -115,3 +115,15 @@ export async function stampWithHash(
 	const hash = await hashFile(stampDirectives(withoutHash, body));
 	return stampDirectives(new Map([['hash', hash], ...withoutHash]), body);
 }
+
+/** `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA
+ *  in a tree listing directly. Uses WebCrypto; SHA-1 is not a trust decision here (that is the
+ *  consent hash's job), it is the identifier the remote already published. */
+export async function gitBlobSha(bytes: Uint8Array): Promise<string> {
+	const header = new TextEncoder().encode(`blob ${bytes.length}\0`);
+	const buf = new Uint8Array(header.length + bytes.length);
+	buf.set(header);
+	buf.set(bytes, header.length);
+	const digest = await crypto.subtle.digest('SHA-1', buf);
+	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}

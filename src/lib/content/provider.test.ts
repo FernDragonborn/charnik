@@ -6,6 +6,7 @@ import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
 import { duringPackWrite } from './remote/install';
 import { type MetaKey } from './meta';
 import { stampWithHash } from './hash';
+import { saveTranslation } from './translate';
 
 /** A CSV with a correct `#content-hash` header for its body — an "untouched, app-seeded" file. */
 async function stamped(body: string): Promise<string> {
@@ -201,5 +202,32 @@ describe('seedShippedContent (versioned re-seed on update)', () => {
 
 		expect(await to.read(P)).toContain('fireball_v1'); // NOT rewritten
 		expect(await to.read(P)).not.toContain('fireball_v2');
+	});
+});
+
+/** The seed is the writer with no preview and no undo: an app update runs it at launch. */
+describe('seedShippedContent (a translated file)', () => {
+	const HEAD = 'id,name_en,name_uk';
+
+	it('UPDATE keeps a translation saved through the app, and copies the replaced file aside', async () => {
+		const to = new MemoryStorage();
+		await to.write(P, await stamped(`${HEAD}\nfireball,Fireball,`));
+		await saveTranslation(
+			to,
+			{ root: ROOTS[0] ?? '', file: 'spells_srd.csv', id: 'fireball' },
+			'uk',
+			{ name: 'Вогняна куля' },
+		);
+		const before = await to.read(P);
+		const from = new MemoryStorage();
+		await from.write(P, await stamped(`${HEAD}\nfireball,Fireball,\nshield,Shield,`));
+
+		const { preserved } = await seedShippedContent(from, to, ROOTS, 2);
+
+		expect(preserved).toEqual([]);
+		expect(await to.read(P)).toContain('Вогняна куля');
+		expect(await to.read(P)).toContain('shield'); // and the new shipped row arrived
+		const [run] = await to.list('content-backups');
+		expect(await to.read(`${run?.path}/srd-2024/spells_srd.csv`)).toBe(before);
 	});
 });

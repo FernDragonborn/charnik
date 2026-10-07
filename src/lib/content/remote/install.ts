@@ -24,9 +24,11 @@ import { rawUrl, type GithubRepo, type RemotePack } from './github';
 import type { PrefetchBudget, RemoteFetcher, UpdateError } from './types';
 import { listFilesRecursive } from '$lib/storage/walk';
 import { packNameOf } from '../disk';
+import { gitBlobSha } from '../hash';
+import type { CarryReport } from '../locale-merge';
+import { beginCarryRun, finishCarryRun, keepLocalTranslations } from '../translation-carry';
 import {
 	FILE_CHANGE,
-	gitBlobSha,
 	localPath,
 	localPathIn,
 	localPackSource,
@@ -72,6 +74,12 @@ export interface ApplyResult {
 	/** The pack publishes rows under a `#content-source` ANOTHER pack already claims. Set when the
 	 *  apply stopped to ask; `acceptSourceClaim` is what then approves it. */
 	sourceClaim?: { source: string; owner: string };
+	/** Files the disk moved under since the diff was computed. Set when the apply refused over them:
+	 *  the diff it was handed is stale, and the caller owes the user a fresh one. */
+	movedLocally?: string[];
+	/** Files whose translations were merged into the incoming bytes rather than replaced by them
+	 *  (`locale-merge.ts`), by dataDir-relative path. Absent when no file had any. */
+	translations?: Record<string, CarryReport>;
 }
 
 export interface ApplyRequest {
@@ -149,6 +157,7 @@ export async function applyPackUpdate({
 	if (moved.length > 0)
 		return {
 			...nothing,
+			movedLocally: moved,
 			error: {
 				kind: 'i18n',
 				key: 'settings.packs.localChanged',
@@ -178,16 +187,32 @@ export async function applyPackUpdate({
 	// unresolvable by inspection. Building the whole tree beside the live one and swapping it in with
 	// a rename makes the visible state jump from all-old to all-new.
 	const removed = removeDeleted ? removable : [];
+	// LAST before the write, past every refusal above: a translation in a file being replaced is
+	// merged into the incoming bytes, and the file it replaces is copied aside — neither of which a
+	// refused apply has any business doing.
+	const run = beginCarryRun(storage);
+	const merged: StagedFile[] = [];
+	for (const file of staged)
+		merged.push({
+			path: file.path,
+			bytes: await keepLocalTranslations(run, localPathIn(diff.pack, file.path), file.bytes),
+		});
 	await swapInNewTree(
 		storage,
 		diff.pack,
-		staged,
+		merged,
 		new Set(removed.map((p) => localPathIn(diff.pack, p))),
 	);
+	await finishCarryRun(run);
 
 	// the pre-download did its job; the cache is pruned as a whole after a check, so nothing is
 	// deleted here — two packs can legitimately share a blob (the cache is content-addressed)
-	return { written: staged.map((f) => f.path), preserved, removed };
+	return {
+		written: staged.map((f) => f.path),
+		preserved,
+		removed,
+		...(Object.keys(run.files).length > 0 ? { translations: run.files } : {}),
+	};
 }
 
 /** Every row the incoming bytes drop, across every file being rewritten. Decoded as text because

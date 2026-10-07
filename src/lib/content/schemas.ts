@@ -691,6 +691,8 @@ export const LOC_STATUS = {
 	notStarted: 'not_started',
 	machine: 'machine',
 	started: 'started',
+	/** was translated, and the source prose has moved since — set by `locale-merge.ts`, cleared by hand */
+	outdated: 'outdated',
 	reviewed: 'reviewed',
 } as const;
 export type LocStatus = (typeof LOC_STATUS)[keyof typeof LOC_STATUS];

@@ -6,8 +6,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { stampWithHash } from '../hash';
-import { diffPack, gitBlobSha, rowsRemovedBy, charactersReferencing, FILE_CHANGE } from './diff';
+import { gitBlobSha, stampWithHash } from '../hash';
+import { diffPack, rowsRemovedBy, charactersReferencing, FILE_CHANGE } from './diff';
 import {
 	applyPackUpdate,
 	cachePath,
@@ -23,6 +23,8 @@ import {
 import type { RemotePack } from './github';
 import type { RemoteFetcher } from './types';
 import type { ContentGraph, LoadedRow } from '../loader';
+import { saveTranslation } from '../translate';
+import { beginCarryRun, finishCarryRun, keepLocalTranslations } from '../translation-carry';
 
 const REPO = { owner: 'o', repo: 'r', branch: 'main' };
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -744,5 +746,96 @@ describe('pluginsIn — the installer must disclose code before installing', () 
 	});
 	it('a data-only pack ships no code', () => {
 		expect(pluginsIn({ pack: 'p', files: [{ path: 'p/a.csv', sha: 'x' }] })).toEqual([]);
+	});
+});
+
+/** A translation is saved INTO the pack file and re-stamped, so the overwrite guard reads the file
+ *  as untouched — and an update that replaced it whole took every translated cell with it. */
+describe('an update over a file that holds translations', () => {
+	const FILE = 'content/p/spells.csv';
+	const HEAD = 'id,name_en,name_uk,text_en,text_uk';
+	const row = { root: 'content/p', file: 'spells.csv', id: 'fireball' };
+
+	async function translatedPack(): Promise<MemoryStorage> {
+		const s = new MemoryStorage();
+		await s.write(FILE, await shippedFile(`${HEAD}\nfireball,Fireball,,Boom,`));
+		await saveTranslation(s, row, 'uk', { name: 'Вогняна куля', text: 'Бум' });
+		return s;
+	}
+	const remoteOf = async (body: string): Promise<RemotePack> => ({
+		pack: 'p',
+		files: [{ path: 'p/spells.csv', sha: await gitBlobSha(enc(body)) }],
+	});
+
+	it('translating a row is not an update: the file still answers for the upstream it came from', async () => {
+		const s = new MemoryStorage();
+		const upstream = await shippedFile(`${HEAD}\nfireball,Fireball,,Boom,`);
+		await s.write(FILE, upstream);
+		await saveTranslation(s, row, 'uk', { name: 'Вогняна куля' });
+
+		expect((await diffPack(s, await remoteOf(upstream))).changes).toEqual([]);
+	});
+
+	it('keeps the translation, takes the new source text, and copies the replaced file aside', async () => {
+		const s = await translatedPack();
+		const before = await s.read(FILE);
+		const upstream = await shippedFile(`${HEAD}\nfireball,Fireball,,A bigger boom,`);
+		const remote = await remoteOf(upstream);
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/spells.csv': upstream }),
+			repo: REPO,
+			diff: await diffPack(s, remote),
+		});
+
+		const after = await s.read(FILE);
+		expect(res.error).toBeUndefined();
+		expect(after).toContain('Вогняна куля');
+		expect(after).toContain('A bigger boom');
+		// the English moved under the translation, so it is marked for another look
+		expect(res.translations?.[FILE]).toMatchObject({
+			carried: ['fireball'],
+			outdated: ['fireball'],
+		});
+		expect(after).toContain('outdated');
+		const [run] = await s.list('content-backups');
+		expect(await s.read(`${run?.path}/p/spells.csv`)).toBe(before);
+		// and the merged file is not offered again on the next check
+		expect((await diffPack(s, remote)).changes).toEqual([]);
+	});
+
+	it('a refused apply copies nothing aside', async () => {
+		const s = await translatedPack();
+		const upstream = await shippedFile(`${HEAD}\nfireball,Fireball,,A bigger boom,`);
+		const diff = await diffPack(s, await remoteOf(upstream));
+		await saveTranslation(s, row, 'uk', { text: 'Бум-бум' }); // the disk moved after the diff
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/spells.csv': upstream }),
+			repo: REPO,
+			diff,
+		});
+
+		expect(res.error).toBeDefined();
+		expect(await s.exists('content-backups')).toBe(false);
+		expect(await s.read(FILE)).toContain('Бум-бум');
+	});
+
+	it('keeps ten runs of copies and drops the oldest', async () => {
+		const s = await translatedPack();
+		for (let n = 0; n < 12; n++) {
+			const run = beginCarryRun(s, new Date(Date.UTC(2026, 0, 1 + n)));
+			await keepLocalTranslations(
+				run,
+				FILE,
+				enc(await shippedFile(`${HEAD}\nfireball,Fireball,,Boom ${n},`)),
+			);
+			await finishCarryRun(run);
+		}
+		const runs = (await s.list('content-backups')).map((e) => e.name).sort();
+		expect(runs).toHaveLength(10);
+		expect(runs[0]).toBe('2026-01-03T00-00-00');
 	});
 });

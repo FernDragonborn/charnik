@@ -12,7 +12,8 @@
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { SHIPPED_PACK_REPO } from '$lib/content/packs.svelte';
 	import { checkRepo, parseGithubRepo, rawUrl } from '$lib/content/remote/github';
-	import { diffPack, gitBlobSha } from '$lib/content/remote/diff';
+	import { diffPack } from '$lib/content/remote/diff';
+	import { gitBlobSha } from '$lib/content/hash';
 	import { tauriFetcher } from '$lib/content/remote/tauri-fetch';
 
 	const REPO = SHIPPED_PACK_REPO;

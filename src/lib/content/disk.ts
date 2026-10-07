@@ -54,8 +54,9 @@ export async function discoverContentRoots(storage: Storage): Promise<string[]> 
  * May the app overwrite this on-disk file, or is it the user's now? The ONE rule behind both the
  * shipped re-seed and a pack update — reuse it rather than invent a second merge strategy.
  *
- * A file is protected when its body no longer matches its own `#content-hash` (the app never
- * re-stamps shipped files, so a mismatch means a hand-edit) **and equally when it carries no hash at
+ * A file is protected when its body no longer matches its own `#content-hash` (the app re-stamps
+ * every edit it makes itself — a saved translation, an adopted hand-edit — so a mismatch means an
+ * edit nobody has acknowledged) **and equally when it carries no hash at
  * all**: "I cannot verify this" and "I verified it changed" are the same instruction to a writer.
  * The old boolean said `false` for unstamped, which quietly meant "overwrite anything you can't
  * check" — the exact case a user's own file added to a pack folder falls into.

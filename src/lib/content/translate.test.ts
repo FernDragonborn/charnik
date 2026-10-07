@@ -9,8 +9,9 @@ import {
 	COVERAGE,
 } from './translate';
 import { LOC_STATUS } from './schemas';
-import { stampWithHash } from './hash';
-import { type MetaKey } from './meta';
+import { gitBlobSha, stampWithHash } from './hash';
+import { parseContentDirectives, type MetaKey } from './meta';
+import { HOMEBREW_ROOT } from './homebrew';
 
 const HEAD =
 	'id,systems,source,name_en,name_uk,text_en,material,level,school,casting_time,range,components,duration,concentration,ritual';
@@ -126,5 +127,38 @@ describe('saveLocStatus', () => {
 				LOC_STATUS.reviewed,
 			),
 		).rejects.toThrow();
+	});
+});
+
+describe('the upstream a translated file came from', () => {
+	it('is recorded on the first edit of a pack file, and kept on the next', async () => {
+		const s = new MemoryStorage();
+		await seed(s, [line('fireball', 'Fireball')]);
+		const shipped = await s.readBytes('a/spells_srd.csv');
+		const row = { root: 'a', file: 'spells_srd.csv', id: 'fireball' };
+
+		await saveTranslation(s, row, 'uk', { name: 'Вогняна' });
+		await saveTranslation(s, row, 'uk', { text: 'Промінь' });
+
+		const header = parseContentDirectives(await s.read('a/spells_srd.csv')).directives;
+		expect(header.get('upstream')).toBe(await gitBlobSha(shipped));
+	});
+
+	it('is not claimed for homebrew, which has no upstream', async () => {
+		const s = new MemoryStorage();
+		const path = `${HOMEBREW_ROOT}/spells_hb.csv`;
+		await s.write(
+			path,
+			await stampWithHash(
+				new Map<MetaKey, string>([['source', 'Homebrew']]),
+				'id,name_en\nmine,Mine',
+			),
+		);
+
+		await saveTranslation(s, { root: HOMEBREW_ROOT, file: 'spells_hb.csv', id: 'mine' }, 'uk', {
+			name: 'Моє',
+		});
+
+		expect(parseContentDirectives(await s.read(path)).directives.has('upstream')).toBe(false);
 	});
 });

@@ -9,14 +9,14 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig, UPDATE_MODE } from '../packs.svelte';
-import { updates, checkNow, restorePendingUpdates } from './updates.svelte';
+import { updates, applyUpdate, checkNow, restorePendingUpdates } from './updates.svelte';
 // one suite across both halves on purpose: what it pins is the GLUE between them
 import { discoverPacks, installPack, renamePack, uninstallPack } from './pack-lifecycle';
-import { gitBlobSha } from './diff';
 import { discoverContentRoots } from '../disk';
 import { forgetUninstalledPacks } from '../provider';
 import { sourceConfig, toggleFile } from '../sources.svelte';
-import { stampWithHash } from '../hash';
+import { gitBlobSha, stampWithHash } from '../hash';
+import type { MetaKey } from '../meta';
 import { MAX_PACK_FILES, type RemoteFetcher } from './types';
 
 const REPO = 'https://github.com/someone/dark-sun';
@@ -149,6 +149,35 @@ describe('install a pack from a pasted URL', () => {
 
 		expect(updates.pending['dark-sun']).toBeUndefined();
 		expect(packConfig.pending['dark-sun']).toBeUndefined();
+	});
+
+	/* The offer is described once — at the check, or at launch — and applied whenever the click
+	   comes. Saving a translation in between moves the file under it, the apply rightly refuses, and
+	   nothing re-read the disk afterwards: a manual check answers 304 before it looks at any pack, so
+	   the same refusal met every later click until a restart. */
+	it('an offer the disk moved under is refused once, then applies', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		const source = new Map<MetaKey, string>([['source', 'Dark Sun']]);
+		const upstream = await stampWithHash(source, 'id\nathasian\nmul');
+		packConfig.pending['dark-sun'] = {
+			repo: REPO,
+			files: [{ path: 'dark-sun/classes_srd.csv', sha: await gitBlobSha(enc(upstream)) }],
+		};
+		updates.pending = {};
+		await restorePendingUpdates();
+		// the app's own edit of that file, after the offer was described
+		const edited = await stampWithHash(source, 'id,name_uk\nathasian,Атасієць');
+		await getUserStorage().write('content/dark-sun/classes_srd.csv', edited);
+		const served = { fetcher: fetcher({ 'dark-sun/classes_srd.csv': upstream }) };
+
+		expect((await applyUpdate('dark-sun', served)).error).toBeDefined();
+		const second = await applyUpdate('dark-sun', served);
+
+		expect(second.error).toBeUndefined();
+		const after = await getUserStorage().read('content/dark-sun/classes_srd.csv');
+		expect(after).toContain('mul');
+		expect(after).toContain('Атасієць');
 	});
 
 	it('uninstalling removes the folder and forgets the entry', async () => {

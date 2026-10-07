@@ -234,6 +234,8 @@ and `#content-updated_at`. `stampWithHash` (`src/lib/content/hash.ts`) is the on
 The hash is not a health-panel cosmetic. It is also the **overwrite guard**
 (`isProtectedFromOverwrite`): a file whose body no longer matches its stamp, or that carries no stamp
 at all, is treated as the user's own, so desktop seeding and every pack update skip it **forever**.
+A file that PASSES the guard is not thereby replaced blindly — the cells somebody translated are
+carried across (▸ A translation survives the file being replaced).
 
 So after any hand-edit, run **`pnpm restamp <file.csv>`**. It is a thin CLI over the app's own
 `restampText` — the same function the in-app drift dialog calls, so a file stamped from the terminal
@@ -349,9 +351,52 @@ composed token is read back through the LOADER's own parser, so the form cannot 
 would refuse. The raw field stays, because a `step()` ladder and a guard are wider than the builder.
 
 **A translation's state is a column**, `loc_status_<locale>`, an open enum
-(`not_started|machine|started|reviewed`) whose members drive the marker and the control — add one and
-it appears. A PARTLY filled translation is a loader warning; a row with none is silent, because the
-English fallback is the contract.
+(`not_started|machine|started|outdated|reviewed`) whose members drive the marker and the control —
+add one and it appears. A PARTLY filled translation is a loader warning; a row with none is silent,
+because the English fallback is the contract. `outdated` is the one member the app sets by itself
+(below); a person clears it.
+
+## A translation survives the file being replaced
+
+A translation is saved INTO the pack file and the file is re-stamped, so the overwrite guard reads it
+as untouched — correctly, since nobody hand-edited it. Three writers then replace a pack file whole:
+a pack update, the bundled seed an app update runs at launch, and the bundled restore. All three go
+through `keepLocalTranslations` (`content/translation-carry.ts`), which merges instead of replacing,
+by row `id` (`content/locale-merge.ts`):
+
+- **Structure and every source-owned cell come from the incoming file** — a damage die, the English
+  text, a new row, a new column.
+- **Every non-empty translation cell comes from the file being replaced**: `<prose base>_<locale>`
+  for each locale that is not the file's own `#content-source_lang`, and `loc_status_<locale>`.
+  **The local cell wins where both sides are filled.** That is the promise the translate view keeps —
+  nothing a translator saved is replaced by a file that arrived later — and it holds for ONE author
+  per locale per data folder. Two translators of one locale are reconciled where their work is taken
+  into the pack, not here.
+- **A translation whose source prose moved is marked `outdated`, never dropped.** The merge is the
+  only moment both versions of the English are in hand; afterwards the old one is gone.
+- **A file with no translation at stake is written as the bytes it arrived as**, so its git blob SHA
+  stays the remote's and the pack diff has nothing to say about it.
+
+It is a cell merge because a line merge cannot do it: one translation save re-serialises the file —
+its line endings, and a new column on every row — so the two sides differ on every line while
+agreeing on every cell but one. That is also why a translator's file is never copied over a pack's.
+
+**A merged file names the upstream it was built from**: `#content-upstream: <git blob SHA>`, written
+by the merge and by the first translation saved into a pack file as it shipped. It never has that
+upstream's bytes again, and the pack diff compares a tree listing by blob SHA, so without the line
+every check re-offers the update that was just applied — and each of those empty applies replaces
+`<pack>.prev`, the one real rollback point. Homebrew has no upstream and carries no such line.
+
+**The file being replaced is copied aside first**, into `content-backups/<when>/<pack>/<file>` in
+the data folder, whenever a translation was at stake; ten runs are kept. The merge cannot keep a row
+the incoming file dropped or re-ided, and a log line cannot hold what the text was — it carries ids,
+never prose — so the copy is the only record of it.
+
+**Taking a translator's work into the pack is the same merge with the roles swapped**: the pack's
+file is the incoming side, theirs is the local one. `pnpm import-translations` (`tooling.md`) does
+that and writes the pack's own byte style, so the commit in the content repo shows the translated
+cells — and, the first time a file gains a column (`higher_level_uk`, `loc_status_uk`), that empty
+column on every other row of it.
 
 ## Where the shipped data comes from
 

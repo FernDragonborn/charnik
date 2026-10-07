@@ -17,6 +17,7 @@ import type { Storage } from '$lib/storage/types';
 import { listFilesRecursive } from '$lib/storage/walk';
 import type { ContentGraph } from '../loader';
 import { isProtectedText } from '../disk';
+import { gitBlobSha } from '../hash';
 import { parseContentDirectives } from '../meta';
 import { isPackFile, type RemotePack } from './github';
 
@@ -36,18 +37,6 @@ export const withinPack = (repoRelative: string): string =>
  */
 export const localPathIn = (localPack: string, repoRelative: string): string =>
 	`content/${localPack}/${withinPack(repoRelative)}`;
-
-/** `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA
- *  in a tree listing directly. Uses WebCrypto; SHA-1 is not a trust decision here (that is the
- *  consent hash's job), it is the identifier the remote already published. */
-export async function gitBlobSha(bytes: Uint8Array): Promise<string> {
-	const header = new TextEncoder().encode(`blob ${bytes.length}\0`);
-	const buf = new Uint8Array(header.length + bytes.length);
-	buf.set(header);
-	buf.set(bytes, header.length);
-	const digest = await crypto.subtle.digest('SHA-1', buf);
-	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 export const FILE_CHANGE = {
 	/** not here yet — safe, nothing can break */
@@ -119,11 +108,18 @@ export async function diffPack(
 		// every file of every pack a second time, on every check and at every launch.
 		const bytes = await storage.readBytes(path);
 		const expectLocal = await gitBlobSha(bytes);
-		if (await isProtectedText(path, decoder.decode(bytes))) {
+		const text = decoder.decode(bytes);
+		if (await isProtectedText(path, text)) {
 			changes.push({ path: file.path, kind: FILE_CHANGE.preserved, sha: file.sha, expectLocal });
 			continue;
 		}
-		if (expectLocal !== file.sha)
+		// A file holding merged translations never has its upstream's bytes again, so it states which
+		// upstream it was built from (`#content-upstream`, `locale-merge.ts`) and that answers for it.
+		// Without it every check would re-offer the update the user has already applied. The bytes
+		// are still asked FIRST: a pack that ships the line in its own file must not be able to make
+		// an identical copy read as changed for ever.
+		const builtFrom = parseContentDirectives(text).directives.get('upstream');
+		if (expectLocal !== file.sha && builtFrom !== file.sha)
 			changes.push({ path: file.path, kind: FILE_CHANGE.changed, sha: file.sha, expectLocal });
 	}
 
