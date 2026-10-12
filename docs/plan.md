@@ -303,7 +303,7 @@ position and are given per wave, because most of them were learned the hard way.
   pinned rail, left-aligned, with the panel regions re-decided — also its own session; RESOURCE-PIN
   asks the same "where does a pin land" question and wants answering with it), PROSE-MARKDOWN (211
   HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
-  COMPANION (research first).
+  COMPANION (its research is written; four answers wait on a sign-off).
 
 ## Verification
 Automated coverage and conventions live in [testing.md] (suites map to phases; run

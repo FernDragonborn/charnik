@@ -255,14 +255,28 @@ stay semi-manual.
   that belongs to a character, so a Ranger's companion and a Wizard's familiar are today entirely
   outside the app. Adjacent to N2b's Wild Shape (`play.form`), which replaces the character's own
   statblock rather than adding a second creature beside it — related shapes, different problems.
-  **This one starts as RESEARCH, and the research owes four answers:** (1) where a companion lives on
-  screen — its own sheet, or a panel on the owner's; (2) whose turn it acts on, which the editions
-  disagree about (a 2024 Beast Master's companion spends the OWNER's action, a familiar spends
-  nothing); (3) whether the owner's effects fold onto it at all; (4) where it sits in the character
-  file. **One constraint is already fixed:** a companion's stats start from a `monster` row but are
+  **The research is written** — [`../research/companion.md`](../research/companion.md), every rule
+  quoted from the shipped packs — and it changes what the item is:
+  - **The four answers are proposed there and wait on a sign-off**: a panel on the owner's play
+    surface rather than a sheet of its own; whose turn it acts on SAID from two facts the granting
+    row states (own initiative · right after you · a mount, and what a command costs), since the
+    rows disagree inside one edition and the app has no initiative order to enforce; no fold of
+    the owner's effects onto it, because no shipped sentence asks for one; a list in `play` beside
+    `play.form`.
+  - **A ranger's companion is not in either pack.** The SRD's ranger has the Hunter only, so the
+    2024 Beast Master this item was written around is homebrew's to bring.
+  - **Three 2024 stat blocks are six ability scores and nothing else**: the Otherworldly Steed,
+    the Giant Insect and the Draconic Spirit live in their spell's text as a table that ends after
+    the scores, and have no monster row. They are transcribed in the content repo before a 2024
+    steed can show a number.
+  - **It needs a way for a row to say "this grants a creature"** — which stat blocks, how many,
+    where it acts, what a command costs — which is `../internals/effects.md` before it is code.
+  **One constraint is already fixed:** a companion's stats start from a `monster` row but are
   the player's to EDIT — every score, HP and attack stays writable, because a bound creature drifts
   from its statblock the moment a table plays it. So the model is an editable overlay over a monster
-  ref, never a read-only pointer at one.
+  ref, never a read-only pointer at one — and the spells write into that overlay themselves (a
+  creature type, an Intelligence of 6, a language).
+
 ## Builder and character
 - [~] **Level-up flow** — the sheet's "▲ Level up" control NAVIGATES to the builder in level-up
   mode (`?levelup=<slug>`), which hydrates the draft from the saved character; the sheet only decides
