@@ -19,6 +19,8 @@ const APP_COMMANDS: &[&str] = &[
     "forget_plugins",
     "set_plugin_enabled",
     "set_plugin_kill_switch",
+    "check_app_update",
+    "install_app_update",
 ];
 
 /// The UI's own catalogs — the one place a string is translated.

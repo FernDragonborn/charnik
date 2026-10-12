@@ -1,14 +1,17 @@
 // Desktop self-update, behind the platform seam. On launch the shell runs `checkForUpdate` once; if a
 // newer signed release exists the header surfaces a gold "update" chip that calls `installUpdate`
-// (download → install → relaunch). On web/headless the checks no-op, so importing this is inert there.
-import type { Update } from '@tauri-apps/plugin-updater';
+// (download → install → restart). On web/headless the checks no-op, so importing this is inert there.
+//
+// The page holds no update handle and passes no arguments: which release, from where, and whether an
+// older one counts are decided in Rust (`src-tauri/src/self_update.rs`), and progress comes back as
+// events. Neither the updater plugin's nor the process plugin's own commands are granted.
 import { detectPlatform, Platform } from '$lib/storage/provider';
 
 export type UpdateStatus = 'idle' | 'available' | 'downloading' | 'installing' | 'error';
 
-// The pending Update handle is neither reactive nor serializable — keep it out of $state, keyed only
-// by the reactive fields below that the UI actually reads.
-let pending: Update | null = null;
+/** The names `self_update.rs` emits under. */
+const PROGRESS_EVENT = 'app-update-progress';
+const INSTALLING_EVENT = 'app-update-installing';
 
 // Dev-only preview flag: when set, `installUpdate` fakes the download instead of touching a real
 // (absent) handle. Guarded everywhere by import.meta.env.DEV so it tree-shakes out of production.
@@ -37,11 +40,10 @@ export const updater: {
 export async function checkForUpdate(): Promise<void> {
 	if (detectPlatform() !== Platform.Desktop) return; // no self-update on web/headless
 	try {
-		const { check } = await import('@tauri-apps/plugin-updater');
-		const found = await check();
-		if (found) {
-			pending = found;
-			updater.version = found.version;
+		const { invoke } = await import('@tauri-apps/api/core');
+		const version = await invoke<string | null>('check_app_update');
+		if (version !== null) {
+			updater.version = version;
 			updater.status = 'available';
 		}
 	} catch (e) {
@@ -49,13 +51,10 @@ export async function checkForUpdate(): Promise<void> {
 	}
 }
 
-/** Download + install the pending update, reporting progress, then relaunch into the new version. On
- *  failure it drops back to 'available' so the user can retry from the same chip. */
 /** Dev-only: light the update chip without a published release, to preview its styling/states. Reach
  *  it from `?dev-update` in the shell. No-op in production. */
 export function simulateUpdateAvailable(): void {
 	if (!import.meta.env.DEV) return;
-	pending = null;
 	fakeUpdate = true;
 	updater.version = '0.0.0-dev';
 	updater.status = 'available';
@@ -71,33 +70,28 @@ async function runFakeInstall(): Promise<void> {
 	updater.status = 'installing';
 }
 
+/** Download + install the update the last check found, reporting progress; Rust restarts into the
+ *  new version when it is in. On failure it drops back to 'available' so the user can retry from the
+ *  same chip. */
 export async function installUpdate(): Promise<void> {
 	if (fakeUpdate) return runFakeInstall();
-	if (!pending) return;
+	if (updater.status !== 'available') return;
 	updater.status = 'downloading';
 	updater.progress = 0;
 	updater.error = '';
+	const stopListening: (() => void)[] = [];
 	try {
-		let total = 0;
-		let received = 0;
-		await pending.downloadAndInstall((event) => {
-			switch (event.event) {
-				case 'Started':
-					total = event.data.contentLength ?? 0;
-					break;
-				case 'Progress':
-					received += event.data.chunkLength;
-					updater.progress = total ? Math.round((received / total) * 100) : 0;
-					break;
-				case 'Finished':
-					updater.status = 'installing';
-					break;
-			}
-		});
-		const { relaunch } = await import('@tauri-apps/plugin-process');
-		await relaunch();
+		const { invoke } = await import('@tauri-apps/api/core');
+		const { listen } = await import('@tauri-apps/api/event');
+		stopListening.push(
+			await listen<number>(PROGRESS_EVENT, (event) => (updater.progress = event.payload)),
+			await listen(INSTALLING_EVENT, () => (updater.status = 'installing')),
+		);
+		await invoke('install_app_update');
 	} catch (e) {
 		updater.status = 'available';
 		updater.error = e instanceof Error ? e.message : String(e);
+	} finally {
+		for (const stop of stopListening) stop();
 	}
 }

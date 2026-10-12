@@ -8,6 +8,8 @@ use tauri_plugin_opener::OpenerExt;
 
 mod plugin_consent;
 mod remote;
+#[cfg(desktop)]
+mod self_update;
 
 /// The set of directories the USER has chosen this session (via the native folder picker) or that we
 /// re-granted from our own persisted pointer at startup — the ONLY paths the fs scope may be extended
@@ -237,11 +239,13 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init());
 
-    // Self-update + relaunch only exist on desktop (no mobile/web target).
+    // Self-update only exists on desktop (no mobile/web target). The plugin is initialised for its
+    // Rust API alone: the capability grants none of its commands, and the page reaches the updater
+    // through `self_update`'s two.
     #[cfg(desktop)]
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init());
+        .manage(self_update::FoundUpdate::default());
 
     builder
         .manage(GrantedDirs::default())
@@ -259,7 +263,11 @@ pub fn run() {
             plugin_consent::grant_plugin_consent,
             plugin_consent::forget_plugins,
             plugin_consent::set_plugin_enabled,
-            plugin_consent::set_plugin_kill_switch
+            plugin_consent::set_plugin_kill_switch,
+            #[cfg(desktop)]
+            self_update::check_app_update,
+            #[cfg(desktop)]
+            self_update::install_app_update
         ])
         .setup(|app| {
             // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win

@@ -863,14 +863,16 @@ own target is where that has to be held again.
 **3 · What page script can do with `process`, `updater` and `http`.** Read in the installed
 plugins' own sources, not driven:
 
-- `process:default` is `allow-exit` and `allow-restart`. Script in the page can quit or relaunch
-  the app whenever it likes.
+- `process:default` is `allow-exit` and `allow-restart`. Script in the page could quit or relaunch
+  the app whenever it liked.
 - `updater:default` is the whole flow — check, download, install — and **`check` takes its
   `proxy`, its `headers`, its `target` and `allow_downgrades` from the page**
   (`tauri-plugin-updater` ▸ `commands.rs` ▸ `check`). The artifact is still verified against the
   pinned minisign key, so a proxy cannot forge a build; what it CAN do, with `allow_downgrades`,
-  is serve an older release that was genuinely signed. Script in the page can therefore put the
-  user on any past version, silently, and relaunch into it. → UPDATER-FROM-PAGE.
+  is serve an older release that was genuinely signed. Script in the page could therefore put the
+  user on any past version, silently, and relaunch into it. Neither permission is granted any
+  more: the app updates through two commands that take no arguments
+  (`docs/internals/security.md` §2).
 - `http:default`'s scope is a URL pattern and nothing else: the method is whatever the page says,
   and of the request headers only the fetch spec's forbidden ones are dropped, which
   `Authorization` is not. With `https://api.github.com/repos/*` allowed, script in the page could

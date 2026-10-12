@@ -91,8 +91,8 @@
   does nothing.** Outcome: a `TableLink` interface beside `Storage`, with a no-op implementation that
   the web build and every build without the Cargo feature use — the web demo never joins a table, so
   the interface may assume a participant owns a character file; a test that the app boots and plays
-  on the no-op. With it, **a fifth exempt path in the Tauri import fence**, the first one where
-  Rust pushes events into the webview. Constraints: no socket is opened and no dependency on a
+  on the no-op. With it, **a sixth exempt path in the Tauri import fence**, and the second place
+  Rust pushes events into the webview after the updater's progress. Constraints: no socket is opened and no dependency on a
   transport is added; removing the feature removes the capability file, the commands and the JS
   seam together. The ground it stands on is built: app commands are under the ACL and the log sink
   takes only the app's own lines (`internals/security.md` §2), so a table-link command arrives
@@ -107,14 +107,6 @@
   measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
   holds a separate key for each table, so nothing links two tables and a key that is online says
   nothing about the person outside that table — which is why every call takes a table id.
-- [ ] **UPDATER-FROM-PAGE · the page can run the updater, and choose its proxy and whether a
-  downgrade counts.** `updater:default` and `process:default` hand the webview the whole flow, and
-  the plugin's `check` takes `proxy`, `headers`, `target` and `allow_downgrades` from its caller
-  (`research/table-link-design-review.md` ▸ What to research next ▸ 3). The signature still holds,
-  so the worst a script in the page can do is move the user to an older, genuinely signed release
-  and relaunch into it — which is every bug that release had. Outcome: the check and the install
-  are Rust commands that take no arguments, progress reaches the chip as events, and neither
-  plugin's permission is in the capability. `lib/update/updater.svelte.ts` is the only caller.
 - [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Five of the
   fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
   each one able to change the design: iroh on mobile; cross-version wire compatibility; key

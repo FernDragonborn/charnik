@@ -10,7 +10,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
   instance. (This is why the server-era controls — localhost bind, LAN token — are gone.)
   The **updater is an outbound HTTP *client*** (GET on the GitHub releases endpoint via
   `plugin-updater` in Rust) — not a server, and not webview `fetch`. It listens on no port
-  and is governed by the **updater capability**, not the CSP.
+  and is governed by **two app commands**, not the CSP (§2 ▸ The page says check and install).
 - **Content is untrusted input** — it may come from strangers (shared packs, imports).
 - **Assumption**: personal desktop use; not multi-tenant. One instance is ENFORCED on desktop
   (`tauri-plugin-single-instance`: a second launch focuses the open window), because every save
@@ -86,6 +86,16 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > command is callable from any local webview whatever the capability's `windows` list says, so
    > a new command is added in three places — the handler, `build.rs`, the capability — and a
    > call without its permission is refused by name.
+   >
+   > **The page says check and install, and nothing else** (`src-tauri/src/self_update.rs`).
+   > `check_app_update` and `install_app_update` take no arguments: the endpoint, the key and the
+   > version comparison are the ones compiled in, the release an install takes is the one the last
+   > check found, held in Rust, and the restart is the one that follows an install. Progress reaches
+   > the chip as events. The updater plugin is initialised for its Rust API alone — the capability
+   > grants none of its commands, whose `check` takes `proxy`, `headers`, `target` and
+   > `allow_downgrades` from the caller — and the process plugin is not in the build, so page script
+   > can neither move the user to an older signed release nor quit or restart the app.
+   > `/dev/self-update` asks the running webview for each of those and expects a refusal.
    >
    > **The log takes only what the app itself says.** `tauri-plugin-log` installs the
    > process-global logger, so it is filtered to the page's own lines (`webview`) and this crate's:

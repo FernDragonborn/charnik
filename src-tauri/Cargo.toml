@@ -45,10 +45,9 @@ tauri-plugin-http = "2"
 http = "1"
 tokio = { version = "1", features = ["macros", "rt"] }
 
-# Desktop-only: self-update from signed GitHub-release artifacts + relaunch after install.
+# Desktop-only: self-update from signed GitHub-release artifacts (`self_update.rs`).
 [target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
 # One process per data folder: a second launch focuses the open window instead of becoming a second
 # writer of the same `character.json`.
 tauri-plugin-single-instance = "2"

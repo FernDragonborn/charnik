@@ -24,8 +24,8 @@
 		"dialog:default",
 		"opener:default",
 		"opener:allow-reveal-item-in-dir",
-		"updater:default",
-		"process:default",
+		"allow-check-app-update",
+		"allow-install-app-update",
 		"log:default",
 		{
 			"identifier": "fs:scope",

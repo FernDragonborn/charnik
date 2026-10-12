@@ -34,9 +34,10 @@ Svelte, the core does not know about effects, and nothing above `Storage` knows 
 All file IO goes through the `Storage` interface — `read` / `write` / `list` / `watch`, confined to
 the data directory. There is no scattered raw `fs`, and **nothing above the interface imports Tauri**.
 Two eslint rules pin that — `no-restricted-imports` for static imports and `no-restricted-syntax` for
-the `import()` expressions the first one cannot see — and four paths are exempt: `lib/storage/tauri.ts`
-(the seam), `lib/update/**` (the desktop updater), `lib/diag/**` (the logger) and
-`lib/content/remote/tauri-fetch.ts` (the pack fetcher's HTTP client, per `security.md` §5).
+the `import()` expressions the first one cannot see — and five paths are exempt: `lib/storage/tauri.ts`
+(the seam), `lib/update/**` (the desktop updater), `lib/diag/**` (the logger),
+`lib/content/remote/tauri-fetch.ts` (the pack fetcher's HTTP client, per `security.md` §5) and
+`lib/effects/plugin-prefs-tauri.ts` (the plugin consent record, which Rust owns).
 
 **Every mutation through it is logged.** `getUserStorage()` hands out the chosen impl wrapped in
 `withWriteLog` (`storage/logged.ts`), so each `write`/`mkdir`/`remove`/`rename` leaves a `debug`

@@ -186,6 +186,10 @@ sentences became numbers, and a security pass closed what a page inside the wind
 - **The app can only READ from GitHub.** Checking and downloading a content pack went through a
   network permission that allowed any kind of request to those addresses; it is two commands that
   fetch and nothing else.
+- **Only the newest signed release can be installed, and only by the update chip.** The page used
+  to hold the whole updater — including which address to ask and whether an older version counts
+  as an update — and could restart or quit the app. It now says "check" and "install" and nothing
+  else.
 - **Allowing a plugin to run is asked by your system, not by the page.** After the review, a
   native dialog names the plugin and its code fingerprint, in your language, and only a yes there
   is recorded — where nothing running inside the window can write it. Plugins you had enabled

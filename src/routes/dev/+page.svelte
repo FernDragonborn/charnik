@@ -67,11 +67,13 @@
 			<li>
 				<a href={dev('storage-edges')}>Storage edges · junctions, held files, the move, plugins</a>
 			</li>
+			<li><a href={dev('self-update')}>Self-update · what the page may ask of the updater</a></li>
 		</ul>
 		<p class="hint">
 			The first only reads and reaches GitHub. The others write, inside throwaway folders they
 			delete afterwards, and never touch the network. Storage edges also needs shell fixtures
-			(docs/internals/tooling.md). Every probe leaves a report in your data folder.
+			(docs/internals/tooling.md). Self-update asks the release endpoint and installs nothing. Every
+			probe leaves a report in your data folder.
 		</p>
 	</section>
 </div>

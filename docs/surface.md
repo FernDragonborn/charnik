@@ -17,13 +17,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `say` ×8 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `say` ×9 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `place` ×6 — src/lib/actions/anchored.ts · src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
+- `probe` ×6 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `REPORT` ×6 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `check` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
-- `probe` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
-- `REPORT` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
-- `check` ×4 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
@@ -488,7 +488,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const updater` — The reactive updater state the chip reads.
 - `function checkForUpdate` — Ask the release endpoint whether a newer signed build exists.
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
-- `function installUpdate`
+- `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
 ## Library functions & types (167 modules)
 
