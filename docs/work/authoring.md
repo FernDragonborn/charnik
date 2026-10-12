@@ -12,12 +12,13 @@
   listed where the pack's "undo this update" already sits (Settings ▸ packs), with what each run
   touched, and a restore that goes through the same swap as a rollback. `listCharacterBackups` /
   `restoreCharacterBackup` are the shape to follow. About 60 lines plus the panel.
-- [ ] **ORPHANED-TRANSLATION · say which vanishing rows carry a translation, before the click.**
-  The apply already stops to name the rows an update drops from inside a changed file, and the merge
-  already knows which of them are translated (`CarryReport.orphaned`) — but only AFTER the user has
-  accepted, and the seed never asks at all. Run the merge as a dry pass at the row-removal prompt and
-  mark those rows in it; for the seed, a toast naming the count and the backup folder. Roughly 30
-  lines, most of it the panel.
+- [ ] **REMOVED-FILE-TRANSLATION · a whole file an update removes takes its translations unsaid and
+  uncopied.** `keepLocalTranslations` runs over the files an update WRITES, so a file the remote
+  dropped — deleted only behind "apply, including deletions" — is neither copied into
+  `content-backups/` nor named as translated; its only copy is `<pack>.prev`, which the next apply
+  replaces. What it needs: the translated row ids of a file with no incoming side (a helper beside
+  `carryLocaleCells`), the copy aside in the same run, and those rows on the panel's translated line
+  at describe time, since a removed file is known before any byte is fetched. About 30 lines.
 - [ ] **ITEM-AT-THE-TABLE · make a custom item from where you are holding it — its own design session.**
   A big goal, not a gap in the homebrew editor. That path authors a CONTENT ROW: you leave play, open
   the compendium, pick a type, fill a schema-driven form, and the row joins the graph for every

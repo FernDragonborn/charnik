@@ -96,7 +96,9 @@ a fake (`tooling.md`).
 
 **Removals are what break a character; additions never do.** So the preview before an apply names the
 rows that would DISAPPEAR and the characters referencing them, down to the row — upstream deletes
-rows far more often than whole files — and accepting a removal is its own separate button.
+rows far more often than whole files — and accepting a removal is its own separate button. A row
+that carries a translation is named again on its own line, because the translation goes with it
+(`content.md` ▸ A translation survives the file being replaced).
 
 **A folder-name collision is resolved, not refused.** A second `srd-2024` installs as `srd-2024-2`,
 said out loud, because refusing the install would leave the user with nothing to do about it.

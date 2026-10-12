@@ -355,6 +355,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
 - `const packConfig` — Reactive, persisted registry.
 - `const missingBundled` — * Bundled packs that are NOT on disk right now — the app ships them, this install doesn't have them.
+- `const orphanedTranslations` — * Translated rows the bundled seed or a restore had nowhere to carry, and the folder the replaced * files were copied…
 - `const bundledPacks` — * The packs the APP SHIPS, by the folder name it ships them under.
 - `const missingUnanswered` — Which of them still deserve the launch prompt — the rest the user has already answered for.
 - `function keepMissingPacks` — "I meant to delete it, stop asking." Suppresses the prompt for these packs; Settings still offers * to restore them, …
@@ -1173,6 +1174,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function localPackSource` — * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
 - `function rowsDroppedFromFile` — * The rows a CHANGED file would drop: present in the graph for that file, absent from the incoming * bytes.
+- `function translatedRowsDropped` — * The rows among those whose TRANSLATION goes with them.
 - `function charactersReferencing` — * Which saved characters mention any of those row keys.
 
 ### `src/lib/content/remote/github.ts`
@@ -1359,6 +1361,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface CarryRun` — One writer's pass over `content/`: what it merged, and where the files it replaced were copied.
 - `function beginCarryRun`
+- `function translationsOrphanedBy` — * The translated rows replacing `path` with `incoming` would leave with nowhere to go, by row id — * the merge as a d…
+- `const orphanedIn` — How many translated rows a run could not carry.
 - `function keepLocalTranslations` — * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there * carries transl…
 - `function finishCarryRun` — Close a run: say what it did, and drop the backup folders past the ones kept.
 
@@ -2165,4 +2169,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1320 exports across 182 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 57 components · 1324 exports across 182 modules · 84 duplicate suspects._

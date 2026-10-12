@@ -42,6 +42,11 @@ sentences became numbers, and a security pass closed what a page inside the wind
 - **And the pencil reaches the Combat screen's Features panel** — where a feature is actually read,
   mid-session. That panel also renders its prose properly now: paragraphs, breaks and emphasis
   instead of one wall of text.
+- **A translation survives the rules under it being updated, and says so when it cannot.** A pack
+  update or a new app version keeps every cell you translated and marks the ones whose English
+  moved. When an update removes an entry you had translated, the pack panel names it before you
+  accept, and a new app version tells you at launch how many there were — in both cases the file
+  as it was is copied into `content-backups` in your data folder first.
 
 ### Rules that were missing
 
@@ -96,8 +101,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
 - **Ritual casting.** A spell with the Ritual tag carries an `R`, and casting it as a ritual spends
   no slot and takes ten minutes longer. Who may is asked of the class the spell is cast as: a
   wizard rituals from the spellbook without preparing, a cleric or druid only what is prepared,
-  and a feat's own spells by the feat's rule. Both packs mark the SRD's 29 ritual spells. A 2014 warlock's Pact of the Tome does not
-  ritual yet.
+  and a feat's own spells by the feat's rule. Both packs mark the SRD's 29 ritual spells. A 2014
+  warlock's Pact of the Tome does not ritual yet.
 - **Known or prepared is the class's to say.** A 2014 bard's spells read as known, not prepared.
 - **Skilled takes tools as well as skills**, against the one count of three, and a feat slot from a
   level offers origin feats too — which is the only way Skilled could be taken at all.

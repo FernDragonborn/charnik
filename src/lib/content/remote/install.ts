@@ -34,6 +34,7 @@ import {
 	localPackSource,
 	rowsDroppedFromFile,
 	sourceOf,
+	translatedRowsDropped,
 	withinPack,
 	type FileChange,
 	type PackDiff,
@@ -71,6 +72,9 @@ export interface ApplyResult {
 	/** `type:source:id` keys this update would drop from INSIDE a changed file. Set when the apply
 	 *  stopped to ask about them; the same list is what `acceptRowRemovals` then approves. */
 	rowRemovals?: string[];
+	/** …and the ones among them that carry a translation, which goes with the row. Set with
+	 *  `rowRemovals`. */
+	translatedRowRemovals?: string[];
 	/** The pack publishes rows under a `#content-source` ANOTHER pack already claims. Set when the
 	 *  apply stopped to ask; `acceptSourceClaim` is what then approves it. */
 	sourceClaim?: { source: string; owner: string };
@@ -171,10 +175,11 @@ export async function applyPackUpdate({
 	// exactly like any other changed file. The bytes are only here, so this is the first moment the
 	// question can be answered at all — and it is still before anything is written.
 	const rowRemovals = graph ? rowsDroppedByUpdate(graph, diff.pack, staged) : [];
-	if (rowRemovals.length > 0 && !acceptRowRemovals)
+	if (graph && rowRemovals.length > 0 && !acceptRowRemovals)
 		return {
 			...nothing,
 			rowRemovals,
+			translatedRowRemovals: await translatedRowsDropped(storage, graph, diff.pack, staged),
 			error: {
 				kind: 'i18n',
 				key: 'settings.packs.rowsWouldVanish',

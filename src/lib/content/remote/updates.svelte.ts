@@ -227,6 +227,7 @@ async function describeUpdate(
 		diff,
 		removedRows,
 		...(await whoBreaks(removedRows)),
+		translatedRows: [],
 		plugins: pluginsIn(remote),
 		pluginsChanged: pluginsTouchedBy(diff),
 		staged: await isStaged(storage, diff),
@@ -318,6 +319,7 @@ async function runApply(
 		if (res.rowRemovals !== undefined) {
 			pending.removedRows = [...new Set([...pending.removedRows, ...res.rowRemovals])].sort();
 			Object.assign(pending, await whoBreaks(pending.removedRows));
+			pending.translatedRows = res.translatedRowRemovals ?? [];
 		}
 		// The offer was described against a disk that has since moved — a translation saved in the
 		// meantime is enough. Describe it again from the listing already in hand, or the same refusal

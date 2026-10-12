@@ -1942,6 +1942,8 @@
 			"rowsRemoved": "{count} entries would DISAPPEAR from your content",
 			"charactersAffected": "Characters that use them: {who}",
 			"draftsAffected": "Unfinished edits that would be left with nothing to edit: {who}",
+			"translationsOrphaned": "{count, plural, one {# translated entry is} other {# translated entries are}} no longer in the rules this version ships, so the translation had nowhere to go. The files as they were are in {backupDir} in your data folder.",
+			"translationsAffected": "Translated entries whose translation goes with them: {who}. The file as it is now is copied into content-backups in your data folder first.",
 			"packTooLarge": "“{pack}” is too big to download: {files} files, {mb} MB (limit {maxFiles} files, {maxMb} MB).",
 			"carriesPlugins": "This pack also contains plugins: {list}. They arrive switched off and need your review.",
 			"changesPlugins": "This update rewrites plugin code: {list}. Applying it stops those plugins until you approve the new code, and any stats they calculate will change.",

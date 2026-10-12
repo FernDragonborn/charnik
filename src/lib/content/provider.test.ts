@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { forgetUninstalledPacks, seedShippedContent } from './provider';
 import { discoverContentRoots } from './disk';
-import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
+import { emptyPackConfig, orphanedTranslations, packConfig, registerPack } from './packs.svelte';
 import { duringPackWrite } from './remote/install';
 import { type MetaKey } from './meta';
 import { stampWithHash } from './hash';
@@ -229,5 +229,24 @@ describe('seedShippedContent (a translated file)', () => {
 		expect(await to.read(P)).toContain('shield'); // and the new shipped row arrived
 		const [run] = await to.list('content-backups');
 		expect(await to.read(`${run?.path}/srd-2024/spells_srd.csv`)).toBe(before);
+		expect(orphanedTranslations.count).toBe(0);
+	});
+
+	it('UPDATE that drops a translated row leaves the count and the backup folder to be said', async () => {
+		const to = new MemoryStorage();
+		await to.write(P, await stamped(`${HEAD}\nfireball,Fireball,`));
+		await saveTranslation(
+			to,
+			{ root: ROOTS[0] ?? '', file: 'spells_srd.csv', id: 'fireball' },
+			'uk',
+			{ name: 'Вогняна куля' },
+		);
+		const from = new MemoryStorage();
+		await from.write(P, await stamped(`${HEAD}\nshield,Shield,`));
+
+		await seedShippedContent(from, to, ROOTS, 2);
+
+		const [run] = await to.list('content-backups');
+		expect(orphanedTranslations).toEqual({ count: 1, backupDir: run?.path });
 	});
 });

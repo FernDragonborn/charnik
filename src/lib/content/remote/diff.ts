@@ -19,6 +19,7 @@ import type { ContentGraph } from '../loader';
 import { isProtectedText } from '../disk';
 import { gitBlobSha } from '../hash';
 import { parseContentDirectives } from '../meta';
+import { translationsOrphanedBy } from '../translation-carry';
 import { isPackFile, type RemotePack } from './github';
 
 /** Where a pack's files live locally. The runtime layout is `content/<pack>/…` regardless of which
@@ -214,6 +215,30 @@ export function rowsDroppedFromFile(
 		.filter((row) => !stillThere.has(row.id))
 		.map((row) => `${row.type}:${row.source}:${row.id}`)
 		.sort();
+}
+
+/**
+ * The rows among those whose TRANSLATION goes with them. The merge keeps a translation by row id, so
+ * a row the incoming file dropped or re-ided takes its translated cells along — and the click that
+ * accepts the removal is the last moment to say so.
+ */
+export async function translatedRowsDropped(
+	storage: Storage,
+	graph: ContentGraph,
+	localPack: string,
+	/** the incoming bytes, by repo-relative path */
+	incoming: { path: string; bytes: Uint8Array }[],
+): Promise<string[]> {
+	const keys: string[] = [];
+	for (const file of incoming) {
+		const path = localPathIn(localPack, file.path);
+		const orphaned = new Set(await translationsOrphanedBy(storage, path, file.bytes));
+		if (orphaned.size === 0) continue;
+		for (const row of graph.rows)
+			if (`${row.root}/${row.file}` === path && orphaned.has(row.id))
+				keys.push(`${row.type}:${row.source}:${row.id}`);
+	}
+	return keys.sort();
 }
 
 /**

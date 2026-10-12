@@ -31,7 +31,7 @@
 		restorePendingUpdates,
 		updates,
 	} from '$lib/content/remote/updates.svelte';
-	import { missingUnanswered } from '$lib/content/packs.svelte';
+	import { missingUnanswered, orphanedTranslations } from '$lib/content/packs.svelte';
 	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
 	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
 	import {
@@ -264,6 +264,18 @@
 	// change, the watcher) — it self-guards and finds nothing to do once the drift is stamped away.
 	$effect(() => {
 		if (content.graph) void autoAdoptDrift();
+	});
+
+	// Stays until dismissed: it names a folder, and it is the only time this is said.
+	$effect(() => {
+		if (orphanedTranslations.count === 0) return;
+		toast.warning(
+			$_('settings.packs.translationsOrphaned', { values: { ...orphanedTranslations } }),
+			{
+				duration: Infinity,
+			},
+		);
+		orphanedTranslations.count = 0;
 	});
 
 	// The write-back the two review dialogs promise (DATA-VER-1 task 6). Dismiss FIRST so the dialog

@@ -362,6 +362,15 @@
 											})}
 										</div>
 									{/if}
+									<!-- The merge carries a translation by row id, so it has nowhere to put this one.
+									     The copy set aside is the only place the text survives. -->
+									{#if pending.translatedRows.length > 0}
+										<div class="pack-warn">
+											{$_('settings.packs.translationsAffected', {
+												values: { who: pending.translatedRows.join(', ') },
+											})}
+										</div>
+									{/if}
 								{/if}
 								{#if pending.staged}
 									<div>{$_('settings.packs.readyOffline')}</div>

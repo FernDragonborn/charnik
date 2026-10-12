@@ -392,6 +392,12 @@ the data folder, whenever a translation was at stake; ten runs are kept. The mer
 the incoming file dropped or re-ided, and a log line cannot hold what the text was — it carries ids,
 never prose — so the copy is the only record of it.
 
+**A translated row with nowhere to go is said to the user, by whichever writer drops it.** A pack
+update runs the merge as a dry pass at its row-removal prompt (`translationsOrphanedBy`) and names
+those rows before the click. The seed and the restore have no click to stop at, so they leave the
+count and the backup folder in `orphanedTranslations` and the layout says it once, in a toast that
+stays until dismissed.
+
 **Taking a translator's work into the pack is the same merge with the roles swapped**: the pack's
 file is the incoming side, theirs is the local one. `pnpm import-translations` (`tooling.md`) does
 that and writes the pack's own byte style, so the commit in the content repo shows the translated

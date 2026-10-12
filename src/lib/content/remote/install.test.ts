@@ -805,6 +805,25 @@ describe('an update over a file that holds translations', () => {
 		expect((await diffPack(s, remote)).changes).toEqual([]);
 	});
 
+	it('names the translated rows an update drops, before the click that accepts them', async () => {
+		const s = await translatedPack();
+		const upstream = await shippedFile(`${HEAD}\nfire_ball,Fireball,,Boom,`); // re-ided upstream
+		const loaded = (id: string): LoadedRow =>
+			({ ...row, id, type: 'spell', source: 'Test' }) as LoadedRow;
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/spells.csv': upstream }),
+			repo: REPO,
+			diff: await diffPack(s, await remoteOf(upstream)),
+			graph: { rows: [loaded('fireball')] } as ContentGraph,
+		});
+
+		expect(res.rowRemovals).toEqual(['spell:Test:fireball']);
+		expect(res.translatedRowRemovals).toEqual(['spell:Test:fireball']);
+		expect(await s.exists('content-backups')).toBe(false); // asking writes nothing
+	});
+
 	it('a refused apply copies nothing aside', async () => {
 		const s = await translatedPack();
 		const upstream = await shippedFile(`${HEAD}\nfireball,Fireball,,A bigger boom,`);

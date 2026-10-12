@@ -308,6 +308,16 @@ function adopt(cfg: PackConfigData): void {
 export const missingBundled = $state<{ packs: string[] }>({ packs: [] });
 
 /**
+ * Translated rows the bundled seed or a restore had nowhere to carry, and the folder the replaced
+ * files were copied into. Those two writers replace a file with no preview, so this is said after the
+ * fact — once, by the layout, which then clears it. Never persisted: the copies are the record.
+ */
+export const orphanedTranslations = $state<{ count: number; backupDir: string }>({
+	count: 0,
+	backupDir: '',
+});
+
+/**
  * The packs the APP SHIPS, by the folder name it ships them under. Recomputed at every content load
  * from the bundle itself, never persisted — it is a fact about this build.
  *

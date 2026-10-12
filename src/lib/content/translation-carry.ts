@@ -39,6 +39,40 @@ export function beginCarryRun(storage: Storage, now: Date = new Date()): CarryRu
 	return { storage, backupDir: `${TRANSLATION_BACKUP_DIR}/${runStamp(now)}`, files: {} };
 }
 
+/** The merge of `incoming` over the file at `path`, or null when no translation is at stake. Reads
+ *  only — what is done with the answer is the caller's. */
+async function mergeOver(
+	storage: Storage,
+	path: string,
+	incoming: Uint8Array,
+): Promise<{ localBytes: Uint8Array; text: string; report: CarryReport } | null> {
+	if (!path.endsWith('.csv') || !(await storage.exists(path))) return null;
+	const localBytes = await storage.readBytes(path);
+	const decoder = new TextDecoder();
+	const { text, ...report } = await carryLocaleCells(
+		decoder.decode(incoming),
+		decoder.decode(localBytes),
+		{ upstream: await gitBlobSha(incoming) },
+	);
+	return touchedTranslations(report) ? { localBytes, text, report } : null;
+}
+
+/**
+ * The translated rows replacing `path` with `incoming` would leave with nowhere to go, by row id —
+ * the merge as a dry pass, so a writer that asks first can name them before anything is written.
+ */
+export async function translationsOrphanedBy(
+	storage: Storage,
+	path: string,
+	incoming: Uint8Array,
+): Promise<string[]> {
+	return (await mergeOver(storage, path, incoming))?.report.orphaned ?? [];
+}
+
+/** How many translated rows a run could not carry. A writer with no preview says this afterwards. */
+export const orphanedIn = (run: CarryRun): number =>
+	Object.values(run.files).reduce((count, report) => count + report.orphaned.length, 0);
+
 /**
  * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there
  * carries translations — then the merged file, with the one it replaces copied into the run's backup
@@ -49,15 +83,9 @@ export async function keepLocalTranslations(
 	path: string,
 	incoming: Uint8Array,
 ): Promise<Uint8Array> {
-	if (!path.endsWith('.csv') || !(await run.storage.exists(path))) return incoming;
-	const localBytes = await run.storage.readBytes(path);
-	const decoder = new TextDecoder();
-	const { text, ...report } = await carryLocaleCells(
-		decoder.decode(incoming),
-		decoder.decode(localBytes),
-		{ upstream: await gitBlobSha(incoming) },
-	);
-	if (!touchedTranslations(report)) return incoming;
+	const merge = await mergeOver(run.storage, path, incoming);
+	if (merge === null) return incoming;
+	const { localBytes, text, report } = merge;
 	run.files[path] = report;
 	await run.storage.writeBytes(
 		`${run.backupDir}/${path.slice(CONTENT_DIR.length + 1)}`,

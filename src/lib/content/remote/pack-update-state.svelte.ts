@@ -24,6 +24,9 @@ export interface PendingUpdate {
 	/** …and the unfinished edits pointed at them (`type:source:id`). A draft is unsaved work with
 	 *  nowhere else it is listed, so it is the reference MOST worth warning about, not the least. */
 	affectedDrafts: string[];
+	/** …and the rows among them that carry a translation, which goes with the row. Known only once an
+	 *  apply has the bytes in hand and stopped to ask. */
+	translatedRows: string[];
 	/** plugin namespaces this pack would add — code always gets said out loud (PLUGINS §2) */
 	plugins: string[];
 	/** …and the ones THIS update rewrites, which is the sharper warning: they stop running until

@@ -34,13 +34,20 @@ import {
 	bundledPacks,
 	forgetPack,
 	missingBundled,
+	orphanedTranslations,
 	packConfig,
 	registerPack,
 	SHIPPED_PACK_REPO,
 	unDismissMissing,
 } from './packs.svelte';
 import { logger } from '$lib/diag/logger';
-import { beginCarryRun, finishCarryRun, keepLocalTranslations } from './translation-carry';
+import {
+	beginCarryRun,
+	finishCarryRun,
+	keepLocalTranslations,
+	orphanedIn,
+	type CarryRun,
+} from './translation-carry';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
@@ -173,8 +180,18 @@ export async function restoreBundledPacks(packs: string[]): Promise<void> {
 		}
 	});
 	await finishCarryRun(run);
+	noteOrphanedTranslations(run);
 	unDismissMissing(packs);
 	resetContentGraph();
+}
+
+/** A pack update names these rows before the click; the seed and the restore have no click to stop
+ *  at, so what they could not carry is left for the layout to say. */
+function noteOrphanedTranslations(run: CarryRun): void {
+	const count = orphanedIn(run);
+	if (count === 0) return;
+	orphanedTranslations.count += count;
+	orphanedTranslations.backupDir = run.backupDir;
 }
 
 /** The CONTENT_SEED_VERSION last written to disk, or null if never seeded / unreadable. */
@@ -234,6 +251,7 @@ export async function seedShippedContent(
 		}
 	}
 	await finishCarryRun(run);
+	noteOrphanedTranslations(run);
 	await to.write(SEED_VERSION_FILE, String(shippedVersion));
 	logger.info('content: seed complete', { preserved });
 	return { preserved };
