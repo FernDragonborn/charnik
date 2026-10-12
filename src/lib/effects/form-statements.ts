@@ -33,6 +33,7 @@ export function collectFormStatement(
 			without: [],
 			ownHp: false,
 			casts: false,
+			onlySenses: false,
 			endsWhen: [],
 		};
 		forms.push(rules);
@@ -49,6 +50,7 @@ function formStatement(
 	if (word === FORM_WORD.endsWhen) return value ? { endsWhen: [value] } : undefined;
 	if (word === FORM_WORD.ownHp) return { ownHp: true };
 	if (word === FORM_WORD.casts) return { casts: true };
+	if (word === FORM_WORD.onlySenses) return { onlySenses: true };
 	const r = ctx
 		? evalExpression(value ?? '', ctx)
 		: ({ ok: false, error: 'expression needs a context' } as const);

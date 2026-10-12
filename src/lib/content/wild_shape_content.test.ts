@@ -73,6 +73,9 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				ownHp: true,
 				hours: 1,
 				casts: false,
+				// "you can't use any of your special senses, such as darkvision, unless your new form
+				// also has that sense"
+				onlySenses: true,
 				// "You automatically revert if you fall unconscious, drop to 0 hit points, or die."
 				endsWhen: ['unconscious'],
 			},
@@ -103,6 +106,7 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				known: 4,
 				hours: 1,
 				casts: false,
+				onlySenses: false,
 				// "until you use Wild Shape again, have the Incapacitated condition, or die"
 				endsWhen: ['incapacitated'],
 			},
@@ -152,6 +156,7 @@ describe('Wild Shape · which stat blocks a level allows', () => {
 				without: [],
 				ownHp: false,
 				casts: false,
+				onlySenses: false,
 				endsWhen: [],
 			}),
 		);
@@ -217,5 +222,36 @@ describe('Wild Shape · what the stat block does to the sheet', () => {
 		const sheet = deriveSheet(shaped(own, 'srd-2024', 'no_such_beast'), graph);
 		expect(sheet.ac.value).toBe(deriveSheet(own, graph).ac.value);
 		expect(sheet.missing).toContain('monster:SRD 5.2.1:no_such_beast');
+	});
+});
+
+/* SRD 5.1 ▸ Wild Shape — "you can't use any of your special senses, such as darkvision, unless your
+   new form also has that sense." SRD 5.2.1 has no such sentence, and its row does not state the
+   rule (asserted with the pool above). An elf's Darkvision is 60 feet; the 2014 wolf lists no
+   special sense and the 2014 giant badger lists Darkvision 30. */
+describe('Wild Shape · the special senses a form leaves', () => {
+	const elf = (pack: Pack): Character => {
+		const c = druid(pack, 2);
+		c.build.species = `species:${EDITIONS[pack].source}:elf`;
+		return characterSchema.parse(c);
+	};
+
+	it('2014: a sense the form does not have is not the druid’s to use, and the form says so', async () => {
+		const graph = await loadPacks('srd-2014');
+		expect(deriveSheet(elf('srd-2014'), graph).senses['darkvision']?.value).toBe(60);
+
+		const asWolf = deriveSheet(shaped(elf('srd-2014'), 'srd-2014', 'wolf', 10), graph);
+		expect(asWolf.senses['darkvision']?.value).toBe(0);
+		expect(asWolf.senses['darkvision']?.trace.at(-1)).toMatchObject({
+			source: 'Wolf',
+			op: 'set',
+			amount: 0,
+		});
+	});
+
+	it('2014: a sense the form has too stays, at the higher of the two', async () => {
+		const graph = await loadPacks('srd-2014');
+		const asBadger = deriveSheet(shaped(elf('srd-2014'), 'srd-2014', 'giant_badger', 10), graph);
+		expect(asBadger.senses['darkvision']?.value).toBe(60);
 	});
 });

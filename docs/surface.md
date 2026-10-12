@@ -686,6 +686,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type MonsterRow`
 - `function challengeRating` — A Challenge Rating as a number — `1/4` is 0.25.
+- `const formHasSense` — Does the stat block have this sense?
 - `function formStatTokens` — What assuming this stat block does to the sheet, as effect tokens.
 - `function isEligibleForm` — Is this stat block one the form's rules allow?
 - `function activeForm` — The form a character is in, resolved: its stat block and the play-state that says so.
@@ -2187,4 +2188,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1337 exports across 183 modules · 85 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1338 exports across 183 modules · 85 duplicate suspects._

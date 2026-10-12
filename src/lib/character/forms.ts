@@ -62,6 +62,18 @@ function skillBonusesOf(row: MonsterRow): Record<string, number> {
 	return out;
 }
 
+/** The special senses a stat block lists with a range, by name. A passive score is not one. */
+function sensesOf(row: MonsterRow): Record<string, number> {
+	const senses = feetByName(row.data.senses, '');
+	for (const name of Object.keys(senses))
+		if (name === '' || name.startsWith('passive')) delete senses[name];
+	return senses;
+}
+
+/** Does the stat block have this sense? What a form that allows no other sense asks of each one
+ *  the character brings. */
+export const formHasSense = (row: MonsterRow, sense: string): boolean => sense in sensesOf(row);
+
 /** What assuming this stat block does to the sheet, as effect tokens. */
 export function formStatTokens(row: MonsterRow): string[] {
 	const d = row.data;
@@ -79,10 +91,8 @@ export function formStatTokens(row: MonsterRow): string[] {
 	}
 	for (const [skill, bonus] of Object.entries(skillBonusesOf(row)))
 		tokens.push(`set_override:skill.${skill}:${bonus}:floor`);
-	// a passive score is not a sense; everything else the cell lists with a range is
-	for (const [sense, feet] of Object.entries(feetByName(d.senses, '')))
-		if (sense && !sense.startsWith('passive'))
-			tokens.push(`set_override:senses.${sense}:${feet}:floor`);
+	for (const [sense, feet] of Object.entries(sensesOf(row)))
+		tokens.push(`set_override:senses.${sense}:${feet}:floor`);
 	return tokens;
 }
 

@@ -1684,6 +1684,7 @@
 			"advantage": "Advantage",
 			"armor": "Armor",
 			"armorStrShort": "STR {score} < {required}",
+			"formLacksSense": "this form does not have the sense",
 			"armorTooHeavy": "{armor} (STR {required})",
 			"base": "Base",
 			"baseScore": "Base score",

@@ -1684,6 +1684,7 @@
 			"advantage": "Перевага",
 			"armor": "Обладунок",
 			"armorStrShort": "СИЛ {score} < {required}",
+			"formLacksSense": "ця форма не має такого чуття",
 			"armorTooHeavy": "{armor} (СИЛ {required})",
 			"base": "База",
 			"baseScore": "Базове значення",

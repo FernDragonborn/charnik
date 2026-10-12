@@ -139,6 +139,7 @@ export const SOURCE_KEY = {
 	speciesDefault: 'provenance.source.speciesDefault',
 	armorTooHeavy: 'provenance.source.armorTooHeavy',
 	armorStrShort: 'provenance.source.armorStrShort',
+	formLacksSense: 'provenance.source.formLacksSense',
 	advantage: 'provenance.source.advantage',
 	disadvantage: 'provenance.source.disadvantage',
 } as const;

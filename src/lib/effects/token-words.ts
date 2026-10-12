@@ -29,7 +29,7 @@ export const isRollLimit = (word: string): word is RollLimit =>
 
 /**
  * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, three a bare
- * word, two nothing at all:
+ * word, three nothing at all:
  *  - `creature:<type>` — the creature type an eligible stat block has (`beast`)
  *  - `max_cr:<expr>` — the highest Challenge Rating eligible; a fraction is written as one (`1/4`)
  *  - `without:<mode>` — a movement mode an eligible stat block may NOT have (`fly`, `swim`)
@@ -38,6 +38,7 @@ export const isRollLimit = (word: string): word is RollLimit =>
  *  - `known:<expr>` — how many forms the character knows, where they are chosen ahead of time
  *  - `hours:<expr>` — how long the form lasts
  *  - `casts` — spells can be cast in the form
+ *  - `only_senses` — the character has no special sense in the form but the stat block's
  *  - `ends_when:<state>` — a state row's id that ends the form the moment the character has it
  */
 export const FORM_WORD = {
@@ -49,6 +50,7 @@ export const FORM_WORD = {
 	known: 'known',
 	hours: 'hours',
 	casts: 'casts',
+	onlySenses: 'only_senses',
 	endsWhen: 'ends_when',
 } as const;
 export type FormWord = (typeof FORM_WORD)[keyof typeof FORM_WORD];
@@ -62,6 +64,7 @@ export const FORM_WORD_VALUE: Record<FormWord, 'expression' | 'word' | 'none'> =
 	known: 'expression',
 	hours: 'expression',
 	casts: 'none',
+	only_senses: 'none',
 	ends_when: 'word',
 };
 export const isFormWord = (word: string): word is FormWord => word in FORM_WORD_VALUE;

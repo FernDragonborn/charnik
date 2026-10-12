@@ -257,6 +257,7 @@ speak of the same thing, the way `extra_attack` rows do.
 | `known` | L2 | how many forms are chosen ahead of time (`build.forms`); absent means any eligible one |
 | `hours` | L2 | how long the form lasts, which becomes its clock |
 | `casts` | — | spells can be cast in the form |
+| `only_senses` | — | a special sense the character has is theirs in the form only if the stat block lists it too (SRD 5.1); the one a form takes reads 0, with the form as the last line of its trace |
 | `ends_when` | a word | a state row's id that ends the form the moment the character has it — `unconscious` (SRD 5.1), `incapacitated` (SRD 5.2.1). Death answers for every state named. Applied, not offered: neither text leaves a choice (`characters.md` ▸ A tracker surfaces) |
 
 A rule the feature does not state limits nothing. A value that does not resolve is surfaced

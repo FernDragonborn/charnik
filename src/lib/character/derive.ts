@@ -41,9 +41,9 @@ import { collectFacts, type EffectFacts, type ResourceDef } from '../effects/app
 import { resolveActiveEffects } from '../effects/resolver';
 import type { Spellcasting } from './spellcasting';
 import { baseResolveState } from './derive-context';
-import { activeForm, withoutForm, type MonsterRow } from './forms';
+import { activeForm, formHasSense, withoutForm, type MonsterRow } from './forms';
 import { rowName } from '../content/loader';
-import { computed, type Computed } from '../rules/pipeline';
+import { computed, SOURCE_KEY, type Computed } from '../rules/pipeline';
 
 // SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
 // cycle); re-exported here so existing `$lib/character/derive` importers keep working.
@@ -216,11 +216,16 @@ export function deriveSheet(
 
 /**
  * What being in a form changes about the sheet that is NOT a number the form's own tokens fold:
- * whose hit points are being counted, and whether spells can be cast.
+ * whose hit points are being counted, whether spells can be cast, and which of the character's
+ * special senses are still theirs to use.
  *
  * A form with hit points of its own (`hpBefore` is the character's, waiting) counts the stat
  * block's: its maximum is the row's `hp` and nothing else, because "you assume the beast's hit
  * points" leaves no room for the character's own bonuses to them.
+ *
+ * A form that allows `only_senses` leaves the character a sense when the stat block lists it too —
+ * that one is the higher of the two, which the form's floor already folded — and none otherwise. A
+ * sense it takes keeps its trace and ends on the form's own line, so the 0 says who set it.
  */
 function inForm(
 	sheet: CharacterSheet,
@@ -228,7 +233,30 @@ function inForm(
 	state: NonNullable<Character['play']['form']>,
 ): CharacterSheet {
 	const source = rowName(row);
-	const casts = sheet.facts.forms.find((rules) => rules.id === state.id)?.casts ?? false;
+	const rules = sheet.facts.forms.find((form) => form.id === state.id);
+	const casts = rules?.casts ?? false;
+	const senses = rules?.onlySenses
+		? Object.fromEntries(
+				Object.entries(sheet.senses).map(([name, sense]) => [
+					name,
+					formHasSense(row, name)
+						? sense
+						: computed(
+								[
+									...sense.trace,
+									{
+										source,
+										layer: 'override' as const,
+										op: 'set' as const,
+										amount: 0,
+										noteKey: SOURCE_KEY.formLacksSense,
+									},
+								],
+								{ min: 0 },
+							),
+				]),
+			)
+		: sheet.senses;
 	const ownHp = state.hpBefore !== undefined && row.data.hp != null;
 	return {
 		...sheet,
@@ -240,5 +268,6 @@ function inForm(
 				}
 			: {}),
 		spellcasting: casts ? sheet.spellcasting : { ...sheet.spellcasting, formBlock: { source } },
+		senses,
 	};
 }

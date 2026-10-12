@@ -101,6 +101,8 @@ export interface FormRules {
 	hours?: number;
 	/** Spells can be cast in the form. */
 	casts: boolean;
+	/** A special sense the stat block does not list is not the character's to use in the form. */
+	onlySenses: boolean;
 	/** The states that end the form (`unconscious`, `incapacitated`) — state rows' ids. */
 	endsWhen: string[];
 }
@@ -122,6 +124,7 @@ export function addFormStatement(rules: FormRules, said: FormStatement): void {
 		if (!rules.endsWhen.includes(state)) rules.endsWhen.push(state);
 	rules.ownHp ||= said.ownHp ?? false;
 	rules.casts ||= said.casts ?? false;
+	rules.onlySenses ||= said.onlySenses ?? false;
 }
 
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated

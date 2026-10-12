@@ -124,5 +124,6 @@ const lifted = (rules: FormRules): FormRules => ({
 	without: [],
 	ownHp: rules.ownHp,
 	casts: rules.casts,
+	onlySenses: rules.onlySenses,
 	endsWhen: rules.endsWhen,
 });

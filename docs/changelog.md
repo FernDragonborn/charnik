@@ -55,6 +55,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   `Milestone`, or your XP against what the next level takes — and opens the place to switch between
   the two and add what you earned. Reaching the total marks the level as earned; you take it in the
   builder as always. Off by default, and a milestone table sees one quiet word.
+- **A 2014 druid's own Darkvision goes dark in a form that has none.** "You can't use any of your
+  special senses, such as darkvision, unless your new form also has that sense" — a wolf does
+  not, a giant badger does, and then the longer range stands. 2024 has no such sentence.
 - **Wild Shape.** A druid had a paragraph where the feature should be. Now the uses are a pool —
   two in 2014, the Druid Features ladder in 2024 — and spending one asks which beast, from the ones
   your level allows (2014) or the forms you chose in the builder (2024). The sheet becomes the

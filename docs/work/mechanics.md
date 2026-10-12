@@ -178,10 +178,14 @@ stay semi-manual.
      on N2's choice kind like every other choice. What it is once chosen is sayable: "once on each of
      your turns when you hit … you can cause the target to take an extra 1d8" is a granted roll
      limited to a turn, the shape Sneak Attack has, and it needs no scope for a form's attacks.
-  3. **A form's senses are added, never taken away.** 2014: "you can't use any of your special
-     senses, such as darkvision, unless your new form also has that sense". The stat block's senses
-     fold as floors; removing the druid's own needs a way to say "no sense but these", which
-     `set_override` on a floor-folded target cannot.
+  3. **What a 2024 form leaves of the SPECIES.** SRD 5.2.1 replaces "your game statistics" and
+     lists what is retained — "creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and
+     Charisma scores; class features; languages; and feats" — and a species trait is not on the
+     list, so RAW an elf's Darkvision and a dwarf's poison resistance are gone in the form while a
+     feat's Blindsight stays. Nothing takes them away today. It is every species trait and not only
+     the senses, it turns on where a token CAME from rather than on what it targets, and it is a
+     reading many tables do not play — so it wants both offered, not one picked. (The 2014 sentence
+     about special senses is built: `form:wild_shape:only_senses`.)
   4. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
      keeps working. Nothing is modelled: a worn item's bonus still folds, and the form's SET of
      Armor Class is what stands over an armor's.
