@@ -107,17 +107,15 @@
   measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
   holds a separate key for each table, so nothing links two tables and a key that is online says
   nothing about the person outside that table — which is why every call takes a table id.
-- [ ] **TABLE-LINK-RESEARCH · the questions the design review left unanswered.** Five of the
-  fourteen under "What to research next ▸ Still open" in `research/table-link-design-review.md`,
-  each one able to change the design: iroh on mobile; cross-version wire compatibility; key
-  storage per platform; pairing ceremonies; how other tools handle authority and griefing. The
-  nine answered there are the ones this repository, one machine and n0's own documentation could
-  answer. An input to TABLE-LINK-SPEC, not a blocker for the seams.
 - [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
   `research/table-link-threats.md` (what the layer can do to a user) and
   `research/table-link-design-review.md` (what the existing code does with a network input, and the
-  thirteen decisions listed under "Decisions the spec must make"). The ones that change the
-  architecture: who computes a sheet the GM looks at; that a GM request names catalog ids and never
+  thirteen decisions listed under "Decisions the spec must make"). Its "What to research next" is
+  answered as far as reading can take it — mobile lifecycle and the iOS local-network prompt, n0's
+  wire promise, the OS key stores, pairing ceremonies, who writes a sheet in other tools — and ends
+  with the list only a device or a table can settle, which the spec schedules rather than waits on.
+  The decisions that change the architecture: who computes a sheet the GM looks at; that a GM
+  request names catalog ids and never
   carries tokens or free formulas; a star of direct connections rather than gossip; which relays an
   endpoint may dial; where keys and approvals live. It also rewrites `internals/security.md`'s
   threat model, which says "no network" in the present tense.

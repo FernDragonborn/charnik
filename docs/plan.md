@@ -256,7 +256,7 @@ position and are given per wave, because most of them were learned the hard way.
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
   Magician), SCOPED-BONUS's Agonizing Blast, E4, MOBILE-ALPHA's tap
-  targets, and TABLE-LINK-RESEARCH with TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
+  targets, and TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
   or shipped content that does nothing — the three clauses above.
 - **The short queue, and it is an ORDER rather than a wave.** One item, and it is the maintainer's
   to do rather than a commit.
@@ -304,8 +304,6 @@ position and are given per wave, because most of them were learned the hard way.
   asks the same "where does a pin land" question and wants answering with it), PROSE-MARKDOWN (211
   HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
   COMPANION (research first).
-
-**Tied to a date rather than a wave:** TABLE-LINK-RESEARCH before TABLE-LINK-SPEC is written.
 
 ## Verification
 Automated coverage and conventions live in [testing.md] (suites map to phases; run

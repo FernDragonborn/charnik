@@ -946,25 +946,151 @@ layer fires it, never during the derive; and the one switch the derive has is th
 `play.autoCalc`. Not checked here: where a `plugin:` token meets the registered evaluator, and
 whether a formula in a save can be made expensive within the L2 caps.
 
-### Still open
+**7 · iroh on mobile — what n0 and Apple say** (read 2026-10-12). Android and iOS are both listed
+as supported (<https://docs.iroh.computer/compatibility>), and since 1.0 the Swift and Kotlin
+bindings are official (<https://iroh.computer/blog/v1>, 2026-06-15).
 
-7. **iroh on mobile.** Background limits on Android and iOS, the local-network permission prompt on
-   iOS, whether `fast-apple-datapath` can be left off without cost, App Store review of a QUIC
-   endpoint that accepts inbound connections.
-   *Leads, from other projects' issue trackers and not verified here:* an iOS client that closes
-   its endpoint when the app backgrounds and binds again on return; a report of dials left
-   unresolved for hours after an iOS reconnect; Android clients that keep a session alive with a
-   foreground service.
-10. **Cross-version wire compatibility** between two iroh minors, as a CI job.
-11. **Key storage per platform.** Keychain, Credential Manager, Secret Service, Android Keystore —
-    what Tauri mobile can reach, and what a backup or a folder sync carries.
-    *One first-party fact so far* (<https://v2.tauri.app/plugin/stronghold/>, read 2026-10-05):
-    Tauri's Stronghold plugin lists all five platforms, Android and iOS included, needs Rust 1.90,
-    and does not hold its own password — the app supplies one and a function that turns it into
-    32 bytes, and the plugin's ready-made argon2 variant keeps its salt in the app's local data
-    directory. So it encrypts a vault and moves the question to where the password lives; it is
-    not the OS keychain.
-12. **Pairing ceremonies.** Whether a short authentication string compared aloud is usable at a
-    real table, against a QR scan in person; and what users do when the GM's key changes.
-14. **Existing tools.** How other virtual tabletops and character trackers that sync player sheets
-    to a GM handle authority, conflicts and griefing — their incident reports are free lessons.
+- **Backgrounding is the app's to handle, and n0 says how — for Android.** The Kotlin page
+  (<https://docs.iroh.computer/languages/kotlin>): "the OS aggressively suspends background
+  processes: sockets get torn down, threads stop scheduling". Its advice is to treat every
+  foreground/background change as a lifecycle event — shut the endpoint down on the way out, bind
+  again on the way back — and, to stay connected in the background, to run iroh inside a
+  foreground service: "Without one, Android will eventually kill the network sockets regardless of
+  how the coroutine scope is structured." The endpoint id survives a rebind only if the secret key
+  is persisted. The Android bindings are built from source; the published artifact is
+  single-platform.
+- **The Swift page says nothing about backgrounding.** It covers linking (`-framework Network`),
+  the macOS sandbox entitlements and persisting the key. So "close on background, bind on return"
+  is n0's stated advice on Android and an unstated one on iOS, where it stays a lead.
+- **The iOS local-network prompt is triggered by the direct path, not by the relay.** Apple's
+  TN3179 (<https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy>)
+  defines a local network as one on a broadcast-capable interface — Wi-Fi and Ethernet, "but not
+  cellular (WWAN) or VPN" — and tabulates what needs the privilege: sending a UDP unicast yes,
+  receiving an incoming UDP unicast no, "All Bonjour operations require local network access", and
+  multicast on iOS needs an entitlement besides. So a relayed or internet path never prompts, and
+  two phones on the same Wi-Fi — the ordinary table — prompt on the first packet one sends to the
+  other's LAN address. mDNS address lookup prompts too and needs `NSBonjourServices`. A denied
+  operation is blocked; one attempted in the background while undetermined is denied without the
+  alert ever showing. The app needs `NSLocalNetworkUsageDescription`, and the spec has to say what
+  a player who tapped "Don't Allow" sees. **[inference]** that such a connection falls back to the
+  relay rather than failing: iroh's behaviour under the denial was not driven.
+- **`fast-apple-datapath` is a default feature** of iroh 1.3.0, commented in its `Cargo.toml` "Use
+  private Apple APIs to send multiple packets in a single syscall." Leaving it off means
+  `default-features = false` and naming the rest (`metrics`, `portmapper`, `tls-ring`), which is
+  also where S-12's port mapping is decided. What it costs in throughput is not published and not
+  measured; a character sheet's deltas are not a workload it would show on.
+
+Not found: anything from n0 or Apple on App Store review of an app whose QUIC endpoint accepts
+inbound connections. Not measured: any of this on a device.
+
+**10 · Cross-version wire compatibility — n0 promises it, so the job is ours for our own format.**
+The release policy (<https://docs.iroh.computer/about/release-policy>, read 2026-10-12): within a
+major series "The wire protocol must also remain compatible across minor versions", and across
+majors it "must remain backward-compatible with the non-deprecated parts of the previous major
+version series". The 1.0 announcement: "Any change that affects the wire stability of iroh will
+always coincide with a major release", and "Wire-breaking relay changes will get new URLs so older
+clients keep working". Minors come no faster than every four weeks and are fully supported for
+three months, in maintenance up to a year; majors no faster than every six months, a year of full
+support. The public relays serve the latest major only; an older one needs a relay of its own.
+
+Two things follow. A CI job that connects two iroh minors tests n0's promise rather than Charnik's
+code — one such job is a canary, not coverage. The skew that is ours is the application protocol
+on top (F-08): two Charnik versions at one table, which is the job worth writing. And none of this
+covers `iroh-gossip`, still 0.101.0 (crates.io, released 2026-06-15) with no stability statement —
+one more reason for the star of direct connections S-10 already asks for.
+
+**11 · Key storage per platform** (read 2026-10-12).
+
+- **Tauri ships no keychain plugin.** The official list (<https://v2.tauri.app/plugin/>) has
+  Stronghold, which is an encrypted vault and not the OS store (its page, read 2026-10-05: all
+  five platforms, Rust 1.90, and the app supplies the password, so the question moves to where
+  the password lives), and Biometric, which authenticates on Android and iOS and stores nothing.
+- **One Rust crate reaches every platform's own store, with no plugin.** `keyring` 4.2.0
+  (<https://docs.rs/keyring/latest/keyring/>) is built from per-store crates — Apple native,
+  Windows native, Secret Service over dbus or zbus, Linux keyutils, Android native — and its docs
+  build for `aarch64-apple-ios` and `x86_64-linux-android`. The Android store (1.0.0) keeps each
+  named store in "a dedicated SharedPreferences file and a dedicated Android Keystore entry" and
+  needs `ndk-context` initialised first. A key held this way is read and written by a Rust
+  command, which is where `security.md` §2 already puts anything the page must not reach.
+- **n0's own advice is the same stores**: "Keychain for production" on the Swift page,
+  `EncryptedSharedPreferences` on the Kotlin one.
+- **What a backup carries is a per-platform flag, and the defaults differ.** iOS: an item whose
+  accessibility ends in `ThisDeviceOnly` "can be restored to the same device that created a
+  backup, but it isn't migrated when restoring another device's backup data"; the default
+  accessibility, When Unlocked, is not such a value
+  (<https://developer.apple.com/documentation/security/restricting-keychain-item-accessibility>).
+  Android: Keystore key material cannot be taken off the device
+  (<https://developer.android.com/privacy-and-security/keystore>), while Auto Backup includes
+  shared preferences by default from API 23, and on a target of API 31 or higher
+  `android:allowBackup="false"` "doesn't disable device-to-device transfers"
+  (<https://developer.android.com/identity/data/autobackup>). **[inference]** So the Android
+  store's preferences file reaches a new phone and the Keystore entry that opens it does not: the
+  app must read an unopenable key as no key, and say "pair again" rather than fail.
+- **On desktop the rule is already the answer**: the data folder is what a folder sync or a
+  restored backup carries, so a key never goes in it.
+
+Because identity is per table (`docs/work/release.md` ▸ TABLE-LINK-SEAM), a lost key costs one
+re-pairing with one GM and nothing else, which is what makes "device-only, never migrated" an
+affordable default on every platform. Not read: whether a Windows credential roams with a domain
+profile, and what Secret Service does on a Linux session with no keyring daemon. Not verified:
+that `keyring` builds inside a Tauri mobile target.
+
+**12 · Pairing ceremonies — what was measured elsewhere.**
+
+- **Comparing digits is the best of the manual comparisons, and one comparison in ten to twenty
+  still passes a mismatch.** Kumar, Saxena, Tsudik and Uzun compared thirteen pairing methods with
+  20 participants (_Pervasive and Mobile Computing_ 5, 2009, doi:10.1016/j.pmcj.2009.07.008, full
+  text read): "Number comparison is an overall winner with respect to our usability measures",
+  with a fatal error rate of "10% in first digit mismatch and 5% in middle digit mismatch";
+  "phrase comparison should not be used at all"; image comparison gave 15% false alarms. The
+  camera method of that study — photographing a barcode with a 2009 phone — rated below audio on
+  usability, which says little about a QR scan today.
+- **A ceremony nobody is made to do is not done.** Vaziripour and others, SOUPS 2017
+  (<https://www.usenix.org/conference/soups2017/technical-sessions/presentation/vaziripour>,
+  abstract as reported, paper not read): 36 pairs on WhatsApp, Viber and Messenger found and
+  completed the ceremony 14% of the time when told only of the threat and 79% when told the
+  ceremony mattered, and the time it took was judged too long either way. Their 2018 follow-up
+  made it faster in a modified Signal and left many users unsure what it was for.
+- **A changed key**: no study measuring what users do with the warning was found.
+
+What that says for the design: a step that is compared aloud and can be skipped will be skipped or
+rushed, and rushing is the failure the digit comparison has. A QR scan in person has no such step
+— the key rides in what is scanned, so approval binds to it with nobody comparing anything (S-11)
+— which makes it the default at a table and a short DIGIT string the fallback for a remote one,
+shown where it cannot be dismissed unread. And a GM key that changes is a new table to join, not
+a warning to click through. Not measured: either ceremony at a real table.
+
+**14 · Existing tools — who may write a sheet** (read 2026-10-12).
+
+- **Foundry VTT** is server-authoritative, with roles (None, Player, Trusted, Assistant,
+  Gamemaster) and a per-document ownership level (<https://foundryvtt.com/article/users/>). Owner
+  "allows the user to view and make changes to the document as its owner"; "GMs always own every
+  document"; role None is the ban. So a player may set any number on a sheet they own, and the
+  proof is a community module that exists to stop it: Lawful Sheets
+  (<https://foundryvtt.com/packages/lawful-sheets>) locks hit points, inventory, currency, slots,
+  XP and death saves, lets values only go DOWN ("Subtraction Rule"), whispers each blocked attempt
+  to the GM — and enforces all of it on the client, against "naive attempts through the browser
+  console".
+- **D&D Beyond** gives the DM the pen: "When you are the DM of a campaign, you gain the ability to
+  edit the characters in that campaign", though "they don't belong to your account" (staff,
+  2019-12-30,
+  <https://www.dndbeyond.com/forums/d-d-beyond-general/bugs-support/53881-problem-with-editing-a-players-character>).
+- **Roll20** assigns a character to players through its "Can Be Edited & Controlled By" field
+  (search results only: the help page refused the request, and the forum statement that a sheet
+  has no GM-only field was not read at its source).
+
+No incumbent stops an owner editing their own numbers, and where a table wants that it is bolted
+on afterwards and enforced where the player sits. Charnik's decided shape — the player's app is
+the one writer, the GM's renders the result — is Foundry's ownership without "the GM owns
+everything", and the opposite of D&D Beyond's; a GM who wants to change a player's sheet asks, by
+catalog id (S-05). Griefing is answered everywhere by removing the participant, which per-table
+keys make a local act. Not found: a published incident of griefing through sheet sync, or how any
+of the three resolves two writers of one sheet. A 2025 disclosure of server-side code execution
+in Foundry, fixed in 13.351, turned up in search and was not read at its source.
+
+### What only a device or a table can answer
+
+Nothing above was driven. Left for when there is a transport to drive: backgrounding and the
+local-network denial on a real iPhone, and App Review's answer (7); two Charnik versions at one
+table (10); `keyring` inside a Tauri mobile build, and a restore onto a second phone (11); both
+ceremonies with players who were not told what they are for (12).
