@@ -319,6 +319,8 @@ in a short desktop window, which hit the same bug.
   longer open their text with the stat block the page already shows above it.
 - **The Avatar of Death has a stat block**, in both packs — the one each SRD prints inside the Deck
   of Many Things, which the compendium could show only as that item's prose.
+- **Undoing a content update offers that update again.** After "Undo this update" the pack read as
+  up to date until its publisher changed something else; the next check now finds it.
 
 ### Ukrainian
 

@@ -375,6 +375,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function setUpdateMode`
 - `function setRepoBranch` — Remember which branch this repo's listing came off (see {@link RepoEntry.branch}).
 - `function recordCheck` — * Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing …
+- `function forgetRepoListing` — * Forget the listing a repo was last seen at, for when the DISK moved back under it — an update * undone, a file put …
 
 ### `src/lib/content/remote/pack-update-state.svelte.ts`
 
@@ -2186,4 +2187,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1336 exports across 183 modules · 85 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1337 exports across 183 modules · 85 duplicate suspects._

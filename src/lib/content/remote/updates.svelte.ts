@@ -20,6 +20,7 @@ import {
 } from '../translation-backups';
 import {
 	forgetPending,
+	forgetRepoListing,
 	localPackFor,
 	packConfig,
 	recordCheck,
@@ -421,8 +422,17 @@ export async function undoUpdate(pack: string): Promise<boolean> {
 	logger.info('packs: rollback', { pack, done });
 	// the rolled-back files are older than the remote again, so the offer is live once more; the next
 	// check re-derives it, and until then the pack simply reads as up to date
-	if (done) forgetPending(pack);
+	if (done) {
+		forgetPending(pack);
+		forgetListingOf(pack);
+	}
 	return done;
+}
+
+/** The disk went back to an older state of this pack, so its repo is asked afresh next time. */
+function forgetListingOf(pack: string): void {
+	const repo = packConfig.packs[pack]?.repo;
+	if (repo !== undefined) forgetRepoListing(repo);
 }
 
 /** Which installed packs have a previous version on disk — drives the undo button. */
@@ -448,6 +458,7 @@ export async function restoreTranslations(backupPath: string, pack: string): Pro
 		restoreTranslationBackup(getUserStorage(), backupPath, pack),
 	);
 	logger.info('packs: translation backup restored', { pack, files: restored });
+	if (restored.length > 0) forgetListingOf(pack);
 	return restored.length > 0;
 }
 

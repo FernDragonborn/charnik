@@ -56,6 +56,11 @@ everything past the cut.
 mid-check leaves an update permanently invisible — the check believes it has already seen this state.
 An oversized pack must clear the recorded ETag rather than being buried by it.
 
+**The ETag is dropped when the disk goes BACK.** It certifies that what is installed answers for the
+remote state it names, and a rollback or a file restored from `content-backups/` makes that false:
+the update is on offer again, and with the ETag in place every check is a `304` that never looks.
+Both forget it (`forgetRepoListing`), so the next check lists the repo and offers the update.
+
 There are caps, and they are refusals rather than truncations: a per-repo pack count, a streaming size
 cap per download, an aggregate pre-download budget, and a request timeout.
 

@@ -9,7 +9,13 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig, UPDATE_MODE } from '../packs.svelte';
-import { updates, applyUpdate, checkNow, restorePendingUpdates } from './updates.svelte';
+import {
+	updates,
+	applyUpdate,
+	checkNow,
+	restorePendingUpdates,
+	undoUpdate,
+} from './updates.svelte';
 // one suite across both halves on purpose: what it pins is the GLUE between them
 import { discoverPacks, installPack, renamePack, uninstallPack } from './pack-lifecycle';
 import { discoverContentRoots } from '../disk';
@@ -416,6 +422,33 @@ describe('the check runs alone', () => {
 		expect(packConfig.repos[REPO]?.etag).toBeUndefined();
 		expect(packConfig.repos[REPO]?.lastCheckedAt).toBeUndefined();
 		expect(packConfig.pending['dark-sun']).toBeUndefined();
+	});
+
+	/* An undo puts the OLD files back, so the update it reversed is on offer again — but the repo's
+	   ETag still says "seen", and a check answered `304` returns before it looks at a single pack. */
+	it('offers the update again after it was undone, though the repo has not moved', async () => {
+		const storage = getUserStorage();
+		await storage.remove('content/dark-sun');
+		await storage.remove('content/dark-sun.prev');
+		await storage.write(
+			'content/dark-sun/classes_srd.csv',
+			await stampWithHash(new Map([['source', 'Dark Sun']]), 'id\nold'),
+		);
+		packConfig.packs['dark-sun'] = { repo: REPO };
+		const conditional: RemoteFetcher = {
+			...fetcher(ALL),
+			getText: async (_url, etag) =>
+				etag === 'W/"1"' ? { kind: 'notModified' } : { kind: 'ok', body: tree, etag: 'W/"1"' },
+		};
+
+		await checkNow({ manual: true, fetcher: conditional });
+		expect((await applyUpdate('dark-sun', { fetcher: conditional })).error).toBeUndefined();
+		expect(updates.pending['dark-sun']).toBeUndefined();
+
+		expect(await undoUpdate('dark-sun')).toBe(true);
+		await checkNow({ manual: true, fetcher: conditional });
+
+		expect(updates.pending['dark-sun']).toBeDefined();
 	});
 
 	it('records it once the packs ARE through, so tomorrow is free', async () => {

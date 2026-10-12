@@ -508,3 +508,18 @@ export function recordCheck(repo: string, at: Date, etag?: string | null): void 
 	packConfig.repos[repo] = next;
 	persist();
 }
+
+/**
+ * Forget the listing a repo was last seen at, for when the DISK moved back under it — an update
+ * undone, a file put back from a copy. The ETag certifies "what is installed answers for this remote
+ * state", which stopped being true; left in place, every later check is a `304` that returns before
+ * it looks at a pack, and the update that is on offer again is never offered.
+ */
+export function forgetRepoListing(repo: string): void {
+	const known = packConfig.repos[repo];
+	if (known?.etag === undefined) return;
+	const next = { ...known };
+	delete next.etag;
+	packConfig.repos[repo] = next;
+	persist();
+}
