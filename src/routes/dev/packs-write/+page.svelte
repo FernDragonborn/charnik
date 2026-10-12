@@ -29,6 +29,10 @@
 	import type { RemoteFetcher } from '$lib/content/remote/types';
 	import { discoverContentRoots } from '$lib/content/disk';
 	import { saveTranslation } from '$lib/content/translate';
+	import {
+		listTranslationBackups,
+		restoreTranslationBackup,
+	} from '$lib/content/translation-backups';
 
 	/** Ignored by pack discovery (leading dot), so a crashed run can never load as content. */
 	const PACK = '.probe-pack';
@@ -311,6 +315,25 @@ fireball,Fireball,,A bigger boom,`,
 		// a translator's folder is a git working copy: `.git` sits beside the packs and must not be one
 		const roots = await discoverContentRoots(s);
 		check('a dot-folder in content/ is not a pack', !roots.includes(ROOT), roots.join(', '));
+
+		// --- 9. and the copy goes back the way an update comes in ------------------------------------
+		// The restore is the apply's own swap, so it is two directory renames over a pack that already
+		// has a `.prev` from section 8 — the case Windows refuses unless the target is removed first.
+		const backup = (await listTranslationBackups(s)).find((run) => run.packs[PACK] !== undefined);
+		check('the copy is listed under its pack', backup?.packs[PACK]?.join(',') === 'a.csv');
+		const restored = backup ? await restoreTranslationBackup(s, backup.path, PACK) : [];
+		check('restore reports the file it put back', restored.join(',') === 'a.csv');
+		check(
+			'the file is the one from before the update',
+			(await s.read(`${ROOT}/a.csv`)) === translated,
+		);
+		check(
+			'the pack it replaced is kept as .prev',
+			(await s.read(`${ROOT}.prev/a.csv`).catch(() => '')) === after,
+		);
+		check('the staging folder is gone', !(await s.exists(`${ROOT}.new`)));
+		check('and "undo this update" reverses the restore', await rollbackPack(s, PACK));
+		check('…to the merged file', (await s.read(`${ROOT}/a.csv`)) === after);
 	}
 </script>
 

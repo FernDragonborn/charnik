@@ -5,13 +5,6 @@
 > [`../internals/content.md`](../internals/content.md) ▸ Authoring from the UI; the ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **TRANSLATION-BACKUP-UI · the copies in `content-backups/` have a way in and no way out.**
-  A file holding translations is copied aside before a pack update or a seed replaces it
-  (`content.md` ▸ A translation survives the file being replaced), and putting one back is a manual
-  file copy — the one step in that flow that is not doable from the UI. What it needs: the runs
-  listed where the pack's "undo this update" already sits (Settings ▸ packs), with what each run
-  touched, and a restore that goes through the same swap as a rollback. `listCharacterBackups` /
-  `restoreCharacterBackup` are the shape to follow. About 60 lines plus the panel.
 - [ ] **REMOVED-FILE-TRANSLATION · a whole file an update removes takes its translations unsaid and
   uncopied.** `keepLocalTranslations` runs over the files an update WRITES, so a file the remote
   dropped — deleted only behind "apply, including deletions" — is neither copied into

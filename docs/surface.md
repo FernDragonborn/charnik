@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (84)
+## Duplicate suspects (85)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -24,6 +24,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `probe` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `REPORT` ×5 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `check` ×4 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
@@ -32,7 +33,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
-- `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
@@ -87,6 +87,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `refusal` ×2 — src/lib/play/cast.ts · src/lib/play/turn.ts
 - `refuse` ×2 — src/lib/content/remote/pack-update-state.svelte.ts · src/lib/play/options.ts
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
+- `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
@@ -232,7 +233,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (57)
+## Shared components (58)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -273,6 +274,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **OwnWords** | `rowId`, `original`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
+| **PackTranslationBackups** | `pack`, `backups`, `onRestored` | The way back out of `content-backups/`, under the pack whose files a run copied aside before it |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
@@ -399,6 +401,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function restorePendingUpdates` — * Rebuild the pending set at launch from what the last check remembered — no network, no throttle, * no update-mode g…
 - `function undoUpdate` — * Undo the last applied update for one pack, from the copy the swap kept beside it.
 - `function rollbackablePacks` — Which installed packs have a previous version on disk — drives the undo button.
+- `const translationBackups` — The copies set aside before a translated file was replaced, newest first — drives the restore * list under each pack.
+- `function restoreTranslations` — * Put one pack's files back as a run copied them.
 - `const autoCheckAllowed` — Should the app check by itself at startup?
 
 ### `src/lib/content/review.svelte.ts`
@@ -486,7 +490,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (166 modules)
+## Library functions & types (167 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1197,6 +1201,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ApplyResult`
 - `interface ApplyRequest`
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
+- `function swapInNewTree` — * Build `<pack>.new` as a COMPLETE tree — every file the pack currently has, minus the ones being * removed, plus the…
 - `const isPackWriteInFlight`
 - `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
 - `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on * every content reb…
@@ -1357,9 +1362,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function saveTranslation` — Write `prose` for `locale` into `row`'s CSV file, in place (only the provided bases).
 - `function saveLocStatus` — Set the tracked localization `status` for `locale` on `row`, in place (the `loc_status_<locale>` * column).
 
+### `src/lib/content/translation-backups.ts`
+
+- `interface TranslationBackup` — One run's copies, as the restore UI needs them.
+- `function listTranslationBackups` — Every run that still holds copies, newest first.
+- `function restoreTranslationBackup` — * Put one pack's files back as one run copied them.
+- `function renameTranslationBackups` — A renamed pack takes its copies along: they are listed under the folder they would go back into.
+
 ### `src/lib/content/translation-carry.ts`
 
+- `const TRANSLATION_BACKUP_DIR`
 - `interface CarryRun` — One writer's pass over `content/`: what it merged, and where the files it replaced were copied.
+- `function backupRunTime` — A run folder's name back as epoch ms, or null for a folder this module did not name.
 - `function beginCarryRun`
 - `function translationsOrphanedBy` — * The translated rows replacing `path` with `incoming` would leave with nowhere to go, by row id — * the merge as a d…
 - `const orphanedIn` — How many translated rows a run could not carry.
@@ -2169,4 +2183,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 57 components · 1324 exports across 182 modules · 84 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1333 exports across 183 modules · 85 duplicate suspects._

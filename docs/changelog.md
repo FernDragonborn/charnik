@@ -46,7 +46,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
   update or a new app version keeps every cell you translated and marks the ones whose English
   moved. When an update removes an entry you had translated, the pack panel names it before you
   accept, and a new app version tells you at launch how many there were — in both cases the file
-  as it was is copied into `content-backups` in your data folder first.
+  as it was is copied into `content-backups` in your data folder first, and Settings ▸ Content
+  updates lists those copies under the pack with a button that puts one back.
 
 ### Rules that were missing
 

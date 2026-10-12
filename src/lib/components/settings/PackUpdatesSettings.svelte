@@ -22,8 +22,11 @@
 		checkNow,
 		applyUpdate,
 		rollbackablePacks,
+		translationBackups,
 		undoUpdate,
 	} from '$lib/content/remote/updates.svelte';
+	import type { TranslationBackup } from '$lib/content/translation-backups';
+	import PackTranslationBackups from './PackTranslationBackups.svelte';
 	import {
 		discoverPacks,
 		installPack,
@@ -63,7 +66,15 @@
 		await reloadContent();
 		await refreshPlugins();
 		rollbackable = await rollbackablePacks();
+		backups = await translationBackups();
 	}
+
+	/** The copies set aside before a translated file was replaced. Read from the disk for the reason
+	 *  `rollbackable` is: they outlive the session that made them. */
+	let backups = $state<TranslationBackup[]>([]);
+	$effect(() => void translationBackups().then((runs) => (backups = runs)));
+	const backupsOf = (pack: string): TranslationBackup[] =>
+		backups.filter((backup) => backup.packs[pack] !== undefined);
 
 	/** Packs with a previous version still on disk (kept by the last apply). Read from the disk
 	 *  rather than tracked in state — a `.prev` also survives a restart, and so must the offer. */
@@ -393,6 +404,14 @@
 									</div>
 								{/if}
 							</div>
+						{/if}
+
+						{#if backupsOf(pack).length > 0}
+							<PackTranslationBackups
+								{pack}
+								backups={backupsOf(pack)}
+								onRestored={afterDiskChange}
+							/>
 						{/if}
 
 						<!-- said at the moment of deciding, and quantified: a pack IS the rules it carries -->

@@ -280,7 +280,7 @@ async function localChangesSince(
  * Crash safety comes from `recoverInterruptedApply`, which reads the leftovers at startup: the
  * three possible in-between states are each distinguishable by which folders exist.
  */
-async function swapInNewTree(
+export async function swapInNewTree(
 	storage: Storage,
 	pack: string,
 	staged: StagedFile[],

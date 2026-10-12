@@ -19,7 +19,7 @@ import { CONTENT_DIR } from './disk';
 import { gitBlobSha } from './hash';
 import { carryLocaleCells, touchedTranslations, type CarryReport } from './locale-merge';
 
-const TRANSLATION_BACKUP_DIR = 'content-backups';
+export const TRANSLATION_BACKUP_DIR = 'content-backups';
 /** Runs kept. A run is one update or one seed, so this is weeks of history, not megabytes of it. */
 const BACKUP_RUNS_KEPT = 10;
 
@@ -34,6 +34,13 @@ export interface CarryRun {
 
 /** `2026-10-07T16-41-17` — sortable as text, and legal in a Windows folder name. */
 const runStamp = (now: Date): string => now.toISOString().slice(0, 19).replace(/:/g, '-');
+
+/** A run folder's name back as epoch ms, or null for a folder this module did not name. */
+export function backupRunTime(folder: string): number | null {
+	const stamp = /^(\d{4}-\d\d-\d\dT\d\d)-(\d\d)-(\d\d)$/.exec(folder);
+	const time = stamp ? Date.parse(`${stamp[1]}:${stamp[2]}:${stamp[3]}Z`) : NaN;
+	return Number.isNaN(time) ? null : time;
+}
 
 export function beginCarryRun(storage: Storage, now: Date = new Date()): CarryRun {
 	return { storage, backupDir: `${TRANSLATION_BACKUP_DIR}/${runStamp(now)}`, files: {} };

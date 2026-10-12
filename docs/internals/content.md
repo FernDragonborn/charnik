@@ -392,6 +392,13 @@ the data folder, whenever a translation was at stake; ten runs are kept. The mer
 the incoming file dropped or re-ided, and a log line cannot hold what the text was — it carries ids,
 never prose — so the copy is the only record of it.
 
+**The copies have a way back out** (`content/translation-backups.ts`): Settings ▸ packs lists the
+runs under the pack whose files they hold, and putting one back goes through the apply's own swap,
+so the pack it replaces becomes `<pack>.prev` and "undo this update" reverses it. It restores the
+whole file as it was — the rules text of that day with the translations it held — because a row the
+update dropped has no other file to live in. A restored copy is not spent, and a renamed pack takes
+its copies to the new folder name.
+
 **A translated row with nowhere to go is said to the user, by whichever writer drops it.** A pack
 update runs the merge as a dry pass at its row-removal prompt (`translationsOrphanedBy`) and names
 those rows before the click. The seed and the restore have no click to stop at, so they leave the

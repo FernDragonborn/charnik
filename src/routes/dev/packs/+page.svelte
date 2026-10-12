@@ -17,6 +17,7 @@
 	} from '$lib/content/packs.svelte';
 	import { updates } from '$lib/content/remote/updates.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
+	import { getUserStorage } from '$lib/storage/provider';
 
 	const REPO = SHIPPED_PACK_REPO;
 	const THIRD_PARTY = 'https://github.com/someone/dark-sun';
@@ -26,7 +27,16 @@
 	onMount(async () => {
 		await loadContentStore();
 		seed();
+		// the one thing the panel reads from DISK rather than from state: a copy set aside before an
+		// update replaced a translated file, which is what puts the restore list under the pack
+		await getUserStorage().write(
+			`content-backups/2026-08-10T06-20-00/srd-2024/spells_srd.csv`,
+			'id',
+		);
+		seeded = true;
 	});
+	/** The panel lists the disk once, on mount — so it mounts after the fixture is on it. */
+	let seeded = $state(false);
 
 	function seed() {
 		// `?missing` = the pack was deleted: the launch prompt (rendered by the LAYOUT, so it shows in a
@@ -129,7 +139,7 @@
 </script>
 
 <h1>Dev preview · Settings ▸ Content updates</h1>
-<PackUpdatesSettings />
+{#if seeded}<PackUpdatesSettings />{/if}
 
 <style>
 	h1 {

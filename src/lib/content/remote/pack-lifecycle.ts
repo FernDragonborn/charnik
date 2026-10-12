@@ -26,6 +26,7 @@ import {
 } from '../packs.svelte';
 import { discoverContentRoots, packNameOf } from '../disk';
 import { renameFileRoot } from '../sources.svelte';
+import { renameTranslationBackups } from '../translation-backups';
 import {
 	checkRepo,
 	packSizeRefusal,
@@ -266,6 +267,7 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 			// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
 			if (await storage.exists(`content/${from}.prev`))
 				await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
+			await renameTranslationBackups(storage, from, target);
 			renamePackEntry(from, target);
 			// …and the browse-config, which disables content FILES by path: leaving those behind would
 			// turn every file the user had switched off back on, as a side effect of a rename

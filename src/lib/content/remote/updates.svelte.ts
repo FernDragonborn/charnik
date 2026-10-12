@@ -14,6 +14,11 @@ import { readCharacterFiles } from '$lib/character/repository';
 import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
 import { content } from '../store.svelte';
 import {
+	listTranslationBackups,
+	restoreTranslationBackup,
+	type TranslationBackup,
+} from '../translation-backups';
+import {
 	forgetPending,
 	localPackFor,
 	packConfig,
@@ -416,6 +421,24 @@ export async function rollbackablePacks(): Promise<string[]> {
 	const packs = Object.keys(packConfig.packs);
 	const flags = await Promise.all(packs.map((pack) => hasRollback(storage, pack)));
 	return packs.filter((_, i) => flags[i] === true);
+}
+
+/** The copies set aside before a translated file was replaced, newest first — drives the restore
+ *  list under each pack. */
+export const translationBackups = (): Promise<TranslationBackup[]> =>
+	guardedDisk([], () => listTranslationBackups(getUserStorage()));
+
+/**
+ * Put one pack's files back as a run copied them. The same two renames a rollback is, so it fails
+ * the same way and reports on the same channel. A pending offer is left alone: it was described
+ * against the files this replaces, so its apply refuses and describes itself again.
+ */
+export async function restoreTranslations(backupPath: string, pack: string): Promise<boolean> {
+	const restored = await guardedDisk([], () =>
+		restoreTranslationBackup(getUserStorage(), backupPath, pack),
+	);
+	logger.info('packs: translation backup restored', { pack, files: restored });
+	return restored.length > 0;
 }
 
 /** Should the app check by itself at startup? Only when the user asked it to. */

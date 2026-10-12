@@ -90,7 +90,8 @@ a fake (`tooling.md`).
   reload mid-swap.
 - **`listFilesRecursive` throws on unreadable-but-present** rather than silently dropping a file,
   which used to lose carry-over files during the swap.
-- **A rename moves the browse config's per-file toggles** with the pack.
+- **A rename moves the browse config's per-file toggles** with the pack, and its copies under
+  `content-backups/`, which are listed by the folder they would be put back into.
 
 `rollbackPack` restores from `<pack>.prev`; `hasRollback` says whether that is still possible.
 
