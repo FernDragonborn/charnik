@@ -334,6 +334,36 @@ fireball,Fireball,,A bigger boom,`,
 		check('the staging folder is gone', !(await s.exists(`${ROOT}.new`)));
 		check('and "undo this update" reverses the restore', await rollbackPack(s, PACK));
 		check('…to the merged file', (await s.read(`${ROOT}/a.csv`)) === after);
+
+		// --- 10. a file the update DELETES leaves a copy too, and the copy brings it back ------------
+		// a run is named to the second, and this one must not land in section 8's folder
+		await new Promise((r) => setTimeout(r, 1100));
+		const dropped = await applyPackUpdate({
+			storage: s,
+			fetcher: localFetcher({}),
+			repo: REPO,
+			diff: {
+				pack: PACK,
+				changes: [
+					{
+						path: `${PACK}/a.csv`,
+						kind: FILE_CHANGE.removed,
+						expectLocal: await gitBlobSha(await s.readBytes(`${ROOT}/a.csv`)),
+					},
+				],
+			},
+			removeDeleted: true,
+		});
+		check(
+			'an update that deletes a translated file reported no error',
+			dropped.error === undefined,
+		);
+		check('the file is gone from the pack', !(await s.exists(`${ROOT}/a.csv`)));
+		const [newest] = (await listTranslationBackups(s)).filter((run) => run.packs[PACK]);
+		check('its copy is the newest run', newest !== undefined && newest.path !== backup?.path);
+		const back = newest ? await restoreTranslationBackup(s, newest.path, PACK) : [];
+		check('restoring it puts the file back', back.join(',') === 'a.csv');
+		check('…as it was before the deletion', (await s.read(`${ROOT}/a.csv`)) === after);
 	}
 </script>
 

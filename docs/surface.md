@@ -1105,6 +1105,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface CarryReport` — What one merge did, by row id — the breadcrumb a log line and a report are built from.
 - `interface CarryResult`
 - `const touchedTranslations` — Did the merge find any translation at stake?
+- `function translatedRowIds` — The rows of `local` that hold a translation, by id — what a file takes with it when it is deleted * rather than repla…
 - `function carryLocaleCells` — * Merge `local`'s translations into `incoming`.
 
 ### `src/lib/content/markdown.ts`
@@ -1179,6 +1180,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
 - `function rowsDroppedFromFile` — * The rows a CHANGED file would drop: present in the graph for that file, absent from the incoming * bytes.
 - `function translatedRowsDropped` — * The rows among those whose TRANSLATION goes with them.
+- `function translatedRowsRemovedBy` — …and the same for whole FILES the update removes, which is known before any byte is fetched: every * translated row i…
 - `function charactersReferencing` — * Which saved characters mention any of those row keys.
 
 ### `src/lib/content/remote/github.ts`
@@ -1378,6 +1380,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function translationsOrphanedBy` — * The translated rows replacing `path` with `incoming` would leave with nowhere to go, by row id — * the merge as a d…
 - `const orphanedIn` — How many translated rows a run could not carry.
 - `function keepLocalTranslations` — * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there * carries transl…
+- `function setAsideRemovedTranslations` — * Copy aside a file that is about to be DELETED, if it holds translations.
 - `function finishCarryRun` — Close a run: say what it did, and drop the backup folders past the ones kept.
 
 ### `src/lib/content/watcher.ts`
@@ -2183,4 +2186,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1333 exports across 183 modules · 85 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1336 exports across 183 modules · 85 duplicate suspects._

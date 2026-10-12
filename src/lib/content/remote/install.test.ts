@@ -7,7 +7,14 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { gitBlobSha, stampWithHash } from '../hash';
-import { diffPack, rowsRemovedBy, charactersReferencing, FILE_CHANGE } from './diff';
+import {
+	diffPack,
+	rowsRemovedBy,
+	charactersReferencing,
+	translatedRowsRemovedBy,
+	FILE_CHANGE,
+	type PackDiff,
+} from './diff';
 import {
 	applyPackUpdate,
 	cachePath,
@@ -822,6 +829,34 @@ describe('an update over a file that holds translations', () => {
 		expect(res.rowRemovals).toEqual(['spell:Test:fireball']);
 		expect(res.translatedRowRemovals).toEqual(['spell:Test:fireball']);
 		expect(await s.exists('content-backups')).toBe(false); // asking writes nothing
+	});
+
+	it('a file the update DELETES is copied aside too, and its translated rows are named up front', async () => {
+		const s = await translatedPack();
+		const before = await s.read(FILE);
+		const diff: PackDiff = {
+			pack: 'p',
+			changes: [{ path: 'p/spells.csv', kind: FILE_CHANGE.removed }],
+		};
+		const loaded = (id: string): LoadedRow =>
+			({ ...row, id, type: 'spell', source: 'Test' }) as LoadedRow;
+		const graph = { rows: [loaded('fireball'), loaded('shield')] } as ContentGraph;
+
+		expect(await translatedRowsRemovedBy(s, graph, diff)).toEqual(['spell:Test:fireball']);
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({}),
+			repo: REPO,
+			diff,
+			removeDeleted: true,
+		});
+
+		expect(res.removed).toEqual(['p/spells.csv']);
+		expect(await s.exists(FILE)).toBe(false);
+		expect(res.translations?.[FILE]?.orphaned).toEqual(['fireball']);
+		const [run] = await s.list('content-backups');
+		expect(await s.read(`${run?.path}/p/spells.csv`)).toBe(before);
 	});
 
 	it('a refused apply copies nothing aside', async () => {

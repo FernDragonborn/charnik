@@ -30,7 +30,13 @@ import {
 	UPDATE_MODE,
 } from '../packs.svelte';
 import { checkRepo, packSizeRefusal, type RemotePack } from './github';
-import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing } from './diff';
+import {
+	diffPack,
+	hasWrites,
+	rowsRemovedBy,
+	charactersReferencing,
+	translatedRowsRemovedBy,
+} from './diff';
 import {
 	applyPackUpdate,
 	hasRollback,
@@ -232,7 +238,9 @@ async function describeUpdate(
 		diff,
 		removedRows,
 		...(await whoBreaks(removedRows)),
-		translatedRows: [],
+		translatedRows: content.graph
+			? await translatedRowsRemovedBy(storage, content.graph, diff)
+			: [],
 		plugins: pluginsIn(remote),
 		pluginsChanged: pluginsTouchedBy(diff),
 		staged: await isStaged(storage, diff),
@@ -324,7 +332,9 @@ async function runApply(
 		if (res.rowRemovals !== undefined) {
 			pending.removedRows = [...new Set([...pending.removedRows, ...res.rowRemovals])].sort();
 			Object.assign(pending, await whoBreaks(pending.removedRows));
-			pending.translatedRows = res.translatedRowRemovals ?? [];
+			pending.translatedRows = [
+				...new Set([...pending.translatedRows, ...(res.translatedRowRemovals ?? [])]),
+			].sort();
 		}
 		// The offer was described against a disk that has since moved — a translation saved in the
 		// meantime is enough. Describe it again from the listing already in hand, or the same refusal

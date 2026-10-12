@@ -26,7 +26,12 @@ import { listFilesRecursive } from '$lib/storage/walk';
 import { packNameOf } from '../disk';
 import { gitBlobSha } from '../hash';
 import type { CarryReport } from '../locale-merge';
-import { beginCarryRun, finishCarryRun, keepLocalTranslations } from '../translation-carry';
+import {
+	beginCarryRun,
+	finishCarryRun,
+	keepLocalTranslations,
+	setAsideRemovedTranslations,
+} from '../translation-carry';
 import {
 	FILE_CHANGE,
 	localPath,
@@ -194,7 +199,8 @@ export async function applyPackUpdate({
 	const removed = removeDeleted ? removable : [];
 	// LAST before the write, past every refusal above: a translation in a file being replaced is
 	// merged into the incoming bytes, and the file it replaces is copied aside — neither of which a
-	// refused apply has any business doing.
+	// refused apply has any business doing. A file being DELETED has nothing to merge into, so it is
+	// only copied.
 	const run = beginCarryRun(storage);
 	const merged: StagedFile[] = [];
 	for (const file of staged)
@@ -202,12 +208,9 @@ export async function applyPackUpdate({
 			path: file.path,
 			bytes: await keepLocalTranslations(run, localPathIn(diff.pack, file.path), file.bytes),
 		});
-	await swapInNewTree(
-		storage,
-		diff.pack,
-		merged,
-		new Set(removed.map((p) => localPathIn(diff.pack, p))),
-	);
+	const dropping = removed.map((path) => localPathIn(diff.pack, path));
+	for (const path of dropping) await setAsideRemovedTranslations(run, path);
+	await swapInNewTree(storage, diff.pack, merged, new Set(dropping));
 	await finishCarryRun(run);
 
 	// the pre-download did its job; the cache is pruned as a whole after a check, so nothing is

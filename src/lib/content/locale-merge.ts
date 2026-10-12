@@ -77,6 +77,18 @@ function parseCsv(text: string): { fields: string[]; rows: CsvRow[] } {
 	return { fields: [...(parsed.meta.fields ?? [])], rows: parsed.data };
 }
 
+/** The rows of `local` that hold a translation, by id — what a file takes with it when it is deleted
+ *  rather than replaced, and there is no incoming side to carry anything onto. */
+export function translatedRowIds(local: string): string[] {
+	const { directives } = parseContentDirectives(local);
+	const sourceLang = (directives.get('source_lang') ?? 'en').toLowerCase();
+	const { fields, rows } = parseCsv(local);
+	const owned = fields.filter((column) => ownedColumn(column, sourceLang) !== null);
+	return rows
+		.filter((row) => owned.some((column) => cell(row, column) !== ''))
+		.map((row) => cell(row, 'id'));
+}
+
 /**
  * Merge `local`'s translations into `incoming`.
  *

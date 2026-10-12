@@ -390,7 +390,9 @@ every check re-offers the update that was just applied — and each of those emp
 **The file being replaced is copied aside first**, into `content-backups/<when>/<pack>/<file>` in
 the data folder, whenever a translation was at stake; ten runs are kept. The merge cannot keep a row
 the incoming file dropped or re-ided, and a log line cannot hold what the text was — it carries ids,
-never prose — so the copy is the only record of it.
+never prose — so the copy is the only record of it. A file an update DELETES is copied the same way
+(`setAsideRemovedTranslations`): it has no incoming side to merge into, so every translated row in
+it is one the copy alone keeps, and restoring the copy brings the file back.
 
 **The copies have a way back out** (`content/translation-backups.ts`): Settings ▸ packs lists the
 runs under the pack whose files they hold, and putting one back goes through the apply's own swap,
@@ -401,7 +403,8 @@ its copies to the new folder name.
 
 **A translated row with nowhere to go is said to the user, by whichever writer drops it.** A pack
 update runs the merge as a dry pass at its row-removal prompt (`translationsOrphanedBy`) and names
-those rows before the click. The seed and the restore have no click to stop at, so they leave the
+those rows before the click; the translated rows of a file it removes are named from the moment
+the update is found, since that needs no downloaded byte. The seed and the restore have no click to stop at, so they leave the
 count and the backup folder in `orphanedTranslations` and the layout says it once, in a toast that
 stays until dismissed.
 

@@ -17,7 +17,12 @@ import { logger } from '$lib/diag/logger';
 import type { Storage } from '$lib/storage/types';
 import { CONTENT_DIR } from './disk';
 import { gitBlobSha } from './hash';
-import { carryLocaleCells, touchedTranslations, type CarryReport } from './locale-merge';
+import {
+	carryLocaleCells,
+	touchedTranslations,
+	translatedRowIds,
+	type CarryReport,
+} from './locale-merge';
 
 export const TRANSLATION_BACKUP_DIR = 'content-backups';
 /** Runs kept. A run is one update or one seed, so this is weeks of history, not megabytes of it. */
@@ -31,6 +36,10 @@ export interface CarryRun {
 	/** dataDir-relative path → what the merge did to that file */
 	files: Record<string, CarryReport>;
 }
+
+/** Where a run keeps its copy of one content file: the same path, below the run's folder. */
+const backupPath = (run: CarryRun, path: string): string =>
+	`${run.backupDir}/${path.slice(CONTENT_DIR.length + 1)}`;
 
 /** `2026-10-07T16-41-17` — sortable as text, and legal in a Windows folder name. */
 const runStamp = (now: Date): string => now.toISOString().slice(0, 19).replace(/:/g, '-');
@@ -94,13 +103,23 @@ export async function keepLocalTranslations(
 	if (merge === null) return incoming;
 	const { localBytes, text, report } = merge;
 	run.files[path] = report;
-	await run.storage.writeBytes(
-		`${run.backupDir}/${path.slice(CONTENT_DIR.length + 1)}`,
-		localBytes,
-	);
+	await run.storage.writeBytes(backupPath(run, path), localBytes);
 	return report.carried.length > 0 || report.outdated.length > 0
 		? new TextEncoder().encode(text)
 		: incoming;
+}
+
+/**
+ * Copy aside a file that is about to be DELETED, if it holds translations. There is no incoming side
+ * to merge into, so every translated row in it is orphaned and the copy is all that is kept of them.
+ */
+export async function setAsideRemovedTranslations(run: CarryRun, path: string): Promise<void> {
+	if (!path.endsWith('.csv') || !(await run.storage.exists(path))) return;
+	const localBytes = await run.storage.readBytes(path);
+	const orphaned = translatedRowIds(new TextDecoder().decode(localBytes));
+	if (orphaned.length === 0) return;
+	run.files[path] = { carried: [], replaced: [], outdated: [], orphaned };
+	await run.storage.writeBytes(backupPath(run, path), localBytes);
 }
 
 /** Close a run: say what it did, and drop the backup folders past the ones kept. */

@@ -19,6 +19,7 @@ import type { ContentGraph } from '../loader';
 import { isProtectedText } from '../disk';
 import { gitBlobSha } from '../hash';
 import { parseContentDirectives } from '../meta';
+import { translatedRowIds } from '../locale-merge';
 import { translationsOrphanedBy } from '../translation-carry';
 import { isPackFile, type RemotePack } from './github';
 
@@ -232,13 +233,36 @@ export async function translatedRowsDropped(
 	const keys: string[] = [];
 	for (const file of incoming) {
 		const path = localPathIn(localPack, file.path);
-		const orphaned = new Set(await translationsOrphanedBy(storage, path, file.bytes));
-		if (orphaned.size === 0) continue;
-		for (const row of graph.rows)
-			if (`${row.root}/${row.file}` === path && orphaned.has(row.id))
-				keys.push(`${row.type}:${row.source}:${row.id}`);
+		keys.push(...rowKeysIn(graph, path, await translationsOrphanedBy(storage, path, file.bytes)));
 	}
 	return keys.sort();
+}
+
+/** …and the same for whole FILES the update removes, which is known before any byte is fetched: every
+ *  translated row in such a file goes with it. */
+export async function translatedRowsRemovedBy(
+	storage: Storage,
+	graph: ContentGraph,
+	diff: PackDiff,
+): Promise<string[]> {
+	const keys: string[] = [];
+	for (const change of diff.changes) {
+		if (change.kind !== FILE_CHANGE.removed || !change.path.endsWith('.csv')) continue;
+		const path = localPathIn(diff.pack, change.path);
+		// a file already gone has nothing left to lose
+		keys.push(
+			...rowKeysIn(graph, path, translatedRowIds(await storage.read(path).catch(() => ''))),
+		);
+	}
+	return keys.sort();
+}
+
+/** The `type:source:id` keys of the rows one file contributes under these ids. */
+function rowKeysIn(graph: ContentGraph, localFilePath: string, ids: string[]): string[] {
+	const wanted = new Set(ids);
+	return graph.rows
+		.filter((row) => `${row.root}/${row.file}` === localFilePath && wanted.has(row.id))
+		.map((row) => `${row.type}:${row.source}:${row.id}`);
 }
 
 /**

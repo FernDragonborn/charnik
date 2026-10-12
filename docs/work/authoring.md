@@ -5,13 +5,6 @@
 > [`../internals/content.md`](../internals/content.md) ▸ Authoring from the UI; the ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **REMOVED-FILE-TRANSLATION · a whole file an update removes takes its translations unsaid and
-  uncopied.** `keepLocalTranslations` runs over the files an update WRITES, so a file the remote
-  dropped — deleted only behind "apply, including deletions" — is neither copied into
-  `content-backups/` nor named as translated; its only copy is `<pack>.prev`, which the next apply
-  replaces. What it needs: the translated row ids of a file with no incoming side (a helper beside
-  `carryLocaleCells`), the copy aside in the same run, and those rows on the panel's translated line
-  at describe time, since a removed file is known before any byte is fetched. About 30 lines.
 - [ ] **ITEM-AT-THE-TABLE · make a custom item from where you are holding it — its own design session.**
   A big goal, not a gap in the homebrew editor. That path authors a CONTENT ROW: you leave play, open
   the compendium, pick a type, fill a schema-driven form, and the row joins the graph for every
