@@ -23,6 +23,21 @@ const APP_COMMANDS: &[&str] = &[
     "install_app_update",
 ];
 
+/// The table link's commands, declared only in a build that compiles them (`src/table_link.rs`).
+const TABLE_LINK_COMMANDS: &[&str] = &[
+    "table_link_host",
+    "table_link_join",
+    "table_link_leave",
+    "table_link_publish",
+    "table_link_respond",
+    "table_link_request",
+];
+/// The capability files of every build, and with them the ones a feature brings in its own folder.
+/// A capability naming a permission the build does not declare fails it, so a feature's file is
+/// read only when the feature is on.
+const CORE_CAPABILITIES: &str = "./capabilities/*.json";
+const ALL_CAPABILITIES: &str = "./capabilities/**/*.json";
+
 /// The UI's own catalogs — the one place a string is translated.
 const LOCALES_DIR: &str = "../src/lib/i18n/locales";
 /// Where the native consent dialog's words sit in a catalog, and the fields it needs.
@@ -32,9 +47,20 @@ const FALLBACK_LOCALE: &str = "en";
 
 fn main() {
     write_consent_strings();
+    let table_link = std::env::var_os("CARGO_FEATURE_TABLE_LINK").is_some();
+    let commands: Vec<&str> = APP_COMMANDS
+        .iter()
+        .chain(if table_link { TABLE_LINK_COMMANDS } else { &[] })
+        .copied()
+        .collect();
     tauri_build::try_build(
         tauri_build::Attributes::new()
-            .app_manifest(tauri_build::AppManifest::new().commands(APP_COMMANDS)),
+            .capabilities_path_pattern(if table_link {
+                ALL_CAPABILITIES
+            } else {
+                CORE_CAPABILITIES
+            })
+            .app_manifest(tauri_build::AppManifest::new().commands(commands.leak())),
     )
     .expect("failed to run tauri-build");
 }

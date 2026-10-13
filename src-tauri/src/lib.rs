@@ -10,6 +10,8 @@ mod plugin_consent;
 mod remote;
 #[cfg(desktop)]
 mod self_update;
+#[cfg(feature = "table-link")]
+mod table_link;
 
 /// The set of directories the USER has chosen this session (via the native folder picker) or that we
 /// re-granted from our own persisted pointer at startup — the ONLY paths the fs scope may be extended
@@ -267,7 +269,19 @@ pub fn run() {
             #[cfg(desktop)]
             self_update::check_app_update,
             #[cfg(desktop)]
-            self_update::install_app_update
+            self_update::install_app_update,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_host,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_join,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_leave,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_publish,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_respond,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_request
         ])
         .setup(|app| {
             // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win

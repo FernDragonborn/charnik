@@ -58,3 +58,26 @@ jobs:
 
       - name: Build (SPA)
         run: pnpm build
+
+  # The table link's Rust is behind a Cargo feature that is OFF in a release, so nothing but this
+  # compiles it: the commands, and the capability file that is read only with the feature on.
+  table-link:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # what Tauri links against on Linux, as release.yml installs it
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y             libwebkit2gtk-4.1-dev             libayatana-appindicator3-dev             librsvg2-dev             libxdo-dev             libssl-dev             build-essential
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Check (table-link)
+        working-directory: src-tauri
+        run: cargo check --features table-link

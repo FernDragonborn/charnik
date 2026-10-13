@@ -34,10 +34,11 @@ Svelte, the core does not know about effects, and nothing above `Storage` knows 
 All file IO goes through the `Storage` interface — `read` / `write` / `list` / `watch`, confined to
 the data directory. There is no scattered raw `fs`, and **nothing above the interface imports Tauri**.
 Two eslint rules pin that — `no-restricted-imports` for static imports and `no-restricted-syntax` for
-the `import()` expressions the first one cannot see — and five paths are exempt: `lib/storage/tauri.ts`
+the `import()` expressions the first one cannot see — and six paths are exempt: `lib/storage/tauri.ts`
 (the seam), `lib/update/**` (the desktop updater), `lib/diag/**` (the logger),
-`lib/content/remote/tauri-fetch.ts` (the pack fetcher's HTTP client, per `security.md` §5) and
-`lib/effects/plugin-prefs-tauri.ts` (the plugin consent record, which Rust owns).
+`lib/content/remote/tauri-fetch.ts` (the pack fetcher's HTTP client, per `security.md` §5),
+`lib/effects/plugin-prefs-tauri.ts` (the plugin consent record, which Rust owns) and
+`lib/table-link/tauri.ts` (the table link's commands and events, below).
 
 **Every mutation through it is logged.** `getUserStorage()` hands out the chosen impl wrapped in
 `withWriteLog` (`storage/logged.ts`), so each `write`/`mkdir`/`remove`/`rename` leaves a `debug`
@@ -75,6 +76,38 @@ the OS file manager — Rust opens it, since the page may name WHICH app folder 
 Capabilities statically allow `$DOCUMENT/charnik/**` and nothing of the app's own directories; a
 folder the user picks anywhere else is granted at runtime by a Rust command
 (`app.fs_scope().allow_directory`), re-applied on every startup for a saved custom path.
+
+## TableLink is the seam a table stands on
+
+A GM's app and the players' apps exchanging data is one interface, `TableLink`
+(`lib/table-link/types.ts`), chosen in one place (`getTableLink`) the way a `Storage` is. **No
+transport exists, and no build opens a socket**: every implementation answers that there is no
+table. What is built is the shape a transport fills in.
+
+- **The calls stand on a SEAT.** `host(name)` answers a GM's seat and `join(invite)` a player's;
+  both `leave()` and `subscribe(listener)`, a player's `publish`es and `respond`s, a GM's
+  `request`s. A player's seat has no way to ask and a GM's none to publish, so the role is the
+  type. A seat carries its table. Every call answers delivered or not delivered — there is no
+  queue.
+- **A player publishes the whole view**: the character as it is saved and the sheet derived from
+  it, traces included. The GM's app renders it and derives nothing from a peer's tokens.
+- **A GM asks one of four typed requests** — take this damage, be healed, take this state or
+  effect, make this roll — naming catalog ids and numbers, never a token or a dice formula. Rust
+  refuses a request carrying any other field. A request never applies itself: it arrives, the
+  player sees it and answers, and a roll made travels back in the answer.
+- **Rust pushes six events down one channel**, told apart by `kind`: a participant joined, a
+  participant left, a view arrived and an answer arrived (to a GM), a request arrived (to a
+  player), the connection's state changed.
+
+**The Rust half is one Cargo feature, `table-link`, and it is OFF in a release.** The feature
+carries the commands (`src-tauri/src/table_link.rs`), their entries in `build.rs` and their
+capability file, which sits in a folder of its own (`capabilities/table-link/`) and is read only
+when the feature is on — a capability naming a permission the build does not declare fails the
+build. CI compiles the feature on (`ci.yml` ▸ `table-link`), since nothing else does. The page
+learns which build it is in by CALLING: a command that is not there is refused, and
+`lib/table-link/tauri.ts` reads the refusal as no table, the same answer `noop.ts` gives the web
+build. There is no second switch to keep true to Cargo's. `/dev/table-link?expect=on|off` asks the
+running webview in either build.
 
 The web build is a **Storage-seam swap and nothing else** — the SPA deploys to GitHub Pages as-is,
 `PUBLIC_PLATFORM` picks the factory, and export/import uses the identical `character.json` and bundle

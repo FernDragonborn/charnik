@@ -1,0 +1,14 @@
+{
+	"$schema": "../../gen/schemas/desktop-schema.json",
+	"identifier": "table-link",
+	"description": "the table link's commands; read only by a build with the table-link feature (build.rs)",
+	"windows": ["main"],
+	"permissions": [
+		"allow-table-link-host",
+		"allow-table-link-join",
+		"allow-table-link-leave",
+		"allow-table-link-publish",
+		"allow-table-link-respond",
+		"allow-table-link-request"
+	]
+}

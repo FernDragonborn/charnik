@@ -76,6 +76,8 @@ export default ts.config(
 			'src/lib/content/remote/tauri-fetch.ts',
 			// the plugin consent record: owned by Rust so page script cannot write it (SECURITY.md §4)
 			'src/lib/effects/plugin-prefs-tauri.ts',
+			// the table link's commands and the events Rust pushes, behind the TableLink seam
+			'src/lib/table-link/tauri.ts',
 		],
 		rules: {
 			'no-restricted-imports': [

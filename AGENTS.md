@@ -248,7 +248,7 @@ stays in the context you pay for afterwards.
 **Filesystem and network work is verified on the real desktop app.** A `MemoryStorage` test proves
 nothing: fakes overwrite happily, while Windows refuses to rename a directory onto an existing one,
 and designs here depend on that. Write a `/dev/<name>` probe that asserts on mount and writes a report
-into the data dir, point `devUrl` at it, run the app, read the report, revert `devUrl`.
+into the data dir, open the app on it (`docs/internals/tooling.md` has the command), read the report.
 
 **Who signs the work off.** The four methods above — a node test, `shot.mjs`, a one-off Playwright
 drive, a `/dev/` probe on the real app — are yours to run and yours to CONCLUDE from: evidence from

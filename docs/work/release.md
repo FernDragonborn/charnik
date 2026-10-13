@@ -87,74 +87,6 @@
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
 ## Security and dependencies
-- [ ] **TABLE-LINK-SEAM · the interface the table link will implement, and the implementation that
-  does nothing.** Outcome: a `TableLink` interface beside `Storage`, with a no-op implementation that
-  the web build and every build without the Cargo feature use — the web demo never joins a table, so
-  the interface may assume a participant owns a character file; a test that the app boots and plays
-  on the no-op. With it, **a sixth exempt path in the Tauri import fence**, and the second place
-  Rust pushes events into the webview after the updater's progress. Constraints: no socket is opened and no dependency on a
-  transport is added; removing the feature removes the capability file, the commands and the JS
-  seam together. The ground it stands on is built: app commands are under the ACL and the log sink
-  takes only the app's own lines (`internals/security.md` §2), so a table-link command arrives
-  with a permission of its own.
-  **What is built, and in which builds it is.** Both sides, not the TypeScript alone: a Cargo
-  feature that carries the commands and their capability file, the adapter in JS that calls them
-  — the sixth exempt path — and the no-op beside it. The commands do nothing, since there is no
-  transport to do it with. **The feature is OFF in the release build**: 0.8.0 ships the no-op and
-  no command the page could call, which is also the build that proves the module comes out
-  whole. A step in CI builds it ON (`cargo check` with the feature), so the other state is
-  compiled on every push rather than once a release — CI builds no Rust outside the release
-  workflow today, so without the step nothing would. The page finds out which build it is in by
-  CALLING: a command that is not there is the no-op's cue, so there is no second switch to keep
-  true to Cargo's.
-  **The small calls, taken so the build does not stop to ask.** The events Rust pushes are six:
-  a participant joined, a participant left, a view arrived (to a GM), a request arrived (to a
-  player), an answer arrived (to a GM), the connection's state changed. A roll that can be asked
-  for is an ability check, a saving throw or a skill, by the id the roller already names it with
-  — not an attack. A state or effect is asked for by its catalog id alone, and its duration is
-  set on the player's side as it is today. Damage is asked for as the raw amount and its type;
-  the player's app applies its own defenses, since only it knows its sheet. The feature is named
-  `table-link`. There is NO user interface for a table in 0.8.0 — no button, no settings row: the
-  no-op says unavailable and no entrance is drawn.
-  **What verifying it takes.** Two full Rust builds, with the feature and without, and a `/dev/`
-  probe run on the real desktop app, which opens the app's window on the maintainer's machine.
-  The CI step needs Tauri's system libraries installed on the Linux runner before `cargo check`;
-  what that adds to a run is not measured.
-  **Where it is likely to cost time.** The capability file names the feature's permissions, and a
-  build without the feature fails on a permission it does not know — so the file has to come and
-  go with the feature, most likely from `build.rs`, and that is proven only by building both ways.
-  And the path by which Rust pushes an event to the page is declared with nothing to send down it:
-  a `/dev/` probe can show the channel works, and only a transport will show whether an event's
-  shape is right.
-  **The calls.** One service, and the calls stand on a SEAT at a table rather than on the service:
-  `host(name)` answers a GM's seat and `join(invite)` a player's, so a player's seat has no way to
-  ask and a GM's none to publish — the role is the type, where one flat list of calls would refuse
-  the wrong one only at the table. A seat carries its table, which is what "every call takes a
-  table id" comes to. Both seats `leave()` and `subscribe(listener)`; a player's `publish`es and
-  `respond`s, a GM's `request`s. Every call answers delivered or not delivered — there is no
-  queue. Joining is approved outside this interface, in a dialog the webview cannot press. The
-  service does not list the tables an install has sat at: where a table is remembered waits on
-  where its keys are.
-  **What a player publishes is the whole view, and the GM sees all of a player character**: the
-  character as it is saved and the sheet derived from it, traces included, inventory, spells and
-  notes with the rest. `publish(character, view)` says what is true now; what crosses the wire —
-  the keys that changed over a cached base — is the transport's, so cutting the view differently
-  later changes no call. Measured on the demo character: the derived sheet is 29.5 KB, of which
-  skills, abilities and passives are 20 KB of traces that change on a level, an item or an effect;
-  the saved character is 3.2 KB and its hit points 20 bytes.
-  **What a GM asks is one of four typed requests, naming catalog ids and never tokens**: take this
-  damage (an amount and a type), be healed, take this state or effect, make this roll. A request
-  never applies itself — it arrives, the player sees it and answers. A roll's request names what
-  to roll and MAY carry its DC: the GM chooses per request whether the DC is announced, by a
-  switch on their side. The roll made travels back in the answer, since a roll is an event and
-  not a state of the sheet; what damage or healing left is seen in the next publish.
-  **What the interface carries, as far as it is decided:** the player's app derives its own sheet
-  and publishes the RESULT — values with their traces — and the GM's app renders it and derives
-  nothing from a peer's tokens. Sent as changes over a cached base, never whole each time: a
-  portrait goes once, an inventory when it changes, hit points when they move. The byte counts are
-  measured on real characters before the shape is fixed. Identity is PER TABLE — a participant
-  holds a separate key for each table, so nothing links two tables and a key that is online says
-  nothing about the person outside that table — which is why every call takes a table id.
 - [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
   `research/table-link-threats.md` (what the layer can do to a user) and
   `research/table-link-design-review.md` (what the existing code does with a network input, and the
@@ -169,6 +101,28 @@
   threat model, which says "no network" in the present tense. And it rewrites
   `internals/roller.md` ▸ "The app never knows AC or DC, so no threshold is ever shown": a roll a GM
   asks for may carry a DC the GM chose to announce, and for that roll the app does know it.
+  **What it fills in is built**: the `TableLink` interface, its no-op and the Rust commands that
+  reach nobody (`../internals/overview.md` ▸ TableLink is the seam a table stands on). There is no
+  user interface for a table — no button, no settings row — and the spec is what draws one.
+  **Decided, and the spec starts from them.** Joining is approved outside the interface, in a
+  dialog the webview cannot press. Identity is PER TABLE: a participant holds a separate key for
+  each table, so nothing links two tables and a key that is online says nothing about the person
+  outside that table. The service does not list the tables an install has sat at — where a table
+  is remembered waits on where its keys are. A view is sent as changes over a cached base, never
+  whole each time: a portrait goes once, an inventory when it changes, hit points when they move;
+  `publish` says what is true now and the cut is the transport's, so cutting it differently
+  changes no call. Measured on the demo character: the derived sheet is 30 KB, of which skills,
+  abilities and passives are 20 KB of traces that change on a level, an item or an effect; the
+  saved character is 3.2 KB and its hit points 20 bytes. The GM chooses per request whether a
+  roll's DC is announced, by a switch on their side. A roll that can be asked for is an ability
+  check, a saving throw or a skill — not an attack. A state or effect's duration is set on the
+  player's side, and damage arrives raw with its type: the player's app applies its own
+  defenses, since only it knows its sheet. Only a GM's seat hears a participant join or leave —
+  a star of direct connections gives a player no one but the GM to hear of.
+  **What only a transport will show:** whether an event's shape is right. The channel is proven
+  with the one event there is to send, and a payload is trusted as typed because only the app's
+  own Rust sends one — the adapter validates it against a schema once it is somebody else's
+  bytes (`lib/table-link/tauri.ts` ▸ `listenToTableLink`).
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have

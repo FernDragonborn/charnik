@@ -240,22 +240,20 @@ position and are given per wave, because most of them were learned the hard way.
   control before it can mean anything.
 - **Before 0.8.0 is tagged.** The list a release is checked against, in the order it is worked.
   Everything else in this section is either already in 0.8.0 or rides to a later one.
-  1. **The seam** — TABLE-LINK-SEAM (the TABLE-LINK-SEAMS wave below says why). It lands on the
-     play-state actions, the one writer per character and the identities, which are built
-     (`internals/actions.md` ▸ Where a mutation lives, `internals/characters.md` ▸ One writer per
-     character, ▸ Identities), so it goes first and the rest lands on it.
-  2. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
+  1. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
      designed together — the columns are signed off (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
      nothing of them is built — and A17 brings the invocation rows with it, because SRD 5.1 puts the
      Tome's rituals in an invocation rather than in the boon.
-  3. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+  2. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
      from that mock.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
   Magician), SCOPED-BONUS's Agonizing Blast, E4, MOBILE-ALPHA's tap
-  targets, and TABLE-LINK-SPEC. None is a wrong number, a path that cannot be finished
+  targets, and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
+  seams it will stand on (`internals/overview.md` ▸ TableLink is the seam a table stands on).
+  None is a wrong number, a path that cannot be finished
   or shipped content that does nothing — the three clauses above.
 - **The short queue, and it is an ORDER rather than a wave.** One item, and it is the maintainer's
   to do rather than a commit.
@@ -283,20 +281,6 @@ position and are given per wave, because most of them were learned the hard way.
   **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
   book and several at the table — a Belt of Giant Strength's variety sets the number — and the
   `+1/+2/+3` rows, which a list still files under one rarity.
-- **0.8.0 · TABLE-LINK-SEAMS.** The table link — a GM's app and the players' apps exchanging data —
-  does NOT ship in 0.8.0, and no line of networking does. What ships is the set of seams the module
-  will stand on, each of which is worth having with no network at all, in this order because each
-  one is what the next is tested through: the play-state actions as functions something other than
-  a click can call, one writer per open character and an identity that survives leaving the
-  machine, which are built (`internals/actions.md` ▸ Where a mutation lives,
-  `internals/characters.md` ▸ One writer per character, ▸ Identities), then TABLE-LINK-SEAM (the
-  interface, with the implementation that does nothing). Its calls are decided, and so is where
-  it ships: the feature is off in the release build and compiled on in CI (`work/release.md` ▸
-  TABLE-LINK-SEAM).
-  The order is a security argument, not tidiness: a network input bolted onto view-model methods
-  that read the player's own form fields has nowhere safe to enter
-  (`research/table-link-design-review.md` ▸ F-03). The transport, pairing and the wire format are
-  a spec that does not exist yet, and TABLE-LINK-SPEC is where its open decisions are listed.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

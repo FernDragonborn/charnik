@@ -97,6 +97,12 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > can neither move the user to an older signed release nor quit or restart the app.
    > `/dev/self-update` asks the running webview for each of those and expects a refusal.
    >
+   > **The table link's commands are in no release build.** They sit behind the `table-link`
+   > Cargo feature with their capability file (`overview.md` ▸ TableLink is the seam a table
+   > stands on), reach nobody in a build that has them, and take a GM's request as a closed set
+   > of typed fields — an unknown field or kind is refused in Rust, so a token or a formula has
+   > no way in. `/dev/table-link` asks the running webview in both builds.
+   >
    > **The log takes only what the app itself says.** `tauri-plugin-log` installs the
    > process-global logger, so it is filtered to the page's own lines (`webview`) and this crate's:
    > unfiltered, every dependency's output reaches the file, and the Webview target hands it to
