@@ -290,7 +290,9 @@ position and are given per wave, because most of them were learned the hard way.
   a click can call, one writer per open character and an identity that survives leaving the
   machine, which are built (`internals/actions.md` ▸ Where a mutation lives,
   `internals/characters.md` ▸ One writer per character, ▸ Identities), then TABLE-LINK-SEAM (the
-  interface, with the implementation that does nothing).
+  interface, with the implementation that does nothing). Its calls are decided, and so is where
+  it ships: the feature is off in the release build and compiled on in CI (`work/release.md` ▸
+  TABLE-LINK-SEAM).
   The order is a security argument, not tidiness: a network input bolted onto view-model methods
   that read the player's own form fields has nowhere safe to enter
   (`research/table-link-design-review.md` ▸ F-03). The transport, pairing and the wire format are

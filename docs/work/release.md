@@ -97,6 +97,22 @@
   seam together. The ground it stands on is built: app commands are under the ACL and the log sink
   takes only the app's own lines (`internals/security.md` §2), so a table-link command arrives
   with a permission of its own.
+  **What is built, and in which builds it is.** Both sides, not the TypeScript alone: a Cargo
+  feature that carries the commands and their capability file, the adapter in JS that calls them
+  — the sixth exempt path — and the no-op beside it. The commands do nothing, since there is no
+  transport to do it with. **The feature is OFF in the release build**: 0.8.0 ships the no-op and
+  no command the page could call, which is also the build that proves the module comes out
+  whole. A step in CI builds it ON (`cargo check` with the feature), so the other state is
+  compiled on every push rather than once a release — CI builds no Rust outside the release
+  workflow today, so without the step nothing would. The page finds out which build it is in by
+  CALLING: a command that is not there is the no-op's cue, so there is no second switch to keep
+  true to Cargo's.
+  **Where it is likely to cost time.** The capability file names the feature's permissions, and a
+  build without the feature fails on a permission it does not know — so the file has to come and
+  go with the feature, most likely from `build.rs`, and that is proven only by building both ways.
+  And the path by which Rust pushes an event to the page is declared with nothing to send down it:
+  a `/dev/` probe can show the channel works, and only a transport will show whether an event's
+  shape is right.
   **The calls.** One service, and the calls stand on a SEAT at a table rather than on the service:
   `host(name)` answers a GM's seat and `join(invite)` a player's, so a player's seat has no way to
   ask and a GM's none to publish — the role is the type, where one flat list of calls would refuse
