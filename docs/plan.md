@@ -246,12 +246,13 @@ position and are given per wave, because most of them were learned the hard way.
      character, ▸ Identities), so it goes first and the rest lands on it.
   2. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
      Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
-     designed together — the columns are drafted (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
-     wait on a sign-off — and A17 brings the invocation rows with it, because SRD 5.1 puts the
+     designed together — the columns are signed off (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
+     nothing of them is built — and A17 brings the invocation rows with it, because SRD 5.1 puts the
      Tome's rituals in an invocation rather than in the boon.
   3. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
-     from that mock; and DAMAGE-TYPE-UI's look — how a hit's type is chosen and shown on the
-     hit-point bar — is redrawn, because what ships reads badly.
+     from that mock; and DAMAGE-TYPE-UI's look — the whole hit-point block: the hit, healing, and
+     the face it wears at 0 hit points — is redrawn, because what ships reads badly. Its rules and
+     what is settled are in the item; a narrow window is laid out in a pass of its own.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature

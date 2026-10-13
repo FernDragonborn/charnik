@@ -167,7 +167,7 @@
        Eldritch Invocations row of both editions, and 2024 Metamagic — those want rows typed
        before they want a column.
 
-     **The draft — one content type, `option`, and it is a proposal until signed off:**
+     **The shape — one content type, `option`. It is signed off, and nothing of it is built:**
 
      | column | what it says |
      | --- | --- |

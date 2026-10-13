@@ -71,25 +71,100 @@ stay semi-manual.
   **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
   and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
 
-- [~] **DAMAGE-TYPE-UI · a hit says what it was, and one press takes more than one type; its LOOK was picked by nobody.**
-  A Damage press records each part in the roll log — how much, of what type, and the defense that
-  changed the number — and a `+` beside the type picker adds a further part with its own amount and
-  type, so a flame tongue's slashing and fire are ONE hit: each part meets its own defense, and temp
-  HP, the concentration save and instant death are asked of the total
-  (`../internals/characters.md` ▸ A tracker surfaces). The picker offers every damage type, the
-  defended ones first. A Heal press records what it restored. What is left:
-  **the second part's row is the first shape that worked** (`design-preview/damage-two-types.png`):
-  an amount, a type and an ✕ under the first picker. **The whole of how a hit's type is chosen
-  and shown on the hit-point bar is redrawn for 0.8.0** — the maintainer's reading of what ships
-  is that it is plainly bad, so it does not wait for COMBAT-RAIL. The mechanics underneath do not
-  change. **Three variants are rendered and wait on a pick**, each on the bar with a typed hit, a
-  defended one and a two-type one (`design-preview/_damage-type-A.png`, `-B`, `-C`): **A** — every
-  part of the hit is a row in the controls column, amount beside type, and the Damage button says
-  the total after defences; **B** — the types the sheet has a defence for are chips under the bar
-  with what each does (`Fire ½`, `Poison 0`), every other type one step away behind `Other`;
-  **C** — the hit is one line under the bar, `Take 8 slashing + 6 fire → 3`, and the column keeps
-  only Heal and a Damage button that says the total. All three put the total ON the button, which
-  is the one thing the three have in common and the current bar lacks.
+- [~] **DAMAGE-TYPE-UI · the hit-point block is redrawn: the hit, healing, and the face it wears at 0 hit points.**
+  What ships: a Damage press records each part in the roll log — how much, of what type, and the
+  defense that changed the number — a `+` beside the type picker adds a further part, the picker
+  offers every damage type with the defended ones first, and a Heal press records what it restored
+  (`../internals/characters.md` ▸ A tracker surfaces). The block is 157px tall at rest and grows
+  when a second part, a concentration save or 0 hit points arrives.
+
+  **The rules the redraw answers to.** Each was learned from a rendered variant that broke it, so a
+  new variant is checked against all of them, not against the last remark:
+  1. The block's height never jumps: nothing appears INSIDE it — no banner, no extra row.
+  2. Room is scarce: no empty cell, no inflated button, no number said twice.
+  3. Damage types and healing never stand in one block — a type beside a Heal reads as a kind of heal.
+  4. Red is the damage press and nothing else.
+  5. It is drawn for a sheet with no defense or one; more is a load test, and what does not fit goes
+     to a menu.
+  6. One hit is one type and one press.
+  7. Healing costs no more steps than it does today, and the sheet holds ONE number field.
+  8. The app's own drawn icons; `∅` marks immunity, `½` resistance, `×2` vulnerability.
+  9. Height is spent before width.
+  10. Temporary hit points do not blur with healing.
+  11. The hit's type reaches the roll log: the control is never a bare multiplier.
+  12. What a type would take from the typed amount is worth saying wherever it costs no room.
+
+  **Settled.**
+  - **A hit of several types is not composed in one press.** The `+` that adds a part goes, with
+    `combat.hp.moreParts` and the paragraph "A hit is one event, however many types it deals" in
+    `../internals/characters.md`. A flame tongue is two presses.
+  - **A damage type on the sheet is its `DamageIcon` and its mark, never a word.** Its name, where
+    the defense comes from and what it would take (`combat.hp.damagePreview.*` already says
+    `Resistant: 12 → 6`) are the provenance popover's, on a resting pointer or focus.
+  - **Healing and temporary hit points are one green control and one popover**: one number, Heal on
+    Enter, Temp HP beside it, and the note the Temp HP menu already carries. The step count equals
+    today's — press, type, Enter against press the field, type, press Heal.
+  - **The minus says a number only when a defense changed it** (`− 6`); at rest it is a bare minus.
+  - **The block is one height in every state**, 117px against today's 157px.
+  - **0 hit points is a face of its own, and it is an emergency that looks like one.** No current
+    number — the label says `0 / 73` — no amount and no minus: a hit taken while down is a failure
+    the player presses, two for a critical, so the "That hit was a critical" checkbox goes. Rescue
+    pulls from the left and death from the right at the colors' full strength (`--color-good`,
+    `--color-accent`), each side's ground advancing a third per save; a save is a glyph — wings
+    under a halo for a success, the skull necrotic damage already wears for a failure — and the
+    healing control stays as the way back up. Tints were tried and are too soft to say it.
+  - **The wings are the two-feather drawing** in `design-preview/death-saves-motion.html`
+    (`WING_PAIR`); the skull is `damageGlyph('necrotic')` unchanged.
+  - **Motion lives on that face and nowhere else on the sheet**, and stands still under
+    `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
+    it never blinks.
+  - **A narrow window is laid out in a pass of its own.** The line this is drawn on does not fit
+    under the narrow threshold, where it becomes several rows.
+
+  **Open, in the order it blocks the build.**
+  1. **How the hit is said.** Two forms stand on the same frame: **W2** — the defended types as
+     glyph chips, the rest behind a menu, then the amount and the minus; **W2z** — the type and a
+     factor `∅ ½ 1 ×2` as one joined control, where a said type lights its factor, the player may
+     overrule it, and with no type said the factor is theirs to press (a defense the sheet does not
+     know). W2z is the narrower (242px against 300px at its widest) and its segments are small.
+  2. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
+     chip in `Controls.svelte` already rolls the owed save, so the proposal is that the chip says the
+     owed DC. **A wrong number ships today**: a second Damage press before the save is rolled
+     REPLACES the owed save (`play-outcomes.ts`, `hp.pendingConcentrationSave =
+     outcome.concentrationSave`), so 30 slashing then 10 fire owes DC 10 where one hit of 40 owes
+     DC 20. The proposal: damage taken before the owed save is rolled adds to it — the order of the
+     presses says whether it was one hit — which is also what makes two presses for a flame tongue
+     RAW again. Neither half is signed off.
+  3. **The 0 hit points face's form and motion.** The field is one of four the maintainer holds
+     equal — a band under the ordinary header, the whole block, the hit-point bar grown into a
+     vessel, the whole block with glyphs — and the motion is liquid (a swell along the surface,
+     drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
+     Which one, and its tempo, are the maintainer's eye on the running page, not a render's.
+  4. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
+     holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
+     nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
+     filter over each liquid body, `mask-position`, a `drop-shadow` on the chevrons, and `box-shadow`
+     for the glow. The build animates `transform` and `opacity` only — the glow as two layers drawn
+     once and cross-faded, which is also the likely end of its flicker — runs nothing while the face
+     is off screen, and is measured before it is called done. The glow's drift is 30% slower than
+     the prototype's 5.5s.
+  5. **How many defended types stand before the menu**: two are drawn, three fit at the wide width.
+  6. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+
+  **Rejected, so they are not drawn again:** a bare `∅ ½ 1 ×2` with no type (unspecific, rule 11);
+  a switch between that and the types (two interfaces, and it breaks in Ukrainian); a type's name
+  in its chip; a minus per type row; a second number field for healing; a factor with the sheet's
+  glyphs drawn under it; the saves as a soft tint; a heartbeat on the glow.
+
+  **The mocks**, built from the app's own glyphs and catalogs: `design-preview/damage-type-under-temp.html`
+  (W2, W2z, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
+  motion, live — the saves are pressable). Renders: `_damage-type-w2.png`, `_damage-type-w2z.png`,
+  `_damage-type-down.png`, `_damage-type-wings.png`, `_death-saves-motion.png`,
+  `_death-saves-arrows.png`.
+
+  **Found on the way:** the Ukrainian catalog abbreviates hit points two ways — the button is
+  `Тимч. ОЗ` (`combat.hp.tempHp`), its menu's title and note say `ЗД` (`combat.menu.tempHpTitle`,
+  `tempHpNote`).
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
@@ -228,7 +303,7 @@ stay semi-manual.
   ("You learn the find familiar spell and can cast it as a ritual"). So this is two choices and a
   link between them, not one row: the boon as a choice of three, the invocations as options —
   which the pack does not carry at all, the row names them and lists none — and an option that
-  REQUIRES another. The shape is drafted with the item varieties it shares
+  REQUIRES another. The shape is signed off with the item varieties it shares
   (`content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1: `option_of`, `requires`, `ritual_source`). The invocation
   rows are typed from the SRD like any other (`content.md` ▸ SRD-TRANSCRIPTION), and the same rows
   are what SCOPED-BONUS's Agonizing Blast waits on.
