@@ -13,9 +13,8 @@
 	import { DEATH_SAVE_TRACK, isStable } from '$lib/play/hit-points';
 	import HpStanding from './HpStanding.svelte';
 	import HpDown from './HpDown.svelte';
-	import DownSide from './DownSide.svelte';
 	import MotionMenu from './MotionMenu.svelte';
-	import { PREVIEW_SAVES } from './down-motions';
+	import { PREVIEW_FIGHT, type DownShown } from './down-motions';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 
@@ -42,41 +41,33 @@
 	});
 
 	/**
-	 * Getting back up is played too: rescue's ground crosses the whole block, and the block on its
-	 * feet is what it leaves behind — a natural 20, a heal and a revival are one way back, and a face
-	 * that simply swapped would say nothing had been at stake. `cover` while the ground travels over
-	 * the 0 hit points face, `reveal` while it fades off the standing one.
+	 * Getting back up is played too — a natural 20, a heal and a revival are one way back, and a
+	 * face that simply swapped would say nothing had been at stake. The face the character just left
+	 * (the fight, `Stabilized`, `Dead` on black) is held still and WIPED away from rescue's edge by
+	 * a band of rescue's own colour, and the block on its feet is what the wipe uncovers.
 	 */
-	const RISE_COVERS_MS = 900;
-	const RISE_REVEALS_MS = 350;
-	let rise = $state<null | 'cover' | 'reveal'>(null);
-	let riseEarned = $state(0);
-	let wasDown = false;
-	/** How far rescue's ground stood when the character got up: where the crossing starts from. */
-	let groundStood = 0;
+	const RISE_MS = 900;
+	let rising = $state<DownShown | null>(null);
+	/** The 0 hit points face as it last stood: what a rise wipes away. */
+	let stood: DownShown | null = null;
 	$effect(() => {
 		if (down) {
-			wasDown = true;
-			groundStood = c.play.death ? 0 : c.play.deathSaves.successes;
-			rise = null;
+			stood = {
+				successes: c.play.deathSaves.successes,
+				failures: c.play.deathSaves.failures,
+				ending: c.play.death ? 'dead' : isStable(c.play) ? 'stable' : null,
+				cause: c.play.death?.cause ?? null,
+				hitPoints: c.play.hp.current,
+			};
+			rising = null;
 			return;
 		}
-		if (!wasDown) return;
-		wasDown = false;
-		if (motion.reduced) return;
-		rise = 'cover';
-		riseEarned = groundStood;
-		// two frames: the first paints the ground where it stood, the second lets it travel
-		let frame = requestAnimationFrame(
-			() => (frame = requestAnimationFrame(() => (riseEarned = DEATH_SAVE_TRACK))),
-		);
-		const revealing = setTimeout(() => (rise = 'reveal'), RISE_COVERS_MS);
-		const done = setTimeout(() => (rise = null), RISE_COVERS_MS + RISE_REVEALS_MS);
-		return () => {
-			cancelAnimationFrame(frame);
-			clearTimeout(revealing);
-			clearTimeout(done);
-		};
+		const left = stood;
+		stood = null;
+		if (!left || motion.reduced) return;
+		rising = left;
+		const done = setTimeout(() => (rising = null), RISE_MS);
+		return () => clearTimeout(done);
 	});
 
 	let block: HTMLElement | undefined = $state();
@@ -125,20 +116,25 @@
 {#snippet pencil()}{@render pencilButton('inside')}{/snippet}
 
 <div class="hp-block" class:tense class:still={playing === 'none'} class:choosing bind:this={block}>
-	{#if down || choosing || rise === 'cover'}
-		<HpDown
-			{c}
-			motion={playing}
-			preview={down ? null : PREVIEW_SAVES}
-			played={seenAlive}
-			{pencil}
-		/>
+	{#if down || choosing}
+		<HpDown {c} motion={playing} shown={down ? null : PREVIEW_FIGHT} played={seenAlive} {pencil} />
 	{:else}
 		<HpStanding {c} {s} {pencil} />
 	{/if}
-	{#if rise}
-		<div class="hp-rise" class:reveal={rise === 'reveal'}>
-			<DownSide tone="good" earned={riseEarned} motion={playing} />
+	{#if rising}
+		<!-- what moves is the mover; what it holds is moved back by as much, so the face it wipes
+		     stays where it stood and only the wipe's edge travels -->
+		<div class="hp-rise" aria-hidden="true">
+			<div class="rise-mover">
+				<i class="rise-band"></i>
+				<div class="rise-clip">
+					<div class="rise-still">
+						<div class="rise-face">
+							<HpDown {c} motion="none" shown={rising} played={false} {pencil} />
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	{/if}
 	{@render pencilButton('side')}
@@ -168,7 +164,9 @@
 		height: 7.3125rem;
 	}
 
-	/* rescue's ground, crossing the block on the way back up and fading off what it leaves */
+	/* ---- the way back up: the face just left, wiped away from rescue's edge. Every layer is the
+	   block's own size, so a percentage means the same travel on each: the block's width plus the
+	   band and its lean, and the held face moved back by exactly that ---- */
 	.hp-rise {
 		position: absolute;
 		inset: 0;
@@ -176,13 +174,56 @@
 		overflow: hidden;
 		border-radius: var(--radius-lg);
 		pointer-events: none;
-		transition: opacity 0.35s ease-out;
+		direction: ltr;
+		--lean: 16px;
+		--band: 4.5rem;
+		--travel: calc(100% + var(--band) + var(--lean));
 	}
-	.hp-rise.reveal {
-		opacity: 0;
+	/* a right-to-left locale has rescue on the other edge: the wipe turns over whole, and the face it
+	   holds is turned back so its words still read */
+	:global([dir='rtl']) .hp-rise,
+	:global([dir='rtl']) .rise-face {
+		scale: -1 1;
 	}
-	:global([dir='rtl']) .hp-rise {
-		transform: scaleX(-1);
+	.rise-mover,
+	.rise-clip,
+	.rise-still {
+		position: absolute;
+		inset: 0;
+	}
+	.rise-mover {
+		animation: rise-wipe 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+	}
+	.rise-still {
+		animation: rise-hold 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+	}
+	@keyframes rise-wipe {
+		to {
+			transform: translateX(var(--travel));
+		}
+	}
+	@keyframes rise-hold {
+		to {
+			transform: translateX(calc(-1 * var(--travel)));
+		}
+	}
+	/* the held face ends on the lean the grounds are cut with */
+	.rise-clip {
+		clip-path: polygon(var(--lean) 0, 100% 0, 100% 100%, 0 100%);
+	}
+	/* rescue's colour leads the wipe: a band on that same lean, just behind the edge */
+	.rise-band {
+		position: absolute;
+		inset-block: 0;
+		right: calc(100% - var(--lean));
+		width: calc(var(--band) + var(--lean));
+		background: linear-gradient(
+			to right,
+			transparent,
+			var(--color-good) 55%,
+			color-mix(in srgb, var(--color-good) 55%, var(--color-glint))
+		);
+		clip-path: polygon(var(--lean) 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
 	}
 
 	/* ---- the pencil: a tab on the block's own side, the block's frame carried round it. There

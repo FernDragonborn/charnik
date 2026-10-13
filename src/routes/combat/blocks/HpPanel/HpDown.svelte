@@ -6,7 +6,7 @@
 	//
 	// There is no amount and no minus here: a hit taken while down is a failure the player presses,
 	// two for a critical. The healing control stays as the way back up.
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { _ } from '$lib/i18n';
@@ -17,19 +17,19 @@
 	import { combat } from '../../combat-view-model.svelte';
 	import DownSide from './DownSide.svelte';
 	import { SKULL_GLYPH, WINGS_GLYPH } from './save-glyphs';
+	import type { DownShown } from './down-motions';
 
 	let {
 		c,
 		motion,
-		preview = null,
+		shown = null,
 		played,
 		pencil,
 	}: {
 		c: Character;
 		motion: DownMotion;
-		/** The saves to DRAW instead of the character's own, while the motion is being chosen on a
-		 *  character who is not down. A preview is looked at, never pressed. */
-		preview?: { successes: number; failures: number } | null;
+		/** A face to DRAW instead of the character's own (`DownShown`). It is looked at, never pressed. */
+		shown?: DownShown | null;
 		/** Was the ending watched? Then the winning ground is seen to cross the block first. */
 		played: boolean;
 		pencil: Snippet;
@@ -41,9 +41,10 @@
 	 *  motion under a dead block to be let go. The stylesheet's `--cross` is the first of the three. */
 	const VERDICT_SETTLES_MS = 1900;
 
-	const saves = $derived(preview ?? c.play.deathSaves);
-	const dead = $derived(!preview && !!c.play.death);
-	const stable = $derived(!preview && isStable(c.play));
+	const saves = $derived(shown ?? c.play.deathSaves);
+	const dead = $derived(shown ? shown.ending === 'dead' : !!c.play.death);
+	const stable = $derived(shown ? shown.ending === 'stable' : isStable(c.play));
+	const cause = $derived(shown ? shown.cause : (c.play.death?.cause ?? null));
 	const over = $derived(dead ? 'dead' : stable ? 'stable' : null);
 	/**
 	 * The ending is drawn in two steps: first the face as it stood, then the winning ground at its
@@ -51,13 +52,15 @@
 	 * the block from death's edge, as the third failure's does, and the verdict waits for it. A face
 	 * that opens on an ending nobody watched starts covered.
 	 */
-	let covered = $state(false);
+	// an ending nobody watched is covered from its FIRST frame: set a frame late, the winning ground
+	// would be seen to stand a third short and close the gap
+	let covered = $state(untrack(() => !!over && !played));
 	$effect(() => {
 		if (!over) {
 			covered = false;
 			return;
 		}
-		if (!played) {
+		if (!played || covered) {
 			covered = true;
 			return;
 		}
@@ -72,7 +75,7 @@
 		bad: dead && covered ? DEATH_SAVE_TRACK : dead ? Math.min(saves.failures, 2) : saves.failures,
 	});
 	/** Only the save that ended it can be taken back, and only when a save did. */
-	const canTakeBack = $derived(stable || c.play.death?.cause === 'death_saves');
+	const canTakeBack = $derived(stable || cause === 'death_saves');
 
 	// Under the black nothing is seen, so nothing keeps moving there: the motion goes once the
 	// verdict stands. A character already dead when the sheet opens starts that way.
@@ -137,7 +140,7 @@
 	</button>
 {/snippet}
 
-<div class="hp-face down {over ?? ''}" class:over={!!over} inert={preview ? true : undefined}>
+<div class="hp-face down {over ?? ''}" class:over={!!over} inert={shown ? true : undefined}>
 	<div class="grounds">
 		<DownSide tone="good" earned={earned.good} motion={playing} />
 		<DownSide tone="bad" earned={earned.bad} motion={playing} />
@@ -147,7 +150,7 @@
 		<div class="middle">
 			<span class="eyebrow at"
 				>{$_('combat.hp.hitPointsAt', {
-					values: { current: c.play.hp.current, max: combat.hpMax },
+					values: { current: shown?.hitPoints ?? c.play.hp.current, max: combat.hpMax },
 				})}{@render pencil()}</span
 			>
 			<div class="acts">
@@ -167,8 +170,8 @@
 	{#if over && covered}
 		<div class="verdict {over}" class:played role="status">
 			<b>{$_(dead ? 'combat.hp.dead' : 'combat.hp.stable')}</b>
-			{#if dead && c.play.death}
-				<small>{$_(DEATH_CAUSE_LABEL[c.play.death.cause])}</small>
+			{#if dead && cause}
+				<small>{$_(DEATH_CAUSE_LABEL[cause])}</small>
 				<!-- healing does not raise the dead; a revival does, and it is the player's to say -->
 				<button type="button" class="revive" onclick={combat.revive}
 					>{$_('combat.death.revived')}</button
