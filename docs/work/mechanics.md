@@ -129,7 +129,12 @@ stay semi-manual.
     mock.
   - **The concentration save a hit owes is said by the concentration chip, not by the block.**
     Nothing appears inside the block (rule 1); the chip in `Controls.svelte` already rolls the
-    owed save, and it says the owed DC.
+    owed save, and it says the owed DC. It holds a QUEUE of them: two hits before a
+    roll owe two saves, each at its own DC, and one press says "that was one hit" and merges them
+    into one at the DC of their sum — the app cannot tell a flame tongue's two presses from two
+    blows, and the rules differ. **A wrong number ships today**: a second Damage press REPLACES
+    the owed save (`play-outcomes.ts`, `hp.pendingConcentrationSave = outcome.concentrationSave`),
+    so 30 slashing then 10 fire owes DC 10.
   - **The third save ends it on one face, whatever motion led there.** The side that won takes
     the whole block, still moving as itself, and the block says what happened in a bold word:
     `Stabilized` on the rescue's own ground, `Dead` in white on a block gone black. Only the way
@@ -157,15 +162,7 @@ stay semi-manual.
     rather than shrinking. Until that mock exists the redraw is built for the wide window.
 
   **Open, in the order it blocks the build.**
-  1. **Two hits before the concentration save is rolled.** **A wrong number ships today**: a
-     second Damage press before the save is rolled REPLACES the owed save (`play-outcomes.ts`,
-     `hp.pendingConcentrationSave = outcome.concentrationSave`), so 30 slashing then 10 fire owes
-     DC 10. The app cannot tell one hit of two types from two hits, and the rules differ: one hit
-     of 40 owes one save at DC 20, two hits owe two, DC 15 and DC 10. Two answers: the damage
-     **adds up** into one save, right for a flame tongue's two presses and wrong for two blows; or
-     the chip holds a **queue** of owed saves with a press that says "that was one hit" and merges
-     them, right by default and one press dearer for the flame tongue. Not signed off.
-  2. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
+  1. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
      drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
      The flat slanted ground has four motions of its own on the same page, each tightening with
      every failure and each looping `transform` and `opacity` only: **pressure** — the death side
@@ -177,7 +174,7 @@ stay semi-manual.
      pace; death as a dark ground whose flames rise with each failure and stay inside it. Each side's scene is laid out once across the whole block and the ground is a window onto it: a wider ground uncovers more shafts or more flames, and nothing stretches. Their cost is not measured.
      Each motion's tempo is the maintainer's eye on the running page, not a render's; which motion
      plays is the player's (Settled).
-  3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
+  2. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
      nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
      filter over each liquid body, `mask-position`, a `drop-shadow` on the chevrons, and `box-shadow`
@@ -193,7 +190,7 @@ stay semi-manual.
      **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
      cheap either, only much less so. Every motion ships, so every one is measured; one that stays dear ships marked as such in the pencil's list.
-  4. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+  3. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
   **The build, and what the prototypes do that it must not.** The mocks are the look; they are
   not the implementation.
