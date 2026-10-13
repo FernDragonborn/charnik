@@ -391,6 +391,11 @@
 
 	/* ---- a narrow block: the saves, and between them the roll and healing as icons ---- */
 	@container hp-block (max-width: 26rem) {
+		/* the label is wider than the gap between the saves here, and it is said by the face anyway */
+		.at {
+			font-size: var(--font-size-micro);
+			letter-spacing: 0;
+		}
 		.acts {
 			flex-direction: row;
 			gap: var(--space-2);

@@ -251,13 +251,23 @@ sentences became numbers, and a security pass closed what a page inside the wind
   field under a list most characters leave empty.
 - **The pass-time bar stops appearing and vanishing on its own**, and the level itself is the
   level-up control.
-- **A hit says what it was, and what it will take before you press.** Pick the type and type the
-  amount, and the line under the picker reads "Resistant: 13 → 6" — or immune, or vulnerable.
-  Taking the damage writes a line in the roll log — how much, of what type, and what your
-  resistance did to it — and the type picker offers every damage type, yours first. A
-  hit that deals two types is one press: add the second with the `+` beside the picker, and each
-  part meets its own defense while temporary hit points and the concentration save see the total.
-  Healing leaves a line too, for the hit points that actually came back.
+- **The hit-point block is redrawn, and it is shorter.** A hit is typed the way you say it: the
+  amount, then its type — `12 f` and Enter is twelve fire — or the type is picked from the same
+  menu the dice tray opens, with the types you have a defense against first. The red minus says
+  what your resistance leaves of it before you press, and the roll log keeps how much, of what
+  type, and what the defense did. Healing and temporary hit points are one green button with one
+  number, already selected when it opens. A hit of two types is two presses.
+- **At 0 hit points the block becomes the fight.** Rescue pulls from one side and death from the
+  other, a wing or a skull per save, and every one can be pressed as well as rolled — which is how
+  you say a critical cost two. The third save ends it on `Stabilized` or on `Dead`, and death no
+  longer covers the sheet with a dialog: the block says it, with what killed you and `I was
+  revived` under the word. A save pressed by mistake can be taken back from either ending.
+- **You pick how that fight moves.** A pencil beside the block lists eight motions, `No animation`
+  among them; the default is Rays & Hellfire. Settings ▸ General has **Reduce motion** — as the
+  system, on, or off — which stills everything in the app and keeps each character's own pick.
+- **Two hits before you roll owe two concentration saves.** A second hit used to replace the first
+  one's save, so 30 damage and then 10 asked for DC 10. Now the chip holds each, oldest first,
+  wears their DCs, and one press says "that was one hit" for a blow that dealt two types.
 - **The concentration chip rolls the save; its ✕ ends the spell.** Pressing the chip used to end
   concentration outright, with nothing to confirm it. Now the press is the Constitution save —
   against the owed DC after damage, 10 otherwise — a failed save ends the spell without asking you
