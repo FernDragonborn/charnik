@@ -144,6 +144,11 @@ decides. The pool is spent and gated on BEFORE the action economy is touched, th
 reserved first, so an exhausted pool blocks the whole cast rather than casting for free. Narrowing the
 list to a DECLARED pool later is a filter on that same control.
 
+**A slot can be what an option COSTS.** "Give yourself one use by expending a spell slot" (Wild
+Resurgence) is the `spend_slot` verb on a spend-option (`actions.md` §2): the slot is reserved with
+the option's other costs through the same `slotToSpend` a cast uses, and which level to give up is
+asked of the player.
+
 **A slot a feature GIVES is counted, not restored.** "Give yourself a level 1 spell slot" (Wild
 Resurgence) is the `gain_slot:<level>` verb: `play.spellSlotsGained` is added to the table's counts
 where the pools are built (`rules/spellcasting` ▸ `withGainedSlots`), so the pips, the cast picker and

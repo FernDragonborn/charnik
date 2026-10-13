@@ -164,3 +164,30 @@ describe('what a character chose of a class feature', () => {
 		expect(sheet.missing).toContain('option:pact_of_the_moon');
 	});
 });
+
+describe('a 2024 druid’s Elemental Fury — SRD 5.2.1 ▸ Druid ▸ Level 7', () => {
+	const S = 'SRD 5.2.1';
+	let graph: ContentGraph;
+	beforeAll(async () => {
+		graph = await loadPacks('srd-2024');
+	});
+
+	const druid = (level: number, pick?: string) => {
+		const c = newCharacter('d', 'Druid', '5.5e');
+		c.build.classes = [classRow({ class: `class:${S}:druid`, level })];
+		if (pick) c.build.options = { druid_elemental_fury: [pick] };
+		return deriveSheet(characterSchema.parse(c), graph);
+	};
+	const strike = (level: number, pick?: string) =>
+		druid(level, pick).facts.rolls.find((roll) => roll.id === 'primal_strike');
+
+	it('Primal Strike is an extra 1d8 once a turn, and 2d8 from level 15', () => {
+		expect(strike(7, 'primal_strike')).toMatchObject({ formula: '1d8', limit: 'turn' });
+		expect(strike(15, 'primal_strike')?.formula).toBe('2d8');
+	});
+
+	it('is nobody’s until it is the option chosen', () => {
+		expect(strike(7)).toBeUndefined();
+		expect(strike(7, 'potent_spellcasting')).toBeUndefined();
+	});
+});

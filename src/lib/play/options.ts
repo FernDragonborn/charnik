@@ -8,7 +8,7 @@
  */
 import { rollFormula } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
-import { MAX_SLOT_LEVEL } from '$lib/rules/spellcasting';
+import { MAX_SLOT_LEVEL, castableSlotLevels, slotToSpend } from '$lib/rules/spellcasting';
 import { isResolvedFormula } from '$lib/effects/action-token';
 import type { ActionSlot } from '$lib/combat/roll';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
@@ -28,6 +28,8 @@ import {
 import {
 	canAfford,
 	gainSlot,
+	regainResource,
+	resourceLeft,
 	resourceName,
 	restoreResource,
 	spendOnOption,
@@ -50,7 +52,11 @@ const VERB = {
 	note: 'note',
 	assumeForm: 'assume_form',
 	spendResource: 'spend_resource',
+	spendSlot: 'spend_slot',
 } as const;
+
+/** The lowest level a slot has: any slot will pay for an option that asks for one. */
+const ANY_SLOT_LEVEL = 1;
 
 /** How many strikes one action may ask for. RAW's largest is a handful; the cap is against a content
  *  typo (`attack:dagger:200`) turning one press into two hundred log lines. */
@@ -97,6 +103,14 @@ export interface ActionRun {
 	action: string;
 	/** Rounds an effect lasts when neither the verb nor its row states a length. */
 	effectRounds: number;
+	/** How many uses an `x` cost was answered with — what a verb written per use multiplies by. */
+	amount?: number;
+}
+
+/** `<n>` or `<n>*x`: a level stated outright, or so many levels for each use of an `x` cost. */
+function slotLevelOf(arg: string, amount: number): number {
+	const perUse = /^(\d+)\*x$/.exec(arg.replace(/\s+/g, ''));
+	return perUse ? Number(perUse[1]) * amount : Number(arg);
 }
 
 type Verb = (character: Character, run: ActionRun, arg: string, ctx: PlayContext) => PlayOutcome;
@@ -221,13 +235,21 @@ const VERBS: Record<string, Verb> = {
 			],
 		};
 	},
-	restore_resource: (character, _run, arg, ctx) =>
-		arg ? restoreResource(character, { id: arg }, ctx) : quietly(character),
+	// `<id>` regains every use; `<id>:<n>` gives that many back and no more
+	restore_resource: (character, _run, arg, ctx) => {
+		if (!arg) return quietly(character);
+		const counted = /^(.+):(\d+)$/.exec(arg);
+		return counted
+			? regainResource(character, { id: (counted[1] ?? '').trim(), count: Number(counted[2]) }, ctx)
+			: restoreResource(character, { id: arg }, ctx);
+	},
+	// the slot was chosen and paid before any verb ran, with everything else the option costs
+	[VERB.spendSlot]: (character) => quietly(character),
 	// affordability was settled before the option paid for anything
 	[VERB.spendResource]: (character, _run, arg, ctx) =>
 		arg ? spendResource(character, idAndCount(arg), ctx) : quietly(character),
-	gain_slot: (character, _run, arg, ctx) => {
-		const level = Number(arg);
+	gain_slot: (character, run, arg, ctx) => {
+		const level = slotLevelOf(arg, run.amount ?? 1);
 		return Number.isInteger(level) && level >= 1 && level <= MAX_SLOT_LEVEL
 			? gainSlot(character, { level }, ctx)
 			: quietly(character);
@@ -259,12 +281,14 @@ export function runAction(character: Character, run: ActionRun, ctx: PlayContext
 	);
 }
 
-/** An option being used: which one, how much of an `x` cost, and — for one that assumes a form —
- *  the stat block chosen, with the name its effect is shown under. */
+/** An option being used: which one, how much of an `x` cost (asked for when it is not given), and — for one that assumes a form —
+ *  the stat block chosen, with the name its effect is shown under; for one paid with a spell slot,
+ *  the level of the slot given up. */
 export interface OptionUse {
 	option: ResourceOption;
 	amount?: number;
 	form?: { monster: string; label: string };
+	slot?: number;
 	effectRounds: number;
 }
 
@@ -272,16 +296,17 @@ export interface OptionUse {
  * Use a spend-option. Nothing is paid unless everything can be: the option's own window, its pool,
  * every pool its verbs spend from besides, and the turn slot.
  *
- * An option that assumes a form ASKS which one first, and backing out of that question costs
- * nothing: called without `form` it returns the question and the character untouched, and pays when
- * it is called again with the answer.
+ * An option that assumes a form ASKS which one first, and one paid with a spell slot asks which
+ * slot when more than one level has one left. Backing out of either question costs nothing: called
+ * without the answer it returns the question and the character untouched, and pays when it is
+ * called again with it.
  */
 export function activateOption(
 	character: Character,
 	use: OptionUse,
 	ctx: PlayContext,
 ): PlayOutcome {
-	const { option, amount = 1 } = use;
+	const { option } = use;
 	const sheet = ctx.derive(character);
 	const refuse = (notice: PlayNotice): PlayOutcome => ({
 		...quietly(character),
@@ -291,6 +316,12 @@ export function activateOption(
 	// the `available` guard is a RULE, not a greyed row: every caller passes through here
 	if (!option.available)
 		return refuse({ text: { key: 'combat.notice.notAvailable', values: { name: option.name } } });
+	// a cost of `x` is the player's to say, up to what the pool has left: asked before anything
+	// else, since every later check is of the amount answered
+	const left = resourceLeft(character, sheet, option.resourceId);
+	if (option.cost === 'x' && use.amount === undefined && left >= 1)
+		return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.amount, max: left }] };
+	const amount = use.amount ?? 1;
 	const spend = optionSpend(option, amount);
 	const verbs = verbsOf(option.action);
 	const further = verbs
@@ -318,15 +349,37 @@ export function activateOption(
 	const form = verbs.find(({ verb, arg }) => verb === VERB.assumeForm && !!arg)?.arg.trim();
 	const chosen = use.form;
 	if (form && !chosen) return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.form, form }] };
+	let spellSlot: string | null = null;
+	if (verbs.some(({ verb }) => verb === VERB.spendSlot)) {
+		const { pools } = sheet.spellcasting;
+		const spentSlots = character.play.spellSlotsSpent;
+		const levels = castableSlotLevels(ANY_SLOT_LEVEL, pools, spentSlots);
+		if (levels.length > 1 && use.slot === undefined)
+			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.slot, levels }] };
+		const reserved = slotToSpend(ANY_SLOT_LEVEL, pools, spentSlots, use.slot);
+		if (!reserved || 'block' in reserved)
+			return refuse({
+				text: { key: 'combat.notice.noSpellSlot', values: { name: option.name } },
+				description: { key: 'combat.notice.restToRecharge' },
+			});
+		spellSlot = reserved.key;
+	}
 	const paid = chain(
-		slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character),
-		(charged) => spendOnOption(charged, spend, ctx),
+		chain(slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character), (charged) =>
+			spendOnOption(charged, spend, ctx),
+		),
+		(charged) => {
+			if (spellSlot === null) return quietly(charged);
+			const spent = charged.play.spellSlotsSpent;
+			const spellSlotsSpent = { ...spent, [spellSlot]: (spent[spellSlot] ?? 0) + 1 };
+			return quietly({ ...charged, play: { ...charged.play, spellSlotsSpent } });
+		},
 	);
 	if (form && chosen) return chain(paid, (payer) => assumeForm(payer, { form, ...chosen }, ctx));
 	return chain(paid, (payer) =>
 		runAction(
 			payer,
-			{ name: option.name, action: option.action, effectRounds: use.effectRounds },
+			{ name: option.name, action: option.action, effectRounds: use.effectRounds, amount },
 			ctx,
 		),
 	);

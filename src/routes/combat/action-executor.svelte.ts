@@ -12,13 +12,21 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { type Attack } from '$lib/combat/attacks';
 import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
 import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
-import { activateOption } from '$lib/play/options';
+import { activateOption, type OptionUse } from '$lib/play/options';
 import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '$lib/play/outcome';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
 import type { FormShift } from './form-shift.svelte';
 import type { InventoryTracker } from './inventory.svelte';
+
+/** A question an option asks with a number for an answer: a slot's level, or a count of uses. */
+export interface OptionQuestion {
+	name: string;
+	kind: 'slot' | 'amount';
+	values: number[];
+	answer: (value: number) => void;
+}
 
 /** What the executor needs from the sheet around it. */
 export interface ExecutorHost {
@@ -45,28 +53,61 @@ export class ActionExecutor {
 		return this.host().effects.newEffectDuration;
 	}
 
+	/** A question an option put before anything was paid, as the rows `OptionQuestionDialog` lists:
+	 *  which spell slot pays for it, or how many uses a cost of `x` spends. */
+	asking = $state<OptionQuestion | null>(null);
+
 	/** Carry out an action, then do what it asked of the host. */
 	private run(
 		action: (character: Character, ctx: PlayContext) => PlayOutcome,
-		answer: (monster: string) => void = () => {},
+		answers: Partial<{
+			form: (monster: string) => void;
+			slot: (levels: number[]) => void;
+			amount: (max: number) => void;
+		}> = {},
 	) {
 		for (const ask of this.host().enact(action)?.asks ?? [])
 			if (ask.kind === PLAY_REQUEST.attack) this.makeAttacks(ask.name, ask.weapon, ask.count);
-			else if (ask.kind === PLAY_REQUEST.form) this.host().forms.ask(ask.form, answer);
+			else if (ask.kind === PLAY_REQUEST.form && answers.form)
+				this.host().forms.ask(ask.form, answers.form);
+			else if (ask.kind === PLAY_REQUEST.slot) answers.slot?.(ask.levels);
+			else if (ask.kind === PLAY_REQUEST.amount) answers.amount?.(ask.max);
 	}
 
 	/** Use a spend-option: resource cost and turn slot validated ALL-OR-NOTHING, both paid, its verbs
-	 *  run. An option that assumes a form opens the picker first and is used again with the answer, so
-	 *  backing out of the question costs nothing. */
-	activateResourceOption = (option: ResourceOption, amount = 1) => {
+	 *  run. An option that assumes a form opens the picker first, and one paid with a spell slot asks
+	 *  which slot; either is used again with the answer, so backing out of the question costs
+	 *  nothing. */
+	activateResourceOption = (option: ResourceOption, amount?: number) => {
 		const effectRounds = this.effectRounds;
-		this.run(
-			(c, ctx) => activateOption(c, { option, amount, effectRounds }, ctx),
-			(monster) => {
-				const form = { monster, label: this.host().forms.nameOf(monster) };
-				this.run((c, ctx) => activateOption(c, { option, amount, effectRounds, form }, ctx));
-			},
-		);
+		const question = (
+			kind: OptionQuestion['kind'],
+			values: number[],
+			answer: (value: number) => void,
+		) => {
+			this.asking = {
+				name: option.name,
+				kind,
+				values,
+				answer: (value) => {
+					this.asking = null;
+					answer(value);
+				},
+			};
+		};
+		const use = (answer: Pick<OptionUse, 'form' | 'slot' | 'amount'>) =>
+			this.run((c, ctx) => activateOption(c, { option, effectRounds, ...answer }, ctx), {
+				form: (monster) =>
+					use({ ...answer, form: { monster, label: this.host().forms.nameOf(monster) } }),
+				slot: (levels) => question('slot', levels, (slot) => use({ ...answer, slot })),
+				amount: (max) =>
+					question(
+						'amount',
+						Array.from({ length: max }, (_, i) => i + 1),
+						(picked) => use({ ...answer, amount: picked }),
+					),
+			});
+		use(amount === undefined ? {} : { amount });
 	};
 
 	/** The resource CHIP's primary "use one" gesture. When the pool has exactly ONE action-option, using

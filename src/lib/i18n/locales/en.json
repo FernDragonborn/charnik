@@ -533,7 +533,8 @@
 		},
 		"actions": {
 			"unavailable": "Not available right now",
-			"cantAfford": "Not enough {resource}"
+			"cantAfford": "Not enough {resource}",
+			"costSlot": "spell slot"
 		},
 		"attacks": {
 			"extraAttack": "{name}: an extra attack with {weapon}",
@@ -814,6 +815,14 @@
 			"stateHeldElsewhere": "Already on you from a spell or an item — end it where it is",
 			"slotLevel": "Level {level}",
 			"slotLevelBase": "Level {level} · base",
+			"optionQuestion": {
+				"slot": "Which spell slot pays for it. Nothing is spent until you choose.",
+				"amount": "How many uses to spend. Nothing is spent until you choose."
+			},
+			"optionAnswer": {
+				"slot": "Level {value}",
+				"amount": "{value, plural, one {# use} other {# uses}}"
+			},
 			"takeLongRest": "Take long rest",
 			"takeShortRest": "Take short rest",
 			"takeShortRestSpend": "Take short rest · spend {count}",
@@ -849,6 +858,7 @@
 		"notice": {
 			"notAvailable": "{name} — not available right now",
 			"notEnoughResource": "Not enough {resource} for {name}",
+			"noSpellSlot": "No spell slot left for {name}",
 			"restToRecharge": "Rest to recharge.",
 			"notEnoughResourceBody": "{left} left · costs {cost}. Rest to recharge.",
 			"extraAttackMade": "{name} — already made this turn",

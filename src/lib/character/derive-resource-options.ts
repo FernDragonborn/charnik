@@ -17,7 +17,8 @@ import { characterFeatures } from './features';
 import type { Character } from './schema';
 
 /** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
- *  small integer or `'x'` (player-picked variable spend, 1..remaining); context-dependent costs
+ *  small integer — 0 for an option its pool does not pay for — or `'x'` (player-picked variable
+ *  spend, 1..remaining); context-dependent costs
  *  (spell_level etc.) are deferred — an unsupported cost drops the option with a deriveIssue. */
 export interface ResourceOption {
 	id: string;
@@ -29,7 +30,7 @@ export interface ResourceOption {
 	description: string;
 	/** Bounded action token(s) the UI runs / displays: apply_condition / heal / roll / apply_effect /
 	 *  attack:<weapon id>[:<count>] / gain_action / rest:short|long / restore_resource:<id> /
-	 *  spend_resource:<id>[:<n>] / gain_slot:<level> / note. A
+	 *  spend_resource:<id>[:<n>] / spend_slot / gain_slot:<level> / note. A
 	 *  `;`-separated LIST is a multi-action (Uncanny Metabolism = regain focus AND heal) — run in order
 	 *  on one activation. */
 	action: string;

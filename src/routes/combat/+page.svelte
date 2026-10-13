@@ -21,6 +21,7 @@
 	import Abilities from './blocks/Abilities.svelte';
 	import PanelCard from './blocks/PanelCard.svelte';
 	import FormDialog from './blocks/FormDialog.svelte';
+	import OptionQuestionDialog from './blocks/OptionQuestionDialog.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import NoCharacter from '$lib/components/NoCharacter.svelte';
 	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
@@ -153,6 +154,7 @@
 	</section>
 	<CombatMenus />
 	<FormDialog />
+	<OptionQuestionDialog />
 {/if}
 
 <style>

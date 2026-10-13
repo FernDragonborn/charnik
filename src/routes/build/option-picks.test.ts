@@ -101,13 +101,25 @@ describe('feature options · the builder asks for what the feature row says to c
 		expect(invocations().picks).toEqual(['book_of_ancient_secrets', 'ascendant_step']);
 	});
 
-	it('2024 ships no option of a class feature yet, so its warlock is asked nothing here', async () => {
+	it('2024: a druid chooses one of Elemental Fury’s two at level 7, and its warlock is asked nothing yet', async () => {
 		build.reset();
 		build.graph = await loadPacks('srd-2024');
 		build.draft.system = '5.5e';
-		build.draft.classes = [
-			{ ...newClassRow(), classId: 'class:SRD 5.2.1:warlock', subclassId: null, level: 5 },
-		];
+		const cls = (id: string, level: number) => ({
+			...newClassRow(),
+			classId: `class:SRD 5.2.1:${id}`,
+			subclassId: null,
+			level,
+		});
+		build.draft.classes = [cls('druid', 6)];
+		expect(build.optionPicks.choices).toEqual([]);
+		build.draft.classes = [cls('druid', 7)];
+		expect(choiceOf('druid_elemental_fury').options.map((o) => o.id)).toEqual([
+			'potent_spellcasting',
+			'primal_strike',
+		]);
+		expect(choiceOf('druid_elemental_fury').cap).toBe(1);
+		build.draft.classes = [cls('warlock', 5)];
 		expect(build.optionPicks.choices).toEqual([]);
 	});
 });

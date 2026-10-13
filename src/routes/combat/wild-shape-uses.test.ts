@@ -46,6 +46,8 @@ async function druid(level: number, circle = false): Promise<Character> {
 }
 
 const option = (id: string) => combat.resourceOptions.find((o) => o.id === id);
+/** The question an option is waiting on — read through a call, since a test also clears it. */
+const question = () => combat.executor.asking;
 const levelOneSlots = () =>
 	combat.sheet?.spellcasting.pools.find((pool) => pool.spellLevel === 1)?.max ?? 0;
 
@@ -93,6 +95,113 @@ describe('Wild Resurgence · a use of Wild Shape becomes a level 1 spell slot', 
 	it('is not offered below druid 5', async () => {
 		await druid(4);
 		expect(option('druid_wild_resurgence_slot')).toBeUndefined();
+	});
+});
+
+describe('Wild Resurgence · a spell slot becomes a use of Wild Shape', () => {
+	// "if you have no uses of Wild Shape left, you can give yourself one use by expending a spell
+	// slot (no action required)"
+	const USE = 'druid_wild_resurgence_use';
+	const usesLeft = () => {
+		const pool = combat.sheet?.resources.find((r) => r.id === 'wild_shape');
+		return (pool?.max ?? 0) - (combat.character?.play.resourcesSpent.wild_shape ?? 0);
+	};
+	async function spentDruid(level = 5): Promise<Character> {
+		const c = await druid(level);
+		combat.executor.asking = null;
+		c.play.resourcesSpent = { wild_shape: usesLeft() };
+		return c;
+	}
+
+	it('is offered only once the uses are gone', async () => {
+		const c = await druid(5);
+		expect(option(USE)?.available).toBe(false);
+		const use = option(USE);
+		if (use) combat.activateResourceOption(use);
+		expect(c.play.spellSlotsSpent).toEqual({});
+		await spentDruid();
+		expect(option(USE)?.available).toBe(true);
+	});
+
+	it('asks which slot when several levels have one, and spends nothing until it is told', async () => {
+		const c = await spentDruid();
+		const use = option(USE);
+		if (!use) throw new Error('no option');
+		combat.activateResourceOption(use);
+		expect(question()?.values).toEqual([1, 2, 3]);
+		expect(c.play.spellSlotsSpent).toEqual({});
+		expect(usesLeft()).toBe(0);
+
+		question()?.answer(2);
+		expect(question()).toBeNull();
+		expect(c.play.spellSlotsSpent).toEqual({ '2': 1 });
+		expect(usesLeft()).toBe(1);
+		// no action required, and the once-a-rest half of the feature is untouched
+		expect(c.play.turn).toMatchObject({ action: 0, bonus: 0 });
+		expect(c.play.resourcesSpent.wild_resurgence ?? 0).toBe(0);
+		// one use back is the window closed again
+		expect(option(USE)?.available).toBe(false);
+	});
+
+	it('takes the only slot there is without asking, and is refused when none is left', async () => {
+		const c = await spentDruid();
+		const slots = Object.fromEntries(
+			(combat.sheet?.spellcasting.pools ?? []).map((pool) => [String(pool.spellLevel), pool.max]),
+		);
+		c.play.spellSlotsSpent = { ...slots, '3': (slots['3'] ?? 1) - 1 };
+		const use = option(USE);
+		if (!use) throw new Error('no option');
+		combat.activateResourceOption(use);
+		expect(question()).toBeNull();
+		expect(c.play.spellSlotsSpent['3']).toBe(slots['3']);
+		expect(usesLeft()).toBe(1);
+
+		c.play.resourcesSpent = { wild_shape: usesLeft() + (c.play.resourcesSpent.wild_shape ?? 0) };
+		combat.activateResourceOption(use);
+		expect(usesLeft()).toBe(0);
+	});
+
+	it('is not offered below druid 5, and the chip still assumes a form', async () => {
+		await druid(4);
+		expect(option(USE)).toBeUndefined();
+		await druid(5);
+		combat.useResourceOrEnter('wild_shape', 2);
+		expect(combat.forms.asking?.options.map((row) => row.id)).toEqual(['wolf']);
+	});
+});
+
+describe('Nature Magician · several uses of Wild Shape become one spell slot', () => {
+	// SRD 5.2.1 ▸ Archdruid: "Choose a number of your unexpended uses of Wild Shape and convert them
+	// into a single spell slot, with each use contributing 2 spell levels … Once you use this
+	// benefit, you can't do so again until you finish a Long Rest."
+	const MAGICIAN = 'druid_nature_magician';
+
+	it('asks how many of the uses left, and two of them are a level 4 slot', async () => {
+		const c = await druid(20);
+		combat.executor.asking = null;
+		expect(combat.sheet?.deriveIssues).toEqual([]);
+		c.play.resourcesSpent = { wild_shape: 1 };
+		const magician = option(MAGICIAN);
+		if (!magician) throw new Error('no option');
+		combat.activateResourceOption(magician);
+		expect(question()).toMatchObject({ kind: 'amount', values: [1, 2, 3] });
+		expect(c.play.spellSlotsGained).toEqual({});
+
+		question()?.answer(2);
+		expect(c.play.resourcesSpent).toMatchObject({ wild_shape: 3, nature_magician: 1 });
+		expect(c.play.spellSlotsGained).toEqual({ '4': 1 });
+		expect(c.play.turn).toMatchObject({ action: 0, bonus: 0 });
+
+		// once until a Long Rest: asked again, answered, and refused whole
+		combat.activateResourceOption(magician);
+		question()?.answer(1);
+		expect(c.play.resourcesSpent.wild_shape).toBe(3);
+		expect(c.play.spellSlotsGained).toEqual({ '4': 1 });
+	});
+
+	it('is an Archdruid’s: not offered at druid 19', async () => {
+		await druid(19);
+		expect(option(MAGICIAN)).toBeUndefined();
 	});
 });
 

@@ -143,12 +143,13 @@ export interface OptionSpend {
 	says: string;
 }
 
-/** Can a pool pay this many uses right now? */
+/** Can a pool pay this many uses right now? An option may cost its pool NOTHING — one that is
+ *  paid for with a spell slot instead — and then there is nothing to be short of. */
 export const canAfford = (
 	character: Character,
 	sheet: CharacterSheet,
 	{ resource, cost }: Pick<OptionSpend, 'resource' | 'cost'>,
-): boolean => cost >= 1 && cost <= resourceLeft(character, sheet, resource);
+): boolean => cost >= 0 && cost <= resourceLeft(character, sheet, resource);
 
 /** Pay an option's cost out of its pool, or refuse when the pool cannot cover it. */
 export function spendOnOption(
@@ -173,6 +174,9 @@ export function spendOnOption(
 				},
 			],
 		};
+	// an option that takes nothing from its pool still says what was done, under its own name
+	if (cost === 0)
+		return { ...quietly(character), notices: [{ text: name, description: spend.says }] };
 	const spent = resourceSpent(character, sheet, spend.resource) + cost;
 	return settled(
 		{
@@ -236,6 +240,17 @@ export function restoreResource(
 		},
 		ctx,
 	);
+}
+
+/** Regain `count` expended uses of a pool, never past full — "give yourself one use". Silent, as
+ *  every part of an action that already said what it is. */
+export function regainResource(
+	character: Character,
+	{ id, count }: { id: string; count: number },
+	ctx: PlayContext,
+): PlayOutcome {
+	const spent = countAt(character.play.resourcesSpent, id);
+	return settled(quietly(withSpent(character, id, Math.max(0, spent - count))), ctx);
 }
 
 /** Regain expended uses until at least `upTo` are AVAILABLE — never fewer than are there already

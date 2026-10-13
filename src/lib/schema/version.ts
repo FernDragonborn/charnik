@@ -134,7 +134,11 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v45: both packs gain `options_srd.csv` — the varieties of the six items whose rarity varies, and
 // a 2014 warlock's Pact Boons and Eldritch Invocations, which its two feature rows now `choose`.
 // An install left at v44 never receives the file, and its Belt of Giant Strength stays a sentence.
-export const CONTENT_SEED_VERSION = 45;
+// v46: the 2024 druid's Elemental Fury is a choice — its feature row says `choose`, and Potent
+// Spellcasting and Primal Strike are options. An install left at v45 is asked nothing at level 7.
+// v47: a 2024 druid's Wild Resurgence gives a use back for a spell slot (`spend_slot`), and an
+// Archdruid's Nature Magician turns uses into one slot. An install left at v46 has neither option.
+export const CONTENT_SEED_VERSION = 47;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

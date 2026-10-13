@@ -243,8 +243,7 @@ position and are given per wave, because most of them were learned the hard way.
   full `pnpm lint:typed`, the version in three files).
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
-  and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
-  Magician), SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
+  (a form's species traits and equipment), Mystic Arcanum, SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
   OPTION-ROWS, E4, MOBILE-ALPHA's tap
   targets, DEFENCE-STRIP — the `Saves` group ships in the form it has and is redrawn for 0.9.0 —
   and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the

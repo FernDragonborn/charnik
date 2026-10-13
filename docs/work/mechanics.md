@@ -143,16 +143,7 @@ stay semi-manual.
   the casting block ship, each stated by the feature's own `form` tokens
   (`../internals/effects.md` ▸ A form) and proven against both packs. The per-edition spec is
   [`../research/wild-shape.md`](../research/wild-shape.md). What is left, in the order it is worth doing:
-  1. **Two of the things a 2024 use buys.** Wild Companion, Land's Aid, Nature's Sanctuary and the
-     use-for-a-slot half of Wild Resurgence ship as options (`../internals/actions.md` ▸ §2). What
-     is left trades in the other direction or in bulk, and both are under Spellcasting below:
-     Wild Resurgence's first half spends a spell SLOT for a use, and Nature Magician turns several
-     uses into one slot.
-  2. **Primal Strike** (2024 Elemental Fury) is one of TWO options the feature offers, so it waits
-     on its option rows like every other choice. What it is once chosen is sayable: "once on each of
-     your turns when you hit … you can cause the target to take an extra 1d8" is a granted roll
-     limited to a turn, the shape Sneak Attack has, and it needs no scope for a form's attacks.
-  3. **What a 2024 form leaves of the SPECIES.** SRD 5.2.1 replaces "your game statistics" and
+  1. **What a 2024 form leaves of the SPECIES.** SRD 5.2.1 replaces "your game statistics" and
      lists what is retained — "creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and
      Charisma scores; class features; languages; and feats" — and a species trait is not on the
      list, so RAW an elf's Darkvision and a dwarf's poison resistance are gone in the form while a
@@ -160,12 +151,12 @@ stay semi-manual.
      the senses, it turns on where a token CAME from rather than on what it targets, and it is a
      reading many tables do not play — so it wants both offered, not one picked. (The 2014 sentence
      about special senses is built: `form:wild_shape:only_senses`.)
-  4. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
+  2. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
      keeps working. Nothing is modelled: a worn item's bonus still folds, and the form's SET of
      Armor Class is what stands over an armor's.
-  5. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
+  3. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
      made ahead of time; the rest itself offers nothing.
-  6. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
+  4. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
      block's listed modifier standing as a floor — the same number in every shipped beast, and RAI
      where a homebrew stat block lists a proficiency its modifier does not show.
 - [~] **PLG-TAILS · a sheet cannot tell that a plugin is a DIFFERENT VERSION of the one it was
@@ -259,20 +250,13 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
-- [~] **Resource subsystem · a slot can be gained; it cannot yet be the PRICE.** Pools, their pips,
-  the spend path, both rests and a slot a feature gives (`gain_slot`, `../internals/rules-core.md` ▸
-  Spellcasting) are built. What is left, in the order it is worth doing:
-  1. **A spell slot as what an option costs.** Wild Resurgence: "if you have no uses of Wild Shape
-     left, you can give yourself one use by expending a spell slot"; Wild Companion takes "a spell
-     slot or a use". An option's cost names a POOL, and which slot to give up is the player's
-     choice, so this is the cast's slot picker reached from an option, plus a verb that gives ONE
-     use back (`restore_resource` gives all). The window is sayable today:
-     `resource.wild_shape==0` in `available`.
-  2. **Nature Magician: several uses become one slot**, "each use contributing 2 spell levels".
-     The cost is `x`, which the schema reads and no control lets a player pick — every option is
-     activated with an amount of 1 — and the action would have to read that amount
-     (`gain_slot:2*x`), while an action's formula is resolved at derive, before any amount exists.
-  3. **Mystic Arcanum is a pool, not a slot** — both SRDs say "cast … once without expending a
+- [~] **Resource subsystem · Mystic Arcanum is a pool, not a slot.** Pools, their pips, the spend
+  path, both rests, a slot a feature gives (`gain_slot`), a slot as what an option costs
+  (`spend_slot`) and a cost the player names (`x`) are built (`../internals/actions.md` §2,
+  `../internals/rules-core.md` ▸ Spellcasting). Wild Resurgence's "once on each of your turns" is
+  not held: the option's window is having no use left, and nothing counts turns for an option.
+  What is left:
+  - **Mystic Arcanum** — both SRDs say "cast … once without expending a
      spell slot", which is the pool a cast already offers to pay from. What blocks it is not a
      token: the level of spell a warlock may learn reads the Pact Magic table, which stops at 5,
      so there is no way to choose the level 6 spell the arcanum is. Natural Recovery's free cast

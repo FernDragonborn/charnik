@@ -533,7 +533,8 @@
 		},
 		"actions": {
 			"unavailable": "Зараз недоступно",
-			"cantAfford": "Недостатньо: {resource}"
+			"cantAfford": "Недостатньо: {resource}",
+			"costSlot": "комірка заклять"
 		},
 		"attacks": {
 			"extraAttack": "{name}: додаткова атака — {weapon}",
@@ -814,6 +815,14 @@
 			"stateHeldElsewhere": "Вже на вас від закляття або предмета — зніміть його там, де воно є",
 			"slotLevel": "Рівень {level}",
 			"slotLevelBase": "Рівень {level} · базовий",
+			"optionQuestion": {
+				"slot": "Якою коміркою заклять заплатити. Нічого не витрачається, доки ви не оберете.",
+				"amount": "Скільки використань витратити. Нічого не витрачається, доки ви не оберете."
+			},
+			"optionAnswer": {
+				"slot": "Рівень {value}",
+				"amount": "{value, plural, one {# використання} few {# використання} other {# використань}}"
+			},
 			"takeLongRest": "Довгий відпочинок",
 			"takeShortRest": "Короткий відпочинок",
 			"takeShortRestSpend": "Короткий відпочинок · витратити {count}",
@@ -849,6 +858,7 @@
 		"notice": {
 			"notAvailable": "{name} — зараз недоступно",
 			"notEnoughResource": "Бракує «{resource}» для «{name}»",
+			"noSpellSlot": "Не лишилося комірок заклять для «{name}»",
 			"restToRecharge": "Відновіть відпочинком.",
 			"notEnoughResourceBody": "Лишилось {left} · коштує {cost}. Відновіть відпочинком.",
 			"extraAttackMade": "{name} — цього ходу вже зроблено",

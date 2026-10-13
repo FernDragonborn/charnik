@@ -61,6 +61,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   which; Strict holds you to it and Free lets you take it anyway. What you chose is listed with
   your features, and Beguiling Influence's two skills are on the sheet. Not yet chosen in the
   app: 2014's Fighting Styles and Metamagic, and the 2024 invocations.
+- **A 2024 druid chooses Elemental Fury at level 7.** Primal Strike is a roll on the sheet — an
+  extra 1d8 once on each of your turns, 2d8 from level 15 — and Potent Spellcasting is listed with
+  your features; its Wisdom modifier on a cantrip's damage is added by hand.
 - **A 2014 druid's own Darkvision goes dark in a form that has none.** "You can't use any of your
   special senses, such as darkvision, unless your new form also has that sense" — a wolf does
   not, a giant badger does, and then the longer range stands. 2024 has no such sentence.
@@ -77,8 +80,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
 - **What else a use of Wild Shape buys (2024).** Wild Companion, Land's Aid and Nature's Sanctuary
   are actions that spend a use, the last two only for a Circle of the Land druid. Wild Resurgence
   turns a use into a level 1 spell slot once per Long Rest — one more pip than your table gives,
-  gone at the next Long Rest. Spending a slot for a use is still two pips set by hand, and Nature
-  Magician is not modelled yet.
+  gone at the next Long Rest. Its other half gives a use back for a spell slot once none is left,
+  and asks which slot when you have more than one level to give. An Archdruid's Nature Magician
+  asks how many uses to convert and hands back one slot of twice that level, once per Long Rest.
 - **Weapon mastery (2024).** Every 2024 weapon has carried its mastery property since the pack was
   written and nothing read it, because the property does nothing until a feature unlocks that kind
   of weapon for you. That feature is here: a capped chip pane off the Attacks card, offered only to

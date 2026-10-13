@@ -56,6 +56,8 @@ export const PLAY_REQUEST = {
 	form: 'form',
 	cast: 'cast',
 	weapon: 'weapon',
+	slot: 'slot',
+	amount: 'amount',
 } as const;
 
 /**
@@ -63,14 +65,19 @@ export const PLAY_REQUEST = {
  *
  * A strike and a cast's rolls are ROLLS, and a roll the player may build in the dice tray is the
  * host's to make: the action has paid for it, and nothing about the result lands in play-state.
- * Which stat block a form takes, and which weapon a spell is laid on, are QUESTIONS, asked before
+ * Which stat block a form takes, which slot pays for an option, and which weapon a spell is laid
+ * on, are QUESTIONS, asked before
  * anything is paid — the action is called again with the answer.
  */
 type PlayRequest =
 	| { kind: typeof PLAY_REQUEST.attack; weapon: string; count: number; name: string }
 	| { kind: typeof PLAY_REQUEST.form; form: string }
 	| { kind: typeof PLAY_REQUEST.cast; spell: string; ritual: boolean; slotLevel: number }
-	| { kind: typeof PLAY_REQUEST.weapon; spell: string };
+	| { kind: typeof PLAY_REQUEST.weapon; spell: string }
+	/** Which spell slot an option is paid with, where more than one level has a slot left. */
+	| { kind: typeof PLAY_REQUEST.slot; levels: number[] }
+	/** How many uses an option with a cost of `x` spends, up to what its pool has left. */
+	| { kind: typeof PLAY_REQUEST.amount; max: number };
 
 /** A concentration save a hit has made due: the damage that made it due, the DC that damage sets,
  *  and the spell it is owed for. The damage is kept because two of these may turn out to be ONE hit

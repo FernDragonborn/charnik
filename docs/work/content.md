@@ -125,8 +125,10 @@
   - **2014 Metamagic** — eight options, two at 3rd level and one more at 10th and 17th.
   - **2024 Eldritch Invocations and Metamagic** — the feature rows name the choice and the pack
     carries none of the options.
-  - **2024 choices of two or three** stated inside a feature's prose: Divine Order, Primal Order,
-    Elemental Fury.
+  - **2024 choices of two** stated inside a feature's prose: Divine Order, Primal Order and
+    Blessed Strikes. Elemental Fury's two ship, Primal Strike as a roll once a turn; Potent
+    Spellcasting's Wisdom modifier on a druid cantrip's damage is text, waiting on the same
+    scoped bonus Agonizing Blast does.
 - [ ] **FIGURINE-2024 · the 2024 Figurine of Wondrous Power stops after the Ebony Fly.** The
   row's text ends at the Giant Fly's stat block heading, so the stat block and the seven
   figurines after it are missing from the entry. Its nine varieties are whole — they are rows of

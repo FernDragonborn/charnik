@@ -156,7 +156,12 @@
 				>
 					<span class="row-name">{o.name}</span>
 					<span class="combat-row-hint">
-						<span class="cost-chip">{o.cost === 'x' ? 'X' : o.cost} {o.resourceName}</span>
+						<!-- an option that takes nothing from its pool is paid some other way, and says which -->
+						<span class="cost-chip"
+							>{o.cost === 0
+								? $_('combat.actions.costSlot')
+								: `${o.cost === 'x' ? 'X' : o.cost} ${o.resourceName}`}</span
+						>
 					</span>
 					<span class="combat-row-desc">{o.description}</span>
 					<!-- a closed vocabulary reads from the catalog; `bonus_action` is not the word every

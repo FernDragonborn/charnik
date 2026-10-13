@@ -1858,7 +1858,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
 - `interface ActionRun` — What running an action is told besides its verbs.
 - `function runAction` — Run an action's RESOLVED verbs in order (a formula in one is already resolved at derive).
-- `interface OptionUse` — An option being used: which one, how much of an `x` cost, and — for one that assumes a form — * the stat block chosen…
+- `interface OptionUse` — An option being used: which one, how much of an `x` cost (asked for when it is not given), and — for one that assumes…
 - `function activateOption` — * Use a spend-option.
 - `function activateOptionById` — * Use a spend-option named by the identity a row has — its own id on the pool it spends — which is * what a caller th…
 
@@ -1890,6 +1890,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function spendResource` — Spend `count` uses of a pool as PART of an action that already said what it is — a feature * paying out of a pool ano…
 - `function gainSlot` — One more spell slot of a level.
 - `function restoreResource` — Regain ALL expended uses of a pool.
+- `function regainResource` — Regain `count` expended uses of a pool, never past full — "give yourself one use".
 - `function restoreResourceUpTo` — Regain expended uses until at least `upTo` are AVAILABLE — never fewer than are there already * ("regain expended unt…
 - `function passBoundary` — * Dawn, or dusk.
 
@@ -2290,4 +2291,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1391 exports across 193 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1392 exports across 193 modules · 94 duplicate suspects._
