@@ -124,6 +124,11 @@ stay semi-manual.
   - **Motion lives on that face and nowhere else on the sheet**, and stands still under
     `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
     it never blinks.
+  - **The third save ends it on one face, whatever motion led there.** The side that won takes
+    the whole block, still moving as itself, and the block says what happened in a bold word:
+    `Stabilized` on the rescue's own ground, `Dead` in white on a block gone black. Only the way
+    in differs between motions. The healing control stays under the word as the way back up
+    (`_death-saves-verdict.png`).
   - **The player picks the motion, and every motion drawn ships beside a still face.** `Rays & Hellfire` plays until the player picks another; `No animation` is the choice already made when the system asks for reduced motion, and it is one press for anyone else. The list opens from a pencil: a tab on the block's left side, outside its frame,
     there only while the pointer or the focus is on the block — and always where there is no
     pointer to rest, since a touch screen has no other way to find it. The list never covers the
