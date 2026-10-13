@@ -69,6 +69,8 @@ export class SkillPicks {
 	speciesSkillPicks = $derived.by(() =>
 		this.host().draft.speciesSkills.slice(0, this.speciesSkillCount),
 	);
+	/** How many of the species' skills are still to choose. */
+	speciesSkillsOwed = $derived(Math.max(this.speciesSkillCount - this.speciesSkillPicks.length, 0));
 	/** Strict-mode guard, the same one a feat's grant uses: a skill already proficient from another
 	 *  source is a wasted pick — disabled in Strict, allowed in Free. */
 	speciesSkillTakenElsewhere = (skill: string): boolean =>

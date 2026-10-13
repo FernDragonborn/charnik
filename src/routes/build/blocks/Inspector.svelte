@@ -21,6 +21,7 @@
 	import InventoryPane from './InventoryPane.svelte';
 	import NotesPane from './NotesPane.svelte';
 	import FormsPane from './FormsPane.svelte';
+	import OptionsPane from './OptionsPane.svelte';
 	import type { Component } from 'svelte';
 	const b = build;
 
@@ -32,6 +33,7 @@
 		skills: SkillsPane,
 		masteries: MasteriesPane,
 		forms: FormsPane,
+		options: OptionsPane,
 		languages: LanguagesPane,
 		spells: SpellsPane,
 		inventory: InventoryPane,

@@ -296,6 +296,10 @@ const classFeatureSchema = baseRow.extend({
 	 *  column of their Features table); the other three say a flat two and name no table. Curated onto
 	 *  the row like `effects`; empty → 0. */
 	mastery_slots: optStr,
+	/** How many of this feature's OPTIONS the character picks — the rows of the `option` type that
+	 *  name it in `option_of` (a Pact Boon's three, the Eldritch Invocations). The same `level:count`
+	 *  grammar as the two columns above and the same reader; empty → the feature asks nothing. */
+	choose: optStr,
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
@@ -610,6 +614,27 @@ const resourceSchema = namedRow;
  *  that carries the property, never gathered onto the whole character. */
 const weaponPropertySchema = baseRow;
 
+/**
+ * One of several things a row is: a variety of an item the book prints once (a Belt of Hill Giant
+ * Strength), or one of the options a class feature has the character choose between (a Pact Boon).
+ * One type for both, because both are "this row, answered with one of these, each with tokens of
+ * its own" — which a word (`choice_options`) or a number (`bonus_choice`) cannot carry.
+ */
+const optionSchema = baseRow.extend({
+	/** The parent row as `<type>:<id>` — `item:belt_of_giant_strength`,
+	 *  `class_feature:warlock_pact_boon`. Matched by edition and never by source, as a class feature
+	 *  is matched to its class, so a homebrew option attaches to a shipped row. */
+	option_of: reqStr,
+	/** An item variety's own rarity; blank inherits the parent's. */
+	rarity: z.preprocess(blankToUndef, Rarity.optional()),
+	/** The id of another option the character must hold first (an invocation that names a boon). */
+	requires: optStr,
+	/** The class level the option opens at; blank is the level its parent is gained at. */
+	level: optInt,
+	/** The rituals this option lets its class cast (`RITUAL_SOURCE`), as a class row states its own. */
+	ritual_source: RitualSourceColumn,
+});
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -632,6 +657,7 @@ export const CONTENT_TYPES = {
 	resource: { schema: resourceSchema, filebase: 'resources' },
 	weapon_property: { schema: weaponPropertySchema, filebase: 'weapon_properties' },
 	advancement: { schema: advancementSchema, filebase: 'advancement' },
+	option: { schema: optionSchema, filebase: 'options' },
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -680,35 +706,8 @@ export type ProseBase = (typeof PROSE_BASES)[number];
  *  (`noUncheckedIndexedAccess`), which is the intended "missing translation → EN fallback" signal. */
 type ProseLocaleColumns = Partial<Record<`${ProseBase}_${string}`, string>>;
 
-/** Tracked localization status of a row's translation into ONE locale — set in the translate view and
- *  stored per-locale in a `loc_status_<loc>` column (in-file, beside the prose). `reviewed` and
- *  `machine` are set ONLY explicitly; an UNSET column derives a default from prose coverage (no prose →
- *  not_started, some prose → started), so legacy already-translated rows read right and pristine rows
- *  need no write. EXTENSIBLE: add a member here + a marker glyph + a `translate.status.<x>` i18n key and
- *  it appears in the control/marker automatically (both iterate LOC_STATUS_ORDER). Object order =
- *  display order (rawest → done). Compare via the named members, never bare strings. */
-export const LOC_STATUS = {
-	notStarted: 'not_started',
-	machine: 'machine',
-	started: 'started',
-	/** was translated, and the source prose has moved since — set by `locale-merge.ts`, cleared by hand */
-	outdated: 'outdated',
-	reviewed: 'reviewed',
-} as const;
-export type LocStatus = (typeof LOC_STATUS)[keyof typeof LOC_STATUS];
-
-/** The statuses in display order (control buttons + marker legend) — LOC_STATUS insertion order. */
-export const LOC_STATUS_ORDER = Object.values(LOC_STATUS);
-
-/** Narrow a raw cell to a known status. Unknown junk (a hand-typed bad value) is NOT a status, so the
- *  reader treats the column as unset and derives the default rather than trusting it. */
-export function isLocStatus(value: unknown): value is LocStatus {
-	return typeof value === 'string' && (LOC_STATUS_ORDER as readonly string[]).includes(value);
-}
-
-/** Column base for the per-locale tracked status (`loc_status_uk`, `loc_status_pt-BR`). One source of
- *  truth shared by the loader re-attach, the translate write path and the column-key type below. */
-export const LOC_STATUS_COL_BASE = 'loc_status';
+export * from './loc-status';
+import { LOC_STATUS_COL_BASE } from './loc-status';
 
 /** Tracked-status columns the strict per-type schema strips (it declares no `loc_status_*`) and the
  *  loader re-attaches, mirroring the prose columns. Value is the raw cell string (validated to a

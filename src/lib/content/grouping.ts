@@ -4,7 +4,8 @@
  * "A–Z" fallback; and a primary filter facet plus the always-present Source filter. Pure —
  * the page just drives these.
  */
-import { rowName, type LoadedRow } from './loader';
+import { rowName, type ContentGraph, type LoadedRow } from './loader';
+import { itemRarities } from './options';
 import { titleCase } from '$lib/util/format';
 import type { Translate } from '$lib/i18n';
 import { SYSTEMS, type ContentType } from './schemas';
@@ -77,6 +78,7 @@ const GROUPINGS: Partial<Record<ContentType, Grouping[]>> = {
 	species: [{ key: 'source', labelKey: 'contentField.source' }],
 	species_option: [{ key: 'species_id', labelKey: 'compendium.groupBySpecies' }],
 	language: [{ key: 'category', labelKey: 'contentField.category' }],
+	option: [{ key: 'option_of', labelKey: 'contentField.option_of' }],
 };
 
 /** The primary filter facet for a type (Source is always offered on top of this). */
@@ -112,13 +114,31 @@ const fieldVal = (r: LoadedRow, key: string): string => {
 	return '';
 };
 
-/** Distinct non-empty values of a field across rows (for filter chips), sorted. */
-export function distinctValues(rows: LoadedRow[], key: string): string[] {
-	const set = new Set<string>();
-	for (const r of rows) {
-		const v = fieldVal(r, key);
-		if (v) set.add(v);
+/** The column an item is filed under more than once: a row the book prints once and finds at
+ *  several rarities stands in each of them (`itemRarities`). */
+const RARITY_KEY = 'rarity';
+
+/**
+ * Every value a row has for a grouping or facet key — one, except where the row is several things
+ * at the table. Never empty: a row with no value still has to land in a bucket.
+ */
+export function fieldValues(r: LoadedRow, key: string, graph?: ContentGraph | null): string[] {
+	if (key === 'source') return [r.source];
+	if (r.type === 'item' && key === RARITY_KEY) {
+		const rarities = itemRarities(r, graph);
+		if (rarities.length) return rarities;
 	}
+	return [fieldVal(r, key)];
+}
+
+/** Distinct non-empty values of a field across rows (for filter chips), sorted. */
+export function distinctValues(
+	rows: LoadedRow[],
+	key: string,
+	graph?: ContentGraph | null,
+): string[] {
+	const set = new Set<string>();
+	for (const r of rows) for (const v of fieldValues(r, key, graph)) if (v) set.add(v);
 	return [...set].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
@@ -134,20 +154,19 @@ const crValue = (s: string) =>
 export function groupRows(
 	rows: LoadedRow[],
 	key: string,
-	type: ContentType,
-	t: Translate,
+	{ type, t, graph }: { type: ContentType; t: Translate; graph?: ContentGraph | null },
 ): { label: string; rows: LoadedRow[] }[] {
 	if (key === 'none') {
 		return [{ label: '', rows: [...rows].sort(compareRows) }];
 	}
 	const buckets = new Map<string, LoadedRow[]>();
-	for (const r of rows) {
-		const raw = key === 'source' ? r.source : fieldVal(r, key);
-		const k = raw || '—';
-		const bucket = buckets.get(k) ?? [];
-		bucket.push(r);
-		buckets.set(k, bucket);
-	}
+	for (const r of rows)
+		for (const raw of fieldValues(r, key, graph)) {
+			const k = raw || '—';
+			const bucket = buckets.get(k) ?? [];
+			bucket.push(r);
+			buckets.set(k, bucket);
+		}
 	const keys = [...buckets.keys()];
 	if (type === 'spell' && key === 'level') keys.sort((a, b) => Number(a) - Number(b));
 	else if (type === 'monster' && key === 'cr') keys.sort((a, b) => crValue(a) - crValue(b));

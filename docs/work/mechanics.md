@@ -14,7 +14,7 @@ Core insight: PHB class features reduce to THREE kinds, and the engine for two o
 already exists — a **passive** (modifier tokens on the row, folded like any other), an **action**
 (activatable) = COMPOSITION of existing systems (`economy.trySpend` + `resourcesSpent` + `addEffect`
 with duration + `rollPool` — no new engine, new `class_features` columns: activation slot,
-resource cost, applied tokens, duration, roll), and a **choice** (`choice_group` + `choose_n` columns; generalizes the builder's slotFeats
+resource cost, applied tokens, duration, roll), and a **choice** (`option` rows + the feature's `choose` column; generalizes the builder's slotFeats
 pattern; a chosen row then behaves as a passive or an action).
 Level scaling stays formula-free: per-level `class_features` rows re-grant (monk die d6→d12,
 superiority d8→d12) — the table is already keyed by level; L2 expressions not needed for ~90%
@@ -44,12 +44,12 @@ stay semi-manual.
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
   attacks via the existing `bonusDice` path. Extra Attack is built (`../internals/effects.md` ▸
   Targets). The fold ALREADY gathers feature tokens (`derive-gather` ▸ `considerFeature` pushes each qualifying row at the `feature` layer), so a passive token on a
-  class-feature row works the day it is written — FEATURE-PASSIVES is written against that. What is
-  still owed here is the content-schema column bump for the action and choice kinds.
-  **The measurement that sizes the choice kind, so it is not re-taken:** of the shipped class-feature rows
-  in both editions, only a handful carry any effect token. So Fighting Style · Metamagic · Eldritch Invocations · Weapon Mastery · Pact Boon · Divine
-  Order · Primal Order · Epic Boon have no column a picker could read, and a panel for them today
-  would be a lie — they are blocked on the `choice_group` / `choose_n` columns, not on UI.
+  class-feature row works the day it is written — FEATURE-PASSIVES is written against that. **The
+  choice kind is built**: a feature's options are rows of the `option` type and its `choose`
+  column says how many (`../internals/content.md` ▸ One row, several options), with the builder's
+  Feature options pane asking. A 2014 warlock's Pact Boon and Eldritch Invocations ship on it;
+  the choices that are not rows yet are `content.md` ▸ OPTION-ROWS. What is still owed here is
+  the content-schema column bump for the action kind.
   Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
   Divinity, Font of Magic, Indomitable, Arcane Recovery, Mystic Arcanum, Natural Recovery, Stunning
   Strike. The Resources block discovers pools from the engine, so each appears the moment content
@@ -83,20 +83,14 @@ stay semi-manual.
   — which is not the same number: a reroll can land on a 1 again, a floor cannot. The `reroll` kind was
   built for exactly this sentence and has no shipped row.
 
-  **What actually blocks it is where 2014 keeps its fighting styles.** They are prose inside ONE
-  `fighter_fighting_style` row, not a row per style, and 2014 ships exactly one feat (Grappler). So
-  there is nothing to author the token onto until the styles are rows the player picks between — N2's
-  chooser, same shape as the 2024 fighting-style feats already have. Once they are, the token is
-  `reroll:damage:two_handed,melee:2` and the edition divergence is said rather than smoothed.
-
-  **Sized, by reading rather than recalling.** SRD 5.1 prints fourteen style options under three
-  class features — six for the Fighter, four each for the Paladin and the Ranger, six distinct
-  styles between them — and they are options OF a feature, not feats: 2014's feats are an optional
-  rule, and a style offered in an ASI slot would be a rule that edition does not have. So the home
-  is an option row with a parent, the shape `species_option` already is, plus a count to pick; that
-  shape is 65 references across 21 files today, which is the honest size of a second one, and a new
-  content type is not a backwards-compatible change (`../internals/content.md`). It is N2's choice kind
-  and is built once, for Metamagic and the Invocations with it.
+  **What is left is where 2014 keeps its fighting styles.** They are prose inside ONE
+  `fighter_fighting_style` row, not a row per style. SRD 5.1 prints fourteen style options under
+  three class features — six for the Fighter, four each for the Paladin and the Ranger, six
+  distinct styles between them — and they are options OF a feature, not feats: 2014's feats are an
+  optional rule, and a style offered in an ASI slot would be a rule that edition does not have. So
+  each is an `option` row of its feature, typed from the SRD (`content.md` ▸ OPTION-ROWS), and the
+  token goes on the row: `reroll:damage:two_handed,melee:2`, the edition divergence said rather
+  than smoothed.
   **Until then a 2014 player says a style with an effect of their own**: a homebrew effect row
   carrying `extra_attack:light:modifier` (Two-Weapon Fighting) or `reroll:damage:two_handed,melee:2`
   folds like any other, and `mastery_content.test.ts` pins the first.
@@ -110,10 +104,10 @@ stay semi-manual.
   Ranger's (level 2).
   **The smallest model** is the column the species already has: `feat_choice` on the class-feature
   row, read by `FeatSlots` into one more slot whose menu is that list. It is deliberately NOT
-  built without a sign-off, because it answers for 2024 the question N2's choice kind asks for both
-  editions, and two answers to "a feature offers a choice" is the thing to avoid. The Paladin's and
+  built without a sign-off, because it answers for 2024 the question the `option` type answers for
+  both editions, and two answers to "a feature offers a choice" is the thing to avoid. The Paladin's and
   Ranger's alternative ("instead of choosing one of those feats, you can choose the option below")
-  is not a feat and needs the choice kind either way.
+  is not a feat and is an `option` row either way.
 
 - [ ] **FEATURE-PASSIVES · the passive features, named.** N2 says the passive kind is a token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
@@ -130,9 +124,9 @@ stay semi-manual.
     `lands_stride`, `hunter_defensive_tactics`, `holy_nimbus`, `thief_supreme_sneak`, 2024
     `studied_attacks`, `precise_hunter`, `innate_sorcery`. The app has no enemy and no turn history
     to test the condition against; surfacing the text is the honest behaviour.
-  - **A choice, so it waits on `choose_n`** (N2's choice kind): `fiendish_resilience` and 2024
+  - **A choice, so it waits on its option rows** (`content.md` ▸ OPTION-ROWS): `fiendish_resilience` and 2024
     `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
-    change — and `pact_boon`, a choice of three. The same wait holds every proficiency that is a
+    change — a 2014 `pact_boon` is chosen already. The same wait holds every proficiency that is a
     CHOICE: 2024 Divine Order and Primal Order, College of Lore, the 2024 elf's one-of-three Keen
     Senses.
   - **Not the passive kind at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
@@ -155,7 +149,7 @@ stay semi-manual.
      Wild Resurgence's first half spends a spell SLOT for a use, and Nature Magician turns several
      uses into one slot.
   2. **Primal Strike** (2024 Elemental Fury) is one of TWO options the feature offers, so it waits
-     on N2's choice kind like every other choice. What it is once chosen is sayable: "once on each of
+     on its option rows like every other choice. What it is once chosen is sayable: "once on each of
      your turns when you hit … you can cause the target to take an extra 1d8" is a granted roll
      limited to a turn, the shape Sneak Attack has, and it needs no scope for a form's attacks.
   3. **What a 2024 form leaves of the SPECIES.** SRD 5.2.1 replaces "your game statistics" and
@@ -190,28 +184,26 @@ stay semi-manual.
   scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
   field, so there is one shape downstream. Rage's damage reads it in both editions; what is left is
   the other consumer:
-  - [ ] **Agonizing Blast.** It is NOT the one content row it was billed as: the packs carry a
-        single `warlock_eldritch_invocations` row and no row per invocation, in either edition, so
-        there is nothing to hang `damage.eldritch_blast+cha_mod` on. Two gaps, not one — the
-        invocation rows (the 2014 source names Agonizing Blast exactly once, under a heading the
-        converter does not emit) and the chooser that picks two of them, which is N2's choice kind.
+  - [ ] **Agonizing Blast.** The 2014 invocation is a row a warlock picks (`option`
+        `agonizing_blast`) and carries no token yet: `damage.eldritch_blast+cha_mod` goes on it,
+        with the cast scoping it to the spell's id. The 2024 pack carries no invocation rows
+        (`content.md` ▸ OPTION-ROWS).
         Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
         scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
         inventory entry has no identity of its own to scope to.
-- [ ] **A17 · a 2014 warlock's Pact of the Tome cannot ritual.** Ritual casting ships for every
-  class and for a spell a feat teaches: `ritual_source` on the class, subclass or feat row, both
-  packs' 29 ritual tags, and the rule in `../internals/rules-core.md` ▸ Spellcasting. The one caster
-  left is the Tome warlock, and **the boon is not where SRD 5.1 puts the rituals.** Pact of the
-  Tome gives a Book of Shadows and three cantrips; what inscribes rituals in it is an INVOCATION,
-  Book of Ancient Secrets ("Prerequisite: Pact of the Tome feature … You can now inscribe magical
-  rituals in your Book of Shadows"). The boon's only ritual is the Chain's, and it is one spell
-  ("You learn the find familiar spell and can cast it as a ritual"). So this is two choices and a
-  link between them, not one row: the boon as a choice of three, the invocations as options —
-  which the pack does not carry at all, the row names them and lists none — and an option that
-  REQUIRES another. The shape is signed off with the item varieties it shares
-  (`content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1: `option_of`, `requires`, `ritual_source`). The invocation
-  rows are typed from the SRD like any other (`content.md` ▸ SRD-TRANSCRIPTION), and the same rows
-  are what SCOPED-BONUS's Agonizing Blast waits on.
+- [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
+  warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
+  that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —
+  "You can also cast a warlock spell you know as a ritual if it has the ritual tag"
+  (`../internals/rules-core.md` ▸ Spellcasting). Two things the same texts state are still only
+  text, and both want a spell a character holds OUTSIDE their class list:
+  - **The book's own rituals.** "Choose two 1st-level spells that have the ritual tag from any
+    class's spell list … You can't cast the spells except as rituals", and more are transcribed
+    into it later. A spell choice with no class list behind it and a ritual-only flag on the
+    entry; a feat's `spell_choice` is the nearest shape and asks for ONE list.
+  - **Pact of the Chain's find familiar** — "You learn the find familiar spell and can cast it as
+    a ritual. The spell doesn't count against your number of spells known": a spell a row GRANTS,
+    which no token says. The Tome's three cantrips from any list are the same gap.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart

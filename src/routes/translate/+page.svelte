@@ -110,7 +110,7 @@
 	});
 	const groupBy = $derived(groupingsFor(selectedType)[0]?.key ?? '');
 	const groups = $derived(
-		groupRows(rows.slice(0, 500), groupBy, selectedType, $_).map((g) => ({
+		groupRows(rows.slice(0, 500), groupBy, { type: selectedType, t: $_ }).map((g) => ({
 			label: g.label,
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,

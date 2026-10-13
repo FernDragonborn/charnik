@@ -114,6 +114,8 @@ const LABELS: Record<string, string> = {
 	caster_from_level: 'Casting from level',
 	prepare_style: 'Prepare style',
 	ritual_source: 'Rituals from',
+	option_of: 'Option of',
+	choose: 'Options to choose',
 };
 const label = (name: string): string => LABELS[name] ?? titleCase(name);
 

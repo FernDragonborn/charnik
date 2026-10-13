@@ -9,6 +9,7 @@
  * belongs to the subclass that row actually chose.
  */
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
+import { optionsOf, type OptionRow } from '../content/options';
 import type { Character } from './schema';
 
 /** A class row as either half of the app names it: the builder's draft, or a saved character's
@@ -72,6 +73,23 @@ export function* activeClassFeatures(
 	}
 }
 
+/**
+ * The options a character HOLDS of one class feature, in the order they were picked. The one
+ * reading of `build.options`: the gather folds these rows' tokens, the sheet lists them, and a
+ * caster's rituals are read off them, so the three cannot disagree about what was chosen. An id
+ * that names no row any more is left out here and reported by the gather.
+ */
+export function heldOptions(
+	graph: ContentGraph,
+	feature: LoadedRowByType<'class_feature'>,
+	picks: Character['build']['options'],
+): OptionRow[] {
+	const ids = picks[feature.id] ?? [];
+	if (!ids.length) return [];
+	const offered = optionsOf(graph, feature);
+	return ids.flatMap((id) => offered.find((option) => option.id === id) ?? []);
+}
+
 /** What section a feature is read under. A named member, not a bare string: the panel and the
  *  catalog both switch on it, and the sheet spec is explicit that these are SEPARATE sections and
  *  never one blob (plan.md ▸ Character sheet fields). */
@@ -130,13 +148,13 @@ export function characterFeatures(character: Character, graph: ContentGraph): Ch
 		subclassId: c.subclass ?? null,
 		level: c.level,
 	}));
-	for (const f of activeClassFeatures(classes, graph, character.system))
-		out.push({
-			section: FEATURE_SECTION.classFeatures,
-			row: f.row,
-			at: f.level,
-			className: String(f.classRow.data.name_en),
-		});
+	for (const f of activeClassFeatures(classes, graph, character.system)) {
+		const className = String(f.classRow.data.name_en);
+		out.push({ section: FEATURE_SECTION.classFeatures, row: f.row, at: f.level, className });
+		// what was chosen of it reads as a feature of its own, straight after the feature that asked
+		for (const option of heldOptions(graph, f.row, b.options))
+			out.push({ section: FEATURE_SECTION.classFeatures, row: option, at: f.level, className });
+	}
 	out.sort((a, b2) => (a.at ?? 0) - (b2.at ?? 0));
 
 	push(FEATURE_SECTION.speciesTraits, b.species);

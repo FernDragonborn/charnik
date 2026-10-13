@@ -240,17 +240,13 @@ position and are given per wave, because most of them were learned the hard way.
   control before it can mean anything.
 - **Before 0.8.0 is tagged.** The list a release is checked against, in the order it is worked.
   Everything else in this section is either already in 0.8.0 or rides to a later one.
-  1. **One row, several options** — MAGIC-ITEM-VOCAB's two pieces and A17. A Belt of Giant
-     Strength's varieties and a warlock's Pact Boon are the same missing shape, so they are
-     designed together — the columns are signed off (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
-     nothing of them is built — and A17 brings the invocation rows with it, because SRD 5.1 puts the
-     Tome's rituals in an invocation rather than in the boon.
-  2. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+  1. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
      from that mock.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
-  Magician), SCOPED-BONUS's Agonizing Blast, E4, MOBILE-ALPHA's tap
+  Magician), SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
+  OPTION-ROWS, E4, MOBILE-ALPHA's tap
   targets, and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
   seams it will stand on (`internals/overview.md` ▸ TableLink is the seam a table stands on).
   None is a wrong number, a path that cannot be finished
@@ -268,19 +264,7 @@ position and are given per wave, because most of them were learned the hard way.
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind, and N2b's tail — a druid assumes a form in both editions, and
-  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the 2014 fighting styles as rows, and the properties whose rule is still only text. A17 sits here as well: ritual casting
-  ships, and what is left is a 2014 warlock's Pact of the Tome, which waits on the boon being a choice.
-- **0.8.0 · MAGIC-ITEM-VOCAB.** The magic items still written as prose, grouped by the vocabulary gap
-  each one wants rather than by item: a QUALIFIER on a defence ("against spells", "against ranged
-  attacks"), a choice the item asks per INSTANCE (Ring of Resistance's damage type — two rings in one
-  party are different rings), the `+1/+2/+3` rows whose bonus is set by their own rarity, a climb
-  speed, and attack rolls made AGAINST you. It blocks no release, because every one
-  of those rows already SAYS what it does as a note and nothing is silently wrong — the work is
-  grammar, and grammar wants a release of its own.
-
-  **Two pieces are left** (`work/content.md` ▸ MAGIC-ITEM-VOCAB): an item that is one entry in the
-  book and several at the table — a Belt of Giant Strength's variety sets the number — and the
-  `+1/+2/+3` rows, which a list still files under one rarity.
+  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the properties whose rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the 2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of Shadows' own two are still text.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom

@@ -65,6 +65,18 @@
 				})}</button
 			>
 		{/if}
+		{#if b.optionPicks.cap > 0}
+			<!-- only where a feature asks for a choice (a Pact Boon, the Eldritch Invocations); the
+			     count is on the button for the same reason it is on the forms' -->
+			<button
+				class="pill-btn"
+				class:accent={b.inspector.isOpen({ id: 'options' })}
+				onclick={() => b.inspector.toggle({ id: 'options' })}
+				>{$_('build.options.picks', {
+					values: { chosen: b.optionPicks.chosen, cap: b.optionPicks.cap }
+				})}</button
+			>
+		{/if}
 		<button class="pill-btn" onclick={() => b.classRows.addClass()} disabled={!b.classRows.canRaiseLevel}>
 			<Icon name="plus" size={12} /> {$_('build.classes.multiclass')}
 		</button>

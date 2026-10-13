@@ -10,7 +10,8 @@
 	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	import RarityRange from './RarityRange.svelte';
-	import { WHOLE_BAND, withinBand } from '../rarity';
+	import { WHOLE_BAND, itemWithinBand } from '../rarity';
+	import { itemRarities } from '$lib/content/options';
 	const b = build;
 
 	let query = $state('');
@@ -30,7 +31,8 @@
 			key: category,
 			label: titleCase(category),
 			rows: b.itemList.filter(
-				(r) => r.data.category === category && withinBand(r.data.rarity, from, to),
+				(r) =>
+					r.data.category === category && itemWithinBand(itemRarities(r, b.graph), from, to),
 			),
 		})).filter((s) => s.rows.length),
 	);

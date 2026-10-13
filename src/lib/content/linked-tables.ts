@@ -11,6 +11,7 @@
 import type { ContentType } from './schemas';
 import type { ContentGraph, LoadedRow } from './loader';
 import { localizedName } from './detail';
+import { optionParentKey } from './options';
 import { asText } from '$lib/util/format';
 
 export interface LinkSpec {
@@ -26,7 +27,13 @@ export interface LinkSpec {
 	unclaimed?: string;
 	/** Column seeded on a new child row, because the schema requires it and blank is not valid. */
 	seed?: Readonly<Record<string, string>>;
+	/** The child names its parent as `<type>:<id>` rather than by the bare id, because rows of more
+	 *  than one type own this table (`option.option_of`). */
+	typed?: true;
 }
+
+/** An item's varieties and a class feature's options are one table, `option`. */
+const OPTIONS: LinkSpec = { child: 'option', fk: 'option_of', typed: true };
 
 const LINKED_TABLES: Partial<Record<ContentType, LinkSpec>> = {
 	class: { child: 'class_feature', fk: 'class_id', unclaimed: 'subclass_id', seed: { level: '1' } },
@@ -38,7 +45,13 @@ const LINKED_TABLES: Partial<Record<ContentType, LinkSpec>> = {
 	},
 	species: { child: 'species_option', fk: 'species_id' },
 	resource: { child: 'resource_option', fk: 'resource_id' },
+	item: OPTIONS,
+	class_feature: OPTIONS,
 };
+
+/** How a child row spells this parent in its foreign key. */
+const parentKey = (link: LinkSpec, parent: LoadedRow): string =>
+	link.typed ? optionParentKey(parent) : parent.id;
 
 /** The linked table this row owns, if any. */
 export const linkOf = (row: LoadedRow): LinkSpec | undefined => LINKED_TABLES[row.type];
@@ -60,7 +73,7 @@ export function linkedRowsOf(graph: ContentGraph, parent: LoadedRow, locale = 'e
 		.filter((r) => {
 			const data = r.data as Record<string, unknown>;
 			return (
-				data[link.fk] === parent.id &&
+				data[link.fk] === parentKey(link, parent) &&
 				(!link.unclaimed || !data[link.unclaimed]) &&
 				r.systems.some((s) => parent.systems.includes(s))
 			);
@@ -81,7 +94,7 @@ export function linkedPrefill(parent: LoadedRow): Record<string, string> {
 	return {
 		...Object.fromEntries((link.carry ?? []).map((c) => [c, asText(data[c])])),
 		...(link.seed ?? {}),
-		[link.fk]: parent.id,
+		[link.fk]: parentKey(link, parent),
 		systems: parent.systems.join(','),
 	};
 }

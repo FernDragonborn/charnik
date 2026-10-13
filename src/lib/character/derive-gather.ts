@@ -12,8 +12,10 @@ import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import { resolveItem } from '../content/resolved-item';
+import { optionNamed } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
+import { heldOptions } from './features';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
@@ -77,13 +79,17 @@ class EffectGatherer {
 			// one — the same answer the inventory panel gets
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
-			if (!attunementNeeded || inv.attuned)
-				this.pushRow(row, 'item', {
-					// spread, not assign: an unanswered question is an ABSENT field, and the two answers
-					// are independent — a +2 armour may still be waiting to be told its damage type
-					...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
-					...(inv.choice !== undefined ? { itemChoice: inv.choice } : {}),
-				});
+			if (attunementNeeded && !inv.attuned) continue;
+			this.pushRow(row, 'item', {
+				// spread, not assign: an unanswered question is an ABSENT field, and the two answers
+				// are independent — a +2 armour may still be waiting to be told its damage type
+				...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
+				...(inv.choice !== undefined ? { itemChoice: inv.choice } : {}),
+			});
+			// the variety this instance is, where the row's answers are rows: its tokens fold beside the
+			// item's own, under the variety's name, and an unanswered row grants none of them
+			const variety = optionNamed(this.graph, row, inv.choice);
+			if (variety && this.isActive(variety)) this.pushRow(variety, 'item');
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
@@ -178,6 +184,18 @@ class EffectGatherer {
 		}
 		seen.add(key);
 		this.pushRow(f, 'feature', { classId: ctx.classId });
+		this.gatherHeldOptions(f, ctx);
+	}
+
+	/** What the character chose of a feature that asks: each option's own tokens, at the feature's
+	 *  layer and under its class. A pick that names no row is reported like any missing ref. */
+	private gatherHeldOptions(f: ClassFeatureRow, ctx: ClassCtx): void {
+		const picks = this.character.build.options;
+		const held = heldOptions(this.graph, f, picks);
+		for (const id of picks[f.id] ?? [])
+			if (!held.some((option) => option.id === id)) this.missing.push(`option:${id}`);
+		for (const option of held)
+			if (this.isActive(option)) this.pushRow(option, 'feature', { classId: ctx.classId });
 	}
 
 	private gatherRuntimeEffects(): void {

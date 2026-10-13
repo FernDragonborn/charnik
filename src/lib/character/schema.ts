@@ -84,10 +84,11 @@ export const inventoryEntry = z.object({
 	 *  are different weapons. Absent until the player answers, and an unanswered row grants nothing —
 	 *  the app does not pick a +1 on their behalf. Read by `item_bonus` in the row's own tokens. */
 	bonus: z.number().int().min(1).max(MAX_ITEM_BONUS).optional(),
-	/** The one of a row's `choice_options` this instance IS — Ring of Resistance's damage type. The
-	 *  same argument as `bonus` one step over: two rings in a party are different rings, so the
-	 *  answer is the instance's and not the shared row's. A `slug`, because every answer the SRD
-	 *  asks for is an id (a damage type), and unanswered grants nothing. */
+	/** The one of a row's `choice_options` this instance IS — Ring of Resistance's damage type — or
+	 *  the id of the `option` row it is, where the row's varieties are rows (a Belt of Hill Giant
+	 *  Strength). The same argument as `bonus` one step over: two rings in a party are different
+	 *  rings, so the answer is the instance's and not the shared row's. A `slug`, because every
+	 *  answer the SRD asks for is an id, and unanswered grants nothing. */
 	choice: slug.optional(),
 });
 
@@ -163,6 +164,10 @@ const buildSchema = z.object({
 	 *  feature whose forms are chosen ahead of time (2024 Wild Shape's Known Forms). A feature that
 	 *  names no count keeps nothing here: 2014 allows any eligible beast the druid has seen. */
 	forms: z.record(z.string(), z.array(ref)).default({}),
+	/** The OPTIONS chosen for a class feature that asks for some (a Pact Boon, the Eldritch
+	 *  Invocations), as bare `option` ids keyed by the feature's bare id — bare like every content →
+	 *  content link, so a homebrew option of a shipped feature is held the same way. */
+	options: z.record(z.string(), z.array(z.string())).default({}),
 	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, keyed by weapon KIND — a +1
 	 *  Rapier is a Rapier, the same key `masteries` uses. RAW hands the player this choice; the app
 	 *  defaults to the bigger modifier and only stores an entry once they have said otherwise, so an

@@ -21,7 +21,13 @@ const rarityIndex = (rarity: unknown): number => {
 export const WHOLE_BAND = { from: 0, to: RARITY_BAND.length - 1 };
 
 /** Is this row inside the band? */
-export const withinBand = (rarity: unknown, from: number, to: number): boolean => {
+const withinBand = (rarity: unknown, from: number, to: number): boolean => {
 	const at = rarityIndex(rarity);
 	return at >= from && at <= to;
 };
+
+/** Is this item inside the band at ANY rarity it can be found at? A row the book prints once and
+ *  finds at several — a `+1/+2/+3` weapon, a Belt of Giant Strength — shows wherever one of them
+ *  falls; a mundane row has none and stands on the ladder's first rung. */
+export const itemWithinBand = (rarities: readonly string[], from: number, to: number): boolean =>
+	rarities.length ? rarities.some((r) => withinBand(r, from, to)) : withinBand('', from, to);

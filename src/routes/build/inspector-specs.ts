@@ -92,6 +92,7 @@ export const EDIT_PANES = {
 	skills: { titleKey: 'skillsTitle', blurbKey: 'skillsBlurb', ownsScroll: false },
 	masteries: { titleKey: 'masteriesTitle', blurbKey: 'masteriesBlurb', ownsScroll: false },
 	forms: { titleKey: 'formsTitle', blurbKey: 'formsBlurb', ownsScroll: false },
+	options: { titleKey: 'optionsTitle', blurbKey: 'optionsBlurb', ownsScroll: false },
 	languages: { titleKey: 'languagesTitle', blurbKey: 'languagesBlurb', ownsScroll: false },
 	spells: { titleKey: 'spellsTitle', blurbKey: 'spellsBlurb', ownsScroll: true },
 	inventory: { titleKey: 'inventoryTitle', blurbKey: 'inventoryBlurb', ownsScroll: true },

@@ -15,6 +15,7 @@ import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { RITUAL_SOURCE, type RitualSource } from '../content/schemas';
 import { getSpellAccess, type SpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
+import { heldOptions } from './features';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import { SYSTEM_LABELS, type Computed } from '../rules/pipeline';
 import { applyEffects, type EffectFacts } from '../effects/apply';
@@ -203,6 +204,31 @@ interface CasterProfile {
 	ritualSource: RitualSource | null;
 }
 
+/**
+ * Which of its spells a class casts as rituals. An option the character chose of one of the
+ * class's features wins (a warlock's Book of Ancient Secrets) — a feature the level has not
+ * reached has given nothing — then the subclass's own statement, then the class's; a class still
+ * written with the boolean reads as `prepared`.
+ */
+function ritualSourceFor(of: {
+	entry: Character['build']['classes'][number];
+	classRow: LoadedRowOf<'class'>;
+	subclass: LoadedRowOf<'subclass'> | undefined;
+	graph: ContentGraph;
+	build: Pick<Character['build'], 'options'>;
+}): RitualSource | null {
+	for (const feature of of.graph.featuresForClass(of.classRow)) {
+		if (feature.data.level > of.entry.level) continue;
+		for (const option of heldOptions(of.graph, feature, of.build.options))
+			if (option.data.ritual_source) return option.data.ritual_source;
+	}
+	return (
+		of.subclass?.data.ritual_source ??
+		of.classRow.data.ritual_source ??
+		(of.classRow.data.ritual ? RITUAL_SOURCE.prepared : null)
+	);
+}
+
 /** Resolve a build class into its caster profile, or null if it doesn't cast. Which ROW owns the
  *  casting differs (the class itself, or a casting SUBCLASS once it's online at `caster_from_level` —
  *  RAW: EK/AT gain Spellcasting at level 3), but both rows carry the SAME caster-descriptor columns,
@@ -210,6 +236,7 @@ interface CasterProfile {
 function casterProfileFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
+	build: Pick<Character['build'], 'options'>,
 ): CasterProfile | null {
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
@@ -253,12 +280,7 @@ function casterProfileFor(
 		className: classRow.data.name_en,
 		ownerId,
 		accessRef,
-		// the subclass's own statement wins, then the class's; a class still written with the boolean
-		// reads as `prepared`
-		ritualSource:
-			chosenSubclass?.data.ritual_source ??
-			classRow.data.ritual_source ??
-			(classRow.data.ritual ? RITUAL_SOURCE.prepared : null),
+		ritualSource: ritualSourceFor({ entry, classRow, subclass: chosenSubclass, graph, build }),
 	};
 }
 
@@ -402,7 +424,7 @@ export function deriveSpellcasting({
 
 	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters
 	const sources = character.build.classes
-		.map((entry) => casterProfileFor(entry, graph))
+		.map((entry) => casterProfileFor(entry, graph, character.build))
 		.filter((p): p is CasterProfile => p !== null);
 
 	const foldSpellStat = (key: 'spell_dc' | 'spell_attack', base: Computed): Computed =>

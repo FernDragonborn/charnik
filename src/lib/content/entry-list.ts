@@ -7,6 +7,7 @@ import { abilityShortLabel, asText, titleCase } from '$lib/util/format';
 import type { ContentType } from '$lib/content/schemas';
 import type { Translate } from '$lib/i18n';
 import { editionLabel } from './detail';
+import { itemRarities } from './options';
 
 /** A row in the left-pane list (name + meta sub-line + the underlying content row). */
 export interface Entry<T> {
@@ -22,6 +23,9 @@ const shortRange = (s: string): string => s.replace(/\bfeet\b/i, 'ft').replace(/
 
 /** The casting time both editions spell for a plain action — 2014 writes "1 action", 2024 "Action". */
 const PLAIN_ACTION = /^(1\s+)?action$/i;
+
+/** Between the rarities one entry is found at. Not the ` · ` that separates facts: these are one. */
+export const RARITY_JOIN = ' / ';
 
 /**
  * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
@@ -70,7 +74,10 @@ export function entryMeta(row: LoadedRow, t: Translate): string {
 	const data = row.data;
 	return [
 		'category' in data ? contentLabel(categoryCatalog(row.type), data.category, t) : '',
-		'rarity' in data ? contentLabel('itemRarity', data.rarity, t) : '',
+		// each rarity a `+1/+2/+3` row states, where the book prints one entry for three items
+		itemRarities(row)
+			.map((rarity) => contentLabel('itemRarity', rarity, t))
+			.join(RARITY_JOIN),
 	]
 		.filter(Boolean)
 		.join(' · ');

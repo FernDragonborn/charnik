@@ -314,6 +314,15 @@
 			"none": "Nothing this character has grants weapon mastery.",
 			"noWeapons": "No weapon you are proficient with carries a mastery property."
 		},
+		"options": {
+			"picks": "options {chosen}/{cap}",
+			"none": "Nothing this character has asks for a choice.",
+			"noRows": "No content that is switched on offers an option for this feature.",
+			"block": {
+				"level": "level {level}",
+				"requires": "needs {option}"
+			}
+		},
 		"skills": {
 			"title": "Skills",
 			"columns": "check · passive",
@@ -360,6 +369,8 @@
 			"formsBlurb": "The forms you have learned to assume. Your level sets how many you know and how dangerous they may be, and you may swap one whenever you finish a Long Rest.",
 			"masteriesTitle": "Weapon mastery",
 			"masteriesBlurb": "Your training lets you use the mastery property of a few KINDS of weapon. Every 2024 weapon has one; it does nothing until one of these picks unlocks it, and you may re-drill on a Long Rest.",
+			"optionsTitle": "Feature options",
+			"optionsBlurb": "Some features hand you a choice — a boon, a set of invocations. Each one says what it does when you hover or focus it, and one whose level or prerequisite you have not met says which.",
 			"skillsBlurb": "Your class offers a list to choose from; your background grants its own for free. Expertise doubles proficiency on a skill you already have.",
 			"languagesTitle": "Languages",
 			"languagesBlurb": "What your character can speak and read.",
@@ -433,6 +444,7 @@
 			"speciesSkills": "{count, plural, one {Choose # more skill from your species.} other {Choose # more skills from your species.}}",
 			"forms": "{count, plural, one {Choose # more known form.} other {Choose # more known forms.}}",
 			"masteries": "{count, plural, one {Choose # more weapon mastery.} other {Choose # more weapon masteries.}}",
+			"options": "{count, plural, one {Choose # more feature option.} other {Choose # more feature options.}}",
 			"originFeat": "{feat}: {count, plural, one {# choice} other {# choices}} still to make.",
 			"cantrips": "{count, plural, one {Choose # more cantrip.} other {Choose # more cantrips.}}",
 			"cantripsFor": "{count, plural, one {Choose # more {class} cantrip.} other {Choose # more {class} cantrips.}}",
@@ -727,6 +739,9 @@
 			"unequipHint": "Take it off",
 			"use": "Use",
 			"used": "Used {name}",
+			"varietyNone": "Variety not set",
+			"varietyPick": "Which {name} is this?",
+			"varietyWithRarity": "{name} · {rarity}",
 			"weight": "{carried} / {capacity} lb"
 		},
 		"log": {
@@ -1203,6 +1218,7 @@
 		"base_item_id": "Base item",
 		"caster_from_level": "Casting from level",
 		"caster_share": "Caster share (multiclass)",
+		"choose": "Options to choose",
 		"condition_immunities": "Condition Immunities",
 		"casting_time": "Casting time",
 		"category": "Category",
@@ -1224,8 +1240,10 @@
 		"level": "Level",
 		"material": "Material",
 		"name": "Name",
+		"option_of": "Option of",
 		"origin_feat_spell_list": "Feat spell list",
 		"prepare_style": "Prepare style",
+		"requires": "Requires",
 		"ritual_source": "Rituals from",
 		"primary_ability": "Primary ability",
 		"properties": "Properties",
@@ -1270,6 +1288,8 @@
 		"or": " or ",
 		"oversizedFile": "This file is bigger than the {cap} MB Charnik reads for one content file, so it was skipped. A content CSV is normally far smaller than that — check it isn’t a backup, an export, or a damaged file. If it really is content, split it into several files; every file in the folder is loaded.",
 		"partialTranslation": "Half-translated into {language} — the parts that are missing show in English until you fill them in (Compendium ▸ Edit compendium ▸ Translate).",
+		"optionParentMissing": "This option belongs to a row that is not loaded for this edition, so it is never offered. Check `option_of` — it is the row's type, a colon, and its id.",
+		"optionRequiresMissing": "This option requires another option that does not exist, so nobody can meet it. Check the id in `requires`.",
 		"resourceOptionUngranted": "This option spends a resource nothing gives the character, so it never appears. Check the id against the feature that grants the pool.",
 		"resourceOptionUngrantedSuggested": "This option spends a resource nothing gives the character, so it never appears. Did you mean {options}?",
 		"resourceUngranted": "This names a resource nothing gives the character, so the name is never used. Check the id against the feature that grants the pool.",
@@ -1332,6 +1352,7 @@
 		"item": "Item",
 		"language": "Language",
 		"monster": "Monster",
+		"option": "Option",
 		"resource": "Resource",
 		"resource_option": "Resource option",
 		"species": "Species",

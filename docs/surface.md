@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (91)
+## Duplicate suspects (94)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -25,6 +25,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `place` ×6 — src/lib/actions/anchored.ts · src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
+- `nameOf` ×4 — src/lib/combat/actions.ts · src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
@@ -36,7 +37,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
-- `nameOf` ×3 — src/lib/combat/actions.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
@@ -83,7 +83,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `optionsOf` ×2 — src/lib/content/homebrew.ts · src/lib/content/options.ts
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `picks` ×2 — src/routes/build/form-picks.svelte.ts · src/routes/build/option-picks.svelte.ts
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
@@ -110,6 +112,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical one-liner body, different names:**
 
+- `optionParentKey` (src/lib/content/options.ts) = `articleKey` (src/lib/content/sources.svelte.ts)
 - `where` (src/lib/content/resource-joins.ts) = `filePath` (src/lib/content/sources.svelte.ts)
 
 ## Design tokens (`styles/tokens.css`)
@@ -511,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (173 modules)
+## Library functions & types (175 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -699,6 +702,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
 - `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
+- `function heldOptions` — * The options a character HOLDS of one class feature, in the order they were picked.
 - `const FEATURE_SECTION` — What section a feature is read under.
 - `type FeatureSection`
 - `const FEATURE_PRESET` — The ways a player narrows the Features panel in one press.
@@ -1036,6 +1040,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/entry-list.ts`
 
 - `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
+- `const RARITY_JOIN` — Between the rarities one entry is found at.
 - `const contentLabel` — * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
 - `function entryMeta` — The small sub-line under an entry's name in the list.
 - `function toEntryGroups` — Project grouped rows into the EntryList model: each group's rows become display Entries (id, name * via `nameOf`, met…
@@ -1047,6 +1052,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Grouping`
 - `function groupingsFor`
 - `function facetFor`
+- `function fieldValues` — * Every value a row has for a grouping or facet key — one, except where the row is several things * at the table.
 - `function distinctValues` — Distinct non-empty values of a field across rows (for filter chips), sorted.
 - `function groupRows` — Group rows by the chosen key into labelled buckets, ordered sensibly.
 
@@ -1130,6 +1136,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ContentSource` — One content root paired with the storage it lives in.
 - `function loadContent` — Load + merge content.
 
+### `src/lib/content/loc-status.ts`
+
+- `const LOC_STATUS` — Tracked localization status of a row's translation into ONE locale — set in the translate view and * stored per-local…
+- `type LocStatus`
+- `const LOC_STATUS_ORDER` — The statuses in display order (control buttons + marker legend) — LOC_STATUS insertion order.
+- `function isLocStatus` — Narrow a raw cell to a known status.
+- `const LOC_STATUS_COL_BASE` — Column base for the per-locale tracked status (`loc_status_uk`, `loc_status_pt-BR`).
+
 ### `src/lib/content/locale-merge.ts`
 
 - `interface CarryReport` — What one merge did, by row id — the breadcrumb a log line and a report are built from.
@@ -1173,6 +1187,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const localizedName` — The name to SHOW out of a locale→name map: the active locale, else English, else whatever there * is.
 - `function namesByLocale` — Every locale a row is NAMED in → its name there, empty columns skipped so `localizedName`'s * fallback chain only eve…
 - `function localesOf` — The locales the DATA actually carries (from its `name_*` columns); always includes `en`.
+
+### `src/lib/content/options.ts`
+
+- `type OptionRow`
+- `const optionParentKey` — How a parent is spelled in `option_of`.
+- `function optionsOf` — * A row's options, in the order their file lists them — which is the order the source's own table * prints.
+- `const optionNamed` — The one of a row's options an answer names, if it names one.
+- `function itemRarities` — * Every rarity an item can be found at, commonest first: each rung's where the row is a `+1/+2/+3` * ladder that stat…
+- `const OPTION_BLOCK` — Why an option cannot be taken yet — an open enum, since a rule may grow a third reason.
+- `type OptionBlock`
+- `function optionBlock` — * What stands between a character and an option of a class feature: the class level it opens at, * or another option …
+- `function optionJoinIssues` — * Options that point at nothing: a parent this edition does not have, so the option is never * offered, or a `require…
 
 ### `src/lib/content/prose.ts`
 
@@ -1340,11 +1366,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const hasProse` — A type whose rows carry TRANSLATABLE prose — a superset of the browsable ones.
 - `const PROSE_BASES` — The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`, * `higher_level_uk`).
 - `type ProseBase`
-- `const LOC_STATUS` — Tracked localization status of a row's translation into ONE locale — set in the translate view and * stored per-local…
-- `type LocStatus`
-- `const LOC_STATUS_ORDER` — The statuses in display order (control buttons + marker legend) — LOC_STATUS insertion order.
-- `function isLocStatus` — Narrow a raw cell to a known status.
-- `const LOC_STATUS_COL_BASE` — Column base for the per-locale tracked status (`loc_status_uk`, `loc_status_pt-BR`).
 - `type RowData` — The validated, coerced data a loaded row of type `T` carries: the zod-inferred model for `T` PLUS * the re-attached p…
 - `type RowColumn` — A column name of type `T`'s model (used to type grouping/facet keys so `row.data[key]` is * provably safe — no cast).
 - `function parseRow` — Validate one raw CSV row for a given type.
@@ -2265,4 +2286,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1378 exports across 190 modules · 91 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1390 exports across 192 modules · 94 duplicate suspects._

@@ -142,6 +142,18 @@ export const issueText = {
 		detail: `"${effectiveId}" · the copy in use is in ${keptIn}`,
 	}),
 
+	/** An `option` naming a parent row this edition does not have — it can never be offered. */
+	optionParentMissing: (parent: string): IssueText => ({
+		key: key('optionParentMissing'),
+		detail: `option_of "${parent}"`,
+	}),
+
+	/** An `option` requiring an option that does not exist — nobody can meet it. */
+	optionRequiresMissing: (required: string): IssueText => ({
+		key: key('optionRequiresMissing'),
+		detail: `requires "${required}"`,
+	}),
+
 	/** A `resource_option` spending a pool nothing grants — the option can never be offered. */
 	resourceOptionUngranted: (id: string, granted: Iterable<string>): IssueText => {
 		const near = suggestion(id, granted);

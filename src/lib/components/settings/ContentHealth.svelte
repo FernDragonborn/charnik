@@ -13,6 +13,7 @@
 	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
 	import { resourceJoinIssues } from '$lib/content/resource-joins';
+	import { optionJoinIssues } from '$lib/content/options';
 	import { TYPE_ASSIGNABLE_KEYS } from '$lib/content/issue-text';
 	import { CONTENT_TYPES, type ContentType } from '$lib/content/schemas';
 	import { assignFileType } from '$lib/content/review.svelte';
@@ -36,15 +37,19 @@
 			for (const w of lintEffectTokens(tokensOf(row))) out.push({ id: row.id, message: w });
 		return out;
 	});
-	// references to a resource pool nothing grants — an option that can never be offered, a name that
-	// will never be read. Content-level (no character involved), so it sits with the loader's issues.
+	// references that resolve to nothing — a resource pool nothing grants, an option of a row that
+	// does not exist. Content-level (no character involved), so it sits with the loader's issues.
 	// per ACTIVE EDITION, not over the union: a pool granted only in 5.5e must not silently vouch for
 	// an option that only exists in 5e. Deduped by row, since a row can sit in both.
 	const joinIssues = $derived.by(() => {
 		if (!graph) return [];
 		const seen = new Map<string, ReturnType<typeof resourceJoinIssues>[number]>();
 		for (const system of app.activeEditions)
-			for (const issue of resourceJoinIssues(graph, system)) seen.set(issue.file + issue.id, issue);
+			for (const issue of [
+				...resourceJoinIssues(graph, system),
+				...optionJoinIssues(graph, system),
+			])
+				seen.set(issue.file + issue.id + issue.key, issue);
 		return [...seen.values()];
 	});
 	const deriveIssues = $derived(deriveHealth.issues);

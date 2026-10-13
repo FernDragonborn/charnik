@@ -35,7 +35,10 @@ const t = (key: string, o?: { values?: Record<string, string | number> }) =>
 
 describe('groupRows', () => {
 	it('A–Z (key "none") is one bucket sorted by name', () => {
-		const g = groupRows([row({ name_en: 'Bless' }), row({ name_en: 'Aid' })], 'none', 'spell', t);
+		const g = groupRows([row({ name_en: 'Bless' }), row({ name_en: 'Aid' })], 'none', {
+			type: 'spell',
+			t,
+		});
 		expect(g).toHaveLength(1);
 		expect(g[0]!.rows.map((r) => r.data.name_en)).toEqual(['Aid', 'Bless']);
 	});
@@ -48,8 +51,7 @@ describe('groupRows', () => {
 				row({ name_en: 'Bless', level: '1' }),
 			],
 			'level',
-			'spell',
-			t,
+			{ type: 'spell', t },
 		);
 		expect(g.map((x) => x.label)).toEqual(['«cantrips»', '«group:1»', '«group:3»']);
 	});
@@ -62,8 +64,7 @@ describe('groupRows', () => {
 				row({ name_en: 'C', cr: '1/2' }, 'monster'),
 			],
 			'cr',
-			'monster',
-			t,
+			{ type: 'monster', t },
 		);
 		expect(g.map((x) => x.label)).toEqual(['«groupCR:1/4»', '«groupCR:1/2»', '«groupCR:2»']);
 	});
@@ -72,8 +73,7 @@ describe('groupRows', () => {
 		const g = groupRows(
 			[row({ name_en: 'A' }, 'spell', 'Homebrew'), row({ name_en: 'B' }, 'spell', 'SRD 5.2.1')],
 			'source',
-			'spell',
-			t,
+			{ type: 'spell', t },
 		);
 		expect(g.map((x) => x.rows.length)).toEqual([1, 1]);
 	});

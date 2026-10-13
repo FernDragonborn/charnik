@@ -140,6 +140,7 @@ describe('buildTodos', () => {
 		speciesSkillsOwed: 0,
 		masteriesOwed: 0,
 		formsOwed: 0,
+		optionsOwed: 0,
 		originFeat: { name: '', owed: 0 },
 		spellPicker: []
 	};

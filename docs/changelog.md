@@ -55,6 +55,12 @@ sentences became numbers, and a security pass closed what a page inside the wind
   `Milestone`, or your XP against what the next level takes — and opens the place to switch between
   the two and add what you earned. Reaching the total marks the level as earned; you take it in the
   builder as always. Off by default, and a milestone table sees one quiet word.
+- **A 2014 warlock chooses a Pact Boon and Eldritch Invocations.** The builder asks for them —
+  one boon at 3rd level, two invocations at 2nd and more down the Invocations Known column — as
+  chips that say what each does. An invocation whose level or boon you have not reached says
+  which; Strict holds you to it and Free lets you take it anyway. What you chose is listed with
+  your features, and Beguiling Influence's two skills are on the sheet. Not yet chosen in the
+  app: 2014's Fighting Styles and Metamagic, and the 2024 invocations.
 - **A 2014 druid's own Darkvision goes dark in a form that has none.** "You can't use any of your
   special senses, such as darkvision, unless your new form also has that sense" — a wolf does
   not, a giant badger does, and then the longer range stands. 2024 has no such sentence.
@@ -106,7 +112,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   no slot and takes ten minutes longer. Who may is asked of the class the spell is cast as: a
   wizard rituals from the spellbook without preparing, a cleric or druid only what is prepared,
   and a feat's own spells by the feat's rule. Both packs mark the SRD's 29 ritual spells. A 2014
-  warlock's Pact of the Tome does not ritual yet.
+  warlock rituals through Book of Ancient Secrets — the warlock spells they know that carry the
+  tag. The two ritual spells the Book itself holds from any class's list are not chosen in the app
+  yet.
 - **Known or prepared is the class's to say.** A 2014 bard's spells read as known, not prepared.
 - **Skilled takes tools as well as skills**, against the one count of three, and a feat slot from a
   level offers origin feats too — which is the only way Skilled could be taken at all.
@@ -151,6 +159,16 @@ sentences became numbers, and a security pass closed what a page inside the wind
   Wonder, Bag of Beans, Bag of Tricks, both decks, both staffs and the rest; all thirty-four tables
   are in. Six items the 2014 pack never had at all are there too: Belt of Giant Strength, Figurine of
   Wondrous Power, Ioun Stone, Potion of Giant Strength, Potions of Healing and Spell Scroll.
+- **An item the book prints once asks which one you found.** A Belt of Giant Strength is five
+  belts, each setting Strength to its own score at its own rarity; the inventory row asks which,
+  goes by that belt's name, and sets the score — in both editions. The same for an Ioun Stone's
+  fourteen stones, a Figurine of Wondrous Power's nine, the Potions of Giant Strength and of
+  Healing and a Spell Scroll's ten levels, where the answer names the item and its rarity.
+  Unanswered grants nothing.
+- **An item found at several rarities is listed under each of them.** A `+1, +2 or +3` weapon
+  stood under Very Rare alone, and a Belt of Giant Strength under none; the compendium's rarity
+  groups and filter, and the rarity band of the item pickers, show each wherever one of its
+  rarities falls.
 - **What an item does to your defences is on the play sheet.** "+2 AC against ranged attacks",
   "advantage on saves against spells", "attacks against you have disadvantage" — eleven shipped items
   say one of these, and they said it only in the builder, to whoever was assembling the character. The

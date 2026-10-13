@@ -51,6 +51,10 @@ export function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
 	return [...list.slice(Math.max(0, list.length - cap + 1)), item];
 }
 
+/** A keyed set of picks (`forms`, `options`), copied so a draft and a character never share a list. */
+export const copyPicks = (picks: Record<string, string[]> | undefined): Record<string, string[]> =>
+	Object.fromEntries(Object.entries(picks ?? {}).map(([id, list]) => [id, [...list]]));
+
 /** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
 export interface DraftClass {
 	/**
@@ -166,6 +170,8 @@ export interface DraftState {
 	masteries: string[];
 	/** Forms chosen ahead of time, as monster refs by form id (`build.forms`). */
 	forms: Record<string, string[]>;
+	/** What was chosen of each class feature that asks, as option ids by feature id (`build.options`). */
+	options: Record<string, string[]>;
 	selectedLanguages: string[];
 	/** Tool proficiencies picked from the content (bare `tool` item ids) — `build.tools`. */
 	selectedTools: string[];
@@ -224,6 +230,7 @@ export function blankDraft(): DraftState {
 		skills: [],
 		masteries: [],
 		forms: {},
+		options: {},
 		expertise: [],
 		selectedLanguages: [],
 		selectedTools: [],
@@ -295,6 +302,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	expertise: z.array(z.string()).catch(() => []),
 	masteries: z.array(z.string()).catch(() => []),
 	forms: z.record(z.string(), z.array(z.string())).catch(() => ({})),
+	options: z.record(z.string(), z.array(z.string())).catch(() => ({})),
 	selectedLanguages: z.array(z.string()).catch(() => []),
 	selectedTools: z.array(z.string()).catch(() => []),
 	customLanguages: z.array(z.string()).catch(() => []),
@@ -347,9 +355,8 @@ export function draftFromCharacter(char: Character): DraftState {
 		speciesSkills: [...(char.build.speciesSkills ?? [])],
 		expertise: [...char.build.expertise],
 		masteries: [...(char.build.masteries ?? [])],
-		forms: Object.fromEntries(
-			Object.entries(char.build.forms ?? {}).map(([id, refs]) => [id, [...refs]]),
-		),
+		forms: copyPicks(char.build.forms),
+		options: copyPicks(char.build.options),
 		selectedLanguages: [...char.build.languages],
 		// a tool a feat's choice granted comes back through its slot's picks, not as a free pick —
 		// or un-picking it in the feat would leave it on the character

@@ -112,120 +112,26 @@
     rows, and the 2024 pack, do not carry the note at all.
   - **Legendary actions are prose in both packs** (2014: 23 rows, 2024: 30); nothing reads them
     yet. A proficiency bonus needs no column — it follows from `cr`.
-- [ ] **MAGIC-ITEM-VOCAB · the magic items that are still prose, and the vocabulary each one wants —
-  0.8.0.** Everything the bounded vocabulary can already SAY is folded (239 rows). What is left is
-  not unauthored: it is items whose text states a real, passive, mechanical benefit that the
-  vocabulary has no way to name. Each carries a `note:` today, so the sheet says the thing and the
-  player applies it by hand. Grouped by the gap, because the gap is the work — the rows follow for
-  free once it closes.
-
-  **Six gaps are closed, and their grammar is `../internals/effects.md` ▸ Targets:** a qualifier on
-  a defence (`ac.ranged`, `saves.spell`), a choice the item asks per instance (`choice_options` +
-  `item_choice`), a bonus stated as a range (`bonus_choice` + `item_bonus`), a
-  sense (`senses.<name>`), attack rolls made against you (`attacked`), and a movement mode stated
-  as the walking speed (`speed.climb`, and the `speed` variable a mode's value may read). The roll-time control
-  that would APPLY a qualified defence is deliberately not built: it needs the player to say what a
-  save is against, which is a design question of its own.
-
-  **Two pieces are left:**
-
-  1. **A row that is one entry in the book and several items at the table**, the same in BOTH
-     editions. The 2014 pack carries every table SRD 5.1 prints inside a magic item — thirty-four,
-     typed by hand as the HTML the 2024 pack uses and pinned by count — and the six items whose
-     rarity "varies": Belt of Giant Strength, Figurine of Wondrous Power, Ioun Stone, Potion of
-     Giant Strength, Potions of Healing and Spell Scroll. A Belt of Giant Strength sets Strength to
-     a number its VARIETY states, an Ioun Stone does a different thing per stone, and neither
-     `bonus_choice` (a `+N` capped at ten) nor `choice_options` (a word substituted into a target)
-     says "this variety sets 23". Until one does, those rows are text in both packs.
-     **The direction:** a variety is an OPTION of the row with tokens of its own —
-     what N2 calls a feature CHOICE (a Pact Boon, a 2014 Fighting Style), asked
-     here of an inventory row instead of the build. One mechanism for both, and an option's own
-     `rarity` settles piece 2 as well.
-
-     **Measured, so it is not re-taken.**
-     - *What an inventory row can be answered with today.* Two fields on `inventoryEntry`, each
-       declared by a column on the item and each read in exactly one way: `bonus` (declared by
-       `bonus_choice`) is a NUMBER, handed to the row's own tokens as the `item_bonus` variable
-       (`effects/context.ts` ▸ `withItemBonus`, read at `derive-gather.ts` and `combat/attacks.ts`);
-       `choice` (declared by `choice_options`) is a WORD, substituted for the `item_choice` segment
-       of the row's tokens (`token-parser.ts` ▸ `withItemChoice`). Both are asked on the inventory
-       row (`routes/combat/inventory.svelte.ts`). Neither can carry tokens of its own, which is the
-       whole gap: "this variety sets 23" is a different TOKEN per answer, not a different word in
-       one.
-     - *What "an option of a row" already is.* Two content types, each naming its parent by a
-       column typed to it: `species_option` (`species_id`; 65 references across 21 files, picked
-       once into `build.speciesOption`) and `resource_option` (`resource_id`; 17 across 9, the
-       honest size of the next one). The builder's own slot pattern is narrower than its name:
-       `build.slotPicks` holds feats and nothing else, and what a class asks beyond feats is a flat
-       array of ids per question (`build.masteries`, `build.forms`).
-     - *The rows that would use it.* Items, the same in both packs: Belt of Giant Strength (five
-       varieties in its own table — type, Strength, rarity), Potion of Giant Strength (five),
-       Potions of Healing (four), Spell Scroll (ten), Figurine of Wondrous Power and Ioun Stone
-       (varieties as prose, no table). Class features whose options are in the row's prose: 2014
-       Fighting Style under three classes and the Champion's second, Metamagic (eight), Pact Boon
-       (three). Class features that NAME a choice whose options are not in the pack at all: the
-       Eldritch Invocations row of both editions, and 2024 Metamagic — those want rows typed
-       before they want a column.
-
-     **The shape — one content type, `option`. It is signed off, and nothing of it is built:**
-
-     | column | what it says |
-     | --- | --- |
-     | `option_of` | the parent row as `<type>:<id>` (`item:belt_of_giant_strength`, `class_feature:warlock_pact_boon`), matched by edition and not by source, as `featuresForClass` matches a feature to its class — so a homebrew option attaches to an SRD row |
-     | `effects` | the option's own tokens, folded at the parent's layer with the parent's origin |
-     | `rarity` | an item variety's own rarity; blank inherits the parent's |
-     | `requires` | the id of another option the character must hold (an invocation that names a boon) |
-     | `level` | the class level an option opens at; blank is the parent's own |
-     | `ritual_source` | the column a class, subclass and feat row already carry, read by the same function |
-
-     The PARENT says how many: `choose` on a class-feature row, in the `level:count` grammar
-     `expertise_slots` and `mastery_slots` use and read by the same `slotsGrantedAtLevel`. An item
-     says nothing — an instance is one variety. The ANSWER lives where the parent's other answers
-     do: an inventory row's existing `choice` holds the option's id, and the build gains
-     `options`, feature id → option ids. `choice_options` stays as it is: a damage type is a
-     word the vocabulary already knows, and a row per word would be rows that say nothing.
-
-     **What it deliberately does not do.** It does not fold `species_option` into itself — that
-     type carries three columns of its own and a `kind`, and merging it is a migration with no
-     player-visible gain. It does not make a consumable act: a Potion of Healing's variety gives it
-     a name and a rarity on the row, and drinking stays the player's.
-
-  2. **A range row is filed under one rarity.** Both packs state a rarity per rung inside
-     `bonus_choice`, as each SRD prints it beside the number, and the article and the inventory
-     row say the rung's. What still reads the row's own `rarity` column is everything that files a
-     row in ONE place: the compendium's rarity grouping and facet, the picker's rarity band, the
-     list's sub-line. So `weapon_1_2_or_3` is found under Very Rare and not under Uncommon. A row
-     cannot stand in three groups without being three entries, which is piece 1's question — a
-     variety with a `rarity` of its own is what a list would file.
-
-  **The rows that stay prose, each for a reason the vocabulary cannot fix by growing a word:**
-  - *Shield of Missile Attraction* wants resistance qualified by the SOURCE of the damage rather than
-    its type, and the type slot is deliberately free-form, so a qualifier written there is
-    indistinguishable from a pack's own damage type.
-  - *Belt of Dwarvenkind* twice over: its advantage is gated on not being a dwarf, which no guard can
-    ask; and "your Constitution increases by 2, to a maximum of 20" cannot be said — within a layer the
-    fold order is set → floor → cap → mult → add, so a `set_override:con:20:cap` fires before the
-    `+2`, and `min(con_score+2,20)` is correctly refused as a dependency cycle. It folds its +2 and
-    its note states the ceiling.
-  - *Holy Avenger's* advantage is an aura it grants to others. 2014's *Necklace of Adaptation* says
-    "harmful gases and vapours", which is not the Poisoned condition its 2024 text names.
-  - *Armor of Vulnerability* turns ONE answer into three facts (resist one of
-    bludgeoning/piercing/slashing, vulnerable to the other two), which no single substitution says;
-    *Ring of Elemental Command's* plane brings resistance, movement and a page of other text with it.
-  - *Goggles of Night* add 60 feet to a Darkvision you already have, and the `item` layer folds
-    BEFORE `feature`, so a species floor would land after the goggles' add
-    (`../internals/effects.md` ▸ Targets).
-  - *Robe of Scintillating Colors'* disadvantage is charge-gated and applies only to creatures that
-    can see you. 2014's *Armor of Invulnerability* resists "nonmagical damage", which is not a type
-    the vocabulary can name; 2014's *Cloak of Elvenkind* needs its hood UP, an action.
-  - A charged item with a RANDOM starting pool ("1d8 + 1 charges") says no pool: the vocabulary
-    takes a literal max.
-
-  **What will never fold, and should stop being counted as missing:** consumables (potions, oils —
-  drinking is not a modelled event), objects with their own stat block (Mirror of Life Trapping,
-  Instant Fortress, Apparatus of the Crab, Iron Flask), and summon items (Horn of Valhalla, Deck of
-  Many Things). These are complete as prose.
-
+- [ ] **OPTION-ROWS · the choices a class feature offers that are not rows yet.** A feature's
+  options are rows of the `option` type and its `choose` column says how many
+  (`../internals/content.md` ▸ One row, several options), so each of these is typing, with no
+  code behind it. Shipped: the six items whose rarity varies, in both packs, and a 2014
+  warlock's Pact Boons and Eldritch Invocations. Not yet rows, every value typed by hand
+  (SRD-TRANSCRIPTION):
+  - **2014 Fighting Style** — fourteen options under three class features, six for the Fighter
+    and four each for the Paladin and the Ranger, and the Champion's second pick, which is a
+    `choose` on `champion_additional_fighting_style` over the Fighter's own options
+    (`mechanics.md` ▸ N2 has the tokens two of them fold).
+  - **2014 Metamagic** — eight options, two at 3rd level and one more at 10th and 17th.
+  - **2024 Eldritch Invocations and Metamagic** — the feature rows name the choice and the pack
+    carries none of the options.
+  - **2024 choices of two or three** stated inside a feature's prose: Divine Order, Primal Order,
+    Elemental Fury.
+- [ ] **FIGURINE-2024 · the 2024 Figurine of Wondrous Power stops after the Ebony Fly.** The
+  row's text ends at the Giant Fly's stat block heading, so the stat block and the seven
+  figurines after it are missing from the entry. Its nine varieties are whole — they are rows of
+  their own — and the entry is what is short. The fix is the rest of the entry typed from
+  `magic-items.md`, the stat block as the HTML the pack's other tables use.
 - [~] **E4 · the spells whose effect is still only prose.** A cast leaves the spell's own effect
   tokens on the caster (`../internals/rules-core.md` ▸ Spellcasting), and the row of a spell that
   rolls nothing is captioned from those tokens, resolved against the sheet

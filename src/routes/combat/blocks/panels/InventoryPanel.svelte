@@ -125,7 +125,10 @@
 		{#if row}
 			<div
 				class="inv-row"
-				class:asks-base={row.isTemplate || row.bonusRungs.length || row.choiceOptions.length}
+				class:asks-base={row.isTemplate ||
+					row.bonusRungs.length ||
+					row.choiceOptions.length ||
+					row.varieties.length}
 			>
 				<RowGrip
 					panel="inventory"
@@ -186,6 +189,33 @@
 							<option value="">{$_('combat.inventory.choiceNone')}</option>
 							{#each row.choiceOptions as option (option)}
 								<option value={option}>{damageTypeLabel(option, $_)}</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
+				<!-- And with a ROW for an answer: the book prints one Belt of Giant Strength and five exist,
+				     each with a score and a rarity of its own. Unanswered it grants nothing. -->
+				{#if row.varieties.length}
+					<label class="base-pick">
+						<span class="visually-hidden"
+							>{$_('combat.inventory.varietyPick', { values: { name: row.name } })}</span
+						>
+						<select
+							value={row.entry.choice ?? ''}
+							onchange={(e) => inv.setChoice(row.entry.iid, e.currentTarget.value)}
+						>
+							<option value="">{$_('combat.inventory.varietyNone')}</option>
+							{#each row.varieties as variety (variety.id)}
+								<option value={variety.id}
+									>{variety.rarity
+										? $_('combat.inventory.varietyWithRarity', {
+												values: {
+													name: variety.name,
+													rarity: $_(`itemRarity.${variety.rarity}`, { default: variety.rarity }),
+												},
+											})
+										: variety.name}</option
+								>
 							{/each}
 						</select>
 					</label>

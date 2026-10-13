@@ -144,6 +144,37 @@ is evaluated — `damage_sensitivity:resist:item_choice` becomes `damage_sensiti
 before the token is parsed. An unanswered row grants nothing: the token is dropped rather than folded
 onto the placeholder, while every other token on the row still applies.
 
+**With a ROW for an answer, the question is the `option` type — one row, several options.** A
+Belt of Giant Strength is one entry in the book and five belts at the table, each setting a
+different score at a different rarity: a different TOKEN per answer, which neither a number nor a
+word can carry. So a variety is a row of its own, naming its parent in `option_of` as
+`<type>:<id>` (`item:belt_of_giant_strength`), with its own `effects`, folded beside the parent's
+at the parent's layer, and its own `rarity`. The answer is the option's id on the same inventory
+field `choice_options` answers (`inventoryEntry.choice`), and the row goes by the variety's name
+once it is given.
+
+**A class feature's choice is the same type, answered in the build.** A Pact Boon is three
+options of `class_feature:warlock_pact_boon`; the feature row's `choose` column says how many, in
+the `level:count` grammar `expertise_slots` uses and read by the same `slotsGrantedAtLevel`; the
+answer is `build.options`, feature id → option ids, and `character/features.ts` ▸ `heldOptions`
+is the one reading of it — the gather folds those rows, the sheet lists them as features, and a
+caster's rituals are read off an option's `ritual_source` before its subclass's or its class's.
+An option may state the class `level` it opens at and one other option it `requires`; an unmet
+one is refused in Strict and noted in Free. Like every content → content link the parent is
+matched by id and edition and never by source, so a homebrew pack adds an option to a shipped
+row. An option that points at nothing is listed in content health (`optionJoinIssues`).
+
+`choice_options` stays what it is: a damage type is a word the vocabulary already knows, and a row
+per word would be rows that say nothing. `species_option` is not folded into `option` either — it
+carries three columns and a `kind` of its own, and merging it is a migration with no
+player-visible gain. An option does not make a consumable act: a Potion of Healing's variety gives
+the row a name and a rarity, and drinking stays the player's.
+
+**An entry the book prints once is filed under every rarity it is found at** (`options.ts` ▸
+`itemRarities`): each rung's where `bonus_choice` states them, each variety's where the varieties
+are rows. The compendium's rarity grouping and facet, the item pickers' rarity band and a list's
+sub-line all read it, so `weapon_1_2_or_3` is found under Uncommon, Rare and Very Rare.
+
 **A resource pool's NAME is a row of its own**, in the `resource` content type, resolved id → name
 once per derive (`character/resource-names.ts`) so a pool and its spend-options cannot disagree. It
 never belonged to the grant — `bardic_inspiration` is granted by two features — so it is neither a
@@ -170,6 +201,39 @@ whoever finds the thing, so the base lives on the player's inventory entry and m
 function. A row is a template when it carries no category-defining tag — no `simple`/`martial` for a
 weapon, no `armor:<weight>`/`ac` for armour (`needsBaseItem`). Do not test this by an EMPTY tag list:
 every shipped template carries `attunement`, and a net carries tags while doing no damage.
+
+## Magic items that stay prose
+
+Everything the bounded vocabulary can say about a magic item is folded. What is left carries a
+`note:`, so the sheet says the thing and the player applies it by hand.
+
+**The magic items that stay prose, each for a reason the vocabulary cannot fix by growing a word:**
+- *Shield of Missile Attraction* wants resistance qualified by the SOURCE of the damage rather than
+  its type, and the type slot is deliberately free-form, so a qualifier written there is
+  indistinguishable from a pack's own damage type.
+- *Belt of Dwarvenkind's* advantage is gated on not being a dwarf, which no guard can ask. Its
+  "increases by 2, to a maximum of 20" IS said, as `flat_bonus:con+2;set_override:con:20:cap` —
+  a cap is applied last, so 19 becomes 20 — and the six Ioun Stones that raise a score say it the
+  same way. The one case it gets wrong is a score already above 20 before the item, which the cap
+  pulls down to 20; `min(con_score+2,20)` would be exact and is refused as a dependency cycle.
+- *Holy Avenger's* advantage is an aura it grants to others. 2014's *Necklace of Adaptation* says
+  "harmful gases and vapours", which is not the Poisoned condition its 2024 text names.
+- *Armor of Vulnerability* turns ONE answer into three facts (resist one of
+  bludgeoning/piercing/slashing, vulnerable to the other two), which no single substitution says;
+  *Ring of Elemental Command's* plane brings resistance, movement and a page of other text with it.
+- *Goggles of Night* add 60 feet to a Darkvision you already have, and the `item` layer folds
+  BEFORE `feature`, so a species floor would land after the goggles' add
+  (`effects.md` ▸ Targets).
+- *Robe of Scintillating Colors'* disadvantage is charge-gated and applies only to creatures that
+  can see you. 2014's *Armor of Invulnerability* resists "nonmagical damage", which is not a type
+  the vocabulary can name; 2014's *Cloak of Elvenkind* needs its hood UP, an action.
+- A charged item with a RANDOM starting pool ("1d8 + 1 charges") says no pool: the vocabulary
+  takes a literal max.
+
+**What will never fold, and should stop being counted as missing:** consumables (potions, oils —
+drinking is not a modelled event), objects with their own stat block (Mirror of Life Trapping,
+Instant Fortress, Apparatus of the Crab, Iron Flask), and summon items (Horn of Valhalla, Deck of
+Many Things). These are complete as prose.
 
 ## One article, two editions
 

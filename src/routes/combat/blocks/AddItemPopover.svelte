@@ -17,7 +17,8 @@
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
 	import RarityRange from '../../build/blocks/RarityRange.svelte';
-	import { WHOLE_BAND, withinBand } from '../../build/rarity';
+	import { WHOLE_BAND, itemWithinBand } from '../../build/rarity';
+	import { itemRarities } from '$lib/content/options';
 	import { rowDetail, rowName } from '../../build/rows';
 	import { ITEM_CATEGORIES } from '$lib/content/schemas';
 	import { titleCase } from '$lib/util/format';
@@ -57,7 +58,8 @@
 			key: category,
 			label: titleCase(category),
 			rows: items.filter(
-				(r) => r.data.category === category && withinBand(r.data.rarity, from, to),
+				(r) =>
+					r.data.category === category && itemWithinBand(itemRarities(r, combat.graph), from, to),
 			),
 		})).filter((s) => s.rows.length),
 	);

@@ -24,6 +24,7 @@
 		facetFor,
 		groupRows,
 		distinctValues,
+		fieldValues,
 		byDisplayName,
 	} from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
@@ -223,7 +224,7 @@
 	const groupings = $derived(groupingsFor(selectedType));
 	const facet = $derived(facetFor(selectedType));
 	const sources = $derived([...new Set(pool.map((r) => r.source))].sort());
-	const facetValues = $derived(facet ? distinctValues(pool, facet.key) : []);
+	const facetValues = $derived(facet ? distinctValues(pool, facet.key, graph) : []);
 
 	const rows = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -231,9 +232,8 @@
 			.filter((r) => {
 				if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
 				if (facet && facetFilter.size) {
-					// facet.key is a runtime config string; scan entries to read the cell off the union (no cast)
-					const v = Object.entries(r.data).find(([k]) => k === facet.key)?.[1];
-					if (!facetFilter.has(v == null ? '' : String(v))) return false;
+					// every value the row has: a `+1/+2/+3` weapon is found under each of its rarities
+					if (!fieldValues(r, facet.key, graph).some((v) => facetFilter.has(v))) return false;
 				}
 				return !q || localName(r).toLowerCase().includes(q);
 			})
@@ -241,7 +241,11 @@
 	});
 
 	const groups = $derived(
-		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType, $_), localName, $_),
+		toEntryGroups(
+			groupRows(rows.slice(0, 500), groupBy, { type: selectedType, t: $_, graph }),
+			localName,
+			$_,
+		),
 	);
 	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
 	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.

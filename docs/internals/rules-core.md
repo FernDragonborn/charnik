@@ -207,7 +207,9 @@ always-prepared spells (domain, oath) sit OUTSIDE the prepared count but still c
 as class spells, and a spell a FEAT teaches is outside it because the feat is its own caster profile
 (below), not because of a flag; a ritual is castable without a slot, and its SOURCE varies (a wizard
 rituals from the spellbook unprepared, a prepared caster only what is prepared) — `ritual_source`
-says which, on the class or on a subclass that grants it to a class with none, and it is asked of
+says which, on the class, on a subclass that grants it to a class with none, or on an option the
+character chose of a class feature (a 2014 warlock's Book of Ancient Secrets), the option's
+statement winning over the subclass's and that over the class's; and it is asked of
 the class a spell is cast AS (`canCastAsRitual`), never of the character as a whole: a wizard's
 spellbook does not make a sorcerer's spell a ritual; cantrips are
 independent of slots, which is why a pure warlock has cantrips and no shared slots; a slot casts any

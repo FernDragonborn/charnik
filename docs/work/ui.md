@@ -6,7 +6,7 @@
 - [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is picked
   blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
   built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
-  "the picker contract". Choice groups (N2's choice kind) render here when N2 lands. Open tails:
+  "the picker contract". A feature's choices render here as the Feature options pane (`OptionsPane`). Open tails:
   - [ ] **The guided ("walk me through it") second mode.** Not this release — it needs
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a

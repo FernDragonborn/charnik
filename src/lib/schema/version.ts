@@ -131,7 +131,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // rungs of every such item as very rare.
 // v44: the 2014 Wild Shape row states that a form leaves the druid no special sense it lacks itself
 // (`form:wild_shape:only_senses`). An install left at v43 keeps an elf's Darkvision in a wolf.
-export const CONTENT_SEED_VERSION = 44;
+// v45: both packs gain `options_srd.csv` — the varieties of the six items whose rarity varies, and
+// a 2014 warlock's Pact Boons and Eldritch Invocations, which its two feature rows now `choose`.
+// An install left at v44 never receives the file, and its Belt of Giant Strength stays a sentence.
+export const CONTENT_SEED_VERSION = 45;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

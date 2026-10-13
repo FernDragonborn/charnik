@@ -40,6 +40,7 @@ import { ClassRows } from './class-rows.svelte';
 import { SkillPicks } from './skill-picks.svelte';
 import { MasteryPicks } from './mastery-picks.svelte';
 import { FormPicks } from './form-picks.svelte';
+import { OptionPicks } from './option-picks.svelte';
 import { SpellPicks } from './spell-picks.svelte';
 import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
 import type { SystemId } from '$lib/stores/app.svelte';
@@ -58,7 +59,8 @@ import {
 	allSelectedRefs,
 	parseDraftState,
 	type DraftState,
-	type EditContext
+	type EditContext,
+	copyPicks,
 } from './draft';
 import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
@@ -355,6 +357,9 @@ export class BuildVM {
 	/** Forms chosen ahead of time (2024 Wild Shape's Known Forms) — see form-picks.svelte.ts. */
 	formPicks: FormPicks = new FormPicks(() => this);
 
+	/** What a class feature has the character choose (a Pact Boon) — see option-picks.svelte.ts. */
+	optionPicks: OptionPicks = new OptionPicks(() => this);
+
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
 	feats: FeatSlots = new FeatSlots(() => this);
@@ -416,9 +421,8 @@ export class BuildVM {
 			// the draft's own picks, untrimmed: what is ELIGIBLE is read off the sheet this character
 			// assembles into, and a question about the sheet must not depend on its own answer. The
 			// play sheet offers only the picks a level still allows.
-			forms: Object.fromEntries(
-				Object.entries(this.draft.forms).map(([id, refs]) => [id, [...refs]]),
-			),
+			forms: copyPicks(this.draft.forms),
+			options: this.optionPicks.picks,
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead). `choiceKeys`, not the class
@@ -530,12 +534,10 @@ export class BuildVM {
 			classSkillCount: this.skillPicks.classSkillCount,
 			skillChosenCount: this.skillPicks.chosenCount,
 			openFeatSlots: this.feats.openFeatSlots,
-			speciesSkillsOwed: Math.max(
-				this.skillPicks.speciesSkillCount - this.skillPicks.speciesSkillPicks.length,
-				0,
-			),
+			speciesSkillsOwed: this.skillPicks.speciesSkillsOwed,
 			masteriesOwed: Math.max(this.masteryPicks.cap - this.masteryPicks.picks.length, 0),
 			formsOwed: this.formPicks.owed,
+			optionsOwed: this.optionPicks.owed,
 			originFeat: {
 				name: rowName(this.row(this.feats.originFeatRef)),
 				owed: this.feats.originChoicesOwed,

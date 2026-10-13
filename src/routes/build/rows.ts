@@ -6,7 +6,8 @@
  * either module works.
  */
 import { buildDetail, localizedName, type DetailModel } from '$lib/content/detail';
-import { contentLabel, entryMeta } from '$lib/content/entry-list';
+import { contentLabel, entryMeta, RARITY_JOIN } from '$lib/content/entry-list';
+import { itemRarities } from '$lib/content/options';
 import { describedPlainProse } from '$lib/content/overrides.svelte';
 import { content } from '$lib/content/store.svelte';
 import { weaponPropertyRowsFor } from '$lib/content/weapon-properties';
@@ -120,7 +121,12 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 	// nothing; rarity and PRICE are what still differ inside one — and price is the question a player
 	// outfitting a level-1 character is actually asking, which is why the article alone was not enough
 	if (row.type === 'item')
-		return [label('itemRarity', row.data.rarity), say(costSaid(row.data.cost), t)]
+		return [
+			itemRarities(row, content.graph)
+				.map((rarity) => label('itemRarity', rarity))
+				.join(RARITY_JOIN),
+			say(costSaid(row.data.cost), t),
+		]
 			.filter(Boolean)
 			.join(' · ');
 	return entryMeta(row, t);

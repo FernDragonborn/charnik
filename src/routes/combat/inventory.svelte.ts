@@ -38,6 +38,7 @@ import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency'
 import { say } from '$lib/util/say';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 import { type ContentGraph } from '$lib/content/loader';
+import { optionsOf } from '$lib/content/options';
 import { localizedName } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -77,6 +78,16 @@ export interface InventoryRow {
 	/** The answers a row ASKS for — Ring of Resistance's damage type. Empty for every row that asks
 	 *  nothing, and still offered after an answer for the same reason the rungs are. */
 	choiceOptions: string[];
+	/** The varieties a row has as rows of their own — the five Belts of Giant Strength. Answered on
+	 *  the same field as `choiceOptions`, and offered after an answer for the same reason. */
+	varieties: ItemVariety[];
+}
+
+/** One variety of a carried item, as its row's question lists it. */
+interface ItemVariety {
+	id: string;
+	name: string;
+	rarity: string | undefined;
 }
 
 /** A mundane item a template can be resolved against, as the picker lists it. */
@@ -124,11 +135,19 @@ export class InventoryTracker {
 			const bare = this.resolve(entry.item);
 			const item = entry.base ? this.resolve(entry.item, entry.base) : bare;
 			const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null;
+			const graph = this.getGraph();
+			const varieties = (graph && item ? optionsOf(graph, item.row) : []).map((variety) => ({
+				id: variety.id,
+				name: localizedName(variety, app.activeLocale),
+				rarity: variety.data.rarity,
+			}));
+			// a row that has been told which variety it is goes by that variety's name
+			const variety = varieties.find((v) => v.id === entry.choice);
 			return {
 				entry,
 				// the ref itself is the last resort: a row whose item left the graph must still be
 				// visible and removable, never a blank line the user cannot act on
-				name: item ? localizedName(item.row, app.activeLocale) : entry.item,
+				name: variety?.name ?? (item ? localizedName(item.row, app.activeLocale) : entry.item),
 				item,
 				weightLb: item?.weightLb ?? 0,
 				meta: [
@@ -147,6 +166,7 @@ export class InventoryTracker {
 				isTemplate: !!bare && needsBaseItem(bare),
 				bonusRungs: parseBonusChoices(item?.row.data.bonus_choice),
 				choiceOptions: splitList(item?.row.data.choice_options),
+				varieties,
 			};
 		});
 	});
