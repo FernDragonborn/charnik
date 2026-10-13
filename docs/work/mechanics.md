@@ -158,7 +158,7 @@ stay semi-manual.
      front a wavering blade of light that sheds sparks; **hatch** — stripes at the front's lean
      marching toward the middle. A fifth dresses each side as what it is: **rays and hellfire** —
      rescue as soft shafts of light breaking through cloud, each coming and going on its own
-     pace; death as a dark ground whose flames rise with each failure and stay inside it. Their cost is not measured.
+     pace; death as a dark ground whose flames rise with each failure and stay inside it. Each side's scene is laid out once across the whole block and the ground is a window onto it: a wider ground uncovers more shafts or more flames, and nothing stretches. Their cost is not measured.
      Which FIELD, and each motion's tempo, are the maintainer's eye on the running page, not a
      render's; which motion is the player's (Settled).
   3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
