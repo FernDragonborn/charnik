@@ -140,6 +140,12 @@ stay semi-manual.
      equal — a band under the ordinary header, the whole block, the hit-point bar grown into a
      vessel, the whole block with glyphs — and the motion is liquid (a swell along the surface,
      drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
+     The flat slanted ground has four motions of its own on the same page, each tightening with
+     every failure and each looping `transform` and `opacity` only: **pressure** — the death side
+     leans in, slips back and leans in again under a shadow that reaches across the middle;
+     **waves** — the front's edge peels off toward the middle and fades; **burning edge** — the
+     front a wavering blade of light that sheds sparks; **hatch** — stripes at the front's lean
+     marching toward the middle. Their cost is not measured.
      Which one, and its tempo, are the maintainer's eye on the running page, not a render's.
   3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
