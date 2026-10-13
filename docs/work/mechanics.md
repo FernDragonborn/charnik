@@ -159,7 +159,13 @@ stay semi-manual.
     were drawn and passed over.
   - **A narrow window gets a mock of its own before it is built.** It is the phone's layout as
     much as a narrow desktop's: icons and buttons in several rows, the elements changing place
-    rather than shrinking. Until that mock exists the redraw is built for the wide window.
+    rather than shrinking. Two forms are drawn at 361px with every press 44px tall (`_hp-narrow.png`):
+    **A** — one row under the bar, the hit's field, the minus, and healing as a bare plus, with
+    the roll and healing as icons between the saves at 0 hit points; **B** — the field on a row
+    of its own, then two halves that say what they do, and the same at 0 hit points. Neither is
+    chosen, and in both the faces differ in height (A 157px on its feet and 129px at 0 hit
+    points, B 209px and 181px, the end faces 140px), which rule 1 forbids and the chosen one
+    must close.
 
   **Open, in the order it blocks the build.**
   1. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
@@ -237,9 +243,9 @@ stay semi-manual.
   glyphs drawn under it; W2z's type and factor split around the amount; the saves as a soft tint; a heartbeat on the glow.
 
   **The mocks**, built from the app's own glyphs and catalogs: `design-preview/damage-type-under-temp.html`
-  (W2, W2z, W3, the two orders, the pencil, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
+  (W2, W2z, W3, the two orders, the pencil, the narrow window, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
   motion, live — the saves are pressable). Renders: `_damage-type-w2.png`, `_damage-type-w2z.png`,
-  `_damage-type-w3.png`, `_damage-type-order.png`, `_hp-pencil.png`,
+  `_damage-type-w3.png`, `_damage-type-order.png`, `_hp-pencil.png`, `_hp-narrow.png`,
   `_damage-type-down.png`, `_damage-type-wings.png`, `_death-saves-motion.png`,
   `_death-saves-arrows.png`.
 
