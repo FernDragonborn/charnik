@@ -159,13 +159,13 @@ stay semi-manual.
     were drawn and passed over.
   - **A narrow window gets a mock of its own before it is built.** It is the phone's layout as
     much as a narrow desktop's: icons and buttons in several rows, the elements changing place
-    rather than shrinking. Two forms are drawn at 361px with every press 44px tall (`_hp-narrow.png`):
-    **A** — one row under the bar, the hit's field, the minus, and healing as a bare plus, with
-    the roll and healing as icons between the saves at 0 hit points; **B** — the field on a row
-    of its own, then two halves that say what they do, and the same at 0 hit points. Neither is
-    chosen, and in both the faces differ in height (A 157px on its feet and 129px at 0 hit
-    points, B 209px and 181px, the end faces 140px), which rule 1 forbids and the chosen one
-    must close.
+    rather than shrinking. It is drawn at 361px with every press 44px tall (`_hp-narrow.png`), and this is the
+    form built for now: one row under the bar — the hit's field, the minus, and healing as a bare
+    plus — and at 0 hit points the roll and healing as icons between the saves. The pencil
+    stands inside by the label, since there is no room beside the block and a touch screen shows
+    it always. Every face is 157px; the temporary hit points' label makes the mock's 159px, which
+    the build closes. A second form, with the field on its own row and two worded halves under
+    it, was drawn and passed over. The type menu and the healing popover are not drawn narrow.
 
   **Open, in the order it blocks the build.**
   1. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
