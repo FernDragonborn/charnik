@@ -104,6 +104,12 @@ stay semi-manual.
   - **Healing and temporary hit points are one green control and one popover**: one number, Heal on
     Enter, Temp HP beside it, and the note the Temp HP menu already carries. The step count equals
     today's — press, type, Enter against press the field, type, press Heal.
+  - **The hit is said as the dice tray says a damage line (W3).** One field holds the amount and
+    then the type that owns it — amount, type, press, one pass left to right, as the table says
+    "12 fire". The type is the tray's own pill with its chevron and opens the tray's two-column
+    menu with the sheet's defended types leading, or is typed without leaving the field
+    (`12 f ↵`). The line is one width whatever the sheet defends. The minus's width is reserved, so
+    saying a number (`− 6`) does not move the line.
   - **The minus says a number only when a defense changed it** (`− 6`); at rest it is a bare minus.
   - **The block is one height in every state**, 117px against today's 157px.
   - **0 hit points is a face of its own, and it is an emergency that looks like one.** No current
@@ -122,21 +128,7 @@ stay semi-manual.
     under the narrow threshold, where it becomes several rows.
 
   **Open, in the order it blocks the build.**
-  1. **How the hit is said.** Three forms stand on the same frame: **W2** — the defended types as
-     glyph chips, the rest behind a menu, then the amount and the minus; **W2z** — the type and a
-     factor `∅ ½ 1 ×2` as one joined control, where a said type lights its factor, the player may
-     overrule it, and with no type said the factor is theirs to press (a defense the sheet does not
-     know). W2z is the narrower (242px against 300px at its widest) and its segments are small.
-     **The order on the line is open in both.** Type, amount, press sends the pointer from the
-     amount back to the type and then across the amount to the minus, and reads against the table's
-     "12 fire". Drawn beside it (`_damage-type-order.png`): **amount first** — amount, type, press,
-     one pass left to right. **W3** says the hit as the dice tray says a damage line: one field
-     holding the amount and then the type that owns it, the type the tray's own pill with its
-     chevron, opening the tray's two-column menu with the sheet's defended types leading, or typed
-     without leaving the field (`12 f ↵`). It is one width whatever the sheet defends (about 90px
-     before the minus), and a defended type costs two presses where W2 and W2z spend one. In every order the minus widens when it says a number (`− 6`) and pushes the line
-     7px left; its width is reserved in the build.
-  2. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
+  1. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
      chip in `Controls.svelte` already rolls the owed save, so the proposal is that the chip says the
      owed DC. **A wrong number ships today**: a second Damage press before the save is rolled
      REPLACES the owed save (`play-outcomes.ts`, `hp.pendingConcentrationSave =
@@ -144,12 +136,12 @@ stay semi-manual.
      DC 20. The proposal: damage taken before the owed save is rolled adds to it — the order of the
      presses says whether it was one hit — which is also what makes two presses for a flame tongue
      RAW again. Neither half is signed off.
-  3. **The 0 hit points face's form and motion.** The field is one of four the maintainer holds
+  2. **The 0 hit points face's form and motion.** The field is one of four the maintainer holds
      equal — a band under the ordinary header, the whole block, the hit-point bar grown into a
      vessel, the whole block with glyphs — and the motion is liquid (a swell along the surface,
      drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
      Which one, and its tempo, are the maintainer's eye on the running page, not a render's.
-  4. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
+  3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
      nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
      filter over each liquid body, `mask-position`, a `drop-shadow` on the chevrons, and `box-shadow`
@@ -166,8 +158,12 @@ stay semi-manual.
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
      cheap either, only much less so. If the liquid cannot be brought near the chevrons' cost, that
      settles which motion ships.
-  5. **How many defended types stand before the menu**: two are drawn, three fit at the wide width.
-  6. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+  4. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+
+  **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
+  rest behind a menu; **W2z** — the type and a factor `∅ ½ 1 ×2` as one joined control, where a
+  said type lights its factor and the player may overrule it; each drawn type first and amount
+  first (`_damage-type-order.png`).
 
   **Rejected, so they are not drawn again:** a bare `∅ ½ 1 ×2` with no type (unspecific, rule 11);
   a switch between that and the types (two interfaces, and it breaks in Ukrainian); a type's name
