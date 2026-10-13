@@ -124,6 +124,9 @@ stay semi-manual.
   - **Motion lives on that face and nowhere else on the sheet**, and stands still under
     `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
     it never blinks.
+  - **The player picks the motion, and every motion drawn ships beside a still face.** The block
+    wears a pencil that opens the list; `Still` is the choice already made when the system asks
+    for reduced motion, and it is one press for anyone else.
   - **A narrow window is laid out in a pass of its own.** The line this is drawn on does not fit
     under the narrow threshold, where it becomes several rows.
 
@@ -148,7 +151,8 @@ stay semi-manual.
      marching toward the middle. A fifth dresses each side as what it is: **rays and hellfire** —
      rescue as soft shafts of light breaking through cloud, each coming and going on its own
      pace; death as a dark ground whose flames rise with each failure and stay inside it. Their cost is not measured.
-     Which one, and its tempo, are the maintainer's eye on the running page, not a render's.
+     Which FIELD, and each motion's tempo, are the maintainer's eye on the running page, not a
+     render's; which motion is the player's (Settled).
   3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
      nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
@@ -164,9 +168,15 @@ stay semi-manual.
      before any of it is carried into the app.
      **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
-     cheap either, only much less so. If the liquid cannot be brought near the chevrons' cost, that
-     settles which motion ships.
-  4. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+     cheap either, only much less so. Every motion ships, so every one is measured; what one that
+     stays dear does — ships marked as such, or waits — is not decided.
+  4. **Where the pencil stands, and where its choice is kept.** Three places are drawn
+     (`_hp-pencil.png`): inside by the label; a tab on the top edge; a tab on the side. A tab is
+     the same on both faces, where the inside one changes place with the label; a side tab needs
+     the free side, and the exhaustion block stands on the right. The choice is proposed as the
+     app's own preference beside theme and language, not the character's: it is about the person
+     at the screen. Whether a row previews its motion is not drawn.
+  5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
   **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
   rest behind a menu; **W2z** — the type and a factor `∅ ½ 1 ×2` as one joined control, where a
@@ -179,9 +189,9 @@ stay semi-manual.
   glyphs drawn under it; W2z's type and factor split around the amount; the saves as a soft tint; a heartbeat on the glow.
 
   **The mocks**, built from the app's own glyphs and catalogs: `design-preview/damage-type-under-temp.html`
-  (W2, W2z, W3, the two orders, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
+  (W2, W2z, W3, the two orders, the pencil, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
   motion, live — the saves are pressable). Renders: `_damage-type-w2.png`, `_damage-type-w2z.png`,
-  `_damage-type-w3.png`, `_damage-type-order.png`,
+  `_damage-type-w3.png`, `_damage-type-order.png`, `_hp-pencil.png`,
   `_damage-type-down.png`, `_damage-type-wings.png`, `_death-saves-motion.png`,
   `_death-saves-arrows.png`.
 
