@@ -258,6 +258,8 @@ speak of the same thing, the way `extra_attack` rows do.
 | `hours` | L2 | how long the form lasts, which becomes its clock |
 | `casts` | — | spells can be cast in the form |
 | `only_senses` | — | a special sense the character has is theirs in the form only if the stat block lists it too (SRD 5.1); the one a form takes reads 0, with the form as the last line of its trace |
+| `sheds` | a word | what the character does not keep in the form, by where it CAME from — `species` (SRD 5.2.1 lists what is retained, and a species trait is not on the list). A table ruling as much as a rule, so the sheet offers both: `ui.formSpecies` is `shed` by default and `kept` where the table plays it so |
+| `worn_only` | — | what is carried works in the form only where the form WEARS it (both SRDs: "Equipment that merges with the form has no effect"). Which rows a form wears is the player's to say, `play.form.worn`, and nothing is worn until it is said |
 | `ends_when` | a word | a state row's id that ends the form the moment the character has it — `unconscious` (SRD 5.1), `incapacitated` (SRD 5.2.1). Death answers for every state named. Applied, not offered: neither text leaves a choice (`characters.md` ▸ A tracker surfaces) |
 
 A rule the feature does not state limits nothing. A value that does not resolve is surfaced
@@ -276,6 +278,23 @@ with `own_hp` then counts the stat block's instead, as an override-layer set, so
 character's own bonuses nor a maximum set by hand reach it. Those hit points reaching 0 END the
 form, by damage or by a number typed in — they are what ran out. A form without `own_hp` is not
 ended by 0 hit points: SRD 5.2.1 names Incapacitated and death, and no more.
+
+**Two sentences turn on where a token CAME from, not on what it targets**, so they are read in
+the gather, off the tokens already collected, before the facts those tokens become exist
+(`character/derive-gather.ts` ▸ `inForm`): `sheds:species` drops what the species and its option
+contributed, and `worn_only` drops a carried item's tokens, its variety's with them, unless the
+form wears that row. A guard on either sentence is not weighed. Neither leaves a line in a trace —
+a contribution that is not made has nothing to hang one on — so the sheet says both where the
+choice is: a toggle beside the form's chip, and one on each carried row.
+
+**What the text leaves open, and how it is read.** Whether falling, merging or being worn is
+decided per item is not stated; it is asked per row, the RAI reading. How a worn armor's Armor
+Class meets the one the stat block set is not stated either: the stat block's SET stands. 2024's
+"use your Proficiency Bonus" for the creature's own proficiencies is read as the stat block's
+listed modifier standing as a floor — the same number in every shipped beast, and RAI where a
+homebrew stat block lists a proficiency its modifier does not show. Swapping a known form on a
+Long Rest is an edit in the builder, like every other choice made ahead of time; the rest itself
+offers nothing.
 
 **Assuming one is a verb** — `assume_form:<id>` on a resource option (`actions.md` §2) — and the
 play-state is `play.form` plus the carrier (`characters.md` ▸ Play-state modelling).

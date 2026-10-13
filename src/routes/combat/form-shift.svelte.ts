@@ -17,7 +17,9 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import { app } from '$lib/stores/app.svelte';
 import type { FormRules } from '$lib/effects/facts';
 import { activeForm, isEligibleForm, type MonsterRow } from '$lib/character/forms';
-import { assumeForm, leaveFormNow, revertForm } from '$lib/play/form-shift';
+import { assumeForm, leaveFormNow, revertForm, setFormWorn } from '$lib/play/form-shift';
+import { FORM_SHEDS } from '$lib/effects/token-words';
+import { FORM_SPECIES } from '$lib/character/schema';
 import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 /** What the form bookkeeping needs from the sheet around it. */
 export interface FormHost {
@@ -103,6 +105,37 @@ export class FormShift {
 		return row ? localizedName(row, app.activeLocale) : monster;
 	};
 
+	/** The rules of the form the character is in, or undefined. */
+	private get currentRules(): FormRules | undefined {
+		const id = this.host().character?.play.form?.id;
+		return id === undefined ? undefined : this.rulesOf(id);
+	}
+
+	/** Does the form set the species' traits aside by its own rules? Where it does, whether THIS
+	 *  table plays it so is the character's to say (`ui.formSpecies`), and the sheet offers both. */
+	get shedsSpecies(): boolean {
+		return this.currentRules?.sheds.includes(FORM_SHEDS.species) ?? false;
+	}
+	get speciesKept(): boolean {
+		return this.host().character?.ui.formSpecies === FORM_SPECIES.kept;
+	}
+	/** Switch between the text and the table's ruling. A sheet preference, not play-state: it
+	 *  outlives the form and is not a thing a rest undoes. */
+	toggleSpecies = (): void => {
+		const character = this.host().character;
+		if (character)
+			character.ui.formSpecies = this.speciesKept ? FORM_SPECIES.shed : FORM_SPECIES.kept;
+	};
+
+	/** Does equipment work in this form only where the form wears it? */
+	get wornOnly(): boolean {
+		return this.currentRules?.wornOnly ?? false;
+	}
+	isWorn = (row: string): boolean => this.host().character?.play.form?.worn.includes(row) ?? false;
+	/** Say the form wears one carried item, or that it does not. */
+	setWorn = (row: string, worn: boolean): void =>
+		void this.host().act((c, ctx) => setFormWorn(c, { row, worn }, ctx));
+
 	/** Leave the form by choice — a Bonus Action in both editions, which the turn has to have. */
 	revert = (): void => {
 		if (this.current) this.host().act(revertForm);
@@ -126,4 +159,6 @@ const lifted = (rules: FormRules): FormRules => ({
 	casts: rules.casts,
 	onlySenses: rules.onlySenses,
 	endsWhen: rules.endsWhen,
+	sheds: rules.sheds,
+	wornOnly: rules.wornOnly,
 });

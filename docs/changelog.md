@@ -77,6 +77,12 @@ sentences became numbers, and a security pass closed what a page inside the wind
   in 2024 you keep your own and gain Temporary Hit Points equal to your druid level. The form has
   its clock, blocks casting until Beast Spells, and ends from its chip as a Bonus Action — or on its
   own when its rules say so: falling unconscious or dying in 2014, Incapacitated or dying in 2024.
+- **A form wears what you say it wears.** Both editions leave equipment to you — it falls, merges
+  or is worn — and only worn equipment keeps working. In a form each carried item says `Merged`
+  until you press it to `Worn by form`, so a ring's bonus no longer rides along on a wolf unasked.
+- **A 2024 form sets your species' traits aside**, as its text does: it keeps class features,
+  languages and feats, and an elf's Darkvision is not on that list. Many tables keep them anyway,
+  so a switch beside the form's chip says which your table plays.
 - **What else a use of Wild Shape buys (2024).** Wild Companion, Land's Aid and Nature's Sanctuary
   are actions that spend a use, the last two only for a Circle of the Land druid. Wild Resurgence
   turns a use into a level 1 spell slot once per Long Rest — one more pip than your table gives,

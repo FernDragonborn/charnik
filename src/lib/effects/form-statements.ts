@@ -7,6 +7,7 @@
 import { evalExpression, type ExprContext } from './expression-evaluator';
 import { addFormStatement, type FormRules, type FormStatement } from './facts';
 import { FORM_WORD, type ParsedEffect } from './token-parser';
+import type { FormWord } from './token-words';
 
 /** Where a statement came from, and how to say that its value could not be read. */
 interface StatementOrigin {
@@ -35,22 +36,36 @@ export function collectFormStatement(
 			casts: false,
 			onlySenses: false,
 			endsWhen: [],
+			sheds: [],
+			wornOnly: false,
 		};
 		forms.push(rules);
 	}
 	addFormStatement(rules, said);
 }
 
+/** The words that turn one rule on, and the words whose value joins a list of them. */
+const FLAG_OF: Partial<Record<FormWord, 'ownHp' | 'casts' | 'onlySenses' | 'wornOnly'>> = {
+	[FORM_WORD.ownHp]: 'ownHp',
+	[FORM_WORD.casts]: 'casts',
+	[FORM_WORD.onlySenses]: 'onlySenses',
+	[FORM_WORD.wornOnly]: 'wornOnly',
+};
+const LIST_OF: Partial<Record<FormWord, 'without' | 'endsWhen' | 'sheds'>> = {
+	[FORM_WORD.without]: 'without',
+	[FORM_WORD.endsWhen]: 'endsWhen',
+	[FORM_WORD.sheds]: 'sheds',
+};
+
 function formStatement(
 	{ word, value }: NonNullable<ParsedEffect['form']>,
 	{ ctx, unreadable }: StatementOrigin,
 ): FormStatement | undefined {
 	if (word === FORM_WORD.creature) return value ? { creature: value } : undefined;
-	if (word === FORM_WORD.without) return value ? { without: [value] } : undefined;
-	if (word === FORM_WORD.endsWhen) return value ? { endsWhen: [value] } : undefined;
-	if (word === FORM_WORD.ownHp) return { ownHp: true };
-	if (word === FORM_WORD.casts) return { casts: true };
-	if (word === FORM_WORD.onlySenses) return { onlySenses: true };
+	const flag = FLAG_OF[word];
+	if (flag) return { [flag]: true };
+	const list = LIST_OF[word];
+	if (list) return value ? { [list]: [value] } : undefined;
 	const r = ctx
 		? evalExpression(value ?? '', ctx)
 		: ({ ok: false, error: 'expression needs a context' } as const);

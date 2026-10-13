@@ -77,11 +77,12 @@ describe.each(['5e', '5.5e'] as const)('form actions · %s', (system) => {
 				id: 'wild_shape',
 				monster: wolf,
 				hpBefore: own.play.hp.current,
+				worn: [],
 			});
 			const row = graphs[system].get(wolf);
 			expect(formed.play.hp.current).toBe(row?.type === 'monster' ? Number(row.data.hp) : NaN);
 		} else {
-			expect(formed.play.form).toEqual({ id: 'wild_shape', monster: wolf });
+			expect(formed.play.form).toEqual({ id: 'wild_shape', monster: wolf, worn: [] });
 			expect(formed.play.hp).toMatchObject({ current: own.play.hp.current, temp: 4 });
 		}
 	});

@@ -567,6 +567,10 @@
 			"formHint": "Your body is this creature's; your mind and your hit points are your own.",
 			"formHintOwnHp": "The hit points shown are this form's. Your own ({hp}) wait until you leave it.",
 			"formLeave": "Leave the {name} form (a Bonus Action)",
+			"formSpecies": "Species traits",
+			"formSpeciesHint": "By the text a form keeps your class features, languages and feats, and not what your species gave you. Many tables keep those too — this is yours to set.",
+			"formSpeciesKept": "kept",
+			"formSpeciesShed": "set aside",
 			"short": "Short",
 			"shortHintDice": "Short rest — spend Hit Dice to heal",
 			"shortHintHalf": "Short rest — heal half your max HP",
@@ -705,6 +709,10 @@
 			"motionReduced": "Reduce motion is on in Settings, so nothing plays. Your pick is kept."
 		},
 		"inventory": {
+			"formMerged": "Merged",
+			"formMergedHint": "Merged into the form: it does nothing until you leave it. Press if the form wears it.",
+			"formWorn": "Worn by form",
+			"formWornHint": "The form wears it, so it works as normal. Press if it merged into the form instead.",
 			"addItem": "Add an item",
 			"attune": "Attune",
 			"attuneHint": "Attune to it",

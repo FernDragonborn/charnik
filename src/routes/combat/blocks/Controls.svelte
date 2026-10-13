@@ -134,6 +134,26 @@
 				>
 			</span>
 		</span>
+		<!-- A table ruling the text and common play disagree on, so both are offered and neither is
+		     chosen for the player: by the text a form leaves the species' traits behind. -->
+		{#if combat.forms.shedsSpecies}
+			<button
+				class="toggle"
+				class:on={combat.forms.speciesKept}
+				aria-pressed={combat.forms.speciesKept}
+				onclick={combat.forms.toggleSpecies}
+				use:provenance={$_('combat.controls.formSpeciesHint')}
+			>
+				{$_('combat.controls.formSpecies')}
+				<span class="toggle-state"
+					>{$_(
+						combat.forms.speciesKept
+							? 'combat.controls.formSpeciesKept'
+							: 'combat.controls.formSpeciesShed',
+					)}</span
+				></button
+			>
+		{/if}
 	{/if}
 	<span class="spacer"></span>
 	<button

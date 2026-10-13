@@ -269,6 +269,21 @@
 							{$_(row.entry.equipped ? 'combat.inventory.equipped' : 'combat.inventory.equip')}
 						</button>
 					{/if}
+					<!-- In a form whose rules say so, what is carried works only where the form WEARS it.
+					     Which pieces a wolf can wear is the player's and the GM's to say, so each is
+					     asked, and until it is answered the item has merged into the form. -->
+					{#if combat.forms.wornOnly && (row.entry.equipped || row.entry.attuned)}
+						{@const worn = combat.forms.isWorn(row.entry.iid)}
+						<button
+							class="pill-btn"
+							class:accent={worn}
+							aria-pressed={worn}
+							onclick={() => combat.forms.setWorn(row.entry.iid, !worn)}
+							title={$_(worn ? 'combat.inventory.formWornHint' : 'combat.inventory.formMergedHint')}
+						>
+							{$_(worn ? 'combat.inventory.formWorn' : 'combat.inventory.formMerged')}
+						</button>
+					{/if}
 					{#if row.attunable}
 						<button
 							class="pill-btn"

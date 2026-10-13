@@ -30,6 +30,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
+- `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
 - `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
@@ -45,7 +46,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×3 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
-- `says` ×3 — src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -826,6 +826,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const DEFAULT_DOWN_MOTION`
 - `const downMotionOf` — The motion a character's stored choice names.
 - `type LevelingMode`
+- `const FORM_SPECIES` — What a form does with species traits its rules shed — see `ui.formSpecies`.
 - `const characterSchema`
 - `const classRow` — The one place a class row or an inventory row is made, so each leaves with an identity of its * own.
 - `const inventoryRow`
@@ -1734,6 +1735,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const FORM_WORD_VALUE` — What each word is followed by.
 - `const isFormWord`
 - `const formWordTakesExpression` — Does this form word carry an L2 expression?
+- `const FORM_SHEDS` — What a form's `sheds` may name: where a trait CAME from, since the rule is about its source * and not about what it d…
 
 ### `src/lib/effects/upcast.ts`
 
@@ -1813,6 +1815,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function assumeForm` — * Assume a form.
 - `const leaveFormNow` — The form ends: its carrier goes, and hit points that were waiting come back.
 - `function revertForm` — Leave the form by choice — a Bonus Action in both editions, which the turn has to have.
+- `function setFormWorn` — Say whether the form wears one carried item.
 
 ### `src/lib/play/form.ts`
 
@@ -2291,4 +2294,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1392 exports across 193 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1395 exports across 193 modules · 94 duplicate suspects._

@@ -15,7 +15,14 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, characterSchema, type Character, classRow } from '../character/schema';
+import {
+	newCharacter,
+	characterSchema,
+	type Character,
+	classRow,
+	inventoryRow,
+} from '../character/schema';
+import { setFormWorn } from '../play/form-shift';
 import { deriveSheet } from '../character/derive';
 import { isEligibleForm, type MonsterRow } from '../character/forms';
 import type { ContentGraph } from './loader';
@@ -40,7 +47,12 @@ function druid(pack: Pack, level: number): Character {
 function shaped(character: Character, pack: Pack, monster: string, hpBefore?: number): Character {
 	const ref = `monster:${EDITIONS[pack].source}:${monster}`;
 	const c = structuredClone(character);
-	c.play.form = { id: 'wild_shape', monster: ref, ...(hpBefore === undefined ? {} : { hpBefore }) };
+	c.play.form = {
+		id: 'wild_shape',
+		monster: ref,
+		worn: [],
+		...(hpBefore === undefined ? {} : { hpBefore }),
+	};
 	c.play.effects = [{ iid: 'form', label: monster, source: ref, effects: [], positive: true }];
 	return c;
 }
@@ -78,6 +90,9 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				onlySenses: true,
 				// "You automatically revert if you fall unconscious, drop to 0 hit points, or die."
 				endsWhen: ['unconscious'],
+				sheds: [],
+				// "Equipment that merges with the form has no effect until you leave the form."
+				wornOnly: true,
 			},
 		]);
 		expect(at(4).facts.forms[0]).toMatchObject({ maxCr: 0.5, without: ['fly'], hours: 2 });
@@ -109,6 +124,10 @@ describe('Wild Shape · the pool and the rules each edition states', () => {
 				onlySenses: false,
 				// "until you use Wild Shape again, have the Incapacitated condition, or die"
 				endsWhen: ['incapacitated'],
+				// "you retain your creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and
+				// Charisma scores; class features; languages; and feats" — and no species trait
+				sheds: ['species'],
+				wornOnly: true,
 			},
 		]);
 		expect(at(4).facts.forms[0]).toMatchObject({ maxCr: 0.5, known: 6, tempHp: 4 });
@@ -158,6 +177,8 @@ describe('Wild Shape · which stat blocks a level allows', () => {
 				casts: false,
 				onlySenses: false,
 				endsWhen: [],
+				sheds: [],
+				wornOnly: false,
 			}),
 		);
 		const types = new Set(beasts.map((row) => row.data.creature_type));
@@ -255,3 +276,82 @@ describe('Wild Shape · the special senses a form leaves', () => {
 		expect(asBadger.senses['darkvision']?.value).toBe(60);
 	});
 });
+
+/* SRD 5.2.1 ▸ Wild Shape — "Your game statistics are replaced by the Beast's stat block, but you
+   retain your creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and Charisma scores;
+   class features; languages; and feats." A species trait is not on the list. An elf's Darkvision
+   is 60 feet and the 2024 riding horse lists no special sense. */
+describe('Wild Shape · what a 2024 form leaves of the species', () => {
+	const elf = (formSpecies?: Character['ui']['formSpecies']): Character => {
+		const c = druid('srd-2024', 2);
+		c.build.species = `species:${EDITIONS['srd-2024'].source}:elf`;
+		if (formSpecies) c.ui.formSpecies = formSpecies;
+		return characterSchema.parse(c);
+	};
+	const darkvision = (character: Character, graph: ContentGraph): number =>
+		deriveSheet(character, graph).senses['darkvision']?.value ?? 0;
+
+	it('sets the species’ traits aside by the text, and keeps them where the table says so', async () => {
+		const graph = await loadPacks('srd-2024');
+		expect(darkvision(elf(), graph)).toBe(60);
+		expect(darkvision(shaped(elf(), 'srd-2024', 'riding_horse'), graph)).toBe(0);
+		expect(darkvision(shaped(elf('kept'), 'srd-2024', 'riding_horse'), graph)).toBe(60);
+	});
+
+	it('2014 states no such rule: its form takes the senses it lacks and nothing else', async () => {
+		const graph = await loadPacks('srd-2014');
+		expect(deriveSheet(druid('srd-2014', 2), graph).facts.forms[0]?.sheds).toEqual([]);
+	});
+});
+
+/* Both editions: "you choose whether your equipment falls …, merges into your new form, or is worn
+   by it. Worn equipment functions as normal … Equipment that merges with the form has no effect".
+   A Cloak of Protection is "+1 bonus to AC and saving throws". */
+describe.each(['srd-2014', 'srd-2024'] as const)(
+	'Wild Shape · equipment in a form — %s',
+	(pack) => {
+		const CLOAK = 'cloak';
+		const cloaked = (): Character => {
+			const c = druid(pack, 2);
+			c.build.inventory = [
+				inventoryRow({
+					iid: CLOAK,
+					item: `item:${EDITIONS[pack].source}:cloak_of_protection`,
+					qty: 1,
+					equipped: true,
+					attuned: true,
+				}),
+			];
+			return characterSchema.parse(c);
+		};
+
+		it('works only where the form wears it, and comes back when the form is left', async () => {
+			const graph = await loadPacks(pack);
+			const wisSave = (character: Character): number =>
+				deriveSheet(character, graph).abilities.wis.save.value;
+			const bare = wisSave(druid(pack, 2));
+			expect(wisSave(cloaked())).toBe(bare + 1);
+
+			const asWolf = shaped(cloaked(), pack, 'wolf', pack === 'srd-2014' ? 10 : undefined);
+			// a form with hit points of its own is ended by having none, so the wolf is given some
+			asWolf.play.hp.current = 5;
+			const inWolf = wisSave(
+				shaped(druid(pack, 2), pack, 'wolf', pack === 'srd-2014' ? 10 : undefined),
+			);
+			expect(wisSave(asWolf)).toBe(inWolf);
+
+			const ctx = {
+				graph,
+				locale: 'en',
+				rng: () => 0.5,
+				derive: (character: Character) => deriveSheet(character, graph),
+			};
+			const worn = setFormWorn(asWolf, { row: CLOAK, worn: true }, ctx).character;
+			expect(worn.play.form?.worn).toEqual([CLOAK]);
+			expect(wisSave(worn)).toBe(inWolf + 1);
+			expect(setFormWorn(worn, { row: CLOAK, worn: false }, ctx).character.play.form?.worn).toEqual(
+				[],
+			);
+		});
+	},
+);

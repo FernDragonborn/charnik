@@ -138,7 +138,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Spellcasting and Primal Strike are options. An install left at v45 is asked nothing at level 7.
 // v47: a 2024 druid's Wild Resurgence gives a use back for a spell slot (`spend_slot`), and an
 // Archdruid's Nature Magician turns uses into one slot. An install left at v46 has neither option.
-export const CONTENT_SEED_VERSION = 47;
+// v48: both Wild Shape rows state that equipment works only where the form wears it, and the 2024
+// one that the form sheds the species' traits. An install left at v47 keeps both in a wolf.
+export const CONTENT_SEED_VERSION = 48;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -296,7 +296,14 @@ const playSchema = z.object({
 	 *  points of its own (2014): the character's own current HP, waiting, while `hp.current` counts
 	 *  the form's. */
 	form: z
-		.object({ id: slug, monster: ref, hpBefore: z.number().int().optional() })
+		.object({
+			id: slug,
+			monster: ref,
+			hpBefore: z.number().int().optional(),
+			/** The inventory rows the form WEARS, by `iid`, where its rules say equipment works only
+			 *  when worn. Everything else has merged into the form or fallen, and does nothing. */
+			worn: z.array(z.string()).default([]),
+		})
 		.nullable()
 		.default(null),
 	/** Effects-auto engine on. Off → derived stats drop their effect layers (flat bonuses,
@@ -399,6 +406,10 @@ export const downMotionOf = (stored: string): DownMotion =>
 const LEVELING_MODES = ['milestone', 'xp'] as const;
 export type LevelingMode = (typeof LEVELING_MODES)[number];
 
+/** What a form does with species traits its rules shed — see `ui.formSpecies`. */
+export const FORM_SPECIES = { shed: 'shed', kept: 'kept' } as const;
+const FORM_SPECIES_MODES = [FORM_SPECIES.shed, FORM_SPECIES.kept] as const;
+
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */
 const uiSchema = z
 	.object({
@@ -455,6 +466,10 @@ const uiSchema = z
 		 *  rules variant like `shortRestMode`, OFF by default: most tables do not weigh money, and a
 		 *  purse that silently encumbers you is a rule nobody asked for. */
 		coinWeight: z.boolean().default(false),
+		/** What a form does with the character's SPECIES traits, where its rules shed them (2024 Wild
+		 *  Shape keeps "class features; languages; and feats" and names no species trait). A table
+		 *  ruling like `shortRestMode`: `shed` is the text, `kept` is how many tables play it. */
+		formSpecies: z.enum(FORM_SPECIES_MODES).default(FORM_SPECIES.shed),
 		/** Does a shot spend the ammunition it fires? The same kind of per-character variant, and OFF
 		 *  by default for the same reason: most tables do not count arrows. */
 		trackAmmunition: z.boolean().default(false),
@@ -475,6 +490,7 @@ const uiSchema = z
 		levelingMode: 'milestone',
 		coinsHidden: [],
 		coinWeight: false,
+		formSpecies: 'shed',
 		trackAmmunition: false,
 		downMotion: DEFAULT_DOWN_MOTION,
 		rowOrder: {},

@@ -36,7 +36,7 @@ die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot con
 stay semi-manual.
 
 - [ ] **N2 · Class-feature engine ("features as data").** The three kinds above, in the order
-  passive → choice → action. Wild Shape carved out as N2b: it is a stat-block REPLACEMENT, not one of the shapes.
+  passive → choice → action. Wild Shape is not one of the shapes: it is a stat-block REPLACEMENT, and it is built (`../internals/effects.md` ▸ A form).
   Superiority dice: extend the grammar —
   `grant_resource:superiority-dice:4:d8:short` (die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
@@ -138,27 +138,6 @@ stay semi-manual.
     History checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the
     2024 Sun Blade's grant is conditional on already being proficient with longswords.
 
-- [~] **N2b · Wild Shape. A druid assumes a form in both editions; the tail is what the form's rules say beyond the body.**
-  The pool, the eligible stat blocks, whose hit points are counted, the form's clock, its attacks and
-  the casting block ship, each stated by the feature's own `form` tokens
-  (`../internals/effects.md` ▸ A form) and proven against both packs. The per-edition spec is
-  [`../research/wild-shape.md`](../research/wild-shape.md). What is left, in the order it is worth doing:
-  1. **What a 2024 form leaves of the SPECIES.** SRD 5.2.1 replaces "your game statistics" and
-     lists what is retained — "creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and
-     Charisma scores; class features; languages; and feats" — and a species trait is not on the
-     list, so RAW an elf's Darkvision and a dwarf's poison resistance are gone in the form while a
-     feat's Blindsight stays. Nothing takes them away today. It is every species trait and not only
-     the senses, it turns on where a token CAME from rather than on what it targets, and it is a
-     reading many tables do not play — so it wants both offered, not one picked. (The 2014 sentence
-     about special senses is built: `form:wild_shape:only_senses`.)
-  2. **Equipment.** Both editions let each item fall, merge or be worn, and only worn equipment
-     keeps working. Nothing is modelled: a worn item's bonus still folds, and the form's SET of
-     Armor Class is what stands over an armor's.
-  3. **Swapping a known form on a Long Rest** is an edit in the builder, like every other choice
-     made ahead of time; the rest itself offers nothing.
-  4. **2024 "use your Proficiency Bonus"** for the creature's own proficiencies is read as the stat
-     block's listed modifier standing as a floor — the same number in every shipped beast, and RAI
-     where a homebrew stat block lists a proficiency its modifier does not show.
 - [~] **PLG-TAILS · a sheet cannot tell that a plugin is a DIFFERENT VERSION of the one it was
   built with.** The sheet names each plugin it counts on and is not getting, and why
   (`../internals/plugins.md` §1), which covers a character opened on an install without the plugin.
@@ -216,7 +195,7 @@ stay semi-manual.
 - [ ] **COMPANION · no data model exists for a bound creature** — a familiar, a steed, a beast
   companion, a summon. Not a missing panel: there is nothing in the character schema for a creature
   that belongs to a character, so a Ranger's companion and a Wizard's familiar are today entirely
-  outside the app. Adjacent to N2b's Wild Shape (`play.form`), which replaces the character's own
+  outside the app. Adjacent to Wild Shape (`play.form`), which replaces the character's own
   statblock rather than adding a second creature beside it — related shapes, different problems.
   **The research is written** — [`../research/companion.md`](../research/companion.md), every rule
   quoted from the shipped packs — and it changes what the item is:

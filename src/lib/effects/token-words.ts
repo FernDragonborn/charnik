@@ -28,8 +28,8 @@ export const isRollLimit = (word: string): word is RollLimit =>
 	(Object.values(ROLL_LIMIT) as string[]).includes(word);
 
 /**
- * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, three a bare
- * word, three nothing at all:
+ * The closed vocabulary a `form` token speaks in. Four words carry an L2 expression, four a bare
+ * word, four nothing at all:
  *  - `creature:<type>` — the creature type an eligible stat block has (`beast`)
  *  - `max_cr:<expr>` — the highest Challenge Rating eligible; a fraction is written as one (`1/4`)
  *  - `without:<mode>` — a movement mode an eligible stat block may NOT have (`fly`, `swim`)
@@ -40,6 +40,9 @@ export const isRollLimit = (word: string): word is RollLimit =>
  *  - `casts` — spells can be cast in the form
  *  - `only_senses` — the character has no special sense in the form but the stat block's
  *  - `ends_when:<state>` — a state row's id that ends the form the moment the character has it
+ *  - `sheds:<origin>` — what the character does not keep in the form, by where it came from
+ *    (`species`)
+ *  - `worn_only` — equipment works in the form only where the form wears it
  */
 export const FORM_WORD = {
 	creature: 'creature',
@@ -52,6 +55,8 @@ export const FORM_WORD = {
 	casts: 'casts',
 	onlySenses: 'only_senses',
 	endsWhen: 'ends_when',
+	sheds: 'sheds',
+	wornOnly: 'worn_only',
 } as const;
 export type FormWord = (typeof FORM_WORD)[keyof typeof FORM_WORD];
 /** What each word is followed by. */
@@ -66,8 +71,14 @@ export const FORM_WORD_VALUE: Record<FormWord, 'expression' | 'word' | 'none'> =
 	casts: 'none',
 	only_senses: 'none',
 	ends_when: 'word',
+	sheds: 'word',
+	worn_only: 'none',
 };
 export const isFormWord = (word: string): word is FormWord => word in FORM_WORD_VALUE;
 /** Does this form word carry an L2 expression? What the linter asks before reading the value. */
 export const formWordTakesExpression = (word: FormWord): boolean =>
 	FORM_WORD_VALUE[word] === 'expression';
+
+/** What a form's `sheds` may name: where a trait CAME from, since the rule is about its source
+ *  and not about what it does. An open enum — a rule that sheds a background's gifts joins it. */
+export const FORM_SHEDS = { species: 'species' } as const;

@@ -60,6 +60,7 @@ export function assumeForm(
 					id: choice.form,
 					monster: choice.monster,
 					...(ownHp ? { hpBefore: own.hp.current } : {}),
+					worn: [],
 				},
 				hp: {
 					...own.hp,
@@ -86,4 +87,19 @@ export function revertForm(character: Character, ctx: PlayContext): PlayOutcome 
 		const said = { text: { key: 'combat.notice.formLeft' }, rows: { name: form.monster } };
 		return { ...left, notices: [...left.notices, said] };
 	});
+}
+
+/** Say whether the form wears one carried item. Both editions leave it to the player and the GM
+ *  ("you choose whether your equipment falls … merges … or is worn by it"), so nothing is worn
+ *  until it is said, and a row the character is not in a form to wear changes nothing. */
+export function setFormWorn(
+	character: Character,
+	{ row, worn }: { row: string; worn: boolean },
+	ctx: PlayContext,
+): PlayOutcome {
+	const form = character.play.form;
+	if (!form) return quietly(character);
+	const others = form.worn.filter((iid) => iid !== row);
+	const next = { ...form, worn: worn ? [...others, row] : others };
+	return settled(quietly({ ...character, play: { ...character.play, form: next } }), ctx);
 }

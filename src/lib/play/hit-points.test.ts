@@ -275,7 +275,7 @@ describe('hit-point actions · a hit that breaks a form', () => {
 		c.build.abilities = { str: 8, dex: 12, con: 14, int: 10, wis: 16, cha: 10 };
 		const derive = (character: Character) => deriveSheet(character, graphs['5e']);
 		const own = hitPointMaximum(c, derive(c));
-		c.play.form = { id: 'wild_shape', monster: wolf, hpBefore: own };
+		c.play.form = { id: 'wild_shape', monster: wolf, hpBefore: own, worn: [] };
 		c.play.effects = [{ iid: 'w', label: 'Wolf', source: wolf, effects: [], positive: true }];
 		c.play.hp.current = 1;
 		const out = takeDamage(

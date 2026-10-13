@@ -105,7 +105,15 @@ export interface FormRules {
 	onlySenses: boolean;
 	/** The states that end the form (`unconscious`, `incapacitated`) — state rows' ids. */
 	endsWhen: string[];
+	/** What the character does not keep in the form, by where it came from (`FORM_SHEDS`). */
+	sheds: string[];
+	/** Equipment works in the form only where the form wears it. */
+	wornOnly: boolean;
 }
+
+/** The rules a form keeps as a LIST each statement joins, and the ones a single statement turns on. */
+const FORM_LISTS = ['without', 'endsWhen', 'sheds'] as const;
+const FORM_FLAGS = ['ownHp', 'casts', 'onlySenses', 'wornOnly'] as const;
 
 /** What one or more statements say about a form — every field optional, because one token says one. */
 export type FormStatement = Partial<Omit<FormRules, 'id' | 'source'>>;
@@ -118,13 +126,9 @@ export function addFormStatement(rules: FormRules, said: FormStatement): void {
 	if (said.tempHp !== undefined) rules.tempHp = said.tempHp;
 	if (said.known !== undefined) rules.known = said.known;
 	if (said.hours !== undefined) rules.hours = said.hours;
-	for (const mode of said.without ?? [])
-		if (!rules.without.includes(mode)) rules.without.push(mode);
-	for (const state of said.endsWhen ?? [])
-		if (!rules.endsWhen.includes(state)) rules.endsWhen.push(state);
-	rules.ownHp ||= said.ownHp ?? false;
-	rules.casts ||= said.casts ?? false;
-	rules.onlySenses ||= said.onlySenses ?? false;
+	for (const list of FORM_LISTS)
+		for (const word of said[list] ?? []) if (!rules[list].includes(word)) rules[list].push(word);
+	for (const flag of FORM_FLAGS) rules[flag] ||= said[flag] ?? false;
 }
 
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated

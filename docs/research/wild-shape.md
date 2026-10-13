@@ -1,4 +1,4 @@
-# Wild Shape — per-edition spec sheet (gate for N2b)
+# Wild Shape — per-edition spec sheet
 
 Source of every statement below: the SHIPPED SRD content repo `D:\data\code\charnik-content-srd`,
 `srd-2014/class_features_srd.csv` and `srd-2024/class_features_srd.csv`, column `text_en`, plus
@@ -252,11 +252,13 @@ differ in their CSV and not in code (`../internals/effects.md` ▸ A form):
 | §3 "Beast stat blocks" | `form:wild_shape:creature:beast` — `beast (dinosaur)` is one, `swarm of tiny beasts` is not (RAI: the SRD does not say) |
 | §4 replaced and retained | the stat block's STR/DEX/CON, AC and speeds are SET; its saves, skills and senses are FLOORS (`character/forms.ts`) |
 | §4 special senses (2014) | `form:wild_shape:only_senses` — a sense the stat block does not list reads 0 while shaped, with the form as the last line of its trace |
+| §4 species traits (2024) | `form:wild_shape:sheds:species` — set aside in the form, or kept where the table says so (`ui.formSpecies`) |
 | §4 attacks | the monster row's `attacks` column, read whole (`combat/form-attacks.ts`) |
 | §5 duration and transform cost | `form:wild_shape:hours:floor(class_level.druid/2)`; the resource option's `action_type` — `action` in 2014, `bonus_action` in 2024 |
 | §5 what ends it unasked | `form:wild_shape:ends_when:unconscious` (2014) · `…:ends_when:incapacitated` (2024); death answers for both, and 0 hit points ends only the 2014 form, whose hit points are its own |
+| §6 equipment | `form:wild_shape:worn_only` in both editions — a carried row works only where the player says the form wears it (`play.form.worn`) |
 | §7 casting | blocked while shaped, lifted by `form:wild_shape:casts` on Beast Spells |
 | §8 Known Forms | `form:wild_shape:known:step(…, 2->4, 4->6, 8->8)`, chosen in the builder into `build.forms` |
 
 The 2024 duration's rounding is not stated; `floor` is the edition's general rule and is RAI here.
-What the app does not model is listed, in order, under N2b in `../work/mechanics.md`.
+What the text leaves open, and how each is read, is `../internals/effects.md` ▸ A form.

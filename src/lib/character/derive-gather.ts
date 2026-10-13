@@ -7,7 +7,8 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { ISSUE_KEY, isWeaponOwnBonus, withItemChoice } from '$lib/effects/token-parser';
+import { ISSUE_KEY, isWeaponOwnBonus, splitGuard, withItemChoice } from '$lib/effects/token-parser';
+import { FORM_SHEDS, FORM_WORD } from '$lib/effects/token-words';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
@@ -16,7 +17,7 @@ import { optionNamed } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
 import { heldOptions } from './features';
-import type { Character } from './schema';
+import { FORM_SPECIES, type Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
 
@@ -45,6 +46,10 @@ type RowOrigin = { classId?: string; itemBonus?: number; itemChoice?: string };
  */
 class EffectGatherer {
 	private readonly active: ActiveEffect[] = [];
+	/** What came from the species, and what came from a carried item with the row it is on — the
+	 *  two things a form's rules may set aside, which turn on a token's SOURCE and not its target. */
+	private readonly fromSpecies = new Set<ActiveEffect>();
+	private readonly carriedOn = new Map<ActiveEffect, string>();
 	private readonly character: Character;
 	private readonly graph: ContentGraph;
 	private readonly isActive: (row: LoadedRow) => boolean;
@@ -61,9 +66,11 @@ class EffectGatherer {
 
 	run(): ActiveEffect[] {
 		const b = this.character.build;
-		this.pushRow(this.resolve(b.species), 'feature');
 		// species sub-option (subrace / lineage) — its ASI + traits cascade like the species' own
-		this.pushRow(this.resolve(b.speciesOption), 'feature');
+		for (const ref of [b.species, b.speciesOption]) {
+			const pushed = this.pushRow(this.resolve(ref), 'feature');
+			if (pushed) this.fromSpecies.add(pushed);
+		}
 		this.pushRow(this.resolve(b.background), 'feature');
 		for (const entry of b.classes) this.gatherClass(entry);
 		// feats (incl. repeatable ones taken more than once → their effect applies each time)
@@ -80,7 +87,7 @@ class EffectGatherer {
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
 			if (attunementNeeded && !inv.attuned) continue;
-			this.pushRow(row, 'item', {
+			const own = this.pushRow(row, 'item', {
 				// spread, not assign: an unanswered question is an ABSENT field, and the two answers
 				// are independent — a +2 armour may still be waiting to be told its damage type
 				...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
@@ -89,11 +96,43 @@ class EffectGatherer {
 			// the variety this instance is, where the row's answers are rows: its tokens fold beside the
 			// item's own, under the variety's name, and an unanswered row grants none of them
 			const variety = optionNamed(this.graph, row, inv.choice);
-			if (variety && this.isActive(variety)) this.pushRow(variety, 'item');
+			const varietyOwn =
+				variety && this.isActive(variety) ? this.pushRow(variety, 'item') : undefined;
+			for (const pushed of [own, varietyOwn]) if (pushed) this.carriedOn.set(pushed, inv.iid);
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
-		return this.active;
+		return this.inForm();
+	}
+
+	/**
+	 * What a form the character is in sets aside. Its rules are the granting feature's own `form`
+	 * sentences, read here off the tokens already gathered, because the facts they become are built
+	 * from this very list — a guard on one of these two sentences is not weighed.
+	 *
+	 * `sheds:species` leaves the species' traits behind (SRD 5.2.1 lists what is retained, and a
+	 * species trait is not on the list) unless the table keeps them (`ui.formSpecies`).
+	 * `worn_only` leaves a carried item working only where the form wears it (`play.form.worn`):
+	 * both editions' "equipment that merges with the form has no effect".
+	 */
+	private inForm(): ActiveEffect[] {
+		const form = this.character.play.form;
+		if (!form) return this.active;
+		const says = (sentence: string): boolean =>
+			this.active.some((effect) =>
+				effect.tokens.some(
+					(token) => splitGuard(token).token.trim() === `form:${form.id}:${sentence}`,
+				),
+			);
+		const sheds =
+			says(`${FORM_WORD.sheds}:${FORM_SHEDS.species}`) &&
+			this.character.ui.formSpecies !== FORM_SPECIES.kept;
+		const wornOnly = says(FORM_WORD.wornOnly);
+		return this.active.filter((effect) => {
+			if (sheds && this.fromSpecies.has(effect)) return false;
+			const row = this.carriedOn.get(effect);
+			return !(wornOnly && row !== undefined && !form.worn.includes(row));
+		});
 	}
 
 	/** B15: a row whose file/source is disabled, or which lost a collision, is treated exactly like a
@@ -124,20 +163,26 @@ class EffectGatherer {
 		return tokens.filter((token) => !isWeaponOwnBonus(token));
 	}
 
-	/** Push a row's tokens as one active effect (skipping token-less rows). */
-	private pushRow(row: LoadedRow | undefined, layer: Layer, from: RowOrigin = {}): void {
-		if (!row) return;
+	/** Push a row's tokens as one active effect (skipping token-less rows), and hand it back. */
+	private pushRow(
+		row: LoadedRow | undefined,
+		layer: Layer,
+		from: RowOrigin = {},
+	): ActiveEffect | undefined {
+		if (!row) return undefined;
 		// the answer is substituted BEFORE the token is parsed, so the parse cache never holds a
 		// template and every consumer downstream reads a finished token (`token-parser.ts`)
 		const tokens = withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice);
-		if (!tokens.length) return;
-		this.active.push({
+		if (!tokens.length) return undefined;
+		const effect: ActiveEffect = {
 			source: rowName(row),
 			layer,
 			...(from.classId !== undefined ? { classId: from.classId } : {}),
 			...(from.itemBonus !== undefined ? { itemBonus: from.itemBonus } : {}),
 			tokens,
-		});
+		};
+		this.active.push(effect);
+		return effect;
 	}
 
 	// class + subclass: the class row's own tokens, its base features up to the class level, the chosen

@@ -242,8 +242,8 @@ position and are given per wave, because most of them were learned the hard way.
   checked against; what remains is the release's own routine (`work/release.md` ▸ AUDIT-DRIFT, the
   full `pnpm lint:typed`, the version in three files).
 
-  **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
-  (a form's species traits and equipment), Mystic Arcanum, SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
+  **Rides past 0.8.0, and says so in the changelog where a player would look for it:** Mystic
+  Arcanum, SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
   OPTION-ROWS, E4, MOBILE-ALPHA's tap
   targets, DEFENCE-STRIP — the `Saves` group ships in the form it has and is redrawn for 0.9.0 —
   and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
@@ -262,8 +262,7 @@ position and are given per wave, because most of them were learned the hard way.
   its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
-  FEATURE-PASSIVES naming the passive kind, and N2b's tail — a druid assumes a form in both editions, and
-  what is left is the uses a 2024 druid spends on other things, equipment and senses. MASTERY-HALF's tail sits here: the properties whose rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the 2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of Shadows' own two are still text.
+  FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the 2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of Shadows' own two are still text.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
