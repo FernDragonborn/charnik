@@ -127,7 +127,7 @@ forward on the view-model, so nothing above it has to know the split happened �
 forwards are load-bearing rather than convenience: a sibling subsystem declares `die`, `effectsFor`
 and `openRoll` on its own host interface and reaches the view-model through them, so deleting the
 forward would make subsystems import each other. Panels destructure `openMenu`, markup two-way binds
-`tempHpInput`, and the behavioural tests drive every one from `combat.*`. What does NOT stay behind is
+`healAmount`, and the behavioural tests drive every one from `combat.*`. What does NOT stay behind is
 a FORM: its fields belong with the verb they end at, bound where they live
 (`bind:value={combat.effects.customModTarget}`), because a form split across two objects is two places
 to look for one panel. Unit tests do not cover that binding seam — a moved scalar is checked by
@@ -604,10 +604,77 @@ and travelling with the control while the page scrolls. A floating part that liv
 picker's card — is named to it as a companion, so a press there is not a press outside. Not being
 full-screen, a popover carries no `LangSwitcher`: the topbar's is still in reach.
 
+## The hit-point block
+
+`routes/combat/blocks/HpPanel/`. Two faces of ONE height — 117px, and 157px where the block is
+narrow — because the first rule it answers to is that its height never jumps: nothing appears inside
+it, no banner and no extra row. That is why the concentration save a hit owes is the concentration
+chip's to say (`characters.md` ▸ A tracker surfaces), and why 0 hit points is a face rather than a
+row added under the bar.
+
+**The rules a change to it is checked against**, each learned from a drawn variant that broke it:
+room is scarce — no empty cell, no inflated button, no number said twice; damage types and healing
+never stand together, since a type beside a Heal reads as a kind of heal; red is the damage press
+and nothing else; the block is drawn for a sheet with no defense or one, and more is a load test
+whose overflow goes to a menu; one hit is one type and one press; the sheet holds one number field
+for the hit and healing costs no more steps than a press, a number and Enter; a damage type is its
+`DamageIcon` and its mark (`∅` immune, `½` resistant, `×2` vulnerable), never a word, with the name
+and what the type would take in the provenance popover; height is spent before width; temporary hit
+points do not blur with healing; the hit's type reaches the roll log.
+
+**The hit is said as the dice tray says a damage line** (`HitLine`): one field holding the amount
+and then the type that owns it — amount, type, press, the order a table says "12 fire" in, and one
+pass for a pointer. The type is the tray's own pill and opens the tray's two-column menu with the
+sheet's defended types leading, or is typed without leaving the field (`12 f ↵`) and found by the
+tray's own matcher, in whatever language it is typed (`hit-line.ts` over `roller-vocabulary`). The
+pill and the menu rows are the tray's classes, shared in `components.css`. The minus says a number
+only when a defense changed it, and its width is reserved so saying it moves nothing. The line is
+one width whatever the sheet defends; a defended type costs two presses here, or two keys. Two
+other ways of saying a hit were drawn and stand as mocks, not built: the defended types as glyph
+chips before the amount, and a type joined to a factor `∅ ½ 1 ×2` the player may overrule.
+
+**Healing and temporary hit points are one green control and one popover**: one number, Heal on
+Enter, Temp HP beside it. The caret is in that number, and the number selected, the moment it opens
+(`actions/takeFocus` — `autofocus` does not do this for a popover a press opened).
+
+**At 0 hit points the whole block is the fight** (`HpDown`). Rescue pulls from one edge and death
+from the other at the colours' full strength, each ground a third further per save; a save is a
+glyph — wings under a halo, the skull necrotic damage wears — and each is also pressed by hand,
+which is how a critical's second failure is said. There is no amount and no minus: a hit taken
+while down is a failure pressed. Under a right-to-left locale the grounds turn over whole.
+
+**A ground is a window, not a fill** (`DownSide`). Each side's scene is laid out once, in pixels
+from the block's edge, and the ground is moved over it by `transform` while the scene inside is
+moved back by the opposite one — so a wider ground uncovers more flames or more shafts of light and
+nothing stretches. What travels with the front rides a third layer. Death's side is rescue's side
+mirrored, so a motion is written one way. What loops is `transform` and `opacity` and nothing else,
+with one exception that says so in the list: Liquid keeps the filter that fuses it.
+
+**The third save ends it on one face, whatever motion led there.** The side that won crosses the
+block, still moving as itself, and only then does the word stand: `Stabilized` on rescue's own
+ground, `Dead` in `--color-death-text` on a block gone `--color-death`. A death the track did not
+cause — massive damage, exhaustion — is crossed the same way, from death's edge, before the verdict.
+Under `Dead` stand the cause and `I was revived`, since healing does not raise the dead; under
+`Stabilized`, the healing control. Once the verdict stands on black the motion under it is let go.
+A character already dead when the sheet opens is shown dead, with nothing played.
+
+**The player picks the motion** — `ui.downMotion`, eight members with `none` among them — from a
+pencil: a tab on the block's own side, outside its frame, there while the pointer or the focus is on
+the block and always where there is no pointer to rest. Its list never covers the block: it opens
+past the tab, or under the block when the window has no room beside it, and while it is open the
+block shows its 0 hit points face playing what is picked, at one success against two failures. `No
+animation` stills the light at two failures as well.
+
+**A narrow block lays itself out** by its own container query, not the window's: the number, the
+bar, then one row of what is pressed — the hit's field, the minus, healing as a bare plus — with
+every press 44px, the pencil inside by the label, and at 0 hit points the roll and healing as icons
+between the saves. The block is a query container and so has no width of its own to insist on; its
+`min-width` is what makes the block beside it wrap under rather than squeeze it.
+
 ## Reduce motion is one switch
 
-Whether anything moves by itself is ONE answer, written on the root element as `data-motion` by
-`mirrorMotion` (`util/motion.ts`). It weighs the app's own setting — `app.reduceMotion`: follow the
+Whether anything moves by itself is ONE answer, written on the root element as `data-motion` by the
+root layout from `motion.reduced` (`stores/motion.svelte.ts`). It weighs the app's own setting — `app.reduceMotion`: follow the
 system, on, or off, on Settings ▸ General — against the system's `prefers-reduced-motion`, and every
 rule and every script asks the attribute: the global rule in `app.css`, a component's own
 `:global(:root[data-motion='reduced'])`, and `motionWanted()` for what CSS cannot reach. A stylesheet

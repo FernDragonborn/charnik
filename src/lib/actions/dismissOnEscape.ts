@@ -8,7 +8,7 @@ import type { Action } from 'svelte/action';
  *
  * NOT for dialogs with richer key handling (CommandPalette's arrows) — those keep their own handler.
  * Passing `undefined` is the must-acknowledge case: the action stays inert, so a modal that refuses
- * Escape (the death screen, DataMigrationDialog) needs no second code path.
+ * Escape (DataMigrationDialog) needs no second code path.
  */
 export const dismissOnEscape: Action<HTMLElement, (() => void) | undefined> = (_node, onEscape) => {
 	let handler = onEscape;

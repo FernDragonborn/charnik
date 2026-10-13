@@ -569,10 +569,7 @@
 			"concentrationSkip": "Skip"
 		},
 		"death": {
-			"backToRoster": "Back to the roster",
-			"body": "The sheet stays exactly as it is — hit points, effects and the roll log are all still here. Nothing but a revival effect brings a character back, so this stays up until one does.",
-			"revived": "I was revived",
-			"title": "You have died"
+			"revived": "I was revived"
 		},
 		"deathCause": {
 			"massive_damage": "Massive damage — the leftover met your hit-point maximum",
@@ -650,7 +647,6 @@
 		},
 		"hp": {
 			"concentrationDc": "Concentration save DC",
-			"damage": "Damage",
 			"damagePreview": {
 				"immune": "Immune: {raw} → {final}",
 				"resist": "Resistant: {raw} → {final}",
@@ -662,19 +658,38 @@
 			"deathSave": "Death save",
 			"deathSuccesses": "Death save successes",
 			"endConcentration": "End concentration on {spell}",
-			"failure": "Failure",
 			"failureN": "Failure {n}",
 			"heal": "Heal",
-			"healTitle": "Apply healing",
 			"hitPoints": "Hit points",
 			"hpAmount": "HP amount",
 			"keepConcentrating": "Dismiss — keep concentrating",
 			"rollDeathSave": "Roll a death save",
-			"success": "Success",
 			"successN": "Success {n}",
 			"temp": "temp",
 			"tempHp": "Temp HP",
-			"untyped": "untyped"
+			"untyped": "untyped",
+			"healOrTemp": "Heal · Temp HP",
+			"hitField": "Damage: the amount, then its type",
+			"noSuchType": "No damage type by that name",
+			"hitPointsAt": "Hit points {current} / {max}",
+			"dead": "Dead",
+			"stable": "Stabilized",
+			"takeBackSave": "Take back the save that ended it",
+			"options": "Hit-point block options",
+			"motionTitle": "At 0 hit points",
+			"motion": {
+				"none": "No animation",
+				"rays-hellfire": "Rays & Hellfire",
+				"pressure": "Pressure",
+				"waves": "Waves",
+				"burning-edge": "Burning edge",
+				"hatch": "Hatch",
+				"liquid": "Liquid",
+				"arrows": "Arrows"
+			},
+			"motionDear": "heavy",
+			"motionDearHint": "This one costs noticeably more processor time than the others.",
+			"motionReduced": "Reduce motion is on in Settings, so nothing plays. Your pick is kept."
 		},
 		"inventory": {
 			"addItem": "Add an item",
@@ -787,8 +802,7 @@
 			"takeLongRest": "Take long rest",
 			"takeShortRest": "Take short rest",
 			"takeShortRestSpend": "Take short rest · spend {count}",
-			"tempHpNote": "Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.",
-			"tempHpTitle": "Set temporary HP",
+			"tempHpNote": "Temp HP is a separate pool — teal in the HP bar. It doesn't stack; setting it takes the value given.",
 			"xpTitle": "Levelling",
 			"xpTrack": "Count experience points",
 			"xpGain": "Experience points to add",

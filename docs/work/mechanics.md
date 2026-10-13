@@ -72,186 +72,35 @@ stay semi-manual.
   and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
 
 - [~] **DAMAGE-TYPE-UI · the hit-point block is redrawn: the hit, healing, and the face it wears at 0 hit points.**
-  What ships: a Damage press records each part in the roll log — how much, of what type, and the
-  defense that changed the number — a `+` beside the type picker adds a further part, the picker
-  offers every damage type with the defended ones first, and a Heal press records what it restored
-  (`../internals/characters.md` ▸ A tracker surfaces). The block is 157px tall at rest and grows
-  when a second part, a concentration save or 0 hit points arrives.
+  The block is built — the hit's line, the green control, the 0 hit points face with its motions and
+  its two endings, the pencil, the narrow layout — and what it IS, with the rules it answers to and
+  the shapes that were drawn and passed over, is `../internals/ui.md` ▸ The hit-point block. What
+  is left is what no harness can sign off:
 
-  **The rules the redraw answers to.** Each was learned from a rendered variant that broke it, so a
-  new variant is checked against all of them, not against the last remark:
-  1. The block's height never jumps: nothing appears INSIDE it — no banner, no extra row.
-  2. Room is scarce: no empty cell, no inflated button, no number said twice.
-  3. Damage types and healing never stand in one block — a type beside a Heal reads as a kind of heal.
-  4. Red is the damage press and nothing else.
-  5. It is drawn for a sheet with no defense or one; more is a load test, and what does not fit goes
-     to a menu.
-  6. One hit is one type and one press.
-  7. Healing costs no more steps than it does today, and the sheet holds ONE number field.
-  8. The app's own drawn icons; `∅` marks immunity, `½` resistance, `×2` vulnerability.
-  9. Height is spent before width.
-  10. Temporary hit points do not blur with healing.
-  11. The hit's type reaches the roll log: the control is never a bare multiplier.
-  12. What a type would take from the typed amount is worth saying wherever it costs no room.
+  1. **Each motion's tempo and reach** are the maintainer's eye on the running app. They were set
+     from single frames.
+  2. **What the motions cost on a real machine.** Headless, with the drawing done in software and
+     one block at one success and two failures, the page's main thread is idle under every motion
+     (0.1%), which is what "only `transform` and `opacity` loop" buys. The process that draws is
+     not: about 6% standing still with the light lit, about 11% under Pressure, Waves, Burning
+     edge, Hatch and Arrows, 16% under Rays & Hellfire and 20% under Liquid. Those figures are a
+     software rasteriser's and say which motion is dearer, not what a GPU pays. Liquid alone is
+     marked `heavy` in the list (`DEAR_MOTIONS`); whether Rays & Hellfire — the default — earns the
+     mark too, or loses flames instead, waits for a number taken on the desktop app.
+  3. **The flames are polygons.** Still, they read closer to thorns than to fire; a tongue drawn as
+     a curve, the way the damage glyphs are, is the next shape if motion does not save them.
+  4. **A wave or a spark crosses the next, unearned skull** on its way to the middle.
+  5. **The narrow layout is the form built for now**: one row under the bar, and at 0 hit points
+     the roll and healing as icons between the saves. A second form — the field on its own row and
+     two worded halves under it — was drawn and passed over, not rejected.
+  6. **Ukrainian abbreviates hit points two ways**: `ОЗ` on the block and in its popover, `ЗД`
+     elsewhere in the catalog.
 
-  **Settled.**
-  - **A hit of several types is not composed in one press.** The `+` that adds a part goes, with
-    `combat.hp.moreParts` and the paragraph "A hit is one event, however many types it deals" in
-    `../internals/characters.md`. A flame tongue is two presses.
-  - **A damage type on the sheet is its `DamageIcon` and its mark, never a word.** Its name, where
-    the defense comes from and what it would take (`combat.hp.damagePreview.*` already says
-    `Resistant: 12 → 6`) are the provenance popover's, on a resting pointer or focus.
-  - **Healing and temporary hit points are one green control and one popover**: one number, Heal on
-    Enter, Temp HP beside it, and the note the Temp HP menu already carries. The step count equals
-    today's — press, type, Enter against press the field, type, press Heal.
-  - **The hit is said as the dice tray says a damage line (W3).** One field holds the amount and
-    then the type that owns it — amount, type, press, one pass left to right, as the table says
-    "12 fire". The type is the tray's own pill with its chevron and opens the tray's two-column
-    menu with the sheet's defended types leading, or is typed without leaving the field
-    (`12 f ↵`). The line is one width whatever the sheet defends. The minus's width is reserved, so
-    saying a number (`− 6`) does not move the line.
-  - **The minus says a number only when a defense changed it** (`− 6`); at rest it is a bare minus.
-  - **The block is one height in every state**, 117px against today's 157px.
-  - **0 hit points is a face of its own, and it is an emergency that looks like one.** No current
-    number — the label says `0 / 73` — no amount and no minus: a hit taken while down is a failure
-    the player presses, two for a critical, so the "That hit was a critical" checkbox goes. Rescue
-    pulls from the left and death from the right at the colors' full strength (`--color-good`,
-    `--color-accent`), each side's ground advancing a third per save; a save is a glyph — wings
-    under a halo for a success, the skull necrotic damage already wears for a failure — and the
-    healing control stays as the way back up. Tints were tried and are too soft to say it.
-  - **The wings are the two-feather drawing** in `design-preview/death-saves-motion.html`
-    (`WING_PAIR`); the skull is `damageGlyph('necrotic')` unchanged.
-  - **Motion lives on that face and nowhere else on the sheet**, and stands still under
-    `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
-    it never blinks.
-  - **The field at 0 hit points is the whole block with the slanted grounds and the glyphs** (T6
-    in the mock). The band, the bare field and the vessel are not built; the vessel stays in the
-    mock.
-  - **The concentration save a hit owes is said by the concentration chip, not by the block.**
-    Nothing appears inside the block (rule 1); the chip in `Controls.svelte` already rolls the
-    owed save, and it says the owed DC. It holds a QUEUE of them: two hits before a
-    roll owe two saves, each at its own DC, and one press says "that was one hit" and merges them
-    into one at the DC of their sum — the app cannot tell a flame tongue's two presses from two
-    blows, and the rules differ. **A wrong number ships today**: a second Damage press REPLACES
-    the owed save (`play-outcomes.ts`, `hp.pendingConcentrationSave = outcome.concentrationSave`),
-    so 30 slashing then 10 fire owes DC 10.
-  - **The third save ends it on one face, whatever motion led there.** The side that won takes
-    the whole block, still moving as itself, and the block says what happened in a bold word:
-    `Stabilized` on the rescue's own ground, `Dead` in white on a block gone black. Only the way
-    in differs between motions. The healing control stays under `Stabilized` as the way back up
-    (`_death-saves-verdict.png`). In Ukrainian the words are «Стабілізовано» and «Смерть».
-  - **The `Dead` face replaces the death dialog.** `DeathScreen.svelte` goes: the block says it,
-    and the sheet behind is no longer out of reach. What the dialog held moves to the face — the
-    cause of death, and `Revived` as the way back, since healing does not raise the dead. The
-    mock draws the healing control under `Dead`; the build draws `Revived`.
-  - **Three successes are recorded in the play state**, so `Stabilized` is drawn from a fact
-    rather than from a notice that has already gone.
-  - **The player picks the motion, and every motion drawn ships beside a still face.** `Rays & Hellfire` plays until the player picks another; `No animation` is one press away. The choice is the character's, kept in `ui` with
-    every other choice about how its sheet looks. Over it stands one setting of the app's own,
-    **Reduce motion** — follow the system, on, or off — and while it is in force the block plays
-    nothing whatever the character chose, and the choice is kept for when it is not. It governs
-    every animation the app has, not this block alone: it is the same switch
-    `prefers-reduced-motion` is, put in the player's hands. The list opens from a pencil: a tab on the block's left side, outside its frame,
-    there only while the pointer or the focus is on the block — and always where there is no
-    pointer to rest, since a touch screen has no other way to find it. The list never covers the
-    block: it opens leftward past the tab, and while it is open the block shows its 0 hit points
-    face playing what is picked (`_hp-pencil.png`). Inside by the label and a tab on the top edge
-    were drawn and passed over.
-  - **A narrow window gets a mock of its own before it is built.** It is the phone's layout as
-    much as a narrow desktop's: icons and buttons in several rows, the elements changing place
-    rather than shrinking. It is drawn at 361px with every press 44px tall (`_hp-narrow.png`), and this is the
-    form built for now: one row under the bar — the hit's field, the minus, and healing as a bare
-    plus — and at 0 hit points the roll and healing as icons between the saves. The pencil
-    stands inside by the label, since there is no room beside the block and a touch screen shows
-    it always. Every face is 157px; the temporary hit points' label makes the mock's 159px, which
-    the build closes. A second form, with the field on its own row and two worded halves under
-    it, was drawn and passed over. The type menu and the healing popover are not drawn narrow.
-
-  **Open, in the order it blocks the build.**
-  1. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
-     drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
-     The flat slanted ground has four motions of its own on the same page, each tightening with
-     every failure and each looping `transform` and `opacity` only: **pressure** — the death side
-     leans in, slips back and leans in again under a shadow that reaches across the middle;
-     **waves** — the front's edge peels off toward the middle and fades; **burning edge** — the
-     front a wavering blade of light that sheds sparks; **hatch** — stripes at the front's lean
-     marching toward the middle. A fifth dresses each side as what it is: **rays and hellfire** —
-     rescue as soft shafts of light breaking through cloud, each coming and going on its own
-     pace; death as a dark ground whose flames rise with each failure and stay inside it. Each side's scene is laid out once across the whole block and the ground is a window onto it: a wider ground uncovers more shafts or more flames, and nothing stretches. Their cost is not measured.
-     Each motion's tempo is the maintainer's eye on the running page, not a render's; which motion
-     plays is the player's (Settled).
-  2. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
-     holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
-     nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
-     filter over each liquid body, `mask-position`, a `drop-shadow` on the chevrons, and `box-shadow`
-     for the glow. The build animates `transform` and `opacity` only — the glow as two layers drawn
-     once and cross-faded, which is also the likely end of its flicker — runs nothing while the face
-     is off screen, and is measured before it is called done. The glow's drift is 30% slower than
-     the prototype's 5.5s.
-     **The animations are not the whole cost, and the rest is unexplained.** With every animation
-     taken off the prototype page, the maintainer still measures about 25% of a CPU from it at
-     rest. Nothing on that page should repaint while nothing moves, so what does is the first thing
-     to find — the fused filter, the masks and `container-type` on the bubbles are the suspects —
-     before any of it is carried into the app.
-     **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
-     liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
-     cheap either, only much less so. Every motion ships, so every one is measured; one that stays dear ships marked as such in the pencil's list.
-  3. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
-
-  **The build, and what the prototypes do that it must not.** The mocks are the look; they are
-  not the implementation.
-  - **Where it lands.** `HpPanel.svelte` is the block. The 0 hit points face is a component of its
-    own beside it, and each motion is one more, chosen by an open enum — never a boolean, and
-    `No animation` is a member of it, not its absence.
-  - **The hit's line reuses the tray's parts.** The type pill, its chevron and the two-column type
-    menu are `RollerLine.svelte`'s; they are lifted into shared components both use, not copied.
-    The types and their matching across locales come from `dice/roller-vocabulary.ts`.
-  - **A ground is a window, moved by `transform`.** The prototype sizes a ground with `width` and
-    cuts its lean with `clip-path`; neither can be carried by the compositor. The build moves a
-    full-width slab with `translateX` and leans it with `skewX`, under the block's own clip. Every
-    motion's scene is laid out once behind it in pixels from the block's edge, and only as much of
-    it as the block is wide is rendered.
-  - **What loops is `transform` and `opacity`, nothing else** — no SVG filter, no animated mask,
-    no animated `box-shadow`. A loop stops when the face is not on screen and when the block has
-    gone black. Each motion's CPU is measured on the real app before that motion is called done.
-  - **`Dead` on black needs a ground and a text token** in both themes; the prototype's are
-    literals.
-  - **`Stabilized` needs the play state to say so.** Three successes reset the track and post a
-    notice in `hit-points.ts` today and leave nothing behind; the schema gains the fact, with its
-    migration, and whatever ends it — healing, damage, a rest — clears it.
-  - **Removing `DeathScreen.svelte` takes its two ways out with it**: `combat.revive` moves to the
-    `Dead` face, and the roster link is the navigation's again once nothing covers it.
-  - **Reduce motion is an open enum on the app's settings** (`system`, `on`, `off`) and one
-    attribute on the root that every reduced-motion rule answers to beside the media query, so
-    the app has one switch and not two. The pencil's list says so when it is in force, since a
-    choice that visibly does nothing reads as broken.
-  - **The pencil stands outside the frame**, so the block gains a wrapper that does not clip it.
-    It follows the pointer and the focus, and is always there under `(hover: none)`.
-  - **The surfaces.** Both systems; right-to-left, where rescue and death trade sides and every
-    lean mirrors; both themes and a user's own; the narrow window; the keyboard path through the
-    hit's line, the pencil's list and the saves, driven in Playwright. `shot.mjs` gains the states
-    — on its feet, each count of saves, each end face — with the loops held still for the frame.
-
-  **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
-  rest behind a menu; **W2z** — the type and a factor `∅ ½ 1 ×2` as one joined control, where a
-  said type lights its factor and the player may overrule it; each drawn type first and amount
-  first (`_damage-type-order.png`).
-
-  **Rejected, so they are not drawn again:** a bare `∅ ½ 1 ×2` with no type (unspecific, rule 11);
-  a switch between that and the types (two interfaces, and it breaks in Ukrainian); a type's name
-  in its chip; a minus per type row; a second number field for healing; a factor with the sheet's
-  glyphs drawn under it; W2z's type and factor split around the amount; the saves as a soft tint; a heartbeat on the glow.
-
-  **The mocks**, built from the app's own glyphs and catalogs: `design-preview/damage-type-under-temp.html`
-  (W2, W2z, W3, the two orders, the pencil, the narrow window, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
-  motion, live — the saves are pressable). Renders: `_damage-type-w2.png`, `_damage-type-w2z.png`,
-  `_damage-type-w3.png`, `_damage-type-order.png`, `_hp-pencil.png`, `_hp-narrow.png`,
-  `_damage-type-down.png`, `_damage-type-wings.png`, `_death-saves-motion.png`,
-  `_death-saves-arrows.png`.
-
-  **Found on the way:** the Ukrainian catalog abbreviates hit points two ways — the button is
-  `Тимч. ОЗ` (`combat.hp.tempHp`), its menu's title and note say `ЗД` (`combat.menu.tempHpTitle`,
-  `tempHpNote`).
+  **The mocks**, built from the app's own glyphs and catalogs and kept for the forms not built:
+  `design-preview/damage-type-under-temp.html` (W2 and W2z, the two ways of saying a hit that stand
+  beside the built W3; the two orders on the line; the pencil; the narrow window; the bare field,
+  the band and the vessel at 0 hit points; the wings) and `design-preview/death-saves-motion.html`
+  (every motion, live, with the vessel that is not built).
 
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all

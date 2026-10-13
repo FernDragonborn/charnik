@@ -223,8 +223,12 @@ maps are keyed by a closed set, an ability or a slot level.
 and every lethal rule lands on ONE `die(cause)` seam. Two readings live at that seam: instant death
 runs the SRD 5.1 text in BOTH editions, because 5.2.1 omits the chapter carrying it, and a revive
 drops one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal sixth level
-would kill the character again on the spot. The dead screen is deliberately not dismissible by
-backdrop or Escape; the roster link is the other way out, so a dead character cannot lock a player in.
+would kill the character again on the spot. Death takes the hit-point block and
+nothing else: the block goes black under `Dead`, with the cause and `I was revived` as the way back,
+and the rest of the sheet — the roll log, the effects, the navigation — stays in reach. The save
+that ENDED the dying, a third success or the third failure, can be taken back from that face
+(`takeBackLastSave`): a track is pressed by hand as well as rolled, and without it a mis-pressed
+skull costs a revival, which is a level of exhaustion and a hit point nobody earned.
 
 **What a level-up slot granted is stored per SLOT, not only flattened.** With only the flattened
 `abilityBoosts`/`feats` saved, a restored slot re-derived its boost a second time. The same root

@@ -591,39 +591,6 @@
 		border-color: var(--color-resource-line);
 		background: color-mix(in srgb, var(--color-resource) 7%, transparent);
 	}
-	/* every pill is the SAME surface — the number's colour carries the meaning */
-	.roller-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-		padding: var(--space-1) var(--space-2);
-		border-radius: var(--radius);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border-strong);
-		font-size: var(--font-size-xs);
-		white-space: nowrap;
-	}
-	/* focus is the selection: the pill you clicked is the pill Del removes */
-	.roller-pill:focus {
-		outline: none;
-		border-color: var(--color-text-muted);
-		background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface-2));
-	}
-	.roller-pill.type-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-		padding: var(--space-1) var(--space-1-5);
-		color: var(--color-text-muted);
-	}
-	/* the chevron is quieter than the type it belongs to until the pill is under the pointer */
-	.roller-pill.type-pill :global(svg:last-child) {
-		opacity: 0.55;
-	}
-	.roller-pill.type-pill:hover :global(svg:last-child),
-	.roller-pill.type-pill:focus :global(svg:last-child) {
-		opacity: 1;
-	}
 	/* an inherited type is drawn as the same pill, dashed — so inheritance is visible and editable
 	   rather than a silent assumption (§7) */
 	.roller-pill.inherited {
@@ -744,55 +711,6 @@
 		border-top: 0;
 		border-radius: 0 0 var(--radius) var(--radius);
 	}
-	.roller-menu-rows {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-	}
-	/* the type picker is every damage type there is — a dozen-odd rows. Two columns because the list is
-	   a CHOICE, not a search result: nothing is ranked, so height is all the single column was buying.
-	   Filled column-FIRST (`grid-auto-flow: column` over an explicit row count), because the arrow keys
-	   walk the list by index: row-major columns made ↓ jump sideways before it ever went down. */
-	.roller-menu.types .roller-menu-rows {
-		display: grid;
-		grid-auto-flow: column;
-		grid-template-rows: repeat(var(--type-rows), auto);
-		grid-template-columns: repeat(2, 1fr);
-		gap: 2px var(--space-2);
-	}
-	.roller-menu-row {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		width: 100%;
-		padding: var(--space-1-5) var(--space-2);
-		border: 0;
-		border-radius: var(--radius);
-		background: transparent;
-		color: var(--color-text-muted);
-		font-size: var(--font-size-xs);
-		text-align: start;
-		cursor: pointer;
-	}
-	/* selection is a FILL, never an outline — the spec is explicit that menu rows carry no borders */
-	.roller-menu-row.on,
-	.roller-menu-row:hover {
-		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
-		color: var(--color-text);
-	}
-	/* a damage type wears its glyph where an effect writes its number. No chip behind it: the icon is
-	   already a shape, and a second plate around it would be the third box in one row. */
-	.roller-menu-glyph {
-		flex: none;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 1.6em;
-		color: var(--color-text-muted);
-	}
-	.roller-menu-row.on .roller-menu-glyph {
-		color: var(--color-text);
-	}
 	/* the cue is drawn in `currentColor`, so the direction is said in colour exactly as a `+1d4` /
 	   `−1d4` chip says its own — and it keeps that colour when the row is highlighted, which is why
 	   these come after the rule above at the same weight. Neutral stays uncoloured: it is the ABSENCE
@@ -823,15 +741,6 @@
 	.roller-menu-preview.negative {
 		color: var(--color-danger);
 	}
-	.roller-menu-name {
-		flex: 1;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.roller-menu-name b {
-		font-weight: 600;
-		color: var(--color-text);
-	}
 	/* activity is a dot, which is why the two groups need no headings */
 	.roller-menu-dot {
 		flex: none;
@@ -842,12 +751,6 @@
 	}
 	.roller-menu-dot.active {
 		background: var(--color-good);
-	}
-	.roller-menu-key {
-		padding: 1px var(--space-1);
-		border-radius: var(--radius-sm);
-		background: var(--color-bg);
-		font-size: var(--font-size-micro);
 	}
 	.roller-menu-hints {
 		display: flex;

@@ -4,6 +4,7 @@
 	// components under menus/. Reads the shared `combat` view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { takeFocus } from '$lib/actions/takeFocus';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { provenance } from '$lib/actions/provenance';
 	import { combat } from './combat-view-model.svelte';
@@ -175,15 +176,32 @@
 	>
 		{#if overlay.kind === 'dice'}
 			<DiceTray />
-		{:else if overlay.kind === 'temphp'}
-			<div class="menu-panel">
-				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.tempHpTitle')}</div>
+		{:else if overlay.kind === 'restore'}
+			<!-- healing and temporary hit points: ONE number, Heal on Enter, Temp HP beside it -->
+			<form
+				class="menu-panel"
+				onsubmit={(event) => {
+					event.preventDefault();
+					combat.heal();
+				}}
+			>
+				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.hp.hitPoints')}</div>
 				<div class="field">
-					<input type="number" bind:value={combat.healAmount} />
-					<button class="submit-btn" onclick={setTempHp}>{$_('combat.menu.set')}</button>
+					<!-- the popover exists to take this number, so the caret is already in it -->
+					<input
+						type="number"
+						min="0"
+						use:takeFocus
+						bind:value={combat.healAmount}
+						aria-label={$_('combat.hp.hpAmount')}
+					/>
+					<button type="submit" class="submit-btn">{$_('combat.hp.heal')}</button>
+					<button type="button" class="submit-btn ghost" onclick={setTempHp}
+						>{$_('combat.hp.tempHp')}</button
+					>
 				</div>
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>
-			</div>
+			</form>
 		{:else if overlay.kind === 'experience'}
 			<div class="menu-panel">
 				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.xpTitle')}</div>
@@ -316,11 +334,10 @@
 					>
 				</div>
 				<div class="field">
-					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						placeholder={$_('combat.menu.labelOptional')}
 						bind:value={combat.effects.customEffectLabel}
-						autofocus
+						use:takeFocus
 					/>
 					<button class="submit-btn" onclick={addCustomModifier}>{$_('combat.menu.add')}</button>
 				</div>

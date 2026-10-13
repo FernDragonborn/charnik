@@ -26,6 +26,7 @@ import {
 	rollDeathSave,
 	setDeathSavePip,
 	setTempHp,
+	takeBackLastSave,
 	takeDamage,
 	type DamagePart,
 	type DeathSavePip,
@@ -112,10 +113,19 @@ export class HitPoints {
 	 *  those change the number — then the rest of the game's types, which change only what the log
 	 *  records the damage as. */
 	get damageTypeOptions(): string[] {
-		const d = this.host().sheet?.damageSensitivities;
-		const defended = d ? [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort() : [];
+		const defended = this.defendedTypes;
 		return [...defended, ...DAMAGE_TYPES.filter((type) => !defended.includes(type))];
 	}
+	/** The damage types this sheet has a defense for, in a stable order. */
+	get defendedTypes(): string[] {
+		const d = this.host().sheet?.damageSensitivities;
+		return d ? [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort() : [];
+	}
+	/** The defense this sheet has against a type, or null — what the type's mark is drawn from. */
+	defenceAgainst = (type: string | null): SensitivityBucket => {
+		const sheet = this.host().sheet;
+		return sheet ? resolveDamagePart({ amount: 1, type }, sheet.damageSensitivities).bucket : null;
+	};
 	/** The typed-in amount after the defence against the picked type, shown BEFORE the press so the
 	 *  player sees "12 → 6" rather than finding out from the HP bar. Null when the defence changes
 	 *  nothing — no type, no defence against it, or no amount yet. */
@@ -162,6 +172,8 @@ export class HitPoints {
 	deathSave = () => this.host().act(rollDeathSave);
 	toggleDeathSave = (kind: DeathSavePip['kind'], index: number) =>
 		this.host().act((c) => setDeathSavePip(c, { kind, index }));
+	/** Undo the press that ended the dying — the third success or the third failure. */
+	takeBackLastSave = () => this.host().act(takeBackLastSave);
 	die = (cause: DeathCause) => this.host().act((c) => die(c, cause));
 	revive = () => this.host().act(revive);
 

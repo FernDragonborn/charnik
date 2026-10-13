@@ -1,9 +1,9 @@
 <script lang="ts">
-	// DEV-ONLY preview of the death-save track in the HP panel (EXPR-5). It's normally reachable only
-	// by dropping a real character to 0 HP mid-combat, so this route loads the combat VM (same as the
-	// combat page), forces the demo character to 0 HP, and renders the live HpPanel — the Death save
-	// button really rolls (reading save.death / saves / d20_tests effects) and the pips toggle by hand.
-	// Not linked from the app; gated to dev builds by /dev/+layout. Delete once it's easy to reach.
+	// DEV-ONLY view of the hit-point block at 0 hit points. That face is normally reached only by
+	// dropping a real character mid-combat, so this route loads the combat view-model as the combat
+	// page does, takes the demo character to 0 hit points, and renders the live `HpPanel`: the roll
+	// really rolls, the saves press, and the pencil picks the motion.
+	// Not linked from the app; gated to dev builds by /dev/+layout.
 	import { onMount } from 'svelte';
 	import { combat } from '../../combat/combat-view-model.svelte';
 	import HpPanel from '../../combat/blocks/HpPanel/HpPanel.svelte';
@@ -13,18 +13,17 @@
 
 	onMount(async () => {
 		await combat.load();
-		if (combat.character) combat.character.play.hp.current = 0; // down the character so the track shows
+		if (combat.character) combat.character.play.hp.current = 0;
 	});
 </script>
 
 <div class="page">
-	<h1>Dev preview · Death-save track (HP panel at 0 HP)</h1>
+	<h1>Dev preview · the hit-point block at 0 hit points</h1>
 	<p>
-		The <b>Death save</b> button rolls a real d20 (picking up <code>save.death</code>,
-		<code>saves</code>
-		and <code>d20_tests</code> effects), applies the RAW outcomes (nat 20 → 1 HP · nat 1 → two
-		failures · three successes → stable), and logs it. The Success/Failure pips are also clickable
-		to set by hand. Use <b>Heal</b> to bring the character back up and watch the track disappear.
+		<b>Death save</b> rolls a real d20 (picking up <code>save.death</code>, <code>saves</code> and
+		<code>d20_tests</code> effects) and applies what RAW says of it. A wing or a skull is also
+		pressed by hand; the third of either ends it on <b>Stabilized</b> or <b>Dead</b>, and the arrow
+		in that face's corner takes the last save back. The pencil beside the block picks the motion.
 	</p>
 
 	{#if c && s}

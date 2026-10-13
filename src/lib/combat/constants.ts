@@ -12,7 +12,7 @@ import type { DeathCause } from '$lib/character/schema';
 /** The anchored dropdown menus the Combat view can open (overlay.kind). */
 export type MenuKind =
 	| 'dice'
-	| 'temphp'
+	| 'restore'
 	| 'addstate'
 	| 'customeffect'
 	| 'log'

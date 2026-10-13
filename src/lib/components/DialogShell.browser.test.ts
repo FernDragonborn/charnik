@@ -48,7 +48,7 @@ describe('DialogShell — the way out', () => {
 		expect(onDismiss).toHaveBeenCalledOnce();
 	});
 
-	// The reverse state: a dialog with no `onDismiss` is one the user MUST resolve (the death screen,
+	// The reverse state: a dialog with no `onDismiss` is one the user MUST resolve (
 	// the first-run modal). Neither exit may fire, or a stray click closes the only way back.
 	it('without onDismiss neither Escape nor the backdrop does anything', async () => {
 		const screen = await shell();

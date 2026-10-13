@@ -84,7 +84,19 @@ const ROUTES = [
 		states: [
 			{ name: 'combat-default' },
 			// interaction: a CombatMenus popup (covers the .popup-h / .section eyebrow labels)
-			{ name: 'combat-temphp', prep: clickBtn(/Temp HP/), ready: 'text=Set temporary HP' },
+			{ name: 'combat-restore', prep: clickBtn(/Temp HP/), ready: 'form.menu-panel' },
+			// the hit's line: every damage type behind the pill, the sheet's defended ones leading
+			{
+				name: 'combat-hit-types',
+				prep: (p) => p.locator('.hit-type').click(),
+				ready: '.hit-menu',
+			},
+			// the pencil's list, and beside it the block showing the face the choice is for
+			{
+				name: 'combat-down-motion',
+				prep: (p) => p.locator('.hp-pencil:visible').first().click({ force: true }),
+				ready: '.motion-menu',
+			},
 			// interaction: the Ctrl+K command palette (covers CommandPalette .group)
 			{ name: 'command-palette', prep: press('Control+k'), ready: '[role="dialog"]' },
 			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
@@ -207,7 +219,34 @@ const ROUTES = [
 			},
 		],
 	},
-	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
+	// the hit-point block at 0 hit points: just dropped, mid-fight and lit, and the two faces the
+	// third save ends on. The harness asks for reduced motion, so no motion is mounted and a frame
+	// is the same frame every run.
+	{
+		path: '/dev/deathsaves',
+		wait: '.hp-face.down',
+		states: [
+			{ name: 'dev-deathsaves' },
+			{
+				name: 'dev-deathsaves-fight',
+				prep: async (p) => {
+					await p.locator('.saves.good .save').first().click();
+					await p.locator('.saves.bad .save').nth(1).click();
+				},
+				ready: '.hp-block.tense',
+			},
+			{
+				name: 'dev-deathsaves-dead',
+				prep: (p) => p.locator('.saves.bad .save').nth(2).click(),
+				ready: '.verdict.dead',
+			},
+			{
+				name: 'dev-deathsaves-stable',
+				prep: (p) => p.locator('.saves.good .save').nth(2).click(),
+				ready: '.verdict.stable',
+			},
+		],
+	},
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share
 	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] },

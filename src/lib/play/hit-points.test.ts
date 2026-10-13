@@ -18,6 +18,7 @@ import {
 	rollConcentrationSave,
 	rollDeathSave,
 	setDeathSavePip,
+	takeBackLastSave,
 	takeDamage,
 } from './hit-points';
 import type { PlayContext } from './outcome';
@@ -156,6 +157,33 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		const healed = heal(stable, { amount: 4 }, ctx()).character.play;
 		expect(healed.deathSaves).toEqual({ successes: 0, failures: 0 });
 		expect(isStable(healed)).toBe(false);
+	});
+
+	it('the save that ended it can be taken back, and a death the track did not cause cannot', () => {
+		const stable = fighter((x) => {
+			x.play.hp.current = 0;
+			x.play.deathSaves = { successes: 3, failures: 0 };
+		});
+		expect(takeBackLastSave(stable).character.play.deathSaves).toEqual({
+			successes: 2,
+			failures: 0,
+		});
+
+		const killed = fighter((x) => {
+			x.play.hp.current = 0;
+			x.play.deathSaves = { successes: 1, failures: 3 };
+			x.play.death = { cause: 'death_saves' };
+		});
+		const back = takeBackLastSave(killed).character.play;
+		expect(back.death).toBeNull();
+		expect(back.deathSaves).toEqual({ successes: 1, failures: 2 });
+
+		const crushed = fighter((x) => {
+			x.play.hp.current = 0;
+			x.play.death = { cause: 'massive_damage' };
+		});
+		expect(takeBackLastSave(crushed).refused).toBe(true);
+		expect(takeBackLastSave(fighter()).refused).toBe(true);
 	});
 
 	it('nobody above 0 hit points rolls a death save', () => {

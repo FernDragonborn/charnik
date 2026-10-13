@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (85)
+## Duplicate suspects (88)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -41,6 +41,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
+- `onKey` ×3 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte
+- `pick` ×3 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `says` ×3 — src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
@@ -66,6 +68,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
+- `idOf` ×2 — src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
@@ -78,9 +81,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `onKey` ×2 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
-- `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
@@ -97,8 +98,10 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
+- `takeFocus` ×2 — src/lib/actions/takeFocus.ts · src/routes/build/blocks/OwnEntries.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
 - `TOOL_PREFIX` ×2 — src/lib/character/derive-targets.ts · src/lib/character/granted-proficiency.ts
+- `typed` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/routes/combat/blocks/HpPanel/HitLine.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 - `WALK` ×2 — src/lib/character/forms.ts · src/routes/dev/storage-edges/+page.svelte
 
@@ -136,9 +139,11 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **readable text ON the amber warning bg (count badges)** — `--color-success`, `--color-warning`, `--color-danger`
 
-**faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
+**the ground a dead character's hit-point block stands on** — `--color-death-text`
 
-## Global CSS classes (88)
+**the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
+
+## Global CSS classes (96)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -213,7 +218,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.provenance-description` | components.css | the same text as an accessible description. |
 | `.provenance-popover` | components.css | --- the provenance popover: how an auto-calculated value explains itself (ui.md ▸ rule 3). |
 | `.roll-toast` | RollToast.svelte :global |  |
-| `.roller-pill` | components.css |  |
+| `.roller-menu` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
+| `.roller-menu-glyph` | components.css | a damage type wears its glyph where an effect writes its number. |
+| `.roller-menu-key` | components.css |  |
+| `.roller-menu-name` | components.css |  |
+| `.roller-menu-row` | components.css |  |
+| `.roller-menu-rows` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
+| `.roller-pill` | components.css | every pill is the SAME surface — the number's colour carries the meaning |
 | `.row-grip` | components.css | A drag affordance names the AXIS its thing travels on, and does it with a SYSTEM cursor, so the whole app keeps whate… |
 | `.row-name` | components.css |  |
 | `.row-wrap` | components.css | positioning context for the row's drag handle, which hangs in the card's padding (RowGrip) |
@@ -230,6 +241,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
 | `.trace` | components.css | --- small shared bits --- |
+| `.type-pill` | components.css | the chevron is quieter than the type it belongs to until the pill is under the pointer |
+| `.types` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
@@ -296,7 +309,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **UpcastBuilder** | `value` | The `upcast` cell, built rather than typed. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (16 modules)
+## Stores & reactive state (17 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -479,6 +492,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function flashAfterReload` — Queue a message to toast right after the coming reload.
 - `function takeFlash` — Read and clear the queued message (null if none).
 
+### `src/lib/stores/motion.svelte.ts`
+
+- `const motion`
+
 ### `src/lib/stores/ui.svelte.ts`
 
 - `const ui` — Transient UI-layout state (not persisted, not domain data).
@@ -491,7 +508,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (168 modules)
+## Library functions & types (169 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -519,6 +536,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type Explanation` — * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown, * so it is said as…
 - `const provenance`
+
+### `src/lib/actions/takeFocus.ts`
+
+- `const takeFocus` — * Put the caret in a field the moment it appears, with what it holds selected so the first key * typed replaces it.
 
 ### `src/lib/actions/trapFocus.ts`
 
@@ -1445,6 +1466,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/dice/roller-sources.ts`
 
+- `const damageTypeSources` — * The damage types as named sources.
 - `interface ActiveRollSource` — An effect currently ON the character — the play-state shape, reduced to what a roller needs.
 - `function rollerSources` — * Everything a roller line can name, active effects first.
 
@@ -1783,6 +1805,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollDeathSave` — * Roll a death save: a d20 against 10, with whatever `save.death` picks up (Bless, exhaustion).
 - `interface DeathSavePip` — One pip of a death-save track, pressed by hand.
 - `function setDeathSavePip` — * Set a death-save track by hand (players track at the table too): pressing a pip fills to it, or * clears it when it…
+- `function takeBackLastSave` — * Take the save that ENDED it back: the third success, or the third failure that killed.
 - `function die` — * Record a death.
 - `function revive` — * "I was revived" — the way back from death.
 - `function rollConcentrationSave` — * Roll a concentration save: CON save against `dc`, or against the RAW floor when the table asks for * one the app sa…
@@ -2164,8 +2187,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const REDUCE_MOTION` — The player's setting.
 - `type ReduceMotion`
 - `const REDUCE_MOTION_CHOICES`
+- `const MOTION` — What the root element says once the setting and the system are weighed.
+- `const SYSTEM_ASKS_REDUCED_MOTION` — The media query the system answers through.
 - `const isMotionReduced` — Is motion reduced, given the setting and what the system asks for?
-- `function mirrorMotion` — * Keep the root element's `data-motion` true to the setting, and to the system while the setting * follows it — a pla…
 - `const motionWanted` — Does anything move right now?
 
 ### `src/lib/util/option-walk.ts`
@@ -2203,4 +2227,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1350 exports across 184 modules · 85 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1355 exports across 186 modules · 88 duplicate suspects._

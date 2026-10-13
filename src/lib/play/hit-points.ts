@@ -336,6 +336,28 @@ export function setDeathSavePip(character: Character, { kind, index }: DeathSave
 }
 
 /**
+ * Take the save that ENDED it back: the third success, or the third failure that killed. A track is
+ * also pressed by hand, and the press that ends the dying is the one a slip costs most — without
+ * this the way back from a mis-pressed skull is a revival, which takes a level of exhaustion and
+ * hands out a hit point. A death the track did not cause is not this action's to undo.
+ */
+export function takeBackLastSave(character: Character): PlayOutcome {
+	const play = character.play;
+	const kept = DEATH_SAVE_TRACK - 1;
+	if (play.death?.cause === 'death_saves' && play.hp.current === 0)
+		return quietly({
+			...character,
+			play: { ...play, death: null, deathSaves: { ...play.deathSaves, failures: kept } },
+		});
+	if (isStable(play))
+		return quietly({
+			...character,
+			play: { ...play, deathSaves: { successes: kept, failures: 0 } },
+		});
+	return { ...quietly(character), refused: true };
+}
+
+/**
  * Record a death. The three lethal rules (massive damage · three death-save failures · the top of
  * the exhaustion ladder) all land here, so "what happens when you die" is one place. Death is
  * AUTOMATIC in RAW (no "you can"), so it is applied and said; the player still owns the way back.

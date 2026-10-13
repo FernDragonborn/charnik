@@ -20,7 +20,6 @@
 	import CombatStrip from './blocks/CombatStrip.svelte';
 	import Abilities from './blocks/Abilities.svelte';
 	import PanelCard from './blocks/PanelCard.svelte';
-	import DeathScreen from './blocks/DeathScreen.svelte';
 	import FormDialog from './blocks/FormDialog.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import NoCharacter from '$lib/components/NoCharacter.svelte';
@@ -154,9 +153,6 @@
 	</section>
 	<CombatMenus />
 	<FormDialog />
-	{#if c.play.death}
-		<DeathScreen cause={c.play.death.cause} />
-	{/if}
 {/if}
 
 <style>

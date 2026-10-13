@@ -6,7 +6,8 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
-	import { mirrorMotion } from '$lib/util/motion';
+	import { motion } from '$lib/stores/motion.svelte';
+	import { MOTION } from '$lib/util/motion';
 	import { registerCustomThemes } from '$lib/styles/customThemes';
 	import { BUNDLED_THEMES } from '$lib/styles/presetThemes';
 	import { initThemes } from '$lib/styles/themeFiles';
@@ -135,7 +136,8 @@
 
 	// Reduce motion is one attribute on <html>, kept true to the setting and to the system.
 	$effect(() => {
-		if (browser) return mirrorMotion(app.reduceMotion);
+		if (browser)
+			document.documentElement.dataset.motion = motion.reduced ? MOTION.reduced : MOTION.full;
 	});
 
 	// Keep svelte-i18n's active locale in sync with the store.

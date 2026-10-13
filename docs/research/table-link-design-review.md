@@ -395,8 +395,8 @@ given only the claim and the source; its verdicts are in *Citation check* at the
   while the combat route is mounted. A network apply therefore has three bad options: drive the
   player's input fields, duplicate the rules, or mutate `play` directly.
 - **Evidence.**
-  - `src/routes/combat/hit-points.svelte.ts:226-234` — `damage()` reads `this.hpAmount`,
-    `this.damageType`, `this.moreParts`, `this.damageWasCrit`: the number the player is typing.
+  - `src/routes/combat/hit-points.svelte.ts` — `damage()` reads `this.hpAmount` and
+    `this.damageType`: the number the player is typing.
     Applying a GM's damage through it means overwriting that field.
   - Invariants that are `$effect`s in `src/routes/combat/+page.svelte:47-79`: clamp HP to max, reset
     death saves above 0 HP, drop an owed concentration save, leave a form, end concentration at

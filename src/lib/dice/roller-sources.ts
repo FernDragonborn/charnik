@@ -38,6 +38,21 @@ const MODES: { english: string; mode: AdvantageMode }[] = [
 	{ english: 'neutral', mode: ADVANTAGE_MODE.neither },
 ];
 
+/**
+ * The damage types as named sources. They come from the glyph list, which is the set the app can
+ * DRAW; a type it has never heard of still works on a roller line, where it arrives as a word the
+ * line takes at face value (see `wordPill`). The hit-point block names a hit's type from this same
+ * list, so a type is typed and matched there exactly as it is in the tray.
+ */
+export const damageTypeSources = (): NamedRollSource[] =>
+	DAMAGE_TYPES.map((type) => ({
+		key: type,
+		names: uiNames(type, `damageType.${type}`),
+		tokens: [],
+		active: false,
+		damageType: true as const,
+	}));
+
 /** An effect currently ON the character — the play-state shape, reduced to what a roller needs. */
 export interface ActiveRollSource {
 	label: string;
@@ -53,9 +68,6 @@ export interface ActiveRollSource {
  * "poisoned" does not know which of our two CSVs it was authored in. A condition's own tokens are
  * read here, not its `apply_condition:` wrapper — the wrapper says "you have it", and a line wants
  * what it DOES.
- *
- * Damage types come from the glyph list, which is the set the app can DRAW; a type it has never heard
- * of still works, it just arrives as a word the line takes at face value (see `wordPill`).
  *
  * An active effect shadows its catalog row by id, so Bless appears once — with the dot — rather than
  * twice under the same name.
@@ -104,12 +116,6 @@ export function rollerSources(
 			mode,
 		})),
 		...byName.values(),
-		...DAMAGE_TYPES.map((type) => ({
-			key: type,
-			names: uiNames(type, `damageType.${type}`),
-			tokens: [],
-			active: false,
-			damageType: true as const,
-		})),
+		...damageTypeSources(),
 	];
 }
