@@ -266,6 +266,8 @@ sentences became numbers, and a security pass closed what a page inside the wind
   its feet is under it. Nothing is raised over the block
   while it says all this: a death save rolls without a card — it is still the last roll in the
   strip and a row in the log — and dying, stabilising and being revived raise no notice. A save pressed by mistake can be taken back from either ending.
+- **A revival takes one level of Exhaustion, not two.** It returns you with one fewer than you
+  died with; a level you had already taken off by hand while dead used to be taken again.
 - **You pick how that fight moves.** A pencil beside the block lists eight motions, `No animation`
   among them; the default is Rays & Hellfire. Settings ▸ General has **Reduce motion** — as the
   system, on, or off — which stills everything in the app and keeps each character's own pick.

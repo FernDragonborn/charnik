@@ -305,7 +305,14 @@ const playSchema = z.object({
 	 *  enum — a new lethal rule is a member, not another flag. Cleared only by `revive()` (a revival
 	 *  effect), never by healing: RAW, hit points don't un-kill you. */
 	death: z
-		.object({ cause: z.enum(DEATH_CAUSES) })
+		.object({
+			cause: z.enum(DEATH_CAUSES),
+			/** The Exhaustion level the character DIED with. A revival returns them with one fewer than
+			 *  this — not one fewer than whatever the level is by then, which a player may already have
+			 *  lowered by hand while the character lay dead. Absent on a death recorded before the
+			 *  level was kept. */
+			exhaustion: z.number().int().min(0).max(EXHAUSTION_MAX).optional(),
+		})
 		.nullable()
 		.default(null),
 	/** Exhaustion level. The real ceiling is DATA (the exhaustion condition row's `max_level`, 6 in

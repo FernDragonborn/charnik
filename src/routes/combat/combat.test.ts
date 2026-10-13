@@ -1981,7 +1981,7 @@ describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaust
 		combat.hpAmount = 18; // max 12, at 6 → 0 with 12 leftover = max → dead
 		combat.damage();
 		expect(character.play.hp.current).toBe(0);
-		expect(character.play.death).toEqual({ cause: 'massive_damage' });
+		expect(character.play.death).toMatchObject({ cause: 'massive_damage' });
 	});
 
 	it('does NOT kill when the leftover is short of the maximum — you just drop to 0', () => {
@@ -2002,14 +2002,14 @@ describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaust
 		character.play.hp.current = 0;
 		character.play.deathSaves = { successes: 0, failures: 2 };
 		combat.toggleDeathSave('failures', 2); // manual pip → third failure
-		expect(character.play.death).toEqual({ cause: 'death_saves' });
+		expect(character.play.death).toMatchObject({ cause: 'death_saves' });
 	});
 
 	it('the top of the exhaustion ladder is lethal, and lower rungs are not', () => {
 		combat.effects.setExhaustion(5);
 		expect(character.play.death).toBeNull();
 		combat.effects.setExhaustion(6); // the data cap (exhaustion row max_level) = death
-		expect(character.play.death).toEqual({ cause: 'exhaustion' });
+		expect(character.play.death).toMatchObject({ cause: 'exhaustion' });
 	});
 
 	it('“I was revived” lifts you off 0 HP, clears the track and drops one exhaustion level', () => {

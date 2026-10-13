@@ -12,6 +12,7 @@ import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
 import {
 	heal,
+	die,
 	hitPointMaximum,
 	isStable,
 	revive,
@@ -95,7 +96,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		});
 		const out = takeDamage(c, { amount: 1, type: null }, ctx());
 		expect(out.character.play.deathSaves.failures).toBe(3);
-		expect(out.character.play.death).toEqual({ cause: 'death_saves' });
+		expect(out.character.play.death).toMatchObject({ cause: 'death_saves' });
 		// the failure is said; the death is the hit-point block's to say
 		expect(out.notices.map((notice) => notice.text)).toMatchObject([
 			{ key: 'combat.notice.deathFailureFromDamage' },
@@ -105,7 +106,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 	it('a remainder as large as the maximum kills outright', () => {
 		const c = fighter((x) => (x.play.hp.current = 3));
 		const out = takeDamage(c, { amount: 3 + maxOf(c), type: null }, ctx());
-		expect(out.character.play.death).toEqual({ cause: 'massive_damage' });
+		expect(out.character.play.death).toMatchObject({ cause: 'massive_damage' });
 	});
 
 	it('healing out of 0 HP resets the death-save track inside the action', () => {
@@ -129,7 +130,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		expect(stoodUp.deathSaves).toEqual({ successes: 0, failures: 0 });
 
 		const died = rollDeathSave(down, ctx(face(1))).character.play;
-		expect(died.death).toEqual({ cause: 'death_saves' });
+		expect(died.death).toMatchObject({ cause: 'death_saves' });
 
 		const stable = rollDeathSave(down, ctx(face(12)));
 		expect(stable.character.play.deathSaves).toEqual({ successes: 3, failures: 0 });
@@ -200,7 +201,9 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		expect(
 			setDeathSavePip(down, { kind: 'successes', index: 2 }).character.play.deathSaves,
 		).toEqual({ successes: 3, failures: 0 });
-		expect(setDeathSavePip(down, { kind: 'failures', index: 2 }).character.play.death).toEqual({
+		expect(
+			setDeathSavePip(down, { kind: 'failures', index: 2 }).character.play.death,
+		).toMatchObject({
 			cause: 'death_saves',
 		});
 	});
@@ -230,6 +233,26 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		expect(play).toMatchObject({ death: null, exhaustion: 5 });
 		expect(play.hp.current).toBe(1);
 		expect(play.deathSaves).toEqual({ successes: 0, failures: 0 });
+	});
+
+	it('a revival takes one level off the exhaustion they DIED with — once, whoever took it', () => {
+		const top = 6;
+		const died = die(
+			fighter((x) => (x.play.exhaustion = top)),
+			'exhaustion',
+		).character;
+		expect(died.play.death).toEqual({ cause: 'exhaustion', exhaustion: top });
+		// revived as they lie: one fewer
+		expect(revive(died).character.play.exhaustion).toBe(top - 1);
+		// the player already took that level off by hand while the character lay dead
+		const lowered = { ...died, play: { ...died.play, exhaustion: top - 1 } };
+		expect(revive(lowered).character.play.exhaustion).toBe(top - 1);
+		// lowered further than that, a revival does not put a level back
+		const rested = { ...died, play: { ...died.play, exhaustion: 2 } };
+		expect(revive(rested).character.play.exhaustion).toBe(2);
+		// a death recorded before the level was kept still loses one
+		const old = { ...died, play: { ...died.play, death: { cause: 'exhaustion' as const } } };
+		expect(revive(old).character.play.exhaustion).toBe(top - 1);
 	});
 
 	it('current hit points are pulled down to a maximum that dropped', () => {

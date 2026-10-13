@@ -126,7 +126,7 @@ const notDying = (play: CharacterPlay): CharacterPlay => ({
  * and a notice on top of that was a stand-in for a block that could not.
  */
 const dead = (play: CharacterPlay, cause: DeathCause): CharacterPlay =>
-	play.death ? play : { ...play, death: { cause } };
+	play.death ? play : { ...play, death: { cause, exhaustion: play.exhaustion } };
 
 /**
  * Take a hit of one type. It meets its defense BEFORE temp HP soaks anything (RAW ordering); temp
@@ -360,8 +360,8 @@ export function die(character: Character, cause: DeathCause): PlayOutcome {
 /**
  * "I was revived" — the way back from death. RAW leaves the hit points to the revival effect, so
  * this applies the Revivify FLOOR (at least 1 HP, never taking hit points away — a character who
- * died of Exhaustion at full HP keeps them) and clears the death-save track. Exhaustion drops by
- * one, per the 2024 glossary ("If the creature died with any Exhaustion levels, it returns with 1
+ * died of Exhaustion at full HP keeps them) and clears the death-save track. Exhaustion drops to
+ * one below the level they died with, per the 2024 glossary ("If the creature died with any Exhaustion levels, it returns with 1
  * fewer level") — in BOTH editions, because reviving straight back onto a lethal exhaustion 6 would
  * kill you again on the spot; RAW is silent in 2014, so RAI wins (docs/internals/rules-core.md ▸
  * RAW, RAI, and saying which). Everything else (conditions, curses) survives death per RAW. Like
@@ -369,12 +369,15 @@ export function die(character: Character, cause: DeathCause): PlayOutcome {
  */
 export function revive(character: Character): PlayOutcome {
 	const play = character.play;
+	// one fewer than the level they DIED with, and never a level put back: lowered by hand while
+	// dead, the level already is that, and taking one more off would take two for one death
+	const diedWith = play.death?.exhaustion ?? play.exhaustion;
 	return quietly({
 		...character,
 		play: notDying({
 			...play,
 			death: null,
-			exhaustion: Math.max(0, play.exhaustion - 1),
+			exhaustion: Math.max(0, Math.min(play.exhaustion, diedWith - 1)),
 			hp: { ...play.hp, current: Math.max(1, play.hp.current) },
 		}),
 	});

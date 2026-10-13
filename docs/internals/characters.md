@@ -223,7 +223,10 @@ maps are keyed by a closed set, an ability or a slot level.
 and every lethal rule lands on ONE `die(cause)` seam. Two readings live at that seam: instant death
 runs the SRD 5.1 text in BOTH editions, because 5.2.1 omits the chapter carrying it, and a revive
 drops one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal sixth level
-would kill the character again on the spot. Death takes the hit-point block and
+would kill the character again on the spot. The level is one below what the character DIED
+with, which `play.death` keeps beside the cause: a level a player already took off by hand while
+the character lay dead is that same level, and counting from whatever stands there now took two
+for one death. Death takes the hit-point block and
 nothing else: the block goes black under `Dead`, with the cause and `I was revived` as the way back,
 and the rest of the sheet — the roll log, the effects, the navigation — stays in reach. The save
 that ENDED the dying, a third success or the third failure, can be taken back from that face
