@@ -124,7 +124,7 @@ stay semi-manual.
   - **Motion lives on that face and nowhere else on the sheet**, and stands still under
     `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
     it never blinks.
-  - **The player picks the motion, and every motion drawn ships beside a still face.** `Still`
+  - **The player picks the motion, and every motion drawn ships beside a still face.** `No animation`
     is the choice already made when the system asks for reduced motion, and it is one press for
     anyone else. The list opens from a pencil: a tab on the block's left side, outside its frame,
     there only while the pointer or the focus is on the block — and always where there is no
