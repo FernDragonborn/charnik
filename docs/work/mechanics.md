@@ -124,9 +124,14 @@ stay semi-manual.
   - **Motion lives on that face and nowhere else on the sheet**, and stands still under
     `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
     it never blinks.
-  - **The player picks the motion, and every motion drawn ships beside a still face.** The block
-    wears a pencil that opens the list; `Still` is the choice already made when the system asks
-    for reduced motion, and it is one press for anyone else.
+  - **The player picks the motion, and every motion drawn ships beside a still face.** `Still`
+    is the choice already made when the system asks for reduced motion, and it is one press for
+    anyone else. The list opens from a pencil: a tab on the block's left side, outside its frame,
+    there only while the pointer or the focus is on the block — and always where there is no
+    pointer to rest, since a touch screen has no other way to find it. The list never covers the
+    block: it opens leftward past the tab, and while it is open the block shows its 0 hit points
+    face playing what is picked (`_hp-pencil.png`). Inside by the label and a tab on the top edge
+    were drawn and passed over.
   - **A narrow window is laid out in a pass of its own.** The line this is drawn on does not fit
     under the narrow threshold, where it becomes several rows.
 
@@ -170,12 +175,8 @@ stay semi-manual.
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
      cheap either, only much less so. Every motion ships, so every one is measured; what one that
      stays dear does — ships marked as such, or waits — is not decided.
-  4. **Where the pencil stands, and where its choice is kept.** Three places are drawn
-     (`_hp-pencil.png`): inside by the label; a tab on the top edge; a tab on the side. A tab is
-     the same on both faces, where the inside one changes place with the label; a side tab needs
-     the free side, and the exhaustion block stands on the right. The choice is proposed as the
-     app's own preference beside theme and language, not the character's: it is about the person
-     at the screen. The list never covers the block: it hangs under it, or beside it past a side tab, and while it is open the block shows its 0 hit points face playing what is picked.
+  4. **Where the pencil's choice is kept.** Proposed as the app's own preference beside theme and
+     language, not the character's: it is about the person at the screen.
   5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
   **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
