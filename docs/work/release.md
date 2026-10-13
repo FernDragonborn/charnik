@@ -107,6 +107,19 @@
   workflow today, so without the step nothing would. The page finds out which build it is in by
   CALLING: a command that is not there is the no-op's cue, so there is no second switch to keep
   true to Cargo's.
+  **The small calls, taken so the build does not stop to ask.** The events Rust pushes are six:
+  a participant joined, a participant left, a view arrived (to a GM), a request arrived (to a
+  player), an answer arrived (to a GM), the connection's state changed. A roll that can be asked
+  for is an ability check, a saving throw or a skill, by the id the roller already names it with
+  — not an attack. A state or effect is asked for by its catalog id alone, and its duration is
+  set on the player's side as it is today. Damage is asked for as the raw amount and its type;
+  the player's app applies its own defenses, since only it knows its sheet. The feature is named
+  `table-link`. There is NO user interface for a table in 0.8.0 — no button, no settings row: the
+  no-op says unavailable and no entrance is drawn.
+  **What verifying it takes.** Two full Rust builds, with the feature and without, and a `/dev/`
+  probe run on the real desktop app, which opens the app's window on the maintainer's machine.
+  The CI step needs Tauri's system libraries installed on the Linux runner before `cargo check`;
+  what that adds to a run is not measured.
   **Where it is likely to cost time.** The capability file names the feature's permissions, and a
   build without the feature fails on a permission it does not know — so the file has to come and
   go with the feature, most likely from `build.rs`, and that is proven only by building both ways.
