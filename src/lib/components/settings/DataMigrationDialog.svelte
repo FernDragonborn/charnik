@@ -130,9 +130,7 @@
 			transform: translate(-50%, -50%) translateX(-3px);
 		}
 	}
-	@media (prefers-reduced-motion: reduce) {
-		.migrate-dialog.shake {
-			animation: none;
-		}
+	:global(:root[data-motion='reduced']) .migrate-dialog.shake {
+		animation: none;
 	}
 </style>

@@ -1856,7 +1856,14 @@
 			},
 			"critNote": "Either way the flat modifier is never doubled. A single roll can be switched to the other method in the roller, where a table usually rules on it.",
 			"editions": "Shown editions",
-			"title": "Appearance & language"
+			"title": "Appearance & language",
+			"reduceMotion": "Reduce motion",
+			"reduceMotionName": {
+				"system": "As the system",
+				"on": "On",
+				"off": "Off"
+			},
+			"reduceMotionNote": "While it is on, nothing moves by itself — and the hit-point block plays no animation at 0 hit points, whatever a character has picked. Each character’s own pick is kept."
 		},
 		"health": {
 			"allClear": "All loaded content is healthy — no problems found.",

@@ -361,6 +361,29 @@ export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
 /** How a character levels (per-character rules variant): `milestone` = the table says when, and XP
  *  is not counted; `xp` = experience points are tracked against the edition's advancement table.
  *  An OPEN enum — a third way to level is a member, not a boolean. */
+/**
+ * What the hit-point block plays at 0 hit points, while the death saves are counted. `none` is a
+ * member and not the absence of one: a block that stands still is a choice a player makes, and the
+ * one `app.reduceMotion` makes for them.
+ */
+export const DOWN_MOTIONS = [
+	'none',
+	'rays-hellfire',
+	'pressure',
+	'waves',
+	'burning-edge',
+	'hatch',
+	'liquid',
+	'arrows',
+] as const;
+export type DownMotion = (typeof DOWN_MOTIONS)[number];
+export const DEFAULT_DOWN_MOTION: DownMotion = 'rays-hellfire';
+/** The motion a character's stored choice names. The field is an OPEN enum — a save written by a
+ *  later Charnik may name a motion this one does not draw — so an unknown name plays the default
+ *  rather than failing the whole character. */
+export const downMotionOf = (stored: string): DownMotion =>
+	DOWN_MOTIONS.find((motion) => motion === stored) ?? DEFAULT_DOWN_MOTION;
+
 const LEVELING_MODES = ['milestone', 'xp'] as const;
 export type LevelingMode = (typeof LEVELING_MODES)[number];
 
@@ -423,6 +446,10 @@ const uiSchema = z
 		/** Does a shot spend the ammunition it fires? The same kind of per-character variant, and OFF
 		 *  by default for the same reason: most tables do not count arrows. */
 		trackAmmunition: z.boolean().default(false),
+		/** The motion this character's hit-point block plays at 0 hit points, by `DOWN_MOTIONS` id —
+		 *  read through `downMotionOf`. A view preference like the panel layout, and the app's
+		 *  `reduceMotion` stands over it without changing it. */
+		downMotion: z.string().default(DEFAULT_DOWN_MOTION),
 	})
 	.default({
 		strict: true,
@@ -437,6 +464,7 @@ const uiSchema = z
 		coinsHidden: [],
 		coinWeight: false,
 		trackAmmunition: false,
+		downMotion: DEFAULT_DOWN_MOTION,
 		rowOrder: {},
 		panelsCollapsed: [],
 	});

@@ -154,9 +154,7 @@
 			transform: translateX(8px);
 		}
 	}
-	@media (prefers-reduced-motion: reduce) {
-		.card.shake {
-			animation: none;
-		}
+	:global(:root[data-motion='reduced']) .card.shake {
+		animation: none;
 	}
 </style>

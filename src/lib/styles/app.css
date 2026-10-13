@@ -83,10 +83,18 @@ select optgroup {
 	top: var(--space-2);
 }
 
+/* Reduce motion (`util/motion.ts`): the root's `data-motion` is the answer, already weighed against
+   the system. The media query stands in only until that attribute is written. */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+	animation-duration: 0.001ms !important;
+	transition-duration: 0.001ms !important;
+}
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
+	:root:not([data-motion]) *,
+	:root:not([data-motion]) *::before,
+	:root:not([data-motion]) *::after {
 		animation-duration: 0.001ms !important;
 		transition-duration: 0.001ms !important;
 	}

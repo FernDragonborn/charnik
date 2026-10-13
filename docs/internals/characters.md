@@ -155,6 +155,11 @@ descriptions this character reads in the player's own words (`textOverrides`, on
 [content.md](content.md) ▸ The words a player puts over ours). It survives a reset of play, because
 resetting the game should not destroy a layout someone arranged, nor prose they wrote.
 
+**How a character's sheet LOOKS is `ui` too, however small**: the motion its hit-point block plays at
+0 hit points is `ui.downMotion`, an open enum read through `downMotionOf` so a save naming a motion
+this build does not draw still loads. What may overrule it is the app's own Reduce motion
+([ui.md](ui.md) ▸ Reduce motion is one switch), which stands over the choice without writing to it.
+
 **What a player chose to see is `ui`, and all of it is stored the same way**: an array of ids or refs
 per panel — `spellsHidden` / `spellsPinned`, `actionsHidden`, `featuresHidden` / `featuresPinned`,
 `panelsCollapsed` — plus `rowOrder`, keyed by panel, for the lists that are derived and so have no

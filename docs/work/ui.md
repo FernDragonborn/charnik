@@ -47,9 +47,9 @@
       live there — `AGENTS.md` ▸ everything is doable from the UI, and a duration hardcoded in a
       constant is the opposite of that. `TOUCH_HOLD_MS` is one export and already the single source
       of both halves, so what this needs is the surface and the persisted value, not a rework.
-      Worth scoping WITH the rest of the interaction settings rather than alone: the same pane is
-      where reduced-motion overrides and a longer double-tap window would go, and one pane asked for
-      once beats three settings arriving separately. LATE — after the UI stops moving.
+      Worth scoping WITH the rest of the interaction settings rather than alone: Reduce motion
+      already stands on Settings ▸ General, a longer double-tap window would go beside it, and one
+      pane asked for once beats three settings arriving separately. LATE — after the UI stops moving.
 
 - [~] **TITLE-POPOVER · an explanation appears where the pointer is, not where Windows decides.**
       The pass is done: every `title` that EXPLAINED a control or a value is the provenance popover

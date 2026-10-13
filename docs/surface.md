@@ -491,7 +491,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (167 modules)
+## Library functions & types (168 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -789,6 +789,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
+- `const DOWN_MOTIONS` — * What the hit-point block plays at 0 hit points, while the death saves are counted.
+- `type DownMotion`
+- `const DEFAULT_DOWN_MOTION`
+- `const downMotionOf` — The motion a character's stored choice names.
 - `type LevelingMode`
 - `const characterSchema`
 - `const classRow` — The one place a class row or an inventory row is made, so each leaves with an identity of its * own.
@@ -2155,6 +2159,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function externalLinkToOpen` — * What to do with a click on `href` from a page served at `origin`: * - a URL string → open it in the OS browser (and…
 - `function shouldCancelNavigation` — …and whether the click must be CANCELLED even when nothing gets opened.
 
+### `src/lib/util/motion.ts`
+
+- `const REDUCE_MOTION` — The player's setting.
+- `type ReduceMotion`
+- `const REDUCE_MOTION_CHOICES`
+- `const isMotionReduced` — Is motion reduced, given the setting and what the system asks for?
+- `function mirrorMotion` — * Keep the root element's `data-motion` true to the setting, and to the system while the setting * follows it — a pla…
+- `const motionWanted` — Does anything move right now?
+
 ### `src/lib/util/option-walk.ts`
 
 - `interface KeyPress` — All a walk needs from a key event.
@@ -2190,4 +2203,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1340 exports across 183 modules · 85 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1350 exports across 184 modules · 85 duplicate suspects._

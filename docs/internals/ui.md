@@ -391,8 +391,8 @@ good", so they are pinned here and every component follows them.
     written in CSS: a feature row and an action row are different heights, and a collapse that
     changed `display` to animate a grid track would rearrange an inventory row's insides mid-drag.
     Easing is always OUT — a gesture decelerates into place, it does not accelerate away from the
-    hand. And the Web Animations API is outside the reach of the global `prefers-reduced-motion`
-    rule in `app.css`, so that action asks the media query itself.
+    hand. And the Web Animations API is outside the reach of the global
+    reduced-motion rule in `app.css`, so that action asks `motionWanted()` itself.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
@@ -603,6 +603,20 @@ keyboard starts inside and goes back to the control. Placement is one action, `a
 and travelling with the control while the page scrolls. A floating part that lives in the body — a
 picker's card — is named to it as a companion, so a press there is not a press outside. Not being
 full-screen, a popover carries no `LangSwitcher`: the topbar's is still in reach.
+
+## Reduce motion is one switch
+
+Whether anything moves by itself is ONE answer, written on the root element as `data-motion` by
+`mirrorMotion` (`util/motion.ts`). It weighs the app's own setting — `app.reduceMotion`: follow the
+system, on, or off, on Settings ▸ General — against the system's `prefers-reduced-motion`, and every
+rule and every script asks the attribute: the global rule in `app.css`, a component's own
+`:global(:root[data-motion='reduced'])`, and `motionWanted()` for what CSS cannot reach. A stylesheet
+reading the media query beside a script reading the setting is two switches that can disagree; the
+media query survives in `app.css` only for the moment before the attribute is written.
+
+A choice of animation that belongs to a CHARACTER — what its hit-point block plays at 0 hit points,
+`ui.downMotion` — sits under that switch and is not changed by it: reduced, the block plays nothing
+and the choice is kept.
 
 ## Icons are drawn, never typed
 

@@ -3,13 +3,14 @@
 // JSON); the system a NEW character is built under is chosen on the Build page (draft.system).
 //
 // Persisted across reloads in localStorage (standalone/offline-safe, same pattern as
-// content/sources.svelte.ts): the chosen theme, UI locale and shown editions survive a page
+// content/sources.svelte.ts): the chosen theme, UI locale, shown editions and the motion setting survive a page
 // reload / app restart. Loaded synchronously at module init so the very first paint (and
 // startI18n in +layout.ts) already uses the saved locale/theme.
 
 import { SYSTEMS } from '$lib/content/schemas';
 import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 import { readStored, writeStored } from '$lib/util/persist';
+import { REDUCE_MOTION, type ReduceMotion } from '$lib/util/motion';
 import type { CustomTheme } from '$lib/styles/customThemes';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
@@ -41,6 +42,9 @@ interface AppState {
 	 *  to a second swing (PLAN §9). A rule option rather than a preference: it changes numbers, so it
 	 *  is also overridable per roll in the roller, where the table's ruling actually happens. */
 	critMethod: CritMethod;
+	/** Whether anything moves by itself: follow the system, or overrule it (`util/motion.ts`). It
+	 *  stands over every per-character choice of an animation — that choice is kept, and not played. */
+	reduceMotion: ReduceMotion;
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -54,6 +58,7 @@ function defaults(): AppState {
 		seededBundledIds: [],
 		contentEditingMode: false,
 		critMethod: CRIT_METHOD.classic,
+		reduceMotion: REDUCE_MOTION.system,
 	};
 }
 
@@ -87,6 +92,7 @@ function persist(): void {
 		seededBundledIds: app.seededBundledIds,
 		contentEditingMode: app.contentEditingMode,
 		critMethod: app.critMethod,
+		reduceMotion: app.reduceMotion,
 	});
 }
 

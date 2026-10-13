@@ -11,6 +11,7 @@
 	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
 	import { LOCALES, _ } from '$lib/i18n';
 	import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
+	import { REDUCE_MOTION_CHOICES } from '$lib/util/motion';
 
 	// a closed vocabulary: the id is the fact, and its name and hint are catalog entries derived from
 	// it, so a method is spelled in exactly one place (docs/internals/ui.md ▸ Strings live in the catalogs)
@@ -90,6 +91,22 @@
 	</div>
 </div>
 <p class="sec-note crit-note">{$_('settings.general.critNote')}</p>
+
+<div class="setting-row">
+	<span class="setting-label">{$_('settings.general.reduceMotion')}</span>
+	<div class="setting-options">
+		{#each REDUCE_MOTION_CHOICES as choice (choice)}
+			<button
+				class="pill-btn"
+				class:accent={app.reduceMotion === choice}
+				aria-pressed={app.reduceMotion === choice}
+				onclick={() => (app.reduceMotion = choice)}
+				>{$_(`settings.general.reduceMotionName.${choice}`)}</button
+			>
+		{/each}
+	</div>
+</div>
+<p class="sec-note crit-note">{$_('settings.general.reduceMotionNote')}</p>
 
 <style>
 	/* rows use the global .setting-row / .setting-label / .setting-options (components.css) */

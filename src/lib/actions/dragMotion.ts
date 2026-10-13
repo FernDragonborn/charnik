@@ -1,5 +1,6 @@
 import { tick } from 'svelte';
 import type { Action } from 'svelte/action';
+import { motionWanted } from '$lib/util/motion';
 
 /*
  * The weight of a dragged block: the two beats `svelte-dnd-action` does not animate.
@@ -64,10 +65,6 @@ const SETTLE_STRETCH = 1.03;
 const SETTLE_SQUASH = 0.94;
 const SHADOW_SELECTOR = '[data-is-dnd-shadow-item-internal]';
 const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
-
-/** The global `prefers-reduced-motion` rule in `app.css` cannot reach the Web Animations API, so the
- *  same answer is given here by hand. Read per call: a user may change it while the app is open. */
-const motionWanted = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The ONE ring every zone shares — only one finger can be arming a drag at a time, so one exists.
  *  Re-attached rather than assumed present, the same way the provenance popover is. */
