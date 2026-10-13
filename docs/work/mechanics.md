@@ -148,6 +148,11 @@ stay semi-manual.
      once and cross-faded, which is also the likely end of its flicker — runs nothing while the face
      is off screen, and is measured before it is called done. The glow's drift is 30% slower than
      the prototype's 5.5s.
+     **The animations are not the whole cost, and the rest is unexplained.** With every animation
+     taken off the prototype page, the maintainer still measures about 25% of a CPU from it at
+     rest. Nothing on that page should repaint while nothing moves, so what does is the first thing
+     to find — the fused filter, the masks and `container-type` on the bubbles are the suspects —
+     before any of it is carried into the app.
   5. **How many defended types stand before the menu**: two are drawn, three fit at the wide width.
   6. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
