@@ -76,7 +76,7 @@ for (const { system, pack, source } of EDITIONS) {
 			combat.hpAmount = 7;
 			combat.damage();
 			expect(character.play.hp.current).toBe(max - 7);
-			combat.hpAmount = 3;
+			combat.healAmount = 3;
 			combat.heal();
 			expect(character.play.hp.current).toBe(max - 4);
 		});

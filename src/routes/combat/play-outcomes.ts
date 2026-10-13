@@ -30,15 +30,11 @@ export interface PlayOutcomesHost {
 	sheet: CharacterSheet | null;
 	graph: ContentGraph | null;
 	journal: RollJournal;
-	hp: { pendingConcentrationSave: OwedConcentrationSave | null; dyingStopped(): void };
+	hp: { owe(save: OwedConcentrationSave): void; keepOwedFor(spell: string | null): void };
 }
 
 /** What stands between the sentences of one notice. */
 const SENTENCE_SEPARATOR = ' · ';
-
-/** Is the death-save track holding anything? */
-const tracksDeathSaves = (character: Character): boolean =>
-	character.play.deathSaves.successes > 0 || character.play.deathSaves.failures > 0;
 
 export class PlayOutcomes {
 	constructor(private host: () => PlayOutcomesHost) {}
@@ -86,18 +82,15 @@ export class PlayOutcomes {
 
 	private commit(held: Character, outcome: PlayOutcome): void {
 		const { hp, journal } = this.host();
-		const wasTracking = tracksDeathSaves(held);
 		adoptCharacter(held, outcome.character);
-		if (held.play.hp.current > 0 || (wasTracking && !tracksDeathSaves(held))) hp.dyingStopped();
 		for (const { name, rolled } of outcome.log)
 			if (rolled) journal.pushRoll(name, rolled);
 			else journal.logMarker(name);
 		for (const notice of outcome.notices) this.announce(notice);
-		if (outcome.concentrationSave) hp.pendingConcentrationSave = outcome.concentrationSave;
+		if (outcome.concentrationSave) hp.owe(outcome.concentrationSave);
 		// an owed save belongs to the concentration it names, and goes when that one ends or is
 		// replaced — whichever writer of `play.concentration` did it
-		const owed = hp.pendingConcentrationSave;
-		if (owed && owed.spell !== held.play.concentration) hp.pendingConcentrationSave = null;
+		hp.keepOwedFor(held.play.concentration);
 	}
 
 	/** Say a notice in the reader's language, naming the content rows it points at. */

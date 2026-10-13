@@ -1766,12 +1766,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/play/hit-points.ts`
 
+- `const DEATH_SAVE_TRACK` — How many saves of one kind end the dying: the third failure kills, the third success stabilises.
+- `const concentrationSaveDc` — * The DC of the concentration save a hit of `damage` makes due: RAW's floor, or half the damage * when that is higher…
+- `const isStable` — * Stable: at 0 hit points with the third success on the track, and not dead.
 - `interface DamagePart` — One typed part of a hit as it is dealt.
 - `interface ResolvedDamagePart` — The same part against the character's defenses.
 - `function resolveDamagePart` — One part of a hit against a set of defenses: what was dealt, what it takes.
 - `const hitPointMaximum` — The EFFECTIVE hit-point maximum: a manual max still has `hp_max` effects folded onto it (A14).
-- `interface DamageIntent` — A hit: its parts, and whether it was a critical — which only matters to a body already at 0.
-- `function takeDamage` — * Take a hit.
+- `function takeDamage` — * Take a hit of one type.
 - `function heal` — Heal.
 - `function setTempHp` — Set Temporary Hit Points to an amount — set, never added: they do not stack.
 - `function rollDeathSave` — * Roll a death save: a d20 against 10, with whatever `save.death` picks up (Bless, exhaustion).
@@ -1811,7 +1813,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PlayLogLine` — One line for the roll log: a marker, or a roll when the action made one.
 - `interface PlayNotice` — Something to tell the player: a catalog sentence, or a row's own words as they are.
 - `const PLAY_REQUEST` — What a request in `asks` is for.
-- `interface OwedConcentrationSave` — A concentration save a hit has made due: the DC, and the spell it is owed for.
+- `interface OwedConcentrationSave` — A concentration save a hit has made due: the damage that made it due, the DC that damage sets, * and the spell it is …
 - `interface PlayOutcome`
 - `const quietly` — An outcome that says nothing beyond the character.
 - `function chain` — * One action after another on the same character, as one outcome: the second starts from what the * first left, and w…
@@ -2188,4 +2190,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 88 global classes · 58 components · 1338 exports across 183 modules · 85 duplicate suspects._
+_47 tokens · 88 global classes · 58 components · 1340 exports across 183 modules · 85 duplicate suspects._

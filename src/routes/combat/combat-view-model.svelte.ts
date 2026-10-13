@@ -67,7 +67,7 @@ const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insig
  *
  * **The accessors are the point, not clutter.** `hpMax` and `die` are declared on two sibling
  * subsystems' host interfaces, five panels destructure `openMenu`, the markup two-way binds
- * `tempHpInput`, and the behavioural tests drive every one of them from `combat.*`. Moving an
+ * `healAmount`, and the behavioural tests drive every one of them from `combat.*`. Moving an
  * implementation is no reason to move the name people call (ui.md ▸ Splitting a large view) — so each carve leaves a
  * one-line forward here and nothing above this file has to know it happened.
  *
@@ -116,7 +116,7 @@ class CombatVM {
 		close: () => (this.overlay = null),
 	});
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
-	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
+	   host interfaces, the panels bind `healAmount`/`hpAmount`, and the behavioural tests drive all
 	   of them from here (ui.md ▸ Splitting a large view). */
 	get hpMax(): number {
 		return this.hp.hpMax;
@@ -130,11 +130,11 @@ class CombatVM {
 	set hpAmount(v: number) {
 		this.hp.hpAmount = v;
 	}
-	get tempHpInput(): number {
-		return this.hp.tempHpInput;
+	get healAmount(): number {
+		return this.hp.healAmount;
 	}
-	set tempHpInput(v: number) {
-		this.hp.tempHpInput = v;
+	set healAmount(v: number) {
+		this.hp.healAmount = v;
 	}
 	get damageType(): string | null {
 		return this.hp.damageType;
@@ -147,12 +147,6 @@ class CombatVM {
 	}
 	get concentrationSaveMod(): number {
 		return this.hp.concentrationSaveMod;
-	}
-	get pendingConcentrationSave() {
-		return this.hp.pendingConcentrationSave;
-	}
-	set pendingConcentrationSave(v) {
-		this.hp.pendingConcentrationSave = v;
 	}
 	damage = () => this.hp.damage();
 	heal = () => this.hp.heal();

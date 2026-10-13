@@ -180,7 +180,7 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		character.play.hp.current = 10; // on their feet: at 0 hit points nothing is concentrated on
 		combat.graph = graph;
 		combat.character = character;
-		combat.pendingConcentrationSave = null; // reset the singleton's transient UI between tests
+		combat.hp.owedConcentrationSaves = []; // reset the singleton's transient UI between tests
 	});
 
 	it('dropping to 0 HP ends concentration (endConcentrationIfBroken, §7)', () => {
@@ -192,14 +192,16 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		expect(character.play.effects).toEqual([]); // the carrier goes down with it
 	});
 
-	it('surviving damage opens the B4 save banner (DC max(10,½dmg)) and does NOT auto-drop (§6/B4)', () => {
+	it('surviving damage leaves a save owed (DC max(10,½dmg)) and does NOT auto-drop', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 6;
 		combat.damage();
 		expect(character.play.hp.current).toBe(14);
 		// 6 dmg → DC max(10, 3) = 10, owed for THIS spell
-		expect(combat.pendingConcentrationSave).toEqual({ dc: 10, spell: `spell:${S}:bless` });
+		expect(combat.hp.owedConcentrationSaves).toEqual([
+			{ dc: 10, damage: 6, spell: `spell:${S}:bless` },
+		]);
 		expect(character.play.concentration).toBe(`spell:${S}:bless`); // never auto-dropped
 	});
 
@@ -208,14 +210,14 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 70; // ⌊70/2⌋ = 35 → capped to 30
 		combat.damage();
-		expect(combat.pendingConcentrationSave?.dc).toBe(30);
+		expect(combat.hp.owedConcentrationSaves[0]?.dc).toBe(30);
 	});
 
-	it('no banner when not concentrating', () => {
+	it('nothing is owed when not concentrating', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.hpAmount = 6;
 		combat.damage();
-		expect(combat.pendingConcentrationSave).toBeNull();
+		expect(combat.hp.owedConcentrationSaves).toEqual([]);
 	});
 
 	it('rolling the save always resolves the check, and a miss ends the spell', () => {
@@ -225,7 +227,7 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.damage();
 		combat.rollConcentrationSave();
 		// the check is answered either way — never left as a still-unrolled {dc}
-		expect(combat.pendingConcentrationSave).toBeNull();
+		expect(combat.hp.owedConcentrationSaves).toEqual([]);
 		// held or ended, and nothing in between: a failed save has no "confirm" step, it IS the end
 		const held = character.play.concentration === `spell:${S}:bless`;
 		expect(held || character.play.concentration === null).toBe(true);
@@ -234,7 +236,7 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 	it('the chip rolls with nothing owed — the table asking for a check the app never saw', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
-		expect(combat.pendingConcentrationSave).toBeNull(); // no damage taken
+		expect(combat.hp.owedConcentrationSaves).toEqual([]); // no damage taken
 		const before = combat.journal.log.length;
 		combat.rollConcentrationSave();
 		expect(combat.journal.log.length).toBe(before + 1); // it rolled, against the DC 10 floor
@@ -252,34 +254,34 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 20;
 		combat.damage();
-		expect(combat.pendingConcentrationSave).not.toBeNull();
+		expect(combat.hp.owedConcentrationSaves).toHaveLength(1);
 		// the next concentration spell REPLACES the first; the save owed for Bless is not owed for it
 		combat.cast(spellRow(graph, `spell:${S}:hold_person`, 'on')!, noModifiers);
 		expect(character.play.concentration).toBe(`spell:${S}:hold_person`);
 		combat.syncPendingConcentration();
-		expect(combat.pendingConcentrationSave).toBeNull();
-		// …and the same for a long rest, which ends concentration without touching the banner
+		expect(combat.hp.owedConcentrationSaves).toEqual([]);
+		// …and the same for a long rest, which ends concentration and knows nothing of what is owed
 		character.play.hp.current = 30;
 		combat.hpAmount = 10;
 		combat.damage();
-		expect(combat.pendingConcentrationSave).not.toBeNull();
+		expect(combat.hp.owedConcentrationSaves).toHaveLength(1);
 		combat.resources.rest('long');
 		combat.syncPendingConcentration();
-		expect(combat.pendingConcentrationSave).toBeNull();
+		expect(combat.hp.owedConcentrationSaves).toEqual([]);
 	});
 
-	it('Dismiss (✕) clears the banner but KEEPS concentration, and a new hit re-arms it', () => {
-		// regression: rolling can end the spell, so the reminder must ALSO be dismissable WITHOUT
-		// rolling — else waving it off is a coin flip on a spell, and the banner never returns.
+	it('waving an owed save off KEEPS concentration, and a new hit owes a new one', () => {
+		// rolling can end the spell, so the reminder is ALSO dismissable WITHOUT rolling — else
+		// waving it off is a coin flip on a spell.
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 6;
 		combat.damage();
 		combat.dismissConcentrationSave();
-		expect(combat.pendingConcentrationSave).toBeNull(); // banner gone
+		expect(combat.hp.owedConcentrationSaves).toEqual([]); // waved off
 		expect(character.play.concentration).toBe(`spell:${S}:bless`); // STILL concentrating
 		combat.damage(); // a new hit
-		expect(combat.pendingConcentrationSave).not.toBeNull(); // banner re-arms
+		expect(combat.hp.owedConcentrationSaves).toHaveLength(1);
 	});
 });
 
@@ -1043,7 +1045,7 @@ describe('CombatVM · S2 split net', () => {
 		combat.damage(); // 5 soaked by temp, 3 off current
 		expect(character.play.hp.temp).toBe(0);
 		expect(character.play.hp.current).toBe(17);
-		combat.hpAmount = 100;
+		combat.healAmount = 100;
 		combat.heal(); // clamps to max
 		expect(character.play.hp.current).toBe(20);
 	});
@@ -1088,17 +1090,16 @@ describe('CombatVM · S2 split net', () => {
 		}
 	});
 
-	it('damage at 0 HP is a death-save failure, and two when the hit was a critical', () => {
+	it('damage at 0 HP is a death-save failure, and a critical is the second one pressed by hand', () => {
 		character.play.hp = { current: 0, max: 20, temp: 0 };
 		combat.hpAmount = 3;
 		combat.damage();
 		expect(character.play.deathSaves.failures).toBe(1);
 
-		combat.hp.damageWasCrit = true; // the one thing the Damage button cannot read off an attack
-		combat.damage();
+		// the sheet has no hit to read a critical from: the player presses the skulls it cost
+		combat.toggleDeathSave('failures', 2);
 		expect(character.play.deathSaves.failures).toBe(3);
 		expect(character.play.death?.cause).toBe('death_saves'); // the third failure is the end
-		expect(combat.hp.damageWasCrit).toBe(false); // crit-ness belonged to that hit only
 	});
 
 	it('damage while still standing leaves the death-save track alone', () => {
@@ -2364,31 +2365,16 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 		combat.graph = await graphOf();
 		character = newCharacter('valen', 'Valen', '5.5e');
 		combat.character = character;
-		combat.hp.damageWasCrit = false;
 	});
 
 	it('healing out of 0 HP clears it — RAW "reset to zero when you regain any hit points"', () => {
 		character.play.hp = { current: 0, max: 20, temp: 0 };
 		character.play.deathSaves = { successes: 1, failures: 2 };
-		combat.hpAmount = 5;
+		combat.healAmount = 5;
 		combat.heal();
 		combat.syncDyingState();
 		expect(character.play.hp.current).toBe(5);
 		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
-	});
-
-	it('a "was it a critical?" nobody spent on a hit does not wait for the next one', () => {
-		character.play.hp = { current: 0, max: 20, temp: 0 };
-		combat.hp.damageWasCrit = true; // ticked at 0 HP…
-		combat.hpAmount = 5;
-		combat.heal(); // …and then healed rather than hit, which hides the checkbox
-		combat.syncDyingState();
-		expect(combat.hp.damageWasCrit).toBe(false);
-		// down again: the next ordinary hit costs ONE failure, not the stale crit's two
-		character.play.hp.current = 0;
-		combat.hpAmount = 3;
-		combat.damage();
-		expect(character.play.deathSaves.failures).toBe(1);
 	});
 
 	it('a long rest fills to the EFFECTIVE max, manual max and hp_max effect together (A14)', () => {
@@ -2409,11 +2395,16 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 		character.play.hp = { current: 0, max: 20, temp: 0 };
 		character.play.deathSaves = { successes: 2, failures: 1 };
 		combat.toggleDeathSave('successes', 2); // the third pip
-		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
-		// and a stable character's next hit starts the track over rather than continuing it
+		// stable is the track itself: the three successes that say so, and every failure forgotten
+		expect(character.play.deathSaves).toEqual({ successes: 3, failures: 0 });
+		// a stable character rolls nothing…
+		const rolls = combat.journal.log.length;
+		combat.deathSave();
+		expect(combat.journal.log.length).toBe(rolls);
+		// …and their next hit starts the dying over rather than continuing it
 		combat.hpAmount = 3;
 		combat.damage();
-		expect(character.play.deathSaves.failures).toBe(1);
+		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 1 });
 	});
 
 	it('a dead character keeps their track — one can die at full hit points', () => {
@@ -2422,5 +2413,55 @@ describe('CombatVM · the death-save track belongs to being at 0 HP', () => {
 		character.play.death = { cause: 'death_saves' };
 		combat.syncDyingState();
 		expect(character.play.deathSaves.failures).toBe(3);
+	});
+});
+
+describe('CombatVM · the concentration saves hits leave owed are a queue', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	const bless = `spell:${S}:bless`;
+	beforeEach(async () => {
+		graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp = { current: 200, max: 200, temp: 0 };
+		combat.graph = graph;
+		combat.character = character;
+		combat.hp.owedConcentrationSaves = [];
+		combat.cast(spellRow(graph, bless, 'on')!, noModifiers);
+	});
+	const hit = (amount: number) => {
+		combat.hpAmount = amount;
+		combat.damageType = null;
+		combat.damage();
+	};
+
+	it('two hits before a roll owe two saves, oldest first — the second does not replace the first', () => {
+		hit(30);
+		hit(10);
+		expect(combat.hp.owedConcentrationSaves.map((save) => save.dc)).toEqual([15, 10]);
+	});
+
+	it('"that was one hit" merges them into one, at the DC of the damage they sum to', () => {
+		hit(30);
+		hit(10);
+		combat.hp.mergeOwedConcentrationSaves();
+		expect(combat.hp.owedConcentrationSaves).toEqual([{ dc: 20, damage: 40, spell: bless }]);
+	});
+
+	it('a roll answers the oldest and leaves the rest owed while the spell holds', () => {
+		hit(30);
+		hit(10);
+		combat.rollConcentrationSave();
+		const held = character.play.concentration === bless;
+		// a miss ends the spell, and nothing is owed for a spell that is gone
+		expect(combat.hp.owedConcentrationSaves.map((save) => save.dc)).toEqual(held ? [10] : []);
+	});
+
+	it('waving the oldest off leaves the next one owed', () => {
+		hit(30);
+		hit(10);
+		combat.dismissConcentrationSave();
+		expect(combat.hp.owedConcentrationSaves.map((save) => save.dc)).toEqual([10]);
+		expect(character.play.concentration).toBe(bless);
 	});
 });

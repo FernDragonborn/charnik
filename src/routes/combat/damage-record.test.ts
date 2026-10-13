@@ -1,7 +1,8 @@
 /*
- * What a Damage press RECORDS, and a hit of more than one type. The defenses' arithmetic is
- * `applyDamageSensitivity`'s and is tested there; this is the hit as one event — each part against
- * its own type, temp HP and the concentration save asked of the total — and the record it leaves.
+ * What a Damage press RECORDS. The defenses' arithmetic is `applyDamageSensitivity`'s and is tested
+ * there; this is the hit as one event of one type — its own defense, then temp HP and the
+ * concentration save asked of what is left — and the record it leaves. A hit of two types is two
+ * presses, and the saves they owe are merged by hand.
  */
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -31,7 +32,7 @@ beforeEach(async () => {
 		durationRounds: 0,
 	});
 	combat.journal.log = [];
-	combat.hp.moreParts = [];
+	combat.hp.owedConcentrationSaves = [];
 });
 
 /** The newest log lines as the key and values they were recorded with. */
@@ -70,60 +71,41 @@ describe('damage · the record a hit leaves', () => {
 	});
 });
 
-describe('damage · one hit, two types', () => {
-	it('each part meets its own defense, and the hit points take the sum', () => {
-		const full = c.play.hp.current;
-		combat.hpAmount = 7;
-		combat.damageType = 'slashing';
-		combat.hp.addPart();
-		combat.hp.moreParts = [{ amount: 12, type: 'fire' }];
-		expect(combat.hp.previewOf(combat.hp.moreParts[0]!)).toEqual({
-			raw: 12,
-			final: 6,
-			bucket: 'resist',
-		});
-		combat.damage();
-		expect(c.play.hp.current).toBe(full - 13);
-		expect(recorded().map(([key]) => key)).toEqual([
-			'combat.log.damageTakenDefended.resist',
-			'combat.log.damageTakenTyped',
-		]);
-		// the extra part belonged to that hit, not to the next one
-		expect(combat.hp.moreParts).toEqual([]);
-	});
-
-	it('is ONE hit: temp HP soaks the total, and one concentration save is owed for it', () => {
+describe('damage · one hit of two types is two presses', () => {
+	it('each press meets its own defense, and the saves they owe merge into the one the hit owes', () => {
 		c.play.hp.temp = 5;
 		c.play.concentration = `spell:${S}:bless`;
 		const full = c.play.hp.current;
 		combat.hpAmount = 14;
 		combat.damageType = 'slashing';
-		combat.hp.moreParts = [{ amount: 20, type: 'fire' }];
 		combat.damage();
-		// 14 + 10 = 24 taken; 5 soaked
+		combat.hpAmount = 20;
+		combat.damageType = 'fire';
+		expect(combat.hp.damagePreview).toEqual({ raw: 20, final: 10, bucket: 'resist' });
+		combat.damage();
+		// 14 + 10 = 24 taken; 5 soaked by the first press
 		expect(c.play.hp).toMatchObject({ temp: 0, current: full - 19 });
-		expect(combat.pendingConcentrationSave?.dc).toBe(12);
-	});
-
-	it('a part can be taken back before the press', () => {
-		combat.hp.addPart();
-		combat.hp.addPart();
-		combat.hp.removePart(0);
-		expect(combat.hp.moreParts).toHaveLength(1);
+		expect(recorded().map(([key]) => key)).toEqual([
+			'combat.log.damageTakenDefended.resist',
+			'combat.log.damageTakenTyped',
+		]);
+		expect(combat.hp.owedConcentrationSaves.map((save) => save.dc)).toEqual([10, 10]);
+		combat.hp.mergeOwedConcentrationSaves();
+		expect(combat.hp.owedConcentrationSaves.map((save) => save.dc)).toEqual([12]);
 	});
 });
 
 describe('healing · the record it leaves', () => {
 	it('says what came back, which is less than what was entered at the maximum', () => {
 		c.play.hp.current = combat.hpMax - 4;
-		combat.hpAmount = 10;
+		combat.healAmount = 10;
 		combat.heal();
 		expect(c.play.hp.current).toBe(combat.hpMax);
 		expect(recorded()).toEqual([['combat.log.hitPointsRestored', { restored: 4 }]]);
 	});
 
 	it('nothing is recorded for a heal that restored nothing', () => {
-		combat.hpAmount = 10;
+		combat.healAmount = 10;
 		combat.heal();
 		expect(recorded()).toEqual([]);
 	});

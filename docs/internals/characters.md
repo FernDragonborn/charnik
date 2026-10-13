@@ -287,7 +287,7 @@ fire a rule and never picks between two readings, but once the player has fired 
 that rule states.
 
 **The concentration chip rolls; its ✕ ends the spell.** Pressing the chip is a save — against the
-owed DC after damage, against the RAW floor of 10 otherwise, which is the check a table calls for
+oldest owed DC after damage, which the chip wears, against the RAW floor of 10 otherwise, which is the check a table calls for
 when the app never saw the trigger. Ending concentration deliberately is a separate control that
 drops out of the chip on hover or focus, so the common act is one press and the rare, irreversible
 one is a step further: the chip's own press used to end the spell outright, which made every stray
@@ -296,14 +296,35 @@ disappearing and the press one step above it is a save — a spell dropped on pu
 to a bad roll must not look alike. Every other way it ends stays silent: 0 HP, an incapacitating
 state, a replacing cast and a rest are all consequences of something the player just watched happen.
 
-**A hit is one event, however many types it deals.** The Damage press takes a list of parts — the
-number field and its type, plus any the player added — and each part meets its own defense before
-they are summed; temp HP, the concentration save and instant death are then asked ONCE, of the
-total, because that is what one hit is. Each part leaves a line in the roll log saying what it was
-(`combat.log.damageTaken*`: a key and its values, the type after a separator rather than inside the
-phrase), which is the only record of what the damage WAS — the hit points say what was left. A Heal
-press leaves the same kind of line (`combat.log.hitPointsRestored`), for what came BACK rather than
-what was entered: healing past the maximum is lost, and a press that restored nothing records nothing.
+**A Damage press is one hit of one type.** It meets its own defense, and temp HP, the concentration
+save and instant death are then asked of what is left. A hit of two types — a flame tongue's slashing
+and its fire — is two presses: composing it in one press put a second amount, a second type and an
+add control on the damage line of every character to serve the few hits that need them. The press
+leaves a line in the roll log saying what it was (`combat.log.damageTaken*`: a key and its values,
+the type after a separator rather than inside the phrase), which is the only record of what the
+damage WAS — the hit points say what was left. A Heal press leaves the same kind of line
+(`combat.log.hitPointsRestored`), for what came BACK rather than what was entered: healing past the
+maximum is lost, and a press that restored nothing records nothing. Healing reads a number of its
+own, never the hit's: one field that means damage on one press and healing on the next is how a
+slip heals back what was just taken.
+
+**The concentration saves hits leave owed are a QUEUE, and the player may merge it.** RAW owes one
+save per hit, at the DC that hit's damage sets, and the app cannot tell two blows from one hit
+entered as two presses. So each press owes its own, oldest first on the concentration chip, and one
+control says "that was one hit": the queue becomes one save at the DC of the damage it sums to,
+which is why an owed save keeps its `damage` beside its `dc`. The queue is the screen's, not
+play-state — it does not survive a reload — and a save is dropped when the concentration it names
+ends or is replaced.
+
+**Stable is the death-save track itself.** Three successes with no failures at 0 hit points IS the
+record: RAW resets "the number of both" on becoming stable, and what is kept is the three successes
+that say so. `isStable` (`$lib/play/hit-points`) reads it, so there is no second field to disagree
+with the track. A stable character rolls no death save; any damage — a hit, or a failure pressed by
+hand — clears the successes and starts the dying again; any hit point regained clears the track.
+
+**A critical on a body at 0 hit points is two failures, and the second is pressed by hand.** The
+Damage press has no attack behind it to read a critical from, so the rule it applies is the plain
+one, and the track's own skulls are how the player says the hit cost two.
 
 **Several saves for one lump of equal projectiles is deliberately not built.** Magic Missile's darts
 each raise their own save in 2014; the way to say that is to press Damage once per dart, which is the

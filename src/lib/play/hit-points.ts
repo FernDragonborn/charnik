@@ -41,7 +41,29 @@ const CONCENTRATION_DC_FLOOR = 10;
 const CONCENTRATION_DC_CAP_2024 = 30;
 
 const DEATH_SAVE_DC = 10;
-const DEATH_SAVE_TRACK = 3;
+/** How many saves of one kind end the dying: the third failure kills, the third success stabilises. */
+export const DEATH_SAVE_TRACK = 3;
+
+/**
+ * The DC of the concentration save a hit of `damage` makes due: RAW's floor, or half the damage
+ * when that is higher, under the cap the 2024 rules state.
+ */
+export const concentrationSaveDc = (damage: number, system: Character['system']): number =>
+	Math.min(
+		system === '5.5e' ? CONCENTRATION_DC_CAP_2024 : Number.POSITIVE_INFINITY,
+		Math.max(CONCENTRATION_DC_FLOOR, Math.floor(damage / 2)),
+	);
+
+/**
+ * Stable: at 0 hit points with the third success on the track, and not dead. The track IS the
+ * record — RAW resets "the number of both" on becoming stable, and what it leaves here is the three
+ * successes that say so and no failures — so there is no second field to disagree with it.
+ */
+export const isStable = (play: CharacterPlay): boolean =>
+	!play.death && play.hp.current === 0 && play.deathSaves.successes >= DEATH_SAVE_TRACK;
+
+/** The third success: stable, with every failure forgotten. */
+const STABLE_TRACK = { successes: DEATH_SAVE_TRACK, failures: 0 };
 
 /** One typed part of a hit as it is dealt. */
 export interface DamagePart {
@@ -110,29 +132,17 @@ function dead(play: CharacterPlay, cause: DeathCause, notices: PlayNotice[]): Ch
 	return { ...play, death: { cause } };
 }
 
-/** A hit: its parts, and whether it was a critical — which only matters to a body already at 0. */
-export interface DamageIntent {
-	parts: readonly DamagePart[];
-	crit: boolean;
-}
-
 /**
- * Take a hit. Each part meets its own defense BEFORE temp HP soaks anything (RAW ordering), and the
- * hit is their sum: temp HP, a form's own hit points, instant death and the concentration save are
- * asked of the total.
+ * Take a hit of one type. It meets its defense BEFORE temp HP soaks anything (RAW ordering); temp
+ * HP, a form's own hit points, instant death and the concentration save are asked of what is left.
+ * A hit of two types is two of these, and the saves they leave owed are the host's to merge.
  */
-export function takeDamage(
-	character: Character,
-	intent: DamageIntent,
-	ctx: PlayContext,
-): PlayOutcome {
+export function takeDamage(character: Character, hit: DamagePart, ctx: PlayContext): PlayOutcome {
 	let sheet = ctx.derive(character);
-	const parts = intent.parts.map((part) => resolveDamagePart(part, sheet.damageSensitivities));
-	const taken = parts.reduce((sum, part) => sum + part.final, 0);
-	// what the damage WAS is recorded, part by part: the hit points only say what was left
-	const log: PlayLogLine[] = parts
-		.filter((part) => part.raw > 0)
-		.map((part) => ({ name: damageTakenName(part) }));
+	const part = resolveDamagePart(hit, sheet.damageSensitivities);
+	const taken = part.final;
+	// what the damage WAS is recorded: the hit points only say what was left
+	const log: PlayLogLine[] = part.raw > 0 ? [{ name: damageTakenName(part) }] : [];
 	const notices: PlayNotice[] = [];
 
 	let play = character.play;
@@ -165,25 +175,25 @@ export function takeDamage(
 	// both editions run the 5.1 text. docs/internals/rules-core.md ▸ RAW, RAI, and saying which
 	if (play.hp.current === 0 && left - before >= hitPointMaximum(character, sheet))
 		play = dead(play, 'massive_damage', notices);
-	// RAW, both editions: damage taken while ALREADY at 0 HP is a death-save failure — two if the hit
-	// was a critical. Unconditional in the book, so it is applied rather than offered. `taken`, not
-	// `left`: the text says "any damage", and temp HP soaking it does not un-hit a dying body.
+	// RAW, both editions: damage taken while ALREADY at 0 HP is a death-save failure, and a stable
+	// creature "stops being stable, and must start making death saving throws again". Unconditional
+	// in the book, so it is applied rather than offered. `taken`, not `left`: the text says "any
+	// damage", and temp HP soaking it does not un-hit a dying body. A critical is two failures, and
+	// the sheet has no hit to read that from — the player presses the second (`setDeathSavePip`).
 	if (before === 0 && taken > 0 && !play.death) {
-		const count = intent.crit ? 2 : 1;
-		const failures = Math.min(DEATH_SAVE_TRACK, play.deathSaves.failures + count);
-		play = { ...play, deathSaves: { ...play.deathSaves, failures } };
-		notices.push({ text: { key: 'combat.notice.deathFailureFromDamage', values: { count } } });
+		const failures = Math.min(DEATH_SAVE_TRACK, play.deathSaves.failures + 1);
+		const successes = isStable(play) ? 0 : play.deathSaves.successes;
+		play = { ...play, deathSaves: { successes, failures } };
+		notices.push({ text: { key: 'combat.notice.deathFailureFromDamage', values: { count: 1 } } });
 		if (failures >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves', notices);
 	}
-	// Damage while concentrating makes a CON save due — DC max(10, ⌊damage/2⌋), capped at 30 in 2024.
-	// It is OWED, not rolled: the player presses it. At 0 HP concentration ends on its own.
+	// Damage while concentrating makes a CON save due. It is OWED, not rolled: the player presses
+	// it. At 0 HP concentration ends on its own.
 	const owed =
 		taken > 0 && play.concentration && play.hp.current > 0
 			? {
-					dc: Math.min(
-						character.system === '5.5e' ? CONCENTRATION_DC_CAP_2024 : Number.POSITIVE_INFINITY,
-						Math.max(CONCENTRATION_DC_FLOOR, Math.floor(taken / 2)),
-					),
+					dc: concentrationSaveDc(taken, character.system),
+					damage: taken,
 					spell: play.concentration,
 				}
 			: undefined;
@@ -246,9 +256,12 @@ const rollD20 = (fx: RollEffects, mod: number, ctx: PlayContext): Rolled =>
 /**
  * Roll a death save: a d20 against 10, with whatever `save.death` picks up (Bless, exhaustion).
  * RAW: a natural 20 puts you back up at 1 HP; a natural 1 is two failures; 10 or more is a success,
- * and three of them leave you stable with the track reset; the third failure kills.
+ * and the third leaves you stable; the third failure kills. Nobody who is not dying rolls one — a
+ * stable creature "doesn't make death saving throws" — so there the press is refused.
  */
 export function rollDeathSave(character: Character, ctx: PlayContext): PlayOutcome {
+	const dying = character.play.hp.current === 0 && !character.play.death;
+	if (!dying || isStable(character.play)) return { ...quietly(character), refused: true };
 	const fx = sheetRollEffects(character, ctx.derive(character), 'save.death');
 	const r = rollD20(fx, fx.flat, ctx);
 	const notices: PlayNotice[] = [];
@@ -270,7 +283,7 @@ export function rollDeathSave(character: Character, ctx: PlayContext): PlayOutco
 			deathSaves: { successes: Math.min(DEATH_SAVE_TRACK, successes + 1), failures },
 		};
 		if (play.deathSaves.successes >= DEATH_SAVE_TRACK) {
-			play = notDying(play);
+			play = { ...play, deathSaves: STABLE_TRACK };
 			notices.push({ text: { key: 'combat.notice.stabilised' } });
 		}
 	} else {
@@ -301,16 +314,22 @@ export interface DeathSavePip {
 /**
  * Set a death-save track by hand (players track at the table too): pressing a pip fills to it, or
  * clears it when it is already the last filled one. A track filled by hand means what the rolled
- * one means — the third failure kills, the third success leaves you stable with the track reset.
+ * one means — the third failure kills, the third success leaves you stable — and a failure pressed
+ * on a stable character is the damage that ends being stable.
  */
 export function setDeathSavePip(character: Character, { kind, index }: DeathSavePip): PlayOutcome {
 	const notices: PlayNotice[] = [];
 	const saves = character.play.deathSaves;
 	const count = saves[kind] === index + 1 ? index : index + 1;
-	let play: CharacterPlay = { ...character.play, deathSaves: { ...saves, [kind]: count } };
+	const pressed = { ...saves, [kind]: count };
+	const unsettled = kind === 'failures' && count > 0 && isStable(character.play);
+	let play: CharacterPlay = {
+		...character.play,
+		deathSaves: unsettled ? { ...pressed, successes: 0 } : pressed,
+	};
 	if (kind === 'failures' && count >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves', notices);
 	if (kind === 'successes' && count >= DEATH_SAVE_TRACK) {
-		play = notDying(play);
+		play = { ...play, deathSaves: STABLE_TRACK };
 		notices.push({ text: { key: 'combat.notice.stabilised' } });
 	}
 	return { character: { ...character, play }, log: [], notices };

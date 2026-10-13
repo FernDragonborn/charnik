@@ -179,7 +179,7 @@
 			<div class="menu-panel">
 				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.tempHpTitle')}</div>
 				<div class="field">
-					<input type="number" bind:value={combat.tempHpInput} />
+					<input type="number" bind:value={combat.healAmount} />
 					<button class="submit-btn" onclick={setTempHp}>{$_('combat.menu.set')}</button>
 				</div>
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>

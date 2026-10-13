@@ -5,7 +5,7 @@
  * The RULES are not here. Damage, healing, the death-save track and the lethal rules are pure
  * actions in `$lib/play/hit-points`; this builds each one's intent from the fields below and hands
  * it to the view-model to carry out. What stays is what only a screen has: the amount being typed,
- * the type picked for it, the parts of a hit still being put together, and the save a hit left owed.
+ * the type picked for it, and the concentration saves hits have left owed.
  *
  * `hpMax` is the EFFECTIVE max, so it stays the answer to "how much HP" for everything above:
  * the view-model re-exposes it (A14 — a manual max still has `hp_max` effects folded onto it), and
@@ -16,6 +16,7 @@ import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
 import {
+	concentrationSaveDc,
 	die,
 	heal,
 	hitPointMaximum,
@@ -39,9 +40,6 @@ export interface DamagePreview {
 	bucket: Exclude<SensitivityBucket, null>;
 }
 
-/** One typed part of a hit as the player enters it. */
-export type DamagePartInput = DamagePart;
-
 /** What the hit-point controls need from the sheet around them. */
 export interface HitPointsHost {
 	character: Character | null;
@@ -54,23 +52,51 @@ export interface HitPointsHost {
 export class HitPoints {
 	constructor(private host: () => HitPointsHost) {}
 
-	/** The temp-HP popover's amount (two-way bound in the markup through the view-model). */
-	tempHpInput = $state(5);
+	/** The green popover's ONE number: what Heal restores and what Temp HP is set to. Healing does
+	 *  not share the hit's amount — a field that means damage on one press and healing on the next is
+	 *  how 12 damage gets healed back by a slip. */
+	healAmount = $state(5);
 	setTempHp = () => {
-		this.host().act((c) => setTempHp(c, { amount: this.tempHpInput }));
+		this.host().act((c) => setTempHp(c, { amount: this.healAmount }));
 		this.host().overlay = null;
 	};
 
 	hpAmount = $state(1);
-	/** B4 concentration-save banner: a CON save the player owes after taking damage while
-	 *  concentrating. `dc` is the suggested-but-editable DC. Null = no check due. A hit leaves it,
-	 *  any rolled save answers it, and the view-model drops it when the concentration it names ends
-	 *  or is replaced.
+	/**
+	 * The CON saves the player owes after taking damage while concentrating, oldest first — a QUEUE,
+	 * because each hit owes its own (RAW), and the concentration chip says and rolls the first. Each
+	 * `dc` is suggested and editable. A hit adds one, a rolled or waved-off save takes the first, and
+	 * the view-model drops the ones whose concentration ended or was replaced.
 	 *
-	 *  `spell` is WHICH concentration it is owed for: an owed save is a fact about one spell, and
-	 *  without the name the banner re-attached itself to whatever was concentrated on next — asking
-	 *  for a spell that had never been hit. */
-	pendingConcentrationSave = $state<OwedConcentrationSave | null>(null);
+	 * `spell` is WHICH concentration a save is owed for: an owed save is a fact about one spell, and
+	 * without the name it re-attaches itself to whatever is concentrated on next — asking for a spell
+	 * that was never hit.
+	 */
+	owedConcentrationSaves = $state<OwedConcentrationSave[]>([]);
+	owe = (save: OwedConcentrationSave) => {
+		this.owedConcentrationSaves = [...this.owedConcentrationSaves, save];
+	};
+	/** Keep only the saves owed for `spell` — the concentration that is still held. */
+	keepOwedFor = (spell: string | null) => {
+		if (this.owedConcentrationSaves.some((save) => save.spell !== spell))
+			this.owedConcentrationSaves = this.owedConcentrationSaves.filter(
+				(save) => save.spell === spell,
+			);
+	};
+	/**
+	 * "That was one hit": every owed save becomes one, at the DC of the damage they sum to. The app
+	 * cannot tell a flame tongue's two presses from two blows, and the rules differ — two blows owe
+	 * two saves, one hit of two types owes one at the DC of its total — so the player says which.
+	 */
+	mergeOwedConcentrationSaves = () => {
+		const [first] = this.owedConcentrationSaves;
+		const system = this.host().character?.system;
+		if (!first || !system) return;
+		const damage = this.owedConcentrationSaves.reduce((sum, save) => sum + save.damage, 0);
+		this.owedConcentrationSaves = [
+			{ spell: first.spell, damage, dc: concentrationSaveDc(damage, system) },
+		];
+	};
 	/** The CON saving-throw bonus a concentration save rolls (d20 + this). */
 	get concentrationSaveMod(): number {
 		return this.host().sheet?.abilities.con.save.value ?? 0;
@@ -96,68 +122,38 @@ export class HitPoints {
 	get damagePreview(): DamagePreview | null {
 		return this.previewOf({ amount: this.hpAmount, type: this.damageType });
 	}
-	/** The same answer for any one part of the hit. */
-	previewOf = (part: DamagePartInput): DamagePreview | null => {
+	/** The same answer for any hit — the type menu asks it of every type it lists. */
+	previewOf = (hit: DamagePart): DamagePreview | null => {
 		const sheet = this.host().sheet;
 		if (!sheet) return null;
-		const { raw, final, bucket } = resolveDamagePart(part, sheet.damageSensitivities);
+		const { raw, final, bucket } = resolveDamagePart(hit, sheet.damageSensitivities);
 		return raw > 0 && bucket ? { raw, final, bucket } : null;
 	};
 
-	/**
-	 * The FURTHER parts of the hit being entered, when it deals more than one type — a flame tongue's
-	 * slashing and its fire. The number field and the type picker above are the first part; each of
-	 * these is another amount with its own type, and its own defense. One press takes them all as ONE
-	 * hit. Cleared by the press, like the crit answer.
-	 */
-	moreParts = $state<DamagePartInput[]>([]);
-	addPart = () => {
-		this.moreParts = [...this.moreParts, { amount: 1, type: null }];
-	};
-	removePart = (index: number) => {
-		this.moreParts = this.moreParts.filter((_, i) => i !== index);
-	};
-
-	/** Was the hit that is being entered a CRITICAL? Only asked at 0 HP, where it is the difference
-	 *  between one death-save failure and two — the Damage button has no attack behind it to read
-	 *  crit-ness from, and one checkbox beats inferring it wrong. Default off, off again after each
-	 *  hit, and off as soon as dying stops (`dyingStopped`) — its control only renders at 0 HP, so a
-	 *  flag that outlived that is a flag nobody can see or unset. */
-	damageWasCrit = $state(false);
-
-	/** The character left 0 HP or became stable, so the crit answer has nothing left to be about.
-	 *  Ticked and then healed instead of hit, it would sit invisible and cost two failures on some
-	 *  later ordinary hit. */
-	dyingStopped = () => {
-		this.damageWasCrit = false;
-	};
-
 	damage = () => {
-		const parts = [{ amount: this.hpAmount, type: this.damageType }, ...this.moreParts];
-		const crit = this.damageWasCrit;
-		this.moreParts = [];
-		// crit-ness belongs to ONE hit, never to the next one
-		this.damageWasCrit = false;
-		this.host().act((c, ctx) => takeDamage(c, { parts, crit }, ctx));
+		const hit = { amount: this.hpAmount, type: this.damageType };
+		this.host().act((c, ctx) => takeDamage(c, hit, ctx));
 	};
-	heal = () => this.host().act((c, ctx) => heal(c, { amount: this.hpAmount }, ctx));
+	heal = () => {
+		this.host().act((c, ctx) => heal(c, { amount: this.healAmount }, ctx));
+		this.host().overlay = null;
+	};
 
 	/**
-	 * Roll a concentration save — from the owed check (B4 banner) or from the concentration chip with
-	 * nothing owed, which is the table asking for one the app cannot see the trigger for. Rolled at
-	 * once and applied, like a death save: the tray has no result callback.
+	 * Roll a concentration save — the first one owed, or with nothing owed the one the table asks
+	 * for and the app cannot see the trigger of. Rolled at once and applied, like a death save: the
+	 * tray has no result callback.
 	 */
 	rollConcentrationSave = () => {
-		const owed = this.pendingConcentrationSave;
+		const [owed, ...rest] = this.owedConcentrationSaves;
+		// answered either way, and before the roll: a miss ends the spell and takes the rest with it
+		this.owedConcentrationSaves = rest;
 		this.host().act((c, ctx) => rollConcentrationSave(c, owed ? { dc: owed.dc } : {}, ctx));
-		// the check is answered either way
-		this.pendingConcentrationSave = null;
 	};
-	/** The B4 banner's ✕ — dismiss the reminder WITHOUT ending concentration. The spell keeps going:
-	 *  the player is waving off the check (rolling it physically, a feature that ignores it, or not
-	 *  caring). Surface, never force — a reminder must be dismissable. */
+	/** Wave the first owed save off WITHOUT ending concentration: the player rolled it at the table,
+	 *  a feature ignores it, or they do not care. Surface, never force — a reminder is dismissable. */
 	dismissConcentrationSave = () => {
-		this.pendingConcentrationSave = null;
+		this.owedConcentrationSaves = this.owedConcentrationSaves.slice(1);
 	};
 
 	/** Roll a death save (shown while at 0 HP). Always rolled at once and applied: unlike other rolls

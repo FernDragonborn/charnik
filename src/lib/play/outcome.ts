@@ -69,9 +69,12 @@ type PlayRequest =
 	| { kind: typeof PLAY_REQUEST.cast; spell: string; ritual: boolean; slotLevel: number }
 	| { kind: typeof PLAY_REQUEST.weapon; spell: string };
 
-/** A concentration save a hit has made due: the DC, and the spell it is owed for. */
+/** A concentration save a hit has made due: the damage that made it due, the DC that damage sets,
+ *  and the spell it is owed for. The damage is kept because two of these may turn out to be ONE hit
+ *  of two types, and then the DC is the sum's. */
 export interface OwedConcentrationSave {
 	dc: number;
+	damage: number;
 	spell: string;
 }
 

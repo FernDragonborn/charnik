@@ -11,9 +11,11 @@
 	import { _ } from '$lib/i18n';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { provenance } from '$lib/actions/provenance';
+	import { signed } from '$lib/util/format';
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
+	const owed = $derived(combat.hp.owedConcentrationSaves);
 	const shield = $derived(combat.inventory.shield);
 	const form = $derived(combat.forms.current);
 	const { openDice } = combat;
@@ -54,12 +56,50 @@
 			<button
 				class="toggle concentration on"
 				onclick={combat.rollConcentrationSave}
-				use:provenance={$_('combat.controls.concentrationHint')}
+				use:provenance={owed.length
+					? $_('combat.controls.concentrationOwedHint', {
+							values: {
+								dc: owed[0]?.dc,
+								mod: signed(combat.concentrationSaveMod),
+								count: owed.length,
+							},
+						})
+					: $_('combat.controls.concentrationHint')}
 				><Icon name="target" />
 				{$_('combat.controls.concentration')}
-				<span class="toggle-state">{conc.label}</span></button
+				<span class="toggle-state">{conc.label}</span>
+				<!-- one mark per save owed, oldest first: two hits before a roll are two saves -->
+				{#each owed as save, index (index)}
+					<span class="toggle-state owed"
+						>{$_('combat.controls.concentrationDc', { values: { dc: save.dc } })}</span
+					>
+				{/each}</button
 			>
 			<span class="conc-drop">
+				{#if owed[0]}
+					<!-- suggested, and the table's to overrule -->
+					<input
+						class="conc-dc"
+						type="number"
+						min="1"
+						bind:value={owed[0].dc}
+						aria-label={$_('combat.hp.concentrationDc')}
+					/>
+					{#if owed.length > 1}
+						<button
+							class="conc-act"
+							onclick={combat.hp.mergeOwedConcentrationSaves}
+							use:provenance={$_('combat.controls.concentrationOneHitHint')}
+							>{$_('combat.controls.concentrationOneHit')}</button
+						>
+					{/if}
+					<button
+						class="conc-act"
+						onclick={combat.dismissConcentrationSave}
+						use:provenance={$_('combat.hp.keepConcentrating')}
+						>{$_('combat.controls.concentrationSkip')}</button
+					>
+				{/if}
 				<button
 					class="conc-end"
 					onclick={combat.endConcentrationByHand}
@@ -166,6 +206,8 @@
 		padding-top: var(--space-1);
 		display: flex;
 		justify-content: center;
+		align-items: center;
+		gap: var(--space-1);
 		opacity: 0;
 		/* not `visibility`, which would take it out of the tab order — the keyboard reaches it and the
 		   rule below is what reveals it. */
@@ -209,6 +251,39 @@
 	.toggle.concentration.on .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
+	}
+	/* an owed save is the one FILLED mark on the chip: it is what the next press answers */
+	.toggle.concentration.on .toggle-state.owed {
+		background: var(--color-accent);
+		color: var(--color-accent-text);
+	}
+	.conc-dc {
+		width: calc(1.5 * var(--space-8));
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-sm);
+		color: var(--color-text);
+		padding: var(--space-1);
+	}
+	.conc-act {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		color: var(--color-text-muted);
+	}
+	.conc-act:hover,
+	.conc-act:focus-visible {
+		color: var(--color-text);
+		border-color: var(--color-text-muted);
 	}
 	/* a chip that is not a button: it states the form, and the control hangs under it */
 	.toggle.form {

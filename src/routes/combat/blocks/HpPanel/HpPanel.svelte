@@ -65,15 +65,6 @@
 			>
 		</div>
 	</div>
-	<!-- At 0 HP the next hit is a death-save failure, and TWO if it was a critical — RAW, and the one
-	     thing the Damage button cannot know, since there is no attack behind it to read. Asked only
-	     here, where it changes something. -->
-	{#if combat.character?.play.hp.current === 0 && !combat.character?.play.death}
-		<label class="crit-ask">
-			<input type="checkbox" bind:checked={combat.hp.damageWasCrit} />
-			{$_('combat.hp.wasCritical')}
-		</label>
-	{/if}
 	<!-- B20: what the incoming damage IS. A type the sheet has a defense for changes the number —
 	     resist (½) / immune (0) / vulnerable (×2) — and those are listed first; any other is what the
 	     log records the hit as. Untyped = plain damage. -->
@@ -85,85 +76,18 @@
 		>
 			{@render typeOptions()}
 		</select>
-		<!-- a hit of two types is ONE hit: each part meets its own defense, the press takes the sum -->
-		<button
-			class="hp-part-add"
-			onclick={combat.hp.addPart}
-			title={$_('combat.hp.addDamageType')}
-			aria-label={$_('combat.hp.addDamageType')}><Icon name="plus" size={12} /></button
-		>
 	</div>
-	{#each combat.hp.moreParts as part, index (index)}
-		<div class="hp-type-row">
-			<input
-				class="hp-number part"
-				type="number"
-				min="0"
-				bind:value={part.amount}
-				aria-label={$_('combat.hp.hpAmount')}
-			/>
-			<select
-				class="hp-damage-type"
-				bind:value={part.type}
-				aria-label={$_('combat.hp.damageTypeLabel')}
-			>
-				{@render typeOptions()}
-			</select>
-			<button
-				class="hp-part-add"
-				onclick={() => combat.hp.removePart(index)}
-				title={$_('combat.hp.removeDamageType')}
-				aria-label={$_('combat.hp.removeDamageType')}><Icon name="x" size={12} /></button
-			>
-		</div>
-	{/each}
 	<!-- what the press WILL take, before it is pressed: a tracker surfaces and the player confirms -->
 	<p class="hp-damage-preview" aria-live="polite">
-		{#each [combat.hp.damagePreview, ...combat.hp.moreParts.map(combat.hp.previewOf)] as preview, index (index)}
-			{#if preview}
-				<span class={preview.final < preview.raw ? 'less' : 'more'}
-					>{$_(`combat.hp.damagePreview.${preview.bucket}`, {
-						values: { raw: preview.raw, final: preview.final },
-					})}</span
-				>
-			{/if}
-		{/each}
-	</p>
-	<!-- B4: concentration-save banner — a thin, persistent bar shown while a CON save is DUE after
-	     taking damage while concentrating. Suggested-but-editable DC, and the PLAYER rolls it; a miss
-	     ends the spell, which is RAW and not a choice (hit-points.svelte.ts ▸ rollConcentrationSave).
-	     Ending it deliberately is the concentration chip's ✕ in the toolbar, not a third button here. -->
-	{#if combat.pendingConcentrationSave && combat.conc}
-		{@const pend = combat.pendingConcentrationSave}
-		<div class="conc-banner" role="status">
-			<span class="conc-warn"
-				><Icon name="triangle-alert" size={13} /> {$_('combat.hp.concentrationCheck')}</span
+		{#if combat.hp.damagePreview}
+			{@const preview = combat.hp.damagePreview}
+			<span class={preview.final < preview.raw ? 'less' : 'more'}
+				>{$_(`combat.hp.damagePreview.${preview.bucket}`, {
+					values: { raw: preview.raw, final: preview.final },
+				})}</span
 			>
-			<span class="conc-detail">
-				{combat.conc.label} · DC
-				<input
-					class="conc-dc"
-					type="number"
-					min="1"
-					bind:value={pend.dc}
-					aria-label={$_('combat.hp.concentrationDc')}
-				/>
-				· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
-			</span>
-			<span class="conc-actions">
-				<button class="conc-btn roll" onclick={combat.rollConcentrationSave}
-					><DiceIcon size={14} /> {$_('combat.hp.roll')}</button
-				>
-				<button
-					class="conc-btn dismiss"
-					title={$_('combat.hp.keepConcentrating')}
-					aria-label={$_('combat.hp.keepConcentratingAria')}
-					onclick={combat.dismissConcentrationSave}
-					><Icon name="x" size={13} label={$_('combat.hp.dismiss')} /></button
-				>
-			</span>
-		</div>
-	{/if}
+		{/if}
+	</p>
 	<!-- Hit Dice live entirely in the "☾ Short" rest popover now (spend + remaining), not on this panel. -->
 	<!-- death takes over the whole sheet (DeathScreen), so the pips stay out of its way -->
 	{#if downed && !c.play.death}
@@ -266,17 +190,6 @@
 	.temptag:hover {
 		filter: brightness(1.14);
 	}
-	/* the crit question sits under the damage row it qualifies, in the same muted register as the
-	   damage-type select beside it */
-	.crit-ask {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1-5);
-		margin-top: var(--space-1-5);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
 	.hitpoints .hitpoints-value {
 		font-family: var(--font-display);
 		font-weight: 700;
@@ -359,38 +272,11 @@
 	.hp-damage-preview .more {
 		color: var(--color-danger);
 	}
-	/* the type, and the control that adds a second one, on one line; a further part repeats the line
-	   with its own amount in front */
 	.hp-type-row {
 		display: flex;
 		align-items: center;
 		gap: var(--space-1-5);
 		margin-top: var(--space-1-5);
-	}
-	/* a further part's amount: as wide as a damage number, so its type keeps the rest of the line */
-	.hp-number.part {
-		flex: none;
-		width: calc(1.5 * var(--space-8));
-	}
-	.hp-part-add {
-		flex: none;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-1);
-		border-radius: var(--radius);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-	.hp-part-add:hover,
-	.hp-part-add:focus-visible {
-		border-color: var(--color-accent);
-		color: var(--color-text);
-	}
-	.hp-damage-preview span + span {
-		margin-inline-start: var(--space-2);
 	}
 	.hp-damage-type {
 		flex: 1;
@@ -403,77 +289,6 @@
 		color: var(--color-text);
 		cursor: pointer;
 	}
-	/* B4 concentration-save banner — thin inline bar (not floating, not modal) */
-	.conc-banner {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-		margin-top: var(--space-2-5);
-		padding: var(--space-1-5) var(--space-2-5);
-		border-radius: var(--radius-md);
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		font-size: var(--font-size-xs);
-	}
-	.conc-warn {
-		font-family: var(--font-display);
-		font-weight: 600;
-		color: var(--color-accent-bright);
-	}
-	.conc-detail {
-		color: var(--color-text-muted);
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-	}
-	.conc-dc {
-		width: 44px;
-		text-align: center;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		color: var(--color-text);
-		padding: 2px var(--space-1);
-	}
-	.conc-btn {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-xs);
-		padding: var(--space-1) var(--space-2-5);
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		border: 1px solid var(--color-border);
-		background: var(--color-surface-2);
-		color: var(--color-text);
-	}
-	.conc-actions {
-		margin-inline-start: auto;
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1-5);
-	}
-	.conc-btn.roll {
-		background: var(--color-accent-soft);
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
-	}
-	.conc-btn.dismiss {
-		padding: var(--space-1) var(--space-2);
-		background: transparent;
-		border-color: transparent;
-		color: var(--color-text-muted);
-	}
-	.conc-btn:hover {
-		filter: brightness(1.12);
-	}
-	.conc-btn.dismiss:hover {
-		background: var(--color-surface-2);
-		filter: none;
-	}
-
 	.death-saves {
 		margin-top: var(--space-3);
 		padding-top: var(--space-2-5);

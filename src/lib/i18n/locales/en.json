@@ -561,7 +561,12 @@
 			"longHint": "Long rest",
 			"diceTray": "Dice tray",
 			"on": "ON",
-			"off": "OFF"
+			"off": "OFF",
+			"concentrationOwedHint": "Roll the owed concentration save — DC {dc}, d20 {mod}.{count, plural, one {} other { # saves are owed; this is the oldest.}}",
+			"concentrationDc": "DC {dc}",
+			"concentrationOneHit": "One hit",
+			"concentrationOneHitHint": "These were one hit of several damage types: one save is owed, at the DC of the total damage.",
+			"concentrationSkip": "Skip"
 		},
 		"death": {
 			"backToRoster": "Back to the roster",
@@ -644,9 +649,6 @@
 			"proficiency": "Proficiency"
 		},
 		"hp": {
-			"addDamageType": "Add another damage type to this hit",
-			"removeDamageType": "Remove this damage type",
-			"concentrationCheck": "Concentration check",
 			"concentrationDc": "Concentration save DC",
 			"damage": "Damage",
 			"damagePreview": {
@@ -659,7 +661,6 @@
 			"deathFailures": "Death save failures",
 			"deathSave": "Death save",
 			"deathSuccesses": "Death save successes",
-			"dismiss": "Dismiss",
 			"endConcentration": "End concentration on {spell}",
 			"failure": "Failure",
 			"failureN": "Failure {n}",
@@ -668,15 +669,12 @@
 			"hitPoints": "Hit points",
 			"hpAmount": "HP amount",
 			"keepConcentrating": "Dismiss — keep concentrating",
-			"keepConcentratingAria": "Dismiss, keep concentrating",
-			"roll": "Roll",
 			"rollDeathSave": "Roll a death save",
 			"success": "Success",
 			"successN": "Success {n}",
 			"temp": "temp",
 			"tempHp": "Temp HP",
-			"untyped": "untyped",
-			"wasCritical": "That hit was a critical"
+			"untyped": "untyped"
 		},
 		"inventory": {
 			"addItem": "Add an item",

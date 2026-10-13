@@ -561,7 +561,12 @@
 			"longHint": "Довгий відпочинок",
 			"diceTray": "Лоток кісток",
 			"on": "УВІМК",
-			"off": "ВИМК"
+			"off": "ВИМК",
+			"concentrationOwedHint": "Кинути належний рятівний кидок на концентрацію — СК {dc}, d20 {mod}.{count, plural, one {} few { Належить # кидки; це найдавніший.} many { Належить # кидків; це найдавніший.} other { Належить # кидка; це найдавніший.}}",
+			"concentrationDc": "СК {dc}",
+			"concentrationOneHit": "Один удар",
+			"concentrationOneHitHint": "Це був один удар кількох типів шкоди: належить один кидок зі СК від сумарної шкоди.",
+			"concentrationSkip": "Пропустити"
 		},
 		"death": {
 			"backToRoster": "Повернутися до списку",
@@ -644,9 +649,6 @@
 			"proficiency": "Володіння"
 		},
 		"hp": {
-			"addDamageType": "Додати до цього удару ще один тип шкоди",
-			"removeDamageType": "Прибрати цей тип шкоди",
-			"concentrationCheck": "Перевірка концентрації",
 			"concentrationDc": "СК рятівного кидка на концентрацію",
 			"damage": "Шкода",
 			"damagePreview": {
@@ -659,7 +661,6 @@
 			"deathFailures": "Провали рятівних кидків від смерті",
 			"deathSave": "Кидок від смерті",
 			"deathSuccesses": "Успіхи рятівних кидків від смерті",
-			"dismiss": "Сховати",
 			"endConcentration": "Припинити концентрацію на {spell}",
 			"failure": "Провал",
 			"failureN": "Провал {n}",
@@ -668,15 +669,12 @@
 			"hitPoints": "Очки здоров’я",
 			"hpAmount": "Кількість ОЗ",
 			"keepConcentrating": "Сховати — концентрація триває",
-			"keepConcentratingAria": "Сховати, концентрація триває",
-			"roll": "Кидок",
 			"rollDeathSave": "Кинути рятівний кидок від смерті",
 			"success": "Успіх",
 			"successN": "Успіх {n}",
 			"temp": "тимч.",
 			"tempHp": "Тимч. ОЗ",
-			"untyped": "без типу",
-			"wasCritical": "Це був критичний удар"
+			"untyped": "без типу"
 		},
 		"inventory": {
 			"addItem": "Додати предмет",

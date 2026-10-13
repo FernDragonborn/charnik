@@ -13,6 +13,7 @@ import type { ContentGraph } from '$lib/content/loader';
 import {
 	heal,
 	hitPointMaximum,
+	isStable,
 	revive,
 	rollConcentrationSave,
 	rollDeathSave,
@@ -69,7 +70,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 	it('a hit soaks temp HP first, records itself, and leaves its input alone', () => {
 		const c = fighter((x) => (x.play.hp.temp = 4));
 		const full = c.play.hp.current;
-		const out = takeDamage(c, { parts: [{ amount: 10, type: null }], crit: false }, ctx());
+		const out = takeDamage(c, { amount: 10, type: null }, ctx());
 		expect(out.character.play.hp).toMatchObject({ current: full - 6, temp: 0 });
 		expect(out.log.map((line) => line.name.key)).toEqual(['combat.log.damageTaken']);
 		expect(c.play.hp).toMatchObject({ current: full, temp: 4 });
@@ -81,18 +82,17 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 			x.play.hp = { current: 200, max: 200, temp: 0 };
 			x.play.concentration = spell;
 		});
-		const hit = (amount: number) =>
-			takeDamage(c, { parts: [{ amount, type: null }], crit: false }, ctx()).concentrationSave;
-		expect(hit(6)).toEqual({ dc: 10, spell });
-		expect(hit(70)).toEqual({ dc: system === '5.5e' ? 30 : 35, spell });
+		const hit = (amount: number) => takeDamage(c, { amount, type: null }, ctx()).concentrationSave;
+		expect(hit(6)).toEqual({ dc: 10, damage: 6, spell });
+		expect(hit(70)).toEqual({ dc: system === '5.5e' ? 30 : 35, damage: 70, spell });
 	});
 
-	it('damage at 0 HP is a death-save failure, two for a critical, and the third kills', () => {
+	it('damage at 0 HP is a death-save failure, and the third kills', () => {
 		const c = fighter((x) => {
 			x.play.hp.current = 0;
-			x.play.deathSaves = { successes: 0, failures: 1 };
+			x.play.deathSaves = { successes: 0, failures: 2 };
 		});
-		const out = takeDamage(c, { parts: [{ amount: 1, type: null }], crit: true }, ctx());
+		const out = takeDamage(c, { amount: 1, type: null }, ctx());
 		expect(out.character.play.deathSaves.failures).toBe(3);
 		expect(out.character.play.death).toEqual({ cause: 'death_saves' });
 		expect(out.notices.map((notice) => notice.text)).toMatchObject([
@@ -103,11 +103,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 
 	it('a remainder as large as the maximum kills outright', () => {
 		const c = fighter((x) => (x.play.hp.current = 3));
-		const out = takeDamage(
-			c,
-			{ parts: [{ amount: 3 + maxOf(c), type: null }], crit: false },
-			ctx(),
-		);
+		const out = takeDamage(c, { amount: 3 + maxOf(c), type: null }, ctx());
 		expect(out.character.play.death).toEqual({ cause: 'massive_damage' });
 	});
 
@@ -135,9 +131,35 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		expect(died.death).toEqual({ cause: 'death_saves' });
 
 		const stable = rollDeathSave(down, ctx(face(12)));
-		expect(stable.character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
+		expect(stable.character.play.deathSaves).toEqual({ successes: 3, failures: 0 });
+		expect(isStable(stable.character.play)).toBe(true);
 		expect(stable.character.play.hp.current).toBe(0);
 		expect(stable.log[0]?.rolled?.total).toBe(12);
+	});
+
+	it('a stable character rolls no death save, and any damage starts the dying again', () => {
+		const stable = fighter((x) => {
+			x.play.hp.current = 0;
+			x.play.deathSaves = { successes: 3, failures: 0 };
+		});
+		const rolled = rollDeathSave(stable, ctx(face(1)));
+		expect(rolled.refused).toBe(true);
+		expect(rolled.character).toBe(stable);
+
+		const hit = takeDamage(stable, { amount: 1, type: null }, ctx()).character.play;
+		expect(hit.deathSaves).toEqual({ successes: 0, failures: 1 });
+		expect(isStable(hit)).toBe(false);
+
+		const pressed = setDeathSavePip(stable, { kind: 'failures', index: 0 }).character.play;
+		expect(pressed.deathSaves).toEqual({ successes: 0, failures: 1 });
+
+		const healed = heal(stable, { amount: 4 }, ctx()).character.play;
+		expect(healed.deathSaves).toEqual({ successes: 0, failures: 0 });
+		expect(isStable(healed)).toBe(false);
+	});
+
+	it('nobody above 0 hit points rolls a death save', () => {
+		expect(rollDeathSave(fighter(), ctx(face(1))).refused).toBe(true);
 	});
 
 	it('the third pip by hand means what the rolled one means', () => {
@@ -147,7 +169,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		});
 		expect(
 			setDeathSavePip(down, { kind: 'successes', index: 2 }).character.play.deathSaves,
-		).toEqual({ successes: 0, failures: 0 });
+		).toEqual({ successes: 3, failures: 0 });
 		expect(setDeathSavePip(down, { kind: 'failures', index: 2 }).character.play.death).toEqual({
 			cause: 'death_saves',
 		});
@@ -204,7 +226,7 @@ describe('hit-point actions · a hit that breaks a form', () => {
 		c.play.hp.current = 1;
 		const out = takeDamage(
 			frozen(c),
-			{ parts: [{ amount: 10, type: null }], crit: false },
+			{ amount: 10, type: null },
 			{ derive, graph: graphs['5e'], locale: 'en' },
 		);
 		expect(out.character.play.form).toBeNull();
