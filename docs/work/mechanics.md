@@ -153,6 +153,10 @@ stay semi-manual.
      rest. Nothing on that page should repaint while nothing moves, so what does is the first thing
      to find — the fused filter, the masks and `container-type` on the bubbles are the suspects —
      before any of it is carried into the app.
+     **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
+     liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
+     cheap either, only much less so. If the liquid cannot be brought near the chevrons' cost, that
+     settles which motion ships.
   5. **How many defended types stand before the menu**: two are drawn, three fit at the wide width.
   6. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
