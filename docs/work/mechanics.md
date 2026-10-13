@@ -182,6 +182,36 @@ stay semi-manual.
      language, not the character's: it is about the person at the screen.
   5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
+  **The build, and what the prototypes do that it must not.** The mocks are the look; they are
+  not the implementation.
+  - **Where it lands.** `HpPanel.svelte` is the block. The 0 hit points face is a component of its
+    own beside it, and each motion is one more, chosen by an open enum — never a boolean, and
+    `No animation` is a member of it, not its absence.
+  - **The hit's line reuses the tray's parts.** The type pill, its chevron and the two-column type
+    menu are `RollerLine.svelte`'s; they are lifted into shared components both use, not copied.
+    The types and their matching across locales come from `dice/roller-vocabulary.ts`.
+  - **A ground is a window, moved by `transform`.** The prototype sizes a ground with `width` and
+    cuts its lean with `clip-path`; neither can be carried by the compositor. The build moves a
+    full-width slab with `translateX` and leans it with `skewX`, under the block's own clip. Every
+    motion's scene is laid out once behind it in pixels from the block's edge, and only as much of
+    it as the block is wide is rendered.
+  - **What loops is `transform` and `opacity`, nothing else** — no SVG filter, no animated mask,
+    no animated `box-shadow`. A loop stops when the face is not on screen and when the block has
+    gone black. Each motion's CPU is measured on the real app before that motion is called done.
+  - **The end faces need two things the sheet does not have.** `Dead` on black needs a ground and
+    a text token in both themes; the prototype's are literals. And three successes leave no trace
+    in the play state today — `hit-points.ts` resets the track and posts a notice — so
+    `Stabilized` has nothing to be drawn from until the state records it.
+  - **Death already owns the sheet.** `DeathScreen.svelte` is a dialog that cannot be dismissed
+    while `play.death` is set, so the `Dead` face is behind its backdrop unless one of them
+    changes. That is a decision, not a detail of the build.
+  - **The pencil stands outside the frame**, so the block gains a wrapper that does not clip it.
+    It follows the pointer and the focus, and is always there under `(hover: none)`.
+  - **The surfaces.** Both systems; right-to-left, where rescue and death trade sides and every
+    lean mirrors; both themes and a user's own; the narrow window; the keyboard path through the
+    hit's line, the pencil's list and the saves, driven in Playwright. `shot.mjs` gains the states
+    — on its feet, each count of saves, each end face — with the loops held still for the frame.
+
   **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
   rest behind a menu; **W2z** — the type and a factor `∅ ½ 1 ×2` as one joined control, where a
   said type lights its factor and the player may overrule it; each drawn type first and amount
