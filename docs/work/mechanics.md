@@ -124,19 +124,29 @@ stay semi-manual.
   - **Motion lives on that face and nowhere else on the sheet**, and stands still under
     `prefers-reduced-motion`. At two failures the block is lit and the light drifts: it may shimmer,
     it never blinks.
+  - **The field at 0 hit points is the whole block with the slanted grounds and the glyphs** (T6
+    in the mock). The band, the bare field and the vessel are not built; the vessel stays in the
+    mock.
   - **The third save ends it on one face, whatever motion led there.** The side that won takes
     the whole block, still moving as itself, and the block says what happened in a bold word:
     `Stabilized` on the rescue's own ground, `Dead` in white on a block gone black. Only the way
-    in differs between motions. The healing control stays under the word as the way back up
-    (`_death-saves-verdict.png`).
+    in differs between motions. The healing control stays under `Stabilized` as the way back up
+    (`_death-saves-verdict.png`). In Ukrainian the words are «Стабілізовано» and «Смерть».
+  - **The `Dead` face replaces the death dialog.** `DeathScreen.svelte` goes: the block says it,
+    and the sheet behind is no longer out of reach. What the dialog held moves to the face — the
+    cause of death, and `Revived` as the way back, since healing does not raise the dead. The
+    mock draws the healing control under `Dead`; the build draws `Revived`.
+  - **Three successes are recorded in the play state**, so `Stabilized` is drawn from a fact
+    rather than from a notice that has already gone.
   - **The player picks the motion, and every motion drawn ships beside a still face.** `Rays & Hellfire` plays until the player picks another; `No animation` is the choice already made when the system asks for reduced motion, and it is one press for anyone else. The list opens from a pencil: a tab on the block's left side, outside its frame,
     there only while the pointer or the focus is on the block — and always where there is no
     pointer to rest, since a touch screen has no other way to find it. The list never covers the
     block: it opens leftward past the tab, and while it is open the block shows its 0 hit points
     face playing what is picked (`_hp-pencil.png`). Inside by the label and a tab on the top edge
     were drawn and passed over.
-  - **A narrow window is laid out in a pass of its own.** The line this is drawn on does not fit
-    under the narrow threshold, where it becomes several rows.
+  - **A narrow window gets a mock of its own before it is built.** It is the phone's layout as
+    much as a narrow desktop's: icons and buttons in several rows, the elements changing place
+    rather than shrinking. Until that mock exists the redraw is built for the wide window.
 
   **Open, in the order it blocks the build.**
   1. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
@@ -147,9 +157,7 @@ stay semi-manual.
      DC 20. The proposal: damage taken before the owed save is rolled adds to it — the order of the
      presses says whether it was one hit — which is also what makes two presses for a flame tongue
      RAW again. Neither half is signed off.
-  2. **The 0 hit points face's form and motion.** The field is one of four the maintainer holds
-     equal — a band under the ordinary header, the whole block, the hit-point bar grown into a
-     vessel, the whole block with glyphs — and the motion is liquid (a swell along the surface,
+  2. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
      drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
      The flat slanted ground has four motions of its own on the same page, each tightening with
      every failure and each looping `transform` and `opacity` only: **pressure** — the death side
@@ -159,8 +167,8 @@ stay semi-manual.
      marching toward the middle. A fifth dresses each side as what it is: **rays and hellfire** —
      rescue as soft shafts of light breaking through cloud, each coming and going on its own
      pace; death as a dark ground whose flames rise with each failure and stay inside it. Each side's scene is laid out once across the whole block and the ground is a window onto it: a wider ground uncovers more shafts or more flames, and nothing stretches. Their cost is not measured.
-     Which FIELD, and each motion's tempo, are the maintainer's eye on the running page, not a
-     render's; which motion is the player's (Settled).
+     Each motion's tempo is the maintainer's eye on the running page, not a render's; which motion
+     plays is the player's (Settled).
   3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
      nothing. What the prototype animates is what a compositor cannot carry: an SVG blur-and-threshold
@@ -176,8 +184,7 @@ stay semi-manual.
      before any of it is carried into the app.
      **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
-     cheap either, only much less so. Every motion ships, so every one is measured; what one that
-     stays dear does — ships marked as such, or waits — is not decided.
+     cheap either, only much less so. Every motion ships, so every one is measured; one that stays dear ships marked as such in the pencil's list.
   4. **Where the pencil's choice is kept.** Proposed as the app's own preference beside theme and
      language, not the character's: it is about the person at the screen.
   5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
@@ -198,13 +205,13 @@ stay semi-manual.
   - **What loops is `transform` and `opacity`, nothing else** — no SVG filter, no animated mask,
     no animated `box-shadow`. A loop stops when the face is not on screen and when the block has
     gone black. Each motion's CPU is measured on the real app before that motion is called done.
-  - **The end faces need two things the sheet does not have.** `Dead` on black needs a ground and
-    a text token in both themes; the prototype's are literals. And three successes leave no trace
-    in the play state today — `hit-points.ts` resets the track and posts a notice — so
-    `Stabilized` has nothing to be drawn from until the state records it.
-  - **Death already owns the sheet.** `DeathScreen.svelte` is a dialog that cannot be dismissed
-    while `play.death` is set, so the `Dead` face is behind its backdrop unless one of them
-    changes. That is a decision, not a detail of the build.
+  - **`Dead` on black needs a ground and a text token** in both themes; the prototype's are
+    literals.
+  - **`Stabilized` needs the play state to say so.** Three successes reset the track and post a
+    notice in `hit-points.ts` today and leave nothing behind; the schema gains the fact, with its
+    migration, and whatever ends it — healing, damage, a rest — clears it.
+  - **Removing `DeathScreen.svelte` takes its two ways out with it**: `combat.revive` moves to the
+    `Dead` face, and the roster link is the navigation's again once nothing covers it.
   - **The pencil stands outside the frame**, so the block gains a wrapper that does not clip it.
     It follows the pointer and the focus, and is always there under `(hover: none)`.
   - **The surfaces.** Both systems; right-to-left, where rescue and death trade sides and every
