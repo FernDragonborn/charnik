@@ -137,7 +137,9 @@
   request names catalog ids and never
   carries tokens or free formulas; a star of direct connections rather than gossip; which relays an
   endpoint may dial; where keys and approvals live. It also rewrites `internals/security.md`'s
-  threat model, which says "no network" in the present tense.
+  threat model, which says "no network" in the present tense. And it rewrites
+  `internals/roller.md` ▸ "The app never knows AC or DC, so no threshold is ever shown": a roll a GM
+  asks for may carry a DC the GM chose to announce, and for that roll the app does know it.
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
