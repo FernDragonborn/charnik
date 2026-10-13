@@ -238,21 +238,21 @@ position and are given per wave, because most of them were learned the hard way.
   weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
   never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
   control before it can mean anything.
-- **Before 0.8.0 is tagged.** The list a release is checked against, in the order it is worked.
-  Everything else in this section is either already in 0.8.0 or rides to a later one.
-  1. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
-     from that mock.
+- **Before 0.8.0 is tagged.** Nothing a commit can close is left on the list a release is
+  checked against; what remains is the release's own routine (`work/release.md` ▸ AUDIT-DRIFT, the
+  full `pnpm lint:typed`, the version in three files).
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature
   Magician), SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
   OPTION-ROWS, E4, MOBILE-ALPHA's tap
-  targets, and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
+  targets, DEFENCE-STRIP — the `Saves` group ships in the form it has and is redrawn for 0.9.0 —
+  and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
   seams it will stand on (`internals/overview.md` ▸ TableLink is the seam a table stands on).
   None is a wrong number, a path that cannot be finished
   or shipped content that does nothing — the three clauses above.
-- **The short queue, and it is an ORDER rather than a wave.** One item, and it is the maintainer's
-  to do rather than a commit.
+- **0.9.0 · the short queue, and it is an ORDER rather than a wave.** One item, and it is the
+  maintainer's to do rather than a commit.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
