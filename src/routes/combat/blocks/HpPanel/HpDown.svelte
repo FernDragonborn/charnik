@@ -79,7 +79,7 @@
 
 	// Under the black nothing is seen, so nothing keeps moving there: the motion goes once the
 	// verdict stands. A character already dead when the sheet opens starts that way.
-	let settled = $state(false);
+	let settled = $state(untrack(() => dead && !played));
 	$effect(() => {
 		if (!dead) {
 			settled = false;

@@ -659,12 +659,17 @@ Under `Dead` stand the cause and `I was revived`, since healing does not raise t
 A character already dead when the sheet opens is shown dead, with nothing played.
 
 **Getting back up is played too, as a wipe.** A natural 20, a heal and a revival are one way back.
-The face the character just left — the fight, `Stabilized`, `Dead` on black — is held exactly as it
-stood (`DownShown`, the same override the pencil's preview draws from) and wiped away from rescue's
-edge behind a band of rescue's colour, and the block on its feet is what the wipe uncovers. Held,
-because the character has already changed: drawn from the live state, the face under the wipe would
-be the fight as it was before the ending, with the verdict gone. The wipe is the window trick once
-more — a mover and, inside it, the face moved back by as much. Reduced, the face simply changes.
+The face the character just left — the fight, `Stabilized`, `Dead` on black — is wiped away from
+rescue's edge, and the block on its feet is what the wipe uncovers. Two things make it seamless,
+and both were learned by getting them wrong. **It is the SAME face**, not a copy drawn over: the
+wipe's wrappers stand around the 0 hit points face for as long as it is on screen and the wipe is
+put ON them, so the motion that was playing is the motion that leaves, its animations still
+running where they were. That is also why the rise is DERIVED from the character rather than set
+in an effect — set a tick later, the face is taken down and put back for a frame between. And
+**the face is held as it stood** (`DownShown`, the override the pencil's preview draws from):
+the character has already changed, and drawn from the live state the face under the wipe would be
+the fight as it was before the ending, with the verdict gone. What leads the wipe is a slit onto
+rescue's own ground, moving as the chosen motion. Reduced, the face simply changes.
 
 **The player picks the motion** — `ui.downMotion`, eight members with `none` among them — from a
 pencil: a tab on the block's own side, outside its frame, there while the pointer or the focus is on

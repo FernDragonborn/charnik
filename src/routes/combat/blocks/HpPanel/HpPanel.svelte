@@ -5,6 +5,7 @@
 	// deep stands in.
 	//
 	// Reads the `combat` view-model singleton; the character and its sheet come in as props.
+	import { untrack } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { motion } from '$lib/stores/motion.svelte';
@@ -13,6 +14,7 @@
 	import { DEATH_SAVE_TRACK, isStable } from '$lib/play/hit-points';
 	import HpStanding from './HpStanding.svelte';
 	import HpDown from './HpDown.svelte';
+	import DownSide from './DownSide.svelte';
 	import MotionMenu from './MotionMenu.svelte';
 	import { PREVIEW_FIGHT, type DownShown } from './down-motions';
 
@@ -47,9 +49,14 @@
 	 * a band of rescue's own colour, and the block on its feet is what the wipe uncovers.
 	 */
 	const RISE_MS = 900;
-	let rising = $state<DownShown | null>(null);
-	/** The 0 hit points face as it last stood: what a rise wipes away. */
-	let stood: DownShown | null = null;
+	/** The 0 hit points face as it last stood — kept for as long as a rise takes to wipe it away. */
+	let stood = $state<DownShown | null>(null);
+	/**
+	 * DERIVED, never set: the wipe has to begin in the very update the character gets up in. Set a
+	 * tick later, the face would be taken down and put back for one frame between — and with it the
+	 * motion it was playing, which is the break this exists to avoid.
+	 */
+	const rising = $derived(!down && !motion.reduced ? stood : null);
 	$effect(() => {
 		if (down) {
 			stood = {
@@ -59,14 +66,10 @@
 				cause: c.play.death?.cause ?? null,
 				hitPoints: c.play.hp.current,
 			};
-			rising = null;
 			return;
 		}
-		const left = stood;
-		stood = null;
-		if (!left || motion.reduced) return;
-		rising = left;
-		const done = setTimeout(() => (rising = null), RISE_MS);
+		if (!untrack(() => stood)) return;
+		const done = setTimeout(() => (stood = null), motion.reduced ? 0 : RISE_MS);
 		return () => clearTimeout(done);
 	});
 
@@ -116,21 +119,34 @@
 {#snippet pencil()}{@render pencilButton('inside')}{/snippet}
 
 <div class="hp-block" class:tense class:still={playing === 'none'} class:choosing bind:this={block}>
-	{#if down || choosing}
-		<HpDown {c} motion={playing} shown={down ? null : PREVIEW_FIGHT} played={seenAlive} {pencil} />
-	{:else}
+	{#if !down && !choosing}
 		<HpStanding {c} {s} {pencil} />
 	{/if}
-	{#if rising}
-		<!-- what moves is the mover; what it holds is moved back by as much, so the face it wipes
-		     stays where it stood and only the wipe's edge travels -->
-		<div class="hp-rise" aria-hidden="true">
+	{#if down || choosing || rising}
+		<!-- ONE 0 hit points face for as long as it is on screen, down or being wiped away: the wipe
+		     is put on around it rather than drawn over a second copy, so the motion it was playing is
+		     the motion that leaves, without a frame's break. What moves is the mover; what it holds is
+		     moved back by as much, so the face stays where it stood and only the wipe's edge travels. -->
+		<div class="hp-rise" class:wiping={!!rising} aria-hidden={rising ? true : undefined}>
 			<div class="rise-mover">
-				<i class="rise-band"></i>
+				{#if rising}
+					<!-- rescue's own ground, seen through the band that leads the wipe -->
+					<div class="rise-band">
+						<div class="rise-band-still">
+							<DownSide tone="good" earned={DEATH_SAVE_TRACK} motion={playing} />
+						</div>
+					</div>
+				{/if}
 				<div class="rise-clip">
 					<div class="rise-still">
 						<div class="rise-face">
-							<HpDown {c} motion="none" shown={rising} played={false} {pencil} />
+							<HpDown
+								{c}
+								motion={playing}
+								shown={rising ?? (down ? null : PREVIEW_FIGHT)}
+								played={seenAlive}
+								{pencil}
+							/>
 						</div>
 					</div>
 				</div>
@@ -164,38 +180,42 @@
 		height: 7.3125rem;
 	}
 
-	/* ---- the way back up: the face just left, wiped away from rescue's edge. Every layer is the
-	   block's own size, so a percentage means the same travel on each: the block's width plus the
-	   band and its lean, and the held face moved back by exactly that ---- */
+	/* ---- the way back up: the face just left, wiped away from rescue's edge. At rest these
+	   wrappers are plain boxes around the face; the wipe is put on them. Every moving layer is then
+	   the block's own width, so a percentage means the same travel on each: the block's width plus
+	   the band and its lean, and what is held is moved back by exactly that ---- */
 	.hp-rise {
+		--lean: 16px;
+		--band: 4.5rem;
+		--travel: calc(100% + var(--band) + var(--lean));
+		--wipe: 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+	}
+	.hp-rise.wiping {
 		position: absolute;
 		inset: 0;
 		z-index: 1;
 		overflow: hidden;
 		border-radius: var(--radius-lg);
 		pointer-events: none;
-		direction: ltr;
-		--lean: 16px;
-		--band: 4.5rem;
-		--travel: calc(100% + var(--band) + var(--lean));
 	}
 	/* a right-to-left locale has rescue on the other edge: the wipe turns over whole, and the face it
 	   holds is turned back so its words still read */
-	:global([dir='rtl']) .hp-rise,
-	:global([dir='rtl']) .rise-face {
+	:global([dir='rtl']) .hp-rise.wiping,
+	:global([dir='rtl']) .wiping .rise-face {
 		scale: -1 1;
 	}
-	.rise-mover,
-	.rise-clip,
-	.rise-still {
+	.wiping .rise-mover,
+	.wiping .rise-clip,
+	.wiping .rise-still {
 		position: absolute;
 		inset: 0;
 	}
-	.rise-mover {
-		animation: rise-wipe 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+	.wiping .rise-mover {
+		animation: rise-wipe var(--wipe);
 	}
-	.rise-still {
-		animation: rise-hold 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+	.wiping .rise-still,
+	.rise-band-still {
+		animation: rise-hold var(--wipe);
 	}
 	@keyframes rise-wipe {
 		to {
@@ -208,22 +228,23 @@
 		}
 	}
 	/* the held face ends on the lean the grounds are cut with */
-	.rise-clip {
+	.wiping .rise-clip {
 		clip-path: polygon(var(--lean) 0, 100% 0, 100% 100%, 0 100%);
 	}
-	/* rescue's colour leads the wipe: a band on that same lean, just behind the edge */
+	/* rescue's ground leads the wipe: a slit on that same lean just behind the edge, over a ground
+	   that stands still behind it and moves as the character's motion */
 	.rise-band {
 		position: absolute;
 		inset-block: 0;
-		right: calc(100% - var(--lean));
-		width: calc(var(--band) + var(--lean));
-		background: linear-gradient(
-			to right,
-			transparent,
-			var(--color-good) 55%,
-			color-mix(in srgb, var(--color-good) 55%, var(--color-glint))
-		);
-		clip-path: polygon(var(--lean) 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
+		left: calc(-1 * var(--band));
+		right: 0;
+		clip-path: polygon(var(--lean) 0, calc(var(--band) + var(--lean)) 0, var(--band) 100%, 0 100%);
+	}
+	.rise-band-still {
+		position: absolute;
+		inset-block: 0;
+		left: var(--band);
+		right: 0;
 	}
 
 	/* ---- the pencil: a tab on the block's own side, the block's frame carried round it. There
