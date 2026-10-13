@@ -15,7 +15,6 @@ import {
 	applyDamageSensitivity,
 	netAdvantage,
 	sheetRollEffects,
-	DEATH_CAUSE_LABEL,
 	type DamageSensitivities,
 	type RollEffects,
 	type RollName,
@@ -121,16 +120,13 @@ const notDying = (play: CharacterPlay): CharacterPlay => ({
 	deathSaves: { successes: 0, failures: 0 },
 });
 
-/** Record a death on the play-state. The first cause sticks: a character already dead is returned
- *  untouched and nothing is said twice. */
-function dead(play: CharacterPlay, cause: DeathCause, notices: PlayNotice[]): CharacterPlay {
-	if (play.death) return play;
-	notices.push({
-		text: { key: 'combat.notice.died' },
-		description: { key: DEATH_CAUSE_LABEL[cause] },
-	});
-	return { ...play, death: { cause } };
-}
+/**
+ * Record a death on the play-state. The first cause sticks: a character already dead is returned
+ * untouched. Nothing is SAID of it — the hit-point block is what says a character died and of what,
+ * and a notice on top of that was a stand-in for a block that could not.
+ */
+const dead = (play: CharacterPlay, cause: DeathCause): CharacterPlay =>
+	play.death ? play : { ...play, death: { cause } };
 
 /**
  * Take a hit of one type. It meets its defense BEFORE temp HP soaks anything (RAW ordering); temp
@@ -174,7 +170,7 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 	// whole hit). SRD 5.2.1 omits the chapter that carries this rule and only cross-references it, so
 	// both editions run the 5.1 text. docs/internals/rules-core.md ▸ RAW, RAI, and saying which
 	if (play.hp.current === 0 && left - before >= hitPointMaximum(character, sheet))
-		play = dead(play, 'massive_damage', notices);
+		play = dead(play, 'massive_damage');
 	// RAW, both editions: damage taken while ALREADY at 0 HP is a death-save failure, and a stable
 	// creature "stops being stable, and must start making death saving throws again". Unconditional
 	// in the book, so it is applied rather than offered. `taken`, not `left`: the text says "any
@@ -185,7 +181,7 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 		const successes = isStable(play) ? 0 : play.deathSaves.successes;
 		play = { ...play, deathSaves: { successes, failures } };
 		notices.push({ text: { key: 'combat.notice.deathFailureFromDamage', values: { count: 1 } } });
-		if (failures >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves', notices);
+		if (failures >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves');
 	}
 	// Damage while concentrating makes a CON save due. It is OWED, not rolled: the player presses
 	// it. At 0 HP concentration ends on its own.
@@ -294,7 +290,7 @@ export function rollDeathSave(character: Character, ctx: PlayContext): PlayOutco
 	}
 	// "On your third failure, you die" — checked once, after every branch, so a natural 1's DOUBLE
 	// failure is as lethal as a third single one.
-	if (play.deathSaves.failures >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves', notices);
+	if (play.deathSaves.failures >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves');
 	return settled(
 		{
 			character: { ...character, play },
@@ -327,7 +323,7 @@ export function setDeathSavePip(character: Character, { kind, index }: DeathSave
 		...character.play,
 		deathSaves: unsettled ? { ...pressed, successes: 0 } : pressed,
 	};
-	if (kind === 'failures' && count >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves', notices);
+	if (kind === 'failures' && count >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves');
 	if (kind === 'successes' && count >= DEATH_SAVE_TRACK) {
 		play = { ...play, deathSaves: STABLE_TRACK };
 		notices.push({ text: { key: 'combat.notice.stabilised' } });
@@ -360,16 +356,11 @@ export function takeBackLastSave(character: Character): PlayOutcome {
 /**
  * Record a death. The three lethal rules (massive damage · three death-save failures · the top of
  * the exhaustion ladder) all land here, so "what happens when you die" is one place. Death is
- * AUTOMATIC in RAW (no "you can"), so it is applied and said; the player still owns the way back.
+ * AUTOMATIC in RAW (no "you can"), so it is applied; the player still owns the way back.
  */
 export function die(character: Character, cause: DeathCause): PlayOutcome {
-	const notices: PlayNotice[] = [];
-	const play = dead(character.play, cause, notices);
-	return {
-		character: play === character.play ? character : { ...character, play },
-		log: [],
-		notices,
-	};
+	const play = dead(character.play, cause);
+	return quietly(play === character.play ? character : { ...character, play });
 }
 
 /**
@@ -379,23 +370,20 @@ export function die(character: Character, cause: DeathCause): PlayOutcome {
  * one, per the 2024 glossary ("If the creature died with any Exhaustion levels, it returns with 1
  * fewer level") — in BOTH editions, because reviving straight back onto a lethal exhaustion 6 would
  * kill you again on the spot; RAW is silent in 2014, so RAI wins (docs/internals/rules-core.md ▸
- * RAW, RAI, and saying which). Everything else (conditions, curses) survives death per RAW.
+ * RAW, RAI, and saying which). Everything else (conditions, curses) survives death per RAW. Like
+ * the death, it is the block's to say: the character is seen to get back up.
  */
 export function revive(character: Character): PlayOutcome {
 	const play = character.play;
-	return {
-		character: {
-			...character,
-			play: notDying({
-				...play,
-				death: null,
-				exhaustion: Math.max(0, play.exhaustion - 1),
-				hp: { ...play.hp, current: Math.max(1, play.hp.current) },
-			}),
-		},
-		log: [],
-		notices: [{ text: { key: 'combat.notice.revived' } }],
-	};
+	return quietly({
+		...character,
+		play: notDying({
+			...play,
+			death: null,
+			exhaustion: Math.max(0, play.exhaustion - 1),
+			hp: { ...play.hp, current: Math.max(1, play.hp.current) },
+		}),
+	});
 }
 
 /**

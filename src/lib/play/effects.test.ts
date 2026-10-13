@@ -119,6 +119,7 @@ describe.each(['5e', '5.5e'] as const)('effect actions · %s', (system) => {
 		});
 		const dead = setExhaustion(c, { level: 99 }, ctx());
 		expect(dead.character.play).toMatchObject({ exhaustion: top, death: { cause: 'exhaustion' } });
-		expect(dead.notices[0]?.text).toEqual({ key: 'combat.notice.died' });
+		// a death is the hit-point block's to say: it carries its cause, and no notice
+		expect(dead.notices).toEqual([]);
 	});
 });

@@ -261,7 +261,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   other, a wing or a skull per save, and every one can be pressed as well as rolled — which is how
   you say a critical cost two. The third save ends it on `Stabilized` or on `Dead`, and death no
   longer covers the sheet with a dialog: the block says it, with what killed you and `I was
-  revived` under the word. A save pressed by mistake can be taken back from either ending.
+  revived` under the word. Getting back up — a natural 20, a heal, a
+  revival — sweeps rescue's colour across the block and leaves it on its feet. Dying and being revived
+  no longer raise a notice: the block is what says it. A save pressed by mistake can be taken back from either ending.
 - **You pick how that fight moves.** A pencil beside the block lists eight motions, `No animation`
   among them; the default is Rays & Hellfire. Settings ▸ General has **Reduce motion** — as the
   system, on, or off — which stills everything in the app and keeps each character's own pick.

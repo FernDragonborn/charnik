@@ -96,9 +96,9 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		const out = takeDamage(c, { amount: 1, type: null }, ctx());
 		expect(out.character.play.deathSaves.failures).toBe(3);
 		expect(out.character.play.death).toEqual({ cause: 'death_saves' });
+		// the failure is said; the death is the hit-point block's to say
 		expect(out.notices.map((notice) => notice.text)).toMatchObject([
 			{ key: 'combat.notice.deathFailureFromDamage' },
-			{ key: 'combat.notice.died' },
 		]);
 	});
 
@@ -223,6 +223,7 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 			x.play.exhaustion = 6;
 			x.play.deathSaves = { successes: 0, failures: 3 };
 		});
+		expect(revive(c).notices).toEqual([]);
 		const play = revive(c).character.play;
 		expect(play).toMatchObject({ death: null, exhaustion: 5 });
 		expect(play.hp.current).toBe(1);

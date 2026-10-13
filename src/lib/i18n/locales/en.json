@@ -858,8 +858,6 @@
 			"nat20Revive": "Natural 20 — back on your feet at 1 HP",
 			"nat1Failures": "Natural 1 — two death-save failures",
 			"stabilised": "Three successes — stable at 0 HP",
-			"died": "The character has died",
-			"revived": "Back from the dead — 1 HP",
 			"attunementFull": "Attuned to {cap} items already",
 			"attunementFullBody": "Break attunement with one first, or switch this character to Free.",
 			"overAttunement": "Over the attunement limit ({cap})",

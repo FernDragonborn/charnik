@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { combat } from '../../combat/combat-view-model.svelte';
 	import HpPanel from '../../combat/blocks/HpPanel/HpPanel.svelte';
+	import CombatMenus from '../../combat/CombatMenus.svelte';
 
 	const c = $derived(combat.character);
 	const s = $derived(combat.sheet);
@@ -30,6 +31,8 @@
 		<div class="frame">
 			<HpPanel {c} {s} />
 		</div>
+		<!-- the healing control opens the combat sheet's own popover, so it is mounted here too -->
+		<CombatMenus />
 	{:else}
 		<p class="loading">Loading the demo character…</p>
 	{/if}

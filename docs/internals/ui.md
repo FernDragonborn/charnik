@@ -658,6 +658,11 @@ Under `Dead` stand the cause and `I was revived`, since healing does not raise t
 `Stabilized`, the healing control. Once the verdict stands on black the motion under it is let go.
 A character already dead when the sheet opens is shown dead, with nothing played.
 
+**Getting back up is played the same way, in rescue's colour.** A natural 20, a heal and a revival
+are one way back: rescue's ground crosses the whole block from its own edge, over the 0 hit points
+face, and fades off the block on its feet — `HpPanel` holds the down face for as long as the
+crossing takes, so the swap happens under cover. Reduced, the face simply changes.
+
 **The player picks the motion** — `ui.downMotion`, eight members with `none` among them — from a
 pencil: a tab on the block's own side, outside its frame, there while the pointer or the focus is on
 the block and always where there is no pointer to rest. Its list never covers the block: it opens

@@ -13,6 +13,7 @@
 	import { DEATH_SAVE_TRACK, isStable } from '$lib/play/hit-points';
 	import HpStanding from './HpStanding.svelte';
 	import HpDown from './HpDown.svelte';
+	import DownSide from './DownSide.svelte';
 	import MotionMenu from './MotionMenu.svelte';
 	import { PREVIEW_SAVES } from './down-motions';
 
@@ -38,6 +39,44 @@
 	let seenAlive = $state(false);
 	$effect(() => {
 		if (!c.play.death) seenAlive = true;
+	});
+
+	/**
+	 * Getting back up is played too: rescue's ground crosses the whole block, and the block on its
+	 * feet is what it leaves behind — a natural 20, a heal and a revival are one way back, and a face
+	 * that simply swapped would say nothing had been at stake. `cover` while the ground travels over
+	 * the 0 hit points face, `reveal` while it fades off the standing one.
+	 */
+	const RISE_COVERS_MS = 900;
+	const RISE_REVEALS_MS = 350;
+	let rise = $state<null | 'cover' | 'reveal'>(null);
+	let riseEarned = $state(0);
+	let wasDown = false;
+	/** How far rescue's ground stood when the character got up: where the crossing starts from. */
+	let groundStood = 0;
+	$effect(() => {
+		if (down) {
+			wasDown = true;
+			groundStood = c.play.death ? 0 : c.play.deathSaves.successes;
+			rise = null;
+			return;
+		}
+		if (!wasDown) return;
+		wasDown = false;
+		if (motion.reduced) return;
+		rise = 'cover';
+		riseEarned = groundStood;
+		// two frames: the first paints the ground where it stood, the second lets it travel
+		let frame = requestAnimationFrame(
+			() => (frame = requestAnimationFrame(() => (riseEarned = DEATH_SAVE_TRACK))),
+		);
+		const revealing = setTimeout(() => (rise = 'reveal'), RISE_COVERS_MS);
+		const done = setTimeout(() => (rise = null), RISE_COVERS_MS + RISE_REVEALS_MS);
+		return () => {
+			cancelAnimationFrame(frame);
+			clearTimeout(revealing);
+			clearTimeout(done);
+		};
 	});
 
 	let block: HTMLElement | undefined = $state();
@@ -86,7 +125,7 @@
 {#snippet pencil()}{@render pencilButton('inside')}{/snippet}
 
 <div class="hp-block" class:tense class:still={playing === 'none'} class:choosing bind:this={block}>
-	{#if down || choosing}
+	{#if down || choosing || rise === 'cover'}
 		<HpDown
 			{c}
 			motion={playing}
@@ -96,6 +135,11 @@
 		/>
 	{:else}
 		<HpStanding {c} {s} {pencil} />
+	{/if}
+	{#if rise}
+		<div class="hp-rise" class:reveal={rise === 'reveal'}>
+			<DownSide tone="good" earned={riseEarned} motion={playing} />
+		</div>
 	{/if}
 	{@render pencilButton('side')}
 	{#if choosing}
@@ -122,6 +166,23 @@
 	.hp-block :global(.hp-face) {
 		box-sizing: border-box;
 		height: 7.3125rem;
+	}
+
+	/* rescue's ground, crossing the block on the way back up and fading off what it leaves */
+	.hp-rise {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		overflow: hidden;
+		border-radius: var(--radius-lg);
+		pointer-events: none;
+		transition: opacity 0.35s ease-out;
+	}
+	.hp-rise.reveal {
+		opacity: 0;
+	}
+	:global([dir='rtl']) .hp-rise {
+		transform: scaleX(-1);
 	}
 
 	/* ---- the pencil: a tab on the block's own side, the block's frame carried round it. There
