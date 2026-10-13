@@ -10,6 +10,10 @@
 	// The chrome is a POPOVER on the control that opened it, not a dialog: adding an item is a step
 	// inside the inventory panel, and nothing is being asked of the player. So no backdrop, no
 	// badge, no subtitle — a title, a way out, and the sheet still readable around it.
+	// The picker's shared pieces — the round ✓ that takes a row, its scrollbars — are styled in the
+	// builder's stylesheet, under the builder's scope. Mounting the picker outside the builder means
+	// bringing both: the sheet, and the scope on the surface the picker sits in.
+	import '$lib/styles/build.css';
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import Icon from '$lib/components/Icon.svelte';
@@ -69,7 +73,7 @@
 
 <div
 	bind:this={surface}
-	class="add-item-popover"
+	class="add-item-popover build-page"
 	role="dialog"
 	aria-labelledby="add-item-title"
 	use:anchored={{ anchor, onclose, companions: PICKER_PARTS }}
@@ -105,7 +109,9 @@
 		z-index: 61;
 		display: flex;
 		flex-direction: column;
-		width: min(47.5rem, calc(100vw - 2 * var(--space-4)));
+		/* a name and one short fact per row: wider than this and the two drift to opposite edges with
+		   nothing between them. The card a row opens for reading sits beside the popover, not in it. */
+		width: min(30rem, calc(100vw - 2 * var(--space-4)));
 		/* the picker is a list that scrolls itself; the popover gives it a height to do that inside
 		   rather than growing past the viewport on a pack with a few hundred items */
 		height: min(32.5rem, 62vh);

@@ -40,6 +40,25 @@ describe('anchored (ui.md ▸ a step inside a panel is a popover)', () => {
 		expect(at(surface)).toEqual({ top: bottom - 80 - 6, left: 8 });
 	});
 
+	it('stays on the side it opened on: a scroll inside it moves nothing, a scroll outside carries it', () => {
+		const bottom = window.innerHeight - 30;
+		const anchor = box({ top: `${bottom}px`, left: '300px', width: '40px', height: '20px' });
+		const surface = box({ width: '200px', height: '80px' });
+		const list = document.createElement('div');
+		surface.append(list);
+		cleanup = anchored(surface, { anchor, onclose: () => {} })?.destroy;
+		const above = { top: bottom - 80 - 6, left: 140 };
+		expect(at(surface)).toEqual(above);
+
+		list.dispatchEvent(new Event('scroll'));
+		expect(at(surface)).toEqual(above);
+
+		// the page scrolls and the control moves up with it: the surface goes too, still above
+		anchor.style.top = `${bottom - 50}px`;
+		document.dispatchEvent(new Event('scroll'));
+		expect(at(surface)).toEqual({ top: above.top - 50, left: 140 });
+	});
+
 	it('closes on a press outside, and not on one inside, on its control or on a companion', () => {
 		const anchor = box({ top: '100px', left: '300px', width: '40px', height: '20px' });
 		const surface = box({ width: '200px', height: '80px' });

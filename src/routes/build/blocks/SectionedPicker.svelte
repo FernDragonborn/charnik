@@ -7,6 +7,7 @@
 	// Reading and taking are separate controls (§6): the toggle on the left takes the row — the same
 	// slot, and the same gold, as the spellbook's prepared switch and SkillRows' proficiency dot — and
 	// the row body opens the article. Hover teases it (PickerPeek), a click reads it (PickerCard).
+	import { wheelSideways } from '$lib/actions/wheelSideways';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
@@ -169,7 +170,7 @@
 
 {#if controls}{@render controls()}{/if}
 
-<div class="jump">
+<div class="jump" use:wheelSideways>
 	{#each shown as section (section.key)}
 		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
 		<button class="jumpbtn" class:here={section.key === hereKey} onclick={() => jumpTo(section.key)}>

@@ -22,8 +22,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `REPORT` ×7 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `check` ×6 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
-- `place` ×6 — src/lib/actions/anchored.ts · src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
+- `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `nameOf` ×4 — src/lib/combat/actions.ts · src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (175 modules)
+## Library functions & types (176 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -551,6 +551,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const FOCUSABLE` — Elements that can hold keyboard focus — the tab ring a trapped dialog cycles within, and the * question `provenance` …
 - `const trapFocus` — * Trap keyboard focus inside a modal dialog (AUDIT F8) — the accessibility half the `.dialog` shell * was missing: ba…
+
+### `src/lib/actions/wheelSideways.ts`
+
+- `function wheelSideways`
 
 ### `src/lib/build/derive.ts`
 
@@ -2286,4 +2290,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1390 exports across 192 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1391 exports across 193 modules · 94 duplicate suspects._

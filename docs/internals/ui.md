@@ -600,8 +600,14 @@ sheet stays readable around it, a press anywhere else closes it, the control tha
 it again, and Escape closes one thing per press — the picker's card first, then the surface. The
 keyboard starts inside and goes back to the control. Placement is one action, `anchored`
 (`lib/actions`): below the control with right edges aligned, above it when there is no room below,
-and travelling with the control while the page scrolls. A floating part that lives in the body — a
-picker's card — is named to it as a companion, so a press there is not a press outside. Not being
+and travelling with the control while the page scrolls, on the side it opened on. A scroll inside
+the surface — its own list, a rail of chips — moves nothing. A floating part that lives in the body
+— a picker's card — is named to it as a companion, so a press there is not a press outside.
+**A picker mounted outside the builder brings the builder's stylesheet and its scope with it**
+(`import '$lib/styles/build.css'` and `build-page` on the surface): the round ✓ that takes a row
+and the picker's scrollbars are styled there, under that scope, and without both the picker is
+drawn with the browser's own buttons. A rail that overflows sideways takes `wheelSideways`
+(`lib/actions`), so a mouse wheel moves it. Not being
 full-screen, a popover carries no `LangSwitcher`: the topbar's is still in reach.
 
 ## The hit-point block

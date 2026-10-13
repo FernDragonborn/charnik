@@ -18,8 +18,8 @@ const MARGIN = 8;
  * aligned, and closed by a press anywhere else.
  *
  * It is pulled back on screen — left, or above the control — for the OPENING placement and on a
- * resize only. While the page scrolls it travels with its control instead, because a surface pinned
- * to an edge its control has already left belongs to nothing.
+ * resize only. While the page scrolls it travels with its control instead, on the side it opened
+ * on, because a surface pinned to an edge its control has already left belongs to nothing.
  *
  * Closing is a listener rather than a full-screen catcher: a fixed catcher's scroll parent is the
  * viewport, which does not scroll in this app, so it froze the page under the open surface. Scroll
@@ -29,20 +29,31 @@ const MARGIN = 8;
 export const anchored: Action<HTMLElement, AnchoredOptions> = (node, initial) => {
 	let options = initial;
 
-	function place(clamp: boolean): void {
+	/** Where the surface sits relative to its control, as the last fit left it. */
+	let offset = { left: 0, top: 0 };
+	const moveTo = (control: DOMRect): void => {
+		node.style.top = `${control.top + offset.top}px`;
+		node.style.left = `${control.left + offset.left}px`;
+	};
+
+	/** Choose the side: below the control, or above it and pulled in from the left edge where below
+	 *  would leave the screen. */
+	function reflow(): void {
 		const control = options.anchor.getBoundingClientRect();
 		let left = control.right - node.offsetWidth;
 		let top = control.bottom + GAP;
-		if (clamp) {
-			if (left < MARGIN) left = MARGIN;
-			if (top + node.offsetHeight > window.innerHeight - MARGIN)
-				top = Math.max(MARGIN, control.top - node.offsetHeight - GAP);
-		}
-		node.style.top = `${top}px`;
-		node.style.left = `${left}px`;
+		if (left < MARGIN) left = MARGIN;
+		if (top + node.offsetHeight > window.innerHeight - MARGIN)
+			top = Math.max(MARGIN, control.top - node.offsetHeight - GAP);
+		offset = { left: left - control.left, top: top - control.top };
+		moveTo(control);
 	}
-	const follow = () => place(false);
-	const reflow = () => place(true);
+	/** Travel with the control on the side already chosen. A scroll INSIDE the surface — its own
+	 *  list, a rail of chips — moves nothing: the control has not gone anywhere. */
+	const follow = (event: Event): void => {
+		if (event.target instanceof Node && node.contains(event.target)) return;
+		moveTo(options.anchor.getBoundingClientRect());
+	};
 	const closeOnOutside = (event: PointerEvent) => {
 		const target = event.target;
 		if (!(target instanceof Node)) return;
@@ -56,14 +67,14 @@ export const anchored: Action<HTMLElement, AnchoredOptions> = (node, initial) =>
 	// against a height of nothing; the same observer covers one that RESIZES while open.
 	const refit = new ResizeObserver(reflow);
 	refit.observe(node);
-	place(true);
+	reflow();
 	window.addEventListener('scroll', follow, true);
 	window.addEventListener('resize', reflow);
 	window.addEventListener('pointerdown', closeOnOutside, true);
 	return {
 		update(next) {
 			options = next;
-			place(true);
+			reflow();
 		},
 		destroy() {
 			refit.disconnect();
