@@ -658,6 +658,12 @@ Under `Dead` stand the cause and `I was revived`, since healing does not raise t
 `Stabilized`, the healing control. Once the verdict stands on black the motion under it is let go.
 A character already dead when the sheet opens is shown dead, with nothing played.
 
+**Nothing is raised over the block while it is the thing to watch.** A death save is recorded
+without its card (`PlayLogLine.quiet` → `RollJournal.logRoll`): it is still the last roll in the
+strip and a row in the log, but the card would land on the block that is lighting the save. For the
+same reason dying, stabilising, a natural 1 or 20 and a revival raise no notice — each stood in for
+a block that could not say it.
+
 **Getting back up is played too, as a wipe.** A natural 20, a heal and a revival are one way back.
 The face the character just left — the fight, `Stabilized`, `Dead` on black — is wiped away from
 rescue's edge, and the block on its feet is what the wipe uncovers. Two things make it seamless,

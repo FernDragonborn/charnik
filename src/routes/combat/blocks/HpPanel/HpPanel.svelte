@@ -73,6 +73,19 @@
 		return () => clearTimeout(done);
 	});
 
+	/**
+	 * What the block's leading edge is made of right now — the tab the pencil stands in is the
+	 * block's own frame carried round it, so it wears that and not one colour for every face:
+	 * rescue's ground once rescue has a save, black under `Dead`.
+	 */
+	const edge = $derived.by(() => {
+		if (!down && !choosing) return 'standing';
+		if (down && c.play.death) return 'dead';
+		if (down && isStable(c.play)) return 'stable';
+		const successes = down ? c.play.deathSaves.successes : PREVIEW_FIGHT.successes;
+		return successes > 0 ? 'rescued' : 'fight';
+	});
+
 	let block: HTMLElement | undefined = $state();
 	let choosing = $state(false);
 	/** The list opens beside the block, past the pencil — unless the window has no such room. */
@@ -107,8 +120,7 @@
 {#snippet pencilButton(place: 'side' | 'inside')}
 	<button
 		type="button"
-		class="hp-pencil {place}"
-		class:down
+		class="hp-pencil {place} {edge}"
 		aria-label={$_('combat.hp.options')}
 		aria-haspopup="true"
 		aria-expanded={choosing}
@@ -273,10 +285,35 @@
 		border-start-start-radius: var(--radius);
 		border-end-start-radius: var(--radius);
 		opacity: 0;
-		transition: opacity 120ms ease;
+		transition:
+			opacity 120ms ease,
+			background-color 0.4s,
+			border-color 0.4s,
+			color 0.4s;
 	}
-	.hp-pencil.side.down {
+	/* the tab is the block's frame carried round the pencil, so it is made of what the block's
+	   leading edge is made of */
+	.hp-pencil.side.fight,
+	.hp-pencil.side.rescued {
 		border-color: var(--color-accent);
+	}
+	.hp-pencil.side.rescued,
+	.hp-pencil.side.stable {
+		background: var(--color-good);
+		color: var(--color-bg);
+	}
+	.hp-pencil.side.stable {
+		border-color: var(--color-good);
+	}
+	/* black arrives with the verdict, once death's ground has crossed the block */
+	.hp-pencil.side.dead {
+		border-color: var(--color-border-strong);
+		background: var(--color-death);
+		color: var(--color-death-text);
+		transition-delay: 0s, 0.9s, 0.9s, 0.9s;
+	}
+	.hp-pencil.side:not(.standing, .fight):hover {
+		filter: brightness(1.15);
 	}
 	.hp-block:hover .hp-pencil.side,
 	.hp-block:focus-within .hp-pencil.side,

@@ -260,28 +260,22 @@ export function rollDeathSave(character: Character, ctx: PlayContext): PlayOutco
 	if (!dying || isStable(character.play)) return { ...quietly(character), refused: true };
 	const fx = sheetRollEffects(character, ctx.derive(character), 'save.death');
 	const r = rollD20(fx, fx.flat, ctx);
-	const notices: PlayNotice[] = [];
 	let play = character.play;
 	const { successes, failures } = play.deathSaves;
 	const natural = naturalOf(r);
 	if (natural === 20) {
 		play = notDying({ ...play, hp: { ...play.hp, current: 1 } });
-		notices.push({ text: { key: 'combat.notice.nat20Revive' } });
 	} else if (natural === 1) {
 		play = {
 			...play,
 			deathSaves: { successes, failures: Math.min(DEATH_SAVE_TRACK, failures + 2) },
 		};
-		notices.push({ text: { key: 'combat.notice.nat1Failures' } });
 	} else if (r.total >= DEATH_SAVE_DC) {
 		play = {
 			...play,
 			deathSaves: { successes: Math.min(DEATH_SAVE_TRACK, successes + 1), failures },
 		};
-		if (play.deathSaves.successes >= DEATH_SAVE_TRACK) {
-			play = { ...play, deathSaves: STABLE_TRACK };
-			notices.push({ text: { key: 'combat.notice.stabilised' } });
-		}
+		if (play.deathSaves.successes >= DEATH_SAVE_TRACK) play = { ...play, deathSaves: STABLE_TRACK };
 	} else {
 		play = {
 			...play,
@@ -294,8 +288,11 @@ export function rollDeathSave(character: Character, ctx: PlayContext): PlayOutco
 	return settled(
 		{
 			character: { ...character, play },
-			log: [{ name: { text: 'Death save', key: 'combat.roll.deathSave' }, rolled: r }],
-			notices,
+			// quiet: the block the player pressed is what shows the save, and a card would cover it
+			log: [{ name: { text: 'Death save', key: 'combat.roll.deathSave' }, rolled: r, quiet: true }],
+			// nothing is SAID of the outcome: the block lights the saves, stands the character up or
+			// names the ending, and a notice raised over it would cover the place that says so
+			notices: [],
 		},
 		ctx,
 	);
@@ -314,7 +311,6 @@ export interface DeathSavePip {
  * on a stable character is the damage that ends being stable.
  */
 export function setDeathSavePip(character: Character, { kind, index }: DeathSavePip): PlayOutcome {
-	const notices: PlayNotice[] = [];
 	const saves = character.play.deathSaves;
 	const count = saves[kind] === index + 1 ? index : index + 1;
 	const pressed = { ...saves, [kind]: count };
@@ -324,11 +320,9 @@ export function setDeathSavePip(character: Character, { kind, index }: DeathSave
 		deathSaves: unsettled ? { ...pressed, successes: 0 } : pressed,
 	};
 	if (kind === 'failures' && count >= DEATH_SAVE_TRACK) play = dead(play, 'death_saves');
-	if (kind === 'successes' && count >= DEATH_SAVE_TRACK) {
+	if (kind === 'successes' && count >= DEATH_SAVE_TRACK)
 		play = { ...play, deathSaves: STABLE_TRACK };
-		notices.push({ text: { key: 'combat.notice.stabilised' } });
-	}
-	return { character: { ...character, play }, log: [], notices };
+	return quietly({ ...character, play });
 }
 
 /**

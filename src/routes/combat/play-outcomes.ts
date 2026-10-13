@@ -83,9 +83,10 @@ export class PlayOutcomes {
 	private commit(held: Character, outcome: PlayOutcome): void {
 		const { hp, journal } = this.host();
 		adoptCharacter(held, outcome.character);
-		for (const { name, rolled } of outcome.log)
-			if (rolled) journal.pushRoll(name, rolled);
-			else journal.logMarker(name);
+		for (const { name, rolled, quiet } of outcome.log)
+			if (!rolled) journal.logMarker(name);
+			else if (quiet) journal.logRoll(name, rolled);
+			else journal.pushRoll(name, rolled);
 		for (const notice of outcome.notices) this.announce(notice);
 		if (outcome.concentrationSave) hp.owe(outcome.concentrationSave);
 		// an owed save belongs to the concentration it names, and goes when that one ends or is

@@ -35,6 +35,9 @@ export interface PlayContext {
 export interface PlayLogLine {
 	name: RollName;
 	rolled?: Rolled;
+	/** The roll's result is already said where the player is looking — the hit-point block lights
+	 *  the death save it was — so the host records it and raises no card over that place. */
+	quiet?: true;
 }
 
 /** Something to tell the player: a catalog sentence, or a row's own words as they are. A

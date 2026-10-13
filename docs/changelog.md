@@ -263,8 +263,9 @@ sentences became numbers, and a security pass closed what a page inside the wind
   longer covers the sheet with a dialog: the block says it, with what killed you and `I was
   revived` under the word. Getting back up — a natural 20, a heal, a
   revival — wipes the face you were on away behind a band of rescue's colour, and the block on
-  its feet is under it. Dying and being revived
-  no longer raise a notice: the block is what says it. A save pressed by mistake can be taken back from either ending.
+  its feet is under it. Nothing is raised over the block
+  while it says all this: a death save rolls without a card — it is still the last roll in the
+  strip and a row in the log — and dying, stabilising and being revived raise no notice. A save pressed by mistake can be taken back from either ending.
 - **You pick how that fight moves.** A pencil beside the block lists eight motions, `No animation`
   among them; the default is Rays & Hellfire. Settings ▸ General has **Reduce motion** — as the
   system, on, or off — which stills everything in the app and keeps each character's own pick.

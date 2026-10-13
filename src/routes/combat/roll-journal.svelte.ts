@@ -240,9 +240,25 @@ export class RollJournal {
 			}),
 		);
 
-	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
-	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
+	/** Record a completed roll and raise its card. `damage` (for an attack) is the per-type rolls
+	 *  that follow the to-hit — each shown as its own line, plus a combined total. */
 	pushRoll = (
+		name: RollName,
+		r: Rolled,
+		damage?: TypedRoll[],
+		noteParts?: SaidText[],
+	): RollLogEntry => {
+		const entry = this.logRoll(name, r, damage, noteParts);
+		toastRoll(entry);
+		return entry;
+	};
+
+	/**
+	 * Record a completed roll — prepend to the log (capped), write it to the file — and raise NO
+	 * card: for a roll whose result is already said where the player is looking. It is still the
+	 * last roll in the strip and a row in the log.
+	 */
+	logRoll = (
 		name: RollName,
 		r: Rolled,
 		damage?: TypedRoll[],
@@ -254,7 +270,6 @@ export class RollJournal {
 		});
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
-		toastRoll(entry);
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.

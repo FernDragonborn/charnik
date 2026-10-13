@@ -12,7 +12,7 @@ vi.mock('$lib/dice/roll-toast', () => ({ toastRoll }));
 const { RollJournal } = await import('./roll-journal.svelte');
 const { MenuOverlay } = await import('./menu-overlay.svelte');
 const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('$lib/dice/roller');
-const { ADVANTAGE_MODE, DIE_ROLE } = await import('$lib/rules/dice');
+const { ADVANTAGE_MODE, DIE_ROLE, rollPool } = await import('$lib/rules/dice');
 type TypedRoll = import('$lib/combat/roll').TypedRoll;
 
 let journal: InstanceType<typeof RollJournal>;
@@ -253,5 +253,22 @@ describe('crit threshold', () => {
 		const j = champion();
 		j.recordRolls([{ label: 'Greataxe', at: 1, ...thrown(19, slash) }]);
 		expect(j.log[0]?.critThreshold).toBe(19);
+	});
+});
+
+describe('a roll whose result is already on screen', () => {
+	const d20 = () => rollPool({ 20: 1 }, { mod: 0 });
+
+	it('is the last roll in the log, and raises no card', () => {
+		journal.logRoll({ text: 'Death save' }, d20());
+		expect(journal.log).toHaveLength(1);
+		expect(journal.log[0]?.label).toBe('Death save');
+		expect(toastRoll).not.toHaveBeenCalled();
+	});
+
+	it('where any other roll is logged and raises one', () => {
+		journal.pushRoll({ text: 'Athletics' }, d20());
+		expect(journal.log).toHaveLength(1);
+		expect(toastRoll).toHaveBeenCalledTimes(1);
 	});
 });

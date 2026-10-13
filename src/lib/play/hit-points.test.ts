@@ -136,6 +136,8 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		expect(isStable(stable.character.play)).toBe(true);
 		expect(stable.character.play.hp.current).toBe(0);
 		expect(stable.log[0]?.rolled?.total).toBe(12);
+		// recorded, and no card raised over the block that already shows it
+		expect(stable.log[0]?.quiet).toBe(true);
 	});
 
 	it('a stable character rolls no death save, and any damage starts the dying again', () => {
