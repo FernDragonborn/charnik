@@ -71,37 +71,6 @@ stay semi-manual.
   **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
   and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
 
-- [~] **DAMAGE-TYPE-UI · the hit-point block is redrawn: the hit, healing, and the face it wears at 0 hit points.**
-  The block is built — the hit's line, the green control, the 0 hit points face with its motions and
-  its two endings, the pencil, the narrow layout — and what it IS, with the rules it answers to and
-  the shapes that were drawn and passed over, is `../internals/ui.md` ▸ The hit-point block. What
-  is left is what no harness can sign off:
-
-  1. **Each motion's tempo and reach** are the maintainer's eye on the running app. They were set
-     from single frames.
-  2. **What the motions cost on a real machine.** Headless, with the drawing done in software and
-     one block at one success and two failures, the page's main thread is idle under every motion
-     (0.1%), which is what "only `transform` and `opacity` loop" buys. The process that draws is
-     not: about 6% standing still with the light lit, about 11% under Pressure, Waves, Burning
-     edge, Hatch and Arrows, 16% under Rays & Hellfire and 20% under Liquid. Those figures are a
-     software rasteriser's and say which motion is dearer, not what a GPU pays. Liquid alone is
-     marked `heavy` in the list (`DEAR_MOTIONS`); whether Rays & Hellfire — the default — earns the
-     mark too, or loses flames instead, waits for a number taken on the desktop app.
-  3. **The flames are polygons.** Still, they read closer to thorns than to fire; a tongue drawn as
-     a curve, the way the damage glyphs are, is the next shape if motion does not save them.
-  4. **A wave or a spark crosses the next, unearned skull** on its way to the middle.
-  5. **The narrow layout is the form built for now**: one row under the bar, and at 0 hit points
-     the roll and healing as icons between the saves. A second form — the field on its own row and
-     two worded halves under it — was drawn and passed over, not rejected.
-  6. **Ukrainian abbreviates hit points two ways**: `ОЗ` on the block and in its popover, `ЗД`
-     elsewhere in the catalog.
-
-  **The mocks**, built from the app's own glyphs and catalogs and kept for the forms not built:
-  `design-preview/damage-type-under-temp.html` (W2 and W2z, the two ways of saying a hit that stand
-  beside the built W3; the two orders on the line; the pencil; the narrow window; the bare field,
-  the band and the vessel at 0 hit points; the wings) and `design-preview/death-saves-motion.html`
-  (every motion, live, with the vessel that is not built).
-
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
   damage except Force) degrades to a note. The cheap shape is a subtractive relation

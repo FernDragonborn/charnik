@@ -249,10 +249,8 @@ position and are given per wave, because most of them were learned the hard way.
      designed together — the columns are signed off (`work/content.md` ▸ MAGIC-ITEM-VOCAB ▸ 1) and
      nothing of them is built — and A17 brings the invocation rows with it, because SRD 5.1 puts the
      Tome's rituals in an invocation rather than in the boon.
-  3. **The looks** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
-     from that mock; and DAMAGE-TYPE-UI's look — the whole hit-point block: the hit, healing, and
-     the face it wears at 0 hit points — is built; what its item still holds is the maintainer's eye
-     on the motions and their cost on a real machine.
+  3. **The look** — DEFENCE-STRIP waits on the maintainer, who redraws its mock, and is built
+     from that mock.
 
   **Rides past 0.8.0, and says so in the changelog where a player would look for it:** N2b's tail
   and the slot-as-a-price half of the resource subsystem (Wild Resurgence's first half, Nature

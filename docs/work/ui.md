@@ -147,7 +147,10 @@
   393px and 320px, in English and Ukrainian, no route scrolls the document sideways and no box inside
   `main` escapes it. The one threshold and the rules behind it are
   [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
-  The banner stays and says alpha rather than absent. Left:
+  The banner stays and says alpha rather than absent. The hit-point block's narrow form — one row
+  under the bar, and at 0 hit points the roll and healing as icons between the saves — is the one
+  built for now; a second, with the field on its own row and two worded halves under it, is drawn
+  in `design-preview/damage-type-under-temp.html` and was passed over, not rejected. Left:
   - [ ] **The row drag handle cannot pass the finger probe, and should not try.** `span.row-grip`
         is 6px wide and misses 2 of 8 probe points — the two horizontal ones, 11px either side of the
         mark: the left lands on the card's own border, the right INSIDE the row's hover pill. Passing

@@ -631,7 +631,10 @@ pill and the menu rows are the tray's classes, shared in `components.css`. The m
 only when a defense changed it, and its width is reserved so saying it moves nothing. The line is
 one width whatever the sheet defends; a defended type costs two presses here, or two keys. Two
 other ways of saying a hit were drawn and stand as mocks, not built: the defended types as glyph
-chips before the amount, and a type joined to a factor `∅ ½ 1 ×2` the player may overrule.
+chips before the amount, and a type joined to a factor `∅ ½ 1 ×2` the player may overrule. They are in
+`design-preview/damage-type-under-temp.html`, with the pencil's other placements and the fields
+at 0 hit points that were not built; every motion runs live in
+`design-preview/death-saves-motion.html`.
 
 **Healing and temporary hit points are one green control and one popover**: one number, Heal on
 Enter, Temp HP beside it. The caret is in that number, and the number selected, the moment it opens
@@ -648,7 +651,10 @@ from the block's edge, and the ground is moved over it by `transform` while the 
 moved back by the opposite one — so a wider ground uncovers more flames or more shafts of light and
 nothing stretches. What travels with the front rides a third layer. Death's side is rescue's side
 mirrored, so a motion is written one way. What loops is `transform` and `opacity` and nothing else,
-with one exception that says so in the list: Liquid keeps the filter that fuses it.
+with one exception that says so in the list: Liquid keeps the filter that fuses it. That is why the
+page's main thread stays idle under every motion; what a motion costs is the drawing, where
+Liquid and Rays & Hellfire are the dearest, and `DEAR_MOTIONS` is the list of the ones marked
+`heavy`.
 
 **The third save ends it on one face, whatever motion led there.** The side that won crosses the
 block, still moving as itself, and only then does the word stand: `Stabilized` on rescue's own
