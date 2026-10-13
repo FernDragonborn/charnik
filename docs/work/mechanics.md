@@ -127,6 +127,9 @@ stay semi-manual.
   - **The field at 0 hit points is the whole block with the slanted grounds and the glyphs** (T6
     in the mock). The band, the bare field and the vessel are not built; the vessel stays in the
     mock.
+  - **The concentration save a hit owes is said by the concentration chip, not by the block.**
+    Nothing appears inside the block (rule 1); the chip in `Controls.svelte` already rolls the
+    owed save, and it says the owed DC.
   - **The third save ends it on one face, whatever motion led there.** The side that won takes
     the whole block, still moving as itself, and the block says what happened in a bold word:
     `Stabilized` on the rescue's own ground, `Dead` in white on a block gone black. Only the way
@@ -154,14 +157,14 @@ stay semi-manual.
     rather than shrinking. Until that mock exists the redraw is built for the wide window.
 
   **Open, in the order it blocks the build.**
-  1. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
-     chip in `Controls.svelte` already rolls the owed save, so the proposal is that the chip says the
-     owed DC. **A wrong number ships today**: a second Damage press before the save is rolled
-     REPLACES the owed save (`play-outcomes.ts`, `hp.pendingConcentrationSave =
-     outcome.concentrationSave`), so 30 slashing then 10 fire owes DC 10 where one hit of 40 owes
-     DC 20. The proposal: damage taken before the owed save is rolled adds to it — the order of the
-     presses says whether it was one hit — which is also what makes two presses for a flame tongue
-     RAW again. Neither half is signed off.
+  1. **Two hits before the concentration save is rolled.** **A wrong number ships today**: a
+     second Damage press before the save is rolled REPLACES the owed save (`play-outcomes.ts`,
+     `hp.pendingConcentrationSave = outcome.concentrationSave`), so 30 slashing then 10 fire owes
+     DC 10. The app cannot tell one hit of two types from two hits, and the rules differ: one hit
+     of 40 owes one save at DC 20, two hits owe two, DC 15 and DC 10. Two answers: the damage
+     **adds up** into one save, right for a flame tongue's two presses and wrong for two blows; or
+     the chip holds a **queue** of owed saves with a press that says "that was one hit" and merges
+     them, right by default and one press dearer for the flame tongue. Not signed off.
   2. **The 0 hit points face's motions.** The motion is liquid (a swell along the surface,
      drops pulled out and drawn back, fused by one filter) or chevrons marching toward the middle.
      The flat slanted ground has four motions of its own on the same page, each tightening with
