@@ -138,7 +138,12 @@ stay semi-manual.
     mock draws the healing control under `Dead`; the build draws `Revived`.
   - **Three successes are recorded in the play state**, so `Stabilized` is drawn from a fact
     rather than from a notice that has already gone.
-  - **The player picks the motion, and every motion drawn ships beside a still face.** `Rays & Hellfire` plays until the player picks another; `No animation` is the choice already made when the system asks for reduced motion, and it is one press for anyone else. The list opens from a pencil: a tab on the block's left side, outside its frame,
+  - **The player picks the motion, and every motion drawn ships beside a still face.** `Rays & Hellfire` plays until the player picks another; `No animation` is one press away. The choice is the character's, kept in `ui` with
+    every other choice about how its sheet looks. Over it stands one setting of the app's own,
+    **Reduce motion** — follow the system, on, or off — and while it is in force the block plays
+    nothing whatever the character chose, and the choice is kept for when it is not. It governs
+    every animation the app has, not this block alone: it is the same switch
+    `prefers-reduced-motion` is, put in the player's hands. The list opens from a pencil: a tab on the block's left side, outside its frame,
     there only while the pointer or the focus is on the block — and always where there is no
     pointer to rest, since a touch screen has no other way to find it. The list never covers the
     block: it opens leftward past the tab, and while it is open the block shows its 0 hit points
@@ -185,9 +190,7 @@ stay semi-manual.
      **The liquid is by far the dearer of the two.** Measured apart by the maintainer, six moving
      liquid sides and six moving chevron sides differ by about 35% of a CPU; the chevrons are not
      cheap either, only much less so. Every motion ships, so every one is measured; one that stays dear ships marked as such in the pencil's list.
-  4. **Where the pencil's choice is kept.** Proposed as the app's own preference beside theme and
-     language, not the character's: it is about the person at the screen.
-  5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
+  4. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
   **The build, and what the prototypes do that it must not.** The mocks are the look; they are
   not the implementation.
@@ -212,6 +215,10 @@ stay semi-manual.
     migration, and whatever ends it — healing, damage, a rest — clears it.
   - **Removing `DeathScreen.svelte` takes its two ways out with it**: `combat.revive` moves to the
     `Dead` face, and the roster link is the navigation's again once nothing covers it.
+  - **Reduce motion is an open enum on the app's settings** (`system`, `on`, `off`) and one
+    attribute on the root that every reduced-motion rule answers to beside the media query, so
+    the app has one switch and not two. The pencil's list says so when it is in force, since a
+    choice that visibly does nothing reads as broken.
   - **The pencil stands outside the frame**, so the block gains a wrapper that does not clip it.
     It follows the pointer and the focus, and is always there under `(hover: none)`.
   - **The surfaces.** Both systems; right-to-left, where rescue and death trade sides and every
