@@ -97,9 +97,28 @@
   seam together. The ground it stands on is built: app commands are under the ACL and the log sink
   takes only the app's own lines (`internals/security.md` §2), so a table-link command arrives
   with a permission of its own.
-  **What it waits on is the list of calls.** The paragraph below says what the interface CARRIES;
-  which methods carry it — join, leave, publish, what a GM request looks like on arrival — is not
-  decided, and an interface written before that is a guess the spec then has to break.
+  **The calls.** One service, and the calls stand on a SEAT at a table rather than on the service:
+  `host(name)` answers a GM's seat and `join(invite)` a player's, so a player's seat has no way to
+  ask and a GM's none to publish — the role is the type, where one flat list of calls would refuse
+  the wrong one only at the table. A seat carries its table, which is what "every call takes a
+  table id" comes to. Both seats `leave()` and `subscribe(listener)`; a player's `publish`es and
+  `respond`s, a GM's `request`s. Every call answers delivered or not delivered — there is no
+  queue. Joining is approved outside this interface, in a dialog the webview cannot press. The
+  service does not list the tables an install has sat at: where a table is remembered waits on
+  where its keys are.
+  **What a player publishes is the whole view, and the GM sees all of a player character**: the
+  character as it is saved and the sheet derived from it, traces included, inventory, spells and
+  notes with the rest. `publish(character, view)` says what is true now; what crosses the wire —
+  the keys that changed over a cached base — is the transport's, so cutting the view differently
+  later changes no call. Measured on the demo character: the derived sheet is 29.5 KB, of which
+  skills, abilities and passives are 20 KB of traces that change on a level, an item or an effect;
+  the saved character is 3.2 KB and its hit points 20 bytes.
+  **What a GM asks is one of four typed requests, naming catalog ids and never tokens**: take this
+  damage (an amount and a type), be healed, take this state or effect, make this roll. A request
+  never applies itself — it arrives, the player sees it and answers. A roll's request names what
+  to roll and MAY carry its DC: the GM chooses per request whether the DC is announced, by a
+  switch on their side. The roll made travels back in the answer, since a roll is an event and
+  not a state of the sheet; what damage or healing left is seen in the next publish.
   **What the interface carries, as far as it is decided:** the player's app derives its own sheet
   and publishes the RESULT — values with their traces — and the GM's app renders it and derives
   nothing from a peer's tokens. Sent as changes over a cached base, never whole each time: a
