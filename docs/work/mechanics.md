@@ -175,7 +175,7 @@ stay semi-manual.
      the same on both faces, where the inside one changes place with the label; a side tab needs
      the free side, and the exhaustion block stands on the right. The choice is proposed as the
      app's own preference beside theme and language, not the character's: it is about the person
-     at the screen. Whether a row previews its motion is not drawn.
+     at the screen. The list never covers the block: it hangs under it, or beside it past a side tab, and while it is open the block shows its 0 hit points face playing what is picked.
   5. **The halo's height** on the wings: the opening inside it is 2.1px or 3px at working size.
 
   **Kept as mocks, not built and not rejected:** **W2** — the defended types as glyph chips, the
