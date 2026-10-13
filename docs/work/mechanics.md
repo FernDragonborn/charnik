@@ -146,8 +146,8 @@ stay semi-manual.
      **waves** — the front's edge peels off toward the middle and fades; **burning edge** — the
      front a wavering blade of light that sheds sparks; **hatch** — stripes at the front's lean
      marching toward the middle. A fifth dresses each side as what it is: **rays and hellfire** —
-     rescue as two fans of light turning against each other, death as a dark ground whose flames
-     rise with each failure and lick past the front. Their cost is not measured.
+     rescue as soft shafts of light breaking through cloud, each coming and going on its own
+     pace; death as a dark ground whose flames rise with each failure and stay inside it. Their cost is not measured.
      Which one, and its tempo, are the maintainer's eye on the running page, not a render's.
   3. **The motion is too expensive as prototyped, and the glow still flickers.** The prototype page
      holds one browser tab near 60% of a CPU with nine panels moving, while the app at rest costs
