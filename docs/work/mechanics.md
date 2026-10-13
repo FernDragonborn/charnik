@@ -122,11 +122,20 @@ stay semi-manual.
     under the narrow threshold, where it becomes several rows.
 
   **Open, in the order it blocks the build.**
-  1. **How the hit is said.** Two forms stand on the same frame: **W2** — the defended types as
+  1. **How the hit is said.** Three forms stand on the same frame: **W2** — the defended types as
      glyph chips, the rest behind a menu, then the amount and the minus; **W2z** — the type and a
      factor `∅ ½ 1 ×2` as one joined control, where a said type lights its factor, the player may
      overrule it, and with no type said the factor is theirs to press (a defense the sheet does not
      know). W2z is the narrower (242px against 300px at its widest) and its segments are small.
+     **The order on the line is open in both.** Type, amount, press sends the pointer from the
+     amount back to the type and then across the amount to the minus, and reads against the table's
+     "12 fire". Drawn beside it (`_damage-type-order.png`): **amount first** — amount, type, press,
+     one pass left to right. **W3** says the hit as the dice tray says a damage line: one field
+     holding the amount and then the type that owns it, the type the tray's own pill with its
+     chevron, opening the tray's two-column menu with the sheet's defended types leading, or typed
+     without leaving the field (`12 f ↵`). It is one width whatever the sheet defends (about 90px
+     before the minus), and a defended type costs two presses where W2 and W2z spend one. In every order the minus widens when it says a number (`− 6`) and pushes the line
+     7px left; its width is reserved in the build.
   2. **The concentration save after a hit.** It leaves the block — rule 1 — and the concentration
      chip in `Controls.svelte` already rolls the owed save, so the proposal is that the chip says the
      owed DC. **A wrong number ships today**: a second Damage press before the save is rolled
@@ -163,11 +172,12 @@ stay semi-manual.
   **Rejected, so they are not drawn again:** a bare `∅ ½ 1 ×2` with no type (unspecific, rule 11);
   a switch between that and the types (two interfaces, and it breaks in Ukrainian); a type's name
   in its chip; a minus per type row; a second number field for healing; a factor with the sheet's
-  glyphs drawn under it; the saves as a soft tint; a heartbeat on the glow.
+  glyphs drawn under it; W2z's type and factor split around the amount; the saves as a soft tint; a heartbeat on the glow.
 
   **The mocks**, built from the app's own glyphs and catalogs: `design-preview/damage-type-under-temp.html`
-  (W2, W2z, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
+  (W2, W2z, W3, the two orders, the 0 hit points faces, the wings) and `design-preview/death-saves-motion.html` (the
   motion, live — the saves are pressable). Renders: `_damage-type-w2.png`, `_damage-type-w2z.png`,
+  `_damage-type-w3.png`, `_damage-type-order.png`,
   `_damage-type-down.png`, `_damage-type-wings.png`, `_death-saves-motion.png`,
   `_death-saves-arrows.png`.
 
