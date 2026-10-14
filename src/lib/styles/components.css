@@ -25,6 +25,11 @@
 	   thing left hanging 13px off the edge. */
 	flex-wrap: wrap;
 }
+/* the gap is between the head and the panel's body: a collapsed card has no body, and a margin left
+   under its head made the card 10px deeper at the bottom than at the top */
+.panel-head:last-child {
+	margin-bottom: 0;
+}
 .htoggle {
 	display: inline-flex;
 	align-items: center;

@@ -124,6 +124,10 @@
 		break-inside: avoid;
 		margin-bottom: var(--space-1-5);
 	}
+	/* spacing BETWEEN groups: the last one's would sit on top of the card's own padding */
+	.category-block:last-child {
+		margin-bottom: 0;
+	}
 	.ability-heading {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
