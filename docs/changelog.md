@@ -22,6 +22,8 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   ammunition — asks which weapon and which bonus right there, in a small popover beside the ✓, and
   the inventory names it for what it is. Searching "longsword +1" or "shield +2" offers that very
   item at the top, already answered. Two magic weapons of the same kind are two rows now.
+- **An item can be taken out of the inventory from the play sheet.** A small bin stands at the end of
+  the row under the pointer, the way the drag grip stands at its start.
 - **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.
 - **A collapsed panel is as deep below its title as above it.**
 - **A plugin's time limit is counted, not timed.** It was 5 ms on the clock, so an honest plugin

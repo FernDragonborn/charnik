@@ -298,6 +298,15 @@
 						</button>
 					{/if}
 				</span>
+				<!-- the way OUT, mirroring the grip on the other edge: one press, no confirm — it is one
+				     press to add the item back from the same panel -->
+				<button
+					class="row-remove"
+					onclick={() => inv.remove(row.entry.iid)}
+					aria-label={$_('combat.inventory.remove', { values: { name: row.name } })}
+					title={$_('combat.inventory.remove', { values: { name: row.name } })}
+					><Icon name="trash-2" size={12} /></button
+				>
 			</div>
 		{/if}
 	{:else}
@@ -437,6 +446,37 @@
 		flex-direction: column;
 		gap: var(--space-1);
 		margin-top: var(--space-2-5);
+	}
+	/* hung just outside the row's END, as the grip hangs outside its start, so it costs the row no
+	   width; shown with the row's hover or the keyboard's focus, and quietly present on touch */
+	.row-remove {
+		position: absolute;
+		inset-inline-end: calc(-1 * (var(--row-bleed) + var(--space-4)));
+		top: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: var(--space-4);
+		padding: 0;
+		background: transparent;
+		border: 0;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		opacity: 0;
+	}
+	.inv-row:hover > .row-remove,
+	.row-remove:focus-visible {
+		opacity: 1;
+	}
+	.row-remove:hover,
+	.row-remove:focus-visible {
+		color: var(--color-danger);
+	}
+	@media (hover: none) {
+		.row-remove {
+			opacity: 0.4;
+		}
 	}
 	.inv-row {
 		/* the handle hangs outside this row, which — unlike a combat row — does not bleed into the

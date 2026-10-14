@@ -760,7 +760,8 @@
 			"varietyNone": "Різновид не вказано",
 			"varietyPick": "Який це різновид «{name}»?",
 			"varietyWithRarity": "{name} · {rarity}",
-			"weight": "{carried} / {capacity} фунтів"
+			"weight": "{carried} / {capacity} фунтів",
+			"remove": "Прибрати {name}"
 		},
 		"log": {
 			"damageTaken": "Отримано шкоди: {final}",

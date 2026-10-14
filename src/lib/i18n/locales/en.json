@@ -760,7 +760,8 @@
 			"varietyNone": "Variety not set",
 			"varietyPick": "Which {name} is this?",
 			"varietyWithRarity": "{name} · {rarity}",
-			"weight": "{carried} / {capacity} lb"
+			"weight": "{carried} / {capacity} lb",
+			"remove": "Remove {name}"
 		},
 		"log": {
 			"damageTaken": "Damage taken: {final}",

@@ -60,6 +60,7 @@
 	import Swords from '@lucide/svelte/icons/swords';
 	import Target from '@lucide/svelte/icons/target';
 	import Tent from '@lucide/svelte/icons/tent';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Timer from '@lucide/svelte/icons/timer';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -116,6 +117,7 @@
 		target: Target,
 		tent: Tent,
 		timer: Timer,
+		'trash-2': Trash2,
 		'triangle-alert': TriangleAlert,
 		upload: Upload,
 		'user-round': UserRound,
