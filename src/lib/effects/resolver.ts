@@ -397,6 +397,7 @@ class Resolver {
 			op,
 			amount: v.amount,
 			note: w.body,
+			...(w.eff.origin !== undefined ? { origin: w.eff.origin } : {}),
 		};
 	}
 

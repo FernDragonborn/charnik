@@ -217,6 +217,8 @@ export function armoredAC(args: {
 	armorBaseAc: number;
 	dexScore: number;
 	dexCap: number | null;
+	/** The inventory row the armour is, so its own AC and its magic read as one item. */
+	origin?: string;
 }): Computed {
 	const dexMod = abilityModifier(args.dexScore);
 	const applied = dexModUnderArmor(dexMod, args.dexCap);
@@ -239,6 +241,7 @@ export function armoredAC(args: {
 			op: 'add',
 			amount: args.armorBaseAc,
 			key: SOURCE_KEY.armor,
+			...(args.origin !== undefined ? { origin: args.origin } : {}),
 		},
 		{
 			source: dexLabel,

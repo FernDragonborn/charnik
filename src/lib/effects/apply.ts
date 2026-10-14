@@ -135,6 +135,7 @@ class FactsCollector {
 					: (p.setMode ?? 'set');
 		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
+		if (eff.origin !== undefined) fact.origin = eff.origin;
 		if (p.scope) fact.scope = p.scope; // §A: scoped per-weapon in computeAttacks
 		if (v.amount !== undefined) fact.amount = v.amount;
 		else if (v.diceFormula && op === 'add') fact.diceFormula = v.diceFormula;
@@ -420,6 +421,7 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
 				op: f.op,
 				amount: f.amount,
 				note: f.token,
+				...(f.origin !== undefined ? { origin: f.origin } : {}),
 			});
 		return;
 	}

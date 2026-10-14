@@ -16,7 +16,7 @@ import { resolveItem, type ResolvedItem } from '../content/resolved-item';
 import { conditionRow } from '../content/states';
 import { castingAbilityByClass } from './spellcasting';
 import { makeEffectCtxFactory } from './derive-context';
-import { num } from './derive-stats';
+import { num, type WornIids } from './derive-stats';
 
 /** A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions. */
 function seedAbilityBase(build: Character['build']): Record<Ability, Contribution[]> {
@@ -113,6 +113,9 @@ export interface DeriveSetup {
 	/** The shield in hand, resolved the same way armour is. A shield you WIELD is worth its AC while
 	 *  you wield it — 5e has no action for raising one — so being equipped is the whole condition. */
 	equippedShield: ResolvedItem | undefined;
+	/** The inventory rows of the armour worn and the shield in hand — the trace's `origin` for the
+	 *  parts of the Armor Class they give. */
+	wornIids: WornIids;
 	abilityByClass: Record<string, Ability>;
 	primaryAbility: Ability | undefined;
 	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined;
@@ -170,6 +173,10 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 		equippedShieldRow?.type === 'item'
 			? resolveItem(graph, equippedShieldRow, equippedShieldEntry?.base)
 			: undefined;
+	const wornIids: WornIids = {
+		...(equippedArmorEntry ? { armor: equippedArmorEntry.iid } : {}),
+		...(equippedShieldEntry ? { shield: equippedShieldEntry.iid } : {}),
+	};
 
 	// casting ability per caster class + the primary caster (highest caster class level) — the
 	// cheap slice the resolve ctx needs; full spellcasting derives AFTER the final scores exist.
@@ -210,6 +217,7 @@ export function prepareDerive(character: Character, graph: ContentGraph): Derive
 		hpMaxBaseFor,
 		equippedArmor,
 		equippedShield,
+		wornIids,
 		abilityByClass,
 		primaryAbility,
 		expandCondition,

@@ -635,6 +635,9 @@ export interface ActiveEffect {
 	/** The `+N` this instance of the item was answered with, read by its own `item_bonus`. Scoped to
 	 *  the effect for the same reason `classId` is: two of the same row may be carried at once. */
 	itemBonus?: number;
+	/** The carried item this effect rides on (its inventory row's `iid`) — what a form that wears
+	 *  only some of your kit checks, and what the trace groups an item's parts by. */
+	origin?: string;
 }
 
 /** A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class). */

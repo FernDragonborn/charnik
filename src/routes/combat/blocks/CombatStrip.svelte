@@ -14,6 +14,7 @@
 		why,
 		whyPassive,
 		contributionText,
+		shownTrace,
 		signed,
 		metres,
 		range,
@@ -65,7 +66,7 @@
 			<!-- one piece per contribution, never broken inside: a source's own name carries spaces, commas
 			     and plus signs ("Cloak of Protection +1"), so a run of them joined by spaces read as one -->
 			<div class="tile-text">
-				{#each s.ac.trace as part, index (index)}<span class="tile-part"
+				{#each shownTrace(s.ac) as part, index (index)}<span class="tile-part"
 						>{contributionText(part, $_)}</span
 					>{/each}
 			</div>

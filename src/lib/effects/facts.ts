@@ -143,6 +143,8 @@ export interface NumericFact {
 	source: string;
 	/** The guard-stripped token, for provenance notes. */
 	token: string;
+	/** The carried item the effect rides on — see `Contribution.origin`. */
+	origin?: string;
 	amount?: number;
 	/** A dice quantity (`1d4`, `-2d6`) — rides the roll path; folds as a note on stats. */
 	diceFormula?: string;

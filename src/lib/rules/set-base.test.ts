@@ -18,6 +18,16 @@ describe('a `base` contribution competes with the base, and the rest still adds'
 		expect(ac.notes?.map((n) => n.key)).toContain(NOTE_KEY.baseReplaced);
 	});
 
+	it('the base it replaced stays in the trace, marked, so a reader is not shown it as adding', () => {
+		const ac = computed([...unarmored, c('Unarmored Defense', 'feature', 'base', 15)]);
+		expect(ac.trace.filter((t) => t.superseded).map((t) => t.source)).toEqual(['Base', 'DEX mod']);
+		const kept = computed([
+			c('Plate', 'base', 'add', 18),
+			c('Unarmored Defense', 'feature', 'base', 15),
+		]);
+		expect(kept.trace.some((t) => t.superseded)).toBe(false);
+	});
+
 	it('a lower base loses to the armour, and says so', () => {
 		const ac = computed([
 			c('Plate', 'base', 'add', 18),

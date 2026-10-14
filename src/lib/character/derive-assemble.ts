@@ -217,6 +217,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		proficiencyBonus: prof,
 		equippedArmor,
 		equippedShield,
+		wornIids,
 		speciesRow,
 		baseSpeed,
 	} = setup;
@@ -246,7 +247,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 			.list('item', { system })
 			.filter((r) => r.data.category === TOOL_ITEM_CATEGORY && isActive(r)),
 	);
-	const ac = deriveAc(statInputs, equippedArmor, equippedShield);
+	const ac = deriveAc(statInputs, equippedArmor, equippedShield, wornIids);
 
 	// HP: the base fold came out of the resolve stage (recomputed at the final CON); hp_max flows
 	// through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).

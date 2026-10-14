@@ -37,8 +37,15 @@ type ClassCtx = { level: number; classId: string; subclassId: string };
  *  carries it (so `spellcasting_mod` reads THAT class's mod, SPEC4), and the two answers a carried
  *  item's row asked its owner for. Absent fields mean "this row asked nothing". */
 /** Where a row's effect came from. `name` is what the trace calls it when that is not the row's own
- *  name — a carried +N item is "Shield +2", never the book's "Shield, +1, +2, or +3". */
-type RowOrigin = { classId?: string; itemBonus?: number; itemChoice?: string; name?: string };
+ *  name — a carried +N item is "Shield +2", never the book's "Shield, +1, +2, or +3" — and `origin`
+ *  is the inventory row it is carried on. */
+type RowOrigin = {
+	classId?: string;
+	itemBonus?: number;
+	itemChoice?: string;
+	name?: string;
+	origin?: string;
+};
 
 /**
  * Collects every active effect (species / class features / feats / items / runtime / exhaustion) as
@@ -52,7 +59,6 @@ class EffectGatherer {
 	/** What came from the species, and what came from a carried item with the row it is on — the
 	 *  two things a form's rules may set aside, which turn on a token's SOURCE and not its target. */
 	private readonly fromSpecies = new Set<ActiveEffect>();
-	private readonly carriedOn = new Map<ActiveEffect, string>();
 	private readonly character: Character;
 	private readonly graph: ContentGraph;
 	private readonly isActive: (row: LoadedRow) => boolean;
@@ -90,19 +96,18 @@ class EffectGatherer {
 			const attunementNeeded =
 				row.type === 'item' && needsAttunement(resolveItem(this.graph, row, inv.base));
 			if (attunementNeeded && !inv.attuned) continue;
-			const own = this.pushRow(row, 'item', {
+			this.pushRow(row, 'item', {
 				// spread, not assign: an unanswered question is an ABSENT field, and the two answers
 				// are independent — a +2 armour may still be waiting to be told its damage type
 				...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
 				...(inv.choice !== undefined ? { itemChoice: inv.choice } : {}),
 				...this.instanceNameOf(row, inv),
+				origin: inv.iid,
 			});
 			// the variety this instance is, where the row's answers are rows: its tokens fold beside the
 			// item's own, under the variety's name, and an unanswered row grants none of them
 			const variety = optionNamed(this.graph, row, inv.choice);
-			const varietyOwn =
-				variety && this.isActive(variety) ? this.pushRow(variety, 'item') : undefined;
-			for (const pushed of [own, varietyOwn]) if (pushed) this.carriedOn.set(pushed, inv.iid);
+			if (variety && this.isActive(variety)) this.pushRow(variety, 'item', { origin: inv.iid });
 		}
 		this.gatherRuntimeEffects();
 		this.gatherExhaustion();
@@ -134,8 +139,7 @@ class EffectGatherer {
 		const wornOnly = says(FORM_WORD.wornOnly);
 		return this.active.filter((effect) => {
 			if (sheds && this.fromSpecies.has(effect)) return false;
-			const row = this.carriedOn.get(effect);
-			return !(wornOnly && row !== undefined && !form.worn.includes(row));
+			return !(wornOnly && effect.origin !== undefined && !form.worn.includes(effect.origin));
 		});
 	}
 
@@ -195,6 +199,7 @@ class EffectGatherer {
 			layer,
 			...(from.classId !== undefined ? { classId: from.classId } : {}),
 			...(from.itemBonus !== undefined ? { itemBonus: from.itemBonus } : {}),
+			...(from.origin !== undefined ? { origin: from.origin } : {}),
 			tokens,
 		};
 		this.active.push(effect);

@@ -64,6 +64,14 @@ export interface Contribution {
 	amount: number;
 	/** Optional extra detail for the tooltip, e.g. "DEX 16". */
 	note?: string;
+	/** The carried item this part came from (its inventory row's `iid`), when one did. An item can
+	 *  reach a value twice — armour's own AC through the core, its +3 through its effects — and this
+	 *  is what lets a reader be shown it once. */
+	origin?: string;
+	/** Part of a base a `base` contribution replaced (Base 10 and DEX under Unarmored Defense): kept
+	 *  in the trace, so nothing is dropped from it, and left out of what a reader is shown — the
+	 *  `baseReplaced` note says what was replaced. Set by `computed`, never by a producer. */
+	superseded?: true;
 	/** i18n keys for a contribution the ENGINE wrote, with the values both of them read. A
 	 *  contribution whose source is a content row's own name — a species, a magic item — carries
 	 *  neither: that word is DATA and passes through untranslated. Rendered by `sourceText` /
@@ -292,15 +300,34 @@ function overriddenSetNotes(contribs: Contribution[]): Note[] {
 	return out;
 }
 
+/** Where a contribution folds, as a number to sort a trace by: its layer's place, with a `base`
+ *  between the core's own base layers and everything after them. */
+export function foldRank(c: Contribution): number {
+	return c.op === 'base' ? BASE_LAYERS.length - 0.5 : LAYER_SEQUENCE.indexOf(c.layer);
+}
+
 /** A `base` folds by MAX against the base the core worked out, so one of them is not counted —
  *  explained either way (the explainability invariant): the core's base replaced by a higher one, or
  *  a `base` that did not beat what was already there. */
+/** Whether a contribution is part of the base the core worked out — what a `base` competes with. */
+const isOwnBase = (c: Contribution): boolean => BASE_LAYERS.includes(c.layer) && c.op !== 'base';
+
+/** The `base` that beat the core's own base, if one did. */
+function winningBase(contribs: Contribution[]): { own: number; won: Contribution } | undefined {
+	const bases = contribs.filter((c) => c.op === 'base');
+	if (!bases.length) return undefined;
+	const own = fold(contribs.filter(isOwnBase));
+	const winner = Math.max(own, ...bases.map((c) => c.amount));
+	const won = bases.find((c) => c.amount === winner && winner > own);
+	return won ? { own, won } : undefined;
+}
+
 function baseNotes(contribs: Contribution[]): Note[] {
 	const bases = contribs.filter((c) => c.op === 'base');
 	if (!bases.length) return [];
-	const own = fold(contribs.filter((c) => BASE_LAYERS.includes(c.layer) && c.op !== 'base'));
+	const own = fold(contribs.filter(isOwnBase));
 	const winner = Math.max(own, ...bases.map((c) => c.amount));
-	const won = bases.find((c) => c.amount === winner && winner > own);
+	const won = winningBase(contribs)?.won;
 	const out: Note[] = [];
 	if (won)
 		out.push({
@@ -328,7 +355,12 @@ export function computed(contribs: Contribution[], clamp?: Clamp, notes?: Note[]
 		...baseNotes(contribs),
 		...ineffective,
 	];
-	const result: Computed = { value, trace: contribs };
+	// a base replaced by a higher one stays in the trace, marked, rather than reading as if it added
+	const replaced = winningBase(contribs) !== undefined;
+	const trace = replaced
+		? contribs.map((c): Contribution => (isOwnBase(c) ? { ...c, superseded: true } : c))
+		: contribs;
+	const result: Computed = { value, trace };
 	if (allNotes.length) result.notes = allNotes;
 	if (clamp) result.clamp = clamp;
 	return result;

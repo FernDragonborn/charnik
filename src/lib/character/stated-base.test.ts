@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { classRow, inventoryRow, newCharacter } from './schema';
 import { deriveSheet } from './derive';
+import { contributionText, shownTrace } from '../combat/effects-view';
 import type { ContentGraph } from '../content/loader';
 
 describe.each([
@@ -26,6 +27,42 @@ describe.each([
 		expect(character('barbarian', [])).toBe(15);
 		expect(character('barbarian', [item('shield')])).toBe(17);
 		expect(character('barbarian', [item('cloak_of_protection')])).toBe(16);
+	});
+
+	it('reads in the order it folds, one part per item: the base, then a Shield +2 as +4', () => {
+		const ch = newCharacter('probe', 'Probe', system);
+		ch.build.classes = [classRow({ class: `class:${source}:barbarian`, level: 1 })];
+		ch.build.abilities = { ...ch.build.abilities, dex: 14, con: 16 };
+		ch.build.inventory = [item('shield_1_2_or_3', { bonus: 2 }), item('cloak_of_protection')];
+		const ac = deriveSheet(ch, graph).ac;
+		expect(ac.value).toBe(15 + 4 + 1);
+		expect(shownTrace(ac).map((t) => contributionText(t))).toEqual([
+			'Unarmored Defense = 15',
+			'Shield +2 +4',
+			'Cloak of Protection +1',
+		]);
+	});
+
+	it('one carried item is one part, however many ways it reaches the number', () => {
+		const plate = system === '5e' ? 'plate' : 'plate_armor'; // the two SRDs' ids for it
+		const parts = (items: ReturnType<typeof item>[]) => {
+			const ch = newCharacter('probe', 'Probe', system);
+			ch.build.abilities = { ...ch.build.abilities, dex: 14 };
+			ch.build.inventory = items;
+			return shownTrace(deriveSheet(ch, graph).ac).map((t) => contributionText(t));
+		};
+		// the plate's own 18 and its +3 are one part, and heavy armour's ignored DEX is no part at all
+		const plateName = graph.get(`item:${source}:${plate}`)?.data.name_en;
+		expect(parts([item('armor_1_2_or_3', { base: `item:${source}:${plate}`, bonus: 3 })])).toEqual([
+			`${plateName} +3 +21`,
+		]);
+		// two different items stay two parts
+		expect(parts([item('shield'), item('cloak_of_protection')])).toEqual([
+			'Base +10',
+			'DEX mod +2',
+			'Shield +2',
+			'Cloak of Protection +1',
+		]);
 	});
 
 	it('a monk with a shield has no Unarmored Defense at all', () => {

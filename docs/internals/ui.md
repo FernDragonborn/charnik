@@ -244,6 +244,10 @@ good", so they are pinned here and every component follows them.
    anywhere outside its own box — a press inside is a selection, never a dismissal — on a second
    press of the trigger, or on Escape. Pinned is a state only that press enters, and while one is
    pinned no other value's popover opens over it. The trigger carries `aria-expanded`.
+   **The parts are what a reader adds up, not what the engine folded** (`combat/effects-view.ts` ▸
+   `shownTrace`): in fold order, a base before what adds to it; one part per carried item, by the
+   trace's `origin` — Plate +3's own 18 and its +3 are "Plate +3 +21"; and neither a base a
+   `set_base` replaced nor an addend of 0 is a part. The trace itself keeps all of it.
    **A scroll closes a HOVERED popover and moves a FOCUSED one**: focusing a value below the fold
    makes the browser scroll it into view, and a popover that closed on that scroll would say
    nothing to exactly the keyboard user it exists for. It follows the value until the value leaves

@@ -231,17 +231,29 @@ export function deriveSkills(
  *  it — there is no action for raising one, and a shield you are holding is worth its AC while you
  *  hold it. Its own `ac` tag is the amount, so a +1 shield is worth 3 rather than a flat 2, and a
  *  shield row that declares no `ac` contributes nothing — the same rule armour follows. */
+/** Which inventory rows are worn as armour and held as a shield — absent when none is. */
+export interface WornIids {
+	armor?: string;
+	shield?: string;
+}
+
 export function deriveAc(
 	{ scores, facts }: StatInputs,
 	equippedArmor: ResolvedItem | undefined,
 	equippedShield: ResolvedItem | undefined,
+	worn: WornIids = {},
 ): Computed {
 	let acBase: Computed;
 	if (equippedArmor) {
 		// no `dex_cap` tag means no cap (light armor), which is NOT `dex_cap:0` (heavy) — hence null
 		const dexCap = tagInt(equippedArmor.tags, ITEM_TAG.dexCap);
 		const armorBaseAc = tagInt(equippedArmor.tags, ITEM_TAG.ac) ?? 0;
-		acBase = armoredAC({ armorBaseAc, dexScore: scores.dex, dexCap });
+		acBase = armoredAC({
+			armorBaseAc,
+			dexScore: scores.dex,
+			dexCap,
+			...(worn.armor !== undefined ? { origin: worn.armor } : {}),
+		});
 	} else {
 		acBase = unarmoredAC({ dexScore: scores.dex });
 	}
@@ -260,6 +272,7 @@ export function deriveAc(
 					op: 'add',
 					amount: shieldAc,
 					key: SOURCE_KEY.shield,
+					...(worn.shield !== undefined ? { origin: worn.shield } : {}),
 				},
 			],
 		};
