@@ -36,8 +36,10 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
 - **One suit of armour and one shield at a time.** Putting on a second takes the first off, so two
   shields' bonuses no longer both reach your Armor Class.
 - **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.
-- **The Armor Class tile lists each part of the number apart** — a source called "Cloak of Protection"
-  no longer runs into the one after it.
+- **The Armor Class reads in the order it adds up, one part per thing you wear.** Unarmored Defense
+  comes before the shield added to it; a Plate +3 is one part, +21, rather than "Armor" and a
+  second "+3"; a Shield +2 is +4 rather than two shields; heavy armour no longer lists a DEX of 0;
+  and a source called "Cloak of Protection" no longer runs into the one after it.
 - **A collapsed panel is as deep below its title as above it.**
 - **The rarity band in the item picker cannot be wedged any more.** A handle pushed past the other
   used to stay where it was dragged while the list did not change, and two handles parked at
@@ -48,6 +50,14 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   switched off for it — turn it off in Settings if it stalls your sheet.
 - **Updated the desktop shell to Tauri 2.12** with its plugins, alongside the routine dependency
   updates.
+
+### Not in this release
+
+- **A +N item's answer is fixed once given.** A wrong pick is a remove and re-add from the inventory;
+  choosing again on the row comes in 0.9.0.
+- **Wand of the War Mage keeps the book's name** with the bonus beside it, and a Ring of Resistance
+  is still asked its damage type on the row after it is added rather than when it is.
+- Everything 0.8.0 listed as not in it still is not.
 
 ## 0.8.0
 
