@@ -116,6 +116,29 @@
   Nothing here is blocked on code. What it needs first is RENDERED variants, not names
   (`AGENTS.md` ▸ Screenshots go in design-preview).
 
+- [ ] **ITEM-INSTANCE · a `+1/+2/+3` item is the one you found, picked as itself — not "Weapon, +1,
+  +2, or +3" with questions hanging off it.** A maintainer-stated rework for 0.9.0. The SRD prints
+  ONE row per kind (`weapon_1_2_or_3`, `armor_…`, `shield_…`, `ammunition_…`,
+  `wand_of_the_war_mage_…`) and the rarity sets the number; the data model already answers it per
+  instance — `base` and `bonus` on the inventory entry (`content.md` ▸ a row the book prints once),
+  read by `item_bonus` in the row's tokens. What is wrong is how a player meets it: the inventory row
+  is NAMED by the book's generic heading, and the bonus and the base are `<select>`s standing on the
+  row after it was added, so a Longsword +2 reads as "Weapon, +1, +2, or +3" with two dropdowns.
+  - **The thing is chosen as an individual item at the moment it is added.** Picking a tiered row in
+    the item picker asks which one — the +N (with its rarity where the source states one) and, for a
+    template, the base — before it lands, and what lands is that instance.
+  - **The inventory names the instance**: "Longsword +2", "Shield +1", "Wand of the War Mage +3" —
+    built from the base's localized name and the answered bonus, never the book's heading. The
+    heading stays what the compendium shows for the row.
+  - **The answer stays changeable** (a reverse state): a misclick or a DM's later reveal is a re-pick
+    on the row's own edit, not a delete and re-add — but it is not a standing pair of dropdowns.
+  - **Same treatment for the word-answered rows** (`choice_options` — Ring of Resistance's damage type)
+    and the varieties (`option` rows — the Belts): "Ring of Resistance (fire)" is the instance's name.
+  - An item already carried with no answer keeps working as today — unanswered grants nothing — and
+    shows the question until it is answered.
+  Size it from `combat/inventory.svelte.ts` (`isTemplate`, `bonusRungs`, `choiceOptions`,
+  `varieties`), `blocks/panels/InventoryPanel.svelte` and the item picker the builder and play share.
+
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
   written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects

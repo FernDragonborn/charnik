@@ -249,6 +249,9 @@ position and are given per wave, because most of them were learned the hard way.
   2. **The log, reworked: LOG-EVENTS** (`roller.md` — what it holds) **with COMBAT-RAIL ▸ 1**
      (`ui.md` — where it stands). One change, because what makes the log worth a pinned rail is that
      it finally says what happened in a turn rather than only what was rolled.
+  3. **ITEM-INSTANCE** — `ui.md`. A `+1/+2/+3` item is picked as the one you found and named as
+     itself in the inventory ("Longsword +2"), not carried as the book's generic heading with
+     dropdowns on the row.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 
