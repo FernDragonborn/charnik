@@ -454,6 +454,10 @@ const uiSchema = z
 		 *  view-model: a hidden row that came back on the next launch was a preference the app kept
 		 *  forgetting, while a hidden SPELL had always survived — one question, two answers. */
 		actionsHidden: z.array(z.string()).default([]),
+		/** The reverse list, for the actions a character starts WITHOUT (`ACTION_DEFAULT.hidden`):
+		 *  the ones the player opened. Its own list rather than a default in `actionsHidden`, because a
+		 *  save written before such a row existed has an `actionsHidden` that never names it. */
+		actionsShown: z.array(z.string()).default([]),
 		/** Features hidden from the Features panel, and features pinned above it, by `type:source:id`.
 		 *  Same shape and same rules as the spell pair. Keyed by the ROW, so a feature a multiclass
 		 *  holds twice is one entry: a player hiding "Ability Score Improvement" means all of them. */
@@ -483,6 +487,7 @@ const uiSchema = z
 		spellsHidden: [],
 		spellsPinned: [],
 		actionsHidden: [],
+		actionsShown: [],
 		featuresHidden: [],
 		featuresPinned: [],
 		textOverrides: {},

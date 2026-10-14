@@ -506,6 +506,9 @@
 			"hide": "Сховатися",
 			"hideDesc": "Непомітність",
 			"hideRoll": "Сховатися (Непомітність)",
+			"cry": "Плакати",
+			"cryDesc": "Це вільна дія.",
+			"markerFree": "вільна",
 			"markerAction": "дія",
 			"markerAttacks": "→ Атаки",
 			"markerContest": "змагання",
@@ -853,7 +856,8 @@
 				"core": "Основні",
 				"melee": "Ближній бій",
 				"stealth": "Скритність",
-				"support": "Підтримка"
+				"support": "Підтримка",
+				"classFeatures": "Класові вміння"
 			},
 			"whichActions": "Які дії показувати",
 			"whichFeatures": "Які вміння показувати"

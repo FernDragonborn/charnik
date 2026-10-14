@@ -506,6 +506,9 @@
 			"hide": "Hide",
 			"hideDesc": "Stealth",
 			"hideRoll": "Hide (Stealth)",
+			"cry": "Cry",
+			"cryDesc": "It's a free action.",
+			"markerFree": "free",
 			"markerAction": "action",
 			"markerAttacks": "→ Attacks",
 			"markerContest": "contest",
@@ -853,7 +856,8 @@
 				"core": "Core",
 				"melee": "Melee",
 				"stealth": "Stealth",
-				"support": "Support"
+				"support": "Support",
+				"classFeatures": "Class features"
 			},
 			"whichActions": "Which actions appear",
 			"whichFeatures": "Which features show"

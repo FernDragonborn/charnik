@@ -11,6 +11,7 @@
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import type { StandardAction } from '$lib/combat/helpers';
+	import { ACTION_DEFAULT } from '$lib/combat/actions';
 	/** The three things this panel lists. A player sees one list of things they can do, so they order
 	 *  one list: a spend-option that opens the character's whole turn has as much claim to the top as
 	 *  Dash does. The kind rides on the row because each renders differently, not because each sorts
@@ -30,7 +31,9 @@
 		combat.layout.ordered(
 			ROW_PANEL.actions,
 			[
-				...combat.visibleActions.map((a): ActionRow => ({ kind: ROW_KIND.action, id: a.id, a })),
+				...combat.visibleActions
+					.filter((a) => a.byDefault === ACTION_DEFAULT.shown)
+					.map((a): ActionRow => ({ kind: ROW_KIND.action, id: a.id, a })),
 				...combat.featureRolls.map((r): ActionRow => ({
 					kind: ROW_KIND.roll,
 					id: `roll:${r.id}:${r.source}`,
@@ -41,6 +44,10 @@
 					id: `spend:${o.id}`,
 					o,
 				})),
+				// a row the character starts without goes after everything the character actually has
+				...combat.visibleActions
+					.filter((a) => a.byDefault === ACTION_DEFAULT.hidden)
+					.map((a): ActionRow => ({ kind: ROW_KIND.action, id: a.id, a })),
 			],
 			(row) => row.id,
 		),

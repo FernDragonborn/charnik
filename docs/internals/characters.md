@@ -174,7 +174,9 @@ Actions panel's — `combat/actions.ts ▸ ACTION_PRESET`, sets grouped by how a
 never a rule — and whatever grows one next). So there is one answer to "is this shown", a preset's effect reads back in
 the same controls a player toggles by hand, and undoing it is the same click either way. A pin is
 exempt from a filter: pinning is the player saying "always this one", and two controls that overrule
-each other leave nobody able to say which won.
+each other leave nobody able to say which won. A row a character starts WITHOUT (`ACTION_DEFAULT.hidden` —
+the Actions panel's Cry) is the reverse list, `actionsShown`: what the player opened, so a save
+written before the row existed never shows it, and no preset reaches it.
 
 The split is what makes rests safe. **A long rest only ever edits `play`**, so it has no way to reach
 the build; resetting play returns a character to "full HP, nothing spent" without needing to know

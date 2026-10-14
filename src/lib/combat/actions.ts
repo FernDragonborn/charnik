@@ -24,9 +24,20 @@ export interface StandardAction {
 	/** The skill that check IS, so the roll picks up the same effects the skills panel's own row does
 	 *  (advantage, Bless dice, a reroll floor). Present exactly when `roll` is. */
 	skill?: SkillId;
+	/** Whether pressing it spends the turn's Action. */
+	cost: ActionCost;
+	/** Whether a character starts with it on the panel. A row hidden by default is shown only once the
+	 *  player opens its own eye, and no preset reaches it. */
+	byDefault: ActionDefault;
 }
 
+export const ACTION_COST = { action: 'action', free: 'free' } as const;
+export type ActionCost = (typeof ACTION_COST)[keyof typeof ACTION_COST];
+export const ACTION_DEFAULT = { shown: 'shown', hidden: 'hidden' } as const;
+export type ActionDefault = (typeof ACTION_DEFAULT)[keyof typeof ACTION_DEFAULT];
+
 const MARKER = {
+	free: 'combat.action.markerFree',
 	action: 'combat.action.markerAction',
 	contest: 'combat.action.markerContest',
 	roll: 'combat.action.markerRoll',
@@ -45,6 +56,7 @@ const ROWS: {
 	system?: System;
 	/** When the two editions call it different things. */
 	nameKey?: string;
+	byDefault?: ActionDefault;
 }[] = [
 	{ id: 'attack', marker: 'attacks' },
 	{ id: 'dash', marker: 'action' },
@@ -58,6 +70,8 @@ const ROWS: {
 	{ id: 'help', marker: 'action' },
 	{ id: 'ready', marker: 'action' },
 	{ id: 'utilize', marker: 'action' },
+	// not a rule: the one row the panel keeps for the player who goes looking under the eyes
+	{ id: 'cry', marker: 'free', byDefault: ACTION_DEFAULT.hidden },
 ];
 
 /** The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills. Pure. */
@@ -72,6 +86,8 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 		hint: r.skill ? signed(sk(r.skill)) : '',
 		descKey: `combat.action.${r.id}Desc`,
 		markerKey: MARKER[r.marker],
+		cost: r.marker === 'free' ? ACTION_COST.free : ACTION_COST.action,
+		byDefault: r.byDefault ?? ACTION_DEFAULT.shown,
 		...(r.skill
 			? { roll: [`combat.action.${r.id}Roll`, sk(r.skill)] as [string, number], skill: r.skill }
 			: {}),
@@ -88,6 +104,7 @@ export const ACTION_PRESET = {
 	melee: 'melee',
 	stealth: 'stealth',
 	support: 'support',
+	classFeatures: 'classFeatures',
 } as const;
 export type ActionPreset = (typeof ACTION_PRESET)[keyof typeof ACTION_PRESET];
 
@@ -97,14 +114,28 @@ const PRESET_SHOWS: Record<Exclude<ActionPreset, 'all'>, readonly string[]> = {
 	melee: [...CORE_ACTIONS, 'grapple', 'shove'],
 	stealth: [...CORE_ACTIONS, 'hide', 'search', 'study'],
 	support: [...CORE_ACTIONS, 'help', 'ready'],
+	// none of the standard twelve: what is left on the panel is what the character's features grant
+	classFeatures: [],
 };
 
 /** The hidden list a preset writes: every action of this character's list the preset does not show. */
 export function actionsHiddenBy(
-	actions: readonly { id: string }[],
+	actions: readonly Pick<StandardAction, 'id' | 'byDefault'>[],
 	preset: ActionPreset,
 ): string[] {
 	if (preset === ACTION_PRESET.all) return [];
 	const shows = PRESET_SHOWS[preset];
-	return actions.filter((a) => !shows.includes(a.id)).map((a) => a.id);
+	return actions
+		.filter((a) => a.byDefault === ACTION_DEFAULT.shown && !shows.includes(a.id))
+		.map((a) => a.id);
+}
+
+/** Is this action off the panel: hidden by the player, or hidden by default and not yet opened. */
+export function isActionHidden(
+	action: Pick<StandardAction, 'id' | 'byDefault'>,
+	ui: { actionsHidden: readonly string[]; actionsShown: readonly string[] },
+): boolean {
+	return action.byDefault === ACTION_DEFAULT.hidden
+		? !ui.actionsShown.includes(action.id)
+		: ui.actionsHidden.includes(action.id);
 }

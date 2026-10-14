@@ -21,7 +21,13 @@ import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
 import { FeatureView } from './feature-view.svelte';
-import { actionsHiddenBy, type ActionPreset } from '$lib/combat/actions';
+import {
+	ACTION_COST,
+	ACTION_DEFAULT,
+	actionsHiddenBy,
+	isActionHidden,
+	type ActionPreset,
+} from '$lib/combat/actions';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -267,16 +273,20 @@ class CombatVM {
 		const cur = ui.spellsPinned ?? [];
 		ui.spellsPinned = cur.includes(ref) ? cur.filter((x) => x !== ref) : [...cur, ref];
 	};
-	/** Hidden standard actions, as the menu reads them. Backed by `ui.actionsHidden`, so the answer
-	 *  survives a restart the way a hidden spell always did. */
-	hiddenActions = $derived(
-		Object.fromEntries((this.character?.ui.actionsHidden ?? []).map((id) => [id, true])),
-	);
+	/** Hidden standard actions, as the menu reads them. Backed by `ui.actionsHidden` (and
+	 *  `ui.actionsShown` for the rows a character starts without), so the answer survives a restart
+	 *  the way a hidden spell always did. */
+	hiddenActions = $derived.by(() => {
+		const ui = this.character?.ui;
+		return Object.fromEntries(this.actions.map((a) => [a.id, ui ? isActionHidden(a, ui) : false]));
+	});
 	toggleActionHidden = (id: string) => {
 		const ui = this.character?.ui;
-		if (!ui) return;
-		const cur = ui.actionsHidden ?? [];
-		ui.actionsHidden = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+		const action = this.actions.find((a) => a.id === id);
+		if (!ui || !action) return;
+		const flip = (cur: string[]) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+		if (action.byDefault === ACTION_DEFAULT.hidden) ui.actionsShown = flip(ui.actionsShown);
+		else ui.actionsHidden = flip(ui.actionsHidden);
 	};
 	/** Show one named set of actions by writing the same eyes `toggleActionHidden` does. */
 	applyActionPreset = (preset: ActionPreset) => {
@@ -443,6 +453,7 @@ class CombatVM {
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
 	actionClick = (a: StandardAction, e: Event) => {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
+		if (a.cost === ACTION_COST.free) return toast(t(a.nameKey), { description: t(a.descKey) });
 		if (!this.economy.trySpend('action')) return;
 		// the roll's NAME is a key: a standard action is a closed rules vocabulary, so its check reads
 		// in the language the log is READ in rather than the one it was made in. Its TARGET is the skill
