@@ -169,8 +169,9 @@ launch, which is exactly what `actionsHidden` and then `panelsCollapsed` each di
 here. `panelsCollapsed` is the one that also holds the two sheet SECTIONS (`abilities`, `combat`),
 so it is never reconciled against the panel list the way `panelColumns` is.
 
-**A FILTER writes those arrays rather than layering over them** (the Features panel's presets, and
-whatever grows one next). So there is one answer to "is this shown", a preset's effect reads back in
+**A FILTER writes those arrays rather than layering over them** (the Features panel's presets, the
+Actions panel's — `combat/actions.ts ▸ ACTION_PRESET`, sets grouped by how a character fights and
+never a rule — and whatever grows one next). So there is one answer to "is this shown", a preset's effect reads back in
 the same controls a player toggles by hand, and undoing it is the same click either way. A pin is
 exempt from a filter: pinning is the player saying "always this one", and two controls that overrule
 each other leave nobody able to say which won.

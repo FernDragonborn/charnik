@@ -18,6 +18,7 @@
 	import Switch from '$lib/components/Switch.svelte';
 	import { COINS } from '$lib/rules/currency';
 	import { FEATURE_PRESET } from '$lib/character/features';
+	import { ACTION_PRESET } from '$lib/combat/actions';
 	import { localizedName } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
 
@@ -363,6 +364,14 @@
 					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
+			<!-- like the features' presets: each WRITES the eyes below, so what it did reads back there -->
+			<div class="view-presets">
+				{#each Object.values(ACTION_PRESET) as preset (preset)}
+					<button class="pill-btn" onclick={() => combat.applyActionPreset(preset)}
+						>{$_(`combat.menu.actionsPreset.${preset}`)}</button
+					>
+				{/each}
+			</div>
 			{#each actions as a (a.id)}
 				<button class="menu-row" onclick={() => combat.toggleActionHidden(a.id)}>
 					<span class="passive-eye" class:on={!hiddenActions[a.id]}
@@ -382,7 +391,7 @@
 			</div>
 			<!-- The presets WRITE the eyes below rather than filtering past them, so there is one answer
 			     to "is this shown" and a player can see and undo what a press did. -->
-			<div class="feature-presets">
+			<div class="view-presets">
 				<button class="pill-btn" onclick={() => combat.featureView.applyPreset(FEATURE_PRESET.all)}
 					>{$_('combat.menu.featuresAll')}</button
 				>
@@ -690,8 +699,8 @@
 		color: var(--color-good);
 		opacity: 1;
 	}
-	/* the presets, above the per-feature eyes they write */
-	.feature-presets {
+	/* the presets, above the per-row eyes they write */
+	.view-presets {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1-5);

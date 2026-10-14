@@ -863,6 +863,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface StandardAction` — A standard combat action row (Dash, Hide, Grapple…).
 - `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
+- `const ACTION_PRESET` — Named views of the actions list, for a player who reaches for four of the twelve.
+- `type ActionPreset`
+- `function actionsHiddenBy` — The hidden list a preset writes: every action of this character's list the preset does not show.
 
 ### `src/lib/combat/attack-names.ts`
 
@@ -2307,4 +2310,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1402 exports across 195 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1405 exports across 195 modules · 94 duplicate suspects._

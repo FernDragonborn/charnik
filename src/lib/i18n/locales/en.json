@@ -848,6 +848,13 @@
 			"enchantTitle": "Cast {name} · which weapon do you touch?",
 			"upcastNote": "A higher slot is spent as cast; a pool spends one use and no slot.",
 			"upcastTitle": "Cast {name} · what pays for it",
+			"actionsPreset": {
+				"all": "All",
+				"core": "Core",
+				"melee": "Melee",
+				"stealth": "Stealth",
+				"support": "Support"
+			},
 			"whichActions": "Which actions appear",
 			"whichFeatures": "Which features show"
 		},

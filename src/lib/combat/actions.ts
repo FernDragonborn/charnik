@@ -77,3 +77,34 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			: {}),
 	}));
 }
+
+/** Named views of the actions list, for a player who reaches for four of the twelve. Each WRITES the
+ *  panel's eyes (`ui.actionsHidden`, ui.md ▸ rule 14) rather than filtering past them, so a preset
+ *  reads back in the same eyes a player toggles by hand and undoing it is the same click. The sets
+ *  are a UI grouping by how a character tends to fight, not a rule: every action stays one eye away. */
+export const ACTION_PRESET = {
+	all: 'all',
+	core: 'core',
+	melee: 'melee',
+	stealth: 'stealth',
+	support: 'support',
+} as const;
+export type ActionPreset = (typeof ACTION_PRESET)[keyof typeof ACTION_PRESET];
+
+const CORE_ACTIONS = ['attack', 'dash', 'disengage', 'dodge'];
+const PRESET_SHOWS: Record<Exclude<ActionPreset, 'all'>, readonly string[]> = {
+	core: CORE_ACTIONS,
+	melee: [...CORE_ACTIONS, 'grapple', 'shove'],
+	stealth: [...CORE_ACTIONS, 'hide', 'search', 'study'],
+	support: [...CORE_ACTIONS, 'help', 'ready'],
+};
+
+/** The hidden list a preset writes: every action of this character's list the preset does not show. */
+export function actionsHiddenBy(
+	actions: readonly { id: string }[],
+	preset: ActionPreset,
+): string[] {
+	if (preset === ACTION_PRESET.all) return [];
+	const shows = PRESET_SHOWS[preset];
+	return actions.filter((a) => !shows.includes(a.id)).map((a) => a.id);
+}

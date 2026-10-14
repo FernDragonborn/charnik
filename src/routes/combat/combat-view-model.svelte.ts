@@ -21,6 +21,7 @@ import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { characterFeatures } from '$lib/character/features';
 import { FeatureView } from './feature-view.svelte';
+import { actionsHiddenBy, type ActionPreset } from '$lib/combat/actions';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -276,6 +277,11 @@ class CombatVM {
 		if (!ui) return;
 		const cur = ui.actionsHidden ?? [];
 		ui.actionsHidden = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+	};
+	/** Show one named set of actions by writing the same eyes `toggleActionHidden` does. */
+	applyActionPreset = (preset: ActionPreset) => {
+		const ui = this.character?.ui;
+		if (ui) ui.actionsHidden = actionsHiddenBy(this.actions, preset);
 	};
 	spellGroupBy = $state<GroupMode>('level');
 	// which skills show in the passive-senses row — PERSISTED per character in ui.passiveSkills
