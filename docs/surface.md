@@ -2061,6 +2061,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function systemShortLabel` — …for the callers holding a plain `string`: a draft summary reads its system out of a file the * user can edit, so an …
 - `const DEFAULT_SYSTEM` — The system a NEW character/draft starts in when nothing says otherwise.
 - `type Layer` — Where a stat's math comes from, in pipeline order.
+- `type Op` — `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already higher" (Headband of …
 - `interface Contribution`
 - `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
 - `type Translate` — * svelte-i18n's `$format`, taken as a parameter so the rules core and every pure view helper stay * locale-free — the…
@@ -2340,4 +2341,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1432 exports across 196 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1433 exports across 196 modules · 94 duplicate suspects._

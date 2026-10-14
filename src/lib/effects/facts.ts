@@ -6,7 +6,7 @@
  * import them without a cycle. `collectFacts` / `applyEffects` (the seam functions) stay in apply.ts;
  * `mergeFacts` sits here beside the seed, because adding a field to the object means adding it to both.
  */
-import type { Layer } from '../rules/pipeline';
+import type { Layer, Op } from '../rules/pipeline';
 import { rechargeRank } from '../rules/recharge';
 import type {
 	DamageSensitivity,
@@ -137,8 +137,8 @@ export function addFormStatement(rules: FormRules, said: FormStatement): void {
 export interface NumericFact {
 	target: string;
 	/** `add`/`set` from flat_bonus/set_override; `floor`/`cap` from set_override's mode slot (A9);
-	 *  `mult` from `halve` (G4, ×½) and plugin `contributions` (plugins.md §4.3). */
-	op: 'add' | 'set' | 'mult' | 'floor' | 'cap';
+	 *  `base` from set_base; `mult` from `halve` (G4, ×½) and plugin `contributions` (plugins.md §4.3). */
+	op: Op;
 	layer: Layer;
 	source: string;
 	/** The guard-stripped token, for provenance notes. */

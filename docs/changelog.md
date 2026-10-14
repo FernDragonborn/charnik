@@ -26,6 +26,12 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   Two magic weapons of the same kind are two rows now. The attack row and the Armor Class breakdown use the same name.
 - **An item can be taken out of the inventory from the play sheet.** A small bin stands at the end of
   the row under the pointer, the way the drag grip stands at its start.
+- **Unarmored Defense keeps your shield and your cloak.** A barbarian with a shield had the
+  shield's +2 dropped, and a Cloak of Protection or a Ring of Protection added nothing beside
+  Unarmored Defense, Mage Armor, Draconic Resilience or the Robe of the Archmagi. Those now work out
+  your BASE Armor Class, as their text says, and every bonus adds on top. The content pack states
+  them with a new word, `set_base`: a pack updated past this release on an older Charnik shows those
+  features as text it does not understand rather than counting them, so update the app with it.
 - **One suit of armour and one shield at a time.** Putting on a second takes the first off, so two
   shields' bonuses no longer both reach your Armor Class.
 - **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.

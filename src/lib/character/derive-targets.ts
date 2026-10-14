@@ -111,6 +111,7 @@ const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof
 		// block_bonus blocks bonuses to a stat target (grappled → speed) — same closed vocab as sets.
 		case EFFECT_KIND.flatBonus:
 		case EFFECT_KIND.setOverride:
+		case EFFECT_KIND.setBase:
 		case EFFECT_KIND.blockBonus:
 			return SENSE_TARGET.test(target) ? OPEN_VOCAB : NUMERIC_TARGETS;
 		// halve (2014 exhaustion) only ever multiplies speed or hp_max — a tighter closed set.

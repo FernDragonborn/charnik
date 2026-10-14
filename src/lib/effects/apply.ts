@@ -98,6 +98,7 @@ class FactsCollector {
 		switch (p.kind) {
 			case EFFECT_KIND.flatBonus:
 			case EFFECT_KIND.setOverride:
+			case EFFECT_KIND.setBase:
 				this.pushNumeric(p, eff, token);
 				return true;
 			case EFFECT_KIND.blockBonus:
@@ -124,8 +125,14 @@ class FactsCollector {
 
 	private pushNumeric(p: ParsedEffect, eff: ActiveEffect, token: string): void {
 		if (!p.target || this.rejectTarget(p.kind, p.target, eff.source, token)) return;
-		// a flat bonus always adds; a set_override's mode slot names the bound it is (plain set if none)
-		const op: NumericFact['op'] = p.kind === EFFECT_KIND.flatBonus ? 'add' : (p.setMode ?? 'set');
+		// a flat bonus always adds; a set_base is a base; a set_override's mode slot names the bound it
+		// is (plain set if none)
+		const op: NumericFact['op'] =
+			p.kind === EFFECT_KIND.flatBonus
+				? 'add'
+				: p.kind === EFFECT_KIND.setBase
+					? 'base'
+					: (p.setMode ?? 'set');
 		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
 		if (p.scope) fact.scope = p.scope; // §A: scoped per-weapon in computeAttacks

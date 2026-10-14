@@ -35,6 +35,7 @@ const OP_SYMBOL: Record<Contribution['op'], string> = {
 	add: '',
 	mult: '',
 	set: '=',
+	base: '=',
 	floor: '≥',
 	cap: '≤',
 };
@@ -166,6 +167,8 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.setOverride]: (p, tr) =>
 		p.target &&
 		`${targetLabel(p.target, tr)} ${OP_SYMBOL[p.setMode ?? 'set']} ${p.amount ?? p.valueExpr ?? '?'}`,
+	[EFFECT_KIND.setBase]: (p, tr) =>
+		p.target && `${targetLabel(p.target, tr)} ${OP_SYMBOL.base} ${p.amount ?? p.valueExpr ?? '?'}`,
 	[EFFECT_KIND.blockBonus]: (p, tr) => p.target && prefixed(tr, 'block', p.target),
 	[EFFECT_KIND.halve]: (p, tr) =>
 		p.target &&
@@ -305,14 +308,24 @@ export function effectsCaption(
 	const tags = tokens.map((raw) => {
 		const { token } = splitGuard(raw);
 		const p = parseToken(token);
-		const numeric = p.kind === EFFECT_KIND.flatBonus || p.kind === EFFECT_KIND.setOverride;
+		const numeric =
+			p.kind === EFFECT_KIND.flatBonus ||
+			p.kind === EFFECT_KIND.setOverride ||
+			p.kind === EFFECT_KIND.setBase;
 		if (!numeric || !p.target || !p.valueExpr) return effectTag(token, translate);
 		const value = resolveEffectValue(p, ctx);
 		if (value.amount === undefined && !value.diceFormula) return effectTag(token, translate);
 		return numericFactTag(
 			{
 				target: p.target,
-				op: p.kind === EFFECT_KIND.flatBonus ? 'add' : p.setMode ? SET_OP[p.setMode] : 'set',
+				op:
+					p.kind === EFFECT_KIND.flatBonus
+						? 'add'
+						: p.kind === EFFECT_KIND.setBase
+							? 'base'
+							: p.setMode
+								? SET_OP[p.setMode]
+								: 'set',
 				...(value.amount !== undefined ? { amount: value.amount } : {}),
 				...(value.diceFormula ? { diceFormula: value.diceFormula } : {}),
 			},
@@ -337,7 +350,7 @@ function numericFactTag(
 ): string {
 	const t = targetLabel(f.target, translate);
 	if (f.amount !== undefined) {
-		if (f.op === 'set') return `${t} = ${f.amount}`;
+		if (f.op === 'set' || f.op === 'base') return `${t} = ${f.amount}`;
 		if (f.op === 'floor') return `${t} ≥ ${f.amount}`;
 		if (f.op === 'cap') return `${t} ≤ ${f.amount}`;
 		if (f.op === 'mult') return `${t} ×${f.amount === 0.5 ? '½' : f.amount}`;

@@ -47,7 +47,13 @@ export type Layer =
 
 // `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already
 // higher" (Headband of Intellect → INT ≥ 19); `cap` = "unless already lower". `set` = plain absolute.
-type Op = 'add' | 'set' | 'mult' | 'floor' | 'cap';
+// `base` = another way to work out the stat's BASE ("your base Armor Class equals 10 + DEX + CON"):
+// it competes with the base the core computed, and everything after the base still adds to it.
+export type Op = 'add' | 'set' | 'mult' | 'floor' | 'cap' | 'base';
+
+/** The layers that make up a stat's base — what a `base` contribution competes with. Armour or
+ *  10 lands on `base`, the ability modifier it reads on `ability`. */
+const BASE_LAYERS: readonly Layer[] = ['base', 'ability'];
 
 export interface Contribution {
 	/** Human label, e.g. "DEX mod", "Proficiency", "Ring of Protection". Always the English, so a
@@ -150,6 +156,8 @@ export const NOTE_KEY = {
 	alreadyAtLeast: 'provenance.alreadyAtLeast',
 	alreadyAtMost: 'provenance.alreadyAtMost',
 	overriddenSet: 'provenance.overriddenSet',
+	baseReplaced: 'provenance.baseReplaced',
+	baseNotHigher: 'provenance.baseNotHigher',
 	bonusBlocked: 'provenance.bonusBlocked',
 	diceBonus: 'provenance.diceBonus',
 	unresolved: 'provenance.unresolved',
@@ -205,6 +213,10 @@ const LAYER_SEQUENCE: Layer[] = [
  * product then floors once; `add` accumulates. Across layers the fixed base→…→override order still
  * holds, so an override-layer `set` beats an item-layer one.
  *
+ * `base` folds BETWEEN layers rather than inside one: after the base and ability layers — the base
+ * the core worked out — the value becomes the most potent of that and every `base`, and the layers
+ * after it add as usual. It is how "your base Armor Class equals…" keeps a shield.
+ *
  * `cap` is the exception and folds LAST, across every layer and after every add, because RAW's caps
  * are ceilings on the finished value rather than on a running total: "your Constitution increases by
  * 2, to a maximum of 20" (Belt of Dwarvenkind) is +2 and THEN a ceiling. A cap inside its own layer
@@ -217,8 +229,13 @@ const LAYER_SEQUENCE: Layer[] = [
  */
 function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]): number {
 	let value = 0;
+	const bases = contribs.filter((c) => c.op === 'base');
 	for (const layer of LAYER_SEQUENCE) {
-		const here = contribs.filter((c) => c.layer === layer);
+		// once the core's own base is counted, a `base` that works it out higher takes its place —
+		// and every layer after, items to conditions, still adds to whichever base won
+		if (layer === LAYER_SEQUENCE[BASE_LAYERS.length] && bases.length)
+			value = Math.max(value, ...bases.map((c) => c.amount));
+		const here = contribs.filter((c) => c.layer === layer && c.op !== 'base');
 		if (here.length === 0) continue;
 		const sets = here.filter((c) => c.op === 'set');
 		if (sets.length) value = Math.max(...sets.map((c) => c.amount));
@@ -275,11 +292,42 @@ function overriddenSetNotes(contribs: Contribution[]): Note[] {
 	return out;
 }
 
+/** A `base` folds by MAX against the base the core worked out, so one of them is not counted —
+ *  explained either way (the explainability invariant): the core's base replaced by a higher one, or
+ *  a `base` that did not beat what was already there. */
+function baseNotes(contribs: Contribution[]): Note[] {
+	const bases = contribs.filter((c) => c.op === 'base');
+	if (!bases.length) return [];
+	const own = fold(contribs.filter((c) => BASE_LAYERS.includes(c.layer) && c.op !== 'base'));
+	const winner = Math.max(own, ...bases.map((c) => c.amount));
+	const won = bases.find((c) => c.amount === winner && winner > own);
+	const out: Note[] = [];
+	if (won)
+		out.push({
+			text: `Base ${own} — replaced by ${won.source} (${winner})`,
+			key: NOTE_KEY.baseReplaced,
+			params: { own, source: won.source, winner },
+		});
+	for (const c of bases)
+		if (c !== won)
+			out.push({
+				text: `${c.source}: base ${c.amount} — the base is already ${winner}`,
+				key: NOTE_KEY.baseNotHigher,
+				params: { source: c.source, amount: c.amount, winner },
+			});
+	return out;
+}
+
 /** Build a `Computed` from contributions (+ optional clamp/notes). */
 export function computed(contribs: Contribution[], clamp?: Clamp, notes?: Note[]): Computed {
 	const ineffective: Note[] = [];
 	const value = fold(contribs, clamp, ineffective);
-	const allNotes = [...(notes ?? []), ...overriddenSetNotes(contribs), ...ineffective];
+	const allNotes = [
+		...(notes ?? []),
+		...overriddenSetNotes(contribs),
+		...baseNotes(contribs),
+		...ineffective,
+	];
 	const result: Computed = { value, trace: contribs };
 	if (allNotes.length) result.notes = allNotes;
 	if (clamp) result.clamp = clamp;

@@ -54,7 +54,11 @@ function varDepKeys(name: string): DepKey[] {
 export function writeKeyOf(p: ParsedEffect): DepKey | null {
 	if (p.target === undefined) return null;
 	const t = p.target.trim();
-	if (p.kind === EFFECT_KIND.flatBonus || p.kind === EFFECT_KIND.setOverride) {
+	if (
+		p.kind === EFFECT_KIND.flatBonus ||
+		p.kind === EFFECT_KIND.setOverride ||
+		p.kind === EFFECT_KIND.setBase
+	) {
 		if (ABILITY_KEYSET.has(t)) return abilityKey(t);
 		if (t === 'hp_max') return HP_MAX_KEY;
 		return null;

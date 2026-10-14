@@ -1789,7 +1789,9 @@
 			"sleight_of_hand": "Passive Sleight of Hand: how steady your hands are when nobody is testing them — the DM reads this to see whether an onlooker catches a movement you make in passing.",
 			"stealth": "Passive Stealth: how easy you are to overlook when you are not actively hiding — the DM reads this against what a watcher would notice.",
 			"survival": "Passive Survival: the ground read as you walk it — the DM reads this for a trail going cold, a coming storm, or which way is north."
-		}
+		},
+		"baseReplaced": "Base {own} — replaced by {source} ({winner})",
+		"baseNotHigher": "{source}: base {amount} — the base is already {winner}"
 	},
 	"refresh": {
 		"title": "Refresh data (re-read from disk)"

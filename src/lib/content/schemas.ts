@@ -26,6 +26,7 @@ export { SYSTEMS }; // one owner in rules/pipeline (AUDIT F7/D2)
 export const EFFECT_KINDS = [
 	'flat_bonus',
 	'set_override',
+	'set_base',
 	'block_bonus',
 	'halve',
 	'advantage',

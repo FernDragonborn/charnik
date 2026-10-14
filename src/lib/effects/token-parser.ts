@@ -29,6 +29,11 @@ import {
 export const EFFECT_KIND = {
 	flatBonus: 'flat_bonus',
 	setOverride: 'set_override',
+	// `set_base:<target>:<value>` — another way to work out a stat's BASE ("your base Armor Class
+	// equals 10 + your Dexterity and Constitution modifiers"). It competes with the base the core
+	// computed, most potent wins, and every bonus after the base still adds — where a set_override
+	// would stomp the shield and the cloak along with the armour.
+	setBase: 'set_base',
 	// `block_bonus:<target>` — RAW's "can't benefit from any bonus to its <target>" (grappled/
 	// restrained block ALL speed bonuses). A fact matched by target; drops effect-borne positive adds.
 	blockBonus: 'block_bonus',
@@ -528,6 +533,9 @@ const parseOnEvent: KindParser = (rest, raw, kind) => {
 const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.flatBonus]: parseFlatBonus,
 	[EFFECT_KIND.setOverride]: parseSetOverride,
+	// the same `<target>:<value>` slot without a mode: a base has no floor or cap of its own
+	[EFFECT_KIND.setBase]: (rest, raw, kind) =>
+		/:(floor|cap)$/i.test(rest) ? { kind: 'unknown', raw } : parseSetOverride(rest, raw, kind),
 	[EFFECT_KIND.blockBonus]: parseTargetOnly,
 	[EFFECT_KIND.halve]: parseTargetOnly,
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
