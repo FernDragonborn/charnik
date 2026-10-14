@@ -16,8 +16,8 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   translation pane and a pack's folder name, it does the panel's own Add, Save, Install or Rename.
 - **The Actions panel has presets** — All, Core, Melee, Stealth, Support and Class features — on its
   show/hide menu. Most characters reach for four of the twelve standard actions; a preset sets the
-  same eyes you would set by hand, so you can see and undo what it did. And if you look through those
-  eyes carefully, you may find one action you did not know you had. It costs nothing.
+  same eyes you would set by hand, so you can see and undo what it did. Crying is still a free
+  action.
 - **A plugin's time limit is counted, not timed.** It was 5 ms on the clock, so an honest plugin
   could fail to a note whenever the computer was busy for a moment; the limit is now a count of
   steps that comes out the same on any machine. A plugin that is slow but keeps working is never
