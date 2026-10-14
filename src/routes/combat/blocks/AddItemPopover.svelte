@@ -25,7 +25,7 @@
 	import { rowDetail, rowName } from '../../build/rows';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { combat } from '../combat-view-model.svelte';
-	import { InstancePicking } from '../../build/item-instance-picking.svelte';
+	import { INSTANCE_SECTION, InstancePicking } from '../../build/item-instance-picking.svelte';
 	import ItemInstanceAsk from '../../build/blocks/ItemInstanceAsk.svelte';
 
 	let { anchor, onclose }: { anchor: HTMLElement; onclose: () => void } = $props();
@@ -66,7 +66,7 @@
 	const sections = $derived(
 		picking.withInstances(
 			query,
-			$_('build.inventory.instances'),
+			{ tiered: $_('build.inventory.tiered'), found: $_('build.inventory.instances') },
 			itemSectionsWithin(items, combat.graph, { from, to }),
 		),
 	);
@@ -99,6 +99,7 @@
 			onpreview={(id) => (previewId = id)}
 			ontake={picking.take}
 			{detail}
+			initiallyOpen={[INSTANCE_SECTION]}
 			placeholder={$_('build.inventory.search')}
 		>
 			{#snippet controls()}

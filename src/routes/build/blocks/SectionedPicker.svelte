@@ -10,7 +10,7 @@
 	import { wheelSideways } from '$lib/actions/wheelSideways';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
 	import { filterByName, pickerMeta, rowName, rowText } from '../rows';
@@ -29,6 +29,7 @@
 		detail,
 		placeholder,
 		controls,
+		initiallyOpen = [],
 	}: {
 		/** Pre-sorted; `key` is stable across a re-filter so an open section stays open. */
 		sections: { key: string; label: string; rows: LoadedRow[] }[];
@@ -42,11 +43,15 @@
 		/** Caps and filter chips — what narrows the pool genuinely, supplied by the pane that knows
 		 *  which narrowing its content type has. */
 		controls?: Snippet;
+		/** Sections that open expanded: everything starts collapsed (§4) except a short list worth
+		 *  seeing before anything is typed. */
+		initiallyOpen?: string[];
 	} = $props();
 
 	const taken = $derived(new Set(takenIds));
 	let list = $state<HTMLElement | null>(null);
-	let openKeys = $state<string[]>([]);
+	// the opening state only: from here on the player opens and closes them
+	let openKeys = $state<string[]>(untrack(() => [...initiallyOpen]));
 	/** The row the pointer or focus is teasing. Stands down entirely while the card is open. */
 	let peeking = $state<string | null>(null);
 	/** Which section headers the rail should light, recomputed on scroll (scroll-spy). */

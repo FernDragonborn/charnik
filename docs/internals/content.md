@@ -138,7 +138,8 @@ content row is shared. Unanswered reads 0, so nothing is granted until the playe
 **Both questions are asked when the item is ADDED** (`content/item-instance.ts`, taken through
 `build/item-instance-picking.svelte.ts` by the builder's and the play sheet's item picker alike): a
 small "which one" popover beside the ✓, and a search that already says it — "longsword +1",
-"shield +2" — offers the answered instance as a row of its own. Each instance is its own inventory
+"shield +2" — offers the answered instance as a row of its own. Before anything is typed, the same
+top section lists the rows that carry a `bonus_choice`, open from the start. Each instance is its own inventory
 row, named for what it is ("Longsword +2", from its base's name; a row with no base keeps its heading
 with the bonus beside it), and the answer is not reopened on the row.
 

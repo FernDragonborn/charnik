@@ -218,7 +218,8 @@
 			"whichBonus": "Бонус",
 			"askAdd": "Додати",
 			"askCancel": "Скасувати",
-			"instances": "Саме цей"
+			"instances": "Саме цей",
+			"tiered": "Магічні +1, +2, +3"
 		},
 		"languages": {
 			"chosen": "Обрано {count}",

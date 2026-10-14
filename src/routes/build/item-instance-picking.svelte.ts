@@ -20,6 +20,7 @@ import {
 	type InstanceScope,
 } from '$lib/content/item-instance';
 import { localizedName } from '$lib/content/detail';
+import { parseBonusChoices } from '$lib/content/item-tags';
 import type { LoadedRow } from '$lib/content/loader';
 import { translator } from '$lib/i18n';
 
@@ -39,6 +40,16 @@ export interface PickerSection {
 	rows: LoadedRow[];
 }
 
+/** The key of the section above the rest — open from the start, so it is seen before anything is
+ *  typed. */
+export const INSTANCE_SECTION = 'instances';
+
+/** Its heading: the book's +N rows before a search, the instances a search named after one. */
+export interface InstanceSectionLabels {
+	tiered: string;
+	found: string;
+}
+
 /** The question on screen: which row, what it is called, and the control it opened beside. */
 export interface InstanceAsk {
 	ref: string;
@@ -52,24 +63,39 @@ export class InstancePicking {
 
 	constructor(private host: InstancePickingHost) {}
 
-	/** The answered instances a search names, as a picker section above the rest — none when the
-	 *  search names none. Each row is the content row it is an instance of, under the instance's
-	 *  name and an id that carries the answers. */
-	section(query: string, label: string): PickerSection | null {
+	/**
+	 * The section above the rest. Before anything is typed it holds the rows the book prints once
+	 * at several bonuses — Weapon, Armor, Shield, Ammunition +N — so a magic item is one press away
+	 * and asks which one. Once a search names an instance ("longsword +1") it holds those instances,
+	 * answered: each is the content row it is an instance of, under the instance's name and an id
+	 * that carries the answers. None when a search names none.
+	 */
+	section(query: string, labels: InstanceSectionLabels): PickerSection | null {
 		const scope = this.host.scope();
 		if (!scope) return null;
+		if (!query.trim()) {
+			const tiered = scope.graph
+				.list('item', { system: scope.system })
+				.filter((row) => scope.isActive(row) && parseBonusChoices(row.data.bonus_choice).length)
+				.sort((a, b) => localizedName(a, scope.locale).localeCompare(localizedName(b, scope.locale)));
+			return tiered.length ? { key: INSTANCE_SECTION, label: labels.tiered, rows: tiered } : null;
+		}
 		const rows = instancesForQuery(scope, query, sayInstanceWith(translator())).flatMap((match) => {
 			const row = scope.graph.get(match.ref);
 			if (row?.type !== 'item') return [];
 			const data = { ...row.data, name_en: match.name, [`name_${scope.locale}`]: match.name };
 			return [{ ...row, effectiveId: instanceRowId(match), data }];
 		});
-		return rows.length ? { key: 'instances', label, rows } : null;
+		return rows.length ? { key: INSTANCE_SECTION, label: labels.found, rows } : null;
 	}
 
 	/** A pane's sections with the searched-for instances above them. */
-	withInstances = (query: string, label: string, sections: PickerSection[]): PickerSection[] => {
-		const found = this.section(query, label);
+	withInstances = (
+		query: string,
+		labels: InstanceSectionLabels,
+		sections: PickerSection[],
+	): PickerSection[] => {
+		const found = this.section(query, labels);
 		return found ? [found, ...sections] : sections;
 	};
 

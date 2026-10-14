@@ -11,7 +11,7 @@
 	import { WHOLE_BAND, itemSectionsWithin } from '../rarity';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { app } from '$lib/stores/app.svelte';
-	import { InstancePicking } from '../item-instance-picking.svelte';
+	import { INSTANCE_SECTION, InstancePicking } from '../item-instance-picking.svelte';
 	import ItemInstanceAsk from './ItemInstanceAsk.svelte';
 	const b = build;
 
@@ -39,7 +39,7 @@
 	const sections = $derived(
 		picking.withInstances(
 			query,
-			$_('build.inventory.instances'),
+			{ tiered: $_('build.inventory.tiered'), found: $_('build.inventory.instances') },
 			itemSectionsWithin(b.itemList, b.graph, { from, to }),
 		),
 	);
@@ -53,6 +53,7 @@
 	onpreview={(id) => (previewId = id)}
 	ontake={picking.take}
 	{detail}
+	initiallyOpen={[INSTANCE_SECTION]}
 	placeholder={$_('build.inventory.search')}
 >
 	{#snippet controls()}

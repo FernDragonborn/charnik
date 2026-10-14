@@ -218,7 +218,8 @@
 			"whichBonus": "Bonus",
 			"askAdd": "Add",
 			"askCancel": "Cancel",
-			"instances": "This one"
+			"instances": "This one",
+			"tiered": "Magic +1, +2, +3"
 		},
 		"languages": {
 			"chosen": "Chosen {count}",
