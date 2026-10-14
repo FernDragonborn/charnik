@@ -4,7 +4,7 @@
  * `$lib/play/resources` and `$lib/play/rests`; this is the names the panels and the action executor
  * call, and the one thing only a screen has — noticing that an ability's window has opened.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { saveCharacterGuarded } from '$lib/character/store.svelte';
 import type { Character } from '$lib/character/schema';

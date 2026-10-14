@@ -7,7 +7,7 @@
  * The SAVE a hit asks for is not here — `HitPoints` owns the banner — and ESTABLISHING
  * concentration is the cast's own step (`$lib/play/cast`).
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { localizedName } from '$lib/content/detail';

@@ -11,7 +11,7 @@
  * Everything reading the host is a getter, never `$derived`: a field initialiser runs before the
  * constructor assigns `host`.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { ABILITIES } from '$lib/character/schema';
 import type { Ability } from '$lib/rules/core';

@@ -7,7 +7,7 @@
 	// docs/work/ui.md ▸ N3). A guided flow becomes a second entry point onto this view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import Portrait from '$lib/components/Portrait.svelte';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import { SYSTEMS, SYSTEM_SHORT_LABELS } from '$lib/rules/pipeline';

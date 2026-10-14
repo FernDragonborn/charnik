@@ -5,7 +5,7 @@
  * for — the strikes an `attack:` verb makes, rolled through the sheet's own attack path, and the
  * question an `assume_form:` verb puts before anything is paid.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';

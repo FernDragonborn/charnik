@@ -8,7 +8,7 @@
  * press DOES is a pure action in `$lib/play/inventory`. What is here is the reactive projection the
  * panel renders, and firing a shot — which stack it spends, asked when there are several.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t, translator } from '$lib/i18n';
 import {
 	ATTUNEMENT_CAP,

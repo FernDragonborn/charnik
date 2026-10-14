@@ -10,7 +10,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { provenance } from '$lib/actions/provenance';

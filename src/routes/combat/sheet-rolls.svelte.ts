@@ -5,7 +5,7 @@
  * These functions are what the dice tray calls, and the host interface below is the contract it
  * satisfies (docs/internals/roller.md).
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t, translator } from '$lib/i18n';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
 import type { ExtraAttackRow } from '$lib/combat/attacks';

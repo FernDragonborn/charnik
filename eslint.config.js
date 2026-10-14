@@ -12,6 +12,14 @@ import globals from 'globals';
  * BEFORE the first file is examined — measured, and a fixed cost that neither `--cache` nor linting
  * fewer files shrinks. Paying it on every commit is not worth it; paying it beside `pnpm test` is.
  */
+// One action says one toast (ui.md ▸ rule 20): every toast goes through the gate that merges what
+// an action says and replaces what the last one said, so naming the library directly is refused.
+const TOASTER_GATE = {
+	group: ['svelte-sonner'],
+	message:
+		'Toasts go through $lib/toast/toast — one action, one toast (docs/internals/ui.md rule 20). Only the gate and the <Toaster> in +layout.svelte import svelte-sonner.',
+};
+
 export default ts.config(
 	js.configs.recommended,
 	...ts.configs.recommended,
@@ -89,6 +97,7 @@ export default ts.config(
 							message:
 								'Tauri imports live ONLY in lib/storage/tauri.ts (Storage seam) or lib/update — go through the Storage interface instead (docs/PLAN.md invariant).',
 						},
+						TOASTER_GATE,
 					],
 				},
 			],
@@ -101,6 +110,25 @@ export default ts.config(
 					selector: 'ImportExpression > Literal[value=/^@tauri-apps/]',
 					message:
 						'Tauri imports live ONLY in lib/storage/tauri.ts (Storage seam) or lib/update — a dynamic import is the same crossing (docs/plan.md invariant).',
+				},
+			],
+		},
+	},
+	{
+		// the toast gate itself and the one <Toaster> are the two places the library may be named;
+		// the rest of the Tauri gate above still holds for them
+		files: ['src/lib/toast/toast.ts', 'src/routes/+layout.svelte'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['@tauri-apps/*', '@tauri-apps/**'],
+							message:
+								'Tauri imports live ONLY in lib/storage/tauri.ts (Storage seam) or lib/update — go through the Storage interface instead (docs/PLAN.md invariant).',
+						},
+					],
 				},
 			],
 		},

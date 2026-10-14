@@ -2,7 +2,7 @@
 	// Dev toolbox index (dev-server only — gated by the /dev layout). Small maintenance actions that
 	// don't belong in the shipped UI. Links to the design-preview pages live here too.
 	import Icon from '$lib/components/Icon.svelte';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { base } from '$app/paths';
 	import { recreateDemoCharacter } from '$lib/character/store.svelte';
 

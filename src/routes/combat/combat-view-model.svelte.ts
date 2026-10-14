@@ -7,7 +7,7 @@
  * Methods are arrow-function fields so they can be destructured / passed to markup with the
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';

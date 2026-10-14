@@ -5,7 +5,7 @@
  * log and the notices. This is the one place that result reaches the world — the character the
  * panels hold, the log, the toasts — so every action lands the same way whichever control built it.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { sayText, type Said } from '$lib/util/say';

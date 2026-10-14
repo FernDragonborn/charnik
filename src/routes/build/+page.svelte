@@ -8,7 +8,7 @@
 	// Shared builder CSS lives in $lib/styles/build.css (confined to `.build-page`); block-local CSS
 	// stays scoped inside its block.
 	import { goto, afterNavigate } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
 	import { build } from './build-view-model.svelte';

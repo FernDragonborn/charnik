@@ -5,7 +5,7 @@
 	// issue. Local-first, no auto-upload — nothing leaves the app until the user pastes it.
 	import DialogShell from './DialogShell.svelte';
 	import { _ } from '$lib/i18n';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { app } from '$lib/stores/app.svelte';
 	import { characters } from '$lib/character/store.svelte';
 	import { content } from '$lib/content/store.svelte';

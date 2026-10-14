@@ -4,7 +4,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed, range } from '$lib/combat/helpers';

@@ -305,7 +305,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Roller** | `diceTray`, `onroll` | The dice tray — the whole of what a roll looks like while you are building it, and the app's |
 | **RollerLine** | `diceTray`, `index`, `line`, `roll` | ONE line of the dice tray: the role stripe, the pills, the caret, the suggestion menu that |
 | **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
-| **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
+| **RollToast** | `models`, `notes`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (176 modules)
+## Library functions & types (177 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2234,6 +2234,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Seating`
 - `interface TableLink`
 
+### `src/lib/toast/toast.ts`
+
+- `const TOAST_TONE`
+- `type ToastTone`
+- `interface ToastOptions`
+- `interface ToastNote` — A sentence on a card — what a notice toast says, and what a roll's card carries under the roll.
+- `const toast` — Say a notice.
+- `function toastRollCard` — Show a completed roll's card — joined by whatever else the same action says.
+
 ### `src/lib/util/format.ts`
 
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
@@ -2294,4 +2303,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1395 exports across 193 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1401 exports across 194 modules · 94 duplicate suspects._

@@ -4,7 +4,7 @@
  * charnik-guid-not-counter). Persistence goes through the repository over the runtime writable
  * Storage (`getUserStorage()`), so the same code works on web (IndexedDB) and Tauri (fs).
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 import {

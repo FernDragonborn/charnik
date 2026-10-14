@@ -7,7 +7,7 @@
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { sayText } from '$lib/util/say';
 	import { content, loadContentStore } from '$lib/content/store.svelte';

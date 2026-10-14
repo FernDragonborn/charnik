@@ -5,7 +5,7 @@
  * the view-model is at its line budget. The host is declared structurally (like InspectorHost next
  * door) so the two modules stay acyclic.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { getUserStorage } from '$lib/storage/provider';
 import { saveDraft, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';

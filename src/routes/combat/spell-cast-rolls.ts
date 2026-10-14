@@ -7,7 +7,7 @@
  * What a slot ADDS is not decided here. `SpellCasting` owns the upcast evaluation, because the
  * carrier effect and the weapon picker read it too, and hands it in as `UpcastReads`.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import type { SaidText } from '$lib/util/say';
 import { rollPool } from '$lib/rules/dice';

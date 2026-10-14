@@ -6,7 +6,7 @@
 	// the CSV content packs. Built-in dark/light are read-only bases you clone from; the bundled
 	// Dracula/Catppuccin presets are worked examples you can add.
 	import Icon, { type IconName } from '../Icon.svelte';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import {

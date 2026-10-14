@@ -10,9 +10,13 @@ import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 /** What was toasted, in order. A notice is the deliverable for a few of these behaviours (a window
  *  opening, a resource restored), so the test has to be able to read what the player was told. */
 const toasts: string[] = [];
-vi.mock('svelte-sonner', () => ({
-	toast: Object.assign((message: string) => toasts.push(message), { custom: () => {} }),
-}));
+vi.mock('$lib/toast/toast', () => {
+	const say = (message: string) => toasts.push(message);
+	return {
+		toast: Object.assign(say, { success: say, warning: say, error: say }),
+		toastRollCard: () => {},
+	};
+});
 import { loadPacks } from '../../test-support/real-content';
 import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';

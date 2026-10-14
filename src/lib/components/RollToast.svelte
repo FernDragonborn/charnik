@@ -9,27 +9,43 @@
 	import type { RollToastModel } from '$lib/dice/roll-toast';
 	import { _ } from '$lib/i18n';
 	import { ADVANTAGE_MODE } from '$lib/rules/dice';
+	import { TOAST_TONE, type ToastNote } from '$lib/toast/toast';
+	import Icon from './Icon.svelte';
 	import RollRow from './RollRow.svelte';
 
 	// `closeToast` is injected by svelte-sonner for a custom-component toast — which is also why it
 	// drops its own close button, so the card itself has to be the dismiss affordance.
-	let { model, closeToast }: { model: RollToastModel; closeToast?: () => void } = $props();
+	// It carries one action's whole say (ui.md ▸ rule 20 — one action, one toast): the rolls, then the
+	// notices the same action left. A lone notice never comes here; the toaster's own card says it.
+	let {
+		models,
+		notes = [],
+		closeToast,
+	}: { models: RollToastModel[]; notes?: ToastNote[]; closeToast?: () => void } = $props();
 
 	// HOW the d20 was rolled is the one thing you can't read off the numbers, and on a toast — which
 	// you glance at once — it belongs to the whole card rather than to a frame around two dice. The
 	// row's own cue (the triangle in the d20) still says it inside. The FIRST attack decides it: a
 	// volley whose throws were read differently has no single card colour anyway.
-	const advantage = $derived(model.attacks[0]?.advantageMode);
+	const advantage = $derived(models[0]?.attacks[0]?.advantageMode);
 
 	// The card IS the labelled dismiss control — deliberately, because no control may live INSIDE it
 	// (it is itself the dismiss target). So the label has to carry both what the roll was and what a
 	// click does; a screen reader gets one button that says both, not an unnamed region plus an ✕.
-	const rollLabel = $derived(sayRollName(rollNameOf(model), $_));
 	const cardLabel = $derived(
-		$_(closeToast ? 'combat.log.rollAriaDismiss' : 'combat.log.rollAria', {
-			values: { label: rollLabel, total: model.total },
-		}),
+		[
+			...models.map((model) =>
+				$_(closeToast ? 'combat.log.rollAriaDismiss' : 'combat.log.rollAria', {
+					values: { label: sayRollName(rollNameOf(model), $_), total: model.total },
+				}),
+			),
+			...notes.map((note) => note.title),
+		].join('. '),
 	);
+	const noteIcon = {
+		[TOAST_TONE.warning]: 'triangle-alert',
+		[TOAST_TONE.error]: 'circle-x',
+	} as const;
 </script>
 
 <div
@@ -47,7 +63,20 @@
 		title={closeToast ? $_('combat.log.dismiss') : undefined}
 		onclick={closeToast}
 	>
-		<RollRow {model} />
+		{#each models as model, index (index)}
+			<RollRow {model} />
+		{/each}
+		{#each notes as note, index (index)}
+			<span class="toast-note {note.tone}">
+				{#if note.tone === TOAST_TONE.warning || note.tone === TOAST_TONE.error}
+					<Icon name={noteIcon[note.tone]} size={14} />
+				{/if}
+				<span class="toast-note-text">
+					<b>{note.title}</b>
+					{#if note.description}<span>{note.description}</span>{/if}
+				</span>
+			</span>
+		{/each}
 	</button>
 </div>
 
@@ -96,6 +125,37 @@
 	}
 	.roll-card.dismissible {
 		cursor: pointer;
+	}
+	/* a notice under the roll that caused it: the sentence the toaster would have said on a card of
+	   its own, said on this one instead */
+	.toast-note {
+		display: flex;
+		gap: var(--space-2);
+		align-items: flex-start;
+		padding: var(--space-2) var(--space-3);
+		font-size: var(--font-size-sm);
+		line-height: 1.4;
+		color: var(--color-text);
+	}
+	.roll-card > * + * {
+		border-top: 1px solid var(--color-border);
+	}
+	.toast-note-text {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+	.toast-note-text > span {
+		color: var(--color-text-muted);
+	}
+	.toast-note.warning {
+		color: var(--color-warning);
+	}
+	.toast-note.error {
+		color: var(--color-danger);
+	}
+	.toast-note b {
+		color: var(--color-text);
 	}
 	/* an advantaged/disadvantaged roll wears its colour on the card edge — 2px, so it reads at a glance
 	   without a second frame inside the row. The hover cue stands down for it: the colour says

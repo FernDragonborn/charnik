@@ -398,6 +398,21 @@ good", so they are pinned here and every component follows them.
     explaining its neighbour, invisible exactly while the pointer is on the element. Raising the row over the popover is not the fix: then
     each covers the other's words. The concentration and form chips' `.conc-drop` is the case;
     controls revealed IN place (a panel head's auto-calc switch, a row's pin) are not this rule.
+19. **Enter in an editable field does what a press on its context's main button does.** The owed
+    save's DC field rolls the save, as the concentration chip does; a name field confirms what the
+    field is for. A field inside a `<form>` gets it from the form's submit; a field outside one
+    carries an `onkeydown` for `e.key === 'Enter'`. A multi-line field keeps Enter for the newline,
+    and the roller line keeps it for its completion menu — there the main act is Ctrl+Enter.
+20. **One action says one toast, and only one toast is ever on screen.** Everything said in the
+    same task — a roll's card and the notice the cast left, a failed save and the roll that failed
+    it — is one card: the rolls, then the notices under them. The next thing said REPLACES the card
+    rather than stacking under it, because a stack shows only its newest and keeps the rest
+    collapsed until hovered. A notice said with `duration: Infinity` is STANDING: it rides every
+    card after it until dismissed. A notice said with an `id` is said once however often it
+    repeats. All of it is `$lib/toast/toast`, the only module allowed to import `svelte-sonner`
+    besides the `<Toaster>` in `+layout.svelte` — the linter refuses the import anywhere else. A
+    lone notice keeps the toaster's own card; a roll's card and the log stay the place a past roll
+    is read again.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.

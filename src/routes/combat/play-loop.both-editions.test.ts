@@ -13,8 +13,9 @@
 import 'fake-indexeddb/auto'; // the VM saves on a rest
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
-vi.mock('svelte-sonner', () => ({
-	toast: Object.assign(() => {}, { custom: () => {} }),
+vi.mock('$lib/toast/toast', () => ({
+	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
+	toastRollCard: () => {},
 }));
 
 import { loadPacks } from '../../test-support/real-content';

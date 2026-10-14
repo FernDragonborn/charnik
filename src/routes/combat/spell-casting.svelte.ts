@@ -7,7 +7,7 @@
  * It reads the host through a narrow interface rather than importing the view-model class, so
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t, translator, type Translate } from '$lib/i18n';
 import { sayText } from '$lib/util/say';
 import { NOTE_KEY } from '$lib/combat/roll';

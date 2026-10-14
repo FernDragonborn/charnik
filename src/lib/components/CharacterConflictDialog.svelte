@@ -13,7 +13,7 @@
 	import { rosterEntryOf } from '$lib/character/repository';
 	import type { Character } from '$lib/character/schema';
 	import { errText } from '$lib/util/format';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 
 	const conflict = $derived(characters.conflict);
 	const theirs = $derived(conflict?.file.character ?? null);

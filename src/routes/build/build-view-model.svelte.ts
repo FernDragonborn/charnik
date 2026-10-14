@@ -9,7 +9,7 @@
  * let the player fix the rest — matching the app's "everything doable, nothing enforced to a
  * dead end" stance.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';

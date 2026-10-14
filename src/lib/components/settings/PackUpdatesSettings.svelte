@@ -4,7 +4,7 @@
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import {
 		bundledPacks,
 		missingBundled,

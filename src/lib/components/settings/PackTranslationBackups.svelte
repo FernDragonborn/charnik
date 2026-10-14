@@ -3,7 +3,7 @@
 	// replaced them (`content/translation-backups.ts`). One row per run; putting one back is the same
 	// swap an update is, so it sits beside "undo this update" and is reversed by it.
 	import { _ } from '$lib/i18n';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { restoreTranslations } from '$lib/content/remote/updates.svelte';
 	import type { TranslationBackup } from '$lib/content/translation-backups';
 	import ConfirmDialog from '../ConfirmDialog.svelte';

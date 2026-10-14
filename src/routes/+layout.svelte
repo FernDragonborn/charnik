@@ -46,7 +46,8 @@
 	} from '$lib/content/review.svelte';
 	import type { FilledMeta } from '$lib/content/meta';
 	import type { RestampFailure } from '$lib/content/restamp';
-	import { Toaster, toast } from 'svelte-sonner';
+	import { Toaster } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { takeFlash } from '$lib/stores/flash';
 	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
 	import { onMount, onDestroy } from 'svelte';

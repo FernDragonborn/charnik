@@ -6,7 +6,7 @@
  * returning one takes back); this is its reactive face, plus the two caps that must agree — the
  * character level cap, and what a played character has already settled under Strict.
  */
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import { newClassRow } from './draft';

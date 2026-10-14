@@ -1,14 +1,14 @@
 /*
  * The roll-toast view model + the ONE way to toast a completed roll. Every roll site (combat's
  * pushRoll, the RollButton, the no-tray fallback) went through its own `toast(string)` template, so
- * the same roll rendered three different ways. They now all call `toastRoll`, which mounts the
- * RollToast component with the model built here.
+ * the same roll rendered three different ways. They now all call `toastRoll`, which hands the model
+ * built here to the toast gate (`$lib/toast/toast`) — the roll's card, joined by whatever else the
+ * same action says.
  *
  * The shape is the final toast design (design-preview/toast-update): the card shrinks to its
  * content, one grid row per ATTACK, and the damage half of the row only exists when something was
  * damaged. A plain check is that same row minus the damage half. Pure — the component just renders.
  */
-import { toast } from 'svelte-sonner';
 import {
 	droppedD20s,
 	keptD20,
@@ -26,7 +26,7 @@ import {
 	type RollLogEntry,
 	type TypedRoll,
 } from '$lib/combat/roll';
-import RollToast from '$lib/components/RollToast.svelte';
+import { toastRollCard } from '$lib/toast/toast';
 import { say, sayText, type SaidValue } from '$lib/util/say';
 import { translator, type Translate } from '$lib/i18n';
 
@@ -241,5 +241,5 @@ export function rollToastModel(
 export function toastRoll(rolled: RollLogEntry | RollLogEntry[]): void {
 	// the catalog is read HERE, at the moment the toast is made — a toast is fire-and-forget, so it
 	// says its sentence once and never re-reads it
-	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled, translator()) } });
+	toastRollCard(rollToastModel(rolled, translator()));
 }

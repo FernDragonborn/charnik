@@ -23,7 +23,7 @@
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import {
 		characters,

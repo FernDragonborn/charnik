@@ -8,7 +8,7 @@
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel, toastRoll, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import { cycleAdvantage } from '$lib/rules/dice';
-	import { toast } from 'svelte-sonner';
+	import { toast } from '$lib/toast/toast';
 	import type { RollLogEntry } from '$lib/combat/helpers';
 	import {
 		amendedAdvantage,
@@ -272,7 +272,7 @@
 		{#each cases as c, i (i)}
 			<div class="case">
 				<div class="cap">{c.title}</div>
-				<div class="slot"><RollToast model={rollToastModel(c.entry, $_)} /></div>
+				<div class="slot"><RollToast models={[rollToastModel(c.entry, $_)]} /></div>
 				<button class="action" onclick={() => toastRoll(c.entry)}>Fire it →</button>
 			</div>
 		{/each}
