@@ -9,6 +9,7 @@
 	//
 	// Two native range inputs, not a hand-rolled drag: the keyboard, the screen reader and the
 	// touch target all come with them. They overlap on one track, each owning its own handle.
+	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import { RARITY_BAND } from '../rarity';
 
@@ -17,10 +18,16 @@
 
 	const label = (i: number) => $_(`itemRarity.${RARITY_BAND[i]}`);
 	const last = RARITY_BAND.length - 1;
-	/** A handle never crosses its partner: the band stays a band, and neither input can be dragged
-	 *  into a state the filter would have to guess about. */
-	const setFrom = (v: number) => (from = Math.min(v, to));
-	const setTo = (v: number) => (to = Math.max(v, from));
+	/* Each handle keeps its own position and may pass the other; the band is whatever lies between
+	   them. Clamping one handle at its partner left the input standing where it was dragged while the
+	   band stayed put — and two handles parked on the same end, the upper one on top, could not be
+	   moved at all. Nothing to clamp is nothing to get stuck on. */
+	let first = $state(untrack(() => from));
+	let second = $state(untrack(() => to));
+	const place = () => {
+		from = Math.min(first, second);
+		to = Math.max(first, second);
+	};
 	const pct = (i: number) => (i / last) * 100;
 </script>
 
@@ -33,17 +40,23 @@
 			type="range"
 			min="0"
 			max={last}
-			value={from}
+			value={first}
 			aria-label={$_('build.inventory.rarityFrom')}
-			oninput={(e) => setFrom(Number(e.currentTarget.value))}
+			oninput={(e) => {
+				first = Number(e.currentTarget.value);
+				place();
+			}}
 		/>
 		<input
 			type="range"
 			min="0"
 			max={last}
-			value={to}
+			value={second}
 			aria-label={$_('build.inventory.rarityTo')}
-			oninput={(e) => setTo(Number(e.currentTarget.value))}
+			oninput={(e) => {
+				second = Number(e.currentTarget.value);
+				place();
+			}}
 		/>
 	</div>
 	<span class="band">{from === to ? label(from) : `${label(from)} — ${label(to)}`}</span>

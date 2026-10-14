@@ -36,6 +36,9 @@ describe.each([
 		const weapon = instanceQuestions(scope, row('weapon_1_2_or_3'));
 		expect(weapon.bases.map((b) => b.name)).toContain('Longsword');
 		expect(weapon.rungs.map((r) => r.bonus)).toEqual([1, 2, 3]);
+		const ammunition = instanceQuestions(scope, row('ammunition_1_2_or_3'));
+		expect(ammunition.bases.some((b) => b.name.startsWith('Arrows'))).toBe(true);
+		expect(ammunition.bases.map((b) => b.name)).not.toContain('Longsword');
 		const shield = instanceQuestions(scope, row('shield_1_2_or_3'));
 		expect(shield.bases).toEqual([]);
 		expect(shield.rungs.map((r) => r.bonus)).toEqual([1, 2, 3]);

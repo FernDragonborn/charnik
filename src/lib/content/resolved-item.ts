@@ -104,6 +104,10 @@ export function needsBaseItem(item: ResolvedItem): boolean {
 		case 'armor':
 		case 'shield':
 			return !item.tags.has(ITEM_TAG.armor) && !item.tags.has(ITEM_TAG.ac);
+		// mundane ammunition has no rarity; a magic row that names no base ("Ammunition, +1, +2, or
+		// +3", Weapon (Any Ammunition)) is a question about which arrows or bolts it is
+		case 'ammunition':
+			return !!item.row.data.rarity;
 		default:
 			return false;
 	}
