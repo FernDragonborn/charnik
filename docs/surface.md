@@ -672,7 +672,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function resolveClassSaves` — Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves.
 - `function deriveAbilityBlocks`
 - `function deriveSkills` — Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the * effect-granted level…
-- `function deriveAc` — AC: equipped armor (dex-capped) + the shield in hand, else unarmored; then AC effects fold on top.
+- `interface WornIids` — Which inventory rows are worn as armour and held as a shield — absent when none is.
+- `function deriveAc`
 - `function deriveSpeed` — Speed from species base; A3: armor whose `str_min` exceeds the wearer's STR drops it 10 ft (RAW, * both editions), tr…
 - `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
 - `function deriveSenses` — Every sense some effect grants, folded to its range.
@@ -934,6 +935,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `function contributionText` — One contribution as a reader meets it: who, and what they did to the number.
+- `function shownTrace` — The parts of a value a reader is shown, in the order they fold — a base before what adds to it.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function whyPassive` — * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
@@ -2072,6 +2074,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const NOTE_KEY` — i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline / * apply / core and the …
 - `interface Computed`
 - `interface Clamp`
+- `function foldRank` — Where a contribution folds, as a number to sort a trace by: its layer's place, with a `base` * between the core's own…
 - `function computed` — Build a `Computed` from contributions (+ optional clamp/notes).
 
 ### `src/lib/rules/proficiency.ts`
@@ -2341,4 +2344,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1433 exports across 196 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1436 exports across 196 modules · 94 duplicate suspects._

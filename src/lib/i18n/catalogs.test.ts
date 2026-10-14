@@ -58,11 +58,15 @@ describe('i18n catalogs', () => {
 		// value legitimately appears a different number of times.
 		const placeholders = (s: string) =>
 			[...new Set([...s.matchAll(/\{(\w+)\s*[},]/g)].map((m) => m[1] ?? ''))].sort();
+		// each catalog walked ONCE: a walk per English string made this quadratic in the catalog's
+		// size, and slow enough to time out when the whole suite runs beside it
+		const others = Object.entries(CATALOGS)
+			.filter(([id]) => id !== 'en')
+			.map(([id, catalog]) => [id, new Map(leafValues(catalog))] as const);
 		for (const [path, value] of leafValues(en)) {
 			const wanted = placeholders(value);
-			for (const [id, catalog] of Object.entries(CATALOGS)) {
-				if (id === 'en') continue;
-				const translated = leafValues(catalog).find(([p]) => p === path)?.[1] ?? '';
+			for (const [id, byPath] of others) {
+				const translated = byPath.get(path) ?? '';
 				// `plural` is an ICU keyword, not a value the caller passes — compare the value names only
 				const named = (list: string[]) => list.filter((n) => n !== 'plural');
 				expect(`${id}:${path}:${named(placeholders(translated)).join(',')}`).toBe(
