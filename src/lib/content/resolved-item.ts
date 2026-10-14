@@ -45,23 +45,29 @@ export interface ResolvedItem {
  * keeps duplicate resolution in `collisions.json` (docs/internals/content.md). A `base_item_id` that
  * resolves to nothing is surfaced at load, not guessed at here.
  */
+/** The row an item is built on: its own `base_item_id` (within its source), else the player's chosen
+ *  base for a template. The row's own base wins — content that already says what it is leaves nothing
+ *  to choose. The chosen base is a full ref, and CROSSES sources on purpose: it is the player's answer
+ *  to "which weapon is this", not one pack claiming authority over another. */
+export function baseRowOf(graph: ContentGraph, row: LoadedRowOf<'item'>, chosenBase?: string) {
+	const baseId = row.data.base_item_id;
+	const base = baseId
+		? graph.get(`item:${row.source}:${baseId}`)
+		: chosenBase
+			? graph.get(chosenBase)
+			: undefined;
+	return base?.type === 'item' ? base : undefined;
+}
+
 export function resolveItem(
 	graph: ContentGraph,
 	row: LoadedRowOf<'item'>,
 	chosenBase?: string,
 ): ResolvedItem {
 	const own = parseItemTags(row.data.tags);
-	const baseId = row.data.base_item_id;
-	// the row's own base wins: content that already says what it is leaves nothing to choose. The
-	// chosen base is a full ref, and CROSSES sources on purpose — it is the player's answer to "which
-	// weapon is this", not one pack claiming authority over another.
-	const base = baseId
-		? graph.get(`item:${row.source}:${baseId}`)
-		: chosenBase
-			? graph.get(chosenBase)
-			: undefined;
+	const base = baseRowOf(graph, row, chosenBase);
 	const ownWeight = Number(row.data.weight_lb ?? 0);
-	if (base?.type !== 'item')
+	if (!base)
 		return {
 			row,
 			tags: own,

@@ -42,8 +42,9 @@ async function loadEdition(pack: string) {
  * carry no `ammo:` tag and nothing here pretends otherwise.
  */
 describe('shipped ammunition · what a weapon can spend', () => {
+	// the MUNDANE kinds: Ammunition +N is ammunition too, and is what these kinds are the base of
 	const ammoRows = (g: Awaited<ReturnType<typeof loadEdition>>) =>
-		g.list('item').filter((r) => r.data.category === 'ammunition');
+		g.list('item').filter((r) => r.data.category === 'ammunition' && !r.data.rarity);
 
 	it('2024: every `ammo:<kind>` a weapon names has a row that carries it', async () => {
 		const g = await loadEdition('srd-2024');

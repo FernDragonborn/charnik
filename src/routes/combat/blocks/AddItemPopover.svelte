@@ -21,13 +21,12 @@
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
 	import RarityRange from '../../build/blocks/RarityRange.svelte';
-	import { WHOLE_BAND, itemWithinBand } from '../../build/rarity';
-	import { itemRarities } from '$lib/content/options';
+	import { WHOLE_BAND, itemSectionsWithin } from '../../build/rarity';
 	import { rowDetail, rowName } from '../../build/rows';
-	import { ITEM_CATEGORIES } from '$lib/content/schemas';
-	import { titleCase } from '$lib/util/format';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { combat } from '../combat-view-model.svelte';
+	import { InstancePicking } from '../../build/item-instance-picking.svelte';
+	import ItemInstanceAsk from '../../build/blocks/ItemInstanceAsk.svelte';
 
 	let { anchor, onclose }: { anchor: HTMLElement; onclose: () => void } = $props();
 
@@ -57,17 +56,23 @@
 					.sort((a, b) => rowName(a).localeCompare(rowName(b)))
 			: [],
 	);
+	const picking = new InstancePicking({
+		scope: () => combat.inventory.instanceScope,
+		carried: () => combat.inventory.rows.map((r) => r.entry.item),
+		add: (ref) => combat.inventory.add(ref),
+		addInstance: (ref, answers) => combat.inventory.addInstance(ref, answers),
+		putBack: (ref) => combat.inventory.putBack(ref),
+	});
 	const sections = $derived(
-		ITEM_CATEGORIES.map((category) => ({
-			key: category,
-			label: titleCase(category),
-			rows: items.filter(
-				(r) =>
-					r.data.category === category && itemWithinBand(itemRarities(r, combat.graph), from, to),
-			),
-		})).filter((s) => s.rows.length),
+		picking.withInstances(
+			query,
+			$_('build.inventory.instances'),
+			itemSectionsWithin(items, combat.graph, { from, to }),
+		),
 	);
-	const detail = $derived(rowDetail(previewId ? combat.graph?.get(previewId) : undefined, 'item'));
+	const detail = $derived(
+		rowDetail(previewId ? combat.graph?.get(picking.rowIdOf(previewId)) : undefined, 'item'),
+	);
 	const carried = $derived(inv.rows.map((r) => r.entry.item));
 </script>
 
@@ -92,7 +97,7 @@
 			{previewId}
 			takenIds={carried}
 			onpreview={(id) => (previewId = id)}
-			ontake={(id) => (carried.includes(id) ? inv.putBack(id) : inv.add(id))}
+			ontake={picking.take}
 			{detail}
 			placeholder={$_('build.inventory.search')}
 		>
@@ -101,6 +106,10 @@
 			{/snippet}
 		</SectionedPicker>
 	</div>
+	<!-- inside the surface, so a press on it is not a press outside that closes the popover -->
+	{#if picking.asking}
+		<ItemInstanceAsk ask={picking.asking} onanswer={picking.answer} oncancel={picking.cancel} />
+	{/if}
 </div>
 
 <style>

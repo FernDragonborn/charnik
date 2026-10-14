@@ -18,6 +18,12 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   show/hide menu. Most characters reach for four of the twelve standard actions; a preset sets the
   same eyes you would set by hand, so you can see and undo what it did. Crying is still a free
   action.
+- **A +1 sword is a Longsword +1.** Adding a "Weapon, +1, +2, or +3" — or armour, a shield,
+  ammunition — asks which weapon and which bonus right there, in a small popover beside the ✓, and
+  the inventory names it for what it is. Searching "longsword +1" or "shield +2" offers that very
+  item at the top, already answered. Two magic weapons of the same kind are two rows now.
+- **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.
+- **A collapsed panel is as deep below its title as above it.**
 - **A plugin's time limit is counted, not timed.** It was 5 ms on the clock, so an honest plugin
   could fail to a note whenever the computer was busy for a moment; the limit is now a count of
   steps that comes out the same on any machine. A plugin that is slow but keeps working is never

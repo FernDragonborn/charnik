@@ -25,13 +25,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
+- `add` ×4 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/ItemInstanceAsk.svelte · src/routes/build/blocks/OwnEntries.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `nameOf` ×4 — src/lib/combat/actions.ts · src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
-- `add` ×3 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/OwnEntries.svelte
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (178 modules)
+## Library functions & types (179 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -751,6 +751,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const attunedCount`
 - `const carriedWeight` — Total carried weight in pounds.
 - `const addItem`
+- `const addItemInstance` — Carry one particular instance, its questions answered as it is added — a template's base, a * `+1/+2/+3` row's bonus.
 - `const removeItem`
 - `const removeItemsOf` — Stop carrying an item altogether — every row of it.
 - `const bumpQty`
@@ -1106,6 +1107,25 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const TYPE_ASSIGNABLE_KEYS` — The issues a file fixes by being TOLD its content type — no directive and an unrecognised name, or * a directive nami…
 - `const issueText`
 
+### `src/lib/content/item-instance.ts`
+
+- `interface BaseItemOption`
+- `interface InstanceAnswers` — The answers that make a row one particular item.
+- `interface InstanceQuestions` — What a row leaves for the player to say: which mundane item it is, and which +N.
+- `interface InstanceScope` — Where the lists come from: this character's edition and language, and the sources they enabled.
+- `function baseItemOptions` — Every mundane item a template could BE, of the same kind as the template asking: a weapon * template offers weapons, …
+- `function instanceQuestions`
+- `const asksWhichOne`
+- `function instanceBaseName` — The mundane item an instance is built on — the player's answer for a template, the row's own * `base_item_id` for a S…
+- `type SayInstance` — How a `+N` instance is said: by its base ("Longsword", +2) or, with no base, by its own heading.
+- `const sayInstanceWith` — The catalog's way of saying an instance, in the reader's language.
+- `interface InstanceNaming` — What naming an instance reads: the graph its base is looked up in, and the reader's language.
+- `function instanceName`
+- `interface InstanceMatch` — One instance a search names, ready to carry: the row, the answers, and what it is called.
+- `function instancesForQuery` — * The instances a search names.
+- `const instanceRowId`
+- `function parseInstanceRowId`
+
 ### `src/lib/content/item-tags.ts`
 
 - `type ItemTags` — Tag name → its value (`''` for a bare tag like `finesse`).
@@ -1315,7 +1335,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/resolved-item.ts`
 
 - `interface ResolvedItem` — An item as the sheet reads it: its row, its tags with a `base_item_id` base merged underneath, * and the damage inher…
-- `function resolveItem` — * Resolve an item against the mundane row its `base_item_id` names — a +1 longsword IS a longsword, * so it inherits …
+- `function baseRowOf` — The row an item is built on: its own `base_item_id` (within its source), else the player's chosen * base for a template.
+- `function resolveItem`
 - `function needsBaseItem` — * Does this item need the player to say WHAT it is?
 - `function armorCategoryOf` — An armor/shield's proficiency category.
 
@@ -1857,6 +1878,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const toggleEquip` — Put on or take off — a shield in hand is what the Armor Class counts.
 - `const ownItem` — Start carrying an item, and stop carrying it altogether — the two a picker asks for, which * speak of the ITEM.
+- `const ownItemInstance` — Start carrying one particular instance — see `addItemInstance`.
 - `const disownItem`
 - `const dropItem`
 - `const changeQuantity` — Change how many of a stack are carried.
@@ -2315,4 +2337,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1410 exports across 195 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1429 exports across 196 modules · 94 duplicate suspects._

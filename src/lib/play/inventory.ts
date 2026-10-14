@@ -10,6 +10,7 @@
 import {
 	ATTUNEMENT_CAP,
 	addItem,
+	addItemInstance,
 	attunedCount,
 	bumpQty,
 	removeItem,
@@ -20,6 +21,7 @@ import {
 	type InventoryEntry,
 } from '$lib/character/inventory';
 import type { Character } from '$lib/character/schema';
+import type { InstanceAnswers } from '$lib/content/item-instance';
 import { quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { settled } from './settle';
 
@@ -42,6 +44,10 @@ export const toggleEquip = listAction<{ row: string }>((list, { row }) =>
 /** Start carrying an item, and stop carrying it altogether — the two a picker asks for, which
  *  speak of the ITEM. `dropItem` is one row leaving. */
 export const ownItem = listAction<{ item: string }>((list, { item }) => addItem(list, item));
+/** Start carrying one particular instance — see `addItemInstance`. */
+export const ownItemInstance = listAction<{ item: string; answers: InstanceAnswers }>(
+	(list, { item, answers }) => addItemInstance(list, item, answers),
+);
 export const disownItem = listAction<{ item: string }>((list, { item }) =>
 	removeItemsOf(list, item),
 );

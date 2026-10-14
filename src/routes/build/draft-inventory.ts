@@ -11,6 +11,7 @@
  */
 import {
 	addItem,
+	addItemInstance,
 	bumpQty,
 	isEquippable,
 	removeItem,
@@ -18,6 +19,7 @@ import {
 	toggleEquipped,
 } from '$lib/character/inventory';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+import type { InstanceAnswers } from '$lib/content/item-instance';
 import type { BuildVM } from './build-view-model.svelte';
 import { rowOfType } from './rows';
 import type { DraftState } from './draft';
@@ -35,6 +37,9 @@ export class DraftInventory {
 
 	// the picker speaks of an ITEM — take it, put it back; a row on the sheet is spoken of by its own id
 	add = (ref: string): void => this.put(addItem(this.host().draft.inventory, ref));
+	/** Carry one particular instance, its questions answered as it was taken. */
+	addInstance = (ref: string, answers: InstanceAnswers): void =>
+		this.put(addItemInstance(this.host().draft.inventory, ref, answers));
 	putBack = (ref: string): void => this.put(removeItemsOf(this.host().draft.inventory, ref));
 	remove = (row: string): void => this.put(removeItem(this.host().draft.inventory, row));
 	bumpQty = (row: string, by: number): void =>

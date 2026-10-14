@@ -5,13 +5,14 @@
 	// that is already one click to undo. Quantity and equipping stay on the sheet's own row.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { ITEM_CATEGORIES } from '$lib/content/schemas';
-	import { titleCase } from '$lib/util/format';
 	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	import RarityRange from './RarityRange.svelte';
-	import { WHOLE_BAND, itemWithinBand } from '../rarity';
-	import { itemRarities } from '$lib/content/options';
+	import { WHOLE_BAND, itemSectionsWithin } from '../rarity';
+	import { isRowActive } from '$lib/content/sources.svelte';
+	import { app } from '$lib/stores/app.svelte';
+	import { InstancePicking } from '../item-instance-picking.svelte';
+	import ItemInstanceAsk from './ItemInstanceAsk.svelte';
 	const b = build;
 
 	let query = $state('');
@@ -21,20 +22,26 @@
 	let from = $state(WHOLE_BAND.from);
 	let to = $state(WHOLE_BAND.to);
 
-	const detail = $derived(rowDetail(previewId ? b.row(previewId) : undefined, 'item'));
-	const carrying = (id: string) => b.draft.inventory.some((i) => i.item === id);
+	const picking = new InstancePicking({
+		scope: () =>
+			b.graph
+				? { graph: b.graph, system: b.draft.system, locale: app.activeLocale, isActive: isRowActive }
+				: null,
+		carried: () => b.draft.inventory.map((i) => i.item),
+		add: b.inventory.add,
+		addInstance: b.inventory.addInstance,
+		putBack: b.inventory.putBack,
+	});
+	const detail = $derived(
+		rowDetail(previewId ? b.row(picking.rowIdOf(previewId)) : undefined, 'item'),
+	);
 
-	// The schema's own order, which runs weapon → armor → gear → magic, is the order a player shops
-	// in; sorting it alphabetically would only scatter that.
 	const sections = $derived(
-		ITEM_CATEGORIES.map((category) => ({
-			key: category,
-			label: titleCase(category),
-			rows: b.itemList.filter(
-				(r) =>
-					r.data.category === category && itemWithinBand(itemRarities(r, b.graph), from, to),
-			),
-		})).filter((s) => s.rows.length),
+		picking.withInstances(
+			query,
+			$_('build.inventory.instances'),
+			itemSectionsWithin(b.itemList, b.graph, { from, to }),
+		),
 	);
 </script>
 
@@ -44,7 +51,7 @@
 	{previewId}
 	takenIds={b.draft.inventory.map((i) => i.item)}
 	onpreview={(id) => (previewId = id)}
-	ontake={(id) => (carrying(id) ? b.inventory.putBack(id) : b.inventory.add(id))}
+	ontake={picking.take}
 	{detail}
 	placeholder={$_('build.inventory.search')}
 >
@@ -52,3 +59,6 @@
 		<RarityRange bind:from bind:to />
 	{/snippet}
 </SectionedPicker>
+{#if picking.asking}
+	<ItemInstanceAsk ask={picking.asking} onanswer={picking.answer} oncancel={picking.cancel} />
+{/if}

@@ -125,8 +125,8 @@
 		{#if row}
 			<div
 				class="inv-row"
-				class:asks-base={row.isTemplate ||
-					row.bonusRungs.length ||
+				class:asks-base={(row.isTemplate && !row.entry.base) ||
+					(row.bonusRungs.length && row.entry.bonus === undefined) ||
 					row.choiceOptions.length ||
 					row.varieties.length}
 			>
@@ -146,7 +146,8 @@
 			     question only the player can answer, so it is asked here, where the item is. -->
 				<!-- The same argument as the base above, one step in: the SRD prints ONE "Weapon, +1, +2,
 				     or +3", and which one you found is yours to say. Unanswered it grants nothing. -->
-				{#if row.bonusRungs.length}
+				<!-- asked when the item was added; a row carried from before then is asked here, once -->
+				{#if row.bonusRungs.length && row.entry.bonus === undefined}
 					<label class="base-pick">
 						<span class="visually-hidden"
 							>{$_('combat.inventory.bonusPick', { values: { name: row.name } })}</span
@@ -220,7 +221,7 @@
 						</select>
 					</label>
 				{/if}
-				{#if row.isTemplate}
+				{#if row.isTemplate && !row.entry.base}
 					<label class="base-pick">
 						<span class="visually-hidden"
 							>{$_('combat.inventory.baseItem', { values: { name: row.name } })}</span

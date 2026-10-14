@@ -25,6 +25,7 @@ import {
 	disownItem,
 	dropItem,
 	ownItem,
+	ownItemInstance,
 	reorderInventory,
 	setCoin,
 	setItemBase,
@@ -37,6 +38,14 @@ import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { say } from '$lib/util/say';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+import {
+	baseItemOptions,
+	instanceName,
+	sayInstanceWith,
+	type BaseItemOption,
+	type InstanceAnswers,
+	type InstanceScope,
+} from '$lib/content/item-instance';
 import { type ContentGraph } from '$lib/content/loader';
 import { optionsOf } from '$lib/content/options';
 import { localizedName } from '$lib/content/detail';
@@ -91,11 +100,6 @@ interface ItemVariety {
 }
 
 /** A mundane item a template can be resolved against, as the picker lists it. */
-export interface BaseItemOption {
-	ref: string;
-	name: string;
-}
-
 /** What the inventory needs from the sheet around it. */
 export interface InventoryHost {
 	character: Character | null;
@@ -145,9 +149,7 @@ export class InventoryTracker {
 			const variety = varieties.find((v) => v.id === entry.choice);
 			return {
 				entry,
-				// the ref itself is the last resort: a row whose item left the graph must still be
-				// visible and removable, never a blank line the user cannot act on
-				name: variety?.name ?? (item ? localizedName(item.row, app.activeLocale) : entry.item),
+				name: variety?.name ?? this.nameOf(entry, item, graph),
 				item,
 				weightLb: item?.weightLb ?? 0,
 				meta: [
@@ -170,6 +172,23 @@ export class InventoryTracker {
 			};
 		});
 	});
+
+	/** What a carried row is called: the instance it is ("Longsword +2") once its questions are
+	 *  answered, else the row's own name — and the ref itself as the last resort, because a row whose
+	 *  item left the graph must still be visible and removable, never a blank line. */
+	private nameOf(
+		entry: InventoryEntry,
+		item: ResolvedItem | undefined,
+		graph: ContentGraph | null | undefined,
+	): string {
+		if (!item) return entry.item;
+		const naming = graph
+			? { graph, locale: app.activeLocale, say: sayInstanceWith(translator()) }
+			: null;
+		return (
+			(naming && instanceName(naming, item.row, entry)) ?? localizedName(item.row, app.activeLocale)
+		);
+	}
 
 	/** The purse, and the coins the sheet shows of it. Hiding electrum is a view choice, so a hidden
 	 *  coin keeps whatever is in it — and keeps weighing, if this character weighs coins at all. */
@@ -257,20 +276,24 @@ export class InventoryTracker {
 	 *  an item magical (`content.md`), and a row that states nothing itself is a template too and has
 	 *  nothing to lend. Edition- and source-filtered like every other list the sheet shows. */
 	baseOptionsFor = (ref: string): BaseItemOption[] => {
+		const scope = this.instanceScope;
+		const template = scope?.graph.get(ref);
+		return scope && template?.type === 'item' ? baseItemOptions(scope, template) : [];
+	};
+
+	/** Where an instance's questions are asked from: this character's edition and language, and the
+	 *  sources they enabled. Null before a character and a graph exist. */
+	get instanceScope(): InstanceScope | null {
 		const graph = this.getGraph();
 		const c = this.getCharacter();
-		const template = graph?.get(ref);
-		if (!graph || !c || template?.type !== 'item') return [];
-		const out: BaseItemOption[] = [];
-		for (const row of graph.rows) {
-			if (row.type !== 'item' || !row.systems.includes(c.system) || !isRowActive(row)) continue;
-			if (row.data.category !== template.data.category || row.data.rarity) continue;
-			// a row that would itself need a base has nothing to lend
-			if (needsBaseItem(resolveItem(graph, row))) continue;
-			out.push({ ref: `item:${row.source}:${row.id}`, name: localizedName(row, app.activeLocale) });
-		}
-		return out.sort((a, b) => a.name.localeCompare(b.name));
-	};
+		return graph && c
+			? { graph, system: c.system, locale: app.activeLocale, isActive: isRowActive }
+			: null;
+	}
+
+	/** Carry one particular instance, its questions answered as it is added. */
+	addInstance = (item: string, answers: InstanceAnswers) =>
+		this.act((c, ctx) => ownItemInstance(c, { item, answers }, ctx));
 
 	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
 	 *  off every number it was folding into. */

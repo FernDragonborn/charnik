@@ -212,7 +212,13 @@
 			"remove": "Remove {name}",
 			"search": "Search equipment…",
 			"title": "Equipment",
-			"weight": "{lb} lb ({kg})"
+			"weight": "{lb} lb ({kg})",
+			"whichOne": "Which {name}?",
+			"whichBase": "Item",
+			"whichBonus": "Bonus",
+			"askAdd": "Add",
+			"askCancel": "Cancel",
+			"instances": "This one"
 		},
 		"languages": {
 			"chosen": "Chosen {count}",
@@ -2312,5 +2318,9 @@
 		"ranged": "ranged",
 		"poisoned": "poison",
 		"ranged_weapon": "ranged weapon"
+	},
+	"item": {
+		"instanceName": "{name} +{bonus}",
+		"instanceNameNoBase": "{name} (+{bonus})"
 	}
 }

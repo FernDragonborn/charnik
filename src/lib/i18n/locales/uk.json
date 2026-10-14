@@ -212,7 +212,13 @@
 			"remove": "Прибрати: {name}",
 			"search": "Пошук спорядження…",
 			"title": "Спорядження",
-			"weight": "{lb} фн ({kg})"
+			"weight": "{lb} фн ({kg})",
+			"whichOne": "Який саме — {name}?",
+			"whichBase": "Предмет",
+			"whichBonus": "Бонус",
+			"askAdd": "Додати",
+			"askCancel": "Скасувати",
+			"instances": "Саме цей"
 		},
 		"languages": {
 			"chosen": "Обрано {count}",
@@ -2312,5 +2318,9 @@
 		"ranged": "дальні атаки",
 		"poisoned": "отруєння",
 		"ranged_weapon": "дальня зброя"
+	},
+	"item": {
+		"instanceName": "{name} +{bonus}",
+		"instanceNameNoBase": "{name} (+{bonus})"
 	}
 }

@@ -140,7 +140,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Archdruid's Nature Magician turns uses into one slot. An install left at v46 has neither option.
 // v48: both Wild Shape rows state that equipment works only where the form wears it, and the 2024
 // one that the form sheds the species' traits. An install left at v47 keeps both in a wolf.
-export const CONTENT_SEED_VERSION = 48;
+// v49: Ammunition, +1, +2, or +3 is ammunition rather than a weapon, so the base it asks for is an
+// arrow or a bolt. An install left at v48 offers it every sword.
+export const CONTENT_SEED_VERSION = 49;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

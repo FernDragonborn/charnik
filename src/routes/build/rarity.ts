@@ -5,7 +5,10 @@
  * empty `rarity` IS in the data (`content.md`), and it is where a starting character shops — the SRD
  * ships 234 magic rows against 149 priced mundane ones, so an unfiltered list buries the basics.
  */
-import { RARITIES } from '$lib/content/schemas';
+import { ITEM_CATEGORIES, RARITIES } from '$lib/content/schemas';
+import { itemRarities } from '$lib/content/options';
+import type { ContentGraph, LoadedRowOf } from '$lib/content/loader';
+import { titleCase } from '$lib/util/format';
 import { asText } from '$lib/util/format';
 
 export const RARITY_BAND = ['none', ...RARITIES] as const;
@@ -31,3 +34,22 @@ const withinBand = (rarity: unknown, from: number, to: number): boolean => {
  *  falls; a mundane row has none and stands on the ladder's first rung. */
 export const itemWithinBand = (rarities: readonly string[], from: number, to: number): boolean =>
 	rarities.length ? rarities.some((r) => withinBand(r, from, to)) : withinBand('', from, to);
+
+/** The item picker's sections inside the band: one per category in the schema's own order, which
+ *  runs weapon → armor → gear → magic — the order a player shops in, where sorting alphabetically
+ *  would only scatter it. The builder's equipment pane and the play sheet's Add item share it. */
+export function itemSectionsWithin(
+	rows: readonly LoadedRowOf<'item'>[],
+	graph: ContentGraph | null | undefined,
+	band: { from: number; to: number },
+) {
+	return ITEM_CATEGORIES.map((category) => ({
+		key: category,
+		label: titleCase(category),
+		rows: rows.filter(
+			(r) =>
+				r.data.category === category &&
+				itemWithinBand(itemRarities(r, graph), band.from, band.to),
+		),
+	})).filter((s) => s.rows.length);
+}

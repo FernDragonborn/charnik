@@ -10,6 +10,7 @@
  * from its `category` column and its `tags` (docs/internals/content.md).
  */
 import { ITEM_TAG } from '$lib/content/item-tags';
+import type { InstanceAnswers } from '$lib/content/item-instance';
 import type { ResolvedItem } from '$lib/content/resolved-item';
 import { inventoryRow, type Character } from './schema';
 
@@ -62,6 +63,20 @@ export const addItem = (list: InventoryList, ref: string): InventoryEntry[] =>
 	!ref || list.some((entry) => entry.item === ref)
 		? [...list]
 		: [...list, inventoryRow({ item: ref })];
+
+/** Carry one particular instance, its questions answered as it is added — a template's base, a
+ *  `+1/+2/+3` row's bonus. Always a row of its own, because two Weapons +N in one pack are two
+ *  weapons; the same instance already carried is not added twice. */
+export const addItemInstance = (
+	list: InventoryList,
+	ref: string,
+	answers: InstanceAnswers,
+): InventoryEntry[] =>
+	list.some(
+		(entry) => entry.item === ref && entry.base === answers.base && entry.bonus === answers.bonus,
+	)
+		? [...list]
+		: [...list, inventoryRow({ item: ref, ...answers })];
 
 export const removeItem = (list: InventoryList, iid: string): InventoryEntry[] =>
 	list.filter((entry) => entry.iid !== iid);
