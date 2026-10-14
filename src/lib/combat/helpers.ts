@@ -15,6 +15,7 @@
 export * from './roll';
 export * from './defense';
 export * from './effects-view';
+export * from './shown-trace';
 export * from './attacks';
 export * from './attack-names';
 export * from './spells';

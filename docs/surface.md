@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (179 modules)
+## Library functions & types (180 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -935,7 +935,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `function contributionText` — One contribution as a reader meets it: who, and what they did to the number.
-- `function shownTrace` — The parts of a value a reader is shown, in the order they fold — a base before what adds to it.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function whyPassive` — * `why` for a passive score, with the sentence that says what THIS passive means on top of it.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
@@ -1008,6 +1007,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
 - `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
 - `function uniqueRowKeys` — * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same * weapon can stan…
+
+### `src/lib/combat/shown-trace.ts`
+
+- `function shownTrace` — The parts of a value a reader is shown, in the order they fold — a base before what adds to it.
 
 ### `src/lib/combat/spells.ts`
 
@@ -2344,4 +2347,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1436 exports across 196 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1436 exports across 197 modules · 94 duplicate suspects._

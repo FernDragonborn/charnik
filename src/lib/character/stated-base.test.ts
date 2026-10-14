@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { classRow, inventoryRow, newCharacter } from './schema';
 import { deriveSheet } from './derive';
-import { contributionText, shownTrace } from '../combat/effects-view';
+import { contributionText } from '../combat/effects-view';
+import { shownTrace } from '../combat/shown-trace';
 import type { ContentGraph } from '../content/loader';
 
 describe.each([
