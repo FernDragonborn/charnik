@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.8.1
+
+A handful of fixes found right after 0.8.0, and a little more say over the Actions panel.
+
+- **One action, one toast.** Everything a single press says now arrives on one card — a roll and the
+  notice it left, a failed concentration save and the roll that failed it — and the next thing said
+  replaces it. Two toasts used to stack, and the older one stood collapsed behind the newer, unread
+  unless you hovered it.
+- **The concentration chip's ✕ and Skip are visible while you point at the chip.** They used to hang
+  under it, exactly where the chip's own tooltip opened, and the tooltip covered them; they now stand
+  above it. Skip also stays under the pointer while a long queue of owed saves gets shorter.
+- **Enter does what the main button does.** In the owed save's DC field it rolls the save; in the XP
+  and custom-modifier menus, the content editor, the metadata dialog, the upcast builder, the
+  translation pane and a pack's folder name, it does the panel's own Add, Save, Install or Rename.
+- **The Actions panel has presets** — All, Core, Melee, Stealth, Support and Class features — on its
+  show/hide menu. Most characters reach for four of the twelve standard actions; a preset sets the
+  same eyes you would set by hand, so you can see and undo what it did. And if you look through those
+  eyes carefully, you may find one action you did not know you had. It costs nothing.
+- **A plugin's time limit is counted, not timed.** It was 5 ms on the clock, so an honest plugin
+  could fail to a note whenever the computer was busy for a moment; the limit is now a count of
+  steps that comes out the same on any machine. A plugin that is slow but keeps working is never
+  switched off for it — turn it off in Settings if it stalls your sheet.
+- **Updated the desktop shell to Tauri 2.12** with its plugins, alongside the routine dependency
+  updates.
+
 ## 0.8.0
 
 The release the table wrote. Charnik went out to its first outside playtest, and most of what is
