@@ -937,7 +937,7 @@ the installer's size with it inside the real app.
 
 **13 · An inert derive mode — and why the question may not need its answer.** What the interface
 carries is decided as the RESULT: a player's app derives its own sheet and the GM's renders it,
-deriving nothing from a peer's tokens (`docs/work/release.md` ▸ TABLE-LINK-SEAM). Held to, there
+deriving nothing from a peer's tokens (`docs/work/release.md` ▸ TABLE-LINK-SPEC). Held to, there
 is no foreign character to derive. What reading the pipeline shows, for the day that changes:
 `deriveSheet` gathers tokens from the character FILE as well as from content — every
 `play.effects[].effects` entry is a token the save itself supplies — so a foreign save brings its
@@ -1029,7 +1029,7 @@ one more reason for the star of direct connections S-10 already asks for.
 - **On desktop the rule is already the answer**: the data folder is what a folder sync or a
   restored backup carries, so a key never goes in it.
 
-Because identity is per table (`docs/work/release.md` ▸ TABLE-LINK-SEAM), a lost key costs one
+Because identity is per table (`docs/work/release.md` ▸ TABLE-LINK-SPEC), a lost key costs one
 re-pairing with one GM and nothing else, which is what makes "device-only, never migrated" an
 affordable default on every platform. Not read: whether a Windows credential roams with a domain
 profile, and what Secret Service does on a Linux session with no keyring daemon. Not verified:

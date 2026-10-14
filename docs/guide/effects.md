@@ -90,7 +90,7 @@ of this page is vocabulary.
 [ guard ? ] flat_bonus : target +|- value
 ```
 
-- **`kind`** — what sort of change this is. There are 24, all listed in §5. You cannot invent a new
+- **`kind`** — what sort of change this is. There are 25, all listed in §5. You cannot invent a new
   one; Charnik will tell you it has never heard of it.
 - **`target`** — what the change lands on: a stat, a roll, a skill. Listed in §6.
 - **`value`** — how much, when the kind needs one. A whole number, a dice term like `2d6`, or a
@@ -110,8 +110,8 @@ penalty.
 **One trap worth knowing:** a `-` in front of a *formula* negates the whole of it, not just its first
 term. `flat_bonus:speed-2*exhaustion` means `-(2 × exhaustion)`, which is what you want. But it also
 means `flat_bonus:hp_max-2+3` is −5, not +1. When a formula has more than one term, write the sign
-inside it and keep the joint a `+`: `flat_bonus:d20_tests+(-2*exhaustion)` is how the shipped 2024
-exhaustion rule says it.
+inside it and keep the joint a `+`: `flat_bonus:d20_tests+(-2*exhaustion)` says what the shipped
+2024 exhaustion rule, `flat_bonus:d20_tests-2*exhaustion`, says.
 
 **The colon is structure, never arithmetic.** `:` separates the parts of an effect and nothing else —
 which is why a formula never contains one, and why a conditional value is written `if(a, b, c)`
@@ -384,13 +384,10 @@ grant_proficiency:partial_up:check.str
         Remarkable Athlete: the same half ROUNDED UP, on every Strength check — the bare
         ability check and every Strength skill, because the rules call both a Strength check.
 
-armor_type==heavy ? disadvantage:skill.stealth
-        Heavy armour, said the way the rules say it.
-
 min_die:skills:proficient:10
         Reliable Talent: a floor, but only on checks your proficiency is already in.
 
-min_die:damage:two_handed;min_die:damage:versatile
+min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3
         Great Weapon Fighting: two scopes, because the rule names two kinds of weapon.
 ```
 

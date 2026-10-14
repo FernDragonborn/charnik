@@ -119,8 +119,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    display). Malicious content can't execute — worst case it's flagged in content-health.
    Expressiveness comes in **three layers**, never by putting code in a CSV cell:
    - **L1 declarative bounded vocab** (data: `kind:target:value` tokens; the fixed `kind` set is
-     `flat_bonus`/`set_override`/`advantage`/`disadvantage`/`grant_proficiency`/`damage_sensitivity`/
-     `apply_condition`/`grant_resource`, per `effects/index.ts`) — ~95%. There is no `op`/`when`/
+     `EFFECT_KIND` in `effects/token-parser.ts`, listed in `effects.md`) — ~95%. There is no `op`/`when`/
      `scope` token dimension: `op` (add/set/mult) is a pipeline-internal concept, and "when"
      (conditionality) is expressed by the L2 guard `<cond> ? <token>`, not an L1 field.
    - **L2 safe value-expressions** (`1d4`, `prof*2`, `ceil(level/2)`): OUR dice+arithmetic

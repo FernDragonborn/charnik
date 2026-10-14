@@ -19,8 +19,9 @@ language, as a page you can read in a browser. Its source is
 
 ## Install
 
-Grab the latest Windows installer from the [Releases](https://github.com/FernDragonborn/charnik/releases)
-page and run it. Linux and macOS builds aren't packaged yet — build from source (see below) in the meantime.
+Grab the latest build from the [Releases](https://github.com/FernDragonborn/charnik/releases) page:
+the `*-setup.exe` installer on Windows, the `.AppImage` or the `.deb` on Linux. macOS isn't packaged
+yet — build from source (see below) in the meantime.
 
 > **Prefer the `.exe` (NSIS) installer.** If Releases also list an `.msi`, pick the `*-setup.exe`
 > instead — it installs per-user without admin rights and gets auto-updates. The `.msi` is a

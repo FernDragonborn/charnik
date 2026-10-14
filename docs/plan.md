@@ -7,7 +7,7 @@
 
 ## Context
 
-Greenfield project (`D:\data\code\charnik`). FOSS, **standalone desktop (Tauri)** app for
+FOSS, **standalone desktop (Tauri)** app for
 D&D **5e (2014) + 5.5e (2024)**. **Scope is a full character TRACKING system**, not just a
 sheet generator. Three roles in one UI:
 1. **Build & level-up** — create a character and advance it level by level.
@@ -17,8 +17,8 @@ sheet generator. Three roles in one UI:
 
 Core intent:
 - **Standalone desktop app (Tauri)** — the 99% use case; data is **local files on disk**.
-  **Windows + Linux** (macOS ~free). **No HTTP server** → LAN/remote access is **not** a
-  goal. **Responsive** kept as a light nicety (window resize), not a phone-over-LAN driver.
+  **Windows + Linux** (macOS ~free). **No HTTP server** → reaching your own data over LAN or remotely is **not** a
+  goal; players linking their apps at one table is a layer of its own (TABLE-LINK-SPEC). **Responsive** kept as a light nicety (window resize), not a phone-over-LAN driver.
 - **Max simple, minimal over-engineering.** FOSS.
 - Content stored in **CSV** (not a DB) — obvious, editable by non-technical users in
   Excel/LibreOffice. Ships **SRD-only by default**; adding more is **very easy**.
@@ -36,8 +36,8 @@ Core intent:
 - **Three-layer repo licensing**: **code = MIT** (root `LICENSE`; keep the
   copyright notice, nothing else — AGPL-3.0-or-later up to 0.5.0, dropped because we don't
   oblige reusers to publish their code; no SPDX header per file, the root licence is the
-  declaration) · **bundled data = CC-BY-4.0** (`content/LICENSE`
-  + `content/ATTRIBUTION.md`, WotC SRD credit) · **user homebrew = author-owned** (app
+  declaration) · **bundled data = CC-BY-4.0** (`LICENSE`
+  + `ATTRIBUTION.md` in `charnik-content-srd`, WotC SRD credit) · **user homebrew = author-owned** (app
   relicenses nothing). Summary lives in root `COPYING.md` + README "Licensing".
 - **Per-source license metadata**: every `source` carries its own `license` +
   `attribution` columns in the content model, so shipped SRD (CC-BY) and community/homebrew
@@ -176,8 +176,8 @@ items. Each may carry **effects** (bounded vocab).
   it — you don't reinterpret a 5e character as 5.5e. The active-system switch only sets
   the **compendium/creation** context. **Converting a character between systems is OUT
   of scope** (mechanics differ too much); a character stays in its system.
-- **PWA deferred** (not dropped): responsive covers phone-over-LAN; PWA only adds
-  install/offline-shell, low value while data lives on the server.
+- **PWA deferred** (not dropped): it would add install and an offline shell to the web demo, and
+  the demo keeps nothing a player returns for.
 - **Accessibility baseline (in scope)**: proper **keyboard navigation** from the start —
   correct **Tab / Shift+Tab** focus order, visible focus, ARIA roles/labels; **command/search
   palette in two scopes — `Ctrl+K` = GLOBAL** (all content + every character) and
@@ -238,18 +238,10 @@ position and are given per wave, because most of them were learned the hard way.
   weapon and is read by nothing; the Champion's crit threshold cannot be got wrong because the app
   never decides a crit at all. Each is a grip or a choice the PLAYER makes, so each wants state and a
   control before it can mean anything.
-- **Before 0.8.0 is tagged.** Nothing a commit can close is left on the list a release is
-  checked against; what remains is the release's own routine (`work/release.md` ▸ AUDIT-DRIFT, the
-  full `pnpm lint:typed`, the version in three files).
-
-  **Rides past 0.8.0, and says so in the changelog where a player would look for it:** Mystic
-  Arcanum, SCOPED-BONUS's Agonizing Blast, A17's tail (the Book of Shadows' own rituals),
-  OPTION-ROWS, E4, MOBILE-ALPHA's tap
-  targets, DEFENCE-STRIP — the `Saves` group ships in the form it has and is redrawn for 0.9.0 —
-  and TABLE-LINK-SPEC — the table link ships no line of networking in 0.8.0, only the
-  seams it will stand on (`internals/overview.md` ▸ TableLink is the seam a table stands on).
-  None is a wrong number, a path that cannot be finished
-  or shipped content that does nothing — the three clauses above.
+- **What a release runs before it is cut** is the routine, not a wave: `work/release.md` ▸
+  AUDIT-DRIFT, the full `pnpm lint:typed`, the version in three files (`package.json`,
+  `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) and the changelog's top heading. Open work a
+  release ships without is named in that release's changelog, where a player would look for it.
 - **0.9.0 · the short queue, and it is an ORDER rather than a wave.** One item, and it is the
   maintainer's to do rather than a commit.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
@@ -262,8 +254,13 @@ position and are given per wave, because most of them were learned the hard way.
   its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
-  FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the 2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of Shadows' own two are still text.
-- **Deliberately in no wave:** DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
+  FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
+  rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the
+  2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of
+  Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's Agonizing Blast and E4.
+- **Deliberately in no wave:** TABLE-LINK-SPEC (the specification before any transport code; the
+  app ships the seams and no line of networking — `internals/overview.md` ▸ TableLink is the seam a
+  table stands on), DISTRIBUTION-EXPANSION (its own session, blocked on accounts, not
   on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
   item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
@@ -273,7 +270,7 @@ position and are given per wave, because most of them were learned the hard way.
   COMPANION (its research is written; four answers wait on a sign-off).
 
 ## Verification
-Automated coverage and conventions live in [testing.md] (suites map to phases; run
+Automated coverage and conventions live in [testing.md](internals/testing.md) (run
 `pnpm test`). Manual acceptance per feature: live switches (no reload); sources
 (2nd CSV, homebrew folder, toggle off, collision resolve); live reload (edit CSV on
 disk); portability (move JSON to fresh install → renders + flags missing; bundle opens

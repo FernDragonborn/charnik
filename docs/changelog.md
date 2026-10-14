@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 The release the table wrote. Charnik went out to its first outside playtest, and most of what is
 here is a player pointing at something: a number that did not move when they equipped a shield, a
@@ -386,7 +386,8 @@ throw chip fits; «замовляння» fits the spell row.
 - **Writing content: the effects guide is published**, in plain language first and then the whole
   vocabulary, linked from the README. An older homebrew `class_features` file with a `resource`
   column still loads; the column is ignored, since a feature's pool is its `grant_resource` token.
-- **Dependencies are clear of known advisories** as of this release.
+- **Nothing that ships carries a known advisory** as of this release. One is open in a tool that
+  runs only when the code is linted, and its fix is not published yet.
 - **The dev server follows the content repo.** A CSV edited in the pack reaches the running app and
   reloads it, instead of staying invisible until the next build.
 - **The screenshot harness sees a phone**, and a probe fails on anything that overflows at 393 or
@@ -397,6 +398,22 @@ throw chip fits; «замовляння» fits the spell row.
   points, a form ending with its effect — hold there rather than in the play screen.
 - **A converter re-run no longer loses what the source does not state** — a spell's class list, its
   upcast, a hand-filled healing die.
+
+### Not in this release
+
+Each of these is absent rather than wrong, and is done by hand until it lands.
+
+- **Mystic Arcanum** is not a pool: a warlock's 6th-level and higher spells are neither chosen nor
+  tracked in the app.
+- **Agonizing Blast** can be chosen (2014) and does not add your Charisma modifier to Eldritch
+  Blast's damage.
+- **Some spells still only say what they do.** Those that ask a question at the cast — Enhance
+  Ability, Protection from Energy, Fire Shield, Enlarge/Reduce — and Haste's doubled Speed and
+  Heroism's Temporary Hit Points change no number. A spell cast on an ally shows its effect on your
+  own sheet until you switch the effect off.
+- **The Defences row's `Saves` group** ships in the form it has and is redrawn for 0.9.0.
+- **No table link.** Charnik still talks to your disk and to GitHub for updates, and to nothing
+  else.
 
 ## 0.7.0
 
@@ -686,7 +703,7 @@ rebuilt around the swing rather than a run-on line of dice.
 
 ### Charnik is now MIT-licensed
 
-- **The code moves from AGPL-3.0-or-later to [MIT](LICENSE).** We don't want to oblige anyone who
+- **The code moves from AGPL-3.0-or-later to [MIT](../LICENSE).** We don't want to oblige anyone who
   reuses Charnik to publish their own code — sharing it back is welcome, not compulsory. Keep the
   copyright notice and that's the whole obligation. Releases up to 0.5.0 stay available under AGPL.
   Bundled SRD data is unaffected (CC-BY-4.0), and content you write stays yours.

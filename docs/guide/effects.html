@@ -672,7 +672,7 @@
 				<dd>Optional. A yes/no question about the character. No guard means always.</dd>
 				<dt class="pt-kind">kind</dt>
 				<dd>
-					What sort of change this is. There are 24, all in §5 — you cannot invent a new one, and
+					What sort of change this is. There are 25, all in §5 — you cannot invent a new one, and
 					Charnik will tell you it has never heard of it.
 				</dd>
 				<dt class="pt-target">target</dt>
@@ -699,8 +699,8 @@
 				means <code>-(2 × exhaustion)</code>, which is what you want — but it also means
 				<code>flat_bonus:hp_max-2+3</code> is −5, not +1. When a formula has more than one term, put
 				the sign inside it and keep the joint a <code>+</code>:
-				<code>flat_bonus:d20_tests+(-2*exhaustion)</code> is how the shipped 2024 exhaustion rule
-				says it.
+				<code>flat_bonus:d20_tests+(-2*exhaustion)</code> says what the shipped 2024 exhaustion rule,
+				<code>flat_bonus:d20_tests-2*exhaustion</code>, says.
 			</p>
 			<p>
 				A few kinds are <strong>markers</strong>: they take no target at all, because the statement
@@ -1194,7 +1194,7 @@ grant_resource:bardic_inspiration:max(1,cha_mod):long</code></pre>
 				</figcaption>
 			</figure>
 			<figure>
-				<pre><code>min_die:damage:two_handed;min_die:damage:versatile</code></pre>
+				<pre><code>min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3</code></pre>
 				<figcaption>
 					<b>Great Weapon Fighting.</b> Two scopes, because the rule names two kinds of weapon.
 				</figcaption>
@@ -1219,10 +1219,6 @@ grant_proficiency:partial_up:check.con</code></pre>
 					<b>Improved Critical.</b> "Unless already lower", so the Champion's later 18 replaces this
 					19 rather than stacking with it into 17.
 				</figcaption>
-			</figure>
-			<figure>
-				<pre><code>armor_type==heavy ? disadvantage:skill.stealth</code></pre>
-				<figcaption><b>Heavy armour.</b> Said the way the rules say it.</figcaption>
 			</figure>
 		</div>
 

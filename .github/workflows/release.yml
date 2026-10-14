@@ -1,10 +1,10 @@
 name: Release desktop
 
 # Manual only — daily pushes never trigger a release. Ship a real build like this:
-#   1. Bump the version in BOTH package.json and src-tauri/tauri.conf.json.
+#   1. Bump the version in package.json, src-tauri/tauri.conf.json and src-tauri/Cargo.toml.
 #   2. Write the new section at the top of docs/changelog.md (its top block becomes the release notes).
 #   3. Actions tab → this workflow → "Run workflow".
-# It builds + signs the installers (Windows NSIS + Linux AppImage/.deb/.rpm), emits latest.json (the
+# It builds + signs the installers (Windows NSIS + Linux AppImage/.deb), emits latest.json (the
 # updater manifest the app polls, with an entry per platform), and publishes a GitHub Release tagged
 # from tauri.conf.json's version.
 #
