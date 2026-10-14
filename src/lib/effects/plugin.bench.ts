@@ -52,6 +52,7 @@ const buildOnly: PluginEvaluator = {
 		ok: true,
 		resultJson: JSON.stringify({ tokens: ['flat_bonus:ac+1'] }),
 		readPlay: false,
+		steps: 0,
 	}),
 };
 

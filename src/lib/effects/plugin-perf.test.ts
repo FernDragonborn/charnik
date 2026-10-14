@@ -1,9 +1,9 @@
 /*
  * PLG performance guarantees. The philosophy: assert WORK DONE (sandbox-call counts, re-compute
  * counts), not wall-clock — work-count is what actually drives cost and is stable in CI, whereas a
- * ms threshold is flaky. The one wall-clock assert (a real QuickJS call) uses a generous ceiling
- * (the CALL_BUDGET) purely as a "not pathologically slow" floor. Numbers-for-eyeballing live in
- * plugin.bench.ts (run with `pnpm exec vitest bench`).
+ * ms threshold is flaky. A real QuickJS call is measured in the sandbox's own unit, interpreter
+ * steps, which do not move with load. Numbers-for-eyeballing live in plugin.bench.ts (run with
+ * `pnpm exec vitest bench`).
  */
 import type { EffectIssue } from './token-parser';
 import { pluginCtx, carrier } from '../../test-support/plugin-fixtures';
@@ -38,6 +38,7 @@ function counting(
 				ok: true as const,
 				resultJson: JSON.stringify(result(token)),
 				readPlay: opts?.readPlay ?? false,
+				steps: 0,
 			};
 		},
 	};
@@ -65,23 +66,19 @@ describe('L3 hot-path cost guarantees (work-count, not wall-clock)', () => {
 			has: () => true,
 			call: () => {
 				calls++;
-				const end = performance.now() + 6; // each call eats ~6ms of the 20ms budget
-				while (performance.now() < end) {
-					/* spin */
-				}
-				return { ok: true, resultJson: '{}', readPlay: false };
+				return { ok: true, resultJson: '{}', readPlay: false, steps: 90 }; // 400 / 90 → five calls
 			},
 		};
 		registerPluginEvaluator(ev);
 		const carriers = Array.from({ length: 50 }, (_, i) => carrier(`plugin:ns1:h${i}`));
 		const issues: EffectIssue[] = [];
 		expandPluginEffects(carriers, ctx(), issues, 's');
-		expect(calls).toBeLessThanOrEqual(6); // ~20ms / 6ms → a handful, never all 50
+		expect(calls).toBe(5); // counted, not timed: the same five on any machine
 		expect(issues.length).toBeGreaterThan(40); // the remainder degraded, sheet unbroken
 	});
 });
 
-describe('real QuickJS throughput (generous wall-clock floor)', () => {
+describe('real QuickJS step cost', () => {
 	const disposers: { dispose(): void }[] = [];
 	afterAll(() => {
 		for (const d of disposers) d.dispose();
@@ -91,7 +88,7 @@ describe('real QuickJS throughput (generous wall-clock floor)', () => {
 		return { namespace, handlerName, args: rest.join(':'), raw };
 	};
 
-	it('a real arithmetic handler call stays well under the 5ms CALL_BUDGET', async () => {
+	it('a real arithmetic handler call costs a step or two of its 100', async () => {
 		const ev = await createSandboxEvaluator([
 			{
 				namespace: 'ns1',
@@ -103,11 +100,9 @@ describe('real QuickJS throughput (generous wall-clock floor)', () => {
 		disposers.push(ev);
 		const b = JSON.stringify(ctx().build);
 		const p = JSON.stringify(ctx().play);
-		ev.call(ref('plugin:ns1:h'), b, p); // warm the context
-		const N = 200;
-		const t0 = performance.now();
-		for (let i = 0; i < N; i++) ev.call(ref('plugin:ns1:h'), b, p);
-		const perCall = (performance.now() - t0) / N;
-		expect(perCall).toBeLessThan(5); // typically << 1ms; the ceiling only catches a pathology
+		// the first call is the cold one, and the one the memo keeps — it must be as cheap as the rest
+		const costs = Array.from({ length: 20 }, () => ev.call(ref('plugin:ns1:h'), b, p));
+		expect(costs.every((c) => c.ok)).toBe(true);
+		expect(Math.max(...costs.map((c) => c.steps))).toBeLessThanOrEqual(2);
 	});
 });

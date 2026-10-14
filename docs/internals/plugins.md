@@ -324,9 +324,14 @@ the keys documented here were rejected, and a rejected key takes the whole resul
   break reproducibility — and memoization assumes determinism). Same
   `(token, ctx)` MUST produce the same result — results are **memoized**: your handler may be
   called once and its answer reused for hours. Never rely on call counts or hidden state.
-- **Budgets.** Per call: ~5 ms CPU (interrupt-based) and 8 MB memory; per sheet computation:
-  ~20 ms aggregate across ALL plugin tokens — beyond it, remaining tokens degrade to notes for
-  that computation. Stay well under; a handler is arithmetic, not a simulation.
+- **Budgets.** Per call: 100 interpreter steps and 8 MB memory; per sheet computation: 400 steps
+  across ALL plugin tokens — beyond it, remaining tokens degrade to notes for that computation. A
+  step is one QuickJS interrupt check (loop iterations and regexp backtracking both count), so the
+  verdict is the same on a fast desktop and a busy laptop: an arithmetic handler costs 0–2, a tight
+  infinite loop spends its 100 in about 5 ms. Behind the counts sit wall-clock backstops (50 ms a
+  call, 100 ms a computation) for what a step cannot see — a native builtin such as
+  `JSON.stringify` of a megabyte runs tens of ms inside one step. Stay well under; a handler is
+  arithmetic, not a simulation.
 - **Failure is contained and fail-closed.** A throw, a timeout, or an invalid result becomes
   an inert note; 3 consecutive failures disable the plugin for the session (with a notice).
 - **Randomness belongs to the host.** You never roll dice — you return dice FORMULAS (in
@@ -417,7 +422,7 @@ A plugin can no more heal you directly than a `passive` handler can change your 
 | Reads | the dependency-resolved derive state (§8.4) | the LIVE state at the instant of the click |
 | Produces | contributions folded into stats | an intent that MUTATES play-state, once |
 | Memoized | yes (pure) | no (side-effecting; runs once per gesture) |
-| Budget | per-call + the ~20 ms aggregate | per-call only (no aggregate — it's one click) |
+| Budget | per-call + the 400-step aggregate | per-call only (no aggregate — it's one click) |
 
 `onUse` reads LIVE state on purpose: clicking two abilities in a row must let the second see the
 first's result (heal to 54, then a "while below 50%" ability correctly sees you're no longer below
@@ -660,7 +665,7 @@ globalThis.handlers = {
 | ------------------------------------------ | ---------------------------------------------------------------------------- |
 | Token shows as plain text on the panel     | Plugin missing/disabled, `namespace` ≠ folder name, or handler `handlerName` not registered — the line above the sheet's stats names the plugin and which of these it is |
 | "disabled — code changed" after an edit    | Hash-pinned consent (§6.3): re-enable in Settings                            |
-| "over budget"                              | Handler too slow — precompute in args, simplify; 5 ms is a LOT of arithmetic |
+| "over budget"                              | Handler too slow — precompute in args, simplify; 100 steps is a LOT of arithmetic |
 | "invalid result"                           | Violated §4.3 (layer/op/caps/finite numbers) — the whole result is rejected  |
 | Different result than expected after edits | Results are memoized (§5) — determinism is assumed; restart the session      |
 | Plugin disabled mid-session                | 3 consecutive failures → fail-closed; fix the error, re-enable               |

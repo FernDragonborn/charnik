@@ -1675,7 +1675,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface PluginCtx`
 - `interface PluginTokenRef` — The parsed token as the handler sees it (§4.1).
-- `type PluginCallOutcome` — One sandbox call.
+- `type PluginCallOutcome` — `steps` is the interpreter work the call consumed (the sandbox's step budget unit), charged to * the per-derive aggre…
 - `interface PluginEvaluator`
 - `function registerPluginEvaluator` — Install the evaluator (the sandbox host, once ≥1 plugin is enabled).
 - `function clearPluginEvaluator` — Remove the evaluator (kill switch / module teardown) — plugin tokens degrade to notes.

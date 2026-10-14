@@ -5,7 +5,7 @@
  * happy paths from docs/internals/plugins.md §9, and the memo read-tracking flag.
  */
 import { pluginCtx } from '../../test-support/plugin-fixtures';
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, afterEach, vi } from 'vitest';
 import { createSandboxEvaluator } from './plugin-sandbox';
 import {
 	expandPluginEffects,
@@ -178,6 +178,41 @@ describe('zero-capability context (PLG-SEC 1) — escapes and intrinsics are abs
 });
 
 describe('budgets (PLG-SEC 9) — hostile code is contained, then the context recycles', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it('a busy machine does not change the verdict: an honest handler is answered however slow the clock runs', async () => {
+		const ev = await evaluatorFor(
+			'ns1',
+			`globalThis.handlers = { work: { passive() {
+				let s = 0; for (let i = 0; i < 20000; i++) s += i; return { notes: [String(s)] };
+			} } };`,
+		);
+		// every clock read jumps 6 ms, as if the OS took the CPU away between checks: more than a whole
+		// call's worth under a wall-clock budget, still nothing under the step count
+		let clock = performance.now();
+		vi.spyOn(performance, 'now').mockImplementation(() => (clock += 6));
+		const out = callOn(ev, 'plugin:ns1:work');
+		expect(out.ok).toBe(true);
+		expect(out.steps).toBeGreaterThan(1);
+		expect(out.steps).toBeLessThan(100);
+	});
+
+	it('the wall-clock backstop still stops what the step count cannot see', async () => {
+		const ev = await evaluatorFor(
+			'ns1',
+			`globalThis.handlers = { slow: { passive() {
+				let s = 0; for (let i = 0; i < 20000; i++) s += i; return {};
+			} } };`,
+		);
+		// each check now looks 60 ms late — past the backstop, the way a native builtin would be
+		let clock = performance.now();
+		vi.spyOn(performance, 'now').mockImplementation(() => (clock += 60));
+		const out = callOn(ev, 'plugin:ns1:slow');
+		expect(out.ok).toBe(false);
+		if (!out.ok) expect(out.reason).toMatch(/over budget/);
+		expect(out.steps).toBeLessThan(100);
+	});
+
 	it('an infinite loop is interrupted, and the NEXT call works (context recycled)', async () => {
 		const ev = await evaluatorFor(
 			'ns1',
@@ -185,9 +220,11 @@ describe('budgets (PLG-SEC 9) — hostile code is contained, then the context re
 				spin: { passive(t) { if (t.args === 'go') { for (;;) {} } return {}; } }
 			};`,
 		);
+		vi.spyOn(performance, 'now').mockReturnValue(0); // a frozen clock: only the count can stop it
 		const bad = callOn(ev, 'plugin:ns1:spin:go');
 		expect(bad.ok).toBe(false);
 		if (!bad.ok) expect(bad.reason).toMatch(/over budget/);
+		expect(bad.steps).toBe(101); // stopped by the count, one check past the budget
 		const good = callOn(ev, 'plugin:ns1:spin');
 		expect(good.ok).toBe(true);
 	});
@@ -198,11 +235,10 @@ describe('budgets (PLG-SEC 9) — hostile code is contained, then the context re
 				return { notes: [String(/^(a+)+$/.test(t.args))] };
 			} } };`,
 		);
-		const t0 = Date.now();
+		vi.spyOn(performance, 'now').mockReturnValue(0); // a frozen clock: only the count can stop it
 		const out = callOn(ev, 'plugin:ns1:redos:' + 'a'.repeat(40) + 'b');
-		const elapsed = Date.now() - t0;
 		expect(out.ok).toBe(false);
-		expect(elapsed).toBeLessThan(2000); // interrupted by the deadline, not 2^40 steps
+		expect(out.steps).toBe(101); // the regexp engine checks in too, so the count stops it
 	});
 	it('a memory bomb hits the memory limit', async () => {
 		const ev = await evaluatorFor(

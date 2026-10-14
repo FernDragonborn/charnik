@@ -31,10 +31,19 @@ import {
 } from 'quickjs-emscripten-core';
 import type { PluginCallOutcome, PluginEvaluator, PluginTokenRef } from './plugin-registry';
 
-/** Per-call CPU deadline, ms (§5 budgets). A handler is arithmetic, not a simulation. */
-const CALL_BUDGET_MS = 5;
-/** Budget for evaluating `main.js` itself (once per session per plugin). */
-const LOAD_BUDGET_MS = 50;
+/** Per-call budget in interpreter steps (§5 budgets) — the count of QuickJS interrupt checks. It
+ *  does not move with load, so whether a handler is "over budget" is a property of the plugin rather
+ *  than of how busy the machine was. The engine's check counter runs on across calls, so the same
+ *  call can land one check either side; only a handler sitting on the line feels that. Arithmetic
+ *  over the args takes 0–2; a tight infinite loop burns 100 in about 5 ms. */
+const CALL_STEP_BUDGET = 100;
+/** Step budget for evaluating `main.js` itself (once per boot). */
+const LOAD_STEP_BUDGET = 500;
+/** Wall-clock backstops behind the step budgets. Steps do not bound time: a native builtin
+ *  (`JSON.stringify` of a megabyte, `'x'.repeat(4e6)`) runs tens of ms between two checks. Far above
+ *  any honest handler, so only a pathological plugin ever meets them. */
+const CALL_BACKSTOP_MS = 50;
+const LOAD_BACKSTOP_MS = 250;
 /** Sandbox memory limit, bytes. */
 const MEMORY_LIMIT = 8 * 1024 * 1024;
 /** Sandbox stack limit, bytes. */
@@ -60,6 +69,19 @@ globalThis.performance = undefined;
 globalThis.eval = undefined;
 `;
 
+/** What the interrupt handler counts against during one `evalCode` — re-armed before each. */
+interface StepBudget {
+	used: number;
+	limit: number;
+	backstopAt: number;
+}
+
+function armBudget(budget: StepBudget, limit: number, backstopMs: number): void {
+	budget.used = 0;
+	budget.limit = limit;
+	budget.backstopAt = now() + backstopMs;
+}
+
 /** One evaluated plugin: its isolated runtime/context + the discovered handler names. */
 interface LoadedPlugin {
 	namespace: string;
@@ -68,7 +90,7 @@ interface LoadedPlugin {
 	passiveHandlers: Set<string>;
 	runtime: QuickJSRuntime | null;
 	context: QuickJSContext | null;
-	deadline: number;
+	budget: StepBudget;
 	/** The REAL main.js load error (`SyntaxError: …`), surfaced to the author instead of a generic
 	 *  "handler not registered". `null` once the plugin loaded cleanly. */
 	loadError: string | null;
@@ -125,9 +147,11 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	const runtime = mod.newRuntime();
 	runtime.setMemoryLimit(MEMORY_LIMIT);
 	runtime.setMaxStackSize(STACK_LIMIT);
-	// interrupt fires between JS ops AND inside quickjs-ng regexp matching; the deadline is
-	// re-armed per call
-	runtime.setInterruptHandler(() => now() > p.deadline);
+	// the interrupt check fires between JS ops AND inside quickjs-ng regexp matching; the budget is
+	// re-armed per evalCode
+	runtime.setInterruptHandler(
+		() => ++p.budget.used > p.budget.limit || now() > p.budget.backstopAt,
+	);
 	// `Eval: false` would kill `evalCode` itself — the HOST boundary is eval. The intrinsic stays;
 	// the sandbox-visible `globalThis.eval` binding is neutered by the setup script instead
 	// (in-sandbox eval would be capability-harmless anyway — it can't reach past the container).
@@ -136,7 +160,7 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	});
 	p.runtime = runtime;
 	p.context = context;
-	p.deadline = now() + LOAD_BUDGET_MS;
+	armBudget(p.budget, LOAD_STEP_BUDGET, LOAD_BACKSTOP_MS);
 
 	const setup = context.evalCode(SETUP_SCRIPT, 'charnik-setup.js');
 	if (setup.error) {
@@ -157,7 +181,7 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	main.value.dispose();
 
 	// discover handlers: names under globalThis.handlers with a callable `passive`
-	p.deadline = now() + LOAD_BUDGET_MS;
+	armBudget(p.budget, LOAD_STEP_BUDGET, LOAD_BACKSTOP_MS);
 	const names = context.evalCode(
 		`JSON.stringify(Object.keys(globalThis.handlers ?? {}).filter(
 			(k) => typeof (globalThis.handlers[k] ?? {}).passive === "function"))`,
@@ -202,7 +226,9 @@ function callPlugin(
 	// context recycled after a limit trip (PLG-SEC 8): rebuild lazily
 	if (!p.context) {
 		const err = (p.loadError = bootPlugin(getModuleSync(), p));
-		if (err || !p.context) return { ok: false, reason: err ?? 'sandbox unavailable' };
+		// the reboot's own steps are not charged to the call: the load budget bounds them, and the
+		// registry's wall backstop bounds the derive
+		if (err || !p.context) return { ok: false, reason: err ?? 'sandbox unavailable', steps: 0 };
 	}
 	const context = p.context;
 
@@ -227,8 +253,9 @@ function callPlugin(
 		}
 	})()`;
 
-	p.deadline = now() + CALL_BUDGET_MS;
+	armBudget(p.budget, CALL_STEP_BUDGET, CALL_BACKSTOP_MS);
 	const res = context.evalCode(code, 'charnik-call.js');
+	const steps = p.budget.used;
 	if (res.error) {
 		// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those). The
 		// context is dropped rather than rebuilt in place: re-evaluating `main.js` is unbounded
@@ -238,23 +265,25 @@ function callPlugin(
 		// disabled the handler instead (PLG-SEC 8).
 		res.error.dispose();
 		disposePlugin(p);
-		return { ok: false, reason: 'over budget' };
+		return { ok: false, reason: 'over budget', steps };
 	}
 	const raw = context.getString(res.value);
 	res.value.dispose();
-	if (raw.length > MAX_RAW_RESULT) return { ok: false, reason: 'result too large' };
+	if (raw.length > MAX_RAW_RESULT) return { ok: false, reason: 'result too large', steps };
 
 	let parsed: { result?: unknown; playRead?: unknown; err?: unknown };
 	try {
 		parsed = JSON.parse(raw) as typeof parsed;
 	} catch {
-		return { ok: false, reason: 'invalid result: not JSON' };
+		return { ok: false, reason: 'invalid result: not JSON', steps };
 	}
-	if (parsed.err !== undefined) return { ok: false, reason: asText(parsed.err, 'plugin error') };
+	if (parsed.err !== undefined)
+		return { ok: false, reason: asText(parsed.err, 'plugin error'), steps };
 	return {
 		ok: true,
 		resultJson: JSON.stringify(parsed.result ?? {}),
 		readPlay: parsed.playRead === true,
+		steps,
 	};
 }
 
@@ -276,7 +305,7 @@ export async function createSandboxEvaluator(
 			passiveHandlers: new Set(),
 			runtime: null,
 			context: null,
-			deadline: 0,
+			budget: { used: 0, limit: 0, backstopAt: 0 },
 			loadError: null,
 		};
 		p.loadError = bootPlugin(mod, p); // boot failure leaves passiveHandlers empty → has() = false
@@ -293,7 +322,7 @@ export async function createSandboxEvaluator(
 		call(token: PluginTokenRef, buildJson: string, playJson: string): PluginCallOutcome {
 			const p = plugins.get(token.namespace);
 			if (!p || !p.passiveHandlers.has(token.handlerName))
-				return { ok: false, reason: 'handler not registered' };
+				return { ok: false, reason: 'handler not registered', steps: 0 };
 			return callPlugin(p, token, buildJson, playJson);
 		},
 		dispose() {

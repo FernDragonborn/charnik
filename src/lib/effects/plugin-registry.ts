@@ -66,8 +66,11 @@ export interface PluginTokenRef {
 /** One sandbox call. `resultJson` is the raw JSON string produced INSIDE the sandbox (§5: the
  *  boundary is a single string — never a live object); `readPlay` reports whether the handler
  *  touched `ctx.play` (drives the §4.2 memo split). */
-export type PluginCallOutcome =
-	{ ok: true; resultJson: string; readPlay: boolean } | { ok: false; reason: string };
+/** `steps` is the interpreter work the call consumed (the sandbox's step budget unit), charged to
+ *  the per-derive aggregate whether the call succeeded or not. */
+export type PluginCallOutcome = (
+	{ ok: true; resultJson: string; readPlay: boolean } | { ok: false; reason: string }
+) & { steps: number };
 
 export interface PluginEvaluator {
 	/** Is this namespace:handlerName present AND enabled? (Missing → the token degrades without a call.) */
@@ -97,8 +100,12 @@ export function clearPluginEvaluator(): void {
 
 /** Result-size cap BEFORE JSON.parse (PLG-SEC 1c). */
 const MAX_RESULT_JSON = 64 * 1024;
-/** Aggregate plugin budget per derive, ms (PLG-SEC 13). */
-const AGGREGATE_BUDGET_MS = 20;
+/** Aggregate plugin budget per derive, in the sandbox's interpreter steps (PLG-SEC 13) — counted,
+ *  not timed, so which tokens degrade does not depend on how busy the machine is. */
+const AGGREGATE_STEP_BUDGET = 400;
+/** Wall-clock backstop behind it: a call can spend tens of ms in a native builtin for a single
+ *  step, so many such tokens would pass the step count and still stall every derive. */
+const AGGREGATE_BACKSTOP_MS = 100;
 /** Consecutive failures before a plugin is disabled for the session (§5 fail-closed). */
 const MAX_CONSECUTIVE_FAILURES = 3;
 
@@ -260,7 +267,7 @@ export function expandPluginEffects(
 	const out = emptyExpansion();
 	const buildJson = JSON.stringify(ctx.build);
 	const playJson = JSON.stringify(ctx.play);
-	const budget: BudgetState = { t0: now(), over: false };
+	const budget: BudgetState = { t0: now(), steps: 0, over: false };
 
 	// ONE user-facing sentence for every way a plugin can fail — the dozen internal reasons (over
 	// budget, result too large, bad target key, handler not registered…) are all the same fact to the
@@ -300,6 +307,7 @@ export function expandPluginEffects(
 /** Aggregate sandbox-call budget state, threaded through one derive's token resolutions. */
 interface BudgetState {
 	t0: number;
+	steps: number;
 	over: boolean;
 }
 
@@ -336,11 +344,16 @@ function resolvePluginToken(
 	// memo lookup: build-only first (the common, cache-hot case), then the full key
 	const hit = memoGet(memoBuild, keys.build) ?? memoGet(memoFull, keys.full);
 	if (hit) return { ok: true, result: hit };
-	if (budget.over || now() - budget.t0 > AGGREGATE_BUDGET_MS) {
+	if (
+		budget.over ||
+		budget.steps > AGGREGATE_STEP_BUDGET ||
+		now() - budget.t0 > AGGREGATE_BACKSTOP_MS
+	) {
 		budget.over = true;
 		return { ok: false, reason: 'plugin budget for this computation exhausted' };
 	}
 	const outcome = evaluator.call(ref, keys.buildJson, keys.playJson);
+	budget.steps += outcome.steps;
 	if (!outcome.ok) {
 		noteFailure(fkey);
 		const suffix = isDisabled(fkey) ? '; plugin disabled for the session' : '';

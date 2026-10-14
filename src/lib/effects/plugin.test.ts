@@ -33,12 +33,17 @@ function fakeEvaluator(
 		call(token, buildJson, playJson) {
 			calls.push(token.raw);
 			const h = handlers[`${token.namespace}:${token.handlerName}`];
-			if (!h) return { ok: false, reason: 'no handler' };
+			if (!h) return { ok: false, reason: 'no handler', steps: 0 };
 			try {
 				const result = h(token, JSON.parse(buildJson), JSON.parse(playJson));
-				return { ok: true, resultJson: JSON.stringify(result), readPlay: opts?.readPlay ?? false };
+				return {
+					ok: true,
+					resultJson: JSON.stringify(result),
+					readPlay: opts?.readPlay ?? false,
+					steps: 0,
+				};
 			} catch (e) {
-				return { ok: false, reason: String(e) };
+				return { ok: false, reason: String(e), steps: 0 };
 			}
 		},
 	};
@@ -100,7 +105,7 @@ describe('expandPluginEffects — availability degradation', () => {
 	it('a broken plugin surfaces its REAL load error, not a generic "not registered" (author DX)', () => {
 		const ev: PluginEvaluator = {
 			has: () => false,
-			call: () => ({ ok: false, reason: 'n/a' }),
+			call: () => ({ ok: false, reason: 'n/a', steps: 0 }),
 			loadError: () => 'main.js failed to load: SyntaxError: unexpected token',
 		};
 		registerPluginEvaluator(ev);
@@ -269,7 +274,7 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			has: () => true,
 			call: () => {
 				n++;
-				return { ok: false, reason: 'handler threw' };
+				return { ok: false, reason: 'handler threw', steps: 0 };
 			},
 		};
 		registerPluginEvaluator(ev);
@@ -284,7 +289,7 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 		let n = 0;
 		const ev: PluginEvaluator = {
 			has: () => true,
-			call: () => (n++, { ok: false, reason: 'boom' }),
+			call: () => (n++, { ok: false, reason: 'boom', steps: 0 }),
 		};
 		registerPluginEvaluator(ev);
 		const issues: EffectIssue[] = [];
@@ -306,8 +311,8 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			call: (token) => {
 				calls.push(token.handlerName);
 				return token.handlerName === 'bad'
-					? { ok: false, reason: 'boom' }
-					: { ok: true, resultJson: '{}', readPlay: true };
+					? { ok: false, reason: 'boom', steps: 0 }
+					: { ok: true, resultJson: '{}', readPlay: true, steps: 0 };
 			},
 		};
 		registerPluginEvaluator(ev);
@@ -332,8 +337,8 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			// readPlay:true so each distinct hp is its own memo key → every pass really calls
 			call: () =>
 				mode === 'fail'
-					? (n++, { ok: false, reason: 'x' })
-					: (n++, { ok: true, resultJson: '{}', readPlay: true }),
+					? (n++, { ok: false, reason: 'x', steps: 0 })
+					: (n++, { ok: true, resultJson: '{}', readPlay: true, steps: 0 }),
 		};
 		registerPluginEvaluator(ev);
 		const issues: EffectIssue[] = [];
@@ -349,18 +354,8 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 		expect(n).toBe(5); // all five actually called; the success cleared the streak
 	});
 
-	it('aggregate budget: once the 20ms is spent, remaining uncached tokens degrade (PLG-4 boundary)', () => {
-		const ev: PluginEvaluator = {
-			has: () => true,
-			call: () => {
-				const end = performance.now() + 25; // one call burns the whole aggregate budget
-				while (performance.now() < end) {
-					/* spin */
-				}
-				return { ok: true, resultJson: '{}', readPlay: false };
-			},
-		};
-		registerPluginEvaluator(ev);
+	const twoTokensAfter = (call: PluginEvaluator['call']) => {
+		registerPluginEvaluator({ has: () => true, call });
 		const issues: EffectIssue[] = [];
 		const out = expandPluginEffects(
 			[carrier('plugin:ns1:aaa'), carrier('plugin:ns1:bbb')],
@@ -368,7 +363,30 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			issues,
 			's',
 		);
+		return { issues, out };
+	};
+
+	it('aggregate budget: once the steps are spent, remaining uncached tokens degrade (PLG-4 boundary)', () => {
+		const { issues, out } = twoTokensAfter(() => ({
+			ok: true,
+			resultJson: '{}',
+			readPlay: false,
+			steps: 401, // one call spends the whole aggregate
+		}));
 		// first token eats the budget; the second is degraded before its call
+		expect(issues.some((i) => /budget/.test(i.detail ?? ''))).toBe(true);
+		expect(out?.unknown.some((u) => u.token === 'plugin:ns1:bbb')).toBe(true);
+	});
+
+	it('aggregate backstop: a call cheap in steps but long on the clock still exhausts the derive', () => {
+		// a native builtin runs tens of ms for a single step; the clock is the only thing that sees it
+		const { issues, out } = twoTokensAfter(() => {
+			const end = performance.now() + 110;
+			while (performance.now() < end) {
+				/* spin */
+			}
+			return { ok: true, resultJson: '{}', readPlay: false, steps: 1 };
+		});
 		expect(issues.some((i) => /budget/.test(i.detail ?? ''))).toBe(true);
 		expect(out?.unknown.some((u) => u.token === 'plugin:ns1:bbb')).toBe(true);
 	});

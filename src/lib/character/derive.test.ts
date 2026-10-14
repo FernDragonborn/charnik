@@ -1639,7 +1639,7 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 	/** A fake evaluator whose one handler returns a fixed result object. */
 	const fixed = (namespace: string, handlerName: string, result: unknown): PluginEvaluator => ({
 		has: (n, f) => n === namespace && f === handlerName,
-		call: () => ({ ok: true, resultJson: JSON.stringify(result), readPlay: false }),
+		call: () => ({ ok: true, resultJson: JSON.stringify(result), readPlay: false, steps: 0 }),
 	});
 
 	async function pluginGraph(): Promise<ContentGraph> {
