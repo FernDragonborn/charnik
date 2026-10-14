@@ -4,6 +4,7 @@
 	// page you were just reading. Binds a flat draft, validates + writes via the homebrew pipeline
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
 	import Icon from './Icon.svelte';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import UpcastBuilder from './UpcastBuilder.svelte';
 	import { onMount } from 'svelte';
 	import { getUserStorage } from '$lib/storage/provider';
@@ -279,7 +280,10 @@
 	{/if}
 {/snippet}
 
-<article class="detail-body edit">
+<article
+	class="detail-body edit"
+	use:submitOnEnter={saving || (!editing && targetShipped) ? undefined : () => void save()}
+>
 	<div class="deyebrow">
 		{$_(
 			editShipped

@@ -7,6 +7,7 @@
 	import { takeFocus } from '$lib/actions/takeFocus';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { provenance } from '$lib/actions/provenance';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
@@ -203,7 +204,7 @@
 				<p class="note">{$_('combat.menu.tempHpNote')}</p>
 			</form>
 		{:else if overlay.kind === 'experience'}
-			<div class="menu-panel">
+			<div class="menu-panel" use:submitOnEnter={combat.experience.add}>
 				<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.xpTitle')}</div>
 				<div class="coin-weight">
 					<Switch
@@ -273,7 +274,7 @@
 				><span class="meta">{$_('combat.menu.customEffectMeta')}</span>
 			</button>
 		{:else if overlay.kind === 'customeffect'}
-			<div class="menu-panel">
+			<div class="menu-panel" use:submitOnEnter={addCustomModifier}>
 				<div class="popup-heading eyebrow" style="border: 0">
 					{$_('combat.menu.customModifier')}
 				</div>

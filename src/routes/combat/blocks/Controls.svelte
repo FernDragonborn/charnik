@@ -6,6 +6,7 @@
 	// Auto-calc is NOT here. It is the escape hatch for a number the engine got wrong, pressed almost
 	// never, and it lives on the Effects panel head — beside the layers it drops.
 	import Icon from '$lib/components/Icon.svelte';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '$lib/i18n';
@@ -75,7 +76,10 @@
 					>
 				{/each}</button
 			>
-			<span class="conc-drop">
+			<span
+				class="conc-drop"
+				use:submitOnEnter={owed[0] ? combat.rollConcentrationSave : undefined}
+			>
 				{#if owed[0]}
 					<!-- suggested, and the table's to overrule -->
 					<input
@@ -84,8 +88,6 @@
 						min="1"
 						bind:value={owed[0].dc}
 						aria-label={$_('combat.hp.concentrationDc')}
-						onkeydown={(e) =>
-							e.key === 'Enter' && (e.preventDefault(), combat.rollConcentrationSave())}
 					/>
 					<!-- Skip before One hit: One hit goes when one save is left, and what goes must be to the
 					     RIGHT of the button being pressed again, or the next press lands on the wrong one -->

@@ -5,6 +5,7 @@
 	// add these" FYI. Presentation only — detection + write-back live in the loader (thin-component).
 	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import DialogShell from './DialogShell.svelte';
 	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
 	import { SYSTEMS } from '$lib/rules/pipeline';
@@ -96,7 +97,7 @@
 	width="min(760px, calc(100vw - 2 * var(--space-4)))"
 	onDismiss={onSkip}
 >
-	<div class="dialog-body files">
+	<div class="dialog-body files" use:submitOnEnter={() => void save()}>
 		{#each issues as issue (issue.file)}
 			{@const fill = fills[issue.file]}
 			<section class="dialog-card file">

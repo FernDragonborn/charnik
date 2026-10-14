@@ -14,6 +14,7 @@
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { provenance } from '$lib/actions/provenance';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import { hasProse, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, editionLabel } from '$lib/content/detail';
 	import { entryMeta, type Entry } from '$lib/content/entry-list';
@@ -334,7 +335,12 @@
 							{/each}
 						</div>
 					</div>
-					<WikiDetail detail={targetDetail} editable={!demo} {draft} />
+					<div
+						class="target-edit"
+						use:submitOnEnter={demo || saving ? undefined : () => void save()}
+					>
+						<WikiDetail detail={targetDetail} editable={!demo} {draft} />
+					</div>
 					<div class="save-row">
 						{#if demo}
 							<p class="demo-note">{$_('demo.readonly')}</p>
@@ -525,5 +531,9 @@
 	.pick {
 		color: var(--color-text-muted);
 		padding: 20px 0;
+	}
+	/* only the Enter-saves boundary (ui.md ▸ rule 19): the pane lays out its children as before */
+	.target-edit {
+		display: contents;
 	}
 </style>

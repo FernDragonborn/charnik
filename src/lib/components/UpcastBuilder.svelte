@@ -7,6 +7,7 @@
 	// wider than the two shapes here (a `step()` ladder, a typed sub-slot, a guard), so the builder
 	// covers what an author reaches for and never becomes the only way in.
 	import { _ } from '$lib/i18n';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import Icon from './Icon.svelte';
 	import { UPCAST_KINDS, parseUpcast } from '$lib/effects/upcast';
 
@@ -48,7 +49,7 @@
 	}
 </script>
 
-<div class="upcast-builder">
+<div class="upcast-builder" use:submitOnEnter={token && !problem ? add : undefined}>
 	<span class="ub-label">{$_('homebrewForm.upcastBuild')}</span>
 	<select bind:value={kind} aria-label={$_('homebrewForm.upcastKind')}>
 		{#each UPCAST_KINDS as k (k)}

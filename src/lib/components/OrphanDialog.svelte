@@ -4,6 +4,7 @@
 	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	// Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer
 	// exists (deleted / renamed / source disabled). The house attention-dialog template
 	// (charnik-dialog-design-template): flag-badge header, "N of M" step-through, two-pane body (your draft
@@ -201,7 +202,10 @@
 			</div>
 
 			<!-- RIGHT: searchable reassign picker + preview -->
-			<div class="pane target">
+			<div
+				class="pane target"
+				use:submitOnEnter={selectedRow ? () => void reassign(true) : undefined}
+			>
 				<div class="panelabel eyebrow t">{$_('orphan.reassignTo')}</div>
 				<input class="search" placeholder={$_('orphan.search')} bind:value={query} />
 				<div class="results">

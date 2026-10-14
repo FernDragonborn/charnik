@@ -399,10 +399,15 @@ good", so they are pinned here and every component follows them.
     each covers the other's words. The concentration and form chips' `.conc-drop` is the case;
     controls revealed IN place (a panel head's auto-calc switch, a row's pin) are not this rule.
 19. **Enter in an editable field does what a press on its context's main button does.** The owed
-    save's DC field rolls the save, as the concentration chip does; a name field confirms what the
-    field is for. A field inside a `<form>` gets it from the form's submit; a field outside one
-    carries an `onkeydown` for `e.key === 'Enter'`. A multi-line field keeps Enter for the newline,
-    and the roller line keeps it for its completion menu — there the main act is Ctrl+Enter.
+    save's DC field rolls the save, as the concentration chip does; a pack's folder-name field
+    installs or renames it; an editor's fields save it. A field inside a `<form>` gets it from the
+    form's submit; anything else puts `use:submitOnEnter={main}` (`actions/submitOnEnter.ts`) on the
+    PANEL, so a field added later is covered without remembering, and passes `undefined` while the
+    main act is unavailable. A field that answers Enter itself (`preventDefault`) is left alone, so
+    a nested builder's own Add wins over its form's Save. Not this rule: a multi-line field (Enter
+    is the newline), the roller line (Enter is its completion menu, the main act is Ctrl+Enter), a
+    list's search (rule 5's arrows and Enter pick a row), and a field that writes as you type with no
+    main button beside it — a coin count, a theme's name, the builder's character name.
 20. **One action says one toast, and only one toast is ever on screen.** Everything said in the
     same task — a roll's card and the notice the cast left, a failed save and the roll that failed
     it — is one card: the rolls, then the notices under them. The next thing said REPLACES the card

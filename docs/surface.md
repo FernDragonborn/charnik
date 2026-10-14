@@ -23,11 +23,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `check` ×6 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
+- `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `place` ×5 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `nameOf` ×4 — src/lib/combat/actions.ts · src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
-- `onKeydown` ×4 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (177 modules)
+## Library functions & types (178 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -542,6 +542,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type Explanation` — * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown, * so it is said as…
 - `const provenance`
+
+### `src/lib/actions/submitOnEnter.ts`
+
+- `const submitOnEnter` — * Enter in a one-line field inside `node` does what the context's main button does (ui.md ▸ rule * 19) — one home for…
 
 ### `src/lib/actions/takeFocus.ts`
 
@@ -2303,4 +2307,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1401 exports across 194 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1402 exports across 195 modules · 94 duplicate suspects._

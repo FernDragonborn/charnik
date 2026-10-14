@@ -5,6 +5,7 @@
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
 	import { toast } from '$lib/toast/toast';
+	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import {
 		bundledPacks,
 		missingBundled,
@@ -62,6 +63,24 @@
 	 *  "this pack contains N plugins, they arrive switched off and need your review" and then the
 	 *  review list stays empty until the next launch. Discovery only; consent is untouched, so
 	 *  nothing new can run because of this. */
+	/** Install a discovered pack under the folder name shown — the Install button, and Enter in the
+	 *  folder field beside it. */
+	async function installFound(found: (typeof updates.discovered)[number]) {
+		const res = await installPack(found.pack, {
+			localName: folderName[found.pack] ?? found.localName,
+		});
+		// it stopped to say this pack publishes under a source name another pack already uses — the
+		// message is in `updates.error`, and the accept button is the click that takes it
+		claimToAccept = res?.sourceClaim !== undefined ? found.pack : null;
+		await afterDiskChange();
+	}
+
+	/** Rename a pack's folder — the confirm button, and Enter in the name field. */
+	async function confirmRename(pack: string, target: string) {
+		renaming = null;
+		if (await renamePack(pack, target)) await afterDiskChange();
+	}
+
 	async function afterDiskChange() {
 		await reloadContent();
 		await refreshPlugins();
@@ -212,7 +231,7 @@
 							<div class="pack-warn">
 								{$_('settings.packs.nameTaken', { values: { name: found.pack } })}
 							</div>
-							<label class="pack-rename">
+							<label class="pack-rename" use:submitOnEnter={() => void installFound(found)}>
 								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
 								<input
 									class="add-url"
@@ -227,19 +246,7 @@
 						{#if found.installed}
 							<span class="pack-sub">{$_('settings.packs.alreadyInstalled')}</span>
 						{:else}
-							<button
-								class="pill-btn accent"
-								onclick={async () => {
-									const res = await installPack(found.pack, {
-										localName: folderName[found.pack] ?? found.localName,
-									});
-									// it stopped to say this pack publishes under a source name another pack
-									// already uses — the message is in `updates.error`, and the button below is
-									// the click that accepts it
-									claimToAccept = res?.sourceClaim !== undefined ? found.pack : null;
-									await afterDiskChange();
-								}}
-							>
+							<button class="pill-btn accent" onclick={() => installFound(found)}>
 								{$_('settings.packs.install')}
 							</button>
 							{#if claimToAccept === found.pack}
@@ -320,7 +327,10 @@
 							</div>
 						{/if}
 						{#if renaming?.pack === pack}
-							<label class="pack-rename">
+							<label
+								class="pack-rename"
+								use:submitOnEnter={() => void confirmRename(pack, renaming?.to ?? pack)}
+							>
 								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
 								<!-- svelte-ignore a11y_autofocus -->
 								<input
@@ -447,13 +457,7 @@
 						     mean opening the config file. -->
 						{#if renaming?.pack === pack}
 							{@const target = renaming.to}
-							<button
-								class="pill-btn accent"
-								onclick={async () => {
-									renaming = null;
-									if (await renamePack(pack, target)) await afterDiskChange();
-								}}
-							>
+							<button class="pill-btn accent" onclick={() => confirmRename(pack, target)}>
 								{$_('settings.packs.renameConfirm')}
 							</button>
 							<button class="pill-btn" onclick={() => (renaming = null)}>
