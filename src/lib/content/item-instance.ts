@@ -10,7 +10,6 @@ import { parseBonusChoices, type BonusRung } from './item-tags';
 import { baseRowOf, needsBaseItem, resolveItem } from './resolved-item';
 import { localizedName } from './detail';
 import type { System } from '$lib/rules/pipeline';
-import type { Translate } from '$lib/i18n';
 
 export interface BaseItemOption {
 	ref: string;
@@ -105,16 +104,11 @@ export function instanceBaseName(
 	return base ? localizedName(base, locale) : undefined;
 }
 
-/** How a `+N` instance is said: by its base ("Longsword", +2) or, with no base, by its own heading. */
-export type SayInstance = (name: string, bonus: number, hasBase: boolean) => string;
-
-/** The catalog's way of saying an instance, in the reader's language. */
-export const sayInstanceWith =
-	(translate: Translate): SayInstance =>
-	(name, bonus, hasBase) =>
-		translate(hasBase ? 'item.instanceName' : 'item.instanceNameNoBase', {
-			values: { name, bonus },
-		});
+/** How a `+N` instance is said: "Longsword +2" by its base, or — with no base — its own heading with
+ *  the bonus beside it. One form in every language the app ships: the bonus is written the same in
+ *  all of them, and only the name is translated. */
+export const sayInstance = (name: string, bonus: number, hasBase: boolean): string =>
+	hasBase ? `${name} +${bonus}` : `${name} (+${bonus})`;
 
 /** What an answered carried row is called: "Longsword +2", "Shield +1". A row with no bonus to
  *  answer, or one not yet answered, keeps its own name. */
@@ -122,11 +116,10 @@ export const sayInstanceWith =
 export interface InstanceNaming {
 	graph: ContentGraph;
 	locale: string;
-	say: SayInstance;
 }
 
 export function instanceName(
-	{ graph, locale, say }: InstanceNaming,
+	{ graph, locale }: InstanceNaming,
 	row: LoadedRowOf<'item'>,
 	// a carried entry as the schema reads it: its answers are `undefined` until given
 	answers: { base?: string | undefined; bonus?: number | undefined },
@@ -134,7 +127,7 @@ export function instanceName(
 	if (answers.bonus === undefined || !parseBonusChoices(row.data.bonus_choice).length)
 		return undefined;
 	const baseName = instanceBaseName(graph, row, locale, answers.base);
-	return say(baseName ?? localizedName(row, locale), answers.bonus, baseName !== undefined);
+	return sayInstance(baseName ?? localizedName(row, locale), answers.bonus, baseName !== undefined);
 }
 
 /** One instance a search names, ready to carry: the row, the answers, and what it is called. */
@@ -152,11 +145,7 @@ const ASKS_FOR_BONUS = /^(.*\S)\s*\+\s*(\d+)$/;
  * "sword"; "shield +2" is the Shield +N row at +2. Only rungs the row offers: there is no Weapon +4.
  * A name of one letter matches too much to mean anything, so it matches nothing.
  */
-export function instancesForQuery(
-	scope: InstanceScope,
-	query: string,
-	say: SayInstance,
-): InstanceMatch[] {
+export function instancesForQuery(scope: InstanceScope, query: string): InstanceMatch[] {
 	const asked = ASKS_FOR_BONUS.exec(query.trim().toLowerCase());
 	const needle = asked?.[1]?.trim() ?? '';
 	const bonus = Number(asked?.[2]);
@@ -175,7 +164,7 @@ export function instancesForQuery(
 					out.push({
 						ref: refOf(row),
 						answers: { base: base.ref, bonus },
-						name: say(base.name, bonus, true),
+						name: sayInstance(base.name, bonus, true),
 					});
 			continue;
 		}
@@ -185,7 +174,7 @@ export function instancesForQuery(
 			out.push({
 				ref: refOf(row),
 				answers: { bonus },
-				name: say(name, bonus, baseName !== undefined),
+				name: sayInstance(name, bonus, baseName !== undefined),
 			});
 	}
 	return out.sort((a, b) => a.name.localeCompare(b.name));

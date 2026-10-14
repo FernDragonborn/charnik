@@ -62,8 +62,12 @@
 		>
 			<div class="tile-key">{$_('combat.section.armorClass')}</div>
 			<div class="tile-value">{s.ac.value}</div>
+			<!-- one piece per contribution, never broken inside: a source's own name carries spaces, commas
+			     and plus signs ("Cloak of Protection +1"), so a run of them joined by spaces read as one -->
 			<div class="tile-text">
-				{s.ac.trace.map((x) => contributionText(x, $_)).join(' ')}
+				{#each s.ac.trace as part, index (index)}<span class="tile-part"
+						>{contributionText(part, $_)}</span
+					>{/each}
 			</div>
 		</button>
 		<button
@@ -269,10 +273,16 @@
 		font-weight: 500;
 	}
 	.tile .tile-text {
+		display: flex;
+		flex-wrap: wrap;
+		column-gap: var(--space-2-5);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-top: var(--space-1-5);
+	}
+	.tile-part {
+		white-space: nowrap;
 	}
 	.tile .tile-text b {
 		color: var(--color-resource);

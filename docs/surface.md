@@ -1118,8 +1118,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const asksWhichOne`
 - `function bonusRowFor` — The `+1/+2/+3` row a mundane item can be found as: the template that offers it as a base (a * Longsword is a Weapon +…
 - `function instanceBaseName` — The mundane item an instance is built on — the player's answer for a template, the row's own * `base_item_id` for a S…
-- `type SayInstance` — How a `+N` instance is said: by its base ("Longsword", +2) or, with no base, by its own heading.
-- `const sayInstanceWith` — The catalog's way of saying an instance, in the reader's language.
+- `const sayInstance` — How a `+N` instance is said: "Longsword +2" by its base, or — with no base — its own heading with * the bonus beside it.
 - `interface InstanceNaming` — What naming an instance reads: the graph its base is looked up in, and the reader's language.
 - `function instanceName`
 - `interface InstanceMatch` — One instance a search names, ready to carry: the row, the answers, and what it is called.
@@ -2338,4 +2337,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1430 exports across 196 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1429 exports across 196 modules · 94 duplicate suspects._

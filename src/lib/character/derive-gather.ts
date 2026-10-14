@@ -13,6 +13,7 @@ import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import { resolveItem } from '../content/resolved-item';
+import { instanceName } from '../content/item-instance';
 import { optionNamed } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
@@ -35,7 +36,9 @@ type ClassCtx = { level: number; classId: string; subclassId: string };
 /** What the row an effect came from still has to say about it after its tokens are read: which class
  *  carries it (so `spellcasting_mod` reads THAT class's mod, SPEC4), and the two answers a carried
  *  item's row asked its owner for. Absent fields mean "this row asked nothing". */
-type RowOrigin = { classId?: string; itemBonus?: number; itemChoice?: string };
+/** Where a row's effect came from. `name` is what the trace calls it when that is not the row's own
+ *  name — a carried +N item is "Shield +2", never the book's "Shield, +1, +2, or +3". */
+type RowOrigin = { classId?: string; itemBonus?: number; itemChoice?: string; name?: string };
 
 /**
  * Collects every active effect (species / class features / feats / items / runtime / exhaustion) as
@@ -92,6 +95,7 @@ class EffectGatherer {
 				// are independent — a +2 armour may still be waiting to be told its damage type
 				...(inv.bonus !== undefined ? { itemBonus: inv.bonus } : {}),
 				...(inv.choice !== undefined ? { itemChoice: inv.choice } : {}),
+				...this.instanceNameOf(row, inv),
 			});
 			// the variety this instance is, where the row's answers are rows: its tokens fold beside the
 			// item's own, under the variety's name, and an unanswered row grants none of them
@@ -163,6 +167,18 @@ class EffectGatherer {
 		return tokens.filter((token) => !isWeaponOwnBonus(token));
 	}
 
+	/** The trace's name for a carried +N instance, as an origin field — empty for any other row. */
+	private instanceNameOf(
+		row: LoadedRow,
+		inv: Character['build']['inventory'][number],
+	): { name?: string } {
+		if (row.type !== 'item') return {};
+		// the core's sources are English row names, so the instance is named in English too
+		const naming = { graph: this.graph, locale: 'en' };
+		const name = instanceName(naming, row, inv);
+		return name === undefined ? {} : { name };
+	}
+
 	/** Push a row's tokens as one active effect (skipping token-less rows), and hand it back. */
 	private pushRow(
 		row: LoadedRow | undefined,
@@ -175,7 +191,7 @@ class EffectGatherer {
 		const tokens = withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice);
 		if (!tokens.length) return undefined;
 		const effect: ActiveEffect = {
-			source: rowName(row),
+			source: from.name ?? rowName(row),
 			layer,
 			...(from.classId !== undefined ? { classId: from.classId } : {}),
 			...(from.itemBonus !== undefined ? { itemBonus: from.itemBonus } : {}),

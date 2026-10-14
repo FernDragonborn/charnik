@@ -2321,9 +2321,5 @@
 		"ranged": "дальні атаки",
 		"poisoned": "отруєння",
 		"ranged_weapon": "дальня зброя"
-	},
-	"item": {
-		"instanceName": "{name} +{bonus}",
-		"instanceNameNoBase": "{name} (+{bonus})"
 	}
 }

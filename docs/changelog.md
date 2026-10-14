@@ -23,10 +23,12 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   the inventory names it for what it is. Searching "longsword +1" or "shield +2" offers that very
   item at the top, already answered; before you type anything, the five +N items open the list.
   Taking a plain Longsword, chain mail, a shield or arrows asks the same: plain, or +1, +2, +3.
-  Two magic weapons of the same kind are two rows now.
+  Two magic weapons of the same kind are two rows now. The attack row and the Armor Class breakdown use the same name.
 - **An item can be taken out of the inventory from the play sheet.** A small bin stands at the end of
   the row under the pointer, the way the drag grip stands at its start.
 - **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.
+- **The Armor Class tile lists each part of the number apart** — a source called "Cloak of Protection"
+  no longer runs into the one after it.
 - **A collapsed panel is as deep below its title as above it.**
 - **The rarity band in the item picker cannot be wedged any more.** A handle pushed past the other
   used to stay where it was dragged while the list did not change, and two handles parked at

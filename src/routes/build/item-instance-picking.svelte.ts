@@ -15,7 +15,6 @@ import {
 	instanceRowId,
 	instancesForQuery,
 	parseInstanceRowId,
-	sayInstanceWith,
 	type InstanceAnswers,
 	type InstanceQuestions,
 	type InstanceScope,
@@ -23,7 +22,6 @@ import {
 import { localizedName } from '$lib/content/detail';
 import { parseBonusChoices } from '$lib/content/item-tags';
 import type { LoadedRow } from '$lib/content/loader';
-import { translator } from '$lib/i18n';
 
 /** What the pane taking items gives this: where to look, and what to do with what was taken. */
 export interface InstancePickingHost {
@@ -84,7 +82,7 @@ export class InstancePicking {
 				.sort((a, b) => localizedName(a, scope.locale).localeCompare(localizedName(b, scope.locale)));
 			return tiered.length ? { key: INSTANCE_SECTION, label: labels.tiered, rows: tiered } : null;
 		}
-		const rows = instancesForQuery(scope, query, sayInstanceWith(translator())).flatMap((match) => {
+		const rows = instancesForQuery(scope, query).flatMap((match) => {
 			const row = scope.graph.get(match.ref);
 			if (row?.type !== 'item') return [];
 			const data = { ...row.data, name_en: match.name, [`name_${scope.locale}`]: match.name };

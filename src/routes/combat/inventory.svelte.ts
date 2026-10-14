@@ -41,7 +41,6 @@ import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/reso
 import {
 	baseItemOptions,
 	instanceName,
-	sayInstanceWith,
 	type BaseItemOption,
 	type InstanceAnswers,
 	type InstanceScope,
@@ -182,9 +181,7 @@ export class InventoryTracker {
 		graph: ContentGraph | null | undefined,
 	): string {
 		if (!item) return entry.item;
-		const naming = graph
-			? { graph, locale: app.activeLocale, say: sayInstanceWith(translator()) }
-			: null;
+		const naming = graph ? { graph, locale: app.activeLocale } : null;
 		return (
 			(naming && instanceName(naming, item.row, entry)) ?? localizedName(item.row, app.activeLocale)
 		);

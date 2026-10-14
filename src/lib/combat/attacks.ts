@@ -37,6 +37,7 @@ import {
 import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
+import { instanceName } from '$lib/content/item-instance';
 import { formatNote, type Note } from '$lib/rules/pipeline';
 import type { Translate } from '$lib/i18n';
 
@@ -589,8 +590,9 @@ export function computeAttacks(
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
 		out.push({
 			id: row.id,
-			// the same name the compendium and every other row on the sheet print
-			name: localizedName(row, locale),
+			// the same name the compendium, the inventory and every other row on the sheet print — the
+			// instance's ("Longsword +2") for a +N weapon, never the book's heading
+			name: instanceName({ graph, locale }, row, inv) ?? localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
 			damageParts,
 			meta: metaTags(item.tags, properties.mastery, propertyRows),

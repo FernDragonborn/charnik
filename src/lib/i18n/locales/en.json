@@ -2321,9 +2321,5 @@
 		"ranged": "ranged",
 		"poisoned": "poison",
 		"ranged_weapon": "ranged weapon"
-	},
-	"item": {
-		"instanceName": "{name} +{bonus}",
-		"instanceNameNoBase": "{name} (+{bonus})"
 	}
 }
