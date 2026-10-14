@@ -85,6 +85,14 @@
 						bind:value={owed[0].dc}
 						aria-label={$_('combat.hp.concentrationDc')}
 					/>
+					<!-- Skip before One hit: One hit goes when one save is left, and what goes must be to the
+					     RIGHT of the button being pressed again, or the next press lands on the wrong one -->
+					<button
+						class="conc-act"
+						onclick={combat.dismissConcentrationSave}
+						use:provenance={$_('combat.hp.keepConcentrating')}
+						>{$_('combat.controls.concentrationSkip')}</button
+					>
 					{#if owed.length > 1}
 						<button
 							class="conc-act"
@@ -93,12 +101,6 @@
 							>{$_('combat.controls.concentrationOneHit')}</button
 						>
 					{/if}
-					<button
-						class="conc-act"
-						onclick={combat.dismissConcentrationSave}
-						use:provenance={$_('combat.hp.keepConcentrating')}
-						>{$_('combat.controls.concentrationSkip')}</button
-					>
 				{/if}
 				<button
 					class="conc-end"
@@ -226,7 +228,9 @@
 		bottom: 100%;
 		padding-bottom: var(--space-1);
 		display: flex;
-		justify-content: center;
+		/* pinned to the chip's START, not centred on it: Skip shortens the chip by one DC mark, and a
+		   centred row would slide out from under the pointer that is pressing it again */
+		justify-content: flex-start;
 		align-items: center;
 		gap: var(--space-1);
 		opacity: 0;
