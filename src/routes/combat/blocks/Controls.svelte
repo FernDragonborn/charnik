@@ -213,8 +213,9 @@
 	.toggle.on .toggle-state {
 		border-color: var(--color-resource);
 	}
-	/* The ✕ hangs UNDER the chip and is a descendant of it, so the pointer crossing the gap never
-	   leaves the hover — the gap is this wrapper's own padding, not empty page. */
+	/* The ✕ stands ABOVE the chip, because the chip's own tooltip opens under it and would cover a row
+	   hung there. It is a descendant of the chip, so the pointer crossing the gap never leaves the
+	   hover — the gap is this wrapper's own padding, not empty page. */
 	.conc-chip {
 		position: relative;
 		display: inline-flex;
@@ -222,8 +223,8 @@
 	.conc-drop {
 		position: absolute;
 		inset-inline: 0;
-		top: 100%;
-		padding-top: var(--space-1);
+		bottom: 100%;
+		padding-bottom: var(--space-1);
 		display: flex;
 		justify-content: center;
 		align-items: center;

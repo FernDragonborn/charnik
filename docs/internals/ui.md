@@ -393,6 +393,11 @@ good", so they are pinned here and every component follows them.
     Easing is always OUT — a gesture decelerates into place, it does not accelerate away from the
     hand. And the Web Animations API is outside the reach of the global
     reduced-motion rule in `app.css`, so that action asks `motionWanted()` itself.
+18. **Controls a hover reveals out of an element stand ABOVE it, never under it.** The element's
+    own popover (rule 3) opens under it, and a row hung in the same place is covered by the note
+    explaining its neighbour, invisible exactly while the pointer is on the element. Raising the row over the popover is not the fix: then
+    each covers the other's words. The concentration and form chips' `.conc-drop` is the case;
+    controls revealed IN place (a panel head's auto-calc switch, a row's pin) are not this rule.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
