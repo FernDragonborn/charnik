@@ -22,6 +22,7 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   ammunition — asks which weapon and which bonus right there, in a small popover beside the ✓, and
   the inventory names it for what it is. Searching "longsword +1" or "shield +2" offers that very
   item at the top, already answered; before you type anything, the five +N items open the list.
+  Taking a plain Longsword, chain mail, a shield or arrows asks the same: plain, or +1, +2, +3.
   Two magic weapons of the same kind are two rows now.
 - **An item can be taken out of the inventory from the play sheet.** A small bin stands at the end of
   the row under the pointer, the way the drag grip stands at its start.

@@ -219,7 +219,8 @@
 			"askAdd": "Add",
 			"askCancel": "Cancel",
 			"instances": "This one",
-			"tiered": "Magic +1, +2, +3"
+			"tiered": "Magic +1, +2, +3",
+			"plain": "Plain"
 		},
 		"languages": {
 			"chosen": "Chosen {count}",

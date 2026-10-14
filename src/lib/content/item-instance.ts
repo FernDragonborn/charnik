@@ -69,6 +69,29 @@ export function instanceQuestions(
 export const asksWhichOne = (questions: InstanceQuestions): boolean =>
 	questions.bases.length > 0 || questions.rungs.length > 0;
 
+/** The `+1/+2/+3` row a mundane item can be found as: the template that offers it as a base (a
+ *  Longsword is a Weapon +N's base), or the row that names it (`base_item_id` — a Shield +N). With
+ *  `usesBase` the instance needs the mundane item as its answered base. None for anything else. */
+export function bonusRowFor(
+	scope: InstanceScope,
+	mundane: LoadedRowOf<'item'>,
+): { ref: string; usesBase: boolean; rungs: BonusRung[] } | null {
+	if (mundane.data.rarity) return null;
+	const ref = refOf(mundane);
+	for (const row of scope.graph.list('item', { system: scope.system })) {
+		const rungs = parseBonusChoices(row.data.bonus_choice);
+		if (!scope.isActive(row) || !rungs.length) continue;
+		if (baseRowOf(scope.graph, row)?.effectiveId === mundane.effectiveId)
+			return { ref: refOf(row), usesBase: false, rungs };
+		if (
+			needsBaseItem(resolveItem(scope.graph, row)) &&
+			baseItemOptions(scope, row).some((option) => option.ref === ref)
+		)
+			return { ref: refOf(row), usesBase: true, rungs };
+	}
+	return null;
+}
+
 /** The mundane item an instance is built on — the player's answer for a template, the row's own
  *  `base_item_id` for a Shield +N — by name. Absent when there is none: a Wand of the War Mage is
  *  nothing but itself. */

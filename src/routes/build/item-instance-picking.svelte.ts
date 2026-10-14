@@ -10,6 +10,7 @@
  */
 import {
 	asksWhichOne,
+	bonusRowFor,
 	instanceQuestions,
 	instanceRowId,
 	instancesForQuery,
@@ -56,6 +57,9 @@ export interface InstanceAsk {
 	name: string;
 	questions: InstanceQuestions;
 	anchor: HTMLElement;
+	/** Set when the row taken is MUNDANE and a +N row can be built on it: the question is then
+	 *  "plain, or which +N", and a +N answer carries the bonus row with this item as its base. */
+	upgrade?: { ref: string; usesBase: boolean };
 }
 
 export class InstancePicking {
@@ -109,11 +113,25 @@ export class InstancePicking {
 		if (instance) return this.host.addInstance(instance.ref, instance.answers);
 		const scope = this.host.scope();
 		const row = scope?.graph.get(id);
-		if (scope && row?.type === 'item') {
+		const anchor = document.activeElement;
+		if (scope && row?.type === 'item' && anchor instanceof HTMLElement) {
+			const name = localizedName(row, scope.locale);
 			const questions = instanceQuestions(scope, row);
-			const anchor = document.activeElement;
-			if (asksWhichOne(questions) && anchor instanceof HTMLElement) {
-				this.asking = { ref: id, name: localizedName(row, scope.locale), questions, anchor };
+			if (asksWhichOne(questions)) {
+				this.asking = { ref: id, name, questions, anchor };
+				return;
+			}
+			// a mundane item already carried is put back, as before; one not yet carried may be the
+			// magic version of itself
+			const upgrade = this.host.carried().includes(id) ? null : bonusRowFor(scope, row);
+			if (upgrade) {
+				this.asking = {
+					ref: id,
+					name,
+					questions: { bases: [], rungs: upgrade.rungs },
+					anchor,
+					upgrade: { ref: upgrade.ref, usesBase: upgrade.usesBase },
+				};
 				return;
 			}
 		}
@@ -121,9 +139,17 @@ export class InstancePicking {
 		else this.host.add(id);
 	};
 
+	/** The popover's answer. For a mundane item, no bonus means the plain item itself. */
 	answer = (answers: InstanceAnswers): void => {
-		if (this.asking) this.host.addInstance(this.asking.ref, answers);
+		const asking = this.asking;
 		this.asking = null;
+		if (!asking) return;
+		if (!asking.upgrade) return this.host.addInstance(asking.ref, answers);
+		if (answers.bonus === undefined) return this.host.add(asking.ref);
+		this.host.addInstance(asking.upgrade.ref, {
+			bonus: answers.bonus,
+			...(asking.upgrade.usesBase ? { base: asking.ref } : {}),
+		});
 	};
 
 	cancel = (): void => {

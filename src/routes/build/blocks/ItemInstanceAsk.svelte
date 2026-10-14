@@ -22,12 +22,18 @@
 	let base = $state('');
 	let bonus = $state<number | undefined>(undefined);
 
+	/** A mundane item's question has one more answer than a +N row's: none — the plain item. */
+	const PLAIN = 0;
 	const ready = $derived(
 		(!ask.questions.bases.length || base !== '') &&
 			(!ask.questions.rungs.length || bonus !== undefined),
 	);
 	const add = () => {
-		if (ready) onanswer({ ...(base ? { base } : {}), ...(bonus === undefined ? {} : { bonus }) });
+		if (!ready) return;
+		onanswer({
+			...(base ? { base } : {}),
+			...(bonus === undefined || bonus === PLAIN ? {} : { bonus }),
+		});
 	};
 
 	onMount(() => {
@@ -61,6 +67,16 @@
 		<div class="field" role="radiogroup" aria-label={$_('build.inventory.whichBonus')}>
 			<span class="eyebrow">{$_('build.inventory.whichBonus')}</span>
 			<div class="rungs">
+				{#if ask.upgrade}
+					<button
+						type="button"
+						class="pill-btn"
+						class:accent={bonus === PLAIN}
+						role="radio"
+						aria-checked={bonus === PLAIN}
+						onclick={() => (bonus = PLAIN)}>{$_('build.inventory.plain')}</button
+					>
+				{/if}
 				{#each ask.questions.rungs as rung (rung.bonus)}
 					<button
 						type="button"

@@ -219,7 +219,8 @@
 			"askAdd": "Додати",
 			"askCancel": "Скасувати",
 			"instances": "Саме цей",
-			"tiered": "Магічні +1, +2, +3"
+			"tiered": "Магічні +1, +2, +3",
+			"plain": "Звичайний"
 		},
 		"languages": {
 			"chosen": "Обрано {count}",

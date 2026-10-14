@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from './loader';
 import {
+	bonusRowFor,
 	instanceName,
 	instanceQuestions,
 	instanceRowId,
@@ -85,6 +86,24 @@ describe.each([
 			'Shield +1',
 		);
 		expect(instanceName({ graph, locale: 'en', say }, weapon, { base: longsword })).toBeUndefined();
+	});
+
+	it('a mundane item knows the +N row it can be found as', () => {
+		expect(bonusRowFor(scope, row('longsword'))).toMatchObject({
+			ref: row('weapon_1_2_or_3').effectiveId,
+			usesBase: true,
+		});
+		expect(bonusRowFor(scope, row('shield'))).toMatchObject({
+			ref: row('shield_1_2_or_3').effectiveId,
+			usesBase: false,
+		});
+		expect(bonusRowFor(scope, row('arrows'))).toMatchObject({
+			ref: row('ammunition_1_2_or_3').effectiveId,
+			usesBase: true,
+		});
+		// a magic row is not a base, and gear has no +N version
+		expect(bonusRowFor(scope, row('weapon_1_2_or_3'))).toBeNull();
+		expect(bonusRowFor(scope, row('backpack'))).toBeNull();
 	});
 
 	it('two different instances are two rows; the same instance twice is one', () => {
