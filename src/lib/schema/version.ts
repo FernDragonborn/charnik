@@ -143,8 +143,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v49: Ammunition, +1, +2, or +3 is ammunition rather than a weapon, so the base it asks for is an
 // arrow or a bolt. An install left at v48 offers it every sword.
 // v50: Unarmored Defense, Mage Armor, Draconic Resilience and the Robe of the Archmagi work out the
-// BASE Armor Class (`set_base`), so a shield and a cloak still add. An install left at v49 sets the
-// whole AC and drops them.
+// BASE Armor Class (`set_base`), so a shield and a cloak still add; the Wood Elf's speed and the
+// Ring of Swimming's and Cloak of the Manta Ray's swim speeds are bases the same way. An install left
+// at v49 sets the whole value and drops what came before it.
 export const CONTENT_SEED_VERSION = 50;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.

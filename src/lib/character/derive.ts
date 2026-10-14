@@ -68,7 +68,7 @@ export interface CharacterSheet {
 	critThreshold: Computed;
 	speed: Computed;
 	/** Fly / swim / climb speeds — base 0 (no SRD species grants one); effects are the source, as a
-	 *  literal (`set_override:speed.swim:40`) or as the walking speed itself
+	 *  literal (`set_base:speed.swim:40`) or as the walking speed itself
 	 *  (`set_override:speed.climb:speed:floor`). Rendered only when nonzero. */
 	flySpeed: Computed;
 	swimSpeed: Computed;

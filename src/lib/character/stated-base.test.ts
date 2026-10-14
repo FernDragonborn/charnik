@@ -33,3 +33,35 @@ describe.each([
 		expect(character('monk', [item('shield')])).toBe(14); // 10 + DEX 2 + the shield's 2
 	});
 });
+
+describe('a stated BASE speed keeps the bonuses after it (2024)', () => {
+	let graph: ContentGraph;
+	beforeAll(async () => {
+		graph = await loadPacks('srd-2024');
+	});
+	const S = 'SRD 5.2.1';
+	const woodElf = (cls?: { id: string; level: number }) => {
+		const ch = newCharacter('probe', 'Probe', '5.5e');
+		ch.build.species = `species:${S}:elf`;
+		ch.build.speciesOption = `species_option:${S}:elf_wood_elf`;
+		if (cls) ch.build.classes = [classRow({ class: `class:${S}:${cls.id}`, level: cls.level })];
+		return ch;
+	};
+
+	it('a Wood Elf walks 35, and a monk’s Unarmored Movement still adds to it', () => {
+		expect(deriveSheet(woodElf(), graph).speed.value).toBe(35);
+		expect(deriveSheet(woodElf({ id: 'monk', level: 2 }), graph).speed.value).toBe(45);
+	});
+
+	it('a Ring of Swimming is a swim speed of 40, a Cloak of the Manta Ray of 60', () => {
+		const swimWith = (id: string) => {
+			const ch = woodElf();
+			ch.build.inventory = [
+				inventoryRow({ item: `item:${S}:${id}`, equipped: true, attuned: true }),
+			];
+			return deriveSheet(ch, graph).swimSpeed.value;
+		};
+		expect(swimWith('ring_of_swimming')).toBe(40);
+		expect(swimWith('cloak_of_the_manta_ray')).toBe(60);
+	});
+});
