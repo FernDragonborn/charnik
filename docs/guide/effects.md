@@ -129,7 +129,7 @@ Put a question and a `?` in front of any effect:
 ```
 is_raging ? advantage:attack
 has_condition.frightened ? disadvantage:attack
-not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_mod
+not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod
 ```
 
 A guard is condition-**first** — "is this true? → then this" — and has no "otherwise" branch. If you
@@ -151,6 +151,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 | Effect | Write it as | What it does |
 | --- | --- | --- |
 | `flat_bonus` | `flat_bonus:<target>+<value>` | Adds to the target. The everyday one. On a `damage` target you may name a damage type — `flat_bonus:damage:fire+1d6` adds a separate fire part that rolls on its own and never takes your ability modifier. |
+| `set_base` | `set_base:<target>:<value>` | Another way to work out the BASE of a stat — what a row means by "your base Armor Class equals…" or "your Speed increases to 35 feet". It competes with the base Charnik already has (your armour, or 10 + DEX), the higher one is used, and every bonus after it still adds: a barbarian's shield and a Cloak of Protection count. Reach for it over `set_override` whenever the text says *base*, or names a value other bonuses should stack on. |
 | `set_override` | `set_override:<target>:<value>[:floor\|cap]` | Forces a value instead of adding to one. Plain form replaces; `:floor` means "at least this"; `:cap` means "no more than this", applied last of all, after every bonus. When two rows set the same target the stronger one wins, and the other is recorded rather than silently lost. |
 | `block_bonus` | `block_bonus:<target>` | "Cannot benefit from any bonus to this." Grappled and restrained use it on speed. Penalties and the base value still apply — only bonuses are refused. |
 | `halve` | `halve:<target>` | Halves it. Exists because halving is the one place the rules ask for a fraction. Targets `speed` and `hp_max`. |
@@ -363,8 +364,8 @@ Every one of these is a real cell in the SRD packs.
 grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long
         Rage: a pool that grows on a level table and comes back on a long rest.
 
-not is_wearing_armor ? set_override:ac:10+dex_mod+con_mod
-        Unarmored Defense: replace AC entirely, but only with no armour on.
+not is_wearing_armor ? set_base:ac:10+dex_mod+con_mod
+        Unarmored Defense: a base AC of its own, only with no armour on — a shield still adds.
 
 not has_condition.blinded and not has_condition.deafened and not has_condition.incapacitated ?
 advantage:save.dex;note:Only against effects you can see

@@ -713,7 +713,7 @@
 			<p>Put a question and a <code>?</code> in front of any effect:</p>
 			<pre><code>is_raging ? advantage:attack
 has_condition.frightened ? disadvantage:attack
-not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_mod</code></pre>
+not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod</code></pre>
 			<p>
 				A guard is condition-<strong>first</strong> — "is this true? → then this" — and has no
 				"otherwise" branch. If you want a different <em>number</em> in the other case, that belongs in
@@ -744,6 +744,11 @@ not is_wearing_armor and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_
 		<div class="kind-name">flat_bonus</div>
 		<div class="kind-form"><code><span class="g-kind">flat_bonus</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">+</span><span class="g-punc">&lt;</span><span class="g-slot">value</span><span class="g-punc">&gt;</span></code></div>
 		<div class="kind-desc">Adds to the target. The everyday one. On a <code>damage</code> target you may name a damage type — <code>flat_bonus:damage:fire+1d6</code> adds a separate fire part that rolls on its own and never takes your ability modifier.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">set_base</div>
+		<div class="kind-form"><code><span class="g-kind">set_base</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">target</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">value</span><span class="g-punc">&gt;</span></code></div>
+		<div class="kind-desc">Another way to work out the <em>base</em> of a stat — what a row means by "your base Armor Class equals…" or "your Speed increases to 35 feet". It competes with the base Charnik already has (your armour, or 10 + DEX), the higher one is used, and every bonus after it still adds: a barbarian's shield and a Cloak of Protection count. Reach for it over <code>set_override</code> whenever the text says <em>base</em>, or names a value other bonuses should stack on.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">set_override</div>
@@ -1162,9 +1167,9 @@ disadvantage:attacked.spell        <span class="cmt">Spellguard Shield</span></c
 				</figcaption>
 			</figure>
 			<figure>
-				<pre><code>not is_wearing_armor ? set_override:ac:10+dex_mod+con_mod</code></pre>
+				<pre><code>not is_wearing_armor ? set_base:ac:10+dex_mod+con_mod</code></pre>
 				<figcaption>
-					<b>Unarmored Defense.</b> Replace AC entirely, but only with no armour on.
+					<b>Unarmored Defense.</b> A base AC of its own, only with no armour on — a shield still adds.
 				</figcaption>
 			</figure>
 			<figure>
