@@ -129,6 +129,17 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
      `quickjs-emscripten`, a narrow host API that only takes effect-context and returns
      `{value, trace, notes}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
      no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
+     > **The budgets are counted, and that buys determinism with stall time.** Per call 100
+     > interpreter steps, per derive 400 (PLUGINS §5) — a count of QuickJS interrupt checks, kept
+     > by the host, so a plugin cannot report its own cost and a busy machine cannot fail an honest
+     > one. A step does not bound time, so wall-clock backstops sit behind the counts: 50 ms a call,
+     > 100 ms a derive. **Accepted residual risk:** a consented plugin can stall every derive by up
+     > to about 150 ms, plus whatever one native builtin runs uninterrupted inside the 8 MB memory
+     > limit (tens of ms). A handler that is slow but keeps succeeding never trips the fail-closed
+     > counter, so the remedy is the user disabling it in Settings. Tightening the backstops
+     > shortens the stall and narrows the margin an honest handler has on a loaded machine — that
+     > trade, not containment, is what those two numbers decide: no budget lets code out of the
+     > sandbox.
    Every layer keeps the `{value, trace, notes}` contract so contributions stay explainable.
 5. **Webview hardening.** Strict Tauri **CSP** — `default-src 'self'` (webview may only load
    its own bundled resources) plus `script-src 'self' 'wasm-unsafe-eval'`,

@@ -331,9 +331,15 @@ the keys documented here were rejected, and a rejected key takes the whole resul
   infinite loop spends its 100 in about 5 ms. Behind the counts sit wall-clock backstops (50 ms a
   call, 100 ms a computation) for what a step cannot see — a native builtin such as
   `JSON.stringify` of a megabyte runs tens of ms inside one step. Stay well under; a handler is
-  arithmetic, not a simulation.
+  arithmetic, not a simulation. The engine's check counter runs on across calls, so the same call
+  can land one step either side of where it landed last time: a handler near 100 steps passes in
+  one session and fails in the next. Keep a margin — that boundary is the only place the count
+  is not exact.
 - **Failure is contained and fail-closed.** A throw, a timeout, or an invalid result becomes
-  an inert note; 3 consecutive failures disable the plugin for the session (with a notice).
+  an inert note; 3 consecutive failures disable the plugin for the session (with a notice). An
+  exhausted per-computation budget is NOT a failure of the plugin that spent it — the tokens it
+  cuts off belong to whoever came next — so a slow handler that keeps succeeding is never
+  disabled by the counter.
 - **Randomness belongs to the host.** You never roll dice — you return dice FORMULAS (in
   tokens, or via `onUse` later). Charnik's single dice path rolls them, so the roll log
   stays honest. This is WHY a roll-dependent outcome ("heal 2d6") is expressed as a formula the
