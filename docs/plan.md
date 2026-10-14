@@ -242,11 +242,13 @@ position and are given per wave, because most of them were learned the hard way.
   AUDIT-DRIFT, the full `pnpm lint:typed`, the version in three files (`package.json`,
   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) and the changelog's top heading. Open work a
   release ships without is named in that release's changelog, where a player would look for it.
-- **0.9.0 · the short queue, and it is an ORDER rather than a wave.** One item, and it is the
-  maintainer's to do rather than a commit.
+- **0.9.0 · the short queue, and it is an ORDER rather than a wave.**
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
+  2. **The log, reworked: LOG-EVENTS** (`roller.md` — what it holds) **with COMBAT-RAIL ▸ 1**
+     (`ui.md` — where it stands). One change, because what makes the log worth a pinned rail is that
+     it finally says what happened in a turn rather than only what was rolled.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 
