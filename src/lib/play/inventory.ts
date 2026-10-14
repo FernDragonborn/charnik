@@ -17,6 +17,7 @@ import {
 	removeItemsOf,
 	toggleAttuned,
 	toggleEquipped,
+	wornSlotIn,
 	useOne,
 	type InventoryEntry,
 } from '$lib/character/inventory';
@@ -36,10 +37,21 @@ const listAction =
 	(character: Character, intent: Intent, ctx: PlayContext): PlayOutcome =>
 		settled(quietly(withInventory(character, change(character.build.inventory, intent))), ctx);
 
-/** Put on or take off — a shield in hand is what the Armor Class counts. */
-export const toggleEquip = listAction<{ row: string }>((list, { row }) =>
-	toggleEquipped(list, row),
-);
+/** Put on or take off — a shield in hand is what the Armor Class counts, and one is all it counts. */
+export const toggleEquip = (
+	character: Character,
+	{ row }: { row: string },
+	ctx: PlayContext,
+): PlayOutcome =>
+	settled(
+		quietly(
+			withInventory(
+				character,
+				toggleEquipped(character.build.inventory, row, wornSlotIn(ctx.graph)),
+			),
+		),
+		ctx,
+	);
 
 /** Start carrying an item, and stop carrying it altogether — the two a picker asks for, which
  *  speak of the ITEM. `dropItem` is one row leaving. */

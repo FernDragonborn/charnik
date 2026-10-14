@@ -26,6 +26,8 @@ A handful of fixes found right after 0.8.0, and a little more say over the Actio
   Two magic weapons of the same kind are two rows now. The attack row and the Armor Class breakdown use the same name.
 - **An item can be taken out of the inventory from the play sheet.** A small bin stands at the end of
   the row under the pointer, the way the drag grip stands at its start.
+- **One suit of armour and one shield at a time.** Putting on a second takes the first off, so two
+  shields' bonuses no longer both reach your Armor Class.
 - **+1 ammunition is built on arrows and bolts**, not on any weapon in the game.
 - **The Armor Class tile lists each part of the number apart** — a source called "Cloak of Protection"
   no longer runs into the one after it.

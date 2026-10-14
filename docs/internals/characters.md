@@ -79,6 +79,10 @@ keys (`build.slotPicks`, `<rowId>:<level>`). Rows are made in one place each (`s
 `inventoryRow`, `classRow`), a row missing its id is given one when the file is read, and two rows
 sharing one are told apart on read, the first keeping its own.
 
+**One suit of armour and one shield are worn at a time** (`character/inventory.ts` ▸ `WORN_SLOT`):
+putting on a second takes the first off, in the builder and in play alike, because the Armor Class
+counts one of each and a second shield's magic bonus would otherwise still reach it.
+
 **An inventory row is spoken of by its `iid` in every action** — equip, attune, count, use, drop,
 reorder, and the three answers a row can be asked for (`$lib/play/inventory`). Two rows may hold
 the same item: a file edited by hand, or two rings that resist different things. Only a picker

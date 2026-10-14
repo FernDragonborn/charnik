@@ -755,7 +755,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const removeItem`
 - `const removeItemsOf` — Stop carrying an item altogether — every row of it.
 - `const bumpQty`
-- `const toggleEquipped`
+- `const WORN_SLOT` — Where a worn item sits on the body: one suit of armour and one shield at a time.
+- `type WornSlot`
+- `const wornSlotIn` — The slot a carried entry is worn in, read off its row's category; none for a weapon or gear.
+- `const toggleEquipped` — Put on or take off.
 - `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
 - `const useOne` — Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which * would read as "car…
 
@@ -1876,7 +1879,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/play/inventory.ts`
 
-- `const toggleEquip` — Put on or take off — a shield in hand is what the Armor Class counts.
+- `const toggleEquip` — Put on or take off — a shield in hand is what the Armor Class counts, and one is all it counts.
 - `const ownItem` — Start carrying an item, and stop carrying it altogether — the two a picker asks for, which * speak of the ITEM.
 - `const ownItemInstance` — Start carrying one particular instance — see `addItemInstance`.
 - `const disownItem`
@@ -2337,4 +2340,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1429 exports across 196 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1432 exports across 196 modules · 94 duplicate suspects._

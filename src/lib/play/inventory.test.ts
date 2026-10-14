@@ -77,6 +77,24 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 		expect(entryOf(c, 'shield')?.equipped).toBe(false);
 	});
 
+	it('one shield and one suit of armour at a time: putting on another takes the first off', () => {
+		const leather = system === '5e' ? 'leather' : 'leather_armor'; // the two SRDs' ids for it
+		const c = carrying('shield', 'shield_1_2_or_3', leather, 'chain_mail', 'dagger');
+		c.build.inventory = c.build.inventory.map((e) =>
+			e.item === item('shield_1_2_or_3') ? { ...e, bonus: 2 } : e,
+		);
+		const wear = (from: Character, id: string) =>
+			toggleEquip(from, { row: rowOf(from, id) }, ctx).character;
+		const worn = ['shield', leather, 'dagger', 'shield_1_2_or_3', 'chain_mail'].reduce(wear, c);
+		const on = (id: string) => entryOf(worn, id)?.equipped;
+		expect([on('shield'), on('shield_1_2_or_3')]).toEqual([false, true]);
+		expect([on(leather), on('chain_mail')]).toEqual([false, true]);
+		expect(on('dagger')).toBe(true); // a weapon is not worn in either slot
+		// and the Armor Class counts the one shield it now holds: its base 2 and its +2, once
+		const bare = derive(wear(worn, 'shield_1_2_or_3')).ac.value;
+		expect(derive(worn).ac.value).toBe(bare + 4);
+	});
+
 	it('owning, counting, using up and putting back', () => {
 		const c = carrying('dagger');
 		const owned = ownItem(c, { item: item('torch') }, ctx).character;
