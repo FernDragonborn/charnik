@@ -84,6 +84,8 @@
 						min="1"
 						bind:value={owed[0].dc}
 						aria-label={$_('combat.hp.concentrationDc')}
+						onkeydown={(e) =>
+							e.key === 'Enter' && (e.preventDefault(), combat.rollConcentrationSave())}
 					/>
 					<!-- Skip before One hit: One hit goes when one save is left, and what goes must be to the
 					     RIGHT of the button being pressed again, or the next press lands on the wrong one -->
