@@ -210,6 +210,10 @@ copied into `.git/hooks/pre-commit` at install time, and only `postinstall` re-c
 touching that block, run `npx simple-git-hooks` and `tail -1 .git/hooks/pre-commit` to see what will
 actually run.
 
+The pre-push test run also writes `.git/last-pre-push-tests.json` (vitest's JSON reporter), so a red
+push leaves the failing test's name and message behind even when the terminal kept only the tail of
+the output. A test that fails once and passes on retry is read from there, not guessed at.
+
 ## How long things take
 
 Set a command's timeout to roughly **2× its expected duration**, never a comfortable ceiling.
