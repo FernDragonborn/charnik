@@ -7,13 +7,18 @@ import { issueText } from './issue-text';
 import { parseBonusChoices } from './item-tags';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from './loader';
 import type { JoinIssue } from './resource-joins';
-import { RARITIES } from './schemas';
+import { RARITIES, splitList } from './schemas';
 
 export type OptionRow = LoadedRowByType<'option'>;
 
 /** How a parent is spelled in `option_of`. */
 export const optionParentKey = (parent: Pick<LoadedRow, 'type' | 'id'>): string =>
 	`${parent.type}:${parent.id}`;
+
+/** The parents an option names: one, or a comma list where several features offer the same option —
+ *  a 2014 Fighting Style is offered by the fighter's, the paladin's, the ranger's and the champion's
+ *  feature, and is one row, so a correction to it lands once. */
+export const optionParents = (option: OptionRow): string[] => splitList(option.data.option_of);
 
 /**
  * A row's options, in the order their file lists them — which is the order the source's own table
@@ -26,7 +31,8 @@ export function optionsOf(graph: ContentGraph, parent: LoadedRow): OptionRow[] {
 		.list('option')
 		.filter(
 			(option) =>
-				option.data.option_of === key && option.systems.some((s) => parent.systems.includes(s)),
+				optionParents(option).includes(key) &&
+				option.systems.some((s) => parent.systems.includes(s)),
 		);
 }
 
@@ -56,7 +62,7 @@ export function itemRarities(row: LoadedRow, graph?: ContentGraph | null): strin
 }
 
 /** Why an option cannot be taken yet — an open enum, since a rule may grow a third reason. */
-export const OPTION_BLOCK = { level: 'level', requires: 'requires' } as const;
+export const OPTION_BLOCK = { level: 'level', requires: 'requires', taken: 'taken' } as const;
 export type OptionBlock = (typeof OPTION_BLOCK)[keyof typeof OPTION_BLOCK];
 
 /**
@@ -87,8 +93,8 @@ export function optionJoinIssues(graph: ContentGraph, system: string): JoinIssue
 	const out: JoinIssue[] = [];
 	for (const option of options) {
 		const at = { file: `${option.root}/${option.file}`, id: option.id };
-		if (!parents.has(option.data.option_of))
-			out.push({ ...at, ...issueText.optionParentMissing(option.data.option_of) });
+		for (const parent of optionParents(option))
+			if (!parents.has(parent)) out.push({ ...at, ...issueText.optionParentMissing(parent) });
 		if (option.data.requires && !ids.has(option.data.requires))
 			out.push({ ...at, ...issueText.optionRequiresMissing(option.data.requires) });
 	}

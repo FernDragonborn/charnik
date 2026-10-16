@@ -123,3 +123,67 @@ describe('feature options · the builder asks for what the feature row says to c
 		expect(build.optionPicks.choices).toEqual([]);
 	});
 });
+
+/*
+ * SRD 5.1 ▸ Fighter, Paladin and Ranger ▸ Fighting Style: "Choose one of the following options. You
+ * can't take a Fighting Style option more than once, even if you later get to choose again." ▸
+ * Champion: "At 10th level, you can choose a second option from the Fighting Style class feature."
+ */
+describe('feature options · a 2014 Fighting Style is one row offered by several features', () => {
+	const STYLE = 'fighter_fighting_style';
+	const SECOND = 'champion_additional_fighting_style';
+	const draftFighter = async (level: number, extra: { classId: string; level: number }[] = []) => {
+		build.reset();
+		build.graph = await loadPacks('srd-2014');
+		build.draft.system = '5e';
+		build.draft.name = 'Kel';
+		build.draft.classes = [
+			{
+				...newClassRow(),
+				classId: 'class:SRD 5.1:fighter',
+				subclassId: level >= 3 ? 'subclass:SRD 5.1:champion' : null,
+				level,
+			},
+			...extra.map((c) => ({ ...newClassRow(), subclassId: null, ...c })),
+		];
+	};
+
+	it('each feature offers the styles its own list names', async () => {
+		await draftFighter(1, [
+			{ classId: 'class:SRD 5.1:paladin', level: 2 },
+			{ classId: 'class:SRD 5.1:ranger', level: 2 },
+		]);
+		const ids = (feature: string) => choiceOf(feature).options.map((o) => o.id);
+		expect(ids(STYLE)).toEqual([
+			'archery',
+			'defense',
+			'dueling',
+			'great_weapon_fighting',
+			'protection',
+			'two_weapon_fighting',
+		]);
+		expect(ids('paladin_fighting_style')).toEqual([
+			'defense',
+			'dueling',
+			'great_weapon_fighting',
+			'protection',
+		]);
+		expect(ids('ranger_fighting_style')).toEqual([
+			'archery',
+			'defense',
+			'dueling',
+			'two_weapon_fighting',
+		]);
+	});
+
+	it("a Champion's second pick is one of the Fighter's, and never the one already taken", async () => {
+		await draftFighter(10);
+		expect(choiceOf(SECOND).options).toHaveLength(6);
+		pick(STYLE, 'defense');
+		const second = choiceOf(SECOND);
+		expect(build.optionPicks.blockOf(second, optionOf(second, 'defense'))).toBe(OPTION_BLOCK.taken);
+		expect(build.optionPicks.canToggle(second, optionOf(second, 'defense'))).toBe(false);
+		pick(SECOND, 'archery');
+		expect(build.optionPicks.picks).toMatchObject({ [STYLE]: ['defense'], [SECOND]: ['archery'] });
+	});
+});

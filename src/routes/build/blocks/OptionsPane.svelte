@@ -43,7 +43,14 @@
 					>
 						{localizedName(option, app.activeLocale)}{#if block !== null}<span class="why"
 								>{$_(`build.options.block.${block}`, {
-									values: { level: option.data.level ?? 0, option: nameOf(option.data.requires) },
+									values: {
+										level: option.data.level ?? 0,
+										option: nameOf(option.data.requires),
+										feature: localizedName(
+											b.optionPicks.takenElsewhere(choice, option)?.feature ?? choice.feature,
+											app.activeLocale,
+										),
+									},
 								})}</span
 							>{/if}
 					</button>

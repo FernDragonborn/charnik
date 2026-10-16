@@ -231,7 +231,7 @@ position and are given per wave, because most of them were learned the hard way.
   Half the gate is automated, because what a hand pass found twice running was the same thing — a
   mechanism built and never given its first consumer, the worst kind of done, since the suite is
   green and the player sees nothing. Two assertions over the shipped packs hold it now: **every
-  effect KIND has a shipped row** (with a pinned list of the three that legitimately have none, each
+  effect KIND has a shipped row** (with a pinned list of the two that legitimately have none, each
   carrying its reason), and **every shipped token names a TARGET the sheet consumes**. Losing the
   last user of a kind fails loudly instead of quietly.
   **An absent feature is not a wrong number**, and blocks nothing. `versatile:1d10` ships on every
@@ -254,7 +254,7 @@ position and are given per wave, because most of them were learned the hard way.
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
-  rule is still only text. OPTION-ROWS sits here too — the 2014 fighting styles, Metamagic and the
+  rule is still only text. OPTION-ROWS sits here too — Metamagic and the
   2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of
   Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's Agonizing Blast and E4.
 - **Deliberately in no wave:** TABLE-LINK-SPEC (the specification before any transport code; the

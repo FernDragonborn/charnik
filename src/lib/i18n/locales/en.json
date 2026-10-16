@@ -330,7 +330,8 @@
 			"noRows": "No content that is switched on offers an option for this feature.",
 			"block": {
 				"level": "level {level}",
-				"requires": "needs {option}"
+				"requires": "needs {option}",
+				"taken": "taken under {feature}"
 			}
 		},
 		"skills": {

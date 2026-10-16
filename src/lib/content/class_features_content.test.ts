@@ -877,10 +877,6 @@ describe('the effect vocabulary has consumers · a kind built and never used is 
 		plugin: 'user-authored by definition',
 		// RAW almost never auto-SUCCEEDS; its mirror `auto_fail` has 16 users, all conditions
 		auto_succeed: 'RAW forces failure, not success',
-		// its only SRD consumer is 2014 Great Weapon Fighting ("reroll the die and must use the new
-		// roll" — genuinely NOT 2024's `min_die`), and 2014 fighting styles are prose inside one
-		// class-feature row rather than rows of their own, so there is nothing to author it onto
-		reroll: '2014 fighting styles are not rows yet',
 	};
 
 	it('every other kind in the vocabulary has at least one shipped row', async () => {

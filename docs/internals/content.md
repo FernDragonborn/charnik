@@ -172,7 +172,12 @@ answer is `build.options`, feature id → option ids, and `character/features.ts
 is the one reading of it — the gather folds those rows, the sheet lists them as features, and a
 caster's rituals are read off an option's `ritual_source` before its subclass's or its class's.
 An option may state the class `level` it opens at and one other option it `requires`; an unmet
-one is refused in Strict and noted in Free. Like every content → content link the parent is
+one is refused in Strict and noted in Free. **An option may name several parents** in `option_of`, a
+comma list, where several features offer the same choice — a 2014 Fighting Style is one row offered
+by the fighter's, the paladin's, the ranger's and the champion's feature, so a correction lands once
+and the tokens cannot drift between copies. **An option is held once**: taken through one feature,
+it is refused (Strict) or noted (Free) through another — SRD 5.1, "You can't take a Fighting Style
+option more than once, even if you later get to choose again". Like every content → content link the parent is
 matched by id and edition and never by source, so a homebrew pack adds an option to a shipped
 row. An option that points at nothing is listed in content health (`optionJoinIssues`).
 

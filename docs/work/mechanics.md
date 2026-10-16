@@ -77,24 +77,6 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [ ] **GWF-2014 · Great Weapon Fighting is a REROLL in 2014 and a floor in 2024, and only one of
-  them ships.** 2024 says "treat any 1 or 2 on a damage die as a 3" and carries
-  `min_die:damage:two_handed,melee:3`. 2014 says "you can reroll the die and **must use the new roll**"
-  — which is not the same number: a reroll can land on a 1 again, a floor cannot. The `reroll` kind was
-  built for exactly this sentence and has no shipped row.
-
-  **What is left is where 2014 keeps its fighting styles.** They are prose inside ONE
-  `fighter_fighting_style` row, not a row per style. SRD 5.1 prints fourteen style options under
-  three class features — six for the Fighter, four each for the Paladin and the Ranger, six
-  distinct styles between them — and they are options OF a feature, not feats: 2014's feats are an
-  optional rule, and a style offered in an ASI slot would be a rule that edition does not have. So
-  each is an `option` row of its feature, typed from the SRD (`content.md` ▸ OPTION-ROWS), and the
-  token goes on the row: `reroll:damage:two_handed,melee:2`, the edition divergence said rather
-  than smoothed.
-  **Until then a 2014 player says a style with an effect of their own**: a homebrew effect row
-  carrying `extra_attack:light:modifier` (Two-Weapon Fighting) or `reroll:damage:two_handed,melee:2`
-  folds like any other, and `mastery_content.test.ts` pins the first.
-
 - [ ] **FIGHTING-STYLE-SLOT · a 2024 class feature that grants a feat opens no slot for it.** Feat
   slots come from three places — a class's `asi_levels`, a species' `feat_choice`, a background's
   origin feat — and none of them is a class FEATURE. So a 2024 Fighter 1 reads "you gain a Fighting

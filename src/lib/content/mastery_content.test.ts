@@ -345,10 +345,9 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 
 	/*
 	 * SRD 5.1 ▸ Fighter ▸ Fighting Style ▸ Two-Weapon Fighting: "you can add your ability modifier to
-	 * the damage of the second attack." The 2014 styles are prose inside one class-feature row, so no
-	 * shipped row can carry the token — a player says it with an effect of their own until they are.
+	 * the damage of the second attack." The style is an option row of the feature, taken in the build.
 	 */
-	it('2014: an effect the player adds puts the modifier back, as the Two-Weapon Fighting style does', async () => {
+	it('2014: taking the Two-Weapon Fighting style puts the modifier back on the second attack', async () => {
 		const graph = await loadPacks('srd-2014');
 		const c = newCharacter('grog', 'Grog', '5e');
 		c.build.classes = [classRow({ class: 'class:SRD 5.1:fighter', level: 1 })];
@@ -362,14 +361,7 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 				?.damageParts[0]?.mod;
 		};
 		expect(extraMod()).toBe(0);
-		c.play.effects = [
-			{
-				iid: 't',
-				label: 'Two-Weapon Fighting',
-				effects: ['extra_attack:light:modifier'],
-				positive: true,
-			},
-		];
+		c.build.options = { fighter_fighting_style: ['two_weapon_fighting'] };
 		expect(extraMod()).toBe(3);
 	});
 

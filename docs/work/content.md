@@ -61,11 +61,7 @@
   — under Strength 13 for a melee weapon and Dexterity 13 for a ranged one in 2024, for a Small
   creature in 2014. The row says `Disadvantage (Heavy)` and the tap rolls with it.
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
-  **What is left, in the order it is worth doing:**
-  1. **2014 Two-Weapon Fighting has no row to carry `extra_attack:light:modifier`** — the 2014
-     fighting styles are prose inside one `fighter_fighting_style` row, the same blocker GWF-2014
-     names and sizes (`mechanics.md`). A player's own effect carrying the token folds today.
-  2. **An attack row prints only the weapon's first property.** It explains all of them on hover
+  **What is left:** **an attack row prints only the weapon's first property.** It explains all of them on hover
      and focus, as the article does; the sub-line has room for one word, and which words earn the
      space is a layout question for COMBAT-RAIL's session.
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
@@ -115,13 +111,9 @@
 - [ ] **OPTION-ROWS · the choices a class feature offers that are not rows yet.** A feature's
   options are rows of the `option` type and its `choose` column says how many
   (`../internals/content.md` ▸ One row, several options), so each of these is typing, with no
-  code behind it. Shipped: the six items whose rarity varies, in both packs, and a 2014
-  warlock's Pact Boons and Eldritch Invocations. Not yet rows, every value typed by hand
+  code behind it. Shipped: the six items whose rarity varies, in both packs, a 2014
+  warlock's Pact Boons and Eldritch Invocations, and the 2014 Fighting Styles. Not yet rows, every value typed by hand
   (SRD-TRANSCRIPTION):
-  - **2014 Fighting Style** — fourteen options under three class features, six for the Fighter
-    and four each for the Paladin and the Ranger, and the Champion's second pick, which is a
-    `choose` on `champion_additional_fighting_style` over the Fighter's own options
-    (`mechanics.md` ▸ N2 has the tokens two of them fold).
   - **2014 Metamagic** — eight options, two at 3rd level and one more at 10th and 17th.
   - **2024 Eldritch Invocations and Metamagic** — the feature rows name the choice and the pack
     carries none of the options.

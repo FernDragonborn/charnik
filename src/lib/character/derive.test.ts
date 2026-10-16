@@ -11,6 +11,7 @@ import {
 import { deriveSheet } from './derive';
 import { TABLE_CHOSEN_ABILITY, toolCheck } from './derive-stats';
 import { makeTempContentRoot, buildCharacter } from '../../test-support/fixtures';
+import { loadPacks } from '../../test-support/real-content';
 import { ISSUE_KEY } from '../effects/token-parser';
 import { attackNotes, computeAttacks, formatDamageParts, rollEffectsFor } from '../combat/helpers';
 import {
@@ -402,6 +403,30 @@ describe('deriveSheet aggregator', () => {
 		// the full chain: computeAttacks tags the weapon → rollEffectsFor gates the min_die on its scopes
 		expect(rollEffectsFor(s.facts, 'damage', new Set(greataxe.scopes)).minDie).toBe(3); // 1/2 → 3
 		expect(rollEffectsFor(s.facts, 'damage', new Set(longbow.scopes)).minDie).toBeUndefined(); // ranged
+	});
+
+	/*
+	 * SRD 5.1 ▸ Fighting Style ▸ Great Weapon Fighting: "you can reroll the die and must use the new
+	 * roll, even if the new roll is a 1 or a 2" — a REROLL, which 2024's floor of 3 is not.
+	 */
+	it('2014 Great Weapon Fighting rerolls the 1s and 2s of a two-handed melee weapon only', async () => {
+		const g = await loadPacks('srd-2014');
+		const c = newCharacter('grog', 'Grog', '5e');
+		c.build.classes = [classRow({ class: 'class:SRD 5.1:fighter', level: 1 })];
+		c.build.options = { fighter_fighting_style: ['great_weapon_fighting'] };
+		c.build.abilities = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [
+			inventoryRow({ item: 'item:SRD 5.1:greataxe', qty: 1, equipped: true, attuned: false }),
+			inventoryRow({ item: 'item:SRD 5.1:longbow', qty: 1, equipped: true, attuned: false }),
+		];
+		const character = characterSchema.parse(c);
+		const s = deriveSheet(character, g);
+		const atks = computeAttacks(character, s, g);
+		const scopesOf = (name: string) => new Set(atks.find((a) => a.name === name)?.scopes);
+		const greataxe = rollEffectsFor(s.facts, 'damage', scopesOf('Greataxe'));
+		expect(greataxe.reroll).toBe(2);
+		expect(greataxe.minDie).toBeUndefined();
+		expect(rollEffectsFor(s.facts, 'damage', scopesOf('Longbow')).reroll).toBeUndefined();
 	});
 
 	it('SCOPED-BONUS: a scoped damage bonus reaches the weapons it names and nothing else', () => {

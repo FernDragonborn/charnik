@@ -8,7 +8,7 @@
  * Pure: the table of links, the query over it, and the draft a new child row starts from.
  * `LinkedRows` is the markup over these — so the join rules are node-testable without a component.
  */
-import type { ContentType } from './schemas';
+import { splitList, type ContentType } from './schemas';
 import type { ContentGraph, LoadedRow } from './loader';
 import { localizedName } from './detail';
 import { optionParentKey } from './options';
@@ -72,8 +72,10 @@ export function linkedRowsOf(graph: ContentGraph, parent: LoadedRow, locale = 'e
 		.list(link.child)
 		.filter((r) => {
 			const data = r.data as Record<string, unknown>;
+			// an option may name several parents (`optionParents`); every other link names one
+			const named = link.typed ? splitList(asText(data[link.fk])) : [data[link.fk]];
 			return (
-				data[link.fk] === parentKey(link, parent) &&
+				named.includes(parentKey(link, parent)) &&
 				(!link.unclaimed || !data[link.unclaimed]) &&
 				r.systems.some((s) => parent.systems.includes(s))
 			);

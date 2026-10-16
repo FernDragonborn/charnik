@@ -1256,6 +1256,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type OptionRow`
 - `const optionParentKey` — How a parent is spelled in `option_of`.
+- `const optionParents` — The parents an option names: one, or a comma list where several features offer the same option — * a 2014 Fighting St…
 - `function optionsOf` — * A row's options, in the order their file lists them — which is the order the source's own table * prints.
 - `const optionNamed` — The one of a row's options an answer names, if it names one.
 - `function itemRarities` — * Every rarity an item can be found at, commonest first: each rung's where the row is a `+1/+2/+3` * ladder that stat…
@@ -2369,4 +2370,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1443 exports across 201 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1444 exports across 201 modules · 96 duplicate suspects._

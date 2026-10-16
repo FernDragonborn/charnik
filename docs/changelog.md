@@ -16,6 +16,12 @@
   the builder, asks again with your answers filled in, so a wrong pick is one change rather than a
   removal and a re-add. The builder names a +1 sword "Longsword +1" too, with its damage. A Wand of
   the War Mage +2 is called that, rather than "Wand of the War Mage, +1, +2, or +3 (+2)".
+- **A 2014 fighter, paladin, ranger and champion choose a Fighting Style.** The six styles are
+  options of the class feature now: Archery and Defense add to the sheet, Two-Weapon Fighting puts
+  your modifier back on the second attack, and Great Weapon Fighting rerolls a 1 or 2 on a two-handed
+  weapon's damage — a reroll, as 2014 prints it, not 2024's floor of 3. Dueling and Protection stay
+  their text: one asks how you hold your weapon, the other is a reaction. A style taken once is not
+  offered again, so a champion's second style is a different one.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
   one identity in the list that draws them.
 

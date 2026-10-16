@@ -7,7 +7,13 @@
 import { slotsGrantedAtLevel } from '$lib/build/derive';
 import { activeClassFeatures } from '$lib/character/features';
 import type { LoadedRowByType } from '$lib/content/loader';
-import { optionBlock, optionsOf, type OptionBlock, type OptionRow } from '$lib/content/options';
+import {
+	OPTION_BLOCK,
+	optionBlock,
+	optionsOf,
+	type OptionBlock,
+	type OptionRow,
+} from '$lib/content/options';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
@@ -72,9 +78,18 @@ export class OptionPicks {
 	optionById = (id: string | undefined): OptionRow | undefined =>
 		this.choices.flatMap((choice) => choice.options).find((option) => option.id === id);
 
-	/** What stands between the character and one option, if anything does. */
+	/** What stands between the character and one option, if anything does — its own level and
+	 *  prerequisite, or the same option already taken through another feature: an option is held
+	 *  once ("You can't take a Fighting Style option more than once, even if you later get to choose
+	 *  again", SRD 5.1). */
 	blockOf = (choice: FeatureChoice, option: OptionRow): OptionBlock | null =>
-		optionBlock(option, choice.classLevel, this.held);
+		this.takenElsewhere(choice, option) ? OPTION_BLOCK.taken : optionBlock(option, choice.classLevel, this.held);
+
+	/** The other feature this option is already taken through, if one is. */
+	takenElsewhere = (choice: FeatureChoice, option: OptionRow): FeatureChoice | undefined =>
+		choice.picks.includes(option.id)
+			? undefined
+			: this.choices.find((other) => other !== choice && other.picks.includes(option.id));
 
 	/** May this chip be pressed? Something already held can always be put down; a prerequisite is
 	 *  a wall in Strict and a note in Free, the split every cap in the builder uses. */
