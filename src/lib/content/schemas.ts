@@ -410,6 +410,11 @@ const itemSchema = baseRow.extend({
 	/** The mundane item this one is built from (same source); empty cells inherit from it. */
 	base_item_id: optStr,
 	bonus_choice: optStr,
+	/** What one found instance is called before its bonus, for a `+1/+2/+3` row that has no base to
+	 *  borrow a name from: "Wand of the War Mage" for "Wand of the War Mage, +1, +2, or +3". The words
+	 *  before the comma are the book's, so they are a column rather than a cut of the heading. Prose,
+	 *  localized like `material` (`instance_name_<loc>`). */
+	instance_name: optStr,
 	/** The answers a row ASKS for, when the SRD prints one entry and lets the item someone found name
 	 *  the rest: Ring of Resistance's gemstone, Armor of Resistance's type. A comma list of ids the
 	 *  row's own `item_choice` tokens are pointed at; blank means the row asks nothing. */
@@ -698,7 +703,7 @@ export const hasProse = (t: ContentType): boolean =>
 /** The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`,
  *  `higher_level_uk`). Kept in ONE place — the loader re-attach, the translate write path and this
  *  type all key off it — so "which columns are translatable" has a single source of truth. */
-export const PROSE_BASES = ['name', 'text', 'material', 'higher_level'] as const;
+export const PROSE_BASES = ['name', 'text', 'material', 'higher_level', 'instance_name'] as const;
 export type ProseBase = (typeof PROSE_BASES)[number];
 
 /** Localized prose columns the strict per-type schema strips (it declares only name/text en+uk) and

@@ -59,6 +59,16 @@ describe.each([
 		).toBe(undefined);
 	});
 
+	it('a +N row with no base is named by the words its own row gives one found', () => {
+		const wand = row('wand_of_the_war_mage_1_2_or_3');
+		expect(instanceName({ graph, locale: 'en' }, wand, { bonus: 2 })).toBe(
+			'Wand of the War Mage +2',
+		);
+		expect(instancesForQuery(scope, 'war mage +3').map((m) => m.name)).toEqual([
+			'Wand of the War Mage +3',
+		]);
+	});
+
 	it('two rings of different kinds are two rows, two of one kind one', () => {
 		const ring = row('ring_of_resistance').effectiveId;
 		const fire = addItemInstance([], ring, { choice: 'fire' });

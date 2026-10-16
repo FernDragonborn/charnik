@@ -146,7 +146,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // BASE Armor Class (`set_base`), so a shield and a cloak still add; the Wood Elf's speed and the
 // Ring of Swimming's and Cloak of the Manta Ray's swim speeds are bases the same way. An install left
 // at v49 sets the whole value and drops what came before it.
-export const CONTENT_SEED_VERSION = 50;
+// v51: items carry `instance_name`, what one found instance of a `+1/+2/+3` row with no base is
+// called — "Wand of the War Mage". An install left at v50 names the wand by its heading.
+export const CONTENT_SEED_VERSION = 51;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

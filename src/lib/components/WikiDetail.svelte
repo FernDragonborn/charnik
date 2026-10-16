@@ -77,6 +77,7 @@
 			bodyMarkdown={rewriting ? '' : body}
 			{higherLevel}
 			{material}
+			instanceName={detail.instanceName ?? ''}
 			{editable}
 			{draft}
 		/>

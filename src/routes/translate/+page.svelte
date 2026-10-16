@@ -160,6 +160,7 @@
 						text: String(r.data[`text_${loc}`] ?? ''),
 						material: String(r.data[`material_${loc}`] ?? ''),
 						higher_level: String(r.data[`higher_level_${loc}`] ?? ''),
+						instance_name: String(r.data[`instance_name_${loc}`] ?? ''),
 					}
 				: { name: '', text: '' };
 			draft = fromRow;
@@ -176,6 +177,7 @@
 						text: String(d.text ?? ''),
 						material: String(d.material ?? ''),
 						higher_level: String(d.higher_level ?? ''),
+						instance_name: String(d.instance_name ?? ''),
 					};
 					draft = restored;
 					baseline = JSON.stringify(restored); // a restored draft is the new clean baseline
@@ -212,6 +214,7 @@
 				text: draft.text,
 				...(draft.material !== undefined ? { material: draft.material } : {}),
 				...(draft.higher_level !== undefined ? { higher_level: draft.higher_level } : {}),
+				...(draft.instance_name !== undefined ? { instance_name: draft.instance_name } : {}),
 			});
 			await deleteDraft(getUserStorage(), target); // saved → the cached draft is now redundant
 			baseline = JSON.stringify(draft); // prevent the auto-save effect from re-spawning it

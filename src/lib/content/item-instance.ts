@@ -9,6 +9,7 @@ import type { ContentGraph, LoadedRow, LoadedRowOf } from './loader';
 import { parseBonusChoices, type BonusRung } from './item-tags';
 import { baseRowOf, needsBaseItem, resolveItem } from './resolved-item';
 import { localizedName } from './detail';
+import { localizedCell } from './prose';
 import { optionNamed, optionsOf } from './options';
 import { splitList } from './schemas';
 import type { System } from '$lib/rules/pipeline';
@@ -128,11 +129,16 @@ export function instanceBaseName(
 	return base ? localizedName(base, locale) : undefined;
 }
 
-/** How a `+N` instance is said: "Longsword +2" by its base, or — with no base — its own heading with
- *  the bonus beside it. One form in every language the app ships: the bonus is written the same in
+/** What the row itself calls one found instance, when it has no base to borrow a name from —
+ *  "Wand of the War Mage" (`instance_name`). Absent when the row does not say. */
+const instanceStem = (row: LoadedRowOf<'item'>, locale: string): string | undefined =>
+	localizedCell(row.data, 'instance_name', locale) || undefined;
+
+/** How a `+N` instance is said: "Longsword +2" by its base or by the row's own `instance_name`, or —
+ *  with neither — its own heading with the bonus beside it. One form in every language the app ships: the bonus is written the same in
  *  all of them, and only the name is translated. */
-export const sayInstance = (name: string, bonus: number, hasBase: boolean): string =>
-	hasBase ? `${name} +${bonus}` : `${name} (+${bonus})`;
+export const sayInstance = (name: string, bonus: number, named: boolean): string =>
+	named ? `${name} +${bonus}` : `${name} (+${bonus})`;
 
 /** What naming an instance reads: the graph its base is looked up in, and the reader's language. */
 export interface InstanceNaming {
@@ -153,8 +159,8 @@ export function instanceName(
 	if (variety) return localizedName(variety, locale);
 	if (answers.bonus === undefined || !parseBonusChoices(row.data.bonus_choice).length)
 		return undefined;
-	const baseName = instanceBaseName(graph, row, locale, answers.base);
-	return sayInstance(baseName ?? localizedName(row, locale), answers.bonus, baseName !== undefined);
+	const stem = instanceBaseName(graph, row, locale, answers.base) ?? instanceStem(row, locale);
+	return sayInstance(stem ?? localizedName(row, locale), answers.bonus, stem !== undefined);
 }
 
 /** One instance a search names, ready to carry: the row, the answers, and what it is called. */
@@ -195,13 +201,14 @@ export function instancesForQuery(scope: InstanceScope, query: string): Instance
 					});
 			continue;
 		}
-		const baseName = instanceBaseName(scope.graph, row, scope.locale);
-		const name = baseName ?? localizedName(row, scope.locale);
+		const stem =
+			instanceBaseName(scope.graph, row, scope.locale) ?? instanceStem(row, scope.locale);
+		const name = stem ?? localizedName(row, scope.locale);
 		if (name.toLowerCase().includes(needle))
 			out.push({
 				ref: refOf(row),
 				answers: { bonus },
-				name: sayInstance(name, bonus, baseName !== undefined),
+				name: sayInstance(name, bonus, stem !== undefined),
 			});
 	}
 	return out.sort((a, b) => a.name.localeCompare(b.name));

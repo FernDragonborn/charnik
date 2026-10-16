@@ -1322,7 +1322,8 @@
 		"tags": "Tags",
 		"text": "Description",
 		"vulnerabilities": "Vulnerabilities",
-		"weight_lb": "Weight (lb)"
+		"weight_lb": "Weight (lb)",
+		"instance_name": "Name of one found"
 	},
 	"contentIssue": {
 		"badRowAnyColumn": "This row was skipped because one of its columns holds something a “{type}” row can’t use. Correct the cell and save the file — the rest of the file loaded normally.",
@@ -1584,7 +1585,8 @@
 			"material": "Material component text, e.g. “a pinch of sulfur and bat guano”.",
 			"higher_level": "What changes when cast with a higher-level slot.",
 			"effects": "Auto-calc effects, “;”-separated. Format kind:target±amount. e.g. flat_bonus:ac+1; damage_sensitivity:resist:fire; grant_proficiency:skill.stealth. Leave blank if none.",
-			"classes": "Tick the spellcaster classes this spell is available to (below)."
+			"classes": "Tick the spellcaster classes this spell is available to (below).",
+			"instance_name": "What one found item is called before its bonus, when it has no base item to borrow a name from — e.g. “Wand of the War Mage”."
 		},
 		"levelWarning": "No level {level} spell slot in the classic rules (0–9).",
 		"newFilePlaceholder": "name",

@@ -13,6 +13,7 @@
 		bodyMarkdown,
 		higherLevel = '',
 		material = '',
+		instanceName = '',
 		editable = false,
 		draft,
 	}: {
@@ -22,6 +23,9 @@
 		higherLevel?: string;
 		/** Source spell material component — empty for non-spells. */
 		material?: string;
+		/** What one found instance of a `+1/+2/+3` row with no base is called — empty for every other
+		 *  row. Only asked while translating: a reader meets it as the name on their sheet. */
+		instanceName?: string;
 		editable?: boolean;
 		/** Absent in read mode; present (bound in place) only when translating. The `| undefined` is
 		 *  required to thread this optional object down under `exactOptionalPropertyTypes`. */
@@ -55,6 +59,17 @@
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by renderContentMarkdownInline -->
 		<div class="highlight">{$_('contentField.higher_level')} — {@html higherHtml}</div>
 	{/if}
+{/if}
+
+{#if instanceName && editable && draft}
+	<label class="edit-line">
+		<span class="eyebrow">{$_('contentField.instance_name')}</span>
+		<input
+			class="text-field edit-inline"
+			bind:value={draft.instance_name}
+			placeholder={instanceName}
+		/>
+	</label>
 {/if}
 
 {#if material}

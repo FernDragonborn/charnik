@@ -141,8 +141,9 @@ kind (`content/item-instance.ts`, taken through
 small "which one" popover beside the ✓, and a search that already says it — "longsword +1",
 "shield +2" — offers the answered instance as a row of its own. Before anything is typed, the same
 top section lists the rows that carry a `bonus_choice`, open from the start. Each instance is its own inventory
-row, named for what it is ("Longsword +2", from its base's name; a row with no base keeps its heading
-with the bonus beside it; a variety by its own name; a word answer beside the heading, "Ring of
+row, named for what it is ("Longsword +2", from its base's name; a row with no base by its own
+`instance_name`, "Wand of the War Mage +2" — the book's words before the comma, a localized prose
+column rather than a cut of the heading; a row with neither keeps its heading with the bonus beside it; a variety by its own name; a word answer beside the heading, "Ring of
 Resistance (Fire)" — `combat/carried-name.ts`, the one name the builder and the play sheet both
 give it). The row's own name is where the same popover asks again, holding the answers it has: the
 way back from a misclick, rather than a standing dropdown on every row.

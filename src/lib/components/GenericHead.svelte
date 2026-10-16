@@ -42,7 +42,8 @@
 {/if}
 {#if detail.meta.length}
 	<div class="detail-meta">
-		{#each detail.meta as [k, v, explainedBy] (k.key)}
+		<!-- by place, not by label: a +N item has one "Rarity at +N" cell per rung, one key between them -->
+		{#each detail.meta as [k, v, explainedBy], i (i)}
 			<!-- a cell whose words are defined by rows of their own says what they do on hover and on
 			     focus: `Mastery: Vex` alone is a word, not a rule -->
 			<div class="meta-cell" use:provenance={describedRules(explainedBy ?? [], detail.locale)}>

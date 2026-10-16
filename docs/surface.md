@@ -259,7 +259,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 | Component | Props | Purpose |
 | --- | --- | --- |
-| **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `editable`, `draft` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
+| **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `instanceName`, `editable`, `draft` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
 | **CharacterConflictDialog** | — | "Something outside Charnik changed this character" — asked when a save was refused because |
 | **Chip** | `active`, `onclick`, `children` | A filter / tag chip. |
 | **ClassPicker** | `value`, `options`, `onChange` |  |
@@ -1145,7 +1145,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const asksWhichOne`
 - `function bonusRowFor` — The `+1/+2/+3` row a mundane item can be found as: the template that offers it as a base (a * Longsword is a Weapon +…
 - `function instanceBaseName` — The mundane item an instance is built on — the player's answer for a template, the row's own * `base_item_id` for a S…
-- `const sayInstance` — How a `+N` instance is said: "Longsword +2" by its base, or — with no base — its own heading with * the bonus beside it.
+- `const sayInstance` — How a `+N` instance is said: "Longsword +2" by its base or by the row's own `instance_name`, or — * with neither — it…
 - `interface InstanceNaming` — What naming an instance reads: the graph its base is looked up in, and the reader's language.
 - `function instanceName` — What an answered carried row is called: "Longsword +2", "Shield +1", or the variety it was told * it is ("Belt of Hil…
 - `interface InstanceMatch` — One instance a search names, ready to carry: the row, the answers, and what it is called.

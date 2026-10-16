@@ -174,7 +174,7 @@
 	// the Translate view's job — so the authoring form only shows the base (English) prose + structure.
 	const isLocaleVariant = (name: string) =>
 		/^(name|text)_(?!en$)[a-z][a-z-]*$/.test(name) ||
-		/^(material|higher_level)_[a-z][a-z-]*$/.test(name);
+		/^(material|higher_level|instance_name)_[a-z][a-z-]*$/.test(name);
 	// material + higher_level render at the BOTTOM (below the body), mirroring the compendium article.
 	const BOTTOM_FIELDS = ['higher_level', 'material', 'upcast'];
 	const CLASSES_FIELD = 'classes';

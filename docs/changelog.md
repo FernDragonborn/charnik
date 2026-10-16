@@ -14,7 +14,10 @@
   the small popover a +1 sword already used, and the row is named for what it is — "Ring of
   Resistance (Fire)", "Belt of Hill Giant Strength". Pressing an item's name, on the play sheet or in
   the builder, asks again with your answers filled in, so a wrong pick is one change rather than a
-  removal and a re-add. The builder names a +1 sword "Longsword +1" too, with its damage.
+  removal and a re-add. The builder names a +1 sword "Longsword +1" too, with its damage. A Wand of
+  the War Mage +2 is called that, rather than "Wand of the War Mage, +1, +2, or +3 (+2)".
+- **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
+  one identity in the list that draws them.
 
 ## 0.8.1
 

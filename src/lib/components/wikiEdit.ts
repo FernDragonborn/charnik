@@ -11,6 +11,7 @@ export interface WikiEditDraft {
 	text: string;
 	material?: string;
 	higher_level?: string;
+	instance_name?: string;
 }
 
 /** How a head renders. `read` = static; `translate` = prose editable (title/body/…), stats read-only;

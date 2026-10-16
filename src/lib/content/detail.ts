@@ -7,7 +7,7 @@ import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loade
 import { asText, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import { costSaid } from '$lib/rules/currency';
-import type { ContentType, RowColumn } from '$lib/content/schemas';
+import { PROSE_BASES, type ContentType, type RowColumn } from '$lib/content/schemas';
 import { cellText, localizedCell } from './prose';
 import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
@@ -24,6 +24,7 @@ const COMMON = new Set([
 	'text_uk',
 	'effects',
 	'higher_level',
+	'instance_name',
 ]);
 
 /** What a COLUMN is called, as a meta-cell heading: the `contentField` catalog, with the column's
@@ -112,7 +113,7 @@ const localized = localizedCell;
 export const localizedName = (row: LoadedRow, locale: string): string =>
 	String(row.data[`name_${locale}`] || row.data.name_en || row.id);
 
-const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
+const PROSE_LOC = new RegExp(`^(?:${PROSE_BASES.join('|')})_${LOCALE_TAG}$`);
 
 /** One k/v cell: what it is called (always a catalog entry) and what it says — a catalog entry when
  *  the word is the app's own vocabulary, the row's own text when it is data — and, where the words
@@ -283,6 +284,8 @@ export interface DetailModel {
 	meta: MetaCell[]; // k/v cells (Casting time, Range, Components, Duration, …)
 	bodyHtml: string; // text_en — rendered as HTML (content may contain markup)
 	higherLevel: string; // higher_level, if any
+	/** What one found instance is called before its bonus (`instance_name`); '' when the row has none. */
+	instanceName?: string;
 	source: SaidText; // attribution line
 	license: string; // the file's #content-license (e.g. CC-BY-4.0), '' when the file declares none
 	monster?: MonsterModel; // present for type === 'monster' → dedicated stat-block layout
@@ -435,5 +438,6 @@ export function buildDetail(
 		eyebrow: [{ key: `contentType.${type}`, fallback: titleCase(type) }],
 		meta,
 		higherLevel: localized(d, 'higher_level', locale),
+		instanceName: localized(d, 'instance_name', locale),
 	};
 }
