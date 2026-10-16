@@ -303,8 +303,9 @@ export interface BuildTodoInput {
 	classSkillCount: number;
 	skillChosenCount: number;
 	/** Feat/ASI slots the character has reached and not yet filled. A slot carrying `species` is the
-	 *  one the SPECIES grants: not a level's improvement, so it says whose grant it is instead. */
-	openFeatSlots: { key: string; level: number; className: string; species?: string }[];
+	 *  one the SPECIES grants, and one carrying `feature` a CLASS FEATURE opens (a Fighting Style):
+	 *  not a level's improvement, so each says whose grant it is instead. */
+	openFeatSlots: OpenFeatSlot[];
 	/** Skills the species grants by choice and the player has not picked yet. Its own line, because
 	 *  it is its own cap: a species grant never counts against the class's. */
 	speciesSkillsOwed: number;
@@ -354,6 +355,27 @@ function spellTodos(d: BuildTodoInput): BuildTodo[] {
 	}
 	return out;
 }
+
+/** An open feat slot, and whose grant it is when it is not a level's: the SPECIES' one, or one a
+ *  CLASS FEATURE opens (a Fighting Style). */
+interface OpenFeatSlot {
+	key: string;
+	level: number;
+	className: string;
+	species?: string;
+	feature?: string;
+}
+
+/** What an open feat slot says — whose grant it is, when it is not a level's. */
+const featTodo = (slot: OpenFeatSlot) => ({
+	key: slot.species ? 'speciesFeat' : slot.feature ? 'featureFeat' : slot.className ? 'featIn' : 'feat',
+	values: {
+		level: slot.level,
+		class: slot.className,
+		species: slot.species ?? '',
+		feature: slot.feature ?? '',
+	},
+});
 
 /**
  * Everything still unfinished about a draft, in the order a player would fix it. Pure and
@@ -425,8 +447,7 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 	for (const slot of d.openFeatSlots)
 		out.push({
 			kind: 'feat',
-			key: slot.species ? 'speciesFeat' : slot.className ? 'featIn' : 'feat',
-			values: { level: slot.level, class: slot.className, species: slot.species ?? '' },
+			...featTodo(slot),
 			slotKey: slot.key,
 			level: slot.level,
 			required: true,

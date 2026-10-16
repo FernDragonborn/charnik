@@ -18,9 +18,9 @@
 
 	const chosen = $derived(b.draft.slotFeats[slotKey] ?? '');
 	const asi = $derived(b.draft.slotAsi[slotKey]);
-	// A species-granted slot offers no ability improvement: the improvement is what a LEVEL offers,
-	// and putting it here would let a species' grant be spent on something the species never granted.
-	const offersAsi = $derived(!b.feats.slotIsSpecies(slotKey));
+	// A species' or a feature's slot offers no ability improvement: the improvement is what a LEVEL
+	// offers, and putting it here would spend a grant on something it never granted.
+	const offersAsi = $derived(b.feats.slotOffersAsi(slotKey));
 </script>
 
 <!-- Reading and taking are separate controls here too (ui.md §6, §11): the card body highlights the

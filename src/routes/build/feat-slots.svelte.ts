@@ -20,6 +20,7 @@ import {
 	splitList,
 } from '$lib/content/schemas';
 import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
+import { activeClassFeatures } from '$lib/character/features';
 import {
 	asiPickCount,
 	toggleCapped,
@@ -47,6 +48,23 @@ export type FeatsHost = Pick<
 	 *  other off the same class are a circular mapped type. This is the one member asked for here. */
 	skillPicks: { isProficientBeforeFeats(skill: string): boolean };
 };
+
+/** A feat slot a CLASS FEATURE opens, and the feats it may hold (its `feat_choice`). */
+export interface FeatureFeatSlot {
+	key: string;
+	level: number;
+	className: string;
+	/** The feature's own name — the slot says whose grant it is, as the species' slot does. */
+	feature: string;
+	choice: string[];
+}
+
+/** The feats a `feat_choice` names, out of `feats`: `any`, feat ids, or feat CATEGORIES — a list
+ *  naming nothing that exists offers nothing rather than silently falling back to everything. */
+const featsChosenFrom = (choice: readonly string[], feats: LoadedRow[]): LoadedRow[] =>
+	choice.some((word) => word.toLowerCase() === ANY_OPTION)
+		? feats
+		: feats.filter((f) => choice.includes(f.id) || choice.includes(String(rowOfType(f, 'feat')?.data.category ?? '')));
 
 export class FeatSlots {
 	/* The host arrives as an ACCESSOR, not an object: a $derived field initialiser runs before a
@@ -89,13 +107,45 @@ export class FeatSlots {
 	/** What the species slot may be filled with. `any` means every feat an ordinary slot offers at
 	 *  level 1; a list names its own ids, and one naming nothing that exists offers nothing rather
 	 *  than silently falling back to everything. */
-	speciesFeatOptions = $derived.by<LoadedRow[]>(() => {
-		const choice = this.speciesFeatChoice;
-		if (!choice.length) return [];
-		const options = this.featOptionsFor(1);
-		if (choice.length === 1 && choice[0]?.toLowerCase() === ANY_OPTION) return options;
-		return options.filter((f) => choice.includes(f.id));
+	speciesFeatOptions = $derived.by<LoadedRow[]>(() =>
+		featsChosenFrom(this.speciesFeatChoice, this.featOptionsFor(1)),
+	);
+
+	/**
+	 * The feat slots a CLASS FEATURE opens, off its `feat_choice` — a 2024 Fighter's Fighting Style
+	 * at 1st level, the Champion's second at 7th. Keyed by the class row and the feature, so the slot
+	 * travels with its class the way a level's does (`class-picks-cache` reads the suffix as opaque).
+	 */
+	featureSlots = $derived.by<FeatureFeatSlot[]>(() => {
+		const { graph, draft } = this.host();
+		if (!graph) return [];
+		const out: FeatureFeatSlot[] = [];
+		for (const active of activeClassFeatures(draft.classes, graph, draft.system)) {
+			const choice = splitList(active.row.data.feat_choice);
+			if (!choice.length) continue;
+			out.push({
+				key: `${active.entry.rowId}:${active.row.id}`,
+				level: active.level,
+				className: rowName(active.classRow),
+				feature: rowName(active.row),
+				choice,
+			});
+		}
+		return out;
 	});
+
+	/** What a slot may be filled with: the species' feats, a feature's, or a level's. */
+	optionsForSlot = (key: string, level: number): LoadedRow[] => {
+		if (this.slotIsSpecies(key)) return this.speciesFeatOptions;
+		const feature = this.featureSlots.find((slot) => slot.key === key);
+		return feature
+			? featsChosenFrom(feature.choice, this.featOptionsFor(level))
+			: this.featOptionsFor(level);
+	};
+	/** Does a slot offer the Ability Score Improvement? Only a LEVEL's: a species' or a feature's grant
+	 *  is a feat, and spending it on an improvement would spend it on something never granted. */
+	slotOffersAsi = (key: string): boolean =>
+		!this.slotIsSpecies(key) && !this.featureSlots.some((slot) => slot.key === key);
 	/** The feat taken in the species slot, or null while the question is open. */
 	speciesFeatRef = $derived.by<string | null>(
 		() => this.host().draft.slotFeats[SPECIES_SLOT_KEY] ?? null,
@@ -119,10 +169,16 @@ export class FeatSlots {
 	 *  own. Lives here rather than in the view-model's todo call because which slots EXIST is this
 	 *  subsystem's fact; the todo list only words it. */
 	openFeatSlots = $derived.by<
-		{ key: string; level: number; className: string; species?: string }[]
+		{ key: string; level: number; className: string; species?: string; feature?: string }[]
 	>(() =>
 		[
 			...this.featSlots,
+			...this.featureSlots.map(({ key, level, className, feature }) => ({
+				key,
+				level,
+				className,
+				feature,
+			})),
 			// the species' slot joins only when a species actually grants a feat, so every SRD
 			// species (none does) adds no line
 			...(this.speciesGrantsFeat
@@ -138,10 +194,12 @@ export class FeatSlots {
 		].filter((slot) => !this.host().draft.slotFeats[slot.key]),
 	);
 
-	/** Every slot key that can hold a feat right now — the class slots plus the species' one. What
-	 *  `usedFeatRefs` and the §C fold walk, so a species feat counts as taken exactly like a slot's. */
+	/** Every slot key that can hold a feat right now — the levels', the features' and the species'.
+	 *  What `usedFeatRefs` and the §C fold walk, so a granted feat counts as taken exactly like a
+	 *  level's: a Fighting Style taken at 1st level is not offered again at 4th. */
 	choiceKeys = $derived.by<string[]>(() => [
 		...this.featSlots.map((s) => s.key),
+		...this.featureSlots.map((s) => s.key),
 		...(this.speciesGrantsFeat ? [SPECIES_SLOT_KEY] : []),
 	]);
 	/** Feat options that make sense for a slot at `level`. Every category is on the menu — SRD 5.2.1 ▸

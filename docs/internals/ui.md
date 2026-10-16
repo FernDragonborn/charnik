@@ -456,7 +456,8 @@ class-features list shows every level up to this one plus a three-level look-ahe
 grants a feat by choice (`species.feat_choice`) adds one more line and one more slot, under the
 reserved `species` key — a slot that offers feats and NOT an ability improvement, because the
 improvement is what a level offers and a species grant spent on one would be a grant the species never
-made. Jumping straight
+made. A class feature that grants one (`class_feature.feat_choice`, a 2024 Fighting Style) does the
+same under `<rowId>:<feature id>`, named for the feature. Jumping straight
 to level 8 cannot silently skip three choices. `blocking` gates Create; leaving is not intercepted,
 because the draft autosaves and waits in the roster (`characters.md`).
 

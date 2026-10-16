@@ -107,6 +107,29 @@
 				</button>
 			{/each}
 
+			{#each b.feats.featureSlots as slot (slot.key)}
+				<!-- a feature's grant (a Fighting Style) is a slot like a level's, badged with its level and
+				     named for the feature that grants it while it is still open -->
+				{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
+				<button
+					class="slot featrow"
+					class:empty={!chosen}
+					class:active={b.inspector.isOpen({ id: 'feat', slotKey: slot.key, level: slot.level })}
+					onclick={() => b.inspector.toggle({ id: 'feat', slotKey: slot.key, level: slot.level })}
+				>
+					<span class="lvl" class:done={!!chosen}>L{slot.level}</span>
+					<span class="ftext">
+						{#if chosen}
+							<b>{rowName(b.row(chosen))}</b>
+							<span class="clamp-2">{rowText(b.row(chosen))}</span>
+						{:else}
+							<b>{slot.feature}</b>
+							<span class="clamp-2">{$_('build.feats.notChosenHint')}</span>
+						{/if}
+					</span>
+				</button>
+			{/each}
+
 			{#if !b.feats.choiceKeys.length && !b.feats.originFeatRef}
 				<p class="subtext">{$_('build.feats.noSlots')}</p>
 			{/if}

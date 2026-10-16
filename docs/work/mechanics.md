@@ -77,19 +77,21 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [ ] **FIGHTING-STYLE-SLOT · a 2024 class feature that grants a feat opens no slot for it.** Feat
-  slots come from three places — a class's `asi_levels`, a species' `feat_choice`, a background's
-  origin feat — and none of them is a class FEATURE. So a 2024 Fighter 1 reads "you gain a Fighting
-  Style feat of your choice" and has nowhere to choose it: the four Fighting Style feats ship with
-  their tokens, and the first slot that offers them is level 4, where taking one costs the Ability
-  Score Improvement. The same holds for the Champion's second one (level 7), the Paladin's and the
-  Ranger's (level 2).
-  **The smallest model** is the column the species already has: `feat_choice` on the class-feature
-  row, read by `FeatSlots` into one more slot whose menu is that list. It is deliberately NOT
-  built without a sign-off, because it answers for 2024 the question the `option` type answers for
-  both editions, and two answers to "a feature offers a choice" is the thing to avoid. The Paladin's and
-  Ranger's alternative ("instead of choosing one of those feats, you can choose the option below")
-  is not a feat and is an `option` row either way.
+- [~] **FIGHTING-STYLE-SLOT · the Paladin's and the Ranger's Fighting Style still open no slot.** A
+  class feature's `feat_choice` opens a feat slot of its own (`FeatSlots.featureSlots`), and the 2024
+  Fighter's and Champion's carry it: a feat GRANT is a feat slot, a feature's own choice is an
+  `option` — the line between the two answers (`../internals/content.md` ▸ One row, several
+  options). Left:
+  - **Paladin 2 and Ranger 2.** Each reads "You gain a Fighting Style feat of your choice … Instead
+    of choosing one of those feats, you can choose the option below" — Blessed Warrior and Druidic
+    Warrior, two cantrips of another class's list. An open feat slot is a REQUIRED todo, so giving
+    them the slot without the way out blocks saving a paladin who took Blessed Warrior: the slot has
+    to accept that option as its answer, which is one more case in `FeatSlots` (a slot answered by
+    the feature's option rows) and the option rows typed from SRD 5.2.1 ▸ Paladin and Ranger. Their
+    cantrips are a spell grant by choice, which no token makes yet; the option may stay text.
+  - **The feats' own prerequisite** — "Fighting Style Feat (Prerequisite: Fighting Style Feature)" —
+    is text, so a level's slot offers Archery to a wizard. It becomes checkable once every feature
+    that gives the prerequisite says so in data, which the two rows above complete.
 
 - [ ] **FEATURE-PASSIVES · the passive features, named.** N2 says the passive kind is a token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that

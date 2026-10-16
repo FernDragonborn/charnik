@@ -22,8 +22,8 @@ export interface ClassEntryLike {
 }
 
 /** One class feature a row actually has, with the row it came from. */
-export interface ActiveClassFeature {
-	entry: ClassEntryLike;
+export interface ActiveClassFeature<Entry extends ClassEntryLike = ClassEntryLike> {
+	entry: Entry;
 	classRow: LoadedRowByType<'class'>;
 	row: LoadedRowByType<'class_feature'>;
 	level: number;
@@ -39,12 +39,12 @@ export interface ActiveClassFeature {
  * `extraLevels` is the only difference between its readers — the builder's sheet previews what the
  * next level or two will bring; a cap counts only what is in hand, and so does the play sheet.
  */
-export function* activeClassFeatures(
-	classes: readonly ClassEntryLike[],
+export function* activeClassFeatures<Entry extends ClassEntryLike>(
+	classes: readonly Entry[],
 	graph: ContentGraph,
 	system: string,
 	{ extraLevels = 0 }: { extraLevels?: number } = {},
-): Generator<ActiveClassFeature> {
+): Generator<ActiveClassFeature<Entry>> {
 	const seen = new Set<string>();
 	for (const entry of classes) {
 		if (!entry.classId) continue;

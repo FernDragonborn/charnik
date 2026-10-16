@@ -301,6 +301,10 @@ const classFeatureSchema = baseRow.extend({
 	 *  name it in `option_of` (a Pact Boon's three, the Eldritch Invocations). The same `level:count`
 	 *  grammar as the two columns above and the same reader; empty → the feature asks nothing. */
 	choose: optStr,
+	/** A FEAT this feature has the character choose, in a slot of its own — 2024 Fighting Style, "You
+	 *  gain a Fighting Style feat of your choice". The species column's grammar, where a word may
+	 *  also name a feat CATEGORY (`fighting_style`), so a homebrew style joins the menu unedited. */
+	feat_choice: optStr,
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with

@@ -175,7 +175,12 @@ An option may state the class `level` it opens at and one other option it `requi
 one is refused in Strict and noted in Free. **An option may name several parents** in `option_of`, a
 comma list, where several features offer the same choice — a 2014 Fighting Style is one row offered
 by the fighter's, the paladin's, the ranger's and the champion's feature, so a correction lands once
-and the tokens cannot drift between copies. **An option is held once**: taken through one feature,
+and the tokens cannot drift between copies. **A feat is not an option.** Where a feature GRANTS a feat (2024 Fighting Style: "You gain a
+Fighting Style feat of your choice"), the feature row's `feat_choice` opens a feat slot of its own,
+the species column's grammar where a word may also name a feat category (`fighting_style`) — so the
+feat stays one row with one set of tokens, and a slot already holding it keeps every other slot from
+offering it again. An `option` is a choice that is not a feat anywhere else.
+**An option is held once**: taken through one feature,
 it is refused (Strict) or noted (Free) through another — SRD 5.1, "You can't take a Fighting Style
 option more than once, even if you later get to choose again". Like every content → content link the parent is
 matched by id and edition and never by source, so a homebrew pack adds an option to a shipped

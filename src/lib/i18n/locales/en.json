@@ -394,7 +394,9 @@
 			"lineageTitle": "{label}",
 			"lineageFallback": "Lineage",
 			"originFeatTitle": "Origin feat",
-			"originFeatBlurb": "Your background grants this feat outright — it is not picked and cannot be cleared. What is left here is what the feat asks you."
+			"originFeatBlurb": "Your background grants this feat outright — it is not picked and cannot be cleared. What is left here is what the feat asks you.",
+			"featureFeatTitle": "Feat from {feature}",
+			"featureFeatBlurb": "{feature} grants a feat and lets you pick which one. Whatever the feat then asks back — an ability, skills, a spell list — it asks right here."
 		},
 		"spells": {
 			"title": "Spellcasting",
@@ -462,7 +464,8 @@
 			"spells": "{count, plural, one {Choose # more spell.} other {Choose # more spells.}}",
 			"spellsFor": "{count, plural, one {Choose # more {class} spell.} other {Choose # more {class} spells.}}",
 			"cantripsOver": "{count, plural, one {Remove # cantrip — over the cap.} other {Remove # cantrips — over the cap.}}",
-			"spellsOver": "{count, plural, one {Remove # spell — over the cap.} other {Remove # spells — over the cap.}}"
+			"spellsOver": "{count, plural, one {Remove # spell — over the cap.} other {Remove # spells — over the cap.}}",
+			"featureFeat": "{feature} ({class} {level}): choose the feat it grants."
 		},
 		"undo": "Undo (Ctrl+Z)",
 		"unnamed": "Unnamed",
