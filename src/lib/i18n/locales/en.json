@@ -172,7 +172,8 @@
 			"spellListFixed": "Spells — from the {list} list",
 			"spellAbilityAsk": "Cast with which ability?",
 			"spellsInPane": "Pick the spells themselves in the Spells pane.",
-			"searchFeats": "Search feats…"
+			"searchFeats": "Search feats…",
+			"grantHint": "Choose the feat it grants."
 		},
 		"free": "Free",
 		"freeHint": "No checks — any skill, scores 1–30, and you can take back a choice you already made.",

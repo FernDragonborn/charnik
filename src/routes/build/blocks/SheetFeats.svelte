@@ -80,7 +80,9 @@
 				</button>
 			{/if}
 
-			{#each b.feats.featSlots as slot (slot.key)}
+			<!-- a level's slots, then the ones a class feature grants (a Fighting Style): the same row,
+			     and an open feature slot is named for the feature rather than "not chosen" -->
+			{#each [...b.feats.featSlots, ...b.feats.featureSlots] as slot (slot.key)}
 				{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
 				{@const multi = b.draft.classes.length > 1}
 				<button
@@ -100,31 +102,10 @@
 							<b>{rowName(b.row(chosen))}</b>
 							<span class="clamp-2">{rowText(b.row(chosen))}</span>
 						{:else}
-							<b>{$_('build.notChosen')}</b>
-							<span class="clamp-2">{$_('build.feats.notChosenHint')}</span>
-						{/if}
-					</span>
-				</button>
-			{/each}
-
-			{#each b.feats.featureSlots as slot (slot.key)}
-				<!-- a feature's grant (a Fighting Style) is a slot like a level's, badged with its level and
-				     named for the feature that grants it while it is still open -->
-				{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
-				<button
-					class="slot featrow"
-					class:empty={!chosen}
-					class:active={b.inspector.isOpen({ id: 'feat', slotKey: slot.key, level: slot.level })}
-					onclick={() => b.inspector.toggle({ id: 'feat', slotKey: slot.key, level: slot.level })}
-				>
-					<span class="lvl" class:done={!!chosen}>L{slot.level}</span>
-					<span class="ftext">
-						{#if chosen}
-							<b>{rowName(b.row(chosen))}</b>
-							<span class="clamp-2">{rowText(b.row(chosen))}</span>
-						{:else}
-							<b>{slot.feature}</b>
-							<span class="clamp-2">{$_('build.feats.notChosenHint')}</span>
+							<b>{'feature' in slot ? slot.feature : $_('build.notChosen')}</b>
+							<span class="clamp-2"
+								>{$_('feature' in slot ? 'build.feats.grantHint' : 'build.feats.notChosenHint')}</span
+							>
 						{/if}
 					</span>
 				</button>
