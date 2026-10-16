@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (94)
+## Duplicate suspects (96)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -50,6 +50,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `adoptCharacter` ×2 — src/lib/character/repository.ts · src/lib/play/outcome.ts
+- `answerReask` ×2 — src/routes/build/blocks/SheetInventory.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `because` ×2 — src/lib/actions/dragMotion.ts · src/lib/content/remote/pack-update-state.svelte.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
@@ -87,6 +88,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `picks` ×2 — src/routes/build/form-picks.svelte.ts · src/routes/build/option-picks.svelte.ts
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
+- `reask` ×2 — src/routes/build/blocks/SheetInventory.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `refusal` ×2 — src/lib/play/cast.ts · src/lib/play/turn.ts
@@ -149,7 +151,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (96)
+## Global CSS classes (97)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -215,6 +217,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.mono-path` | components.css | a filesystem path shown inline (settings Data row) — mono, muted, ellipsized |
 | `.monster-type` | components.css |  |
 | `.muted` | components.css |  |
+| `.name-button` | components.css | --- a row's NAME that is also the control asking about it (which +N, which kind): it reads as the name it is, and say… |
 | `.on` | components.css | the SELECTED chip. |
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
@@ -514,7 +517,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (183 modules)
+## Library functions & types (184 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -753,6 +756,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const carriedWeight` — Total carried weight in pounds.
 - `const addItem`
 - `const addItemInstance` — Carry one particular instance, its questions answered as it is added — a template's base, a * `+1/+2/+3` row's bonus.
+- `const answerItem` — Which one a carried row IS — the item a template is, the +N, the kind — answered again as a * whole: the answers give…
 - `const removeItem`
 - `const removeItemsOf` — Stop carrying an item altogether — every row of it.
 - `const bumpQty`
@@ -924,6 +928,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
 - `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
+
+### `src/lib/combat/carried-name.ts`
+
+- `function carriedName` — The instance's own name ("Longsword +2", "Belt of Hill Giant Strength"), else the row's — and a * WORD answer said be…
 
 ### `src/lib/combat/constants.ts`
 
@@ -1130,18 +1138,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/item-instance.ts`
 
-- `interface BaseItemOption`
 - `interface InstanceAnswers` — The answers that make a row one particular item.
-- `interface InstanceQuestions` — What a row leaves for the player to say: which mundane item it is, and which +N.
+- `interface InstanceQuestions` — What a row leaves for the player to say: which mundane item it is, which +N, and which kind.
 - `interface InstanceScope` — Where the lists come from: this character's edition and language, and the sources they enabled.
-- `function baseItemOptions` — Every mundane item a template could BE, of the same kind as the template asking: a weapon * template offers weapons, …
 - `function instanceQuestions`
 - `const asksWhichOne`
 - `function bonusRowFor` — The `+1/+2/+3` row a mundane item can be found as: the template that offers it as a base (a * Longsword is a Weapon +…
 - `function instanceBaseName` — The mundane item an instance is built on — the player's answer for a template, the row's own * `base_item_id` for a S…
 - `const sayInstance` — How a `+N` instance is said: "Longsword +2" by its base, or — with no base — its own heading with * the bonus beside it.
 - `interface InstanceNaming` — What naming an instance reads: the graph its base is looked up in, and the reader's language.
-- `function instanceName`
+- `function instanceName` — What an answered carried row is called: "Longsword +2", "Shield +1", or the variety it was told * it is ("Belt of Hil…
 - `interface InstanceMatch` — One instance a search names, ready to carry: the row, the answers, and what it is called.
 - `function instancesForQuery` — * The instances a search names.
 - `const instanceRowId`
@@ -1909,9 +1915,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const dropItem`
 - `const changeQuantity` — Change how many of a stack are carried.
 - `const reorderInventory` — * Reorder what is carried.
-- `const setItemBase` — Which mundane item a template IS ("Weapon (Any Melee Weapon)").
-- `const setItemBonus` — Which of the bonuses a `+1/+2/+3` row offers this one is.
-- `const setItemChoice` — Which of a row's options this one is — a Ring of Resistance's damage type.
+- `const setItemAnswers` — Which one a carried row is, answered again (`answerItem`).
 - `function attune` — * Attune, or stop.
 - `function useItem` — Spend one of a stack — or `count`, never more than it holds.
 - `function setCoin` — How many of one coin the purse holds.
@@ -2365,4 +2369,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1445 exports across 200 modules · 94 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1443 exports across 201 modules · 96 duplicate suspects._

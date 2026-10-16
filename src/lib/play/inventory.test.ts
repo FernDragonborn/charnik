@@ -16,9 +16,7 @@ import {
 	ownItem,
 	reorderInventory,
 	setCoin,
-	setItemBase,
-	setItemBonus,
-	setItemChoice,
+	setItemAnswers,
 	toggleEquip,
 	useItem,
 } from './inventory';
@@ -136,25 +134,18 @@ describe.each(['5e', '5.5e'] as const)('inventory actions · %s', (system) => {
 	it('an answer a row asks for is kept on the entry, and taking it back removes it', () => {
 		const c = carrying('dagger');
 		const row = rowOf(c, 'dagger');
-		const answered = setItemChoice(
-			setItemBonus(
-				setItemBase(c, { row, base: item('shield') }, ctx).character,
-				{ row, bonus: 2 },
-				ctx,
-			).character,
-			{ row, choice: 'fire' },
-			ctx,
-		).character;
+		const answers = { base: item('shield'), bonus: 2, choice: 'fire' };
+		const answered = setItemAnswers(c, { row, answers }, ctx).character;
 		expect(entryOf(answered, 'dagger')).toMatchObject({
 			base: item('shield'),
 			bonus: 2,
 			choice: 'fire',
 		});
-		const cleared = setItemChoice(
-			setItemBonus(setItemBase(answered, { row }, ctx).character, { row }, ctx).character,
-			{ row },
-			ctx,
-		).character;
+		// answered again with only the bonus: the base and the kind are taken back
+		const rebonused = setItemAnswers(answered, { row, answers: { bonus: 3 } }, ctx).character;
+		expect(entryOf(rebonused, 'dagger')).toMatchObject({ bonus: 3 });
+		expect(entryOf(rebonused, 'dagger')?.base).toBeUndefined();
+		const cleared = setItemAnswers(answered, { row, answers: {} }, ctx).character;
 		// the row it was before it was asked anything — the same row, by its own id
 		expect(entryOf(cleared, 'dagger')).toEqual(entryOf(c, 'dagger'));
 	});

@@ -393,6 +393,21 @@
 	text-align: center;
 }
 
+/* --- a row's NAME that is also the control asking about it (which +N, which kind): it reads as the
+   name it is, and says it is a control when pointed at; focus shows through the global ring --- */
+.name-button {
+	padding: 0;
+	color: inherit;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	text-align: start;
+}
+.name-button:hover {
+	text-decoration: underline dotted;
+	text-underline-offset: 3px;
+}
+
 /* --- ghost icon button (remove / close) --- */
 .icon-button {
 	background: transparent;

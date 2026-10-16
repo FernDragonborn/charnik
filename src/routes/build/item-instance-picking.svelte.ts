@@ -58,6 +58,30 @@ export interface InstanceAsk {
 	/** Set when the row taken is MUNDANE and a +N row can be built on it: the question is then
 	 *  "plain, or which +N", and a +N answer carries the bonus row with this item as its base. */
 	upgrade?: { ref: string; usesBase: boolean };
+	/** The answers a carried row already has, when the question is asked AGAIN from its name. */
+	current?: InstanceAnswers;
+}
+
+/** The question asked AGAIN from a carried row: by the book's own name (`heading`) — the row's
+ *  name carries the answer being changed — and holding the answers it has. */
+export function askAgain(
+	entry: { item: string; base?: string | undefined; bonus?: number | undefined; choice?: string | undefined },
+	heading: string,
+	questions: InstanceQuestions,
+	anchor: HTMLElement,
+): InstanceAsk {
+	const { base, bonus, choice } = entry;
+	return {
+		ref: entry.item,
+		name: heading,
+		questions,
+		anchor,
+		current: {
+			...(base ? { base } : {}),
+			...(bonus === undefined ? {} : { bonus }),
+			...(choice ? { choice } : {}),
+		},
+	};
 }
 
 export class InstancePicking {
@@ -126,7 +150,7 @@ export class InstancePicking {
 				this.asking = {
 					ref: id,
 					name,
-					questions: { bases: [], rungs: upgrade.rungs },
+					questions: { bases: [], rungs: upgrade.rungs, choices: [] },
 					anchor,
 					upgrade: { ref: upgrade.ref, usesBase: upgrade.usesBase },
 				};

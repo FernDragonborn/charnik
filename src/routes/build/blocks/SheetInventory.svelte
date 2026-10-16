@@ -5,6 +5,14 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
+	import {
+		asksWhichOne,
+		type InstanceAnswers,
+		type InstanceQuestions,
+	} from '$lib/content/item-instance';
+	import ItemInstanceAsk from './ItemInstanceAsk.svelte';
+	import { askAgain, type InstanceAsk } from '../item-instance-picking.svelte';
+	import type { DraftState } from '../draft';
 	import { why } from '$lib/combat/effects-view';
 	import { provenance } from '$lib/actions/provenance';
 	import { kilograms } from '$lib/combat/constants';
@@ -25,6 +33,22 @@
 	);
 	const capacity = $derived(s?.carryingCapacity.value ?? 0);
 	const load = $derived(capacity > 0 ? Math.min(1, carried / capacity) : 0);
+
+	/** The question asked again from a carried row's name, and which row it is for. */
+	let reasking = $state<{ ask: InstanceAsk; row: string } | null>(null);
+	const reask = (
+		entry: DraftState['inventory'][number],
+		heading: string,
+		questions: InstanceQuestions,
+		anchor: HTMLElement,
+	) => {
+		reasking = { row: entry.iid, ask: askAgain(entry, heading, questions, anchor) };
+	};
+	const answerReask = (answers: InstanceAnswers) => {
+		const row = reasking?.row;
+		reasking = null;
+		if (row) b.inventory.reanswer(row, answers);
+	};
 </script>
 
 <div class="card">
@@ -44,11 +68,25 @@
 	<div class="split">
 		<div class="items">
 			{#each b.draft.inventory as entry (entry.iid)}
-				{@const row = rowOfType(b.row(entry.item), 'item')}
-				{@const item = b.inventory.resolved(entry.item)}
+				{@const item = b.inventory.resolved(entry.item, entry.base)}
+				{@const name = b.inventory.nameOf(entry)}
+				{@const questions = b.inventory.questionsOf(entry.item)}
 				{@const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null}
 				<div class="item">
-					<span class="iname">{rowName(row) || entry.item}</span>
+					<!-- asked which one it is when it was added, and asked again from its name -->
+					{#if asksWhichOne(questions)}
+						<button
+							type="button"
+							class="iname name-button"
+							aria-haspopup="dialog"
+							title={$_('combat.inventory.reask', { values: { name } })}
+							onclick={(e) =>
+								reask(entry, rowName(b.row(entry.item)) || name, questions, e.currentTarget)}
+							>{name}</button
+						>
+					{:else}
+						<span class="iname">{name}</span>
+					{/if}
 					<span class="imeta">
 						{#if ac !== null}{$_('build.vitals.ac')}&nbsp;{ac}{/if}
 						{#if item?.damage}{item.damage}{/if}
@@ -65,7 +103,7 @@
 					{/if}
 					<button
 						class="icon-button"
-						aria-label={$_('build.inventory.remove', { values: { name: rowName(row) } })}
+						aria-label={$_('build.inventory.remove', { values: { name } })}
 						onclick={() => b.inventory.remove(entry.iid)}
 					>
 						<Icon name="x" size={11} />
@@ -101,6 +139,10 @@
 		</div>
 	</div>
 </div>
+
+{#if reasking}
+	<ItemInstanceAsk ask={reasking.ask} onanswer={answerReask} oncancel={() => (reasking = null)} />
+{/if}
 
 <style>
 	.split {

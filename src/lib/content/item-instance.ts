@@ -5,13 +5,15 @@
  * on the shared row. This module asks them: what a row leaves open, what an answered instance is
  * called ("Longsword +2"), and which instances a search like "sword +1" means.
  */
-import type { ContentGraph, LoadedRowOf } from './loader';
+import type { ContentGraph, LoadedRow, LoadedRowOf } from './loader';
 import { parseBonusChoices, type BonusRung } from './item-tags';
 import { baseRowOf, needsBaseItem, resolveItem } from './resolved-item';
 import { localizedName } from './detail';
+import { optionNamed, optionsOf } from './options';
+import { splitList } from './schemas';
 import type { System } from '$lib/rules/pipeline';
 
-export interface BaseItemOption {
+interface BaseItemOption {
 	ref: string;
 	name: string;
 }
@@ -20,12 +22,23 @@ export interface BaseItemOption {
 export interface InstanceAnswers {
 	base?: string;
 	bonus?: number;
+	/** A word the row offers (Ring of Resistance's damage type), or the id of a variety row. */
+	choice?: string;
 }
 
-/** What a row leaves for the player to say: which mundane item it is, and which +N. */
+/** One answer to "which kind is it": a variety that is a row of its own carries its name and rarity;
+ *  a WORD (a damage type) carries neither, and is said in the reader's vocabulary by the view. */
+interface InstanceChoice {
+	id: string;
+	name?: string;
+	rarity?: string;
+}
+
+/** What a row leaves for the player to say: which mundane item it is, which +N, and which kind. */
 export interface InstanceQuestions {
 	bases: BaseItemOption[];
 	rungs: BonusRung[];
+	choices: InstanceChoice[];
 }
 
 /** Where the lists come from: this character's edition and language, and the sources they enabled. */
@@ -33,7 +46,7 @@ export interface InstanceScope {
 	graph: ContentGraph;
 	system: System;
 	locale: string;
-	isActive: (row: LoadedRowOf<'item'>) => boolean;
+	isActive: (row: LoadedRow) => boolean;
 }
 
 const refOf = (row: LoadedRowOf<'item'>) => `item:${row.source}:${row.id}`;
@@ -41,10 +54,7 @@ const refOf = (row: LoadedRowOf<'item'>) => `item:${row.source}:${row.id}`;
 /** Every mundane item a template could BE, of the same kind as the template asking: a weapon
  *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks an
  *  item magical (`content.md`), and a row that states nothing itself has nothing to lend. */
-export function baseItemOptions(
-	scope: InstanceScope,
-	template: LoadedRowOf<'item'>,
-): BaseItemOption[] {
+function baseItemOptions(scope: InstanceScope, template: LoadedRowOf<'item'>): BaseItemOption[] {
 	const { graph, system, locale, isActive } = scope;
 	const out: BaseItemOption[] = [];
 	for (const row of graph.list('item', { system })) {
@@ -55,6 +65,19 @@ export function baseItemOptions(
 	return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** The kinds a row is found as: its varieties where they are rows (the five Belts of Giant
+ *  Strength), else the words its `choice_options` lists. */
+function instanceChoices(scope: InstanceScope, row: LoadedRowOf<'item'>): InstanceChoice[] {
+	const varieties = optionsOf(scope.graph, row).filter((variety) => scope.isActive(variety));
+	if (varieties.length)
+		return varieties.map((variety) => ({
+			id: variety.id,
+			name: localizedName(variety, scope.locale),
+			...(variety.data.rarity ? { rarity: variety.data.rarity } : {}),
+		}));
+	return splitList(row.data.choice_options).map((id) => ({ id }));
+}
+
 export function instanceQuestions(
 	scope: InstanceScope,
 	row: LoadedRowOf<'item'>,
@@ -62,11 +85,12 @@ export function instanceQuestions(
 	return {
 		bases: needsBaseItem(resolveItem(scope.graph, row)) ? baseItemOptions(scope, row) : [],
 		rungs: parseBonusChoices(row.data.bonus_choice),
+		choices: instanceChoices(scope, row),
 	};
 }
 
 export const asksWhichOne = (questions: InstanceQuestions): boolean =>
-	questions.bases.length > 0 || questions.rungs.length > 0;
+	questions.bases.length > 0 || questions.rungs.length > 0 || questions.choices.length > 0;
 
 /** The `+1/+2/+3` row a mundane item can be found as: the template that offers it as a base (a
  *  Longsword is a Weapon +N's base), or the row that names it (`base_item_id` — a Shield +N). With
@@ -110,20 +134,23 @@ export function instanceBaseName(
 export const sayInstance = (name: string, bonus: number, hasBase: boolean): string =>
 	hasBase ? `${name} +${bonus}` : `${name} (+${bonus})`;
 
-/** What an answered carried row is called: "Longsword +2", "Shield +1". A row with no bonus to
- *  answer, or one not yet answered, keeps its own name. */
 /** What naming an instance reads: the graph its base is looked up in, and the reader's language. */
 export interface InstanceNaming {
 	graph: ContentGraph;
 	locale: string;
 }
 
+/** What an answered carried row is called: "Longsword +2", "Shield +1", or the variety it was told
+ *  it is ("Belt of Hill Giant Strength"). A row with nothing to answer, or not yet answered, keeps
+ *  its own name — and so does a row answered with a WORD, which the view says beside the name. */
 export function instanceName(
 	{ graph, locale }: InstanceNaming,
 	row: LoadedRowOf<'item'>,
 	// a carried entry as the schema reads it: its answers are `undefined` until given
-	answers: { base?: string | undefined; bonus?: number | undefined },
+	answers: { base?: string | undefined; bonus?: number | undefined; choice?: string | undefined },
 ): string | undefined {
+	const variety = optionNamed(graph, row, answers.choice);
+	if (variety) return localizedName(variety, locale);
 	if (answers.bonus === undefined || !parseBonusChoices(row.data.bonus_choice).length)
 		return undefined;
 	const baseName = instanceBaseName(graph, row, locale, answers.base);

@@ -119,16 +119,12 @@
   (`AGENTS.md` ▸ Screenshots go in design-preview).
 
 - [~] **ITEM-INSTANCE · a `+1/+2/+3` item is the one you found, picked as itself.** The base and the
-  +N are asked when the item is added and the row is named as the instance (`content.md` ▸ a row the
-  book prints once). What is left:
-  - **The answer is locked once given** — a misclick is a remove and re-add. A re-pick on the row's
-    own edit is the reverse state this still owes; it is not a standing pair of dropdowns.
+  +N, and the kind a ring or a belt is, are asked when the item is added, asked again from the row's
+  own name, and the row is named as the instance (`content.md` ▸ a row the book prints once). What
+  is left:
   - **A row with no base keeps the book's heading**: Wand of the War Mage +2 reads "Wand of the War
     Mage, +1, +2, or +3 (+2)", because nothing in the row says the words before the comma. It needs a
     column naming the stem, in the content repo, not a string cut out of the name.
-  - **The word-answered rows** (`choice_options` — Ring of Resistance's damage type) and the
-    varieties (`option` rows — the Belts) are still asked on the row after adding, and still named by
-    the heading.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding

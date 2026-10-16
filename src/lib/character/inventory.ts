@@ -74,10 +74,26 @@ export const addItemInstance = (
 	answers: InstanceAnswers,
 ): InventoryEntry[] =>
 	list.some(
-		(entry) => entry.item === ref && entry.base === answers.base && entry.bonus === answers.bonus,
+		(entry) =>
+			entry.item === ref &&
+			entry.base === answers.base &&
+			entry.bonus === answers.bonus &&
+			entry.choice === answers.choice,
 	)
 		? [...list]
 		: [...list, inventoryRow({ item: ref, ...answers })];
+
+/** Which one a carried row IS — the item a template is, the +N, the kind — answered again as a
+ *  whole: the answers given replace the ones it had, and one left out is taken back. */
+export const answerItem = (
+	list: InventoryList,
+	iid: string,
+	answers: InstanceAnswers,
+): InventoryEntry[] =>
+	withEntry(list, iid, ({ base: _base, bonus: _bonus, choice: _choice, ...rest }) => ({
+		...rest,
+		...answers,
+	}));
 
 export const removeItem = (list: InventoryList, iid: string): InventoryEntry[] =>
 	list.filter((entry) => entry.iid !== iid);

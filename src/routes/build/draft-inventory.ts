@@ -12,6 +12,7 @@
 import {
 	addItem,
 	addItemInstance,
+	answerItem,
 	bumpQty,
 	isEquippable,
 	removeItem,
@@ -20,7 +21,15 @@ import {
 	wornSlotIn,
 } from '$lib/character/inventory';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
-import type { InstanceAnswers } from '$lib/content/item-instance';
+import {
+	instanceQuestions,
+	type InstanceAnswers,
+	type InstanceQuestions,
+} from '$lib/content/item-instance';
+import { carriedName } from '$lib/combat/carried-name';
+import { isRowActive } from '$lib/content/sources.svelte';
+import { translator } from '$lib/i18n';
+import { app } from '$lib/stores/app.svelte';
 import type { BuildVM } from './build-view-model.svelte';
 import { rowOfType } from './rows';
 import type { DraftState } from './draft';
@@ -42,6 +51,9 @@ export class DraftInventory {
 	addInstance = (ref: string, answers: InstanceAnswers): void =>
 		this.put(addItemInstance(this.host().draft.inventory, ref, answers));
 	putBack = (ref: string): void => this.put(removeItemsOf(this.host().draft.inventory, ref));
+	/** Answer again which one a carried row is — asked from its own name on the sheet. */
+	reanswer = (row: string, answers: InstanceAnswers): void =>
+		this.put(answerItem(this.host().draft.inventory, row, answers));
 	remove = (row: string): void => this.put(removeItem(this.host().draft.inventory, row));
 	bumpQty = (row: string, by: number): void =>
 		this.put(bumpQty(this.host().draft.inventory, row, by));
@@ -51,10 +63,31 @@ export class DraftInventory {
 	/** An item as the sheet reads it — its own tags plus whatever it inherits from its base item. The
 	 *  graph lives on the host, so no component resolves an item itself and reads a +1 plate's AC off
 	 *  its own (empty) tags. */
-	resolved = (id: string | null): ResolvedItem | undefined => {
+	resolved = (id: string | null, base?: string): ResolvedItem | undefined => {
 		const host = this.host();
 		const row = rowOfType(host.row(id), 'item');
-		return row && host.graph ? resolveItem(host.graph, row) : undefined;
+		return row && host.graph ? resolveItem(host.graph, row, base) : undefined;
+	};
+
+	/** What a carried row is called — the same name the play sheet gives it (`carriedName`). */
+	nameOf = (entry: DraftState['inventory'][number]): string => {
+		const { graph } = this.host();
+		const row = rowOfType(this.host().row(entry.item), 'item');
+		return row && graph
+			? carriedName({ graph, locale: app.activeLocale }, row, entry, translator())
+			: entry.item;
+	};
+
+	/** What a carried row can be asked again — which item, which +N, which kind. */
+	questionsOf = (ref: string): InstanceQuestions => {
+		const { graph, draft } = this.host();
+		const row = rowOfType(this.host().row(ref), 'item');
+		return row && graph
+			? instanceQuestions(
+					{ graph, system: draft.system, locale: app.activeLocale, isActive: isRowActive },
+					row,
+				)
+			: { bases: [], rungs: [], choices: [] };
 	};
 
 	/** Can this be equipped (armour / shield / weapon)? */

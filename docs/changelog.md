@@ -9,6 +9,12 @@
   "no ammunition", "that action is already used" — stays in the log after the toast is gone. The
   lines one action left stand together under one bracket, and the strip under the sheet still shows
   the last thing you did.
+- **An item the book prints once is asked about once, when you add it, and can be asked again.**
+  A Ring of Resistance asks its damage type and a Belt of Giant Strength which belt it is right in
+  the small popover a +1 sword already used, and the row is named for what it is — "Ring of
+  Resistance (Fire)", "Belt of Hill Giant Strength". Pressing an item's name, on the play sheet or in
+  the builder, asks again with your answers filled in, so a wrong pick is one change rather than a
+  removal and a re-add. The builder names a +1 sword "Longsword +1" too, with its damage.
 
 ## 0.8.1
 

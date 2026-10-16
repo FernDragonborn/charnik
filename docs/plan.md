@@ -246,9 +246,7 @@ position and are given per wave, because most of them were learned the hard way.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
-  2. **ITEM-INSTANCE's tail** — `ui.md`. Picking a `+1/+2/+3` item as the one you found ships in
-     0.8.1; left are re-picking an answer, a stem for the rows with no base, and the word-answered
-     rows.
+  2. **ITEM-INSTANCE's tail** — `ui.md`. A stem for the rows with no base.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
 

@@ -11,6 +11,7 @@ import {
 	ATTUNEMENT_CAP,
 	addItem,
 	addItemInstance,
+	answerItem,
 	attunedCount,
 	bumpQty,
 	removeItem,
@@ -81,31 +82,9 @@ export const reorderInventory = listAction<{ rows: readonly string[] }>((list, {
 	return [...moved, ...list.filter((entry) => !rows.includes(entry.iid))];
 });
 
-/** One carried entry changed, the rest as they were. */
-const forRow = (
-	list: readonly InventoryEntry[],
-	row: string,
-	change: (entry: InventoryEntry) => InventoryEntry,
-): InventoryEntry[] => list.map((entry) => (entry.iid === row ? change(entry) : entry));
-
-/*
- * The answers a carried row can be asked for. Taking one back (no value) takes whatever it granted
- * off the sheet rather than leaving the last pick standing.
- */
-
-/** Which mundane item a template IS ("Weapon (Any Melee Weapon)"). */
-export const setItemBase = listAction<{ row: string; base?: string }>((list, { row, base }) =>
-	forRow(list, row, ({ base: _was, ...rest }) => (base ? { ...rest, base } : rest)),
-);
-/** Which of the bonuses a `+1/+2/+3` row offers this one is. */
-export const setItemBonus = listAction<{ row: string; bonus?: number }>((list, { row, bonus }) =>
-	forRow(list, row, ({ bonus: _was, ...rest }) =>
-		bonus === undefined ? rest : { ...rest, bonus },
-	),
-);
-/** Which of a row's options this one is — a Ring of Resistance's damage type. */
-export const setItemChoice = listAction<{ row: string; choice?: string }>((list, { row, choice }) =>
-	forRow(list, row, ({ choice: _was, ...rest }) => (choice ? { ...rest, choice } : rest)),
+/** Which one a carried row is, answered again (`answerItem`). */
+export const setItemAnswers = listAction<{ row: string; answers: InstanceAnswers }>(
+	(list, { row, answers }) => answerItem(list, row, answers),
 );
 
 /**

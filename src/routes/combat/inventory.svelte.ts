@@ -27,30 +27,25 @@ import {
 	ownItemInstance,
 	reorderInventory,
 	setCoin,
-	setItemBase,
-	setItemBonus,
-	setItemChoice,
+	setItemAnswers,
 	toggleEquip,
 	useItem,
 } from '$lib/play/inventory';
 import type { PlayContext, PlayNotice, PlayOutcome } from '$lib/play/outcome';
 import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { say } from '$lib/util/say';
-import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 import {
-	baseItemOptions,
-	instanceName,
-	type BaseItemOption,
+	instanceQuestions,
 	type InstanceAnswers,
+	type InstanceQuestions,
 	type InstanceScope,
 } from '$lib/content/item-instance';
+import { carriedName } from '$lib/combat/carried-name';
 import { type ContentGraph } from '$lib/content/loader';
-import { optionsOf } from '$lib/content/options';
-import { localizedName } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
-import { tagInt, ITEM_TAG, parseBonusChoices, type BonusRung } from '$lib/content/item-tags';
-import { splitList } from '$lib/content/schemas';
+import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 import { ammunitionStacks, firedAmmunition } from '$lib/character/ammunition';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -75,29 +70,14 @@ export interface InventoryRow {
 	equippable: boolean;
 	consumable: boolean;
 	attunable: boolean;
-	/** A template item ("Weapon (Any Melee Weapon)") — one whose own row does not say what kind of
-	 *  thing it is. Stays true after a base is picked, because the pick is the player's and they must
-	 *  be able to change it: the row keeps the chooser, with `entry.base` selected in it. */
-	isTemplate: boolean;
-	/** The rungs a `+1/+2/+3` row offers, empty for every row that offers none. Like `isTemplate`,
-	 *  it stays offered after an answer: which one you found is yours to correct. */
-	bonusRungs: BonusRung[];
-	/** The answers a row ASKS for — Ring of Resistance's damage type. Empty for every row that asks
-	 *  nothing, and still offered after an answer for the same reason the rungs are. */
-	choiceOptions: string[];
-	/** The varieties a row has as rows of their own — the five Belts of Giant Strength. Answered on
-	 *  the same field as `choiceOptions`, and offered after an answer for the same reason. */
-	varieties: ItemVariety[];
+	/** What the row can be asked — which item a template is, which +N, which kind — empty for a row
+	 *  that asks nothing. It stays offered after an answer: which one you found is yours to correct,
+	 *  and the row's own name is where the question is asked again. */
+	questions: InstanceQuestions;
+	/** A question it asks is still open: a row carried from before the question was asked at Add. */
+	unanswered: boolean;
 }
 
-/** One variety of a carried item, as its row's question lists it. */
-interface ItemVariety {
-	id: string;
-	name: string;
-	rarity: string | undefined;
-}
-
-/** A mundane item a template can be resolved against, as the picker lists it. */
 /** What the inventory needs from the sheet around it. */
 export interface InventoryHost {
 	character: Character | null;
@@ -133,23 +113,18 @@ export class InventoryTracker {
 	rows = $derived.by<InventoryRow[]>(() => {
 		const c = this.getCharacter();
 		if (!c) return [];
+		const scope = this.instanceScope;
 		return c.build.inventory.map((entry) => {
 			// resolved TWICE only for a template that has a base: once as the row itself is (is there a
 			// question to ask?) and once as the player answered it (what does the sheet show?)
 			const bare = this.resolve(entry.item);
 			const item = entry.base ? this.resolve(entry.item, entry.base) : bare;
 			const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null;
-			const graph = this.getGraph();
-			const varieties = (graph && item ? optionsOf(graph, item.row) : []).map((variety) => ({
-				id: variety.id,
-				name: localizedName(variety, app.activeLocale),
-				rarity: variety.data.rarity,
-			}));
-			// a row that has been told which variety it is goes by that variety's name
-			const variety = varieties.find((v) => v.id === entry.choice);
+			const questions =
+				scope && bare ? instanceQuestions(scope, bare.row) : { bases: [], rungs: [], choices: [] };
 			return {
 				entry,
-				name: variety?.name ?? this.nameOf(entry, item, graph),
+				name: this.nameOf(entry, item),
 				item,
 				weightLb: item?.weightLb ?? 0,
 				meta: [
@@ -165,27 +140,21 @@ export class InventoryTracker {
 				equippable: isEquippable(item),
 				consumable: isConsumable(item),
 				attunable: needsAttunement(item),
-				isTemplate: !!bare && needsBaseItem(bare),
-				bonusRungs: parseBonusChoices(item?.row.data.bonus_choice),
-				choiceOptions: splitList(item?.row.data.choice_options),
-				varieties,
+				questions,
+				unanswered:
+					(questions.bases.length > 0 && !entry.base) ||
+					(questions.rungs.length > 0 && entry.bonus === undefined) ||
+					(questions.choices.length > 0 && !entry.choice),
 			};
 		});
 	});
 
-	/** What a carried row is called: the instance it is ("Longsword +2") once its questions are
-	 *  answered, else the row's own name — and the ref itself as the last resort, because a row whose
-	 *  item left the graph must still be visible and removable, never a blank line. */
-	private nameOf(
-		entry: InventoryEntry,
-		item: ResolvedItem | undefined,
-		graph: ContentGraph | null | undefined,
-	): string {
-		if (!item) return entry.item;
-		const naming = graph ? { graph, locale: app.activeLocale } : null;
-		return (
-			(naming && instanceName(naming, item.row, entry)) ?? localizedName(item.row, app.activeLocale)
-		);
+	/** What a carried row is called (`carriedName`) — and the ref itself as the last resort, because
+	 *  a row whose item left the graph must still be visible and removable, never a blank line. */
+	private nameOf(entry: InventoryEntry, item: ResolvedItem | undefined): string {
+		const graph = this.getGraph();
+		if (!item || !graph) return entry.item;
+		return carriedName({ graph, locale: app.activeLocale }, item.row, entry, translator());
 	}
 
 	/** The purse, and the coins the sheet shows of it. Hiding electrum is a view choice, so a hidden
@@ -269,16 +238,6 @@ export class InventoryTracker {
 	putBack = (item: string) => this.act((c, ctx) => disownItem(c, { item }, ctx));
 	remove = (row: string) => this.act((c, ctx) => dropItem(c, { row }, ctx));
 
-	/** Every mundane item a template could BE, of the same kind as the template asking: a weapon
-	 *  template offers weapons, an armour one offers armour. Mundane = no rarity, which is what marks
-	 *  an item magical (`content.md`), and a row that states nothing itself is a template too and has
-	 *  nothing to lend. Edition- and source-filtered like every other list the sheet shows. */
-	baseOptionsFor = (ref: string): BaseItemOption[] => {
-		const scope = this.instanceScope;
-		const template = scope?.graph.get(ref);
-		return scope && template?.type === 'item' ? baseItemOptions(scope, template) : [];
-	};
-
 	/** Where an instance's questions are asked from: this character's edition and language, and the
 	 *  sources they enabled. Null before a character and a graph exist. */
 	get instanceScope(): InstanceScope | null {
@@ -293,18 +252,9 @@ export class InventoryTracker {
 	addInstance = (item: string, answers: InstanceAnswers) =>
 		this.act((c, ctx) => ownItemInstance(c, { item, answers }, ctx));
 
-	/** Answer "which +N is this one" for a carried item — or un-answer it, which takes the bonus back
-	 *  off every number it was folding into. */
-	setBonus = (row: string, bonus: number | undefined) =>
-		this.act((c, ctx) => setItemBonus(c, { row, ...(bonus === undefined ? {} : { bonus }) }, ctx));
-
-	/** Answer "which type is this one" for a carried item — the ring's gemstone. */
-	setChoice = (row: string, choice: string) =>
-		this.act((c, ctx) => setItemChoice(c, { row, choice }, ctx));
-
-	/** Say which item a template is — or take the answer back, which leaves the row saying it needs
-	 *  one rather than silently keeping the last pick. */
-	setBase = (row: string, base: string) => this.act((c, ctx) => setItemBase(c, { row, base }, ctx));
+	/** Answer again which one a carried row is — the item a template is, the +N, the kind. */
+	reanswer = (row: string, answers: InstanceAnswers) =>
+		this.act((c, ctx) => setItemAnswers(c, { row, answers }, ctx));
 
 	/** FINESSE-ABILITY: which ability a finesse weapon is swung with, the fifth play-time verb on
 	 *  something carried. Keyed by the weapon KIND, so a +1 Rapier and a plain one answer together —

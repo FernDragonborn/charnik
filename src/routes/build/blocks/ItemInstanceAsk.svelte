@@ -1,14 +1,17 @@
 <script lang="ts">
 	// "Which one?" for an item the book prints once: the weapon a template is, the +N a `+1/+2/+3`
-	// row is. Asked as the item is ADDED, beside the ✓ that took it, so the inventory gets the one
-	// instance rather than the heading with its questions left on the row. Nothing is added until
-	// every question it asks is answered; Escape or a press elsewhere adds nothing.
-	import { onMount } from 'svelte';
+	// row is, the kind a ring or a belt is. Asked as the item is ADDED, beside the ✓ that took it, so
+	// the inventory gets the one instance rather than the heading with its questions left on the row,
+	// and asked AGAIN from the carried row's own name, holding its answers, which is the way back
+	// from a misclick. Nothing is written until every question it asks is answered; Escape or a press
+	// elsewhere writes nothing.
+	import { onMount, untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import { anchored } from '$lib/actions/anchored';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import type { InstanceAnswers } from '$lib/content/item-instance';
+	import { damageTypeLabel } from '$lib/combat/attacks';
 	import type { InstanceAsk } from '../item-instance-picking.svelte';
 
 	let {
@@ -19,20 +22,26 @@
 		$props();
 
 	let surface = $state<HTMLDivElement>();
-	let base = $state('');
-	let bonus = $state<number | undefined>(undefined);
+	// the answers it is opened with: none at Add, the row's own when asked again from it
+	// one popover per question: it is mounted for an ask and gone with it, so the opening answers are
+	// read once
+	let base = $state(untrack(() => ask.current?.base ?? ''));
+	let bonus = $state<number | undefined>(untrack(() => ask.current?.bonus));
+	let choice = $state(untrack(() => ask.current?.choice ?? ''));
 
 	/** A mundane item's question has one more answer than a +N row's: none — the plain item. */
 	const PLAIN = 0;
 	const ready = $derived(
 		(!ask.questions.bases.length || base !== '') &&
-			(!ask.questions.rungs.length || bonus !== undefined),
+			(!ask.questions.rungs.length || bonus !== undefined) &&
+			(!ask.questions.choices.length || choice !== ''),
 	);
 	const add = () => {
 		if (!ready) return;
 		onanswer({
 			...(base ? { base } : {}),
 			...(bonus === undefined || bonus === PLAIN ? {} : { bonus }),
+			...(choice ? { choice } : {}),
 		});
 	};
 
@@ -93,10 +102,28 @@
 			</div>
 		</div>
 	{/if}
+	{#if ask.questions.choices.length}
+		<label class="field">
+			<span class="eyebrow">{$_('build.inventory.whichKind')}</span>
+			<select bind:value={choice}>
+				<option value="" disabled>{$_('combat.inventory.choiceNone')}</option>
+				{#each ask.questions.choices as option (option.id)}
+					<option value={option.id}
+						>{#if option.name && option.rarity}{$_('combat.inventory.varietyWithRarity', {
+								values: {
+									name: option.name,
+									rarity: $_(`itemRarity.${option.rarity}`, { default: option.rarity }),
+								},
+							})}{:else}{option.name ?? damageTypeLabel(option.id, $_)}{/if}</option
+					>
+				{/each}
+			</select>
+		</label>
+	{/if}
 	<div class="actions">
 		<button type="button" class="pill-btn" onclick={oncancel}>{$_('build.inventory.askCancel')}</button>
 		<button type="button" class="pill-btn accent" disabled={!ready} onclick={add}
-			>{$_('build.inventory.askAdd')}</button
+			>{$_(ask.current ? 'build.inventory.askSave' : 'build.inventory.askAdd')}</button
 		>
 	</div>
 </div>

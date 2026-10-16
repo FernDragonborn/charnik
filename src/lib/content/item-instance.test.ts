@@ -41,6 +41,31 @@ describe.each([
 		expect(shield.rungs.map((r) => r.bonus)).toEqual([1, 2, 3]);
 	});
 
+	it('a row found as one of several kinds asks which: a variety by its row, a word by its id', () => {
+		const belt = instanceQuestions(scope, row('belt_of_giant_strength'));
+		expect(belt.choices).toHaveLength(5);
+		expect(belt.choices.every((c) => c.name && c.rarity)).toBe(true);
+		const hill = belt.choices.find((c) => c.id === 'belt_of_hill_giant_strength');
+		// a belt told which it is goes by that belt's name
+		expect(
+			instanceName({ graph, locale: 'en' }, row('belt_of_giant_strength'), { choice: hill?.id }),
+		).toBe(hill?.name);
+		const ring = instanceQuestions(scope, row('ring_of_resistance'));
+		expect(ring.choices.map((c) => c.id)).toContain('fire');
+		expect(ring.choices.every((c) => c.name === undefined)).toBe(true);
+		// a ring answered with a word keeps the book's name; the word is said beside it by the view
+		expect(
+			instanceName({ graph, locale: 'en' }, row('ring_of_resistance'), { choice: 'fire' }),
+		).toBe(undefined);
+	});
+
+	it('two rings of different kinds are two rows, two of one kind one', () => {
+		const ring = row('ring_of_resistance').effectiveId;
+		const fire = addItemInstance([], ring, { choice: 'fire' });
+		expect(addItemInstance(fire, ring, { choice: 'cold' })).toHaveLength(2);
+		expect(addItemInstance(fire, ring, { choice: 'fire' })).toHaveLength(1);
+	});
+
 	it('"longsword +1" is the +N weapon built on a longsword, at +1', () => {
 		const matches = instancesForQuery(scope, 'longsword +1');
 		const longsword = matches.find((m) => m.name === 'Longsword +1');

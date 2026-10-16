@@ -11,7 +11,10 @@
 	import { ATTUNEMENT_CAP } from '$lib/character/inventory';
 	import { kilograms } from '$lib/combat/constants';
 	import { why } from '$lib/combat/helpers';
-	import { damageTypeLabel } from '$lib/combat/attacks';
+	import { asksWhichOne, type InstanceAnswers } from '$lib/content/item-instance';
+	import ItemInstanceAsk from '../../../build/blocks/ItemInstanceAsk.svelte';
+	import { rowName } from '../../../build/rows';
+	import { askAgain, type InstanceAsk } from '../../../build/item-instance-picking.svelte';
 	import { provenance } from '$lib/actions/provenance';
 	import AddItemPopover from '../AddItemPopover.svelte';
 	import { dndzone } from 'svelte-dnd-action';
@@ -35,6 +38,18 @@
 	let dragging = $state<{ id: string; row: InventoryRow }[] | null>(null);
 	/* the item carries its ROW — see `AttacksPanel` for what a lookup by id cost the shadow item */
 	const items = $derived(dragging ?? rows.map((row) => ({ id: row.entry.iid, row })));
+
+	/** The question asked again from a carried row, and which row it is for. */
+	let reasking = $state<{ ask: InstanceAsk; row: string } | null>(null);
+	const reask = (row: InventoryRow, anchor: HTMLElement) => {
+		const heading = row.item ? rowName(row.item.row) : row.name;
+		reasking = { row: row.entry.iid, ask: askAgain(row.entry, heading, row.questions, anchor) };
+	};
+	const answerReask = (answers: InstanceAnswers) => {
+		const row = reasking?.row;
+		reasking = null;
+		if (row) inv.reanswer(row, answers);
+	};
 </script>
 
 <div class="load">
@@ -123,119 +138,41 @@
 	{#each items as item (item.id)}
 		{@const row = item.row}
 		{#if row}
-			<div
-				class="inv-row"
-				class:asks-base={(row.isTemplate && !row.entry.base) ||
-					(row.bonusRungs.length && row.entry.bonus === undefined) ||
-					row.choiceOptions.length ||
-					row.varieties.length}
-			>
+			<div class="inv-row">
 				<RowGrip
 					panel="inventory"
 					id={row.entry.iid}
 					name={row.name}
 					onmove={(by) => inv.move(row.entry.iid, by)}
 				/>
-				<span class="nm">{row.name}</span>
+				<!-- a row the book prints once is asked which one it is when it is added; its own name is
+				     where that is asked again, holding the answers it has, which is the way back from a
+				     misclick (an item answered wrongly used to be a remove and a re-add) -->
+				{#if asksWhichOne(row.questions)}
+					<button
+						type="button"
+						class="nm name-button"
+						aria-haspopup="dialog"
+						title={$_('combat.inventory.reask', { values: { name: row.name } })}
+						onclick={(e) => reask(row, e.currentTarget)}>{row.name}</button
+					>
+				{:else}
+					<span class="nm">{row.name}</span>
+				{/if}
 				{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
 				<span class="meta">{row.meta}</span>
 				{#if row.weightLb}<span class="wt"
 						>{$_('combat.inventory.pounds', { values: { lb: row.weightLb } })}</span
 					>{/if}
-				<!-- A template item ("any Simple or Martial weapon") is not a content gap to report — it is a
-			     question only the player can answer, so it is asked here, where the item is. -->
-				<!-- The same argument as the base above, one step in: the SRD prints ONE "Weapon, +1, +2,
-				     or +3", and which one you found is yours to say. Unanswered it grants nothing. -->
-				<!-- asked when the item was added; a row carried from before then is asked here, once -->
-				{#if row.bonusRungs.length && row.entry.bonus === undefined}
-					<label class="base-pick">
-						<span class="visually-hidden"
-							>{$_('combat.inventory.bonusPick', { values: { name: row.name } })}</span
-						>
-						<select
-							value={row.entry.bonus ?? ''}
-							onchange={(e) =>
-								inv.setBonus(
-									row.entry.iid,
-									e.currentTarget.value ? Number(e.currentTarget.value) : undefined,
-								)}
-						>
-							<option value="">{$_('combat.inventory.bonusNone')}</option>
-							{#each row.bonusRungs as rung (rung.bonus)}
-								<option value={rung.bonus}
-									>{rung.rarity
-										? $_('combat.inventory.bonusWithRarity', {
-												values: {
-													bonus: rung.bonus,
-													rarity: $_(`itemRarity.${rung.rarity}`, { default: rung.rarity }),
-												},
-											})
-										: $_('combat.inventory.bonusPlain', { values: { bonus: rung.bonus } })}</option
-								>
-							{/each}
-						</select>
-					</label>
-				{/if}
-				<!-- The same question with a word for an answer: the SRD's ring names ONE gemstone and
-				     lets the one you found say which. Unanswered it grants nothing. -->
-				{#if row.choiceOptions.length}
-					<label class="base-pick">
-						<span class="visually-hidden"
-							>{$_('combat.inventory.choicePick', { values: { name: row.name } })}</span
-						>
-						<select
-							value={row.entry.choice ?? ''}
-							onchange={(e) => inv.setChoice(row.entry.iid, e.currentTarget.value)}
-						>
-							<option value="">{$_('combat.inventory.choiceNone')}</option>
-							{#each row.choiceOptions as option (option)}
-								<option value={option}>{damageTypeLabel(option, $_)}</option>
-							{/each}
-						</select>
-					</label>
-				{/if}
-				<!-- And with a ROW for an answer: the book prints one Belt of Giant Strength and five exist,
-				     each with a score and a rarity of its own. Unanswered it grants nothing. -->
-				{#if row.varieties.length}
-					<label class="base-pick">
-						<span class="visually-hidden"
-							>{$_('combat.inventory.varietyPick', { values: { name: row.name } })}</span
-						>
-						<select
-							value={row.entry.choice ?? ''}
-							onchange={(e) => inv.setChoice(row.entry.iid, e.currentTarget.value)}
-						>
-							<option value="">{$_('combat.inventory.varietyNone')}</option>
-							{#each row.varieties as variety (variety.id)}
-								<option value={variety.id}
-									>{variety.rarity
-										? $_('combat.inventory.varietyWithRarity', {
-												values: {
-													name: variety.name,
-													rarity: $_(`itemRarity.${variety.rarity}`, { default: variety.rarity }),
-												},
-											})
-										: variety.name}</option
-								>
-							{/each}
-						</select>
-					</label>
-				{/if}
-				{#if row.isTemplate && !row.entry.base}
-					<label class="base-pick">
-						<span class="visually-hidden"
-							>{$_('combat.inventory.baseItem', { values: { name: row.name } })}</span
-						>
-						<select
-							value={row.entry.base ?? ''}
-							onchange={(e) => inv.setBase(row.entry.iid, e.currentTarget.value)}
-						>
-							<option value="">{$_('combat.inventory.baseItemNone')}</option>
-							{#each inv.baseOptionsFor(row.entry.item) as opt (opt.ref)}
-								<option value={opt.ref}>{opt.name}</option>
-							{/each}
-						</select>
-					</label>
+				<!-- a row carried from before the question was asked at Add still has it open: it grants
+				     nothing until answered, so it says so where it stands -->
+				{#if row.unanswered}
+					<button
+						type="button"
+						class="pill-btn ask-which"
+						aria-haspopup="dialog"
+						onclick={(e) => reask(row, e.currentTarget)}>{$_('combat.inventory.askWhich')}</button
+					>
 				{/if}
 				<span class="acts">
 					<span class="stepper">
@@ -320,6 +257,9 @@
 {#if adding && addControl}
 	<AddItemPopover anchor={addControl} onclose={() => (adding = false)} />
 {/if}
+{#if reasking}
+	<ItemInstanceAsk ask={reasking.ask} onanswer={answerReask} oncancel={() => (reasking = null)} />
+{/if}
 
 <style>
 	/* a header for the list, holding the one control that adds to it */
@@ -350,23 +290,8 @@
 		border-color: var(--color-border-strong);
 	}
 
-	/* the chooser gets its OWN line: it is a sentence-long question in a row of one-word controls, and
-	   squeezing it in beside them collapses the item's kind line to an ellipsis. Only the few rows
-	   that ASK wrap — every other row keeps the single-line shape it has always had. */
-	.asks-base {
-		flex-wrap: wrap;
-	}
-	.base-pick {
-		flex-basis: 100%;
-	}
-	.base-pick select {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		background: var(--color-surface-2);
-		border: 1px dashed var(--color-border-strong);
-		border-radius: var(--radius-sm);
-		padding: 1px var(--space-1);
-		max-inline-size: 220px;
+	.ask-which {
+		border-style: dashed;
 	}
 	.load {
 		display: flex;
