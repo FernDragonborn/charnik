@@ -57,6 +57,14 @@ stay semi-manual.
   `ki`, `focus`, `persistent_rage`, `uncanny_metabolism`, `wild_shape`, `wild_resurgence`. **These rows come from a producer sibling**
   (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
   is still game data, and hand-authoring it from memory is the failure that passes every gate.
+- [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
+  An option offered by several features (`option_of` naming more than one parent) can be taken
+  through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted
+  (Free) under the Champion's second pick (`OptionPicks.takenElsewhere`, `OPTION_BLOCK.taken`).
+  The rule is written to SRD 5.1's "You can't take a Fighting Style option more than once, even if
+  you later get to choose again", and applies to EVERY shared option, not only styles. To check: is
+  "once per character" right for every option that may be shared later, or should a row say so?
+
 - [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
   feedback. Today `ui.spellsPinned` pins spells to the top of the combat spell list and nothing else
   can be pinned — so a Barbarian hunting Rage, or a player who wants the two potions they are actually
