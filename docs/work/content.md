@@ -121,11 +121,6 @@
     Blessed Strikes. Elemental Fury's two ship, Primal Strike as a roll once a turn; Potent
     Spellcasting's Wisdom modifier on a druid cantrip's damage is text, waiting on the same
     scoped bonus Agonizing Blast does.
-- [ ] **FIGURINE-2024 · the 2024 Figurine of Wondrous Power stops after the Ebony Fly.** The
-  row's text ends at the Giant Fly's stat block heading, so the stat block and the seven
-  figurines after it are missing from the entry. Its nine varieties are whole — they are rows of
-  their own — and the entry is what is short. The fix is the rest of the entry typed from
-  `magic-items.md`, the stat block as the HTML the pack's other tables use.
 - [~] **E4 · the spells whose effect is still only prose.** A cast leaves the spell's own effect
   tokens on the caster (`../internals/rules-core.md` ▸ Spellcasting), and the row of a spell that
   rolls nothing is captioned from those tokens, resolved against the sheet

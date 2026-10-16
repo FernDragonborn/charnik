@@ -155,7 +155,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // of their own (`feat_choice`). An install left at v52 offers the style only in a level's slot.
 // v54: the 2024 Paladin's and Ranger's Fighting Style do too, and offer Blessed Warrior and Druidic
 // Warrior as option rows the slot may take instead. An install left at v53 asks them nothing.
-export const CONTENT_SEED_VERSION = 54;
+// v55: the 2024 Figurine of Wondrous Power carries its whole entry — the Giant Fly's stat block and
+// the seven figurines after it. An install left at v54 stops at the Ebony Fly.
+export const CONTENT_SEED_VERSION = 55;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -27,6 +27,8 @@
   Champion a second style at 7th. The first slot that offered a style used to be 4th level, where it
   cost the Ability Score Improvement. A style taken is not offered again by a later level, and a
   character with no Fighting Style feature is no longer offered one at all.
+- **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
+  figurines after it — Golden Lions to Silver Raven — were missing.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
   one identity in the list that draws them.
 
