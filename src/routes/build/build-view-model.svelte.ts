@@ -422,17 +422,13 @@ export class BuildVM {
 			// assembles into, and a question about the sheet must not depend on its own answer. The
 			// play sheet offers only the picks a level still allows.
 			forms: copyPicks(this.draft.forms),
-			options: this.optionPicks.picks,
+			// a feature's choice, and the option a feat slot took INSTEAD of a feat (Blessed Warrior)
+			options: { ...this.optionPicks.picks, ...this.feats.slotOptionPicks },
 			saves: this.classRow?.data.saves ?? [],
-			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
-			// its ability boost flows through abilityBoosts instead). `choiceKeys`, not the class
-			// slots: a species-granted feat is as taken as one a level bought.
-			feats: [
-				...new Set([
-					...this.carriedFeats,
-					...this.feats.choiceKeys.map((key) => this.draft.slotFeats[key]).filter((r) => r && r !== ASI)
-				])
-			],
+			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat — its
+			// ability boost flows through abilityBoosts instead, and an option taken instead of a feat
+			// is an option). Every slot, not the class levels': a granted feat is as taken as one bought.
+			feats: [...new Set([...this.carriedFeats, ...this.feats.slotFeatRefs])],
 			// persist the per-slot picks so a later level-up restores filled slots (UBUG-13)
 			slotPicks: {
 				feats: { ...this.draft.slotFeats },

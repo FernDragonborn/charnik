@@ -22,9 +22,11 @@
   weapon's damage — a reroll, as 2014 prints it, not 2024's floor of 3. Dueling and Protection stay
   their text: one asks how you hold your weapon, the other is a reaction. A style taken once is not
   offered again, so a champion's second style is a different one.
-- **A 2024 fighter chooses a Fighting Style at 1st level**, in a feat slot of its own, and a
-  Champion a second one at 7th. The first slot that offered a style used to be 4th level, where it
-  cost the Ability Score Improvement. A style taken there is not offered again by a later level.
+- **A 2024 fighter chooses a Fighting Style at 1st level**, in a feat slot of its own; a paladin
+  and a ranger at 2nd, with Blessed Warrior or Druidic Warrior offered in the same slot instead; a
+  Champion a second style at 7th. The first slot that offered a style used to be 4th level, where it
+  cost the Ability Score Improvement. A style taken is not offered again by a later level, and a
+  character with no Fighting Style feature is no longer offered one at all.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
   one identity in the list that draws them.
 

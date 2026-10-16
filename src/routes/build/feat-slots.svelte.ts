@@ -21,6 +21,8 @@ import {
 } from '$lib/content/schemas';
 import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
 import { activeClassFeatures } from '$lib/character/features';
+import { optionsOf } from '$lib/content/options';
+import { isRowActive } from '$lib/content/sources.svelte';
 import {
 	asiPickCount,
 	toggleCapped,
@@ -57,6 +59,11 @@ export interface FeatureFeatSlot {
 	/** The feature's own name — the slot says whose grant it is, as the species' slot does. */
 	feature: string;
 	choice: string[];
+	/** What the slot may hold INSTEAD of a feat: the feature's own options — SRD 5.2.1 ▸ Paladin ▸
+	 *  Fighting Style, "Instead of choosing one of those feats, you can choose the option below". */
+	instead: LoadedRow[];
+	/** The feature's id, which an option answer is stored under in `build.options`. */
+	featureId: string;
 }
 
 /** The feats a `feat_choice` names, out of `feats`: `any`, feat ids, or feat CATEGORIES — a list
@@ -129,6 +136,8 @@ export class FeatSlots {
 				className: rowName(active.classRow),
 				feature: rowName(active.row),
 				choice,
+				instead: optionsOf(graph, active.row).filter((row) => isRowActive(row)),
+				featureId: active.row.id,
 			});
 		}
 		return out;
@@ -139,9 +148,27 @@ export class FeatSlots {
 		if (this.slotIsSpecies(key)) return this.speciesFeatOptions;
 		const feature = this.featureSlots.find((slot) => slot.key === key);
 		return feature
-			? featsChosenFrom(feature.choice, this.featOptionsFor(level))
+			? [...featsChosenFrom(feature.choice, this.featOptionsFor(level)), ...feature.instead]
 			: this.featOptionsFor(level);
 	};
+
+	/** The feats the slots hold — not an ASI, and not a feature's option taken INSTEAD of a feat. */
+	slotFeatRefs = $derived.by<string[]>(() =>
+		this.choiceKeys.flatMap((key) => {
+			const ref = this.host().draft.slotFeats[key];
+			return ref && ref !== ASI && this.host().row(ref)?.type === 'feat' ? [ref] : [];
+		}),
+	);
+	/** A feature slot answered with one of the feature's options, as `build.options` holds it. */
+	slotOptionPicks = $derived.by<Record<string, string[]>>(() =>
+		Object.fromEntries(
+			this.featureSlots.flatMap((slot) => {
+				const ref = this.host().draft.slotFeats[slot.key];
+				const option = slot.instead.find((row) => row.effectiveId === ref);
+				return option ? [[slot.featureId, [option.id]]] : [];
+			}),
+		),
+	);
 	/** Does a slot offer the Ability Score Improvement? Only a LEVEL's: a species' or a feature's grant
 	 *  is a feat, and spending it on an improvement would spend it on something never granted. */
 	slotOffersAsi = (key: string): boolean =>
@@ -206,15 +233,22 @@ export class FeatSlots {
 	 *  Feats: "If you're instructed to choose a feat and no category is specified, you can choose from
 	 *  any category", and a level's slot is "another feat of your choice for which you qualify" — so an
 	 *  origin feat a background did not grant is still takeable. Epic boons only unlock at level 19+,
-	 *  which is their own prerequisite. (Not a hard block — just the right menu per slot.) */
+	 *  and a Fighting Style feat with a Fighting Style feature ("Prerequisite: Fighting Style
+	 *  Feature"), which is each one's own prerequisite. (Not a hard block — just the right menu.) */
 	featOptionsFor = (level: number): LoadedRow[] =>
 		this.host().featList.filter((f) => {
 			// the plain ASI is offered as its own dedicated slot option, not as a feat row
 			if (f.id === ASI_FEAT_ID) return false;
 			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
 			if (cat === FEAT_CATEGORY.epicBoon) return level >= EPIC_BOON_MIN_LEVEL;
+			if (cat === FEAT_CATEGORY.fightingStyle) return this.hasFightingStyleFeature;
 			return true;
 		});
+	/** Does a feature the character has grant Fighting Style feats — the prerequisite every one of
+	 *  those feats prints? Read off the data (`feat_choice` naming the category), never a class list. */
+	private hasFightingStyleFeature = $derived(
+		this.featureSlots.some((slot) => slot.choice.includes(FEAT_CATEGORY.fightingStyle)),
+	);
 	// ASI may be taken in every slot; a feat is repeatable iff its row says so.
 	isRepeatable = (ref: string): boolean =>
 		ref === ASI || Boolean(rowOfType(this.host().graph?.get(ref), 'feat')?.data.repeatable);

@@ -153,7 +153,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // rerolls nothing.
 // v53: the 2024 Fighter's Fighting Style and the Champion's Additional Fighting Style open a feat slot
 // of their own (`feat_choice`). An install left at v52 offers the style only in a level's slot.
-export const CONTENT_SEED_VERSION = 53;
+// v54: the 2024 Paladin's and Ranger's Fighting Style do too, and offer Blessed Warrior and Druidic
+// Warrior as option rows the slot may take instead. An install left at v53 asks them nothing.
+export const CONTENT_SEED_VERSION = 54;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -97,7 +97,8 @@ export class Inspector {
 
 	detail = $derived.by<DetailModel | null>(() => {
 		const type = this.pick?.type;
-		return type ? rowDetail(this.previewRow, type) : null;
+		// a feat slot may also offer a feature's option, which reads as what it is
+		return type ? rowDetail(this.previewRow, this.previewRow?.type ?? type) : null;
 	});
 
 	// --- what taking it would do ------------------------------------------------------------------

@@ -77,22 +77,6 @@ stay semi-manual.
   (`damage_sensitivity:resist:all` + `damage_sensitivity:none:force`) rather than a set expression
   in the type slot, which would put a grammar inside a slot that is deliberately free-form. Not worth
   building until a second case appears — record it here so the third one does not re-open the design.
-- [~] **FIGHTING-STYLE-SLOT · the Paladin's and the Ranger's Fighting Style still open no slot.** A
-  class feature's `feat_choice` opens a feat slot of its own (`FeatSlots.featureSlots`), and the 2024
-  Fighter's and Champion's carry it: a feat GRANT is a feat slot, a feature's own choice is an
-  `option` — the line between the two answers (`../internals/content.md` ▸ One row, several
-  options). Left:
-  - **Paladin 2 and Ranger 2.** Each reads "You gain a Fighting Style feat of your choice … Instead
-    of choosing one of those feats, you can choose the option below" — Blessed Warrior and Druidic
-    Warrior, two cantrips of another class's list. An open feat slot is a REQUIRED todo, so giving
-    them the slot without the way out blocks saving a paladin who took Blessed Warrior: the slot has
-    to accept that option as its answer, which is one more case in `FeatSlots` (a slot answered by
-    the feature's option rows) and the option rows typed from SRD 5.2.1 ▸ Paladin and Ranger. Their
-    cantrips are a spell grant by choice, which no token makes yet; the option may stay text.
-  - **The feats' own prerequisite** — "Fighting Style Feat (Prerequisite: Fighting Style Feature)" —
-    is text, so a level's slot offers Archery to a wizard. It becomes checkable once every feature
-    that gives the prerequisite says so in data, which the two rows above complete.
-
 - [ ] **FEATURE-PASSIVES · the passive features, named.** N2 says the passive kind is a token; this
   is WHICH rows, found by matching each shipped feature's own SRD text against the phrases that
   declare a mechanic ("you have advantage on", "your speed increases", "your AC equals", "immune to",

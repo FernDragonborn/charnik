@@ -11,20 +11,17 @@ import { newClassRow } from './draft';
 
 const S = 'SRD 5.2.1';
 
-async function draftFighter(level: number) {
+async function draftClass(cls: string, level: number, subclass: string | null = null) {
 	build.reset();
 	build.graph = await loadPacks('srd-2024');
 	build.draft.system = '5.5e';
 	build.draft.name = 'Kel';
 	build.draft.classes = [
-		{
-			...newClassRow(),
-			classId: `class:${S}:fighter`,
-			subclassId: level >= 3 ? `subclass:${S}:champion` : null,
-			level,
-		},
+		{ ...newClassRow(), classId: `class:${S}:${cls}`, subclassId: subclass, level },
 	];
 }
+const draftFighter = (level: number) =>
+	draftClass('fighter', level, level >= 3 ? `subclass:${S}:champion` : null);
 
 const slotOf = (feature: string) => {
 	const slot = build.feats.featureSlots.find((s) => s.key.endsWith(`:${feature}`));
@@ -64,5 +61,39 @@ describe('a class feature that grants a feat opens a slot for it', () => {
 		expect(build.feats.featureSlots.map((s) => s.level)).toEqual([1]);
 		await draftFighter(7);
 		expect(build.feats.featureSlots.map((s) => s.level)).toEqual([1, 7]);
+	});
+
+	/*
+	 * SRD 5.2.1 ▸ Paladin ▸ Fighting Style: "You gain a Fighting Style feat of your choice … Instead of
+	 * choosing one of those feats, you can choose the option below." ▸ Blessed Warrior.
+	 */
+	it("a paladin's slot takes a style or Blessed Warrior, and the warrior is an option, not a feat", async () => {
+		await draftClass('paladin', 2);
+		const slot = slotOf('paladin_fighting_style');
+		const offered = build.feats.optionsForSlot(slot.key, 2).map((row) => row.id);
+		expect(offered).toEqual(expect.arrayContaining(['defense', 'blessed_warrior']));
+		const warrior = build.feats.optionsForSlot(slot.key, 2).find((row) => row.id === 'blessed_warrior');
+		build.feats.setSlotFeat(slot.key, warrior?.effectiveId ?? '');
+		// answered: nothing is owed, so the character can be saved
+		expect(build.todos.find((t) => t.slotKey === slot.key)).toBeUndefined();
+		expect(build.assembled.build.feats).not.toContain(warrior?.effectiveId);
+		expect(build.assembled.build.options).toMatchObject({ paladin_fighting_style: ['blessed_warrior'] });
+	});
+
+	it("a ranger's slot offers Druidic Warrior the same way", async () => {
+		await draftClass('ranger', 2);
+		const slot = slotOf('ranger_fighting_style');
+		expect(build.feats.optionsForSlot(slot.key, 2).map((row) => row.id)).toContain('druidic_warrior');
+	});
+
+	it('a Fighting Style feat needs a Fighting Style feature: a wizard is not offered one', async () => {
+		await draftClass('wizard', 4);
+		const level4 = build.feats.featSlots.find((s) => s.level === 4);
+		const offered = build.feats.optionsForSlot(level4?.key ?? '', 4).map((f) => f.id);
+		expect(offered).not.toContain('archery');
+		expect(offered).toContain('alert');
+		await draftFighter(4);
+		const fighter4 = build.feats.featSlots.find((s) => s.level === 4);
+		expect(build.feats.optionsForSlot(fighter4?.key ?? '', 4).map((f) => f.id)).toContain('archery');
 	});
 });

@@ -179,7 +179,10 @@ and the tokens cannot drift between copies. **A feat is not an option.** Where a
 Fighting Style feat of your choice"), the feature row's `feat_choice` opens a feat slot of its own,
 the species column's grammar where a word may also name a feat category (`fighting_style`) — so the
 feat stays one row with one set of tokens, and a slot already holding it keeps every other slot from
-offering it again. An `option` is a choice that is not a feat anywhere else.
+offering it again. The feature's own `option` rows are what the slot may take INSTEAD of a feat (the
+2024 Paladin's Blessed Warrior), stored in `build.options` like any option. A Fighting Style feat is
+offered only to a character one of whose features names that category — the "Prerequisite: Fighting
+Style Feature" each prints. An `option` is a choice that is not a feat anywhere else.
 **An option is held once**: taken through one feature,
 it is refused (Strict) or noted (Free) through another — SRD 5.1, "You can't take a Fighting Style
 option more than once, even if you later get to choose again". Like every content → content link the parent is
