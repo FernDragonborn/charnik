@@ -187,3 +187,28 @@ describe('feature options · a 2014 Fighting Style is one row offered by several
 		expect(build.optionPicks.picks).toMatchObject({ [STYLE]: ['defense'], [SECOND]: ['archery'] });
 	});
 });
+
+/*
+ * SRD 5.1 ▸ Sorcerer ▸ Metamagic: "You gain two of the following Metamagic options of your choice.
+ * You gain another one at 10th and 17th level." SRD 5.2.1: "you gain two Metamagic options of your
+ * choice … You gain two more options at Sorcerer level 10 and two more at Sorcerer level 17."
+ */
+describe.each([
+	['srd-2014', '5e', 'SRD 5.1', 8, [[3, 2], [10, 3], [17, 4]]],
+	['srd-2024', '5.5e', 'SRD 5.2.1', 10, [[2, 2], [10, 4], [17, 6]]],
+] as const)('feature options · Metamagic (%s)', (pack, system, source, offered, ladder) => {
+	it('asks the options the edition prints, as many as its sorcerer level allows', async () => {
+		for (const [level, cap] of ladder) {
+			build.reset();
+			build.graph = await loadPacks(pack);
+			build.draft.system = system;
+			build.draft.name = 'Ash';
+			build.draft.classes = [
+				{ ...newClassRow(), classId: `class:${source}:sorcerer`, subclassId: null, level },
+			];
+			const metamagic = choiceOf('sorcerer_metamagic');
+			expect(metamagic.options).toHaveLength(offered);
+			expect(metamagic.cap).toBe(cap);
+		}
+	});
+});

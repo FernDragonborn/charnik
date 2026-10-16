@@ -157,7 +157,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Warrior as option rows the slot may take instead. An install left at v53 asks them nothing.
 // v55: the 2024 Figurine of Wondrous Power carries its whole entry — the Giant Fly's stat block and
 // the seven figurines after it. An install left at v54 stops at the Ebony Fly.
-export const CONTENT_SEED_VERSION = 55;
+// v56: Metamagic is a choice in both packs — eight 2014 options and ten 2024 ones, the feature row
+// `choose`-ing them by sorcerer level. An install left at v55 is asked nothing.
+export const CONTENT_SEED_VERSION = 56;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

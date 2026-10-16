@@ -254,7 +254,7 @@ position and are given per wave, because most of them were learned the hard way.
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
-  rule is still only text. OPTION-ROWS sits here too — Metamagic and the
+  rule is still only text. OPTION-ROWS sits here too — the
   2024 invocations as rows — with A17's tail: a Tome warlock casts rituals, and the Book of
   Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's Agonizing Blast and E4.
 - **Deliberately in no wave:** TABLE-LINK-SPEC (the specification before any transport code; the

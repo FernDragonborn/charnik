@@ -27,6 +27,8 @@
   Champion a second style at 7th. The first slot that offered a style used to be 4th level, where it
   cost the Ability Score Improvement. A style taken is not offered again by a later level, and a
   character with no Fighting Style feature is no longer offered one at all.
+- **A sorcerer chooses Metamagic**: eight options in 2014, ten in 2024, as many as the level
+  allows, listed on the sheet as features.
 - **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
   figurines after it — Golden Lions to Silver Raven — were missing.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
