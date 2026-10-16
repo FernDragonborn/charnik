@@ -4,6 +4,7 @@
  * the effects-auto toggle. Split out of the old combat/helpers.ts junk-drawer.
  */
 import {
+	ADVANTAGE_MODE,
 	droppedD20s,
 	type AdvantageMode,
 	parseDiceTerm,
@@ -19,11 +20,12 @@ import {
 	type StoredRoll,
 } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
-import { sayText, type Said, type SaidText, type SaidValue } from '$lib/util/say';
+import { sayText, type Said, type SaidValue } from '$lib/util/say';
 import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
 import type { Character } from '$lib/character/schema';
+import { LOG_KIND, type LogKind } from '$lib/character/log-kind';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -151,10 +153,13 @@ export type RollLogEntry = Rolled & {
 	 *  is the legacy seam and still renders, but nothing writes it any more. */
 	note?: string;
 	/** The app's own provenance, as facts rather than as a sentence — an upcast's extra dice, a
-	 *  formula fragment the parser could not account for. Said by `rollToastModel`, for the same
-	 *  reason an amendment is facts: prose written into `log.jsonl` freezes that roll in whatever
-	 *  language it was made in, and switching the UI afterwards cannot reach it. */
-	noteParts?: SaidText[];
+	 *  formula fragment the parser could not account for, the explanation a notice carried. Said by
+	 *  `rollToastModel`, for the same reason an amendment is facts: prose written into `log.jsonl`
+	 *  freezes that roll in whatever language it was made in, and switching the UI afterwards cannot
+	 *  reach it. A plain string is a content row's own words, which no catalog holds. */
+	noteParts?: Said[];
+	/** What kind of line this is. Absent is a `roll`, which is every line written before kinds. */
+	kind?: LogKind;
 	/** When it was rolled (epoch ms), stamped by `pushRoll` — so it belongs to the ROLL rather than to
 	 *  how it happens to be stored. The persisted line used to invent its own timestamp at write time,
 	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
@@ -185,6 +190,38 @@ export type RollLogEntry = Rolled & {
 	group?: string;
 };
 
+/** A line that threw nothing — what an action was, what followed from it, what it said. */
+export interface LogEvent {
+	name: RollName;
+	kind?: LogKind;
+	outcome?: AutoOutcome;
+	/** What the line explains itself with — a notice's description. */
+	noteParts?: Said[];
+}
+
+/**
+ * The lines one action left that threw nothing, as log entries: `at + i` each, because `at` is the
+ * identity an amendment matches on, and one `group` when there are several, for the reason a volley's
+ * throws share one — the log draws them as one action, and that survives a reload.
+ */
+export function eventEntries(events: readonly LogEvent[], at: number): RollLogEntry[] {
+	const group = events.length > 1 ? crypto.randomUUID() : undefined;
+	return events.map(({ name, outcome, kind, noteParts }, i) => ({
+		...nameFields(name),
+		...(outcome ? { outcome } : {}),
+		...(kind && kind !== LOG_KIND.roll ? { kind } : {}),
+		...(noteParts?.length ? { noteParts } : {}),
+		...(group ? { group } : {}),
+		expr: '',
+		dice: [],
+		d20s: [],
+		advantage: ADVANTAGE_MODE.neither,
+		mod: 0,
+		total: NaN,
+		at: at + i,
+	}));
+}
+
 /** A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only
  *  the rendered `expr`, and so does every damage part under it. */
 export type StoredRollLogEntry = StoredRoll & {
@@ -193,7 +230,8 @@ export type StoredRollLogEntry = StoredRoll & {
 	labelValues?: Record<string, SaidValue>;
 	critThreshold?: number;
 	note?: string;
-	noteParts?: SaidText[];
+	noteParts?: Said[];
+	kind?: LogKind;
 	at?: number;
 	group?: string;
 	amendments?: RollAmendment[];
@@ -216,6 +254,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.labelValues !== undefined ? { labelValues: e.labelValues } : {}),
 	...(e.note !== undefined ? { note: e.note } : {}),
 	...(e.noteParts !== undefined ? { noteParts: e.noteParts } : {}),
+	...(e.kind !== undefined ? { kind: e.kind } : {}),
 	...(e.at !== undefined ? { at: e.at } : {}),
 	...(e.group !== undefined ? { group: e.group } : {}),
 	...(e.critThreshold !== undefined ? { critThreshold: e.critThreshold } : {}),

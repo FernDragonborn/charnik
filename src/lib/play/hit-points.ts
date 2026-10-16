@@ -9,6 +9,7 @@
  * An action that moves hit points, or what their maximum depends on, ends in `settled` (`./settle`),
  * so the rules that FOLLOW such a change hold wherever it came from.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { naturalOf, rollPool, type Rolled } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
 import {
@@ -138,7 +139,8 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 	const part = resolveDamagePart(hit, sheet.damageSensitivities);
 	const taken = part.final;
 	// what the damage WAS is recorded: the hit points only say what was left
-	const log: PlayLogLine[] = part.raw > 0 ? [{ name: damageTakenName(part) }] : [];
+	const log: PlayLogLine[] =
+		part.raw > 0 ? [{ name: damageTakenName(part), kind: LOG_KIND.damage }] : [];
 	const notices: PlayNotice[] = [];
 
 	let play = character.play;
@@ -157,6 +159,7 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 			text: { key: 'combat.notice.formBroken' },
 			description: { key: 'combat.notice.formBrokenBody', values: { excess } },
 			rows: { name: form.monster },
+			kind: LOG_KIND.effect,
 		});
 		left = excess;
 		sheet = ctx.derive({ ...character, play });
@@ -227,6 +230,7 @@ export function heal(
 									key: 'combat.log.hitPointsRestored',
 									values: { restored },
 								},
+								kind: LOG_KIND.healing,
 							},
 						]
 					: [],
@@ -413,6 +417,7 @@ export function rollConcentrationSave(
 					: {
 							text: { key: 'combat.notice.concentrationFailed', values },
 							description: { key: 'combat.notice.concentrationFailedBody' },
+							kind: LOG_KIND.concentration,
 						},
 			],
 		},

@@ -10,7 +10,6 @@
  * editable pills, built from ONE `RollSpec` — a roll site says what it wants rolled once.
  */
 import {
-	ADVANTAGE_MODE,
 	advantageFromSign,
 	cycleAdvantage,
 	setAdvantage,
@@ -25,11 +24,14 @@ import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
 import { toastRoll } from '$lib/dice/roll-toast';
 import { DiceTray } from '$lib/dice/dice-tray.svelte';
 import type { SaidText, SaidValue } from '$lib/util/say';
+import type { LogKind } from '$lib/character/log-kind';
 import {
 	amendedAdvantage,
+	eventEntries,
 	nameFields,
 	withoutLegacyAmendment,
 	type AutoOutcome,
+	type LogEvent,
 	type RollLogEntry,
 	type RollName,
 	type TypedRoll,
@@ -363,27 +365,25 @@ export class RollJournal {
 	};
 
 	/**
-	 * A no-roll cast (buff/utility): a bare log marker, not a rolled total. Takes the same `RollName`
+	 * A line that threw nothing: a no-roll cast, a save a condition decided. Takes the same `RollName`
 	 * a rolled entry does, so a marker carries its catalog key and reads in the language the log is
 	 * being READ in — `log.jsonl` keeps the line verbatim, and a finished sentence written into it
-	 * would be frozen in whatever language the marker happened in. `outcome` is the same fact for the
-	 * marker a forced save leaves: the condition decided it, so there is no die to show.
+	 * would be frozen in whatever language the marker happened in. `outcome` is the fact a forced save
+	 * leaves: the condition decided it, so there is no die to show.
 	 */
-	logMarker = (name: RollName, outcome?: AutoOutcome) => {
-		const entry: RollLogEntry = {
-			...nameFields(name),
-			...(outcome ? { outcome } : {}),
-			expr: '',
-			dice: [],
-			d20s: [],
-			advantage: ADVANTAGE_MODE.neither,
-			mod: 0,
-			total: NaN,
-			at: Date.now(),
-		};
-		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
+	logMarker = (name: RollName, outcome?: AutoOutcome, kind?: LogKind) =>
+		this.logEvents([{ name, ...(outcome ? { outcome } : {}), ...(kind ? { kind } : {}) }]);
+
+	/**
+	 * Record what ONE action did that threw nothing — what it was, what followed from it, what it
+	 * said — as one run of lines, in the order given (`eventEntries`).
+	 */
+	logEvents = (events: readonly LogEvent[]) => {
+		if (!events.length) return;
+		const entries = eventEntries(events, Date.now());
+		this.log = [...entries, ...this.log].slice(0, ROLL_LOG_MAX);
 		// persisted like any other line: a paralysed character's auto-failed save is part of the record,
-		// and a marker that lived only until the reload was the log quietly editing itself
-		this.persist?.(entry);
+		// and a line that lived only until the reload was the log quietly editing itself
+		for (const entry of entries) this.persist?.(entry);
 	};
 }

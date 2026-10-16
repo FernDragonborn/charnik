@@ -27,7 +27,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `add` ×4 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/ItemInstanceAsk.svelte · src/routes/build/blocks/OwnEntries.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
-- `nameOf` ×4 — src/lib/combat/actions.ts · src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
+- `nameOf` ×4 — src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte · src/routes/combat/play-outcomes.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
@@ -514,7 +514,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (180 modules)
+## Library functions & types (183 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -763,11 +763,22 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
 - `const useOne` — Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which * would read as "car…
 
+### `src/lib/character/level-log.ts`
+
+- `interface LevelGain` — One class that rose: which, and the level it reached in it.
+- `function levelGains` — The classes whose level rose, matched by row identity — a class taken anew is a gain from * nothing.
+- `function logLevelGains` — Write the levels `after` gained over `before` into the character's log, where the turns played at * them are read.
+
+### `src/lib/character/log-kind.ts`
+
+- `const LOG_KIND` — An open enum (AGENTS.md ▸ Taste): a new kind is a member, and `isTurnAct` below then fails to * compile until it says…
+- `type LogKind`
+- `function isTurnAct` — * Is a line of this kind something the player DID, rather than what followed from it or what was said * about it?
+
 ### `src/lib/character/log-repository.ts`
 
-- `const LOG_KIND` — The kinds of line `log.jsonl` holds.
 - `interface LogEntry`
-- `function logLineFor` — The stored line for one completed roll: the WHOLE record, plus the flattened summary an older * build reads.
+- `function logLineFor` — The stored line for one log entry: the WHOLE record, plus the flattened summary an older build * reads.
 - `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
 - `function reviseLog` — Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage * applied after the fac…
 - `function readLog` — Read the whole roll log, newest first.
@@ -866,7 +877,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/actions.ts`
 
-- `interface StandardAction` — A standard combat action row (Dash, Hide, Grapple…).
+- `interface StandardAction`
 - `const ACTION_COST`
 - `type ActionCost`
 - `const ACTION_DEFAULT`
@@ -975,6 +986,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const nameFields` — A roll NAME as the fields a spec or a record carries — {@link rollNameOf}'s inverse, so the two * shapes convert in o…
 - `const rollNameOf` — A recorded row read back as a roll NAME, so a stored line says itself the same way a live one does.
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
+- `interface LogEvent` — A line that threw nothing — what an action was, what followed from it, what it said.
+- `function eventEntries` — * The lines one action left that threw nothing, as log entries: `at + i` each, because `at` is the * identity an amen…
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `function actionRuns` — The roll log as the ACTIONS it recorded: consecutive entries sharing a `group` are one action's * throws, and everyth…
@@ -1818,6 +1831,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface CastIntent` — How a cast is asked for.
 - `function castSpell` — * Cast a spell.
 
+### `src/lib/play/changes.ts`
+
+- `interface ChangeNames` — The words a change needs that play-state holds only as ids.
+- `function playChanges`
+
 ### `src/lib/play/concentration.ts`
 
 - `function endConcentration` — Stop concentrating: the ref goes, and the spell's own effect with it.
@@ -2347,4 +2365,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 96 global classes · 58 components · 1436 exports across 197 modules · 94 duplicate suspects._
+_50 tokens · 96 global classes · 58 components · 1445 exports across 200 modules · 94 duplicate suspects._

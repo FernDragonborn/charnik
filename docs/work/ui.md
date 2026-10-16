@@ -86,6 +86,8 @@
      the combat body scrolls under a log that stays put, and the log scrolls without moving the body.
      Today everything is one page scroll, so the log — the thing you look at right after acting —
      leaves the screen exactly when you acted.
+     The log holds the whole turn now — what an action spent, began, ended and said
+     (`../internals/roller.md` ▸ Conventions) — which is what makes it worth a place that stays.
   2. **The play screen moves to the LEFT edge.** It is centred now, which spends the widest part of
      a desktop window on gutters while the rail has to come from somewhere.
   3. **Which blocks live where is re-decided.** `combat.layout` already holds two drag-reorderable

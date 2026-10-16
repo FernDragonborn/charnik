@@ -5,6 +5,7 @@
  * (`effects/facts.ts` ▸ `FormRules`) — so nothing here knows what a druid is. What ENDS a form
  * without being asked is `./settle`.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import type { Character } from '$lib/character/schema';
 import { formStatTokens } from '$lib/character/forms';
 import { effectInstanceOf } from './effects';
@@ -84,7 +85,11 @@ export function revertForm(character: Character, ctx: PlayContext): PlayOutcome 
 	if (!form) return { ...quietly(character), refused: true };
 	return chain(spendTurnSlot(character, { slot: 'bonus' }, ctx), (paid) => {
 		const left = leaveFormNow(paid, ctx);
-		const said = { text: { key: 'combat.notice.formLeft' }, rows: { name: form.monster } };
+		const said = {
+			text: { key: 'combat.notice.formLeft' },
+			rows: { name: form.monster },
+			kind: LOG_KIND.effect,
+		};
 		return { ...left, notices: [...left.notices, said] };
 	});
 }

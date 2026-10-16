@@ -6,6 +6,7 @@
  * Two verbs cannot finish here, and say so in `asks`: a strike is a roll the host makes through its
  * own dice path, and assuming a form needs to know WHICH stat block before anything is paid.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { rollFormula } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
 import { MAX_SLOT_LEVEL, castableSlotLevels, slotToSpend } from '$lib/rules/spellcasting';
@@ -266,6 +267,7 @@ const VERBS: Record<string, Verb> = {
 								key: 'combat.notice.restTakenFor',
 								values: { name: run.name, kind: { catalog: 'combat.restKind', id: arg } },
 							},
+							kind: LOG_KIND.rest,
 						},
 					],
 				}))

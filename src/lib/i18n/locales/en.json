@@ -782,7 +782,7 @@
 			"noRolls": "Tap any check · save · attack · spell to roll it.",
 			"rollAria": "{label} — {total}",
 			"rollAriaDismiss": "{label} — {total}. Dismiss",
-			"rollLog": "Roll log · history",
+			"rollLog": "Log · history",
 			"shortRestHalf": "Short rest — +{hp} HP (½ max)",
 			"spell": {
 				"damage": "{name} damage",
@@ -794,7 +794,22 @@
 			},
 			"spellAttack": "{name} (spell attack)",
 			"attackExtra": "{name} — {property}",
-			"attackNumbered": "{name} {index}/{count}"
+			"attackNumbered": "{name} {index}/{count}",
+			"concentrationBegun": "Concentrating on {spell}",
+			"concentrationEnded": "Concentration ended · {spell}",
+			"slotSpent": "{count, plural, one {Level {level} spell slot spent} other {# level {level} spell slots spent}}",
+			"slotRestored": "{count, plural, one {Level {level} spell slot restored} other {# level {level} spell slots restored}}",
+			"slotGained": "{count, plural, one {Level {level} spell slot gained} other {# level {level} spell slots gained}}",
+			"pactSlotSpent": "{count, plural, one {Pact slot spent} other {# pact slots spent}}",
+			"pactSlotRestored": "{count, plural, one {Pact slot restored} other {# pact slots restored}}",
+			"resourceSpent": "{name} · {count} spent",
+			"resourceRegained": "{name} · {count} back",
+			"effectOn": "{name} · begins",
+			"effectOff": "{name} · ends",
+			"tempHp": "Temp HP {from} → {to}",
+			"exhaustion": "Exhaustion {from} → {to}",
+			"experience": "XP {from} → {to}",
+			"levelGained": "{name} {level} · character level {total}"
 		},
 		"menu": {
 			"add": "Add",

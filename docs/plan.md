@@ -246,10 +246,7 @@ position and are given per wave, because most of them were learned the hard way.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
-  2. **The log, reworked: LOG-EVENTS** (`roller.md` — what it holds) **with COMBAT-RAIL ▸ 1**
-     (`ui.md` — where it stands). One change, because what makes the log worth a pinned rail is that
-     it finally says what happened in a turn rather than only what was rolled.
-  3. **ITEM-INSTANCE's tail** — `ui.md`. Picking a `+1/+2/+3` item as the one you found ships in
+  2. **ITEM-INSTANCE's tail** — `ui.md`. Picking a `+1/+2/+3` item as the one you found ships in
      0.8.1; left are re-picking an answer, a stem for the rows with no base, and the word-answered
      rows.
 

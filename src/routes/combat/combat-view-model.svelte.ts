@@ -247,6 +247,7 @@ class CombatVM {
 	outcomes = new PlayOutcomes(() => this);
 	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
 	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
+	notify = (...a: Parameters<PlayOutcomes['notify']>) => this.outcomes.notify(...a);
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
 	// drift; entering combat sets it to 1, Next turn advances it, and effect expiry reads it.
@@ -466,7 +467,13 @@ class CombatVM {
 				e,
 				a.skill ? skillRollTarget(a.skill, this.sheet) : undefined,
 			);
-		else toast(t('combat.notice.actionUsed', { name: t(a.nameKey) }));
+		else
+			this.notify({
+				text: {
+					key: 'combat.notice.actionUsed',
+					values: { name: a.nameWord },
+				},
+			});
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see spell-casting.svelte.ts. */
 	casting = new SpellCasting(this);

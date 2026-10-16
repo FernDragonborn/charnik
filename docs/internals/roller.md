@@ -235,7 +235,21 @@ which is the named member. The two meet at exactly one seam, `advantageMode()` i
 
 - **The roller stays pure**: no Svelte, no toast, no storage. Determinism under a seeded rng is both a
   test property and a correctness property, and the four roller properties are listed in `testing.md`.
-- **The log is a rolling recent history, not an archive** — the last **100 rolls**, which survive a
+- **The log holds the turn, not only the dice.** A line is a `LogKind` (`character/log-kind.ts`, an
+  open enum; absent is a `roll`): a roll, an act that threw nothing (a cast, damage taken, healing, a
+  rest), what followed from an act (a slot or a pool spent or given back, an effect begun or ended,
+  concentration, temporary hit points, Exhaustion, experience, a level), or what an action said
+  (`notice`). What followed is read off the play-state before and after an action
+  (`play/changes.ts` ▸ `playChanges`), in the one place every action lands
+  (`PlayOutcomes.commit`), so a slot spent by a cast and one spent by a pip leave the same line. An
+  action that already said a change — a notice carrying that `kind`, or its own line — is not said
+  twice, and a rest stands for everything it gave back. A notice reaches the toast and the log as one
+  `Said` (`PlayOutcomes.notify` for a view's own notice about the character); a toast about the app
+  stays out. One action's lines share a `group`, drawn as one bracket with no `×N`, since they are not
+  N of anything. The last-roll strip shows the newest line `isTurnAct` says the player DID. A level
+  is taken in the builder, so its line is written by the builder's save, from the file it replaced
+  (`character/level-log.ts`).
+- **The log is a rolling recent history, not an archive** — the last **100 lines**, which survive a
   restart so reopening the app shows the session before. Measured: a structured attack line (d20 +
   the advantage pair + a damage line + a note) is 678 B and a plain save 296 B, so the cap is
   ~30–66 KB. It is also the per-roll IO cost, because `writeLogLine` reads and rewrites the whole

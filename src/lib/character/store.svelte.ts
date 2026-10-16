@@ -31,6 +31,10 @@ import { demoCharacter, DEMO_ID } from '$lib/demo/sheet';
 import { slugify } from '$lib/util/slug';
 import { errText } from '$lib/util/format';
 import { logger } from '$lib/diag/logger';
+import { content } from '$lib/content/store.svelte';
+import { localizedName } from '$lib/content/detail';
+import { app } from '$lib/stores/app.svelte';
+import { logLevelGains } from './level-log';
 
 /** A save the repository refused because `character.json` is not the file this app last held: the
  *  state the player has, and what the file says now. Open until the player picks which one wins. */
@@ -178,13 +182,23 @@ export async function saveCharacterToStore(
 	upsertRosterEntry(character);
 }
 
+/** A class's name in the reader's language, for a log line — the row's own word, which is data. */
+function className(ref: string): string {
+	const row = content.graph?.get(ref);
+	return row ? localizedName(row, app.activeLocale) : ref;
+}
+
 /** The builder's save: its `build` over the file as it is at this moment, so what the table did
  *  while the builder was open is not written back as it was when the builder opened. Answers
  *  `false` for a save that was refused and is being asked about — the builder stays open for the
  *  answer — and throws for one that failed. */
 export async function saveBuildToStore(character: Character): Promise<boolean> {
+	const storage = getUserStorage();
+	// what the file held before, so the levels this save gained can be said in the log
+	const before = (await loadCharacter(storage, character.id)).character;
 	try {
 		await saveCharacterToStore(character, SAVE_MODE.build);
+		if (before) await logLevelGains(storage, before, character, className);
 		return true;
 	} catch (e) {
 		if (e instanceof CharacterConflictError) return false;

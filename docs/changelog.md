@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0
+
+- **The log says what happened in a turn, not only what was rolled.** Beside the rolls it now keeps
+  a spell slot or a Rage spent and given back, an effect or a condition beginning and ending,
+  concentration taken up and dropped, temporary hit points, Exhaustion and experience, every rest,
+  and every level you take. What a toast told you — "you can't hold Concentration while raging",
+  "no ammunition", "that action is already used" — stays in the log after the toast is gone. The
+  lines one action left stand together under one bracket, and the strip under the sheet still shows
+  the last thing you did.
+
 ## 0.8.1
 
 A handful of fixes found right after 0.8.0, and a little more say over the Actions panel.

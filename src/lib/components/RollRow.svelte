@@ -355,8 +355,9 @@
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
 	     few seconds of value, and for an amendment it is redundant besides: the cue in the d20 and the
 	     struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
-	{#if model.note && !strip}<span class="roll-note"
-			><Icon name="arrow-up" size={11} /> {model.note}</span
+	{#if model.note && !strip}<span class="roll-note" class:said={model.kind}
+			>{#if !model.kind}<Icon name="arrow-up" size={11} />{/if}
+			{model.note}</span
 		>{/if}
 </div>
 
@@ -831,5 +832,9 @@
 		padding: 0 var(--space-4) var(--space-2);
 		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
+	}
+	/* a notice's explanation is prose about the turn, not a roll's boosted dice */
+	.roll-note.said {
+		color: var(--color-text-muted);
 	}
 </style>

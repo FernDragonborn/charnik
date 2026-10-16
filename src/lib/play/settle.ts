@@ -6,6 +6,7 @@
  * condition and a rage; a form ends with its effect, a state or a death. So they are stated once, here, and every action ends in `settled` — a rule
  * enforced by something that watches a screen holds only while that screen is mounted.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { effectiveHpMax } from '$lib/rules/core';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -71,7 +72,13 @@ function endFinishedForm(character: Character, sheet: CharacterSheet): PlayOutco
 	if (!stated && !spent) return quietly(character);
 	return {
 		...quietly(left),
-		notices: [{ text: { key: 'combat.notice.formEnded' }, rows: { name: form.monster } }],
+		notices: [
+			{
+				text: { key: 'combat.notice.formEnded' },
+				rows: { name: form.monster },
+				kind: LOG_KIND.effect,
+			},
+		],
 	};
 }
 

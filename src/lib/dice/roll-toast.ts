@@ -27,7 +27,8 @@ import {
 	type TypedRoll,
 } from '$lib/combat/roll';
 import { toastRollCard } from '$lib/toast/toast';
-import { say, sayText, type SaidValue } from '$lib/util/say';
+import { say, type SaidValue } from '$lib/util/say';
+import type { LogKind } from '$lib/character/log-kind';
 import { translator, type Translate } from '$lib/i18n';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
@@ -106,6 +107,9 @@ export interface RollToastModel {
 	/** The big number on the right: total damage when there is any, else the roll total. */
 	total: number;
 	note?: string;
+	/** The line's kind, when it is not a roll — what `RollRow` dresses a note by: an upcast's arrow
+	 *  belongs to a roll's provenance, not to a notice's explanation. */
+	kind?: LogKind;
 }
 
 /**
@@ -207,7 +211,7 @@ export function rollToastModel(
 	const note = noted
 		? [
 				noted.note,
-				...(noted.noteParts ?? []).map((part) => sayText(part, t)),
+				...(noted.noteParts ?? []).map((part) => say(part, t)),
 				...describeAmendments(noted, noted.amendments, t),
 			]
 				.filter(Boolean)
@@ -219,6 +223,7 @@ export function rollToastModel(
 		...(first?.labelKey ? { labelKey: first.labelKey } : {}),
 		...(first?.labelValues ? { labelValues: first.labelValues } : {}),
 		...(first?.outcome ? { outcome: first.outcome } : {}),
+		...(first?.kind ? { kind: first.kind } : {}),
 		attacks,
 		damaging,
 		tested: attacks.some((a) => a.chips.length > 0 || a.mod !== 0),

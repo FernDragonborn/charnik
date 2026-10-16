@@ -1,5 +1,5 @@
 /*
- * A character's roll log: `characters/<slug>/log.jsonl`, one JSON object per line, append-only and
+ * A character's log: `characters/<slug>/log.jsonl`, one JSON object per line, append-only and
  * kept OUT of `character.json` so a long campaign cannot bloat the save. Every write here rewrites
  * the whole file, so each takes its turn on the character's own queue (`repository.ts` ▸ `enqueue`).
  */
@@ -8,20 +8,14 @@ import { dirOf, enqueue } from './repository';
 // TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
 // the roll lives. Erased at build — no runtime edge from the character layer into combat.
 import type { RollLogEntry } from '../combat/roll';
+import { LOG_KIND, type LogKind } from './log-kind';
 
 const logOf = (slug: string) => `${dirOf(slug)}/log.jsonl`;
 
-/** The kinds of line `log.jsonl` holds. `roll` is the only one written today — see `LogEntry.kind`. */
-export const LOG_KIND = { roll: 'roll' } as const;
-type LogKind = (typeof LOG_KIND)[keyof typeof LOG_KIND];
-
 export interface LogEntry {
 	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21
-	/** What KIND of line this is. One member so far — every writer has always said `roll`, while the
-	 *  type advertised a taxonomy ("attack" | "save" | "check" | …) nothing ever wrote, so a reader
-	 *  could not trust it. A named member rather than a free string, per
-	 *  AGENTS.md ▸ Taste (open enums, never booleans): reviving the taxonomy means adding a member here, and every switch over it
-	 *  then fails to compile until it handles the new one. */
+	/** What KIND of line this is — the same fact as `roll.kind`, said at the top of the line so a
+	 *  reader of the file need not open the record to learn it. */
 	kind: LogKind;
 	label: string;
 	/** The COMPLETE in-session record: dice, per-type damage, the advantage pair, the provenance
@@ -35,12 +29,12 @@ export interface LogEntry {
 	detail?: string;
 }
 
-/** The stored line for one completed roll: the WHOLE record, plus the flattened summary an older
- *  build reads. One builder, so an append and a revision can never write different shapes. */
+/** The stored line for one log entry: the WHOLE record, plus the flattened summary an older build
+ *  reads. One builder, so an append and a revision can never write different shapes. */
 export function logLineFor(roll: RollLogEntry): LogEntry {
 	return {
 		t: roll.at ?? Date.now(),
-		kind: LOG_KIND.roll,
+		kind: roll.kind ?? LOG_KIND.roll,
 		label: roll.label,
 		roll,
 		...(Number.isFinite(roll.total) ? { result: roll.total } : {}),

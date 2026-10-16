@@ -8,8 +8,7 @@
  * press DOES is a pure action in `$lib/play/inventory`. What is here is the reactive projection the
  * panel renders, and firing a shot — which stack it spends, asked when there are several.
  */
-import { toast } from '$lib/toast/toast';
-import { t, translator } from '$lib/i18n';
+import { translator } from '$lib/i18n';
 import {
 	ATTUNEMENT_CAP,
 	attunedCount,
@@ -34,7 +33,7 @@ import {
 	toggleEquip,
 	useItem,
 } from '$lib/play/inventory';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import type { PlayContext, PlayNotice, PlayOutcome } from '$lib/play/outcome';
 import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
 import { say } from '$lib/util/say';
 import { needsBaseItem, resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
@@ -106,6 +105,8 @@ export interface InventoryHost {
 	sheet: CharacterSheet | null;
 	/** Carry out a play-state action on the open character; false when it was refused. */
 	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
+	/** Tell the player something about their character, and keep it in the log. */
+	notify(notice: PlayNotice): void;
 }
 
 export class InventoryTracker {
@@ -364,7 +365,7 @@ export class InventoryTracker {
 		const only = stacks[0];
 		if (!fire()) return;
 		if (only) this.use(only.entry.iid, shots);
-		else toast(t('combat.notice.noAmmunition'));
+		else this.host().notify({ text: { key: 'combat.notice.noAmmunition' } });
 	};
 
 	/** Finish the waiting shot from the stack the player picked. */

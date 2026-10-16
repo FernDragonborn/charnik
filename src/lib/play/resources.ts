@@ -5,6 +5,7 @@
  * A pool's `spent` is stored by id and outlives whatever granted it, so every read here goes through
  * `resourceSpent`, which clamps it to what the sheet grants NOW.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { pipClick, titleCase } from '$lib/combat/helpers';
 import { RECHARGE_ALL } from '$lib/rules/recharge';
 import { rechargeCount } from '$lib/effects/recharge-amount';
@@ -96,6 +97,7 @@ export function useResource(
 				{
 					text: { key: 'combat.notice.resourceUsed', values: { name } },
 					description: leftOf(max, before + 1),
+					kind: LOG_KIND.resource,
 				},
 			],
 		},
@@ -128,6 +130,7 @@ export function setResourcePip(
 							key: 'combat.notice.resourceLeftOf',
 							values: { left: max - after, max },
 						},
+						kind: LOG_KIND.resource,
 					},
 				];
 	return settled({ character: withSpent(character, id, after), log: [], notices }, ctx);
@@ -186,6 +189,7 @@ export function spendOnOption(
 				{
 					text: { key: 'combat.notice.resourceSpent', values: { name, cost, resource } },
 					description: spend.says,
+					kind: LOG_KIND.resource,
 				},
 			],
 		},
@@ -219,7 +223,9 @@ export function gainSlot(
 		{
 			character: { ...character, play: { ...character.play, spellSlotsGained } },
 			log: [],
-			notices: [{ text: { key: 'combat.notice.slotGained', values: { level } } }],
+			notices: [
+				{ text: { key: 'combat.notice.slotGained', values: { level } }, kind: LOG_KIND.slot },
+			],
 		},
 		ctx,
 	);
@@ -236,7 +242,12 @@ export function restoreResource(
 		{
 			character: withSpent(character, id, 0),
 			log: [],
-			notices: [{ text: { key: 'combat.notice.resourceFullyRestored', values: { name } } }],
+			notices: [
+				{
+					text: { key: 'combat.notice.resourceFullyRestored', values: { name } },
+					kind: LOG_KIND.resource,
+				},
+			],
 		},
 		ctx,
 	);
@@ -310,6 +321,7 @@ export function passBoundary(
 				{
 					text: { key: `combat.timeSkip.${trigger === 'dawn' ? 'newDay' : 'nightfall'}` },
 					description: recharged.length ? recharged : { key: 'combat.notice.nothingRecharged' },
+					kind: LOG_KIND.resource,
 				},
 			],
 		},

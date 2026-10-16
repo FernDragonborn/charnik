@@ -4,12 +4,10 @@
  * `$lib/play/resources` and `$lib/play/rests`; this is the names the panels and the action executor
  * call, and the one thing only a screen has — noticing that an ability's window has opened.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
 import { saveCharacterGuarded } from '$lib/character/store.svelte';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import type { PlayContext, PlayNotice, PlayOutcome } from '$lib/play/outcome';
 import {
 	canAfford,
 	gainSlot,
@@ -39,6 +37,8 @@ export interface ResourceTrackerHost {
 	sheet: CharacterSheet | null;
 	/** Carry out a play-state action on the open character; false when it was refused. */
 	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
+	/** Tell the player something about their character, and keep it in the log. */
+	notify(notice: PlayNotice): void;
 }
 
 export class ResourceTracker {
@@ -137,7 +137,7 @@ export class ResourceTracker {
 			const was = this.windowWas.get(o.id);
 			this.windowWas.set(o.id, o.available);
 			if (seeded && was === false && o.available)
-				toast(t('combat.notice.windowOpen', { name: o.name }));
+				this.host().notify({ text: { key: 'combat.notice.windowOpen', values: { name: o.name } } });
 		}
 	};
 

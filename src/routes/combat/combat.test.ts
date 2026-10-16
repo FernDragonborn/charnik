@@ -25,6 +25,8 @@ import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { DIE_ROLE } from '$lib/rules/dice';
 import { combat } from './combat-view-model.svelte';
+import { LOG_KIND, isTurnAct } from '$lib/character/log-kind';
+import { logLineFor } from '$lib/character/log-repository';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import { PanelLayout, PANEL_MOVE } from './panel-layout.svelte';
 import { UNARMED_STRIKE_ID, attackNotes } from '$lib/combat/attacks';
@@ -59,6 +61,9 @@ async function graphOf(): Promise<ContentGraph> {
 		].join('\n'),
 	});
 }
+
+/** The log's THROWS — what an action rolled, without the lines that say what followed from it. */
+const rolls = () => combat.journal.log.filter((e) => !e.kind);
 
 const noModifiers = { shiftKey: false } as unknown as Event;
 /** A Shift-click: what `wantsTray` reads to open the roll tray instead of rolling instantly. */
@@ -100,6 +105,30 @@ describe('CombatVM · concentration (CVM-bug1)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		expect(character.play.concentration).toBe(`spell:${S}:bless`);
 		expect(combat.conc?.label).toBe('Bless');
+	});
+
+	it('the log keeps what a cast began and what ending it by hand took away (LOG-EVENTS)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		const begun = combat.journal.log.find((e) => e.kind === LOG_KIND.concentration);
+		expect(begun).toMatchObject({
+			labelKey: 'combat.log.concentrationBegun',
+			labelValues: { spell: 'Bless' },
+		});
+		// what followed from one action is one run, which is what the log draws as one bracket
+		const effectOn = combat.journal.log.find((e) => e.labelKey === 'combat.log.effectOn');
+		expect(effectOn?.group).toBeTruthy();
+		expect(effectOn?.group).toBe(begun?.group);
+
+		combat.endConcentrationByHand();
+		expect(combat.journal.log[0]).toMatchObject({
+			kind: LOG_KIND.concentration,
+			labelKey: 'combat.log.concentrationEnded',
+		});
+		// and the kind is part of the stored line, so a reload reads the same log
+		expect(logLineFor(combat.journal.log[0]!).kind).toBe(LOG_KIND.concentration);
+		// the always-visible strip still shows the cast, not the line that came after it
+		const lastAct = combat.journal.log.find((e) => isTurnAct(e.kind ?? LOG_KIND.roll));
+		expect(lastAct?.labelKey).toBe('combat.log.cast');
 	});
 
 	it('casting a non-concentration spell leaves concentration untouched', () => {
@@ -241,9 +270,9 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		expect(combat.hp.owedConcentrationSaves).toEqual([]); // no damage taken
-		const before = combat.journal.log.length;
+		const before = rolls().length;
 		combat.rollConcentrationSave();
-		expect(combat.journal.log.length).toBe(before + 1); // it rolled, against the DC 10 floor
+		expect(rolls().length).toBe(before + 1); // it rolled, against the DC 10 floor
 	});
 
 	it('rolling with no concentration at all does nothing', () => {
@@ -530,7 +559,8 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 			values: { base: '3d8 fire', added: '1d8', slot: 2 },
 		});
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers); // still a level-2 slot → +1d8
-		expect(combat.journal.log[0]?.noteParts?.[0]?.values?.slot).toBe(2);
+		const again = combat.journal.log[0]?.noteParts?.[0];
+		expect(typeof again === 'object' && again.values?.slot).toBe(2);
 		character.play.spellSlotsSpent = {}; // a base-slot cast has no upcast → no provenance note
 		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
 		expect(combat.journal.log[0]?.noteParts).toBeUndefined();
@@ -1191,8 +1221,9 @@ describe('CombatVM · S2 split net', () => {
 		character.ui.shortRestMode = 'half';
 		character.play.hp = { current: 1, max: 40, temp: 0 };
 		combat.startShortRest(noModifiers);
-		expect(combat.journal.log[0]).toMatchObject({
-			labelKey: 'combat.log.shortRestHalf',
+		expect(
+			combat.journal.log.find((e) => e.labelKey === 'combat.notice.shortRestHealed'),
+		).toMatchObject({
 			labelValues: { hp: 20 },
 		});
 	});
@@ -1300,15 +1331,15 @@ describe('CombatVM · S2 split net', () => {
 			positive: true,
 		});
 		expect(combat.sheet!.attacksPerAction.value).toBe(2);
-		const before = combat.journal.log.length;
+		const before = rolls().length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		// both rolled, on ONE Action — the second strike rides the first's Attack action
-		expect(combat.journal.log.length).toBe(before + 2);
+		expect(rolls().length).toBe(before + 2);
 		expect(character.play.turn.action).toBe(1);
 		// the third wants a second Action, and there is none
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
-		expect(combat.journal.log.length).toBe(before + 2);
+		expect(rolls().length).toBe(before + 2);
 	});
 
 	it('Savage Attacker rerolls the WEAPON dice and leaves an effect die alone', () => {
@@ -2284,20 +2315,20 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		const character = monk();
 		combat.graph = graph;
 		combat.character = character;
-		const before = combat.journal.log.length;
+		const before = rolls().length;
 
 		combat.activateResourceOption(flurry());
 
-		expect(combat.journal.log.length - before).toBe(2); // two strikes, two log entries
+		expect(rolls().length - before).toBe(2); // two strikes, two log entries
 		expect(character.play.turn.bonus).toBe(1); // ONE bonus action, not one per strike
 		expect(combat.resources.resourceSpent('focus')).toBe(1);
 		// numbered, so the log says WHICH strike each line was — in throw order, like a volley's beams,
 		// because the two were recorded as ONE action
-		expect(combat.journal.log[0]?.label).toMatch(/1\/2$/);
-		expect(combat.journal.log[1]?.label).toMatch(/2\/2$/);
+		expect(rolls()[0]?.label).toMatch(/1\/2$/);
+		expect(rolls()[1]?.label).toMatch(/2\/2$/);
 		// one action, so one group — and each strike keeps an identity of its own, which is what an
 		// amendment matches on: sharing a millisecond made re-reading one rewrite both
-		const [a, b] = combat.journal.log;
+		const [a, b] = rolls();
 		expect(a?.group).toBeTruthy();
 		expect(b?.group).toBe(a?.group);
 		expect(a?.at).not.toBe(b?.at);
@@ -2308,11 +2339,11 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		const character = monk();
 		combat.graph = graph;
 		combat.character = character;
-		const before = combat.journal.log.length;
+		const before = rolls().length;
 
 		combat.activateResourceOption(flurry({ action: 'attack:greatsword_we_do_not_carry:2' }));
 
-		expect(combat.journal.log.length).toBe(before); // nothing rolled…
+		expect(rolls().length).toBe(before); // nothing rolled…
 		expect(character.play.turn.bonus).toBe(1); // …though the action was still spent (all-or-nothing
 		expect(combat.resources.resourceSpent('focus')).toBe(1); // validates the COST, not the content)
 	});
@@ -2323,17 +2354,17 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 		combat.graph = graph;
 		combat.character = character;
 
-		const before = combat.journal.log.length; // the tray is a singleton, so count the DELTA
+		const before = rolls().length; // the tray is a singleton, so count the DELTA
 
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}` }));
-		expect(combat.journal.log.length - before).toBe(1);
+		expect(rolls().length - before).toBe(1);
 		// unnumbered when there is only one — the numbering is the fact under test, so it is asserted
 		// as the ABSENCE of an "i/N" rather than on the strike's word
-		expect(combat.journal.log[0]?.label).not.toMatch(/\d+\/\d+/);
+		expect(rolls()[0]?.label).not.toMatch(/\d+\/\d+/);
 
 		character.play.turn.bonus = 0; // fresh turn for the second activation
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}:500` }));
-		expect(combat.journal.log.length - before).toBe(1 + 12); // capped, not five hundred log lines
+		expect(rolls().length - before).toBe(1 + 12); // capped, not five hundred log lines
 	});
 });
 
@@ -2356,9 +2387,9 @@ describe.each([
 		const flurry = combat.sheet?.resourceOptions.find((o) => o.id.endsWith('flurry_of_blows'));
 		expect(flurry?.action).toBe(`attack:${UNARMED_STRIKE_ID}:2`);
 		if (!flurry) return;
-		const before = combat.journal.log.length;
+		const before = rolls().length;
 		combat.activateResourceOption(flurry);
-		expect(combat.journal.log.length - before).toBe(2);
+		expect(rolls().length - before).toBe(2);
 		expect(character.play.turn.bonus).toBe(1); // one Bonus Action for the pair
 	});
 });

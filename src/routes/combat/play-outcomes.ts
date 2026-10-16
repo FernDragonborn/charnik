@@ -8,7 +8,10 @@
 import { toast } from '$lib/toast/toast';
 import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import { sayText, type Said } from '$lib/util/say';
+import { say, type Said } from '$lib/util/say';
+import { LOG_KIND } from '$lib/character/log-kind';
+import { playChanges } from '$lib/play/changes';
+import { resourceName } from '$lib/play/resources';
 import { localizedName } from '$lib/content/detail';
 import { isRowActive } from '$lib/content/sources.svelte';
 import type { ContentGraph } from '$lib/content/loader';
@@ -23,6 +26,7 @@ import {
 	type PlayOutcome,
 } from '$lib/play/outcome';
 import type { RollJournal } from './roll-journal.svelte';
+import type { LogEvent } from '$lib/combat/roll';
 
 /** What carrying an outcome out needs from the sheet around it. */
 export interface PlayOutcomesHost {
@@ -81,22 +85,47 @@ export class PlayOutcomes {
 	};
 
 	private commit(held: Character, outcome: PlayOutcome): void {
-		const { hp, journal } = this.host();
+		const { hp, journal, sheet, graph } = this.host();
+		// shallow is enough: an action replaces what it changes and never edits what it was handed
+		const before = { ...held.play };
 		adoptCharacter(held, outcome.character);
-		for (const { name, rolled, quiet } of outcome.log)
-			if (!rolled) journal.logMarker(name);
+		const events: LogEvent[] = [];
+		for (const { name, rolled, quiet, kind } of outcome.log)
+			if (!rolled) events.push({ name, ...(kind ? { kind } : {}) });
 			else if (quiet) journal.logRoll(name, rolled);
 			else journal.pushRoll(name, rolled);
-		for (const notice of outcome.notices) this.announce(notice);
+		const said = [...outcome.log, ...outcome.notices].map((l) => l.kind ?? LOG_KIND.notice);
+		const nameOf = (ref: string) => {
+			const row = graph?.get(ref);
+			return row ? localizedName(row, app.activeLocale) : ref;
+		};
+		events.push(
+			...playChanges(
+				before,
+				outcome.character.play,
+				{ resource: (id) => (sheet ? resourceName(sheet, id) : id), spell: nameOf },
+				said,
+			),
+		);
+		events.push(...outcome.notices.map((notice) => this.announce(notice)));
+		journal.logEvents(events);
 		if (outcome.concentrationSave) hp.owe(outcome.concentrationSave);
 		// an owed save belongs to the concentration it names, and goes when that one ends or is
 		// replaced — whichever writer of `play.concentration` did it
 		hp.keepOwedFor(held.play.concentration);
 	}
 
-	/** Say a notice in the reader's language, naming the content rows it points at. */
-	private announce(notice: PlayNotice): void {
-		const translate = translator();
+	/**
+	 * Tell the player something about their character, and keep it in the log: the toast is gone in
+	 * seconds, and the log is where a past turn is read again. One sentence for both, so the two
+	 * cannot disagree. For what an action said, and for what a view refused or noticed on the
+	 * character's behalf — never for news about the app itself.
+	 */
+	notify = (notice: PlayNotice): void => this.host().journal.logEvents([this.announce(notice)]);
+
+	/** Say a notice in the reader's language, naming the content rows it points at, and hand back
+	 *  its log line. The names are resolved now: a row's name is data, which no catalog holds. */
+	private announce(notice: PlayNotice): LogEvent {
 		const graph = this.host().graph;
 		const names = Object.fromEntries(
 			Object.entries(notice.rows ?? {}).map(([name, ref]) => {
@@ -104,11 +133,24 @@ export class PlayOutcomes {
 				return [name, row ? localizedName(row, app.activeLocale) : ref];
 			}),
 		);
-		const said = (text: Said) =>
-			typeof text === 'string'
-				? text
-				: sayText({ ...text, values: { ...text.values, ...names } }, translate);
-		const description = [notice.description ?? []].flat().map(said).join(SENTENCE_SEPARATOR);
-		toast(said(notice.text), description ? { description } : {});
+		const named = (text: Said): Said =>
+			typeof text === 'string' ? text : { ...text, values: { ...text.values, ...names } };
+		const text = named(notice.text);
+		const description = [notice.description ?? []].flat().map(named);
+		const translate = translator();
+		const spoken = description.map((part) => say(part, translate)).join(SENTENCE_SEPARATOR);
+		toast(say(text, translate), spoken ? { description: spoken } : {});
+		return {
+			name:
+				typeof text === 'string'
+					? { text }
+					: {
+							text: text.fallback ?? text.key,
+							key: text.key,
+							...(text.values ? { values: text.values } : {}),
+						},
+			kind: notice.kind ?? LOG_KIND.notice,
+			...(description.length ? { noteParts: description } : {}),
+		};
 	}
 }

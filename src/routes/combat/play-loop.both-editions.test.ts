@@ -184,7 +184,12 @@ for (const { system, pack, source } of EDITIONS) {
 			expect(character.build.inventory.find((e) => e.item === `item:${source}:arrows`)?.qty).toBe(
 				17,
 			);
-			expect(combat.journal.log.slice(0, 3).every((e) => e.damage !== undefined)).toBe(true);
+			expect(
+				combat.journal.log
+					.filter((e) => !e.kind)
+					.slice(0, 3)
+					.every((e) => e.damage !== undefined),
+			).toBe(true);
 		});
 
 		it('Sneak Attack marks itself used where the roll lands, and the mark is the player’s to lift', async () => {

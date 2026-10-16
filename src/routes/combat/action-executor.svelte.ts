@@ -5,15 +5,19 @@
  * for — the strikes an `attack:` verb makes, rolled through the sheet's own attack path, and the
  * question an `assume_form:` verb puts before anything is paid.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { type Attack } from '$lib/combat/attacks';
 import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
 import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
 import { activateOption, type OptionUse } from '$lib/play/options';
-import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '$lib/play/outcome';
+import { t } from '$lib/i18n';
+import {
+	PLAY_REQUEST,
+	type PlayContext,
+	type PlayNotice,
+	type PlayOutcome,
+} from '$lib/play/outcome';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
@@ -42,6 +46,8 @@ export interface ExecutorHost {
 	inventory: Pick<InventoryTracker, 'shoot'>;
 	/** Carry out a play-state action on the open character, and hand back what came of it. */
 	enact(action: (character: Character, ctx: PlayContext) => PlayOutcome): PlayOutcome | null;
+	/** Tell the player something about their character, and keep it in the log. */
+	notify(notice: PlayNotice): void;
 }
 
 export class ActionExecutor {
@@ -146,8 +152,9 @@ export class ActionExecutor {
 	private makeAttacks(name: string, id: string, count: number) {
 		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
 		if (!at) {
-			toast(t('combat.notice.nothingToAttack', { name }), {
-				description: t('combat.notice.nothingToAttackBody', { id }),
+			this.host().notify({
+				text: { key: 'combat.notice.nothingToAttack', values: { name } },
+				description: { key: 'combat.notice.nothingToAttackBody', values: { id } },
 			});
 			return;
 		}

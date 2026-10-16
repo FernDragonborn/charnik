@@ -4,6 +4,7 @@
  *
  * Out of combat there is no economy: nothing is charged and nothing is refused.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { pipClick, type ActionSlot } from '$lib/combat/roll';
 import { isEffectExpired } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
@@ -139,6 +140,7 @@ function expireTimedEffects(character: Character, ctx: PlayContext): PlayOutcome
 			log: [],
 			notices: expired.map((effect) => ({
 				text: { key: 'combat.notice.effectExpired', values: { label: effect.label } },
+				kind: LOG_KIND.effect,
 			})),
 		},
 		ctx,

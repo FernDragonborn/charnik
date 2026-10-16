@@ -14,6 +14,7 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
+import type { PlayNotice } from '$lib/play/outcome';
 import {
 	wantsTray,
 	sheetRollEffects,
@@ -46,6 +47,8 @@ export interface SheetRollsHost {
 	journal: RollJournal;
 	economy: TurnEconomy;
 	openMenu(kind: MenuKind, e: Event): void;
+	/** Tell the player something about their character, and keep it in the log. */
+	notify(notice: PlayNotice): void;
 }
 
 /** WHICH effects a roll picks up: its effect key (`save.dex`, `skill.stealth`, `attack`), and the
@@ -194,8 +197,9 @@ export class SheetRolls {
 		const economy = this.host().economy;
 		const mark = extraAttackMark(at, extra);
 		if (economy.isRollUsed(mark)) {
-			toast(t('combat.notice.extraAttackMade', { name: extra.name }), {
-				description: t('combat.notice.nextTurnToRefresh'),
+			this.host().notify({
+				text: { key: 'combat.notice.extraAttackMade', values: { name: extra.name } },
+				description: { key: 'combat.notice.nextTurnToRefresh' },
 			});
 			return false;
 		}

@@ -6,6 +6,7 @@
  * fire it. RAW these happen TO the character, so they are applied and said rather than offered; with
  * effects-auto off the player manages by hand and nothing fires.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { PLAY_EVENT, type PlayEvent } from '$lib/effects/token-parser';
 import type { Character } from '$lib/character/schema';
 import { runAction } from './options';
@@ -64,6 +65,7 @@ function regainOnInitiative(character: Character, ctx: PlayContext): PlayOutcome
 								key: 'combat.notice.resourceRestoredTo',
 								values: { resource: resourceName(sheet, regain.id), count: after },
 							},
+							kind: LOG_KIND.resource,
 						},
 					],
 				};

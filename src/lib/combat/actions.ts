@@ -12,9 +12,15 @@ import type { CharacterSheet, SkillId } from '$lib/character/derive';
  *  Everything a reader SEES is a catalog key, not a word: this is a closed rules vocabulary the UI
  *  names, and a check's roll name travels as a key for the same reason a tapped stat's does — the
  *  log keeps the line verbatim. */
+/** Where a standard action's words live in the catalog. */
+const ACTION_CATALOG = 'combat.action';
+
 export interface StandardAction {
 	id: string;
 	nameKey: string;
+	/** The same name as a word a sentence carries — "{name} used" names the action in the reader's
+	 *  language, wherever that sentence is read again. */
+	nameWord: { catalog: string; id: string };
 	hint: string;
 	descKey: string;
 	/** Short right-side tag: action / contest / → roll / → Attacks. */
@@ -54,8 +60,6 @@ const ROWS: {
 	skill?: SkillId;
 	/** Only in this system — Study is a 2024 action. */
 	system?: System;
-	/** When the two editions call it different things. */
-	nameKey?: string;
 	byDefault?: ActionDefault;
 }[] = [
 	{ id: 'attack', marker: 'attacks' },
@@ -78,11 +82,11 @@ const ROWS: {
 export function standardActions(sheet: CharacterSheet | null, system: System): StandardAction[] {
 	const sk = (k: SkillId) => sheet?.skills[k]?.value ?? 0;
 	// 2024 renamed 2014's "Use an Object" to "Utilize" — the one row whose name is edition-dependent
-	const nameOf = (id: string) =>
-		id === 'utilize' && system === '5e' ? 'combat.action.useAnObject' : `combat.action.${id}`;
+	const nameIdOf = (id: string) => (id === 'utilize' && system === '5e' ? 'useAnObject' : id);
 	return ROWS.filter((r) => !r.system || r.system === system).map((r) => ({
 		id: r.id,
-		nameKey: r.nameKey ?? nameOf(r.id),
+		nameKey: `${ACTION_CATALOG}.${nameIdOf(r.id)}`,
+		nameWord: { catalog: ACTION_CATALOG, id: nameIdOf(r.id) },
 		hint: r.skill ? signed(sk(r.skill)) : '',
 		descKey: `combat.action.${r.id}Desc`,
 		markerKey: MARKER[r.marker],

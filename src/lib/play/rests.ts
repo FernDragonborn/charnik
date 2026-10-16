@@ -5,6 +5,7 @@
  * A rest is a DURATION, so it also expires what runs out inside it — and not what is still running
  * after: a long rest is eight hours, not forever.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { rollFormula } from '$lib/rules/dice';
 import {
 	effectiveHpMax,
@@ -135,6 +136,7 @@ export function rest(
 						key: 'combat.notice.restRestored',
 						values: { kind: { catalog: 'combat.restKind', id: kind } },
 					},
+					kind: LOG_KIND.rest,
 					...(before.exhaustion > play.exhaustion
 						? {
 								description: {
@@ -207,7 +209,7 @@ export function diceShortRest(
 			outcome = chain(outcome, (rested) => spendHitDie(rested, { die }, ctx));
 	return chain(outcome, (rested) => ({
 		...quietly(rested),
-		notices: [{ text: { key: 'combat.notice.shortRestTaken' } }],
+		notices: [{ text: { key: 'combat.notice.shortRestTaken' }, kind: LOG_KIND.rest }],
 	}));
 }
 
@@ -223,16 +225,10 @@ export function halfShortRest(character: Character, ctx: PlayContext): PlayOutco
 					...rested,
 					play: { ...play, hp: { ...play.hp, current: Math.min(max, play.hp.current + hp) } },
 				},
-				log: [
-					{
-						name: {
-							text: `Short rest — +${hp} HP (½ max)`,
-							key: 'combat.log.shortRestHalf',
-							values: { hp },
-						},
-					},
+				log: [],
+				notices: [
+					{ text: { key: 'combat.notice.shortRestHealed', values: { hp } }, kind: LOG_KIND.rest },
 				],
-				notices: [{ text: { key: 'combat.notice.shortRestHealed', values: { hp } } }],
 			},
 			ctx,
 		);

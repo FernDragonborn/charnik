@@ -12,6 +12,7 @@ import type { ContentGraph } from '$lib/content/loader';
 import type { Rng, Rolled } from '$lib/rules/dice';
 import type { RollName } from '$lib/combat/roll';
 import type { Said } from '$lib/util/say';
+import type { LogKind } from '$lib/character/log-kind';
 
 /** What an action reads besides the character. */
 export interface PlayContext {
@@ -38,6 +39,8 @@ export interface PlayLogLine {
 	/** The roll's result is already said where the player is looking — the hit-point block lights
 	 *  the death save it was — so the host records it and raises no card over that place. */
 	quiet?: true;
+	/** What kind of line it is. Absent is a `roll`. */
+	kind?: LogKind;
 }
 
 /** Something to tell the player: a catalog sentence, or a row's own words as they are. A
@@ -48,6 +51,10 @@ export interface PlayNotice {
 	text: Said;
 	description?: Said | readonly Said[];
 	rows?: Record<string, string>;
+	/** The change this notice reports, when it reports one — its line in the log is then that kind,
+	 *  and the host does not log the same change a second time from the state it sees move. Absent is
+	 *  a `notice`: a refusal, a reminder, anything that changed nothing. */
+	kind?: LogKind;
 }
 
 /** What a request in `asks` is for. */

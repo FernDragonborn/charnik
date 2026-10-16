@@ -8,6 +8,7 @@
  * SRD 5.2.1 — "you gain a number of Temporary Hit Points equal to your Druid level"; "you retain your
  * … Hit Points"; "until you … have the Incapacitated condition, or die."
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { newCharacter, type Character, classRow } from '$lib/character/schema';
@@ -110,7 +111,7 @@ describe.each(['5e', '5.5e'] as const)('form actions · %s', (system) => {
 		expect(out.character.play.form).toBeNull();
 		expect(out.character.play.hp.current).toBe(own.play.hp.current);
 		expect(out.notices).toEqual([
-			{ text: { key: 'combat.notice.formEnded' }, rows: { name: wolf } },
+			{ text: { key: 'combat.notice.formEnded' }, rows: { name: wolf }, kind: LOG_KIND.effect },
 		]);
 	});
 
@@ -132,6 +133,7 @@ describe.each(['5e', '5.5e'] as const)('form actions · %s', (system) => {
 		expect(back.notices.at(-1)).toEqual({
 			text: { key: 'combat.notice.formLeft' },
 			rows: { name: wolf },
+			kind: LOG_KIND.effect,
 		});
 
 		const spent = { ...formed, play: { ...formed.play, turn: { ...formed.play.turn, bonus: 1 } } };

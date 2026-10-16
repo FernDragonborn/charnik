@@ -7,6 +7,7 @@
  * What a slot ADDS is not decided here. `SpellCasting` owns the upcast evaluation, because the
  * carrier effect and the weapon picker read it too, and hands it in as `UpcastReads`.
  */
+import { LOG_KIND } from '$lib/character/log-kind';
 import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import type { SaidText } from '$lib/util/say';
@@ -243,11 +244,15 @@ export class SpellCastRolls {
 			// name is DATA and rides as a value; whether it was a ritual picks the whole phrase, because
 			// a parenthetical tacked onto a translated sentence is not one a translator can move.
 			const suffix = ritual ? ' (ritual)' : '';
-			this.host.journal.logMarker({
-				text: `Cast ${r.name}${suffix}`,
-				key: ritual ? 'combat.log.castRitual' : 'combat.log.cast',
-				values: { name: r.name },
-			});
+			this.host.journal.logMarker(
+				{
+					text: `Cast ${r.name}${suffix}`,
+					key: ritual ? 'combat.log.castRitual' : 'combat.log.cast',
+					values: { name: r.name },
+				},
+				undefined,
+				LOG_KIND.cast,
+			);
 			toast(t('combat.notice.castSpell', { name: r.name, suffix }));
 		}
 	}

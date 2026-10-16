@@ -23,7 +23,8 @@ import {
 	CharacterConflictError,
 	SAVE_MODE,
 } from './repository';
-import { appendLog, LOG_KIND, reviseLog, logLineFor, readLog } from './log-repository';
+import { appendLog, reviseLog, logLineFor, readLog } from './log-repository';
+import { LOG_KIND } from './log-kind';
 import { charactersReferencing } from '$lib/content/remote/diff';
 import { addItem, attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 

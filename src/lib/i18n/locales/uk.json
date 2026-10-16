@@ -782,7 +782,7 @@
 			"noRolls": "Торкніться будь-якої перевірки · рятівного кидка · атаки · закляття, щоб кинути.",
 			"rollAria": "{label} — {total}",
 			"rollAriaDismiss": "{label} — {total}. Закрити",
-			"rollLog": "Журнал кидків · історія",
+			"rollLog": "Журнал · історія",
 			"shortRestHalf": "Короткий відпочинок — +{hp} ОЗ (½ максимуму)",
 			"spell": {
 				"damage": "{name} — шкода",
@@ -794,7 +794,22 @@
 			},
 			"spellAttack": "{name} (атака закляттям)",
 			"attackExtra": "{name} — {property}",
-			"attackNumbered": "{name} {index}/{count}"
+			"attackNumbered": "{name} {index}/{count}",
+			"concentrationBegun": "Концентрація на {spell}",
+			"concentrationEnded": "Концентрацію припинено · {spell}",
+			"slotSpent": "{count, plural, one {Витрачено комірку {level} рівня} few {Витрачено # комірки {level} рівня} other {Витрачено # комірок {level} рівня}}",
+			"slotRestored": "{count, plural, one {Відновлено комірку {level} рівня} few {Відновлено # комірки {level} рівня} other {Відновлено # комірок {level} рівня}}",
+			"slotGained": "{count, plural, one {Отримано комірку {level} рівня} few {Отримано # комірки {level} рівня} other {Отримано # комірок {level} рівня}}",
+			"pactSlotSpent": "{count, plural, one {Витрачено комірку пакту} few {Витрачено # комірки пакту} other {Витрачено # комірок пакту}}",
+			"pactSlotRestored": "{count, plural, one {Відновлено комірку пакту} few {Відновлено # комірки пакту} other {Відновлено # комірок пакту}}",
+			"resourceSpent": "{name} · витрачено {count}",
+			"resourceRegained": "{name} · повернуто {count}",
+			"effectOn": "{name} · починає діяти",
+			"effectOff": "{name} · більше не діє",
+			"tempHp": "Тимч. ОЗ {from} → {to}",
+			"exhaustion": "Виснаження {from} → {to}",
+			"experience": "Досвід {from} → {to}",
+			"levelGained": "{name} {level} · рівень персонажа {total}"
 		},
 		"menu": {
 			"add": "Додати",

@@ -25,8 +25,11 @@
 	{#each actions as run, i (i)}
 		<div class="log-row" class:one-action={run.length > 1}>
 			<!-- how many throws one action made. The bracket alone is too quiet to carry it at this
-			     contrast, and "×3" is what a player says out loud about a volley anyway. -->
-			{#if run.length > 1}<span class="action-count eyebrow">×{run.length}</span>{/if}
+			     contrast, and "×3" is what a player says out loud about a volley anyway. A run that is
+			     an action and what followed from it is not three of anything, so it has no count. -->
+			{#if run.length > 1 && run.every((l) => !l.kind)}<span class="action-count eyebrow"
+					>×{run.length}</span
+				>{/if}
 			{#each run as l, j (j)}
 				<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
 			     d20 to apply advantage after the fact, tap a damage pill marked with the reroll icon to reroll it. N2 Savage

@@ -17,10 +17,12 @@
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import RollRow from '$lib/components/RollRow.svelte';
+	import { isTurnAct, LOG_KIND } from '$lib/character/log-kind';
 
 	const { openMenu } = combat;
 	const log = $derived(combat.journal.log);
-	const last = $derived(log[0]);
+	// the newest thing the player DID: what followed from it, or what was said about it, sits in the log
+	const last = $derived(log.find((e) => isTurnAct(e.kind ?? LOG_KIND.roll)));
 
 	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
 	// toast expires mid-decision and click-anywhere dismisses it, so it announces and these two act.
