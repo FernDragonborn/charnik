@@ -941,3 +941,25 @@ describe('shipped Unarmored Movement · a monk walks at the speed its own table 
 		},
 	);
 });
+
+/*
+ * SRD 5.2.1 ▸ Warlock ▸ Witch Sight: "You have Truesight with a range of 30 feet." ▸ Gift of the
+ * Depths: "you gain a Swim Speed equal to your Speed. You can also cast Water Breathing once without
+ * expending a spell slot. You regain the ability to cast it in this way again when you finish a Long
+ * Rest."
+ */
+describe('2024 invocations that put a number on the sheet', () => {
+	it('Witch Sight grants Truesight 30 ft; Gift of the Depths a Swim Speed and one long-rest cast', async () => {
+		const g = await loadEdition('srd-2024');
+		const c = charOf('SRD 5.2.1', '5.5e', 'warlock', 15);
+		const bare = deriveSheet(c, g);
+		expect(bare.senses.truesight).toBeUndefined();
+		c.build.options = { warlock_eldritch_invocations: ['witch_sight', 'gift_of_the_depths'] };
+		const sheet = deriveSheet(c, g);
+		expect(sheet.senses.truesight?.value).toBe(30);
+		expect(sheet.swimSpeed?.value).toBe(sheet.speed.value);
+		const pool = sheet.resources.find((r) => r.id === 'gift_of_the_depths');
+		expect(pool?.max).toBe(1);
+		expect(pool?.recharge).toMatchObject({ trigger: 'long' });
+	});
+});

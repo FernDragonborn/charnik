@@ -161,3 +161,29 @@ for (const { system, pack, source } of EDITIONS) {
 		});
 	});
 }
+
+/*
+ * SRD 5.1 ▸ Warlock ▸ Agonizing Blast: "When you cast eldritch blast, add your Charisma modifier to
+ * the damage it deals on a hit." The option's token is scoped to the spell's id, so it reaches
+ * Eldritch Blast and no other spell.
+ */
+describe('a held invocation reaches the one spell it names · 5e', () => {
+	it('Agonizing Blast adds the Charisma modifier to Eldritch Blast and to nothing else', async () => {
+		const source = 'SRD 5.1';
+		combat.graph = await loadPacks('srd-2014');
+		const c = newCharacter('probe', 'Probe', '5e');
+		c.play.hp.current = 10;
+		c.build.classes = [classRow({ class: `class:${source}:warlock`, level: 2 })];
+		c.build.abilities = { str: 10, dex: 14, con: 12, int: 10, wis: 10, cha: 18 };
+		c.build.options = { warlock_eldritch_invocations: ['agonizing_blast'] };
+		combat.character = c;
+		const castAndRead = (id: string) => {
+			const row = combat.graph ? spellRow(combat.graph, `spell:${source}:${id}`, 'on') : null;
+			expect(row, `${id} ships`).not.toBeNull();
+			if (row) combat.cast(row, noModifiers);
+			return combat.journal.log[0]?.damage?.[0]?.expr ?? combat.journal.log[0]?.expr ?? '';
+		};
+		expect(castAndRead('eldritch_blast')).toContain('+4');
+		expect(castAndRead('fire_bolt')).not.toContain('+4');
+	});
+});

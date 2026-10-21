@@ -506,7 +506,7 @@ column on every other row of it.
 ## Where the shipped data comes from
 
 Game data is converted from a real CC-BY source, never authored from memory. That conversion happens
-in a producer sibling, not here; what this repository sees is the pack, which checks its own 38 files
+in a producer sibling, not here; what this repository sees is the pack, which checks its own files
 against a manifest of row counts (`charnik-content-srd` ▸ `check.mjs`).
 
 - **5.5e = SRD 5.2.1** — `downfallx/dnd-5e-srd-markdown`.

@@ -29,6 +29,11 @@
   character with no Fighting Style feature is no longer offered one at all.
 - **A sorcerer chooses Metamagic**: eight options in 2014, ten in 2024, as many as the level
   allows, listed on the sheet as features.
+- **A 2024 warlock chooses Eldritch Invocations**: one at 1st level and more down the Invocations
+  column, from all 28 — the three Pacts among them. An invocation whose level or Pact you have not
+  reached says which. Witch Sight puts Truesight on the sheet, and Gift of the Depths a Swim Speed
+  and its one Water Breathing a day. The four marked Repeatable are taken once for now.
+- **A 2014 warlock's Agonizing Blast adds the Charisma modifier** to Eldritch Blast's damage.
 - **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
   figurines after it — Golden Lions to Silver Raven — were missing.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared

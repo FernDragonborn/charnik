@@ -112,10 +112,8 @@
   options are rows of the `option` type and its `choose` column says how many
   (`../internals/content.md` ▸ One row, several options), so each of these is typing, with no
   code behind it. Shipped: the six items whose rarity varies, in both packs, a 2014
-  warlock's Pact Boons and Eldritch Invocations, the 2014 Fighting Styles, and Metamagic in both. Not yet rows, every value typed by hand
-  (SRD-TRANSCRIPTION):
-  - **2024 Eldritch Invocations** — the feature row names the choice and the pack carries none of
-    the options.
+  warlock's Pact Boons and Eldritch Invocations in both editions, the 2014 Fighting Styles, and
+  Metamagic in both. Not yet rows, every value typed by hand (SRD-TRANSCRIPTION):
   - **2024 choices of two** stated inside a feature's prose: Divine Order, Primal Order and
     Blessed Strikes. Elemental Fury's two ship, Primal Strike as a roll once a turn; Potent
     Spellcasting's Wisdom modifier on a druid cantrip's damage is text, waiting on the same

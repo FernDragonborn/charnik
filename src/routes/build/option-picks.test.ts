@@ -101,7 +101,7 @@ describe('feature options · the builder asks for what the feature row says to c
 		expect(invocations().picks).toEqual(['book_of_ancient_secrets', 'ascendant_step']);
 	});
 
-	it('2024: a druid chooses one of Elemental Fury’s two at level 7, and its warlock is asked nothing yet', async () => {
+	it('2024: a druid chooses one of Elemental Fury’s two at level 7', async () => {
 		build.reset();
 		build.graph = await loadPacks('srd-2024');
 		build.draft.system = '5.5e';
@@ -119,8 +119,36 @@ describe('feature options · the builder asks for what the feature row says to c
 			'primal_strike',
 		]);
 		expect(choiceOf('druid_elemental_fury').cap).toBe(1);
-		build.draft.classes = [cls('warlock', 5)];
-		expect(build.optionPicks.choices).toEqual([]);
+	});
+
+	/*
+	 * SRD 5.2.1 ▸ Warlock ▸ Eldritch Invocations: "You gain one invocation of your choice, such as Pact
+	 * of the Tome", growing down the Invocations column of the Warlock Features table; "if an
+	 * invocation requires you to be a level 5+ Warlock, you can select the invocation once you reach
+	 * Warlock level 5."
+	 */
+	it('2024: a warlock is asked one invocation at level 1, and the Invocations column after it', async () => {
+		build.reset();
+		build.graph = await loadPacks('srd-2024');
+		build.draft.system = '5.5e';
+		const warlockAt = (level: number) => [
+			{ ...newClassRow(), classId: 'class:SRD 5.2.1:warlock', subclassId: null, level },
+		];
+		build.draft.classes = warlockAt(1);
+		expect(choiceOf(INVOCATIONS).options).toHaveLength(28);
+		for (const [level, known] of [[1, 1], [2, 3], [5, 5], [7, 6], [9, 7], [12, 8], [15, 9], [18, 10], [20, 10]]) {
+			build.draft.classes = warlockAt(level ?? 1);
+			expect(choiceOf(INVOCATIONS).cap, `level ${level}`).toBe(known);
+		}
+
+		build.draft.classes = warlockAt(5);
+		const block = (id: string) =>
+			build.optionPicks.blockOf(choiceOf(INVOCATIONS), optionOf(choiceOf(INVOCATIONS), id));
+		expect(block('witch_sight')).toBe(OPTION_BLOCK.level);
+		expect(block('thirsting_blade')).toBe(OPTION_BLOCK.requires);
+		expect(block('pact_of_the_blade')).toBeNull();
+		pick(INVOCATIONS, 'pact_of_the_blade');
+		expect(block('thirsting_blade')).toBeNull();
 	});
 });
 
