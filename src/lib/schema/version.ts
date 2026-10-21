@@ -164,7 +164,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // An install left at v56 asks a 2024 warlock nothing.
 // v58: a 2024 cleric's Divine Order and Blessed Strikes and a druid's Primal Order are choices of two
 // option rows. An install left at v57 asks them nothing.
-export const CONTENT_SEED_VERSION = 58;
+// v59: the rectangular tables in content prose are Markdown rather than HTML — 123 of 128, the
+// same cells. An install left at v58 keeps the HTML, which renders the same.
+export const CONTENT_SEED_VERSION = 59;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

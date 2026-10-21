@@ -4,21 +4,26 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **PROSE-MARKDOWN · the tables in content prose are HTML; make them Markdown — its own session.**
-  211 `<table>` blocks across the two packs (2014: 116 in monsters, 16 in class features; 2024: 49 in
-  items, 16 in spells, 11 in class features, 3 in species), plus 70 `<em>`, 34 `<b>` and one `<span>`.
-  The renderer already takes both — `renderContentMarkdown` parses Markdown and sanitizes raw HTML in
-  one pass — so nothing is broken today. What is wrong is that a column the USER is invited to edit in
-  a table processor holds two notations for the same thing, and the HTML one is the notation they
-  cannot read or write by hand.
-  **Why it is a session and not a pass:** a Markdown table is only equivalent when the source table is
-  RECTANGULAR. A monster stat block's tables are the ones most likely not to be, so the conversion has
-  to be checked, not trusted — and it is 211 diffs in the content repo, each of which a human reads.
-  **Do the audit with it, not after:** the same pass answers where else HTML is doing a job Markdown
-  does (`<b>`/`<em>` are plain `**`/`_`), and whether anything left is load-bearing enough to keep.
-  The one pipeline note that bounds the work: `renderContentMarkdown` force-feeds blank lines around
-  `<table>` and then mops up emphasis left literal inside its cells — a workaround that exists only
-  because of these blocks, and that comes out with them.
+- [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; five are not, and want a look.**
+  123 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
+  HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,
+  nothing in a cell Markdown has no inline form for — and each checked to render the same cells,
+  emphasis included, through the app's own pipeline. Whitespace the page layout left inside a cell
+  is collapsed. The `<b>` and `<em>` the audit counted were all inside those tables.
+  **Five stay HTML, and each is a defect of the source conversion rather than of Markdown:**
+  - **The four 2024 ability-score blocks** — `find_steed`, `giant_insect`, `summon_dragon` and the
+    Giant Fly inside `figurine_of_wondrous_power`. Each row is right: twelve cells, the score, its
+    modifier and its save for three abilities. The HEADER is wrong: it names nine columns
+    (`MOD SAVE` with no cell over the score) and pads the rest with a `colspan`, and two of the four
+    have no header row at all. The fix is a header of `| | | MOD | SAVE |` ×3 typed over the cells
+    that are already there. These are the three stat blocks COMPANION needs transcribed as rows
+    anyway (`../work/mechanics.md` ▸ COMPANION), so the two may want deciding together.
+  - **2014 `draconicbloodline_draconic_ancestry`** — the dragon table is split in two after its first
+    row, and the second half's last cell swallowed the rest of the section: the Draconic language
+    sentence, and Draconic Resilience whole (with the source's `<span style>` heading). The row is
+    a misfile, not a table problem: its fix is the Draconic Bloodline's rows themselves.
+  `renderContentMarkdown` keeps its HTML-table workaround (blank lines forced around `<table>`,
+  emphasis mopped up inside cells) while any of these ship, and for homebrew that writes HTML.
 
 - [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;

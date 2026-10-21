@@ -18,6 +18,15 @@ import { TOOL_ITEM_CATEGORY } from './schemas';
  * The VALUES are hand-checked against each edition's own SRD text, so they're asserted literally: a
  * converter re-run that wipes the column (the class_features/conditions failure mode) fails here.
  */
+/** How many tables a row's prose prints — a Markdown table by its delimiter row, and any HTML table
+ *  a homebrew-style row may still carry. */
+const tablesIn = (text: string): number =>
+	(text.match(/^\| ?---/gm) ?? []).length + (text.match(/<table>/g) ?? []).length;
+/** Does a table in the prose hold this word as a whole cell? */
+const hasCell = (text: string, word: string): boolean =>
+	new RegExp(String.raw`\|\s*${word}\s*\|`, 'i').test(text) ||
+	text.toLowerCase().includes(`>${word}<`);
+
 const EDITIONS = [
 	['5.5e', 'srd-2024'],
 	['5e', 'srd-2014'],
@@ -508,9 +517,8 @@ describe('shipped magic items · a resistance the player answers for, in both ed
 				expect(row?.type === 'item' && row.data.choice_options).toBe(options);
 				// the table the options are read off is in the row, in the reader's sight
 				const text = row?.type === 'item' ? String(row.data.text_en) : '';
-				expect(text).toContain('<table>');
-				for (const option of options.split(','))
-					expect(text.toLowerCase()).toContain(`>${option}<`);
+				expect(tablesIn(text)).toBeGreaterThan(0);
+				for (const option of options.split(',')) expect(hasCell(text, option), option).toBe(true);
 
 				const worn = (choice?: string) => {
 					const c = newCharacter('w', 'Wearer', system);
@@ -536,7 +544,7 @@ describe('shipped magic items · a resistance the player answers for, in both ed
 		const graph = await loadPacks('srd-2014');
 		const tables = (id: string) => {
 			const row = graph.get(`item:SRD 5.1:${id}`);
-			return (String(row?.type === 'item' ? row.data.text_en : '').match(/<table>/g) ?? []).length;
+			return tablesIn(String(row?.type === 'item' ? row.data.text_en : ''));
 		};
 		const EXPECTED: Record<string, number> = {
 			apparatus_of_the_crab: 1,
@@ -577,7 +585,7 @@ describe('shipped magic items · a resistance the player answers for, in both ed
 		// and no item table anywhere else in the pack: 34 in all
 		const all = graph
 			.list('item', { system: '5e' })
-			.reduce((n, row) => n + (String(row.data.text_en).match(/<table>/g) ?? []).length, 0);
+			.reduce((n, row) => n + tablesIn(String(row.data.text_en)), 0);
 		expect(all).toBe(Object.values(EXPECTED).reduce((a, b) => a + b, 0));
 	});
 

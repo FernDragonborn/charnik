@@ -263,8 +263,7 @@ position and are given per wave, because most of them were learned the hard way.
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
   item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
   pinned rail, left-aligned, with the panel regions re-decided — also its own session; RESOURCE-PIN
-  asks the same "where does a pin land" question and wants answering with it), PROSE-MARKDOWN (211
-  HTML tables in content prose become Markdown — 211 diffs a human reads, so its own session too) and
+  asks the same "where does a pin land" question and wants answering with it) and
   COMPANION (its research is written; four answers wait on a sign-off).
 
 ## Verification

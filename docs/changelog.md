@@ -34,6 +34,9 @@
   reached says which. Witch Sight puts Truesight on the sheet, and Gift of the Depths a Swim Speed
   and its one Water Breathing a day. The four marked Repeatable are taken once for now.
 - **A 2014 warlock's Agonizing Blast adds the Charisma modifier** to Eldritch Blast's damage.
+- **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
+  spreadsheet reads as rows rather than HTML. They show the same in the app. Five stay HTML for
+  now, each a conversion defect of the SRD source.
 - **A 2024 cleric chooses a Divine Order and Blessed Strikes, and a druid a Primal Order.**
   Protector and Warden bring their weapons and armour, Thaumaturge and Magician their bonus to two
   Intelligence skills, and Divine Strike is a roll on the sheet — 1d8, 2d8 from level 14. The extra
