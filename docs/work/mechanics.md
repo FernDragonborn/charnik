@@ -146,6 +146,22 @@ stay semi-manual.
   CLASS or a SCHOOL has nothing to name — 2024 Potent Spellcasting on any Cleric or Druid cantrip,
   Empowered Evocation on evocation spells (FEATURE-PASSIVES lists them). The fix is the cast
   offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
+- [ ] **EXTRA-CANTRIP · an option that teaches its class one more cantrip.** SRD 5.2.1 Thaumaturge and
+  Magician: "You know one extra cantrip from the Cleric/Druid spell list." The class's cantrip cap
+  reads the class table only, so it is one short — a number we know to be wrong.
+- [ ] **FEATURE-LANGUAGES · the languages a class feature grants.** Druidic (druid), Thieves' Cant
+  (rogue), Draconic (2014 Dragon Ancestor), and the 2024 rogue's "one other language of your choice".
+  Languages come from a species and a background today; a feature grants none.
+- [ ] **DISCIPLE-OF-LIFE · healing that grows with the slot.** SRD 5.1 Life Domain: "Whenever you use a
+  spell of 1st level or higher to restore hit points to a creature, the creature regains additional
+  hit points equal to 2 + the spell's level." A cast's heal takes no such bonus yet.
+- [ ] **MARTIAL-ARTS · a monk's Dexterity and die.** Both editions: unarmed strikes and monk weapons
+  may use Dexterity for attack and damage, and roll the Martial Arts die in place of their own
+  damage, while unarmored and without a shield. The attack rows read Strength and the weapon's die.
+- [ ] **FEATURE-SPELLS · spells a feature always has prepared.** The subclass spell tables (Domain,
+  Oath, Circle, Patron, Draconic Spells), 2024 Druidic's Speak with Animals and Favored Enemy's
+  Hunter's Mark, and the 2014 Fiend's expanded list. A column of `spell@level` (`content.md` ▸ At a
+  level is `@`), read into the caster profile as always prepared and not counted against its cap.
 - [~] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** An option
   row's `answer` column says what each pick asks (`OPTION_ANSWER`: `cantrip.damage`,
   `cantrip.attack`); such an option is taken once per answer, stored as `id.answer` in the same

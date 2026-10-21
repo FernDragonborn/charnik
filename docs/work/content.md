@@ -4,6 +4,18 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
+- [ ] **CLASS-SKILL-LISTS · eleven 2014 classes offer a skill list with the equipment text in it.**
+  `classes_srd.csv` ▸ `skills_from`: the last skill is glued to "equipment you start with…" and a
+  dozen fragments of the class table follow it as skill ids, so Strict refuses the skill that was
+  swallowed (a barbarian's Survival, a cleric's Religion). Each list retyped from its class's own
+  "Skills: Choose N from …" line. The bard's `any` is right.
+- [ ] **CLASS-POOLS-L1 · three level-1 pools the class text states and no token grants.** SRD 5.1
+  Divine Sense ("1 + your Charisma modifier" uses, long rest); SRD 5.2.1 Innate Sorcery (twice, long
+  rest, a minute of +1 spell save DC and Advantage on spell attacks) and Favored Enemy's free casts
+  of Hunter's Mark (the Favored Enemy column of the Ranger Features table).
+- [ ] **CHOICES-2014 · three level-1 choices nothing records.** Favored Enemy (a creature type, or
+  two humanoid races), Natural Explorer (a terrain) and Dragon Ancestor (a dragon) as option rows,
+  so the build asks and the sheet says what was chosen; what each advantage applies to stays text.
 - [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; four are not, and want a look.**
   124 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
   HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,

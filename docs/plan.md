@@ -242,6 +242,23 @@ position and are given per wave, because most of them were learned the hard way.
   AUDIT-DRIFT, the full `pnpm lint:typed`, the version in three files (`package.json`,
   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) and the changelog's top heading. Open work a
   release ships without is named in that release's changelog, where a player would look for it.
+- **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
+  release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
+  feature that does nothing. In order, cheapest first:
+  1. **CLASS-SKILL-LISTS** — `content.md`. 2014 classes' skill lists swallowed the equipment text.
+  2. **EXTRA-CANTRIP** — `mechanics.md`. Thaumaturge and Magician's "one extra cantrip".
+  3. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
+     free Hunter's Marks (2024).
+  4. **CHOICES-2014** — `content.md`. Favored Enemy, Natural Explorer and Dragon Ancestor as options.
+  5. **FEATURE-LANGUAGES** — `mechanics.md`. Druidic, Thieves' Cant, Draconic, a rogue's extra one.
+  6. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
+  7. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
+  8. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
+  9. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+
+  The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`.
+  Mystic Arcanum and the slot recoveries wait for the release after.
+
 - **0.9.0 · the short queue, and it is an ORDER rather than a wave.**
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
