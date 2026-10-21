@@ -245,19 +245,21 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  2. **EXTRA-CANTRIP** — `mechanics.md`. Thaumaturge and Magician's "one extra cantrip".
-  3. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
+  1. **EXTRA-CANTRIP** — `mechanics.md`. Thaumaturge and Magician's "one extra cantrip".
+  2. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
      free Hunter's Marks (2024).
-  4. **CHOICES-2014** — `content.md`. Favored Enemy, Natural Explorer and Dragon Ancestor as options.
-  5. **FEATURE-LANGUAGES** — `mechanics.md`. Druidic, Thieves' Cant, Draconic, a rogue's extra one.
-  6. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
-  7. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
-  8. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
-  9. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
-  10. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+  3. **CHOICES-2014** — `content.md`. Favored Enemy, Natural Explorer and Dragon Ancestor as options.
+  4. **FEATURE-LANGUAGES** — `mechanics.md`. Druidic, Thieves' Cant, Draconic, a rogue's extra one.
+  5. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
+  6. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
+  7. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
+  8. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+  9. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
       the build and put in the inventory.
 
-  The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`.
+  The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,
+  its entries regrouped (new features, numbers that were wrong, for content authors) — they were
+  appended in the order the work landed. Tagging and pushing wait for the maintainer.
   Mystic Arcanum and the slot recoveries wait for the release after.
 
 - **0.9.0 · the short queue, and it is an ORDER rather than a wave.**

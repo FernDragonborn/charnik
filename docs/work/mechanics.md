@@ -62,8 +62,9 @@ stay semi-manual.
   has the feature that grants it (`granted_by`), Divine Spark as a roll; Stunning Strike; and Sorcery
   Points into a slot at the table's cost, held to 2024's minimum sorcerer level. What is left wants
   a verb: Font of Magic's slot INTO points gives as many points as the slot's level, which no
-  `restore_resource` count can say; Arcane and Natural Recovery restore slots, and Indomitable
-  rerolls a save — each is a pip the player spends by hand until then.
+  `restore_resource` count can say; Arcane and Natural Recovery restore slots (designed under
+  Spellcasting ▸ Resource subsystem below), and Indomitable rerolls a save — each is a pip the
+  player spends by hand until then.
 - [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
   An option offered by several features (`option_of` naming more than one parent) can be taken
   through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted
@@ -148,7 +149,10 @@ stay semi-manual.
   offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
 - [ ] **EXTRA-CANTRIP · an option that teaches its class one more cantrip.** SRD 5.2.1 Thaumaturge and
   Magician: "You know one extra cantrip from the Cleric/Druid spell list." The class's cantrip cap
-  reads the class table only, so it is one short — a number we know to be wrong.
+  reads the class table only (`character/spellcasting.ts` ▸ `cantripCap: cc.cantrips`), so it is
+  one short — a number we know to be wrong. Planned shape: an `option` column `cantrips` (an
+  integer, "this many more cantrips from the asking class's list"), summed into the class's cap
+  from its held options the way `ritualSourceFor` already reads `ritual_source` off them.
 - [ ] **FEATURE-LANGUAGES · the languages a class feature grants.** Druidic (druid), Thieves' Cant
   (rogue), Draconic (2014 Dragon Ancestor), and the 2024 rogue's "one other language of your choice".
   Languages come from a species and a background today; a feature grants none.
@@ -244,9 +248,31 @@ stay semi-manual.
   `../internals/rules-core.md` ▸ Spellcasting). Wild Resurgence's "once on each of your turns" is
   not held: the option's window is having no use left, and nothing counts turns for an option.
   What is left:
-  - **Mystic Arcanum** — both SRDs say "cast … once without expending a
-     spell slot", which is the pool a cast already offers to pay from. What blocks it is not a
-     token: the level of spell a warlock may learn reads the Pact Magic table, which stops at 5,
-     so there is no way to choose the level 6 spell the arcanum is. Natural Recovery's free cast
-     and the slot recovery of Arcane Recovery are the same two shapes: a pool that is sayable
-     today, and slots a player already restores by their pips.
+  - **Mystic Arcanum — the design is agreed with the maintainer; build it after 0.8.2.** RAW, both
+     editions: at warlock level 11 one level 6 Warlock spell, then one of level 7 at 13, 8 at 15 and
+     9 at 17, each cast "once without expending a spell slot" and regained on a Long Rest — four
+     separate uses, each tied to its own spell, not one pool. Pact slots stop at level 5, so they
+     never pay for one, and the spells are not counted among those known or prepared. SRD 5.2.1
+     lets a warlock "replace one of your arcanum spells with another Warlock spell of the same
+     level" on gaining a level; SRD 5.1 is silent (RAW: no swap; many tables allow it). What blocks
+     it today: the level a warlock may learn reads the Pact Magic table, so no level 6 spell can
+     be chosen.
+     **The shape**, reusing the feat caster profile (`character/spellcasting.ts` ▸
+     `featCasterProfiles`: its own list, caps and spell level):
+     - the feature row carries `spell_choice` = `6:1@11,7:1@13,8:1@15,9:1@17` — `spell level:count`
+       as in a feat's column, and `@` the class level it opens at (`../internals/content.md` ▸ At a
+       level is `@`); `spell_choice_lists` = `warlock`; a new open-enum column `spell_free_cast` =
+       `long` — "each spell chosen here casts once per long rest" (a later row may say `short`);
+     - the builder's spell picker gains a section per opened rung ("Mystic Arcanum — level 6
+       spell, choose 1"), not counted against the warlock's own cap;
+     - each chosen spell gets a one-use pool of its own; casting it spends that pool, the cast
+       picker offers that pool and no slot (the first time data ties a pool to one spell — today
+       the picker lists every pool with a use left, `../internals/rules-core.md` ▸ Spellcasting);
+     - swapping is the builder's free edit as for any spell; the hover says the edition's rule.
+  - **Arcane Recovery and Natural Recovery — the design, sized at about two hours.** A verb
+    `recover_slots:<budget>:<max slot level>` — `recover_slots:ceil(class_level.wizard/2):5` — on a
+    resource option of the pool that already ships. The player is not asked slot by slot: the
+    executor lists every MAXIMAL combination of spent slots within the budget ("two level 1 slots",
+    "one level 2 slot") as rows of the existing `OptionQuestionDialog`, which learns to show a label
+    rather than a number, and restores the one taken. 2024 Natural Recovery's free cast is its
+    second pool (`natural_recovery_spell`), already shipped.
