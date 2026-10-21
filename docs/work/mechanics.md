@@ -50,13 +50,19 @@ stay semi-manual.
   Feature options pane asking. Every choice of a ROW the SRD prints ships on it; what a choice of
   a WORD still waits on is FEATURE-PASSIVES ▸ "A choice of a word". What is still owed here is
   the content-schema column bump for the action kind.
-  Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
-  Divinity, Font of Magic, Indomitable, Arcane Recovery, Mystic Arcanum, Natural Recovery, Stunning
-  Strike. The Resources block discovers pools from the engine, so each appears the moment content
-  encodes it; the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`,
-  `ki`, `focus`, `persistent_rage`, `uncanny_metabolism`, `wild_shape`, `wild_resurgence`. Each is typed by hand from
-  the local SRD source (`content.md` ▸ SRD-TRANSCRIPTION) — a mechanic stated in SRD prose is still
-  game data, and authoring it from memory is the failure that passes every gate.
+  **Every pool the class features state ships**, typed from its own sentence or table column, in
+  both editions: Lay on Hands, Channel Divinity (one pool both classes fill, so a multiclass takes
+  the larger ladder, which is SRD 5.1's own cleric 6 / paladin 4 example), Sorcery Points,
+  Indomitable, Arcane Recovery and Natural Recovery (two in 2024: the free cast and the slots),
+  beside `rage`, `bardic_inspiration`, `second_wind`, `action_surge`, `ki`, `focus`,
+  `persistent_rage`, `uncanny_metabolism`, `wild_shape` and `wild_resurgence`. Mystic Arcanum waits
+  on its design (Spellcasting ▸ Resource subsystem below).
+  **What is owed is the SPEND side** — `resource_option` rows that say what a use does, so a pip is
+  more than a counter: Lay on Hands heals a number the player names (`x`), Font of Magic converts
+  between slots and points (`spend_slot`, `gain_slot`), each Channel Divinity effect is its own
+  option, Stunning Strike costs one Ki or Focus, and the two recoveries restore slots — which no
+  executor verb says yet (`actions.md` §2). Each is typed by hand from the local SRD source
+  (`content.md` ▸ SRD-TRANSCRIPTION).
 - [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
   An option offered by several features (`option_of` naming more than one parent) can be taken
   through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted

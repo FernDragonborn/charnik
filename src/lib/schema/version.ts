@@ -174,7 +174,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // left at v60 gives a dwarf none.
 // v62: a paladin's Aura of Protection adds to their own saves in both editions, and a 2014 tiefling
 // resists fire. An install left at v61 gives neither.
-export const CONTENT_SEED_VERSION = 62;
+// v63: the class pools the features state — Lay on Hands, Channel Divinity, Sorcery Points,
+// Indomitable, Arcane Recovery, Natural Recovery — ship in both editions, with their names. An
+// install left at v62 shows none of them.
+export const CONTENT_SEED_VERSION = 63;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -1157,3 +1157,102 @@ describe('2014 Hellish Resistance', () => {
 		expect(resists('human')).not.toContain('fire');
 	});
 });
+
+/*
+ * The pools the class features state in prose, each typed from its own sentence or table column:
+ * Lay on Hands ("your paladin level × 5"), Channel Divinity (SRD 5.1: 1, 2 at 6th, 3 at 18th;
+ * SRD 5.2.1's columns: cleric 2/3/4 at 2/6/18, paladin 2/3 at 3/11, one back on a Short Rest),
+ * Sorcery Points (the column is the sorcerer level from 2nd), Indomitable (1, 2 at 13th, 3 at 17th),
+ * and the once-a-long-rest Arcane Recovery and Natural Recovery.
+ */
+describe.each([
+	{
+		pack: 'srd-2014',
+		source: 'SRD 5.1',
+		system: '5e',
+		land: 'circleoftheland',
+		cd: [
+			[2, 1],
+			[6, 2],
+			[18, 3],
+		],
+		recovery: 2,
+	},
+	{
+		pack: 'srd-2024',
+		source: 'SRD 5.2.1',
+		system: '5.5e',
+		land: 'circle_of_the_land',
+		cd: [
+			[2, 2],
+			[6, 3],
+			[18, 4],
+		],
+		recovery: 6,
+	},
+] as const)('class pools · $system', ({ pack, source, system, land, cd, recovery }) => {
+	const pool = (
+		g: ContentGraph,
+		classes: { id: string; level: number; subclass?: string }[],
+		id: string,
+	) => {
+		const c = newCharacter('p', 'P', system);
+		c.build.classes = classes.map((k) =>
+			classRow({
+				class: `class:${source}:${k.id}`,
+				level: k.level,
+				...(k.subclass ? { subclass: `subclass:${source}:${k.subclass}` } : {}),
+			}),
+		);
+		return deriveSheet(characterSchema.parse(c), g).resources.find((r) => r.id === id);
+	};
+
+	it('Lay on Hands is five times the paladin level, and Sorcery Points the sorcerer level', async () => {
+		const g = await loadEdition(pack);
+		expect(pool(g, [{ id: 'paladin', level: 1 }], 'lay_on_hands')?.max).toBe(5);
+		expect(pool(g, [{ id: 'paladin', level: 20 }], 'lay_on_hands')?.max).toBe(100);
+		expect(pool(g, [{ id: 'sorcerer', level: 1 }], 'sorcery_points')).toBeUndefined();
+		expect(pool(g, [{ id: 'sorcerer', level: 2 }], 'sorcery_points')?.max).toBe(2);
+		expect(pool(g, [{ id: 'sorcerer', level: 20 }], 'sorcery_points')?.max).toBe(20);
+		expect(pool(g, [{ id: 'sorcerer', level: 2 }], 'sorcery_points')?.name).toBe('Sorcery Points');
+	});
+
+	it('Channel Divinity follows the cleric table', async () => {
+		const g = await loadEdition(pack);
+		for (const [level, uses] of cd)
+			expect(pool(g, [{ id: 'cleric', level }], 'channel_divinity')?.max, `level ${level}`).toBe(
+				uses,
+			);
+	});
+
+	it('Indomitable is 1, 2 at 13th and 3 at 17th; the recoveries once a long rest', async () => {
+		const g = await loadEdition(pack);
+		for (const [level, uses] of [
+			[9, 1],
+			[13, 2],
+			[17, 3],
+		] as const)
+			expect(pool(g, [{ id: 'fighter', level }], 'indomitable')?.max, `level ${level}`).toBe(uses);
+		expect(pool(g, [{ id: 'wizard', level: 1 }], 'arcane_recovery')?.max).toBe(1);
+		expect(
+			pool(g, [{ id: 'druid', level: recovery, subclass: land }], 'natural_recovery')?.max,
+		).toBe(1);
+	});
+});
+
+// SRD 5.1 ▸ Multiclassing ▸ Channel Divinity: "if you are a cleric 6/paladin 4, you can use Channel
+// Divinity twice between rests because you are high enough level in the cleric class".
+it('2014: a cleric 6 / paladin 4 channels divinity twice, not three times', async () => {
+	const g = await loadEdition('srd-2014');
+	const c = newCharacter('p', 'P', '5e');
+	c.build.classes = [
+		classRow({ class: 'class:SRD 5.1:cleric', level: 6 }),
+		classRow({
+			class: 'class:SRD 5.1:paladin',
+			level: 4,
+			subclass: 'subclass:SRD 5.1:oathofdevotion',
+		}),
+	];
+	const sheet = deriveSheet(characterSchema.parse(c), g);
+	expect(sheet.resources.find((r) => r.id === 'channel_divinity')?.max).toBe(2);
+});

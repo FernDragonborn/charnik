@@ -37,6 +37,10 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **The class pools the rules describe are on the sheet**, in both editions: Lay on Hands,
+  Channel Divinity, Sorcery Points, Indomitable, Arcane Recovery and Natural Recovery, each counted
+  from its own table and refilled on the rest its text names. Spending one marks a use; what each
+  use does is still read from the feature's text.
 - **A paladin's Aura of Protection adds to their own saving throws** from 6th level — the
   Charisma modifier, at least +1 — in both editions, and stops while the paladin is unconscious
   (2014) or Incapacitated (2024). The sheet did not count it at all.
