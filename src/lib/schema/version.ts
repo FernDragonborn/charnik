@@ -177,7 +177,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v63: the class pools the features state — Lay on Hands, Channel Divinity, Sorcery Points,
 // Indomitable, Arcane Recovery, Natural Recovery — ship in both editions, with their names. An
 // install left at v62 shows none of them.
-export const CONTENT_SEED_VERSION = 63;
+// v64: the class pools have their spend options — Lay on Hands, the Channel Divinity effects, Stunning
+// Strike, Sorcery Points into slots. An install left at v63 shows the pools with nothing to press.
+export const CONTENT_SEED_VERSION = 64;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

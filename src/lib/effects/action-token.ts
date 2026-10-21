@@ -38,6 +38,9 @@ function formulaOf(action: string): string | null {
 	const i = action.indexOf(':');
 	if (i === -1) return null;
 	const rest = action.slice(i + 1).trim();
+	// `x` is the amount the player answers at the press, not an expression: there is nothing to
+	// resolve until then (`play/options.ts` ▸ HEAL_ANSWERED)
+	if (rest === 'x') return null;
 	return FORMULA_VERBS.has(action.slice(0, i)) && rest ? rest : null;
 }
 

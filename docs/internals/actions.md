@@ -64,7 +64,7 @@ still landing on an existing system per the table above:
 
 | Token | Executes |
 | --- | --- |
-| `heal:<formula>` | HP path, clamped to max (L2-resolved to dice at derive) |
+| `heal:<formula>` | HP path, clamped to max (L2-resolved to dice at derive). `heal:x` heals the amount an `x` cost was answered with — Lay on Hands, a pool of hit points spent by the number; the bare `x` is the only form, since nothing resolves it until the press |
 | `roll:<formula>` | the dice path + roll log |
 | `apply_condition:<id>` | the `play.effects` add path |
 | `apply_effect:<id>` | a NAMED `effects.csv` buff/debuff (Rage) → the `play.effects` add path via the "+"-catalog seam (its `ref` re-resolves LIVE, `negative`→buff/debuff, `duration_rounds`→timer). The multi-token, timed, positive analogue of `apply_condition` — a class-feature ACTIVATION that turns a state on (Enter Rage). |

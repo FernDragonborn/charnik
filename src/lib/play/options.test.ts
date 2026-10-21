@@ -175,4 +175,75 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(next.play.round).toBe(2);
 		expect(next.play.turn.action).toBe(0);
 	});
+
+	/*
+	 * SRD 5.1 ▸ Lay on Hands: "you can touch a creature and draw power from the pool to restore a
+	 * number of hit points to that creature, up to the maximum amount remaining in your pool"; SRD
+	 * 5.2.1 says the same, the creature "could be yourself". The app heals only its own character, so
+	 * yourself and another creature are two options on one pool, and the player answers how many.
+	 */
+	it('Lay on Hands heals yourself by the amount answered, and another creature only spends', () => {
+		const c = build('paladin', 5);
+		c.build.abilities.con = 10;
+		const option = (id: string) => {
+			const found = derive(c).resourceOptions.find((o) => o.id === id);
+			if (!found) throw new Error(`a paladin has ${id}`);
+			return found;
+		};
+		const left = (x: Character) => resourceLeft(x, derive(x), 'lay_on_hands');
+		expect(left(c)).toBe(25);
+		const self = option('paladin_lay_on_hands_self');
+		expect(
+			activateOption(c, { option: self, effectRounds: EFFECT_ROUNDS }, ctx()).asks,
+		).toMatchObject([{ kind: PLAY_REQUEST.amount, max: 25 }]);
+		const healed = activateOption(
+			c,
+			{ option: self, effectRounds: EFFECT_ROUNDS, amount: 7 },
+			ctx(),
+		);
+		expect(healed.character.play.hp.current).toBe(5 + 7);
+		expect(left(healed.character)).toBe(18);
+		const other = activateOption(
+			c,
+			{ option: option('paladin_lay_on_hands_other'), effectRounds: EFFECT_ROUNDS, amount: 7 },
+			ctx(),
+		);
+		expect(other.character.play.hp.current).toBe(5);
+		expect(left(other.character)).toBe(18);
+	});
+
+	it('a Channel Divinity effect is offered only to whoever has the feature that grants it', () => {
+		const ids = (x: Character) => derive(x).resourceOptions.map((o) => o.id);
+		const cleric = build('cleric', 6);
+		expect(ids(cleric)).toContain('cleric_turn_undead');
+		expect(ids(cleric).some((id) => id.includes('sacred_weapon'))).toBe(false);
+		const devotion = build('paladin', 6, (x) => {
+			x.build.classes = [
+				classRow({
+					class: `class:${source}:paladin`,
+					level: 6,
+					subclass: `subclass:${source}:${system === '5e' ? 'oathofdevotion' : 'oath_of_devotion'}`,
+				}),
+			];
+		});
+		expect(ids(devotion).some((id) => id.includes('sacred_weapon'))).toBe(true);
+		expect(ids(devotion)).not.toContain('cleric_turn_undead');
+	});
+
+	it('Sorcery Points create a spell slot at the table’s cost', () => {
+		const sorcerer = build('sorcerer', 5);
+		const create = (level: number) => {
+			const found = derive(sorcerer).resourceOptions.find(
+				(o) => o.id === `sorcerer_create_slot_${level}`,
+			);
+			if (!found) throw new Error(`no slot ${level}`);
+			return found;
+		};
+		expect([1, 2, 3, 4, 5].map((level) => create(level).cost)).toEqual([2, 3, 5, 6, 7]);
+		const out = activateOption(sorcerer, { option: create(3), effectRounds: EFFECT_ROUNDS }, ctx());
+		expect(out.character.play.spellSlotsGained).toMatchObject({ '3': 1 });
+		expect(resourceLeft(out.character, derive(out.character), 'sorcery_points')).toBe(0);
+		// SRD 5.2.1 adds a minimum sorcerer level per slot: 7 for a level 4 slot
+		expect(create(4).available).toBe(system === '5e');
+	});
 });

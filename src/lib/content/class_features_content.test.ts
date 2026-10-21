@@ -445,10 +445,18 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 			const opts = sheet.resourceOptions.filter((o) => o.resourceId === resourceId);
 			expect(opts.map((o) => o.id).sort()).toEqual([
 				'flurry_of_blows',
+				'monk_stunning_strike',
 				'patient_defense',
 				'step_of_the_wind',
 			]);
-			expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
+			expect(opts.every((o) => o.cost === 1)).toBe(true);
+			// the three that take the Bonus Action; Stunning Strike rides the hit that triggers it
+			expect(
+				opts
+					.filter((o) => o.actionType === 'bonus_action')
+					.map((o) => o.id)
+					.sort(),
+			).toEqual(['flurry_of_blows', 'patient_defense', 'step_of_the_wind']);
 			// UBUG-11: the option MAKES the two strikes through the ordinary attack path. A `note:` here
 			// would be the shipped row describing what the app can do rather than doing it.
 			expect(opts.find((o) => o.id === 'flurry_of_blows')?.action).toBe('attack:unarmed_strike:2');
@@ -1255,4 +1263,21 @@ it('2014: a cleric 6 / paladin 4 channels divinity twice, not three times', asyn
 	];
 	const sheet = deriveSheet(characterSchema.parse(c), g);
 	expect(sheet.resources.find((r) => r.id === 'channel_divinity')?.max).toBe(2);
+});
+
+// SRD 5.2.1 ▸ Divine Spark: "Roll 1d8 and add your Wisdom modifier … You roll an additional d8 when
+// you reach Cleric levels 7 (2d8), 13 (3d8), and 18 (4d8)."
+it('2024 Divine Spark rolls the d8s of its cleric level plus the Wisdom modifier', async () => {
+	const g = await loadEdition('srd-2024');
+	const spark = (level: number) => {
+		const c = newCharacter('p', 'P', '5.5e');
+		c.build.classes = [classRow({ class: 'class:SRD 5.2.1:cleric', level })];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 16, cha: 10 };
+		const sheet = deriveSheet(characterSchema.parse(c), g);
+		expect(sheet.deriveIssues).toEqual([]);
+		return sheet.resourceOptions.find((o) => o.id === 'cleric_divine_spark')?.action;
+	};
+	expect(spark(2)).toBe('roll:1d8+3');
+	expect(spark(7)).toBe('roll:2d8+3');
+	expect(spark(18)).toBe('roll:4d8+3');
 });

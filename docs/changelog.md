@@ -39,8 +39,10 @@
   now, each a conversion defect of the SRD source.
 - **The class pools the rules describe are on the sheet**, in both editions: Lay on Hands,
   Channel Divinity, Sorcery Points, Indomitable, Arcane Recovery and Natural Recovery, each counted
-  from its own table and refilled on the rest its text names. Spending one marks a use; what each
-  use does is still read from the feature's text.
+  from its own table and refilled on the rest its text names. Lay on Hands heals you by the number
+  you answer, or spends for someone else; each Channel Divinity effect is its own button, Divine
+  Spark a roll; Stunning Strike spends its point; Sorcery Points make a spell slot at the table's
+  price.
 - **A paladin's Aura of Protection adds to their own saving throws** from 6th level — the
   Charisma modifier, at least +1 — in both editions, and stops while the paladin is unconscious
   (2014) or Incapacitated (2024). The sheet did not count it at all.

@@ -114,6 +114,10 @@ function slotLevelOf(arg: string, amount: number): number {
 	return perUse ? Number(perUse[1]) * amount : Number(arg);
 }
 
+/** The one formula a `heal:` may leave to the press: `x`, the amount an `x` cost was answered with
+ *  (Lay on Hands: "restore a number of hit points … up to the maximum amount remaining"). */
+export const HEAL_ANSWERED = 'x';
+
 type Verb = (character: Character, run: ActionRun, arg: string, ctx: PlayContext) => PlayOutcome;
 
 /** `apply_effect:<id>` — a NAMED catalog state (Rage), read off its row: tokens live by ref, valence,
@@ -169,7 +173,8 @@ const unresolved = (character: Character, run: ActionRun, formula: string): Play
  * or malformed does nothing.
  */
 const VERBS: Record<string, Verb> = {
-	heal: (character, run, arg, ctx) => {
+	heal: (character, run, given, ctx) => {
+		const arg = given.trim() === HEAL_ANSWERED ? String(run.amount ?? 1) : given;
 		if (!arg) return quietly(character);
 		if (!isResolvedFormula(arg)) return unresolved(character, run, arg);
 		const rolled = rollFormula(arg, ctx.rng);

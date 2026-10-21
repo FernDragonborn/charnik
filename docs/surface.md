@@ -1925,6 +1925,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
 - `interface ActionRun` — What running an action is told besides its verbs.
+- `const HEAL_ANSWERED` — The one formula a `heal:` may leave to the press: `x`, the amount an `x` cost was answered with * (Lay on Hands: "res…
 - `function runAction` — Run an action's RESOLVED verbs in order (a formula in one is already resolved at derive).
 - `interface OptionUse` — An option being used: which one, how much of an `x` cost (asked for when it is not given), and — for one that assumes…
 - `function activateOption` — * Use a spend-option.
@@ -2370,4 +2371,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1444 exports across 201 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1445 exports across 201 modules · 96 duplicate suspects._

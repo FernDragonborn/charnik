@@ -57,12 +57,13 @@ stay semi-manual.
   beside `rage`, `bardic_inspiration`, `second_wind`, `action_surge`, `ki`, `focus`,
   `persistent_rage`, `uncanny_metabolism`, `wild_shape` and `wild_resurgence`. Mystic Arcanum waits
   on its design (Spellcasting ▸ Resource subsystem below).
-  **What is owed is the SPEND side** — `resource_option` rows that say what a use does, so a pip is
-  more than a counter: Lay on Hands heals a number the player names (`x`), Font of Magic converts
-  between slots and points (`spend_slot`, `gain_slot`), each Channel Divinity effect is its own
-  option, Stunning Strike costs one Ki or Focus, and the two recoveries restore slots — which no
-  executor verb says yet (`actions.md` §2). Each is typed by hand from the local SRD source
-  (`content.md` ▸ SRD-TRANSCRIPTION).
+  **The spend side ships where a verb exists**: Lay on Hands on yourself (`heal:x`), on another
+  creature and as a cure; every Channel Divinity effect in the packs, each offered only to whoever
+  has the feature that grants it (`granted_by`), Divine Spark as a roll; Stunning Strike; and Sorcery
+  Points into a slot at the table's cost, held to 2024's minimum sorcerer level. What is left wants
+  a verb: Font of Magic's slot INTO points gives as many points as the slot's level, which no
+  `restore_resource` count can say; Arcane and Natural Recovery restore slots, and Indomitable
+  rerolls a save — each is a pip the player spends by hand until then.
 - [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
   An option offered by several features (`option_of` naming more than one parent) can be taken
   through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted
