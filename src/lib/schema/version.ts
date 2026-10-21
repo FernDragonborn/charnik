@@ -184,7 +184,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v66: the species' saving-throw traits are stated defences (Dwarven Resilience, Fey Ancestry, Brave),
 // a 2014 dwarf resists poison, a 2024 gnome has advantage on its three mental saves, and the 2014
 // Staff of the Magi on saves against spells. An install left at v65 says none of it.
-export const CONTENT_SEED_VERSION = 66;
+// v67: Boon of Truesight gives Truesight and Boon of Fate its 2d4 and its one use. An install left
+// at v66 gives neither.
+export const CONTENT_SEED_VERSION = 67;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

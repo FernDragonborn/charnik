@@ -1348,3 +1348,27 @@ it('2024 Gnomish Cunning: advantage on Intelligence, Wisdom and Charisma saves, 
 	]);
 	expect(rollEffectsFor(facts, 'save.str').advantage).toBe(false);
 });
+
+/*
+ * SRD 5.2.1 ▸ Boon of Truesight: "You have Truesight with a range of 60 feet." ▸ Boon of Fate: "you can
+ * roll 2d4 and apply the total … Once you use this benefit, you can't use it again until you roll
+ * Initiative or finish a Short or Long Rest."
+ */
+it('2024 epic boons: Truesight 60 ft, and Fate a 2d4 with one use back on a rest or initiative', async () => {
+	const g = await loadEdition('srd-2024');
+	const withFeat = (feat: string) => {
+		const c = newCharacter('b', 'B', '5.5e');
+		c.build.classes = [classRow({ class: 'class:SRD 5.2.1:fighter', level: 19 })];
+		c.build.feats = [`feat:SRD 5.2.1:${feat}`];
+		return deriveSheet(characterSchema.parse(c), g);
+	};
+	expect(withFeat('boon_of_truesight').senses.truesight?.value).toBe(60);
+	const fate = withFeat('boon_of_fate');
+	expect(fate.resources.find((r) => r.id === 'boon_of_fate')).toMatchObject({
+		max: 1,
+		name: 'Boon of Fate',
+	});
+	expect(fate.facts.rolls.find((r) => r.id === 'improve_fate')?.formula).toBe('2d4');
+	expect(fate.facts.initiativeRegain).toMatchObject([{ id: 'boon_of_fate', upTo: 1 }]);
+	expect(fate.deriveIssues).toEqual([]);
+});

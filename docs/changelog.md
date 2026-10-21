@@ -37,6 +37,8 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **Boon of Truesight gives Truesight 60 ft**, and **Boon of Fate is a 2d4 roll with one use**
+  that comes back on a rest or when you roll initiative.
 - **The species say their saving-throw traits on the sheet**: a dwarf's advantage against poison,
   an elf's and a half-elf's against being charmed, a halfling's against being frightened, in both
   editions; a 2014 dwarf also resists poison damage, which the sheet did not count, and a 2024
