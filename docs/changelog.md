@@ -37,6 +37,10 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **A paladin's Aura of Protection adds to their own saving throws** from 6th level — the
+  Charisma modifier, at least +1 — in both editions, and stops while the paladin is unconscious
+  (2014) or Incapacitated (2024). The sheet did not count it at all.
+- **A 2014 tiefling resists fire**, as Hellish Resistance says.
 - **Dwarven Toughness adds its hit point per level**: the 2014 Hill Dwarf's and every 2024
   Dwarf's, which the sheet did not count.
 - **A draconic sorcerer's Draconic Resilience counts from the level it is gained, in both

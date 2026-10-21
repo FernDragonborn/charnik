@@ -1111,3 +1111,49 @@ describe('Dwarven Toughness adds a hit point per character level', () => {
 		}
 	});
 });
+
+/*
+ * SRD 5.1 ▸ Paladin ▸ Aura of Protection: "Starting at 6th level, whenever you … must make a saving
+ * throw, the creature gains a bonus to the saving throw equal to your Charisma modifier (with a
+ * minimum bonus of +1). You must be conscious to grant this bonus." SRD 5.2.1: "The aura is inactive
+ * while you have the Incapacitated condition. You and your allies in the aura gain a bonus to saving
+ * throws equal to your Charisma modifier (minimum bonus of +1)."
+ */
+describe.each([
+	{ pack: 'srd-2014', source: 'SRD 5.1', system: '5e', off: 'unconscious' },
+	{ pack: 'srd-2024', source: 'SRD 5.2.1', system: '5.5e', off: 'stunned' },
+] as const)('Aura of Protection · $system', ({ pack, source, system, off }) => {
+	const paladin = (level: number, cha: number) => {
+		const c = newCharacter('ser', 'Ser', system);
+		c.build.classes = [classRow({ class: `class:${source}:paladin`, level })];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha };
+		return characterSchema.parse(c);
+	};
+	const wisSave = (c: Character, g: ContentGraph) => deriveSheet(c, g).abilities.wis.save.value;
+
+	it('adds the Charisma modifier, at least +1, to every save from level 6, and not while out', async () => {
+		const g = await loadEdition(pack);
+		expect(wisSave(paladin(6, 16), g) - wisSave(paladin(5, 16), g)).toBe(3);
+		expect(wisSave(paladin(6, 8), g) - wisSave(paladin(5, 8), g)).toBe(1);
+		const out = paladin(6, 16);
+		out.play.effects = [
+			{ iid: 'o', label: off, effects: [`apply_condition:${off}`], positive: false },
+		];
+		expect(wisSave(out, g)).toBe(wisSave(paladin(5, 16), g));
+	});
+});
+
+// SRD 5.1 ▸ Tiefling ▸ Hellish Resistance: "You have resistance to fire damage."
+describe('2014 Hellish Resistance', () => {
+	it('a tiefling resists fire, and a human does not', async () => {
+		const g = await loadEdition('srd-2014');
+		const resists = (speciesId: string) => {
+			const c = newCharacter('mal', 'Mal', '5e');
+			c.build.classes = [classRow({ class: 'class:SRD 5.1:wizard', level: 1 })];
+			c.build.species = `species:SRD 5.1:${speciesId}`;
+			return deriveSheet(characterSchema.parse(c), g).damageSensitivities.resist;
+		};
+		expect(resists('tiefling')).toContain('fire');
+		expect(resists('human')).not.toContain('fire');
+	});
+});
