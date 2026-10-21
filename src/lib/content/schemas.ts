@@ -121,6 +121,14 @@ export const SCHOOLS = [
 // `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled
 // "temp HP" and never adds the spellcasting mod (temp HP is a flat/dice value, no ability mod — item 3).
 export const RESOLUTIONS = ['attack', 'save', 'auto', 'temp', 'none'] as const;
+/** The same words by name, for code that compares against one. */
+export const RESOLUTION = {
+	attack: 'attack',
+	save: 'save',
+	auto: 'auto',
+	temp: 'temp',
+	none: 'none',
+} as const satisfies Record<string, (typeof RESOLUTIONS)[number]>;
 // The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of
 // them; ITEM-TAGS folded that column away, and a kind is what `category` is for. They sit beside the
 // mundane categories rather than under a "magic" one because `rarity` is what marks an item magical.
@@ -644,6 +652,9 @@ const optionSchema = baseRow.extend({
 	level: optInt,
 	/** The rituals this option lets its class cast (`RITUAL_SOURCE`), as a class row states its own. */
 	ritual_source: RitualSourceColumn,
+	/** What each pick of this option asks (`OPTION_ANSWER`); an option that asks may be taken once per
+	 *  answer, and its `option_choice` tokens read that answer. Blank asks nothing. */
+	answer: optStr,
 });
 
 // --- Registry: type name → { schema, file glob, column order for unparse } -----

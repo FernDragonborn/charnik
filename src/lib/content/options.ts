@@ -7,7 +7,8 @@ import { issueText } from './issue-text';
 import { parseBonusChoices } from './item-tags';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from './loader';
 import type { JoinIssue } from './resource-joins';
-import { RARITIES, splitList } from './schemas';
+import { RARITIES, RESOLUTION, splitList } from './schemas';
+import { getSpellAccess } from './spellAccess';
 
 export type OptionRow = LoadedRowByType<'option'>;
 
@@ -59,6 +60,60 @@ export function itemRarities(row: LoadedRow, graph?: ContentGraph | null): strin
 	const found = stated.length ? stated : row.data.rarity ? [row.data.rarity] : [];
 	const order = (rarity: string): number => (RARITIES as readonly string[]).indexOf(rarity);
 	return [...new Set(found)].sort((a, b) => order(a) - order(b));
+}
+
+/**
+ * What an option asks of each pick, where it asks anything: an open enum, since a homebrew option
+ * may ask something these do not name, and an unknown one offers no answers rather than guessing.
+ * SRD 5.2.1's _Repeatable_ invocations ask "one of your known Warlock cantrips that deals damage"
+ * (Agonizing Blast, Eldritch Spear) or "that requires an attack roll" (Repelling Blast).
+ */
+export const OPTION_ANSWER = {
+	damageCantrip: 'cantrip.damage',
+	attackCantrip: 'cantrip.attack',
+} as const;
+
+/** Joins an option's id to the answer one pick of it was given, in the string `build.options`
+ *  already holds: ids are snake_case, so the mark cannot collide with one. */
+const PICK_ANSWER_MARK = '@';
+
+/** One pick as `build.options` stores it: the option, and the answer that pick was given. */
+export interface OptionPick {
+	id: string;
+	answer?: string;
+}
+
+export const readPick = (pick: string): OptionPick => {
+	const at = pick.indexOf(PICK_ANSWER_MARK);
+	return at === -1 ? { id: pick } : { id: pick.slice(0, at), answer: pick.slice(at + 1) };
+};
+
+export const writePick = ({ id, answer }: OptionPick): string =>
+	answer ? `${id}${PICK_ANSWER_MARK}${answer}` : id;
+
+/**
+ * The answers an option's pick may be given: the cantrips the character knows that are on the
+ * asking class's list and do what the option names. Each answer may be taken once — "Each time
+ * you do so, choose a different eligible cantrip" — which the picker holds, not this.
+ */
+export function optionAnswers(
+	graph: ContentGraph,
+	option: OptionRow,
+	of: { classId: string; spellRefs: readonly string[] },
+): LoadedRowByType<'spell'>[] {
+	const asks = option.data.answer;
+	if (asks !== OPTION_ANSWER.damageCantrip && asks !== OPTION_ANSWER.attackCantrip) return [];
+	const access = getSpellAccess(graph);
+	return of.spellRefs.flatMap((ref) => {
+		const spell = graph.get(ref);
+		if (spell?.type !== 'spell' || Number(spell.data.level) !== 0) return [];
+		if (!access.classesForSpell(spell.effectiveId).some((c) => c.classId === of.classId)) return [];
+		const fits =
+			asks === OPTION_ANSWER.attackCantrip
+				? spell.data.resolution === RESOLUTION.attack
+				: !!spell.data.damage;
+		return fits ? [spell] : [];
+	});
 }
 
 /** Why an option cannot be taken yet — an open enum, since a rule may grow a third reason. */

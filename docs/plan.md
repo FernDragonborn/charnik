@@ -254,8 +254,8 @@ position and are given per wave, because most of them were learned the hard way.
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
-  rule is still only text. REPEATABLE-OPTION sits here too — a 2024 invocation taken once per cantrip — and A17's tail: a Tome warlock casts rituals, and the Book of
-  Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's 2024 Agonizing Blast and E4.
+  rule is still only text. REPEATABLE-OPTION's tail sits here too — Lessons of the First Ones, a feat per pick — and A17's tail: a Tome warlock casts rituals, and the Book of
+  Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's class and school scopes and E4.
 - **Deliberately in no wave:** TABLE-LINK-SPEC (the specification before any transport code; the
   app ships the seams and no line of networking — `internals/overview.md` ▸ TableLink is the seam a
   table stands on), DISTRIBUTION-EXPANSION (the 1.0.0 pre-release, its own session, blocked on

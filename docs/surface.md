@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (96)
+## Duplicate suspects (95)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -70,7 +70,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
-- `idOf` ×2 — src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `invokeRaw` ×2 — src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
@@ -715,11 +714,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
 - `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
 - `function heldOptions` — * The options a character HOLDS of one class feature, in the order they were picked.
+- `interface HeldOption` — One option held: the row, and the answer this pick of it was given where the row asks one.
 - `const FEATURE_SECTION` — What section a feature is read under.
 - `type FeatureSection`
 - `const FEATURE_PRESET` — The ways a player narrows the Features panel in one press.
 - `type FeaturePreset`
 - `interface CharacterFeature` — One thing a character HAS, as the sheet reads it.
+- `const featureKey` — What identifies one feature on the sheet — its row, and for an option taken once per answer, * that answer too, since…
 - `function characterFeatures` — Every feature, trait and feat a character has, in reading order: class features by level, then * what their origin ga…
 
 ### `src/lib/character/forms.ts`
@@ -1260,6 +1261,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function optionsOf` — * A row's options, in the order their file lists them — which is the order the source's own table * prints.
 - `const optionNamed` — The one of a row's options an answer names, if it names one.
 - `function itemRarities` — * Every rarity an item can be found at, commonest first: each rung's where the row is a `+1/+2/+3` * ladder that stat…
+- `const OPTION_ANSWER` — * What an option asks of each pick, where it asks anything: an open enum, since a homebrew option * may ask something…
+- `interface OptionPick` — One pick as `build.options` stores it: the option, and the answer that pick was given.
+- `const readPick`
+- `const writePick`
+- `function optionAnswers` — * The answers an option's pick may be given: the cantrips the character knows that are on the * asking class's list a…
 - `const OPTION_BLOCK` — Why an option cannot be taken yet — an open enum, since a rule may grow a third reason.
 - `type OptionBlock`
 - `function optionBlock` — * What stands between a character and an option of a class feature: the class level it opens at, * or another option …
@@ -1413,6 +1419,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RITUAL_SOURCES`
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
+- `const RESOLUTION` — The same words by name, for code that compares against one.
 - `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
 - `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
 - `const TOOL_ITEM_CATEGORY` — The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`).
@@ -1782,6 +1789,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function splitGuard`
 - `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
 - `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
+- `function withOptionChoice`
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
@@ -2374,4 +2382,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1445 exports across 202 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1454 exports across 202 modules · 95 duplicate suspects._

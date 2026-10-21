@@ -186,7 +186,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Staff of the Magi on saves against spells. An install left at v65 says none of it.
 // v67: Boon of Truesight gives Truesight and Boon of Fate its 2d4 and its one use. An install left
 // at v66 gives neither.
-export const CONTENT_SEED_VERSION = 67;
+// v68: the 2024 Agonizing Blast, Eldritch Spear and Repelling Blast ask a cantrip per pick (the
+// options `answer` column), and Agonizing Blast scopes its Charisma to it. An install left at v67
+// takes each once and asks nothing.
+export const CONTENT_SEED_VERSION = 68;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

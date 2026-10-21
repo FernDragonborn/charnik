@@ -10,7 +10,12 @@
  * kept its own parallel state would give a player two controls that disagree and no way to tell
  * which won.
  */
-import { FEATURE_PRESET, type CharacterFeature, type FeaturePreset } from '$lib/character/features';
+import {
+	FEATURE_PRESET,
+	featureKey,
+	type CharacterFeature,
+	type FeaturePreset,
+} from '$lib/character/features';
 import type { Character } from '$lib/character/schema';
 
 export class FeatureView {
@@ -72,14 +77,14 @@ export class FeatureView {
 		const features = this.features;
 		const top = Math.max(...features.map((f) => f.at ?? 0), 0);
 		const keeps = (f: CharacterFeature): boolean =>
-			this.pinned.has(f.row.effectiveId) ||
+			this.pinned.has(featureKey(f)) ||
 			(preset === FEATURE_PRESET.newest
 				? f.at === top
 				: f.className === undefined || f.className === className);
-		this.setHidden(features.filter((f) => !keeps(f)).map((f) => f.row.effectiveId));
+		this.setHidden(features.filter((f) => !keeps(f)).map((f) => featureKey(f)));
 	};
 
 	/** What the panel renders: everything the player has not hidden. Pinning is a GROUPING and stays
 	 *  the panel's own job — this says what exists, not where it sits. */
-	visible = $derived(this.features.filter((f) => !this.hidden.has(f.row.effectiveId)));
+	visible = $derived(this.features.filter((f) => !this.hidden.has(featureKey(f))));
 }

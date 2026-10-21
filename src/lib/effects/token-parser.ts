@@ -713,6 +713,24 @@ export function withItemChoice(tokens: string[], choice: string | undefined): st
 	return out;
 }
 
+/**
+ * The word an OPTION's row writes where one pick's answer goes — 2024 Agonizing Blast's
+ * `flat_bonus:damage.option_choice+cha_mod`, scoped to whichever cantrip that pick named. Its own
+ * word rather than `item_choice`, because it answers a different question in a different place,
+ * and it sits INSIDE a segment (a scope), so it is replaced as a whole word rather than a whole
+ * segment. Unanswered, the token is dropped, as an unanswered item's is.
+ */
+const OPTION_CHOICE = /\boption_choice\b/g;
+
+export function withOptionChoice(tokens: string[], answer: string | undefined): string[] {
+	const out: string[] = [];
+	for (const token of tokens) {
+		if (!token.match(OPTION_CHOICE)) out.push(token);
+		else if (answer) out.push(token.replace(OPTION_CHOICE, answer));
+	}
+	return out;
+}
+
 /** Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule
  *  notes, so the producers below and the message catalogs never drift on a bare string. */
 export const ISSUE_KEY = {

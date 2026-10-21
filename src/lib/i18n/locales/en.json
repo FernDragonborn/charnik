@@ -329,6 +329,11 @@
 			"picks": "options {chosen}/{cap}",
 			"none": "Nothing this character has asks for a choice.",
 			"noRows": "No content that is switched on offers an option for this feature.",
+			"answerFor": "{option} — for which cantrip?",
+			"noAnswers": {
+				"cantrip.damage": "Learn a cantrip of this class that deals damage first.",
+				"cantrip.attack": "Learn a cantrip of this class that makes an attack roll first."
+			},
 			"block": {
 				"level": "level {level}",
 				"requires": "needs {option}",

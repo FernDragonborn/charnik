@@ -6,7 +6,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
  * by hand and what a preset decides are the same state read twice.
  */
 import { FeatureView } from './feature-view.svelte';
-import { FEATURE_PRESET, FEATURE_SECTION, type CharacterFeature } from '$lib/character/features';
+import {
+	FEATURE_PRESET,
+	FEATURE_SECTION,
+	featureKey,
+	type CharacterFeature,
+} from '$lib/character/features';
 import { newCharacter } from '$lib/character/schema';
 import { makeRow } from '$lib/content/test-utils';
 
@@ -22,7 +27,7 @@ const originFeature = (id: string): CharacterFeature => ({
 	row: makeRow('species', { id }),
 });
 
-const idOf = (f: CharacterFeature) => f.row.effectiveId;
+const idOf = (f: CharacterFeature) => featureKey(f);
 
 const features = [
 	classFeature('rage', 1, 'Barbarian'),

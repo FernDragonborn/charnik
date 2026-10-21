@@ -827,3 +827,30 @@ describe('a scoped bonus can name SEVERAL scopes, and needs all of them (RAGE-SC
 		expect(parseToken('flat_bonus:damage.melee,,str+2').kind).toBe('unknown');
 	});
 });
+
+describe('withOptionChoice · one pick of an option points its tokens at its answer', () => {
+	it('fills the word inside a scope, leaves other tokens, and drops an unanswered one', async () => {
+		const { withOptionChoice } = await import('./token-parser');
+		const tokens = ['flat_bonus:damage.option_choice+cha_mod', 'flat_bonus:ac+1'];
+		expect(withOptionChoice(tokens, 'chill_touch')).toEqual([
+			'flat_bonus:damage.chill_touch+cha_mod',
+			'flat_bonus:ac+1',
+		]);
+		expect(withOptionChoice(tokens, undefined)).toEqual(['flat_bonus:ac+1']);
+		// a whole word only: an id that merely contains it is not a placeholder
+		expect(withOptionChoice(['note:my_option_choices'], undefined)).toEqual([
+			'note:my_option_choices',
+		]);
+	});
+	it('a pick reads back as the option and its answer', async () => {
+		const { readPick, writePick } = await import('../content/options');
+		expect(readPick('agonizing_blast@chill_touch')).toEqual({
+			id: 'agonizing_blast',
+			answer: 'chill_touch',
+		});
+		expect(readPick('armor_of_shadows')).toEqual({ id: 'armor_of_shadows' });
+		expect(writePick({ id: 'agonizing_blast', answer: 'chill_touch' })).toBe(
+			'agonizing_blast@chill_touch',
+		);
+	});
+});

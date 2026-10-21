@@ -9,8 +9,11 @@ import { activeClassFeatures } from '$lib/character/features';
 import type { LoadedRowByType } from '$lib/content/loader';
 import {
 	OPTION_BLOCK,
+	optionAnswers,
 	optionBlock,
 	optionsOf,
+	readPick,
+	writePick,
 	type OptionBlock,
 	type OptionRow,
 } from '$lib/content/options';
@@ -29,7 +32,8 @@ export interface FeatureChoice {
 	classLevel: number;
 	cap: number;
 	options: OptionRow[];
-	/** The picks, as option ids, trimmed to what is still offered and to the cap. */
+	/** The picks as `build.options` stores them — an option id, or `id@answer` for an option that
+	 *  asks — trimmed to what is still offered and to the cap. */
 	picks: string[];
 }
 
@@ -49,7 +53,9 @@ export class OptionPicks {
 			const options = optionsOf(graph, active.row).filter((row) => isRowActive(row));
 			const offered = new Set(options.map((option) => option.id));
 			// a pick the level no longer allows is dropped, like every other capped pick here
-			const picks = (draft.options[active.row.id] ?? []).filter((id) => offered.has(id));
+			const picks = (draft.options[active.row.id] ?? []).filter((pick) =>
+				offered.has(readPick(pick).id),
+			);
 			out.push({
 				feature: active.row,
 				classLevel: active.entry.level,
@@ -67,7 +73,31 @@ export class OptionPicks {
 	cap = $derived(this.choices.reduce((n, c) => n + c.cap, 0));
 
 	/** Everything held, whichever feature asked: an invocation names a boon of another feature. */
-	private held = $derived(new Set(this.choices.flatMap((choice) => choice.picks)));
+	private held = $derived(
+		new Set(this.choices.flatMap((choice) => choice.picks.map((pick) => readPick(pick).id))),
+	);
+
+	/** Is this option held by this feature, whatever its picks were answered with? */
+	holds = (choice: FeatureChoice, option: OptionRow): boolean =>
+		choice.picks.some((pick) => readPick(pick).id === option.id);
+
+	/** The answers taken for one option of one feature, in the order they were picked. */
+	answersTaken = (choice: FeatureChoice, option: OptionRow): string[] =>
+		choice.picks.flatMap((pick) => {
+			const read = readPick(pick);
+			return read.id === option.id && read.answer ? [read.answer] : [];
+		});
+
+	/** What each pick of an option may name: the cantrips the draft knows that fit it. Empty for an
+	 *  option that asks nothing — and for one that asks, until a fitting cantrip is chosen. */
+	answersFor = (choice: FeatureChoice, option: OptionRow) => {
+		const { graph, draft } = this.host();
+		if (!graph || !option.data.answer) return [];
+		return optionAnswers(graph, option, {
+			classId: String(choice.feature.data.class_id),
+			spellRefs: draft.selectedSpells,
+		});
+	};
 
 	/** The picks as the build stores them, feature id → option ids. */
 	picks = $derived(
@@ -87,24 +117,35 @@ export class OptionPicks {
 
 	/** The other feature this option is already taken through, if one is. */
 	takenElsewhere = (choice: FeatureChoice, option: OptionRow): FeatureChoice | undefined =>
-		choice.picks.includes(option.id)
+		this.holds(choice, option)
 			? undefined
-			: this.choices.find((other) => other !== choice && other.picks.includes(option.id));
+			: this.choices.find((other) => other !== choice && this.holds(other, option));
 
 	/** May this chip be pressed? Something already held can always be put down; a prerequisite is
 	 *  a wall in Strict and a note in Free, the split every cap in the builder uses. */
 	canToggle = (choice: FeatureChoice, option: OptionRow): boolean =>
-		choice.picks.includes(option.id) ||
+		this.holds(choice, option) ||
 		!this.host().draft.strict ||
 		this.blockOf(choice, option) === null;
 
 	/** Toggle one option. At the cap a click REPLACES the oldest pick (ui.md §10). */
 	toggle = (choice: FeatureChoice, option: OptionRow) => {
-		if (!this.canToggle(choice, option)) return;
-		const draft = this.host().draft;
-		draft.options = {
-			...draft.options,
-			[choice.feature.id]: toggleCapped(choice.picks, option.id, choice.cap),
-		};
+		// an option that asks is taken one answer at a time (`toggleAnswer`), never bare
+		if (option.data.answer || !this.canToggle(choice, option)) return;
+		this.write(choice, toggleCapped(choice.picks, option.id, choice.cap));
 	};
+
+	/** Take or put down one answered pick. Each answer is its own pick — "Each time you do so,
+	 *  choose a different eligible cantrip" — so the same option may be held once per answer, and
+	 *  the cap counts every pick. */
+	toggleAnswer = (choice: FeatureChoice, option: OptionRow, answer: string) => {
+		const pick = writePick({ id: option.id, answer });
+		if (!choice.picks.includes(pick) && !this.canToggle(choice, option)) return;
+		this.write(choice, toggleCapped(choice.picks, pick, choice.cap));
+	};
+
+	private write(choice: FeatureChoice, picks: string[]) {
+		const draft = this.host().draft;
+		draft.options = { ...draft.options, [choice.feature.id]: picks };
+	}
 }

@@ -10,6 +10,7 @@ import {
 	inventoryRow,
 } from '../character/schema';
 import { deriveSheet } from '../character/derive';
+import { characterFeatures, featureKey } from '../character/features';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
@@ -1371,4 +1372,19 @@ it('2024 epic boons: Truesight 60 ft, and Fate a 2d4 with one use back on a rest
 	expect(fate.facts.rolls.find((r) => r.id === 'improve_fate')?.formula).toBe('2d4');
 	expect(fate.facts.initiativeRegain).toMatchObject([{ id: 'boon_of_fate', upTo: 1 }]);
 	expect(fate.deriveIssues).toEqual([]);
+});
+
+// Two picks of one option are two features on the sheet: one per cantrip, keyed apart and named by it.
+it('2024: two Agonizing Blasts read as two features, each naming its cantrip', async () => {
+	const g = await loadEdition('srd-2024');
+	const c = newCharacter('w', 'W', '5.5e');
+	c.build.classes = [classRow({ class: 'class:SRD 5.2.1:warlock', level: 5 })];
+	c.build.options = {
+		warlock_eldritch_invocations: ['agonizing_blast@eldritch_blast', 'agonizing_blast@chill_touch'],
+	};
+	const blasts = characterFeatures(characterSchema.parse(c), g).filter(
+		(f) => f.row.id === 'agonizing_blast',
+	);
+	expect(blasts.map((f) => f.answer?.id)).toEqual(['eldritch_blast', 'chill_touch']);
+	expect(new Set(blasts.map(featureKey)).size).toBe(2);
 });

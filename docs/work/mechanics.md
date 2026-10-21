@@ -139,26 +139,21 @@ stay semi-manual.
   for a bonus TYPE, `docs/internals/compatibility.md` §4) and keeps the weapon vocabulary out of L1.
   A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
   scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
-  field, so there is one shape downstream. Rage's damage reads it in both editions; what is left is
-  the other consumer:
-  - [ ] **2024 Agonizing Blast.** The 2014 row carries `flat_bonus:damage.eldritch_blast+cha_mod`
-        and a held one reaches Eldritch Blast and no other spell. The 2024 row is text: "Choose one
-        of your known Warlock cantrips that deals damage", so its scope is a cantrip the PLAYER
-        names, and the invocation is _Repeatable_ — once per eligible cantrip. Both halves are
-        REPEATABLE-OPTION below.
-        Magic Weapon, the other consumer this line named, is built: the cast asks which weapon and
-        scopes the bonus to that weapon's id, so two copies of one weapon both take it — an
-        inventory entry has no identity of its own to scope to.
-- [ ] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** SRD
-  5.2.1 marks four invocations _Repeatable_: Agonizing Blast, Eldritch Spear and Repelling Blast
-  ("Each time you do so, choose a different eligible cantrip") and Lessons of the First Ones
-  ("choose a different Origin feat"). `build.options` holds a feature's picks as a set of option
-  ids and an option is held once (`content.md` ▸ One row, several options), so today each of the
-  four is taken once and asks nothing. What it needs: a row that says it may repeat (an open-enum
-  column, since "once per character" is the other policy and a third will come), an answer per
-  pick — a cantrip the character knows, or an Origin feat slot — and the token's scope filled
-  from the cantrip answer the way `item_choice` fills an item's. The four rows ship as text until
-  then.
+  field, so there is one shape downstream. Rage's damage reads it in both editions, 2014 Agonizing
+  Blast as `damage.eldritch_blast`, 2024 Agonizing Blast as `damage.option_choice` filled with the
+  cantrip its pick named (REPEATABLE-OPTION), and Magic Weapon with the weapon its cast asked for.
+  What is left: **a cast offers only its spell's id as a scope**, so a bonus to every spell of a
+  CLASS or a SCHOOL has nothing to name — 2024 Potent Spellcasting on any Cleric or Druid cantrip,
+  Empowered Evocation on evocation spells (FEATURE-PASSIVES lists them). The fix is the cast
+  offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
+- [~] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** An option
+  row's `answer` column says what each pick asks (`OPTION_ANSWER`: `cantrip.damage`,
+  `cantrip.attack`); such an option is taken once per answer, stored as `id@answer` in the same
+  `build.options` list, and its `option_choice` tokens read that answer (`../internals/content.md` ▸
+  One row, several options). Agonizing Blast, Eldritch Spear and Repelling Blast ship on it.
+  **Left: Lessons of the First Ones** — "gain one Origin feat of your choice … Each time you do so,
+  choose a different Origin feat". Its answer is a FEAT, which wants the feat slot a feature's
+  `feat_choice` opens, opened per pick; the row is taken once and asks nothing until then.
 - [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
   warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
   that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —

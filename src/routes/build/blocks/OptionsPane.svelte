@@ -9,9 +9,18 @@
 	import { localizedName } from '$lib/content/detail';
 	import { provenance } from '$lib/actions/provenance';
 	import { app } from '$lib/stores/app.svelte';
+	import type { OptionRow } from '$lib/content/options';
+	import type { FeatureChoice } from '../option-picks.svelte';
 	const b = build;
 
 	const choices = $derived(b.optionPicks.choices);
+	// an option that asks (2024 Agonizing Blast: which cantrip) opens a row of its answers under the
+	// chips; each answer is a pick of its own, so the same option may be held once per cantrip
+	let opened = $state<string | null>(null);
+	const pressOption = (choice: FeatureChoice, option: OptionRow) => {
+		if (option.data.answer) opened = opened === option.effectiveId ? null : option.effectiveId;
+		else b.optionPicks.toggle(choice, option);
+	};
 	const nameOf = (id: string | undefined): string => {
 		const option = b.optionPicks.optionById(id);
 		return option ? localizedName(option, app.activeLocale) : (id ?? '');
@@ -34,14 +43,17 @@
 					{@const block = b.optionPicks.blockOf(choice, option)}
 					<!-- a prerequisite that is not met is said on the chip, and the chip stays focusable so
 					     its text can still be read: `aria-disabled`, never `disabled` -->
+					{@const taken = b.optionPicks.answersTaken(choice, option).length}
 					<button
 						class="pick-chip"
-						class:on={choice.picks.includes(option.id)}
+						class:on={b.optionPicks.holds(choice, option)}
 						aria-disabled={!b.optionPicks.canToggle(choice, option)}
+						aria-expanded={option.data.answer ? opened === option.effectiveId : undefined}
 						use:provenance={describedPlainProse(option, app.activeLocale)}
-						onclick={() => b.optionPicks.toggle(choice, option)}
+						onclick={() => pressOption(choice, option)}
 					>
-						{localizedName(option, app.activeLocale)}{#if block !== null}<span class="why"
+						{localizedName(option, app.activeLocale)}{#if taken > 1}<span class="why">×{taken}</span
+							>{/if}{#if block !== null}<span class="why"
 								>{$_(`build.options.block.${block}`, {
 									values: {
 										level: option.data.level ?? 0,
@@ -56,6 +68,32 @@
 					</button>
 				{/each}
 			</div>
+			{#each choice.options.filter((option) => option.effectiveId === opened) as option (option.effectiveId)}
+				{@const answers = b.optionPicks.answersFor(choice, option)}
+				{@const taken = b.optionPicks.answersTaken(choice, option)}
+				<p class="subtext">
+					{$_('build.options.answerFor', {
+						values: { option: localizedName(option, app.activeLocale) },
+					})}
+				</p>
+				{#if answers.length}
+					<div class="chips">
+						{#each answers as spell (spell.effectiveId)}
+							<button
+								class="pick-chip"
+								class:on={taken.includes(spell.id)}
+								aria-disabled={!taken.includes(spell.id) &&
+									!b.optionPicks.canToggle(choice, option)}
+								onclick={() => b.optionPicks.toggleAnswer(choice, option, spell.id)}
+							>
+								{localizedName(spell, app.activeLocale)}
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<p class="subtext">{$_(`build.options.noAnswers.${option.data.answer}`)}</p>
+				{/if}
+			{/each}
 		{:else}
 			<p class="subtext">{$_('build.options.noRows')}</p>
 		{/if}

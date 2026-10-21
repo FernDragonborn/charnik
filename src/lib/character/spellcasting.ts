@@ -219,8 +219,8 @@ function ritualSourceFor(of: {
 }): RitualSource | null {
 	for (const feature of of.graph.featuresForClass(of.classRow)) {
 		if (feature.data.level > of.entry.level) continue;
-		for (const option of heldOptions(of.graph, feature, of.build.options))
-			if (option.data.ritual_source) return option.data.ritual_source;
+		for (const { row } of heldOptions(of.graph, feature, of.build.options))
+			if (row.data.ritual_source) return row.data.ritual_source;
 	}
 	return (
 		of.subclass?.data.ritual_source ??

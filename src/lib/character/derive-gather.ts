@@ -7,14 +7,20 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { ISSUE_KEY, isWeaponOwnBonus, splitGuard, withItemChoice } from '$lib/effects/token-parser';
+import {
+	ISSUE_KEY,
+	isWeaponOwnBonus,
+	splitGuard,
+	withItemChoice,
+	withOptionChoice,
+} from '$lib/effects/token-parser';
 import { FORM_SHEDS, FORM_WORD } from '$lib/effects/token-words';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import { resolveItem } from '../content/resolved-item';
 import { instanceName } from '../content/item-instance';
-import { optionNamed } from '../content/options';
+import { optionNamed, readPick } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
 import { heldOptions } from './features';
@@ -43,6 +49,8 @@ type RowOrigin = {
 	classId?: string;
 	itemBonus?: number;
 	itemChoice?: string;
+	/** The answer one pick of an option was given — the cantrip an Agonizing Blast names. */
+	optionAnswer?: string;
 	name?: string;
 	origin?: string;
 };
@@ -192,7 +200,10 @@ class EffectGatherer {
 		if (!row) return undefined;
 		// the answer is substituted BEFORE the token is parsed, so the parse cache never holds a
 		// template and every consumer downstream reads a finished token (`token-parser.ts`)
-		const tokens = withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice);
+		const tokens = withOptionChoice(
+			withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice),
+			from.optionAnswer,
+		);
 		if (!tokens.length) return undefined;
 		const effect: ActiveEffect = {
 			source: from.name ?? rowName(row),
@@ -258,10 +269,16 @@ class EffectGatherer {
 	private gatherHeldOptions(f: ClassFeatureRow, ctx: ClassCtx): void {
 		const picks = this.character.build.options;
 		const held = heldOptions(this.graph, f, picks);
-		for (const id of picks[f.id] ?? [])
-			if (!held.some((option) => option.id === id)) this.missing.push(`option:${id}`);
-		for (const option of held)
-			if (this.isActive(option)) this.pushRow(option, 'feature', { classId: ctx.classId });
+		for (const pick of picks[f.id] ?? []) {
+			const { id } = readPick(pick);
+			if (!held.some((option) => option.row.id === id)) this.missing.push(`option:${id}`);
+		}
+		for (const { row, answer } of held)
+			if (this.isActive(row))
+				this.pushRow(row, 'feature', {
+					classId: ctx.classId,
+					...(answer ? { optionAnswer: answer } : {}),
+				});
 	}
 
 	private gatherRuntimeEffects(): void {

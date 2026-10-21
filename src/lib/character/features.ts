@@ -9,7 +9,7 @@
  * belongs to the subclass that row actually chose.
  */
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
-import { optionsOf, type OptionRow } from '../content/options';
+import { optionsOf, readPick, type OptionRow } from '../content/options';
 import type { Character } from './schema';
 
 /** A class row as either half of the app names it: the builder's draft, or a saved character's
@@ -83,11 +83,21 @@ export function heldOptions(
 	graph: ContentGraph,
 	feature: LoadedRowByType<'class_feature'>,
 	picks: Character['build']['options'],
-): OptionRow[] {
-	const ids = picks[feature.id] ?? [];
-	if (!ids.length) return [];
+): HeldOption[] {
+	const stored = picks[feature.id] ?? [];
+	if (!stored.length) return [];
 	const offered = optionsOf(graph, feature);
-	return ids.flatMap((id) => offered.find((option) => option.id === id) ?? []);
+	return stored.flatMap((pick) => {
+		const { id, answer } = readPick(pick);
+		const row = offered.find((option) => option.id === id);
+		return row ? [{ row, ...(answer ? { answer } : {}) }] : [];
+	});
+}
+
+/** One option held: the row, and the answer this pick of it was given where the row asks one. */
+export interface HeldOption {
+	row: OptionRow;
+	answer?: string;
 }
 
 /** What section a feature is read under. A named member, not a bare string: the panel and the
@@ -125,6 +135,20 @@ export interface CharacterFeature {
 	at?: number;
 	/** The class that granted it, for a multiclass sheet where "level 3" alone says nothing. */
 	className?: string;
+	/** What this pick of an option was answered with — the cantrip an Agonizing Blast names. */
+	answer?: LoadedRow;
+}
+
+/** What identifies one feature on the sheet — its row, and for an option taken once per answer,
+ *  that answer too, since two Agonizing Blasts are two features a player pins and hides apart. */
+export const featureKey = (f: CharacterFeature): string =>
+	f.answer ? `${f.row.effectiveId}@${f.answer.id}` : f.row.effectiveId;
+
+/** The row an answer names: a cantrip id, in the option's own edition. */
+function answerRow(graph: ContentGraph, option: OptionRow, answer: string): LoadedRow | undefined {
+	return graph
+		.list('spell')
+		.find((spell) => spell.id === answer && spell.systems.some((s) => option.systems.includes(s)));
 }
 
 /** Every feature, trait and feat a character has, in reading order: class features by level, then
@@ -152,8 +176,16 @@ export function characterFeatures(character: Character, graph: ContentGraph): Ch
 		const className = String(f.classRow.data.name_en);
 		out.push({ section: FEATURE_SECTION.classFeatures, row: f.row, at: f.level, className });
 		// what was chosen of it reads as a feature of its own, straight after the feature that asked
-		for (const option of heldOptions(graph, f.row, b.options))
-			out.push({ section: FEATURE_SECTION.classFeatures, row: option, at: f.level, className });
+		for (const held of heldOptions(graph, f.row, b.options)) {
+			const answer = held.answer ? answerRow(graph, held.row, held.answer) : undefined;
+			out.push({
+				section: FEATURE_SECTION.classFeatures,
+				row: held.row,
+				at: f.level,
+				className,
+				...(answer ? { answer } : {}),
+			});
+		}
 	}
 	out.sort((a, b2) => (a.at ?? 0) - (b2.at ?? 0));
 

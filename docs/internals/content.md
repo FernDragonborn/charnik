@@ -183,6 +183,13 @@ offering it again. The feature's own `option` rows are what the slot may take IN
 2024 Paladin's Blessed Warrior), stored in `build.options` like any option. A Fighting Style feat is
 offered only to a character one of whose features names that category — the "Prerequisite: Fighting
 Style Feature" each prints. An `option` is a choice that is not a feat anywhere else.
+**An option that asks is taken once per answer.** Its `answer` column names what each pick asks —
+an open enum (`OPTION_ANSWER`), `cantrip.damage` or `cantrip.attack` for SRD 5.2.1's _Repeatable_
+invocations, offered from the cantrips the character knows on the asking class's list. A pick is
+stored as `id@answer` in the same list (`options.ts` ▸ `readPick`), so a save holds no new field, and
+the row's `option_choice` tokens read the answer — replaced as a whole word inside a scope,
+`flat_bonus:damage.option_choice+cha_mod`, where `item_choice` replaces a whole segment. An
+unanswered pick cannot exist: the picker takes such an option only through an answer.
 **An option is held once**: taken through one feature,
 it is refused (Strict) or noted (Free) through another — SRD 5.1, "You can't take a Fighting Style
 option more than once, even if you later get to choose again". Like every content → content link the parent is

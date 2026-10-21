@@ -37,6 +37,10 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **A 2024 warlock's Agonizing Blast, Eldritch Spear and Repelling Blast name their cantrip**, and
+  each may be taken again for another: pressing one in the builder lists the fitting cantrips you
+  know. Agonizing Blast adds your Charisma modifier to the damage of the cantrip it names, and the
+  sheet lists each pick as "Agonizing Blast · Chill Touch".
 - **Boon of Truesight gives Truesight 60 ft**, and **Boon of Fate is a 2d4 roll with one use**
   that comes back on a rest or when you roll initiative.
 - **The species say their saving-throw traits on the sheet**: a dwarf's advantage against poison,

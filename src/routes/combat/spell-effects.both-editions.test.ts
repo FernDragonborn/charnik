@@ -206,3 +206,30 @@ describe('a held invocation reaches the one spell it names · 5e', () => {
 		expect(castAndRead('fire_bolt')).not.toContain('+4');
 	});
 });
+
+/*
+ * SRD 5.2.1 ▸ Agonizing Blast: "Choose one of your known Warlock cantrips that deals damage. You can
+ * add your Charisma modifier to that spell's damage rolls." The pick names the cantrip, and the
+ * bonus reaches that cantrip and no other.
+ */
+describe('a held invocation reaches the cantrip its pick named · 5.5e', () => {
+	it('Agonizing Blast on Chill Touch adds Charisma to Chill Touch and not to Eldritch Blast', async () => {
+		const source = 'SRD 5.2.1';
+		combat.graph = await loadPacks('srd-2024');
+		const c = newCharacter('probe', 'Probe', '5.5e');
+		c.play.hp.current = 10;
+		c.build.classes = [classRow({ class: `class:${source}:warlock`, level: 2 })];
+		c.build.abilities = { str: 10, dex: 14, con: 12, int: 10, wis: 10, cha: 18 };
+		c.build.options = { warlock_eldritch_invocations: ['agonizing_blast@chill_touch'] };
+		combat.character = c;
+		const castAndRead = (id: string) => {
+			const row = combat.graph ? spellRow(combat.graph, `spell:${source}:${id}`, 'on') : null;
+			expect(row, `${id} ships`).not.toBeNull();
+			if (row) combat.cast(row, noModifiers);
+			return combat.journal.log[0]?.damage?.[0]?.expr ?? combat.journal.log[0]?.expr ?? '';
+		};
+		expect(castAndRead('chill_touch')).toContain('+4');
+		expect(castAndRead('eldritch_blast')).not.toContain('+4');
+		expect(combat.sheet?.deriveIssues).toEqual([]);
+	});
+});

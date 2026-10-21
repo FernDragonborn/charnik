@@ -29,6 +29,7 @@
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import {
 		FEATURE_SECTION,
+		featureKey,
 		type CharacterFeature,
 		type FeatureSection,
 	} from '$lib/character/features';
@@ -47,8 +48,12 @@
 	/** What a row would be called by inside its group: the class that granted it, or the section it
 	 *  came from when no class did. */
 	const qualifierOf = (f: CharacterFeature) => f.className ?? $_(`combat.features.${f.section}`);
-	const idOf = (f: CharacterFeature) => f.row.effectiveId;
-	const nameOf = (f: CharacterFeature) => localizedName(f.row, app.activeLocale);
+	const idOf = featureKey;
+	// an option taken once per answer says which: "Agonizing Blast · Chill Touch"
+	const nameOf = (f: CharacterFeature) =>
+		f.answer
+			? `${localizedName(f.row, app.activeLocale)} · ${localizedName(f.answer, app.activeLocale)}`
+			: localizedName(f.row, app.activeLocale);
 	/** Which feature's rewrite editor is open, by row. Keyed rather than a single flag: the panel is a
 	 *  list of independent <details>, and a player may have more than one expanded. Bound through a
 	 *  getter/setter pair, since a key that has never been written reads `undefined` and `bind:` will

@@ -262,3 +262,58 @@ describe.each([
 		}
 	});
 });
+
+/*
+ * SRD 5.2.1 ▸ Agonizing Blast: "Choose one of your known Warlock cantrips that deals damage …
+ * Repeatable. You can gain this invocation more than once. Each time you do so, choose a different
+ * eligible cantrip." Repelling Blast asks for one "that requires an attack roll".
+ */
+describe('feature options · a 2024 invocation taken once per cantrip', () => {
+	const draftWarlock2024 = async (spells: string[]) => {
+		build.reset();
+		build.graph = await loadPacks('srd-2024');
+		build.draft.system = '5.5e';
+		build.draft.classes = [
+			{ ...newClassRow(), classId: 'class:SRD 5.2.1:warlock', subclassId: null, level: 5 },
+		];
+		build.draft.selectedSpells = spells.map((id) => `spell:SRD 5.2.1:${id}`);
+	};
+	const ids = (rows: { id: string }[]) => rows.map((row) => row.id);
+
+	it('offers the known cantrips that fit, and holds one pick per answer', async () => {
+		await draftWarlock2024(['eldritch_blast', 'chill_touch', 'mage_hand']);
+		const invocations = choiceOf(INVOCATIONS);
+		const agonizing = optionOf(invocations, 'agonizing_blast');
+		expect(ids(build.optionPicks.answersFor(invocations, agonizing))).toEqual([
+			'eldritch_blast',
+			'chill_touch',
+		]);
+		// a press on the option itself asks for its answer rather than taking it bare
+		build.optionPicks.toggle(invocations, agonizing);
+		expect(choiceOf(INVOCATIONS).picks).toEqual([]);
+		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'eldritch_blast');
+		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'chill_touch');
+		expect(choiceOf(INVOCATIONS).picks).toEqual([
+			'agonizing_blast@eldritch_blast',
+			'agonizing_blast@chill_touch',
+		]);
+		expect(build.optionPicks.answersTaken(choiceOf(INVOCATIONS), agonizing)).toEqual([
+			'eldritch_blast',
+			'chill_touch',
+		]);
+		expect(build.optionPicks.holds(choiceOf(INVOCATIONS), agonizing)).toBe(true);
+		// each answer is one of the five picks a level 5 warlock has
+		expect(choiceOf(INVOCATIONS).cap - choiceOf(INVOCATIONS).picks.length).toBe(3);
+		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'chill_touch');
+		expect(choiceOf(INVOCATIONS).picks).toEqual(['agonizing_blast@eldritch_blast']);
+	});
+
+	it('asks nothing it cannot answer: no cantrip that fits, no answer to give', async () => {
+		await draftWarlock2024(['mage_hand']);
+		const invocations = choiceOf(INVOCATIONS);
+		expect(build.optionPicks.answersFor(invocations, optionOf(invocations, 'repelling_blast'))).toEqual(
+			[],
+		);
+	});
+});
+
