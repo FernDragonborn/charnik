@@ -90,7 +90,7 @@ of this page is vocabulary.
 [ guard ? ] flat_bonus : target +|- value
 ```
 
-- **`kind`** — what sort of change this is. There are 26, all listed in §5. You cannot invent a new
+- **`kind`** — what sort of change this is. There are 27, all listed in §5. You cannot invent a new
   one; Charnik will tell you it has never heard of it.
 - **`target`** — what the change lands on: a stat, a roll, a skill. Listed in §6.
 - **`value`** — how much, when the kind needs one. A whole number, a dice term like `2d6`, or a
