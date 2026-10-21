@@ -255,6 +255,8 @@ position and are given per wave, because most of them were learned the hard way.
   7. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
   8. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
   9. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+  10. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+      the build and put in the inventory.
 
   The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`.
   Mystic Arcanum and the slot recoveries wait for the release after.

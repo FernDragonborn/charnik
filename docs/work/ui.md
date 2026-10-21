@@ -3,8 +3,11 @@
 > Tracker. Screens, the builder, accessibility and UI copy. The contracts are
 > [`../internals/ui.md`](../internals/ui.md); the ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **STARTING-EQUIPMENT · a class's starting kit is not offered.** The "(a) or (b)" equipment
-  choices each class prints are text; the builder's inventory starts empty. Not in 0.8.2.
+- [ ] **STARTING-EQUIPMENT · a class's starting kit is not offered.** The equipment choices each
+  class prints — SRD 5.2.1's "Choose A or B" of a kit with gold or gold alone, for every class and
+  background; SRD 5.1's several "(a) or (b)" lines — are text, and the builder's inventory starts
+  empty. Wants a column a kit can be read from (item ids, counts, gold), typed from each source line,
+  and a choice in the build that fills the inventory.
 - [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is picked
   blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
   built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
