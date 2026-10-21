@@ -4,13 +4,13 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; five are not, and want a look.**
-  123 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
+- [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; four are not, and want a look.**
+  124 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
   HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,
   nothing in a cell Markdown has no inline form for — and each checked to render the same cells,
   emphasis included, through the app's own pipeline. Whitespace the page layout left inside a cell
   is collapsed. The `<b>` and `<em>` the audit counted were all inside those tables.
-  **Five stay HTML, and each is a defect of the source conversion rather than of Markdown:**
+  **Four stay HTML, each a defect of the source conversion rather than of Markdown:**
   - **The four 2024 ability-score blocks** — `find_steed`, `giant_insect`, `summon_dragon` and the
     Giant Fly inside `figurine_of_wondrous_power`. Each row is right: twelve cells, the score, its
     modifier and its save for three abilities. The HEADER is wrong: it names nine columns
@@ -18,10 +18,6 @@
     have no header row at all. The fix is a header of `| | | MOD | SAVE |` ×3 typed over the cells
     that are already there. These are the three stat blocks COMPANION needs transcribed as rows
     anyway (`../work/mechanics.md` ▸ COMPANION), so the two may want deciding together.
-  - **2014 `draconicbloodline_draconic_ancestry`** — the dragon table is split in two after its first
-    row, and the second half's last cell swallowed the rest of the section: the Draconic language
-    sentence, and Draconic Resilience whole (with the source's `<span style>` heading). The row is
-    a misfile, not a table problem: its fix is the Draconic Bloodline's rows themselves.
   `renderContentMarkdown` keeps its HTML-table workaround (blank lines forced around `<table>`,
   emphasis mopped up inside cells) while any of these ship, and for homebrew that writes HTML.
 

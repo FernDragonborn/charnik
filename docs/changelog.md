@@ -35,8 +35,13 @@
   and its one Water Breathing a day. The four marked Repeatable are taken once for now.
 - **A 2014 warlock's Agonizing Blast adds the Charisma modifier** to Eldritch Blast's damage.
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
-  spreadsheet reads as rows rather than HTML. They show the same in the app. Five stay HTML for
+  spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **A draconic sorcerer's Draconic Resilience counts from the level it is gained, in both
+  editions.** 2014 gave its 13 + Dexterity Armor Class only from 6th level, under a feature named
+  "Draconic Ancestry" that held three of them; it is Dragon Ancestor (with its table and the
+  Draconic language), Draconic Resilience at 1st and Elemental Affinity at 6th now. Neither
+  edition added the hit points: one per sorcerer level, from 1st in 2014 and 3rd in 2024.
 - **A 2024 cleric chooses a Divine Order and Blessed Strikes, and a druid a Primal Order.**
   Protector and Warden bring their weapons and armour, Thaumaturge and Magician their bonus to two
   Intelligence skills, and Divine Strike is a roll on the sheet — 1d8, 2d8 from level 14. The extra

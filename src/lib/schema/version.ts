@@ -166,7 +166,11 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // option rows. An install left at v57 asks them nothing.
 // v59: the rectangular tables in content prose are Markdown rather than HTML — 123 of 128, the
 // same cells. An install left at v58 keeps the HTML, which renders the same.
-export const CONTENT_SEED_VERSION = 59;
+// v60: the 2014 Draconic Bloodline is Dragon Ancestor, Draconic Resilience at 1st and Elemental
+// Affinity at 6th, and Draconic Resilience raises hit points in both editions. An install left at
+// v59 gives a 2014 draconic sorcerer its Armor Class only from 6th level, and neither edition the
+// hit points.
+export const CONTENT_SEED_VERSION = 60;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

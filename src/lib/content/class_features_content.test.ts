@@ -1025,3 +1025,53 @@ describe('2024 choices of two: Divine Order, Primal Order, Blessed Strikes', () 
 		expect(strikeAt(14)).toBe('2d8');
 	});
 });
+
+/*
+ * SRD 5.1 ▸ Draconic Bloodline ▸ Draconic Resilience, a 1st-level feature: "your hit point maximum
+ * increases by 1 and increases by 1 again whenever you gain a level in this class … When you aren't
+ * wearing armor, your AC equals 13 + your Dexterity modifier." SRD 5.2.1 ▸ Draconic Sorcery ▸
+ * Draconic Resilience, at level 3: "Your Hit Point maximum increases by 3, and it increases by 1
+ * whenever you gain another Sorcerer level … your base Armor Class equals 10 plus your Dexterity and
+ * Charisma modifiers."
+ */
+describe.each([
+	{
+		pack: 'srd-2014',
+		source: 'SRD 5.1',
+		system: '5e',
+		subclass: 'draconicbloodline',
+		from: 1,
+		ac: 15,
+	},
+	{
+		pack: 'srd-2024',
+		source: 'SRD 5.2.1',
+		system: '5.5e',
+		subclass: 'draconic_sorcery',
+		from: 3,
+		ac: 15,
+	},
+] as const)('Draconic Resilience · $system', ({ pack, source, system, subclass, from, ac }) => {
+	const sorcerer = (level: number, withSubclass: boolean) => {
+		const c = newCharacter('ash', 'Ash', system);
+		c.build.classes = [
+			classRow({
+				class: `class:${source}:sorcerer`,
+				level,
+				...(withSubclass ? { subclass: `subclass:${source}:${subclass}` } : {}),
+			}),
+		];
+		c.build.abilities = { str: 10, dex: 14, con: 10, int: 10, wis: 10, cha: 16 };
+		return characterSchema.parse(c);
+	};
+
+	it('raises hit points by the sorcerer level from the level it is gained, and sets the unarmored AC', async () => {
+		const g = await loadEdition(pack);
+		for (const level of [from, 6, 20]) {
+			const plain = deriveSheet(sorcerer(level, false), g);
+			const scaled = deriveSheet(sorcerer(level, true), g);
+			expect(scaled.maxHp.value - plain.maxHp.value, `level ${level}`).toBe(level);
+			expect(scaled.ac.value, `level ${level}`).toBe(ac);
+		}
+	});
+});
