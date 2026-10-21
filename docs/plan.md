@@ -262,12 +262,29 @@ position and are given per wave, because most of them were learned the hard way.
   appended in the order the work landed. Tagging and pushing wait for the maintainer.
   Mystic Arcanum and the slot recoveries wait for the release after.
 
-- **0.9.0 · the short queue, and it is an ORDER rather than a wave.**
+- **0.9.0 · a table can play levels 1–4 together.** The maintainer's goal: every SRD class and
+  subclass works through level 4 in both editions, and players can sit at one table across their
+  own apps. Two halves:
+  - **Levels 1–4, after 0.8.2's level 1.** DIVINE-SMITE (a roll that grows with the slot spent) ·
+    FEATURE-SKILLS (a skill or an expertise a feature has the player choose) · SLOT-RECOVERY (Arcane
+    and Natural Recovery, Magical Cunning — one verb) · CIRCLE-OF-THE-LAND (both editions' land
+    choice and its spells) · SPECIES-SPELLS (lineage and legacy spells at character level 3) ·
+    REACTION-ROLLS · TOGGLE-STATES · HUNTERS-PREY · FRENZY, and DISCIPLE-OF-LIFE's 2024 half.
+    FEATURE-SPELLS from 0.8.2 is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: built general
+    (a feature, a subclass, a species, an option), they are mostly content.
+  - **A table, minimally.** TABLE-LINK-SPEC first — its own session with the maintainer, starting
+    from the decisions `research/table-link-design-review.md` lists and the ones already taken
+    (work/release.md ▸ TABLE-LINK-SPEC) — then TABLE-LINK-MVP, the smallest table worth sitting at.
+    Proposed, for the spec to settle: a GM hosts and players join with approval outside the
+    webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM asks
+    for an ability check, a save or a skill and sees the roll land; damage a GM sends arrives raw
+    with its type and the player's app applies its defenses. No chat, no maps, no initiative order.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
+  DEFENCE-STRIP stays in 0.9.0, waiting on the maintainer's mock.
 
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
@@ -276,9 +293,7 @@ position and are given per wave, because most of them were learned the hard way.
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
   rule is still only text. REPEATABLE-OPTION's tail sits here too — Lessons of the First Ones, a feat per pick — and A17's tail: a Tome warlock casts rituals, and the Book of
   Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's class and school scopes and E4.
-- **Deliberately in no wave:** TABLE-LINK-SPEC (the specification before any transport code; the
-  app ships the seams and no line of networking — `internals/overview.md` ▸ TableLink is the seam a
-  table stands on), DISTRIBUTION-EXPANSION (the 1.0.0 pre-release, its own session, blocked on
+- **Deliberately in no wave:** DISTRIBUTION-EXPANSION (the 1.0.0 pre-release, its own session, blocked on
   accounts, not on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
   item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a

@@ -8,6 +8,14 @@
   Divine Sense ("1 + your Charisma modifier" uses, long rest); SRD 5.2.1 Innate Sorcery (twice, long
   rest, a minute of +1 spell save DC and Advantage on spell attacks) and Favored Enemy's free casts
   of Hunter's Mark (the Favored Enemy column of the Ranger Features table).
+- [ ] **CIRCLE-OF-THE-LAND · the land a druid chooses, and its spells.** SRD 5.1: a terrain of eight
+  at level 2, each a table of circle spells by druid level, and a bonus cantrip; SRD 5.2.1: a land
+  type chosen at each Long Rest (arid, polar, temperate, tropical) with its own table. Option rows
+  on FEATURE-SPELLS and EXTRA-CANTRIP (`mechanics.md`).
+- [ ] **SPECIES-SPELLS · the spells a lineage or legacy grants at character level 3 and 5.** SRD
+  5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
+  (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). `spell@level` where the level is the
+  character's (FEATURE-SPELLS).
 - [ ] **CHOICES-2014 · three level-1 choices nothing records.** Favored Enemy (a creature type, or
   two humanoid races), Natural Explorer (a terrain) and Dragon Ancestor (a dragon) as option rows,
   so the build asks and the sheet says what was chosen; what each advantage applies to stays text.

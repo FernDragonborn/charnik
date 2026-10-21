@@ -125,6 +125,13 @@
   with the one event there is to send, and a payload is trusted as typed because only the app's
   own Rust sends one — the adapter validates it against a schema once it is somebody else's
   bytes (`lib/table-link/tauri.ts` ▸ `listenToTableLink`).
+- [ ] **TABLE-LINK-MVP · the smallest table worth sitting at — 0.9.0, after TABLE-LINK-SPEC.** The
+  maintainer's goal for 0.9.0 is people playing levels 1–4 together, each on their own app. What it
+  holds is the spec's to decide; the proposal it starts from is in `../plan.md` ▸ 0.9.0 — host and
+  join with approval outside the webview, the GM's live view of each sheet, a GM's request for a
+  check, a save or a skill and the roll it gets back, raw damage applied by the player's app. It
+  fills the `TableLink` seam that already exists (`../internals/overview.md` ▸ TableLink is the
+  seam a table stands on) and rewrites `../internals/security.md`'s "no network" threat model.
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have

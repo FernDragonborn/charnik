@@ -158,7 +158,37 @@ stay semi-manual.
   Languages come from a species and a background today; a feature grants none.
 - [ ] **DISCIPLE-OF-LIFE · healing that grows with the slot.** SRD 5.1 Life Domain: "Whenever you use a
   spell of 1st level or higher to restore hit points to a creature, the creature regains additional
-  hit points equal to 2 + the spell's level." A cast's heal takes no such bonus yet.
+  hit points equal to 2 + the spell's level." A cast's heal takes no such bonus yet. 0.8.2 needs the
+  2014 half (level 1); SRD 5.2.1's, at level 3 ("When a spell you cast with a spell slot restores
+  Hit Points … additional Hit Points equal to 2 plus the level of the spell slot"), is 0.9.0's.
+- [ ] **DIVINE-SMITE · a roll that grows with the slot it spends.** SRD 5.1 paladin, level 2: "expend
+  one spell slot to deal radiant damage … 2d8 for a 1st-level spell slot, plus 1d8 for each spell
+  level higher than 1st, to a maximum of 5d8 … increased by 1d8 if the target is an undead or a
+  fiend". `spend_slot` exists; a roll that reads the level of the slot it spent does not. SRD 5.2.1's
+  Paladin's Smite is the Divine Smite SPELL always prepared with one free cast a long rest —
+  FEATURE-SPELLS and a pool.
+- [ ] **FEATURE-SKILLS · a skill or an expertise a feature has the player choose.** SRD 5.2.1 Primal
+  Knowledge (one more skill from the barbarian list), Scholar (Expertise in one of six skills
+  already held) and Deft Explorer (Expertise in one held skill, and two languages); College of Lore's
+  three skills of any kind in both editions. Skills come from a class, a species and a background
+  today; a feature's `expertise_slots` names a count and no list.
+- [ ] **SLOT-RECOVERY · one verb for the features that give slots back.** Arcane Recovery, Natural
+  Recovery (the designed `recover_slots`, Spellcasting ▸ Resource subsystem below) and SRD 5.2.1
+  Magical Cunning ("regain expended Pact Magic spell slots but no more than a number equal to half
+  the maximum (round up)", once a long rest).
+- [ ] **REACTION-ROLLS · the dice a reaction or a rest rolls, as options.** Cutting Words (a Bardic
+  Inspiration die off an enemy's roll), Song of Rest (SRD 5.1, a d6 more on a short rest's hit
+  dice), Deflect Missiles / Deflect Attacks (1d10 + Dexterity + monk level), Slow Fall (five times
+  the monk level), Tactical Mind (SRD 5.2.1, a Second Wind use for +1d10 to a failed check).
+- [ ] **TOGGLE-STATES · a state the player turns on for a turn.** Reckless Attack (Advantage on
+  Strength melee attacks, and attacks against you have it) and SRD 5.2.1 Steady Aim, as effect rows
+  added in one press like any other.
+- [ ] **HUNTERS-PREY · the Hunter's choice.** SRD 5.1: one of Colossus Slayer (an extra 1d8 once a
+  turn), Giant Killer and Horde Breaker; SRD 5.2.1: Colossus Slayer or Horde Breaker, swappable on a
+  rest. Option rows; Colossus Slayer a limited roll.
+- [ ] **FRENZY · the Berserker's.** SRD 5.2.1: Reckless Attack while raging adds Rage-damage d6s to the
+  first hit each turn; SRD 5.1: a bonus-action melee attack each turn of the rage, and a level of
+  Exhaustion when it ends.
 - [ ] **MARTIAL-ARTS · a monk's Dexterity and die.** Both editions: unarmed strikes and monk weapons
   may use Dexterity for attack and damage, and roll the Martial Arts die in place of their own
   damage, while unarmored and without a shield. The attack rows read Strength and the weapon's die.
