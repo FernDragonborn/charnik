@@ -10,7 +10,7 @@
 	import { sayText } from '$lib/util/say';
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
-	import { lintEffectTokens } from '$lib/effects/apply';
+	import { lintEffectTokens } from '$lib/effects/lint-effect-tokens';
 	import { tokensOf } from '$lib/content/loader';
 	import { resourceJoinIssues } from '$lib/content/resource-joins';
 	import { optionJoinIssues } from '$lib/content/options';

@@ -8,15 +8,14 @@
  * re-scan of raw tokens. The one resolve stage that produces the effect list lives in
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
-import { ISSUE_KEY, formWordTakesExpression, grantsExtraAttack } from './token-parser';
+import { ISSUE_KEY, grantsExtraAttack } from './token-parser';
 import { collectFormStatement } from './form-statements';
 import { computed, NOTE_KEY, type Computed, type Contribution, type Note } from '../rules/pipeline';
 import { titleCase } from '../util/format';
-import { evalExpression, lintExpression } from './expression-evaluator';
+import { evalExpression } from './expression-evaluator';
 import {
 	parseToken,
 	resolveEffectValue,
-	splitGuard,
 	ctxOf,
 	EFFECT_KIND,
 	MAX_RESOURCE_MAX,
@@ -26,8 +25,8 @@ import {
 	type ParsedEffect,
 	isPlayEvent,
 } from './token-parser';
-import { actionFormulas, resolveActionFormula } from './action-token';
-import { RECHARGE_ALL, rechargeRank } from '../rules/recharge';
+import { resolveActionFormula } from './action-token';
+import { rechargeRank } from '../rules/recharge';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
 	EffectFacts,
@@ -488,34 +487,4 @@ export function applyEffects(
 	// BUG-3: re-fold under the base's OWN clamp — a clamped base (speed `{min:0}`, maxHp `{min:1}`)
 	// must keep its floor even when zero effects fold, or the on/off/deleted invariant breaks.
 	return computed(acc.contribs, base.clamp, acc.notes.length ? acc.notes : undefined);
-}
-
-/** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression
- *  slot — guard, value, resource max, resource recharge AMOUNT, an `on_event` action's formula — for
- *  the spec-promised soft warns
- *  (mixed-type `if()`, unusual die). Parse ERRORS are not reported here; they surface at derive as
- *  issues/inert notes. */
-export function lintEffectTokens(tokens: string[]): string[] {
-	const warns: string[] = [];
-	for (const raw of tokens) {
-		const g = splitGuard(raw);
-		const exprs: string[] = [];
-		if (g.guard !== undefined) exprs.push(g.guard);
-		const p = parseToken(g.token);
-		if (p.valueExpr) exprs.push(p.valueExpr);
-		// a LITERAL dice bonus (`+1d7`) parses to `p.dice`, not `valueExpr` — lint it too, else the most
-		// common author typo (an unusual die size in the fast-path form) would silently skip the warning
-		if (p.dice) exprs.push(p.dice);
-		if (p.resource?.maxExpr) exprs.push(p.resource.maxExpr);
-		// a wand's `dawn(1d6+1)` is an expression like any other, and the typo that hits it is the same
-		// one — it was the single L2 slot nothing looked at, one segment over from the max that is lit
-		if (p.resource && p.resource.recharge.amount !== RECHARGE_ALL)
-			exprs.push(p.resource.recharge.amount);
-		if (p.form?.value && formWordTakesExpression(p.form.word)) exprs.push(p.form.value);
-		// an `on_event` action's own formula (`heal:5+con_mod`) is an L2 expression too — the fifth slot,
-		// asked through the same function the evaluator uses so the two cannot drift apart again
-		if (p.action) exprs.push(...actionFormulas(p.action));
-		for (const e of exprs) for (const w of lintExpression(e)) warns.push(`${raw} — ${w}`);
-	}
-	return warns;
 }

@@ -517,7 +517,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (184 modules)
+## Library functions & types (185 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1633,7 +1633,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export ResourceDef`
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
 - `function applyEffects`
-- `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 
 ### `src/lib/effects/context.ts`
 
@@ -1708,6 +1707,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/form-statements.ts`
 
 - `function collectFormStatement` — One `form` statement, added to what is already known of that form.
+
+### `src/lib/effects/lint-effect-tokens.ts`
+
+- `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 
 ### `src/lib/effects/plugin-host.ts`
 
@@ -2371,4 +2374,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1445 exports across 201 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1445 exports across 202 modules · 96 duplicate suspects._

@@ -6,7 +6,8 @@ import {
 	EFFECT_KINDS,
 	type ActiveEffect,
 } from './token-parser';
-import { applyEffects, collectFacts, lintEffectTokens } from './apply';
+import { applyEffects, collectFacts } from './apply';
+import { lintEffectTokens } from './lint-effect-tokens';
 import { makeExprContext, type BuildVars } from './context';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';

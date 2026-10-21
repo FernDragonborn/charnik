@@ -564,8 +564,8 @@ resolve stage, no split-brain scans.
   play actions (`settleHitPoints` in `$lib/play`) and persistence in the view-model, not inside derive. (CLAUDE.md "core is pure"
   made concrete: derive reads state and returns `{value, trace, notes}`; it does not write it back.)
 - **A new kind/target must be added in THREE places or the token folds into nowhere / renders raw:**
-  (1) the derive `isTargetSupported` closed-vocab set (`effects/apply.ts`), (2) `effectTag` (the panel
-  label), and (3) `lintEffectTokens` (reachability). Miss (1) → the token is inert; miss (2)/(3) → it
+  (1) the derive `isTargetSupported` closed-vocab set (`character/derive-targets.ts`), (2) `effectTag`
+  (the panel label), and (3) `lintEffectTokens` (reachability, `effects/lint-effect-tokens.ts`). Miss (1) → the token is inert; miss (2)/(3) → it
   works but shows as a raw string / passes lint silently.
 
 ---
