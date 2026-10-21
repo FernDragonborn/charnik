@@ -245,7 +245,6 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  1. **CLASS-SKILL-LISTS** — `content.md`. 2014 classes' skill lists swallowed the equipment text.
   2. **EXTRA-CANTRIP** — `mechanics.md`. Thaumaturge and Magician's "one extra cantrip".
   3. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
      free Hunter's Marks (2024).

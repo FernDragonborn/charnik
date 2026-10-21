@@ -1388,3 +1388,19 @@ it('2024: two Agonizing Blasts read as two features, each naming its cantrip', a
 	expect(blasts.map((f) => f.answer?.id)).toEqual(['eldritch_blast', 'chill_touch']);
 	expect(new Set(blasts.map(featureKey)).size).toBe(2);
 });
+
+// Every class's "Skills: Choose N from …" is a list of skills a character can take — no fragment of
+// the equipment text that once followed it in the 2014 conversion.
+describe.each(['srd-2014', 'srd-2024'] as const)('class skill lists · %s', (pack) => {
+	it('name only skills, or any', async () => {
+		const { SKILL_ABILITY } = await import('../character/skills');
+		const g = await loadEdition(pack);
+		const system = pack === 'srd-2014' ? '5e' : '5.5e';
+		for (const cls of g.list('class', { system })) {
+			const from = String(cls.data.skills_from ?? '');
+			if (from === 'any') continue;
+			const unknown = from.split(',').filter((id) => !(id in SKILL_ABILITY));
+			expect(unknown, cls.id).toEqual([]);
+		}
+	});
+});

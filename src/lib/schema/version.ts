@@ -192,7 +192,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v69: the class-feature ladders (`choose`, `expertise_slots`, `mastery_slots`) are `count@level`.
 // An install left at v68 holds the old `level:count`, which now grants nothing and is said in
 // content health.
-export const CONTENT_SEED_VERSION = 69;
+// v70: the 2014 classes' skill lists are each class's own, without the equipment text the
+// conversion glued to the last skill. An install left at v69 refuses that skill in Strict.
+export const CONTENT_SEED_VERSION = 70;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -37,6 +37,9 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **A 2014 class offers its whole skill list.** Eleven classes had the last skill of their list glued
+  to their starting equipment text, so a barbarian could not take Survival, nor a cleric or a wizard
+  Religion, in Strict.
 - **For content authors: "at a level" is written with `@`.** A class feature's `choose`,
   `expertise_slots` and `mastery_slots` read `2@3,2@10` — two at level 3, two more at 10 — where
   they read `3:2,10:2`. The shipped packs are converted; a homebrew row still in the old form grants

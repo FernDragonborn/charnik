@@ -4,11 +4,6 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **CLASS-SKILL-LISTS · eleven 2014 classes offer a skill list with the equipment text in it.**
-  `classes_srd.csv` ▸ `skills_from`: the last skill is glued to "equipment you start with…" and a
-  dozen fragments of the class table follow it as skill ids, so Strict refuses the skill that was
-  swallowed (a barbarian's Survival, a cleric's Religion). Each list retyped from its class's own
-  "Skills: Choose N from …" line. The bard's `any` is right.
 - [ ] **CLASS-POOLS-L1 · three level-1 pools the class text states and no token grants.** SRD 5.1
   Divine Sense ("1 + your Charisma modifier" uses, long rest); SRD 5.2.1 Innate Sorcery (twice, long
   rest, a minute of +1 spell save DC and Advantage on spell attacks) and Favored Enemy's free casts
