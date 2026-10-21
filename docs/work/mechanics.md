@@ -54,9 +54,9 @@ stay semi-manual.
   Divinity, Font of Magic, Indomitable, Arcane Recovery, Mystic Arcanum, Natural Recovery, Stunning
   Strike. The Resources block discovers pools from the engine, so each appears the moment content
   encodes it; the ids that DO exist are `rage`, `bardic_inspiration`, `second_wind`, `action_surge`,
-  `ki`, `focus`, `persistent_rage`, `uncanny_metabolism`, `wild_shape`, `wild_resurgence`. **These rows come from a producer sibling**
-  (`docs/internals/content.md` ▸ "Where the shipped data comes from") — a mechanic stated in SRD prose
-  is still game data, and hand-authoring it from memory is the failure that passes every gate.
+  `ki`, `focus`, `persistent_rage`, `uncanny_metabolism`, `wild_shape`, `wild_resurgence`. Each is typed by hand from
+  the local SRD source (`content.md` ▸ SRD-TRANSCRIPTION) — a mechanic stated in SRD prose is still
+  game data, and authoring it from memory is the failure that passes every gate.
 - [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
   An option offered by several features (`option_of` naming more than one parent) can be taken
   through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted

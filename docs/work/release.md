@@ -21,7 +21,9 @@
   **Order: WinGet → AUR → Choco → Flathub** — reach per hour of work, with
   Flathub last because its cost is not the manifest but the sandbox: arbitrary dataDirs need portals
   or a broad `--filesystem`, which is exactly what reviewers push back on.
-  **This is its own session, and it is blocked on ACCOUNTS, not on code.** Every manifest can be
+  **Not before the 1.0.0 pre-release** — the maintainer's call: no channel is opened, and no manifest
+  written ahead, while the version is below 1.0.0.
+  **Then it is its own session, and it is blocked on ACCOUNTS, not on code.** Every manifest can be
   written and validated ahead of time; what cannot be done for the maintainer is registering on AUR
   (account + SSH key), Chocolatey (API key) and Flathub, and opening the `winget-pkgs` PR from a
   personal GitHub account. So: **remind the maintainer to create those accounts**, then do all four
