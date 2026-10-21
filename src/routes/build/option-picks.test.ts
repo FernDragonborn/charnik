@@ -112,13 +112,35 @@ describe('feature options · the builder asks for what the feature row says to c
 			level,
 		});
 		build.draft.classes = [cls('druid', 6)];
-		expect(build.optionPicks.choices).toEqual([]);
+		expect(build.optionPicks.choices.map((c) => c.feature.id)).toEqual(['druid_primal_order']);
 		build.draft.classes = [cls('druid', 7)];
 		expect(choiceOf('druid_elemental_fury').options.map((o) => o.id)).toEqual([
 			'potent_spellcasting',
 			'primal_strike',
 		]);
 		expect(choiceOf('druid_elemental_fury').cap).toBe(1);
+	});
+
+	it('2024: a cleric chooses a Divine Order at 1 and Blessed Strikes at 7; a druid a Primal Order at 1', async () => {
+		build.reset();
+		build.graph = await loadPacks('srd-2024');
+		build.draft.system = '5.5e';
+		const cls = (id: string, level: number) => [
+			{ ...newClassRow(), classId: `class:SRD 5.2.1:${id}`, subclassId: null, level },
+		];
+		build.draft.classes = cls('cleric', 1);
+		expect(build.optionPicks.choices.map((c) => c.feature.id)).toEqual(['cleric_divine_order']);
+		expect(choiceOf('cleric_divine_order').options.map((o) => o.id)).toEqual([
+			'protector',
+			'thaumaturge',
+		]);
+		build.draft.classes = cls('cleric', 7);
+		expect(choiceOf('cleric_blessed_strikes').options.map((o) => o.id)).toEqual([
+			'divine_strike',
+			'cleric_potent_spellcasting',
+		]);
+		build.draft.classes = cls('druid', 1);
+		expect(choiceOf('druid_primal_order').options.map((o) => o.id)).toEqual(['magician', 'warden']);
 	});
 
 	/*

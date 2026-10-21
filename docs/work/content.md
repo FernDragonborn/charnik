@@ -108,16 +108,6 @@
     rows, and the 2024 pack, do not carry the note at all.
   - **Legendary actions are prose in both packs** (2014: 23 rows, 2024: 30); nothing reads them
     yet. A proficiency bonus needs no column — it follows from `cr`.
-- [ ] **OPTION-ROWS · the choices a class feature offers that are not rows yet.** A feature's
-  options are rows of the `option` type and its `choose` column says how many
-  (`../internals/content.md` ▸ One row, several options), so each of these is typing, with no
-  code behind it. Shipped: the six items whose rarity varies, in both packs, a 2014
-  warlock's Pact Boons and Eldritch Invocations in both editions, the 2014 Fighting Styles, and
-  Metamagic in both. Not yet rows, every value typed by hand (SRD-TRANSCRIPTION):
-  - **2024 choices of two** stated inside a feature's prose: Divine Order, Primal Order and
-    Blessed Strikes. Elemental Fury's two ship, Primal Strike as a roll once a turn; Potent
-    Spellcasting's Wisdom modifier on a druid cantrip's damage is text, waiting on the same
-    scoped bonus Agonizing Blast does.
 - [~] **E4 · the spells whose effect is still only prose.** A cast leaves the spell's own effect
   tokens on the caster (`../internals/rules-core.md` ▸ Spellcasting), and the row of a spell that
   rolls nothing is captioned from those tokens, resolved against the sheet

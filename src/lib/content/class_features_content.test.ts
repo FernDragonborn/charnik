@@ -963,3 +963,65 @@ describe('2024 invocations that put a number on the sheet', () => {
 		expect(pool?.recharge).toMatchObject({ trigger: 'long' });
 	});
 });
+
+/*
+ * SRD 5.2.1 ▸ Cleric ▸ Divine Order: "Protector. … you gain proficiency with Martial weapons and
+ * training with Heavy armor." "Thaumaturge. … a bonus to your Intelligence (Arcana or Religion)
+ * checks. The bonus equals your Wisdom modifier (minimum of +1)." ▸ Blessed Strikes: "Divine
+ * Strike. … an extra 1d8 Necrotic or Radiant damage", and Improved Blessed Strikes: "increases to
+ * 2d8". Druid ▸ Primal Order is the same two shapes.
+ */
+describe('2024 choices of two: Divine Order, Primal Order, Blessed Strikes', () => {
+	const held = (c: Character, feature: string, option: string) => {
+		c.build.options = { ...c.build.options, [feature]: [option] };
+		return c;
+	};
+	const withPlate = (c: Character) => {
+		c.build.inventory = [
+			inventoryRow({ item: 'item:SRD 5.2.1:plate_armor', qty: 1, equipped: true, attuned: false }),
+		];
+		return c;
+	};
+
+	it('Protector lets a cleric cast in Heavy armor; Warden gives a druid Medium armor', async () => {
+		const g = await loadEdition('srd-2024');
+		const cleric = withPlate(charOf('SRD 5.2.1', '5.5e', 'cleric', 1));
+		expect(deriveSheet(cleric, g).spellcasting.armorBlock).toBeDefined();
+		held(cleric, 'cleric_divine_order', 'protector');
+		expect(deriveSheet(cleric, g).spellcasting.armorBlock).toBeUndefined();
+		const warden = held(charOf('SRD 5.2.1', '5.5e', 'druid', 1), 'druid_primal_order', 'warden');
+		expect(deriveSheet(warden, g).deriveIssues).toEqual([]);
+	});
+
+	it('Thaumaturge and Magician add the Wisdom modifier, at least +1, to two Intelligence skills', async () => {
+		const g = await loadEdition('srd-2024');
+		const cleric = charOf('SRD 5.2.1', '5.5e', 'cleric', 1);
+		cleric.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 16, cha: 10 };
+		const before = deriveSheet(cleric, g).skills;
+		const after = deriveSheet(held(cleric, 'cleric_divine_order', 'thaumaturge'), g).skills;
+		expect((after.arcana?.value ?? 0) - (before.arcana?.value ?? 0)).toBe(3);
+		expect((after.religion?.value ?? 0) - (before.religion?.value ?? 0)).toBe(3);
+		expect(after.history?.value).toBe(before.history?.value);
+
+		const druid = charOf('SRD 5.2.1', '5.5e', 'druid', 1);
+		druid.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 8, cha: 10 };
+		const plain = deriveSheet(druid, g).skills;
+		const magician = deriveSheet(held(druid, 'druid_primal_order', 'magician'), g).skills;
+		expect((magician.nature?.value ?? 0) - (plain.nature?.value ?? 0)).toBe(1);
+	});
+
+	it('Divine Strike rolls 1d8 from cleric level 7 and 2d8 from 14', async () => {
+		const g = await loadEdition('srd-2024');
+		const strikeAt = (level: number) =>
+			deriveSheet(
+				held(
+					charOf('SRD 5.2.1', '5.5e', 'cleric', level),
+					'cleric_blessed_strikes',
+					'divine_strike',
+				),
+				g,
+			).facts.rolls.find((r) => r.id === 'divine_strike')?.formula;
+		expect(strikeAt(7)).toBe('1d8');
+		expect(strikeAt(14)).toBe('2d8');
+	});
+});

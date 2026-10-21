@@ -47,8 +47,8 @@ stay semi-manual.
   class-feature row works the day it is written — FEATURE-PASSIVES is written against that. **The
   choice kind is built**: a feature's options are rows of the `option` type and its `choose`
   column says how many (`../internals/content.md` ▸ One row, several options), with the builder's
-  Feature options pane asking. A 2014 warlock's Pact Boon and Eldritch Invocations ship on it;
-  the choices that are not rows yet are `content.md` ▸ OPTION-ROWS. What is still owed here is
+  Feature options pane asking. Every choice of a ROW the SRD prints ships on it; what a choice of
+  a WORD still waits on is FEATURE-PASSIVES ▸ "A choice of a word". What is still owed here is
   the content-schema column bump for the action kind.
   Same for the pools the prose describes and no `grant_resource` creates: Lay on Hands, Channel
   Divinity, Font of Magic, Indomitable, Arcane Recovery, Mystic Arcanum, Natural Recovery, Stunning
@@ -92,7 +92,7 @@ stay semi-manual.
   what is left is grouped by what it waits on:
 
   - **Blocked on SCOPED-BONUS reaching spells.** "Add your <ability> modifier to the damage of X":
-    2024 `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
+    2024 Potent Spellcasting on `blessed_strikes` and `elemental_fury` (any cantrip of that class), `empowered_evocation`
     (evocation spells), `oath_of_devotion_sacred_weapon` and 2014 `oathofdevotion_channel_divinity`
     (one weapon, attack roll), 2014 `foe_slayer` (attack OR damage, player's pick).
   - **Situational by nature — these stay `note`, and that is the answer, not a gap.** Advantage that
@@ -100,11 +100,15 @@ stay semi-manual.
     `lands_stride`, `hunter_defensive_tactics`, `holy_nimbus`, `thief_supreme_sneak`, 2024
     `studied_attacks`, `precise_hunter`, `innate_sorcery`. The app has no enemy and no turn history
     to test the condition against; surfacing the text is the honest behaviour.
-  - **A choice, so it waits on its option rows** (`content.md` ▸ OPTION-ROWS): `fiendish_resilience` and 2024
+  - **A choice of a word, which a class feature cannot ask yet.** `fiendish_resilience` and 2024
     `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
-    change — a 2014 `pact_boon` is chosen already. The same wait holds every proficiency that is a
-    CHOICE: 2024 Divine Order and Primal Order, College of Lore, the 2024 elf's one-of-three Keen
-    Senses.
+    change — and the proficiencies that are a choice of skill: College of Lore's three and the 2024
+    elf's one-of-three Keen Senses. An item asks for a word (`choice_options`, filled into the
+    token as `item_choice`); a feature has no such column, and a row per damage type would be rows
+    that say nothing (`../internals/content.md` ▸ One row, several options).
+  - **An extra cantrip.** 2024 Thaumaturge and Magician ("You know one extra cantrip from the
+    Cleric/Druid spell list") ship their skill bonus; the cantrip is text, since no token raises a
+    class's cantrip count.
   - **Not the passive kind at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
     resistance — an activated ability with a duration (the action kind, and EXCEPT-DAMAGE for what it
     resists). 2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no

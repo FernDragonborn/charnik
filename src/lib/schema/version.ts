@@ -162,7 +162,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v57: the 2024 Eldritch Invocations are a choice — 28 option rows the feature row `choose`s by
 // warlock level — and the 2014 Agonizing Blast adds the Charisma modifier to Eldritch Blast's damage.
 // An install left at v56 asks a 2024 warlock nothing.
-export const CONTENT_SEED_VERSION = 57;
+// v58: a 2024 cleric's Divine Order and Blessed Strikes and a druid's Primal Order are choices of two
+// option rows. An install left at v57 asks them nothing.
+export const CONTENT_SEED_VERSION = 58;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row
