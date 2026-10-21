@@ -181,7 +181,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Strike, Sorcery Points into slots. An install left at v63 shows the pools with nothing to press.
 // v65: Haste doubles Speed (`double`) and Heroism gives Temporary Hit Points each turn start
 // (`temp_hp`). An install left at v64 does neither.
-export const CONTENT_SEED_VERSION = 65;
+// v66: the species' saving-throw traits are stated defences (Dwarven Resilience, Fey Ancestry, Brave),
+// a 2014 dwarf resists poison, a 2024 gnome has advantage on its three mental saves, and the 2014
+// Staff of the Magi on saves against spells. An install left at v65 says none of it.
+export const CONTENT_SEED_VERSION = 66;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

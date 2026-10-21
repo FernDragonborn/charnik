@@ -1281,3 +1281,70 @@ it('2024 Divine Spark rolls the d8s of its cleric level plus the Wisdom modifier
 	expect(spark(7)).toBe('roll:2d8+3');
 	expect(spark(18)).toBe('roll:4d8+3');
 });
+
+/*
+ * The species' saving-throw traits, each said where the defences are said. SRD 5.1: "advantage on
+ * saving throws against poison, and … resistance against poison damage" (Dwarven Resilience),
+ * "against being charmed" (Fey Ancestry), "against being frightened" (Brave). SRD 5.2.1: the same
+ * against the Poisoned, Charmed and Frightened conditions, and Gnomish Cunning's "Advantage on
+ * Intelligence, Wisdom, and Charisma saving throws", which has no case and so is a roll mode.
+ */
+describe.each([
+	{
+		pack: 'srd-2014',
+		source: 'SRD 5.1',
+		system: '5e',
+		cases: [
+			['dwarf', 'poison'],
+			['elf', 'charmed'],
+			['half_elf', 'charmed'],
+			['halfling', 'frightened'],
+		],
+	},
+	{
+		pack: 'srd-2024',
+		source: 'SRD 5.2.1',
+		system: '5.5e',
+		cases: [
+			['dwarf', 'poisoned'],
+			['elf', 'charmed'],
+			['halfling', 'frightened'],
+		],
+	},
+] as const)('species saving-throw traits · $system', ({ pack, source, system, cases }) => {
+	const sheetOf = (g: ContentGraph, species: string) => {
+		const c = newCharacter('s', 'S', system);
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
+		c.build.species = `species:${source}:${species}`;
+		return deriveSheet(characterSchema.parse(c), g);
+	};
+	it('each states its advantage against the case it names', async () => {
+		const g = await loadEdition(pack);
+		for (const [species, scope] of cases) {
+			const sheet = sheetOf(g, species);
+			expect(
+				sheet.qualifiedDefenses.some(
+					(d) => d.target === 'saves' && d.scope === scope && d.swing === 'advantage',
+				),
+				`${species} against ${scope}`,
+			).toBe(true);
+			expect(rollEffectsFor(sheet.facts, 'save.con').advantage, species).toBe(false);
+		}
+		expect(sheetOf(g, 'dwarf').damageSensitivities.resist).toContain('poison');
+		expect(sheetOf(g, 'human').qualifiedDefenses).toEqual([]);
+	});
+});
+
+it('2024 Gnomish Cunning: advantage on Intelligence, Wisdom and Charisma saves, and no other', async () => {
+	const g = await loadEdition('srd-2024');
+	const c = newCharacter('g', 'G', '5.5e');
+	c.build.classes = [classRow({ class: 'class:SRD 5.2.1:wizard', level: 1 })];
+	c.build.species = 'species:SRD 5.2.1:gnome';
+	const facts = deriveSheet(characterSchema.parse(c), g).facts;
+	expect(['int', 'wis', 'cha'].map((a) => rollEffectsFor(facts, `save.${a}`).advantage)).toEqual([
+		true,
+		true,
+		true,
+	]);
+	expect(rollEffectsFor(facts, 'save.str').advantage).toBe(false);
+});
