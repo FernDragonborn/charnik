@@ -7,13 +7,8 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import {
-	ISSUE_KEY,
-	isWeaponOwnBonus,
-	splitGuard,
-	withItemChoice,
-	withOptionChoice,
-} from '$lib/effects/token-parser';
+import { ISSUE_KEY, isWeaponOwnBonus, splitGuard } from '$lib/effects/token-parser';
+import { withItemChoice, withOptionChoice } from '$lib/effects/token-answers';
 import { FORM_SHEDS, FORM_WORD } from '$lib/effects/token-words';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
@@ -199,7 +194,7 @@ class EffectGatherer {
 	): ActiveEffect | undefined {
 		if (!row) return undefined;
 		// the answer is substituted BEFORE the token is parsed, so the parse cache never holds a
-		// template and every consumer downstream reads a finished token (`token-parser.ts`)
+		// template and every consumer downstream reads a finished token (`token-answers.ts`)
 		const tokens = withOptionChoice(
 			withItemChoice(EffectGatherer.globalTokens(row), from.itemChoice),
 			from.optionAnswer,

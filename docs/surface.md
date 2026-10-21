@@ -516,7 +516,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (185 modules)
+## Library functions & types (187 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1065,6 +1065,27 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function isDemo` — Show the demo banner: the hosted preview, a `PUBLIC_DEMO=true` build, OR dev (so it can be * previewed while developi…
 - `function isReadOnlyContent` — * Whether shipped content is READ-ONLY here → block saves with a message.
 
+### `src/lib/content/content-vocabulary.ts`
+
+- `const HIT_DICE` — * The fixed words content columns take — hit dice, caster kinds, schools, item categories, rarities, * feat categories.
+- `const CASTER_TYPES`
+- `const CASTER_SHARES`
+- `const PREPARE_STYLES`
+- `const RITUAL_SOURCE` — * Which of its spells a class — or a subclass — may cast as a RITUAL, as the SRD states it per class: * `prepared` is…
+- `type RitualSource`
+- `const RITUAL_SOURCES`
+- `const SCHOOLS`
+- `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
+- `const RESOLUTION` — The same words by name, for code that compares against one.
+- `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
+- `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
+- `const TOOL_ITEM_CATEGORY` — The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`).
+- `const RARITIES`
+- `const ANY_OPTION` — * The wildcard a choice column takes instead of a list: `skills_from`, `ability_choice` and * `feat_choice` all read …
+- `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
+- `const FEAT_CATEGORIES`
+- `const PROFICIENCY_CHOICE_KIND` — What a proficiency choice-grant may be answered with — the words `feat.skill_choice_kinds` lists.
+
 ### `src/lib/content/detail.ts`
 
 - `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
@@ -1410,24 +1431,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export splitList`
 - `re-export SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `re-export ABILITIES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
-- `const HIT_DICE`
-- `const CASTER_TYPES`
-- `const CASTER_SHARES`
-- `const PREPARE_STYLES`
-- `const RITUAL_SOURCE` — * Which of its spells a class — or a subclass — may cast as a RITUAL, as the SRD states it per class: * `prepared` is…
-- `type RitualSource`
-- `const RITUAL_SOURCES`
-- `const SCHOOLS`
-- `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
-- `const RESOLUTION` — The same words by name, for code that compares against one.
-- `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
-- `const WEAPON_LIKE_ITEM_CATEGORIES` — The categories whose row IS the thing you swing.
-- `const TOOL_ITEM_CATEGORY` — The category whose rows a tool proficiency can name (`grant_proficiency:tool.<id>`).
-- `const RARITIES`
-- `const ANY_OPTION` — * The wildcard a choice column takes instead of a list: `skills_from`, `ability_choice` and * `feat_choice` all read …
-- `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
-- `const FEAT_CATEGORIES`
-- `const PROFICIENCY_CHOICE_KIND` — What a proficiency choice-grant may be answered with — the words `feat.skill_choice_kinds` lists.
 - `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry), plus * `variant` — a trait set …
 - `const ROW_KIND` — What a state row IS.
 - `const VALENCE` — Whether a state is something you WANT.
@@ -1767,6 +1770,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
 
+### `src/lib/effects/token-answers.ts`
+
+- `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
+- `function withOptionChoice`
+
 ### `src/lib/effects/token-parser.ts`
 
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
@@ -1788,8 +1796,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
 - `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
-- `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
-- `function withOptionChoice`
 - `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
@@ -2382,4 +2388,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1454 exports across 202 modules · 95 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1454 exports across 204 modules · 95 duplicate suspects._

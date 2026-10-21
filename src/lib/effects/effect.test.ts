@@ -830,7 +830,7 @@ describe('a scoped bonus can name SEVERAL scopes, and needs all of them (RAGE-SC
 
 describe('withOptionChoice · one pick of an option points its tokens at its answer', () => {
 	it('fills the word inside a scope, leaves other tokens, and drops an unanswered one', async () => {
-		const { withOptionChoice } = await import('./token-parser');
+		const { withOptionChoice } = await import('./token-answers');
 		const tokens = ['flat_bonus:damage.option_choice+cha_mod', 'flat_bonus:ac+1'];
 		expect(withOptionChoice(tokens, 'chill_touch')).toEqual([
 			'flat_bonus:damage.chill_touch+cha_mod',
