@@ -844,13 +844,13 @@ describe('withOptionChoice · one pick of an option points its tokens at its ans
 	});
 	it('a pick reads back as the option and its answer', async () => {
 		const { readPick, writePick } = await import('../content/options');
-		expect(readPick('agonizing_blast@chill_touch')).toEqual({
+		expect(readPick('agonizing_blast.chill_touch')).toEqual({
 			id: 'agonizing_blast',
 			answer: 'chill_touch',
 		});
 		expect(readPick('armor_of_shadows')).toEqual({ id: 'armor_of_shadows' });
 		expect(writePick({ id: 'agonizing_blast', answer: 'chill_touch' })).toBe(
-			'agonizing_blast@chill_touch',
+			'agonizing_blast.chill_touch',
 		);
 	});
 });

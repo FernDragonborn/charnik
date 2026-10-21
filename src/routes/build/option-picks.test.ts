@@ -294,8 +294,8 @@ describe('feature options · a 2024 invocation taken once per cantrip', () => {
 		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'eldritch_blast');
 		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'chill_touch');
 		expect(choiceOf(INVOCATIONS).picks).toEqual([
-			'agonizing_blast@eldritch_blast',
-			'agonizing_blast@chill_touch',
+			'agonizing_blast.eldritch_blast',
+			'agonizing_blast.chill_touch',
 		]);
 		expect(build.optionPicks.answersTaken(choiceOf(INVOCATIONS), agonizing)).toEqual([
 			'eldritch_blast',
@@ -305,7 +305,7 @@ describe('feature options · a 2024 invocation taken once per cantrip', () => {
 		// each answer is one of the five picks a level 5 warlock has
 		expect(choiceOf(INVOCATIONS).cap - choiceOf(INVOCATIONS).picks.length).toBe(3);
 		build.optionPicks.toggleAnswer(choiceOf(INVOCATIONS), agonizing, 'chill_touch');
-		expect(choiceOf(INVOCATIONS).picks).toEqual(['agonizing_blast@eldritch_blast']);
+		expect(choiceOf(INVOCATIONS).picks).toEqual(['agonizing_blast.eldritch_blast']);
 	});
 
 	it('asks nothing it cannot answer: no cantrip that fits, no answer to give', async () => {

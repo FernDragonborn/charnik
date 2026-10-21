@@ -1380,7 +1380,7 @@ it('2024: two Agonizing Blasts read as two features, each naming its cantrip', a
 	const c = newCharacter('w', 'W', '5.5e');
 	c.build.classes = [classRow({ class: 'class:SRD 5.2.1:warlock', level: 5 })];
 	c.build.options = {
-		warlock_eldritch_invocations: ['agonizing_blast@eldritch_blast', 'agonizing_blast@chill_touch'],
+		warlock_eldritch_invocations: ['agonizing_blast.eldritch_blast', 'agonizing_blast.chill_touch'],
 	};
 	const blasts = characterFeatures(characterSchema.parse(c), g).filter(
 		(f) => f.row.id === 'agonizing_blast',

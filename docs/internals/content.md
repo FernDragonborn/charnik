@@ -186,7 +186,7 @@ Style Feature" each prints. An `option` is a choice that is not a feat anywhere 
 **An option that asks is taken once per answer.** Its `answer` column names what each pick asks —
 an open enum (`OPTION_ANSWER`), `cantrip.damage` or `cantrip.attack` for SRD 5.2.1's _Repeatable_
 invocations, offered from the cantrips the character knows on the asking class's list. A pick is
-stored as `id@answer` in the same list (`options.ts` ▸ `readPick`), so a save holds no new field, and
+stored as `id.answer` in the same list (`options.ts` ▸ `readPick`), so a save holds no new field, and
 the row's `option_choice` tokens read the answer — replaced as a whole word inside a scope,
 `flat_bonus:damage.option_choice+cha_mod`, where `item_choice` replaces a whole segment. An
 unanswered pick cannot exist: the picker takes such an option only through an answer.

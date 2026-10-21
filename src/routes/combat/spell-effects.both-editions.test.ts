@@ -220,7 +220,7 @@ describe('a held invocation reaches the cantrip its pick named · 5.5e', () => {
 		c.play.hp.current = 10;
 		c.build.classes = [classRow({ class: `class:${source}:warlock`, level: 2 })];
 		c.build.abilities = { str: 10, dex: 14, con: 12, int: 10, wis: 10, cha: 18 };
-		c.build.options = { warlock_eldritch_invocations: ['agonizing_blast@chill_touch'] };
+		c.build.options = { warlock_eldritch_invocations: ['agonizing_blast.chill_touch'] };
 		combat.character = c;
 		const castAndRead = (id: string) => {
 			const row = combat.graph ? spellRow(combat.graph, `spell:${source}:${id}`, 'on') : null;

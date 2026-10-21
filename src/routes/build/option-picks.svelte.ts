@@ -32,7 +32,7 @@ export interface FeatureChoice {
 	classLevel: number;
 	cap: number;
 	options: OptionRow[];
-	/** The picks as `build.options` stores them — an option id, or `id@answer` for an option that
+	/** The picks as `build.options` stores them — an option id, or `id.answer` for an option that
 	 *  asks — trimmed to what is still offered and to the cap. */
 	picks: string[];
 }

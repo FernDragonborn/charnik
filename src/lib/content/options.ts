@@ -74,8 +74,9 @@ export const OPTION_ANSWER = {
 } as const;
 
 /** Joins an option's id to the answer one pick of it was given, in the string `build.options`
- *  already holds: ids are snake_case, so the mark cannot collide with one. */
-const PICK_ANSWER_MARK = '@';
+ *  already holds. A dot, because a dot already means "narrowed to" in a token (`damage.eldritch_blast`,
+ *  `saves.spell`), and ids are snake_case, so it cannot collide with one. */
+const PICK_ANSWER_MARK = '.';
 
 /** One pick as `build.options` stores it: the option, and the answer that pick was given. */
 export interface OptionPick {

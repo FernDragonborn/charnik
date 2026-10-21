@@ -329,7 +329,7 @@ describe('deriveSpellcasting: a spell-granting feat (§D)', () => {
 			}),
 			g,
 		).spellcasting;
-		expect(sc.classes.map((c) => c.classId)).toEqual(['wizard', `${MI}@r1:4`]);
+		expect(sc.classes.map((c) => c.classId)).toEqual(['wizard', `${MI}.r1:4`]);
 		expect(sc.casterLevel).toBe(5); // the feat adds nothing to it
 	});
 

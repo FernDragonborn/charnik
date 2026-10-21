@@ -343,8 +343,8 @@ function featCasterProfiles(
 		out.push({
 			// keyed by the SLOT the feat sits in, so two instances of a repeatable feat are two
 			// profiles with two lists and never one that swallows the other's picks
-			classId: `${taken.feat}@${taken.key}`,
-			classEffectiveId: `${taken.feat}@${taken.key}`,
+			classId: `${taken.feat}.${taken.key}`,
+			classEffectiveId: `${taken.feat}.${taken.key}`,
 			className: feat.data.name_en,
 			ability: taken.ability,
 			...statsFor(taken.ability),

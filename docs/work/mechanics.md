@@ -148,7 +148,7 @@ stay semi-manual.
   offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
 - [~] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** An option
   row's `answer` column says what each pick asks (`OPTION_ANSWER`: `cantrip.damage`,
-  `cantrip.attack`); such an option is taken once per answer, stored as `id@answer` in the same
+  `cantrip.attack`); such an option is taken once per answer, stored as `id.answer` in the same
   `build.options` list, and its `option_choice` tokens read that answer (`../internals/content.md` ▸
   One row, several options). Agonizing Blast, Eldritch Spear and Repelling Blast ship on it.
   **Left: Lessons of the First Ones** — "gain one Origin feat of your choice … Each time you do so,

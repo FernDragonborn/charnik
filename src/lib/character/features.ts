@@ -142,7 +142,7 @@ export interface CharacterFeature {
 /** What identifies one feature on the sheet — its row, and for an option taken once per answer,
  *  that answer too, since two Agonizing Blasts are two features a player pins and hides apart. */
 export const featureKey = (f: CharacterFeature): string =>
-	f.answer ? `${f.row.effectiveId}@${f.answer.id}` : f.row.effectiveId;
+	f.answer ? `${f.row.effectiveId}.${f.answer.id}` : f.row.effectiveId;
 
 /** The row an answer names: a cantrip id, in the option's own edition. */
 function answerRow(graph: ContentGraph, option: OptionRow, answer: string): LoadedRow | undefined {
