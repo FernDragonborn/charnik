@@ -106,6 +106,22 @@
   **What it fills in is built**: the `TableLink` interface, its no-op and the Rust commands that
   reach nobody (`../internals/overview.md` ▸ TableLink is the seam a table stands on). There is no
   user interface for a table — no button, no settings row — and the spec is what draws one.
+  **What the table turns from text into mechanics** — input for the spec, found by re-reading every
+  class feature the app keeps as text because it sees no ally, no target, no GM roll and no scene:
+  - *Allies:* spells and effects cast on another character (Bless, healing, Lay on Hands, Preserve
+    Life, Song of Rest), a Bardic Inspiration die given, the auras (Protection, Courage, Devotion,
+    Aura Expansion, Countercharm) applied while "in the aura".
+  - *The GM's rolls:* Cutting Words off a monster's roll; every `attacked` fact (Elusive, Cloak of
+    Displacement) on the GM's attack.
+  - *Incoming damage:* it arrives raw and the player's app applies its defenses (decided below), so
+    Uncanny Dodge and Evasion are prompts at that moment.
+  - *Targets:* conditions laid on a monster (Stunning Strike, Open Hand Technique, Turn Undead,
+    Abjure Foes, the Vex/Sap/Slow/Push masteries), a target's type (Divine Smite against undead,
+    Favored Enemy), a marked creature (Hunter's Mark, Precise Hunter, Studied Attacks, Quivering
+    Palm).
+  - *The scene:* a GM's "dim light" or "difficult terrain" as a table fact a guard can read (One
+    with Shadows, Boon of the Night Spirit, Land's Stride, Natural Explorer).
+  Still text with a table: languages as flavour, Timeless Body, the lore paragraphs.
   **Decided, and the spec starts from them.** Joining is approved outside the interface, in a
   dialog the webview cannot press. Identity is PER TABLE: a participant holds a separate key for
   each table, so nothing links two tables and a key that is online says nothing about the person

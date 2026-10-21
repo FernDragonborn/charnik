@@ -286,6 +286,31 @@ position and are given per wave, because most of them were learned the hard way.
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
   DEFENCE-STRIP stays in 0.9.0, waiting on the maintainer's mock.
 
+- **Levels 5–10, after 0.9.0 — a wave of its own.** The mechanisms the middle levels lean on, read
+  feature by feature: a spell cast on SOMEONE ELSE (E4 — Bless on three allies; with the table link
+  the effect can travel to the ally's app, so it is designed with TABLE-LINK, not after it) ·
+  COMPANION (Faithful Steed, the Chain familiar, the summon spells) · a spell held outside the class
+  list (Magical Secrets, A17's Book of Shadows) · a choice made at the cast (E4 — Enhance Ability,
+  Protection from Energy, Enlarge/Reduce) · a feature asking for a WORD (Fiendish Resilience,
+  Elemental Affinity — FEATURE-PASSIVES) · SCOPED-BONUS's class and school scopes (Empowered
+  Evocation, Potent Spellcasting) · damage taken by halves (Uncanny Dodge, Evasion — the table link's
+  raw incoming damage is where they prompt) · Brutal Strike, Cunning Strike and the other dice a
+  hit can spend · and pools on FEATURE-SPELLS (Wholeness of Body, Dark One's Own Luck, Sorcerous
+  Restoration, Tireless, Divine Intervention, Contact Patron). ACTION-OPTIONS turns most of what was
+  "text" at these levels into buttons.
+- **Levels 11–20 — a wave of its own, cheaper than it looks.** About a third is content on tokens
+  that exist (Primal Champion's and Body and Mind's raised caps, Improved Divine Smite's and Radiant
+  Strikes' typed +1d8, Stroke of Luck and Greater Divine Intervention as pools, the Hunter's later
+  choices as options). The mechanisms: a pool per SPELL (Mystic Arcanum, Spell Mastery, Signature
+  Spells — built once, for all three), dice rolled at their maximum (Supreme Healing, Overchannel),
+  EXCEPT-DAMAGE (Superior Defense and Empty Body are its second and third cases), Relentless Rage's
+  rising DC at 0 hit points, Hunter's Mark as a spell a feature strengthens (Foe Slayer, Superior
+  Hunter's Prey), the 2024 epic boons' remainder.
+  **The waves cross-link, which is why they are named here and not merged:** FEATURE-SPELLS (0.8.2)
+  carries CIRCLE-OF-THE-LAND, SPECIES-SPELLS, the free casts of the middle levels and Words of
+  Creation; the per-spell pool is Mystic Arcanum's; COMPANION serves Faithful Steed and Dragon
+  Companion; TABLE-LINK carries spells on allies, auras, Cutting Words and the incoming-damage
+  prompts.
 - **What the playtest left.** The first outside playtest is where the current work comes from, and
   its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
   it is a player already standing in front of it.

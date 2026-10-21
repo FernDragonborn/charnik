@@ -180,6 +180,14 @@ stay semi-manual.
   Inspiration die off an enemy's roll), Song of Rest (SRD 5.1, a d6 more on a short rest's hit
   dice), Deflect Missiles / Deflect Attacks (1d10 + Dexterity + monk level), Slow Fall (five times
   the monk level), Tactical Mind (SRD 5.2.1, a Second Wind use for +1d10 to a failed check).
+- [ ] **ACTION-OPTIONS · a feature's action that spends no pool.** Many features are an action, a Bonus
+  Action or a Reaction that does something and has no uses to count: Cunning Action, Fast Hands,
+  Steady Aim, Stillness of Mind, Self-Restoration, Tranquility, Countercharm; Dark One's Blessing is
+  the player pressing "I dropped a creature" for `temp_hp:cha_mod+class_level.warlock`. The turn
+  economy and the verbs exist (`actions.md` §2); a `resource_option` needs a pool. An option bound to
+  the FEATURE that grants it — spending its turn slot and running its verbs — turns a dozen
+  text-only features into buttons. Wants a design of where such options live (a `feature_option`
+  type, or a `resource_option` with no `resource_id`) before code.
 - [ ] **TOGGLE-STATES · a state the player turns on for a turn.** Reckless Attack (Advantage on
   Strength melee attacks, and attacks against you have it) and SRD 5.2.1 Steady Aim, as effect rows
   added in one press like any other.
