@@ -1075,3 +1075,39 @@ describe.each([
 		}
 	});
 });
+
+/*
+ * SRD 5.1 ▸ Hill Dwarf ▸ Dwarven Toughness: "Your hit point maximum increases by 1, and it increases
+ * by 1 every time you gain a level." SRD 5.2.1 ▸ Dwarf ▸ Dwarven Toughness: "Your Hit Point maximum
+ * increases by 1, and it increases by 1 again whenever you gain a level."
+ */
+describe('Dwarven Toughness adds a hit point per character level', () => {
+	const fighter = (source: string, system: '5e' | '5.5e', level: number) => {
+		const c = newCharacter('thora', 'Thora', system);
+		c.build.classes = [classRow({ class: `class:${source}:fighter`, level })];
+		return c;
+	};
+	it('2014: the Hill Dwarf subrace has it, the dwarf before a subrace does not', async () => {
+		const g = await loadEdition('srd-2014');
+		for (const level of [1, 7]) {
+			const hill = fighter('SRD 5.1', '5e', level);
+			hill.build.species = 'species:SRD 5.1:dwarf';
+			hill.build.speciesOption = 'species_option:SRD 5.1:hill_dwarf';
+			const plain = fighter('SRD 5.1', '5e', level);
+			plain.build.species = 'species:SRD 5.1:dwarf';
+			const hp = (c: Character) => deriveSheet(characterSchema.parse(c), g).maxHp.value;
+			expect(hp(hill) - hp(plain), `level ${level}`).toBe(level);
+		}
+	});
+	it('2024: every dwarf has it', async () => {
+		const g = await loadEdition('srd-2024');
+		for (const level of [1, 7]) {
+			const dwarf = fighter('SRD 5.2.1', '5.5e', level);
+			dwarf.build.species = 'species:SRD 5.2.1:dwarf';
+			const human = fighter('SRD 5.2.1', '5.5e', level);
+			human.build.species = 'species:SRD 5.2.1:human';
+			const hp = (c: Character) => deriveSheet(characterSchema.parse(c), g).maxHp.value;
+			expect(hp(dwarf) - hp(human), `level ${level}`).toBe(level);
+		}
+	});
+});

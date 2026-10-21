@@ -170,7 +170,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Affinity at 6th, and Draconic Resilience raises hit points in both editions. An install left at
 // v59 gives a 2014 draconic sorcerer its Armor Class only from 6th level, and neither edition the
 // hit points.
-export const CONTENT_SEED_VERSION = 60;
+// v61: Dwarven Toughness raises hit points — the 2014 Hill Dwarf and the 2024 Dwarf. An install
+// left at v60 gives a dwarf none.
+export const CONTENT_SEED_VERSION = 61;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

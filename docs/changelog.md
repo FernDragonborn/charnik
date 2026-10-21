@@ -37,6 +37,8 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **Dwarven Toughness adds its hit point per level**: the 2014 Hill Dwarf's and every 2024
+  Dwarf's, which the sheet did not count.
 - **A draconic sorcerer's Draconic Resilience counts from the level it is gained, in both
   editions.** 2014 gave its 13 + Dexterity Armor Class only from 6th level, under a feature named
   "Draconic Ancestry" that held three of them; it is Dragon Ancestor (with its table and the
