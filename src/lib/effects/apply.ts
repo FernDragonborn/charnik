@@ -107,8 +107,7 @@ class FactsCollector {
 				return true;
 			case EFFECT_KIND.halve:
 			case EFFECT_KIND.double:
-				// G4: a ×½ or ×2 multiply at the effect's layer. Folds through the pipeline's `mult` op
-				// (one product per layer, then floors once — RAW round-down).
+				// G4: ×½ or ×2 on the finished value, through the pipeline's `mult` op (`fold`)
 				if (p.target && !this.rejectTarget(p.kind, p.target.trim(), eff.source, token))
 					this.facts.numeric.push({
 						target: p.target.trim(),
