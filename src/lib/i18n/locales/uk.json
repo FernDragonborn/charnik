@@ -1142,6 +1142,7 @@
 			"form": "форма · {target}",
 			"grantRoll": "кидок · {target}",
 			"halve": "{target} ×½",
+			"double": "{target} ×2",
 			"hpMax": "Максимум ОЗ",
 			"initiative": "Ініціатива",
 			"minDie": "мін. {value} · {target}",

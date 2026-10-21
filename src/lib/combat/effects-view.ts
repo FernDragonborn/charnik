@@ -173,6 +173,11 @@ const TAG_FORMATTERS: Partial<
 		say(tr, 'combat.tag.halve', `${targetLabel(p.target)} ×½`, {
 			target: targetLabel(p.target, tr),
 		}),
+	[EFFECT_KIND.double]: (p, tr) =>
+		p.target &&
+		say(tr, 'combat.tag.double', `${targetLabel(p.target)} ×2`, {
+			target: targetLabel(p.target, tr),
+		}),
 	[EFFECT_KIND.damageSensitivity]: (p, tr) =>
 		p.target &&
 		p.sensitivity &&

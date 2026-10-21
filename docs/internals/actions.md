@@ -66,6 +66,7 @@ still landing on an existing system per the table above:
 | --- | --- |
 | `heal:<formula>` | HP path, clamped to max (L2-resolved to dice at derive). `heal:x` heals the amount an `x` cost was answered with — Lay on Hands, a pool of hit points spent by the number; the bare `x` is the only form, since nothing resolves it until the press |
 | `roll:<formula>` | the dice path + roll log |
+| `temp_hp:<formula>` | Temporary Hit Points through the `tempHp` rule: they do not stack, so the new amount replaces the old only when it is higher. Heroism's "gains temporary hit points equal to your spellcasting ability modifier at the start of each of its turns" is `on_event:turn_start:temp_hp:spellcasting_mod` |
 | `apply_condition:<id>` | the `play.effects` add path |
 | `apply_effect:<id>` | a NAMED `effects.csv` buff/debuff (Rage) → the `play.effects` add path via the "+"-catalog seam (its `ref` re-resolves LIVE, `negative`→buff/debuff, `duration_rounds`→timer). The multi-token, timed, positive analogue of `apply_condition` — a class-feature ACTIVATION that turns a state on (Enter Rage). |
 | `gain_action` | one ADDITIONAL action this turn (Action Surge) — `play.turn.grantedActions`, which raises the per-turn max. Never a refund of a spent action: surging before you act must be worth a whole action, not nothing. It lives in play-state rather than as a `flat_bonus:action+1` effect because a grant is a one-turn fact and must still work with effects-auto off. |

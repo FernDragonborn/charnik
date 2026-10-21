@@ -269,6 +269,12 @@ Derive answers from the actual SRD text of both editions rather than from a conv
 RAW is often per-effect. A Headband of Intellect sets Intelligence to 19 "unless it is already
 higher"; grappled sets speed to 0 *and* blocks speed bonuses. There is no single max/min rule.
 
+**A doubling or a halving multiplies the finished value — RAI.** "The target's speed is doubled"
+(Haste) and "Speed halved" (2014 exhaustion) name the speed the creature has, its other bonuses
+included; neither SRD orders a multiplication against an addition beyond rounding down. So `mult`
+folds after every layer and before the caps (`rules/pipeline.ts` ▸ `fold`): Haste over Longstrider
+is (30 + 10) × 2.
+
 A RAW- or RAI-correct behavior that cannot currently be implemented is logged as a **known gap**, not
 recast as a design choice. When answering a rules question, tag each option as RAW-forced,
 RAI-resolved, or a free architectural choice, so decisions are asked only where the rules leave room.

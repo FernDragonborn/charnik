@@ -84,11 +84,30 @@ for (const { system, pack, source } of EDITIONS) {
 			expect(combat.sheet?.flySpeed.value).toBe(60);
 		});
 
-		it('Haste: "+2 bonus to AC … an additional action on each of its turns"', async () => {
+		it('Haste: "speed is doubled, it gains a +2 bonus to AC … an additional action"', async () => {
 			await caster();
+			const walk = combat.sheet?.speed.value ?? 0;
 			cast('haste');
 			expect(ac()).toBe(14);
 			expect(combat.economy.slotMax.action).toBe(2);
+			expect(combat.sheet?.speed.value).toBe(walk * 2);
+			// the speed it doubles is the one the creature has, Longstrider's ten feet included
+			cast('longstrider');
+			expect(combat.sheet?.speed.value).toBe((walk + 10) * 2);
+		});
+
+		it('Heroism: Temporary Hit Points equal to the spellcasting modifier at each turn start', async () => {
+			const c = await caster();
+			c.play.inCombat = true;
+			c.play.round = 1;
+			cast('heroism');
+			expect(combat.sheet?.conditionImmunities).toContain('frightened');
+			combat.nextTurn();
+			expect(combat.character?.play.hp.temp).toBe(3); // Intelligence 16
+			// they do not stack, and a larger amount is never lowered
+			if (combat.character) combat.character.play.hp.temp = 7;
+			combat.nextTurn();
+			expect(combat.character?.play.hp.temp).toBe(7);
 		});
 
 		it('Invisibility gives the condition, and Mind Blank the two immunities', async () => {

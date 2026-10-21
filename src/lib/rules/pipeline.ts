@@ -211,15 +211,21 @@ const LAYER_SEQUENCE: Layer[] = [
  * contributions were gathered — so two effects that both `set` the same key (two items, or two
  * community plugins) can never get a different result from file-scan / namespace-sort luck.
  *
- * Within a layer the ops fold in a fixed sub-order — set → floor → mult → add (A9):
+ * Within a layer the ops fold in a fixed sub-order — set → floor → add (A9):
  * `set` takes the most potent, i.e. HIGHEST, of the sets competing for one TARGET (identical in 5e
  * and 5.5e). That is our reading, not a quoted rule: RAW states how two castings of the same SPELL
  * combine (`effects.md` ▸ Two of the same thing) and says nothing general about two differently
  * named sources setting one stat, so the loser is surfaced as a note rather than silently stomped.
  * `floor` raises the running value to at
- * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `mult` folds as one
- * product then floors once; `add` accumulates. Across layers the fixed base→…→override order still
- * holds, so an override-layer `set` beats an item-layer one.
+ * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `add` accumulates.
+ * Across layers the fixed base→…→override order still holds, so an override-layer `set` beats an
+ * item-layer one.
+ *
+ * `mult` folds AFTER every layer, as one product floored once, and before the caps. The rules say
+ * what a doubling or a halving is OF — "the target's speed is doubled" (Haste), "speed halved" (2014
+ * exhaustion) — and it is the speed the creature has, its other bonuses included; SRD 5.1 and 5.2.1
+ * state no order beyond rounding down, so this is RAI. Folded inside its own layer, Haste's ×2 landed
+ * before Longstrider's +10 and doubled 30 into 70 rather than 40 into 80.
  *
  * `base` folds BETWEEN layers rather than inside one: after the base and ability layers — the base
  * the core worked out — the value becomes the most potent of that and every `base`, and the layers
@@ -257,10 +263,10 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]
 					params: { source: f.source, amount: f.amount },
 				});
 		}
-		const product = here.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
-		if (product !== 1) value = Math.floor(value * product);
 		value += here.filter((c) => c.op === 'add').reduce((sum, c) => sum + c.amount, 0);
 	}
+	const product = contribs.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
+	if (product !== 1) value = Math.floor(value * product);
 	// caps last, across ALL layers and after every add — a cap is a CEILING on the finished value
 	// ("to a maximum of 20"), not a clamp on whatever the running total happened to be at its own
 	// layer. Lowest-first, so the tightest wins and the rest are noted "already ≤".

@@ -100,6 +100,10 @@ const PROFICIENCY_TARGETS = new Set<string>([
 /** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
 const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
 
+/** `double` targets — Haste's Speed. Walking only: doubling a movement mode the creature lacks would
+ *  make the mode appear at zero feet, so a fly or swim speed waits on a row that needs one. */
+const DOUBLE_TARGETS = new Set<string>(['speed']);
+
 /** A kind whose targets are NOT a closed set (damage_sensitivity's types, grant_resource's ids):
  *  there is nothing to check against, so every target passes. Named rather than `null` (NULL-1) —
  *  "no candidate set" and "no valid targets" are opposite answers and must not share a spelling. */
@@ -117,6 +121,8 @@ const targetCandidatesFor = (kind: string, target: string): Set<string> | typeof
 		// halve (2014 exhaustion) only ever multiplies speed or hp_max — a tighter closed set.
 		case EFFECT_KIND.halve:
 			return HALVE_TARGETS;
+		case EFFECT_KIND.double:
+			return DOUBLE_TARGETS;
 		case EFFECT_KIND.advantage:
 		case EFFECT_KIND.disadvantage:
 		case EFFECT_KIND.autoFail:

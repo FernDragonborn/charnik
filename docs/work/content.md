@@ -114,13 +114,13 @@
   rolls nothing is captioned from those tokens, resolved against the sheet
   (`combat/effects-view.ts` ▸ `effectsCaption`) — so a spell says what it does because its data
   does, and the hardcoded name list that used to say it is gone. 25 spells of the 2024 pack and 24
-  of the 2014 one carry tokens, each typed from the sentence of its own text that states it.
+  of the 2014 one carry tokens — Haste doubling Speed (`double`) and Heroism's Temporary Hit Points each
+  turn (`on_event:turn_start:temp_hp`) among them — each typed from the sentence of its own text that states it.
   What is left, grouped by what each waits on:
   - **A choice made at the cast.** Enhance Ability (which ability), Protection from Energy and
     Fire Shield (which damage type), Enlarge/Reduce (which of the two): the token would need the
     answer the way an item's `item_choice` does, and a cast asks nothing yet.
-  - **A word the vocabulary lacks.** Haste doubles Speed and no kind multiplies but `halve`;
-    Heroism's Temporary Hit Points each turn want an executor verb that gives them; 2014 Stoneskin
+  - **A word the vocabulary lacks.** 2014 Stoneskin
     resists NONMAGICAL damage; Protection from Poison's advantage is against one condition; Jump,
     Freedom of Movement, Death Ward and Sanctuary state rules about events the app does not see.
   - **A spell cast on SOMEONE ELSE still lands on the caster.** The model is "a cast applies to

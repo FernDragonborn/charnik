@@ -29,6 +29,7 @@ export const EFFECT_KINDS = [
 	'set_base',
 	'block_bonus',
 	'halve',
+	'double',
 	'advantage',
 	'disadvantage',
 	'grant_proficiency',

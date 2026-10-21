@@ -92,7 +92,7 @@ class FactsCollector {
 		return true;
 	}
 
-	/** flat_bonus / set_override (→ numeric) + block_bonus + halve — the numeric-fold + bonus-block
+	/** flat_bonus / set_override (→ numeric) + block_bonus + halve / double — the numeric-fold + bonus-block
 	 *  kinds. Returns true iff `p.kind` was one of them. */
 	private collectStatFact(p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
 		switch (p.kind) {
@@ -106,13 +106,14 @@ class FactsCollector {
 					this.facts.blockedBonuses.push({ target: p.target.trim(), source: eff.source });
 				return true;
 			case EFFECT_KIND.halve:
-				// G4: a ×½ multiply at the effect's layer. Folds through the pipeline's `mult` op
+			case EFFECT_KIND.double:
+				// G4: a ×½ or ×2 multiply at the effect's layer. Folds through the pipeline's `mult` op
 				// (one product per layer, then floors once — RAW round-down).
 				if (p.target && !this.rejectTarget(p.kind, p.target.trim(), eff.source, token))
 					this.facts.numeric.push({
 						target: p.target.trim(),
 						op: 'mult',
-						amount: 0.5,
+						amount: p.kind === EFFECT_KIND.double ? 2 : 0.5,
 						layer: eff.layer,
 						source: eff.source,
 						token,

@@ -259,8 +259,9 @@ All three keys optional; an empty object is a valid "nothing applies" answer.
   `namespace` in the provenance trace — a plugin cannot masquerade as core math. An `op: "set"` folds
   exactly like a content `set_override`: at YOUR declared layer (D12 — a set is no longer forced to
   `override`), most-potent-wins among the sets of that one layer, and a set in a later layer of
-  `LAYER_SEQUENCE` then replaces whatever an earlier layer settled on. `add`/`mult` fold at your
-  declared layer too.
+  `LAYER_SEQUENCE` then replaces whatever an earlier layer settled on. `add` folds at your declared
+  layer too; `mult` multiplies the finished value, after every layer and before the caps, as a
+  content `halve` or `double` does (`rules/pipeline.ts` ▸ `fold`).
 - **`notes`** — plain-text explanations for the stat tooltip / effects panel. Rendered as
   plain text ONLY (no markdown, no links), ≤ 200 chars each.
 

@@ -41,6 +41,9 @@ export const EFFECT_KIND = {
 	// exhaustion L2 = speed halved, L4 = hp-max halved); a dedicated kind, NOT a generic multiply,
 	// because token value slots lex integers only and a `1/2` expr floors to 0. Targets: speed, hp_max.
 	halve: 'halve',
+	// `double:<target>` — a ×2 multiply, halve's mirror: Haste's "the target's Speed is doubled" in
+	// both editions. The same dedicated-kind reasoning, and the same closed target set's walking half.
+	double: 'double',
 	advantage: 'advantage',
 	disadvantage: 'disadvantage',
 	grantProficiency: 'grant_proficiency',
@@ -538,6 +541,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 		/:(floor|cap)$/i.test(rest) ? { kind: 'unknown', raw } : parseSetOverride(rest, raw, kind),
 	[EFFECT_KIND.blockBonus]: parseTargetOnly,
 	[EFFECT_KIND.halve]: parseTargetOnly,
+	[EFFECT_KIND.double]: parseTargetOnly,
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
 	[EFFECT_KIND.grantValue]: parseGrantValue,
 	[EFFECT_KIND.extraAttack]: parseExtraAttack,

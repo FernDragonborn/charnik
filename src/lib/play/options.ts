@@ -199,6 +199,26 @@ const VERBS: Record<string, Verb> = {
 			ctx,
 		);
 	},
+	// Temporary Hit Points do not stack: the new amount replaces the old only when it is higher (SRD 5.1
+	// and 5.2.1 alike), so a Heroism tick never lowers what a Fiendish Vigor gave
+	temp_hp: (character, run, arg, ctx) => {
+		if (!arg) return quietly(character);
+		if (!isResolvedFormula(arg)) return unresolved(character, run, arg);
+		const rolled = rollFormula(arg, ctx.rng);
+		const hp = character.play.hp;
+		if (rolled.total <= hp.temp) return quietly(character);
+		return settled(
+			{
+				character: {
+					...character,
+					play: { ...character.play, hp: { ...hp, temp: rolled.total } },
+				},
+				log: [],
+				notices: [],
+			},
+			ctx,
+		);
+	},
 	roll: (character, run, arg, ctx) => {
 		if (!arg) return quietly(character);
 		if (!isResolvedFormula(arg)) return unresolved(character, run, arg);

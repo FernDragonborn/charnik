@@ -155,6 +155,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 | `set_override` | `set_override:<target>:<value>[:floor\|cap]` | Forces a value instead of adding to one. Plain form replaces; `:floor` means "at least this"; `:cap` means "no more than this", applied last of all, after every bonus. When two rows set the same target the stronger one wins, and the other is recorded rather than silently lost. |
 | `block_bonus` | `block_bonus:<target>` | "Cannot benefit from any bonus to this." Grappled and restrained use it on speed. Penalties and the base value still apply — only bonuses are refused. |
 | `halve` | `halve:<target>` | Halves it. Exists because halving is the one place the rules ask for a fraction. Targets `speed` and `hp_max`. |
+| `double` | `double:<target>` | Doubles it — Haste's "your Speed is doubled". Targets `speed`. |
 
 ### Changing a roll
 

@@ -37,6 +37,8 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **Haste doubles your Speed**, every bonus to it included, and **Heroism gives its Temporary Hit
+  Points at the start of each of your turns** — never lowering a larger amount you already have.
 - **The class pools the rules describe are on the sheet**, in both editions: Lay on Hands,
   Channel Divinity, Sorcery Points, Indomitable, Arcane Recovery and Natural Recovery, each counted
   from its own table and refilled on the rest its text names. Lay on Hands heals you by the number

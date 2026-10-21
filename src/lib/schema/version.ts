@@ -179,7 +179,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // install left at v62 shows none of them.
 // v64: the class pools have their spend options — Lay on Hands, the Channel Divinity effects, Stunning
 // Strike, Sorcery Points into slots. An install left at v63 shows the pools with nothing to press.
-export const CONTENT_SEED_VERSION = 64;
+// v65: Haste doubles Speed (`double`) and Heroism gives Temporary Hit Points each turn start
+// (`temp_hp`). An install left at v64 does neither.
+export const CONTENT_SEED_VERSION = 65;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

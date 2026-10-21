@@ -1142,6 +1142,7 @@
 			"form": "form · {target}",
 			"grantRoll": "roll · {target}",
 			"halve": "{target} ×½",
+			"double": "{target} ×2",
 			"hpMax": "Max HP",
 			"initiative": "Initiative",
 			"minDie": "min {value} · {target}",
