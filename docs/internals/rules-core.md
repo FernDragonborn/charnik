@@ -98,9 +98,9 @@ Express per-class rules as descriptor columns: `caster_share` (`full` / `half` /
 `prepare_style`, `spell_ability`, `ritual_source`. Non-spell class mechanics — Infusions, Crimson Rite, Rage,
 Ki — are **resources** granted by tokens.
 
-**A grant that grows with level is ONE row with a `level:count` ladder** — `expertise_slots`
-(`1:2,6:2` for a Rogue) and `mastery_slots` (`1:3,4:1,10:1,16:1` for a 2024 Fighter), both read by
-`slotsGrantedAtLevel`. Strict enforces the cap and Free does not; at the cap a click replaces the
+**A grant that grows with level is ONE row with a `count@level` ladder** — `expertise_slots`
+(`2@1,2@6` for a Rogue), `mastery_slots` (`3@1,1@4,1@10,1@16` for a 2024 Fighter) and `choose`, all
+read by `content/level-gate.ts` ▸ `countAtLevel` (`content.md` ▸ At a level is `@`). Strict enforces the cap and Free does not; at the cap a click replaces the
 oldest pick (`ui.md` ▸ rule 10). Multiclass mastery grants SUM, which is RAW rather than a convenience:
 the 2024 multiclassing rules name their exceptions and Weapon Mastery is not one. A grant the count
 cannot express honestly is left out rather than over-permitted — the Wizard's one expertise from a

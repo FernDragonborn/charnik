@@ -148,6 +148,20 @@ export const issueText = {
 		detail: `option_of "${parent}"`,
 	}),
 
+	/** A level ladder written the old way, `level:count` — read as nothing, with the step it is now. */
+	levelLadderOldForm: (column: string, part: string, now: string): IssueText => ({
+		key: key('levelLadderOldForm'),
+		values: { column, now },
+		detail: `${column} "${part}"`,
+	}),
+
+	/** A level ladder part that is no step at all. */
+	levelLadderUnread: (column: string, part: string): IssueText => ({
+		key: key('levelLadderUnread'),
+		values: { column },
+		detail: `${column} "${part}"`,
+	}),
+
 	/** An `option` requiring an option that does not exist — nobody can meet it. */
 	optionRequiresMissing: (required: string): IssueText => ({
 		key: key('optionRequiresMissing'),

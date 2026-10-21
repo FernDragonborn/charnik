@@ -516,7 +516,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (187 modules)
+## Library functions & types (188 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -565,7 +565,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/build/derive.ts`
 
 - `function halfFeatAbilities` — The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all * six (Epic Boons), …
-- `function slotsGrantedAtLevel` — Sum the `level:count` pairs (`"1:2,6:2"`) whose unlock level ≤ the class level.
 - `function expertiseBudget` — N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's * active features'…
 - `function masteryBudget` — MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the * same sum over `mast…
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
@@ -876,7 +875,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
 - `interface FeatSpellGrant` — One rung of a feat's spell grant: how many spells of that level it teaches.
-- `function featSpellGrants` — Parse a feat's `spell_choice` column — `level:count` pairs (`"0:2,1:1"` = two cantrips and one * level-1 spell).
+- `function featSpellGrants` — Parse a feat's `spell_choice` column — `spell level:count` pairs (`"0:2,1:1"` = two cantrips and * one level-1 spell).
 - `interface SpellcastingInput` — What the full casting derive needs.
 - `function deriveSpellcasting`
 
@@ -1192,6 +1191,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function tagInt` — A numeric tag's value, or `null` when the tag is absent or not a number.
 - `function armorWeightOf` — The armor weight an `armor:<weight>` tag names, or undefined when it names nothing known.
 - `function weaponCategoryOf` — A weapon's proficiency category.
+
+### `src/lib/content/level-gate.ts`
+
+- `const LEVEL_MARK`
+- `const LEVEL_LADDER_COLUMNS` — The class-feature columns that are a ladder of counts by class level.
+- `interface LevelStep` — One step of a ladder: how many, from which level.
+- `function readLevelLadder` — A ladder read: the steps it states, and every part it could not read, kept to be said.
+- `const countAtLevel` — How many a ladder has granted by this level.
+- `function levelLadderIssues` — Every ladder part content health should point at: the old `level:count` form, with the step it * is in the new one, a…
 
 ### `src/lib/content/linked-tables.ts`
 
@@ -2388,4 +2396,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1454 exports across 204 modules · 95 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1459 exports across 205 modules · 95 duplicate suspects._

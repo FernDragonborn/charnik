@@ -189,7 +189,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v68: the 2024 Agonizing Blast, Eldritch Spear and Repelling Blast ask a cantrip per pick (the
 // options `answer` column), and Agonizing Blast scopes its Charisma to it. An install left at v67
 // takes each once and asks nothing.
-export const CONTENT_SEED_VERSION = 68;
+// v69: the class-feature ladders (`choose`, `expertise_slots`, `mastery_slots`) are `count@level`.
+// An install left at v68 holds the old `level:count`, which now grants nothing and is said in
+// content health.
+export const CONTENT_SEED_VERSION = 69;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

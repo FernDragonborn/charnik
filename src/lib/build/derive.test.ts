@@ -1,3 +1,4 @@
+import { countAtLevel } from '$lib/content/level-gate';
 import { describe, it, expect } from 'vitest';
 import {
 	parseSpeciesBoostChoice,
@@ -5,7 +6,6 @@ import {
 	speciesFixedAbilities,
 	buildTodos,
 	type BuildTodoInput,
-	slotsGrantedAtLevel,
 	expertiseBudget,
 	openSubclassChoices,
 	halfFeatAbilities,
@@ -49,17 +49,18 @@ describe('halfFeatAbilities (half-feat +1 targets)', () => {
 	});
 });
 
-describe('slotsGrantedAtLevel (the level:count grants — expertise and weapon mastery)', () => {
-	it('sums the pairs whose unlock level ≤ the class level', () => {
-		expect(slotsGrantedAtLevel('1:2,6:2', 1)).toBe(2);
-		expect(slotsGrantedAtLevel('1:2,6:2', 5)).toBe(2);
-		expect(slotsGrantedAtLevel('1:2,6:2', 6)).toBe(4);
-		expect(slotsGrantedAtLevel('3:2,10:2', 20)).toBe(4);
+describe('countAtLevel (a ladder of counts by level — expertise, weapon mastery, options)', () => {
+	it('sums the steps whose level ≤ the class level', () => {
+		expect(countAtLevel('2@1,2@6', 1)).toBe(2);
+		expect(countAtLevel('2@1,2@6', 5)).toBe(2);
+		expect(countAtLevel('2@1,2@6', 6)).toBe(4);
+		expect(countAtLevel('2@3,2@10', 20)).toBe(4);
 	});
-	it('is 0 for empty / undefined / garbage', () => {
-		expect(slotsGrantedAtLevel(undefined, 20)).toBe(0);
-		expect(slotsGrantedAtLevel('', 20)).toBe(0);
-		expect(slotsGrantedAtLevel('junk', 20)).toBe(0);
+	it('is 0 for empty / undefined / garbage, and for the old level:count form', () => {
+		expect(countAtLevel(undefined, 20)).toBe(0);
+		expect(countAtLevel('', 20)).toBe(0);
+		expect(countAtLevel('junk', 20)).toBe(0);
+		expect(countAtLevel('1:2,6:2', 20)).toBe(0);
 	});
 });
 
@@ -70,7 +71,7 @@ describe('expertiseBudget (drafted-class expertise cap)', () => {
 	});
 	const graph = {
 		get: (id: string) => (id === 'rogue' ? makeRow('class', { id: 'rogue' }) : undefined),
-		featuresForClass: () => [feat({ id: 'rogue_expertise', level: 1, expertise_slots: '1:2,6:2' })]
+		featuresForClass: () => [feat({ id: 'rogue_expertise', level: 1, expertise_slots: '2@1,2@6' })]
 	} as unknown as ContentGraph;
 
 	it("sums a class's active-feature grants at the class level", () => {

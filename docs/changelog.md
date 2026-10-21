@@ -37,6 +37,10 @@
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.
+- **For content authors: "at a level" is written with `@`.** A class feature's `choose`,
+  `expertise_slots` and `mastery_slots` read `2@3,2@10` — two at level 3, two more at 10 — where
+  they read `3:2,10:2`. The shipped packs are converted; a homebrew row still in the old form grants
+  nothing, and Settings ▸ Content health names it with the step to write instead.
 - **A 2024 warlock's Agonizing Blast, Eldritch Spear and Repelling Blast name their cantrip**, and
   each may be taken again for another: pressing one in the builder lists the fitting cantrips you
   know. Agonizing Blast adds your Charisma modifier to the damage of the cantrip it names, and the

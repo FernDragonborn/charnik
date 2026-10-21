@@ -26,10 +26,9 @@
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature
   unlocks that KIND of weapon for you.
   **What shipped.** `mastery_slots` on the five 2024 class features that grant Weapon Mastery, in the
-  same `level:count` grammar `expertise_slots` uses and read by the same function — which is now
-  named for the grammar (`slotsGrantedAtLevel`) rather than for one of its two columns. The ladders
+  same `count@level` ladder `expertise_slots` uses and read by the same `countAtLevel`. The ladders
   are the SRD's own: Barbarian and Fighter have a Weapon Mastery column in their Features table
-  (`1:2,4:1,10:1` and `1:3,4:1,10:1,16:1`); Paladin, Ranger and Rogue name no table and stay flat at
+  (`2@1,1@4,1@10` and `3@1,1@4,1@10,1@16`); Paladin, Ranger and Rogue name no table and stay flat at
   two. `build.masteries` holds the picked weapon KINDS as bare ids; the picker is a capped chip pane
   off the Attacks card, and the attack row prints the mastery **only** when a pick unlocks it —
   matched on `ResolvedItem.kindId`, because a +1 Greataxe is still a Greataxe. 2014 caps at 0, so

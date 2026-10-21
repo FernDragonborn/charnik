@@ -3,6 +3,7 @@
  * `$derived`. Kept out of build/rules.ts (which stays "just numbers, no graph") and out of the VM
  * (which keeps only reactive wiring), so these are plain, unit-testable functions. No Svelte runes.
  */
+import { countAtLevel } from '$lib/content/level-gate';
 import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
@@ -24,24 +25,9 @@ export function halfFeatAbilities(spec: string | undefined): Ability[] {
 	return ABILITIES.filter((a) => wanted.has(a));
 }
 
-/** Sum the `level:count` pairs (`"1:2,6:2"`) whose unlock level ≤ the class level. A single feature
- *  row can thus carry a progressive grant (Rogue's L1 Expertise row also grants +2 at L6; the 2024
- *  Fighter's L1 Weapon Mastery row grows to six kinds by L16). One reader, because the two columns
- *  are one grammar. Pure. */
-export function slotsGrantedAtLevel(spec: string | undefined, classLevel: number): number {
-	if (!spec) return 0;
-	let total = 0;
-	for (const pair of spec.split(',')) {
-		const [lvl, count] = pair.split(':');
-		const atLevel = Number(lvl);
-		const n = Number(count);
-		if (Number.isFinite(atLevel) && Number.isFinite(n) && atLevel <= classLevel) total += n;
-	}
-	return total;
-}
 
 /** N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's
- *  active features' `expertise_slots` (a `level:count` spec resolved against that class's level, for
+ *  active features' `expertise_slots` (a `count@level` ladder resolved against that class's level, for
  *  the matching system and either a base feature or one under the chosen subclass). Mirrors the
  *  derive-gather feature gates. The builder caps expertise picks at this. Pure. */
 export function expertiseBudget(
@@ -52,7 +38,7 @@ export function expertiseBudget(
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
 		const spec = feature.row.data.expertise_slots;
-		if (spec) total += slotsGrantedAtLevel(spec, feature.entry.level);
+		if (spec) total += countAtLevel(spec, feature.entry.level);
 	}
 	return total;
 }
@@ -68,7 +54,7 @@ export function masteryBudget(
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
 		const spec = feature.row.data.mastery_slots;
-		if (spec) total += slotsGrantedAtLevel(spec, feature.entry.level);
+		if (spec) total += countAtLevel(spec, feature.entry.level);
 	}
 	return total;
 }

@@ -4,7 +4,7 @@
  * (`content/options.ts`), so this knows nothing of warlocks — a homebrew feature with a `choose`
  * and three option rows asks the same way.
  */
-import { slotsGrantedAtLevel } from '$lib/build/derive';
+import { countAtLevel } from '$lib/content/level-gate';
 import { activeClassFeatures } from '$lib/character/features';
 import type { LoadedRowByType } from '$lib/content/loader';
 import {
@@ -48,7 +48,7 @@ export class OptionPicks {
 		if (!graph) return [];
 		const out: FeatureChoice[] = [];
 		for (const active of activeClassFeatures(draft.classes, graph, draft.system)) {
-			const cap = slotsGrantedAtLevel(active.row.data.choose, active.entry.level);
+			const cap = countAtLevel(active.row.data.choose, active.entry.level);
 			if (cap === 0) continue;
 			const options = optionsOf(graph, active.row).filter((row) => isRowActive(row));
 			const offered = new Set(options.map((option) => option.id));

@@ -290,8 +290,9 @@ export interface FeatSpellGrant {
 	count: number;
 }
 
-/** Parse a feat's `spell_choice` column — `level:count` pairs (`"0:2,1:1"` = two cantrips and one
- *  level-1 spell). The same pair grammar `expertise` uses, so an author already knows it. A malformed
+/** Parse a feat's `spell_choice` column — `spell level:count` pairs (`"0:2,1:1"` = two cantrips and
+ *  one level-1 spell). The colon is spell level against count; a CLASS level would be `@`
+ *  (`content/level-gate.ts`), which a feat's grant does not need. A malformed
  *  pair is dropped rather than guessed at: a feat that teaches nothing shows as teaching nothing. */
 export function featSpellGrants(spec: string | undefined): FeatSpellGrant[] {
 	if (!spec) return [];

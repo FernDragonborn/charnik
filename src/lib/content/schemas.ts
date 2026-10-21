@@ -216,20 +216,20 @@ const classFeatureSchema = baseRow.extend({
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
 	subclass_id: optStr,
-	/** N4a: skill-expertise CHOICES this feature unlocks, as `level:count` pairs so ONE feature row can
-	 *  carry a progressive grant (SRD models Rogue Expertise as a single L1 row that also grants +2 at
-	 *  L6 → `"1:2,6:2"`; Bard 2024 `"2:2,9:2"`, 2014 `"3:2,10:2"`). The builder sums the counts whose
-	 *  level ≤ the class level. Curated onto the row like `effects` (not in the prose); empty → 0. */
+	/** N4a: skill-expertise CHOICES this feature unlocks, a ladder of `count@level` steps
+	 *  (`level-gate.ts`) so ONE feature row can carry a progressive grant (SRD models Rogue Expertise
+	 *  as a single L1 row that also grants +2 at L6 → `"2@1,2@6"`; Bard 2024 `"2@2,2@9"`, 2014
+	 *  `"2@3,2@10"`). Curated onto the row like `effects` (not in the prose); empty → 0. */
 	expertise_slots: optStr,
-	/** MASTERY-HALF: weapon-mastery CHOICES this feature unlocks, in the same `level:count` grammar
-	 *  `expertise_slots` uses and summed by the same reader — 2024 Barbarian `"1:2,4:1,10:1"` is two
+	/** MASTERY-HALF: weapon-mastery CHOICES this feature unlocks, in the same ladder `expertise_slots`
+	 *  uses and summed by the same reader — 2024 Barbarian `"2@1,1@4,1@10"` is two
 	 *  kinds at 1st and one more at 4th and 10th. Only two SRD classes grow it (the Weapon Mastery
 	 *  column of their Features table); the other three say a flat two and name no table. Curated onto
 	 *  the row like `effects`; empty → 0. */
 	mastery_slots: optStr,
 	/** How many of this feature's OPTIONS the character picks — the rows of the `option` type that
-	 *  name it in `option_of` (a Pact Boon's three, the Eldritch Invocations). The same `level:count`
-	 *  grammar as the two columns above and the same reader; empty → the feature asks nothing. */
+	 *  name it in `option_of` (a Pact Boon's three, the Eldritch Invocations). The same ladder as the
+	 *  two columns above and the same reader; empty → the feature asks nothing. */
 	choose: optStr,
 	/** A FEAT this feature has the character choose, in a slot of its own — 2024 Fighting Style, "You
 	 *  gain a Fighting Style feat of your choice". The species column's grammar, where a word may
@@ -292,7 +292,7 @@ const featSchema = baseRow.extend({
 	 *  Blank = skills only; `skill,tool` is Skilled's "any combination of three skills or tools",
 	 *  where a picked tool lands in `build.tools`. A list, so a third kind is a word and not a column. */
 	skill_choice_kinds: optStr,
-	/** §D choice-grant: the spells this feat teaches, as `level:count` pairs (Magic Initiate =
+	/** §D choice-grant: the spells this feat teaches, as `spell level:count` pairs (Magic Initiate =
 	 *  `0:2,1:1` — two cantrips and one level-1 spell). The feat becomes a caster profile of its own,
 	 *  so the counts ARE its cantrip/known caps and the ordinary spell picker asks the question. */
 	spell_choice: optStr,

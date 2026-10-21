@@ -31,7 +31,7 @@ async function graphOf(): Promise<ContentGraph> {
 		].join('\n'),
 		'class_features_srd.csv': [
 			'id,systems,source,name_en,class_id,level,expertise_slots',
-			`expertise,5.5e,${S},Expertise,rogue,1,"1:2,6:2"`
+			`expertise,5.5e,${S},Expertise,rogue,1,"2@1,2@6"`
 		].join('\n'),
 		'feats_srd.csv': [
 			'id,systems,source,name_en,category,ability_choice,skill_choice,spell_choice,spell_choice_lists,spell_choice_ability,skill_choice_kinds',

@@ -156,6 +156,16 @@ is evaluated — `damage_sensitivity:resist:item_choice` becomes `damage_sensiti
 before the token is parsed. An unanswered row grants nothing: the token is dropped rather than folded
 onto the placeholder, while every other token on the row still applies.
 
+**At a level is `@`, everywhere.** A column that grants something from a level writes it
+`<what>@<level>` — `@` reads "at", so `2@3` is "two at level 3", and a ladder is its steps joined by
+commas: `2@3,2@10` is two at 3rd and two more at 10th. Whose level it is belongs to the column — a
+class feature's is its class's — and never to the mark. One mark for one fact, so the colon is left to
+mean what it does in `spell_choice` (spell level : count), and the dot what it does in a token (narrowed
+to). `content/level-gate.ts` is the one reader; the ladder columns are `choose`, `expertise_slots` and
+`mastery_slots`. The form those columns had before, `level:count`, grants nothing and is said in
+content health with the step it is now — a count read the wrong way round would be a wrong number on
+the sheet, so it is never guessed at.
+
 **With a ROW for an answer, the question is the `option` type — one row, several options.** A
 Belt of Giant Strength is one entry in the book and five belts at the table, each setting a
 different score at a different rarity: a different TOKEN per answer, which neither a number nor a
@@ -167,7 +177,7 @@ once it is given.
 
 **A class feature's choice is the same type, answered in the build.** A Pact Boon is three
 options of `class_feature:warlock_pact_boon`; the feature row's `choose` column says how many, in
-the `level:count` grammar `expertise_slots` uses and read by the same `slotsGrantedAtLevel`; the
+the `count@level` ladder `expertise_slots` uses and read by the same `countAtLevel`; the
 answer is `build.options`, feature id → option ids, and `character/features.ts` ▸ `heldOptions`
 is the one reading of it — the gather folds those rows, the sheet lists them as features, and a
 caster's rituals are read off an option's `ritual_source` before its subclass's or its class's.
