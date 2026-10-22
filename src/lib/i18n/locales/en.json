@@ -228,6 +228,8 @@
 		"languages": {
 			"chosen": "Chosen {count}",
 			"backgroundGrants": "your background grants {count}",
+			"featureGrants": "your class features grant {count} of your choice",
+			"fromFeature": "known from {feature}",
 			"search": "Search languages…"
 		},
 		"levelMeta": "level · prof {bonus}",

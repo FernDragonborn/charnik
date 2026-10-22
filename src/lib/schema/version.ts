@@ -197,7 +197,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v71: Thaumaturge and Magician carry `cantrips` 1. An install left at v70 counts one cantrip short.
 // v72: Divine Sense (2014), Innate Sorcery and Favored Enemy (2024) are pools with spend options,
 // and Innate Sorcery an effect row. An install left at v71 has none of the three.
-export const CONTENT_SEED_VERSION = 72;
+// v73: the 2014 ranger chooses Favored Enemy and Natural Explorer, a draconic sorcerer a Dragon
+// Ancestor, and features teach their languages (`language_grants`) — with 2014 Druidic and Thieves'
+// Cant as language rows. An install left at v72 asks none of it.
+export const CONTENT_SEED_VERSION = 73;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

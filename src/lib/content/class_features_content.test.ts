@@ -10,7 +10,8 @@ import {
 	inventoryRow,
 } from '../character/schema';
 import { deriveSheet } from '../character/derive';
-import { characterFeatures, featureKey } from '../character/features';
+import { characterFeatures, featureKey, featureLanguages } from '../character/features';
+import { optionsOf } from './options';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
@@ -1472,5 +1473,70 @@ describe('the level-1 class pools', () => {
 		expect(advantageOn(['fire_bolt', 'spell', 'wizard'])).toBe(false);
 		expect(advantageOn(['melee', 'str', 'longsword'])).toBe(false);
 		expect(unleashed.deriveIssues).toEqual([]);
+	});
+});
+
+/*
+ * SRD 5.1 ▸ Ranger ▸ Favored Enemy: "Choose a type of favored enemy: aberrations, beasts, … or
+ * undead. Alternatively, you can select two races of humanoid … you also learn one language of
+ * your choice … You choose one additional favored enemy, as well as an associated language, at 6th
+ * and 14th level." ▸ Natural Explorer: "arctic, coast, desert, forest, grassland, mountain, or
+ * swamp … additional favored terrain types at 6th and 10th level." ▸ Dragon Ancestor: ten dragons;
+ * "You can speak, read, and write Draconic." ▸ Druid ▸ Druidic: "You know Druidic". ▸ Rogue ▸
+ * Thieves' Cant. SRD 5.2.1 ▸ Rogue ▸ Thieves' Cant: "You know Thieves' Cant and one other language
+ * of your choice".
+ */
+describe('2014 level-1 choices, and the languages a feature teaches', () => {
+	const offered = (g: ContentGraph, feature: string) => {
+		const row = g.list('class_feature', { system: '5e' }).find((r) => r.id === feature);
+		return row ? optionsOf(g, row).length : 0;
+	};
+	const learned = (c: Character, g: ContentGraph) => {
+		const classes = c.build.classes.map((e) => ({
+			classId: e.class,
+			subclassId: e.subclass ?? null,
+			level: e.level,
+		}));
+		const found = featureLanguages(classes, g, c.system, c.build.options);
+		return { ids: found.granted.map((x) => x.row.id), choices: found.choices };
+	};
+
+	it('2014: Favored Enemy, Natural Explorer and Dragon Ancestor offer what the book lists', async () => {
+		const g = await loadEdition('srd-2014');
+		expect(offered(g, 'ranger_favored_enemy')).toBe(14);
+		expect(offered(g, 'ranger_natural_explorer')).toBe(7);
+		expect(offered(g, 'draconicbloodline_dragon_ancestor')).toBe(10);
+	});
+
+	it('2014: each favored enemy teaches a language of choice; a dragon ancestor Draconic', async () => {
+		const g = await loadEdition('srd-2014');
+		const ranger = charOf('SRD 5.1', '5e', 'ranger', 6);
+		ranger.build.options = { ranger_favored_enemy: ['favored_enemy_undead', 'favored_enemy_fey'] };
+		expect(learned(ranger, g)).toEqual({ ids: [], choices: 2 });
+		const sorcerer = charOf('SRD 5.1', '5e', 'sorcerer', 1);
+		sorcerer.build.classes = [
+			classRow({
+				class: 'class:SRD 5.1:sorcerer',
+				subclass: 'subclass:SRD 5.1:draconicbloodline',
+				level: 1,
+			}),
+		];
+		expect(learned(sorcerer, g).ids).toEqual(['draconic']);
+		expect(learned(charOf('SRD 5.1', '5e', 'druid', 1), g).ids).toEqual(['druidic']);
+		expect(learned(charOf('SRD 5.1', '5e', 'rogue', 1), g).ids).toEqual(['thieves_cant']);
+		const languages = g.list('language', { system: '5e' }).map((r) => r.id);
+		expect(languages).toEqual(expect.arrayContaining(['druidic', 'thieves_cant', 'draconic']));
+	});
+
+	it('2024: Druidic, and Thieves’ Cant with one language of choice', async () => {
+		const g = await loadEdition('srd-2024');
+		expect(learned(charOf('SRD 5.2.1', '5.5e', 'druid', 1), g)).toEqual({
+			ids: ['druidic'],
+			choices: 0,
+		});
+		expect(learned(charOf('SRD 5.2.1', '5.5e', 'rogue', 1), g)).toEqual({
+			ids: ['thieves_cant'],
+			choices: 1,
+		});
 	});
 });

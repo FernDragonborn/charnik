@@ -12,9 +12,6 @@
   5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
   (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). `spell@level` where the level is the
   character's (FEATURE-SPELLS).
-- [ ] **CHOICES-2014 · three level-1 choices nothing records.** Favored Enemy (a creature type, or
-  two humanoid races), Natural Explorer (a terrain) and Dragon Ancestor (a dragon) as option rows,
-  so the build asks and the sheet says what was chosen; what each advantage applies to stays text.
 - [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; four are not, and want a look.**
   124 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
   HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,

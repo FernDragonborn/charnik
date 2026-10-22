@@ -148,9 +148,6 @@ stay semi-manual.
   Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
   (FEATURE-PASSIVES lists them). The fix is the cast offering its school and `cantrip` beside the
   class, the way a weapon offers its tags.
-- [ ] **FEATURE-LANGUAGES · the languages a class feature grants.** Druidic (druid), Thieves' Cant
-  (rogue), Draconic (2014 Dragon Ancestor), and the 2024 rogue's "one other language of your choice".
-  Languages come from a species and a background today; a feature grants none.
 - [ ] **DISCIPLE-OF-LIFE · healing that grows with the slot.** SRD 5.1 Life Domain: "Whenever you use a
   spell of 1st level or higher to restore hit points to a creature, the creature regains additional
   hit points equal to 2 + the spell's level." A cast's heal takes no such bonus yet. 0.8.2 needs the

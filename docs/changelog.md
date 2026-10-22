@@ -90,6 +90,14 @@
   their Sorcerer spells by 1 and gives Advantage on their Sorcerer spell attacks for a minute — not
   a second class's spells; a 2024 ranger's Favored Enemy counts its free Hunter's Marks, two at 1st
   level and up to six at 17th.
+- **A 2014 ranger chooses Favored Enemy and Natural Explorer, and a draconic sorcerer their Dragon
+  Ancestor**, in the builder, as many as the level allows — a second enemy at 6th and a third at
+  14th, a second terrain at 6th and a third at 10th. What each grants beyond its language stays the
+  feature's text.
+- **The languages a class teaches are known.** Druidic, Thieves' Cant and a dragon ancestor's
+  Draconic are on the builder's language list, locked on and saying which feature taught them; a
+  2024 rogue's "one other language of your choice" and each 2014 favored enemy's language are
+  counted beside the background's.
 
 ## 0.8.1
 

@@ -235,6 +235,10 @@ const classFeatureSchema = baseRow.extend({
 	 *  gain a Fighting Style feat of your choice". The species column's grammar, where a word may
 	 *  also name a feat CATEGORY (`fighting_style`), so a homebrew style joins the menu unedited. */
 	feat_choice: optStr,
+	/** The languages this row teaches, as a comma list of language ids, where `any` is one more of
+	 *  the player's choice (`thieves_cant,any` — "You know Thieves' Cant and one other language of
+	 *  your choice"). The builder lists the named ones as known and adds the choices to its count. */
+	language_grants: optStr,
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
@@ -576,6 +580,10 @@ const optionSchema = baseRow.extend({
 	/** How many more cantrips its class knows, from that class's own list ("You know one extra
 	 *  cantrip from the Cleric spell list"); summed into the class's cantrip cap. */
 	cantrips: optInt,
+	/** The languages this row teaches, as a comma list of language ids, where `any` is one more of
+	 *  the player's choice (`thieves_cant,any` — "You know Thieves' Cant and one other language of
+	 *  your choice"). The builder lists the named ones as known and adds the choices to its count. */
+	language_grants: optStr,
 	/** What each pick of this option asks (`OPTION_ANSWER`); an option that asks may be taken once per
 	 *  answer, and its `option_choice` tokens read that answer. Blank asks nothing. */
 	answer: optStr,

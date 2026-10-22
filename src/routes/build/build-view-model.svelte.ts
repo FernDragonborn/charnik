@@ -41,6 +41,7 @@ import { SkillPicks } from './skill-picks.svelte';
 import { MasteryPicks } from './mastery-picks.svelte';
 import { FormPicks } from './form-picks.svelte';
 import { OptionPicks } from './option-picks.svelte';
+import { featureLanguages, NO_FEATURE_LANGUAGES } from '$lib/character/features';
 import { SpellPicks } from './spell-picks.svelte';
 import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
 import type { SystemId } from '$lib/stores/app.svelte';
@@ -337,6 +338,12 @@ export class BuildVM {
 	/** Which spells are chosen, and the Strict caps over them — see spell-picks.svelte.ts. */
 	spellPicks = new SpellPicks(() => this);
 
+	/** What the drafted classes' features teach them to speak — Druidic, Thieves' Cant. */
+	languagesFromFeatures = $derived(
+		this.graph
+			? featureLanguages(this.draft.classes, this.graph, this.draft.system, this.draft.options)
+			: NO_FEATURE_LANGUAGES,
+	);
 	/** How many free "of your choice" languages the background grants (display only). */
 	backgroundLangCount = $derived(Number(this.backgroundRow?.data.languages ?? 0));
 	/** Tools the background grants outright — always proficient, never a pick, exactly like the

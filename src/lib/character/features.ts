@@ -10,6 +10,7 @@
  */
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
 import { optionsOf, readPick, type OptionRow } from '../content/options';
+import { splitList } from '../content/schema-cells';
 import type { Character } from './schema';
 
 /** A class row as either half of the app names it: the builder's draft, or a saved character's
@@ -107,6 +108,39 @@ export function* heldClassOptions(
 	const asked = [{ classId: entry.class, subclassId: entry.subclass ?? null, level: entry.level }];
 	for (const f of activeClassFeatures(asked, graph, character.system))
 		yield* heldOptions(graph, f.row, character.build.options);
+}
+
+/** The word in `language_grants` that is a language of the player's choice, not a language id. */
+export const LANGUAGE_OF_CHOICE = 'any';
+
+/** What the class features a character has reached teach them to speak: each language they name,
+ *  as the edition's row with the feature or option that names it, and how many more are the
+ *  player's to choose. A named language the edition has no row for is left out. */
+export interface FeatureLanguages {
+	granted: { row: LoadedRow; from: LoadedRow }[];
+	choices: number;
+}
+
+export const NO_FEATURE_LANGUAGES: FeatureLanguages = { granted: [], choices: 0 };
+
+export function featureLanguages<Entry extends ClassEntryLike>(
+	classes: readonly Entry[],
+	graph: ContentGraph,
+	system: string,
+	picks: Character['build']['options'],
+): FeatureLanguages {
+	const out: FeatureLanguages = { granted: [], choices: 0 };
+	const languages = graph.list('language', { system });
+	for (const f of activeClassFeatures(classes, graph, system)) {
+		const held = heldOptions(graph, f.row, picks).map((h) => h.row);
+		for (const from of [f.row, ...held])
+			for (const word of splitList(from.data.language_grants)) {
+				if (word === LANGUAGE_OF_CHOICE) out.choices += 1;
+				const row = languages.find((language) => language.id === word);
+				if (row) out.granted.push({ row, from });
+			}
+	}
+	return out;
 }
 
 /** One option held: the row, and the answer this pick of it was given where the row asks one. */

@@ -50,8 +50,11 @@
 	// I speak", and where the word came from is not part of that answer
 	const languages = $derived(
 		[
-			...b.draft.selectedLanguages.map((ref) => rowName(b.row(ref))),
-			...b.draft.customLanguages,
+			...new Set([
+				...b.languagesFromFeatures.granted.map((g) => rowName(g.row)),
+				...b.draft.selectedLanguages.map((ref) => rowName(b.row(ref))),
+				...b.draft.customLanguages,
+			]),
 		]
 			.filter(Boolean)
 			.join(' · '),

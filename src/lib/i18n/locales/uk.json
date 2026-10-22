@@ -228,6 +228,8 @@
 		"languages": {
 			"chosen": "Обрано {count}",
 			"backgroundGrants": "бекграунд дає {count}",
+			"featureGrants": "риси класу дають {count} на ваш вибір",
+			"fromFeature": "відома завдяки «{feature}»",
 			"search": "Пошук мов…"
 		},
 		"levelMeta": "рівень · володіння {bonus}",

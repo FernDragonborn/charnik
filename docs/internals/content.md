@@ -182,7 +182,9 @@ answer is `build.options`, feature id → option ids, and `character/features.ts
 is the one reading of it — the gather folds those rows, the sheet lists them as features, a
 caster's rituals are read off an option's `ritual_source` before its subclass's or its class's, and
 an option's `cantrips` adds to its class's cantrip cap (Thaumaturge's "one extra cantrip from the
-Cleric spell list").
+Cleric spell list"). A feature or an option teaches languages through `language_grants` — language
+ids, and `any` for one of the player's choice (`thieves_cant,any`); `character/features.ts` ▸
+`featureLanguages` is its one reader.
 An option may state the class `level` it opens at and one other option it `requires`; an unmet
 one is refused in Strict and noted in Free. **An option may name several parents** in `option_of`, a
 comma list, where several features offer the same choice — a 2014 Fighting Style is one row offered

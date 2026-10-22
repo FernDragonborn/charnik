@@ -117,6 +117,7 @@ const LABELS: Record<string, string> = {
 	ritual_source: 'Rituals from',
 	option_of: 'Option of',
 	choose: 'Options to choose',
+	language_grants: 'Languages taught',
 };
 const label = (name: string): string => LABELS[name] ?? titleCase(name);
 

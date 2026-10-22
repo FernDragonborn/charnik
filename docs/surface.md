@@ -714,6 +714,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
 - `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
 - `function heldOptions` — * The options a character HOLDS of one class feature, in the order they were picked.
+- `const LANGUAGE_OF_CHOICE` — The word in `language_grants` that is a language of the player's choice, not a language id.
+- `interface FeatureLanguages` — What the class features a character has reached teach them to speak: each language they name, * as the edition's row …
+- `const NO_FEATURE_LANGUAGES`
+- `function featureLanguages`
 - `interface HeldOption` — One option held: the row, and the answer this pick of it was given where the row asks one.
 - `const FEATURE_SECTION` — What section a feature is read under.
 - `type FeatureSection`
@@ -2397,4 +2401,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1459 exports across 205 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1463 exports across 205 modules · 96 duplicate suspects._

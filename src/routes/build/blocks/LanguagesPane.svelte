@@ -19,6 +19,21 @@
 	let highlighted = $state<string | null>(null);
 	const shown = $derived(filterByName(b.languageList, query));
 
+	// what was chosen, and what the background and the class features leave to choose, as one line
+	const summary = $derived(
+		[
+			$_('build.languages.chosen', { values: { count: b.draft.selectedLanguages.length } }),
+			b.backgroundLangCount > 0
+				? $_('build.languages.backgroundGrants', { values: { count: b.backgroundLangCount } })
+				: '',
+			b.languagesFromFeatures.choices > 0
+				? $_('build.languages.featureGrants', { values: { count: b.languagesFromFeatures.choices } })
+				: '',
+		]
+			.filter(Boolean)
+			.join(' · '),
+	);
+
 	const pickerId = $props.id();
 	const picker = new PickerReading(
 		() => ({
@@ -26,16 +41,16 @@
 			previewId: highlighted,
 			onpreview: (id) => (highlighted = id),
 			// there is no article to open here, so Enter goes straight through to the toggle
-			onenter: (id) => b.toggleLanguage(id),
+			onenter: (id) => {
+				if (!b.languagesFromFeatures.granted.some((g) => g.row.effectiveId === id))
+					b.toggleLanguage(id);
+			},
 		}),
 		pickerId,
 	);
 </script>
 
-<p class="subtext">
-	{$_('build.languages.chosen', { values: { count: b.draft.selectedLanguages.length } })}{#if b.backgroundLangCount > 0}
-		· {$_('build.languages.backgroundGrants', { values: { count: b.backgroundLangCount } })}{/if}
-</p>
+<p class="subtext">{summary}</p>
 
 <PickerSearch
 	bind:query
@@ -57,15 +72,24 @@
 	onkeydown={picker.fromOptions}
 >
 	{#each shown as row (row.effectiveId)}
-		{@const on = b.draft.selectedLanguages.includes(row.effectiveId)}
+		{@const grant = b.languagesFromFeatures.granted.find((g) => g.row.id === row.id)}
+		{@const on = !!grant || b.draft.selectedLanguages.includes(row.effectiveId)}
+		<!-- a language a class feature teaches is locked on, the way a background's tool is: it is not
+		     a pick, and the chip says where it came from -->
 		<button
 			class="pick-chip"
 			id={picker.optionId(row.effectiveId)}
 			role="option"
 			aria-selected={on}
+			aria-disabled={grant ? true : undefined}
 			class:on
 			class:is-active={row.effectiveId === highlighted}
-			onclick={() => b.toggleLanguage(row.effectiveId)}>{rowName(row)}</button
+			use:provenance={grant
+				? $_('build.languages.fromFeature', { values: { feature: rowName(grant.from) } })
+				: ''}
+			onclick={() => {
+				if (!grant) b.toggleLanguage(row.effectiveId);
+			}}>{rowName(row)}</button
 		>
 	{:else}
 		<p class="subtext">{$_('build.inspector.noMatch', { values: { query } })}</p>
