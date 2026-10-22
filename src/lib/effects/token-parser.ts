@@ -293,6 +293,7 @@ const SCOPABLE_TARGETS: readonly string[] = [
 	'ac',
 	'spell_dc',
 	'spell_attack',
+	'heal',
 ];
 
 const baseTarget = (target: string): string => target.toLowerCase().split('.')[0] ?? '';

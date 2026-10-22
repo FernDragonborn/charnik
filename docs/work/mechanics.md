@@ -148,11 +148,6 @@ stay semi-manual.
   Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
   (FEATURE-PASSIVES lists them). The fix is the cast offering its school and `cantrip` beside the
   class, the way a weapon offers its tags.
-- [ ] **DISCIPLE-OF-LIFE · healing that grows with the slot.** SRD 5.1 Life Domain: "Whenever you use a
-  spell of 1st level or higher to restore hit points to a creature, the creature regains additional
-  hit points equal to 2 + the spell's level." A cast's heal takes no such bonus yet. 0.8.2 needs the
-  2014 half (level 1); SRD 5.2.1's, at level 3 ("When a spell you cast with a spell slot restores
-  Hit Points … additional Hit Points equal to 2 plus the level of the spell slot"), is 0.9.0's.
 - [ ] **DIVINE-SMITE · a roll that grows with the slot it spends.** SRD 5.1 paladin, level 2: "expend
   one spell slot to deal radiant damage … 2d8 for a 1st-level spell slot, plus 1d8 for each spell
   level higher than 1st, to a maximum of 5d8 … increased by 1d8 if the target is an undead or a

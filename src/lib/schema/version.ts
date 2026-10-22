@@ -200,7 +200,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v73: the 2014 ranger chooses Favored Enemy and Natural Explorer, a draconic sorcerer a Dragon
 // Ancestor, and features teach their languages (`language_grants`) — with 2014 Druidic and Thieves'
 // Cant as language rows. An install left at v72 asks none of it.
-export const CONTENT_SEED_VERSION = 73;
+// v74: Disciple of Life heals 2 + the slot's level, in both editions. An install left at v73 heals
+// by the dice alone.
+export const CONTENT_SEED_VERSION = 74;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

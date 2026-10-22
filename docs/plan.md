@@ -245,11 +245,10 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  1. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
-  2. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
-  3. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
-  4. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
-  5. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+  1. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
+  2. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
+  3. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+  4. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
       the build and put in the inventory.
 
   The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,
@@ -264,7 +263,7 @@ position and are given per wave, because most of them were learned the hard way.
     FEATURE-SKILLS (a skill or an expertise a feature has the player choose) · SLOT-RECOVERY (Arcane
     and Natural Recovery, Magical Cunning — one verb) · CIRCLE-OF-THE-LAND (both editions' land
     choice and its spells) · SPECIES-SPELLS (lineage and legacy spells at character level 3) ·
-    REACTION-ROLLS · TOGGLE-STATES · HUNTERS-PREY · FRENZY, and DISCIPLE-OF-LIFE's 2024 half.
+    REACTION-ROLLS · TOGGLE-STATES · HUNTERS-PREY · FRENZY.
     FEATURE-SPELLS from 0.8.2 is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: built general
     (a feature, a subclass, a species, an option), they are mostly content.
   - **A table, minimally.** TABLE-LINK-SPEC first — its own session with the maintainer, starting

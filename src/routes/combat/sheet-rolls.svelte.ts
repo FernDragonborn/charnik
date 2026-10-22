@@ -10,6 +10,7 @@ import { t, translator } from '$lib/i18n';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
 import type { ExtraAttackRow } from '$lib/combat/attacks';
 import { EFFECT_KIND, EXTRA_ATTACK_WORD, ROLL_LIMIT } from '$lib/effects/token-parser';
+import type { ExprContext } from '$lib/effects/expression-evaluator';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
@@ -94,10 +95,10 @@ export class SheetRolls {
 	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
 	 *  effects (gated on the effects-auto toggle). Reads the sheet's typed-facts object (D7: guards
 	 *  evaluated, conditions expanded, expression values resolved — B21), not raw `play.effects`. */
-	effectsFor(key: string, scopes?: Set<string>): RollEffects {
+	effectsFor(key: string, scopes?: Set<string>, cast?: ExprContext): RollEffects {
 		const c = this.host().character;
 		const sheet = this.host().sheet;
-		return c && sheet ? sheetRollEffects(c, sheet, key, scopes) : NO_ROLL_EFFECTS;
+		return c && sheet ? sheetRollEffects(c, sheet, key, { scopes, cast }) : NO_ROLL_EFFECTS;
 	}
 
 	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the

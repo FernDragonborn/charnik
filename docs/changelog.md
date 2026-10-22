@@ -98,6 +98,9 @@
   Draconic are on the builder's language list, locked on and saying which feature taught them; a
   2024 rogue's "one other language of your choice" and each 2014 favored enemy's language are
   counted beside the background's.
+- **A Life cleric's healing spells heal 2 + the slot's level more**, Disciple of Life in both
+  editions — from 1st level in 2014 and 3rd in 2024. The bonus is on the roll, read from the slot
+  you cast with, and a cantrip gets none.
 
 ## 0.8.1
 

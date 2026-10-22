@@ -12,6 +12,7 @@ import {
 import { deriveSheet } from '../character/derive';
 import { characterFeatures, featureKey, featureLanguages } from '../character/features';
 import { optionsOf } from './options';
+import { withCastSlot } from '../effects/context';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
@@ -1538,5 +1539,51 @@ describe('2014 level-1 choices, and the languages a feature teaches', () => {
 			ids: ['thieves_cant'],
 			choices: 1,
 		});
+	});
+});
+
+/*
+ * SRD 5.1 ▸ Life Domain ▸ Disciple of Life: "Whenever you use a spell of 1st level or higher to
+ * restore hit points to a creature, the creature regains additional hit points equal to 2 + the
+ * spell's level." SRD 5.2.1, at Cleric level 3: "additional Hit Points equal 2 plus the spell
+ * slot's level." The value names the slot, so it is read at the cast.
+ */
+describe('Disciple of Life heals by the slot it is cast from', () => {
+	it.each([
+		['srd-2014', 'SRD 5.1', '5e', 'lifedomain', 1] as const,
+		['srd-2024', 'SRD 5.2.1', '5.5e', 'life_domain', 3] as const,
+	])('%s', async (dir, source, system, subclass, level) => {
+		const g = await loadEdition(dir);
+		const c = charOf(source, system, 'cleric', level);
+		c.build.classes = [
+			classRow({
+				class: `class:${source}:cleric`,
+				subclass: `subclass:${source}:${subclass}`,
+				level,
+			}),
+		];
+		const sheet = deriveSheet(c, g);
+		expect(sheet.deriveIssues).toEqual([]);
+		const base = sheet.castCtx;
+		if (!base) throw new Error('no cast context');
+		const heal = (slot: number, spellLevel: number) =>
+			rollEffectsFor(
+				sheet.facts,
+				'heal',
+				new Set(['cure_wounds', 'spell', 'cleric']),
+				withCastSlot(base, slot, spellLevel),
+			).flat;
+		expect(heal(1, 1)).toBe(3);
+		expect(heal(3, 1)).toBe(5);
+		expect(heal(0, 0)).toBe(0); // a cantrip has no slot
+		// no Life Domain, no bonus
+		expect(
+			rollEffectsFor(
+				deriveSheet(charOf(source, system, 'cleric', level), g).facts,
+				'heal',
+				new Set(['cure_wounds', 'spell', 'cleric']),
+				withCastSlot(base, 1, 1),
+			).flat,
+		).toBe(0);
 	});
 });

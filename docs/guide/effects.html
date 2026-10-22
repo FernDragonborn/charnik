@@ -901,7 +901,8 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 				<code>speed.swim</code> · <code>speed.climb</code> · <code>attack</code> ·
 				<code>attacks</code> (how many you get) ·
 				<code>attacked</code> (what an attacker rolling at <em>you</em> gets) · <code>damage</code> ·
-				<code>spell_dc</code> · <code>spell_attack</code> · <code>crit_threshold</code> (the lowest
+				<code>spell_dc</code> · <code>spell_attack</code> · <code>heal</code> (what a healing spell restores
+				beyond its dice) · <code>crit_threshold</code> (the lowest
 				d20 face that crits for you) · <code>action</code> · <code>bonus</code> ·
 				<code>reaction</code> · <code>senses.&lt;name&gt;</code> and how far it reaches · any ability
 				by name (<code>str</code> … <code>cha</code>).
@@ -930,8 +931,8 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 
 			<h3>Narrowing a bonus to some attacks</h3>
 			<p>
-				<code>attack</code>, <code>damage</code>, <code>spell_dc</code> and
-				<code>spell_attack</code> accept a <strong>scope</strong> after a dot, so a bonus applies to
+				<code>attack</code>, <code>damage</code>, <code>spell_dc</code>,
+				<code>spell_attack</code> and <code>heal</code> accept a <strong>scope</strong> after a dot, so a bonus applies to
 				some rolls and not others:
 			</p>
 			<pre class="cols"><code>flat_bonus:damage.melee+2          <span class="cmt">melee only</span>
@@ -939,7 +940,8 @@ flat_bonus:damage.longsword+1      <span class="cmt">one weapon</span>
 flat_bonus:damage.str+2            <span class="cmt">attacks that used Strength</span>
 flat_bonus:damage.melee,str+2      <span class="cmt">both at once — every part must match</span>
 advantage:attack.spell,sorcerer    <span class="cmt">the sorcerer's spell attacks</span>
-flat_bonus:spell_dc.sorcerer+1     <span class="cmt">the sorcerer's spell save DC, not a second class's</span></code></pre>
+flat_bonus:spell_dc.sorcerer+1     <span class="cmt">the sorcerer's spell save DC, not a second class's</span>
+flat_bonus:heal.spell+if(slot>=1,2+slot,0)   <span class="cmt">healing spells, 2 + the slot cast from (Disciple of Life)</span></code></pre>
 			<p>
 				What a roll offers as scopes depends on what is rolling. A weapon offers its tags, its own
 				id, and the ability the attack used. A spell offers its id, <code>spell</code>, and the

@@ -417,6 +417,21 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(combat.journal.log[0]?.expr).toContain('+3'); // spellcasting mod still added
 	});
 
+	it('a heal that reads the slot (Disciple of Life) is read at the slot cast from', () => {
+		character.play.spellSlotsSpent = { '1': 4 };
+		character.play.effects = [
+			{
+				iid: 'dol',
+				label: 'Disciple of Life',
+				effects: ['flat_bonus:heal.spell+if(slot>=1,2+slot,0)'],
+				positive: true,
+			},
+		];
+		combat.cast(spellRow(graph, `spell:${S}:cure_wounds`, 'on')!, noModifiers);
+		// slot 2: the spellcasting mod (+3) and 2 + 2
+		expect(combat.journal.log[0]?.expr).toMatch(/ \+7$/);
+	});
+
 	it('a broken upcast formula degrades to base dice, never silently-wrong dice (H11)', () => {
 		character.play.spellSlotsSpent = { '1': 4 };
 		combat.cast(spellRow(graph, `spell:${S}:bad_bolt`, 'on')!, noModifiers);

@@ -19,7 +19,9 @@ import {
 	type Rolled,
 	type StoredRoll,
 } from '$lib/rules/dice';
-import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
+import { matchesTarget, type EffectFacts, type NumericFact } from '$lib/effects/apply';
+import { parseToken, resolveEffectValue } from '$lib/effects/token-parser';
+import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { sayText, type Said, type SaidValue } from '$lib/util/say';
 import type { Translate } from '$lib/i18n';
 import type { RollMod } from '$lib/effects/facts';
@@ -425,7 +427,26 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	flat: 0,
 	bonusDice: [],
 };
-export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<string>): RollEffects {
+/** A numeric fact's value as a CAST reads it: the derive resolved it with no slot in hand, so a
+ *  value that names the slot (Disciple of Life's "2 + the spell's level") is resolved again here. */
+function atCast(
+	f: NumericFact,
+	cast: ExprContext | undefined,
+): Pick<NumericFact, 'amount' | 'diceFormula'> {
+	if (!cast) return f;
+	const v = resolveEffectValue(parseToken(f.token), cast);
+	return {
+		...(v.amount !== undefined ? { amount: v.amount } : {}),
+		...(v.diceFormula ? { diceFormula: v.diceFormula } : {}),
+	};
+}
+
+export function rollEffectsFor(
+	facts: EffectFacts,
+	key: string,
+	scopes?: Set<string>,
+	cast?: ExprContext,
+): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	// a SCOPED fact applies only to something the scope names — every comma-separated part must be in
 	// the rolling thing's scopes (GWF `two_handed,melee`), and a roll that names no scopes at all
@@ -443,9 +464,10 @@ export function rollEffectsFor(facts: EffectFacts, key: string, scopes?: Set<str
 		// §A: an ATTACK-scoped bonus is already in the row's to-hit (computeAttacks folds it there,
 		// where the weapon is known), so picking it up again here would count it twice
 		if (f.scope && (key === 'attack' || !inScope(f.scope))) continue;
-		if (f.amount !== undefined) out.flat += f.amount;
-		else if (f.diceFormula) {
-			const die = parseDiceTerm(f.diceFormula);
+		const value = atCast(f, cast);
+		if (value.amount !== undefined) out.flat += value.amount;
+		else if (value.diceFormula) {
+			const die = parseDiceTerm(value.diceFormula);
 			if (die) out.bonusDice.push(die);
 		}
 	}
@@ -465,9 +487,9 @@ export const sheetRollEffects = (
 	character: Character,
 	sheet: CharacterSheet,
 	key: string,
-	scopes?: Set<string>,
+	of: { scopes?: Set<string> | undefined; cast?: ExprContext | undefined } = {},
 ): RollEffects =>
-	character.play.autoCalc ? rollEffectsFor(sheet.facts, key, scopes) : NO_ROLL_EFFECTS;
+	character.play.autoCalc ? rollEffectsFor(sheet.facts, key, of.scopes, of.cast) : NO_ROLL_EFFECTS;
 
 /** What a skill check rolls AS: its effect key plus the scopes that narrow which effects apply.
  *  `proficient` here means "this check adds your proficiency bonus" — RAW's own wording for Reliable

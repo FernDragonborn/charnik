@@ -33,6 +33,8 @@ import {
 } from '$lib/combat/helpers';
 import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import { combinePools } from '$lib/effects/upcast';
+import { withCastSlot } from '$lib/effects/context';
+import type { ExprContext } from '$lib/effects/expression-evaluator';
 
 /** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
  *  `damage:cold:…` routes to the cold part), the slot it came out of, and the provenance the roll
@@ -51,7 +53,7 @@ type UpcastCast = {
 export interface CastRollsHost {
 	sheet: CharacterSheet | null;
 	journal: RollJournal;
-	effectsFor(key: string, scopes?: Set<string>): RollEffects;
+	effectsFor(key: string, scopes?: Set<string>, cast?: ExprContext): RollEffects;
 	openRoll(spec: RollSpec, e: Event): void;
 	openMenu(kind: MenuKind, e: Event): void;
 }
@@ -174,6 +176,20 @@ export class SpellCastRolls {
 	 *  HEALING only (item 6). Damage effects never ride a heal / temp-HP roll, so its "primary fx" is
 	 *  just that mod (0 for temp) as a flat. temp HP scales via its OWN `temp_hp` upcast delta, damage /
 	 *  heal via the typed damage/heal delta pool (item 3). */
+	/** What a healing cast adds besides its dice: the spellcasting modifier on a dice heal, and
+	 *  whatever heals more by the slot it is cast from (Disciple of Life), read at that slot. */
+	private healEffects(
+		r: SpellRow,
+		caster: SpellcastingClass | undefined,
+		slotLevel: number,
+		healMod: number,
+	): RollEffects {
+		const base = this.host.sheet?.castCtx;
+		const cast = base ? withCastSlot(base, slotLevel, r.level) : undefined;
+		const fx = this.host.effectsFor('heal', spellScopes(r, caster), cast);
+		return { ...NO_ROLL_EFFECTS, flat: healMod + fx.flat, bonusDice: fx.bonusDice };
+	}
+
 	private spellOutcomeParts(
 		r: SpellRow,
 		caster: SpellcastingClass | undefined,
@@ -185,9 +201,10 @@ export class SpellCastRolls {
 		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
 		const healMod =
 			heal && healDice && caster ? (this.host.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-		const primaryFx: RollEffects =
-			heal || temp
-				? { ...NO_ROLL_EFFECTS, flat: healMod }
+		const primaryFx: RollEffects = temp
+			? NO_ROLL_EFFECTS
+			: heal
+				? this.healEffects(r, caster, slotLevel, healMod)
 				: this.host.effectsFor('damage', spellScopes(r, caster));
 		const tempDelta = temp ? this.upcast.upcastFlatDelta(r, slotLevel, 'temp_hp') : 0;
 		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;

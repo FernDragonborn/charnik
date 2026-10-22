@@ -43,7 +43,7 @@ describe.runIf(hasContentRepo)('shipped content stamps', () => {
  * a whole new file. The signature below is what makes the miss loud HERE instead of silent in the app:
  * when it changes, bump the constant and paste the new one in.
  */
-const SEEDED_CONTENT = { version: 73, signature: 'cc05dede1d9fae4b' };
+const SEEDED_CONTENT = { version: 74, signature: 'a9f6225f535274cb' };
 
 describe.runIf(hasContentRepo)('the shipped set and the seed version move together', () => {
 	it('content that changed since the last bump is a bump', () => {

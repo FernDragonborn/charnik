@@ -203,7 +203,7 @@ how exhausted they are. The full list of what a guard can ask is in §7.
 ## 6 · What you can point an effect at
 
 **Stats and rolls:** `ac` · `hp_max` · `initiative` · `speed` · `speed.fly` · `speed.swim` ·
-`speed.climb` · `attack` · `attacks` (how many you get) · `damage` · `spell_dc` · `spell_attack` · `action` ·
+`speed.climb` · `attack` · `attacks` (how many you get) · `damage` · `spell_dc` · `spell_attack` · `heal` (what a healing spell restores beyond its dice) · `action` ·
 `bonus` · `reaction` · any ability by name (`str` … `cha`).
 
 **Senses:** `senses.darkvision` · `senses.truesight` · `senses.blindsight` · `senses.tremorsense`
@@ -225,7 +225,7 @@ sense take the greater one, so write it as `set_override:senses.darkvision:60:fl
 
 ### Narrowing a bonus to some attacks
 
-`attack`, `damage`, `spell_dc` and `spell_attack` accept a **scope** after a dot, so a bonus applies
+`attack`, `damage`, `spell_dc`, `spell_attack` and `heal` accept a **scope** after a dot, so a bonus applies
 to some rolls and not others:
 
 ```
@@ -235,6 +235,7 @@ flat_bonus:damage.str+2            attacks that used Strength
 flat_bonus:damage.melee,str+2      both at once — every part must match
 advantage:attack.spell,sorcerer    the sorcerer's spell attacks
 flat_bonus:spell_dc.sorcerer+1     the sorcerer's spell save DC, not a second class's
+flat_bonus:heal.spell+if(slot>=1,2+slot,0)   healing spells, 2 + the slot cast from (Disciple of Life)
 ```
 
 What a roll offers as scopes depends on what is rolling. A weapon offers its tags, its own id, and
