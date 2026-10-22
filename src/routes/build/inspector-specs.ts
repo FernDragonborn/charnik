@@ -37,6 +37,7 @@ export type InspectorHost = Pick<
 	| 'subclassesFor'
 	| 'feats'
 	| 'pickSpecies'
+	| 'pickBackground'
 	| 'classRows'
 >;
 
@@ -96,6 +97,11 @@ export const EDIT_PANES = {
 	languages: { titleKey: 'languagesTitle', blurbKey: 'languagesBlurb', ownsScroll: false },
 	spells: { titleKey: 'spellsTitle', blurbKey: 'spellsBlurb', ownsScroll: true },
 	inventory: { titleKey: 'inventoryTitle', blurbKey: 'inventoryBlurb', ownsScroll: true },
+	startingEquipment: {
+		titleKey: 'startingEquipmentTitle',
+		blurbKey: 'startingEquipmentBlurb',
+		ownsScroll: false,
+	},
 	notes: { titleKey: 'notesTitle', blurbKey: 'notesBlurb', ownsScroll: false },
 } as const satisfies Record<string, { titleKey: string; blurbKey: string; ownsScroll: boolean }>;
 
@@ -275,7 +281,7 @@ function backgroundPickSpec(b: InspectorHost): PickSpec {
 		type: 'background',
 		options: b.backgroundList,
 		currentId: b.draft.backgroundId,
-		apply: (host, id) => (host.draft.backgroundId = id),
+		apply: (host, id) => host.pickBackground(id),
 		blockedKey: lock.blocked,
 		clearable: lock.clearable,
 	};

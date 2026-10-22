@@ -14,6 +14,7 @@
 	import { tokensOf } from '$lib/content/loader';
 	import { resourceJoinIssues } from '$lib/content/resource-joins';
 	import { optionJoinIssues } from '$lib/content/options';
+	import { startingKitIssues } from '$lib/content/starting-equipment';
 	import { levelLadderIssues } from '$lib/content/level-gate';
 	import { TYPE_ASSIGNABLE_KEYS } from '$lib/content/issue-text';
 	import { CONTENT_TYPES, type ContentType } from '$lib/content/schemas';
@@ -49,6 +50,7 @@
 			for (const issue of [
 				...resourceJoinIssues(graph, system),
 				...optionJoinIssues(graph, system),
+				...startingKitIssues(graph, system),
 				...levelLadderIssues(graph, system),
 			])
 				seen.set(issue.file + issue.id + issue.key, issue);

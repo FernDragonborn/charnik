@@ -167,6 +167,22 @@ to). `content/level-gate.ts` is the one reader; the ladder columns are `choose`,
 content health with the step it is now — a count read the wrong way round would be a wrong number on
 the sheet, so it is never guessed at.
 
+**Starting equipment is a column with a grammar of its own**, `starting_equipment` on a class and a
+background, read by `content/starting-equipment.ts` and nothing else. `;` separates the lines the
+book prints, `|` the alternatives one line offers (SRD 5.1's (a)/(b), SRD 5.2.1's A/B/C), `+` the
+things one alternative hands over. A thing is an item id with an optional count (`4*handaxe`), coins
+(`15gp`), or `any.` and the tag words an item the player picks must ALL carry (`any.martial,melee`;
+`/` between word sets is either: `any.artisans_tools/musical_instrument`). A trailing `?` is the
+book's "(if proficient)" — Strict refuses that card to a character who is not, Free says so on it.
+An id is matched in the row's own edition and never by source. A pick is answered from MUNDANE items
+only. Items are named as the pack names them: SRD 5.2.1's "Arcane Focus (Quarterstaff)" is a
+`quarterstaff`, and SRD 5.1's "wooden shield" a `shield`. What the source names and no table prices —
+the Acolyte's prayer book, incense and vestments — has no row, so the background's text keeps saying
+it. The words a pick reads are the groups the equipment tables print (`arcane_focus`, `druidic_focus`,
+`holy_symbol`, `musical_instrument`, `artisans_tools`), carried as tags on the rows grouped under
+them. A part this cannot read, an id with no row and a pick no item answers are each named in content
+health, and the card shows the part as written. A pack is one row; its contents are its text.
+
 **With a ROW for an answer, the question is the `option` type — one row, several options.** A
 Belt of Giant Strength is one entry in the book and five belts at the table, each setting a
 different score at a different rarity: a different TOKEN per answer, which neither a number nor a

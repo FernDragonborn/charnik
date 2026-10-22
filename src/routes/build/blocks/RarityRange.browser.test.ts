@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import RarityRange from './RarityRange.svelte';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 

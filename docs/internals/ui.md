@@ -458,8 +458,21 @@ reserved `species` key — a slot that offers feats and NOT an ability improveme
 improvement is what a level offers and a species grant spent on one would be a grant the species never
 made. A class feature that grants one (`class_feature.feat_choice`, a 2024 Fighting Style) does the
 same under `<rowId>:<feature id>`, named for the feature. Jumping straight
-to level 8 cannot silently skip three choices. `blocking` gates Create; leaving is not intercepted,
+to level 8 cannot silently skip three choices. A todo is `required` or a nudge: `blocking` gates
+Create, and the nudges — the starting equipment and the items it still asks for — sit under their own
+heading in the resting inspector, quieter, because a table that buys its kit with gold has nothing
+left to do. `blocking` gates Create; leaving is not intercepted,
 because the draft autosaves and waits in the roster (`characters.md`).
+
+**Starting equipment is a pane of cards** (`StartingEquipmentPane`, `starting-kit-picks.svelte.ts`),
+opened from the Equipment card or its nudge, while creating only: a row of cards per line the book
+prints, one card per alternative, each listing what it holds. The first press takes the kit — every
+other line on its first card the rules allow, a default the player sees — and a press on another card
+swaps that line's rows and no other (`starting-kit.ts` remembers each row by the part that put it
+there). A pick ("a martial weapon") is asked on the card with the item popover the Add list uses.
+"Put it back" removes exactly what the kit added, and a different starting class or background drops
+its kit the same way. The coins are not rows: they go into `play.currency` when the character is
+created.
 
 **One shared inspector shell** (title, blurb, footer) with a body component per target — a feat slot
 and an ability allocator are not the same question. `/dev/inspector` renders every target at once, so

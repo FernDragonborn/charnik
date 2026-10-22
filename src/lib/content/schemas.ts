@@ -211,6 +211,9 @@ const classSchema = baseRow.extend({
 	/** Levels at which this class grants an ASI-or-feat slot (e.g. "4,6,8,12,14,16,19" for Fighter).
 	 *  Data, not a class-name switch — derived from the SRD progression by the converters. */
 	asi_levels: csvList(z.array(z.number().int()).default([]), Number),
+	/** What the row hands out at 1st level, as lines of alternatives (`content/starting-equipment.ts`).
+	 *  A class's is read for the STARTING class only — multiclassing hands out no kit. */
+	starting_equipment: optStr,
 });
 
 /** Linked table: a class feature granted at a level (incl. ASI/feat slot markers).
@@ -286,6 +289,8 @@ const backgroundSchema = baseRow.extend({
 	/** The spell list that granted feat is PINNED to, as a bare class id — the SRD's "Magic Initiate
 	 *  (Cleric)". Blank when the feat names no list, and then the player chooses one. */
 	origin_feat_spell_list: optStr,
+	/** What the row hands out at 1st level (`content/starting-equipment.ts`). */
+	starting_equipment: optStr,
 });
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */

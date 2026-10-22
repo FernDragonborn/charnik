@@ -257,7 +257,8 @@ type TodoKind =
 	| 'masteries'
 	| 'forms'
 	| 'options'
-	| 'originFeat';
+	| 'originFeat'
+	| 'startingEquipment';
 
 export interface BuildTodo {
 	kind: TodoKind;
@@ -306,6 +307,10 @@ export interface BuildTodoInput {
 	/** The background's granted origin feat and how many choices it still asks for. A grant nobody is
 	 *  told about is a grant thrown away — Skilled hands out three skills or none. */
 	originFeat: { name: string; owed: number };
+	/** Starting kits offered and not taken, and the items a taken one still asks which of. A nudge,
+	 *  never a requirement: many tables buy their equipment with the gold instead. */
+	kitsOwed: number;
+	kitPicksOwed: number;
 	spellPicker: ReturnType<typeof buildSpellPicker>;
 }
 
@@ -373,6 +378,21 @@ const featTodo = (slot: OpenFeatSlot) => ({
  * each ASI/feat level) is its own line, so levelling straight to 8 cannot silently skip three
  * choices.
  */
+/** The starting equipment's lines — nudges, never in the way of creating the character. */
+function kitTodos(d: BuildTodoInput): BuildTodo[] {
+	const out: BuildTodo[] = [];
+	if (d.kitsOwed > 0)
+		out.push({ kind: 'startingEquipment', key: 'startingEquipment', required: false });
+	if (d.kitPicksOwed > 0)
+		out.push({
+			kind: 'startingEquipment',
+			key: 'kitPicks',
+			values: { count: d.kitPicksOwed },
+			required: false,
+		});
+	return out;
+}
+
 export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 	const out: BuildTodo[] = [];
 	const need = (ok: boolean, kind: TodoKind) => {
@@ -447,6 +467,6 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 			values: { feat: d.originFeat.name, count: d.originFeat.owed },
 			required: true,
 		});
-	out.push(...spellTodos(d));
+	out.push(...spellTodos(d), ...kitTodos(d));
 	return out;
 }

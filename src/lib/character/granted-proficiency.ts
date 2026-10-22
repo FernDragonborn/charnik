@@ -10,6 +10,8 @@
 import type { EffectFacts } from '../effects/apply';
 import type { Ability, PartialProficiency } from '../rules/core';
 import { ABILITIES } from './schema';
+import type { ContentGraph } from '../content/loader';
+import { gatherProfGrants, withGrantedProfs, type ProfGrants } from '../rules/proficiency';
 import { SKILL_ABILITY, type SkillId } from './skills';
 
 /** Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) →
@@ -149,4 +151,22 @@ export function grantedEquipmentProfs(facts: EffectFacts): { armor: string[]; we
 			weapons.push(p.target.slice(EQUIPMENT_PREFIX.weapon.length));
 	}
 	return { armor, weapons };
+}
+
+/** Which armour this character is proficient with: the classes' own `armor_profs`, plus whatever a
+ *  feature granted. Lenient — a class that declares none stays proficient with everything. */
+export function armorProfGrants(
+	classes: readonly { class: string }[],
+	facts: EffectFacts,
+	graph: ContentGraph,
+): ProfGrants {
+	return withGrantedProfs(
+		gatherProfGrants(
+			classes.map((c) => {
+				const r = graph.get(c.class);
+				return r?.type === 'class' ? r.data.armor_profs : undefined;
+			}),
+		),
+		grantedEquipmentProfs(facts).armor,
+	);
 }

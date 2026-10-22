@@ -244,13 +244,8 @@ position and are given per wave, because most of them were learned the hard way.
   release ships without is named in that release's changelog, where a player would look for it.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
-  feature that does nothing. In order, cheapest first:
-  1. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
-      the build and put in the inventory.
-
-  The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,
-  its entries regrouped (new features, numbers that were wrong, for content authors) — they were
-  appended in the order the work landed. Tagging and pushing wait for the maintainer.
+  feature that does nothing. Its work is in and the changelog is grouped under `0.8.2`; what is left
+  is the cut, the release routine above. Tagging and pushing wait for the maintainer.
   Mystic Arcanum and the slot recoveries wait for the release after.
 
 - **0.9.0 · a table can play levels 1–4 together.** The maintainer's goal: every SRD class and

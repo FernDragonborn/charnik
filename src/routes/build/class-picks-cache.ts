@@ -12,6 +12,8 @@ import { z } from 'zod';
 import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Ability } from '$lib/rules/core';
 import { slotMapSchemas, type AsiShape, type DraftState, type FeatSpellChoice } from './draft';
+import { KIT_SOURCE } from '$lib/content/starting-equipment';
+import { dropKit } from './starting-kit';
 
 /** Everything in the draft that belongs to one class row's class choice. */
 export interface ClassScopedPicks {
@@ -175,6 +177,8 @@ export function switchClass(
 	if (row < 0 || row >= draft.classes.length) return;
 	const leaving = draft.classes[row]?.classId ?? null;
 	if (leaving === classId) return;
+	// the starting class hands out the starting kit, so a different one hands out a different kit
+	if (row === 0) dropKit(draft, KIT_SOURCE.class);
 	const stashed = stashClassPicks(draft, row);
 	if (leaving && stashed) cache.set(leaving, stashed);
 	dropRowSlots(draft, draft.classes[row]?.rowId ?? '');

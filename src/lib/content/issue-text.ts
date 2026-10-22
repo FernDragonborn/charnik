@@ -135,6 +135,28 @@ export const issueText = {
 		};
 	},
 
+	/** A starting-equipment part that is no item, coin or pick — its card shows it and adds nothing. */
+	kitPartUnread: (part: string): IssueText => ({
+		key: key('kitPartUnread'),
+		detail: `starting_equipment "${part}"`,
+	}),
+
+	/** A starting-equipment item id this edition has no row for. */
+	kitItemMissing: (id: string, candidates: Iterable<string>): IssueText => {
+		const near = suggestion(id, candidates);
+		return {
+			key: key(near ? 'kitItemMissingSuggested' : 'kitItemMissing'),
+			values: { ...(near ? { options: near } : {}) },
+			detail: `starting_equipment "${id}"`,
+		};
+	},
+
+	/** An `any.` pick no item of this edition can answer. */
+	kitAnyNone: (tags: string): IssueText => ({
+		key: key('kitAnyNone'),
+		detail: `starting_equipment "any.${tags}"`,
+	}),
+
 	/** The same `source:id` twice — the second copy is inert everywhere, so say which one won. */
 	duplicateId: (id: string, effectiveId: string, keptIn: string): IssueText => ({
 		key: key('duplicateId'),

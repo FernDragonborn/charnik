@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (97)
+## Duplicate suspects (98)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -74,6 +74,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
+- `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -521,7 +522,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (192 modules)
+## Library functions & types (193 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -584,7 +585,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function classFeatureLines`
 - `interface BuildTodo`
 - `interface BuildTodoInput` — An empty field is required in BOTH modes — Strict vs Free decides whether a CAP is enforced, not * whether a choice w…
-- `function buildTodos` — * Everything still unfinished about a draft, in the order a player would fix it.
+- `function buildTodos`
 
 ### `src/lib/build/rules.ts`
 
@@ -758,6 +759,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
 - `function partialFrom` — The `partial` argument `skillCheck` takes, when the rung in force IS partial and a grant said so.
 - `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
+- `function armorProfGrants` — Which armour this character is proficient with: the classes' own `armor_profs`, plus whatever a * feature granted.
 
 ### `src/lib/character/inventory.ts`
 
@@ -1503,6 +1505,22 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellAccess`
 - `function buildSpellAccess` — Build the union access index from the content graph (pure).
 - `function getSpellAccess` — Cached access index for a graph (rebuilt only when the graph object changes — the content * store rotates the graph o…
+
+### `src/lib/content/starting-equipment.ts`
+
+- `const KIT_SOURCE`
+- `type KitSource`
+- `const KIT_SOURCES`
+- `const KIT_PART`
+- `type KitPart`
+- `interface KitAlternative`
+- `interface KitLine` — One line the book prints.
+- `function parseStartingKit` — The column as lines of alternatives.
+- `function kitOf` — The kit the row carries, or none — the one reader of the column.
+- `function kitItemsById` — The item rows of one edition by id: a kit names its items by id, matched in the row's own * edition and never by sour…
+- `function matchesAny` — Does the item carry every word of one of the sets?
+- `function kitCoins` — The coins one alternative hands over, by coin id.
+- `function startingKitIssues` — What a kit names that this edition cannot hand over — a part it cannot read, an item id with no * row, a pick no item…
 
 ### `src/lib/content/states.ts`
 
@@ -2438,4 +2456,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1484 exports across 209 modules · 97 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1498 exports across 210 modules · 98 duplicate suspects._

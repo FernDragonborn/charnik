@@ -7,6 +7,16 @@ spends, the spells it always has prepared and the numbers its features add.
 
 ### New
 
+- **Starting equipment.** A new character takes the kit their class and background print: a card
+  for each alternative, every item listed on it, and a press puts it in the Equipment card — chain
+  mail or leather and a longbow, A or B or the gold, in both editions. Where the book says "a martial
+  weapon", the card asks which one; where it says "(if proficient)", Strict offers it only to a
+  character who is. Another card swaps that line and nothing else, "Put it back" takes away exactly
+  what the kit added, and the coins go into the purse when the character is created. SRD 5.1's seven
+  equipment packs are in the compendium, and SRD 5.2.1 has the wizard's Spellbook.
+- **The builder says what is worth doing besides what is required.** Under the lines that stand
+  between you and Create, the inspector lists the ones that do not — the starting equipment, and
+  the items it still asks which of.
 - **The log says what happened in a turn, not only what was rolled.** Beside the rolls it now keeps
   a spell slot or a Rage spent and given back, an effect or a condition beginning and ending,
   concentration taken up and dropped, temporary hit points, Exhaustion and experience, every rest,
@@ -121,6 +131,10 @@ spends, the spells it always has prepared and the numbers its features add.
 
 ### For content authors
 
+- **A class and a background carry `starting_equipment`**: the book's lines separated by `;`, the
+  alternatives of a line by `|`, the things one hands over by `+` — `4*handaxe`, `15gp`, or
+  `any.martial,melee` for an item the player picks. Settings ▸ Content health names an id the
+  edition does not have.
 - **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
   spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
   now, each a conversion defect of the SRD source.

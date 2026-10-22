@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { submitOnEnter } from './submitOnEnter';
 
 /** A panel holding `fields`, with the action on it; returns how many times it submitted. */

@@ -19,6 +19,8 @@ import {
 import { moveSlotKeysToRow } from '$lib/character/migrations';
 import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
 import type { ContentType } from '$lib/content/schemas';
+import { KIT_SOURCES, type KitSource } from '$lib/content/starting-equipment';
+import type { TakenKit } from './starting-kit';
 import {
 	baseAbilities,
 	BOOST_SHAPES,
@@ -197,6 +199,9 @@ export interface DraftState {
 	 *  loss was silent because the draft type agreed with the mapper. Borrowing the type makes a new
 	 *  REQUIRED column fail here; the round-trip test in `build.test.ts` covers the optional ones. */
 	inventory: Character['build']['inventory'];
+	/** The starting equipment taken from the class and the background, and the rows each put in
+	 *  `inventory` (`starting-kit.ts`). Creation only: a character already played has spent its kit. */
+	startingKits: Partial<Record<KitSource, TakenKit>>;
 	/** Free prose for the table — bonds, flaws, a debt. One bullet per line; affects nothing. */
 	notes: string;
 	/** The portrait file already SAVED beside this character (`photo.webp`), or null. A portrait
@@ -243,6 +248,7 @@ export function blankDraft(): DraftState {
 		slotFeatSpells: {},
 		selectedSpells: [],
 		inventory: [],
+		startingKits: {},
 		notes: ''
 	};
 }
@@ -316,6 +322,16 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	// the character's own row, whole: a row cut down to the four fields a mundane item has would
 	// resume a draft without the base, the bonus and the choice the player had answered
 	inventory: z.array(inventoryEntry).catch(() => []),
+	startingKits: z
+		.partialRecord(
+			z.enum(KIT_SOURCES),
+			z.object({
+				picks: z.array(z.number().int().min(0)),
+				asks: z.record(z.string(), z.string()),
+				granted: z.record(z.string(), z.string()),
+			}),
+		)
+		.catch(() => ({})),
 	notes: z.string().catch(''),
 });
 

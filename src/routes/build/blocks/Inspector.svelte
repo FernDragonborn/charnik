@@ -22,6 +22,7 @@
 	import NotesPane from './NotesPane.svelte';
 	import FormsPane from './FormsPane.svelte';
 	import OptionsPane from './OptionsPane.svelte';
+	import StartingEquipmentPane from './StartingEquipmentPane.svelte';
 	import type { Component } from 'svelte';
 	const b = build;
 
@@ -37,6 +38,7 @@
 		languages: LanguagesPane,
 		spells: SpellsPane,
 		inventory: InventoryPane,
+		startingEquipment: StartingEquipmentPane,
 		notes: NotesPane,
 	};
 	// defaults to the page's shared inspector; /dev/inspector passes its own so it can show every
@@ -124,6 +126,22 @@
 			<div class="resting done">
 				<span class="eyebrow ok">{$_('build.inspector.nothingMissing')}</span>
 				<p class="blurb">{$_('build.inspector.nothingMissingBody')}</p>
+			</div>
+		{/if}
+		{#if b.nudges.length}
+			<div class="resting">
+				<span class="eyebrow">{$_('build.inspector.worthDoing')}</span>
+				<div class="todolist">
+					{#each b.nudges as todo (todo.key + JSON.stringify(todo.values ?? {}))}
+						{@const t = b.todoTarget(todo)}
+						{#if t}
+							<button class="todo nudge" onclick={() => ins.open(t)}>
+								<Icon name="chevron-right" size={12} />
+								{$_(`build.todo.${todo.key}`, { values: todo.values })}
+							</button>
+						{/if}
+					{/each}
+				</div>
 			</div>
 		{/if}
 	{:else}
@@ -246,6 +264,13 @@
 	.todo:focus-visible {
 		outline: var(--focus-ring);
 		outline-offset: -2px;
+	}
+	/* a nudge reads quieter than what blocks creation, and turns to the accent only under the pointer */
+	.todo.nudge {
+		color: var(--color-text-muted);
+	}
+	.todo.nudge:hover {
+		color: var(--color-accent-bright);
 	}
 	.todo.static {
 		cursor: default;

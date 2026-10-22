@@ -146,7 +146,8 @@ these says it may be used.
 resource uses spent, active effects and conditions, what they are concentrating on, and the coins in
 their purse. Money is play-state and not an inventory row: a stack of arrows answers "how many do I
 carry", a purse answers "what can I afford", and the only thing the two share is weight — which a
-character counts only if their table does (`ui.coinWeight`, off by default).
+character counts only if their table does (`ui.coinWeight`, off by default). A new character's purse
+starts with the coins of the starting kits it took (`ui.md` ▸ Starting equipment is a pane of cards).
 
 **Experience points are play-state too**, for the purse's reason: they are earned at the table,
 session by session. `play.xp` is counted only where the character tracks it (`ui.levelingMode`,

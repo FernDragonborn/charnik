@@ -143,9 +143,19 @@ describe('buildTodos', () => {
 		formsOwed: 0,
 		optionsOwed: 0,
 		originFeat: { name: '', owed: 0 },
+		kitsOwed: 0,
+		kitPicksOwed: 0,
 		spellPicker: []
 	};
 	const kinds = (input: BuildTodoInput) => buildTodos(input).map((t) => t.kind);
+
+	it('asks for the starting equipment as a nudge, never a requirement', () => {
+		const todos = buildTodos({ ...done, kitsOwed: 1, kitPicksOwed: 2 });
+		expect(todos.map((t) => [t.key, t.required])).toEqual([
+			['startingEquipment', false],
+			['kitPicks', false],
+		]);
+	});
 
 	it('a finished draft has nothing left to do', () => {
 		expect(buildTodos(done)).toEqual([]);

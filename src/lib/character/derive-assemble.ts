@@ -12,7 +12,7 @@ import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import { resolveResourceOptions } from './derive-resource-options';
 import { hitDicePools, type DeriveSetup } from './derive-setup';
-import { gatherGrantedProficiencies, grantedEquipmentProfs } from './granted-proficiency';
+import { armorProfGrants, gatherGrantedProficiencies } from './granted-proficiency';
 import {
 	resolveClassSaves,
 	deriveAbilityBlocks,
@@ -35,7 +35,7 @@ import {
 	carryingCapacity,
 	type Ability,
 } from '../rules/core';
-import { gatherProfGrants, isArmorProficient, withGrantedProfs } from '../rules/proficiency';
+import { isArmorProficient } from '../rules/proficiency';
 import { ITEM_TAG } from '../content/item-tags';
 import { TOOL_ITEM_CATEGORY } from '../content/schemas';
 import { conditionRows } from '../content/states';
@@ -120,15 +120,7 @@ function applyArmorSpellBlock({
 	issues,
 }: ArmorSpellBlockInput): void {
 	if (!equippedArmor) return;
-	const armorGrants = withGrantedProfs(
-		gatherProfGrants(
-			build.classes.map((c) => {
-				const r = graph.get(c.class);
-				return r?.type === 'class' ? r.data.armor_profs : undefined;
-			}),
-		),
-		grantedEquipmentProfs(facts).armor,
-	);
+	const armorGrants = armorProfGrants(build.classes, facts, graph);
 	// an unclassifiable armor never blocks (isArmorProficient says true), so past this line the weight
 	// class is always known — the guard is what narrows it, not a comment
 	const cat = armorCategoryOf(equippedArmor);

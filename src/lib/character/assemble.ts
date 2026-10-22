@@ -25,6 +25,8 @@ export interface AssembleWrapper {
 	shortRestMode: ShortRestMode;
 	/** Existing play-state to preserve when editing (null = a fresh, blank play-state). */
 	play: CharacterPlay | null;
+	/** The coins a fresh play-state starts with — the starting kits'. Ignored when `play` is given. */
+	startingCoins?: Record<string, number>;
 	/** Existing ui prefs to preserve when editing (null = none). */
 	ui: Partial<CharacterUi> | null;
 }
@@ -44,7 +46,7 @@ export function assembleCharacter(build: BuildInput, w: AssembleWrapper): Charac
 		system: w.system,
 		build,
 		// editing keeps the original play-state; creating starts blank
-		play: w.play ?? { hp: { current: 0, temp: 0 } },
+		play: w.play ?? { hp: { current: 0, temp: 0 }, currency: { ...w.startingCoins } },
 		// persist the Free/Strict + short-rest-model choices per character (keep other ui prefs)
 		ui: { ...(w.ui ?? {}), strict: w.strict, shortRestMode: w.shortRestMode },
 	});

@@ -18,6 +18,7 @@
 	import { kilograms } from '$lib/combat/constants';
 	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 	import { resolveItem } from '$lib/content/resolved-item';
+	import { purseSaid } from '../starting-kit-picks.svelte';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -32,6 +33,8 @@
 		}, 0)
 	);
 	const capacity = $derived(s?.carryingCapacity.value ?? 0);
+	// the coins the taken kits hand over — the purse the character is created with
+	const purse = $derived(purseSaid(b.kit.coins, $_));
 	const load = $derived(capacity > 0 ? Math.min(1, carried / capacity) : 0);
 
 	/** The question asked again from a carried row's name, and which row it is for. */
@@ -56,6 +59,15 @@
 		<span class="eyebrow">{$_('build.inventory.title')}</span>
 		<span class="spacer"></span>
 		<span class="trail">{$_('build.inventory.itemCount', { values: { count: b.draft.inventory.length } })}</span>
+		{#if b.kit.kits.length}
+			<button
+				class="pill-btn"
+				class:accent={b.inspector.isOpen({ id: 'startingEquipment' })}
+				onclick={() => b.inspector.toggle({ id: 'startingEquipment' })}
+			>
+				{$_('build.spec.startingEquipmentTitle')}
+			</button>
+		{/if}
 		<button
 			class="pill-btn"
 			class:accent={b.inspector.isOpen({ id: 'inventory' })}
@@ -122,6 +134,7 @@
 						values: { lb: Math.round(carried), kg: kilograms(carried) }
 					})}</span
 				>
+				{#if purse}<b>{$_('build.inventory.purse')}</b><span>{purse}</span>{/if}
 				<b>{$_('build.inventory.capacity')}</b><span use:provenance={s ? why(s.carryingCapacity, $_) : ''}
 					>{$_('build.inventory.pounds', { values: { lb: capacity } })}</span
 				>

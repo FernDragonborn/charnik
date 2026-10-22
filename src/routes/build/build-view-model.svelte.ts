@@ -41,6 +41,7 @@ import { SkillPicks } from './skill-picks.svelte';
 import { MasteryPicks } from './mastery-picks.svelte';
 import { FormPicks } from './form-picks.svelte';
 import { OptionPicks } from './option-picks.svelte';
+import { StartingKitPicks } from './starting-kit-picks.svelte';
 import { featureLanguages, NO_FEATURE_LANGUAGES } from '$lib/character/features';
 import { SpellPicks } from './spell-picks.svelte';
 import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
@@ -50,6 +51,7 @@ import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
 import { DraftInventory } from './draft-inventory';
+import { setBackground } from './starting-kit';
 // the blocks reach these through the view-model they already import, so `rows` stays a leaf nobody
 // has to know about to print a name
 export { ASI, rowName, rowOfType };
@@ -266,6 +268,7 @@ export class BuildVM {
 		this.draft.speciesOptionId = null;
 		this.draft.speciesBoostPicks = [];
 	};
+	pickBackground = (id: string | null) => setBackground(this.draft, id);
 
 	// --- the edition this character is built in --------------------------------
 	/**
@@ -298,8 +301,7 @@ export class BuildVM {
 		if (this.draft.speciesId && dropped.has(this.draft.speciesId)) this.pickSpecies(null);
 		if (this.draft.speciesOptionId && dropped.has(this.draft.speciesOptionId))
 			this.draft.speciesOptionId = null;
-		if (this.draft.backgroundId && dropped.has(this.draft.backgroundId))
-			this.draft.backgroundId = null;
+		if (this.draft.backgroundId && dropped.has(this.draft.backgroundId)) this.pickBackground(null);
 		this.draft.classes.forEach((row, i) => {
 			if (row.subclassId && dropped.has(row.subclassId)) this.classRows.setSubclass(i, null);
 			// through `switchClass`, so the row's slot picks and its stash are handled the one way
@@ -366,6 +368,7 @@ export class BuildVM {
 
 	/** What a class feature has the character choose (a Pact Boon) — see option-picks.svelte.ts. */
 	optionPicks: OptionPicks = new OptionPicks(() => this);
+	kit: StartingKitPicks = new StartingKitPicks(() => this);
 
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
@@ -469,6 +472,7 @@ export class BuildVM {
 			strict: this.draft.strict,
 			shortRestMode: this.draft.shortRestMode,
 			play: this.edit?.play ?? null,
+			startingCoins: this.kit.coins,
 			ui: this.edit?.ui ?? null
 		});
 	});
@@ -545,6 +549,8 @@ export class BuildVM {
 				name: rowName(this.row(this.feats.originFeatRef)),
 				owed: this.feats.originChoicesOwed,
 			},
+			kitsOwed: this.kit.kitsOwed,
+			kitPicksOwed: this.kit.picksOwed,
 			spellPicker: this.spellPicks.picker
 		})
 	);
@@ -566,6 +572,8 @@ export class BuildVM {
 	/** Blocking todos — what stands between the draft and a playable character, and the ONLY gate on
 	 *  creating one. Each carries the inspector target that resolves it (`todoTarget`). */
 	blocking = $derived(this.todos.filter((t) => t.required));
+	/** The rest — worth doing, never in the way of creating the character. */
+	nudges = $derived(this.todos.filter((t) => !t.required));
 	canCreate = $derived(this.blocking.length === 0);
 
 	/** A portrait the player picked but has not saved: downscaled bytes with nowhere to land yet,

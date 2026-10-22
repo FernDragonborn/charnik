@@ -183,6 +183,7 @@
 			"restingTitle": "Click anything on the sheet",
 			"restingBody": "Every choice opens here with its full article and a preview of what it would do to your numbers before you take it.",
 			"stillToDo": "Still to do",
+			"worthDoing": "Worth doing",
 			"nothingMissing": "Nothing required is missing",
 			"nothingMissingBody": "Create them, or keep tuning — everything here stays editable afterwards.",
 			"clear": "Clear",
@@ -195,6 +196,7 @@
 		"inventory": {
 			"add": "Add",
 			"capacity": "Capacity",
+			"purse": "Purse",
 			"carrying": "Carrying",
 			"empty": "Nothing carried yet — armour and a weapon change AC and your attacks.",
 			"encumbranceAt": "Encumbrance rules start at {lb} lb.",
@@ -224,6 +226,23 @@
 			"plain": "Plain",
 			"whichKind": "Kind",
 			"askSave": "Save"
+		},
+		"kit": {
+			"none": "Choose a class or a background — each hands out its own starting equipment.",
+			"source": {
+				"class": "class",
+				"background": "background"
+			},
+			"putBack": "Put it back",
+			"pressToTake": "Press a card to take this kit. Each line starts on its first card; press another to swap.",
+			"line": "Line {n}",
+			"ifProficient": "if proficient",
+			"anyItem": "item",
+			"choose": "Choose one of {count}",
+			"block": {
+				"notProficient": "You are not proficient with it."
+			},
+			"purse": "Your purse starts with {coins}."
 		},
 		"languages": {
 			"chosen": "Chosen {count}",
@@ -399,6 +418,8 @@
 			"spellsBlurb": "Cantrips are always ready; leveled spells start prepared and can be re-prepared in the Spellbook after a rest.",
 			"inventoryTitle": "Equipment",
 			"inventoryBlurb": "What your character carries. Equipping armour, a shield, or a weapon changes AC and your attacks immediately.",
+			"startingEquipmentTitle": "Starting equipment",
+			"startingEquipmentBlurb": "What you carry at 1st level. A card goes into your Equipment the moment you take it, and its coins into your purse when the character is created.",
 			"notesTitle": "Story",
 			"notesBlurb": "Bonds, flaws, whatever the table needs to remember. Goes to your GM; it changes nothing on the sheet.",
 			"lineageTitle": "{label}",
@@ -476,7 +497,9 @@
 			"spellsFor": "{count, plural, one {Choose # more {class} spell.} other {Choose # more {class} spells.}}",
 			"cantripsOver": "{count, plural, one {Remove # cantrip — over the cap.} other {Remove # cantrips — over the cap.}}",
 			"spellsOver": "{count, plural, one {Remove # spell — over the cap.} other {Remove # spells — over the cap.}}",
-			"featureFeat": "{feature} ({class} {level}): choose the feat it grants."
+			"featureFeat": "{feature} ({class} {level}): choose the feat it grants.",
+			"startingEquipment": "Choose your starting equipment.",
+			"kitPicks": "{count, plural, one {Choose # more item of your starting equipment.} other {Choose # more items of your starting equipment.}}"
 		},
 		"undo": "Undo (Ctrl+Z)",
 		"unnamed": "Unnamed",
@@ -1307,6 +1330,7 @@
 		"name": "Name",
 		"option_of": "Option of",
 		"origin_feat_spell_list": "Feat spell list",
+		"starting_equipment": "Starting equipment",
 		"prepare_style": "Prepare style",
 		"requires": "Requires",
 		"ritual_source": "Rituals from",
@@ -1358,6 +1382,10 @@
 		"levelLadderOldForm": "This count by level is written the old way, so it grants nothing. Write it as `{now}` in `{column}` — the count, then `@` and the level.",
 		"featureSpellUnread": "This part of `spells` is not a spell id with an optional level, so it grants nothing. Write `bless`, or `bless@3` for one gained at class level 3.",
 		"featureSpellMissing": "This feature grants a spell this edition has no row for, so it grants nothing. Check the id against the spell list.",
+		"kitPartUnread": "This part of the starting equipment is not an item, coins or a pick, so its card shows it as written and adds nothing. A part is an item id (`4*handaxe`), coins (`15gp`), or `any.` and the tags the item must carry.",
+		"kitItemMissing": "The starting equipment names an item this edition has no row for, so its card adds nothing for it. Check the id for a typo, or add the item to a pack of the same edition.",
+		"kitItemMissingSuggested": "The starting equipment names an item this edition has no row for, so its card adds nothing for it. Did you mean {options}?",
+		"kitAnyNone": "No item of this edition carries these tags, so this pick can never be answered. Check the words after `any.` against the items’ `tags`.",
 		"levelLadderUnread": "This part of `{column}` is not a count by level, so it grants nothing. Each step is the count, `@` and the level, as in `2@3`.",
 		"optionRequiresMissing": "This option requires another option that does not exist, so nobody can meet it. Check the id in `requires`.",
 		"resourceOptionUngranted": "This option spends a resource nothing gives the character, so it never appears. Check the id against the feature that grants the pool.",
