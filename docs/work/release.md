@@ -196,6 +196,8 @@
   published `pnpm update braces` moves it, `micromatch`'s range already admits it.
 - **AUDIT-DRIFT · `pnpm audit` reports DEP-2 and nothing else, and it drifts silently — re-run it before every tag.** Three
   rules the re-audits keep proving:
+  - **`cargo audit` is half of it and has never run**: the Rust crates are not in `pnpm audit`, and
+    the tool is a separate install (`cargo install cargo-audit`).
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
     family).
   - **A transitive one is pinned in `pnpm-workspace.yaml` ▸ `overrides`, and the pin's range must

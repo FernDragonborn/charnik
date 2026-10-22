@@ -2,109 +2,88 @@
 
 A read of the shipped 0.8.1 tree for vulnerabilities only; game-rule bugs are out of scope. The
 threat model is `internals/security.md`: content and packs are untrusted, the page is the thing
-being contained, and the Rust side decides what the page may reach. Every CONFIRMED finding was
-reproduced: in Chromium with Playwright, in the real QuickJS build, or by reading the exact plugin
-source in the locked crate version. Nothing has been fixed yet. Each finding gives the change that
-closes it.
+being contained, and the Rust side decides what the page may reach.
 
-## Confirmed
+Every finding below is closed, and each names the test or probe that holds the fix. This file is
+kept for what it proved: how each defect was reproduced, what was checked and found correct, and
+where the reading stopped.
 
-### S1 · `dialog:default` lets page script widen the fs scope, bypassing `GrantedDirs` — medium
+## Findings
 
-`src-tauri/capabilities/default.json` grants `dialog:default`, and with it the dialog plugin's
-`open` and `save` commands. In `tauri-plugin-dialog` 2.8.2 (`src/commands.rs`, `open` and `save`),
-each picked folder or file goes straight into the fs plugin's runtime scope
-(`allow_directory(path, options.recursive)` / `allow_file`). That path does not go through
-`pick_data_dir`, `GrantedDirs` or `is_grantable`. So the rule in `security.md` §2 is false: it says
-the fs scope is only `$DOCUMENT/charnik` plus folders Rust granted. Script in the page can open a
-native picker with any title and `defaultPath`, for example "Choose a folder for your portrait"
-opening on the home folder with `recursive: true`. One click then gives the page recursive
-read/write over that folder for the rest of the session. The static denies on
-`$APPCONFIG`/`$APPDATA`/`$APPLOCALDATA` still apply, and nothing is persisted across launches.
+### S1 · `dialog:default` let page script widen the fs scope past `GrantedDirs` — medium · closed
 
-No front-end code imports `@tauri-apps/plugin-dialog`. Rust shows the data-folder picker and the
-consent dialog itself, and those need no capability. The permission does nothing the app uses.
+The capability granted the dialog plugin's `open` and `save`. In `tauri-plugin-dialog` 2.8.2
+(`src/commands.rs`), every folder or file picked through them goes straight into the fs plugin's
+runtime scope (`allow_directory(path, options.recursive)` / `allow_file`). That bypasses
+`pick_data_dir`, `GrantedDirs` and `is_grantable`. A picker that page script words itself, for
+example "Choose your portrait" opening on the home folder with `recursive: true`, would hand the
+page that whole folder for the session. No front-end code used the plugin; Rust draws every
+dialog the app shows.
 
-**Fix:** remove `"dialog:default"` from the capability. Extend `/dev/self-update`, or a sibling
-probe, to call `plugin:dialog|open` from the webview and expect a refusal.
+**Fix:** the permission is gone from `capabilities/default.json`. **Held by** `/dev/page-reach`,
+which on the desktop app gets `dialog.open not allowed` for `open`, `save` and `message`.
 
-### S2 · prose can make a remote request through the `background` attribute — low (CSP holds)
+### S2 · prose could request a remote image through `background` — low (CSP held) · closed
 
-`content/markdown.ts` lets an element fetch only its own origin or `data:`. It enforces this through
-`FETCHING_ATTRIBUTES = ['src', 'poster', 'href', 'xlink:href']`. DOMPurify keeps the legacy
-`background` attribute by default, and Chromium still loads it as an image. Running the exact
-`PROSE_POLICY` and hook over
-`<table background="https://evil.example/t.png">` and `<td background="https://evil.example/d.png">`
-keeps both attributes, and the page requests both URLs. On desktop and on the web build `img-src
-'self' data: blob:` blocks the load, so nothing leaves the machine today. The sanitiser's first
-line has a hole and CSP is the only thing covering it, which is the state `security.md` §5 says
-must not be relied on.
+DOMPurify keeps the legacy `background` attribute by default, and Chromium still loads it as an
+image on a `<table>` or `<td>`. The `PROSE_POLICY` hook covered `src`, `poster`, `href` and
+`xlink:href`, so `<table background="https://evil.example/t.png">` survived sanitising. In a
+Playwright drive the page requested both test URLs. `img-src` stopped the load in the app, but it
+was the only thing doing so.
 
-The same probe confirmed the hook strips remote `<img src>`, `<feImage href>`, `<svg><use>`, `<a
-ping>` and `srcset`.
+**Fix:** `background` is in `FORBID_ATTR`. **Held by** `markdown.browser.test.ts` ▸ loads only
+what travels with the page, which fails without the fix.
 
-**Fix:** add `'background'` to `FETCHING_ATTRIBUTES`, or `FORBID_ATTR` it outright, since prose
-needs no table backgrounds. Add a case to the markdown test.
+### S3 · a plugin could swap `globalThis.JSON` and hide that it read `ctx.play` — low · closed
 
-### S3 · a plugin can replace `globalThis.JSON` and hide that it read `ctx.play` — low
+`Object.freeze(JSON)` freezes the object, but the global binding stays writable
+(`{"writable":true,"configurable":true}` in quickjs-ng). The call wrapper resolves `JSON` on every
+call, so a `main.js` replacing it could report `playRead: false` for a handler that read
+`ctx.play`, and the memo would then serve its result across every play-state change. Nothing
+escaped the sandbox. The effect was limited to the plugin's own numbers going stale.
 
-`effects/plugin-sandbox.ts` ▸ `SETUP_SCRIPT` runs `Object.freeze(JSON)` so that a handler cannot
-swap `JSON.stringify` and misreport `playRead`. Freezing the object leaves the global binding
-writable (`{"writable":true,"configurable":true}` in quickjs-ng). The call wrapper looks `JSON` up
-on `globalThis` on every call. A `main.js` that sets `globalThis.JSON = { parse, stringify: o =>
-… playRead: false … }` makes the wrapper return `{"result":{"hp":7},"playRead":false}` for a handler
-that read `ctx.play.hp`. Reproduced in `@jitl/quickjs-ng-wasmfile-release-sync`. The memo then
-serves that result across every play-state change. Nothing escapes the sandbox; the cost is that a
-consented plugin can make its own numbers stale. The `Math` freeze has the same shape and no
-consequence, since `Math.random` cannot be restored.
+**Fix:** `SETUP_SCRIPT` pins the `JSON` and `Math` bindings non-writable and non-configurable.
+**Held by** `plugin-sandbox.test.ts` ▸ a plugin cannot swap the global JSON, which fails without
+the fix.
 
-**Fix:** pin the bindings in `SETUP_SCRIPT`:
-`Object.defineProperty(globalThis, "JSON", { writable: false, configurable: false })`, and the
-same for `Math`. Add a sandbox test with a plugin that tries the swap.
+### S4 · `dompurify` 3.4.16 sat behind three advisories — unreachable · closed
 
-### S4 · `dompurify` 3.4.16 is behind three advisories — not exploitable here, bump anyway
+GHSA-cg2g-xh64-v4q7 (`SAFE_FOR_TEMPLATES` with DOM output), GHSA-mrv2-3pqr-j5jr (`IN_PLACE`) and
+GHSA-c6gr-qvv4-5v3f (xhtml parser). `markdown.ts` uses none of those modes.
 
-`pnpm audit` lists GHSA-cg2g-xh64-v4q7 (critical, `SAFE_FOR_TEMPLATES` with DOM output),
-GHSA-mrv2-3pqr-j5jr (high, `IN_PLACE` with a hook that removes a parent) and GHSA-c6gr-qvv4-5v3f
-(low, `PARSER_MEDIA_TYPE: application/xhtml+xml`). `markdown.ts` uses string output with none of
-those options, so none of them is reachable. The package is the one sanitising seam and a direct
-dependency, so the patched version is a one-line bump (`work/release.md` ▸ AUDIT-DRIFT).
+**Fix:** `dompurify` is `^3.4.17`.
 
-**Fix:** `"dompurify": "^3.4.17"`.
+### S5 · dev-only advisories — closed where a patch exists
 
-### S5 · dev-only advisories: `@vitest/mocker` and `braces` — low
+`@vitest/mocker` < 4.1.12 (GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp) let anything reaching the
+browser-test server register a mock while `pnpm test` runs. Fixed by moving the vitest family to
+`^4.1.12`. `braces` ≤ 3.0.3 (GHSA-vfj7-8cjw-p6xm) has no patched release: the advisory's
+`first_patched_version` is null and the registry's latest is 3.0.3. It is already
+`work/release.md` ▸ DEP-2, and `pnpm audit` now reports it and nothing else.
 
-GHSA-qxg6-89mg-rqv8 and GHSA-xp26-3454-mjgp (moderate, `@vitest/mocker` < 4.1.12). The first lets
-anything that reaches the browser-test server register a mock, which is code injection on a
-maintainer's machine while `pnpm test` runs. GHSA-vfj7-8cjw-p6xm (high, `braces` ≤ 3.0.3, via
-stylelint) is a stack-exhaustion DoS on a glob pattern the repo writes itself. Neither ships.
+### S6 · a middle click on a prose link opened the remote page in a new window — medium · closed
 
-**Fix:** bump `vitest` and `@vitest/browser` to `^4.1.12`. Widen the existing `braces` override in
-`pnpm-workspace.yaml` to reach `<3.0.4`.
+The layout's link handler listened for `click` only, and a middle click fires `auxclick`. Behind
+it, Tauri 2.12 installs no new-window handler unless one is given. wry 0.57 then leaves WebView2's
+`NewWindowRequested` unhandled (`webview2/mod.rs`), and WebView2's default is to open the request
+in a popup window of its own. The failure was established from that source and not observed
+before the fix.
 
-## Suspected
+**Fix:** the handler takes `auxclick` from the middle button. The main window is built in Rust
+(`lib.rs` ▸ `open_main_window`, with `create: false` in the config) with an `on_new_window` that
+refuses every request and sends an http(s) one to the OS browser. **Held by** `/dev/page-reach` on
+the desktop app: `window.open` gets no window, left and middle presses on an outside link are
+cancelled, and a right press is not.
 
-### S6 · middle-click on a prose link is not intercepted — needs the real app
+### S7 · a pack name from config reached a recursive delete unchecked — low · closed
 
-The layout's capture listener (`routes/+layout.svelte`) handles `click` only. A middle-click fires
-`auxclick`, so it never reaches `externalLinkToOpen`. On WebView2 a middle-click on a link raises
-NewWindowRequested. Whether Tauri 2.12 denies that or opens a second, unrestricted window on the
-remote page was not checked: it needs the desktop build.
+`parsePackConfig` took any key, and `uninstallPack` checked only `isReservedPackName`, which
+passes `''`. An entry keyed `''` in a pack config that arrived with someone else's data folder
+would offer an Uninstall that runs `storage.remove('content/')`.
 
-**Check:** a `/dev/` probe with an external link. Middle-click it on Windows and Linux and see
-whether a window appears. **Fix if it does:** listen for `auxclick` with the same handler, and set
-`on_new_window` to deny in `lib.rs`.
-
-### S7 · a pack name read from config is not validated before `uninstallPack` deletes it — low
-
-`parsePackConfig` takes `packs` as any record. `uninstallPack` checks only `isReservedPackName`,
-which passes `''` and `a/b`. A pack config arriving with a restored or shared data folder that
-holds an entry keyed `''` shows a row whose Uninstall runs `storage.remove('content/')`, which is
-every pack and every authored file under it. This needs that file plus the user confirming the
-uninstall, so it is a footgun more than an attack. Not driven end to end.
-
-**Fix:** drop keys that fail `isUsablePackFolderName` in `parsePackConfig`, and refuse them in
-`uninstallPack` the same way `renamePack` already does.
+**Fix:** `parsePackConfig` drops `packs` and `pending` keys that fail `isUsablePackFolderName`, and
+`uninstallPack` refuses such a name. **Held by** `packs.test.ts` and `updates.test.ts`, both of
+which fail without the fix.
 
 ## Ruled out
 
@@ -137,16 +116,15 @@ uninstall, so it is a footgun more than an attack. Not driven end to end.
   produced blob.
 - **Character and config JSON.** Characters go through migrate → zod. Config readers drop non-objects.
   No merge assigns untrusted keys onto a live object.
+- **The web CSP's `base-uri`.** It read `'self'` where desktop and `security.md` §5 say `'none'`. It
+  now says `'none'` too. DOMPurify strips `<base>` either way.
 
 ## Not yet checked
 
-- `cargo audit`: `cargo-audit` is not installed on this machine.
-- S6, on Windows and Linux.
+- `cargo audit`: the tool is not installed here. It is now a step of `work/release.md` ▸ AUDIT-DRIFT.
 - The table link (`table_link.rs`, `lib/table-link`): not in a release build. Its own design review
   is `research/table-link-*.md`.
-- The web demo's IndexedDB storage and its CSP `<meta>`. The meta carries `base-uri 'self'`, while
-  desktop and `security.md` §5 say `'none'`. That is harmless while DOMPurify strips `<base>`, but
-  the doc and the config disagree.
+- The web demo's IndexedDB storage.
 - A user-dropped locale catalog rendered outside the six `{@html}` sites. Svelte escapes text
   interpolation, so this should be safe, but it was not swept site by site.
-- macOS: no build exists.
+- The Linux and macOS webviews for S6. Only WebView2 was driven, and there is no macOS build.
