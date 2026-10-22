@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.9.0
+## 0.8.2
+
+Every SRD class plays its first level in both editions: the choices it asks, the pools it
+spends, the spells it always has prepared and the numbers its features add.
+
+### New
 
 - **The log says what happened in a turn, not only what was rolled.** Beside the rolls it now keeps
   a spell slot or a Rage spent and given back, an effect or a condition beginning and ending,
@@ -33,74 +38,30 @@
   column, from all 28 — the three Pacts among them. An invocation whose level or Pact you have not
   reached says which. Witch Sight puts Truesight on the sheet, and Gift of the Depths a Swim Speed
   and its one Water Breathing a day. The four marked Repeatable are taken once for now.
-- **A 2014 warlock's Agonizing Blast adds the Charisma modifier** to Eldritch Blast's damage.
-- **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
-  spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
-  now, each a conversion defect of the SRD source.
-- **A 2014 class offers its whole skill list.** Eleven classes had the last skill of their list glued
-  to their starting equipment text, so a barbarian could not take Survival, nor a cleric or a wizard
-  Religion, in Strict.
-- **For content authors: "at a level" is written with `@`.** A class feature's `choose`,
-  `expertise_slots` and `mastery_slots` read `2@3,2@10` — two at level 3, two more at 10 — where
-  they read `3:2,10:2`. The shipped packs are converted; a homebrew row still in the old form grants
-  nothing, and Settings ▸ Content health names it with the step to write instead.
 - **A 2024 warlock's Agonizing Blast, Eldritch Spear and Repelling Blast name their cantrip**, and
   each may be taken again for another: pressing one in the builder lists the fitting cantrips you
   know. Agonizing Blast adds your Charisma modifier to the damage of the cantrip it names, and the
   sheet lists each pick as "Agonizing Blast · Chill Touch".
-- **Boon of Truesight gives Truesight 60 ft**, and **Boon of Fate is a 2d4 roll with one use**
-  that comes back on a rest or when you roll initiative.
-- **The species say their saving-throw traits on the sheet**: a dwarf's advantage against poison,
-  an elf's and a half-elf's against being charmed, a halfling's against being frightened, in both
-  editions; a 2014 dwarf also resists poison damage, which the sheet did not count, and a 2024
-  gnome rolls Intelligence, Wisdom and Charisma saves with advantage. The 2014 Staff of the Magi
-  says its advantage on saves against spells.
-- **Haste doubles your Speed**, every bonus to it included, and **Heroism gives its Temporary Hit
-  Points at the start of each of your turns** — never lowering a larger amount you already have.
+- **A 2024 cleric chooses a Divine Order and Blessed Strikes, and a druid a Primal Order.**
+  Protector and Warden bring their weapons and armour, Thaumaturge and Magician their bonus to two
+  Intelligence skills, and Divine Strike is a roll on the sheet — 1d8, 2d8 from level 14. The extra
+  cantrip Thaumaturge and Magician teach counts toward the cantrips you may know; Potent
+  Spellcasting is listed as text.
+- **A 2014 ranger chooses Favored Enemy and Natural Explorer, and a draconic sorcerer their Dragon
+  Ancestor**, in the builder, as many as the level allows — a second enemy at 6th and a third at
+  14th, a second terrain at 6th and a third at 10th. What each grants beyond its language stays the
+  feature's text.
+- **Three level-1 pools are on the sheet.** A 2014 paladin's Divine Sense has 1 + Charisma
+  modifier uses; a 2024 sorcerer's Innate Sorcery has two, and spending one raises the save DC of
+  their Sorcerer spells by 1 and gives Advantage on their Sorcerer spell attacks for a minute — not
+  a second class's spells; a 2024 ranger's Favored Enemy counts its free Hunter's Marks, two at 1st
+  level and up to six at 17th.
 - **The class pools the rules describe are on the sheet**, in both editions: Lay on Hands,
   Channel Divinity, Sorcery Points, Indomitable, Arcane Recovery and Natural Recovery, each counted
   from its own table and refilled on the rest its text names. Lay on Hands heals you by the number
   you answer, or spends for someone else; each Channel Divinity effect is its own button, Divine
   Spark a roll; Stunning Strike spends its point; Sorcery Points make a spell slot at the table's
   price.
-- **A paladin's Aura of Protection adds to their own saving throws** from 6th level — the
-  Charisma modifier, at least +1 — in both editions, and stops while the paladin is unconscious
-  (2014) or Incapacitated (2024). The sheet did not count it at all.
-- **A 2014 tiefling resists fire**, as Hellish Resistance says.
-- **Dwarven Toughness adds its hit point per level**: the 2014 Hill Dwarf's and every 2024
-  Dwarf's, which the sheet did not count.
-- **A draconic sorcerer's Draconic Resilience counts from the level it is gained, in both
-  editions.** 2014 gave its 13 + Dexterity Armor Class only from 6th level, under a feature named
-  "Draconic Ancestry" that held three of them; it is Dragon Ancestor (with its table and the
-  Draconic language), Draconic Resilience at 1st and Elemental Affinity at 6th now. Neither
-  edition added the hit points: one per sorcerer level, from 1st in 2014 and 3rd in 2024.
-- **A 2024 cleric chooses a Divine Order and Blessed Strikes, and a druid a Primal Order.**
-  Protector and Warden bring their weapons and armour, Thaumaturge and Magician their bonus to two
-  Intelligence skills, and Divine Strike is a roll on the sheet — 1d8, 2d8 from level 14. The extra
-  cantrip Thaumaturge and Magician teach counts toward the cantrips you may know; Potent
-  Spellcasting is listed as text.
-- **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
-  figurines after it — Golden Lions to Silver Raven — were missing.
-- **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
-  one identity in the list that draws them.
-- **Thaumaturge and Magician teach their extra cantrip.** A 2024 cleric or druid who chose one may
-  know one cantrip more than the class table says; the builder and the spellbook were one short.
-- **Three level-1 pools are on the sheet.** A 2014 paladin's Divine Sense has 1 + Charisma
-  modifier uses; a 2024 sorcerer's Innate Sorcery has two, and spending one raises the save DC of
-  their Sorcerer spells by 1 and gives Advantage on their Sorcerer spell attacks for a minute — not
-  a second class's spells; a 2024 ranger's Favored Enemy counts its free Hunter's Marks, two at 1st
-  level and up to six at 17th.
-- **A 2014 ranger chooses Favored Enemy and Natural Explorer, and a draconic sorcerer their Dragon
-  Ancestor**, in the builder, as many as the level allows — a second enemy at 6th and a third at
-  14th, a second terrain at 6th and a third at 10th. What each grants beyond its language stays the
-  feature's text.
-- **The languages a class teaches are known.** Druidic, Thieves' Cant and a dragon ancestor's
-  Draconic are on the builder's language list, locked on and saying which feature taught them; a
-  2024 rogue's "one other language of your choice" and each 2014 favored enemy's language are
-  counted beside the background's.
-- **A Life cleric's healing spells heal 2 + the slot's level more**, Disciple of Life in both
-  editions — from 1st level in 2014 and 3rd in 2024. The bonus is on the roll, read from the slot
-  you cast with, and a cantrip gets none.
 - **A monk fights with Martial Arts**, in both editions: while unarmored, without a shield and
   holding only monk weapons, their Unarmed Strike and monk weapons swing with Dexterity when it is the
   better score — with the same STR/DEX switch a finesse weapon has — and roll the Martial Arts die
@@ -114,9 +75,74 @@
 - **Lessons of the First Ones grants its Origin feat.** A 2024 warlock taking it picks the feat
   right there, a different one each time, and the feat lands in a slot of its own, asking whatever
   it asks — Magic Initiate its spell list, Skilled its skills.
+- **The languages a class teaches are known.** Druidic, Thieves' Cant and a dragon ancestor's
+  Draconic are on the builder's language list, locked on and saying which feature taught them; a
+  2024 rogue's "one other language of your choice" and each 2014 favored enemy's language are
+  counted beside the background's.
+- **Boon of Truesight gives Truesight 60 ft**, and **Boon of Fate is a 2d4 roll with one use**
+  that comes back on a rest or when you roll initiative.
+
+### Numbers that were wrong, and other fixes
+
+- **A 2014 warlock's Agonizing Blast adds the Charisma modifier** to Eldritch Blast's damage.
+- **A 2014 class offers its whole skill list.** Eleven classes had the last skill of their list glued
+  to their starting equipment text, so a barbarian could not take Survival, nor a cleric or a wizard
+  Religion, in Strict.
+- **The species say their saving-throw traits on the sheet**: a dwarf's advantage against poison,
+  an elf's and a half-elf's against being charmed, a halfling's against being frightened, in both
+  editions; a 2014 dwarf also resists poison damage, which the sheet did not count, and a 2024
+  gnome rolls Intelligence, Wisdom and Charisma saves with advantage. The 2014 Staff of the Magi
+  says its advantage on saves against spells.
+- **Haste doubles your Speed**, every bonus to it included, and **Heroism gives its Temporary Hit
+  Points at the start of each of your turns** — never lowering a larger amount you already have.
+- **A paladin's Aura of Protection adds to their own saving throws** from 6th level — the
+  Charisma modifier, at least +1 — in both editions, and stops while the paladin is unconscious
+  (2014) or Incapacitated (2024). The sheet did not count it at all.
+- **A 2014 tiefling resists fire**, as Hellish Resistance says.
+- **Dwarven Toughness adds its hit point per level**: the 2014 Hill Dwarf's and every 2024
+  Dwarf's, which the sheet did not count.
+- **A draconic sorcerer's Draconic Resilience counts from the level it is gained, in both
+  editions.** 2014 gave its 13 + Dexterity Armor Class only from 6th level, under a feature named
+  "Draconic Ancestry" that held three of them; it is Dragon Ancestor (with its table and the
+  Draconic language), Draconic Resilience at 1st and Elemental Affinity at 6th now. Neither
+  edition added the hit points: one per sorcerer level, from 1st in 2014 and 3rd in 2024.
+- **Thaumaturge and Magician teach their extra cantrip.** A 2024 cleric or druid who chose one may
+  know one cantrip more than the class table says; the builder and the spellbook were one short.
+- **A Life cleric's healing spells heal 2 + the slot's level more**, Disciple of Life in both
+  editions — from 1st level in 2014 and 3rd in 2024. The bonus is on the roll, read from the slot
+  you cast with, and a cantrip gets none.
+- **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
+  figurines after it — Golden Lions to Silver Raven — were missing.
+- **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
+  one identity in the list that draws them.
 - **The ability scores of Find Steed's, Giant Insect's and Summon Dragon's creatures, and of the
   Figurine of Wondrous Power's Giant Fly, line up under their headings.** The header named nine
   columns over twelve cells.
+
+### For content authors
+
+- **The tables in the shipped rules text are Markdown in the CSV**, so a table opened in a
+  spreadsheet reads as rows rather than HTML. They show the same in the app. Four stay HTML for
+  now, each a conversion defect of the SRD source.
+- **For content authors: "at a level" is written with `@`.** A class feature's `choose`,
+  `expertise_slots` and `mastery_slots` read `2@3,2@10` — two at level 3, two more at 10 — where
+  they read `3:2,10:2`. The shipped packs are converted; a homebrew row still in the old form grants
+  nothing, and Settings ▸ Content health names it with the step to write instead.
+
+### Security
+
+- **Rules text loads nothing from the internet.** A table in a row's text could name a background
+  image, and the window fetched it from wherever it pointed; it loads only the app's own now.
+- **A page inside the window opens no file picker and no second window.** A middle click on a link
+  in the rules text opens it in your browser, as a left click does. The file-picker permission
+  nothing in the app used is gone, so nothing inside the window can ask for a folder.
+- **A plugin cannot freeze your sheet.** One that replaced the built-in JSON could keep its result
+  from updating through every change in play; the built-ins it sees are pinned.
+- **A damaged pack setting cannot uninstall your content.** A settings entry that named no pack
+  offered an Uninstall that would have removed every pack; such an entry is dropped instead.
+- **Dependency updates** past twenty security advisories — DOMPurify, which cleans every rules
+  text; rustls and its root certificates, which the desktop app fetches packs and updates over; and
+  the test tooling.
 
 ## 0.8.1
 

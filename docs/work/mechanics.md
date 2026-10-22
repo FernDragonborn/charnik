@@ -106,7 +106,7 @@ stay semi-manual.
   - **Situational by nature — these stay `note`, and that is the answer, not a gap.** Advantage that
     depends on what you are fighting or what you did last turn: `favored_enemy`, `countercharm`,
     `lands_stride`, `hunter_defensive_tactics`, `holy_nimbus`, `thief_supreme_sneak`, 2024
-    `studied_attacks`, `precise_hunter`, `innate_sorcery`. The app has no enemy and no turn history
+    `studied_attacks`, `precise_hunter`. The app has no enemy and no turn history
     to test the condition against; surfacing the text is the honest behaviour.
   - **A choice of a word, which a class feature cannot ask yet.** `fiendish_resilience` and 2024
     `draconic_sorcery_elemental_affinity` — resistance to a damage type the player picks and can
@@ -114,14 +114,11 @@ stay semi-manual.
     elf's one-of-three Keen Senses. An item asks for a word (`choice_options`, filled into the
     token as `item_choice`); a feature has no such column, and a row per damage type would be rows
     that say nothing (`../internals/content.md` ▸ One row, several options).
-  - **An extra cantrip.** 2024 Thaumaturge and Magician ("You know one extra cantrip from the
-    Cleric/Druid spell list") ship their skill bonus; the cantrip is text, since no token raises a
-    class's cantrip count.
   - **Not the passive kind at all.** 2024 `superior_defense` spends 3 Focus Points for a minute of
     resistance — an activated ability with a duration (the action kind, and EXCEPT-DAMAGE for what it
     resists). 2014 `ki_empowered_strikes` stays prose: "unarmed strikes count as magical" has no
-    target and no enemy to test against. The Gnomish Lineages stay prose too — each grants cantrips
-    and a prepared spell, and no token grants a spell.
+    target and no enemy to test against. The Gnomish Lineages grant cantrips and a prepared spell,
+    which is SPECIES-SPELLS (`content.md`).
   - **Qualified grants stay text**: Stonecunning's doubled bonus applies only to stonework-origin
     History checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the
     2024 Sun Blade's grant is conditional on already being proficient with longswords.
@@ -195,8 +192,10 @@ stay semi-manual.
     into it later. A spell choice with no class list behind it and a ritual-only flag on the
     entry; a feat's `spell_choice` is the nearest shape and asks for ONE list.
   - **Pact of the Chain's find familiar** — "You learn the find familiar spell and can cast it as
-    a ritual. The spell doesn't count against your number of spells known": a spell a row GRANTS,
-    which no token says. The Tome's three cantrips from any list are the same gap.
+    a ritual. The spell doesn't count against your number of spells known": a spell an OPTION
+    grants. A class feature's `spells` says exactly this, and an option has no such column until
+    CIRCLE-OF-THE-LAND gives it one (`content.md`). The Tome's three cantrips from any list are the
+    first bullet's gap — a choice with no class list behind it.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **CONCENTRATION-SPLIT** — a segmented
   `1 · 2 · 3` beside Damage, to raise several DC 10 saves for one lump of equal projectiles (Magic
   Missile). 2024 dropped the per-source sentence, under 2014 the player presses Damage once per dart
