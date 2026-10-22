@@ -184,9 +184,6 @@ stay semi-manual.
 - [ ] **FRENZY · the Berserker's.** SRD 5.2.1: Reckless Attack while raging adds Rage-damage d6s to the
   first hit each turn; SRD 5.1: a bonus-action melee attack each turn of the rage, and a level of
   Exhaustion when it ends.
-- [ ] **MARTIAL-ARTS · a monk's Dexterity and die.** Both editions: unarmed strikes and monk weapons
-  may use Dexterity for attack and damage, and roll the Martial Arts die in place of their own
-  damage, while unarmored and without a shield. The attack rows read Strength and the weapon's die.
 - [ ] **FEATURE-SPELLS · spells a feature always has prepared.** The subclass spell tables (Domain,
   Oath, Circle, Patron, Draconic Spells), 2024 Druidic's Speak with Animals and Favored Enemy's
   Hunter's Mark, and the 2014 Fiend's expanded list. A column of `spell@level` (`content.md` ▸ At a

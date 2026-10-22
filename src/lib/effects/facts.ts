@@ -14,6 +14,7 @@ import type {
 	PlayEvent,
 	RechargePolicy,
 	RollLimit,
+	WeaponRuleWord,
 } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
@@ -67,6 +68,15 @@ export interface RollMod {
 }
 
 /** One `extra_attack` statement: what it says about the extra attack `property` grants. */
+/** One `weapon_rule` statement: what an attack its scope names may do. */
+export interface WeaponRule {
+	word: WeaponRuleWord;
+	scope: string;
+	/** The `grant_roll` id a `die` rolls. */
+	value?: string;
+	source: string;
+}
+
 export interface ExtraAttackRule {
 	property: string;
 	words: ExtraAttackWord[];
@@ -257,6 +267,7 @@ export interface EffectFacts {
 	 *  re-prices or adjusts the extra attack a property grants (2024 Two-Weapon Fighting puts the
 	 *  ability modifier back on the Light property's). Read where the attack rows are built. */
 	extraAttackRules: ExtraAttackRule[];
+	weaponRules: WeaponRule[];
 	/** The forms this character may assume (`form`), one entry per form id. */
 	forms: FormRules[];
 	unknown: { source: string; token: string }[];
@@ -286,6 +297,7 @@ export const emptyFacts = (): EffectFacts => ({
 	rerolls: [],
 	minDie: [],
 	extraAttackRules: [],
+	weaponRules: [],
 	forms: [],
 	unknown: [],
 	pluginNotes: [],
@@ -312,6 +324,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.rerolls.push(...extra.rerolls);
 	base.minDie.push(...extra.minDie);
 	base.extraAttackRules.push(...extra.extraAttackRules);
+	base.weaponRules.push(...extra.weaponRules);
 	for (const form of extra.forms) {
 		const known = base.forms.find((f) => f.id === form.id);
 		if (known) addFormStatement(known, form);

@@ -20,7 +20,7 @@ import {
 	type StoredRoll,
 } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts, type NumericFact } from '$lib/effects/apply';
-import { parseToken, resolveEffectValue } from '$lib/effects/token-parser';
+import { parseToken, resolveEffectValue, scopeMatches } from '$lib/effects/token-parser';
 import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { sayText, type Said, type SaidValue } from '$lib/util/say';
 import type { Translate } from '$lib/i18n';
@@ -452,7 +452,7 @@ export function rollEffectsFor(
 	// the rolling thing's scopes (GWF `two_handed,melee`), and a roll that names no scopes at all
 	// (a save, a skill) picks up none of them
 	const inScope = (scope: string | undefined): boolean =>
-		!scope || (scopes ? scope.split(',').every((t) => scopes.has(t)) : false);
+		!scope || (scopes ? scopeMatches(scope, scopes) : false);
 	// advantage answers to the qualifier too: "advantage on saving throws against spells" is not
 	// advantage on a save, and until the roll says what it is against, it does not apply
 	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key) && inScope(a.scope));

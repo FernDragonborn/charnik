@@ -14,7 +14,7 @@ import { characterFeatures, featureKey, featureLanguages } from '../character/fe
 import { optionsOf } from './options';
 import { withCastSlot } from '../effects/context';
 import { rollEffectsFor } from '../combat/roll';
-import { attackNotes, computeAttacks } from '../combat/helpers';
+import { attackNotes, computeAttacks, formatDamageParts } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 import { EFFECT_KIND, parseToken, splitGuard } from '../effects/token-parser';
 import { isEffectTargetSupported } from '../character/derive-targets';
@@ -1585,5 +1585,71 @@ describe('Disciple of Life heals by the slot it is cast from', () => {
 				withCastSlot(base, 1, 1),
 			).flat,
 		).toBe(0);
+	});
+});
+
+/*
+ * SRD 5.1 ▸ Monk ▸ Martial Arts: "monk weapons, which are shortswords and any simple melee weapons
+ * that don't have the two-handed or heavy property … while you are unarmed or wielding only monk
+ * weapons and you aren't wearing armor or wielding a shield: You can use Dexterity instead of
+ * Strength … You can roll a d4 in place of the normal damage". SRD 5.2.1: "Simple Melee weapons;
+ * Martial Melee weapons that have the Light property … roll 1d6 in place of the normal damage".
+ */
+describe('Martial Arts: a monk’s Dexterity and die', () => {
+	const monk = (source: string, system: '5e' | '5.5e', items: string[]) => {
+		const c = charOf(source, system, 'monk', 1);
+		c.build.abilities = { str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = items.map((id) =>
+			inventoryRow({ item: `item:${source}:${id}`, qty: 1, equipped: true, attuned: false }),
+		);
+		return c;
+	};
+	const rows = (c: Character, g: ContentGraph) =>
+		computeAttacks(c, deriveSheet(c, g), g).map((a) => ({
+			id: a.id,
+			toHit: a.toHit,
+			damage: formatDamageParts(a.damageParts),
+			swap: a.finesse?.ability,
+		}));
+
+	it('2014: a quarterstaff and the fists swing with Dexterity; the fists roll the d4', async () => {
+		const g = await loadEdition('srd-2014');
+		expect(rows(monk('SRD 5.1', '5e', ['quarterstaff']), g)).toEqual([
+			{ id: 'quarterstaff', toHit: 5, damage: '1d6 +3 bludgeoning', swap: 'dex' },
+			{ id: 'unarmed_strike', toHit: 5, damage: '1d4 +3 bludgeoning', swap: 'dex' },
+		]);
+	});
+
+	it('2014: a greatclub is no monk weapon, and holding one ends Martial Arts', async () => {
+		const g = await loadEdition('srd-2014');
+		expect(rows(monk('SRD 5.1', '5e', ['greatclub']), g)).toEqual([
+			{ id: 'greatclub', toHit: 2, damage: '1d8 bludgeoning', swap: undefined },
+			{ id: 'unarmed_strike', toHit: 2, damage: '+1 bludgeoning', swap: undefined },
+		]);
+	});
+
+	it('2014: a shield ends it', async () => {
+		const g = await loadEdition('srd-2014');
+		const shielded = rows(monk('SRD 5.1', '5e', ['shortsword', 'shield']), g);
+		expect(shielded.find((r) => r.id === 'unarmed_strike')?.swap).toBeUndefined();
+	});
+
+	it('2024: a dagger rolls the d6 in place of its d4; a light martial weapon is a monk weapon', async () => {
+		const g = await loadEdition('srd-2024');
+		const out = rows(monk('SRD 5.2.1', '5.5e', ['dagger', 'scimitar']), g);
+		expect(out).toEqual([
+			{ id: 'dagger', toHit: 5, damage: '1d6 +3 piercing', swap: 'dex' },
+			{ id: 'scimitar', toHit: 5, damage: '1d6 +3 slashing', swap: 'dex' },
+			{ id: 'unarmed_strike', toHit: 5, damage: '1d6 +3 bludgeoning', swap: 'dex' },
+		]);
+	});
+
+	it('the player may still swing a monk weapon with Strength', async () => {
+		const g = await loadEdition('srd-2024');
+		const c = monk('SRD 5.2.1', '5.5e', []);
+		c.build.finesseAbility = { unarmed_strike: 'str' };
+		expect(rows(c, g)).toEqual([
+			{ id: 'unarmed_strike', toHit: 2, damage: '1d6 bludgeoning', swap: 'str' },
+		]);
 	});
 });

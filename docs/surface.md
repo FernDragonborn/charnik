@@ -517,7 +517,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (188 modules)
+## Library functions & types (191 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -916,21 +916,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/attacks.ts`
 
-- `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
+- `re-export attackAbility`
 - `const UNARMED_STRIKE_ID` — The one id a bare-fisted attack answers to — it has no content row, and an action that says * "make two Unarmed Strik…
 - `type AttackNote` — One line of provenance under an attack row.
 - `function attackNotes` — An attack row's notes as one line, in the reader's language.
 - `interface Attack` — A weapon/unarmed attack row.
 - `const attackName` — What to print for an attack.
-- `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
-- `const damageTypeLabel` — What a damage type is CALLED.
-- `const senseLabel` — A sense id → the reader's word for it.
-- `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `type ExtraAttackRow` — An extra attack as its row offers it: what it is, and what it rolls for damage.
 - `const attackPropertyRows` — The rows behind an attack's properties — the plain ones in the weapon's own order, then its * mastery.
 - `function attackMeta` — An attack row's sub-line, in the reader's language.
-- `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
 - `function weaponProfGrants` — Which weapons this character is proficient with: the classes' own `weapon_profs`, plus whatever a * feature or item g…
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 
@@ -948,6 +943,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function modTargetLabel` — What a custom modifier is called when the player names it nothing: "+1 to AC", "+1 до КЗ".
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
+
+### `src/lib/combat/damage-parts.ts`
+
+- `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
+- `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
+- `const damageTypeLabel` — What a damage type is CALLED.
+- `const senseLabel` — A sense id → the reader's word for it.
+- `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 
 ### `src/lib/combat/defense.ts`
 
@@ -1054,6 +1057,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
+
+### `src/lib/combat/weapon-rules.ts`
+
+- `interface AttackRules`
+- `function weaponRulesFor`
+- `const swingTags` — A weapon's tags as it swings under a `dex` rule: as a finesse weapon does, so the one * STR/DEX choice the sheet alre…
+- `function withRuleDie` — One die of `sides` in place of the pool, where it is the bigger — "You can roll 1d6 in place of * the normal damage",…
+- `function attackAbility` — * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR, * and a finesse wea…
+- `function swingOf` — How a weapon — or the fists — swings: its ability, and what a feature lets it do (Martial Arts' * Dexterity and die).
 
 ### `src/lib/components/damage-glyphs.ts`
 
@@ -1716,7 +1728,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
 - `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
-- `interface ExtraAttackRule` — One `extra_attack` statement: what it says about the extra attack `property` grants.
+- `interface WeaponRule` — One `weapon_rule` statement: what an attack its scope names may do.
+- `interface ExtraAttackRule`
 - `interface FormRules` — * A form the character may assume, as every `form` statement about it adds up (Wild Shape).
 - `type FormStatement` — What one or more statements say about a form — every field optional, because one token says one.
 - `function addFormStatement` — Add what further statements say about the SAME form onto what is known (in place): a stated * value replaces an unsta…
@@ -1730,6 +1743,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/form-statements.ts`
 
 - `function collectFormStatement` — One `form` statement, added to what is already known of that form.
+
+### `src/lib/effects/issues.ts`
+
+- `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
+- `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
 ### `src/lib/effects/lint-effect-tokens.ts`
 
@@ -1798,6 +1816,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
+- `const scopeMatches` — Does a thing with these scopes fall under a scope?
 - `const PLAY_EVENT` — * The play events an `on_event` token may hook — and the only ones the app fires.
 - `type PlayEvent`
 - `const isPlayEvent` — Is this string one of the fired events?
@@ -1809,8 +1828,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
 - `const isWeaponOwnBonus` — * Does this token name the WEAPON's own attack/damage bonus (D9), rather than something the item * grants whoever car…
-- `const ISSUE_KEY` — Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule * notes, so the produc…
-- `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
+- `re-export ISSUE_KEY`
+- `re-export type EffectIssue`
 
 ### `src/lib/effects/token-words.ts`
 
@@ -1818,6 +1837,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type ExtraAttackWord`
 - `const EXTRA_ATTACK_WORDS`
 - `const grantsExtraAttack` — Does this statement GRANT the attack, rather than re-price or adjust one another row grants?
+- `const WEAPON_RULE_WORD` — The closed vocabulary a `weapon_rule` speaks in — what a feature lets an attack it scopes do: * `dex`, resolve from D…
+- `type WeaponRuleWord`
+- `const isWeaponRuleWord`
 - `const ROLL_LIMIT` — How often a granted roll may be made, where its rule says so.
 - `type RollLimit`
 - `const isRollLimit`
@@ -2401,4 +2423,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1463 exports across 205 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1476 exports across 208 modules · 96 duplicate suspects._

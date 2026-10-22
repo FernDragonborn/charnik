@@ -26,32 +26,31 @@ import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
-import { parseDicePool, parseFormula, formatDicePool } from '$lib/rules/dice';
+import { parseDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import {
 	EFFECT_KIND,
 	parseToken,
 	isWeaponOwnBonus,
 	resolveEffectValue,
+	scopeMatches,
 } from '$lib/effects/token-parser';
+import { swingOf, withRuleDie } from './weapon-rules';
+export { attackAbility } from './weapon-rules';
 import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
 import { effectTag } from './effects-view';
 import { localizedName } from '$lib/content/detail';
 import { instanceName } from '$lib/content/item-instance';
 import { formatNote, type Note } from '$lib/rules/pipeline';
 import type { Translate } from '$lib/i18n';
-
-/** One typed slice of a weapon's damage: its dice pool, flat mod, and damage type. A plain weapon is
- *  one part ("1d8 slashing"); a multi-type weapon is several ("1d6 slashing" + "1d4 radiant"). */
-export interface DamagePart {
-	pool: Record<number, number>;
-	mod: number;
-	type: string;
-	/** Fragments of the segment that neither the pool nor the modifier accounted for — a content
-	 *  defect, so it is carried to the sheet as a note rather than discovered at the roll. Omitted
-	 *  when the segment reads cleanly, which is every shipped row. */
-	issues?: string[];
-}
+import { parseDamageParts, type DamagePart } from './damage-parts';
+export {
+	parseDamageParts,
+	formatDamageParts,
+	damageTypeLabel,
+	senseLabel,
+	type DamagePart,
+} from './damage-parts';
 
 /** The one id a bare-fisted attack answers to — it has no content row, and an action that says
  *  "make two Unarmed Strikes" has to be able to name it. */
@@ -139,66 +138,6 @@ export interface Attack {
  *  Takes the translator rather than importing one, like `skillLabel`. */
 export const attackName = (attack: Attack, t: (key: string) => string): string =>
 	attack.nameKey ? t(attack.nameKey) : attack.name;
-
-/** The trailing damage-type word(s) of a segment ("1d8 +3 slashing" → "slashing"), or "" if none. */
-function segmentType(segment: string): string {
-	return (/([a-z][a-z ]*?)\s*$/i.exec(segment.trim())?.[1] ?? '').trim();
-}
-
-/** Parse a weapon/spell damage string into its typed parts. Multiple types are `;`-separated
- *  ("1d6 slashing; 1d4 radiant"); a plain weapon is one part ("1d8 slashing"). Each part carries its
- *  own dice pool, flat mod, and type — dice and modifier read by the roller's own parsers, so a
- *  segment and a roll formula can never disagree about what "+2" means. Empty string → no parts. Pure. */
-export function parseDamageParts(dmg: string): DamagePart[] {
-	return dmg
-		.split(';')
-		.map((s) => s.trim())
-		.filter(Boolean)
-		.map((seg) => {
-			const { dice, mod, bonusDice, issues } = parseFormula(seg);
-			// a part carries a POOL, which has no sign to hold a subtracted term with — so a `-1d4` is
-			// surfaced as what the segment could not express rather than rolled as `+1d4`
-			const unread = [...issues, ...bonusDice.map((d) => `-${d.count}d${d.sides}`)];
-			return {
-				pool: dice,
-				mod,
-				type: segmentType(seg),
-				...(unread.length ? { issues: unread } : {}),
-			};
-		});
-}
-
-/** What a damage type is CALLED. The type is an id (`bludgeoning`) and the catalog holds the word for
- *  it; a homebrew type nobody has translated falls back to the id, which is still what its author
- *  wrote. Takes the translator rather than reaching for one, so this module stays pure and
- *  node-testable (docs/internals/ui.md ▸ Strings live in the catalogs). */
-export const damageTypeLabel = (type: string, translate: Translate): string =>
-	type ? translate(`damageType.${type}`, { default: type }) : '';
-
-/** A sense id → the reader's word for it. Open vocabulary like a damage type: the SRD names four
- *  and the catalog carries those; a pack's own sense falls back to the id it wrote. */
-export const senseLabel = (sense: string, translate: Translate): string =>
-	sense ? translate(`senseName.${sense}`, { default: sense }) : '';
-
-/** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4
- *  radiant"). Inverse of `parseDamageParts` for the panel. Pure.
- *
- *  Without a translator the TYPE ID is printed, which is the right answer for a caller that has no
- *  locale to spend — a node test, or a string that is about to be re-parsed. Every surface a person
- *  reads passes one. */
-export function formatDamageParts(parts: DamagePart[], translate?: Translate): string {
-	return parts
-		.map((p) =>
-			[
-				formatDicePool(p.pool),
-				p.mod ? signed(p.mod) : '',
-				translate ? damageTypeLabel(p.type, translate) : p.type,
-			]
-				.filter(Boolean)
-				.join(' '),
-		)
-		.join(' + ');
-}
 
 /** D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus. A LITERAL
  *  `flat_bonus:attack` / `flat_bonus:damage` folds; an EXPRESSION folds when `ctx` can resolve it —
@@ -355,10 +294,7 @@ function scopedFlatBonus(
 	const word = target === 'attack' ? 'attack' : 'damage';
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || !matchesTarget(f.target, target) || f.amount === undefined) continue;
-		// a scope is a LIST and every part must match (`melee,str`), the same sentence `roll.ts`
-		// applies — this side used to compare the whole string, so a two-part scope matched a set
-		// holding both its parts and neither of them together
-		if (f.scope && !f.scope.split(',').every((part) => scopes.has(part))) continue;
+		if (!scopeMatches(f.scope, scopes)) continue;
 		amount += f.amount;
 		notes.push(
 			attackNote(noteKey, `${signed(f.amount)} ${word} (${f.source})`, {
@@ -371,49 +307,41 @@ function scopedFlatBonus(
 }
 
 /**
- * Which ability an attack resolves from, and its modifier: ranged is DEX, everything else is STR,
- * and a finesse weapon is the PLAYER's call — `chosen` is what they said, and with nothing said the
- * bigger modifier is the default, which is what they would pick almost every time.
- *
- * The ANSWER is also an effect scope, because RAW keys some bonuses off the ability rather than off
- * the weapon — Rage pays out on "an attack using Strength", so the same rapier is or is not eligible
- * depending on this call. That is exactly why the default cannot simply stand: at STR 14 / DEX 16 a
- * raging barbarian's rapier does MORE damage swung with the smaller modifier, and the app used to
- * take the bigger one silently and never say a choice existed.
- */
-export function attackAbility(
-	tags: ItemTags,
-	strMod: number,
-	dexMod: number,
-	chosen?: Ability,
-): { ability: Ability; mod: number } {
-	if (tags.has(ITEM_TAG.ranged)) return { ability: 'dex', mod: dexMod };
-	if (tags.has(ITEM_TAG.finesse)) {
-		if (chosen === 'str') return { ability: 'str', mod: strMod };
-		if (chosen === 'dex') return { ability: 'dex', mod: dexMod };
-		return dexMod > strMod ? { ability: 'dex', mod: dexMod } : { ability: 'str', mod: strMod };
-	}
-	return { ability: 'str', mod: strMod };
-}
-
-/**
  * The Unarmed Strike row. A melee attack that carries no weapon properties, so it reads the SAME
  * melee-scoped bonuses a weapon does — it is one of the attacks a scope names, and leaving it out made
  * a character's fists the one melee attack a melee bonus skipped. Its damage is `1 + STR` by the book.
- * Always Strength, so it carries that scope like any weapon that resolved from it — which is what makes
- * 2024's "with either a weapon or an Unarmed Strike" fall out.
+ * It carries the ability it resolved from as a scope like any weapon — which is what makes 2024's
+ * "with either a weapon or an Unarmed Strike" fall out — and that is Strength unless a feature lets
+ * it be Dexterity (Martial Arts).
  */
-function unarmedStrike(sheet: CharacterSheet, prof: number, strMod: number): Attack {
-	const unarmedScopes = new Set(['melee', 'str', UNARMED_STRIKE_ID]);
+function unarmedStrike(
+	character: Character,
+	sheet: CharacterSheet,
+	wielded: readonly Set<string>[],
+): Attack {
+	const fist = {
+		item: { tags: new Map([[ITEM_TAG.melee, '']]), kindId: UNARMED_STRIKE_ID },
+		scopes: new Set([ITEM_TAG.melee, UNARMED_STRIKE_ID]),
+	};
+	const swing = swingOf(character, sheet, fist, wielded);
+	const unarmedScopes = new Set(['melee', swing.ability, UNARMED_STRIKE_ID]);
 	const unarmedScoped = scopedFlatBonus(sheet.facts, 'attack', unarmedScopes);
 	const unarmedDamage = scopedFlatBonus(sheet.facts, 'damage', unarmedScopes);
 	return {
 		id: UNARMED_STRIKE_ID,
 		name: '',
 		nameKey: 'combat.attacks.unarmedStrike',
-		toHit: strMod + prof + unarmedScoped.amount,
+		toHit: swing.mod + sheet.proficiencyBonus + unarmedScoped.amount,
 		scopes: [...unarmedScopes],
-		damageParts: [{ pool: {}, mod: 1 + strMod + unarmedDamage.amount, type: 'bludgeoning' }],
+		// "1 + your Strength modifier", or a feature's die in place of the 1 (Martial Arts)
+		damageParts: [
+			{
+				pool: withRuleDie({}, swing.rules),
+				mod: (swing.rules.dieSides ? 0 : 1) + swing.mod + unarmedDamage.amount,
+				type: 'bludgeoning',
+			},
+		],
+		...(swing.rules.dex ? { finesse: { kindId: UNARMED_STRIKE_ID, ability: swing.ability } } : {}),
 		meta: { kinds: [ITEM_TAG.melee], propertyRows: [] },
 		...(unarmedScoped.notes.length || unarmedDamage.notes.length
 			? { notes: [...unarmedScoped.notes, ...unarmedDamage.notes] }
@@ -485,7 +413,9 @@ function wieldedWeapons(character: Character, graph: ContentGraph) {
 	const wielded = character.build.inventory.flatMap((inv) => {
 		const row = inv.equipped ? graph.get(inv.item) : undefined;
 		if (row?.type !== 'item' || row.data.category !== 'weapon') return [];
-		return [{ inv, row, item: resolveItem(graph, row, inv.base) }];
+		const item = resolveItem(graph, row, inv.base);
+		// what the weapon is in scope of: its tags, its row and its KIND — a +1 shortsword is a shortsword
+		return [{ inv, row, item, scopes: new Set([...item.tags.keys(), row.id, item.kindId]) }];
 	});
 	const isPaired = (property: string, scope: string | undefined): boolean =>
 		wielded.reduce(
@@ -502,9 +432,7 @@ export function computeAttacks(
 	graph: ContentGraph,
 	locale = 'en',
 ): Attack[] {
-	const prof = sheet.proficiencyBonus,
-		strMod = sheet.abilities.str.mod,
-		dexMod = sheet.abilities.dex.mod;
+	const prof = sheet.proficiencyBonus;
 	// A7: weapon proficiency gate. A weapon you're not proficient with omits the proficiency bonus
 	// from its to-hit (RAW). Grants come from the character's classes; lenient — a class (or set of
 	// classes) that declares no weapon_profs stays proficient with everything.
@@ -514,16 +442,11 @@ export function computeAttacks(
 	const masteries = new Set(character.build.masteries ?? []);
 	const propertyRows = weaponPropertyRows(graph, character.system);
 	const { wielded, isPaired } = wieldedWeapons(character, graph);
+	const wieldedScopes = wielded.map((w) => w.scopes);
 	const out: Attack[] = [];
-	for (const { inv, row, item } of wielded) {
-		// the kind, not the row: a +1 Rapier is a Rapier, so one answer covers every copy of it
-		const finesse = item.tags.has(ITEM_TAG.finesse);
-		const { ability, mod } = attackAbility(
-			item.tags,
-			strMod,
-			dexMod,
-			finesse ? character.build.finesseAbility[item.kindId] : undefined,
-		);
+	for (const w of wielded) {
+		const { inv, row, item, scopes } = w;
+		const { ability, mod, rules, finesse } = swingOf(character, sheet, w, wieldedScopes);
 		const proficient = isWeaponProficient(weaponGrants, weaponCategoryOf(item.tags), row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
@@ -533,7 +456,7 @@ export function computeAttacks(
 		// The weapon's own bonus never reaches the global facts (D9 keeps it on this row), so the gate
 		// the gather applies to every other item has to be applied here too — and SAID, because an
 		// inactive +1 is indistinguishable from a weapon that never had one.
-		const w = ownWeaponBonus(row.data.effects, item, inv);
+		const own = ownWeaponBonus(row.data.effects, item, inv);
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
 		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
@@ -542,7 +465,7 @@ export function computeAttacks(
 		// …and so is the ABILITY this attack resolved from, because RAW keys some bonuses off it
 		// rather than off the weapon: Rage pays out on "an attack using Strength", so a rapier swung
 		// with Dexterity must not take it while the same rapier swung with Strength does.
-		const scopeSet = new Set([...item.tags.keys(), row.id, ability]);
+		const scopeSet = new Set([...scopes, ability]);
 		const scoped = scopedFlatBonus(sheet.facts, 'attack', scopeSet);
 		const scopedDamage = scopedFlatBonus(sheet.facts, 'damage', scopeSet);
 		const notProfNote = proficient
@@ -572,7 +495,7 @@ export function computeAttacks(
 		// a property's roll mode is an effect like any other, so the effects switch turns it off too
 		const rollModes = character.play.autoCalc ? properties.modes : [];
 		const notes = [
-			...(w.notes ?? []),
+			...(own.notes ?? []),
 			...rollModes.map(rollModeNote),
 			...properties.unread.map((token) => ({ token })),
 			...scoped.notes,
@@ -584,16 +507,22 @@ export function computeAttacks(
 		// the character-level damage bonuses land on the PRIMARY part, where RAW puts them and where the
 		// roll path puts them too — the row and the tap now read the same number
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
-			i === 0 ? { ...p, mod: p.mod + mod + w.damage + scopedDamage.amount } : p,
+			i === 0
+				? {
+						...p,
+						pool: withRuleDie(p.pool, rules),
+						mod: p.mod + mod + own.damage + scopedDamage.amount,
+					}
+				: p,
 		);
 		// typed magic damage (flaming +1d6 fire) rides as extra part(s) after the weapon's own types
-		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
+		const damageParts = [...baseParts, ...(own.extraParts ?? [])];
 		out.push({
 			id: row.id,
 			// the same name the compendium, the inventory and every other row on the sheet print — the
 			// instance's ("Longsword +2") for a +N weapon, never the book's heading
 			name: instanceName({ graph, locale }, row, inv) ?? localizedName(row, locale),
-			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.amount,
+			toHit: mod + (proficient ? prof : 0) + own.attack + scoped.amount,
 			damageParts,
 			meta: metaTags(item.tags, properties.mastery, propertyRows),
 			scopes: [...scopeSet],
@@ -605,6 +534,6 @@ export function computeAttacks(
 			...(notes.length ? { notes } : {}),
 		});
 	}
-	out.push(unarmedStrike(sheet, prof, strMod));
+	out.push(unarmedStrike(character, sheet, wieldedScopes));
 	return out;
 }

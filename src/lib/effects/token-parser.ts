@@ -11,7 +11,6 @@
  * after which it is an "effect" (`ParsedEffect`). `resolveEffectValue` bridges to L2 — it
  * evaluates a token's value expression. The fold seam that consumes these lives in apply.ts.
  */
-import type { SaidText } from '$lib/util/say';
 import type { Layer } from '../rules/pipeline';
 import { parseRecharge, type RechargePolicy } from '../rules/recharge';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
@@ -20,7 +19,9 @@ import {
 	FORM_WORD_VALUE,
 	isFormWord,
 	isRollLimit,
+	isWeaponRuleWord,
 	type ExtraAttackWord,
+	type WeaponRuleWord,
 	type FormWord,
 	type RollLimit,
 } from './token-words';
@@ -65,6 +66,11 @@ export const EFFECT_KIND = {
 	// modifier back on its damage, which the attack otherwise leaves off. So Light grants, Nick
 	// re-prices the same attack, and Two-Weapon Fighting restores the modifier: three rows, one kind.
 	extraAttack: 'extra_attack',
+	// `weapon_rule:<word>:<scope>[:<value>]` — what a feature lets an attack it scopes do, in a closed
+	// set of words (`WEAPON_RULE_WORD`): Martial Arts' Dexterity and its die. Several tokens say one
+	// rule for several kinds of weapon, and a rule holds only while EVERY weapon wielded is one some
+	// token of that word scopes — RAW's "while you are unarmed or wielding only Monk weapons".
+	weaponRule: 'weapon_rule',
 	// `damage_sensitivity:<relation>:<type>` — how this character RELATES to one damage type. One
 	// kind rather than three, because the three relations are one axis (a damage multiplier: x0, x1/2,
 	// x2), so "immunity outranks vulnerability outranks resistance" stays a comparison inside a kind.
@@ -143,12 +149,14 @@ export type DamageSensitivity = 'resist' | 'immune' | 'vulnerable';
 
 export {
 	EXTRA_ATTACK_WORD,
+	WEAPON_RULE_WORD,
 	grantsExtraAttack,
 	ROLL_LIMIT,
 	FORM_WORD,
 	formWordTakesExpression,
 	type ExtraAttackWord,
 	type RollLimit,
+	type WeaponRuleWord,
 } from './token-words';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
@@ -215,6 +223,8 @@ export interface ParsedEffect {
 	/** on_event: the executor action token to run when `target`'s event fires, verbatim (it carries its
 	 *  own `:` and may hold an L2 formula — `heal:5+con_mod` — resolved at derive like every other). */
 	action?: string;
+	/** weapon_rule: the word, and the `grant_roll` id a `die` names. The scope is `scope`. */
+	weaponRule?: { word: WeaponRuleWord; value?: string };
 	/** extra_attack: what the token says about the attack `target`'s property grants. */
 	extraAttack?: ExtraAttackWord[];
 	/** form: what the token says about the form `target` names — the word, and its value where the
@@ -281,6 +291,18 @@ function qualifierSlot(
 		return { damageType: q, ...(dottedScope ? { scope: dottedScope } : {}) };
 	return { scope: dottedScope ? `${dottedScope},${q}` : q };
 }
+
+/** Does a thing with these scopes fall under a scope? EVERY comma-separated part must be one of
+ *  them, and a part written `!tag` must not be — the one reading of a scope, for rolls, attacks and
+ *  weapon properties alike. No scope at all applies to everything. */
+export const scopeMatches = (
+	scope: string | undefined,
+	scopes: { has(part: string): boolean },
+): boolean =>
+	!scope ||
+	scope
+		.split(',')
+		.every((part) => (part.startsWith('!') ? !scopes.has(part.slice(1)) : scopes.has(part)));
 
 /** The targets a dotted sub-name SCOPES rather than names: `damage.melee` is a damage bonus for
  *  melee things, while `speed.fly` is its own stat. Two families, one dot — so the split is a list,
@@ -386,6 +408,21 @@ const parseGrantValue: KindParser = (rest, raw, kind) => {
 	const m = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(rest.trim());
 	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
 	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
+};
+
+const parseWeaponRule: KindParser = (rest, raw, kind) => {
+	// `weapon_rule:<word>:<scope>[:<value>]`; a scope part written `!tag` is one the weapon must lack
+	const m = /^([a-z]+):(!?[a-z0-9_]+(?:,!?[a-z0-9_]+)*)(?::([a-z0-9_]+))?$/i.exec(rest.trim());
+	const word = m?.[1]?.toLowerCase();
+	if (!m?.[2] || !word || !isWeaponRuleWord(word)) return { kind: 'unknown', raw };
+	const value = m[3]?.toLowerCase();
+	return {
+		kind,
+		target: word,
+		scope: m[2].toLowerCase(),
+		weaponRule: { word, ...(value ? { value } : {}) },
+		raw,
+	};
 };
 
 const parseExtraAttack: KindParser = (rest, raw, kind) => {
@@ -554,6 +591,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.grantRoll]: parseGrantRoll,
 	[EFFECT_KIND.grantValue]: parseGrantValue,
 	[EFFECT_KIND.extraAttack]: parseExtraAttack,
+	[EFFECT_KIND.weaponRule]: parseWeaponRule,
 	[EFFECT_KIND.form]: parseForm,
 	[EFFECT_KIND.damageSensitivity]: parseDamageSensitivity,
 	[EFFECT_KIND.grantResource]: parseGrantResource,
@@ -688,41 +726,4 @@ export const isWeaponOwnBonus = (token: string): boolean => {
 	return p.kind === EFFECT_KIND.flatBonus && (p.target === 'attack' || p.target === 'damage');
 };
 
-/** Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule
- *  notes, so the producers below and the message catalogs never drift on a bare string. */
-export const ISSUE_KEY = {
-	unknownTarget: 'effectIssue.unknownTarget',
-	unknownTargetSuggested: 'effectIssue.unknownTargetSuggested',
-	unknownCondition: 'effectIssue.unknownCondition',
-	unknownConditionSuggested: 'effectIssue.unknownConditionSuggested',
-	armorBlocksCasting: 'effectIssue.armorBlocksCasting',
-	duplicateClassFeature: 'effectIssue.duplicateClassFeature',
-	unreadableOptionEffect: 'effectIssue.unreadableOptionEffect',
-	unreadableOptionCondition: 'effectIssue.unreadableOptionCondition',
-	unreadableOptionCost: 'effectIssue.unreadableOptionCost',
-	unrollableValue: 'effectIssue.unrollableValue',
-	unreadableResourceMax: 'effectIssue.unreadableResourceMax',
-	unreadableFormValue: 'effectIssue.unreadableFormValue',
-	pluginFailed: 'effectIssue.pluginFailed',
-	dependencyCycle: 'effectIssue.dependencyCycle',
-	misplacedWalkingSpeed: 'effectIssue.misplacedWalkingSpeed',
-	attackOnly: 'effectIssue.attackOnly',
-	unreadableGuard: 'effectIssue.unreadableGuard',
-	rolledAbilityScore: 'effectIssue.rolledAbilityScore',
-	unreadableAbilityChange: 'effectIssue.unreadableAbilityChange',
-	noPreparedCount: 'effectIssue.noPreparedCount',
-} as const;
-
-/** A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source)
- *  content-health merges with loader issues. */
-export interface EffectIssue extends SaidText {
-	source: string;
-	token: string;
-	/** What went wrong and what it means for the sheet, in the words of whoever wrote the CSV row, as
-	 *  the catalog KEY and its values (`SaidText`) — the derive has no locale and the panel showing it
-	 *  is re-read after a language switch. The parser's own phrasing belongs in `detail` (UX-1). */
-	key: string;
-	/** The technical particulars (the parser's complaint, a plugin's error) — shown demoted, so the
-	 *  homebrew author still gets the exact fault the sentence summarizes. */
-	detail?: string;
-}
+export { ISSUE_KEY, type EffectIssue } from './issues';

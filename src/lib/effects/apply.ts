@@ -263,6 +263,9 @@ class FactsCollector {
 				// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass reports
 				// every plugin token itself, so counting it as unknown too would double the panel entry.
 				break;
+			case EFFECT_KIND.weaponRule:
+				this.pushWeaponRule(p, eff);
+				break;
 			case EFFECT_KIND.extraAttack:
 				// a statement that only re-prices or adjusts an attack a weapon grants is the character's
 				// to make; one that GRANTS it needs a weapon, and falls through with the stated numbers
@@ -284,6 +287,17 @@ class FactsCollector {
 				this.facts.unknown.push({ source: eff.source, token });
 				break;
 		}
+	}
+
+	private pushWeaponRule(p: ParsedEffect, eff: ActiveEffect): void {
+		if (!p.weaponRule || !p.scope) return;
+		const { word, value } = p.weaponRule;
+		this.facts.weaponRules.push({
+			word,
+			scope: p.scope,
+			source: eff.source,
+			...(value ? { value } : {}),
+		});
 	}
 
 	/** An event hook: the event (target) + the executor verb to run when it fires, its L2 resolved

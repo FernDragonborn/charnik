@@ -101,6 +101,10 @@
 - **A Life cleric's healing spells heal 2 + the slot's level more**, Disciple of Life in both
   editions — from 1st level in 2014 and 3rd in 2024. The bonus is on the roll, read from the slot
   you cast with, and a cantrip gets none.
+- **A monk fights with Martial Arts**, in both editions: while unarmored, without a shield and
+  holding only monk weapons, their Unarmed Strike and monk weapons swing with Dexterity when it is the
+  better score — with the same STR/DEX switch a finesse weapon has — and roll the Martial Arts die
+  where it beats the weapon's own. The Unarmed Strike rolls the die in place of its flat 1.
 
 ## 0.8.1
 

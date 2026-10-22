@@ -24,6 +24,7 @@ import {
 	grantsExtraAttack,
 	parseToken,
 	resolveEffectValue,
+	scopeMatches,
 	splitGuard,
 } from '$lib/effects/token-parser';
 import type { ExtraAttackRule } from '$lib/effects/facts';
@@ -137,8 +138,7 @@ function statementsOf(row: WeaponPropertyRow, name: string, ctx: ExprContext): R
 }
 
 /** Does a weapon carry every tag a scope asks for? No scope asks for nothing. */
-const inScope = (tags: ItemTags, scope: string | undefined): boolean =>
-	scope === undefined || scope.split(',').every((part) => tags.has(part));
+const inScope = (tags: ItemTags, scope: string | undefined): boolean => scopeMatches(scope, tags);
 
 /** Does a weapon carry this property — as a plain tag, or as the mastery its tag names — and every
  *  tag the scope asks for beside it? */

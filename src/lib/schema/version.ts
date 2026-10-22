@@ -202,7 +202,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // Cant as language rows. An install left at v72 asks none of it.
 // v74: Disciple of Life heals 2 + the slot's level, in both editions. An install left at v73 heals
 // by the dice alone.
-export const CONTENT_SEED_VERSION = 74;
+// v75: Martial Arts lets a monk's fists and monk weapons swing with Dexterity and roll the Martial
+// Arts die (`weapon_rule`). An install left at v74 swings them with Strength and their own die.
+export const CONTENT_SEED_VERSION = 75;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

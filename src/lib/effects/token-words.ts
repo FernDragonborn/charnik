@@ -20,6 +20,14 @@ export const EXTRA_ATTACK_WORDS: ReadonlySet<string> = new Set(Object.values(EXT
 export const grantsExtraAttack = (words: readonly ExtraAttackWord[]): boolean =>
 	words.includes(EXTRA_ATTACK_WORD.same) || words.includes(EXTRA_ATTACK_WORD.other);
 
+/** The closed vocabulary a `weapon_rule` speaks in — what a feature lets an attack it scopes do:
+ *  `dex`, resolve from Dexterity (the player's call, as a finesse weapon's is); `die`, roll the named
+ *  `grant_roll` in place of the weapon's own damage die where it is the bigger. */
+export const WEAPON_RULE_WORD = { dex: 'dex', die: 'die' } as const;
+export type WeaponRuleWord = (typeof WEAPON_RULE_WORD)[keyof typeof WEAPON_RULE_WORD];
+export const isWeaponRuleWord = (word: string): word is WeaponRuleWord =>
+	(Object.values(WEAPON_RULE_WORD) as string[]).includes(word);
+
 /** How often a granted roll may be made, where its rule says so. An open enum: "once per turn" is
  *  the one the SRD's granted rolls state (Sneak Attack), and a rest-limited one would join it here. */
 export const ROLL_LIMIT = { turn: 'turn' } as const;
