@@ -3,6 +3,12 @@
 > Tracker. Packaging, distribution channels, dependencies and their advisories. The ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
+- [ ] **WINDOWS-SIGNING · the installer is not Authenticode-signed, so SmartScreen warns.** Release
+  builds carry the updater's minisign signature only; Windows shows "Windows protected your PC" and,
+  unsigned, resets reputation with every release. For an app nobody knows that screen is a drop-off
+  point (`../research/adoption-friction.md` ▸ Where we lose ▸ 1). Options: SignPath's free certificate
+  for public open-source projects (eligibility to verify), Azure Artifact Signing (~$10/month, US and
+  Canada individuals), an OV certificate ($150–300/year). Needs the maintainer's account or money.
 - [ ] **DISTRIBUTION-EXPANSION · ship through the platform package managers**, beyond GitHub
   Releases, so users install and update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
@@ -112,6 +118,9 @@
   Beyond since June 2026); telling the GM who passed a requested save is what the most-installed
   Foundry module exists for; conditions laid by the GM travel to the player's sheet, with one writer
   rather than two that must converge.
+  **Where a new table drops Charnik** is `../research/adoption-friction.md`: the spec settles the
+  phone path for players (without it the in-person table is unreachable), a GM's manual entry for a
+  player without Charnik, and moderation for the shared log.
   **What the table turns from text into mechanics** — input for the spec, found by re-reading every
   class feature the app keeps as text because it sees no ally, no target, no GM roll and no scene:
   - *Allies:* spells and effects cast on another character (Bless, healing, Lay on Hands, Preserve

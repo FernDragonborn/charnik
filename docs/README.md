@@ -45,6 +45,8 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Reuse surface](surface.md) — generated; never hand-edited
 
 Design research sits in [research/](research/) — including
+[where an unknown app loses a table](research/adoption-friction.md): the drop-off points a new
+player meets, where Charnik can be an order of magnitude better, and which integrations are possible;
 [Wild Shape](research/wild-shape.md), the per-edition spec a form is built from, every line quoted from
 the shipped SRD text, [a bound creature](research/companion.md), the same for a familiar, a steed
 and a summon, with the four answers COMPANION waits on proposed, the [table link threat model](research/table-link-threats.md), the attack
