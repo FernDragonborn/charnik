@@ -118,10 +118,12 @@ which fail without the fix.
   No merge assigns untrusted keys onto a live object.
 - **The web CSP's `base-uri`.** It read `'self'` where desktop and `security.md` §5 say `'none'`. It
   now says `'none'` too. DOMPurify strips `<base>` either way.
+- **The Rust crates (`cargo audit`).** Eighteen advisories. Fifteen are patch releases `cargo update`
+  takes: rustls, rustls-webpki and the bundled root certificates, h2, quinn-proto, and quick-xml
+  through plist. The three left are `zip` under the updater, unreachable — `work/release.md` ▸ DEP-3.
 
 ## Not yet checked
 
-- `cargo audit`: the tool is not installed here. It is now a step of `work/release.md` ▸ AUDIT-DRIFT.
 - The table link (`table_link.rs`, `lib/table-link`): not in a release build. Its own design review
   is `research/table-link-*.md`.
 - The web demo's IndexedDB storage.

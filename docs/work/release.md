@@ -194,10 +194,19 @@
   at lint time over patterns this repo wrote and ships in no build. The advisory names `3.0.4` as
   patched and the registry's latest is `3.0.3`, so there is nothing to pin: when `3.0.4` is
   published `pnpm update braces` moves it, `micromatch`'s range already admits it.
+- **DEP-3 · `zip 4.6.1`, three advisories** (RUSTSEC-2026-0367/0368/0369: SUID bits, symlink targets
+  and permissions applied through symlinks on extraction) — transitive via `tauri-plugin-updater`
+  2.14, the latest 2.x; the fix is `zip 9`, which only the updater's 3.0 alpha takes. Unreachable
+  here: the updater extracts a zip on Windows only, where none of the three applies, and only after
+  `verify` has checked the bytes against the minisign key built into the app, so the archive is
+  never someone else's. Moves with the updater's next release.
 - **AUDIT-DRIFT · `pnpm audit` reports DEP-2 and nothing else, and it drifts silently — re-run it before every tag.** Three
   rules the re-audits keep proving:
-  - **`cargo audit` is half of it and has never run**: the Rust crates are not in `pnpm audit`, and
-    the tool is a separate install (`cargo install cargo-audit`).
+  - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
+    `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). It reports DEP-3
+    and nothing else; its warnings (unmaintained `zbus`/`zvariant`, `proc-macro-error`, unsound
+    `glib`) are Linux-only crates Tauri pins, DEP-1's kind. A patch release that fixes an advisory is
+    `cargo update -p <name>`.
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
     family).
   - **A transitive one is pinned in `pnpm-workspace.yaml` ▸ `overrides`, and the pin's range must
