@@ -53,6 +53,20 @@ describe('parsePackConfig', () => {
 		expect(parsed.packs['srd-2014']?.pinned).toBe(true);
 		expect(parsed.repos[REPO]?.etag).toBe('W/"abc"');
 	});
+	it('drops a key that is not a folder a pack could live in — `""` would be `content/` itself', () => {
+		const pending = { repo: REPO, files: [{ path: 'x/a.csv', sha: 'abc' }] };
+		const parsed = parsePackConfig({
+			packs: {
+				'': { repo: REPO },
+				'a/b': { repo: REPO },
+				homebrew: { repo: REPO },
+				ok: { repo: REPO },
+			},
+			pending: { '': pending, '.prev': pending, ok: pending },
+		});
+		expect(Object.keys(parsed.packs)).toEqual(['ok']);
+		expect(Object.keys(parsed.pending)).toEqual(['ok']);
+	});
 });
 
 /** Deleting a bundled pack is allowed, so the app has to say the rules are gone — once, and then

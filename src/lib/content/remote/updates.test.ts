@@ -196,6 +196,15 @@ describe('install a pack from a pasted URL', () => {
 		expect(packConfig.repos[REPO]).toBeUndefined();
 	});
 
+	it('an entry that names no pack folder is forgotten, and nothing on disk is deleted', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		packConfig.packs[''] = { repo: REPO };
+		await uninstallPack('');
+		expect(packConfig.packs['']).toBeUndefined();
+		expect(await getUserStorage().exists('content/dark-sun/classes_srd.csv')).toBe(true);
+	});
+
 	it('re-installing clears "stop asking" — deleting it a second time must prompt again', async () => {
 		packConfig.dismissedMissing = ['dark-sun'];
 		await discoverPacks(REPO, { fetcher: fetcher(ALL) });

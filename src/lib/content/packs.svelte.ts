@@ -231,7 +231,7 @@ export function parsePackConfig(raw: unknown): PackConfigData {
 	const parsed = raw as Partial<PackConfigData>;
 	return {
 		updates: isUpdateMode(parsed.updates) ? parsed.updates : UPDATE_MODE.off,
-		packs: isRecord(parsed.packs) ? parsed.packs : {},
+		packs: usableFolderKeys(parsed.packs),
 		repos: isRecord(parsed.repos) ? parsed.repos : {},
 		pending: parsePending(parsed.pending),
 		dismissedMissing: Array.isArray(parsed.dismissedMissing)
@@ -256,7 +256,15 @@ function parsePending(raw: unknown): Record<string, PendingRemote> {
 		);
 		if (clean.length === files.length) out[pack] = { repo, files: clean };
 	}
-	return out;
+	return usableFolderKeys(out);
+}
+
+/** A pack key names a folder the app deletes, renames and writes into, and this file can arrive with
+ *  a data folder somebody else kept — so a key that is not a folder the app could have created (`''`
+ *  would be `content/` itself) is dropped here, before any button can be offered for it. */
+function usableFolderKeys<T>(raw: Partial<Record<string, T>> | undefined): Record<string, T> {
+	if (!isRecord<T>(raw)) return {};
+	return Object.fromEntries(Object.entries(raw).filter(([pack]) => isUsablePackFolderName(pack)));
 }
 
 const isUpdateMode = (v: unknown): v is UpdateMode => typeof v === 'string' && v in UPDATE_MODE;

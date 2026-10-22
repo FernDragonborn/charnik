@@ -298,11 +298,11 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
  * failed delete left the pack installed with its permission already gone.
  */
 export async function uninstallPack(pack: string): Promise<void> {
-	// This deletes a folder recursively, so a reserved name reaching it is the worst outcome in the
-	// module: `homebrew` here would erase everything the user ever authored. An older build could
-	// have registered one before `isReservedPackName` existed — drop the entry, keep the files.
-	// Nothing is revoked on this path either: the code stays on disk, so its permission should too.
-	if (isReservedPackName(pack)) {
+	// This deletes a folder recursively, so a name that is not one pack's folder reaching it is the
+	// worst outcome in the module: `homebrew` would erase everything the user ever authored, and `''`
+	// is `content/` itself. Drop the entry, keep the files. Nothing is revoked on this path either:
+	// the code stays on disk, so its permission should too.
+	if (!isUsablePackFolderName(pack)) {
 		forgetPack(pack);
 		return;
 	}
