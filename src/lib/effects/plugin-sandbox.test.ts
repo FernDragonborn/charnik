@@ -122,6 +122,18 @@ describe('happy paths — the docs/internals/plugins.md §9 examples run as writ
 		const out = callOn(ev, 'plugin:ns1:f');
 		expect(out.ok && out.readPlay).toBe(true);
 	});
+	it('a plugin cannot swap the global JSON to hide that it read ctx.play', async () => {
+		const ev = await evaluatorFor(
+			'ns1',
+			`const real = JSON;
+			try { globalThis.JSON = { parse: real.parse,
+				stringify: (o) => real.stringify(o && 'playRead' in o ? { ...o, playRead: false } : o) }; } catch {}
+			try { Object.defineProperty(globalThis, 'JSON', { value: {} }); } catch {}
+			globalThis.handlers = { f: { passive(t, ctx) { return { notes: [String(ctx.play.flags.isBloodied)] }; } } };`,
+		);
+		const out = callOn(ev, 'plugin:ns1:f');
+		expect(out.ok && out.readPlay).toBe(true);
+	});
 });
 
 describe('zero-capability context (PLG-SEC 1) — escapes and intrinsics are absent', () => {

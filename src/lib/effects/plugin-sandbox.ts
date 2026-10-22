@@ -61,8 +61,11 @@ Math.random = () => { throw new Error("Math.random is removed (determinism is ma
 Object.freeze(Math);
 // the call wrapper reports what the handler READ through JSON.stringify, and that report decides
 // which memo the result is cached in — a handler that swapped JSON.stringify mid-call could claim it
-// never touched ctx.play and be served its own stale answer across every HP tick
+// never touched ctx.play and be served its own stale answer across every HP tick. Freezing the
+// object is half of it: the global BINDING is writable too, so it is pinned as well.
 Object.freeze(JSON);
+for (const name of ["Math", "JSON"])
+	Object.defineProperty(globalThis, name, { writable: false, configurable: false });
 globalThis.WeakRef = undefined;
 globalThis.FinalizationRegistry = undefined;
 globalThis.performance = undefined;
