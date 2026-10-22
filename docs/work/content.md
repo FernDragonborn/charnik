@@ -14,23 +14,6 @@
   (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). The class feature's `spells` grammar on a
   species row, where the level is the character's — and a species casts with no class profile behind
   it, so the spell needs one the way a feat's does.
-- [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; four are not, and want a look.**
-  124 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
-  HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,
-  nothing in a cell Markdown has no inline form for — and each checked to render the same cells,
-  emphasis included, through the app's own pipeline. Whitespace the page layout left inside a cell
-  is collapsed. The `<b>` and `<em>` the audit counted were all inside those tables.
-  **Four stay HTML, each a defect of the source conversion rather than of Markdown:**
-  - **The four 2024 ability-score blocks** — `find_steed`, `giant_insect`, `summon_dragon` and the
-    Giant Fly inside `figurine_of_wondrous_power`. Each row is right: twelve cells, the score, its
-    modifier and its save for three abilities. The HEADER is wrong: it names nine columns
-    (`MOD SAVE` with no cell over the score) and pads the rest with a `colspan`, and two of the four
-    have no header row at all. The fix is a header of `| | | MOD | SAVE |` ×3 typed over the cells
-    that are already there. These are the three stat blocks COMPANION needs transcribed as rows
-    anyway (`../work/mechanics.md` ▸ COMPANION), so the two may want deciding together.
-  `renderContentMarkdown` keeps its HTML-table workaround (blank lines forced around `<table>`,
-  emphasis mopped up inside cells) while any of these ship, and for homebrew that writes HTML.
-
 - [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature

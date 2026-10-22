@@ -200,7 +200,10 @@ offered only to a character one of whose features names that category — the "P
 Style Feature" each prints. An `option` is a choice that is not a feat anywhere else.
 **An option that asks is taken once per answer.** Its `answer` column names what each pick asks —
 an open enum (`OPTION_ANSWER`), `cantrip.damage` or `cantrip.attack` for SRD 5.2.1's _Repeatable_
-invocations, offered from the cantrips the character knows on the asking class's list. A pick is
+invocations, offered from the cantrips the character knows on the asking class's list, and
+`feat.origin` for Lessons of the First Ones, offered from the edition's Origin feats — whose pick
+opens a feat slot holding that feat (`option-picks.svelte.ts` ▸ `optionFeatSlotKey`), so the feat's
+own questions are asked and saved the way any slot's are. A pick is
 stored as `id.answer` in the same list (`options.ts` ▸ `readPick`), so a save holds no new field, and
 the row's `option_choice` tokens read the answer — replaced as a whole word inside a scope,
 `flat_bonus:damage.option_choice+cha_mod`, where `item_choice` replaces a whole segment. An

@@ -207,7 +207,9 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v76: the subclass spell tables, Druidic's Speak with Animals and Favored Enemy's Hunter's Mark are
 // a class feature's `spells`, and the 2014 Fiend's expanded list `spells_as: list`. An install left
 // at v75 grants none of them.
-export const CONTENT_SEED_VERSION = 76;
+// v77: Lessons of the First Ones answers with an Origin feat, and the four 2024 ability-score blocks
+// are Markdown tables. An install left at v76 asks Lessons nothing and shows the blocks misaligned.
+export const CONTENT_SEED_VERSION = 77;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

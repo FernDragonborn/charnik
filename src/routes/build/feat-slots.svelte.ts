@@ -20,8 +20,15 @@ import {
 	splitList,
 } from '$lib/content/schemas';
 import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
-import { activeClassFeatures } from '$lib/character/features';
-import { optionsOf } from '$lib/content/options';
+import { OPTION_ANSWER, optionsOf, writePick } from '$lib/content/options';
+import {
+	activeClassFeatures,
+	heldOptions,
+	type ActiveClassFeature,
+	type ClassEntryLike,
+} from '$lib/character/features';
+import { optionFeatSlotKey } from './option-picks.svelte';
+import type { ContentGraph } from '$lib/content/loader';
 import { isRowActive } from '$lib/content/sources.svelte';
 import {
 	asiPickCount,
@@ -64,6 +71,33 @@ export interface FeatureFeatSlot {
 	instead: LoadedRow[];
 	/** The feature's id, which an option answer is stored under in `build.options`. */
 	featureId: string;
+}
+
+/** The slots a feature's feat-answered picks open (Lessons of the First Ones), each holding the feat
+ *  its pick named — filled when the pick is taken (`OptionPicks.toggleAnswer`). */
+function optionFeatSlots(
+	active: ActiveClassFeature<ClassEntryLike & { rowId: string }>,
+	graph: ContentGraph,
+	picks: Record<string, string[]>,
+): FeatureFeatSlot[] {
+	return heldOptions(graph, active.row, picks).flatMap(({ row, answer }) =>
+		answer && row.data.answer === OPTION_ANSWER.originFeat
+			? [
+					{
+						key: optionFeatSlotKey(
+							{ entryRowId: active.entry.rowId, feature: active.row },
+							writePick({ id: row.id, answer }),
+						),
+						level: active.level,
+						className: rowName(active.classRow),
+						feature: rowName(row),
+						choice: [answer],
+						instead: [],
+						featureId: active.row.id,
+					},
+				]
+			: [],
+	);
 }
 
 /** The feats a `feat_choice` names, out of `feats`: `any`, feat ids, or feat CATEGORIES — a list
@@ -128,6 +162,7 @@ export class FeatSlots {
 		if (!graph) return [];
 		const out: FeatureFeatSlot[] = [];
 		for (const active of activeClassFeatures(draft.classes, graph, draft.system)) {
+			out.push(...optionFeatSlots(active, graph, draft.options));
 			const choice = splitList(active.row.data.feat_choice);
 			if (!choice.length) continue;
 			out.push({

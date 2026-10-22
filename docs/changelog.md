@@ -111,6 +111,12 @@
   says, marked always prepared and never counted against the spells you prepare or know. The 2014
   Fiend adds its spells to the list you choose from. The builder shows them, locked, beside your
   picks.
+- **Lessons of the First Ones grants its Origin feat.** A 2024 warlock taking it picks the feat
+  right there, a different one each time, and the feat lands in a slot of its own, asking whatever
+  it asks — Magic Initiate its spell list, Skilled its skills.
+- **The ability scores of Find Steed's, Giant Insect's and Summon Dragon's creatures, and of the
+  Figurine of Wondrous Power's Giant Fly, line up under their headings.** The header named nine
+  columns over twelve cells.
 
 ## 0.8.1
 

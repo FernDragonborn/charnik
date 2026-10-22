@@ -7,7 +7,7 @@ import { issueText } from './issue-text';
 import { parseBonusChoices } from './item-tags';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from './loader';
 import type { JoinIssue } from './resource-joins';
-import { RARITIES, RESOLUTION, splitList } from './schemas';
+import { FEAT_CATEGORY, RARITIES, RESOLUTION, splitList } from './schemas';
 import { getSpellAccess } from './spellAccess';
 
 export type OptionRow = LoadedRowByType<'option'>;
@@ -71,6 +71,9 @@ export function itemRarities(row: LoadedRow, graph?: ContentGraph | null): strin
 export const OPTION_ANSWER = {
 	damageCantrip: 'cantrip.damage',
 	attackCantrip: 'cantrip.attack',
+	/** An Origin feat, each pick a different one (Lessons of the First Ones); the pick opens a feat
+	 *  slot holding it, so the feat's own questions are asked like any slot's. */
+	originFeat: 'feat.origin',
 } as const;
 
 /** Joins an option's id to the answer one pick of it was given, in the string `build.options`
@@ -101,8 +104,16 @@ export function optionAnswers(
 	graph: ContentGraph,
 	option: OptionRow,
 	of: { classId: string; spellRefs: readonly string[] },
-): LoadedRowByType<'spell'>[] {
+): LoadedRowByType<'spell' | 'feat'>[] {
 	const asks = option.data.answer;
+	if (asks === OPTION_ANSWER.originFeat)
+		return graph
+			.list('feat')
+			.filter(
+				(feat) =>
+					feat.data.category === FEAT_CATEGORY.origin &&
+					feat.systems.some((s) => option.systems.includes(s)),
+			);
 	if (asks !== OPTION_ANSWER.damageCantrip && asks !== OPTION_ANSWER.attackCantrip) return [];
 	const access = getSpellAccess(graph);
 	return of.spellRefs.flatMap((ref) => {

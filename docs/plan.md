@@ -245,8 +245,7 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  1. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
-  2. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+  1. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
       the build and put in the inventory.
 
   The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,
@@ -314,7 +313,7 @@ position and are given per wave, because most of them were learned the hard way.
   it is a player already standing in front of it.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
-  rule is still only text. REPEATABLE-OPTION's tail sits here too — Lessons of the First Ones, a feat per pick — and A17's tail: a Tome warlock casts rituals, and the Book of
+  rule is still only text. A17's tail sits here too: a Tome warlock casts rituals, and the Book of
   Shadows' own two are still text. So do Mystic Arcanum, SCOPED-BONUS's class and school scopes and E4.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (the 1.0.0 pre-release, its own session, blocked on
   accounts, not on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI

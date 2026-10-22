@@ -13,6 +13,28 @@ describe('renderContentMarkdown', () => {
 		expect(renderContentMarkdown('**Ghouls**')).toContain('<strong>Ghouls</strong>');
 	});
 
+	// the 2024 stat blocks' ability rows: a header typed over twelve cells, the score's column blank
+	it('renders an ability-score block as one table of twelve columns between two paragraphs', () => {
+		const html = renderContentMarkdown(
+			[
+				'**Speed** 30 ft.',
+				'',
+				'| | | MOD | SAVE | | | MOD | SAVE | | | MOD | SAVE |',
+				'|' + ' --- |'.repeat(12),
+				'| STR | 14 | +2 | +2 | DEX | 13 | +1 | +1 | CON | 13 | +1 | +1 |',
+				'| INT | 2 | −4 | −4 | WIS | 10 | +0 | +0 | CHA | 3 | −4 | −4 |',
+				'',
+				'**Senses** None',
+			].join('\n'),
+		);
+		const doc = new DOMParser().parseFromString(html, 'text/html');
+		expect(doc.querySelectorAll('table')).toHaveLength(1);
+		expect(doc.querySelectorAll('th')).toHaveLength(12);
+		expect(doc.querySelectorAll('tbody tr')).toHaveLength(2);
+		expect(doc.querySelector('tbody tr td')?.textContent).toBe('STR');
+		expect(doc.querySelector('table + p, div + p')?.textContent).toContain('Senses');
+	});
+
 	it('leaves an underscore inside a word alone', () => {
 		expect(renderContentMarkdown('hit_die and spell_slot')).toContain('hit_die and spell_slot');
 	});

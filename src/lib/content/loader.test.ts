@@ -232,6 +232,11 @@ describe('loader — real content', () => {
 			expect(g.list('language').length).toBe(19 + 18);
 			expect(g.list('language', { system: '5.5e' }).length).toBe(19);
 
+			// every table in the packs' prose is Markdown: the last four HTML ones were the 2024
+			// ability-score blocks, whose header named nine columns over twelve cells
+			const htmlTables = g.rows.filter((r) => /<table/i.test(String(r.data.text_en ?? '')));
+			expect(htmlTables.map((r) => r.id)).toEqual([]);
+
 			// fireball exists in both editions with the right systems
 			const fb = g.editionsOf('spell', 'fireball');
 			expect(fb.length).toBe(2);

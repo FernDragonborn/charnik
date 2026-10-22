@@ -335,7 +335,8 @@
 			"answerFor": "{option} — for which cantrip?",
 			"noAnswers": {
 				"cantrip.damage": "Learn a cantrip of this class that deals damage first.",
-				"cantrip.attack": "Learn a cantrip of this class that makes an attack roll first."
+				"cantrip.attack": "Learn a cantrip of this class that makes an attack roll first.",
+				"feat.origin": "No Origin feat is loaded for this edition."
 			},
 			"block": {
 				"level": "level {level}",

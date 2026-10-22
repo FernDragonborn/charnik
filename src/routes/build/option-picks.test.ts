@@ -317,3 +317,41 @@ describe('feature options · a 2024 invocation taken once per cantrip', () => {
 	});
 });
 
+
+/*
+ * SRD 5.2.1 ▸ Lessons of the First Ones: "You've received knowledge from an elder entity of the
+ * multiverse, allowing you to gain one Origin feat of your choice … You can gain this invocation
+ * more than once. Each time you do so, choose a different Origin feat."
+ */
+describe('Lessons of the First Ones · each pick is an Origin feat, in a slot of its own', () => {
+	const LESSONS = 'lessons_of_the_first_ones';
+	async function draftWarlock2024(level: number) {
+		build.reset();
+		build.graph = await loadPacks('srd-2024');
+		build.draft.system = '5.5e';
+		build.draft.name = 'Valen';
+		build.draft.classes = [
+			{ ...newClassRow(), classId: 'class:SRD 5.2.1:warlock', subclassId: null, level },
+		];
+	}
+	const answer = (id: string) => {
+		const choice = choiceOf(INVOCATIONS);
+		build.optionPicks.toggleAnswer(choice, optionOf(choice, LESSONS), id);
+	};
+
+	it('offers the Origin feats, opens a filled slot per pick, and takes it back with the pick', async () => {
+		await draftWarlock2024(5);
+		const choice = choiceOf(INVOCATIONS);
+		const offered = build.optionPicks.answersFor(choice, optionOf(choice, LESSONS)).map((f) => f.id);
+		expect(offered).toEqual(expect.arrayContaining(['alert', 'magic_initiate', 'skilled']));
+		answer('alert');
+		answer('savage_attacker');
+		expect(build.feats.slotFeatRefs).toEqual(
+			expect.arrayContaining(['feat:SRD 5.2.1:alert', 'feat:SRD 5.2.1:savage_attacker']),
+		);
+		expect(build.assembled.build.feats).toContain('feat:SRD 5.2.1:alert');
+		answer('alert');
+		expect(build.feats.slotFeatRefs).not.toContain('feat:SRD 5.2.1:alert');
+		expect(build.assembled.build.feats).not.toContain('feat:SRD 5.2.1:alert');
+	});
+});

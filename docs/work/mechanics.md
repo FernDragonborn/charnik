@@ -142,7 +142,7 @@ stay semi-manual.
   it is cast as, and a roll naming no scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
   field, so there is one shape downstream. Rage's damage reads it in both editions, 2014 Agonizing
   Blast as `damage.eldritch_blast`, 2024 Agonizing Blast as `damage.option_choice` filled with the
-  cantrip its pick named (REPEATABLE-OPTION), and Magic Weapon with the weapon its cast asked for.
+  cantrip its pick named (`content.md` ▸ One row, several options), and Magic Weapon with the weapon its cast asked for.
   Innate Sorcery's DC and advantage name the class (`spell_dc.sorcerer`, `attack.spell,sorcerer`).
   What is left: **a cast offers no SCHOOL and no CANTRIP scope**, so 2024 Potent Spellcasting (any
   Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
@@ -184,14 +184,6 @@ stay semi-manual.
 - [ ] **FRENZY · the Berserker's.** SRD 5.2.1: Reckless Attack while raging adds Rage-damage d6s to the
   first hit each turn; SRD 5.1: a bonus-action melee attack each turn of the rage, and a level of
   Exhaustion when it ends.
-- [~] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** An option
-  row's `answer` column says what each pick asks (`OPTION_ANSWER`: `cantrip.damage`,
-  `cantrip.attack`); such an option is taken once per answer, stored as `id.answer` in the same
-  `build.options` list, and its `option_choice` tokens read that answer (`../internals/content.md` ▸
-  One row, several options). Agonizing Blast, Eldritch Spear and Repelling Blast ship on it.
-  **Left: Lessons of the First Ones** — "gain one Origin feat of your choice … Each time you do so,
-  choose a different Origin feat". Its answer is a FEAT, which wants the feat slot a feature's
-  `feat_choice` opens, opened per pick; the row is taken once and asks nothing until then.
 - [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
   warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
   that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —

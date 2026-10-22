@@ -8,6 +8,7 @@ import { countAtLevel } from '$lib/content/level-gate';
 import { activeClassFeatures } from '$lib/character/features';
 import type { LoadedRowByType } from '$lib/content/loader';
 import {
+	OPTION_ANSWER,
 	OPTION_BLOCK,
 	optionAnswers,
 	optionBlock,
@@ -27,6 +28,8 @@ export type OptionPicksHost = Pick<BuildVM, 'draft' | 'graph'>;
 /** One feature that asks: how many, out of what, and what is chosen. */
 export interface FeatureChoice {
 	feature: LoadedRowByType<'class_feature'>;
+	/** The drafted class row the feature came from — what a slot it opens is keyed by. */
+	entryRowId: string;
 	/** The level of the class row the feature came from, which is what an option's own level and
 	 *  the feature's ladder are both read against. */
 	classLevel: number;
@@ -36,6 +39,12 @@ export interface FeatureChoice {
 	 *  asks — trimmed to what is still offered and to the cap. */
 	picks: string[];
 }
+
+/** The feat slot one feat-answered pick opens, keyed like a feature's own slot with the pick after it. */
+export const optionFeatSlotKey = (
+	choice: Pick<FeatureChoice, 'entryRowId' | 'feature'>,
+	pick: string,
+): string => `${choice.entryRowId}:${choice.feature.id}.${pick}`;
 
 export class OptionPicks {
 	/* The host arrives as an ACCESSOR: a `$derived` field initialiser runs before a constructor
@@ -58,6 +67,7 @@ export class OptionPicks {
 			);
 			out.push({
 				feature: active.row,
+				entryRowId: active.entry.rowId,
 				classLevel: active.entry.level,
 				cap,
 				options,
@@ -141,8 +151,26 @@ export class OptionPicks {
 	toggleAnswer = (choice: FeatureChoice, option: OptionRow, answer: string) => {
 		const pick = writePick({ id: option.id, answer });
 		if (!choice.picks.includes(pick) && !this.canToggle(choice, option)) return;
-		this.write(choice, toggleCapped(choice.picks, pick, choice.cap));
+		const picks = toggleCapped(choice.picks, pick, choice.cap);
+		this.write(choice, picks);
+		if (option.data.answer === OPTION_ANSWER.originFeat) this.fillFeatSlots(choice, option, picks);
 	};
+
+	/** An answer that names a feat opens a slot holding that feat — filled here, emptied when the
+	 *  pick is put down — so the feat's own questions (Magic Initiate's list, Skilled's skills) are
+	 *  asked where every slot's are. */
+	private fillFeatSlots(choice: FeatureChoice, option: OptionRow, picks: readonly string[]) {
+		const { draft } = this.host();
+		const feats = this.answersFor(choice, option);
+		const slotFeats = { ...draft.slotFeats };
+		for (const answer of this.answersTaken(choice, option)) delete slotFeats[optionFeatSlotKey(choice, writePick({ id: option.id, answer }))];
+		for (const pick of picks) {
+			const { id, answer } = readPick(pick);
+			const feat = feats.find((row) => row.id === answer);
+			if (id === option.id && feat) slotFeats[optionFeatSlotKey(choice, pick)] = feat.effectiveId;
+		}
+		draft.slotFeats = slotFeats;
+	}
 
 	private write(choice: FeatureChoice, picks: string[]) {
 		const draft = this.host().draft;
