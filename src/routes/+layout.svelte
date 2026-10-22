@@ -76,6 +76,11 @@
 
 	let { children } = $props();
 
+	/** The event a non-primary mouse button fires instead of `click`, and the button that opens a link
+	 *  in a new window. */
+	const AUX_CLICK = 'auxclick';
+	const MIDDLE_BUTTON = 1;
+
 	// The bug-report flow (audit DIAG-1): the "Found a bug?" chip opens this instead of jumping straight
 	// to GitHub, so the user has a diagnostics bundle to attach.
 	let showDiagnostics = $state(false);
@@ -165,13 +170,16 @@
 	 * ONE listener in the layout rather than a handler per renderer: this has to hold for every link
 	 * the app ever shows — content prose, a translated UI string (a user can drop in a locale file),
 	 * a dialog's "report a bug" — and a rule enforced at each call site is a rule with a hole in it.
-	 * Capture phase, so it runs before SvelteKit's own router or any component handler.
+	 * Capture phase, so it runs before SvelteKit's own router or any component handler. A middle
+	 * click arrives as `auxclick`, not `click`, and its default is a NEW window on the remote page —
+	 * so it is the same act and takes the same path; a right click is the context menu's.
 	 *
 	 * Desktop only: on the web the browser already owns this, tabs and address bar included.
 	 */
 	$effect(() => {
 		if (!browser || detectPlatform() !== Platform.Desktop) return;
 		const onClick = (event: MouseEvent): void => {
+			if (event.type === AUX_CLICK && event.button !== MIDDLE_BUTTON) return;
 			const anchor = (event.target as Element | null)?.closest?.('a[href]');
 			if (!(anchor instanceof HTMLAnchorElement) || event.defaultPrevented) return;
 			const { href } = anchor;
@@ -184,7 +192,11 @@
 			);
 		};
 		document.addEventListener('click', onClick, true);
-		return () => document.removeEventListener('click', onClick, true);
+		document.addEventListener(AUX_CLICK, onClick, true);
+		return () => {
+			document.removeEventListener('click', onClick, true);
+			document.removeEventListener(AUX_CLICK, onClick, true);
+		};
 	});
 
 	// Content loads once at startup so the DATA-VER-1 review surfaces app-wide. On desktop the FIRST

@@ -13,6 +13,7 @@
 		"windows": [
 			{
 				"title": "Charnik",
+				"create": false,
 				"width": 800,
 				"height": 600,
 				"resizable": true,

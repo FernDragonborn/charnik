@@ -201,6 +201,33 @@ fn open_app_dir(app: tauri::AppHandle, which: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Build the window `tauri.conf.json` describes (it says `create: false`, so this is the only place it
+/// is made) with one rule a config file cannot state: no page gets a second window. WebView2 answers
+/// an unhandled new-window request — a middle click, a `target="_blank"` link — by opening one on the
+/// remote page, outside every capability. The page's own link handler sends such a link to the OS
+/// browser first; this holds whatever reaches here anyway, and sends a web address the same way.
+fn open_main_window(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let config = app
+        .config()
+        .app
+        .windows
+        .first()
+        .ok_or("tauri.conf.json declares no window")?
+        .clone();
+    let opener = app.clone();
+    tauri::WebviewWindowBuilder::from_config(app, &config)?
+        .on_new_window(move |url, _features| {
+            if matches!(url.scheme(), "http" | "https") {
+                if let Err(e) = opener.opener().open_url(url.as_str(), None::<&str>) {
+                    log::warn!("could not open {url} in the browser: {e}");
+                }
+            }
+            tauri::webview::NewWindowResponse::Deny
+        })
+        .build()?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // WebKitGTK's DMABUF renderer (webkit2gtk ≥ 2.42) crashes at startup on a range of GPU/driver
@@ -284,6 +311,7 @@ pub fn run() {
             table_link::table_link_request
         ])
         .setup(|app| {
+            open_main_window(app.handle())?;
             // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win
             // %LOCALAPPDATA%\{bundleId}\logs) plus Stdout and the Webview devtools. Verbose in dev
             // (Debug), quiet in release (Info+). The JS `$lib/diag` facade forwards through this;

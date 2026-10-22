@@ -10,6 +10,7 @@
 	// It never installs anything: `install_app_update` is called only when the check found nothing,
 	// where the answer is a refusal.
 	import { onMount } from 'svelte';
+	import { invokeRaw } from '../invoke-raw';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 
 	const REPORT = 'self-update-probe.txt';
@@ -25,22 +26,6 @@
 	function check(what: string, ok: boolean, detail = ''): void {
 		if (!ok) failures += 1;
 		say(`${ok ? 'ok  ' : 'FAIL'} ${what}${detail === '' ? '' : ` — ${detail}`}`);
-	}
-
-	type Outcome = { resolved: true; value: unknown } | { resolved: false; reason: string };
-
-	/** One call through the webview's own IPC entry, settled either way. */
-	async function invokeRaw(command: string, args: Record<string, unknown> = {}): Promise<Outcome> {
-		const internals: unknown = Reflect.get(window, '__TAURI_INTERNALS__');
-		const invoke: unknown =
-			typeof internals === 'object' && internals !== null ? Reflect.get(internals, 'invoke') : null;
-		if (typeof invoke !== 'function') return { resolved: false, reason: 'no IPC entry' };
-		try {
-			const value: unknown = await Reflect.apply(invoke, internals, [command, args]);
-			return { resolved: true, value };
-		} catch (e) {
-			return { resolved: false, reason: String(e) };
-		}
 	}
 
 	async function refused(what: string, command: string, args: Record<string, unknown> = {}) {

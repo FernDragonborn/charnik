@@ -26,14 +26,17 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 1. **No HTTP server.** Tauri loads the SPA from a bundled protocol in the webview; the
    frontend talks to the OS only through scoped Tauri commands/plugins. No open ports.
 2. **Tauri capabilities / least privilege.** Grant only the plugins we need (`fs`,
-   `dialog`, `path`) and **scope `fs` to `dataDir`/roots** — no broad filesystem access.
+   `path`) and **scope `fs` to `dataDir`/roots** — no broad filesystem access.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
    > **Where the desktop sandbox is actually decided** (`src-tauri/src/lib.rs`). The fs scope is not
    > static: it is widened at runtime to whatever data folder the user chose, and the rule for who may
    > widen it lives in Rust, not in the capability file.
    >
    > - `pick_data_dir` opens the OS folder dialog and records the picked path in `GrantedDirs` — a
-   >   session set the renderer cannot write to. Only a human click, or the saved pointer re-granted
+   >   session set the renderer cannot write to. The page holds no permission of the dialog plugin:
+   >   its `open` and `save` put whatever the user picks straight into the fs scope, past this set, so
+   >   a granted one would let page script word a picker ("choose your portrait") that hands it a
+   >   folder. Rust draws every dialog the app shows. Only a human click, or the saved pointer re-granted
    >   at startup, puts a path in it. The second means every folder INSIDE the current data folder
    >   passes the test below: that widens nothing, since it is already in scope, but it is why a
    >   probe must never let a data-folder move succeed.
@@ -96,6 +99,8 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > `allow_downgrades` from the caller — and the process plugin is not in the build, so page script
    > can neither move the user to an older signed release nor quit or restart the app.
    > `/dev/self-update` asks the running webview for each of those and expects a refusal.
+   > `/dev/page-reach` does the same for the dialog plugin's commands and for `window.open`, and
+   > presses an outside link with each mouse button.
    >
    > **The table link's commands are in no release build.** They sit behind the `table-link`
    > Cargo feature with their capability file (`overview.md` ▸ TableLink is the seam a table
@@ -165,16 +170,21 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > `PROSE_POLICY`) forbids all three, with the form controls; `form-action 'none'` is the second
    > line behind it. The same seam, and it is the only one — the inline fragment and a catalog
    > string go through it too — keeps a `class` only when the renderer wrote it, drops every
-   > `data-*`, and lets an element FETCH only what travels with the page: a `data:` image or a path
+   > `data-*` and the legacy `background` attribute (a browser still loads it as an image on a table
+   > or a cell), and lets an element FETCH only what travels with the page: a `data:` image or a path
    > on the app's own origin. A remote `<img>` or `<svg><image>` is a request to a stranger's
    > server the moment a row is read, and `img-src` is a second line behind that rule rather than
    > the only thing in front of it. A link keeps its address: following it is the reader's act.
    >
    > **How, since content prose IS rendered HTML** (`ArticleProse` runs `{@html}` over
    > marked+DOMPurify, which strips anything executable and correctly keeps `<a href>`): ONE
-   > capture-phase click listener in the root layout sends every cross-origin link to
-   > `plugin-opener` and cancels the navigation — including one in a scheme the capability won't
-   > take, which is cancelled without being opened. A per-renderer handler would be a rule with a
+   > capture-phase listener in the root layout, on `click` and on a middle-button `auxclick`, sends
+   > every cross-origin link to `plugin-opener` and cancels the navigation — including one in a
+   > scheme the capability won't take, which is cancelled without being opened. Behind it, no page
+   > gets a second window: the main window is built in Rust (`lib.rs` ▸ `open_main_window`, the
+   > config says `create: false`) with a new-window handler that refuses every request and hands an
+   > http(s) one to the OS browser. Without it WebView2 answers a middle click or a
+   > `target="_blank"` by opening the remote page in a window of its own. A per-renderer handler would be a rule with a
    > hole in it; the policy itself is a pure function (`$lib/util/links.ts`) with tests. Desktop
    > only — on the web the browser owns this. **Stated here from the start and only implemented
    > 2026-08-12**, which is why it is spelled out rather than assumed.

@@ -96,7 +96,7 @@ export default defineConfig({
 				directives: {
 					'img-src': ['self', 'data:', 'blob:'],
 					'form-action': ['none'],
-					'base-uri': ['self'],
+					'base-uri': ['none'],
 					'object-src': ['none'],
 				},
 			},

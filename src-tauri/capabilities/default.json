@@ -21,7 +21,6 @@
 		"fs:read-all",
 		"fs:write-all",
 		"fs:deny-default",
-		"dialog:default",
 		"opener:default",
 		"opener:allow-reveal-item-in-dir",
 		"allow-check-app-update",
