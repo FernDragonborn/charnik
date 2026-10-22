@@ -17,11 +17,12 @@ const RENDERER_CLASSES: readonly string[] = ['prose-break', 'prose-table-scroll'
  *
  * `data-*` goes because the app's own scripts read data attributes and prose has no business
  * setting one. `srcset` goes whole: it is a list of sources, and the rule about sources below is
- * about one.
+ * about one. `background` goes whole too: DOMPurify keeps the legacy attribute, a browser still
+ * fetches it as an image on a table or a cell, and prose has no use for a picture behind a table.
  */
 const PROSE_POLICY = {
 	FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-	FORBID_ATTR: ['style', 'srcset'],
+	FORBID_ATTR: ['style', 'srcset', 'background'],
 	ALLOW_DATA_ATTR: false,
 };
 

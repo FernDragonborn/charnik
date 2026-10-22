@@ -67,6 +67,7 @@ describe('renderContentMarkdown', () => {
 				'<img alt="own" src="/content/portrait.png">' +
 				'<img alt="set" srcset="https://evil.example/2x.png 2x">' +
 				'<svg><image href="https://evil.example/in.svg" /></svg>' +
+				'<table background="https://evil.example/t.png"><tr><td background="https://evil.example/d.png">x</td></tr></table>' +
 				'<a href="https://example.com/rules">rules</a>',
 		);
 		expect(html).not.toContain('evil.example');
