@@ -152,8 +152,8 @@ stay semi-manual.
   one spell slot to deal radiant damage … 2d8 for a 1st-level spell slot, plus 1d8 for each spell
   level higher than 1st, to a maximum of 5d8 … increased by 1d8 if the target is an undead or a
   fiend". `spend_slot` exists; a roll that reads the level of the slot it spent does not. SRD 5.2.1's
-  Paladin's Smite is the Divine Smite SPELL always prepared with one free cast a long rest —
-  FEATURE-SPELLS and a pool.
+  Paladin's Smite is the Divine Smite SPELL always prepared with one free cast a long rest — a
+  feature's `spells` and a pool.
 - [ ] **FEATURE-SKILLS · a skill or an expertise a feature has the player choose.** SRD 5.2.1 Primal
   Knowledge (one more skill from the barbarian list), Scholar (Expertise in one of six skills
   already held) and Deft Explorer (Expertise in one held skill, and two languages); College of Lore's
@@ -184,10 +184,6 @@ stay semi-manual.
 - [ ] **FRENZY · the Berserker's.** SRD 5.2.1: Reckless Attack while raging adds Rage-damage d6s to the
   first hit each turn; SRD 5.1: a bonus-action melee attack each turn of the rage, and a level of
   Exhaustion when it ends.
-- [ ] **FEATURE-SPELLS · spells a feature always has prepared.** The subclass spell tables (Domain,
-  Oath, Circle, Patron, Draconic Spells), 2024 Druidic's Speak with Animals and Favored Enemy's
-  Hunter's Mark, and the 2014 Fiend's expanded list. A column of `spell@level` (`content.md` ▸ At a
-  level is `@`), read into the caster profile as always prepared and not counted against its cap.
 - [~] **REPEATABLE-OPTION · an option taken more than once, each time with its own answer.** An option
   row's `answer` column says what each pick asks (`OPTION_ANSWER`: `cantrip.damage`,
   `cantrip.attack`); such an option is taken once per answer, stored as `id.answer` in the same

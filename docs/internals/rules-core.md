@@ -232,7 +232,17 @@ A **prepared** caster (cleric, druid, wizard, paladin) keeps a known or spellboo
 subset: a per-spell toggle against a cap of class level plus the ability modifier, with
 always-prepared and domain spells flagged, and rituals castable unprepared where the class allows
 it. A **known** caster (sorcerer, bard, warlock, ranger) skips preparation — everything known is
-castable. A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
+castable.
+
+**A spell a feature grants is derived, never stored.** A class feature's `spells` column names them
+(`bless@1`, by class level) and `spells_as` how they are had: `prepared` — always prepared and never
+counted against the class's number (Domain, Oath and Patron spells, Druidic's Speak with Animals) —
+or `list`, added to the class's list to choose from (the 2014 Fiend). `deriveSpellcasting` puts them
+on the class's profile (`grantedSpells`, and its access list), and `spellEntries` is the one reading
+of what a character has: `build.spells` plus those, so a subclass changed or a level lost takes its
+spells along. A chosen spell a feature later grants turns always prepared and stops counting.
+
+A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
 because house rules exist and the tracker does not enforce.
 
 **Grapple and Shove have no fixed DC, and the editions disagree about what they even are.** 2014

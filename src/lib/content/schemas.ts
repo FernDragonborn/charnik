@@ -108,6 +108,8 @@ import {
 	ITEM_CATEGORIES,
 	RARITIES,
 	FEAT_CATEGORIES,
+	SPELLS_AS,
+	SPELLS_AS_VALUES,
 } from './content-vocabulary';
 
 const Size = z.enum(SIZES);
@@ -239,6 +241,11 @@ const classFeatureSchema = baseRow.extend({
 	/** The languages this row teaches, as a comma list of language ids, where `any` is one more of
 	 *  the player's choice (`thieves_cant,any` — "You know Thieves' Cant and one other language of
 	 *  your choice"). The builder lists the named ones as known and adds the choices to its count. */
+	/** The spells this feature gives its class, `id@level` by class level, or a bare id from the
+	 *  feature's own level (`content.md` ▸ At a level is `@`). How they are had is `spells_as`. */
+	spells: optStr,
+	/** `SPELLS_AS`; blank is `prepared`. */
+	spells_as: enumDefault(z.enum(SPELLS_AS_VALUES), SPELLS_AS.prepared),
 	language_grants: optStr,
 });
 

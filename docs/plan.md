@@ -245,9 +245,8 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  1. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
-  2. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
-  3. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+  1. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+  2. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
       the build and put in the inventory.
 
   The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,
@@ -263,8 +262,8 @@ position and are given per wave, because most of them were learned the hard way.
     and Natural Recovery, Magical Cunning — one verb) · CIRCLE-OF-THE-LAND (both editions' land
     choice and its spells) · SPECIES-SPELLS (lineage and legacy spells at character level 3) ·
     REACTION-ROLLS · TOGGLE-STATES · HUNTERS-PREY · FRENZY.
-    FEATURE-SPELLS from 0.8.2 is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: built general
-    (a feature, a subclass, a species, an option), they are mostly content.
+    A class feature's `spells` (0.8.2) is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: the
+    same column on an option and a species row, and they are mostly content.
   - **A table, minimally.** TABLE-LINK-SPEC first — its own session with the maintainer, starting
     from the decisions `research/table-link-design-review.md` lists and the ones already taken
     (work/release.md ▸ TABLE-LINK-SPEC) — then TABLE-LINK-MVP, the smallest table worth sitting at.
@@ -292,7 +291,7 @@ position and are given per wave, because most of them were learned the hard way.
   Elemental Affinity — FEATURE-PASSIVES) · SCOPED-BONUS's class and school scopes (Empowered
   Evocation, Potent Spellcasting) · damage taken by halves (Uncanny Dodge, Evasion — the table link's
   raw incoming damage is where they prompt) · Brutal Strike, Cunning Strike and the other dice a
-  hit can spend · and pools on FEATURE-SPELLS (Wholeness of Body, Dark One's Own Luck, Sorcerous
+  hit can spend · and pools beside a feature's `spells` (Wholeness of Body, Dark One's Own Luck, Sorcerous
   Restoration, Tireless, Divine Intervention, Contact Patron). ACTION-OPTIONS turns most of what was
   "text" at these levels into buttons.
 - **Levels 11–20 — a wave of its own, cheaper than it looks.** About a third is content on tokens
@@ -305,8 +304,8 @@ position and are given per wave, because most of them were learned the hard way.
   Hunter's Prey), the 2024 epic boons' remainder.
   **Then the phone path for players** — the maintainer's order: after the engine is whole, not before
   (`research/adoption-friction.md` ▸ Where we lose ▸ 5).
-  **The waves cross-link, which is why they are named here and not merged:** FEATURE-SPELLS (0.8.2)
-  carries CIRCLE-OF-THE-LAND, SPECIES-SPELLS, the free casts of the middle levels and Words of
+  **The waves cross-link, which is why they are named here and not merged:** a feature's `spells`
+  (0.8.2) carries CIRCLE-OF-THE-LAND, SPECIES-SPELLS, the free casts of the middle levels and Words of
   Creation; the per-spell pool is Mystic Arcanum's; COMPANION serves Faithful Steed and Dragon
   Companion; TABLE-LINK carries spells on allies, auras, Cutting Words and the incoming-damage
   prompts.

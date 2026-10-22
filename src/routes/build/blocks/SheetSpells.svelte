@@ -5,6 +5,7 @@
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
+	import { provenance } from '$lib/actions/provenance';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -12,12 +13,12 @@
 
 	/** The chosen spells, bucketed by their own level. Cantrips lead. */
 	const byLevel = $derived.by(() => {
-		const buckets = new Map<number, { id: string; name: string }[]>();
-		for (const ref of b.draft.selectedSpells) {
+		const buckets = new Map<number, { id: string; name: string; granted: boolean }[]>();
+		for (const ref of b.spellPicks.held) {
 			const row = rowOfType(b.row(ref), 'spell');
 			const lvl = Number(row?.data.level ?? 0);
 			const bucket = buckets.get(lvl) ?? [];
-			bucket.push({ id: ref, name: rowName(row) || ref });
+			bucket.push({ id: ref, name: rowName(row) || ref, granted: b.spellPicks.granted.has(ref) });
 			buckets.set(lvl, bucket);
 		}
 		return [...buckets.entries()]
@@ -104,9 +105,14 @@
 						</div>
 						<div class="chips">
 							{#each g.spells as sp (sp.id)}
+								<!-- a spell a feature grants is always prepared and has no way out but the feature -->
 								<button
 									class="pick-chip on"
-									title={$_('build.spells.remove', { values: { name: sp.name } })}
+									aria-disabled={sp.granted ? true : undefined}
+									use:provenance={sp.granted ? $_('build.spells.granted') : ''}
+									title={sp.granted
+										? undefined
+										: $_('build.spells.remove', { values: { name: sp.name } })}
 									onclick={() => b.spellPicks.toggle(sp.id)}
 								>
 									{sp.name}

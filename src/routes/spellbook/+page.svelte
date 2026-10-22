@@ -13,8 +13,9 @@
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
+	import { spellEntries } from '$lib/character/spellcasting';
 	import { isRowActive } from '$lib/content/sources.svelte';
-	import { preparedTalliesByClass, canTogglePreparedFor } from '$lib/combat/helpers';
+	import { preparedTalliesOf, canTogglePreparedFor } from '$lib/combat/helpers';
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 	import { rowName, type LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
@@ -71,7 +72,7 @@
 	const resolved = $derived.by(() => {
 		if (!graph || !character) return [] as { entry: SpellEntry; row: LoadedRow }[];
 		const g = graph;
-		return character.build.spells
+		return spellEntries(character, sheet)
 			.map((entry) => ({ entry, row: g.get(entry.spell) }))
 			.filter((x): x is { entry: SpellEntry; row: LoadedRow } => !!x.row);
 	});
@@ -98,7 +99,7 @@
 	const sheet = $derived(graph && character ? deriveSheet(character, graph, isRowActive) : null);
 	// A18-tail: per-class prepared accounting (attribute each prepared spell to the class that grants
 	// it). Single caster collapses to one row; multiclass shows + enforces a cap per class.
-	const preparedTallies = $derived(preparedTalliesByClass(character?.build.spells ?? [], sheet));
+	const preparedTallies = $derived(preparedTalliesOf(character, sheet));
 
 	function togglePrepare(id: string) {
 		const e = entryOf.get(id);
@@ -106,7 +107,7 @@
 		const isCantrip = row?.type === 'spell' && Number(row.data.level) === 0;
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the combat sheet, D13)
 		const res = canTogglePreparedFor({
-			spells: character?.build.spells ?? [],
+			spells: character ? spellEntries(character, sheet) : [],
 			sheet,
 			entry: e,
 			spellRef: id,

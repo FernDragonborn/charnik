@@ -11,6 +11,7 @@ import { toast } from '$lib/toast/toast';
 import { t, translator, type Translate } from '$lib/i18n';
 import { sayText } from '$lib/util/say';
 import { NOTE_KEY } from '$lib/combat/roll';
+import { spellEntries } from '$lib/character/spellcasting';
 import { upcastPreview } from './spell-roll-name';
 import type { Character } from '$lib/character/schema';
 import type { ResourceDef } from '$lib/effects/facts';
@@ -220,10 +221,11 @@ export class SpellCasting {
 		// by the REF, which is what a spell IS (`type:source:id`): matching on the bare id made two
 		// same-id spells from two packs one spell, and the first entry always won — so tapping the prep
 		// dot on one flipped the other and read as a no-op
-		const sp = this.host.character.build.spells.find((s) => s.spell === r.ref);
+		const spells = spellEntries(this.host.character, this.host.sheet);
+		const sp = spells.find((s) => s.spell === r.ref);
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the spellbook, D13)
 		const res = canTogglePreparedFor({
-			spells: this.host.character.build.spells,
+			spells,
 			sheet: this.host.sheet,
 			entry: sp,
 			spellRef: r.ref,

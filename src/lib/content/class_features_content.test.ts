@@ -13,6 +13,9 @@ import { deriveSheet } from '../character/derive';
 import { characterFeatures, featureKey, featureLanguages } from '../character/features';
 import { optionsOf } from './options';
 import { withCastSlot } from '../effects/context';
+import { spellEntries } from '../character/spellcasting';
+import { preparedTalliesByClass } from '../combat/spells';
+import { levelLadderIssues } from './level-gate';
 import { rollEffectsFor } from '../combat/roll';
 import { attackNotes, computeAttacks, formatDamageParts } from '../combat/helpers';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
@@ -1651,5 +1654,82 @@ describe('Martial Arts: a monk’s Dexterity and die', () => {
 		expect(rows(c, g)).toEqual([
 			{ id: 'unarmed_strike', toHit: 2, damage: '1d6 bludgeoning', swap: 'str' },
 		]);
+	});
+});
+
+/*
+ * SRD 5.1 ▸ Life Domain Spells: "1st bless, cure wounds; 3rd lesser restoration, spiritual
+ * weapon …" — "you always have them prepared, and they don't count against the number of spells you
+ * can prepare each day". ▸ The Fiend ▸ Expanded Spell List: "The following spells are added to the
+ * warlock spell list for you." SRD 5.2.1 ▸ Druidic: "you always have the Speak with Animals spell
+ * prepared"; ▸ Favored Enemy: "You always have the Hunter's Mark spell prepared"; ▸ Fiend Spells:
+ * "3 Burning Hands, Command, Scorching Ray, Suggestion … 9 Geas, Insect Plague".
+ */
+describe('spells a feature always has prepared', () => {
+	const withSubclass = (
+		source: string,
+		system: '5e' | '5.5e',
+		cls: string,
+		sub: string,
+		level: number,
+	) => {
+		const c = charOf(source, system, cls, level);
+		c.build.classes = [
+			classRow({ class: `class:${source}:${cls}`, subclass: `subclass:${source}:${sub}`, level }),
+		];
+		return c;
+	};
+	const granted = (c: Character, g: ContentGraph) =>
+		deriveSheet(c, g)
+			.spellcasting.classes.flatMap((p) => p.grantedSpells)
+			.map((ref) => ref.split(':').pop())
+			.sort();
+
+	it('2014: a Life cleric has bless and cure wounds at 1st, two more at 3rd', async () => {
+		const g = await loadEdition('srd-2014');
+		expect(granted(withSubclass('SRD 5.1', '5e', 'cleric', 'lifedomain', 1), g)).toEqual([
+			'bless',
+			'cure_wounds',
+		]);
+		const at3 = withSubclass('SRD 5.1', '5e', 'cleric', 'lifedomain', 3);
+		expect(granted(at3, g)).toEqual([
+			'bless',
+			'cure_wounds',
+			'lesser_restoration',
+			'spiritual_weapon',
+		]);
+		// always prepared, and never counted: the spell list shows them, the prepared tally does not
+		const sheet = deriveSheet(at3, g);
+		const entries = spellEntries(at3, sheet);
+		expect(entries.every((e) => e.alwaysPrepared)).toBe(true);
+		expect(preparedTalliesByClass(entries, sheet)[0]?.count ?? 0).toBe(0);
+	});
+
+	it('2014: the Fiend adds its spells to the warlock list without preparing them', async () => {
+		const g = await loadEdition('srd-2014');
+		const c = withSubclass('SRD 5.1', '5e', 'warlock', 'thefiend', 1);
+		const sheet = deriveSheet(c, g);
+		const warlock = sheet.spellcasting.classes[0];
+		expect(warlock?.grantedSpells).toEqual([]);
+		expect(warlock?.accessSpellIds).toContain('spell:SRD 5.1:burning_hands');
+		expect(warlock?.accessSpellIds).toContain('spell:SRD 5.1:hallow');
+	});
+
+	it('2024: Druidic and Favored Enemy at 1st; the Fiend’s table by warlock level', async () => {
+		const g = await loadEdition('srd-2024');
+		expect(granted(charOf('SRD 5.2.1', '5.5e', 'druid', 1), g)).toEqual(['speak_with_animals']);
+		expect(granted(charOf('SRD 5.2.1', '5.5e', 'ranger', 1), g)).toEqual(['hunters_mark']);
+		const fiend = (level: number) =>
+			granted(withSubclass('SRD 5.2.1', '5.5e', 'warlock', 'fiend_patron', level), g);
+		expect(fiend(3)).toEqual(['burning_hands', 'command', 'scorching_ray', 'suggestion']);
+		expect(fiend(9)).toHaveLength(10);
+	});
+
+	it('every shipped grant names a spell of its own edition', async () => {
+		for (const [dir, system] of [
+			['srd-2014', '5e'],
+			['srd-2024', '5.5e'],
+		] as const)
+			expect(levelLadderIssues(await loadEdition(dir), system)).toEqual([]);
 	});
 });

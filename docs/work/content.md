@@ -6,12 +6,14 @@
 
 - [ ] **CIRCLE-OF-THE-LAND · the land a druid chooses, and its spells.** SRD 5.1: a terrain of eight
   at level 2, each a table of circle spells by druid level, and a bonus cantrip; SRD 5.2.1: a land
-  type chosen at each Long Rest (arid, polar, temperate, tropical) with its own table. Option rows
-  on FEATURE-SPELLS (`mechanics.md`), the bonus cantrip an option's `cantrips`.
+  type chosen at each Long Rest (arid, polar, temperate, tropical) with its own table. Option rows,
+  which want the class feature's `spells` column on `option` too (read through `heldClassOptions`),
+  and the bonus cantrip an option's `cantrips`.
 - [ ] **SPECIES-SPELLS · the spells a lineage or legacy grants at character level 3 and 5.** SRD
   5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
-  (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). `spell@level` where the level is the
-  character's (FEATURE-SPELLS).
+  (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). The class feature's `spells` grammar on a
+  species row, where the level is the character's — and a species casts with no class profile behind
+  it, so the spell needs one the way a feat's does.
 - [~] **PROSE-MARKDOWN · the tables in content prose are Markdown; four are not, and want a look.**
   124 of the 128 tables across the two packs are Markdown tables now, each rewritten only where its
   HTML was RECTANGULAR — a header row of `<th>`, every row the same width, no `colspan`/`rowspan`,

@@ -33,7 +33,7 @@ import {
 	type GroupMode,
 	standardActions,
 	buildSpellGroups,
-	preparedTalliesByClass,
+	preparedTalliesOf,
 	skillRollTarget,
 	type Attack,
 	type ExtraAttackRow,
@@ -535,9 +535,7 @@ class CombatVM {
 	armorBlock = $derived(this.sheet?.spellcasting.armorBlock);
 	// A18-tail: per-class prepared accounting (each prepared spell attributed to the class that grants
 	// it). Drives the header (via PreparedCaps); the toggle gate uses canTogglePreparedFor directly.
-	preparedTallies = $derived(
-		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet),
-	);
+	preparedTallies = $derived(preparedTalliesOf(this.character, this.sheet));
 
 	// conditions for THIS character's system (not a hardcoded edition). Carries the row `id` (not just
 	// the label) so applying one emits `apply_condition:<id>` — the DAG then expands the condition

@@ -156,6 +156,18 @@ export const issueText = {
 	}),
 
 	/** A level ladder part that is no step at all. */
+	featureSpellUnread: (part: string): IssueText => ({
+		key: key('featureSpellUnread'),
+		values: {},
+		detail: `spells "${part}"`,
+	}),
+
+	featureSpellMissing: (part: string): IssueText => ({
+		key: key('featureSpellMissing'),
+		values: {},
+		detail: `spells "${part}"`,
+	}),
+
 	levelLadderUnread: (column: string, part: string): IssueText => ({
 		key: key('levelLadderUnread'),
 		values: { column },

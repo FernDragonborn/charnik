@@ -12,6 +12,7 @@ import type { CharacterSheet } from '$lib/character/derive';
 import {
 	canCastAsRitual,
 	casterForSpell,
+	spellEntries,
 	type SpellcastingClass,
 } from '$lib/character/spellcasting';
 // re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
@@ -108,6 +109,13 @@ export interface PreparedClassTally {
 	count: number;
 	cap: number;
 }
+
+/** The prepared tallies of a character as the sheet has them — what they chose and what a
+ *  feature grants (`spellEntries`). */
+export const preparedTalliesOf = (
+	character: Character | null | undefined,
+	sheet: CharacterSheet | null,
+) => preparedTalliesByClass(character ? spellEntries(character, sheet) : [], sheet);
 
 /** Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class
  *  that grants it — via `casterForSpell`, the SAME access-map binding the builder's picker uses — and
@@ -270,7 +278,7 @@ export function buildSpellGroups({
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
 		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
-	const all: SpEntry[] = character.build.spells
+	const all: SpEntry[] = spellEntries(character, sheet ?? null)
 		.map((sp) => ({
 			sp,
 			row: spellRow(graph, sp.spell, prepState(sp), {

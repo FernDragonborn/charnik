@@ -162,7 +162,8 @@ commas: `2@3,2@10` is two at 3rd and two more at 10th. Whose level it is belongs
 class feature's is its class's — and never to the mark. One mark for one fact, so the colon is left to
 mean what it does in `spell_choice` (spell level : count), and the dot what it does in a token (narrowed
 to). `content/level-gate.ts` is the one reader; the ladder columns are `choose`, `expertise_slots` and
-`mastery_slots`. The form those columns had before, `level:count`, grants nothing and is said in
+`mastery_slots`, and a class feature's `spells` grants by the same mark — `bless@3`, or a bare
+`bless` from the feature's own level (`rules-core.md` ▸ Preparation). The form those columns had before, `level:count`, grants nothing and is said in
 content health with the step it is now — a count read the wrong way round would be a wrong number on
 the sheet, so it is never guessed at.
 

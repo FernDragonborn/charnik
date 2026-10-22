@@ -48,6 +48,39 @@ export const countAtLevel = (spec: string | undefined, level: number): number =>
 		.steps.filter((step) => step.level <= level)
 		.reduce((total, step) => total + step.count, 0);
 
+const GRANT = /^([a-z0-9_]+)(?:@(\d+))?$/;
+
+/** The ids a grant column (`spells`) names by this level: `bless@3` from level 3, a bare `bless`
+ *  from the row's own level, which the reader has already reached. A part it cannot read grants
+ *  nothing and is said in content health. */
+export function grantedAtLevel(spec: string | undefined, level: number): string[] {
+	const out: string[] = [];
+	for (const raw of (spec ?? '').split(',')) {
+		const m = GRANT.exec(raw.trim());
+		if (m?.[1] && (m[2] === undefined || Number(m[2]) <= level)) out.push(m[1]);
+	}
+	return out;
+}
+
+/** Every part of a feature's `spells` content health should point at: one it cannot read, and a
+ *  spell this edition has no row for. */
+function featureSpellIssues(graph: ContentGraph, system: string): JoinIssue[] {
+	const spells = new Set(graph.list('spell', { system }).map((spell) => spell.id));
+	const out: JoinIssue[] = [];
+	for (const row of graph.list('class_feature', { system }))
+		for (const raw of (row.data.spells ?? '').split(',')) {
+			const part = raw.trim();
+			const m = GRANT.exec(part);
+			if (!part || (m?.[1] && spells.has(m[1]))) continue;
+			out.push({
+				file: `${row.root}/${row.file}`,
+				id: row.id,
+				...(m ? issueText.featureSpellMissing(part) : issueText.featureSpellUnread(part)),
+			});
+		}
+	return out;
+}
+
 /** Every ladder part content health should point at: the old `level:count` form, with the step it
  *  is in the new one, and anything else that is not a step. */
 export function levelLadderIssues(graph: ContentGraph, system: string): JoinIssue[] {
@@ -66,5 +99,5 @@ export function levelLadderIssues(graph: ContentGraph, system: string): JoinIssu
 			}
 		}
 	}
-	return out;
+	return [...out, ...featureSpellIssues(graph, system)];
 }

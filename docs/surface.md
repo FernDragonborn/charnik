@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (96)
+## Duplicate suspects (97)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -116,6 +116,10 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `optionParentKey` (src/lib/content/options.ts) = `articleKey` (src/lib/content/sources.svelte.ts)
 - `where` (src/lib/content/resource-joins.ts) = `filePath` (src/lib/content/sources.svelte.ts)
+
+**Identical literal array:**
+
+- `asked` (src/lib/character/feature-spells.ts) = `asked` (src/lib/character/features.ts)
 
 ## Design tokens (`styles/tokens.css`)
 
@@ -517,7 +521,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (191 modules)
+## Library functions & types (192 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -709,6 +713,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deleteDraft`
 - `function listDrafts` — Newest first.
 
+### `src/lib/character/feature-spells.ts`
+
+- `interface FeatureSpells` — The spells a class's features hand it at its level, as this edition's spell rows.
+- `function featureSpellsFor`
+- `function spellEntries` — * The spells a character has: the ones chosen, and the ones a feature keeps always prepared — the * second never stor…
+
 ### `src/lib/character/features.ts`
 
 - `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
@@ -873,6 +883,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/spellcasting.ts`
 
+- `re-export spellEntries`
 - `interface SpellcastingClass`
 - `function canCastAsRitual` — * May this spell be cast as a ritual by the class it is cast AS?
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a * multiclass caster has o…
@@ -1051,6 +1062,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellGroup` — A group of spells (Pinned / by level / by prepared / by school).
 - `const castingIcon` — Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus).
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
+- `const preparedTalliesOf` — The prepared tallies of a character as the sheet has them — what they chose and what a * feature grants (`spellEntrie…
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `interface PrepareToggleInput` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
 - `function canTogglePreparedFor`
@@ -1090,6 +1102,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RITUAL_SOURCE` — * Which of its spells a class — or a subclass — may cast as a RITUAL, as the SRD states it per class: * `prepared` is…
 - `type RitualSource`
 - `const RITUAL_SOURCES`
+- `const SPELLS_AS` — How a feature's `spells` are had: `prepared` — always prepared, never counted against the class's * number (Domain, O…
+- `const SPELLS_AS_VALUES`
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const RESOLUTION` — The same words by name, for code that compares against one.
@@ -1216,6 +1230,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface LevelStep` — One step of a ladder: how many, from which level.
 - `function readLevelLadder` — A ladder read: the steps it states, and every part it could not read, kept to be said.
 - `const countAtLevel` — How many a ladder has granted by this level.
+- `function grantedAtLevel` — The ids a grant column (`spells`) names by this level: `bless@3` from level 3, a bare `bless` * from the row's own le…
 - `function levelLadderIssues` — Every ladder part content health should point at: the old `level:count` form, with the step it * is in the new one, a…
 
 ### `src/lib/content/linked-tables.ts`
@@ -2423,4 +2438,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1476 exports across 208 modules · 96 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1484 exports across 209 modules · 97 duplicate suspects._

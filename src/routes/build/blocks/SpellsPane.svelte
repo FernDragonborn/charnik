@@ -84,7 +84,7 @@
 				{sections}
 				bind:query
 				{previewId}
-				takenIds={b.draft.selectedSpells}
+				takenIds={b.spellPicks.held}
 				onpreview={(id) => (previewId = id)}
 				ontake={b.spellPicks.toggle}
 				{detail}

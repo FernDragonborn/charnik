@@ -105,6 +105,12 @@
   holding only monk weapons, their Unarmed Strike and monk weapons swing with Dexterity when it is the
   better score — with the same STR/DEX switch a finesse weapon has — and roll the Martial Arts die
   where it beats the weapon's own. The Unarmed Strike rolls the die in place of its flat 1.
+- **A subclass's spells are always prepared.** A Life cleric's Domain Spells, a Devotion
+  paladin's Oath Spells, a 2024 Fiend warlock's and Draconic sorcerer's spells, a 2024 druid's Speak
+  with Animals and a 2024 ranger's Hunter's Mark are on the spell list from the level their table
+  says, marked always prepared and never counted against the spells you prepare or know. The 2014
+  Fiend adds its spells to the list you choose from. The builder shows them, locked, beside your
+  picks.
 
 ## 0.8.1
 

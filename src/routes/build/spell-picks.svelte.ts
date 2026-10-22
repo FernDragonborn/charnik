@@ -43,12 +43,23 @@ export class SpellPicks {
 			: [];
 	});
 
+	/** The spells a class feature keeps always prepared (a Domain's, an Oath's) — had, never picked. */
+	granted = $derived.by(
+		() => new Set(this.host().sheet?.spellcasting.classes.flatMap((c) => c.grantedSpells) ?? []),
+	);
+	/** What the picker shows as held: the picks, and what a feature grants. */
+	held = $derived.by(() => [...new Set([...this.host().draft.selectedSpells, ...this.granted])]);
+
 	/** The spell level of a ref, as the content declares it. */
 	private levelOf = (ref: string): number =>
 		Number(rowOfType(this.host().graph?.get(ref), 'spell')?.data.level ?? 0);
 
 	toggle = (ref: string) => {
 		const draft = this.host().draft;
+		if (this.granted.has(ref)) {
+			toast(t('build.notice.grantedSpell'));
+			return;
+		}
 		if (draft.selectedSpells.includes(ref)) {
 			if (this.host().edit && draft.strict && this.host().edit?.spells.has(ref)) {
 				toast(t('build.notice.strictKnownSpell'));

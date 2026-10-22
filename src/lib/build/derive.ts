@@ -145,8 +145,10 @@ export function buildSpellPicker({
 		// RV1: attribute each CHOSEN spell to ONE caster class via `casterForSpell` — the SAME rule the
 		// play sheet uses for prepared tallies — so a dual-list spell counts against ONE class's cap
 		// (identically at build + play time), not against every class whose list happens to include it.
+		// a spell a feature grants is had, never chosen, and charged to no cap
 		const chosenForThisClass = selectedSpells.filter(
-			(id) => casterForSpell(sheet, id)?.classId === profile.classId
+			(id) =>
+				!profile.grantedSpells.includes(id) && casterForSpell(sheet, id)?.classId === profile.classId
 		);
 		const cantripsChosen = chosenForThisClass.filter((id) => chosenLevel(id) === 0).length;
 		const leveledChosen = chosenForThisClass.filter((id) => chosenLevel(id) > 0).length;

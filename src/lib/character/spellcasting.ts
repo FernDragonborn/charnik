@@ -13,6 +13,8 @@ import type { ArmorCategory } from '$lib/content/item-tags';
 import { ISSUE_KEY } from '$lib/effects/token-parser';
 import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { RITUAL_SOURCE, type RitualSource } from '../content/schemas';
+import { featureSpellsFor, type FeatureSpells } from './feature-spells';
+export { spellEntries } from './feature-spells';
 import { getSpellAccess, type SpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { heldClassOptions } from './features';
@@ -52,6 +54,9 @@ export interface SpellcastingClass {
 	 *  CLASS, because a ritual is cast as the class the spell is cast as: a wizard's spellbook does
 	 *  not make a sorcerer's spell a ritual. */
 	ritualSource: RitualSource | null;
+	/** Spell effectiveIds a feature keeps always prepared for this class (Domain, Oath, Patron
+	 *  spells) — never counted against its prepared or known number, and on its list either way. */
+	grantedSpells: string[];
 }
 
 /**
@@ -204,6 +209,7 @@ interface CasterProfile {
 	ritualSource: RitualSource | null;
 	/** Cantrips known beyond the casting table, from held options. */
 	extraCantrips: number;
+	featureSpells: FeatureSpells;
 }
 
 /**
@@ -292,6 +298,7 @@ function casterProfileFor(
 		accessRef,
 		ritualSource: ritualSourceFor({ entry, classRow, subclass: chosenSubclass, graph, character }),
 		extraCantrips: extraCantripsFor(entry, graph, character),
+		featureSpells: featureSpellsFor(entry, graph, character),
 	};
 }
 
@@ -372,6 +379,7 @@ function featCasterProfiles(
 			// the feat's own statement: SRD 5.2.1 lets any spellcaster ritual a spell they have
 			// prepared, and a feat that keeps its spell always prepared says so on its row
 			ritualSource: feat.data.ritual_source ?? null,
+			grantedSpells: [],
 		});
 	}
 	return out;
@@ -532,9 +540,16 @@ export function deriveSpellcasting({
 			cantripCap: (cc.cantrips ?? 0) + p.extraCantrips,
 			preparedCap: cappedPrepared(p, cc.prepared, abilityModifier(score)),
 			maxSpellLevel: maxSpellLevel(ownCounts),
-			accessSpellIds: access.spellIdsForClass(p.accessRef),
+			accessSpellIds: [
+				...new Set([
+					...access.spellIdsForClass(p.accessRef),
+					...p.featureSpells.prepared,
+					...p.featureSpells.list,
+				]),
+			],
 			isPact,
 			ritualSource: p.ritualSource,
+			grantedSpells: p.featureSpells.prepared,
 		};
 	});
 

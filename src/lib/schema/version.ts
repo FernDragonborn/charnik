@@ -204,7 +204,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // by the dice alone.
 // v75: Martial Arts lets a monk's fists and monk weapons swing with Dexterity and roll the Martial
 // Arts die (`weapon_rule`). An install left at v74 swings them with Strength and their own die.
-export const CONTENT_SEED_VERSION = 75;
+// v76: the subclass spell tables, Druidic's Speak with Animals and Favored Enemy's Hunter's Mark are
+// a class feature's `spells`, and the 2014 Fiend's expanded list `spells_as: list`. An install left
+// at v75 grants none of them.
+export const CONTENT_SEED_VERSION = 76;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

@@ -304,7 +304,8 @@ describe('buildSpellPicker', () => {
 		classId,
 		accessSpellIds: access.map((s) => s.effectiveId),
 		maxSpellLevel,
-		saveDC: { value: saveDC }
+		saveDC: { value: saveDC },
+		grantedSpells: [] as string[]
 	});
 	const sheetOf = (...classes: ReturnType<typeof caster>[]) =>
 		({ spellcasting: { classes } }) as unknown as CharacterSheet;

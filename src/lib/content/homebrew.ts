@@ -31,6 +31,7 @@ import {
 	CASTER_SHARES,
 	PREPARE_STYLES,
 	RITUAL_SOURCES,
+	SPELLS_AS_VALUES,
 	SCHOOLS,
 	RESOLUTIONS,
 	ITEM_CATEGORIES,
@@ -63,6 +64,7 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	caster_share: CASTER_SHARES,
 	prepare_style: PREPARE_STYLES,
 	ritual_source: RITUAL_SOURCES,
+	spells_as: SPELLS_AS_VALUES,
 	school: SCHOOLS,
 	resolution: RESOLUTIONS,
 	category: ITEM_CATEGORIES,
@@ -118,6 +120,8 @@ const LABELS: Record<string, string> = {
 	option_of: 'Option of',
 	choose: 'Options to choose',
 	language_grants: 'Languages taught',
+	spells: 'Spells granted',
+	spells_as: 'Spells are',
 };
 const label = (name: string): string => LABELS[name] ?? titleCase(name);
 

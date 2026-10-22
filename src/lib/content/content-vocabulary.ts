@@ -17,6 +17,12 @@ export const PREPARE_STYLES = ['prepared', 'known'] as const;
 export const RITUAL_SOURCE = { prepared: 'prepared', spellbook: 'spellbook' } as const;
 export type RitualSource = (typeof RITUAL_SOURCE)[keyof typeof RITUAL_SOURCE];
 export const RITUAL_SOURCES = Object.values(RITUAL_SOURCE);
+/** How a feature's `spells` are had: `prepared` — always prepared, never counted against the class's
+ *  number (Domain, Oath and Patron spells); `list` — added to the class's spell list to choose from
+ *  (the 2014 Fiend's "expanded list"). An open enum: a third way a feature hands over a spell is a
+ *  member here. */
+export const SPELLS_AS = { prepared: 'prepared', list: 'list' } as const;
+export const SPELLS_AS_VALUES = Object.values(SPELLS_AS);
 export const SCHOOLS = [
 	'abjuration',
 	'conjuration',

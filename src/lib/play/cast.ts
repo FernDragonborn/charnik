@@ -11,7 +11,7 @@ import { localizedName } from '$lib/content/detail';
 import { pactPool, slotToSpend, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import { evalUpcast } from '$lib/effects/upcast';
-import { canCastAsRitual } from '$lib/character/spellcasting';
+import { canCastAsRitual, spellEntries } from '$lib/character/spellcasting';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { UNARMED_STRIKE_ID, type ActionSlot, type Attack } from '$lib/combat/helpers';
@@ -135,7 +135,7 @@ function weaponFor(
 
 /** May this cast be a ritual? Only where it was asked for and the class it is cast as allows. */
 function isRitual(character: Character, sheet: CharacterSheet, spell: CastSpell, asked: boolean) {
-	const entry = character.build.spells.find((known) => known.spell === spell.subject.ref);
+	const entry = spellEntries(character, sheet).find((known) => known.spell === spell.subject.ref);
 	return (
 		asked &&
 		canCastAsRitual(casterForSpell(sheet, spell.subject.ref), {
