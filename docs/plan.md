@@ -279,6 +279,10 @@ position and are given per wave, because most of them were learned the hard way.
     webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM asks
     for an ability check, a save or a skill and sees the roll land; damage a GM sends arrives raw
     with its type and the player's app applies its defenses. No chat, no maps, no initiative order.
+    **The 0.9.0 table is desktop players.** The maintainer's call: a player joining from a phone — the
+    web demo at a table, or the mobile build — comes only once the base engine supports the SRD
+    through level 20 (the 5–10 and 11–20 waves below), so the decision-10 question of
+    `research/table-link-design-review.md` is settled for 0.9.0 as "not yet".
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
@@ -306,6 +310,8 @@ position and are given per wave, because most of them were learned the hard way.
   EXCEPT-DAMAGE (Superior Defense and Empty Body are its second and third cases), Relentless Rage's
   rising DC at 0 hit points, Hunter's Mark as a spell a feature strengthens (Foe Slayer, Superior
   Hunter's Prey), the 2024 epic boons' remainder.
+  **Then the phone path for players** — the maintainer's order: after the engine is whole, not before
+  (`research/adoption-friction.md` ▸ Where we lose ▸ 5).
   **The waves cross-link, which is why they are named here and not merged:** FEATURE-SPELLS (0.8.2)
   carries CIRCLE-OF-THE-LAND, SPECIES-SPELLS, the free casts of the middle levels and Words of
   Creation; the per-spell pool is Mystic Arcanum's; COMPANION serves Faithful Steed and Dragon

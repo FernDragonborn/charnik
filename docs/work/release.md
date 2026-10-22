@@ -3,12 +3,33 @@
 > Tracker. Packaging, distribution channels, dependencies and their advisories. The ORDER is
 > [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **WINDOWS-SIGNING · the installer is not Authenticode-signed, so SmartScreen warns.** Release
-  builds carry the updater's minisign signature only; Windows shows "Windows protected your PC" and,
-  unsigned, resets reputation with every release. For an app nobody knows that screen is a drop-off
-  point (`../research/adoption-friction.md` ▸ Where we lose ▸ 1). Options: SignPath's free certificate
-  for public open-source projects (eligibility to verify), Azure Artifact Signing (~$10/month, US and
-  Canada individuals), an OV certificate ($150–300/year). Needs the maintainer's account or money.
+- [ ] **WINDOWS-SIGNING · the installer is not Authenticode-signed, so SmartScreen warns — SignPath
+  is the maintainer's choice.** Release builds carry the updater's minisign signature only; Windows
+  shows "Windows protected your PC" and, unsigned, resets reputation with every release. For an app
+  nobody knows that screen is a drop-off point (`../research/adoption-friction.md` ▸ Where we lose ▸ 1).
+  **SignPath Foundation's conditions** (<https://signpath.org/terms.html>, read 2026-10-22): an
+  OSI-approved licence for every component, no proprietary component, actively maintained and already
+  released; the functionality described on the download page; a **"Code signing policy"** on the home
+  and release pages naming the team's roles (authors, reviewers, approvers) and crediting "Free code
+  signing provided by SignPath.io, certificate by SignPath Foundation"; a privacy statement (README ▸
+  Privacy now carries one); **MFA for every team member** on SignPath and GitHub; binaries built from
+  source in CI, **each release approved by hand**; product name and version fixed in the metadata;
+  data sent elsewhere described, and — on the strictest reading — an installation option to disable
+  it, which the pack check has (Settings ▸ Content updates) and the app's own launch update check
+  does not yet. The certificate is issued to SignPath Foundation, which becomes the publisher shown.
+  **The risk:** "for executables, we require a certain verifiable reputation … We cannot sign binaries
+  based on source code that nobody knows", and a project was turned down in October 2026 for lacking
+  public visibility, with reapplication welcome later. Charnik is in that position today, so apply —
+  a refusal costs nothing — and expect to reapply once the project is talked about.
+  **What is the maintainer's:** the application at signpath.org, MFA on the GitHub account, the
+  SignPath organisation and its API token as `release`-environment secrets. **What can be prepared
+  ahead:** the "Code signing policy" section (written only once accepted, since its credit line would
+  otherwise be untrue), a toggle for the launch update check, and a `release.yml` step that submits the
+  NSIS installer through `signpath/github-action-submit-signing-request` only when the secrets exist —
+  checking first that Tauri's bundler is not asked to sign the same file.
+  **Fallback** if SignPath declines: an OV certificate ($150–300 a year; since 2024 no faster
+  reputation from EV, by Microsoft's own page). Azure Artifact Signing is limited to individuals in the
+  US and Canada.
 - [ ] **DISTRIBUTION-EXPANSION · ship through the platform package managers**, beyond GitHub
   Releases, so users install and update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to

@@ -109,6 +109,11 @@ character.
 
 ## Recommendations, cheapest leverage first
 
+Taken by the maintainer on 2026-10-22: signing goes through SignPath (`work/release.md` ▸
+WINDOWS-SIGNING, with its reputation risk); the phone path waits until the engine supports the SRD
+through level 20 (`plan.md`).
+
+
 1. **Sign the Windows installer** (SignPath for open source, or Azure Artifact Signing). Before any
    promotion — it is the first screen a new user sees.
 2. **Decide the phone path for players** (web demo joining a table, or the mobile build) as part of

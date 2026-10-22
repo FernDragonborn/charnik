@@ -66,6 +66,16 @@ can build from source. Only official releases are signed (the updater's `.sig` f
 are added by CI via `src-tauri/tauri.release.conf.json`, which needs the private key); local unsigned
 builds simply don't auto-update.
 
+## Privacy
+
+Charnik has no account, no telemetry and no analytics. Your characters and content stay in folders
+on your disk, and deleting the app leaves them there. The desktop app goes online for two things,
+both to GitHub: at launch it asks GitHub's release endpoint whether a newer version exists, and once
+a day it asks the repositories of your content packs what changed — which Settings ▸ Content updates
+can turn off. GitHub sees each request as it sees any visit: your IP address and the request itself.
+The "Found a bug?" button builds a diagnostics bundle on your machine; nothing leaves it unless you
+attach it yourself. The web demo keeps everything in your browser.
+
 ## Licensing
 
 Charnik separates **code**, **bundled data**, and **user content** — see
