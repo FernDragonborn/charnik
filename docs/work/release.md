@@ -28,8 +28,11 @@
   NSIS installer through `signpath/github-action-submit-signing-request` only when the secrets exist —
   checking first that Tauri's bundler is not asked to sign the same file.
   **Fallback** if SignPath declines: an OV certificate ($150–300 a year; since 2024 no faster
-  reputation from EV, by Microsoft's own page). Azure Artifact Signing is limited to individuals in the
-  US and Canada.
+  reputation from EV, by Microsoft's own page). Azure Artifact Signing (about $10 a month) takes an individual
+  only in the US or Canada, and an organisation in the US, Canada, the EU, the UK, Australia, New
+  Zealand, Japan, South Korea, Singapore, Switzerland, Norway or Israel — the right path if the
+  maintainer has such an entity, since it depends on no third party's view of the project's
+  reputation.
 - [ ] **DISTRIBUTION-EXPANSION · ship through the platform package managers**, beyond GitHub
   Releases, so users install and update the native way. Target set:
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
