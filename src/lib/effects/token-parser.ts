@@ -285,7 +285,15 @@ function qualifierSlot(
 /** The targets a dotted sub-name SCOPES rather than names: `damage.melee` is a damage bonus for
  *  melee things, while `speed.fly` is its own stat. Two families, one dot — so the split is a list,
  *  not a guess. */
-const SCOPABLE_TARGETS: readonly string[] = ['attack', 'damage', 'attacked', 'saves', 'ac'];
+const SCOPABLE_TARGETS: readonly string[] = [
+	'attack',
+	'damage',
+	'attacked',
+	'saves',
+	'ac',
+	'spell_dc',
+	'spell_attack',
+];
 
 const baseTarget = (target: string): string => target.toLowerCase().split('.')[0] ?? '';
 

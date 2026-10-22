@@ -225,18 +225,21 @@ sense take the greater one, so write it as `set_override:senses.darkvision:60:fl
 
 ### Narrowing a bonus to some attacks
 
-`attack` and `damage` — and only those two — accept a **scope** after a dot, so a bonus applies to
-some rolls and not others:
+`attack`, `damage`, `spell_dc` and `spell_attack` accept a **scope** after a dot, so a bonus applies
+to some rolls and not others:
 
 ```
 flat_bonus:damage.melee+2          melee only
 flat_bonus:damage.longsword+1      one weapon
 flat_bonus:damage.str+2            attacks that used Strength
 flat_bonus:damage.melee,str+2      both at once — every part must match
+advantage:attack.spell,sorcerer    the sorcerer's spell attacks
+flat_bonus:spell_dc.sorcerer+1     the sorcerer's spell save DC, not a second class's
 ```
 
 What a roll offers as scopes depends on what is rolling. A weapon offers its tags, its own id, and
-the ability the attack used. A spell offers its id. A skill check offers `proficient` when it is
+the ability the attack used. A spell offers its id, `spell`, and the class it is cast as. A skill
+check offers `proficient` when it is
 adding your proficiency bonus. A saving throw offers nothing, so a scoped effect never touches one.
 
 ### Proficiency has its own targets

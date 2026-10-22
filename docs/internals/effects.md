@@ -150,11 +150,14 @@ total at its own layer. So that one row stays prose until the ordering has an an
 
 **A SCOPED bonus** applies to one thing rather than everything, and says so in the target namespace:
 `flat_bonus:damage.melee+2` (a category), `damage.<weapon_id>` (one weapon), `damage.<spell_id>` (one
-spell — Agonizing Blast). The scopable targets are `attack`, `damage`, `attacked`, `saves` and `ac`;
-every other dotted target IS a target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
+spell — Agonizing Blast). The scopable targets are `attack`, `damage`, `attacked`, `saves`, `ac`,
+`spell_dc` and `spell_attack`; every other dotted target IS a target (`speed.fly`, `save.str`). The older `flat_bonus:attack:<category>` (Archery) means the same
 thing and normalizes to the same field. A scope matches when EVERY comma-separated part is one of the
 rolling thing's scopes, and what those are depends on what is rolling: a weapon names its tags, its
-own id, and the ABILITY the attack resolved from (`str`/`dex`); a cast names the spell's id; a SKILL
+own id, and the ABILITY the attack resolved from (`str`/`dex`); a cast names the spell's id,
+`spell`, and the class it is cast as (Innate Sorcery's "attack rolls of Sorcerer spells" is
+`advantage:attack.spell,sorcerer`); a caster profile folds a `spell_dc`/`spell_attack` scoped to its
+own class (`spell_dc.sorcerer+1`) and no other; a SKILL
 CHECK names `proficient` when it adds your proficiency bonus (expertise included, Jack of All Trades'
 `partial` rung excluded) — which is how Reliable Talent floors the checks RAW says it floors and no
 others. A roll that names nothing (a save) picks up no scoped effect at all. Attack scopes fold once,

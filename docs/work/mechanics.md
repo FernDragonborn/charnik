@@ -138,15 +138,16 @@ stay semi-manual.
   is the settled shape: the scope lives in the TARGET namespace — `flat_bonus:damage.melee+2`,
   `damage.<weapon_id>`, `damage.<spell_id>` — so it costs no token segment (the 4th stays reserved
   for a bonus TYPE, `docs/internals/compatibility.md` §4) and keeps the weapon vocabulary out of L1.
-  A weapon's scopes are its tags plus its own id, a cast's is the spell's id, and a roll naming no
-  scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
+  A weapon's scopes are its tags plus its own id, a cast's are the spell's id, `spell` and the class
+  it is cast as, and a roll naming no scope picks up none of them. `flat_bonus:attack:<category>` (Archery) normalizes into the same
   field, so there is one shape downstream. Rage's damage reads it in both editions, 2014 Agonizing
   Blast as `damage.eldritch_blast`, 2024 Agonizing Blast as `damage.option_choice` filled with the
   cantrip its pick named (REPEATABLE-OPTION), and Magic Weapon with the weapon its cast asked for.
-  What is left: **a cast offers only its spell's id as a scope**, so a bonus to every spell of a
-  CLASS or a SCHOOL has nothing to name — 2024 Potent Spellcasting on any Cleric or Druid cantrip,
-  Empowered Evocation on evocation spells (FEATURE-PASSIVES lists them). The fix is the cast
-  offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
+  Innate Sorcery's DC and advantage name the class (`spell_dc.sorcerer`, `attack.spell,sorcerer`).
+  What is left: **a cast offers no SCHOOL and no CANTRIP scope**, so 2024 Potent Spellcasting (any
+  Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
+  (FEATURE-PASSIVES lists them). The fix is the cast offering its school and `cantrip` beside the
+  class, the way a weapon offers its tags.
 - [ ] **FEATURE-LANGUAGES · the languages a class feature grants.** Druidic (druid), Thieves' Cant
   (rogue), Draconic (2014 Dragon Ancestor), and the 2024 rogue's "one other language of your choice".
   Languages come from a species and a background today; a feature grants none.

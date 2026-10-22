@@ -85,6 +85,11 @@
   one identity in the list that draws them.
 - **Thaumaturge and Magician teach their extra cantrip.** A 2024 cleric or druid who chose one may
   know one cantrip more than the class table says; the builder and the spellbook were one short.
+- **Three level-1 pools are on the sheet.** A 2014 paladin's Divine Sense has 1 + Charisma
+  modifier uses; a 2024 sorcerer's Innate Sorcery has two, and spending one raises the save DC of
+  their Sorcerer spells by 1 and gives Advantage on their Sorcerer spell attacks for a minute — not
+  a second class's spells; a 2024 ranger's Favored Enemy counts its free Hunter's Marks, two at 1st
+  level and up to six at 17th.
 
 ## 0.8.1
 

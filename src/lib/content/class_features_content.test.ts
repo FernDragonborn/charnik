@@ -1417,3 +1417,60 @@ describe.each(['srd-2014', 'srd-2024'] as const)('class skill lists · %s', (pac
 		}
 	});
 });
+
+/*
+ * The level-1 pools the class text states. SRD 5.1 ▸ Paladin ▸ Divine Sense: "You can use this
+ * feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you
+ * regain all expended uses." SRD 5.2.1 ▸ Sorcerer ▸ Innate Sorcery: "for 1 minute … The spell save
+ * DC of your Sorcerer spells increases by 1. You have Advantage on the attack rolls of Sorcerer
+ * spells you cast. You can use this feature twice, and you regain all expended uses of it when you
+ * finish a Long Rest." ▸ Ranger ▸ Favored Enemy: "You can cast it twice without expending a spell
+ * slot" — the Favored Enemy column reads 2, 3 at 5, 4 at 9, 5 at 13, 6 at 17.
+ */
+describe('the level-1 class pools', () => {
+	const pool = (c: Character, g: ContentGraph, id: string) =>
+		deriveSheet(c, g).resources.find((r) => r.id === id);
+
+	it('2014: Divine Sense has 1 + Charisma modifier uses, back on a long rest', async () => {
+		const g = await loadEdition('srd-2014');
+		const paladin = charOf('SRD 5.1', '5e', 'paladin', 1);
+		paladin.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 16 };
+		expect(pool(paladin, g, 'divine_sense')?.max).toBe(4);
+		expect(pool(paladin, g, 'divine_sense')?.recharge).toMatchObject({ trigger: 'long' });
+		const sense = deriveSheet(paladin, g).resourceOptions.find(
+			(o) => o.id === 'paladin_divine_sense',
+		);
+		expect(sense?.actionType).toBe('action');
+	});
+
+	it('2024: Favored Enemy casts Hunter’s Mark 2 to 6 times by the table', async () => {
+		const g = await loadEdition('srd-2024');
+		const uses = (level: number) =>
+			pool(charOf('SRD 5.2.1', '5.5e', 'ranger', level), g, 'favored_enemy')?.max;
+		expect([1, 4, 5, 9, 13, 17, 20].map(uses)).toEqual([2, 2, 3, 4, 5, 6, 6]);
+	});
+
+	it('2024: Innate Sorcery is two uses, and raises only the Sorcerer spells’ DC', async () => {
+		const g = await loadEdition('srd-2024');
+		const c = charOf('SRD 5.2.1', '5.5e', 'sorcerer', 1);
+		c.build.classes.push(classRow({ class: 'class:SRD 5.2.1:wizard', level: 1 }));
+		expect(pool(c, g, 'innate_sorcery')?.max).toBe(2);
+		const dc = (sheet: ReturnType<typeof deriveSheet>, classId: string) =>
+			sheet.spellcasting.classes.find((p) => p.classId === classId)?.saveDC.value;
+		const calm = deriveSheet(c, g);
+		const effect = g.list('effect', { system: '5.5e' }).find((r) => r.id === 'innate_sorcery');
+		c.play.effects = [
+			{ iid: 'i1', label: 'Innate Sorcery', effects: effect?.data.effects ?? [], positive: true },
+		];
+		const unleashed = deriveSheet(characterSchema.parse(c), g);
+		expect(dc(unleashed, 'sorcerer')).toBe((dc(calm, 'sorcerer') ?? 0) + 1);
+		expect(dc(unleashed, 'wizard')).toBe(dc(calm, 'wizard'));
+		// advantage on a sorcerer's spell attack, not on a wizard's, and not on a sword
+		const advantageOn = (scopes: string[]) =>
+			rollEffectsFor(unleashed.facts, 'attack', new Set(scopes)).advantage;
+		expect(advantageOn(['fire_bolt', 'spell', 'sorcerer'])).toBe(true);
+		expect(advantageOn(['fire_bolt', 'spell', 'wizard'])).toBe(false);
+		expect(advantageOn(['melee', 'str', 'longsword'])).toBe(false);
+		expect(unleashed.deriveIssues).toEqual([]);
+	});
+});

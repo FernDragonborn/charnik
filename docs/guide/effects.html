@@ -930,16 +930,20 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 
 			<h3>Narrowing a bonus to some attacks</h3>
 			<p>
-				<code>attack</code> and <code>damage</code> accept a <strong>scope</strong> after a dot, so a
-				bonus applies to some rolls and not others:
+				<code>attack</code>, <code>damage</code>, <code>spell_dc</code> and
+				<code>spell_attack</code> accept a <strong>scope</strong> after a dot, so a bonus applies to
+				some rolls and not others:
 			</p>
 			<pre class="cols"><code>flat_bonus:damage.melee+2          <span class="cmt">melee only</span>
 flat_bonus:damage.longsword+1      <span class="cmt">one weapon</span>
 flat_bonus:damage.str+2            <span class="cmt">attacks that used Strength</span>
-flat_bonus:damage.melee,str+2      <span class="cmt">both at once — every part must match</span></code></pre>
+flat_bonus:damage.melee,str+2      <span class="cmt">both at once — every part must match</span>
+advantage:attack.spell,sorcerer    <span class="cmt">the sorcerer's spell attacks</span>
+flat_bonus:spell_dc.sorcerer+1     <span class="cmt">the sorcerer's spell save DC, not a second class's</span></code></pre>
 			<p>
 				What a roll offers as scopes depends on what is rolling. A weapon offers its tags, its own
-				id, and the ability the attack used. A spell offers its id. A skill check offers
+				id, and the ability the attack used. A spell offers its id, <code>spell</code>, and the
+				class it is cast as. A skill check offers
 				<code>proficient</code> when it is adding your proficiency bonus.
 			</p>
 

@@ -334,7 +334,7 @@ function featCasterProfiles(
 	character: Character,
 	graph: ContentGraph,
 	access: SpellAccess,
-	statsFor: (ability: Ability) => Pick<SpellcastingClass, 'saveDC' | 'attack'>,
+	statsFor: (ability: Ability, classId: string) => Pick<SpellcastingClass, 'saveDC' | 'attack'>,
 ): SpellcastingClass[] {
 	const out: SpellcastingClass[] = [];
 	for (const taken of character.build.featSpells) {
@@ -352,14 +352,15 @@ function featCasterProfiles(
 			.find((c) => c.id === taken.list);
 		const cantrips = grants.find((g) => g.level === 0)?.count ?? 0;
 		const leveled = grants.filter((g) => g.level > 0);
+		const profileId = `${taken.feat}.${taken.key}`;
 		out.push({
 			// keyed by the SLOT the feat sits in, so two instances of a repeatable feat are two
 			// profiles with two lists and never one that swallows the other's picks
-			classId: `${taken.feat}.${taken.key}`,
-			classEffectiveId: `${taken.feat}.${taken.key}`,
+			classId: profileId,
+			classEffectiveId: profileId,
 			className: feat.data.name_en,
 			ability: taken.ability,
-			...statsFor(taken.ability),
+			...statsFor(taken.ability, profileId),
 			// "known", never "prepared": the spells a feat teaches are fixed until you level up and
 			// swap one — there is no re-prepare on a rest
 			prepareStyle: 'known',
@@ -406,6 +407,40 @@ function preparedCapOrReport({
 	return 0;
 }
 
+/** The facts as one caster profile reads them: a numeric fact scoped to its class is unscoped for
+ *  it, and every other scoped fact stays scoped, which the fold skips. */
+function factsFor(facts: EffectFacts, classId: string): EffectFacts {
+	if (!facts.numeric.some((f) => f.scope === classId)) return facts;
+	return {
+		...facts,
+		numeric: facts.numeric.map((f) => {
+			if (f.scope !== classId) return f;
+			const { scope: _ownClass, ...unscoped } = f;
+			return unscoped;
+		}),
+	};
+}
+
+/** DC + attack for one caster profile — the same two numbers every profile computes, class or feat.
+ *  `spell_dc`/`spell_attack` effects fold onto every profile (a Rod of the Pact Keeper), and one
+ *  scoped to a class (`spell_dc.sorcerer+1`, Innate Sorcery's "your Sorcerer spells") onto that
+ *  class's profile alone. */
+function profileStats(of: {
+	ability: Ability;
+	classId: string;
+	score: number;
+	level: number;
+	facts: EffectFacts | undefined;
+}): Pick<SpellcastingClass, 'saveDC' | 'attack'> {
+	const fold = (key: 'spell_dc' | 'spell_attack', base: Computed): Computed =>
+		of.facts ? applyEffects(key, base, factsFor(of.facts, of.classId)) : base;
+	const stat = { ability: of.ability, score: of.score, level: of.level };
+	return {
+		saveDC: fold('spell_dc', spellSaveDC(stat)),
+		attack: fold('spell_attack', spellAttackBonus(stat)),
+	};
+}
+
 /** What the full casting derive needs. The two optional halves are the effects engine's: with
  *  auto-calc off there are no `facts` to fold and nowhere to report an `issue`, and casting still
  *  derives — the DCs are just base ones. */
@@ -439,23 +474,9 @@ export function deriveSpellcasting({
 		.map((entry) => casterProfileFor(entry, graph, character))
 		.filter((p): p is CasterProfile => p !== null);
 
-	const foldSpellStat = (key: 'spell_dc' | 'spell_attack', base: Computed): Computed =>
-		facts ? applyEffects(key, base, facts) : base;
-
 	const access = getSpellAccess(graph);
-	/** DC + attack for one ability — the same two numbers every profile computes, class or feat. */
-	const statsFor = (ability: Ability) => ({
-		// `spell_dc`/`spell_attack` effects (a Rod-of-the-Pact-Keeper-style item) fold onto every
-		// caster profile's numbers — the target is not class-scoped in the L1 vocabulary
-		saveDC: foldSpellStat(
-			'spell_dc',
-			spellSaveDC({ ability, score: scores[ability], level: totalLevel }),
-		),
-		attack: foldSpellStat(
-			'spell_attack',
-			spellAttackBonus({ ability, score: scores[ability], level: totalLevel }),
-		),
-	});
+	const statsFor = (ability: Ability, classId: string) =>
+		profileStats({ ability, classId, score: scores[ability], level: totalLevel, facts });
 
 	// a feat teaches spells whether or not a class does — a Fighter with Magic Initiate casts, so the
 	// feat profiles are built BEFORE the "no caster class" exit rather than behind it
@@ -506,7 +527,7 @@ export function deriveSpellcasting({
 			classEffectiveId: p.accessRef,
 			className: p.className,
 			ability: p.ability,
-			...statsFor(p.ability),
+			...statsFor(p.ability, p.ownerId),
 			prepareStyle: p.prepareStyle,
 			cantripCap: (cc.cantrips ?? 0) + p.extraCantrips,
 			preparedCap: cappedPrepared(p, cc.prepared, abilityModifier(score)),

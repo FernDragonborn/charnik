@@ -68,9 +68,13 @@ export interface UpcastReads {
 }
 
 /** What a cast is IN SCOPE of, so a bonus can name one spell (`flat_bonus:damage.eldritch_blast+3`,
- *  Agonizing Blast) instead of every roll the character makes. The spell's own id — the same
+ *  Agonizing Blast) instead of every roll the character makes: the spell's own id, `spell` for any
+ *  spell, and the class it is cast AS (Innate Sorcery's "Sorcerer spells you cast") — the same
  *  vocabulary a weapon's id and its tags use, because a scope is a name, not an enum. */
-const spellScopes = (r: SpellRow): Set<string> => new Set([r.id]);
+/** The scope every spell's roll carries beside its own id (`advantage:attack.spell`). */
+const SPELL_SCOPE = 'spell';
+const spellScopes = (r: SpellRow, caster: SpellcastingClass | undefined): Set<string> =>
+	new Set([r.id, SPELL_SCOPE, ...(caster ? [caster.classId] : [])]);
 
 export class SpellCastRolls {
 	constructor(
@@ -117,7 +121,7 @@ export class SpellCastRolls {
 		cast: { up: UpcastCast; times: number },
 	): void {
 		const { up, times } = cast;
-		const scopes = spellScopes(r);
+		const scopes = spellScopes(r, caster);
 		const fx = this.host.effectsFor('attack', scopes);
 		const dmgFx = this.host.effectsFor('damage', scopes);
 		const toHit = caster.attack.value + fx.flat;
@@ -184,7 +188,7 @@ export class SpellCastRolls {
 		const primaryFx: RollEffects =
 			heal || temp
 				? { ...NO_ROLL_EFFECTS, flat: healMod }
-				: this.host.effectsFor('damage', spellScopes(r));
+				: this.host.effectsFor('damage', spellScopes(r, caster));
 		const tempDelta = temp ? this.upcast.upcastFlatDelta(r, slotLevel, 'temp_hp') : 0;
 		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
 		return {
