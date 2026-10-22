@@ -21,7 +21,7 @@ each point below is either a **cost of switching** to remove or a **reason to sw
    so Windows SmartScreen shows "Windows protected your PC" — and unsigned, its reputation resets
    with every release's new file hash. For an unknown app this is where a share of people simply
    leave. Remedies, by cost: SignPath's free certificate for public open-source projects (eligibility
-   to verify); Azure Artifact Signing at about $10 a month (an individual in the US or Canada, or an organisation in the US, Canada, the EU, the UK and a few more); an OV
+   to verify); Azure Artifact Signing at about $10 a month (an individual in the US or Canada, or an organisation in a listed dozen countries — neither applies to Charnik's maintainer); an OV
    certificate at $150–300 a year — and since 2024 an EV certificate no longer buys instant
    reputation, by Microsoft's own page. The web demo stays the zero-install first contact.
 2. **The player's character already exists elsewhere.** Retyping a level-7 character from D&D Beyond
@@ -109,7 +109,8 @@ character.
 
 ## Recommendations, cheapest leverage first
 
-Taken by the maintainer on 2026-10-22: signing goes through SignPath (`work/release.md` ▸
+Taken by the maintainer on 2026-10-22: signing goes through SignPath, an OV certificate the
+fallback, Azure Artifact Signing ruled out by its eligibility (`work/release.md` ▸
 WINDOWS-SIGNING, with its reputation risk); the phone path waits until the engine supports the SRD
 through level 20 (`plan.md`).
 
