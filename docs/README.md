@@ -43,6 +43,8 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
+- [Security audit — 0.8.1](audit-oct-22.md) — the open security findings on the 0.8.1 tree, each
+  with its reproduction and fix, plus what was ruled out and what the reading did not reach.
 
 Design research sits in [research/](research/) — including
 [where an unknown app loses a table](research/adoption-friction.md): the drop-off points a new
