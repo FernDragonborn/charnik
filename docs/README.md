@@ -48,6 +48,8 @@ Design research sits in [research/](research/) — including
 [Wild Shape](research/wild-shape.md), the per-edition spec a form is built from, every line quoted from
 the shipped SRD text, [a bound creature](research/companion.md), the same for a familiar, a steed
 and a summon, with the four answers COMPANION waits on proposed, the [table link threat model](research/table-link-threats.md), the attack
-catalog the networked GM↔player spec must answer, and its companion
+catalog the networked GM↔player spec must answer, its survey of
+[what a table does in other tools](research/table-features-elsewhere.md) — D&D Beyond, Foundry,
+Roll20, Fantasy Grounds and the lighter tables, and what recurs — and its companion
 [design review](research/table-link-design-review.md): what the existing code does once a network
 input exists, the ways the module can be built wrong, and the decisions a spec takes first.
