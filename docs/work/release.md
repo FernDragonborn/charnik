@@ -106,9 +106,12 @@
   **What it fills in is built**: the `TableLink` interface, its no-op and the Rust commands that
   reach nobody (`../internals/overview.md` ▸ TableLink is the seam a table stands on). There is no
   user interface for a table — no button, no settings row — and the spec is what draws one.
-  **What other tools give a table** is `../research/table-features-elsewhere.md`: a shared roll log
-  is everyone's floor and is missing from the 0.9.0 proposal; initiative entered by the player and
-  shown to all is expected.
+  **What other tools give a table** is `../research/table-features-elsewhere.md` (read October 2026):
+  a shared roll log is everyone's floor and is missing from the 0.9.0 proposal — with GM-only rolls
+  and moderation from day one; initiative entered by the player and broadcast is now expected (D&D
+  Beyond since June 2026); telling the GM who passed a requested save is what the most-installed
+  Foundry module exists for; conditions laid by the GM travel to the player's sheet, with one writer
+  rather than two that must converge.
   **What the table turns from text into mechanics** — input for the spec, found by re-reading every
   class feature the app keeps as text because it sees no ally, no target, no GM roll and no scene:
   - *Allies:* spells and effects cast on another character (Bless, healing, Lay on Hands, Preserve
