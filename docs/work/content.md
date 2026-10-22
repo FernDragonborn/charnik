@@ -11,7 +11,7 @@
 - [ ] **CIRCLE-OF-THE-LAND · the land a druid chooses, and its spells.** SRD 5.1: a terrain of eight
   at level 2, each a table of circle spells by druid level, and a bonus cantrip; SRD 5.2.1: a land
   type chosen at each Long Rest (arid, polar, temperate, tropical) with its own table. Option rows
-  on FEATURE-SPELLS and EXTRA-CANTRIP (`mechanics.md`).
+  on FEATURE-SPELLS (`mechanics.md`), the bonus cantrip an option's `cantrips`.
 - [ ] **SPECIES-SPELLS · the spells a lineage or legacy grants at character level 3 and 5.** SRD
   5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
   (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). `spell@level` where the level is the

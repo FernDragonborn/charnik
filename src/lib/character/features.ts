@@ -94,6 +94,21 @@ export function heldOptions(
 	});
 }
 
+/**
+ * Every option one class entry holds, through the features it has reached — subclass features
+ * gated to the subclass it chose. What a held option grants its class (a ritual source, an extra
+ * cantrip) is read off these rows, so that reading and the sheet's listing share one gate.
+ */
+export function* heldClassOptions(
+	entry: Character['build']['classes'][number],
+	graph: ContentGraph,
+	character: Pick<Character, 'system' | 'build'>,
+): Generator<HeldOption> {
+	const asked = [{ classId: entry.class, subclassId: entry.subclass ?? null, level: entry.level }];
+	for (const f of activeClassFeatures(asked, graph, character.system))
+		yield* heldOptions(graph, f.row, character.build.options);
+}
+
 /** One option held: the row, and the answer this pick of it was given where the row asks one. */
 export interface HeldOption {
 	row: OptionRow;

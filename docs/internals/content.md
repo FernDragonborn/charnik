@@ -179,8 +179,10 @@ once it is given.
 options of `class_feature:warlock_pact_boon`; the feature row's `choose` column says how many, in
 the `count@level` ladder `expertise_slots` uses and read by the same `countAtLevel`; the
 answer is `build.options`, feature id → option ids, and `character/features.ts` ▸ `heldOptions`
-is the one reading of it — the gather folds those rows, the sheet lists them as features, and a
-caster's rituals are read off an option's `ritual_source` before its subclass's or its class's.
+is the one reading of it — the gather folds those rows, the sheet lists them as features, a
+caster's rituals are read off an option's `ritual_source` before its subclass's or its class's, and
+an option's `cantrips` adds to its class's cantrip cap (Thaumaturge's "one extra cantrip from the
+Cleric spell list").
 An option may state the class `level` it opens at and one other option it `requires`; an unmet
 one is refused in Strict and noted in Free. **An option may name several parents** in `option_of`, a
 comma list, where several features offer the same choice — a 2014 Fighting Style is one row offered

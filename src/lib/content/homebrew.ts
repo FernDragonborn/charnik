@@ -88,6 +88,7 @@ const NUMBER_FIELDS = new Set([
 	'ac',
 	'caster_from_level',
 	'cantrips_known',
+	'cantrips',
 	'prepared_known',
 	'duration_rounds',
 ]);

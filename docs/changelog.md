@@ -77,11 +77,14 @@
 - **A 2024 cleric chooses a Divine Order and Blessed Strikes, and a druid a Primal Order.**
   Protector and Warden bring their weapons and armour, Thaumaturge and Magician their bonus to two
   Intelligence skills, and Divine Strike is a roll on the sheet — 1d8, 2d8 from level 14. The extra
-  cantrip each Order's second option teaches, and Potent Spellcasting, are listed as text.
+  cantrip Thaumaturge and Magician teach counts toward the cantrips you may know; Potent
+  Spellcasting is listed as text.
 - **The 2024 Figurine of Wondrous Power reads to the end**: the Giant Fly's stat block and the seven
   figurines after it — Golden Lions to Silver Raven — were missing.
 - **A +1/+2/+3 item's article no longer trips over its rarity cells**, one per rung, which shared
   one identity in the list that draws them.
+- **Thaumaturge and Magician teach their extra cantrip.** A 2024 cleric or druid who chose one may
+  know one cantrip more than the class table says; the builder and the spellbook were one short.
 
 ## 0.8.1
 

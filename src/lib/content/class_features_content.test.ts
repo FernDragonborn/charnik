@@ -1019,6 +1019,19 @@ describe('2024 choices of two: Divine Order, Primal Order, Blessed Strikes', () 
 		expect((magician.nature?.value ?? 0) - (plain.nature?.value ?? 0)).toBe(1);
 	});
 
+	// "You know one extra cantrip from the Cleric spell list." / "… from the Druid spell list."
+	it('Thaumaturge and Magician each know one cantrip more than the class table', async () => {
+		const g = await loadEdition('srd-2024');
+		const cantripCap = (c: Character) => deriveSheet(c, g).spellcasting.classes[0]?.cantripCap;
+		const cleric = charOf('SRD 5.2.1', '5.5e', 'cleric', 1);
+		expect(cantripCap(cleric)).toBe(3);
+		expect(cantripCap(held(cleric, 'cleric_divine_order', 'thaumaturge'))).toBe(4);
+		expect(cantripCap(held(cleric, 'cleric_divine_order', 'protector'))).toBe(3);
+		const druid = charOf('SRD 5.2.1', '5.5e', 'druid', 1);
+		expect(cantripCap(druid)).toBe(2);
+		expect(cantripCap(held(druid, 'druid_primal_order', 'magician'))).toBe(3);
+	});
+
 	it('Divine Strike rolls 1d8 from cleric level 7 and 2d8 from 14', async () => {
 		const g = await loadEdition('srd-2024');
 		const strikeAt = (level: number) =>

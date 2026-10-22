@@ -245,16 +245,15 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. In order, cheapest first:
-  1. **EXTRA-CANTRIP** — `mechanics.md`. Thaumaturge and Magician's "one extra cantrip".
-  2. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
+  1. **CLASS-POOLS-L1** — `content.md`. Divine Sense (2014), Innate Sorcery and Favored Enemy's
      free Hunter's Marks (2024).
-  3. **CHOICES-2014** — `content.md`. Favored Enemy, Natural Explorer and Dragon Ancestor as options.
-  4. **FEATURE-LANGUAGES** — `mechanics.md`. Druidic, Thieves' Cant, Draconic, a rogue's extra one.
-  5. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
-  6. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
-  7. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
-  8. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
-  9. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
+  2. **CHOICES-2014** — `content.md`. Favored Enemy, Natural Explorer and Dragon Ancestor as options.
+  3. **FEATURE-LANGUAGES** — `mechanics.md`. Druidic, Thieves' Cant, Draconic, a rogue's extra one.
+  4. **DISCIPLE-OF-LIFE** — `mechanics.md`. +2 + the spell's level on a 2014 Life cleric's healing.
+  5. **MARTIAL-ARTS** — `mechanics.md`. A monk's Dexterity and Martial Arts die, both editions.
+  6. **FEATURE-SPELLS** — `mechanics.md`. Spells a feature always has prepared, `spell@level`.
+  7. **REPEATABLE-OPTION**'s Lessons of the First Ones, and **PROSE-MARKDOWN**'s four tables.
+  8. **STARTING-EQUIPMENT** — `ui.md`. A class's (and a 2024 background's) starting kit, asked in
       the build and put in the inventory.
 
   The cut is then the release routine below; the `0.9.0` heading in the changelog becomes `0.8.2`,

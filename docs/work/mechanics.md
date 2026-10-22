@@ -147,12 +147,6 @@ stay semi-manual.
   CLASS or a SCHOOL has nothing to name — 2024 Potent Spellcasting on any Cleric or Druid cantrip,
   Empowered Evocation on evocation spells (FEATURE-PASSIVES lists them). The fix is the cast
   offering more scopes (its school, the class it was cast as), the way a weapon offers its tags.
-- [ ] **EXTRA-CANTRIP · an option that teaches its class one more cantrip.** SRD 5.2.1 Thaumaturge and
-  Magician: "You know one extra cantrip from the Cleric/Druid spell list." The class's cantrip cap
-  reads the class table only (`character/spellcasting.ts` ▸ `cantripCap: cc.cantrips`), so it is
-  one short — a number we know to be wrong. Planned shape: an `option` column `cantrips` (an
-  integer, "this many more cantrips from the asking class's list"), summed into the class's cap
-  from its held options the way `ritualSourceFor` already reads `ritual_source` off them.
 - [ ] **FEATURE-LANGUAGES · the languages a class feature grants.** Druidic (druid), Thieves' Cant
   (rogue), Draconic (2014 Dragon Ancestor), and the 2024 rogue's "one other language of your choice".
   Languages come from a species and a background today; a feature grants none.

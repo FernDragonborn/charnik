@@ -573,6 +573,9 @@ const optionSchema = baseRow.extend({
 	level: optInt,
 	/** The rituals this option lets its class cast (`RITUAL_SOURCE`), as a class row states its own. */
 	ritual_source: RitualSourceColumn,
+	/** How many more cantrips its class knows, from that class's own list ("You know one extra
+	 *  cantrip from the Cleric spell list"); summed into the class's cantrip cap. */
+	cantrips: optInt,
 	/** What each pick of this option asks (`OPTION_ANSWER`); an option that asks may be taken once per
 	 *  answer, and its `option_choice` tokens read that answer. Blank asks nothing. */
 	answer: optStr,

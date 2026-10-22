@@ -194,7 +194,8 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // content health.
 // v70: the 2014 classes' skill lists are each class's own, without the equipment text the
 // conversion glued to the last skill. An install left at v69 refuses that skill in Strict.
-export const CONTENT_SEED_VERSION = 70;
+// v71: Thaumaturge and Magician carry `cantrips` 1. An install left at v70 counts one cantrip short.
+export const CONTENT_SEED_VERSION = 71;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

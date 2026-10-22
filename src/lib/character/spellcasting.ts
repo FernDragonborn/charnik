@@ -15,7 +15,7 @@ import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { RITUAL_SOURCE, type RitualSource } from '../content/schemas';
 import { getSpellAccess, type SpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
-import { heldOptions } from './features';
+import { heldClassOptions } from './features';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import { SYSTEM_LABELS, type Computed } from '../rules/pipeline';
 import { applyEffects, type EffectFacts } from '../effects/apply';
@@ -202,6 +202,8 @@ interface CasterProfile {
 	/** The build ref (`class:…`/`subclass:…`) used as identity + for the spell-access lookup. */
 	accessRef: string;
 	ritualSource: RitualSource | null;
+	/** Cantrips known beyond the casting table, from held options. */
+	extraCantrips: number;
 }
 
 /**
@@ -215,18 +217,26 @@ function ritualSourceFor(of: {
 	classRow: LoadedRowOf<'class'>;
 	subclass: LoadedRowOf<'subclass'> | undefined;
 	graph: ContentGraph;
-	build: Pick<Character['build'], 'options'>;
+	character: Pick<Character, 'system' | 'build'>;
 }): RitualSource | null {
-	for (const feature of of.graph.featuresForClass(of.classRow)) {
-		if (feature.data.level > of.entry.level) continue;
-		for (const { row } of heldOptions(of.graph, feature, of.build.options))
-			if (row.data.ritual_source) return row.data.ritual_source;
-	}
+	for (const { row } of heldClassOptions(of.entry, of.graph, of.character))
+		if (row.data.ritual_source) return row.data.ritual_source;
 	return (
 		of.subclass?.data.ritual_source ??
 		of.classRow.data.ritual_source ??
 		(of.classRow.data.ritual ? RITUAL_SOURCE.prepared : null)
 	);
+}
+
+/** The cantrips a class knows beyond its table, from the options it holds (Thaumaturge, Magician). */
+function extraCantripsFor(
+	entry: Character['build']['classes'][number],
+	graph: ContentGraph,
+	character: Pick<Character, 'system' | 'build'>,
+): number {
+	let extra = 0;
+	for (const { row } of heldClassOptions(entry, graph, character)) extra += row.data.cantrips ?? 0;
+	return extra;
 }
 
 /** Resolve a build class into its caster profile, or null if it doesn't cast. Which ROW owns the
@@ -236,7 +246,7 @@ function ritualSourceFor(of: {
 function casterProfileFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
-	build: Pick<Character['build'], 'options'>,
+	character: Pick<Character, 'system' | 'build'>,
 ): CasterProfile | null {
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
@@ -280,7 +290,8 @@ function casterProfileFor(
 		className: classRow.data.name_en,
 		ownerId,
 		accessRef,
-		ritualSource: ritualSourceFor({ entry, classRow, subclass: chosenSubclass, graph, build }),
+		ritualSource: ritualSourceFor({ entry, classRow, subclass: chosenSubclass, graph, character }),
+		extraCantrips: extraCantripsFor(entry, graph, character),
 	};
 }
 
@@ -425,7 +436,7 @@ export function deriveSpellcasting({
 
 	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters
 	const sources = character.build.classes
-		.map((entry) => casterProfileFor(entry, graph, character.build))
+		.map((entry) => casterProfileFor(entry, graph, character))
 		.filter((p): p is CasterProfile => p !== null);
 
 	const foldSpellStat = (key: 'spell_dc' | 'spell_attack', base: Computed): Computed =>
@@ -497,7 +508,7 @@ export function deriveSpellcasting({
 			ability: p.ability,
 			...statsFor(p.ability),
 			prepareStyle: p.prepareStyle,
-			cantripCap: cc.cantrips ?? 0,
+			cantripCap: (cc.cantrips ?? 0) + p.extraCantrips,
 			preparedCap: cappedPrepared(p, cc.prepared, abilityModifier(score)),
 			maxSpellLevel: maxSpellLevel(ownCounts),
 			accessSpellIds: access.spellIdsForClass(p.accessRef),
