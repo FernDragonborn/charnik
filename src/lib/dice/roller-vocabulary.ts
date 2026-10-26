@@ -13,6 +13,7 @@
  * is explicit that the menu stays open until a person picks (§6), which is the same rule as "never a
  * silently-wrong number", one floor up in the interaction.
  */
+import { foldForSearch } from '$lib/util/search-fold';
 import { localizedName } from '$lib/content/names';
 import { EFFECT_KIND, parseToken } from '$lib/effects/token-parser';
 import { ADVANTAGE_MODE, parseDiceTerm, type AdvantageMode } from '$lib/rules/dice';
@@ -132,9 +133,7 @@ export function rollerCandidates(sources: NamedRollSource[], locale: string): Ro
 			label,
 			// the key is an alias because content ids are what a fast typist and a shared macro use,
 			// and because a row with no translation into the active locale must still be reachable
-			aliases: [
-				...new Set([source.key, ...Object.values(source.names)].map((s) => s.toLowerCase())),
-			],
+			aliases: [...new Set([source.key, ...Object.values(source.names)].map(foldForSearch))],
 			insert,
 			preview: previewOf(source, insert),
 			active: source.active,
@@ -187,13 +186,13 @@ export function matchCandidates(
 	candidates: RollerCandidate[],
 	limit = 8,
 ): RollerMatch[] {
-	const q = query.trim().toLowerCase();
+	const q = foldForSearch(query.trim());
 	if (!q) return [];
 	const hits: (RollerMatch & { rank: number })[] = [];
 	for (const candidate of candidates) {
 		const rank = Math.min(...candidate.aliases.map((a) => rankOf(a, q)));
 		if (rank > 2) continue;
-		hits.push({ candidate, rank, at: candidate.label.toLowerCase().indexOf(q), length: q.length });
+		hits.push({ candidate, rank, at: foldForSearch(candidate.label).indexOf(q), length: q.length });
 	}
 	hits.sort(
 		(a, b) =>
@@ -211,7 +210,7 @@ export function matchCandidates(
  *  unresolved for the same reason: the menu is still open, and picking is the player's. */
 export function candidateResolver(candidates: RollerCandidate[]): RollerResolver {
 	return (word) => {
-		const q = word.trim().toLowerCase();
+		const q = foldForSearch(word.trim());
 		const hits = candidates.filter((c) => c.aliases.includes(q));
 		if (hits.length === 1) return hits[0]?.insert ?? null;
 		// a name two candidates share is not a word the line may absorb: picking one of them would roll a

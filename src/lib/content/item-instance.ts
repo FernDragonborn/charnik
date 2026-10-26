@@ -5,6 +5,7 @@
  * on the shared row. This module asks them: what a row leaves open, what an answered instance is
  * called ("Longsword +2"), and which instances a search like "sword +1" means.
  */
+import { foldForSearch } from '$lib/util/search-fold';
 import type { ContentGraph, LoadedRow, LoadedRowOf } from './loader';
 import { parseBonusChoices, type BonusRung } from './item-tags';
 import { baseRowOf, needsBaseItem, resolveItem } from './resolved-item';
@@ -179,7 +180,7 @@ const ASKS_FOR_BONUS = /^(.*\S)\s*\+\s*(\d+)$/;
  * A name of one letter matches too much to mean anything, so it matches nothing.
  */
 export function instancesForQuery(scope: InstanceScope, query: string): InstanceMatch[] {
-	const asked = ASKS_FOR_BONUS.exec(query.trim().toLowerCase());
+	const asked = ASKS_FOR_BONUS.exec(foldForSearch(query.trim()));
 	const needle = asked?.[1]?.trim() ?? '';
 	const bonus = Number(asked?.[2]);
 	if (needle.length < 2 || !Number.isInteger(bonus)) return [];
@@ -193,7 +194,7 @@ export function instancesForQuery(scope: InstanceScope, query: string): Instance
 		const { bases } = instanceQuestions(scope, row);
 		if (bases.length) {
 			for (const base of bases)
-				if (base.name.toLowerCase().includes(needle))
+				if (foldForSearch(base.name).includes(needle))
 					out.push({
 						ref: refOf(row),
 						answers: { base: base.ref, bonus },
@@ -204,7 +205,7 @@ export function instancesForQuery(scope: InstanceScope, query: string): Instance
 		const stem =
 			instanceBaseName(scope.graph, row, scope.locale) ?? instanceStem(row, scope.locale);
 		const name = stem ?? localizedName(row, scope.locale);
-		if (name.toLowerCase().includes(needle))
+		if (foldForSearch(name).includes(needle))
 			out.push({
 				ref: refOf(row),
 				answers: { bonus },

@@ -2,6 +2,7 @@
 	// Ctrl/Cmd+K command + global content search. Pages navigate via the router; content is
 	// fuzzy-searched (name + article text) over the reactive content store and opens the entry
 	// in the compendium (deep-link route). Search core lives in $lib/content/search.
+	import { foldForSearch } from '$lib/util/search-fold';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { compendiumEntryPath } from '$lib/content/detail';
@@ -60,7 +61,7 @@
 	});
 
 	const pages = $derived<PageItem[]>(
-		COMMANDS.filter((c) => $_(c.labelKey).toLowerCase().includes(query.trim().toLowerCase())).map(
+		COMMANDS.filter((c) => foldForSearch($_(c.labelKey)).includes(foldForSearch(query.trim()))).map(
 			(c) => ({ kind: 'page', key: c.key, label: $_(c.labelKey), href: c.href }),
 		),
 	);

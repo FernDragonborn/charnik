@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { foldForSearch } from '$lib/util/search-fold';
 	import { _ } from '$lib/i18n';
 	import { asText } from '$lib/util/format';
 	import Icon from './Icon.svelte';
@@ -64,9 +65,9 @@
 	const candidates = $derived.by(() => {
 		const t = current?.target;
 		if (!t || t.kind === 'add') return [];
-		const q = query.trim().toLowerCase();
+		const q = foldForSearch(query.trim());
 		const all = graph.list(t.type);
-		const pool = q ? all.filter((r) => rowName(r).toLowerCase().includes(q)) : all;
+		const pool = q ? all.filter((r) => foldForSearch(rowName(r)).includes(q)) : all;
 		return pool.slice(0, 40);
 	});
 

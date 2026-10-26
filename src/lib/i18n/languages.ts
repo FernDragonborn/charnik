@@ -6,6 +6,7 @@
  * ACTIVE locales are still DISCOVERED from content + UI catalogs (i18n-is-data-driven), never from here.
  * Codes are ISO 639-1 where one exists, else ISO 639-2/3 (e.g. `crh`). Extend freely.
  */
+import { foldForSearch } from '$lib/util/search-fold';
 
 interface Language {
 	/** shown in the picker — the language's own name in its own script. */
@@ -141,7 +142,7 @@ export function languageName(code: string): string {
  *  picker finds a language by any of those, even ones Intl.DisplayNames can't name. */
 export function languageSearchText(code: string): string {
 	const l = LANGUAGES[code] ?? LANGUAGES[code.split('-')[0] ?? code];
-	return `${l?.native ?? ''} ${l?.en ?? ''} ${l?.uk ?? ''} ${code}`.toLowerCase();
+	return foldForSearch(`${l?.native ?? ''} ${l?.en ?? ''} ${l?.uk ?? ''} ${code}`);
 }
 
 /** Languages from {@link LANGUAGES} that aren't in `have` yet — the "add a language" menu, sorted by

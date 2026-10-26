@@ -522,7 +522,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (193 modules)
+## Library functions & types (194 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2446,6 +2446,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function sayText` — A said sentence in the reader's language.
 - `const say` — Say a word that may simply be data.
 
+### `src/lib/util/search-fold.ts`
+
+- `const foldForSearch` — * A string as search compares it: lower-cased, with every apostrophe-like mark read as `'`, so * «м'ята» finds «мʼята…
+
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
@@ -2456,4 +2460,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1498 exports across 210 modules · 98 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1499 exports across 211 modules · 98 duplicate suspects._

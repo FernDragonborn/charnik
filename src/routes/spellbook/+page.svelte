@@ -3,6 +3,7 @@
 	// management: show-on-sheet (eye), pin, prepare (switch). Reuses EntryList + WikiDetail;
 	// prepare + show-on-sheet edit the ACTIVE character (persisted: prepared on the spellEntry,
 	// hidden in ui.spellsHidden — Issue #3); pin is still a local UI set (D3, no schema field yet).
+	import { foldForSearch } from '$lib/util/search-fold';
 	import { onMount } from 'svelte';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { goto } from '$app/navigation';
@@ -80,10 +81,10 @@
 	const isPrepared = (e: SpellEntry) => e.prepared || e.alwaysPrepared;
 
 	const groups = $derived.by(() => {
-		const q = query.trim().toLowerCase();
+		const q = foldForSearch(query.trim());
 		const rows = resolved
 			.filter(({ entry, row }) => {
-				if (q && !rowName(row).toLowerCase().includes(q)) return false;
+				if (q && !foldForSearch(rowName(row)).includes(q)) return false;
 				if (filter === 'prepared' && !isPrepared(entry)) return false;
 				if (filter === 'pinned' && !pinned.has(row.effectiveId)) return false;
 				return true;

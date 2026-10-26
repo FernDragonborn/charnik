@@ -38,6 +38,14 @@ async function seed(): Promise<ContentGraph> {
 				'SRD 5.2.1',
 			),
 			row(
+				'hideous_laughter',
+				'Tasha’s Hideous Laughter',
+				'Жахливий сміх Ташʼї',
+				'A creature you choose that you can see perceives everything as hilariously funny.',
+				'5.5e',
+				'SRD 5.2.1',
+			),
+			row(
 				'healing-word',
 				'Healing Word',
 				'',
@@ -93,6 +101,11 @@ describe('content search', () => {
 	it('is cross-language on names (Ukrainian query hits name_uk)', () => {
 		const r = searchContent(name, text, 'куля', both);
 		expect(r.some((x) => x.id === 'fireball')).toBe(true);
+	});
+
+	it('reads every apostrophe-like mark as one, in a name of any language', () => {
+		for (const query of ["tasha's hideous laughter", "жахливий сміх таш'ї"])
+			expect(name.search(query)[0]?.score).toBeLessThan(0.01);
 	});
 
 	it('ignores queries shorter than 2 chars', () => {

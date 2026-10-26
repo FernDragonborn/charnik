@@ -12,6 +12,7 @@ import Fuse, { type FuseResultMatch } from 'fuse.js';
 import type { ContentGraph, LoadedRow } from './loader';
 import { localesOf, localizedName, namesByLocale } from './names';
 import { isBrowsable, type ContentType } from './schemas';
+import { foldForSearch } from '$lib/util/search-fold';
 
 export interface NameDoc {
 	effectiveId: string;
@@ -20,7 +21,7 @@ export interface NameDoc {
 	source: string;
 	systems: string[];
 	names: Record<string, string>; // locale → name (for display)
-	nameAll: string[]; // every locale's name (indexed key)
+	nameAll: string[]; // every locale's name, folded for search (indexed key)
 }
 export interface TextDoc {
 	effectiveId: string;
@@ -30,6 +31,9 @@ export interface TextDoc {
 	systems: string[];
 	names: Record<string, string>;
 	text: string; // active-locale-or-EN, plain text
+	/** `text` folded for search — the indexed key. The fold keeps length, so a match index in it is
+	 *  the same index in `text`, which is what the snippet is cut from. */
+	searchText: string;
 }
 
 export interface SearchResult {
@@ -69,7 +73,7 @@ function buildNameDocs(graph: ContentGraph): NameDoc[] {
 		.filter((r) => isBrowsable(r.type))
 		.map((r) => {
 			const names = namesByLocale(r, locales);
-			return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
+			return { ...base(r), names, nameAll: [...new Set(Object.values(names).map(foldForSearch))] };
 		});
 }
 
@@ -82,14 +86,18 @@ function buildTextDocs(graph: ContentGraph, locale: string, override?: ProseOver
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
-		.map((r) => ({
-			...base(r),
-			names: namesByLocale(r, locales),
-			text: plainText(
+		.map((r) => {
+			const text = plainText(
 				override?.(r.effectiveId, locale) ??
 					String(r.data[`text_${locale}`] || r.data.text_en || ''),
-			),
-		}));
+			);
+			return {
+				...base(r),
+				names: namesByLocale(r, locales),
+				text,
+				searchText: foldForSearch(text),
+			};
+		});
 }
 
 const OPTS = {
@@ -103,10 +111,14 @@ export const makeNameIndex = (graph: ContentGraph) =>
 	new Fuse(buildNameDocs(graph), { ...OPTS, threshold: 0.3, keys: ['nameAll'] });
 
 export const makeTextIndex = (graph: ContentGraph, locale: string, override?: ProseOverride) =>
-	new Fuse(buildTextDocs(graph, locale, override), { ...OPTS, threshold: 0.34, keys: ['text'] });
+	new Fuse(buildTextDocs(graph, locale, override), {
+		...OPTS,
+		threshold: 0.34,
+		keys: ['searchText'],
+	});
 
 function snippetFor(text: string, matches: readonly FuseResultMatch[] | undefined): string {
-	const m = matches?.find((x) => x.key === 'text');
+	const m = matches?.find((x) => x.key === 'searchText');
 	const at = m?.indices?.[0]?.[0] ?? 0;
 	const start = Math.max(0, at - 24);
 	const s = text.slice(start, start + 72).trim();
@@ -138,7 +150,7 @@ export function searchContent(
 	query: string,
 	{ editions, locale, limit = 30 }: SearchOpts,
 ): SearchResult[] {
-	const q = query.trim();
+	const q = foldForSearch(query.trim());
 	if (q.length < 2) return [];
 	const inEdition = (systems: string[]) => systems.some((s) => editions.includes(s));
 	// Name pass runs first and wins on collision (deduped by effectiveId), so a name match keeps its

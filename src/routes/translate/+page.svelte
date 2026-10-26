@@ -5,6 +5,7 @@
 	// locales are chosen freely via two dropdowns above the panes + persisted across re-entries. Saves
 	// write the localized columns into the row's own CSV + re-stamp its hash (see content/translate.ts).
 	// Reuses EntryList + WikiDetail + the shared list helpers — only the shell is new.
+	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon, { type IconName } from '$lib/components/Icon.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
@@ -104,8 +105,8 @@
 	// this pane always shows the SOURCE-language name, so it sorts on `name_en` rather than a locale
 	const sourceName = (r: LoadedRow) => rowName(r);
 	const rows = $derived.by(() => {
-		const q = query.trim().toLowerCase();
-		return (q ? pool.filter((r) => sourceName(r).toLowerCase().includes(q)) : [...pool]).sort(
+		const q = foldForSearch(query.trim());
+		return (q ? pool.filter((r) => foldForSearch(sourceName(r)).includes(q)) : [...pool]).sort(
 			byDisplayName(sourceName),
 		);
 	});

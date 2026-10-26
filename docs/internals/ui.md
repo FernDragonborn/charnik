@@ -900,6 +900,10 @@ actions, conditions, and notes, not a page-text search. Only the global one sits
 local one focuses the list's own search box inside the view. Views switch by tab bar, by `Ctrl+1..4`,
 or from the palette.
 
+**Every search box compares through `foldForSearch`** (`lib/util/search-fold.ts`): case-blind, and
+every apostrophe-like mark (`’ ‘ ʼ ´ \``, primes) reads as `'`, so «м'ята» finds «мʼята» however the
+keyboard typed it. A new filter uses it on both the query and the text it searches.
+
 **Shortcuts match the physical key** (`e.code`: `'KeyK'`, `'Digit1'`), never `e.key`, which is
 layout-dependent — on a Cyrillic layout the K key yields `"к"`. **Every internal link and navigation
 carries `base`** from `$app/paths`, including the palette's `goto`, or it 404s under the GitHub Pages

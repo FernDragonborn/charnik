@@ -5,6 +5,7 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
+import { foldForSearch } from '$lib/util/search-fold';
 import { buildDetail, localizedName, type DetailModel } from '$lib/content/detail';
 import { contentLabel, entryMeta, RARITY_JOIN } from '$lib/content/entry-list';
 import { itemRarities } from '$lib/content/options';
@@ -60,9 +61,9 @@ export function rowText(row: LoadedRow | undefined, locale = app.activeLocale): 
  * An empty query returns the list untouched, so a caller never has to special-case it.
  */
 export function filterByName<T extends LoadedRow>(rows: T[], query: string): T[] {
-	const needle = query.trim().toLowerCase();
+	const needle = foldForSearch(query.trim());
 	if (!needle) return rows;
-	return rows.filter((row) => rowName(row).toLowerCase().includes(needle));
+	return rows.filter((row) => foldForSearch(rowName(row)).includes(needle));
 }
 
 /**

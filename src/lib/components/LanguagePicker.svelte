@@ -4,6 +4,7 @@
 	// a type-to-filter search over the loaded content locales plus (when `allowAdd`) every other known
 	// language, so a new target language is one click away. Picking an "add" language just sets the
 	// value to that code — translating + saving then creates its columns (no separate schema step).
+	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon from './Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { languageName, languageSearchText, addableLanguages } from '$lib/i18n/languages';
@@ -29,7 +30,7 @@
 	// match by native / English / Ukrainian name or code (languageSearchText), so a language is findable
 	// however the user spells it — incl. minority ones Intl.DisplayNames can't name (crh, rue, …).
 	const match = (code: string) => {
-		const q = query.trim().toLowerCase();
+		const q = foldForSearch(query.trim());
 		return !q || languageSearchText(code).includes(q);
 	};
 	const current = $derived(

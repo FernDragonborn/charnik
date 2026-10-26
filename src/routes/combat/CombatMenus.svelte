@@ -2,6 +2,7 @@
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-state, custom-effect, show/hide,
 	// pin-skills, spellbook). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
+	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { takeFocus } from '$lib/actions/takeFocus';
@@ -33,9 +34,9 @@
 	 *  conditions too, so the box beside it is the only way the list stays navigable at size. */
 	let stateQuery = $state('');
 	const matchingStates = $derived.by(() => {
-		const q = stateQuery.trim().toLowerCase();
+		const q = foldForSearch(stateQuery.trim());
 		return q
-			? combat.effects.stateCatalog.filter((p) => p.label.toLowerCase().includes(q))
+			? combat.effects.stateCatalog.filter((p) => foldForSearch(p.label).includes(q))
 			: combat.effects.stateCatalog;
 	});
 

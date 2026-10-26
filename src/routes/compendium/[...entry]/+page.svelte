@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
 	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
+	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { onMount, untrack } from 'svelte';
@@ -227,7 +228,7 @@
 	const facetValues = $derived(facet ? distinctValues(pool, facet.key, graph) : []);
 
 	const rows = $derived.by(() => {
-		const q = query.trim().toLowerCase();
+		const q = foldForSearch(query.trim());
 		return pool
 			.filter((r) => {
 				if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
@@ -235,7 +236,7 @@
 					// every value the row has: a `+1/+2/+3` weapon is found under each of its rarities
 					if (!fieldValues(r, facet.key, graph).some((v) => facetFilter.has(v))) return false;
 				}
-				return !q || localName(r).toLowerCase().includes(q);
+				return !q || foldForSearch(localName(r)).includes(q);
 			})
 			.sort(byDisplayName(localName, contentLocale));
 	});
