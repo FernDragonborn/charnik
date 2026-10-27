@@ -21,7 +21,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `probe` ×8 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPORT` ×8 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `check` ×7 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte
-- `open` ×6 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
+- `open` ×7 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
@@ -1740,6 +1740,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DependencyResolved`
 - `interface Inst` — One token occurrence: the carrying effect + guard split + parse + its graph reads/write.
 - `const readsOf`
+- `function stronglyConnected` — Tarjan SCCs, with an explicit stack: content decides the node count, and a chain of a few * thousand resource tokens …
 - `function buildDependencyOrder` — Build the value-node graph (dep → dependent edges from each writer's reads), order it by SCC * condensation topo (sou…
 
 ### `src/lib/effects/expression-evaluator.ts`
@@ -2474,4 +2475,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1509 exports across 212 modules · 99 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1510 exports across 212 modules · 99 duplicate suspects._

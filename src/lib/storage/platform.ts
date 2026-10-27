@@ -20,10 +20,15 @@ export enum Platform {
 
 /**
  * Detect the current runtime. No `window` means a headless (non-browser) context; otherwise the
- * Tauri runtime injects `__TAURI_INTERNALS__` into the webview's `window`, so its presence means
- * desktop and its absence means a plain browser.
+ * Tauri runtime injects `__TAURI_INTERNALS__`, with its `invoke`, into the webview's `window`, so its
+ * presence means desktop and its absence means a plain browser.
  */
 export function detectPlatform(): Platform {
 	if (typeof window === 'undefined') return Platform.Headless;
-	return '__TAURI_INTERNALS__' in window ? Platform.Desktop : Platform.Web;
+	// not just `in window`: an element with that `id` in rendered prose puts the name on `window` too
+	// (DOM clobbering), and only Tauri's object carries an `invoke` function
+	const internals: unknown = Reflect.get(window, '__TAURI_INTERNALS__');
+	const invoke: unknown =
+		typeof internals === 'object' && internals !== null ? Reflect.get(internals, 'invoke') : null;
+	return typeof invoke === 'function' ? Platform.Desktop : Platform.Web;
 }

@@ -42,6 +42,20 @@ describe('parseStartingKit', () => {
 		expect(parseStartingKit(undefined)).toEqual([]);
 	});
 
+	it('leaves a count no book prints unread, rather than drawing millions of rows', () => {
+		const parts = parseStartingKit(`300000000*any.martial + ${'9'.repeat(400)}gp + 20*arrows`)[0]
+			?.alternatives[0]?.parts;
+		expect(parts?.map((p) => p.kind)).toEqual([KIT_PART.unread, KIT_PART.unread, KIT_PART.item]);
+	});
+
+	it('hands over the player’s own fork of an item, not the shipped one', () => {
+		const row = (source: string) => ({ id: 'longsword', source, type: 'item' });
+		const graph = {
+			list: () => [row('SRD 5.1'), row('Homebrew')],
+		} as unknown as ContentGraph;
+		expect(kitItemsById(graph, '5e', () => true).get('longsword')?.source).toBe('Homebrew');
+	});
+
 	it('sums an alternative’s coins by coin', () => {
 		const [line] = parseStartingKit('5sp + 10gp + 3gp');
 		expect(kitCoins(line?.alternatives[0] ?? { parts: [] })).toEqual({ sp: 5, gp: 13 });

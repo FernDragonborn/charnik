@@ -45,7 +45,10 @@ describe('a build with no table', () => {
 		expect(getTableLink()).toBe(noopTableLink);
 		vi.stubGlobal('window', {});
 		expect(getTableLink()).toBe(noopTableLink);
-		vi.stubGlobal('window', { __TAURI_INTERNALS__: {} });
+		// an element clobbering the name is not Tauri: only its object carries `invoke`
+		vi.stubGlobal('window', { __TAURI_INTERNALS__: { id: '__TAURI_INTERNALS__' } });
+		expect(getTableLink()).toBe(noopTableLink);
+		vi.stubGlobal('window', { __TAURI_INTERNALS__: { invoke: () => {} } });
 		expect(getTableLink()).toBe(tauriTableLink);
 	});
 

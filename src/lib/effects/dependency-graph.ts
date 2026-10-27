@@ -153,40 +153,52 @@ export const readsOf = (
 	return [...keys];
 };
 
-/** Tarjan SCCs (iteratively small graphs — recursion depth is the node count, ≤ a few dozen).
+/** Tarjan SCCs, with an explicit stack: content decides the node count, and a chain of a few
+ *  thousand resource tokens overflowed the call stack of the recursive form.
  *  Components are emitted sinks-first (reverse topological order of the condensation). */
-function stronglyConnected(n: number, adj: ReadonlyArray<ReadonlySet<number>>): number[][] {
+export function stronglyConnected(n: number, adj: ReadonlyArray<ReadonlySet<number>>): number[][] {
 	const index = new Array<number>(n).fill(-1);
 	const low = new Array<number>(n).fill(0);
 	const onStack = new Array<boolean>(n).fill(false);
 	const stack: number[] = [];
 	const comps: number[][] = [];
 	let counter = 0;
-	const visit = (v: number): void => {
+	// one frame per node being visited: the node, and the edges it has not followed yet
+	const frames: { v: number; edges: Iterator<number> }[] = [];
+	const open = (v: number): void => {
 		index[v] = low[v] = counter++;
 		stack.push(v);
 		onStack[v] = true;
-		for (const w of adj[v] ?? []) {
-			if (index[w] === -1) {
-				visit(w);
-				low[v] = Math.min(low[v] ?? 0, low[w] ?? 0);
-			} else if (onStack[w]) {
-				low[v] = Math.min(low[v] ?? 0, index[w] ?? 0);
-			}
-		}
-		if (low[v] === index[v]) {
-			const comp: number[] = [];
-			for (;;) {
-				const w = stack.pop();
-				if (w === undefined) break;
-				onStack[w] = false;
-				comp.push(w);
-				if (w === v) break;
-			}
-			comps.push(comp);
-		}
+		frames.push({ v, edges: (adj[v] ?? new Set<number>()).values() });
 	};
-	for (let v = 0; v < n; v++) if (index[v] === -1) visit(v);
+	const closeComponent = (v: number): void => {
+		const comp: number[] = [];
+		for (;;) {
+			const w = stack.pop();
+			if (w === undefined) break;
+			onStack[w] = false;
+			comp.push(w);
+			if (w === v) break;
+		}
+		comps.push(comp);
+	};
+	for (let root = 0; root < n; root++) {
+		if (index[root] !== -1) continue;
+		open(root);
+		for (let frame = frames.at(-1); frame; frame = frames.at(-1)) {
+			const edge = frame.edges.next();
+			if (!edge.done) {
+				const w = edge.value;
+				if (index[w] === -1) open(w);
+				else if (onStack[w]) low[frame.v] = Math.min(low[frame.v] ?? 0, index[w] ?? 0);
+				continue;
+			}
+			frames.pop();
+			if (low[frame.v] === index[frame.v]) closeComponent(frame.v);
+			const parent = frames.at(-1);
+			if (parent) low[parent.v] = Math.min(low[parent.v] ?? 0, low[frame.v] ?? 0);
+		}
+	}
 	return comps;
 }
 

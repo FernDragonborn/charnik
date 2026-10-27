@@ -371,7 +371,7 @@ describe('the check runs alone', () => {
 		// seam is already resolved (to IndexedDB) by the block above and cached, so planting the marker
 		// now reaches the platform gate and nothing else.
 		getUserStorage();
-		Object.assign(globalThis, { window: { __TAURI_INTERNALS__: {} } });
+		Object.assign(globalThis, { window: { __TAURI_INTERNALS__: { invoke: () => {} } } });
 	});
 	afterAll(() => {
 		Reflect.deleteProperty(globalThis, 'window');

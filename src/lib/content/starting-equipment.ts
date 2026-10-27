@@ -19,6 +19,7 @@ import { resolveItem, needsBaseItem } from './resolved-item';
 import { issueText, type IssueText } from './issue-text';
 import type { JoinIssue } from './resource-joins';
 import { COINS } from '$lib/rules/currency';
+import { HOMEBREW_SOURCE } from './homebrew';
 
 export const KIT_SOURCE = { class: 'class', background: 'background' } as const;
 export type KitSource = (typeof KIT_SOURCE)[keyof typeof KIT_SOURCE];
@@ -49,13 +50,23 @@ const WORD = /^[a-z0-9_]+$/;
 const ANY_PREFIX = 'any.';
 const IF_PROFICIENT = '?';
 
+/** No kit in either book hands over more than a few dozen of one thing (20 arrows, 50 gp); a count past
+ *  these is a typo or a hostile pack, and the builder would try to draw every one of them. */
+const MAX_KIT_COUNT = 100;
+const MAX_KIT_COINS = 100_000;
+
 function parsePart(text: string): KitPart {
 	const coin = COIN.exec(text);
-	if (coin) return { kind: KIT_PART.coin, coin: coin[2] ?? '', amount: Number(coin[1]) };
+	if (coin) {
+		const amount = Number(coin[1]);
+		return amount <= MAX_KIT_COINS
+			? { kind: KIT_PART.coin, coin: coin[2] ?? '', amount }
+			: { kind: KIT_PART.unread, text };
+	}
 	const counted = COUNTED.exec(text);
 	const count = counted ? Number(counted[1]) : 1;
 	const body = (counted ? (counted[2] ?? '') : text).trim();
-	if (count < 1) return { kind: KIT_PART.unread, text };
+	if (count < 1 || count > MAX_KIT_COUNT) return { kind: KIT_PART.unread, text };
 	if (body.startsWith(ANY_PREFIX)) {
 		const tagSets = body
 			.slice(ANY_PREFIX.length)
@@ -98,7 +109,8 @@ export function kitOf(row: LoadedRow | undefined): KitLine[] {
 }
 
 /** The item rows of one edition by id: a kit names its items by id, matched in the row's own
- *  edition and never by source, so a homebrew pack's dagger serves a shipped kit. */
+ *  edition and never by source, so a homebrew pack's dagger serves a shipped kit — and where both
+ *  have one, the player's own fork is the one handed over, as it is everywhere else. */
 export function kitItemsById(
 	graph: ContentGraph,
 	system: string,
@@ -106,7 +118,7 @@ export function kitItemsById(
 ): Map<string, LoadedRowOf<'item'>> {
 	const out = new Map<string, LoadedRowOf<'item'>>();
 	for (const row of graph.list('item', { system }))
-		if (isActive(row) && !out.has(row.id)) out.set(row.id, row);
+		if (isActive(row) && (!out.has(row.id) || row.source === HOMEBREW_SOURCE)) out.set(row.id, row);
 	return out;
 }
 

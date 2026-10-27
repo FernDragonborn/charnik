@@ -515,13 +515,17 @@ uniqueThemeId ends for a name that fills the whole id.
 **Fix:** split on the delimiters and trim each part, which is linear. **Held by**
 `whitespace-tolerance.test.ts` ▸ a long run of spaces parses in linear time (33 s before the fix).
 
-#### S10 · Starting-equipment counts are unbounded — low-medium · CONFIRMED
+#### S10 · Starting-equipment counts are unbounded — low-medium · closed
 
 A pack row `300000000*any.martial` froze the builder as soon as a class was picked: `picksOwed` alone
 ran 273 s and the pane tried to render 3×10⁸ `<li>`. A saved draft froze it again. A 400-digit count
 gave `Infinity` and a ZodError on click (`content/starting-equipment.ts`, `starting-kit.ts`,
 `StartingEquipmentPane.svelte`). Also: `kitItemsById` took the first in load order, so a homebrew fork
 of `longsword` lost to the SRD in kits.
+
+**Fix:** a count over 100 or coins over 100 000 is an unread part (shown as its text, named in content
+health); a homebrew row wins its id in a kit. **Held by** `starting-equipment.test.ts` ▸ leaves a
+count no book prints unread, and ▸ hands over the player's own fork.
 
 #### S11 · The S3 fix is incomplete: a plugin can still hide a `ctx.play` read — low · closed
 
@@ -532,7 +536,7 @@ getters and `toJSON` (`effects/plugin-sandbox.ts`). Both variants (`get notes(){
 **Fix:** the result is stringified before the flag is read. **Held by** `plugin-sandbox.test.ts` ▸ a
 play read hidden in the result's getter / toJSON still counts.
 
-#### S12 · DOM clobbering: an `id` in prose makes the web build think it is desktop — low · CONFIRMED switch, LIKELY effects
+#### S12 · DOM clobbering: an `id` in prose makes the web build think it is desktop — low · closed
 
 `'__TAURI_INTERNALS__' in window` was checked on every call (`storage/platform.ts`). DOMPurify keeps
 `id` and `name`, so a browser probe showed `web → desktop` while such prose was on the page. While the
@@ -540,11 +544,18 @@ flag is wrong, `isReadOnlyContent()` is false, `reloadContent()` takes the deskt
 and seeds the pack into IndexedDB, and Settings shows desktop controls. On the hosted demo only the
 player's own prose can do it; a self-hosted web build also takes pasted homebrew.
 
-#### S13 · A deep dependency chain overflows the stack — low · CONFIRMED in node
+**Fix:** desktop is a `__TAURI_INTERNALS__` that carries an `invoke` function, which no element does.
+`SANITIZE_NAMED_PROPS` was not taken: it renames every prose `id`, and in-page anchors use them.
+**Held by** `table-link.test.ts` ▸ a build with no table.
+
+#### S13 · A deep dependency chain overflows the stack — low · closed
 
 A chain of about 8000 resource tokens threw `RangeError` in the recursive Tarjan
 (`effects/dependency-graph.ts`). `deriveSheet` has no try/catch and `src` has no `svelte:boundary`, so
 the `$derived` in the builder, combat and Spellbook fell over.
+
+**Fix:** Tarjan runs on an explicit stack, emitting components in the same order. **Held by**
+`dependency-graph.test.ts` ▸ walks a chain of 100 000 without overflowing the stack.
 
 #### S14 · Smaller — low / info
 
