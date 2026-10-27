@@ -43,9 +43,10 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
-- [Security audit — 0.8.1](audit-oct-22.md) — a security read of the 0.8.1 tree. Every finding is
-  closed; it is kept for what it PROVED — how each defect was reproduced, the test or probe that now
-  holds it, what was ruled out, and where the reading stopped.
+- [Audit — 0.8.2, with the 0.8.1 security audit](audit-oct-27.md) — vulnerabilities and bugs in
+  rules, play state, player data, packs and UI. Each finding says whether it is closed (and the test
+  or probe that holds it) or open (and the tracker item it lives in); it also keeps what was ruled out
+  and where the reading stopped.
 
 Design research sits in [research/](research/) — including
 [where an unknown app loses a table](research/adoption-friction.md): the drop-off points a new
