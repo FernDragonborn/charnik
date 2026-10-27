@@ -751,6 +751,52 @@ describe('one writer per open character (CHARACTER-WRITER)', () => {
 		expect(await s.exists(FILE)).toBe(false);
 	});
 
+	it('a folder copied or renamed by hand is its own character, never the original', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		const original = await s.read(FILE);
+		await s.write('characters/mirt-copy/character.json', original);
+		await s.write('characters/renamed/character.json', original);
+		expect((await listCharacters(s)).map((e) => e.id).sort()).toEqual([
+			'mirt',
+			'mirt-copy',
+			'renamed',
+		]);
+		const copy = (await adoptCharacter(s, 'mirt-copy')).character!;
+		copy.play.hp.current = 1;
+		await saveCharacter(s, copy);
+		expect(await s.read(FILE)).toBe(original); // the original is untouched
+		expect((await loadCharacter(s, 'renamed')).ok).toBe(true);
+		await deleteCharacter(s, 'mirt-copy');
+		expect(await s.exists(FILE)).toBe(true);
+	});
+
+	it('a field this build does not know survives a save, at every level it can sit', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		type Stored = {
+			notes?: string;
+			build: Record<string, unknown>;
+			play: Record<string, unknown> & { hp: { current: number } };
+			ui: Record<string, unknown>;
+		};
+		const raw = JSON.parse(await s.read(FILE)) as Stored;
+		raw.notes = 'by hand';
+		raw.build.backstory = 'from a newer Charnik';
+		raw.play.ward = 3;
+		raw.ui.theme = 'parchment';
+		await s.write(FILE, JSON.stringify(raw));
+		const mine = (await adoptCharacter(s, 'mirt')).character!;
+		mine.play.hp.current = 4;
+		await saveCharacter(s, mine);
+		const after = JSON.parse(await s.read(FILE)) as Stored;
+		expect(after.notes).toBe('by hand');
+		expect(after.build.backstory).toBe('from a newer Charnik');
+		expect(after.play.ward).toBe(3);
+		expect(after.ui.theme).toBe('parchment');
+		expect(after.play.hp.current).toBe(4);
+	});
+
 	it('names the character a watched path belongs to, and nothing else in the folder', () => {
 		expect(characterSlugOfPath('characters/mirt/character.json')).toBe('mirt');
 		expect(characterSlugOfPath('characters\\mirt\\character.json')).toBe('mirt');

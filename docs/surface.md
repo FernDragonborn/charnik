@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (98)
+## Duplicate suspects (99)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -115,6 +115,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical one-liner body, different names:**
 
+- `isRecord` (src/lib/character/migrations.ts) = `isPlainRecord` (src/lib/character/schema.ts)
 - `optionParentKey` (src/lib/content/options.ts) = `articleKey` (src/lib/content/sources.svelte.ts)
 - `where` (src/lib/content/resource-joins.ts) = `filePath` (src/lib/content/sources.svelte.ts)
 
@@ -522,7 +523,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (194 modules)
+## Library functions & types (195 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -870,6 +871,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type LevelingMode`
 - `const FORM_SPECIES` — What a form does with species traits its rules shed — see `ui.formSpecies`.
 - `const characterSchema`
+- `function withUnknownKeysOf` — * `next` as it is written, plus every key of the stored file this build does not know — at the top * level and in `bu…
 - `const classRow` — The one place a class row or an inventory row is made, so each leaves with an identity of its * own.
 - `const inventoryRow`
 - `type Character`
@@ -1118,6 +1120,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
 - `const PROFICIENCY_CHOICE_KIND` — What a proficiency choice-grant may be answered with — the words `feat.skill_choice_kinds` lists.
+
+### `src/lib/content/csv-table.ts`
+
+- `type CsvRow`
+- `interface CsvDamage` — One thing a parse lost: Papa's code, the data row it is on (1-based) when it has one.
+- `interface CsvTable`
+- `function parseCsvTable`
+- `const describeDamage`
+- `class DamagedCsvError` — A write refused because the file did not parse whole: writing the parse back would make the loss * permanent.
+- `function parseCsvForRewrite` — The table, or a refusal when writing it back would lose what the parse lost.
 
 ### `src/lib/content/detail.ts`
 
@@ -2462,4 +2474,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1501 exports across 211 modules · 98 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1509 exports across 212 modules · 99 duplicate suspects._

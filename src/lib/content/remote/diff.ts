@@ -12,8 +12,8 @@
  * Comparison is by GIT BLOB SHA, because that is what a repo tree listing gives us — so "did this
  * file change?" is answered without downloading a single byte.
  */
-import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
+import { parseCsvTable } from '../csv-table';
 import { listFilesRecursive } from '$lib/storage/walk';
 import type { ContentGraph } from '../loader';
 import { isProtectedText } from '../disk';
@@ -210,8 +210,11 @@ export function rowsDroppedFromFile(
 	const before = graph.rows.filter((row) => `${row.root}/${row.file}` === localFilePath);
 	if (before.length === 0) return [];
 	const { body } = parseContentDirectives(incoming);
-	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-	const stillThere = new Set(parsed.data.map((row) => row['id']).filter(Boolean));
+	const stillThere = new Set(
+		parseCsvTable(body)
+			.rows.map((row) => row['id'])
+			.filter(Boolean),
+	);
 	return before
 		.filter((row) => !stillThere.has(row.id))
 		.map((row) => `${row.type}:${row.source}:${row.id}`)

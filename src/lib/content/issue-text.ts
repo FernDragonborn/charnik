@@ -80,6 +80,13 @@ export const issueText = {
 		detail: complaints,
 	}),
 
+	/** The file did not parse whole: an unclosed quote swallowed the rows after it, a row has more
+	 *  cells than the header, or a header repeats. */
+	damagedCsv: (detail: string): IssueText => ({ key: key('damagedCsv'), detail }),
+
+	/** The file could not be read at all — locked by another program, or gone mid-listing. */
+	unreadableFile: (error: string): IssueText => ({ key: key('unreadableFile'), detail: error }),
+
 	/** A `name_*`/`text_*` header whose language part isn’t a language code. */
 	malformedLocaleColumn: (column: string): IssueText => ({
 		key: key('malformedLocaleColumn'),

@@ -1373,6 +1373,8 @@
 		"badTagValue": "The tag “{name}” has to be a whole number, and this row gives it something else — so it is ignored, and the item behaves as if the tag weren’t there at all. Write it as {name}:12, or remove it.",
 		"duplicateId": "Two entries share the id “{id}” under the same source, so only the first one is used and this one is ignored everywhere in the app. Give one of them a different id, or delete the copy.",
 		"listSeparator": ", ",
+		"damagedCsv": "Part of this file can’t be read as a table, so rows in it may be missing or cut short — and Charnik won’t save a translation or homebrew into it until it reads whole. It is usually a stray quote mark in a cell: close it or remove it, then save the file.",
+		"unreadableFile": "Charnik couldn’t read this file, so none of its rows are loaded. Another program may have it open — close it, and the file loads again on the next change.",
 		"malformedLocaleColumn": "This column looks like a translation, but Charnik can’t read a language code out of it, so the column is ignored. Translation columns are written name_<code> or text_<code> — name_uk, text_de.",
 		"noSubclassRows": "This class hands out a subclass at level {level}, but no subclass in this edition names it — so a character reaching that level is asked for a choice with nothing in it. Add the subclass rows, or clear “subclass_level”.",
 		"option": "“{option}”",

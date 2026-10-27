@@ -60,6 +60,7 @@ import { HitPoints } from './hit-points.svelte';
 import { InventoryTracker } from './inventory.svelte';
 import { Concentration } from './concentration';
 import { FormShift } from './form-shift.svelte';
+import { forgetCharacterState } from './forget-character-state';
 import { Experience } from './experience.svelte';
 import { sheetAttacks } from '$lib/combat/form-attacks';
 import { PlayOutcomes } from './play-outcomes';
@@ -306,35 +307,19 @@ class CombatVM {
 	// still-loading state (character null but load not finished).
 	noCharacter = $state(false);
 
-	/** What this singleton holds for ONE character and must not hand the next: a concentration save
-	 *  owed, a reroll offered, a picker half-filled, a question asked. */
-	private forgetTransientState() {
-		this.hp.owedConcentrationSaves = [];
-		this.rolls.forgetSavage();
-		this.rests.hdPick = {};
-		this.casting.upcastSpell = null;
-		this.casting.enchanting = null;
-		this.executor.asking = null;
-		this.forms.asking = null;
-		this.menus.overlay = null;
-		this.inventory.shotPending = null;
-		this.resources.forgetWindows();
-	}
-
 	load = async () => {
 		this.noCharacter = false;
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
 		// the character opened from the Roster, else a sensible default (demo on first run, else the
 		// user's first save, else none → the empty state)
 		const c = await ensureActiveCharacter();
-		if (c !== this.character) this.forgetTransientState();
+		if (c !== this.character) forgetCharacterState(this);
+		// set even when null: a kept previous object is what the autosave wrote back after a delete
+		this.character = c;
 		if (!c) {
-			// the previous character's object must go too, or the autosave writes a deleted one back
-			this.character = null;
 			this.noCharacter = true;
 			return;
 		}
-		this.character = c;
 		// once-per-session snapshot of this character for the rolling backup ring (B3)
 		void snapshotCharacterOnLaunch(getUserStorage(), c.id);
 		// restore this character's saved panel layout (falls back to the default columns)

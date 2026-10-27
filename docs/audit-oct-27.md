@@ -100,7 +100,7 @@ file that vanished outside the app is a conflict, not a silent rewrite. **Held b
 `character.test.ts` ▸ a deleted character stays deleted, and ▸ a play save into a file removed
 outside the app asks; a Playwright drive (open → delete → Combat → roster) stayed at 0.
 
-### D5 · A hand-copied character folder: deleting the copy deletes the original — medium · CONFIRMED
+### D5 · A hand-copied character folder: deleting the copy deletes the original — medium · closed
 
 `characters.md` calls copying a folder by hand a normal case. But copying `bob-a1b2/` to `bob-copy/`
 showed two `bob-a1b2` in the roster; edits to the "copy" went into the original; deleting the copy's
@@ -108,8 +108,11 @@ row deleted the **original** with its backups. A folder renamed by hand did not 
 (`not found`).
 
 Why: the save path came from the `id` inside the file (`repository.ts`), and the roster used `c.id`
-rather than the folder name. Fix direction: bind `id` to the folder name on every read, as backup
-restore already does.
+rather than the folder name.
+
+**Fix:** every read sets `id` to the folder name (`repository.ts` ▸ `anchoredTo`); the file's `id`
+follows on the next save. **Held by** `character.test.ts` ▸ a folder copied or renamed by hand is its
+own character.
 
 ### D6 · A fractional or infinite number in play state blocks every later save — medium · closed
 
@@ -125,12 +128,18 @@ was refused with a toast.
 one restores nothing. **Held by** `hit-points.test.ts` ▸ temp HP stays a whole number the save can
 hold, and `recharge-amount.test.ts` ▸ gives back whole uses.
 
-### D7 · Unknown character fields vanish on the next save — medium · CONFIRMED
+### D7 · Unknown character fields vanish on the next save — medium · closed
 
 `characterSchema` was a plain `z.object`, and zod 4 strips unknown keys. A hand-written `notes` or
 `build.backstory` vanished on the first autosave. The dangerous case: a newer build adds a field
 without raising `schemaVersion` (additive changes do not raise it), and an older build on a second
 machine, over a synced folder, opens the file and erases the field with no conflict.
+
+**Fix:** not `.loose()`, which would widen `Character` to any key and lose the type check on every
+field. A save carries the stored file's unknown keys over at the top level and in `build`, `play` and
+`ui` (`schema.ts` ▸ `withUnknownKeysOf`), from a file at this `schemaVersion` or newer. Unknown keys
+inside a row are not carried. **Held by** `character.test.ts` ▸ a field this build does not know
+survives a save.
 
 ### D8 · "Undo update" on a pack discards everything changed since — medium-high · CONFIRMED by trace
 
@@ -138,7 +147,7 @@ machine, over a synced folder, opens the file and erases the field with no confl
 lives until the next apply, possibly months. One click with no confirmation
 (`PackUpdatesSettings.svelte`) discarded every translation, edit and note made since.
 
-### D9 · An unclosed quote in a CSV silently swallows every following row — medium · CONFIRMED
+### D9 · An unclosed quote in a CSV silently swallows every following row — medium · closed
 
 One stray `"` in an Excel cell and every row below it disappeared from the compendium, with nothing in
 Content Health. `parsed.errors` from Papa was read nowhere (`loader.ts`, `homebrew.ts`,
@@ -146,7 +155,12 @@ Content Health. `parsed.errors` from Papa was read nowhere (`loader.ts`, `homebr
 a file wrote the broken parse back to disk. Extra cells in a row and a second column with the same
 header were lost the same way.
 
-### D10 · One locked file stops all content from loading — medium · CONFIRMED for reads, LIKELY for Excel
+**Fix:** one parse, `csv-table.ts` ▸ `parseCsvTable`, reports an unclosed or stray quote, extra cells
+and a repeated header. The loader raises `contentIssue.damagedCsv`; the homebrew and translation
+writers refuse with `DamagedCsvError`; a pack merge leaves a damaged incoming file as its own bytes.
+**Held by** `csv-table.test.ts`.
+
+### D10 · One locked file stops all content from loading — medium · reads closed, seed and stat open
 
 After an app update with an SRD CSV open in Excel, launch showed the content error screen until Excel
 was closed.
@@ -154,6 +168,11 @@ was closed.
 - `loader.ts` read files through `Promise.all`, so one `EBUSY` cancelled everything (confirmed).
 - The seed (`provider.ts`) threw out of `buildGraph` when a rename hit an open file.
 - `storage/tauri.ts` ran `stat` on a file that vanished during the listing.
+
+**Fix (reads):** a file that cannot be read is `contentIssue.unreadableFile` on that file, and the
+rest loads. **Held by** `csv-table.test.ts` ▸ a file that cannot be read. The seed rename and the
+listing `stat` are open (`work/release.md` ▸ AUDIT-LOCKED-FILE), and the Excel lock itself is owed a
+desktop run.
 
 ### D11 · A demo folder without `demo-seeded.json` breaks roster and combat on every launch — medium · closed
 
@@ -198,8 +217,8 @@ the file's own columns that the form never saw.
   the old name, and `forgetUninstalledPacks` then lost the URL and pin.
 - **The seed matched files by path, not by `#content-id`.** A renamed SRD file was seeded beside
   itself, giving duplicate ids; a file deleted from the pack came back with the next seed.
-- **Case and nesting.** Upper-case `.CSV` files were ignored with no health entry. CSVs in subfolders
-  of a remote pack were installed but never loaded.
+- **Case and nesting.** Upper-case `.CSV` files were ignored with no health entry — closed, the loader
+  reads them. CSVs in subfolders of a remote pack were installed but never loaded — open.
 - **The web demo did not ask for `navigator.storage.persist()`**, so the browser could evict the
   IndexedDB with the characters in it.
 - **Two demo tabs.** Config sections (pack pin, source toggles) are last-writer-wins

@@ -517,6 +517,55 @@ export const characterSchema = z.object({
 	ui: uiSchema,
 });
 
+const isPlainRecord = (v: unknown): v is Record<string, unknown> =>
+	typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** The stored file whose unknown keys a save carries forward: one at this schema version or newer.
+ *  An older file's unknown keys are the names its migrations renamed away, not data. */
+function carriedFrom(raw: string): unknown {
+	try {
+		const stored: unknown = JSON.parse(raw);
+		const version = (stored as { schemaVersion?: unknown } | null)?.schemaVersion;
+		return typeof version === 'number' && version >= CHARACTER_SCHEMA_VERSION ? stored : null;
+	} catch {
+		return null; // a file that is not JSON has no keys to carry
+	}
+}
+
+/** The parts whose keys this build knows, for {@link withUnknownKeysOf}. */
+const KNOWN_KEYS = {
+	character: new Set(Object.keys(characterSchema.shape)),
+	build: new Set(Object.keys(buildSchema.shape)),
+	play: new Set(Object.keys(playSchema.shape)),
+	ui: new Set(Object.keys(uiSchema.unwrap().shape)),
+};
+
+/**
+ * `next` as it is written, plus every key of the stored file this build does not know — at the top
+ * level and in `build`, `play` and `ui`. The schema strips unknown keys on read, so without this a
+ * field a newer Charnik added (an additive change keeps `schemaVersion`), or one written by hand, is
+ * erased by the first save of an older one. The types stay strict: only the written JSON carries them.
+ */
+export function withUnknownKeysOf(
+	storedText: string | null,
+	next: Character,
+): Record<string, unknown> {
+	const stored = storedText === null ? null : carriedFrom(storedText);
+	const keep = (from: unknown, known: Set<string>, into: object): Record<string, unknown> => {
+		const out: Record<string, unknown> = { ...into };
+		if (isPlainRecord(from))
+			for (const [key, value] of Object.entries(from)) if (!known.has(key)) out[key] = value;
+		return out;
+	};
+	const top = isPlainRecord(stored) ? stored : {};
+	return {
+		...keep(top, KNOWN_KEYS.character, next),
+		build: keep(top.build, KNOWN_KEYS.build, next.build),
+		play: keep(top.play, KNOWN_KEYS.play, next.play),
+		ui: keep(top.ui, KNOWN_KEYS.ui, next.ui),
+	};
+}
+
 /** The one place a class row or an inventory row is made, so each leaves with an identity of its
  *  own. Takes what the file may omit and answers the row as a character holds it. */
 export const classRow = (row: z.input<typeof classEntry>) => classEntry.parse(row);

@@ -12,8 +12,9 @@
  *     `resolveRefs()` reports which referenced ids are missing, so the character/render
  *     layer can "render what's possible + flag it" instead of crashing.
  */
-import Papa from 'papaparse';
 import type { Storage, FileEntry } from '../storage/types';
+import { describeDamage, parseCsvTable } from './csv-table';
+import { errText } from '../util/format';
 import {
 	CONTENT_TYPES,
 	TYPE_ALIASES,
@@ -249,7 +250,7 @@ function resolveFileType(
 		});
 		return null;
 	}
-	const base = entry.name.replace(/\.csv$/, '');
+	const base = entry.name.replace(/\.csv$/i, '');
 	// type = the filebase that the name equals or starts with (e.g. species_srd → species)
 	const match = acc.typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
 	if (match) return { type: match[1], kind: undefined };
@@ -358,7 +359,7 @@ const MAX_CSV_BYTES = 20 * 1024 * 1024;
  *  content-health issue into `acc`. A non-CSV / directory entry is skipped. */
 async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promise<void> {
 	const { st, root, entry } = file;
-	if (entry.isDir || !entry.name.endsWith('.csv')) return;
+	if (entry.isDir || !entry.name.toLowerCase().endsWith('.csv')) return;
 	// the caller reads bodies ahead in parallel (SMELL-5); fall back to a direct read for any caller
 	// that doesn't (keeps this callable standalone).
 	const raw = preRead ?? (await st.read(`${root}/${entry.name}`));
@@ -406,8 +407,15 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			.map((s) => s.trim())
 			.filter(Boolean),
 	};
-	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-	for (const h of parsed.meta.fields ?? []) {
+	const parsed = parseCsvTable(body);
+	if (parsed.damage.length)
+		acc.issues.push({
+			level: 'error',
+			root,
+			file: entry.name,
+			...issueText.damagedCsv(describeDamage(parsed.damage)),
+		});
+	for (const h of parsed.fields) {
 		const m = LOCALE_COL.exec(h);
 		if (m?.[1]) acc.localeSet.add(m[1].toLowerCase());
 		else if (/^(?:name|text)_/.test(h))
@@ -422,7 +430,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 	// columns; one that cannot be (no step registered, or written by a NEWER build than this one) is
 	// reported and its rows are loaded as-is — flagged beats silently reinterpreted.
 	const declared = declaredSchema(directives.get('schema'));
-	const migrated = migrateRows(type, parsed.data, declared);
+	const migrated = migrateRows(type, parsed.rows, declared);
 	if (migrated.error)
 		acc.issues.push({
 			level: 'warn',
@@ -473,6 +481,22 @@ function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices
 	return { byType, byEffectiveId, articles, uniqueRows };
 }
 
+/** A file's text, or an issue on that file: one locked or vanished file must not fail the load of
+ *  all content. */
+async function readOrIssue(file: FileRef, acc: LoadAcc): Promise<string | null> {
+	try {
+		return await file.st.read(`${file.root}/${file.entry.name}`);
+	} catch (e) {
+		acc.issues.push({
+			level: 'error',
+			root: file.root,
+			file: file.entry.name,
+			...issueText.unreadableFile(errText(e)),
+		});
+		return null;
+	}
+}
+
 /** Load + merge content. The 2-arg form (one storage, many roots) is the common case; `extra`
  *  adds roots backed by a DIFFERENT storage (e.g. homebrew in user storage while SRD ships as
  *  fetched assets). All sources merge by type exactly the same way. */
@@ -502,9 +526,10 @@ export async function loadContent(
 		files.map(async (file) => ({
 			file,
 			raw:
-				file.entry.isDir || !file.entry.name.endsWith('.csv')
+				// `.CSV` from a tool that upper-cases extensions is the same file
+				file.entry.isDir || !file.entry.name.toLowerCase().endsWith('.csv')
 					? null
-					: await file.st.read(`${file.root}/${file.entry.name}`),
+					: await readOrIssue(file, acc),
 		})),
 	);
 	for (const { file, raw } of withRaw) if (raw != null) await processFile(file, acc, raw);

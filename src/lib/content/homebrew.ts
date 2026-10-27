@@ -41,6 +41,7 @@ import {
 } from './schemas';
 import type { z } from 'zod';
 import { EFFECT_TOKEN_SEPARATOR } from './schema-cells';
+import { parseCsvForRewrite } from './csv-table';
 
 /** The content root user homebrew is written to (a source merged into the graph like any other). */
 export const HOMEBREW_ROOT = 'content/homebrew';
@@ -456,8 +457,9 @@ async function readHomebrewFile(
 }> {
 	if (!(await storage.exists(file))) return { rows: [], directives: new Map(), header: [] };
 	const { directives, body } = parseContentDirectives(await storage.read(file));
-	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-	return { rows: parsed.data, directives, header: parsed.meta.fields ?? [] };
+	// every caller rewrites the file from what this returns
+	const { rows, fields } = parseCsvForRewrite(file, body);
+	return { rows, directives, header: fields };
 }
 
 /**

@@ -95,8 +95,11 @@ development it throws, and the panel is gone.
 All of them are random rather than time-ordered: the array holds the order, and an id that sorts by
 time would tell every peer when the character was made.
 
-**Nothing tells two folders with one `uid` apart.** A character folder copied by hand is two
-characters claiming one identity, and which of them is the copy is not something the files say.
+**A character is the folder it sits in.** Every read sets `id` to the folder's name
+(`repository.ts` ▸ `anchoredTo`), so the save path, the roster row and a delete all go by the folder:
+a folder copied or renamed by hand is its own character, and the `id` inside the file follows on its
+next save. **Nothing tells two folders with one `uid` apart**, though: a copy is two characters
+claiming one identity, and which of them is the copy is not something the files say.
 
 ## The unfinished one is a different kind of file
 
@@ -197,6 +200,14 @@ one by hand. That distinguishes "computed" from "overridden" without a second fl
 Every save carries a **`schemaVersion`**, and old saves are migrated forward. **Before release
 there are no users and therefore no migrations**: the schema may change breaking, and the machinery
 exists for afterwards.
+
+**A key this build does not know survives a save** (`schema.ts` ▸ `withUnknownKeysOf`), at the top
+level and in `build`, `play` and `ui`. An additive field keeps `schemaVersion`, so an older Charnik on
+a second machine opens a newer file without migrating it, and the schema strips what it does not
+know; a save then carries those keys over from the file on disk. Only from a file at this
+`schemaVersion` or newer: an older file's unknown keys are the names its migrations renamed away. The
+`Character` type stays strict — the carried keys live in the written JSON only. Unknown keys inside a
+row (a class entry, an inventory row) are not carried.
 
 The default save holds **id references only**. A **bundle export** additionally embeds the content
 rows it references, so a character survives being sent to someone who does not have the packs.

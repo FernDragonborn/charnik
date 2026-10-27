@@ -11,7 +11,7 @@
 import type { Storage, FileEntry } from '../storage/types';
 import { migrate, CHARACTER_SCHEMA_VERSION, type Versioned } from '../schema/version';
 import { CHARACTER_MIGRATIONS } from './migrations';
-import { characterSchema, parseCharacter, type Character } from './schema';
+import { characterSchema, parseCharacter, withUnknownKeysOf, type Character } from './schema';
 import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
 import { errText } from '../util/format';
@@ -338,7 +338,7 @@ export function saveCharacter(
 				logger.warn('character: save backup failed', { error: errText(e) });
 			}
 		}
-		const text = JSON.stringify({ ...next, rev: rev + 1 }, null, 2);
+		const text = JSON.stringify({ ...withUnknownKeysOf(current, next), rev: rev + 1 }, null, 2);
 		await storage.mkdir(dirOf(id));
 		await storage.write(fileOf(id), text);
 		held.set(id, text);
@@ -362,7 +362,7 @@ export function adoptCharacter(storage: Storage, slug: string): Promise<LoadResu
 			return { ok: false, error: `not found: ${slug}` };
 		}
 		heldBy(storage).set(slug, raw);
-		return readSavedCharacter(raw);
+		return anchoredTo(slug, readSavedCharacter(raw));
 	});
 }
 
@@ -471,7 +471,14 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 	} catch {
 		return { ok: false, error: `not found: ${slug}` };
 	}
-	return readSavedCharacter(raw);
+	return anchoredTo(slug, readSavedCharacter(raw));
+}
+
+/** A character is the folder it sits in: the save path, the roster row and a delete all go by the
+ *  folder, so a folder copied or renamed by hand is its own character, never the original's alias.
+ *  The `id` inside the file follows on the next save. */
+function anchoredTo(slug: string, res: LoadResult): LoadResult {
+	return res.ok && res.character ? { ...res, character: { ...res.character, id: slug } } : res;
 }
 
 /** The same parse → migrate → validate over bytes already in hand, so a SNAPSHOT is put through

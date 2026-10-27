@@ -23,6 +23,7 @@ import {
 import { HASH_STATE, parseContentDirectives } from './meta';
 import { fileHashState, gitBlobSha, stampWithHash } from './hash';
 import { HOMEBREW_ROOT } from './homebrew';
+import { parseCsvForRewrite } from './csv-table';
 
 /** Prose COVERAGE of a row into `locale` — purely "is the prose physically there?", derived from the
  *  cells. Feeds the l10n-status default (unset status → not_started/started) and the content-health
@@ -97,9 +98,7 @@ async function patchRowColumns(
 		(await fileHashState(raw)) === HASH_STATE.match
 	)
 		directives.set('upstream', await gitBlobSha(bytes));
-	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-	const rows = parsed.data;
-	const fields = parsed.meta.fields ? [...parsed.meta.fields] : [];
+	const { rows, fields } = parseCsvForRewrite(path, body);
 
 	const target = rows.find((r) => r.id === row.id);
 	if (!target) throw new Error(`${who}: row "${row.id}" not found in ${path}`);

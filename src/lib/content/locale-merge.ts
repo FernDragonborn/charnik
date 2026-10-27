@@ -19,7 +19,7 @@ import { isLocStatusColumn, isProseLocaleColumn } from './loader';
 import { parseContentDirectives } from './meta';
 import { LOC_STATUS, LOC_STATUS_COL_BASE, PROSE_BASES, type ProseBase } from './schemas';
 
-type CsvRow = Record<string, string>;
+import { parseCsvTable, type CsvRow, type CsvTable } from './csv-table';
 
 /** What one merge did, by row id — the breadcrumb a log line and a report are built from. */
 export interface CarryReport {
@@ -69,12 +69,14 @@ const comparable = (prose: string): string => prose.replace(/\r\n?/g, '\n').trim
 const sourceProse = (row: CsvRow, base: ProseBase, sourceLang: string): string =>
 	comparable(cell(row, `${base}_${sourceLang}`) || cell(row, base));
 
-function parseCsv(text: string): { fields: string[]; rows: CsvRow[] } {
-	const parsed = Papa.parse<CsvRow>(parseContentDirectives(text).body, {
-		header: true,
-		skipEmptyLines: true,
-	});
-	return { fields: [...(parsed.meta.fields ?? [])], rows: parsed.data };
+const parseCsv = (text: string): CsvTable => parseCsvTable(parseContentDirectives(text).body);
+
+/** An incoming file to merge INTO, or no columns at all when it did not parse whole: a damaged file
+ *  then lands as its own bytes, where the loader reports it, rather than being rewritten from a parse
+ *  that would make the loss permanent. */
+function mergeTarget(incoming: string): CsvTable {
+	const table = parseCsv(incoming);
+	return table.damage.length ? { fields: [], rows: [], damage: table.damage } : table;
 }
 
 /** The rows of `local` that hold a translation, by id — what a file takes with it when it is deleted
@@ -116,7 +118,7 @@ export async function carryLocaleCells(
 ): Promise<CarryResult> {
 	const { directives } = parseContentDirectives(incoming);
 	const sourceLang = (directives.get('source_lang') ?? 'en').toLowerCase();
-	const next = parseCsv(incoming);
+	const next = mergeTarget(incoming);
 	const mine = parseCsv(local);
 
 	const wanted = options.onlyLocales?.map((locale) => locale.toLowerCase());
