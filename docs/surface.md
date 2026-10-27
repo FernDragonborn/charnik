@@ -829,6 +829,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function restoreCharacterBackup` — * Put one snapshot back as the live save.
 - `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
 - `function enqueue`
+- `const wasDeleted`
 - `const SAVE_MODE` — How a write treats the file already on disk.
 - `type SaveMode`
 - `class CharacterConflictError` — A save that was REFUSED because the file is not the one this copy came from.
@@ -2461,4 +2462,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1500 exports across 211 modules · 98 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1501 exports across 211 modules · 98 duplicate suspects._

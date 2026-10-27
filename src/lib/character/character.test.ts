@@ -331,7 +331,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		await appendLog(s, 'mirt', { t: 2, kind: LOG_KIND.roll, label: 'DEX', result: 9 });
 		await s.write(
 			'characters/mirt/log.jsonl',
-			(await s.read('characters/mirt/log.jsonl')) + 'garbage\n',
+			(await s.read('characters/mirt/log.jsonl')) + 'garbage\nnull\n3\n',
 		);
 		const log = await readLog(s, 'mirt');
 		expect(log.map((e) => e.label)).toEqual(['DEX', 'Longsword']);
@@ -726,6 +726,29 @@ describe('one writer per open character (CHARACTER-WRITER)', () => {
 		expect(after.build.abilities.int).toBe(18);
 		expect(after.play.hp.current).toBe(3);
 		expect(after.rev).toBe(3);
+	});
+
+	it('a deleted character stays deleted: a queued save and a late log line write nothing', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		await saveCharacter(s, c);
+		const deleting = deleteCharacter(s, 'mirt');
+		const lateSave = saveCharacter(s, c); // the combat autosave, queued after the delete
+		const lateLog = appendLog(s, 'mirt', { t: 1, kind: LOG_KIND.roll, label: 'd20', result: 4 });
+		await Promise.all([deleting, lateSave, lateLog]);
+		expect(await s.exists('characters/mirt')).toBe(false);
+		// creating it again is the player's choice, and it lands
+		await saveCharacter(s, sample(), SAVE_MODE.build);
+		expect(await s.exists(FILE)).toBe(true);
+	});
+
+	it('a play save into a file removed outside the app asks instead of writing it back', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		const mine = (await adoptCharacter(s, 'mirt')).character!;
+		await s.remove('characters/mirt');
+		await expect(saveCharacter(s, mine)).rejects.toBeInstanceOf(CharacterConflictError);
+		expect(await s.exists(FILE)).toBe(false);
 	});
 
 	it('names the character a watched path belongs to, and nothing else in the folder', () => {

@@ -10,6 +10,7 @@
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
+	import type { Character } from '$lib/character/schema';
 	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
 	import Hero from './blocks/Hero.svelte';
@@ -57,8 +58,16 @@
 
 	// autosave play-state edits back to storage (debounced), so combat persists per character
 	let saveTimer: ReturnType<typeof setTimeout>;
+	// the character the pending timer would save: switching to another inside the debounce must save
+	// this one now, or its last edit is cancelled along with the timer
+	let pendingSave: Character | null = null;
 	$effect(() => {
 		const c = combat.character;
+		if (pendingSave && pendingSave !== c) {
+			clearTimeout(saveTimer);
+			void saveCharacterGuarded(pendingSave);
+			pendingSave = null;
+		}
 		if (!c) return;
 		// BUG-2: deep-track play AND ui AND build — combat mutates all three (togglePin/panelColumns →
 		// c.ui, togglePrepared → c.build.spells), and saveCharacterToStore writes the whole character.
@@ -67,7 +76,11 @@
 		JSON.stringify(c.ui);
 		JSON.stringify(c.build);
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => void saveCharacterGuarded(c), 800);
+		pendingSave = c;
+		saveTimer = setTimeout(() => {
+			pendingSave = null;
+			void saveCharacterGuarded(c);
+		}, 800);
 	});
 
 	// flush the pending autosave before a manual refresh, so an unsaved edit survives the reload

@@ -35,6 +35,7 @@
 	"character": {
 		"notSaved": "This character isn't being saved",
 		"notSavedBody": "Charnik can't write to your data folder, so nothing since the last successful save is on disk. Check the folder still exists and has room — the next change tries again.",
+		"reloadHeld": "The reload was held back so the unsaved change is not lost. Reload again once saving works.",
 		"portraitOf": "Portrait of {name}",
 		"conflict": {
 			"title": "This character changed outside Charnik",

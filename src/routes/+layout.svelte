@@ -51,7 +51,12 @@
 	import { takeFlash } from '$lib/stores/flash';
 	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
 	import { onMount, onDestroy } from 'svelte';
-	import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
+	import {
+		detectPlatform,
+		Platform,
+		getUserStorage,
+		resetUserStorage,
+	} from '$lib/storage/provider';
 	import {
 		applySavedDataDir,
 		defaultDataDir,
@@ -267,6 +272,10 @@
 	async function confirmDataDir(dir: string) {
 		// picker-chosen (already granted in Rust), or the proposal itself, which Rust accepts unpicked
 		await setDataDirOverride(dir);
+		// the roster behind the modal already opened storage, on the default root it computed before
+		// any pointer existed — reopen it on the folder just chosen, and read the roster from there
+		resetUserStorage();
+		await loadRoster();
 
 		firstRunDefault = null;
 		await loadContentStore();

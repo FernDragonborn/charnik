@@ -41,6 +41,15 @@ describe('reload coordinator', () => {
 		expect(b).toHaveBeenCalledOnce();
 		expect(reload).toHaveBeenCalledOnce();
 	});
+
+	it('holds the reload back when a flusher failed, so the unsaved edit is not discarded', async () => {
+		const reload = vi.fn();
+		vi.stubGlobal('location', { reload });
+		const off = onBeforeReload(() => Promise.reject(new Error('disk full')));
+		await reloadApp();
+		off();
+		expect(reload).not.toHaveBeenCalled();
+	});
 });
 
 // ── the foundation live-reload relies on: re-reading content reflects an on-disk change ──────────

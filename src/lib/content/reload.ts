@@ -11,6 +11,8 @@
  */
 import { logger } from '$lib/diag/logger';
 import { errText } from '$lib/util/format';
+import { toast } from '$lib/toast/toast';
+import { t } from '$lib/i18n';
 
 // Pending-write flushers (e.g. a debounced character autosave) — awaited before any reload.
 const flushers = new Set<() => Promise<void> | void>();
@@ -21,18 +23,25 @@ export function onBeforeReload(fn: () => Promise<void> | void): () => void {
 	return () => void flushers.delete(fn);
 }
 
-async function flushAll(): Promise<void> {
-	// allSettled, not all: a flusher that REJECTS used to take the reload with it — `reloadApp` awaits
-	// this before `location.reload()`, and two of its three callers are `void reloadApp()`, so the
-	// reload the user pressed simply did not happen and nothing said why.
+/** Run every flusher; true when all of them landed. */
+async function flushAll(): Promise<boolean> {
+	// allSettled, not all: one rejecting flusher must not stop the others from writing
 	const settled = await Promise.allSettled([...flushers].map((fn) => Promise.resolve(fn())));
+	let flushed = true;
 	for (const r of settled)
-		if (r.status === 'rejected')
+		if (r.status === 'rejected') {
+			flushed = false;
 			logger.error('flush before reload failed', { error: errText(r.reason) });
+		}
+	return flushed;
 }
 
-/** Flush pending writes, then reload the webview so every view re-reads fresh data from disk. */
+/** Flush pending writes, then reload the webview so every view re-reads fresh data from disk. A
+ *  flush that failed holds the reload back and says so: the reload would discard the very edit. */
 export async function reloadApp(): Promise<void> {
-	await flushAll();
+	if (!(await flushAll())) {
+		toast(t('character.notSaved'), { description: t('character.reloadHeld') });
+		return;
+	}
 	if (typeof location !== 'undefined') location.reload();
 }

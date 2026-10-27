@@ -55,7 +55,7 @@ replaceable. Probe: edit → `restampText` → seed v2 gave `preserved: []`, edi
 Fix direction: adoption is its own fact in the stamp (`#content-adopted`), and `isProtectedText`
 honours it. Saving a translation does not clear it.
 
-### D2 · First run: the chosen folder is ignored for the whole first session — high · CONFIRMED by trace
+### D2 · First run: the chosen folder is ignored for the whole first session — high · fixed, desktop check owed
 
 The player picks their own folder on first run and creates characters. After a restart the folder is
 empty, and everything from the first session sits in `Documents/charnik`.
@@ -66,8 +66,10 @@ exists yet, so `<Documents>/charnik` is cached. `confirmDataDir` (`+layout.svelt
 but never calls `resetUserStorage()`, and `loadContentStore()` without `remount` does not reopen
 storage. Nobody sees an error, because `Documents/charnik` is in the static scope.
 
-Fix direction: `resetUserStorage()` in `confirmDataDir` right after `setDataDirOverride`, then reload
-the roster.
+**Fix:** `confirmDataDir` calls `resetUserStorage()` right after `setDataDirOverride`, then reloads
+the roster from the chosen folder. **Not yet run on the desktop app:** first run, pick another folder,
+create a character, restart. The demo the roster seeded into `Documents/charnik` behind the modal stays
+there.
 
 ### D3 · Editing or forking an article with several effects breaks its mechanics — high · closed
 
@@ -79,7 +81,7 @@ the bonuses turned into a text note.
 by** `homebrew.test.ts` ▸ a row with several effects keeps every one through rowToDraft → upsert →
 parse.
 
-### D4 · A deleted character comes back — high · CONFIRMED (Playwright and a node test)
+### D4 · A deleted character comes back — high · closed
 
 Delete the last character and open Combat: about a second later the character is back in the roster
 (1 → 0 → 1).
@@ -90,6 +92,13 @@ Why: the `combat` singleton's "no active character" branch did not clear `this.c
 that exists (`repository.ts`), so a missing file is simply written again. Besides, `deleteCharacter`
 was not on the character's queue: a save queued after a delete recreated the file, and a late
 `appendLog` left a folder with a lone `log.jsonl`.
+
+**Fix:** `load()` drops the previous character when none is active. `deleteCharacter` runs on the
+character's queue and remembers the slug, so a play save of a copy that was on disk (rev ≥ 1) and a
+late log line write nothing; a new character reusing the slug still saves. A play save into a held
+file that vanished outside the app is a conflict, not a silent rewrite. **Held by**
+`character.test.ts` ▸ a deleted character stays deleted, and ▸ a play save into a file removed
+outside the app asks; a Playwright drive (open → delete → Combat → roster) stayed at 0.
 
 ### D5 · A hand-copied character folder: deleting the copy deletes the original — medium · CONFIRMED
 
@@ -181,8 +190,8 @@ the file's own columns that the form never saw.
   consent. Both fail closed, but the data looks lost.
 - **Startup recovery** (`provider.ts`, `install.ts`) removed or renamed ANY `content/*.prev` or
   `*.new` folder, even one the user made. It should touch registered packs only.
-- **`reload.ts`.** If a flusher rejected, the error was logged but `location.reload()` still ran, with
-  no toast.
+- **`reload.ts`** · closed. If a flusher rejected, the error was logged but `location.reload()` still
+  ran, with no toast. A failed flush now holds the reload back and says so (`reload.test.ts`).
 - **`buildAndSwap`** (`install.ts`) deleted `.prev` before the swap; a failed swap lost the undo copy
   too.
 - **`renamePack`** (`pack-lifecycle.ts`). An exception after the folder rename left the registry on
@@ -320,10 +329,13 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
 
 ## U · UI state
 
-### U1 · Combat stays on "no character" after a character is created — high · CONFIRMED
+### U1 · Combat stays on "no character" after a character is created — high · closed
 
 `noCharacter` was set to true and never reset (`combat-view-model.svelte.ts`). After Create through an
 SPA `goto`, or opening from the roster, the empty state stayed until a reload.
+
+**Fix:** `load()` resets it first. **Held by** a Playwright drive: empty Combat → a character restored
+client-side → opened from the roster → the sheet, not the empty state.
 
 ### U2 · The edition switch in level-up shows but does not save, and the dropped picks are lost — high · CONFIRMED
 
@@ -333,11 +345,14 @@ character was still 5e, and the species, background or spells the switch removed
 editions is out of scope (`AGENTS.md`), so in edit mode the switch is disabled and shows the bound
 edition.
 
-### U3 · The combat singleton carried the previous character's transient state — medium · LIKELY (code reading)
+### U3 · The combat singleton carried the previous character's transient state — medium · closed
 
 Carried across characters: `hp.owedConcentrationSaves` (the new character got a concentration save
 prompt), `rolls.savagePending` and `savageUsedRound`, `rests.hdPick`, `casting.upcastSpell`,
 `executor.asking`, `forms.asking`, `menus.overlay`, `inventory.shotPending`, `resources.windowWas`.
+
+**Fix:** `load()` forgets all of them (and `casting.enchanting`) whenever the character changes. Held
+by code reading only: the view-model has no unit harness.
 
 ### U4 · Save errors are silent — medium · CONFIRMED
 
@@ -372,8 +387,10 @@ When `openCharacter` returned null, `ensureActiveCharacter` silently took the de
 ### U8 · Smaller — low
 
 - **Autosave debounce.** Switching character within 800 ms lost the previous one's save
-  (`combat/+page.svelte`). Translation behaves the same, per row (`translate/+page.svelte`).
-- **`readLog`** took `JSON.parse(line) as LogEntry` unchecked: a `null` line broke `combat.load`.
+  (`combat/+page.svelte`) — closed: the pending character is saved at once when another replaces it.
+  Translation behaves the same, per row (`translate/+page.svelte`) — open.
+- **`readLog`** · closed. It took `JSON.parse(line) as LogEntry` unchecked: a `null` line broke
+  `combat.load`. Non-object lines are skipped (`character.test.ts` ▸ appends and reads newest-first).
 - **`Turnbar.svelte`:** `role=button` inside a `<button>`, a nested interactive element.
 - **Raw `name_en` in the reader's language:** `compendium/[...entry]/+page.svelte`, `spellbook`,
   `mastery-picks.svelte.ts`, `EditContentForm.svelte`, `OrphanDialog.svelte`.

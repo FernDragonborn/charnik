@@ -141,6 +141,9 @@ export class ResourceTracker {
 		}
 	};
 
+	/** Another character's windows are not this one's to have opened. */
+	forgetWindows = () => this.windowWas.clear();
+
 	/** Written at once rather than by the debounced autosave: a rest or a new day is the kind of
 	 *  moment a player closes the app right after. */
 	saveNow = () => {

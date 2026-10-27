@@ -78,6 +78,11 @@ export class SheetRolls {
 		at: number;
 	} | null>(null);
 	private savageUsedRound = $state<number | null>(null);
+	/** The reroll offer belongs to the character whose roll it was. */
+	forgetSavage = () => {
+		this.savagePending = null;
+		this.savageUsedRound = null;
+	};
 	/** The feature name offering a once-per-turn weapon-damage reroll RIGHT NOW, or null when none is
 	 *  pending / the per-turn use is spent / no `damage_reroll` feature is active. Drives the offer UI. */
 	get savageLabel(): string | null {

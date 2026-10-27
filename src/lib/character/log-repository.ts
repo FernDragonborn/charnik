@@ -4,7 +4,7 @@
  * the whole file, so each takes its turn on the character's own queue (`repository.ts` ▸ `enqueue`).
  */
 import type { Storage } from '../storage/types';
-import { dirOf, enqueue } from './repository';
+import { dirOf, enqueue, wasDeleted } from './repository';
 // TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
 // the roll lives. Erased at build — no runtime edge from the character layer into combat.
 import type { RollLogEntry } from '../combat/roll';
@@ -56,7 +56,10 @@ const LOG_MAX_LINES = 100;
  *  fire-and-forget from the combat view, so it takes its turn on the character's queue: two fast
  *  rolls would otherwise both read the same `prev` and the second write would clobber the first. */
 export function appendLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	return enqueue(slug, () => writeLogLine(storage, slug, entry));
+	// a roll that lands after a delete would leave a folder holding a lone log.jsonl
+	return enqueue(slug, async () => {
+		if (!wasDeleted(storage, slug)) await writeLogLine(storage, slug, entry);
+	});
 }
 
 async function writeLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
@@ -115,7 +118,9 @@ export async function readLog(storage: Storage, slug: string): Promise<LogEntry[
 	for (const line of raw.split('\n')) {
 		if (!line.trim()) continue;
 		try {
-			out.push(JSON.parse(line) as LogEntry);
+			const entry: unknown = JSON.parse(line);
+			// a hand-edited `null` or `3` parses fine and then breaks whoever reads `.t`
+			if (entry && typeof entry === 'object') out.push(entry as LogEntry);
 		} catch {
 			/* skip corrupt line */
 		}

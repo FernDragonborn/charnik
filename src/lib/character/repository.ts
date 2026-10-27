@@ -222,6 +222,16 @@ function heldBy(storage: Storage): Map<string, string> {
 	return held;
 }
 
+/** The slugs this app deleted, per storage: a play-loop save or a log line still queued for one
+ *  must not write its folder back. Cleared by a save the player chose (a new build, a restore). */
+const deletedSlugs = new WeakMap<Storage, Set<string>>();
+function deletedBy(storage: Storage): Set<string> {
+	let deleted = deletedSlugs.get(storage);
+	if (!deleted) deletedSlugs.set(storage, (deleted = new Set()));
+	return deleted;
+}
+export const wasDeleted = (storage: Storage, slug: string): boolean => deletedBy(storage).has(slug);
+
 /** How a write treats the file already on disk. */
 export const SAVE_MODE = {
 	/** The play loop: refused when the file moved on from the copy being saved. */
@@ -290,7 +300,19 @@ export function saveCharacter(
 		}
 		const id = res.data.id;
 		const held = heldBy(storage);
+		// rev 0 is a character never written, so a new one that reuses the slug, not the deleted copy
+		if (mode === SAVE_MODE.checked && res.data.rev > 0 && wasDeleted(storage, id)) {
+			logger.info('character: dropping a play save of a deleted character');
+			return;
+		}
+		deletedBy(storage).delete(id);
 		const current = (await storage.exists(fileOf(id))) ? await storage.read(fileOf(id)) : null;
+		// the file this copy came from is gone (deleted outside the app): writing it back is the
+		// player's call, not the play loop's
+		if (current === null && mode === SAVE_MODE.checked && held.has(id)) {
+			logger.warn('character: save refused, the file is gone');
+			throw new CharacterConflictError(res.data);
+		}
 		let next = res.data;
 		let rev = next.rev;
 		if (current !== null) {
@@ -540,8 +562,13 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 }
 
 /** Delete a character folder (character.json, log, photo). */
-export async function deleteCharacter(storage: Storage, slug: string): Promise<void> {
-	logger.info('character: deleting');
-	heldBy(storage).delete(slug);
-	await storage.remove(dirOf(slug));
+export function deleteCharacter(storage: Storage, slug: string): Promise<void> {
+	// on the character's queue, so a save already waiting there lands before the folder goes, and one
+	// queued after is dropped (`wasDeleted`) rather than writing the folder back
+	return enqueue(slug, async () => {
+		logger.info('character: deleting');
+		heldBy(storage).delete(slug);
+		deletedBy(storage).add(slug);
+		await storage.remove(dirOf(slug));
+	});
 }
