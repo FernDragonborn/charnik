@@ -2237,7 +2237,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function shareContribution` — One caster class's contribution to the shared multiclass caster level.
 - `function shareFromCaster` — Default `caster_share` from the `caster` column when the data leaves it blank.
 - `function effectiveCasterLevel` — Shared multiclass caster level = SUM of contributions (NOT the senior class).
-- `function slotCountsFor` — Slot counts (per spell level, index 0 = 1st) at a character level, clamped to 1..20.
+- `function slotCountsFor` — Slot counts (per spell level, index 0 = 1st) at a character level, capped at 20.
 - `function maxSpellLevel` — Highest spell level with at least one slot (0 = no leveled slots).
 - `function cantripDieMultiplier` — Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and * 2024, so no per-syst…
 - `function preparedCap` — * The prepared/known set SIZE.

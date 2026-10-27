@@ -861,7 +861,7 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 	<div class="kind">
 		<div class="kind-name">apply_condition</div>
 		<div class="kind-form"><code><span class="g-kind">apply_condition</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span></code></div>
-		<div class="kind-desc">Apply a condition row, whose own effects then take hold. Expands one level only, so conditions cannot chain forever.</div>
+		<div class="kind-desc">Apply a condition row, whose own effects then take hold — including a condition it applies in turn (Unconscious brings Incapacitated). Two conditions that apply each other are reported as a cycle.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">regain_on_initiative</div>

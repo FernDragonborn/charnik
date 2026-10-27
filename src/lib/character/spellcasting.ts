@@ -149,6 +149,15 @@ function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTa
 }
 
 /** Cantrips-known + prepared/known-set size for a class at a level (from class_casting). */
+/** Does this caster class cast at its level? Not when its own slot table has a row for the level and
+ *  the row is all zeros, with no cantrips either — the 2014 half-caster's level 1. A level the table
+ *  has no row for is not evidence of anything, so it stays a caster. */
+function castsAtItsLevel(graph: ContentGraph, p: CasterProfile, systems: string[]): boolean {
+	const row = slotTable(graph, p.slotKind, systems).get(p.level);
+	if (!row || row.some((count) => count > 0)) return true;
+	return (castingCounts(graph, p.ownerId, p.level, systems).cantrips ?? 0) + p.extraCantrips > 0;
+}
+
 function castingCounts(
 	graph: ContentGraph,
 	classId: string,
@@ -477,10 +486,14 @@ export function deriveSpellcasting({
 	) => preparedCapOrReport({ profile, tableValue, abilityMod, system: character.system, issues });
 	const totalLevel = character.build.classes.reduce((n, c) => n + c.level, 0) || 1;
 
-	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters
+	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters,
+	// and a caster class whose own table gives nothing yet at its level — a 2014 Paladin 1 has no
+	// Spellcasting feature, so it neither casts nor joins a multiclass ("once you have the
+	// Spellcasting feature from more than one class")
 	const sources = character.build.classes
 		.map((entry) => casterProfileFor(entry, graph, character))
-		.filter((p): p is CasterProfile => p !== null);
+		.filter((p): p is CasterProfile => p !== null)
+		.filter((p) => castsAtItsLevel(graph, p, systems));
 
 	const access = getSpellAccess(graph);
 	const statsFor = (ability: Ability, classId: string) =>

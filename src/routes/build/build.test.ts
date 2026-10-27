@@ -206,6 +206,20 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.abilityBoosts.con).toBe(2); // once, not 4
 	});
 
+	it('an ASI stops at 20: +2 on a 19 is over the cap, +1 on it is not', () => {
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 19, wis: 10, cha: 12 };
+		const key = build.feats.featSlots[0]?.key ?? '';
+		build.feats.setSlotFeat(key, ASI);
+		const int = build.sheet?.abilities.int?.score.value ?? 0;
+		expect(build.feats.passesAbilityCap(key, 'int', 2)).toBe(int + 2 > 20);
+		expect(build.feats.passesAbilityCap(key, 'int', 21 - int)).toBe(true);
+		expect(build.feats.passesAbilityCap(key, 'str', 2)).toBe(false);
+		// the slot's own pick never blocks itself
+		build.feats.toggleAsiPick(key, 'str');
+		expect(build.feats.passesAbilityCap(key, 'str', 2)).toBe(false);
+	});
+
 	it('a full ability picker replaces its oldest pick rather than ignoring the click', () => {
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		const key = build.feats.featSlots[0]?.key ?? '';

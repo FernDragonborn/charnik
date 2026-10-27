@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { makeExprContext, type BuildVars, type PlayVars } from './context';
-import { splitGuard, type ActiveEffect, type EffectCtx } from './token-parser';
+import { ISSUE_KEY, splitGuard, type ActiveEffect, type EffectCtx } from './token-parser';
 import { applyEffects } from './apply';
 import { resolveActiveEffects } from './resolver';
 import { type ResolveState } from './dependency-graph';
@@ -232,6 +232,43 @@ describe('resolveActiveEffects · apply_condition expansion (after guards, SPEC7
 			expandFrightened,
 		).effects.flatMap((e) => e.tokens);
 		expect(tokens).not.toContain('disadvantage:attack');
+	});
+
+	// Unconscious imposes Incapacitated and Prone; Stunned imposes Incapacitated — the SRD needs two levels
+	const nested = (id: string) =>
+		({
+			unconscious: { source: 'Unconscious', tokens: ['apply_condition:incapacitated'] },
+			incapacitated: { source: 'Incapacitated', tokens: ['blocks_concentration'] },
+			loop_a: { source: 'A', tokens: ['apply_condition:loop_b'] },
+			loop_b: { source: 'B', tokens: ['apply_condition:loop_a', 'disadvantage:attack'] },
+		})[id];
+
+	it('expands a condition another condition imposes', () => {
+		const effects: ActiveEffect[] = [
+			{ source: 'Sleep', layer: 'condition', tokens: ['apply_condition:unconscious'] },
+		];
+		const tokens = resolve(effects, makeExprContext(build, play()), nested).effects.flatMap(
+			(e) => e.tokens,
+		);
+		expect(tokens).toContain('blocks_concentration');
+	});
+
+	it('imposes nothing nested under a condition whose own applier failed its guard', () => {
+		const effects: ActiveEffect[] = [
+			{ source: 'Sleep', layer: 'condition', tokens: ['is_raging ? apply_condition:unconscious'] },
+		];
+		const tokens = resolve(effects, makeExprContext(build, play()), nested).effects.flatMap(
+			(e) => e.tokens,
+		);
+		expect(tokens).not.toContain('blocks_concentration');
+	});
+
+	it('ends on conditions that impose each other, and names the cycle', () => {
+		const effects: ActiveEffect[] = [
+			{ source: 'Curse', layer: 'condition', tokens: ['apply_condition:loop_a'] },
+		];
+		const r = resolve(effects, makeExprContext(build, play()), nested);
+		expect(r.issues.some((i) => i.key === ISSUE_KEY.dependencyCycle)).toBe(true);
 	});
 });
 

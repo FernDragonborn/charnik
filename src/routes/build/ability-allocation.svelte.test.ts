@@ -66,7 +66,7 @@ function setup(over: Partial<DraftState> = {}, edit: EditContext | null = null) 
 	// annotated, and each host reads the OTHER lazily: the two know about each other, so an inferred
 	// type here is a cycle
 	const skillPicks: SkillPicks = new SkillPicks(() => ({ ...base, feats, sheet: null }));
-	const feats: FeatSlots = new FeatSlots(() => ({ ...base, skillPicks }));
+	const feats: FeatSlots = new FeatSlots(() => ({ ...base, skillPicks, sheet: null }));
 	return { draft, rows, abilities: new AbilityAllocation(() => ({ ...base, feats })) };
 }
 

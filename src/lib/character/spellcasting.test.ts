@@ -6,6 +6,7 @@ import { deriveSheet } from './derive';
 import { canCastAsRitual, casterForSpell } from './spellcasting';
 import { buildSpellGroups } from '../combat/spells';
 import { characterSchema, newCharacter, type Character, classRow } from './schema';
+import { loadPacks } from '../../test-support/real-content';
 
 /*
  * End-to-end spellcasting derive (data → access → rules → per-class profile). Locks the L1 slot
@@ -105,6 +106,23 @@ describe('deriveSpellcasting', () => {
 		const cle = sc.classes.find((c) => c.classId === 'cleric')!;
 		expect(wiz.maxSpellLevel).toBe(2); // full@3 → [4,2]
 		expect(cle.maxSpellLevel).toBe(1); // full@2 → [3]
+	});
+
+	it('a 2014 half-caster at level 1 has no Spellcasting yet, alone or in a multiclass', async () => {
+		const srd = await loadPacks('srd-2014');
+		const at = (...classes: [string, number][]) => {
+			const c = newCharacter('x', 'X', '5e');
+			c.build.classes = classes.map(([id, level]) =>
+				classRow({ class: `class:SRD 5.1:${id}`, level }),
+			);
+			return deriveSheet(characterSchema.parse(c), srd).spellcasting;
+		};
+		expect(at(['paladin', 1], ['ranger', 1]).pools).toEqual([]);
+		expect(at(['paladin', 1]).classes).toEqual([]);
+		// a Wizard 1 / Paladin 1 casts on the Wizard's own table, not a shared level of 1
+		expect(at(['wizard', 1], ['paladin', 1]).classes.map((c) => c.classId)).toEqual(['wizard']);
+		// and from level 2 on the half-caster joins: 2 + 2 → half + half = caster level 2
+		expect(at(['paladin', 2], ['ranger', 2]).casterLevel).toBe(2);
 	});
 
 	it('warlock: pact pool is separate (short rest, forced upcast), no shared level', () => {

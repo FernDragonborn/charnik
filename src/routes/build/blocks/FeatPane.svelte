@@ -58,9 +58,15 @@
 		<div class="chips">
 			{#each ABILITIES as ab (ab)}
 				{@const amount = b.feats.asiBoostFor(slotKey)[ab]}
+				{@const on = asi.picks.includes(ab)}
+				<!-- RAW: an ASI cannot raise a score above 20. Strict blocks, Free lets it through. -->
+				{@const blocked =
+					b.draft.strict && !on && b.feats.passesAbilityCap(slotKey, ab, asi.shape === '2' ? 2 : 1)}
 				<button
 					class="pick-chip"
-					class:on={asi.picks.includes(ab)}
+					class:on
+					class:dim={blocked}
+					disabled={blocked}
 					onclick={() => b.feats.toggleAsiPick(slotKey, ab)}
 				>
 					{abilityShortLabel(ab, $_)}{#if amount}<span class="gold">&nbsp;+{amount}</span>{/if}

@@ -2,7 +2,7 @@
  * The ONE resolve stage, in DEPENDENCY order (closes AUDIT A10 + the DAG deferred from EXPR-3):
  * gather → order value-WRITING tokens by what other tokens' guards/values READ (the graph +
  * ordering live in ./dependency-graph) → evaluate guards against the progressively-resolved state →
- * expand `apply_condition` (one level, guard-checked) → emit the guard-stripped effect list every
+ * expand `apply_condition` (nested to a fixpoint, guard-checked) → emit the guard-stripped effect list every
  * consumer reads, plus the ability scores as traced, clamped `Computed`s (A10: through the same
  * fold/clamp pipeline as every other stat).
  *
@@ -41,8 +41,8 @@ import {
 	type ResolveState,
 } from './dependency-graph';
 
-/** A one-level `apply_condition` expansion: the condition row's label + its token instances +
- *  every applier instance (A11: ONE child set per condition id, applies iff any applier survives). */
+/** An `apply_condition` expansion: the condition row's label + its token instances + every applier
+ *  instance (A11: ONE child set per condition id, applies iff any live applier survives). */
 type Expansion = { label: string; children: Inst[]; appliers: Inst[] };
 
 /** One token occurrence → an Inst (guard split + parse + its graph reads/write). Pure. */
@@ -90,8 +90,20 @@ function assembleResolved(
 		const kept = keptTokens(insts.filter((i) => i.eff === eff && i.condId === undefined));
 		if (kept.length) out.push({ ...eff, tokens: kept });
 	}
+	// an applier counts when it applied AND, if it sits inside another condition, that one is live —
+	// Incapacitated imposed by an Unconscious whose own guard failed is not imposed
+	const liveApplier = (ex: Expansion, seen: Set<Expansion>): Inst | undefined => {
+		if (seen.has(ex)) return undefined; // a cycle of conditions imposes nothing by itself
+		const next = new Set(seen).add(ex);
+		return ex.appliers.find((a) => {
+			if (a.disposition !== 'applied') return false;
+			if (a.condId === undefined) return true;
+			const parent = expansions.get(a.condId);
+			return parent !== undefined && liveApplier(parent, next) !== undefined;
+		});
+	};
 	for (const ex of expansions.values()) {
-		const applier = ex.appliers.find((a) => a.disposition === 'applied');
+		const applier = liveApplier(ex, new Set());
 		if (!applier) continue;
 		const kept = keptTokens(ex.children);
 		if (kept.length)
@@ -237,20 +249,26 @@ class Resolver {
 			children: c.tokens.map((t) => makeInst(eff, t, id, c.source)),
 			appliers: [],
 		};
+		// registered BEFORE the children expand, so a condition that names itself back ends here
 		this.expansions.set(id, ex);
 		this.insts.push(...ex.children);
+		// a condition may impose another (Unconscious → Incapacitated, Prone): expanded to a fixpoint
+		for (const child of ex.children) this.expandIfApplier(child);
 		return ex;
 	}
 
-	/** Token instances + one-level condition expansions (ONE child set per condition id — A11). */
+	private expandIfApplier(inst: Inst): void {
+		if (inst.parsed.kind !== EFFECT_KIND.applyCondition || inst.parsed.target === undefined) return;
+		this.ensureExpansion(inst.eff, inst.parsed.target.trim())?.appliers.push(inst);
+	}
+
+	/** Token instances + their condition expansions (ONE child set per condition id — A11). */
 	private gatherInstances(): void {
 		for (const eff of this.active) {
 			for (const raw of eff.tokens) {
 				const inst = makeInst(eff, raw);
 				this.insts.push(inst);
-				if (inst.parsed.kind !== EFFECT_KIND.applyCondition || inst.parsed.target === undefined)
-					continue;
-				this.ensureExpansion(eff, inst.parsed.target.trim())?.appliers.push(inst);
+				this.expandIfApplier(inst);
 			}
 		}
 	}

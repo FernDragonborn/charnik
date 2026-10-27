@@ -52,6 +52,7 @@ export type FeatsHost = Pick<
 	| 'speciesOptionRow'
 	| 'row'
 	| 'ownedTools'
+	| 'sheet'
 > & {
 	/** Named structurally, not picked: `SkillPicksHost` names `feats` and two Picks that name each
 	 *  other off the same class are a circular mapped type. This is the one member asked for here. */
@@ -547,6 +548,29 @@ export class FeatSlots {
 		const cur = this.host().draft.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
 		const picks = toggleCapped(cur.picks, ab, asiPickCount(cur.shape));
 		this.host().draft.slotAsi = { ...this.host().draft.slotAsi, [key]: { ...cur, picks } };
+	};
+
+	// --- the ability cap an improvement stops at ------------------------------------
+	/** RAW, both editions: an ASI or a feat's +1 cannot raise a score above 20 — an Epic Boon's, 30. */
+	abilityCapOf = (key: string): number =>
+		rowOfType(this.host().graph?.get(this.featRefFor(key) ?? ''), 'feat')?.data.category ===
+		FEAT_CATEGORY.epicBoon
+			? 30
+			: 20;
+	/**
+	 * Would `amount` of `ab` from this slot pass its cap? Read off the sheet less what the slot already
+	 * gives `ab`, so a slot's own pick never blocks itself. The player's to override: Strict blocks,
+	 * Free lets it through, like every other cap in the builder.
+	 *
+	 * shortcut: the sheet's score includes items, so a Belt of Giant Strength blocks an ASI it should
+	 * not; upgrade by reading the score before item contributions once the trace marks them.
+	 */
+	passesAbilityCap = (key: string, ab: Ability, amount: number): boolean => {
+		const score = this.host().sheet?.abilities[ab]?.score.value;
+		if (score === undefined) return false;
+		const given =
+			(this.asiBoostFor(key)[ab] ?? 0) + (this.host().draft.slotFeatAbility[key] === ab ? 1 : 0);
+		return score - given + amount > this.abilityCapOf(key);
 	};
 
 }

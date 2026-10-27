@@ -104,7 +104,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `form`                       | `form:<id>:<word>[:<value>]`                            | One statement about a FORM a feature lets the character assume (Wild Shape), keyed by the form's id so several rows can speak of one form. The words are closed (`FORM_WORD`); see ▸ A form below. |
 | `damage_sensitivity`         | `damage_sensitivity:<resist\|immune\|vulnerable>:<type>` | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `condition_immunity`         | `condition_immunity:<id>`                               | A condition this character cannot be given (2024 Aura of Courage → Frightened). The id REFERENCES a state row, so it is free-form like a damage type — which is also what lets 2014's `condition_immunity:disease` say a word no row carries. It states what is true of the body and folds onto the Defenses strip beside the damage defenses; it does not refuse an application, because the ruling at the table is the player's (`characters.md` ▸ A tracker surfaces, it never decides). |
-| `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
+| `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens, and any condition it imposes in turn (the condition's `effects` flow + register `has_condition.<id>`).                                                             |
 | `regain_on_initiative`       | `regain_on_initiative:<resource>:<n>`                   | When initiative is rolled, top `<resource>` back up to `<n>` (2024 Perfect Focus, Superior Inspiration). AUTO-applied with a notice, not a player click — RAW gives no choice. Same `kind:target:int` shape as `reroll`/`min_die`. |
 | `note`                       | `note:<free text>`                                      | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
 | `blocks_concentration`       | `blocks_concentration`                                  | MARKER, no target: the carrying state forbids Concentration (RAW Rage). A fact the combat layer reads to drop or withhold it. |
@@ -548,7 +548,9 @@ content and is not what either of these implements.
    dedupe) → order value nodes (abilities, `hp_max`, conditions, resources) by read/write deps
    (Tarjan SCC; a cycle → inert + issue) → evaluate guards in that order (drop false-guarded
    tokens; an ERRORED guard keeps the token verbatim = inert note + issue) → expand
-   `apply_condition:<id>` ONE level per id → emit the guard-stripped `resolvedEffects` + the
+   `apply_condition:<id>` once per id, and the conditions THOSE impose in turn, to a fixpoint (the
+   SRD's Unconscious imposes Incapacitated; a child applies only while its parent is live; a
+   condition cycle is a dependency cycle) → emit the guard-stripped `resolvedEffects` + the
    effective ability `Computed`s + the hp-max base. Guard eval precedes condition expansion.
 3. **Facts** (`collectFacts`) — parse every resolved token ONCE, resolve L2 values ONCE → the
    typed `EffectFacts` object (numeric / advantage / disadvantage / proficiencies / defenses /

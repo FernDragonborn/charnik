@@ -186,8 +186,10 @@ export function effectiveCasterLevel(
 	return entries.reduce((n, e) => n + shareContribution(e.share, e.level), 0);
 }
 
-/** Slot counts (per spell level, index 0 = 1st) at a character level, clamped to 1..20. */
+/** Slot counts (per spell level, index 0 = 1st) at a character level, capped at 20. A caster level of
+ *  0 is no slots, not the first row of the table. */
 export function slotCountsFor(table: SlotTable, charLevel: number): number[] {
+	if (charLevel <= 0) return [];
 	return [...(table.get(clamp(charLevel, 1, 20)) ?? [])];
 }
 

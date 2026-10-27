@@ -40,9 +40,14 @@
 		<span class="eyebrow">{$_('build.feats.halfFeatAsk', { values: { feat: rowName(b.row(ref)) } })}</span>
 		<div class="chips">
 			{#each halfOpts as ab (ab)}
+				{@const on = b.draft.slotFeatAbility[choiceKey] === ab}
+				<!-- RAW: a feat's +1 stops at 20 (an Epic Boon's at 30). Strict blocks, Free lets it through. -->
+				{@const blocked = b.draft.strict && !on && b.feats.passesAbilityCap(choiceKey, ab, 1)}
 				<button
 					class="pick-chip"
-					class:on={b.draft.slotFeatAbility[choiceKey] === ab}
+					class:on
+					class:dim={blocked}
+					disabled={blocked}
 					onclick={() => b.feats.setSlotFeatAbility(choiceKey, ab)}>{abilityShortLabel(ab, $_)}</button
 				>
 			{/each}

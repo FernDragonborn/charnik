@@ -245,12 +245,17 @@ SRD (`srd-2014/species_srd.csv`, dwarf): "Your speed is not reduced by wearing h
 A Dwarf Cleric with STR 10 in chain mail had speed 15 instead of 25. The −10 was a hard-coded
 contribution (`character/derive-stats.ts`) no effect could cancel.
 
-### R3 · Paladin 1 / Ranger 1 (2014) gets slots and a prepare limit — high · CONFIRMED · 5e
+### R3 · Paladin 1 / Ranger 1 (2014) gets slots and a prepare limit — high · closed · 5e
 
 SRD: `paladin_spellcasting` and `ranger_spellcasting` are level-2 features, and `half_1` is all
 zeros. Multiclassing: "Once you have the Spellcasting feature from more than one class". Caster level
 0 was clamped to 1 in `slotCountsFor` (`rules/spellcasting.ts`), so the character got two 1st-level
 slots. A lone Paladin 1 (2014) also had a prepare limit of 1 and a DC/attack profile with no slot.
+
+**Fix:** a caster class whose own slot table has an all-zero row at its level, and no cantrips, is
+not a caster yet — it neither casts nor joins the multiclass level; a caster level of 0 is no slots.
+A level the table has no row for still counts as casting. **Held by** `spellcasting.test.ts` ▸ a 2014
+half-caster at level 1 has no Spellcasting yet, over the shipped SRD 5.1 pack.
 
 ### R4 · Entering combat resets the round to 1, so timed effects grow younger — high · CONFIRMED · both
 
@@ -282,12 +287,18 @@ points, ends concentration…, whose 24-hour spell effect goes with it.
 `rests.ts` dropped effects with ≤ 1 h or ≤ 8 h left but did not add `restRounds` to `play.round`. A
 24-hour effect still had 14400 rounds after three long rests.
 
-### R8 · An ASI or half-feat raises a score above 20 — medium · CONFIRMED · both
+### R8 · An ASI or half-feat raises a score above 20 — medium · closed in Strict · both
 
 SRD 2014 ASI: "you can't increase an ability score above 20 using this feature". 2024: "This feat
 can't increase an ability score above 20" and "to a maximum of 20". STR 19 plus two ASIs gave 23, and
 the builder offered +2 on a 19 (`routes/build/ability-allocation.svelte.ts`, `FeatPane.svelte`).
 Epic Boons keep their cap of 30.
+
+**Fix:** in Strict the ASI and half-feat chips that would pass the cap are disabled, the way the
+builder's other caps are; Free lets them through (`feat-slots.svelte.ts` ▸ `passesAbilityCap`).
+**Held by** `build.test.ts` ▸ an ASI stops at 20. The cap reads the sheet's score, items included, so
+a Belt of Giant Strength blocks an ASI it should not — a `shortcut:` in the code. A save that already
+holds 23 is not lowered.
 
 ### R9 · A Warlock multiclass cannot spend a Pact Magic slot — medium · CONFIRMED by trace · 5e (5.5e LIKELY)
 
@@ -302,12 +313,17 @@ had a STR check of +0 instead of +1; the content row carried only
 `grant_proficiency:partial:skills`. Initiative (`rules/core.ts`, `derive-assemble.ts`) got no half
 bonus from JoAT or Remarkable Athlete either.
 
-### R11 · Nested conditions are not expanded, and the shipped SRD needs them — medium · CONFIRMED
+### R11 · Nested conditions are not expanded, and the shipped SRD needs them — medium · closed
 
 Unconscious imposes Incapacitated and Prone; Stunned, Paralyzed and Petrified impose Incapacitated.
 The ids reached `state.conditions`, but the child conditions' tokens were not applied and no issue was
 raised (`effects/resolver.ts`). So in 2024 Stunned did not show "Your Concentration is broken" or
 disadvantage on initiative. `effects.md` documented ONE level.
+
+**Fix:** an expansion's children expand in turn, once per id; a nested condition applies only while
+the one imposing it is live, and a cycle of conditions is the dependency cycle it already was.
+**Held by** `resolve.test.ts` ▸ expands a condition another condition imposes, and the two beside it.
+A plugin's returned `apply_condition` still expands one level (`effects.md` ▸ 3½).
 
 ### R12 · Resistance and vulnerability to one type double the damage — medium · closed
 
