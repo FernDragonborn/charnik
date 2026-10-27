@@ -105,8 +105,8 @@ export function renderContentMarkdownInline(md: string): string {
 
 /** Sanitize a raw HTML string (no Markdown pass) — DOMPurify keeps safe inline tags like <b>/<em> and
  *  strips anything executable (<script>, on* handlers, javascript:). The shared seam for `{@html …}`
- *  of any string that could be user-authored — incl. i18n catalog strings, since a user can drop in a
- *  new locale JSON at runtime (the i18n invariant), so those are NOT trusted (ARCH-3). */
+ *  of any string that could be user-authored — incl. i18n catalog strings, which are NOT trusted:
+ *  a catalog is meant to be a file a user drops in (`work/ui.md` ▸ LOCALE-DROP-IN). */
 export function sanitizeHtml(html: string): string {
 	return sanitize(html);
 }

@@ -330,6 +330,7 @@
 			"saving": "Saving…"
 		},
 		"ruleset": "Ruleset",
+		"rulesetBound": "This character was built in its edition and stays in it — Charnik does not convert a character between editions.",
 		"shortRest": "Short rest healing",
 		"shortRestDice": "Dice",
 		"shortRestDiceHint": "Short rest: spend Hit Dice to heal (by the book)",
@@ -1938,7 +1939,10 @@
 		"deleteConfirm": "Delete character",
 		"discardDraftTitle": "Discard “{name}”?",
 		"discardDraftBody": "This unfinished build is removed for good. It can’t be undone.",
-		"discardDraftConfirm": "Discard draft"
+		"discardDraftConfirm": "Discard draft",
+		"level": "level {level}",
+		"cannotOpen": "“{name}” can’t be opened",
+		"cannotOpenBody": "Its save doesn’t read as a character, so nothing was opened in its place. Settings ▸ Data can put back one of its backups."
 	},
 	"senseName": {
 		"blindsight": "Blindsight",

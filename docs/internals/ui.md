@@ -160,7 +160,8 @@ Everything else is on you.
 
 **A box side is logical, never physical:** `margin-inline-start`, `padding-inline-end`,
 `border-inline-start`, `text-align: start`. A physical side stays put when the UI is mirrored, and
-Charnik discovers its locales — an RTL catalog is a file a user can drop in, not a release we plan.
+Charnik discovers its locales — an RTL catalog is meant to be a file a user drops in, not a release
+we plan (`../work/ui.md` ▸ LOCALE-DROP-IN).
 Stylelint's `property-disallowed-list` holds the line. Bare `left`/`right` offsets are still allowed:
 they anchor a `fixed`/`absolute` box to the viewport, and some are written from JS — where the side
 is a real choice, ask `getComputedStyle(el).direction`, as `card-placement.ts` does.

@@ -266,6 +266,10 @@ function revOf(raw: string): number | undefined {
 /** What the builder owns of a character: the build, and the two authoring choices it folds into
  *  `ui`. Everything else is the file's, because the table kept playing while the builder was open. */
 function mergeBuildOver(onDisk: Character, built: Character): Character {
+	// a build is edition-specific through and through: written over a file of the other edition it
+	// would be read with the wrong rules, and converting a character is out of scope
+	if (built.system !== onDisk.system)
+		throw new Error(`the build is ${built.system} and the character is ${onDisk.system}`);
 	return {
 		...onDisk,
 		build: built.build,

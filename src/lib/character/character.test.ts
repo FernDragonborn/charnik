@@ -751,6 +751,17 @@ describe('one writer per open character (CHARACTER-WRITER)', () => {
 		expect(await s.exists(FILE)).toBe(false);
 	});
 
+	it("refuses a builder's save in another edition than the character's", async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, sample());
+		const inBuilder = (await loadCharacter(s, 'mirt')).character!;
+		const other = inBuilder.system === '5e' ? '5.5e' : '5e';
+		await expect(
+			saveCharacter(s, { ...inBuilder, system: other }, SAVE_MODE.build),
+		).rejects.toThrow(/edition|is 5/);
+		expect((await loadCharacter(s, 'mirt')).character?.system).toBe(inBuilder.system);
+	});
+
 	it('a folder copied or renamed by hand is its own character, never the original', async () => {
 		const s = new MemoryStorage();
 		await saveCharacter(s, sample());

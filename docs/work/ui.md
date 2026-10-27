@@ -11,6 +11,15 @@
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
+- [ ] **LOCALE-DROP-IN · a language a user adds is a file they drop in — and nothing loads one yet.**
+  `i18n/index.ts` discovers locales from a registry so a new one needs no component change, but the
+  registry holds only the catalogs built in (`LOCALES`): no reader picks a `<id>.json` up from the
+  data folder, and Settings has no way to add one. Doable from the UI, live, like every other
+  content: a catalog under `locales/` in the data folder joins the switcher, falls back to English
+  key by key, and its strings stay untrusted — every `{@html}` of one already goes through
+  `sanitizeHtml`. Desktop reads the folder; on web the file is picked in Settings. Until then the
+  "a user can drop in a catalog" sentences in `security.md` and the code describe this item, not
+  the app (`../audit-oct-27.md` ▸ Docs this audit proved wrong).
 - [~] **DEFENCE-STRIP · the `Saves` group has not found its form.** The strip itself is one
   component now (`DefenseStrip`, the contract is [`../internals/ui.md`](../internals/ui.md) ▸ Shared
   controls and dialogs), so the builder and the play sheet say the same things and a Cloak of

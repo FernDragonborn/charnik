@@ -14,8 +14,9 @@ Playwright drive, or an unambiguous code trace, and the most important ones were
 - **LIKELY** — the code does exactly this, but the rule cannot be checked (the shipped SRD carries
   no "Combat" or "Resting" chapter, only data CSVs), or the behaviour needs the real desktop app.
 
-Each finding says **closed** with the test or probe that holds it, or **open** with the tracker item
-it now lives in (`work/*.md`).
+A finding marked **closed** names the test or probe that holds it. Every other finding is open: its
+heading still carries the CONFIRMED / LIKELY it was found with, and where it has moved into a tracker
+the text names the item (`work/*.md`).
 
 ---
 
@@ -372,13 +373,18 @@ SPA `goto`, or opening from the roster, the empty state stayed until a reload.
 **Fix:** `load()` resets it first. **Held by** a Playwright drive: empty Combat → a character restored
 client-side → opened from the roster → the sheet, not the empty state.
 
-### U2 · The edition switch in level-up shows but does not save, and the dropped picks are lost — high · CONFIRMED
+### U2 · The edition switch in level-up shows but does not save, and the dropped picks are lost — high · closed
 
 In level-up the player pressed 5.5e and accepted "you will lose these picks". After Create the
 character was still 5e, and the species, background or spells the switch removed were gone
 (`BuildHead.svelte`, `repository.ts` ▸ `mergeBuildOver` takes `system` from disk). Converting between
 editions is out of scope (`AGENTS.md`), so in edit mode the switch is disabled and shows the bound
 edition.
+
+**Fix:** in a level-up the other edition is `aria-disabled` with the reason on hover, and a builder
+save in another edition than the file's is refused. **Held by** `character.test.ts` ▸ refuses a
+builder's save in another edition, and a Playwright drive: the level-up's 5e button is
+`aria-disabled`, a forced click opens no dialog and changes nothing, a new character's is free.
 
 ### U3 · The combat singleton carried the previous character's transient state — medium · closed
 
@@ -407,10 +413,13 @@ Cast only showed a toast: no slot spent, no dice rolled. Pin was a local `Set` t
 navigation and was not tied to `ui.spellsPinned`. The hard-coded `['fire-bolt','shield']` did not even
 match the ids (`fire_bolt`). The toast showed `name_en`.
 
-### U6 · Clicking a broken character in the roster opens a different one — medium · CONFIRMED
+### U6 · Clicking a broken character in the roster opens a different one — medium · closed
 
 When `openCharacter` returned null, `ensureActiveCharacter` silently took the demo or the first one
 (`+page.svelte`, `store.svelte.ts`). Likewise `?levelup=<broken>` turned into a new blank draft.
+
+**Fix:** both stay on the roster with a toast that names the character and points at its backups.
+**Held by** a Playwright drive over an unreadable `character.json` and an unknown `?levelup=`.
 
 ### U7 · One-way doors — medium · design
 
@@ -429,7 +438,7 @@ When `openCharacter` returned null, `ensureActiveCharacter` silently took the de
 - **`Turnbar.svelte`:** `role=button` inside a `<button>`, a nested interactive element.
 - **Raw `name_en` in the reader's language:** `compendium/[...entry]/+page.svelte`, `spellbook`,
   `mastery-picks.svelte.ts`, `EditContentForm.svelte`, `OrphanDialog.svelte`.
-- **Hard-coded English:** `'level ' + c.level` (`+page.svelte`), `` `${name} copy` ``
+- **Hard-coded English:** `'level ' + c.level` (`+page.svelte`, closed — `roster.level`), `` `${name} copy` ``
   (`ThemesSettings.svelte`), `'uk'` as default (`translate/+page.svelte`), slot refusals
   (`rules/spellcasting.ts`).
 - **About 500 px literals in `<style>`**, most in `EditContentForm`, `HpPanel/DownSide`,
@@ -615,7 +624,8 @@ outside page opens in the app window — S6 back. Not run on Linux.
 
 - **Locale catalogs.** `internals/security.md`, the comment in `content/markdown.ts` and
   `+layout.svelte` said a user can drop in their own catalog. No loader exists: only catalogs built in
-  at build time. The 0.8.1 "not yet checked" item about such catalogs is therefore unreachable.
+  at build time. The 0.8.1 "not yet checked" item about such catalogs is therefore unreachable today.
+  The sentences now say it is planned, and the loader is `work/ui.md` ▸ LOCALE-DROP-IN.
 - **Nested conditions.** `internals/effects.md` settled one level; the shipped SRD needs two (R11).
 - **Hand-copied folders.** `internals/characters.md` called a hand-copied character folder normal;
   the code was not ready (D5).

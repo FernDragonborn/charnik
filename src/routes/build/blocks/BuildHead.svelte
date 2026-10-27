@@ -108,10 +108,15 @@
 		<!-- iterates the ONE system list, so a third system is a row in SYSTEM_LABELS, not a button
 		     somebody has to remember to add here (docs/internals/compatibility.md) -->
 		{#each SYSTEMS as sys (sys)}
+			<!-- a saved character is bound to the edition it was built in; converting is out of scope,
+			     so in a level-up the other edition is shown and not offered -->
+			{@const bound = !!b.edit && b.draft.system !== sys}
 			<button
 				class:on={b.draft.system === sys}
 				aria-pressed={b.draft.system === sys}
-				onclick={() => askSwitch(sys)}>{SYSTEM_SHORT_LABELS[sys]}</button
+				aria-disabled={bound ? true : undefined}
+				use:provenance={bound ? $_('build.rulesetBound') : ''}
+				onclick={() => !bound && askSwitch(sys)}>{SYSTEM_SHORT_LABELS[sys]}</button
 			>
 		{/each}
 	</div>

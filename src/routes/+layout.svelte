@@ -173,7 +173,7 @@
 	 * nothing to say what happened.
 	 *
 	 * ONE listener in the layout rather than a handler per renderer: this has to hold for every link
-	 * the app ever shows — content prose, a translated UI string (a user can drop in a locale file),
+	 * the app ever shows — content prose, a translated UI string (a catalog is meant to be droppable),
 	 * a dialog's "report a bug" — and a rule enforced at each call site is a rule with a hole in it.
 	 * Capture phase, so it runs before SvelteKit's own router or any component handler. A middle
 	 * click arrives as `auxclick`, not `click`, and its default is a NEW window on the remote page —

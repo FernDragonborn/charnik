@@ -17,6 +17,7 @@
 	import { getUserStorage } from '$lib/storage/provider';
 	import { systemShortLabel } from '$lib/rules/pipeline';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import { toast } from '$lib/toast/toast';
 
 	const demo = isDemo();
 
@@ -49,8 +50,15 @@
 		await reloadDrafts();
 	}
 
-	async function open(slug: string) {
-		await openCharacter(slug);
+	async function open(slug: string, name: string) {
+		// a save that does not read stays on the roster and says so; Combat would otherwise fall back
+		// to the demo or the first character, and the player would be playing somebody else
+		if (!(await openCharacter(slug))) {
+			toast($_('roster.cannotOpen', { values: { name } }), {
+				description: $_('roster.cannotOpenBody'),
+			});
+			return;
+		}
 		void goto(`${base}/combat`);
 	}
 </script>
@@ -70,8 +78,8 @@
 		<aside class="demobanner">
 			<div class="db-badge">{$_('demo.badge')}</div>
 			<h2 class="db-title">{$_('demo.title')}</h2>
-			<!-- i18n string carries <b> emphasis; sanitized because a user can drop in a locale catalog
-			     at runtime (ARCH-3), so the string is not trusted. -->
+			<!-- i18n string carries <b> emphasis; sanitized anyway, so markup in a catalog is never
+			     trusted on the strength of where it was built. -->
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
 			<p class="db-body">{@html sanitizeHtml($_('demo.body'))}</p>
 			<a
@@ -125,10 +133,10 @@
 			{/each}
 			{#each characters.roster as c (c.id)}
 				<li class="card roster-card">
-					<button class="roster-open" onclick={() => open(c.id)}>
+					<button class="roster-open" onclick={() => open(c.id, c.name)}>
 						<span class="roster-name">{c.name}</span>
 						<span class="roster-subtitle">
-							{c.classes || 'level ' + c.level}
+							{c.classes || $_('roster.level', { values: { level: c.level } })}
 							{#if c.system}<span class="sysbadge">{systemShortLabel(c.system)}</span>{/if}
 							{#if c.error}<span class="roster-error"
 									><Icon name="triangle-alert" size={13} />

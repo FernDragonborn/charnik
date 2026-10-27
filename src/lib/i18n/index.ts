@@ -3,8 +3,8 @@
  *
  * `svelte-i18n` was chosen so a user can DROP IN a new locale catalog and switch without
  * a rebuild. The language list is therefore DISCOVERED from this registry — never a
- * hardcoded array inside a component. Runtime-added catalogs extend `LOCALES`; everything
- * UI-facing reads from it. Missing keys fall back to English.
+ * hardcoded array inside a component. Today it holds the built-in catalogs; the reader that adds a
+ * dropped-in one is `docs/work/ui.md` ▸ LOCALE-DROP-IN. Missing keys fall back to English.
  */
 import { get } from 'svelte/store';
 import { register, init, locale, waitLocale, json, _ } from 'svelte-i18n';

@@ -61,6 +61,14 @@
 		const slug = page.url.searchParams.get('edit') || page.url.searchParams.get('levelup');
 		const guid = page.url.searchParams.get('draft');
 		const char = slug ? await loadCharacterBySlug(slug) : null;
+		if (slug && !char) {
+			// a level-up of a save that does not read is not a new blank character
+			toast($_('roster.cannotOpen', { values: { name: slug } }), {
+				description: $_('roster.cannotOpenBody'),
+			});
+			void goto(`${base}/`);
+			return;
+		}
 		if (char) build.hydrate(char);
 		else if (guid) {
 			const record = await loadDraft(getUserStorage(), guid);

@@ -406,6 +406,11 @@
 .build-page .segment-group button:hover {
 	color: var(--color-text);
 }
+/* shown and explained, not offered — `aria-disabled`, so the hover still reads why */
+.build-page .segment-group button[aria-disabled='true'] {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
 /* `all: unset` above takes the global focus ring with it, and at (0,2,1) it outranks the `:focus-visible`
    rule in app.css — so every control that unsets has to put it back (as `.slot`, `.pick-chip`, `.cell`
    and the rest of the module already do). */
