@@ -19,7 +19,7 @@ import { rechargeCount } from '$lib/effects/recharge-amount';
 import { remainingRounds, ROUNDS_PER_UNIT } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { dropEffects } from './concentration';
+import { dropEffects, endConcentration } from './concentration';
 import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { hitDiceSpent } from './resources';
 import { settled } from './settle';
@@ -67,7 +67,9 @@ function longRest(
 		if (regained > 0) hitDice[h.die] = Math.min(hitDice[h.die] ?? 0, h.max) - regained;
 	}
 	return {
-		...play,
+		// a long rest ALWAYS ends concentration, even with no effect of the spell's on the character
+		// (Hold Person on an enemy) — and the spell's own effect goes with it
+		...endConcentration(play),
 		spellSlotsSpent: {},
 		// a slot a feature gave lasts until the rest that would have refilled it anyway. Font of
 		// Magic's text says so ("vanishes when you finish a Long Rest"); Wild Resurgence's is silent,
@@ -75,9 +77,6 @@ function longRest(
 		spellSlotsGained: {},
 		// full HP is the EFFECTIVE max (A14): a manual max does not silence an `hp_max` effect
 		hp: { ...play.hp, current: effectiveHpMax(play.hp.max ?? null, sheet.maxHp), temp: 0 },
-		// a long rest ALWAYS ends concentration, even with no effect of the spell's on the character
-		// (Hold Person on an enemy)
-		concentration: null,
 		hitDiceSpent: hitDice,
 		// RAW both editions: a Long Rest removes ONE Exhaustion level. 2014 adds "provided the
 		// creature has also ingested some food and drink" — a tracker does not model rations, so it

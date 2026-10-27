@@ -139,6 +139,16 @@ describe.each(['5e', '5.5e'] as const)('resource and rest actions · %s', (syste
 				{ iid: 'hour', label: 'hour', effects: [], positive: true, durationRounds: 600 },
 				{ iid: 'day', label: 'day', effects: [], positive: true, durationRounds: 14400 },
 				{ iid: 'forever', label: 'forever', effects: [], positive: false },
+				// the concentration spell's own effect, 24 hours long like Hunter's Mark: it ends with
+				// the concentration, not with the clock
+				{
+					iid: 'spell',
+					label: 'spell',
+					effects: [],
+					positive: true,
+					durationRounds: 14400,
+					source: `spell:${source}:bless`,
+				},
 			];
 		});
 		const out = rest(c, { kind: 'long' }, ctx());

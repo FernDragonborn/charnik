@@ -84,6 +84,17 @@ describe('character store · demo seed-once lifecycle', () => {
 		expect(await s.exists(DEMO_SEEDED_MARKER)).toBe(true);
 	});
 
+	it('a played demo in a folder that lost its marker is kept, not overwritten', async () => {
+		const s = getUserStorage();
+		const demo = await recreateDemoCharacter();
+		await saveCharacterToStore({ ...demo, build: { ...demo.build, name: 'Played' } });
+		await s.remove(DEMO_SEEDED_MARKER);
+		await loadRoster(); // a fresh rev-0 demo here was a CharacterConflictError
+		const loaded = await loadCharacter(s, DEMO_ID);
+		expect(loaded.ok && loaded.character?.build.name).toBe('Played');
+		expect(await s.exists(DEMO_SEEDED_MARKER)).toBe(true);
+	});
+
 	it('deleting the demo does NOT resurrect it, and an empty roster yields no active character', async () => {
 		await recreateDemoCharacter(); // demo present + marker set + active = demo
 		await removeCharacter(DEMO_ID); // also clears active (it was the demo)

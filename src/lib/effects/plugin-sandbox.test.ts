@@ -134,6 +134,17 @@ describe('happy paths — the docs/internals/plugins.md §9 examples run as writ
 		const out = callOn(ev, 'plugin:ns1:f');
 		expect(out.ok && out.readPlay).toBe(true);
 	});
+	it.each([
+		['a getter', `return { get notes() { return [String(ctx.play.flags.isBloodied)]; } };`],
+		['toJSON', `return { toJSON() { return { notes: [String(ctx.play.flags.isBloodied)] }; } };`],
+	])('a play read hidden in the result’s %s still counts', async (_, body) => {
+		const ev = await evaluatorFor(
+			'ns1',
+			`globalThis.handlers = { f: { passive(t, ctx) { ${body} } } };`,
+		);
+		const out = callOn(ev, 'plugin:ns1:f');
+		expect(out.ok && out.readPlay).toBe(true);
+	});
 });
 
 describe('zero-capability context (PLG-SEC 1) — escapes and intrinsics are absent', () => {

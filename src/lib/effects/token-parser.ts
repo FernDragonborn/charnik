@@ -614,7 +614,12 @@ const FREE_TEXT_BODY: ReadonlySet<string> = new Set([EFFECT_KIND.note, EFFECT_KI
  *  ONE parse chokepoint (as the target lowercasing in `parseTokenUncached` is), so every kind parser
  *  is tolerant without its regex spelling it out, and so is the next one somebody writes. */
 function tightenDelimiters(kind: EffectKind, body: string): string {
-	return FREE_TEXT_BODY.has(kind) ? body.trim() : body.replace(/\s*([:,])\s*/g, '$1').trim();
+	if (FREE_TEXT_BODY.has(kind)) return body.trim();
+	// split-and-trim, not `/\s*([:,])\s*/g`: that regex is quadratic in a long run of spaces
+	return body
+		.split(/([:,])/)
+		.map((part) => part.trim())
+		.join('');
 }
 
 /**

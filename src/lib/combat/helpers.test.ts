@@ -851,6 +851,10 @@ describe('applyDamageSensitivity — resist / immune / vulnerable applied to dam
 	it('doubles a vulnerable type', () => {
 		expect(applyDamageSensitivity(7, 'cold', d)).toEqual({ final: 14, bucket: 'vulnerable' });
 	});
+	it('halves before doubling a type it both resists and is vulnerable to', () => {
+		const both = { resist: ['fire'], immune: [], vulnerable: ['fire'] };
+		expect(applyDamageSensitivity(7, 'fire', both).final).toBe(6);
+	});
 	it('leaves an untyped hit or an undefended type unchanged', () => {
 		expect(applyDamageSensitivity(10, null, d)).toEqual({ final: 10, bucket: null });
 		expect(applyDamageSensitivity(10, 'radiant', d)).toEqual({ final: 10, bucket: null });

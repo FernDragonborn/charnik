@@ -1464,7 +1464,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const enumDefault` — An enum cell that defaults to `d` when the cell is blank/missing — `boolDefault`'s sibling.
 - `const idField` — `id` is a local slug; effective identity is `source:id`, built by the loader.
 - `const systemsField` — `systems` = comma list over SYSTEMS, e.g.
-- `const effectsField` — A `;`-separated list of effect tokens.
+- `const EFFECT_TOKEN_SEPARATOR` — A `;`-separated list of effect tokens.
+- `const effectsField`
 
 ### `src/lib/content/schemas.ts`
 
@@ -2460,4 +2461,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1499 exports across 211 modules · 98 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1500 exports across 211 modules · 98 duplicate suspects._

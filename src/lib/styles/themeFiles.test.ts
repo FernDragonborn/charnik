@@ -30,6 +30,12 @@ describe('slug + id', () => {
 		expect(uniqueThemeId('Ocean', ['ocean'])).toBe('ocean-2');
 		expect(uniqueThemeId('dark', [])).toBe('dark-2'); // 'dark' is reserved → bumped
 	});
+
+	it('uniqueThemeId ends for a name that fills the whole id', () => {
+		const long = 'a'.repeat(60);
+		const id = uniqueThemeId(long, ['a'.repeat(40)]);
+		expect(id).toBe(`${'a'.repeat(38)}-2`);
+	});
 });
 
 describe('serialize / parse (import security boundary)', () => {

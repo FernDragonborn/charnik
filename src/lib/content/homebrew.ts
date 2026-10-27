@@ -40,6 +40,7 @@ import {
 	type ContentType,
 } from './schemas';
 import type { z } from 'zod';
+import { EFFECT_TOKEN_SEPARATOR } from './schema-cells';
 
 /** The content root user homebrew is written to (a source merged into the graph like any other). */
 export const HOMEBREW_ROOT = 'content/homebrew';
@@ -340,7 +341,10 @@ export function rowToDraft(row: LoadedRow): Record<string, string> {
 	const d = blankDraft(row.type);
 	for (const [k, v] of Object.entries(row.data as Record<string, unknown>)) {
 		if (k === 'source') continue;
-		d[k] = Array.isArray(v) ? v.map((x: unknown) => asText(x)).join(',') : asText(v);
+		// a token may itself contain commas, so `effects` keeps its own separator; every other list
+		// column is read by `splitList`, which takes a comma
+		const separator = k === 'effects' ? EFFECT_TOKEN_SEPARATOR : ',';
+		d[k] = Array.isArray(v) ? v.map((x: unknown) => asText(x)).join(separator) : asText(v);
 	}
 	d.systems = row.systems.join(',');
 	d.id = row.id;
@@ -374,7 +378,8 @@ export async function upsertHomebrewRow(
 	const columns = columnsWithExtras(type, [...existing, finalRow], header);
 
 	const idx = existing.findIndex((r) => r.id === id);
-	if (idx >= 0) existing[idx] = finalRow;
+	// the strict schema dropped the file's own extra columns from the draft; keep them under the edit
+	if (idx >= 0) existing[idx] = { ...existing[idx], ...finalRow };
 	else existing.push(finalRow);
 
 	await writeStampedHomebrew(storage, targetFile, { columns, rows: existing }, directives);

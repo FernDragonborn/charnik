@@ -19,6 +19,12 @@ describe('rechargeCount — how many uses an amount is', () => {
 		expect(rechargeCount('2', CTX, rngSequence())).toBe(2);
 	});
 
+	it('gives back whole uses, and nothing for an infinite amount', () => {
+		// 1d4+1.5 with a 4 on the die → 5.5, and a use is never half
+		expect(rechargeCount('1d4+3/2', CTX, rngSequence(0.99))).toBe(5);
+		expect(rechargeCount('1d6+inf', CTX, rngSequence(0.5))).toBeNull();
+	});
+
 	it('says nothing rather than restoring zero when it cannot read the amount', () => {
 		expect(rechargeCount('nonsense(', CTX, rngSequence())).toBeNull();
 		expect(rechargeCount('1d6', undefined, rngSequence())).toBeNull();

@@ -250,7 +250,9 @@ function callPlugin(
 			const r = globalThis.handlers[t.handlerName].passive(t, ctx);
 			if (r !== undefined && r !== null && typeof r.then === "function")
 				return JSON.stringify({ err: "async handlers are invalid (return plain JSON)" });
-			return JSON.stringify({ result: r ?? {}, playRead });
+			// stringify the result BEFORE reading the flag: its getters and toJSON run in here too
+			const rj = JSON.stringify(r ?? {});
+			return '{"result":' + (rj === undefined ? "{}" : rj) + ',"playRead":' + playRead + '}';
 		} catch (e) {
 			return JSON.stringify({ err: String((e && e.message) || e).slice(0, 200) });
 		}
@@ -281,7 +283,8 @@ function callPlugin(
 		return { ok: false, reason: 'invalid result: not JSON', steps };
 	}
 	if (parsed.err !== undefined)
-		return { ok: false, reason: asText(parsed.err, 'plugin error'), steps };
+		// cut on the host: the sandbox's own String.prototype.slice is the plugin's to replace
+		return { ok: false, reason: asText(parsed.err, 'plugin error').slice(0, 200), steps };
 	return {
 		ok: true,
 		resultJson: JSON.stringify(parsed.result ?? {}),

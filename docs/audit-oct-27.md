@@ -69,11 +69,15 @@ storage. Nobody sees an error, because `Documents/charnik` is in the static scop
 Fix direction: `resetUserStorage()` in `confirmDataDir` right after `setDataDirOverride`, then reload
 the roster.
 
-### D3 · Editing or forking an article with several effects breaks its mechanics — high · CONFIRMED
+### D3 · Editing or forking an article with several effects breaks its mechanics — high · closed
 
 `rowToDraft` (`homebrew.ts`) joined arrays with `,`, while `effectsField` (`schema-cells.ts`) splits
 effects on `;`. So `["adv:attack", "speed:+10"]` became one unknown token `adv:attack,speed:+10`, and
 the bonuses turned into a text note.
+
+**Fix:** `effects` is joined with `EFFECT_TOKEN_SEPARATOR`, the one `effectsField` splits on. **Held
+by** `homebrew.test.ts` ▸ a row with several effects keeps every one through rowToDraft → upsert →
+parse.
 
 ### D4 · A deleted character comes back — high · CONFIRMED (Playwright and a node test)
 
@@ -98,7 +102,7 @@ Why: the save path came from the `id` inside the file (`repository.ts`), and the
 rather than the folder name. Fix direction: bind `id` to the folder name on every read, as backup
 restore already does.
 
-### D6 · A fractional or infinite number in play state blocks every later save — medium · CONFIRMED
+### D6 · A fractional or infinite number in play state blocks every later save — medium · closed
 
 - **Temp HP field** (`setTempHp`, `play/hit-points.ts`) did not round: `2.5` or `1e999` (`Infinity`)
   were stored as is.
@@ -107,6 +111,10 @@ restore already does.
 
 The schema requires `int`, and `saveCharacter` refuses an invalid character, so every save after that
 was refused with a toast.
+
+**Fix:** temp HP is rounded and an infinite one refused; a recharge count is floored and an infinite
+one restores nothing. **Held by** `hit-points.test.ts` ▸ temp HP stays a whole number the save can
+hold, and `recharge-amount.test.ts` ▸ gives back whole uses.
 
 ### D7 · Unknown character fields vanish on the next save — medium · CONFIRMED
 
@@ -138,16 +146,22 @@ was closed.
 - The seed (`provider.ts`) threw out of `buildGraph` when a rename hit an open file.
 - `storage/tauri.ts` ran `stat` on a file that vanished during the listing.
 
-### D11 · A demo folder without `demo-seeded.json` breaks roster and combat on every launch — medium · CONFIRMED
+### D11 · A demo folder without `demo-seeded.json` breaks roster and combat on every launch — medium · closed
 
 It happens when only `characters/` is moved to a new folder. `seedDemoIfFirstRun`
 (`store.svelte.ts`) saved a fresh demo at rev 0 in `checked` mode over a `karroth` at rev ≥ 1 and got
 a `CharacterConflictError`. The data was intact, but the app was blocked.
 
-### D12 · Editing a homebrew row in the UI erased its own extra columns — medium · CONFIRMED
+**Fix:** a demo folder that exists only gets the marker. **Held by** `store.test.ts` ▸ a played demo
+in a folder that lost its marker is kept.
+
+### D12 · Editing a homebrew row in the UI erased its own extra columns — medium · closed
 
 `upsertHomebrewRow` (`homebrew.ts`) built the row from `row.data`, from which the strict schema had
 already dropped extra columns: `my_notes = KEEP ME` came back empty after an edit.
+
+**Fix:** the edited row is laid over the file's row. **Held by** `homebrew.test.ts` ▸ an edit keeps
+the file's own columns that the form never saw.
 
 ### D13 · Smaller — low
 
@@ -226,11 +240,14 @@ kill. SRD 5.1 has 63 monster attacks of the form "… plus N (XdY) <type>".
 Decision: the existing "this was one blow" merge (`mergeOwedConcentrationSaves`) also takes back the
 failure and checks massive damage against the sum. One press stays one type.
 
-### R6 · A long rest ends concentration but leaves the spell's effect — medium · CONFIRMED · both
+### R6 · A long rest ends concentration but leaves the spell's effect — medium · closed · both
 
 SRD 5.1 (hunters_mark): "…you can maintain your concentration on the spell for up to 24 hours."
 `longRest` wrote `concentration: null` directly (`play/rests.ts`) instead of calling
 `endConcentration`, so the `hunters_mark` effect stayed on the character.
+
+**Fix:** `longRest` calls `endConcentration`. **Held by** `resources.test.ts` ▸ a long rest fills hit
+points, ends concentration…, whose 24-hour spell effect goes with it.
 
 ### R7 · A rest does not advance the clock — medium · CONFIRMED
 
@@ -264,10 +281,13 @@ The ids reached `state.conditions`, but the child conditions' tokens were not ap
 raised (`effects/resolver.ts`). So in 2024 Stunned did not show "Your Concentration is broken" or
 disadvantage on initiative. `effects.md` documented ONE level.
 
-### R12 · Resistance and vulnerability to one type double the damage — medium · CONFIRMED in code, LIKELY by rule
+### R12 · Resistance and vulnerability to one type double the damage — medium · closed
 
 `combat/defense.ts` checked vulnerability first and ignored resistance: 7 fire became 14. RAW halves
 first, then doubles: 3 → 6.
+
+**Fix:** RAW order. **Held by** `helpers.test.ts` ▸ halves before doubling a type it both resists
+and is vulnerable to.
 
 ### R13 · Rests, healing and Hit Dice work on a dead character — low-medium · CONFIRMED
 
@@ -441,17 +461,23 @@ found the fix complete.
 No sandbox escape and no write outside scope. Everything below is a hang from foreign content, a
 bypassed check, or an incomplete fix.
 
-#### S8 · Importing a long-named theme twice: an infinite loop — medium · CONFIRMED
+#### S8 · Importing a long-named theme twice: an infinite loop — medium · closed
 
 `slugifyThemeName` cut to 40 characters, `isSafeThemeId` allowed up to 41, and the candidates
 `<40>-2`, `<40>-3`, … are 42+, so the `while` in `uniqueThemeId` (`styles/themeFiles.ts`) never ended.
 On desktop the same path runs through `loadThemeFiles` → `themeFromJson`, so two such files in
 `themes/` would hang every launch (traced, not run on desktop).
 
-#### S9 · ReDoS in the token parser's whitespace normalisation — medium · CONFIRMED
+**Fix:** the stem is cut to make room for the suffix. **Held by** `themeFiles.test.ts` ▸
+uniqueThemeId ends for a name that fills the whole id.
+
+#### S9 · ReDoS in the token parser's whitespace normalisation — medium · closed
 
 `tightenDelimiters` (`effects/token-parser.ts`) ran `/\s*([:,])\s*/g`, quadratic in the run length:
 40 k spaces took 1.3 s, a ~1 MB cell took minutes. CSV trims only the token's ends.
+
+**Fix:** split on the delimiters and trim each part, which is linear. **Held by**
+`whitespace-tolerance.test.ts` ▸ a long run of spaces parses in linear time (33 s before the fix).
 
 #### S10 · Starting-equipment counts are unbounded — low-medium · CONFIRMED
 
@@ -461,11 +487,14 @@ gave `Infinity` and a ZodError on click (`content/starting-equipment.ts`, `start
 `StartingEquipmentPane.svelte`). Also: `kitItemsById` took the first in load order, so a homebrew fork
 of `longsword` lost to the SRD in kits.
 
-#### S11 · The S3 fix is incomplete: a plugin can still hide a `ctx.play` read — low · CONFIRMED
+#### S11 · The S3 fix is incomplete: a plugin can still hide a `ctx.play` read — low · closed
 
 `playRead` was captured while the result object was built, and `JSON.stringify` then ran the result's
 getters and `toJSON` (`effects/plugin-sandbox.ts`). Both variants (`get notes(){…ctx.play.hp…}` and
 `toJSON`) returned a value for HP 41 and then for HP 5. Same consequence as S3.
+
+**Fix:** the result is stringified before the flag is read. **Held by** `plugin-sandbox.test.ts` ▸ a
+play read hidden in the result's getter / toJSON still counts.
 
 #### S12 · DOM clobbering: an `id` in prose makes the web build think it is desktop — low · CONFIRMED switch, LIKELY effects
 
@@ -487,8 +516,9 @@ the `$derived` in the builder, combat and Spellbook fell over.
   (`expression-evaluator.ts`): `1d6+inf` showed "+Infinity", `(1d6+inf)*0` silently became 0.
 - **Plugin tokens.** Ability tokens a plugin returns were silently ignored
   (`character/derive-plugins.ts`, no issue).
-- **Plugin error length.** The error text was cut with the sandbox's own `String.prototype.slice`
-  (`plugin-sandbox.ts`), so a plugin returned 40 k characters. Cut on the host.
+- **Plugin error length** · closed. The error text was cut with the sandbox's own
+  `String.prototype.slice` (`plugin-sandbox.ts`), so a plugin returned 40 k characters. It is cut on
+  the host.
 - **Plugin restart.** A restart after a limit hit is not counted against the derive budget, and the
   three-failure counter resets on a run of successes (`plugin-sandbox.ts` ▸ `callPlugin`). Not
   measured.

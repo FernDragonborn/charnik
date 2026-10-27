@@ -73,11 +73,13 @@ const isUnknownArray = (v: unknown): v is unknown[] => Array.isArray(v);
  *  additive, not a breaking change for older apps. Classifying/flagging an unknown token is the
  *  effect engine's job (and a downstream content-health pass, which may import `$lib/effects`), NOT
  *  the schema's — the schema deliberately stays independent of the removable engine. */
+export const EFFECT_TOKEN_SEPARATOR = ';';
+
 export const effectsField = z.preprocess((v) => {
 	if (v === '' || v == null) return [];
 	if (isUnknownArray(v)) return v; // elements stay `unknown`; the schema below says they're strings
 	return asText(v)
-		.split(';')
+		.split(EFFECT_TOKEN_SEPARATOR)
 		.map((s) => s.trim())
 		.filter(Boolean);
 }, z.array(z.string()).default([]));

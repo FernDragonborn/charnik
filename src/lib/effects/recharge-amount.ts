@@ -27,7 +27,10 @@ export function rechargeCount(
 	if (amount === RECHARGE_ALL || !ctx) return null;
 	const r = evalExpression(amount, ctx);
 	if (!r.ok) return null;
-	if (r.value.type === 'number')
-		return Number.isFinite(r.value.value) ? Math.max(0, Math.floor(r.value.value)) : null;
-	return Math.max(0, rollPool(r.value.dice.pool, { mod: r.value.dice.flat, rng }).total);
+	const total =
+		r.value.type === 'number'
+			? r.value.value
+			: rollPool(r.value.dice.pool, { mod: r.value.dice.flat, rng }).total;
+	// a use count is a whole number: `1d4+level/2` must not leave 5.5 uses in the save
+	return Number.isFinite(total) ? Math.max(0, Math.floor(total)) : null;
 }

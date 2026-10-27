@@ -18,6 +18,7 @@ import {
 	copyCharacterPhoto,
 	characterChangedOutside,
 	characterSlugOfPath,
+	dirOf,
 	CharacterConflictError,
 	SAVE_MODE,
 	type SaveMode,
@@ -65,7 +66,9 @@ const markDemoSeeded = (s: Storage): Promise<void> =>
  *  auto-resurrects behind the user's back. */
 async function seedDemoIfFirstRun(s: Storage): Promise<void> {
 	if (await s.exists(DEMO_SEEDED_MARKER)) return;
-	await saveCharacter(s, demoCharacter());
+	// a demo already played in a folder that lost its marker: a fresh rev-0 demo over it is a conflict
+	const demo = demoCharacter();
+	if (!(await s.exists(dirOf(demo.id)))) await saveCharacter(s, demo);
 	await markDemoSeeded(s);
 }
 

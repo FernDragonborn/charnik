@@ -242,7 +242,9 @@ export function heal(
 
 /** Set Temporary Hit Points to an amount — set, never added: they do not stack. */
 export function setTempHp(character: Character, intent: { amount: number }): PlayOutcome {
-	const hp = { ...character.play.hp, temp: Math.max(0, intent.amount) };
+	// the save schema holds an integer: a 2.5 or an Infinity would make every later save refuse
+	if (!Number.isFinite(intent.amount)) return { ...quietly(character), refused: true };
+	const hp = { ...character.play.hp, temp: Math.max(0, Math.round(intent.amount)) };
 	return quietly({ ...character, play: { ...character.play, hp } });
 }
 

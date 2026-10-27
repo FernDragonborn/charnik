@@ -39,7 +39,11 @@ export function uniqueThemeId(base: string, taken: Iterable<string>): string {
 	const stem = slugifyThemeName(base);
 	let id = stem;
 	let n = 2;
-	while (!isSafeThemeId(id) || set.has(id)) id = `${stem}-${n++}`;
+	// the stem gives way to the suffix, or a 40-character stem plus `-2` would never fit an id
+	while (!isSafeThemeId(id) || set.has(id)) {
+		const suffix = `-${n++}`;
+		id = `${stem.slice(0, 40 - suffix.length)}${suffix}`;
+	}
 	return id;
 }
 

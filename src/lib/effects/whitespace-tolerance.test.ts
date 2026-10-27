@@ -80,4 +80,11 @@ describe('whitespace in an effect token is formatting, not meaning', () => {
 			expect(meaning(spaceEveryDelimiter(token))).toEqual(meaning(token));
 		},
 	);
+
+	it('a long run of spaces parses in linear time', () => {
+		// the old regex took over a second on 40 000 spaces; a pack cell can hold a megabyte
+		const started = performance.now();
+		parseToken(`advantage:${' '.repeat(200_000)}x`);
+		expect(performance.now() - started).toBeLessThan(500);
+	});
 });

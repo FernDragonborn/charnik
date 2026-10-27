@@ -28,7 +28,11 @@ export function applyDamageSensitivity(
 ): { final: number; bucket: SensitivityBucket } {
 	if (!type) return { final: amount, bucket: null };
 	if (defenses.immune.includes(type)) return { final: 0, bucket: 'immune' };
-	if (defenses.vulnerable.includes(type)) return { final: amount * 2, bucket: 'vulnerable' };
-	if (defenses.resist.includes(type)) return { final: Math.floor(amount / 2), bucket: 'resist' };
+	const resisted = defenses.resist.includes(type);
+	const vulnerable = defenses.vulnerable.includes(type);
+	// RAW, both editions: resistance applies before vulnerability, so having both halves then doubles
+	const halved = resisted ? Math.floor(amount / 2) : amount;
+	if (vulnerable) return { final: halved * 2, bucket: 'vulnerable' };
+	if (resisted) return { final: halved, bucket: 'resist' };
 	return { final: amount, bucket: null };
 }

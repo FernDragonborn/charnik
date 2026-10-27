@@ -19,6 +19,7 @@ import {
 	rollConcentrationSave,
 	rollDeathSave,
 	setDeathSavePip,
+	setTempHp,
 	takeBackLastSave,
 	takeDamage,
 } from './hit-points';
@@ -107,6 +108,14 @@ describe.each(['5e', '5.5e'] as const)('hit-point actions · %s', (system) => {
 		const c = fighter((x) => (x.play.hp.current = 3));
 		const out = takeDamage(c, { amount: 3 + maxOf(c), type: null }, ctx());
 		expect(out.character.play.death).toMatchObject({ cause: 'massive_damage' });
+	});
+
+	it('temp HP stays a whole number the save can hold', () => {
+		const c = fighter();
+		expect(setTempHp(c, { amount: 2.5 }).character.play.hp.temp).toBe(3);
+		const infinite = setTempHp(c, { amount: Infinity });
+		expect(infinite.refused).toBe(true);
+		expect(infinite.character.play.hp.temp).toBe(0);
 	});
 
 	it('healing out of 0 HP resets the death-save track inside the action', () => {

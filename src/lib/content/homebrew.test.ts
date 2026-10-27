@@ -12,6 +12,7 @@ import {
 	HOMEBREW_SOURCE,
 } from './homebrew';
 import { makeRow } from './test-utils';
+import { parseRow } from './schemas';
 import { parseContentDirectives, checkFileMeta } from './meta';
 
 const readRows = async (s: MemoryStorage, file: string) => {
@@ -129,6 +130,29 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_uk).toBe('Ікс');
 		expect(rows[0]?.text_uk).toBe('опис');
+	});
+
+	it('a row with several effects keeps every one through rowToDraft → upsert → parse', async () => {
+		const s = new MemoryStorage();
+		const row = makeRow(
+			'effect',
+			{ id: 'blessed', name_en: 'Blessed', effects: ['adv:attack', 'speed:+10'] },
+			'SRD 5.1',
+		);
+		const draft = rowToDraft(row);
+		draft.systems = '5e';
+		await upsertHomebrewRow(s, 'effect', draft, file);
+		const reloaded = parseRow('effect', (await readRows(s, file))[0] ?? {});
+		expect(reloaded.success && reloaded.data.effects).toEqual(['adv:attack', 'speed:+10']);
+	});
+
+	it('an edit keeps the file’s own columns that the form never saw', async () => {
+		const s = new MemoryStorage();
+		await s.write(file, 'id,name_en,systems,my_notes\r\nx,X,5e,KEEP ME');
+		await upsertHomebrewRow(s, 'effect', { id: 'x', name_en: 'X2', systems: '5e' }, file);
+		const rows = await readRows(s, file);
+		expect(rows[0]?.name_en).toBe('X2');
+		expect(rows[0]?.my_notes).toBe('KEEP ME');
 	});
 
 	it('removes a row by id (rewriting the file), and deletes the file when its last row goes', async () => {
