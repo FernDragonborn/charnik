@@ -46,9 +46,12 @@ prose only invites a second, contradicting one later. What this buys is the reas
 exists: an agent opening a `[ ]` finds the constraints, the rejected alternatives and the acceptance
 in one block, and can start writing code without asking anything.
 
-**A box turns `[x]` only when the change is in code and verified.** A fix may be proposed, designed,
-and fully written up while its box stays open — readers trust `[x]` as "handled in the codebase", and
-a premature tick hides real remaining work.
+**A box turns `[x]` only when its item is done, tested and committed** — in code, held by a test or
+a probe the item names, and in a commit on `main`. The commit that does the work may tick the box
+itself; nothing else may. An item that moves to another tracker is ticked by the commit that adds it
+there, and names where it went. A fix may be proposed, designed, and fully written up while its box
+stays open — readers trust `[x]` as "handled in the codebase", and a premature tick hides real
+remaining work. This holds for every checklist in `docs/`: the plan, `work/*.md`, and an audit.
 
 **The plan is pruned, not accumulated.** When work closes, its narrative leaves; only what future work
 must still respect stays.

@@ -18,9 +18,8 @@ A finding marked **closed** names the test or probe that holds it. Every other f
 heading still carries the CONFIRMED / LIKELY it was found with, and where it has moved into a tracker
 the text names the item (`work/*.md`).
 
-**A box is ticked only by the commit that fixes, tests and commits the item** — the same commit may
-tick it. An item that leaves this file for a tracker is ticked by the commit that adds it there, and
-names the item. The file is deleted, with its line in `README.md`, once every box is ticked.
+A box is ticked by the rule in `internals/work-artifacts.md` ▸ "A box turns `[x]`…" and no other
+way. The file is deleted, with its line in `README.md`, once every box is ticked.
 
 ## Decisions taken for the open items
 
