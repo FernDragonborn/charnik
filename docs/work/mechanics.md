@@ -251,6 +251,14 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
+- [ ] **RAGE-NO-CASTING · a raging Barbarian can still cast and upcast a spell — blocks the next
+  release.** RAW, both editions: SRD 5.1 "If you are able to cast spells, you can't cast them or
+  concentrate on them while raging"; SRD 5.2.1 "You can't maintain Concentration, and you can't cast
+  spells." The `rage` condition rows carry only `blocks_concentration`, so the sheet withholds
+  Concentration and nothing else: the cast and upcast paths stay open while Rage is on. The fix is a
+  sibling marker beside `blocks_concentration` (`token-parser.ts`, `schemas.ts`, a fact flag in
+  `facts.ts`) that the cast path reads to withhold every spell, added to both editions' `rage` rows
+  in `charnik-content-srd`. Withhold, not hide: the spell list stays readable and says why it is shut.
 - [~] **Resource subsystem · Mystic Arcanum is a pool, not a slot.** Pools, their pips, the spend
   path, both rests, a slot a feature gives (`gain_slot`), a slot as what an option costs
   (`spend_slot`) and a cost the player names (`x`) are built (`../internals/actions.md` §2,
