@@ -251,14 +251,23 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
-- [ ] **RAGE-NO-CASTING · a raging Barbarian can still cast and upcast a spell — blocks the next
-  release.** RAW, both editions: SRD 5.1 "If you are able to cast spells, you can't cast them or
-  concentrate on them while raging"; SRD 5.2.1 "You can't maintain Concentration, and you can't cast
-  spells." The `rage` condition rows carry only `blocks_concentration`, so the sheet withholds
-  Concentration and nothing else: the cast and upcast paths stay open while Rage is on. The fix is a
-  sibling marker beside `blocks_concentration` (`token-parser.ts`, `schemas.ts`, a fact flag in
-  `facts.ts`) that the cast path reads to withhold every spell, added to both editions' `rage` rows
-  in `charnik-content-srd`. Withhold, not hide: the spell list stays readable and says why it is shut.
+- [ ] **CAST-POOL-LINK · any resource pays for any spell — blocks the next release.** The upcast
+  picker offers "cast from <pool>" for every resource with a use left (`spell-casting.svelte.ts` ▸
+  `castablePools`), so a Barbarian upcasts with a Rage use, a Monk with Ki, a Bard with Bardic
+  Inspiration, and `play/cast.ts` ▸ `payForCast` accepts it. The cause is the settled rule in
+  `../internals/rules-core.md` ▸ What pays for a cast: nothing in the data links a pool to a spell,
+  so the list is every pool and the player was trusted to pick. That trust is a bug: a pool that
+  cannot pay for a spell must not be offered. The fix is the link — the row that grants a free cast
+  (Magic Initiate, an item's "N/day", Mystic Arcanum's `spell_free_cast`) declares the pool and the
+  spells it pays for, `castablePools` offers only a pool declared for that spell, `payForCast`
+  refuses an undeclared one, and the rules-core paragraph is rewritten in the same commit.
+  **Rage, separately:** RAW, both editions, a raging creature casts nothing at all — SRD 5.1 "If you
+  are able to cast spells, you can't cast them or concentrate on them while raging"; SRD 5.2.1 "You
+  can't maintain Concentration, and you can't cast spells." The `rage` rows carry only
+  `blocks_concentration`, so slot casts stay open too. A sibling marker (`token-parser.ts`,
+  `schemas.ts`, a fact flag in `facts.ts`) read by the cast path withholds every spell, added to both
+  editions' `rage` rows in `charnik-content-srd`. Withhold, not hide: the list stays readable and
+  says why it is shut.
 - [~] **Resource subsystem · Mystic Arcanum is a pool, not a slot.** Pools, their pips, the spend
   path, both rests, a slot a feature gives (`gain_slot`), a slot as what an option costs
   (`spend_slot`) and a cost the player names (`x`) are built (`../internals/actions.md` §2,

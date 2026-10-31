@@ -245,7 +245,7 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.8.2 · every SRD class works at level 1, in both editions.** The maintainer's bar for this
   release: a level-1 character of any SRD class shows no number we know to be wrong and holds no
   feature that does nothing. Its work is in and the changelog is grouped under `0.8.2`; what is left
-  is `work/mechanics.md` ▸ RAGE-NO-CASTING, which the release does not ship without, and then the
+  is `work/mechanics.md` ▸ CAST-POOL-LINK, which the release does not ship without, and then the
   cut, the release routine above. Tagging and pushing wait for the maintainer.
   Mystic Arcanum and the slot recoveries wait for the release after.
 
