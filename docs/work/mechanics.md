@@ -251,7 +251,7 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
-- [ ] **CAST-POOL-LINK · any resource pays for any spell — blocks the next release.** The upcast
+- [ ] **CAST-POOL-LINK · any resource pays for any spell.** The upcast
   picker offers "cast from <pool>" for every resource with a use left (`spell-casting.svelte.ts` ▸
   `castablePools`), so a Barbarian upcasts with a Rage use, a Monk with Ki, a Bard with Bardic
   Inspiration, and `play/cast.ts` ▸ `payForCast` accepts it. The cause is the settled rule in

@@ -3,6 +3,33 @@
 > Tracker. Screens, the builder, accessibility and UI copy. The contracts are
 > [`../internals/ui.md`](../internals/ui.md); the ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
+**The five BUILD-* items below block the next release** (the maintainer, 2026-10-31).
+
+- [ ] **BUILD-ONE-SPELL-PICKER · a second caster profile splits the Spells inspector in two.** A
+  Wizard with Magic Initiate (its casting ability chosen) gets two stacked pickers under one
+  "Spells" heading, WIZARD above and MAGIC INITIATE below, each with its own search, school chips,
+  level tabs and list. It must be ONE picker: one search, one list, and each profile's own counters
+  (`cantrips 0/3`, `prepared 0/4`, `known 0/1`) saying which pick goes where. Never two stacked
+  panes.
+- [ ] **BUILD-UNTAKE · "Taken" does not undo a pick when creating a character.** The picker card's
+  Taken button (`PickerCard.svelte`) calls the same `ontake` as Take, so clicking it again leaves the
+  pick in place. At creation it must give the pick back. Level-up differs: in Strict mode much of it
+  cannot be changed, so there the button follows that rule and says why.
+- [ ] **BUILD-ABILITY-CLICKABLE · the ability scores do not look clickable.** The Abilities block
+  (`AbilitiesPane.svelte`) reads as display, not as a control. Redraw it so the score you can change
+  looks like one (`../internals/ui.md` ▸ Every interactive element says so).
+- [ ] **BUILD-DASHED-MEANS-OPTIONAL · a dashed border reads as "you must pick here".** The meaning
+  is "something can go here". Write that rule into `../internals/ui.md` (the UX pattern contract, and
+  The builder is a live sheet, which today says an unfilled thing is "an empty slot in crimson"), then
+  walk every dashed border against it. Today's set: builder `build.css` ▸ `.slot.empty` (crimson) and
+  `.tag.ghost` / `.tag.ghost.wanted` (muted / crimson), `StartingEquipmentPane` ▸ `.ask` (crimson),
+  `ClassPicker` ▸ `.custom-chip`, `Portrait` ▸ `.is-empty`, roster `+page.svelte` ▸ the unfinished
+  character card, roller `Roller` ▸ `.roller-die-btn.ghost` and `RollerLine` ▸ the inherited type
+  pill, combat `EffectsPanel` ▸ the rules note, `InventoryPanel` ▸ `.ask-which`, `SpellsPanel` ▸
+  `.slot-pip.spent`.
+- [ ] **BUILD-CLASS-SLOT-GREY · the empty class slot is crimson-dashed; make it grey.** One case of
+  BUILD-DASHED-MEANS-OPTIONAL, named so it is not lost in the sweep.
+
 - [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is picked
   blind (spells, feats, subclasses, maneuvers, features). The live-sheet-plus-inspector shape is
   built and its contract is `docs/internals/ui.md` ▸ "The builder is a live sheet, not a form" +
