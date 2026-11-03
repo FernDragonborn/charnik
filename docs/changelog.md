@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.8.3
+
+A hotfix for character creation and spellcasting, in both editions.
+
+### Fixed
+
+- **One spell picker, however many sources teach you spells.** A class and Magic Initiate share
+  one search, one set of filters and one list; each source keeps its own counters and choices.
+- **Taken gives a choice back during character creation.** At level-up, a settled choice in
+  Strict mode stays locked and says why.
+- **Ability scores look editable.** The builder marks the controls that open their editor, and
+  the ability allocator makes its choices visible.
+- **A dashed outline means room for something, not a requirement.** Empty class slots and other
+  optional spaces use the neutral outline; a spent spell slot has its own solid state.
+- **Rage prevents all spellcasting**, not only Concentration. Spells remain readable and explain
+  why casting is unavailable; ending Rage makes them available again.
+- **Only a resource declared for a spell can pay for it.** Rage, Ki and Bardic Inspiration are not
+  alternative spell slots. An invalid payment is refused without spending a resource or an action.
+
+### For content authors
+
+- **A free-cast pool names its spell** with `grant_resource:<id>:<max>:<recharge>:spell:<spell_id>`.
+  A feat uses `:spell:chosen` for its selected leveled spells, with separate uses for repeatable
+  instances. The shipped 2024 Magic Initiate row uses this link. An older character keeps its spells;
+  if their feat ownership was not recorded, the builder asks you to identify them before granting
+  free casts rather than guessing which spell the feat taught.
+
+### Security
+
+- **Dependency patches** update Zod's input validation, fast-uri in the build tooling, and Tokio
+  in the desktop dependency tree. Remaining upstream advisories and their exposure are tracked in
+  `docs/work/release.md`; this hotfix does not force a framework or toolchain major upgrade.
+
+### Not in this release
+
+- The remaining level 1–4 mechanics and the desktop table link belong to 0.9.0. Mystic Arcanum
+  and the slot-recovery features remain open work.
+
 ## 0.8.2
 
 Every SRD class plays its first level in both editions: the choices it asks, the pools it

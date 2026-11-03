@@ -9,6 +9,7 @@
 import type { Layer, Op } from '../rules/pipeline';
 import { rechargeRank } from '../rules/recharge';
 import type {
+	ActiveEffect,
 	DamageSensitivity,
 	ExtraAttackWord,
 	PlayEvent,
@@ -213,7 +214,28 @@ export interface ResourceDef {
 	max: number;
 	recharge: RechargePolicy;
 	source: string; // the granting effect/feature
+	spell?: string;
 }
+
+export const resourceGrantWins = (
+	candidate: ResourceDef,
+	previous: ResourceDef | undefined,
+): boolean =>
+	previous === undefined ||
+	candidate.max > previous.max ||
+	(candidate.max === previous.max &&
+		rechargeRank(candidate.recharge) > rechargeRank(previous.recharge));
+
+export const resourcesForChoices = (
+	resource: ResourceDef,
+	choices: NonNullable<ActiveEffect['resourceChoices']>,
+): ResourceDef[] =>
+	choices.map((choice) => ({
+		...resource,
+		id: `${resource.id}:${choice.key}`,
+		spell: choice.spell,
+		name: `${resource.source} · ${choice.name}`,
+	}));
 
 /**
  * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and
@@ -247,6 +269,7 @@ export interface EffectFacts {
 	/** RAW `blocks_concentration` marker present on some active state (Rage) — the combat layer drops
 	 *  and withholds Concentration while true. */
 	breaksConcentration: boolean;
+	spellcastingBlocks: { source: string }[];
 	/** `damage_reroll` markers (2024 Savage Attacker): the feature(s) that let you reroll a weapon's
 	 *  damage dice once per turn. Carries the source NAME so the combat layer can OFFER a post-roll
 	 *  reroll labelled from the feature itself — no id/string hardcoded (data-driven). Empty = no such
@@ -291,6 +314,7 @@ export const emptyFacts = (): EffectFacts => ({
 	resourceIds: [],
 	conditions: [],
 	breaksConcentration: false,
+	spellcastingBlocks: [],
 	damageReroll: [],
 	initiativeRegain: [],
 	onEvent: [],
@@ -334,6 +358,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.pluginNotes.push(...extra.pluginNotes);
 	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
 	base.breaksConcentration ||= extra.breaksConcentration;
+	base.spellcastingBlocks.push(...extra.spellcastingBlocks);
 	base.damageReroll.push(...extra.damageReroll);
 	base.initiativeRegain.push(...extra.initiativeRegain);
 	base.onEvent.push(...extra.onEvent);
@@ -341,12 +366,6 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);
 		if (!prev) base.resources.push(def);
-		// the SAME rule `pushResource` applies within one pass, including the equal-max tie-break on the
-		// faster recharge — compared here by max alone, a plugin's faster policy silently lost
-		else if (
-			def.max > prev.max ||
-			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
-		)
-			base.resources[base.resources.indexOf(prev)] = def;
+		else if (resourceGrantWins(def, prev)) base.resources[base.resources.indexOf(prev)] = def;
 	}
 }

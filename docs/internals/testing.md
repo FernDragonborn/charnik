@@ -174,6 +174,14 @@ the modifier and nothing else; cycling the advantage state never changes the mul
 (the property a re-roll leak once violated — see that doc on why the mode may not draw); the kept
 d20 is never worse than a dropped one; a full lap of the cycle returns the roll exactly as it landed.
 
+**Casting authorization** — `play/cast-pools.test.ts` exercises both editions' shipped Rage
+conditions and explicit spell-linked pools: slot, pool, ritual and cantrip refusal leave the exact
+character untouched and ask for no roll or weapon; removing Rage restores casting. The shipped
+Magic Initiate row is asserted, including separate pools for repeatable instances that choose the
+same spell, exhaustion, Short/Long Rest recharge and removed/unanswered feats.
+`combat/blocks/panels/SpellsPanel.browser.test.ts` renders same-named repeatable feat profiles
+without duplicate keys and keeps blocked spell controls readable and focusable in both editions.
+
 ## Determinism
 Inject a **seeded RNG** for dice (4d6 stat roll, the dice roller, HP rolls on level-up)
 so tests are repeatable; all derived stats otherwise deterministic.

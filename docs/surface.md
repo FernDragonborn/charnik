@@ -523,7 +523,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (195 modules)
+## Library functions & types (198 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -715,6 +715,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deleteDraft`
 - `function listDrafts` — Newest first.
 
+### `src/lib/character/feat-resource-choices.ts`
+
+- `function featResourceChoices`
+
+### `src/lib/character/feat-spells.ts`
+
+- `interface FeatSpellGrant` — One rung of a feat's spell grant: how many spells of that level it teaches.
+- `function featSpellGrants` — Parse a feat's `spell_choice` column — `spell level:count` pairs (`"0:2,1:1"` = two cantrips and * one level-1 spell).
+- `function featCasterProfiles`
+
 ### `src/lib/character/feature-spells.ts`
 
 - `interface FeatureSpells` — The spells a class's features hand it at its level, as this edition's spell rows.
@@ -889,14 +899,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/spellcasting.ts`
 
 - `re-export spellEntries`
+- `re-export featSpellGrants`
+- `re-export type FeatSpellGrant`
 - `interface SpellcastingClass`
 - `function canCastAsRitual` — * May this spell be cast as a ritual by the class it is cast AS?
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a * multiclass caster has o…
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
-- `interface FeatSpellGrant` — One rung of a feat's spell grant: how many spells of that level it teaches.
-- `function featSpellGrants` — Parse a feat's `spell_choice` column — `spell level:count` pairs (`"0:2,1:1"` = two cantrips and * one level-1 spell).
 - `interface SpellcastingInput` — What the full casting derive needs.
 - `function deriveSpellcasting`
 
@@ -1784,6 +1794,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
 - `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
+- `const resourceGrantWins`
+- `const resourcesForChoices`
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `const emptyFacts`
 - `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
@@ -1849,6 +1861,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
 
+### `src/lib/effects/resource-token.ts`
+
+- `const RESOURCE_SPELL_CHOICE`
+- `const MAX_RESOURCE_MAX`
+- `function parseGrantResource`
+
 ### `src/lib/effects/token-answers.ts`
 
 - `function withItemChoice` — * Point a carried item's tokens at the choice this instance was answered with.
@@ -1856,12 +1874,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/token-parser.ts`
 
+- `re-export MAX_RESOURCE_MAX`
+- `re-export RESOURCE_SPELL_CHOICE`
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
 - `type EffectKind`
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
 - `re-export RechargePolicy` — The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep importing it from the…
 - `type DamageSensitivity`
-- `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
 - `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
 - `const scopeMatches` — Does a thing with these scopes fall under a scope?
@@ -1936,6 +1955,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function upcastAt` — * A spell's `upcast` cell evaluated at a slot level — the ONE place the cast's context is built, so * the damage, dur…
 - `function enchantableWeapons` — What a magic-weapon buff can be laid on: each weapon the character attacks with, once.
 - `interface CastIntent` — How a cast is asked for.
+- `function spellcastingBlock`
+- `const poolAllowsSpell`
 - `function castSpell` — * Cast a spell.
 
 ### `src/lib/play/changes.ts`
@@ -2475,4 +2496,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1510 exports across 212 modules · 99 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1522 exports across 215 modules · 99 duplicate suspects._

@@ -44,7 +44,16 @@ export function spellEntries(
 	sheet: { spellcasting: { classes: readonly { grantedSpells: readonly string[] }[] } } | null,
 ): SpellEntry[] {
 	const granted = new Set(sheet?.spellcasting.classes.flatMap((c) => c.grantedSpells) ?? []);
-	const out = character.build.spells.map((entry) =>
+	const chosen = [...character.build.spells];
+	for (const taken of character.build.featSpells) {
+		if (!character.build.feats.includes(taken.feat)) continue;
+		for (const spell of taken.spells ?? []) {
+			granted.add(spell);
+			if (!chosen.some((entry) => entry.spell === spell))
+				chosen.push({ spell, prepared: true, alwaysPrepared: true });
+		}
+	}
+	const out = chosen.map((entry) =>
 		granted.has(entry.spell) ? { ...entry, alwaysPrepared: true } : entry,
 	);
 	for (const spell of granted)

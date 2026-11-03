@@ -9,10 +9,18 @@
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed, range } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
+	import { ISSUE_KEY } from '$lib/effects/token-parser';
+	import { spellcastingBlock } from '$lib/play/cast';
+	import { sayText } from '$lib/util/say';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const spellGroups = $derived(combat.spellGroups);
 	const pinned = $derived(combat.pinned);
+	const castingBlock = $derived(spellcastingBlock(s));
+	const blockedReason = $derived(castingBlock ? sayText(castingBlock, $_) : '');
+	const featSpellGaps = $derived(
+		s.deriveIssues.filter((issue) => issue.key === ISSUE_KEY.featSpellOwnershipMissing),
+	);
 	const { cast, togglePrepared } = combat;
 	const { slotClick } = combat.resources;
 
@@ -26,7 +34,7 @@
 {#if s.spellcasting.classes.length}
 	{@const multi = s.spellcasting.classes.length > 1}
 	<div class="cast-line">
-		{#each s.spellcasting.classes as sc, i (sc.className)}
+		{#each s.spellcasting.classes as sc, i (sc.classEffectiveId)}
 			{#if i > 0}<span class="cast-separator">&nbsp;·&nbsp;</span>{/if}
 			{#if multi}<b class="cast-class">{sc.className}</b>
 			{/if}{$_('combat.spells.saveDc')}
@@ -58,6 +66,18 @@
 		</div>
 	{/if}
 	<div class="spell-rows">
+		{#each featSpellGaps as gap, index (index)}
+			<div class="armor-block">
+				<Icon name="triangle-alert" size={13} />
+				{sayText(gap, $_)}
+			</div>
+		{/each}
+		{#each s.facts.spellcastingBlocks as block, index (index)}
+			<div class="armor-block" use:provenance={$_('combat.spells.stateBlockNote')}>
+				<Icon name="triangle-alert" size={13} />
+				{$_('combat.spells.stateBlocked', { values: { source: block.source } })}
+			</div>
+		{/each}
 		{#each spellGroups as g (g.key)}
 			<div class="spgroup">
 				<div class="spell-category eyebrow" class:star={g.key === 'pinned'}>
@@ -97,8 +117,11 @@
 								aria-pressed={r.prepState === 'on' || r.prepState === 'always'}
 								onclick={() => togglePrepared(r)}
 							></button>
-							<button class="name-cast" onclick={(e) => cast(r, e)}
-								><span class="name-main">{r.name}</span></button
+							<button
+								class="name-cast"
+								aria-disabled={!!blockedReason}
+								use:provenance={blockedReason}
+								onclick={(e) => cast(r, e)}><span class="name-main">{r.name}</span></button
 							>
 							<button
 								class="pin-star"
@@ -117,6 +140,8 @@
 								     may cast it as a ritual as things stand. The name casts normally. -->
 								<button
 									class="ritual-cast"
+									aria-disabled={!!blockedReason}
+									use:provenance={blockedReason}
 									title={$_('combat.spells.castRitual')}
 									onclick={(e) => cast(r, e, { ritual: true })}>R</button
 								>
@@ -217,7 +242,6 @@
 	}
 	.spell-category .slot-pip.spent {
 		background: transparent;
-		border-style: dashed;
 		opacity: 0.5;
 	}
 	.spell-row {

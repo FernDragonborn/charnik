@@ -106,7 +106,11 @@ function optionFeatSlots(
 const featsChosenFrom = (choice: readonly string[], feats: LoadedRow[]): LoadedRow[] =>
 	choice.some((word) => word.toLowerCase() === ANY_OPTION)
 		? feats
-		: feats.filter((f) => choice.includes(f.id) || choice.includes(String(rowOfType(f, 'feat')?.data.category ?? '')));
+		: feats.filter(
+				(f) =>
+					choice.includes(f.id) ||
+					choice.includes(String(rowOfType(f, 'feat')?.data.category ?? '')),
+			);
 
 export class FeatSlots {
 	/* The host arrives as an ACCESSOR, not an object: a $derived field initialiser runs before a
@@ -306,7 +310,9 @@ export class FeatSlots {
 	);
 	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
 	featOptionBlocked = (ref: string, slotKey: string): boolean =>
-		!this.isRepeatable(ref) && this.host().draft.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);
+		!this.isRepeatable(ref) &&
+		this.host().draft.slotFeats[slotKey] !== ref &&
+		this.usedFeatRefs.includes(ref);
 	setSlotFeat = (key: string, ref: string) => {
 		const next = { ...this.host().draft.slotFeats };
 		if (ref) next[key] = ref;
@@ -314,7 +320,10 @@ export class FeatSlots {
 		this.host().draft.slotFeats = next;
 		// initialise / clear this slot's ASI allocation as needed
 		if (ref === ASI && !this.host().draft.slotAsi[key])
-			this.host().draft.slotAsi = { ...this.host().draft.slotAsi, [key]: { shape: '2', picks: [] } };
+			this.host().draft.slotAsi = {
+				...this.host().draft.slotAsi,
+				[key]: { shape: '2', picks: [] },
+			};
 		if (ref !== ASI && this.host().draft.slotAsi[key]) {
 			const asi = { ...this.host().draft.slotAsi };
 			delete asi[key];
@@ -335,9 +344,7 @@ export class FeatSlots {
 		const featSk = { ...this.host().draft.slotFeatSkills };
 		delete featSk[key];
 		this.host().draft.slotFeatSkills = featSk;
-		// §D likewise: the list and ability answered for the old feat say nothing about the new one.
-		// The SPELLS picked under it are left alone — they are ordinary entries in the spell list, and
-		// a player who swaps a feat has not asked to lose them.
+		// §D likewise: the list, ability and spells belong to this instance of the old feat.
 		const featSp = { ...this.host().draft.slotFeatSpells };
 		delete featSp[key];
 		this.host().draft.slotFeatSpells = featSp;
@@ -382,11 +389,15 @@ export class FeatSlots {
 	 *  character already has from elsewhere; the refusal lives here, where every caller meets it. */
 	toggleSlotFeatSkill = (key: string, pick: string, cap: number) => {
 		const picks = this.slotFeatSkillsFor(key);
-		if (this.host().draft.strict && !picks.includes(pick) && this.featSkillTakenElsewhere(key, pick))
+		if (
+			this.host().draft.strict &&
+			!picks.includes(pick) &&
+			this.featSkillTakenElsewhere(key, pick)
+		)
 			return;
 		this.host().draft.slotFeatSkills = {
 			...this.host().draft.slotFeatSkills,
-			[key]: toggleCapped(picks, pick, cap)
+			[key]: toggleCapped(picks, pick, cap),
 		};
 	};
 	/** Strict-mode guard: a proficiency already held from ANOTHER source (a class/background pick, a
@@ -398,7 +409,7 @@ export class FeatSlots {
 			: this.host().skillPicks.isProficientBeforeFeats(pick);
 		if (heldAlready) return true;
 		return Object.entries(this.host().draft.slotFeatSkills).some(
-			([k, list]) => k !== key && list.includes(pick)
+			([k, list]) => k !== key && list.includes(pick),
 		);
 	};
 	/** Every §C pick that still counts, across all slots + the origin feat: each slot capped to its
@@ -474,7 +485,8 @@ export class FeatSlots {
 		const ref = this.featRefFor(key);
 		if (!ref || ref === ASI) return [];
 		const spec = rowOfType(this.host().graph?.get(ref), 'feat')?.data.spell_choice_lists;
-		const pinned = key === ORIGIN_SLOT_KEY ? this.host().backgroundRow?.data.origin_feat_spell_list : undefined;
+		const pinned =
+			key === ORIGIN_SLOT_KEY ? this.host().backgroundRow?.data.origin_feat_spell_list : undefined;
 		const wanted = pinned ? [pinned] : splitList(spec);
 		// all three columns or none: without an ability there is nothing to cast these spells WITH, and
 		// picking one for the author would be inventing the rule. The shipped rows are pinned by
@@ -500,19 +512,22 @@ export class FeatSlots {
 		const abilities = this.featSpellAbilitiesFor(key);
 		const ability = current?.ability ?? abilities[0];
 		if (!ability) return;
+		const spells = current?.list === list ? current.spells : [];
 		this.host().draft.slotFeatSpells = {
 			...this.host().draft.slotFeatSpells,
-			[key]: { list, ability },
+			[key]: { list, ability, ...(spells ? { spells: [...spells] } : {}) },
 		};
 	};
 	/** Picking the ability settles the LIST too when only one is on offer — a background's pinned list
 	 *  is not a question, and making the player tap a lone chip to confirm it is a trip for nothing. */
 	setFeatSpellAbility = (key: string, ability: Ability) => {
-		const list = this.featSpellChoiceFor(key)?.list ?? this.featSpellListsFor(key)[0]?.id;
+		const current = this.featSpellChoiceFor(key);
+		const list = current?.list ?? this.featSpellListsFor(key)[0]?.id;
 		if (!list) return;
+		const spells = current ? current.spells : [];
 		this.host().draft.slotFeatSpells = {
 			...this.host().draft.slotFeatSpells,
-			[key]: { list, ability },
+			[key]: { list, ability, ...(spells ? { spells: [...spells] } : {}) },
 		};
 	};
 	/** RAW for a repeatable spell feat: a second Magic Initiate must name a DIFFERENT list. Strict
@@ -525,13 +540,21 @@ export class FeatSlots {
 	};
 	/** Every answered §D feat, flattened for `build.featSpells` — the derive's view of them. A slot
 	 *  whose feat no longer teaches spells drops out here rather than lingering in the character. */
-	featSpellPicks = $derived.by<{ feat: string; key: string; list: string; ability: Ability }[]>(() => {
+	featSpellPicks = $derived.by<(FeatSpellChoice & { feat: string; key: string })[]>(() => {
 		const keys = [...this.choiceKeys, ORIGIN_SLOT_KEY];
 		return keys.flatMap((key) => {
 			const ref = this.featRefFor(key);
 			const choice = this.host().draft.slotFeatSpells[key];
 			if (!ref || !choice || !this.featSpellGrantsOf(ref).length) return [];
-			return [{ feat: ref, key, list: choice.list, ability: choice.ability }];
+			return [
+				{
+					feat: ref,
+					key,
+					list: choice.list,
+					ability: choice.ability,
+					...(choice.spells ? { spells: [...choice.spells] } : {}),
+				},
+			];
 		});
 	});
 
@@ -572,5 +595,4 @@ export class FeatSlots {
 			(this.asiBoostFor(key)[ab] ?? 0) + (this.host().draft.slotFeatAbility[key] === ab ? 1 : 0);
 		return score - given + amount > this.abilityCapOf(key);
 	};
-
 }

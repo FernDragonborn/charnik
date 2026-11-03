@@ -27,6 +27,7 @@ export const ISSUE_KEY = {
 	rolledAbilityScore: 'effectIssue.rolledAbilityScore',
 	unreadableAbilityChange: 'effectIssue.unreadableAbilityChange',
 	noPreparedCount: 'effectIssue.noPreparedCount',
+	featSpellOwnershipMissing: 'effectIssue.featSpellOwnershipMissing',
 } as const;
 
 /** A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source)

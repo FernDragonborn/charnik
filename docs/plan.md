@@ -242,12 +242,6 @@ position and are given per wave, because most of them were learned the hard way.
   AUDIT-DRIFT, the full `pnpm lint:typed`, the version in three files (`package.json`,
   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) and the changelog's top heading. Open work a
   release ships without is named in that release's changelog, where a player would look for it.
-- **0.8.2 · every SRD class works at level 1, in both editions** — released 2026-10-23.
-  Mystic Arcanum and the slot recoveries wait for a later release.
-
-- **The next release does not ship without:** `work/mechanics.md` ▸ CAST-POOL-LINK, and
-  `work/ui.md` ▸ the five BUILD-* items.
-
 - **0.9.0 · a table can play levels 1–4 together.** The maintainer's goal: every SRD class and
   subclass works through level 4 in both editions, and players can sit at one table across their
   own apps. Two halves:

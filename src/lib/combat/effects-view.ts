@@ -222,6 +222,8 @@ const TAG_FORMATTERS: Partial<
 	// the two MARKERS carry no target or value — the whole tag is the sentence
 	[EFFECT_KIND.blocksConcentration]: (_p, tr) =>
 		say(tr, 'combat.tag.blocksConcentration', 'blocks concentration'),
+	[EFFECT_KIND.blocksSpellcasting]: (_p, tr) =>
+		say(tr, 'combat.tag.blocksSpellcasting', 'blocks spellcasting'),
 	[EFFECT_KIND.damageReroll]: (_p, tr) => say(tr, 'combat.tag.damageReroll', 'may reroll damage'),
 	[EFFECT_KIND.regainOnInitiative]: (p, tr) =>
 		p.target &&

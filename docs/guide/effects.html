@@ -821,7 +821,7 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 	<div class="kind">
 		<div class="kind-name">grant_resource</div>
 		<div class="kind-form"><code><span class="g-kind">grant_resource</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">id</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">max</span><span class="g-punc">&gt;</span><span class="g-punc">:</span><span class="g-punc">&lt;</span><span class="g-slot">recharge</span><span class="g-punc">&gt;</span></code></div>
-		<div class="kind-desc">A pool with a size and a way back: <code>short</code>, <code>long</code>, <code>short_one</code>, <code>consumable</code>, <code>other</code>, or one carrying an amount like <code>long(2)</code> or <code>dawn(1d6+1)</code>. Rage, ki, an item's charges.</div>
+		<div class="kind-desc">A pool with a size and a way back: <code>short</code>, <code>long</code>, <code>short_one</code>, <code>consumable</code>, <code>other</code>, or one carrying an amount like <code>long(2)</code> or <code>dawn(1d6+1)</code>. Rage, ki, an item's charges. Add <code>:spell:&lt;spell_id&gt;</code> to let this pool cast that spell without a slot; a comma list authorizes several spells from the same pool. <code>:spell:chosen</code> uses a feat's selected leveled spells, one separate pool per spell and repeatable feat instance. Without the suffix this pool cannot pay for spells.</div>
 	</div>
 	<div class="kind">
 		<div class="kind-name">grant_roll</div>
@@ -881,6 +881,11 @@ not is_wearing_armor and not is_wearing_shield ? set_base:ac:10+dex_mod+wis_mod<
 		<div class="kind-name">blocks_concentration</div>
 		<div class="kind-form"><code><span class="g-kind">blocks_concentration</span></code></div>
 		<div class="kind-desc">Marker. While this is on the character they cannot concentrate. Rage does this.</div>
+	</div>
+	<div class="kind">
+		<div class="kind-name">blocks_spellcasting</div>
+		<div class="kind-form"><code><span class="g-kind">blocks_spellcasting</span></code></div>
+		<div class="kind-desc">Marker. While this is on the character they cannot cast any spell, even a cantrip or ritual. Spells stay readable and say why casting is blocked. Rage carries both markers.</div>
 	</div>
 </div>
 

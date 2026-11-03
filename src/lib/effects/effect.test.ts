@@ -14,6 +14,28 @@ import { unarmoredAC, savingThrow } from '../rules/core';
 import { computed, type Contribution } from '../rules/pipeline';
 
 describe('effect vocabulary', () => {
+	it('parses spellcasting blocks and spell-linked resource grants', () => {
+		expect(parseToken('blocks_spellcasting')).toMatchObject({ kind: 'blocks_spellcasting' });
+		expect(parseToken('blocks_spellcasting:spell').kind).toBe('unknown');
+		expect(parseToken('grant_resource:free_cast:1:long:spell:shield').resource).toMatchObject({
+			id: 'free_cast',
+			spell: 'shield',
+			max: 1,
+		});
+		expect(parseToken('grant_resource:free_cast:1:long:spell:chosen').resource?.spell).toBe(
+			'chosen',
+		);
+		expect(
+			parseToken('grant_resource:free_cast:1:long:spell:shield,detect_magic').resource?.spell,
+		).toBe('shield,detect_magic');
+		expect(parseToken('grant_resource:free_cast:1:long:spell:chosen,shield').kind).toBe('unknown');
+		expect(parseToken('grant_resource:free_cast:1:long:spell:').kind).toBe('unknown');
+		expect(parseToken('grant_resource:free_cast:1:never:spell:shield').kind).toBe('unknown');
+		const facts = collectFacts([
+			{ source: 'Authored state', layer: 'condition', tokens: ['blocks_spellcasting'] },
+		]);
+		expect(facts.spellcastingBlocks).toEqual([{ source: 'Authored state' }]);
+	});
 	it('the engine and the content schema list the same kinds (guard against drift)', () => {
 		// the two lists are intentionally separate (effects is a removable module) — keep them equal
 		expect([...EFFECT_KINDS].sort()).toEqual([...SCHEMA_EFFECT_KINDS].sort());

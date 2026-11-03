@@ -12,6 +12,7 @@
 	import type { DetailModel } from '$lib/content/detail';
 	import { placeCard, entryElement } from '../card-placement';
 	import { floatInBody } from '$lib/actions/floatInBody';
+	import { provenance } from '$lib/actions/provenance';
 
 	let {
 		picker,
@@ -19,6 +20,7 @@
 		title,
 		detail,
 		taken,
+		blocked = null,
 		ontake,
 		onclose,
 	}: {
@@ -30,6 +32,7 @@
 		title: string;
 		detail: DetailModel | null;
 		taken: boolean;
+		blocked?: string | null;
 		/** Absent when the card is read-only (nothing here to commit). */
 		ontake?: () => void;
 		onclose: () => void;
@@ -117,9 +120,20 @@
 
 	{#if ontake}
 		<footer>
-			<button class="btn take" class:is-taken={taken} onclick={ontake}>
-				<Icon name={taken ? 'check' : 'plus'} size={13} />
-				{$_(taken ? 'build.picker.taken' : 'build.picker.take')}
+			<button
+				class="btn take"
+				class:is-taken={taken}
+				class:is-blocked={!!blocked}
+				aria-disabled={blocked ? true : undefined}
+				use:provenance={blocked}
+				onclick={() => {
+					if (!blocked) ontake?.();
+				}}
+			>
+				<Icon name={taken && !blocked ? 'minus' : taken ? 'check' : 'plus'} size={13} />
+				{$_(
+					taken ? (blocked ? 'build.picker.taken' : 'build.inspector.clear') : 'build.picker.take',
+				)}
 			</button>
 		</footer>
 	{/if}
@@ -183,5 +197,9 @@
 	}
 	.take.is-taken {
 		color: var(--color-resource);
+	}
+	.take[aria-disabled='true'] {
+		opacity: 0.5;
+		cursor: help;
 	}
 </style>

@@ -87,7 +87,7 @@ interface DamageTypePill extends PillCommon {
 	kind: typeof PILL_KIND.damageType;
 	type: string;
 	/** Set when the app added this pill rather than the player: the tail after a type inherits it.
-	 *  Drawn as the SAME pill with a dashed edge, so inheritance is never silent and is edited the
+	 *  Drawn as the SAME pill with a muted solid edge, so inheritance is never silent and is edited the
 	 *  same way — the moment another type is named, the inherited one goes. */
 	inherited?: true;
 }
@@ -318,7 +318,7 @@ const isValue = (p: RollerPill): p is DicePill | FlatPill =>
 /**
  * Re-derive the line's implicit parts after an edit. Today that is exactly one rule: damage that
  * trails a type with no type of its own INHERITS it, and the inherited type is drawn as a real pill
- * (dashed, because it wasn't typed) rather than left as a silent assumption. Naming another type
+ * (muted, because it wasn't typed) rather than left as a silent assumption. Naming another type
  * removes it, since it is rebuilt from scratch every time rather than accumulated.
  *
  * A tail with nothing to inherit gets nothing — that case is a warning, not a guess (§7).

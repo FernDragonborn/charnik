@@ -135,14 +135,19 @@ rest, pact slots recharge on a short one, and a Mystic Arcanum or an item's "3/d
 without a spell level. The UI renders level-tagged pools as pips and the rest as trackers. Anything
 "N/day" is therefore `grant_resource:<id>:<max>:<recharge>`.
 
-**What pays for a cast is chosen at the cast.** `cast(r, e, { pool })` spends one use of a pool and no
-slot, and the picker that offers slot levels offers the pools beside them — which is how "cast it once
-without a spell slot" (Magic Initiate, and the same sentence on several items) is paid. **The player
-names the pool, because nothing in the data links one to a spell**: there is no column saying which
-pool a given spell may spend, so the picker lists every pool with a use left and the feat's own text
-decides. The pool is spent and gated on BEFORE the action economy is touched, the way a slot is
-reserved first, so an exhausted pool blocks the whole cast rather than casting for free. Narrowing the
-list to a DECLARED pool later is a filter on that same control.
+**What pays for a cast is declared by its source.** A `grant_resource` token may end in
+`:spell:<spell_id>[,<spell_id>...]`, linking its pool to those spells, or `:spell:chosen`, linking it to the leveled
+spells selected for that feat instance. The cast picker offers only a linked pool with uses left;
+`castSpell` and `payForCast` refuse any other pool. A chosen-spell pool is keyed by the granting
+feat, its stable instance key and the chosen-spell position, so repeatable feats never share their
+free use and replacing a spell does not refresh an already-spent use.
+Validation happens before a weapon question, turn cost, resource, effect or roll. Pool casts use the
+spell's base level and spend no slot. An exhausted pool refuses the whole cast.
+
+**An active `blocks_spellcasting` marker withholds every cast**, including a cantrip, ritual or
+pool cast. Both editions' Rage carries it alongside `blocks_concentration`. The spell list stays
+readable, names the blocking source, and casting returns when the effect ends. Worn unproficient
+armor and a form that cannot cast use the same pure-action preflight.
 
 **A slot can be what an option COSTS.** "Give yourself one use by expending a spell slot" (Wild
 Resurgence) is the `spend_slot` verb on a spend-option (`actions.md` §2): the slot is reserved with

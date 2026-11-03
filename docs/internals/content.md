@@ -26,6 +26,16 @@ is only possible where its rows are listed, and "everything is doable from the U
 invariant. The pure lookup tables (slot matrices, join rows) carry no name and stay out of both.
 SEARCH is article-only (`isBrowsable`), so the palette never answers a spell query with a spend row.
 
+## Spell-linked resources
+
+`grant_resource:<id>:<max>:<recharge>:spell:<spell_id>` declares a pool that pays only for that
+spell, matched by its bare id like other content links. A comma list links several explicit spells
+to the same pool. `:spell:chosen` on a spell-granting feat
+reads `build.featSpells[].spells`: selected spell refs belong to the stable feat instance, not the
+flat class spell list. Each selected leveled spell receives an independent pool; cantrips do not.
+An unanswered or removed feat grants no such pool. The shipped Magic Initiate row declares one use
+per Long Rest this way. A pool without a spell link is not a casting source.
+
 ## Identity
 
 A row's effective identity is **`type:source:id`**, so the same `id` from two different sources

@@ -41,6 +41,7 @@
 		ontake={ins.take}
 		detail={ins.detail}
 		blocked={(id) => {
+			if (id === ins.pick?.currentId && !ins.pick.clearable) return $_('build.strictSettled');
 			const key = ins.pick?.blockedKey?.(id);
 			return key ? $_(key) : null;
 		}}

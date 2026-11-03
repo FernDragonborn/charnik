@@ -251,23 +251,7 @@ stay semi-manual.
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
 ## Spellcasting
-- [ ] **CAST-POOL-LINK · any resource pays for any spell.** The upcast
-  picker offers "cast from <pool>" for every resource with a use left (`spell-casting.svelte.ts` ▸
-  `castablePools`), so a Barbarian upcasts with a Rage use, a Monk with Ki, a Bard with Bardic
-  Inspiration, and `play/cast.ts` ▸ `payForCast` accepts it. The cause is the settled rule in
-  `../internals/rules-core.md` ▸ What pays for a cast: nothing in the data links a pool to a spell,
-  so the list is every pool and the player was trusted to pick. That trust is a bug: a pool that
-  cannot pay for a spell must not be offered. The fix is the link — the row that grants a free cast
-  (Magic Initiate, an item's "N/day", Mystic Arcanum's `spell_free_cast`) declares the pool and the
-  spells it pays for, `castablePools` offers only a pool declared for that spell, `payForCast`
-  refuses an undeclared one, and the rules-core paragraph is rewritten in the same commit.
-  **Rage, separately:** RAW, both editions, a raging creature casts nothing at all — SRD 5.1 "If you
-  are able to cast spells, you can't cast them or concentrate on them while raging"; SRD 5.2.1 "You
-  can't maintain Concentration, and you can't cast spells." The `rage` rows carry only
-  `blocks_concentration`, so slot casts stay open too. A sibling marker (`token-parser.ts`,
-  `schemas.ts`, a fact flag in `facts.ts`) read by the cast path withholds every spell, added to both
-  editions' `rage` rows in `charnik-content-srd`. Withhold, not hide: the list stays readable and
-  says why it is shut.
+
 - [~] **Resource subsystem · Mystic Arcanum is a pool, not a slot.** Pools, their pips, the spend
   path, both rests, a slot a feature gives (`gain_slot`), a slot as what an option costs
   (`spend_slot`) and a cost the player names (`x`) are built (`../internals/actions.md` §2,
@@ -283,17 +267,17 @@ stay semi-manual.
      level" on gaining a level; SRD 5.1 is silent (RAW: no swap; many tables allow it). What blocks
      it today: the level a warlock may learn reads the Pact Magic table, so no level 6 spell can
      be chosen.
-     **The shape**, reusing the feat caster profile (`character/spellcasting.ts` ▸
+     **The shape**, reusing the feat caster profile (`character/feat-spells.ts` ▸
      `featCasterProfiles`: its own list, caps and spell level):
      - the feature row carries `spell_choice` = `6:1@11,7:1@13,8:1@15,9:1@17` — `spell level:count`
        as in a feat's column, and `@` the class level it opens at (`../internals/content.md` ▸ At a
-       level is `@`); `spell_choice_lists` = `warlock`; a new open-enum column `spell_free_cast` =
-       `long` — "each spell chosen here casts once per long rest" (a later row may say `short`);
+       level is `@`); `spell_choice_lists` = `warlock`; a
+       `grant_resource:<id>:1:long:spell:chosen` token declares its per-spell free casts, using the
+       same link as Magic Initiate; feature-instance choices still need their own persistence;
      - the builder's spell picker gains a section per opened rung ("Mystic Arcanum — level 6
        spell, choose 1"), not counted against the warlock's own cap;
-     - each chosen spell gets a one-use pool of its own; casting it spends that pool, the cast
-       picker offers that pool and no slot (the first time data ties a pool to one spell — today
-       the picker lists every pool with a use left, `../internals/rules-core.md` ▸ Spellcasting);
+     - each chosen spell gets a one-use pool of its own; casting it spends that pool, and the cast
+       picker offers only that spell's declared pool (`../internals/rules-core.md` ▸ Spellcasting);
      - swapping is the builder's free edit as for any spell; the hover says the edition's rule.
   - **Arcane Recovery and Natural Recovery — the design, sized at about two hours.** A verb
     `recover_slots:<budget>:<max slot level>` — `recover_slots:ceil(class_level.wizard/2):5` — on a

@@ -3,6 +3,7 @@
 	// Clicking any of them opens the one allocator — they are never edited six different ways.
 	// A score raised above what you rolled/bought reads in crimson, so a boost is visible at a glance.
 	import { _ } from '$lib/i18n';
+	import Icon from '$lib/components/Icon.svelte';
 	import { abilityShortLabel } from '$lib/util/format';
 	import { build } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
@@ -25,6 +26,10 @@
 			class="slot tile ability"
 			class:active
 			class:boosted
+			aria-expanded={active}
+			aria-label={$_('build.abilities.scoreLabel', {
+				values: { ability: abilityShortLabel(ab, $_) },
+			})}
 			use:provenance={block
 				? why(block.score, $_)
 				: abilityProvenanceText(b.abilities.provenance(ab, score), $_)}
@@ -33,6 +38,7 @@
 			<small>{abilityShortLabel(ab, $_)}</small>
 			<span class="score">
 				<b>{score}</b>
+				<span class="edit-mark"><Icon name="pencil" size={12} /></span>
 				<!-- What the score gained from OUTSIDE what you rolled or bought, said as a number. The
 				     crimson tint alone marked that something happened without saying what, and the first
 				     playtest never noticed a species' +1 at all — the popover held the only answer, and a
@@ -65,6 +71,14 @@
 		padding: var(--space-2-5) var(--space-1-5);
 	}
 	.ability.boosted b {
+		color: var(--color-accent-bright);
+	}
+	.edit-mark {
+		display: inline-flex;
+		color: var(--color-text-muted);
+	}
+	.ability:hover .edit-mark,
+	.ability:focus-visible .edit-mark {
 		color: var(--color-accent-bright);
 	}
 	/* the number and its bump ride one baseline, so the tile still reads as one score */

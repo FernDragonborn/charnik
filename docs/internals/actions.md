@@ -94,6 +94,9 @@ the three — a verb for them would be a play-state channel invented for one row
 
 Core rules (owned HERE, restated for authors in plugins.md):
 
+- **Casting preflight.** `blocks_spellcasting`, armor/form blocks and an invalid or exhausted
+  spell-linked pool refuse before any weapon question, payment, effect or roll. A cast cannot
+  substitute an unrelated resource for a slot.
 - **All-or-nothing.** Validate the entire intent (affordability, caps, well-formedness) first;
   apply every part or reject the whole with a notice. Never a partial (a spent resource with a
   failed heal).

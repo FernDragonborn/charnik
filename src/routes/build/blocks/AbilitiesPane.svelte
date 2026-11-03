@@ -15,14 +15,18 @@
 	const METHODS: { id: StatMethod; labelKey: string; hintKey: string }[] = [
 		{ id: 'point_buy', labelKey: 'pointBuy', hintKey: 'pointBuyHint' },
 		{ id: 'standard_array', labelKey: 'standardArray', hintKey: 'standardArrayHint' },
-		{ id: 'manual', labelKey: 'manual', hintKey: 'manualHint' }
+		{ id: 'manual', labelKey: 'manual', hintKey: 'manualHint' },
 	];
 	const method = $derived(METHODS.find((m) => m.id === b.draft.method));
 </script>
 
 <div class="methods">
 	{#each METHODS as m (m.id)}
-		<button class="pick-chip" class:on={b.draft.method === m.id} onclick={() => b.abilities.setMethod(m.id)}>
+		<button
+			class="pick-chip"
+			class:on={b.draft.method === m.id}
+			onclick={() => b.abilities.setMethod(m.id)}
+		>
 			{$_(`build.abilities.${m.labelKey}`)}
 		</button>
 	{/each}
@@ -44,24 +48,43 @@
 			<span class="code">{abilityShortLabel(ab, $_)}</span>
 			{#if b.draft.method === 'standard_array'}
 				<select
-					class="bare"
-					aria-label={$_('build.abilities.scoreLabel', { values: { ability: abilityShortLabel(ab, $_) } })}
+					class="text-field score-select"
+					aria-label={$_('build.abilities.scoreLabel', {
+						values: { ability: abilityShortLabel(ab, $_) },
+					})}
 					value={b.draft.arrayPick[ab] ?? ''}
 					onchange={(e) =>
-						b.abilities.assignArray(ab, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}
+						b.abilities.assignArray(
+							ab,
+							e.currentTarget.value === '' ? null : Number(e.currentTarget.value),
+						)}
 				>
 					<option value="">—</option>
-					{#if b.draft.arrayPick[ab] != null}<option value={b.draft.arrayPick[ab]}>{b.draft.arrayPick[ab]}</option>{/if}
+					{#if b.draft.arrayPick[ab] != null}<option value={b.draft.arrayPick[ab]}
+							>{b.draft.arrayPick[ab]}</option
+						>{/if}
 					{#each b.abilities.arrayRemaining as v (v)}<option value={v}>{v}</option>{/each}
 				</select>
 			{:else}
 				<span class="stepper">
-					<button aria-label={$_('build.abilities.lower', { values: { ability: abilityShortLabel(ab, $_) } })} onclick={() => b.abilities.bumpAbility(ab, -1)}><Icon name="minus" size={12} /></button>
+					<button
+						aria-label={$_('build.abilities.lower', {
+							values: { ability: abilityShortLabel(ab, $_) },
+						})}
+						onclick={() => b.abilities.bumpAbility(ab, -1)}><Icon name="minus" size={12} /></button
+					>
 					<span class="base">{b.draft.abilities[ab]}</span>
-					<button aria-label={$_('build.abilities.raise', { values: { ability: abilityShortLabel(ab, $_) } })} onclick={() => b.abilities.bumpAbility(ab, 1)}><Icon name="plus" size={12} /></button>
+					<button
+						aria-label={$_('build.abilities.raise', {
+							values: { ability: abilityShortLabel(ab, $_) },
+						})}
+						onclick={() => b.abilities.bumpAbility(ab, 1)}><Icon name="plus" size={12} /></button
+					>
 				</span>
 			{/if}
-			<span class="note">{abilityProvenanceText(b.abilities.provenance(ab, block?.score.value), $_)}</span>
+			<span class="note"
+				>{abilityProvenanceText(b.abilities.provenance(ab, block?.score.value), $_)}</span
+			>
 			<span class="total">
 				{block?.score.value ?? b.draft.abilities[ab]}
 				<small>{block ? signed(block.mod) : ''}</small>
@@ -73,16 +96,29 @@
 {#if b.abilities.boostCarrier === 'background' && b.abilities.backgroundBoostChoices.length}
 	<div class="boost">
 		<span class="eyebrow"
-			>{$_('build.abilities.backgroundBoost', { values: { background: rowName(b.backgroundRow) } })}</span
+			>{$_('build.abilities.backgroundBoost', {
+				values: { background: rowName(b.backgroundRow) },
+			})}</span
 		>
 		<div class="segment-group small" role="group" aria-label={$_('build.abilities.boostShape')}>
-			<button class:on={b.draft.boostShape === '2-1'} onclick={() => (b.draft.boostShape = '2-1')}>{$_('build.abilities.shape21')}</button>
-			<button class:on={b.draft.boostShape === '1-1-1'} onclick={() => (b.draft.boostShape = '1-1-1')}>{$_('build.abilities.shape111')}</button>
+			<button class:on={b.draft.boostShape === '2-1'} onclick={() => (b.draft.boostShape = '2-1')}
+				>{$_('build.abilities.shape21')}</button
+			>
+			<button
+				class:on={b.draft.boostShape === '1-1-1'}
+				onclick={() => (b.draft.boostShape = '1-1-1')}>{$_('build.abilities.shape111')}</button
+			>
 		</div>
 		<div class="chips">
 			{#each b.abilities.backgroundBoostChoices as ab (ab)}
-				<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.abilities.toggleBoostPick(ab)}>
-					{abilityShortLabel(ab, $_)}{#if b.abilities.backgroundBoosts[ab]}<span class="gold">&nbsp;+{b.abilities.backgroundBoosts[ab]}</span>{/if}
+				<button
+					class="pick-chip"
+					class:on={b.draft.boostPicks.includes(ab)}
+					onclick={() => b.abilities.toggleBoostPick(ab)}
+				>
+					{abilityShortLabel(ab, $_)}{#if b.abilities.backgroundBoosts[ab]}<span class="gold"
+							>&nbsp;+{b.abilities.backgroundBoosts[ab]}</span
+						>{/if}
 				</button>
 			{/each}
 		</div>
@@ -95,14 +131,20 @@
 					values: {
 						species: rowName(b.speciesOptionRow) || rowName(b.speciesRow),
 						count: b.abilities.speciesBoostChoice.count,
-						amount: b.abilities.speciesBoostChoice.amount
-					}
+						amount: b.abilities.speciesBoostChoice.amount,
+					},
 				})}
-				<span class="gold">{b.draft.speciesBoostPicks.length}/{b.abilities.speciesBoostChoice.count}</span>
+				<span class="gold"
+					>{b.draft.speciesBoostPicks.length}/{b.abilities.speciesBoostChoice.count}</span
+				>
 			</span>
 			<div class="chips">
 				{#each b.abilities.speciesBoostAbilities as ab (ab)}
-					<button class="pick-chip" class:on={b.draft.speciesBoostPicks.includes(ab)} onclick={() => b.abilities.toggleSpeciesBoostPick(ab)}>
+					<button
+						class="pick-chip"
+						class:on={b.draft.speciesBoostPicks.includes(ab)}
+						onclick={() => b.abilities.toggleSpeciesBoostPick(ab)}
+					>
 						{abilityShortLabel(ab, $_)}
 					</button>
 				{/each}
@@ -135,6 +177,20 @@
 	.rows {
 		display: flex;
 		flex-direction: column;
+	}
+	.score-select {
+		padding: var(--space-1-5) var(--space-2);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-md);
+		cursor: pointer;
+	}
+	.arow :global(.stepper) {
+		border-color: var(--color-border-strong);
+	}
+	.arow :global(.stepper button:focus-visible) {
+		outline: var(--focus-ring);
+		outline-offset: calc(-1 * var(--focus-offset));
 	}
 	.arow {
 		display: grid;

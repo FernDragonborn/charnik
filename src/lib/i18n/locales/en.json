@@ -935,6 +935,7 @@
 		},
 		"moveRow": "Move {name} — drag, or use the arrow keys",
 		"notice": {
+			"poolCannotCast": "This resource cannot pay for this spell.",
 			"notAvailable": "{name} — not available right now",
 			"notEnoughResource": "Not enough {resource} for {name}",
 			"noSpellSlot": "No spell slot left for {name}",
@@ -1128,6 +1129,8 @@
 			"alwaysPrepared": "always prepared",
 			"utility": "utility",
 			"armorBlockNote": "Not proficient with {category} armour — spellcasting blocked",
+			"stateBlocked": "Spellcasting blocked — {source}",
+			"stateBlockNote": "An active effect forbids casting spells. You can still read your spells. End the effect to cast again.",
 			"formBlocked": "Casting blocked — you are in {form} form",
 			"formBlockNote": "You can't cast spells in this form. A spell you have already cast keeps going, and so does your concentration on it.",
 			"attackBonus": "attack",
@@ -1157,6 +1160,7 @@
 			"togglePrepared": "tap to prepare / unprepare"
 		},
 		"tag": {
+			"blocksSpellcasting": "blocks spellcasting",
 			"abilityChecks": "ability checks",
 			"ac": "AC",
 			"action": "Action",
@@ -1542,6 +1546,7 @@
 		"title": "Drafts"
 	},
 	"effectIssue": {
+		"featSpellOwnershipMissing": "Select the spells for {source} in the builder. This save does not record which spells belong to this feat; your existing spells and preparation are unchanged.",
 		"armorBlocksCasting": "Not proficient with {category} armour — spellcasting blocked.",
 		"dependencyCycle": "This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.",
 		"attackOnly": "This effect states a number about one attack, so it only works on a weapon property. Here there is no attack to state it for, and it is left out of the sheet.",

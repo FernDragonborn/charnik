@@ -14,6 +14,8 @@ import { evalUpcast } from '$lib/effects/upcast';
 import { canCastAsRitual, spellEntries } from '$lib/character/spellcasting';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import type { ResourceDef } from '$lib/effects/facts';
+import type { SaidText } from '$lib/util/say';
 import { UNARMED_STRIKE_ID, type ActionSlot, type Attack } from '$lib/combat/helpers';
 import { durationToRounds } from '$lib/combat/effects-view';
 import { sheetAttacks } from '$lib/combat/form-attacks';
@@ -106,6 +108,19 @@ const refusal = (character: Character, ...notices: PlayNotice[]): PlayOutcome =>
 	notices,
 });
 
+export function spellcastingBlock(sheet: CharacterSheet): SaidText | null {
+	const state = sheet.facts.spellcastingBlocks[0];
+	if (state) return { key: 'combat.spells.stateBlocked', values: { source: state.source } };
+	const armor = sheet.spellcasting.armorBlock;
+	if (armor) return { key: 'combat.spells.castingBlocked', values: { armor: armor.source } };
+	const form = sheet.spellcasting.formBlock;
+	return form ? { key: 'combat.spells.formBlocked', values: { form: form.source } } : null;
+}
+
+export const poolAllowsSpell = (pool: ResourceDef, spell: { ref: string; id: string }): boolean =>
+	pool.spell?.split(',').some((selector) => selector === spell.ref || selector === spell.id) ??
+	false;
+
 /** A spell as a cast reads it: its row, what its upcast is read against, and its name. */
 interface CastSpell {
 	subject: UpcastSubject;
@@ -160,7 +175,8 @@ function payForCast(
 	const none = (paid: PlayOutcome) => ({ paid, slot: null });
 	const pool = poolId ? sheet.resources.find((r) => r.id === poolId) : undefined;
 	// a pool this character does not have must not cast for free
-	if (poolId && !pool) return none(refusal(character));
+	if (poolId && (!pool || !poolAllowsSpell(pool, { ref: spell.subject.ref, id: spell.data.id })))
+		return none(refusal(character, { text: { key: 'combat.notice.poolCannotCast' } }));
 	if (pool && resourceSpent(character, sheet, pool.id) >= pool.max)
 		return none(useResource(character, pool, ctx));
 	const { pools } = sheet.spellcasting;
@@ -265,6 +281,20 @@ function leaveSpellEffect(
 export function castSpell(character: Character, intent: CastIntent, ctx: PlayContext): PlayOutcome {
 	const row = ctx.graph.get(intent.spell);
 	if (row?.type !== 'spell') return refusal(character);
+	const sheet = ctx.derive(character);
+	const blocked = spellcastingBlock(sheet);
+	if (blocked) return refusal(character, { text: blocked });
+	if (intent.pool) {
+		const pool = sheet.resources.find((entry) => entry.id === intent.pool);
+		if (
+			!pool ||
+			!poolAllowsSpell(pool, { ref: row.effectiveId, id: row.id }) ||
+			row.data.level === 0
+		)
+			return refusal(character, { text: { key: 'combat.notice.poolCannotCast' } });
+		if (resourceSpent(character, sheet, pool.id) >= pool.max)
+			return useResource(character, pool, ctx);
+	}
 	const spell: CastSpell = {
 		subject: { ref: intent.spell, level: row.data.level, upcast: row.data.upcast ?? '' },
 		data: row.data,

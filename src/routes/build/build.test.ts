@@ -11,7 +11,13 @@ import { getUserStorage } from '$lib/storage/provider';
 import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
 import { loadCharacter, readCharacterPhoto } from '$lib/character/repository';
 import { type ContentGraph } from '$lib/content/loader';
-import { characterSchema, newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
+import {
+	characterSchema,
+	newCharacter,
+	type Character,
+	classRow,
+	inventoryRow,
+} from '$lib/character/schema';
 import { migrate, CHARACTER_SCHEMA_VERSION } from '$lib/schema/version';
 import { CHARACTER_MIGRATIONS } from '$lib/character/migrations';
 import { build, ASI } from './build-view-model.svelte';
@@ -27,11 +33,11 @@ async function graphOf(): Promise<ContentGraph> {
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,asi_levels',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,"4,8,12,16,19"`,
 			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,"4,6,8,12,14,16,19"`,
-			`rogue,5.5e,${S},Rogue,d8,"dex,int",none,,"4,8,10,12,16,19"`
+			`rogue,5.5e,${S},Rogue,d8,"dex,int",none,,"4,8,10,12,16,19"`,
 		].join('\n'),
 		'class_features_srd.csv': [
 			'id,systems,source,name_en,class_id,level,expertise_slots',
-			`expertise,5.5e,${S},Expertise,rogue,1,"2@1,2@6"`
+			`expertise,5.5e,${S},Expertise,rogue,1,"2@1,2@6"`,
 		].join('\n'),
 		'feats_srd.csv': [
 			'id,systems,source,name_en,category,ability_choice,skill_choice,spell_choice,spell_choice_lists,spell_choice_ability,skill_choice_kinds',
@@ -46,25 +52,25 @@ async function graphOf(): Promise<ContentGraph> {
 			// §D: a spell-teaching feat, once as a free choice of list and once pinned by a background
 			`initiate,5.5e,${S},Initiate,origin,,,"0:2,1:1","wizard,rogue","int,wis"`,
 			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
-			`gifted,5.5e,${S},Gifted,origin,"str,dex",,,,`
+			`gifted,5.5e,${S},Gifted,origin,"str,dex",,,,`,
 		].join('\n'),
 		'backgrounds_srd.csv': [
 			'id,systems,source,name_en,skills,origin_feat,origin_feat_spell_list,tools',
 			`scholar,5.5e,${S},Scholar,"arcana,history",skilled,,quill`,
 			`prodigy,5.5e,${S},Prodigy,,gifted,,`,
 			// the SRD's "Magic Initiate (Cleric)" shape: the background names which list
-			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard,`
+			`hedge,5.5e,${S},Hedge Witch,,initiate,wizard,`,
 		].join('\n'),
 		'species_srd.csv': [
 			'id,systems,source,name_en,effects,size,speed,creature_type,skill_choice,feat_choice',
 			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid,,`,
 			// the shape PLAYTEST-SPECIES-GRANTS exists for: a species whose grant is a CHOICE
 			`gifted_kin,5.5e,${S},Gifted Kin,,medium,30,humanoid,1,"alert,tough"`,
-			`open_kin,5.5e,${S},Open Kin,,medium,30,humanoid,,any`
+			`open_kin,5.5e,${S},Open Kin,,medium,30,humanoid,,any`,
 		].join('\n'),
 		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components',
-			`fireball,5.5e,${S},Fireball,3,evocation,action,150 ft,instant,V S M`
+			`fireball,5.5e,${S},Fireball,3,evocation,action,150 ft,instant,V S M`,
 		].join('\n'),
 	});
 }
@@ -91,7 +97,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 	it('previewing an option leaves the draft exactly as it was', () => {
 		build.draft.name = 'Valen';
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 3 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 3 },
+		];
 		const before = JSON.stringify(build.draft);
 
 		// the inspector's diff runs the REAL pipeline on a draft of its own; nothing outside may see it
@@ -150,7 +158,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('preserves item attunement through the hydrate → assemble round-trip (D15)', () => {
 		const saved = savedCharacter();
 		saved.build.inventory = [
-			inventoryRow({ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true })
+			inventoryRow({ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true }),
 		];
 		build.hydrate(characterSchema.parse(saved));
 		const out = build.assembled;
@@ -162,14 +170,20 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		// magic item IS), then every prepared flag were each lost by a mapper that copies field by field
 		const saved = savedCharacter();
 		saved.build.inventory = [
-			inventoryRow({ item: `item:${S}:flame_tongue`, qty: 1, equipped: true, attuned: true, base: `item:${S}:longsword` }),
+			inventoryRow({
+				item: `item:${S}:flame_tongue`,
+				qty: 1,
+				equipped: true,
+				attuned: true,
+				base: `item:${S}:longsword`,
+			}),
 			// what the player answered for THIS instance: which +N it is, which damage type it resists
 			inventoryRow({ item: `item:${S}:weapon_1_2_or_3`, base: `item:${S}:dagger`, bonus: 2 }),
-			inventoryRow({ item: `item:${S}:ring_of_resistance`, attuned: true, choice: 'fire' })
+			inventoryRow({ item: `item:${S}:ring_of_resistance`, attuned: true, choice: 'fire' }),
 		];
 		saved.build.spells = [
 			{ spell: `spell:${S}:fireball`, prepared: false, alwaysPrepared: false }, // put away by the player
-			{ spell: `spell:${S}:light`, prepared: true, alwaysPrepared: true } // granted by the class
+			{ spell: `spell:${S}:light`, prepared: true, alwaysPrepared: true }, // granted by the class
 		];
 		const parsed = characterSchema.parse(saved);
 		build.hydrate(parsed);
@@ -180,13 +194,17 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 14 },
+		];
 		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
 	});
 
 	it('level-up restores filled ASI slots and applies each boost ONCE, not twice (UBUG-13)', () => {
 		build.draft.name = 'Asi';
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 },
+		];
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
 		const slot = build.feats.featSlots[0]; // the level-4 ASI slot
 		expect(slot).toBeDefined();
@@ -207,7 +225,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('an ASI stops at 20: +2 on a 19 is over the cap, +1 on it is not', () => {
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 },
+		];
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 19, wis: 10, cha: 12 };
 		const key = build.feats.featSlots[0]?.key ?? '';
 		build.feats.setSlotFeat(key, ASI);
@@ -221,7 +241,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('a full ability picker replaces its oldest pick rather than ignoring the click', () => {
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 },
+		];
 		const key = build.feats.featSlots[0]?.key ?? '';
 		build.feats.setSlotFeat(key, ASI);
 
@@ -328,7 +350,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.draft.name = 'Asi';
 		// level 6 is a Fighter-only ASI level: the fallback the builder uses with no graph does not
 		// know about it, which is what made the timing matter
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 6 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 6 },
+		];
 		const key = build.feats.featSlots.find((s) => s.level === 6)?.key ?? '';
 		expect(key).toBeTruthy();
 		build.feats.setSlotFeat(key, ASI);
@@ -364,7 +388,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 	it('a level-up does not inherit the previous build class stash (B3)', () => {
 		build.classRows.setClass(0, `class:${S}:fighter`);
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 7 },
+		];
 		build.draft.skills = ['athletics'];
 		build.classRows.setClass(0, `class:${S}:wizard`); // stashes the Fighter at level 7, with its skills
 
@@ -499,9 +525,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a level set before the class does NOT lock that class out at 20', () => {
 		// `totalLevel`'s `|| 1` is a display floor; when it entered the arithmetic, taking the first
 		// class was computed as level + 1 — so a blank row walked to 20 could never be filled
-		build.draft.classes = [
-			{ ...newClassRow(), classId: null, subclassId: null, level: 20 },
-		];
+		build.draft.classes = [{ ...newClassRow(), classId: null, subclassId: null, level: 20 }];
 		build.classRows.setClass(0, `class:${S}:fighter`);
 		expect(build.draft.classes[0]?.classId).toBe(`class:${S}:fighter`);
 		expect(build.classRows.totalLevel).toBe(20);
@@ -525,7 +549,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('expertise stays reachable when the class grants none, and never dead-ends at the cap (B15, B16)', () => {
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 3 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 3 },
+		];
 		build.draft.skills = ['athletics', 'perception', 'survival'];
 		expect(build.skillPicks.expertiseCap).toBe(0); // this Fighter grants no expertise slots
 
@@ -544,7 +570,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.expertise).toEqual([]);
 
 		// at a real cap the click replaces the oldest pick instead of being ignored (ui.md §10)
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 },
+		];
 		expect(build.skillPicks.expertiseCap).toBe(2);
 		build.skillPicks.toggleExpertise('athletics');
 		build.skillPicks.toggleExpertise('perception');
@@ -582,7 +610,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	});
 
 	it('§D: a granted spell feat pins its list, keeps its ability, and survives the round-trip', () => {
-		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 1 }];
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 1 },
+		];
 		build.draft.backgroundId = `background:${S}:hedge`;
 		// the background pins the list, so the pane offers ONE and the question left is the ability
 		expect(build.feats.featSpellListsFor(ORIGIN_SLOT_KEY).map((r) => r.id)).toEqual(['wizard']);
@@ -591,12 +621,22 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 		// answering the ability settles the pinned list with it — no tap on a lone chip
 		build.feats.setFeatSpellAbility(ORIGIN_SLOT_KEY, 'wis');
-		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({ list: 'wizard', ability: 'wis' });
+		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({
+			list: 'wizard',
+			ability: 'wis',
+			spells: [],
+		});
 		expect(build.feats.originChoicesOwed).toBe(0);
 
 		const saved = characterSchema.parse(build.assembled);
 		expect(saved.build.featSpells).toEqual([
-			{ feat: `feat:${S}:initiate`, key: ORIGIN_SLOT_KEY, list: 'wizard', ability: 'wis' },
+			{
+				feat: `feat:${S}:initiate`,
+				key: ORIGIN_SLOT_KEY,
+				list: 'wizard',
+				ability: 'wis',
+				spells: [],
+			},
 		]);
 		// the feat is a caster profile, and a Fighter who has one casts
 		const profile = build.sheet?.spellcasting.classes[0];
@@ -608,7 +648,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.hydrate(saved);
-		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({ list: 'wizard', ability: 'wis' });
+		expect(build.feats.featSpellChoiceFor(ORIGIN_SLOT_KEY)).toEqual({
+			list: 'wizard',
+			ability: 'wis',
+			spells: [],
+		});
 		expect(build.sheet?.spellcasting.classes[0]?.ability).toBe('wis');
 	});
 
@@ -740,7 +784,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, skill, 3);
 		expect(build.feats.originChoicesOwed).toBe(0);
 		expect(build.assembled.build.featSkills).toEqual(
-			expect.arrayContaining(['stealth', 'athletics', 'survival'])
+			expect.arrayContaining(['stealth', 'athletics', 'survival']),
 		);
 		expect(build.todos.map((t) => t.kind)).not.toContain('originFeat');
 	});
@@ -889,7 +933,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 		// re-open (the level-up path) and move the pick: the ability it LEFT keeps nothing. The residue
 		// is measured against the picks the SAVE held, so there is nothing for the old one to survive on.
-		for (const [from, to] of [['str', 'dex'], ['dex', 'con'], ['con', 'int']] as const) {
+		for (const [from, to] of [
+			['str', 'dex'],
+			['dex', 'con'],
+			['con', 'int'],
+		] as const) {
 			build.reset();
 			build.graph = graph;
 			build.hydrate(saved);
@@ -908,7 +956,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.feats).toContain(`feat:${S}:alert`);
 	});
 
-	it("a half-feat swap keeps a +1 the new feat still offers and re-points one it does not", () => {
+	it('a half-feat swap keeps a +1 the new feat still offers and re-points one it does not', () => {
 		build.draft.classes = [
 			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 4 },
 		];
@@ -1058,7 +1106,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		const wizard = `class:${S}:wizard`;
 		const fighter = `class:${S}:fighter`;
 		expect(build.classList.map((r) => r.effectiveId)).toEqual(
-			expect.arrayContaining([wizard, fighter])
+			expect.arrayContaining([wizard, fighter]),
 		);
 		try {
 			toggleSource(S); // user disables the whole SRD source AFTER building

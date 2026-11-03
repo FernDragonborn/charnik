@@ -19,6 +19,7 @@ import {
 	ctxOf,
 	EFFECT_KIND,
 	MAX_RESOURCE_MAX,
+	RESOURCE_SPELL_CHOICE,
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
@@ -26,8 +27,7 @@ import {
 	isPlayEvent,
 } from './token-parser';
 import { resolveActionFormula } from './action-token';
-import { rechargeRank } from '../rules/recharge';
-import { matchesTarget, emptyFacts } from './facts';
+import { matchesTarget, emptyFacts, resourceGrantWins, resourcesForChoices } from './facts';
 import type {
 	EffectFacts,
 	NumericFact,
@@ -226,6 +226,9 @@ class FactsCollector {
 			case EFFECT_KIND.blocksConcentration:
 				this.facts.breaksConcentration = true;
 				break;
+			case EFFECT_KIND.blocksSpellcasting:
+				this.facts.spellcastingBlocks.push({ source: eff.source });
+				break;
 			case EFFECT_KIND.damageReroll:
 				// carry the feature's name so the combat layer can label the offered reroll from data
 				this.facts.damageReroll.push({ source: eff.source });
@@ -369,18 +372,18 @@ class FactsCollector {
 			recharge: p.resource.recharge,
 			name: titleCase(p.resource.id),
 			source: eff.source,
+			...(p.resource.spell ? { spell: p.resource.spell } : {}),
 		};
-		const prev = this.pools.get(def.id);
-		// a scaling feature re-granted at a higher tier: the largest max wins. At an EQUAL max the
-		// FASTER recharge wins — an upgrade feature that only changes how you get the pool back
-		// (Font of Inspiration: Bardic Inspiration returns on a Short Rest too) grants the same count,
-		// so a plain `>` would silently keep the base grant's slower policy.
-		if (
-			!prev ||
-			def.max > prev.max ||
-			(def.max === prev.max && rechargeRank(def.recharge) > rechargeRank(prev.recharge))
-		)
-			this.pools.set(def.id, def);
+		if (def.spell === RESOURCE_SPELL_CHOICE) {
+			for (const resource of resourcesForChoices(def, eff.resourceChoices ?? []))
+				this.storeResource(resource);
+			return;
+		}
+		this.storeResource(def);
+	}
+
+	private storeResource(def: ResourceDef): void {
+		if (resourceGrantWins(def, this.pools.get(def.id))) this.pools.set(def.id, def);
 	}
 }
 

@@ -57,7 +57,9 @@
 		<span class="subtext">{$_(`build.kit.source.${kit.source}`)}</span>
 		<span class="spacer"></span>
 		{#if kit.taken}
-			<button class="pill-btn" onclick={() => b.kit.putBack(kit.source)}>{$_('build.kit.putBack')}</button>
+			<button class="pill-btn" onclick={() => b.kit.putBack(kit.source)}
+				>{$_('build.kit.putBack')}</button
+			>
 		{/if}
 	</div>
 	{#if !kit.taken}<p class="subtext">{$_('build.kit.pressToTake')}</p>{/if}
@@ -84,8 +86,9 @@
 						{#each alternative.parts as part, p (p)}
 							{#if part.kind === KIT_PART.item}
 								<li>
-									{#if part.count > 1}{part.count}&nbsp;×&nbsp;{/if}{b.kit.itemName(part.id)}{#if part.ifProficient}<span class="why"
-											>{$_('build.kit.ifProficient')}</span
+									{#if part.count > 1}{part.count}&nbsp;×&nbsp;{/if}{b.kit.itemName(
+										part.id,
+									)}{#if part.ifProficient}<span class="why">{$_('build.kit.ifProficient')}</span
 										>{/if}
 								</li>
 							{:else if part.kind === KIT_PART.any}
@@ -102,10 +105,18 @@
 													askFor(kit, { line: l, part: p, n }, part, e.currentTarget);
 												}}
 											>
-												{answer ? rowName(b.row(answer)) : $_('build.kit.choose', { values: { count: b.kit.candidates(part.tagSets).length } })}
+												{answer
+													? rowName(b.row(answer))
+													: $_('build.kit.choose', {
+															values: { count: b.kit.candidates(part.tagSets).length },
+														})}
 											</button>
 										{:else}
-											<span class="ask">{$_('build.kit.choose', { values: { count: b.kit.candidates(part.tagSets).length } })}</span>
+											<span class="ask"
+												>{$_('build.kit.choose', {
+													values: { count: b.kit.candidates(part.tagSets).length },
+												})}</span
+											>
 										{/if}
 									</li>
 								{/each}
@@ -212,7 +223,7 @@
 		margin-inline-start: var(--space-1);
 	}
 	.ask {
-		border: 1px dashed var(--color-accent);
+		border: 1px solid var(--color-accent);
 		border-radius: var(--radius-xs);
 		padding: 0 var(--space-1);
 		color: var(--color-accent);

@@ -113,7 +113,10 @@
 		const first = key === shown[0]?.key;
 		const top = first
 			? 0
-			: list.scrollTop + box.getBoundingClientRect().top - list.getBoundingClientRect().top - LIST_PAD_TOP;
+			: list.scrollTop +
+				box.getBoundingClientRect().top -
+				list.getBoundingClientRect().top -
+				LIST_PAD_TOP;
 		list.scrollTo({ top, behavior: 'smooth' });
 	}
 
@@ -149,7 +152,7 @@
 	}
 
 	// reading + the keyboard walk are the same contract in both pickers — see `picker-reading`.
-	// The id scopes this picker's DOM ids: the spell pane renders one per caster class.
+	// The id scopes this picker's DOM ids when several inspectors share a page.
 	const pickerId = $props.id();
 	const picker = new PickerReading(
 		() => ({
@@ -178,14 +181,15 @@
 <div class="jump" use:wheelSideways>
 	{#each shown as section (section.key)}
 		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
-		<button class="jumpbtn" class:here={section.key === hereKey} onclick={() => jumpTo(section.key)}>
+		<button
+			class="jumpbtn"
+			class:here={section.key === hereKey}
+			onclick={() => jumpTo(section.key)}
+		>
 			{section.label}{#if got}<span class="gold">&nbsp;{got}</span>{/if}
 		</button>
 	{/each}
-	<button
-		class="jumpbtn all"
-		onclick={() => (openKeys = allOpen ? [] : shown.map((s) => s.key))}
-	>
+	<button class="jumpbtn all" onclick={() => (openKeys = allOpen ? [] : shown.map((s) => s.key))}>
 		{$_(allOpen ? 'build.picker.collapseAll' : 'build.picker.expandAll')}
 	</button>
 </div>
@@ -210,11 +214,18 @@
 		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
 		<div class="sect-row" role="row" aria-expanded={open}>
 			<div class="sect-cell" role="gridcell">
-				<button class="sect" class:shut={!open} data-section={section.key} onclick={() => toggleSection(section.key)}>
+				<button
+					class="sect"
+					class:shut={!open}
+					data-section={section.key}
+					onclick={() => toggleSection(section.key)}
+				>
 					<Icon name={open ? 'chevron-down' : 'chevron-right'} size={12} />
 					<span class="sname">{section.label}</span>
 					<span class="sof">
-						{#if got}<span class="gold">{$_('build.picker.sectionTaken', { values: { count: got } })}</span> ·
+						{#if got}<span class="gold"
+								>{$_('build.picker.sectionTaken', { values: { count: got } })}</span
+							> ·
 						{/if}{section.rows.length}
 					</span>
 				</button>

@@ -84,13 +84,14 @@
 	border-color: var(--color-accent);
 	background: var(--color-accent-soft);
 }
-/* an EMPTY required slot — crimson, because it is what is standing between here and a character */
+/* An empty slot offers room for a choice; the todo list owns required-choice warnings. */
 .build-page .slot.empty {
-	border: 1px dashed var(--color-accent);
-	color: var(--color-accent-bright);
+	border: 1px dashed var(--color-border-strong);
+	color: var(--color-text-muted);
 }
 .build-page .slot.empty:hover {
-	background: var(--color-accent-soft);
+	background: var(--color-surface-2);
+	color: var(--color-text);
 }
 
 /* a big readout tile (AC / Max HP / Initiative / …) */
@@ -144,16 +145,6 @@
 	background: var(--color-accent-soft);
 	color: var(--color-accent-bright);
 }
-.build-page .tag.ghost {
-	border-style: dashed;
-	background: transparent;
-	color: var(--color-text-muted);
-}
-.build-page .tag.ghost.wanted {
-	border-color: var(--color-accent);
-	color: var(--color-accent-bright);
-}
-
 /* pips — a countable resource. Available on the left, spent on the right (ui.md §7). */
 .build-page .pips {
 	display: flex;

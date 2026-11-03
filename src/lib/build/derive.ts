@@ -25,7 +25,6 @@ export function halfFeatAbilities(spec: string | undefined): Ability[] {
 	return ABILITIES.filter((a) => wanted.has(a));
 }
 
-
 /** N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's
  *  active features' `expertise_slots` (a `count@level` ladder resolved against that class's level, for
  *  the matching system and either a base feature or one under the chosen subclass). Mirrors the
@@ -33,7 +32,7 @@ export function halfFeatAbilities(spec: string | undefined): Ability[] {
 export function expertiseBudget(
 	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
-	system: string
+	system: string,
 ): number {
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
@@ -49,7 +48,7 @@ export function expertiseBudget(
 export function masteryBudget(
 	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
-	system: string
+	system: string,
 ): number {
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
@@ -89,7 +88,7 @@ export function speciesFixedAbilities(rows: (LoadedRow | undefined)[]): Set<Abil
 
 /** One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map. */
 export function asiBoost(
-	alloc: { shape: '2' | '1-1'; picks: Ability[] } | undefined
+	alloc: { shape: '2' | '1-1'; picks: Ability[] } | undefined,
 ): Partial<Record<Ability, number>> {
 	if (!alloc) return {};
 	const out: Partial<Record<Ability, number>> = {};
@@ -117,7 +116,7 @@ export function buildSpellPicker({
 	sheet,
 	graph,
 	strict,
-	selectedSpells
+	selectedSpells,
 }: SpellPickerInput) {
 	const levelOf = (s: LoadedRow) => (s.type === 'spell' ? Number(s.data.level ?? 0) : 0);
 	const chosenLevel = (id: string) => {
@@ -146,10 +145,18 @@ export function buildSpellPicker({
 		// play sheet uses for prepared tallies — so a dual-list spell counts against ONE class's cap
 		// (identically at build + play time), not against every class whose list happens to include it.
 		// a spell a feature grants is had, never chosen, and charged to no cap
-		const chosenForThisClass = selectedSpells.filter(
-			(id) =>
-				!profile.grantedSpells.includes(id) && casterForSpell(sheet, id)?.classId === profile.classId
-		);
+		const classSheet = {
+			spellcasting: {
+				classes: sheet.spellcasting.classes.filter((entry) => entry.chosenSpells === undefined),
+			},
+		};
+		const chosenForThisClass =
+			profile.chosenSpells ??
+			selectedSpells.filter(
+				(id) =>
+					!profile.grantedSpells.includes(id) &&
+					casterForSpell(classSheet, id)?.classId === profile.classId,
+			);
 		const cantripsChosen = chosenForThisClass.filter((id) => chosenLevel(id) === 0).length;
 		const leveledChosen = chosenForThisClass.filter((id) => chosenLevel(id) > 0).length;
 		return { profile, groups, cantripsChosen, leveledChosen };
@@ -179,7 +186,7 @@ export function openSubclassChoices(
 	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
 	nameOf: (row: LoadedRow) => string,
-	hasOptions: (classId: string) => boolean
+	hasOptions: (classId: string) => boolean,
 ): { index: number; className: string; level: number }[] {
 	return classes.flatMap((entry, index) => {
 		if (!entry.classId || entry.subclassId) return [];
@@ -227,17 +234,17 @@ export function classFeatureLines({
 	graph,
 	system,
 	nameOf,
-	lookaheadLevels = 3
+	lookaheadLevels = 3,
 }: ClassFeatureInput): ClassFeatureLine[] {
-	const out = [...activeClassFeatures(classes, graph, system, { extraLevels: lookaheadLevels })].map(
-		(f) => ({
-			level: f.level,
-			className: nameOf(f.classRow),
-			row: f.row,
-			gained: f.gained,
-			fromSubclass: f.fromSubclass
-		})
-	);
+	const out = [
+		...activeClassFeatures(classes, graph, system, { extraLevels: lookaheadLevels }),
+	].map((f) => ({
+		level: f.level,
+		className: nameOf(f.classRow),
+		row: f.row,
+		gained: f.gained,
+		fromSubclass: f.fromSubclass,
+	}));
 	return out.sort((a, b) => a.level - b.level || a.className.localeCompare(b.className));
 }
 
@@ -361,7 +368,13 @@ interface OpenFeatSlot {
 
 /** What an open feat slot says — whose grant it is, when it is not a level's. */
 const featTodo = (slot: OpenFeatSlot) => ({
-	key: slot.species ? 'speciesFeat' : slot.feature ? 'featureFeat' : slot.className ? 'featIn' : 'feat',
+	key: slot.species
+		? 'speciesFeat'
+		: slot.feature
+			? 'featureFeat'
+			: slot.className
+				? 'featIn'
+				: 'feat',
 	values: {
 		level: slot.level,
 		class: slot.className,

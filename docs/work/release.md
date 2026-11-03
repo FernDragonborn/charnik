@@ -195,23 +195,29 @@
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- **DEP-2 · `braces <=3.0.3` high advisory** (GHSA-vfj7-8cjw-p6xm, stack exhaustion on a crafted
-  pattern) — transitive under `stylelint` only (`fast-glob` / `globby` → `micromatch`), so it runs
-  at lint time over patterns this repo wrote and ships in no build. The advisory names `3.0.4` as
-  patched and the registry's latest is `3.0.3`, so there is nothing to pin: when `3.0.4` is
-  published `pnpm update braces` moves it, `micromatch`'s range already admits it.
-- **DEP-3 · `zip 4.6.1`, three advisories** (RUSTSEC-2026-0367/0368/0369: SUID bits, symlink targets
-  and permissions applied through symlinks on extraction) — transitive via `tauri-plugin-updater`
-  2.14, the latest 2.x; the fix is `zip 9`, which only the updater's 3.0 alpha takes. Unreachable
-  here: the updater extracts a zip on Windows only, where none of the three applies, and only after
-  `verify` has checked the bytes against the minisign key built into the app, so the archive is
-  never someone else's. Moves with the updater's next release.
-- **AUDIT-DRIFT · `pnpm audit` reports DEP-2 and nothing else, and it drifts silently — re-run it before every tag.** Three
-  rules the re-audits keep proving:
+- **DEP-3 · `zip 4.6.1`, four advisories** (RUSTSEC-2026-0367/0368/0369/0429) — transitive via
+  `tauri-plugin-updater` 2.14; the fix is `zip 9`, outside that updater's dependency range. The first
+  three concern Unix permission bits and symlink extraction; the fourth can abort extraction on an
+  oversized symlink entry. The updater's ZIP extraction is Windows-only and follows minisign
+  verification, so an untrusted archive cannot reach it. Moves with the updater's dependency bump.
+- **DEP-4 · SvelteKit 2 has two low advisories** (GHSA-pfhg-q3qv-9q6r and
+  GHSA-27mw-82g8-phjj), fixed in 3.0.0. They concern enhanced form redirects and an untrusted
+  cache-control header at prerender time. Charnik uses neither enhanced forms nor an untrusted
+  prerender response; the shipped app is static. Move with the SvelteKit 3 migration, not a hotfix.
+- **DEP-5 · `deepmerge 4.3.1` prototype poisoning** (GHSA-gcqx-w48m-w2h4, low) — via
+  `svelte-i18n` and the Svelte Vite plugin. The advisory's patched 4.3.2 is not published to the
+  registry. Runtime UI catalogs are bundled, not user-loaded; adding external catalogs must account
+  for this boundary. Update within the parents' existing ranges when the patch is published.
+- **DEP-6 · `minimatch 10.2.6` glob amplification** (GHSA-g3hv-75wg-m249, moderate) — build/lint
+  tooling only. The patch is 11.0.1; ESLint and TypeScript ESLint still require 10.x, including their
+  available updates. The patterns are repository-owned and no minimatch ships in the app. Move with
+  the upstream toolchain rather than forcing a major across its dependency ranges.
+- **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4, DEP-5 and
+  DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
   - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
-    `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). It reports DEP-3
-    and nothing else; its warnings (unmaintained `zbus`/`zvariant`, `proc-macro-error`, unsound
-    `glib`) are Linux-only crates Tauri pins, DEP-1's kind. A patch release that fixes an advisory is
+    `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). Its warnings
+    (unmaintained `zbus_names`/`zvariant`, `proc-macro-error`, unsound `glib`) are Linux-only crates
+    Tauri pins, DEP-1's kind. A patch release that fixes an advisory is
     `cargo update -p <name>`.
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
     family).

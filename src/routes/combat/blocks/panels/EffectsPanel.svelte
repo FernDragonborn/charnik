@@ -402,11 +402,10 @@
 		border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
 		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	}
-	/* display-only rules note (not engine-computed) — dashed + muted so it reads as reference, and
+	/* display-only rules note (not engine-computed) — muted so it reads as reference, and
 	   allowed to wrap since it carries a sentence, not a short tag */
 	.effect-tag--note {
 		color: var(--color-text-muted);
-		border-style: dashed;
 		border-color: var(--color-border-strong);
 		background: transparent;
 		font-family: var(--font-body);

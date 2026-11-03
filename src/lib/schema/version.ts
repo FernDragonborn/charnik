@@ -212,7 +212,7 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v78: every class and background carries its starting equipment, SRD 5.1 has its seven equipment
 // packs, and the foci, holy symbols, instruments and artisan's tools carry the word their table
 // groups them under. An install left at v77 offers no starting equipment.
-export const CONTENT_SEED_VERSION = 78;
+export const CONTENT_SEED_VERSION = 79;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

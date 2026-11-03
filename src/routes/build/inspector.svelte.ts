@@ -116,7 +116,10 @@ export class Inspector {
 		const id = this.previewId;
 		if (!spec || id === null || id === spec.currentId) return null;
 		const b = this.host();
-		return diffSheets(b.sheet, b.previewSheet((trial) => spec.apply(trial, id)));
+		return diffSheets(
+			b.sheet,
+			b.previewSheet((trial) => spec.apply(trial, id)),
+		);
 	});
 
 	// --- committing --------------------------------------------------------------------------------
@@ -131,7 +134,11 @@ export class Inspector {
 	take = (id: string) => {
 		const spec = this.pick;
 		// a blocked option is readable but not takeable — the double-click shortcut reaches it too
-		if (!spec || id === spec.currentId || spec.blockedKey?.(id)) return;
+		if (!spec || spec.blockedKey?.(id)) return;
+		if (id === spec.currentId) {
+			this.clear();
+			return;
+		}
 		const host = this.host();
 		const before = host.sheet; // deriveSheet returns a fresh object, so this stays valid after apply
 		spec.apply(host, id);

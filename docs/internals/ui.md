@@ -423,6 +423,12 @@ good", so they are pinned here and every component follows them.
     besides the `<Toaster>` in `+layout.svelte` — the linter refuses the import anywhere else. A
     lone notice keeps the toaster's own card; a roll's card and the log stay the place a past roll
     is read again.
+21. **A dashed border means optional capacity: something can go here.** It is neutral, not a
+    required-choice warning. Empty builder slots, an optional portrait or custom class, and the
+    roller's additive controls use the strong muted border token. Required choices are named in the
+    builder's todo list; a conditional equipment answer uses a solid accent border. Draft status,
+    explanatory tags, inherited damage types, reference-only rules notes and spent spell pips use
+    solid borders: none offers room for an optional addition.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
@@ -431,7 +437,8 @@ The Combat view is the reference implementation. Reuse the existing primitives (
 
 Two panes, full-bleed, each scrolling on its own. **Left: the whole character sheet, always live** —
 every block renders what the draft currently derives, every changeable thing on it opens the inspector
-on that choice, and an unfilled thing renders as an empty slot in crimson saying what it will give.
+on that choice, and an unfilled thing renders as a neutral, grey-dashed slot saying what can go there.
+The todo list, not the slot's border, says which choices are required.
 **Right: the inspector** (`clamp(520px, 40vw, 880px)`), one choice at a time.
 
 **Nothing is picked blind, and that is the whole point of the page.** An option shows the reused
@@ -443,7 +450,11 @@ the sheet**, computed by applying the candidate to a trial draft and diffing the
 
 **Taking has no confirm step, and it is not the same click as reading.** The toggle on a row takes and
 untakes; the row body opens the article, which repeats the take where the eyes already are. A one-of
-pick replaces rather than toggles, and `Clear` in the pane footer is its way out.
+pick replaces another option; taking its current option again clears it. The article's action reads
+`Clear` once taken, and the pane footer offers the same way out. This includes the first class:
+clearing its choice keeps an empty class row. In Strict level-up a settled choice stays `Taken`,
+focusable and `aria-disabled`, with the existing Strict explanation on hover or focus. Free removes
+that lock, as it does for the other builder controls.
 
 **The whole draft has undo** — Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y plus a pair of header buttons, because a
 shortcut is not a way in for someone who never learns it. A step is a snapshot of `DraftState`
@@ -587,14 +598,33 @@ Two traps that only a driven browser catches:
   live `getBoundingClientRect()` deltas, and snap the first section to a true `0` — the list's
   padding plus the header's margin otherwise leave a few px you can still scroll up past.
 
-Caps are per class, not per level: `cantripCap` + `preparedCap` (`src/lib/build/derive.ts`). A
-per-level "2/3" counter is invented game data and must never be rendered.
+**Spells use one picker across every caster profile.** Profile counter buttons choose the destination
+above one shared search, school/concentration/ritual filters, level rail and list. Switching profiles
+changes that list's accessible pool and taken state without creating another scroll region; the
+search stays shared. Every profile keeps its own cantrip and prepared/known counters. Feat profiles
+also name their chosen class list and casting ability so repeatable instances remain distinguishable.
+Class spell attribution follows the core; a feat's choices are stored under its own instance key in
+`slotFeatSpells.spells` and `build.featSpells.spells`, independently of class picks in `build.spells`.
+Untaking one profile's spell does not untake another profile's copy. A changed feat list clears that
+instance's spell choices; changing only the casting ability preserves them.
+
+A legacy feat answer with no owned spell refs stays unspecified on hydrate and save: no inference
+from the flat spell list, and no implicit empty selection. The spell pane explains that gap using
+the derive's localized ownership warning. Explicitly selecting a spell initializes that profile's
+own list; the legacy flat spell refs and their preparation flags remain untouched.
+
+Caps are per profile, not per spell level: `cantripCap` + `preparedCap`
+(`src/lib/build/derive.ts`). A per-level "2/3" counter is invented game data and must never be rendered.
 
 ## Every interactive element says so
 
 Give every clickable thing a visible affordance: `cursor: pointer`, a hover state, and a visible
 `:focus-visible` ring. Users cannot discover or confidently hit a target that gives no feedback,
 especially a tiny one.
+
+The builder's ability-score tiles carry a visible pencil beside the score before hover; their
+expanded state names the open allocator. Inside it, standard-array values use bordered native
+selects and other methods use the shared plus/minus stepper, including an inset keyboard focus ring.
 
 Make the hover halo contrast with the row-hover background — a same-coloured halo blends away
 invisibly. Enlarge small hit areas with a transparent `::before` inset.

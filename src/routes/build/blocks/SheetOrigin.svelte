@@ -17,7 +17,9 @@
 
 	const bgSkills = $derived(splitList(background?.data.skills).map((s) => skillLabel(s, $_)));
 	const bgTools = $derived(splitList(background?.data.tools).map((t) => titleCase(t)));
-	const bgBoosts = $derived(splitList(background?.data.ability_choices).map((a) => abilityShortLabel(a, $_)));
+	const bgBoosts = $derived(
+		splitList(background?.data.ability_choices).map((a) => abilityShortLabel(a, $_)),
+	);
 
 	const open = (target: InspectorTarget) => b.inspector.toggle(target);
 </script>
@@ -38,9 +40,10 @@
 						values: {
 							size: titleCase(String(species.data.size)),
 							feet: Number(species.data.speed),
-							metres: metres(Number(species.data.speed))
-						}
-					})}{#if species.data.creature_type}{' · ' + titleCase(String(species.data.creature_type))}{/if}
+							metres: metres(Number(species.data.speed)),
+						},
+					})}{#if species.data.creature_type}{' · ' +
+							titleCase(String(species.data.creature_type))}{/if}
 				</span>
 			{:else}
 				<b class="pickname">{$_('build.notChosen')}</b>
@@ -59,7 +62,7 @@
 				<b class="pickname">{lineage ? rowName(lineage) : $_('build.notChosen')}</b>
 				<span class="mini"
 					>{$_(lineage ? 'build.origin.lineageChosen' : 'build.origin.lineageAsk', {
-						values: { species: rowName(species) }
+						values: { species: rowName(species) },
 					})}</span
 				>
 			</button>
@@ -80,7 +83,7 @@
 					{#if Number(background.data.languages) > 0}
 						<span class="tag muted"
 							>{$_('build.origin.backgroundLanguages', {
-								values: { count: Number(background.data.languages) }
+								values: { count: Number(background.data.languages) },
 							})}</span
 						>
 					{/if}
@@ -92,9 +95,9 @@
 					<!-- what a background gives is data, so an unchosen one promises nothing countable: two
 					     skills is the SRD's usual shape, not a rule, and a number here would be inventing
 					     game data on a card that has none yet -->
-					<span class="tag ghost">{$_('build.origin.backgroundSkillsUnknown')}</span>
-					<span class="tag ghost">{$_('build.origin.backgroundTool')}</span>
-					<span class="tag ghost wanted">{$_('build.origin.backgroundBoosts')}</span>
+					<span class="tag muted">{$_('build.origin.backgroundSkillsUnknown')}</span>
+					<span class="tag muted">{$_('build.origin.backgroundTool')}</span>
+					<span class="tag muted">{$_('build.origin.backgroundBoosts')}</span>
 				</span>
 			{/if}
 		</button>

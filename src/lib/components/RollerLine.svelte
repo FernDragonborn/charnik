@@ -591,10 +591,9 @@
 		border-color: var(--color-resource-line);
 		background: color-mix(in srgb, var(--color-resource) 7%, transparent);
 	}
-	/* an inherited type is drawn as the same pill, dashed — so inheritance is visible and editable
+	/* an inherited type is drawn as the same pill, muted — so inheritance is visible and editable
 	   rather than a silent assumption (§7) */
 	.roller-pill.inherited {
-		border-style: dashed;
 		border-color: var(--color-text-muted);
 		opacity: 0.75;
 	}

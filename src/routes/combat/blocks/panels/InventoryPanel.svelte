@@ -169,7 +169,7 @@
 				{#if row.unanswered}
 					<button
 						type="button"
-						class="pill-btn ask-which"
+						class="pill-btn"
 						aria-haspopup="dialog"
 						onclick={(e) => reask(row, e.currentTarget)}>{$_('combat.inventory.askWhich')}</button
 					>
@@ -290,9 +290,6 @@
 		border-color: var(--color-border-strong);
 	}
 
-	.ask-which {
-		border-style: dashed;
-	}
 	.load {
 		display: flex;
 		align-items: baseline;

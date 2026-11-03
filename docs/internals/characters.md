@@ -25,6 +25,13 @@ rather than written over a working character. Restoring is itself a save, so the
 checkpointed on the way out as far as the `save` ring's throttle allows — what makes a wrong restore
 recoverable is the other snapshots, not that one.
 
+**Feat spell ownership is per instance.** `build.spells` holds class selections;
+`build.featSpells[].spells` holds the selected refs for that feat's stable key. The known-spell view
+unions them and keeps feat spells always prepared without charging a class cap. A repeatable feat
+has independent selections and independent free-cast pools. An older save without this field keeps
+its existing flat spell list and preparation flags; ownership is not guessed. A visible derive issue
+asks the player to select the feat's spells before any free-cast pool is offered.
+
 ## One writer per character
 
 Every save of a character takes its turn on **one queue per character** (`repository.ts` ▸
@@ -135,7 +142,7 @@ shipped SRD one, never a hand-authored one.
 happens at the table: name, species and its sub-option, background, classes with their levels, the
 six ability scores, skills, expertise, tools, feats — and the ANSWERS a feat asked back, which are build data
 of their own rather than refs: the ability a half-feat raised, the skills a Skilled-shaped one granted,
-and the spell list plus casting ability a Magic-Initiate-shaped one draws on (`build.featSpells`, one
+and the spell list, casting ability and selected spell refs a Magic-Initiate-shaped one draws on (`build.featSpells`, one
 entry per instance, because it is repeatable and each instance is its own caster profile). The SPECIES
 asks back too, and its answers are their own fields for the same reason: `build.speciesSkills` holds
 what a species-granted skill choice was spent on, kept apart from `skills` so no cap counts another's

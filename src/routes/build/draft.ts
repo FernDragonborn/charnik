@@ -102,11 +102,10 @@ export const ORIGIN_SLOT_KEY = 'origin';
 export const SPECIES_SLOT_KEY = 'species';
 
 /** What a spell-granting feat was answered with, in the slot it sits in (§D, Magic Initiate). */
-export interface FeatSpellChoice {
-	/** Bare class id of the chosen spell list. */
-	list: string;
-	ability: Ability;
-}
+export type FeatSpellChoice = Pick<
+	Character['build']['featSpells'][number],
+	'list' | 'ability' | 'spells'
+>;
 
 /** The per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
 interface SlotMaps {
@@ -249,7 +248,7 @@ export function blankDraft(): DraftState {
 		selectedSpells: [],
 		inventory: [],
 		startingKits: {},
-		notes: ''
+		notes: '',
 	};
 }
 
@@ -275,7 +274,14 @@ export const slotMapSchemas = {
 	),
 	ability: z.record(z.string(), z.enum(ABILITIES)),
 	skills: z.record(z.string(), z.array(z.string())),
-	spells: z.record(z.string(), z.object({ list: z.string(), ability: z.enum(ABILITIES) })),
+	spells: z.record(
+		z.string(),
+		z.object({
+			list: z.string(),
+			ability: z.enum(ABILITIES),
+			spells: z.array(z.string()).optional(),
+		}),
+	),
 } as const;
 
 const draftStateSchema: z.ZodType<DraftState> = z.object({
@@ -348,6 +354,20 @@ export function parseDraftState(value: unknown): DraftState {
  *  directly; abilities become manual with prior boosts/feats carried separately (see hydrate). New
  *  per-level picks (slotFeats/slotAsi/boost*) start blank so a prior session can't leak in. */
 export function draftFromCharacter(char: Character): DraftState {
+	const featSpells = new Map<string, FeatSpellChoice>(
+		char.build.featSpells.map((choice) => [
+			choice.key,
+			{
+				list: choice.list,
+				ability: choice.ability,
+				...(choice.spells ? { spells: [...choice.spells] } : {}),
+			},
+		]),
+	);
+	for (const [key, choice] of Object.entries(char.build.slotPicks.featSpells)) {
+		const spells = choice.spells ?? featSpells.get(key)?.spells;
+		featSpells.set(key, { ...choice, ...(spells ? { spells: [...spells] } : {}) });
+	}
 	const draft: DraftState = {
 		...blankDraft(),
 		name: char.build.name,
@@ -362,7 +382,7 @@ export function draftFromCharacter(char: Character): DraftState {
 					rowId: c.rowId,
 					classId: c.class,
 					subclassId: c.subclass ?? null,
-					level: c.level
+					level: c.level,
 				}))
 			: [newClassRow()],
 		method: 'manual',
@@ -392,13 +412,13 @@ export function draftFromCharacter(char: Character): DraftState {
 		slotAsi: { ...char.build.slotPicks.asi },
 		slotFeatAbility: { ...char.build.slotPicks.featAbility },
 		slotFeatSkills: { ...char.build.slotPicks.featSkills },
-		slotFeatSpells: { ...char.build.slotPicks.featSpells },
+		slotFeatSpells: Object.fromEntries(featSpells),
 		notes: char.build.notes,
 		photo: char.build.photo ?? null,
 		// every row whole — its identity, its attunement, and what the player answered for THIS
 		// instance: without `base` a level-up strips a Flame Tongue of its dice, and without `bonus`
 		// and `choice` a Weapon +2 and a Ring of Resistance come back granting nothing
-		inventory: char.build.inventory.map((i) => ({ ...i }))
+		inventory: char.build.inventory.map((i) => ({ ...i })),
 	};
 	return draft;
 }
@@ -413,9 +433,9 @@ export function draftFromCharacter(char: Character): DraftState {
 export function isDraftWorthKeeping(draft: DraftState): boolean {
 	return Boolean(
 		draft.name.trim() ||
-			draft.speciesId ||
-			draft.backgroundId ||
-			draft.classes.some((c) => c.classId)
+		draft.speciesId ||
+		draft.backgroundId ||
+		draft.classes.some((c) => c.classId),
 	);
 }
 
@@ -432,7 +452,7 @@ export function draftSummary(draft: DraftState): {
 		name: draft.name.trim(),
 		classes: taken.map((c) => `${c.classId?.split(':').pop()} ${c.level}`).join(' / '),
 		level: taken.reduce((n, c) => n + c.level, 0),
-		system: draft.system
+		system: draft.system,
 	};
 }
 
@@ -456,14 +476,14 @@ function refsHeld(draft: DraftState): Partial<Record<ContentType, (string | null
 		feat: Object.values(draft.slotFeats),
 		language: draft.selectedLanguages,
 		item: draft.inventory.map((i) => i.item),
-		spell: draft.selectedSpells
+		spell: draft.selectedSpells,
 	};
 }
 
 /** Flat, for anything that has to look at the whole set of picks rather than one type of them. */
 export function allSelectedRefs(draft: DraftState): { type: ContentType; ref: string }[] {
 	return Object.entries(refsHeld(draft)).flatMap(([type, refs]) =>
-		refs.flatMap((ref) => (ref ? [{ type: type as ContentType, ref }] : []))
+		refs.flatMap((ref) => (ref ? [{ type: type as ContentType, ref }] : [])),
 	);
 }
 

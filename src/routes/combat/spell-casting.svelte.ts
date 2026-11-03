@@ -15,7 +15,13 @@ import { spellEntries } from '$lib/character/spellcasting';
 import { upcastPreview } from './spell-roll-name';
 import type { Character } from '$lib/character/schema';
 import type { ResourceDef } from '$lib/effects/facts';
-import { castSpell, enchantableWeapons, upcastAt } from '$lib/play/cast';
+import {
+	castSpell,
+	enchantableWeapons,
+	upcastAt,
+	poolAllowsSpell,
+	spellcastingBlock,
+} from '$lib/play/cast';
 import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '$lib/play/outcome';
 import {
 	effectsCaption,
@@ -103,25 +109,27 @@ export class SpellCasting {
 	 *  offer these and pass the choice as `cast(r, e, { slot })`). Empty = no choice (cantrip / single
 	 *  option / no open slot). */
 	castableSlots = (r: SpellRow): number[] =>
-		castableSlotLevels(
-			r.level,
-			this.host.sheet?.spellcasting.pools ?? [],
-			this.host.character?.play.spellSlotsSpent ?? {},
-		);
+		this.blockedReason
+			? []
+			: castableSlotLevels(
+					r.level,
+					this.host.sheet?.spellcasting.pools ?? [],
+					this.host.character?.play.spellSlotsSpent ?? {},
+				);
 
-	/** The pools a cast can be paid from instead of a slot — every named resource this character still
-	 *  has a use in. FEAT-FREE-CAST: the sentence is Magic Initiate's "cast it once without a slot",
-	 *  and several magic items say the same, but nothing in the data LINKS a pool to a spell. The
-	 *  player is who knows, so the picker OFFERS and the player names it — the tracker's standing rule
-	 *  (`AGENTS.md` ▸ a play-tracker surfaces and suggests). Narrowing this to a declared pool is a
-	 *  later filter on the same control, not a different one.
-	 *  A cantrip costs nothing, so it is never asked. */
 	castablePools = (r: SpellRow): ResourceDef[] =>
-		r.level === 0
+		r.level === 0 || this.blockedReason
 			? []
 			: (this.host.sheet?.resources ?? []).filter(
-					(pool) => this.host.resources.resourceSpent(pool.id) < pool.max,
+					(pool) =>
+						poolAllowsSpell(pool, r) && this.host.resources.resourceSpent(pool.id) < pool.max,
 				);
+
+	get blockedReason(): string {
+		const sheet = this.host.sheet;
+		const block = sheet ? spellcastingBlock(sheet) : null;
+		return block ? sayText(block, translator()) : '';
+	}
 
 	/** Whether this cast has more than one way to be PAID FOR — what the picker affordance asks.
 	 *  `castableSlots` is empty for a single option rather than holding it, so a pool beside that one
@@ -148,6 +156,10 @@ export class SpellCasting {
 	upcastSpell = $state<SpellRow | null>(null);
 	/** Open the slot-picker for a leveled spell (the ⇡ affordance), anchored under the click. */
 	openUpcast = (r: SpellRow, e: Event) => {
+		if (this.blockedReason) {
+			toast(this.blockedReason);
+			return;
+		}
 		this.upcastSpell = r;
 		this.host.openMenu('upcast', e);
 	};

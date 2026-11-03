@@ -25,7 +25,7 @@
 			.sort(([a], [c]) => a - c)
 			.map(([level, spells]) => ({
 				level,
-				spells: spells.sort((x, y) => x.name.localeCompare(y.name))
+				spells: spells.sort((x, y) => x.name.localeCompare(y.name)),
 			}));
 	});
 
@@ -46,13 +46,13 @@
 							style: $_(
 								c.prepareStyle === 'known'
 									? 'build.spells.styleKnown'
-									: 'build.spells.stylePrepared'
+									: 'build.spells.stylePrepared',
 							),
 							chosen:
 								b.spellPicks.picker.find((p) => p.profile.classEffectiveId === c.classEffectiveId)
 									?.leveledChosen ?? 0,
-							cap: c.preparedCap
-						}
+							cap: c.preparedCap,
+						},
 					})}</span
 				>
 			{/each}
@@ -66,10 +66,10 @@
 				{$_('build.spells.armorBlock', {
 					values: {
 						note: $_('combat.spells.armorBlockNote', {
-							values: { category: $_(`armorCategory.${casting.armorBlock.category}`) }
+							values: { category: $_(`armorCategory.${casting.armorBlock.category}`) },
 						}),
-						source: casting.armorBlock.source
-					}
+						source: casting.armorBlock.source,
+					},
 				})}
 			</p>
 		{/if}
@@ -85,7 +85,7 @@
 			{#if !casting.pools.length}
 				<!-- "yet" is a promise, and a character who casts only because a FEAT taught them will
 				     never be given slots by it — no caster level means nothing is on its way. -->
-				<span class="tag ghost"
+				<span class="tag muted"
 					>{$_(casting.casterLevel ? 'build.spells.noSlots' : 'build.spells.noSlotsEver')}</span
 				>
 			{/if}
@@ -113,7 +113,7 @@
 									title={sp.granted
 										? undefined
 										: $_('build.spells.remove', { values: { name: sp.name } })}
-									onclick={() => b.spellPicks.toggle(sp.id)}
+									onclick={() => b.spellPicks.remove(sp.id)}
 								>
 									{sp.name}
 								</button>
@@ -129,7 +129,9 @@
 {:else if b.classRows.primaryClassId}
 	<div class="card quiet">
 		<span class="eyebrow">{$_('build.spells.title')}</span>
-		<p class="subtext">{$_('build.spells.noCasting', { values: { class: rowName(b.classRow) } })}</p>
+		<p class="subtext">
+			{$_('build.spells.noCasting', { values: { class: rowName(b.classRow) } })}
+		</p>
 	</div>
 {/if}
 

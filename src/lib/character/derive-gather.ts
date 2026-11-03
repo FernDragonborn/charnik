@@ -19,6 +19,7 @@ import { optionNamed, readPick } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
 import { heldOptions } from './features';
+import { featResourceChoices } from './feat-resource-choices';
 import { FORM_SPECIES, type Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
@@ -48,6 +49,7 @@ type RowOrigin = {
 	optionAnswer?: string;
 	name?: string;
 	origin?: string;
+	resourceChoices?: ActiveEffect['resourceChoices'];
 };
 
 /**
@@ -86,7 +88,12 @@ class EffectGatherer {
 		this.pushRow(this.resolve(b.background), 'feature');
 		for (const entry of b.classes) this.gatherClass(entry);
 		// feats (incl. repeatable ones taken more than once → their effect applies each time)
-		for (const featRef of b.feats) this.pushRow(this.resolve(featRef), 'feature');
+		for (const featRef of b.feats) {
+			const row = this.resolve(featRef);
+			this.pushRow(row, 'feature', {
+				resourceChoices: featResourceChoices(this.character, this.graph, row),
+			});
+		}
 		// RAW, both editions: an item that REQUIRES attunement confers nothing until it is attuned —
 		// equipping it is not enough, and the `attunement` tag was read only to draw the button
 		for (const inv of b.inventory) {
@@ -206,6 +213,7 @@ class EffectGatherer {
 			...(from.classId !== undefined ? { classId: from.classId } : {}),
 			...(from.itemBonus !== undefined ? { itemBonus: from.itemBonus } : {}),
 			...(from.origin !== undefined ? { origin: from.origin } : {}),
+			...(from.resourceChoices ? { resourceChoices: from.resourceChoices } : {}),
 			tokens,
 		};
 		this.active.push(effect);

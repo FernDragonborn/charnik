@@ -128,7 +128,7 @@ export interface PickSpec extends SpecCopy {
 	 *  spec is applied twice over: for real when you take an option, and to a throwaway when the pane
 	 *  works out what taking it would do. */
 	apply: (host: InspectorHost, id: string | null) => void;
-	/** Can this choice be un-made? A class row cannot (removing it is a different control). */
+	/** Can this choice be un-made? Settled choices stay locked in Strict level-up. */
 	clearable: boolean;
 	/**
 	 * Why an option cannot be taken here, as a catalog KEY — this module has no locale.
@@ -235,7 +235,7 @@ function classPickSpec(b: InspectorHost, index: number): PickSpec {
 		currentId: held,
 		apply: (host, id) => host.classRows.setClass(index, id),
 		blockedKey: settled.blocked,
-		clearable: index > 0 && settled.clearable,
+		clearable: settled.clearable,
 	};
 }
 

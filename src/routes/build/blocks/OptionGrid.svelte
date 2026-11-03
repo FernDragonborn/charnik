@@ -62,7 +62,7 @@
 	const previewRow = $derived(options.find((o) => o.effectiveId === previewId));
 
 	// reading + the keyboard walk are the same contract in both pickers — see `picker-reading`.
-	// The id scopes this picker's DOM ids: the spell pane renders one per caster class.
+	// The id scopes this picker's DOM ids when several inspectors share a page.
 	const pickerId = $props.id();
 	const picker = new PickerReading(
 		() => ({ ids: options.map((o) => o.effectiveId), previewId, onpreview, ontake }),
@@ -134,6 +134,7 @@
 		title={rowName(previewRow)}
 		{detail}
 		taken={isTaken(previewId)}
+		blocked={blocked?.(previewId) ?? null}
 		ontake={() => ontake(previewId)}
 		onclose={picker.close}
 	/>

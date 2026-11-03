@@ -48,6 +48,7 @@ export const EFFECT_KINDS = [
 	'auto_succeed',
 	'note',
 	'blocks_concentration',
+	'blocks_spellcasting',
 	'damage_reroll',
 	'regain_on_initiative',
 	'on_event',

@@ -100,12 +100,12 @@ const spellEntry = z.object({
 });
 
 /** What a spell-granting feat (Magic Initiate) was answered with: which class list its spells come
- *  from, and which ability casts them. The spells themselves are ordinary `build.spells` entries —
- *  the feat is a caster profile of its own, so the access map attributes them to it. */
+ *  from, which ability casts them, and the spell refs selected for this feat instance. */
 const featSpellChoice = z.object({
 	/** Bare class id of the chosen spell list (`wizard`) — the list is the feat's access map. */
 	list: z.string(),
 	ability: z.enum(ABILITIES),
+	spells: z.array(ref).optional(),
 });
 
 /** Per-slot ASI/feat picks, keyed by slot key (`"<classIndex>:<level>"`, plus `"origin"` for the

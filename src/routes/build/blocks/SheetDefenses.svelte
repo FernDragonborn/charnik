@@ -20,9 +20,8 @@
 
 	const s = $derived(b.sheet);
 	const classRows = $derived(
-		b.draft.classes.map((c) => rowOfType(b.row(c.classId), 'class')).filter((r) => !!r)
+		b.draft.classes.map((c) => rowOfType(b.row(c.classId), 'class')).filter((r) => !!r),
 	);
-
 
 	/** "all · shields" reads better than a list of category words, and an undeclared class means
 	 *  proficient with everything (the lenient default the rules layer already uses). A feature's own
@@ -38,8 +37,18 @@
 	}
 
 	const granted = $derived(s ? grantedEquipmentProfs(s.facts) : { armor: [], weapons: [] });
-	const armor = $derived(profText(classRows.map((r) => r.data.armor_profs), granted.armor));
-	const weapons = $derived(profText(classRows.map((r) => r.data.weapon_profs), granted.weapons));
+	const armor = $derived(
+		profText(
+			classRows.map((r) => r.data.armor_profs),
+			granted.armor,
+		),
+	);
+	const weapons = $derived(
+		profText(
+			classRows.map((r) => r.data.weapon_profs),
+			granted.weapons,
+		),
+	);
 	const tools = $derived(
 		[
 			...splitList(b.backgroundRow?.data.tools).map((t) => titleCase(t)),
@@ -76,7 +85,11 @@
 			<div class="saves">
 				{#each ABILITIES as ab (ab)}
 					{@const block = s.abilities[ab]}
-					<div class="save" class:is-taken={block.saveProficient} use:provenance={why(block.save, $_)}>
+					<div
+						class="save"
+						class:is-taken={block.saveProficient}
+						use:provenance={why(block.save, $_)}
+					>
 						<span class="code">{abilityShortLabel(ab, $_)}</span>
 						<b>{signed(block.save.value)}</b>
 					</div>
@@ -112,7 +125,7 @@
 						>{$_('build.defenses.climb', { values: { feet: s.climbSpeed.value } })}</span
 					>{/if}
 				{#if !hasDefenseChips(s)}
-					<span class="tag ghost">{$_('build.defenses.noResistances')}</span>
+					<span class="tag muted">{$_('build.defenses.noResistances')}</span>
 				{/if}
 				<button
 					class="pill-btn"

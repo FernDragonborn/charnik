@@ -12,7 +12,9 @@
  * evaluates a token's value expression. The fold seam that consumes these lives in apply.ts.
  */
 import type { Layer } from '../rules/pipeline';
-import { parseRecharge, type RechargePolicy } from '../rules/recharge';
+import type { RechargePolicy } from '../rules/recharge';
+import { parseGrantResource } from './resource-token';
+export { MAX_RESOURCE_MAX, RESOURCE_SPELL_CHOICE } from './resource-token';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
 import {
 	EXTRA_ATTACK_WORDS,
@@ -103,6 +105,7 @@ export const EFFECT_KIND = {
 	// RAW Rage ("you can't maintain Concentration"), a homebrew trance, etc. Surfaced as a fact flag the
 	// combat layer reads to drop/withhold concentration; data-driven, so any CSV state can carry it.
 	blocksConcentration: 'blocks_concentration',
+	blocksSpellcasting: 'blocks_spellcasting',
 	// MARKER (`damage_reroll`, no target/value): the carrying feature lets you, ONCE PER TURN, reroll a
 	// WEAPON's damage dice and use either roll (2024 Savage Attacker). Distinct from `reroll:` (a
 	// per-die threshold that always applies) — this is a whole-pool, player-invoked "roll twice, keep
@@ -140,7 +143,11 @@ export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
 /** MARKER kinds carry no `:target` — a bare token IS the whole effect (`blocks_concentration`). Every
  *  other kind bare (`flat_bonus` with no target) stays malformed → `unknown`. */
-const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KIND.damageReroll]);
+const MARKER_KINDS = new Set<string>([
+	EFFECT_KIND.blocksConcentration,
+	EFFECT_KIND.blocksSpellcasting,
+	EFFECT_KIND.damageReroll,
+]);
 
 // The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep
 // importing it from the effects surface they already use.
@@ -164,7 +171,6 @@ export {
  *  +1e6 AC is silly, not dangerous); a resource `max` DRIVES the pip render loop (see AUDIT B10) →
  *  bound the WORK. Values past a cap are clamped, not dropped, so a typo still parses. */
 const MAX_EFFECT_AMOUNT = 1_000_000;
-export const MAX_RESOURCE_MAX = 1000;
 const clampAmount = (n: number) =>
 	Number.isFinite(n) ? Math.max(-MAX_EFFECT_AMOUNT, Math.min(MAX_EFFECT_AMOUNT, n)) : 0;
 
@@ -216,7 +222,13 @@ export interface ParsedEffect {
 	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). `max`
 	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
 	 *  derive time — exactly one of the two is set. */
-	resource?: { id: string; max?: number; maxExpr?: string; recharge: RechargePolicy };
+	resource?: {
+		id: string;
+		max?: number;
+		maxExpr?: string;
+		recharge: RechargePolicy;
+		spell?: string;
+	};
 	/** plugin: the parsed handler reference. `args` is OPAQUE, hostile text the handler must parse
 	 *  defensively (docs/internals/plugins.md §1) — never interpreted here. */
 	plugin?: { namespace: string; handlerName: string; args: string };
@@ -472,28 +484,6 @@ const parseDamageSensitivity: KindParser = (rest, raw, kind) => {
 	};
 };
 
-const parseGrantResource: KindParser = (rest, raw, kind) => {
-	// `grant_resource:<id>` (bare flag) or `grant_resource:<id>:<max>:<recharge>` where <max> is a
-	// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
-	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
-	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
-	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):([a-z_]+(?:\([^:]*\))?))?$/i.exec(rest.trim());
-	if (!m?.[1]) return { kind: 'unknown', raw };
-	const id = m[1].toLowerCase();
-	const maxSlot = m[2]?.trim();
-	// the recharge word (or `trigger(amount)`) anchors the end; an unknown one leaves the token
-	// unparsed rather than defaulting to a policy the author did not write
-	const recharge = m[3] ? parseRecharge(m[3]) : undefined;
-	if (maxSlot && m[3] && !recharge) return { kind: 'unknown', raw };
-	if (maxSlot && recharge) {
-		const resource = /^\d+$/.test(maxSlot)
-			? { id, max: Math.min(Number(maxSlot), MAX_RESOURCE_MAX), recharge }
-			: { id, maxExpr: maxSlot, recharge };
-		return { kind, target: id, resource, raw };
-	}
-	return { kind, target: id, raw };
-};
-
 const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 	// `grant_proficiency:[<level>:]<target>` — the LADDER RUNG is an optional leading word, defaulting
 	// to `proficient` so every token written before the rung existed keeps parsing. `partial` is a
@@ -641,7 +631,7 @@ function classifyToken(token: string): ParsedEffect {
 	if (sep === -1)
 		return MARKER_KINDS.has(raw) ? { kind: raw as EffectKind, raw } : { kind: 'unknown', raw };
 	const kind = raw.slice(0, sep) as EffectKind;
-	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
+	if (!EFFECT_KINDS.includes(kind) || MARKER_KINDS.has(kind)) return { kind: 'unknown', raw };
 	const rest = tightenDelimiters(kind, raw.slice(sep + 1));
 	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
 	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
@@ -694,6 +684,7 @@ export interface ActiveEffect {
 	/** The carried item this effect rides on (its inventory row's `iid`) — what a form that wears
 	 *  only some of your kit checks, and what the trace groups an item's parts by. */
 	origin?: string;
+	resourceChoices?: { key: string; spell: string; name: string }[];
 }
 
 /** A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class). */

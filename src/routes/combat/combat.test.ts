@@ -890,9 +890,6 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 });
 
 describe('CombatVM · a pool pays for a cast instead of a slot (FEAT-FREE-CAST)', () => {
-	/** Magic Initiate's sentence: the level-1 spell is cast once without a slot, and the pool that
-	 *  pays is a named resource. Nothing in the data links the two, so the PLAYER names the pool —
-	 *  what is asserted here is that naming it actually pays. */
 	const withPool = async (max: number) => {
 		const graph = await graphOf();
 		const character = newCharacter('valen', 'Valen', '5.5e');
@@ -902,7 +899,7 @@ describe('CombatVM · a pool pays for a cast instead of a slot (FEAT-FREE-CAST)'
 			{
 				iid: '1',
 				label: 'Magic Initiate',
-				effects: [`grant_resource:free_cast:${max}:long`],
+				effects: [`grant_resource:free_cast:${max}:long:spell:bless`],
 				positive: true,
 			},
 		];

@@ -101,7 +101,7 @@
 		<p class="muted">{$_('roster.empty')}</p>
 	{:else}
 		<ul class="list">
-			<!-- a dashed card is the same card, not yet finished: clicking it resumes the build -->
+			<!-- An unfinished character uses the same card; clicking it resumes the build. -->
 			{#each drafts as d (d.guid)}
 				<li class="card roster-card is-draft">
 					<a class="roster-open" href="{base}/build?draft={d.guid}">
@@ -297,9 +297,8 @@
 		cursor: pointer;
 		text-decoration: none;
 	}
-	/* dashed = not finished. The same shape as a saved character on purpose: it IS one, earlier. */
+	/* The draft label names unfinished work; its muted card stays the same shape as a character. */
 	.roster-card.is-draft {
-		border-style: dashed;
 		border-color: var(--color-border-strong);
 		background: transparent;
 	}
