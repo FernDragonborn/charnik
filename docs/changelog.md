@@ -2,9 +2,27 @@
 
 ## 0.8.3
 
-A hotfix for character creation and spellcasting, in both editions.
+A hotfix for character creation and spellcasting, in both editions, and for the ways a save or a
+content file could be lost or misread.
+
+### New
+
+- **Search treats every apostrophe as an apostrophe.** "Hunter's Mark" is found whether you type
+  a straight `'`, a curly `’`, `ʼ` or a backtick — in global search, the compendium, the spellbook,
+  the builder's pickers, the roller and every other search box.
 
 ### Fixed
+
+- **A caster has no spell slots before their Spellcasting feature.** A 2014 Paladin 1 neither casts
+  nor counts toward a multiclass caster level.
+- **In Strict mode, an ASI or a feat's +1 cannot raise a score past 20** (30 for an Epic Boon); the
+  builder disables the pick and says why.
+- **A condition brings the conditions it imposes.** Unconscious makes you Incapacitated too, for as
+  long as Unconscious lasts.
+- **Resistance halves before vulnerability doubles**, as the rules order them.
+- **A long rest ends a concentration spell's effect** together with the concentration.
+- **A level-up stays in the character's edition.** The other edition is shown disabled with the
+  reason, and a save in the wrong edition is refused.
 
 - **One spell picker, however many sources teach you spells.** A class and Magic Initiate share
   one search, one set of filters and one list; each source keeps its own counters and choices.
@@ -19,6 +37,26 @@ A hotfix for character creation and spellcasting, in both editions.
 - **Only a resource declared for a spell can pay for it.** Rage, Ki and Bardic Inspiration are not
   alternative spell slots. An invalid payment is refused without spending a resource or an action.
 
+### Your data
+
+- **A deleted character stays deleted.** A play save or a log line arriving after the delete no
+  longer brings it back, and a file removed outside the app while it is open is reported as a
+  conflict instead of being quietly rewritten.
+- **Switching characters never loses the last change.** The previous character is saved at once,
+  combat forgets everything it showed for them, and a save that fails holds a reload back and says so.
+- **A copied character folder is its own character**, even when the copy carries the original's id.
+- **A save keeps fields this version does not know**, so opening a character in an older Charnik
+  and saving it does not strip what a newer one wrote.
+- **An unreadable save says so.** Opening or levelling one stays on the roster with a message,
+  rather than opening the demo or a blank character.
+- **The data folder chosen at first run is the one used**, without a restart.
+- **The demo is never written over your files.** A demo folder that has lost its marker is kept.
+- **Editing a homebrew row keeps all its effects** and the file's own columns, not only the first.
+- **A damaged or locked CSV is reported** — an unclosed quote, extra cells, a repeated header, a
+  file that cannot be read — and the app refuses to rewrite a damaged one. `.CSV` files load too.
+- **Temporary HP and recharge counts stay whole numbers**, so a save is never refused over them.
+- **A long theme name no longer freezes the app.**
+
 ### For content authors
 
 - **A free-cast pool names its spell** with `grant_resource:<id>:<max>:<recharge>:spell:<spell_id>`.
@@ -26,12 +64,20 @@ A hotfix for character creation and spellcasting, in both editions.
   instances. The shipped 2024 Magic Initiate row uses this link. An older character keeps its spells;
   if their feat ownership was not recorded, the builder asks you to identify them before granting
   free casts rather than guessing which spell the feat taught.
+- **`apply_condition` nests.** A condition that imposes another applies it only while it is active.
+- **Content cannot stall or break the sheet.** A very long chain of dependent effects resolves, and
+  a starting-equipment count over 100 or coins over 100 000 is shown as an unread part. A homebrew
+  item wins its id in a kit.
 
 ### Security
 
 - **Dependency patches** update Zod's input validation, fast-uri in the build tooling, and Tokio
   in the desktop dependency tree. Remaining upstream advisories and their exposure are tracked in
   `docs/work/release.md`; this hotfix does not force a framework or toolchain major upgrade.
+- **A page element cannot make the web demo think it is the desktop app.**
+- **A plugin cannot hide a read of play state** behind a getter or `toJSON`, and its error text is
+  trimmed before the app shows it.
+- **A crafted effect token cannot slow parsing**: whitespace is normalized in linear time.
 
 ### Not in this release
 
