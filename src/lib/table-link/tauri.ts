@@ -49,17 +49,46 @@ export const listenToTableLink = (
 		else logger.warn('table link: an event that is not one was dropped');
 	});
 
-const PLAYER_EVENTS: readonly string[] = [TABLE_EVENT.request, TABLE_EVENT.connection];
-const isPlayerEvent = (event: TableLinkWireEvent): event is TableLinkWireEvent & PlayerEvent =>
-	PLAYER_EVENTS.includes(event.kind);
-const isGmEvent = (event: TableLinkWireEvent): event is TableLinkWireEvent & GmEvent =>
-	!PLAYER_EVENTS.includes(event.kind);
+/** An event as the seat it is for hears it, or null when it is the other seat's. */
+const playerEvent = (event: TableLinkWireEvent): PlayerEvent | null =>
+	event.kind === TABLE_EVENT.request || event.kind === TABLE_EVENT.connection ? event : null;
+const gmEvent = (event: TableLinkWireEvent): GmEvent | null =>
+	event.kind === TABLE_EVENT.request || event.kind === TABLE_EVENT.connection ? null : event;
+
+/**
+ * What Rust said about a seat before anybody could be listening for it. A seat's id is the
+ * command's answer, and a player's connection starts changing state while that answer is still on
+ * its way — so the events are kept from before the call and handed to the first listener.
+ */
+interface EarlyEvents {
+	heard: TableLinkWireEvent[];
+	stop: Unsubscribe;
+}
+const EARLY_EVENTS_MAX = 64;
+
+/** A seat's `subscribe`: its table's events of its own kind, the early ones first. */
+const subscribing =
+	<Event>(
+		table: TableId,
+		early: EarlyEvents,
+		ownEvent: (event: TableLinkWireEvent) => Event | null,
+	) =>
+	async (listener: (event: Event) => void): Promise<Unsubscribe> => {
+		const hear = (event: TableLinkWireEvent): void => {
+			const own = event.table === table ? ownEvent(event) : null;
+			if (own) listener(own);
+		};
+		const stop = await listenToTableLink(hear);
+		early.stop();
+		for (const event of early.heard.splice(0)) hear(event);
+		return stop;
+	};
 
 /** A call that could not be made was not delivered — which is the whole of what a caller is told. */
 const delivery = (command: string, args: Record<string, unknown>): Promise<Delivery> =>
 	invoke<Delivery>(command, args).catch(() => DELIVERY.notDelivered);
 
-const playerSeat = (table: TableId, code: string): PlayerSeat => ({
+const playerSeat = (table: TableId, code: string, early: EarlyEvents): PlayerSeat => ({
 	table,
 	code,
 	leave: () => invoke('table_link_leave', { table }),
@@ -73,13 +102,10 @@ const playerSeat = (table: TableId, code: string): PlayerSeat => ({
 		return delivery('table_link_publish', { table, view: view.data });
 	},
 	respond: (requestId, answer) => delivery('table_link_respond', { table, requestId, answer }),
-	subscribe: (listener) =>
-		listenToTableLink((event) => {
-			if (event.table === table && isPlayerEvent(event)) listener(event);
-		}),
+	subscribe: subscribing(table, early, playerEvent),
 });
 
-const gmSeat = (table: TableId, invite: string): GmSeat => ({
+const gmSeat = (table: TableId, invite: string, early: EarlyEvents): GmSeat => ({
 	table,
 	invite,
 	leave: () => invoke('table_link_leave', { table }),
@@ -92,10 +118,7 @@ const gmSeat = (table: TableId, invite: string): GmSeat => ({
 	},
 	dismiss: (participant) => invoke('table_link_dismiss', { table, participant }),
 	setDoor: (open) => invoke<string | null>('table_link_door', { table, open }).catch(() => null),
-	subscribe: (listener) =>
-		listenToTableLink((event) => {
-			if (event.table === table && isGmEvent(event)) listener(event);
-		}),
+	subscribe: subscribing(table, early, gmEvent),
 });
 
 /** What `table_link_host` and `table_link_join` answer. */
@@ -106,19 +129,32 @@ type RustSeating =
 async function seat<S>(
 	command: string,
 	args: Record<string, unknown>,
-	seatAt: (table: TableId, token: string) => S,
+	seatAt: (table: TableId, token: string, early: EarlyEvents) => S,
 ): Promise<Seating<S>> {
+	const early: EarlyEvents = { heard: [], stop: () => {} };
+	early.stop = await listenToTableLink((event) => {
+		if (early.heard.length < EARLY_EVENTS_MAX) early.heard.push(event);
+	});
 	// a refusal is a build without the feature, and reads as no table
 	const seating = await invoke<RustSeating>(command, args).catch(() => null);
-	if (!seating) return { status: SEATING.unavailable, reason: UNAVAILABLE.noTable };
-	if (seating.status === SEATING.unavailable) return seating;
+	if (seating?.status !== SEATING.seated) {
+		early.stop();
+		return seating ?? { status: SEATING.unavailable, reason: UNAVAILABLE.noTable };
+	}
 	return {
 		status: SEATING.seated,
-		seat: seatAt(seating.table, seating.invite ?? seating.code ?? ''),
+		seat: seatAt(seating.table, seating.invite ?? seating.code ?? '', early),
 	};
 }
 
 export const tauriTableLink: TableLink = {
+	// leaving a table that is not there does nothing in a build with the feature, and is refused
+	// in a build without it
+	available: () =>
+		invoke('table_link_leave', { table: '' }).then(
+			() => true,
+			() => false,
+		),
 	host: ({ name, relay, locale }) => seat('table_link_host', { name, relay, locale }, gmSeat),
 	join: ({ invite, name, locale }) => seat('table_link_join', { invite, name, locale }, playerSeat),
 };

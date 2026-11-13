@@ -129,14 +129,7 @@ export const tableRequestSchema = z.discriminatedUnion('kind', [
 		kind: z.literal(TABLE_REQUEST.roll),
 		roll: z.enum(REQUESTED_ROLL),
 		id,
-		// Rust sends an absent DC as null
-		dc: z
-			.number()
-			.int()
-			.min(0)
-			.max(DC_MAX)
-			.nullish()
-			.transform((dc) => dc ?? undefined),
+		dc: z.number().int().min(0).max(DC_MAX).exactOptional(),
 	}),
 ]);
 
@@ -144,17 +137,17 @@ export const tableRequestSchema = z.discriminatedUnion('kind', [
 export const tableRollSchema = z.object({
 	total: bounded,
 	/** The d20 face that counted; absent when the outcome was forced and nothing was rolled. */
-	natural: z.number().int().min(1).max(20).optional(),
+	natural: z.number().int().min(1).max(20).exactOptional(),
 	advantage: z.enum(ADVANTAGE_MODE),
 	mod: bounded,
 	/** A condition decided it — a paralysed character's Dexterity save. */
-	outcome: z.enum(AUTO_OUTCOME).optional(),
+	outcome: z.enum(AUTO_OUTCOME).exactOptional(),
 });
 export type TableRoll = z.infer<typeof tableRollSchema>;
 
 const tableAnswerSchema = z.object({
 	outcome: z.enum(TABLE_ANSWER),
-	roll: tableRollSchema.nullish().transform((roll) => roll ?? undefined),
+	roll: tableRollSchema.exactOptional(),
 });
 
 const table = text(ID_MAX).nullable();
@@ -196,9 +189,6 @@ export const tableEventSchema = z.discriminatedUnion('kind', [
 		kind: z.literal(TABLE_EVENT.connection),
 		table,
 		state: z.enum(CONNECTION),
-		reason: z
-			.enum(CLOSE_REASON)
-			.nullish()
-			.transform((reason) => reason ?? undefined),
+		reason: z.enum(CLOSE_REASON).exactOptional(),
 	}),
 ]);

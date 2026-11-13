@@ -46,6 +46,9 @@ const FRAME_PACE: Duration = Duration::from_millis(10);
 const MAX_SEATS: usize = 12;
 /// How many strangers may wait for the GM's answer at once; the rest are told the table is full.
 const MAX_WAITING: usize = 4;
+/// How many connections may be between arriving and saying hello at once. Whoever dials past
+/// that is refused before the handshake, so a flood of dials costs the table nothing it keeps.
+const MAX_GREETING: usize = 16;
 const OUTBOUND_QUEUE: usize = 32;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -145,6 +148,7 @@ pub enum TableEvent {
     Connection {
         table: Option<String>,
         state: ConnectionState,
+        #[serde(skip_serializing_if = "Option::is_none")]
         reason: Option<CloseReason>,
     },
 }
@@ -154,7 +158,7 @@ pub enum TableEvent {
 #[serde(rename_all = "snake_case")]
 pub enum Unavailable {
     /// The person at this app said no to opening the network.
-    Declined,
+    Cancelled,
     AlreadySeated,
     BadName,
     BadInvite,
@@ -387,7 +391,11 @@ async fn say_goodbye(mut send: iroh::endpoint::SendStream, conn: &Connection, fr
 }
 
 /// One player's connection, from its hello to its end.
-async fn seat_player(conn: Connection, shared: Arc<GmShared>) {
+async fn seat_player(
+    conn: Connection,
+    shared: Arc<GmShared>,
+    greeting: tokio::sync::OwnedSemaphorePermit,
+) {
     let player = conn.remote_id();
     let Ok(Ok((mut send, mut recv))) = timeout(HELLO_WAIT, conn.accept_bi()).await else {
         return;
@@ -401,6 +409,8 @@ async fn seat_player(conn: Connection, shared: Arc<GmShared>) {
     else {
         return;
     };
+    // the hello is said: what waits from here is counted by `admit`
+    drop(greeting);
     let name = wire::plain_text(&name);
     if let Err(reason) = shared.admit(player, protocol, &secret, &name).await {
         say_goodbye(send, &conn, &GmFrame::Refused { reason }).await;
@@ -559,11 +569,16 @@ pub async fn host(
     let accepting = tokio::spawn({
         let (endpoint, shared) = (endpoint.clone(), shared.clone());
         async move {
+            let greeting = Arc::new(Semaphore::new(MAX_GREETING));
             while let Some(incoming) = endpoint.accept().await {
+                let Ok(permit) = greeting.clone().try_acquire_owned() else {
+                    incoming.refuse();
+                    continue;
+                };
                 let shared = shared.clone();
                 tokio::spawn(async move {
                     if let Ok(conn) = incoming.await {
-                        seat_player(conn, shared).await;
+                        seat_player(conn, shared, permit).await;
                     }
                 });
             }

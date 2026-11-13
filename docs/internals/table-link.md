@@ -123,7 +123,8 @@ invitation handed out before stops working either way. Whoever is seated stays.
 
 What bounds a leaked invitation: a stranger's hello with the right secret raises one native
 question at a time, at most four wait behind it and the rest are told the table is full, and the
-GM shuts the door once everyone is in.
+GM shuts the door once everyone is in. A dial that never says hello holds one of sixteen places
+for ten seconds, and a dial past those is refused before its handshake.
 
 ## What crosses the wire
 
@@ -171,6 +172,29 @@ long name or effect label is cut to fit before it leaves rather than costing the
 Peer text is rendered as text. Nothing a peer sent is passed to the Markdown renderer or set as
 HTML.
 
+## What a request does on a sheet
+
+A request waits until the player presses, and it is then carried out by the SAME actions a click
+on the sheet uses (`routes/table/table-view-model.svelte.ts` ▸ `TableVM.accept`):
+
+- **Damage** is `takeDamage` with the amount and the type as sent: the character's own defenses
+  apply first, then temporary hit points, a form's own, instant death and the concentration save.
+- **Healing** is `heal`.
+- **A state** is the row of that id in the character's own picker, switched on with the row's own
+  duration — and left alone when the character already has it. An id this app's content does not
+  have can only be declined.
+- **A roll** is the sheet's own check, save or skill (`combat/sheet-roll-specs.ts`), rolled at
+  once with the effects it picks up, logged like any other, and read back as five facts: the
+  total, the d20 that counted, how it was read, the modifier, and a forced outcome. It is not
+  built in the dice tray, which hands no result back to answer the GM with. An announced DC is
+  answered on the player's side as a passed-or-failed line; a DC the GM kept stays on the GM's.
+
+The character is saved after each, because the play screen's autosave is not running on every
+screen a request can arrive over. At most twelve requests wait at once; one past that is declined
+unseen, and a repeated request id is one request.
+
+On the GM's side an answer is believed only from the participant who was asked, and only once.
+
 ## Staying seated
 
 - **A key the GM let in is not asked about twice.** A player whose connection drops dials again —
@@ -198,6 +222,10 @@ character's edition, and the GM's app names conditions from its own catalog.
 - `src/lib/table-link/` — `types.ts` (the seam), `wire-schema.ts` (what a peer is believed to have
   said), `view.ts` (the table's view of a character), `tauri.ts` and `noop.ts` (the two
   implementations), `provider.ts` (the one place one is chosen).
+- `src/routes/table/table-view-model.svelte.ts` — `TableVM`: the seat this app holds, who a GM
+  has seated and what was asked of them, and what a player's app does with a request. **No
+  screen mounts it yet** (`work/release.md` ▸ TABLE-LINK-MVP); its copy is in the catalogs under
+  `table.*` and `settings.table.*`.
 
 ## What is left to a device and a table
 

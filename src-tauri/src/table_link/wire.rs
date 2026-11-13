@@ -92,6 +92,8 @@ pub enum TableRequest {
     Roll {
         roll: RequestedRoll,
         id: String,
+        /// There when the GM announced it. Absent, never null: the page reads an absent field.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         dc: Option<u32>,
     },
 }

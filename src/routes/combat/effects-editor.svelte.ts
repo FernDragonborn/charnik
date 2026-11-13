@@ -38,6 +38,8 @@ import { conditionIdOf } from '$lib/combat/effects-view';
 /** One row of the "+" picker. `conditionId` is what makes the two kinds behave differently once
  *  they are in one list: a condition toggles off again, anything else adds another instance. */
 export interface StateChoice {
+	/** The row's own id — what another app at the table names this state by. */
+	rowId: string;
 	ref: string | null;
 	conditionId: string | null;
 	label: string;
@@ -148,6 +150,7 @@ export class EffectsEditor {
 			.map((r) => {
 				const condition = isConditionRow(r);
 				return {
+					rowId: r.id,
 					// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes
 					// propagate), with the baked label/tokens kept as the orphan fallback. A bare
 					// condition carries none: its token already names the row the derive looks up.

@@ -244,11 +244,11 @@ describe('what a peer sent', () => {
 			kind: TABLE_REQUEST.roll,
 			roll: REQUESTED_ROLL.savingThrow,
 			id: 'dex',
-			dc: null,
 		};
-		expect(tableEventSchema.parse(requestEvent(roll))).toEqual(
-			requestEvent({ kind: TABLE_REQUEST.roll, roll: REQUESTED_ROLL.savingThrow, id: 'dex' }),
-		);
+		expect(fits(requestEvent(roll))).toBe(true);
+		expect(fits(requestEvent({ ...roll, dc: 15 }))).toBe(true);
+		// an absent field is absent, never null
+		expect(fits(requestEvent({ ...roll, dc: null }))).toBe(false);
 	});
 
 	it('is dropped when a number is not one a sheet can hold', () => {

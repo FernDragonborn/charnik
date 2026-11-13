@@ -32,3 +32,5 @@ export const SKILL_ABILITY = {
 
 /** The 18 SRD skill ids. */
 export type SkillId = keyof typeof SKILL_ABILITY;
+/** The same ids as a list, in the order the table above states them. */
+export const SKILL_IDS = Object.keys(SKILL_ABILITY) as SkillId[];

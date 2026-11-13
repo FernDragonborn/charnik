@@ -5,6 +5,11 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, ABIL } from '$lib/combat/helpers';
+	import {
+		abilityCheckRoll,
+		savingThrowRoll,
+		type SheetRollSpec,
+	} from '$lib/combat/sheet-roll-specs';
 	import { provenance } from '$lib/actions/provenance';
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
@@ -12,7 +17,8 @@
 	let { s }: { s: CharacterSheet } = $props();
 	const collapsed = $derived(combat.layout.collapsed);
 	const { toggle } = combat.layout;
-	const { roll } = combat;
+	const rollSpec = ({ name, mod, target }: SheetRollSpec, e: Event) =>
+		combat.roll(name, mod, e, target);
 </script>
 
 <div class="sectlab">
@@ -34,13 +40,7 @@
 					type="button"
 					class="ability-check"
 					use:provenance={why(a.check, $_)}
-					onclick={(e) =>
-						roll(
-							{ text: `${ab.toUpperCase()} check`, key: `combat.roll.check.${ab}` },
-							a.check.value,
-							e,
-							`check.${ab}`,
-						)}
+					onclick={(e) => rollSpec(abilityCheckRoll(ab, s), e)}
 				>
 					<span class="ability-name">
 						<b>{abilityShortLabel(ab, $_)}</b> · {a.score.value}
@@ -54,13 +54,7 @@
 					class="ability-save"
 					class:prof
 					use:provenance={why(a.save, $_)}
-					onclick={(e) =>
-						roll(
-							{ text: `${ab.toUpperCase()} save`, key: `combat.roll.save.${ab}` },
-							a.save.value,
-							e,
-							`save.${ab}`,
-						)}
+					onclick={(e) => rollSpec(savingThrowRoll(ab, s), e)}
 				>
 					<i class="prof-dot" class:on={prof}></i>{$_('combat.section.save')}
 					<b>{signed(a.save.value)}</b>

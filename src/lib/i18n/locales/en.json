@@ -1755,7 +1755,8 @@
 		"translate": "Translate",
 		"skipToContent": "Skip to content",
 		"openCommandPalette": "Open command palette",
-		"primary": "Primary"
+		"primary": "Primary",
+		"table": "Table"
 	},
 	"noCharacter": {
 		"title": "No character here yet",
@@ -2232,7 +2233,8 @@
 			"health": "Content health",
 			"plugins": "Plugins",
 			"sources": "Content",
-			"themes": "Themes"
+			"themes": "Themes",
+			"table": "Table"
 		},
 		"theme": "Theme",
 		"themeDark": "Dark",
@@ -2266,6 +2268,25 @@
 			"confirmAction": "Restore snapshot",
 			"done": "Restored “{name}”.",
 			"failed": "That snapshot could not be restored —"
+		},
+		"table": {
+			"title": "Table",
+			"blurb": "How a table YOU open is reached. A relay server introduces the apps at a table to each other, and carries what they send when they cannot connect directly. It sees the network addresses of those apps and never what is sent.",
+			"relay": "Relay",
+			"relayName": {
+				"n0": "number 0 (public)",
+				"custom": "My own",
+				"none": "None"
+			},
+			"relayHint": {
+				"n0": "Free public relays run by number 0, the makers of iroh. A table works across the internet with nothing to set up. They promise no uptime.",
+				"custom": "A relay you or your group runs. Players' apps connect to it too, and are told its address before they do.",
+				"none": "No relay. Players must be on your local network, or able to reach this computer directly, and the invitation carries this computer's network addresses."
+			},
+			"relayUrl": "Relay address",
+			"relayUrlPlaceholder": "https://relay.example.org",
+			"relayUrlBad": "A relay address starts with https://",
+			"joiningNote": "When you JOIN a table, your app uses the relay named in the GM's invitation, and asks you first."
 		}
 	},
 	"skillName": {
@@ -2426,6 +2447,171 @@
 				"allow": "Let in",
 				"deny": "Refuse"
 			}
+		},
+		"title": "Table",
+		"blurb": "Sit at one table, each from your own app. The GM sees every player's sheet as it changes and can ask for a roll, send damage or healing, or lay a state. Nothing the GM asks applies itself: the player sees it and answers.",
+		"webOnly": "A table needs the desktop app. This build has no way to connect to another app.",
+		"busy": "Charnik is asking you a question in a window of its own. Answer it there.",
+		"problem": {
+			"no_table": "This build of Charnik has no table link. Nothing was opened.",
+			"cancelled": "You said no, so nothing went online.",
+			"already_seated": "This app is already at a table. Leave that one first.",
+			"bad_name": "A table needs a name the players will recognise. Type one and try again.",
+			"bad_invite": "That is not an invitation this version of Charnik can follow. Ask the GM to copy it again — it starts with “charnik-table:” — and check that you both run the same version.",
+			"bad_relay": "The relay address in Settings ▸ Table is not a web address starting with https://. Nothing was opened.",
+			"relay_unreachable": "The relay server did not answer, so players could not have found this table. Check the connection, or choose another relay in Settings ▸ Table.",
+			"network": "Charnik could not open a network connection on this computer. Nothing was opened.",
+			"no_character": "There is no character open to sit down as. Open one from the roster, then join.",
+			"unreachable": "The GM's app could not be reached. Check that the table is still open and that this is the GM's latest invitation.",
+			"invite": "The table did not take this invitation: its door is shut, or the GM has made a newer one. Ask for the current invitation.",
+			"declined": "The GM did not let you in.",
+			"version": "The GM's app speaks another version of the table link. Update both apps to the same version of Charnik.",
+			"full": "The table is full, or too many people are waiting to be let in. Try again in a moment.",
+			"dismissed": "The GM removed you from the table.",
+			"table_closed": "The GM closed the table.",
+			"lost": "The connection to the table was lost and did not come back. Join again with the invitation.",
+			"protocol": "The GM's app sent something this app does not understand, so the seat was given up. Check that you both run the same version of Charnik."
+		},
+		"host": {
+			"title": "Open a table",
+			"blurb": "You are the GM. Players join with an invitation you hand them, and each one sits only after you let them in.",
+			"name": "Table name",
+			"namePlaceholder": "Thursday game",
+			"relay": "Reached through",
+			"relayName": {
+				"n0": "the public relays of number 0",
+				"custom": "your relay",
+				"none": "no relay — the local network"
+			},
+			"changeRelay": "Change in Settings",
+			"open": "Open table"
+		},
+		"join": {
+			"title": "Join a table",
+			"blurb": "You sit as the character you are playing. The GM sees that character's sheet across the table — not your notes, inventory or build.",
+			"invite": "Invitation",
+			"invitePlaceholder": "charnik-table:…",
+			"as": "You join as {name}",
+			"noCharacter": "Open a character first: you join as the one you are playing.",
+			"join": "Join table"
+		},
+		"gm": {
+			"eyebrow": "You are the GM",
+			"invite": "Invitation",
+			"inviteHint": "Hand this to your players. Each one still waits for your yes.",
+			"copy": "Copy invitation",
+			"copied": "Invitation copied",
+			"notCopied": "The invitation could not be copied. Select it and copy it by hand.",
+			"door": "Letting players in",
+			"doorShut": "The door is shut: nobody new can ask to join, and invitations handed out before no longer work. Whoever is seated stays.",
+			"close": "Close table",
+			"closeTitle": "Close the table?",
+			"closeBody": "Every player is disconnected. Playing again needs a new table and a new invitation.",
+			"empty": "Nobody is seated yet. Send the invitation: when a player joins, Charnik asks you to let them in and shows their code.",
+			"players": "At the table"
+		},
+		"seat": {
+			"away": "connection lost — their app is dialling again",
+			"noSheet": "waiting for their sheet…",
+			"dismiss": "Remove {name} from the table",
+			"level": "Level {level}",
+			"hitPoints": "Hit points",
+			"temp": "+{temp} temporary",
+			"dead": "Dead",
+			"dying": "Dying · {successes} saved, {failures} failed",
+			"stable": "Stable at 0",
+			"ac": "AC",
+			"initiative": "Initiative",
+			"speed": "Speed",
+			"proficiency": "Proficiency",
+			"saves": "Saves",
+			"passives": "Passive",
+			"skills": "Skills",
+			"states": "States",
+			"noStates": "none",
+			"exhaustion": "Exhaustion {level}",
+			"concentration": "Concentrating"
+		},
+		"ask": {
+			"title": "Ask the table",
+			"who": "Who",
+			"everyone": "Everyone",
+			"what": "What",
+			"kind": {
+				"roll": "A roll",
+				"damage": "Damage",
+				"heal": "Healing",
+				"effect": "A state"
+			},
+			"rollKind": {
+				"ability_check": "Ability check",
+				"saving_throw": "Saving throw",
+				"skill": "Skill"
+			},
+			"which": "Which",
+			"dc": "DC",
+			"dcNone": "none",
+			"announce": "Tell the players the DC",
+			"announceHint": "Off: players roll without being told the DC, and only you see who met it.",
+			"amount": "Amount",
+			"damageType": "Type",
+			"state": "State",
+			"send": "Ask",
+			"nobody": "Nobody at the table can be asked right now."
+		},
+		"asked": {
+			"title": "Asked",
+			"empty": "What you ask, and what comes back, is listed here.",
+			"pending": "waiting",
+			"declined": "declined",
+			"done": "done",
+			"passed": "passed",
+			"failed": "failed",
+			"natural": "d20 {natural}",
+			"forced": {
+				"fail": "fails by a condition",
+				"succeed": "succeeds by a condition"
+			}
+		},
+		"request": {
+			"damage": "Take {amount} damage",
+			"heal": "Regain {amount} hit points",
+			"effect": "Take the state: {state}",
+			"roll": "Roll: {roll}",
+			"dc": "DC {dc}"
+		},
+		"player": {
+			"eyebrow": "You are a player",
+			"state": {
+				"connecting": "Reaching the GM's app…",
+				"waiting": "Waiting for the GM to let you in.",
+				"connected": "Seated. The GM sees this character's sheet and can ask you for rolls.",
+				"reconnecting": "The connection dropped. Charnik is dialling the table again…",
+				"closed": "The seat is closed."
+			},
+			"code": "Your code — read it to the GM",
+			"sees": "The GM sees: name, level, hit points and death saves, states, AC, initiative, speed, abilities, saves, skills and passives, and what the character resists. Not your notes, inventory, spells or build.",
+			"leave": "Leave table"
+		},
+		"prompt": {
+			"title": "The GM asks",
+			"subtitle": "Nothing happens until you answer.",
+			"accept": {
+				"roll": "Roll",
+				"damage": "Take it",
+				"heal": "Heal",
+				"effect": "Take it"
+			},
+			"decline": "Decline",
+			"afterDefenses": "{final} after your defenses",
+			"cannotRoll": "This sheet has nothing by that name to roll, so you can only decline.",
+			"cannotEffect": "This app has no state called “{id}” — the GM may be using content you do not have. You can only decline."
+		},
+		"notice": {
+			"passed": "Passed — DC {dc}",
+			"failed": "Failed — DC {dc}",
+			"notDelivered": "Not delivered to: {names}",
+			"answerLost": "The GM's app did not get your answer — the connection may have dropped."
 		}
 	}
 }

@@ -8,4 +8,8 @@ import { SEATING, UNAVAILABLE, type TableLink } from './types';
 const unavailable = () =>
 	Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable });
 
-export const noopTableLink: TableLink = { host: unavailable, join: unavailable };
+export const noopTableLink: TableLink = {
+	available: () => Promise.resolve(false),
+	host: unavailable,
+	join: unavailable,
+};

@@ -152,8 +152,11 @@ so a per-instance target and a per-instance advantage do not exist.
 `dice/roller-sources.ts` (the one file that reads the content graph) ·
 `dice/dice-tray.svelte.ts` (live state) · `components/Roller.svelte` + `RollerLine.svelte`.
 
-- **The app never knows AC or DC, so no threshold is ever shown.** "Hit" is the player's call. The one
-  outcome the app may name by itself is a natural 1.
+- **The app does not know AC or DC, so the roller shows no threshold.** "Hit" is the player's call. The
+  one outcome the app may name by itself is a natural 1. **A roll the GM asked for across a table is
+  the exception**: when the GM chose to announce its DC, the request carries it, and the player's
+  app says passed or failed in the log beside the roll (`table-link.md`; `routes/table/` ▸
+  `rollPassed`). A DC the GM kept is never sent, and is judged on the GM's side alone.
 - **A line is a list of PILLS, not a formula string** — the same decision `Rolled.dice` makes one floor
   down. A pill holds what a string cannot: which effect gave the die, that a bound applies to it, that
   a damage type was inherited rather than typed.

@@ -56,7 +56,7 @@ export const UNAVAILABLE = {
 	/** The build has no table link at all: the web demo, or a desktop build without the feature. */
 	noTable: 'no_table',
 	/** The person at this app said no to going online. */
-	declined: 'declined',
+	cancelled: 'cancelled',
 	alreadySeated: 'already_seated',
 	badName: 'bad_name',
 	badInvite: 'bad_invite',
@@ -190,6 +190,9 @@ export interface JoinOptions {
 }
 
 export interface TableLink {
+	/** Does this build have a table at all? Asked without opening anything or asking anybody, so
+	 *  the app can leave the table out of its navigation where there is none to sit at. */
+	available(): Promise<boolean>;
 	/** Opening a table is confirmed outside this interface, in a dialog the webview cannot press. */
 	host(options: HostOptions): Promise<Seating<GmSeat>>;
 	/** So is joining one — and so is the GM's letting this seat in. */

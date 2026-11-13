@@ -12,6 +12,7 @@ import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 import { readStored, writeStored } from '$lib/util/persist';
 import { REDUCE_MOTION, type ReduceMotion } from '$lib/util/motion';
 import type { CustomTheme } from '$lib/styles/customThemes';
+import { RELAY_MODE, type RelaySetting } from '$lib/table-link/types';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
 export type SystemId = (typeof SYSTEMS)[number];
@@ -45,6 +46,9 @@ interface AppState {
 	/** Whether anything moves by itself: follow the system, or overrule it (`util/motion.ts`). It
 	 *  stands over every per-character choice of an animation — that choice is kept, and not played. */
 	reduceMotion: ReduceMotion;
+	/** Which relay servers a table THIS app opens is reached through (`table-link/types.ts`). A
+	 *  GM's choice: a player's app follows the invitation it was handed. */
+	tableRelay: RelaySetting;
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -59,6 +63,7 @@ function defaults(): AppState {
 		contentEditingMode: false,
 		critMethod: CRIT_METHOD.classic,
 		reduceMotion: REDUCE_MOTION.system,
+		tableRelay: { mode: RELAY_MODE.n0 },
 	};
 }
 
@@ -93,6 +98,7 @@ function persist(): void {
 		contentEditingMode: app.contentEditingMode,
 		critMethod: app.critMethod,
 		reduceMotion: app.reduceMotion,
+		tableRelay: app.tableRelay,
 	});
 }
 

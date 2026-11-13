@@ -122,8 +122,14 @@
   `../internals/table-link.md`. Built: the transport (iroh, a star, a key per table, relays by the
   GM's setting), the invitation and the door, the three native questions, the wire with its
   ceilings, the bounded schemas the page holds a peer to, and the `TableLink` seam over them.
-  Left, in order: the player's side of a request (it arrives over any screen and is carried out
-  through the same actions a click uses); the Table screen for both seats, and the relay setting.
+  Built too: `TableVM` (`routes/table/`), which keeps a GM's seated players and what was asked of
+  them, and carries a request out on a player's sheet through the same actions a click uses.
+  **Left: everything a person sees.** No screen mounts the view-model, so a table cannot be
+  opened from the app yet. In order: the Table screen for both seats (`/table`, in the navigation
+  only where `TableLink.available()` says the build has a table); the request prompt the layout
+  raises over every screen, and `TableVM.keepPublishing` started there; Settings ▸ Table for
+  `app.tableRelay`. The copy for all three is in the catalogs (`table.*`, `settings.table.*`).
+  Then a requested roll built in the dice tray, which needs the tray to hand its result back.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay

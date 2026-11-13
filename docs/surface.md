@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (100)
+## Duplicate suspects (101)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -105,6 +105,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
 - `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
+- `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
 - `takeFocus` ×2 — src/lib/actions/takeFocus.ts · src/routes/build/blocks/OwnEntries.svelte
@@ -524,7 +525,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (200 modules)
+## Library functions & types (201 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -896,6 +897,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const SKILL_ABILITY` — `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the values are still checke…
 - `type SkillId` — The 18 SRD skill ids.
+- `const SKILL_IDS` — The same ids as a list, in the order the table above states them.
 
 ### `src/lib/character/spellcasting.ts`
 
@@ -1063,6 +1065,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
 - `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
 - `function uniqueRowKeys` — * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same * weapon can stan…
+
+### `src/lib/combat/sheet-roll-specs.ts`
+
+- `interface SheetRollSpec`
+- `const abilityCheckRoll`
+- `const savingThrowRoll`
+- `const skillRoll`
+- `const abilityOf` — An id that came from outside the sheet, as the ability it names — or undefined.
+- `const skillOf` — An id that came from outside the sheet, as the skill it names — or undefined.
 
 ### `src/lib/combat/shown-trace.ts`
 
@@ -2530,4 +2541,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1549 exports across 217 modules · 100 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1556 exports across 218 modules · 101 duplicate suspects._

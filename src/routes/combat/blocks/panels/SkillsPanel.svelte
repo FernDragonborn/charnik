@@ -6,7 +6,8 @@
 	import type { Ability } from '$lib/rules/core';
 	import { _ } from '$lib/i18n';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed, titleCase, ABIL, skillRollTarget } from '$lib/combat/helpers';
+	import { why, signed, titleCase, ABIL } from '$lib/combat/helpers';
+	import { skillRoll } from '$lib/combat/sheet-roll-specs';
 	import { provenance } from '$lib/actions/provenance';
 
 	let { s }: { s: CharacterSheet } = $props();
@@ -41,13 +42,10 @@
 						<button
 							class="skill-row"
 							use:provenance={why(sk, $_)}
-							onclick={(e) =>
-								roll(
-									{ text: titleCase(skill), key: `skillName.${skill}` },
-									sk.value,
-									e,
-									skillRollTarget(skill, s),
-								)}
+							onclick={(e) => {
+								const check = skillRoll(skill, s);
+								roll(check.name, check.mod, e, check.target);
+							}}
 						>
 							<i
 								class="prof-dot"

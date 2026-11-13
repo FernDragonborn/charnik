@@ -185,7 +185,7 @@ pub async fn table_link_host(
         values: vec![("table", name.clone()), ("route", route)],
     };
     if !question.ask(app.clone()).await {
-        return unavailable(Unavailable::Declined);
+        return unavailable(Unavailable::Cancelled);
     }
     match session::host(&name, &relay, emitter(&app), approver(&app, &locale)).await {
         Ok((table, invite)) => {
@@ -236,7 +236,7 @@ pub async fn table_link_join(
         ],
     };
     if !question.ask(app.clone()).await {
-        return unavailable(Unavailable::Declined);
+        return unavailable(Unavailable::Cancelled);
     }
     match session::join(&invite, &name, emitter(&app)).await {
         Ok(player) => {
