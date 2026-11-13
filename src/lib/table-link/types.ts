@@ -1,23 +1,23 @@
 /*
- * The table link's seam: what a GM's app and a player's app say to each other, as an interface
- * with no transport behind it. Beside `Storage` and for the same reason — everything above it
- * talks to this, so the build with no table (`noop.ts`: the web demo, and any desktop build without
- * the Cargo feature) and the build with one are the same app.
+ * The table link's seam: what a GM's app and a player's app say to each other, as an interface.
+ * Beside `Storage` and for the same reason — everything above it talks to this, so the build with
+ * no table (`noop.ts`: the web demo, and any desktop build without the Cargo feature) and the build
+ * with one are the same app. `docs/internals/table-link.md` is the specification.
  *
  * The calls stand on a SEAT rather than on the service: `host` answers a GM's seat and `join` a
  * player's, so a player's seat has no way to ask and a GM's none to publish. The role is the type.
  */
 import type { CharacterSheet } from '$lib/character/derive';
 import type { Character } from '$lib/character/schema';
-import type { RollLogEntry } from '$lib/combat/roll';
 import type { DamagePart } from '$lib/play/hit-points';
+import type { TableRoll, TableView } from './wire-schema';
 
 export type TableId = string;
 /** A participant's key AT ONE TABLE. Nothing links it to the same person at another. */
-type ParticipantId = string;
-type RequestId = string;
+export type ParticipantId = string;
+export type RequestId = string;
 
-interface Participant {
+export interface Participant {
 	id: ParticipantId;
 	name: string;
 }
@@ -26,8 +26,53 @@ interface Participant {
 export const DELIVERY = { delivered: 'delivered', notDelivered: 'not_delivered' } as const;
 export type Delivery = (typeof DELIVERY)[keyof typeof DELIVERY];
 
-export const CONNECTION = { unavailable: 'unavailable' } as const;
-type ConnectionState = (typeof CONNECTION)[keyof typeof CONNECTION];
+/** Where a player's connection to the GM stands. */
+export const CONNECTION = {
+	connecting: 'connecting',
+	/** The hello is said and the GM has not answered. */
+	waiting: 'waiting',
+	connected: 'connected',
+	reconnecting: 'reconnecting',
+	closed: 'closed',
+} as const;
+export type ConnectionState = (typeof CONNECTION)[keyof typeof CONNECTION];
+
+/** Why a player's seat ended, or was never given. */
+export const CLOSE_REASON = {
+	unreachable: 'unreachable',
+	invite: 'invite',
+	declined: 'declined',
+	version: 'version',
+	full: 'full',
+	dismissed: 'dismissed',
+	tableClosed: 'table_closed',
+	lost: 'lost',
+	protocol: 'protocol',
+} as const;
+export type CloseReason = (typeof CLOSE_REASON)[keyof typeof CLOSE_REASON];
+
+/** Why `host` or `join` gave no seat. */
+export const UNAVAILABLE = {
+	/** The build has no table link at all: the web demo, or a desktop build without the feature. */
+	noTable: 'no_table',
+	/** The person at this app said no to going online. */
+	declined: 'declined',
+	alreadySeated: 'already_seated',
+	badName: 'bad_name',
+	badInvite: 'bad_invite',
+	badRelay: 'bad_relay',
+	relayUnreachable: 'relay_unreachable',
+	network: 'network',
+} as const;
+export type UnavailableReason = (typeof UNAVAILABLE)[keyof typeof UNAVAILABLE];
+
+/** Which relay servers a table is reached through — the GM's choice, carried by the invitation. */
+export const RELAY_MODE = { n0: 'n0', custom: 'custom', none: 'none' } as const;
+export type RelayMode = (typeof RELAY_MODE)[keyof typeof RELAY_MODE];
+export type RelaySetting =
+	| { mode: typeof RELAY_MODE.n0 }
+	| { mode: typeof RELAY_MODE.custom; url: string }
+	| { mode: typeof RELAY_MODE.none };
 
 export const TABLE_REQUEST = {
 	damage: 'damage',
@@ -41,7 +86,7 @@ export const REQUESTED_ROLL = {
 	savingThrow: 'saving_throw',
 	skill: 'skill',
 } as const;
-type RequestedRoll = (typeof REQUESTED_ROLL)[keyof typeof REQUESTED_ROLL];
+export type RequestedRoll = (typeof REQUESTED_ROLL)[keyof typeof REQUESTED_ROLL];
 
 /**
  * What a GM may ask of a player. Catalog ids and numbers, never an effect token or a dice formula.
@@ -62,7 +107,7 @@ export interface TableAnswer {
 	outcome: (typeof TABLE_ANSWER)[keyof typeof TABLE_ANSWER];
 	/** The roll that was made. A roll is an event and not a state of the sheet, so it travels here;
 	 *  what damage or healing left is seen in the next publish. */
-	roll?: RollLogEntry;
+	roll?: TableRoll;
 }
 
 export const TABLE_EVENT = {
@@ -74,57 +119,79 @@ export const TABLE_EVENT = {
 	connection: 'connection',
 } as const;
 
-interface ConnectionChanged {
-	kind: typeof TABLE_EVENT.connection;
-	state: ConnectionState;
-}
-
 export type PlayerEvent =
 	| { kind: typeof TABLE_EVENT.request; requestId: RequestId; request: TableRequest }
-	| ConnectionChanged;
+	| { kind: typeof TABLE_EVENT.connection; state: ConnectionState; reason?: CloseReason };
 
 export type GmEvent =
 	| { kind: typeof TABLE_EVENT.participantJoined; participant: Participant }
 	| { kind: typeof TABLE_EVENT.participantLeft; participant: ParticipantId }
-	| {
-			kind: typeof TABLE_EVENT.view;
-			participant: ParticipantId;
-			character: Character;
-			view: CharacterSheet;
-	  }
+	/** A player's sheet as the table sees it, already held to `tableViewSchema`. */
+	| { kind: typeof TABLE_EVENT.view; participant: ParticipantId; view: TableView }
 	| {
 			kind: typeof TABLE_EVENT.answer;
 			participant: ParticipantId;
 			requestId: RequestId;
 			answer: TableAnswer;
-	  }
-	| ConnectionChanged;
+	  };
 
 export type Unsubscribe = () => void;
 
 interface Seat<Event> {
 	readonly table: TableId;
+	/** A GM's leaving closes the table for everyone at it. */
 	leave(): Promise<void>;
 	subscribe(listener: (event: Event) => void): Promise<Unsubscribe>;
 }
 
 export interface PlayerSeat extends Seat<PlayerEvent> {
-	/** Says what is true NOW: the character as it is saved and the sheet derived from it, traces
-	 *  included. What crosses the wire — the keys that changed — is the transport's to decide. */
-	publish(character: Character, view: CharacterSheet): Promise<Delivery>;
+	/** The digits to read to the GM, who is shown the same ones before letting this seat in. */
+	readonly code: string;
+	/** Says what is true NOW. What leaves is the table's view of the character (`view.ts`), and
+	 *  what crosses the wire — the keys of it that changed — is the transport's to decide. */
+	publish(character: Character, sheet: CharacterSheet): Promise<Delivery>;
 	respond(request: RequestId, answer: TableAnswer): Promise<Delivery>;
 }
 
+/** What asking came to: the id an answer will carry, when the request left. */
+export type Asked =
+	| { delivery: typeof DELIVERY.delivered; requestId: RequestId }
+	| { delivery: typeof DELIVERY.notDelivered };
+
 export interface GmSeat extends Seat<GmEvent> {
-	request(participant: ParticipantId, request: TableRequest): Promise<Delivery>;
+	/** What to hand a player. It names the table and knocks; the GM still lets each one in. */
+	readonly invite: string;
+	request(participant: ParticipantId, request: TableRequest): Promise<Asked>;
+	/** Take a participant's seat away, and their way back in. */
+	dismiss(participant: ParticipantId): Promise<void>;
+	/** Open the door under a NEW invitation, which is answered, or shut it (null). Either way every
+	 *  invitation handed out before stops working; whoever is seated stays. */
+	setDoor(open: boolean): Promise<string | null>;
 }
 
 export const SEATING = { seated: 'seated', unavailable: 'unavailable' } as const;
 export type Seating<S> =
-	{ status: typeof SEATING.seated; seat: S } | { status: typeof SEATING.unavailable };
+	| { status: typeof SEATING.seated; seat: S }
+	| { status: typeof SEATING.unavailable; reason: UnavailableReason };
+
+export interface HostOptions {
+	/** The table's name, as players are shown it. */
+	name: string;
+	relay: RelaySetting;
+	/** The language the native question is asked in. */
+	locale: string;
+}
+
+export interface JoinOptions {
+	invite: string;
+	/** The name the GM is asked about. */
+	name: string;
+	locale: string;
+}
 
 export interface TableLink {
-	host(name: string): Promise<Seating<GmSeat>>;
-	/** Joining is approved outside this interface, in a dialog the webview cannot press. */
-	join(invite: string): Promise<Seating<PlayerSeat>>;
+	/** Opening a table is confirmed outside this interface, in a dialog the webview cannot press. */
+	host(options: HostOptions): Promise<Seating<GmSeat>>;
+	/** So is joining one — and so is the GM's letting this seat in. */
+	join(options: JoinOptions): Promise<Seating<PlayerSeat>>;
 }

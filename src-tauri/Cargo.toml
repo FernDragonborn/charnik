@@ -6,7 +6,7 @@ authors = ["Fern Dragonborn <48766349+FernDragonborn@users.noreply.github.com>"]
 license = "MIT"
 repository = "https://github.com/FernDragonborn/charnik"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.91"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 # The table link's commands and their capability (`src/table_link.rs`). Off in a release: the app
 # ships with no command of it for the page to call. CI compiles it on.
-table-link = []
+table-link = ["dep:iroh", "dep:tokio", "dep:data-encoding", "dep:getrandom"]
 
 [build-dependencies]
 tauri-build = { version = "2.6.3", features = [] }
@@ -44,6 +44,14 @@ tauri-plugin-opener = "2"
 # Depended on for its HTTP client alone (`remote.rs`): the plugin is NOT initialised, so its `fetch`
 # command — any method, any header, to whatever the scope allows — does not exist for the page.
 tauri-plugin-http = "2"
+# The table link's transport (`table_link/`), compiled only with the `table-link` feature. The
+# defaults are left out on purpose: `portmapper` asks the router to open a port (UPnP/PCP/NAT-PMP),
+# `fast-apple-datapath` uses private Apple APIs, and `metrics` collects what nothing reads.
+iroh = { version = "1.4", default-features = false, features = ["tls-ring"], optional = true }
+tokio = { version = "1", features = ["sync", "time", "macros", "rt"], optional = true }
+# An invitation is bytes a person pastes (`table_link/wire.rs`), and its secret is the OS's randomness.
+data-encoding = { version = "2", optional = true }
+getrandom = { version = "0.4", optional = true }
 
 [dev-dependencies]
 # `remote.rs` builds a response by hand to test its size ceiling without a network.

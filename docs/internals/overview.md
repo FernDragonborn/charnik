@@ -7,9 +7,10 @@
 
 Charnik is a **Tauri v2 desktop app** wrapping a **SvelteKit SPA** (`adapter-static`, TypeScript) in
 the system webview, with a free web build of the same SPA beside it. There is **no HTTP server** —
-not in the desktop app, not anywhere. Standalone desktop is the case that matters; LAN and remote
-access are not goals, and the absence of a server is a security property as much as a simplicity one
-(`security.md`).
+not in the desktop app, not anywhere. Standalone desktop is the case that matters; reaching your
+own data over LAN or remotely is not a goal, and the absence of a server is a security property as
+much as a simplicity one (`security.md`). The one thing that listens is a table the user opened
+(`table-link.md`), for as long as it is open.
 
 The Rust side stays minimal: configuration, capabilities, and the official plugins. The whole
 TypeScript side runs without Rust; only the Tauri wiring needs it.
@@ -80,34 +81,37 @@ folder the user picks anywhere else is granted at runtime by a Rust command
 ## TableLink is the seam a table stands on
 
 A GM's app and the players' apps exchanging data is one interface, `TableLink`
-(`lib/table-link/types.ts`), chosen in one place (`getTableLink`) the way a `Storage` is. **No
-transport exists, and no build opens a socket**: every implementation answers that there is no
-table. What is built is the shape a transport fills in.
+(`lib/table-link/types.ts`), chosen in one place (`getTableLink`) the way a `Storage` is. The
+desktop implementation is a transport in Rust; everything else has no table and says so.
+`table-link.md` is the specification — who is trusted, the wire, the relays, the native
+questions — and this is the shape the rest of the app sees.
 
-- **The calls stand on a SEAT.** `host(name)` answers a GM's seat and `join(invite)` a player's;
-  both `leave()` and `subscribe(listener)`, a player's `publish`es and `respond`s, a GM's
-  `request`s. A player's seat has no way to ask and a GM's none to publish, so the role is the
-  type. A seat carries its table. Every call answers delivered or not delivered — there is no
-  queue.
-- **A player publishes the whole view**: the character as it is saved and the sheet derived from
-  it, traces included. The GM's app renders it and derives nothing from a peer's tokens.
+- **The calls stand on a SEAT.** `host` answers a GM's seat and `join` a player's; both `leave()`
+  and `subscribe(listener)`, a player's `publish`es and `respond`s, a GM's `request`s,
+  `dismiss`es and opens or shuts the door. A player's seat has no way to ask and a GM's none to
+  publish, so the role is the type. Every call answers delivered or not delivered — there is no
+  queue — and a seat that was not given says why.
+- **A player publishes the table's view of their sheet**: what a GM reads across a table, each
+  number with its trace (`table-link/view.ts`). The GM's app renders it and derives nothing from a
+  peer's tokens.
 - **A GM asks one of four typed requests** — take this damage, be healed, take this state or
   effect, make this roll — naming catalog ids and numbers, never a token or a dice formula. Rust
   refuses a request carrying any other field. A request never applies itself: it arrives, the
   player sees it and answers, and a roll made travels back in the answer.
 - **Rust pushes six events down one channel**, told apart by `kind`: a participant joined, a
-  participant left, a view arrived and an answer arrived (to a GM), a request arrived (to a
-  player), the connection's state changed.
+  participant left, a view arrived and an answer arrived (to a GM), a request arrived and the
+  connection's state changed (to a player). Each is held to a bounded schema before a listener
+  hears it (`table-link/wire-schema.ts`).
 
 **The Rust half is one Cargo feature, `table-link`, and it is OFF in a release.** The feature
-carries the commands (`src-tauri/src/table_link.rs`), their entries in `build.rs` and their
-capability file, which sits in a folder of its own (`capabilities/table-link/`) and is read only
-when the feature is on — a capability naming a permission the build does not declare fails the
-build. CI compiles the feature on (`ci.yml` ▸ `table-link`), since nothing else does. The page
-learns which build it is in by CALLING: a command that is not there is refused, and
-`lib/table-link/tauri.ts` reads the refusal as no table, the same answer `noop.ts` gives the web
-build. There is no second switch to keep true to Cargo's. `/dev/table-link?expect=on|off` asks the
-running webview in either build.
+carries the transport and its commands (`src-tauri/src/table_link/`), their entries in `build.rs`,
+the crates only they use, and their capability file, which sits in a folder of its own
+(`capabilities/table-link/`) and is read only when the feature is on — a capability naming a
+permission the build does not declare fails the build. CI compiles the feature on (`ci.yml` ▸
+`table-link`), since nothing else does. The page learns which build it is in by CALLING: a command
+that is not there is refused, and `lib/table-link/tauri.ts` reads the refusal as no table, the
+same answer `noop.ts` gives the web build. There is no second switch to keep true to Cargo's.
+`/dev/table-link?expect=on|off` asks the running webview in either build.
 
 The web build is a **Storage-seam swap and nothing else** — the SPA deploys to GitHub Pages as-is,
 `PUBLIC_PLATFORM` picks the factory, and export/import uses the identical `character.json` and bundle

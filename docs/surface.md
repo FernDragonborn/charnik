@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (99)
+## Duplicate suspects (100)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -63,6 +63,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `COMMANDS` ×2 — src/lib/components/CommandPalette.svelte · src/routes/dev/table-link/+page.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
+- `DEATH_SAVE_TRACK` ×2 — src/lib/play/hit-points.ts · src/lib/table-link/wire-schema.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `DRAFTS_DIR` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
@@ -523,7 +524,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (198 modules)
+## Library functions & types (200 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2210,8 +2211,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SYSTEM_SHORT_LABELS` — The same name where the full one will not fit — a roster badge, a segmented switch.
 - `function systemShortLabel` — …for the callers holding a plain `string`: a draft summary reads its system out of a file the * user can edit, so an …
 - `const DEFAULT_SYSTEM` — The system a NEW character/draft starts in when nothing says otherwise.
-- `type Layer` — Where a stat's math comes from, in pipeline order.
-- `type Op` — `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already higher" (Headband of …
+- `const LAYERS` — Where a stat's math comes from, in pipeline order.
+- `type Layer`
+- `const OPS` — `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already higher" (Headband of …
+- `type Op`
 - `interface Contribution`
 - `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
 - `type Translate` — * svelte-i18n's `$format`, taken as a parameter so the rules core and every pure view helper stay * locale-free — the…
@@ -2399,17 +2402,29 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/table-link/tauri.ts`
 
 - `type TableLinkWireEvent` — An event as Rust sends it: one of a seat's, addressed to its table.
-- `const listenToTableLink` — Every table event Rust pushes, whichever table it is for.
+- `const listenToTableLink` — Every table event Rust pushes, whichever table it is for, once it has been held to its shape.
 - `const tauriTableLink`
 
 ### `src/lib/table-link/types.ts`
 
 - `type TableId`
+- `type ParticipantId` — A participant's key AT ONE TABLE.
+- `type RequestId`
+- `interface Participant`
 - `const DELIVERY` — Every call answers one of these.
 - `type Delivery`
-- `const CONNECTION`
+- `const CONNECTION` — Where a player's connection to the GM stands.
+- `type ConnectionState`
+- `const CLOSE_REASON` — Why a player's seat ended, or was never given.
+- `type CloseReason`
+- `const UNAVAILABLE` — Why `host` or `join` gave no seat.
+- `type UnavailableReason`
+- `const RELAY_MODE` — Which relay servers a table is reached through — the GM's choice, carried by the invitation.
+- `type RelayMode`
+- `type RelaySetting`
 - `const TABLE_REQUEST`
 - `const REQUESTED_ROLL`
+- `type RequestedRoll`
 - `type TableRequest` — * What a GM may ask of a player.
 - `const TABLE_ANSWER`
 - `interface TableAnswer`
@@ -2418,10 +2433,29 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type GmEvent`
 - `type Unsubscribe`
 - `interface PlayerSeat`
+- `type Asked` — What asking came to: the id an answer will carry, when the request left.
 - `interface GmSeat`
 - `const SEATING`
 - `type Seating`
+- `interface HostOptions`
+- `interface JoinOptions`
 - `interface TableLink`
+
+### `src/lib/table-link/view.ts`
+
+- `function tableViewOf`
+
+### `src/lib/table-link/wire-schema.ts`
+
+- `const NAME_MAX` — The ceilings a player's own free text is cut to before it leaves (`view.ts`), so a long name * shortens on the GM's s…
+- `const LABEL_MAX`
+- `const LIST_MAX`
+- `const tableViewSchema` — * A character as the table sees it: what a GM reads off a sheet across the table, and nothing a * player would not sa…
+- `type TableView`
+- `const tableRequestSchema`
+- `const tableRollSchema` — A roll as it travels back to the GM: what it came to and how, never the sentence around it.
+- `type TableRoll`
+- `const tableEventSchema` — Every event Rust pushes, as the page will believe it.
 
 ### `src/lib/toast/toast.ts`
 
@@ -2496,4 +2530,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 58 components · 1522 exports across 215 modules · 99 duplicate suspects._
+_50 tokens · 97 global classes · 58 components · 1549 exports across 217 modules · 100 duplicate suspects._

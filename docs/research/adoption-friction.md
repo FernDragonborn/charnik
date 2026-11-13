@@ -117,8 +117,8 @@ through level 20 (`plan.md`).
 
 1. **Sign the Windows installer** (SignPath for open source, or Azure Artifact Signing). Before any
    promotion — it is the first screen a new user sees.
-2. **Decide the phone path for players** (web demo joining a table, or the mobile build) as part of
-   TABLE-LINK-SPEC; without it the in-person table is unreachable.
+2. **Decide the phone path for players** (web demo joining a table, or the mobile build) (TABLE-LINK-PHONE,
+   `../work/release.md`); without it the in-person table is unreachable.
 3. **Put the trace in front**: the first-run screen and the landing page show "why is this number this
    number", because it is the one thing nobody else does.
 4. **Discord roll mirror** — a small feature that makes Charnik useful to an online group where only

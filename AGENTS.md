@@ -12,8 +12,10 @@ resources, conditions, concentration, rests), and browse a compendium over every
 Five things the product is. A change that erodes one of them is wrong even when it is convenient.
 
 **The data belongs to the user.** Content is CSV in folders they can open, edit, and share. There is
-no database, no account, no server — the desktop app talks to the filesystem and nothing else. A user
-who deletes Charnik keeps their characters.
+no database, no account, no server of ours — the desktop app talks to the filesystem, and to the
+network only where the user said so: a pack or an update it fetches, and a table they opened or
+joined, app to app (`docs/internals/table-link.md`). A user who deletes Charnik keeps their
+characters.
 
 **Every number can explain itself.** The rules core returns a value plus the trace that produced it —
 each `{source, op, amount}` contribution and every rule note or block. Never a bare number. The UI

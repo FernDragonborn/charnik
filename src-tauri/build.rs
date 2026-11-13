@@ -31,6 +31,8 @@ const TABLE_LINK_COMMANDS: &[&str] = &[
     "table_link_publish",
     "table_link_respond",
     "table_link_request",
+    "table_link_dismiss",
+    "table_link_door",
 ];
 /// The capability files of every build, and with them the ones a feature brings in its own folder.
 /// A capability naming a permission the build does not declare fails it, so a feature's file is
@@ -40,13 +42,17 @@ const ALL_CAPABILITIES: &str = "./capabilities/**/*.json";
 
 /// The UI's own catalogs — the one place a string is translated.
 const LOCALES_DIR: &str = "../src/lib/i18n/locales";
-/// Where the native consent dialog's words sit in a catalog, and the fields it needs.
-const CONSENT_KEY: [&str; 3] = ["settings", "plugins", "nativeConsent"];
-const CONSENT_FIELDS: [&str; 4] = ["title", "body", "allow", "deny"];
+/// Where the words of the NATIVE dialogs sit in a catalog: every string under these keys is
+/// compiled into the binary. A native dialog asks a security question, so the page may name the
+/// language it is asked in and never the sentence.
+const NATIVE_ROOTS: [&[&str]; 2] = [
+    &["settings", "plugins", "nativeConsent"],
+    &["table", "native"],
+];
 const FALLBACK_LOCALE: &str = "en";
 
 fn main() {
-    write_consent_strings();
+    write_native_strings();
     let table_link = std::env::var_os("CARGO_FEATURE_TABLE_LINK").is_some();
     let commands: Vec<&str> = APP_COMMANDS
         .iter()
@@ -65,30 +71,50 @@ fn main() {
     .expect("failed to run tauri-build");
 }
 
-/// One catalog's consent strings, in `CONSENT_FIELDS` order; a field the catalog lacks is absent.
-fn consent_fields(catalog: &Path) -> [Option<String>; 4] {
+/// Every string under `at`, as `dotted.key → words`.
+fn collect_strings(at: &serde_json::Value, key: &str, found: &mut Vec<(String, String)>) {
+    match at {
+        serde_json::Value::String(words) => found.push((key.to_string(), words.clone())),
+        serde_json::Value::Object(children) => {
+            for (name, child) in children {
+                collect_strings(child, &format!("{key}.{name}"), found);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// One catalog's native-dialog strings.
+fn native_strings_of(catalog: &Path) -> Vec<(String, String)> {
     let text = std::fs::read_to_string(catalog)
         .unwrap_or_else(|e| panic!("cannot read {}: {e}", catalog.display()));
     let json: serde_json::Value = serde_json::from_str(&text)
         .unwrap_or_else(|e| panic!("{} is not JSON: {e}", catalog.display()));
-    let section = CONSENT_KEY.iter().fold(Some(&json), |at, key| at?.get(key));
-    CONSENT_FIELDS.map(|field| Some(section?.get(field)?.as_str()?.to_string()))
+    let mut found = Vec::new();
+    for root in NATIVE_ROOTS {
+        if let Some(section) = root.iter().try_fold(&json, |at, key| at.get(key)) {
+            collect_strings(section, &root.join("."), &mut found);
+        }
+    }
+    found
 }
 
-/// Compile the consent dialog's words into the binary, one arm per catalog found by scanning the
-/// folder. Rust has no catalogs at runtime, and the page must not be the one to supply the sentence
-/// a security question is asked in — so the page names a locale and the words come from here. A
-/// field a catalog lacks falls back to English; English lacking one fails the build.
-fn write_consent_strings() {
+/// Compile the native dialogs' words into the binary, one arm per string of every catalog found
+/// by scanning the folder. Rust has no catalogs at runtime, and the page must not be the one to
+/// supply the sentence a security question is asked in — so the page names a locale and the words
+/// come from here. A string a catalog lacks is said in English; English lacking a whole root
+/// fails the build.
+fn write_native_strings() {
     println!("cargo:rerun-if-changed={LOCALES_DIR}");
-    let english = consent_fields(&Path::new(LOCALES_DIR).join(format!("{FALLBACK_LOCALE}.json")))
-        .map(|field| field.expect("en.json is missing a settings.plugins.nativeConsent string"));
-    let literal = |fields: &[String; 4]| {
-        format!(
-            "ConsentStrings {{ title: {:?}, body: {:?}, allow: {:?}, deny: {:?} }}",
-            fields[0], fields[1], fields[2], fields[3]
-        )
-    };
+    let english =
+        native_strings_of(&Path::new(LOCALES_DIR).join(format!("{FALLBACK_LOCALE}.json")));
+    for root in NATIVE_ROOTS {
+        let prefix = format!("{}.", root.join("."));
+        assert!(
+            english.iter().any(|(key, _)| key.starts_with(&prefix)),
+            "en.json has no strings under {prefix}"
+        );
+    }
 
     let mut catalogs: Vec<_> = std::fs::read_dir(LOCALES_DIR)
         .expect("the UI locale catalogs are missing")
@@ -101,26 +127,27 @@ fn write_consent_strings() {
     let mut ids = Vec::new();
     for catalog in &catalogs {
         let id = catalog.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-        let mut fields = consent_fields(catalog).into_iter().zip(&english);
-        let fields: [String; 4] = std::array::from_fn(|_| {
-            fields
-                .next()
-                .map(|(own, en)| own.unwrap_or(en.clone()))
-                .unwrap()
-        });
-        writeln!(arms, "        {id:?} => {},", literal(&fields)).unwrap();
+        for (key, words) in native_strings_of(catalog) {
+            writeln!(arms, "        ({id:?}, {key:?}) => {words:?},").unwrap();
+        }
         ids.push(format!("{id:?}"));
     }
 
     let source = format!(
-        "pub struct ConsentStrings {{\n    pub title: &'static str,\n    pub body: &'static str,\n    \
-         pub allow: &'static str,\n    pub deny: &'static str,\n}}\n\n\
-         #[allow(dead_code)]\npub const CONSENT_LOCALES: &[&str] = &[{}];\n\n\
-         pub fn consent_strings(locale: &str) -> ConsentStrings {{\n    match locale {{\n{arms}        \
-         _ => {},\n    }}\n}}\n",
+        "#[allow(dead_code)]
+pub const NATIVE_LOCALES: &[&str] = &[{}];
+
+         /// The words of a native dialog in a locale, in English where the locale lacks them, and
+         /// empty where English does too.
+         pub fn native_string(locale: &str, key: &str) -> &'static str {{
+    match (locale, key) {{
+{arms}                 ({FALLBACK_LOCALE:?}, _) => \"\",
+        (_, key) => native_string({FALLBACK_LOCALE:?}, key),
+    }}
+}}
+",
         ids.join(", "),
-        literal(&english),
     );
-    let out = Path::new(&std::env::var("OUT_DIR").expect("OUT_DIR")).join("consent_strings.rs");
-    std::fs::write(out, source).expect("cannot write consent_strings.rs");
+    let out = Path::new(&std::env::var("OUT_DIR").expect("OUT_DIR")).join("native_strings.rs");
+    std::fs::write(out, source).expect("cannot write native_strings.rs");
 }

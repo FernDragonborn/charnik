@@ -42,14 +42,23 @@ export function systemShortLabel(system: string): string {
 export const DEFAULT_SYSTEM: System = '5.5e';
 
 /** Where a stat's math comes from, in pipeline order. */
-export type Layer =
-	'base' | 'ability' | 'proficiency' | 'item' | 'feature' | 'condition' | 'override';
+export const LAYERS = [
+	'base',
+	'ability',
+	'proficiency',
+	'item',
+	'feature',
+	'condition',
+	'override',
+] as const;
+export type Layer = (typeof LAYERS)[number];
 
 // `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already
 // higher" (Headband of Intellect → INT ≥ 19); `cap` = "unless already lower". `set` = plain absolute.
 // `base` = another way to work out the stat's BASE ("your base Armor Class equals 10 + DEX + CON"):
 // it competes with the base the core computed, and everything after the base still adds to it.
-export type Op = 'add' | 'set' | 'mult' | 'floor' | 'cap' | 'base';
+export const OPS = ['add', 'set', 'mult', 'floor', 'cap', 'base'] as const;
+export type Op = (typeof OPS)[number];
 
 /** The layers that make up a stat's base — what a `base` contribution competes with. Armour or
  *  10 lands on `base`, the ability modifier it reads on `ability`. */

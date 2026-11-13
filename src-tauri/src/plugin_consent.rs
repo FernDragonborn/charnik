@@ -16,8 +16,27 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
-// `ConsentStrings` and `consent_strings(locale)`, generated from `src/lib/i18n/locales/*.json`.
-include!(concat!(env!("OUT_DIR"), "/consent_strings.rs"));
+use crate::native_strings::native_string;
+
+/// Where the consent dialog's words sit in a catalog (`build.rs` ▸ `NATIVE_ROOTS`).
+const CONSENT_KEY: &str = "settings.plugins.nativeConsent";
+
+struct ConsentStrings {
+    title: &'static str,
+    body: &'static str,
+    allow: &'static str,
+    deny: &'static str,
+}
+
+fn consent_strings(locale: &str) -> ConsentStrings {
+    let said = |field: &str| native_string(locale, &format!("{CONSENT_KEY}.{field}"));
+    ConsentStrings {
+        title: said("title"),
+        body: said("body"),
+        allow: said("allow"),
+        deny: said("deny"),
+    }
+}
 
 /// The record, in the shape the page reads it (`PluginPrefs` in `effects/plugin-host.ts`).
 #[derive(Default, Clone, Serialize, Deserialize)]
@@ -196,10 +215,13 @@ mod tests {
 
     #[test]
     fn every_bundled_locale_asks_about_the_plugin_and_its_fingerprint() {
-        for locale in CONSENT_LOCALES {
+        for locale in crate::native_strings::NATIVE_LOCALES {
             let strings = consent_strings(locale);
             assert!(strings.body.contains("{namespace}"), "{locale}");
             assert!(strings.body.contains("{fingerprint}"), "{locale}");
+            for words in [strings.title, strings.allow, strings.deny] {
+                assert!(!words.is_empty(), "{locale}");
+            }
         }
         // a locale nobody bundled is asked in English, never in the page's words
         assert_eq!(consent_strings("xx").title, consent_strings("en").title);

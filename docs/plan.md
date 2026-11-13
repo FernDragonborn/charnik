@@ -18,7 +18,7 @@ sheet generator. Three roles in one UI:
 Core intent:
 - **Standalone desktop app (Tauri)** — the 99% use case; data is **local files on disk**.
   **Windows + Linux** (macOS ~free). **No HTTP server** → reaching your own data over LAN or remotely is **not** a
-  goal; players linking their apps at one table is a layer of its own (TABLE-LINK-SPEC). **Responsive** kept as a light nicety (window resize), not a phone-over-LAN driver.
+  goal; players linking their apps at one table is a layer of its own (`internals/table-link.md`). **Responsive** kept as a light nicety (window resize), not a phone-over-LAN driver.
 - **Max simple, minimal over-engineering.** FOSS.
 - Content stored in **CSV** (not a DB) — obvious, editable by non-technical users in
   Excel/LibreOffice. Ships **SRD-only by default**; adding more is **very easy**.
@@ -252,17 +252,15 @@ position and are given per wave, because most of them were learned the hard way.
     REACTION-ROLLS · TOGGLE-STATES · HUNTERS-PREY · FRENZY.
     A class feature's `spells` (0.8.2) is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: the
     same column on an option and a species row, and they are mostly content.
-  - **A table, minimally.** TABLE-LINK-SPEC first — its own session with the maintainer, starting
-    from the decisions `research/table-link-design-review.md` lists and the ones already taken
-    (work/release.md ▸ TABLE-LINK-SPEC) — then TABLE-LINK-MVP, the smallest table worth sitting at.
-    Proposed, for the spec to settle: a GM hosts and players join with approval outside the
-    webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM asks
-    for an ability check, a save or a skill and sees the roll land; damage a GM sends arrives raw
-    with its type and the player's app applies its defenses. No chat, no maps, no initiative order.
+  - **A table, minimally.** TABLE-LINK-MVP, the smallest table worth sitting at, to the
+    specification in `internals/table-link.md`: a GM hosts and players join with approval outside
+    the webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM
+    asks for an ability check, a save or a skill and sees the roll land; damage a GM sends arrives
+    raw with its type and the player's app applies its defenses. No chat, no maps, no initiative
+    order. Then TABLE-LINK-FIELD: two real networks, and the feature on in a release.
     **The 0.9.0 table is desktop players.** The maintainer's call: a player joining from a phone — the
     web demo at a table, or the mobile build — comes only once the base engine supports the SRD
-    through level 20 (the 5–10 and 11–20 waves below), so the decision-10 question of
-    `research/table-link-design-review.md` is settled for 0.9.0 as "not yet".
+    through level 20 (the 5–10 and 11–20 waves below), which is TABLE-LINK-PHONE.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.

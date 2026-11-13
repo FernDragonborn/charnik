@@ -6,7 +6,8 @@
 	// command is there. Open it as `/dev/table-link?expect=off` on a plain build and `?expect=on`
 	// on one built with `--features table-link`; the probe fails if the build is not the one named.
 	//
-	// It opens no table and reaches nobody — there is no transport in either build.
+	// It opens no table and reaches nobody: every call here is one Rust answers BEFORE it would
+	// ask the person at the app anything, so no native dialog appears and no socket is bound.
 	import { onMount } from 'svelte';
 	import { invokeRaw } from '../invoke-raw';
 	import { page } from '$app/state';
@@ -14,27 +15,31 @@
 	import { getContentGraph } from '$lib/content/provider';
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { getTableLink } from '$lib/table-link/provider';
-	import { listenToTableLink, type TableLinkWireEvent } from '$lib/table-link/tauri';
 	import {
-		CONNECTION,
 		DELIVERY,
+		RELAY_MODE,
 		REQUESTED_ROLL,
 		SEATING,
 		TABLE_ANSWER,
-		TABLE_EVENT,
 		TABLE_REQUEST,
+		UNAVAILABLE,
 		type TableAnswer,
 		type TableRequest,
 	} from '$lib/table-link/types';
+	import { tableViewOf } from '$lib/table-link/view';
 
 	const REPORT = 'table-link-probe.txt';
 	const EXPECT_ON = 'on';
-	/** Long enough for an event Rust sent before its command answered to be handed to the page. */
-	const EVENT_WAIT_MS = 500;
-	const COMMANDS = ['host', 'join', 'leave', 'publish', 'respond', 'request'].map(
-		(call) => `table_link_${call}`,
-	);
+	const COMMANDS = [
+		'host',
+		'join',
+		'leave',
+		'publish',
+		'respond',
+		'request',
+		'dismiss',
+		'door',
+	].map((call) => `table_link_${call}`);
 
 	let lines = $state<string[]>([]);
 	let failures = $state(0);
@@ -87,44 +92,60 @@
 		}
 		ran = true;
 
-		// --- 1. the seam the app uses says no table, in both builds ---------------------------------
-		const link = getTableLink();
-		check('hosting gives no seat', (await link.host('probe')).status === SEATING.unavailable);
-		check('joining gives no seat', (await link.join('probe')).status === SEATING.unavailable);
-
 		if (expectOn) await probeFeatureOn();
 		else
 			for (const command of COMMANDS)
 				await refused(`${command} is not the page's to call`, command, { table: 'probe' });
 	}
 
-	async function probeFeatureOn(): Promise<void> {
-		// --- 2. Rust reaches the page down the channel -----------------------------------------------
-		const heard: TableLinkWireEvent[] = [];
-		const stop = await listenToTableLink((event) => heard.push(event));
-		await answers('host answers no table', null, 'table_link_host', { name: 'probe' });
-		await new Promise((done) => setTimeout(done, EVENT_WAIT_MS));
-		stop();
+	/** A call Rust turns away before asking anybody: the answer names why, and no dialog showed. */
+	async function turnedAway(what: string, reason: string, command: string, args: object) {
+		const outcome = await invokeRaw(command, { locale: 'en', ...args });
+		const answered = outcome.resolved ? JSON.stringify(outcome.value) : outcome.reason;
 		check(
-			'…and says so as an event',
-			heard.some(
-				(event) => event.kind === TABLE_EVENT.connection && event.state === CONNECTION.unavailable,
-			),
-			JSON.stringify(heard),
+			what,
+			outcome.resolved &&
+				JSON.stringify(outcome.value) === JSON.stringify({ status: SEATING.unavailable, reason }),
+			`answered ${answered}`,
 		);
-		await answers('join answers no table', null, 'table_link_join', { invite: 'probe' });
-		await answers('leave answers', null, 'table_link_leave', { table: 'probe' });
+	}
 
-		// --- 3. every call a seat makes is read by Rust, and delivered to nobody --------------------
+	async function probeFeatureOn(): Promise<void> {
+		// --- 1. no table is opened or joined on what is not a name, a relay or an invitation --------
+		const n0 = { mode: RELAY_MODE.n0 };
+		await turnedAway('a table needs a name', UNAVAILABLE.badName, 'table_link_host', {
+			name: ' ',
+			relay: n0,
+		});
+		await turnedAway('a relay is a web address over TLS', UNAVAILABLE.badRelay, 'table_link_host', {
+			name: 'probe',
+			relay: { mode: RELAY_MODE.custom, url: 'http://relay.example.org' },
+		});
+		await refused('a relay setting of no known mode is refused', 'table_link_host', {
+			name: 'probe',
+			relay: { mode: 'tor' },
+			locale: 'en',
+		});
+		await turnedAway(
+			'an invitation is one this app made',
+			UNAVAILABLE.badInvite,
+			'table_link_join',
+			{
+				invite: 'charnik-table:not-one',
+				name: 'probe',
+			},
+		);
+		await turnedAway('a seat needs a name', UNAVAILABLE.badName, 'table_link_join', {
+			invite: 'charnik-table:not-one',
+			name: '',
+		});
+
+		// --- 2. with no seat, every call a seat makes is read by Rust and delivered to nobody -------
 		const undelivered = DELIVERY.notDelivered;
 		const character = demoCharacter();
-		const view = deriveSheet(character, await getContentGraph());
-		say(`     a derived sheet is ${JSON.stringify(view).length} bytes`);
-		await answers('a whole view is taken', undelivered, 'table_link_publish', {
-			table: 'probe',
-			character,
-			view,
-		});
+		const view = tableViewOf(character, deriveSheet(character, await getContentGraph()));
+		say(`     a table's view of a sheet is ${JSON.stringify(view).length} bytes`);
+		await answers('a view is taken', undelivered, 'table_link_publish', { table: 'probe', view });
 		const requests: TableRequest[] = [
 			{ kind: TABLE_REQUEST.damage, amount: 7, type: 'fire' },
 			{ kind: TABLE_REQUEST.damage, amount: 7, type: null },
@@ -139,11 +160,7 @@
 				`a request is taken: ${JSON.stringify(request)}`,
 				undelivered,
 				'table_link_request',
-				{
-					table: 'probe',
-					participant: 'nobody',
-					request,
-				},
+				{ table: 'probe', participant: 'nobody', requestId: 'r-1', request },
 			);
 		const answer: TableAnswer = { outcome: TABLE_ANSWER.declined };
 		await answers('an answer is taken', undelivered, 'table_link_respond', {
@@ -151,23 +168,38 @@
 			requestId: 'r-1',
 			answer,
 		});
-
-		// --- 4. a request is ids and numbers, and Rust holds it to that ------------------------------
-		await refused('a request carrying tokens is refused', 'table_link_request', {
+		await answers('no door opens on no table', null, 'table_link_door', {
+			table: 'probe',
+			open: true,
+		});
+		await answers('dismissing nobody answers', null, 'table_link_dismiss', {
 			table: 'probe',
 			participant: 'nobody',
+		});
+		await answers('leaving no table answers', null, 'table_link_leave', { table: 'probe' });
+
+		// --- 3. a request is ids and numbers, and Rust holds it to that ------------------------------
+		const asking = { table: 'probe', participant: 'nobody', requestId: 'r-1' };
+		await refused('a request carrying tokens is refused', 'table_link_request', {
+			...asking,
 			request: { kind: TABLE_REQUEST.effect, id: 'poisoned', tokens: ['ac+5'] },
 		});
 		await refused('a request of no known kind is refused', 'table_link_request', {
-			table: 'probe',
-			participant: 'nobody',
+			...asking,
 			request: { kind: 'formula', formula: '100d100' },
+		});
+		await refused('an answer carrying more than an answer is refused', 'table_link_respond', {
+			table: 'probe',
+			requestId: 'r-1',
+			answer: { outcome: TABLE_ANSWER.accepted, apply: ['hp-10'] },
 		});
 	}
 </script>
 
 <h1>Dev · table link probe</h1>
-<p>Opens no table. Report also written to <code>{REPORT}</code> in your data folder.</p>
+<p>
+	Opens no table and asks nothing. Report also written to <code>{REPORT}</code> in your data folder.
+</p>
 <pre>{lines.join('\n')}</pre>
 
 <style>

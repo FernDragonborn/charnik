@@ -2396,5 +2396,36 @@
 		"ranged": "ranged",
 		"poisoned": "poison",
 		"ranged_weapon": "ranged weapon"
+	},
+	"table": {
+		"native": {
+			"host": {
+				"title": "Charnik — open a table?",
+				"body": "Open the table \"{table}\"?\n\nCharnik will go online so that the players you invite can connect to this app. {route}\n\nNobody sits at the table until you let them in.",
+				"allow": "Open the table",
+				"deny": "Cancel"
+			},
+			"hostRoute": {
+				"n0": "Connections are set up through the public relay servers of number 0 (iroh). They see the network addresses of the apps at the table and never what is sent.",
+				"custom": "Connections are set up through the relay server {relay}. It sees the network addresses of the apps at the table and never what is sent.",
+				"none": "No relay server is used. The invitation carries this computer's network addresses, and only players who can reach them can join."
+			},
+			"join": {
+				"title": "Charnik — join a table?",
+				"body": "Join the table \"{table}\" as \"{player}\"?\n\nCharnik will connect to the GM's app and show it your character's sheet. {route}",
+				"allow": "Join",
+				"deny": "Cancel"
+			},
+			"joinRoute": {
+				"relay": "The connection is set up through the relay server {relay}. It sees your network address and never what is sent.",
+				"direct": "The connection goes straight to the GM's computer, with no relay server."
+			},
+			"approve": {
+				"title": "Charnik — a player wants to join",
+				"body": "\"{player}\" wants to join the table \"{table}\".\n\nTheir code is {code}. Let them in only if that is the code the player reads to you.",
+				"allow": "Let in",
+				"deny": "Refuse"
+			}
+		}
 	}
 }

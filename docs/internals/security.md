@@ -1,13 +1,14 @@
 # Charnik — Security plan
 
 Companion to [plan.md](../plan.md). Charnik is a **standalone Tauri desktop app** (no HTTP
-server). That removes the whole network attack surface; the real risks are **untrusted
-content** (CSV/JSON, shared homebrew, bundle/content-pack imports) and **file-system
-scope**. Security tasks are **woven across roadmap phases**, not one late step.
+server). The risks are **untrusted content** (CSV/JSON, shared homebrew, bundle/content-pack
+imports), **file-system scope**, and — in a build with the table link, for as long as a table is
+open — **another app's bytes**. Security tasks are **woven across roadmap phases**, not one late
+step.
 
 ## Threat model & assumptions
-- **No network server** → no LAN/remote/auth surface. Single local user, single app
-  instance. (This is why the server-era controls — localhost bind, LAN token — are gone.)
+- **No network server, and nothing listening unless a table is open.** Single local user, single
+  app instance. (This is why the server-era controls — localhost bind, LAN token — are gone.)
   The **updater is an outbound HTTP *client*** (GET on the GitHub releases endpoint via
   `plugin-updater` in Rust) — not a server, and not webview `fetch`. It listens on no port
   and is governed by **two app commands**, not the CSP (§2 ▸ The page says check and install).
@@ -18,13 +19,17 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
   Writes are atomic, serialised per character, and refused when the file is not the one the app
   last held — a folder-sync tool that changes a character under a running app raises a question
   instead of losing to the next save (`characters.md` ▸ One writer per character).
-- **A networked module is planned and none ships.** The table link's threat model and the design
-  review beside it are `docs/research/table-link-*.md`; every statement here about "no network"
-  holds until that module exists, and is rewritten in the change that adds it.
+- **The table link is the one networked module, and it is in no release build** (the
+  `table-link` Cargo feature). In a build that has it, a table is the only time the app accepts
+  a connection or dials a peer, and each is preceded by a native question: opening a table,
+  joining one, letting a player in. **Every peer is taken to be a modified build.** What a peer
+  may see, ask and send, where each frame is bounded, and which relays an endpoint may use are
+  `table-link.md`; the attack catalog it answers is `docs/research/table-link-threats.md`.
 
 ## Decisions / controls
 1. **No HTTP server.** Tauri loads the SPA from a bundled protocol in the webview; the
-   frontend talks to the OS only through scoped Tauri commands/plugins. No open ports.
+   frontend talks to the OS only through scoped Tauri commands/plugins. No port is open except
+   the QUIC endpoint of a table the user opened or joined, which closes with it (`table-link.md`).
 2. **Tauri capabilities / least privilege.** Grant only the plugins we need (`fs`,
    `path`) and **scope `fs` to `dataDir`/roots** — no broad filesystem access.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
@@ -104,9 +109,13 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    >
    > **The table link's commands are in no release build.** They sit behind the `table-link`
    > Cargo feature with their capability file (`overview.md` ▸ TableLink is the seam a table
-   > stands on), reach nobody in a build that has them, and take a GM's request as a closed set
-   > of typed fields — an unknown field or kind is refused in Rust, so a token or a formula has
-   > no way in. `/dev/table-link` asks the running webview in both builds.
+   > stands on). In a build that has them the page can ASK for a table and cannot have one: `host`,
+   > `join` and each admission are answered by the person in a native dialog whose words are
+   > compiled in, and the page supplies a locale and names that are printed as quoted data. A
+   > GM's request is a closed set of typed, bounded fields — an unknown field or kind is refused
+   > in Rust, so a token or a formula has no way in — and a peer's event is held to a bounded
+   > schema before the page's own code hears it (`table-link.md`). `/dev/table-link` asks the
+   > running webview in both builds.
    >
    > **The log takes only what the app itself says.** `tauri-plugin-log` installs the
    > process-global logger, so it is filtered to the page's own lines (`webview`) and this crate's:

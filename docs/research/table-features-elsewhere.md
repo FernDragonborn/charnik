@@ -1,6 +1,6 @@
 # What a table does in other tools
 
-> Research for TABLE-LINK-SPEC (`../work/release.md`), read in October 2026: which networked features
+> Research for the table link (`../internals/table-link.md`), read in October 2026: which networked features
 > D&D Beyond, Foundry VTT, Roll20, Fantasy Grounds, Owlbear Rodeo, Shard, Alchemy, Demiplane, Avrae
 > and the in-person tools offer a table, which modules tables install on top, and what their forums
 > ask for and complain about — so the spec chooses Charnik's first table knowing what players already

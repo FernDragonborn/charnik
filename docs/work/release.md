@@ -117,41 +117,39 @@
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
 ## Security and dependencies
-- [ ] **TABLE-LINK-SPEC · the specification, before any transport code.** Its inputs are
-  `research/table-link-threats.md` (what the layer can do to a user) and
-  `research/table-link-design-review.md` (what the existing code does with a network input, and the
-  thirteen decisions listed under "Decisions the spec must make"). Its "What to research next" is
-  answered as far as reading can take it — mobile lifecycle and the iOS local-network prompt, n0's
-  wire promise, the OS key stores, pairing ceremonies, who writes a sheet in other tools — and ends
-  with the list only a device or a table can settle, which the spec schedules rather than waits on.
-  The decisions that change the architecture: who computes a sheet the GM looks at; that a GM
-  request names catalog ids and never
-  carries tokens or free formulas; a star of direct connections rather than gossip; which relays an
-  endpoint may dial; where keys and approvals live. It also rewrites `internals/security.md`'s
-  threat model, which says "no network" in the present tense. And it rewrites
-  `internals/roller.md` ▸ "The app never knows AC or DC, so no threshold is ever shown": a roll a GM
-  asks for may carry a DC the GM chose to announce, and for that roll the app does know it.
-  **What it fills in is built**: the `TableLink` interface, its no-op and the Rust commands that
-  reach nobody (`../internals/overview.md` ▸ TableLink is the seam a table stands on). There is no
-  user interface for a table — no button, no settings row — and the spec is what draws one.
-  **What other tools give a table** is `../research/table-features-elsewhere.md` (read October 2026):
-  a shared roll log is everyone's floor and is missing from the 0.9.0 proposal — with GM-only rolls
-  and moderation from day one; initiative entered by the player and broadcast is now expected (D&D
-  Beyond since June 2026); telling the GM who passed a requested save is what the most-installed
-  Foundry module exists for; conditions laid by the GM travel to the player's sheet, with one writer
-  rather than two that must converge.
-  **Where a new table drops Charnik** is `../research/adoption-friction.md`: the spec settles the
-  phone path for players (without it the in-person table is unreachable), a GM's manual entry for a
-  player without Charnik, and moderation for the shared log.
-  **What the table turns from text into mechanics** — input for the spec, found by re-reading every
-  class feature the app keeps as text because it sees no ally, no target, no GM roll and no scene:
+- [ ] **TABLE-LINK-MVP · the smallest table worth sitting at — 0.9.0.** The maintainer's goal for
+  0.9.0 is people playing levels 1–4 together, each on their own app. The specification is
+  `../internals/table-link.md`. Built: the transport (iroh, a star, a key per table, relays by the
+  GM's setting), the invitation and the door, the three native questions, the wire with its
+  ceilings, the bounded schemas the page holds a peer to, and the `TableLink` seam over them.
+  Left, in order: the player's side of a request (it arrives over any screen and is carried out
+  through the same actions a click uses); the Table screen for both seats, and the relay setting.
+- [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
+  far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
+  for a release build: a session through n0's relays between two networks and one with no relay
+  on one LAN; how often a path stays on the relay and what a session's traffic comes to against
+  n0's unpublished limits; a relay that drops mid-session and the six redials; two Charnik
+  versions at one table; `cargo audit` over the crates the feature adds. The release workflow
+  then builds with the feature, and `../internals/overview.md` and `security.md` stop saying it
+  is in no release.
+- **TABLE-LINK-LOG · a roll log the table shares.** Every other tool's floor
+  (`../research/table-features-elsewhere.md`) and not in the first table: players' rolls on the
+  GM's screen as one stream, GM-only rolls, and moderation from day one. A star gives a player
+  nobody but the GM to hear from, so another player's roll reaches them through the GM's app.
+- **TABLE-LINK-REMEMBER · a table that is there next week.** A table lives for one session and
+  its keys are in memory. Remembering one means a key that outlives the app: the OS store through
+  the `keyring` crate, never the data folder (design review ▸ 11), a list of tables with "forget
+  this one", and a GM key that changes being a new table to join rather than a warning.
+- **TABLE-LINK-MECHANICS · what a table turns from text into mechanics.** Found by re-reading
+  every class feature the app keeps as text because it sees no ally, no target, no GM roll and no
+  scene:
   - *Allies:* spells and effects cast on another character (Bless, healing, Lay on Hands, Preserve
     Life, Song of Rest), a Bardic Inspiration die given, the auras (Protection, Courage, Devotion,
     Aura Expansion, Countercharm) applied while "in the aura".
   - *The GM's rolls:* Cutting Words off a monster's roll; every `attacked` fact (Elusive, Cloak of
     Displacement) on the GM's attack.
-  - *Incoming damage:* it arrives raw and the player's app applies its defenses (decided below), so
-    Uncanny Dodge and Evasion are prompts at that moment.
+  - *Incoming damage:* it arrives raw and the player's app applies its defenses, so Uncanny Dodge
+    and Evasion are prompts at that moment.
   - *Targets:* conditions laid on a monster (Stunning Strike, Open Hand Technique, Turn Undead,
     Abjure Foes, the Vex/Sap/Slow/Push masteries), a target's type (Divine Smite against undead,
     Favored Enemy), a marked creature (Hunter's Mark, Precise Hunter, Studied Attacks, Quivering
@@ -159,32 +157,14 @@
   - *The scene:* a GM's "dim light" or "difficult terrain" as a table fact a guard can read (One
     with Shadows, Boon of the Night Spirit, Land's Stride, Natural Explorer).
   Still text with a table: languages as flavour, Timeless Body, the lore paragraphs.
-  **Decided, and the spec starts from them.** Joining is approved outside the interface, in a
-  dialog the webview cannot press. Identity is PER TABLE: a participant holds a separate key for
-  each table, so nothing links two tables and a key that is online says nothing about the person
-  outside that table. The service does not list the tables an install has sat at — where a table
-  is remembered waits on where its keys are. A view is sent as changes over a cached base, never
-  whole each time: a portrait goes once, an inventory when it changes, hit points when they move;
-  `publish` says what is true now and the cut is the transport's, so cutting it differently
-  changes no call. Measured on the demo character: the derived sheet is 30 KB, of which skills,
-  abilities and passives are 20 KB of traces that change on a level, an item or an effect; the
-  saved character is 3.2 KB and its hit points 20 bytes. The GM chooses per request whether a
-  roll's DC is announced, by a switch on their side. A roll that can be asked for is an ability
-  check, a saving throw or a skill — not an attack. A state or effect's duration is set on the
-  player's side, and damage arrives raw with its type: the player's app applies its own
-  defenses, since only it knows its sheet. Only a GM's seat hears a participant join or leave —
-  a star of direct connections gives a player no one but the GM to hear of.
-  **What only a transport will show:** whether an event's shape is right. The channel is proven
-  with the one event there is to send, and a payload is trusted as typed because only the app's
-  own Rust sends one — the adapter validates it against a schema once it is somebody else's
-  bytes (`lib/table-link/tauri.ts` ▸ `listenToTableLink`).
-- [ ] **TABLE-LINK-MVP · the smallest table worth sitting at — 0.9.0, after TABLE-LINK-SPEC.** The
-  maintainer's goal for 0.9.0 is people playing levels 1–4 together, each on their own app. What it
-  holds is the spec's to decide; the proposal it starts from is in `../plan.md` ▸ 0.9.0 — host and
-  join with approval outside the webview, the GM's live view of each sheet, a GM's request for a
-  check, a save or a skill and the roll it gets back, raw damage applied by the player's app. It
-  fills the `TableLink` seam that already exists (`../internals/overview.md` ▸ TableLink is the
-  seam a table stands on) and rewrites `../internals/security.md`'s "no network" threat model.
+  Beside them, what other tools give a table and this one does not yet: initiative entered by the
+  player and broadcast (D&D Beyond since June 2026), and a GM's manual entry for a player without
+  Charnik (`../research/adoption-friction.md`).
+- **TABLE-LINK-PHONE · a player joins from a phone.** After the engine carries the SRD through
+  level 20 (`../plan.md` ▸ Levels 11–20). What reading could settle is in the design review ▸ 7
+  and 11: iroh on Android and iOS, the iOS local-network prompt, backgrounding, key storage. What
+  only a device can: `keyring` inside a Tauri mobile build, a restore onto a second phone, App
+  Review's answer to an endpoint that accepts connections.
 - **AUDIT-LOCKED-FILE · a pack file held open by another program still blocks a seed or a listing**
   (`../audit-oct-27.md` ▸ D10). Reads are per-file now; two paths are not. The seed
   (`content/provider.ts`) throws out of `buildGraph` when its rename lands on a file Excel holds, and
