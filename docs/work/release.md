@@ -137,8 +137,9 @@
   on one LAN; how often a path stays on the relay and what a session's traffic comes to against
   n0's unpublished limits; a relay that drops mid-session and the six redials; two Charnik
   versions at one table; `cargo audit` over the crates the feature adds. The release workflow
-  then builds with the feature, and `../internals/overview.md` and `security.md` stop saying it
-  is in no release.
+  then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
+  no release, and the changelog of that release is where the table is first named: until then no
+  release has it, so no changelog mentions it.
 - **TABLE-LINK-LOG · a roll log the table shares.** Every other tool's floor
   (`../research/table-features-elsewhere.md`) and not in the first table: players' rolls on the
   GM's screen as one stream, GM-only rolls, and moderation from day one. A star gives a player
