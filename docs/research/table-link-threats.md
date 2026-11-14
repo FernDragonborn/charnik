@@ -4,6 +4,12 @@ Research collected 2026-10-04, before the first spec of the **table link**: an o
 lets a GM's Charnik and the players' Charniks exchange data across networks, in both directions,
 with no server anyone has to deploy. Transport candidate: iroh.
 
+**The spec this fed is [`internals/table-link.md`](../internals/table-link.md).** It answers the
+catalog below and departs from it in three places, each argued there: one invitation serves the
+whole table rather than a single-use one per player, and frames carry neither a signature nor a
+sequence number, which the catalog asks for under gossip and a star of direct connections does not
+need. Read the catalog as what was feared, and the spec as what was built.
+
 This document is the input to that spec. It lists the ways **our** layer can hurt a user, how each
 one would actually show up in Charnik, and what the spec must do about it. It deliberately does not
 audit iroh itself — that is a stated trust assumption (§2), checked only at the API level we depend

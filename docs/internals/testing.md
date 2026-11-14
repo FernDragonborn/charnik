@@ -215,8 +215,28 @@ P8 build/level-up/multiclass/XP (unit + property) ·
 P9 sheet (component math, effects panel, play-state/rests) ·
 P12 export/print (deferred e2e).
 
+## The Rust side
+
+`pnpm test` runs no Rust. The crate's own tests are `cargo test`, from `src-tauri/`, and the table
+link's are compiled only with its feature: **`cargo test --features table-link`** (~40 s after an
+edit). Run it before committing anything under `src-tauri/src/table_link/`, and
+`cargo clippy --features table-link --tests` beside it — a change there passes every `pnpm` gate
+untouched.
+
+What they hold (`table-link.md`): the wire — a frame over its ceiling, a field nobody named, a
+request that is more than ids and bounded numbers, the cut of a view and the view that outgrows
+one, an invitation that survives being pasted — and **two sessions sitting at one table inside
+the test**, over real QUIC on this machine with no relay: a player the GM lets in is seen, asked
+and answers; nobody sits without the door's secret and the GM's yes; dismissing and closing tell
+the seat why. `session.rs` knows nothing of Tauri so that this is possible: the GM's approval is
+a closure there and a native dialog in the app.
+
+Not held by any test: a relay, two networks, and a dropped connection dialled again
+(`work/release.md` ▸ TABLE-LINK-FIELD).
+
 ## CI
-GitHub Actions (free for public repos), **in place**: `ci.yml` (lint + test), `codeql.yml`,
+GitHub Actions (free for public repos), **in place**: `ci.yml` (lint + test, and the table link's
+Rust tests in a job of their own, since the feature is in no other build), `codeql.yml`,
 `pages.yml` (the web demo) and `release.yml` (the desktop matrix). All three of the workflows that
 need rules data check the CONTENT repo out into `.content-srd/` and set `CHARNIK_CONTENT` —
 `actions/checkout` refuses a path outside the workspace, so the sibling-folder layout that needs no

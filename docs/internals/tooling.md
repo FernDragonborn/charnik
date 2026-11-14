@@ -223,7 +223,7 @@ generous ceiling is not insurance, it is the cost.
 
 `pnpm test` ~21 s (node ~18 s, browser ~11 s — run one project to pay one) · `pnpm check` ~15 s ·
 `eslint .` ~17 s · `pnpm build` ~12 s · a single `vitest run <file>` ~4 s ·
-`pnpm lint:typed:changed` ~15 s · `shot.mjs` ~60 s for the full set (both widths) · **`pnpm lint:typed` ~11m30**.
+`pnpm lint:typed:changed` ~15 s · `cargo test --features table-link` ~40 s after an edit · `shot.mjs` ~60 s for the full set (both widths) · **`pnpm lint:typed` ~11m30**.
 For anything genuinely long or unknown, run it in the background instead of buying a big timeout.
 
 Only the last one is worth working around. The whole ordinary gate — test, check, build — is under a
@@ -232,6 +232,13 @@ particular type-checks *nothing*, because vite transpiles with esbuild.
 
 ## Toolchain constraints that will bite
 
+- **Rust is 1.91 or newer, for every build** (`src-tauri/Cargo.toml` ▸ `rust-version`). iroh 1.x
+  asks for it, and although iroh is compiled only with the `table-link` feature, a crate states
+  one `rust-version`: an older toolchain is refused before it reads the feature list. The release
+  and CI workflows build on `stable`, which is past it.
+- **The `table-link` feature is a second dependency tree.** 142 more crates than a plain build
+  (513 against 371 in `cargo tree`), so the first `pnpm tauri dev --features table-link` or
+  `cargo test --features table-link` on a machine compiles all of them before it starts.
 - **TypeScript stays on 6.x.** The 7.0 bump is on dependabot's ignore list (PR #7, closed
   2026-07-26). The root cause is not typescript-eslint being slow: **TS 7.0 ships no programmatic
   API at all** — it lands in 7.1, targeted autumn 2026 — so every tool that reads the compiler

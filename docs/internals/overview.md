@@ -107,7 +107,7 @@ questions — and this is the shape the rest of the app sees.
 carries the transport and its commands (`src-tauri/src/table_link/`), their entries in `build.rs`,
 the crates only they use, and their capability file, which sits in a folder of its own
 (`capabilities/table-link/`) and is read only when the feature is on — a capability naming a
-permission the build does not declare fails the build. CI compiles the feature on (`ci.yml` ▸
+permission the build does not declare fails the build. CI builds the feature and runs its tests (`ci.yml` ▸
 `table-link`), since nothing else does. The page learns which build it is in by CALLING: a command
 that is not there is refused, and `lib/table-link/tauri.ts` reads the refusal as no table, the
 same answer `noop.ts` gives the web build. There is no second switch to keep true to Cargo's.

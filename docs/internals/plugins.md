@@ -359,7 +359,9 @@ the keys documented here were rejected, and a rejected key takes the whole resul
    **Its words are not the page's.** `src-tauri/build.rs` compiles them out of the UI's own locale
    catalogs (`settings.plugins.nativeConsent`), one set per catalog it finds, so the page hands
    over a locale code and never a sentence: it chooses the language of the question and nothing
-   about what is asked. A locale that is not bundled is asked in English.
+   about what is asked. A locale that is not bundled is asked in English. Every native question
+   is worded this way — `build.rs` ▸ `NATIVE_ROOTS` lists the catalog keys it compiles in, and the
+   table link's three sit under `table.native` (`table-link.md`).
 3. **Consent is per-machine and pinned to a CRYPTOGRAPHIC code hash**
    `(namespace, sha256(len(main.js) ‖ main.js ‖ len(plugin.json) ‖ plugin.json))`, stored OUTSIDE the
    data folder AND outside the webview's reach — `<appConfig>/plugins.json`, read and written only
