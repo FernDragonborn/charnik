@@ -38,7 +38,8 @@
 	const urlTab = $derived(TAB_IDS.find((id) => id === page.url.searchParams.get('tab')));
 	let tab = $state<Tab>('general');
 	$effect(() => {
-		if (urlTab) tab = urlTab;
+		// a link to a tab this build does not have lands on the first one
+		if (urlTab && (urlTab !== 'table' || table.available)) tab = urlTab;
 	});
 
 	onMount(loadContentStore);

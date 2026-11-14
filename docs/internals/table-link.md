@@ -258,8 +258,38 @@ character's edition, and the GM's app names conditions from its own catalog.
   has seated and what was asked of them, what a player's app does with a request) and the screen
   over it, below. `components/settings/TableSettings.svelte` is the relay setting.
 
+## Driving a live table
+
+Three things sit between the transport's test and the screen's preview: the commands, the native
+questions, and the events crossing into the webview. They are driven together by one probe and
+one ignored test, with **a person answering the two native questions** — a script that pressed
+them would be the thing they exist to refuse.
+
+1. Start the dev server (`pnpm dev`) and read its port.
+2. Open the desktop app on the probe, built with the feature (`tooling.md` ▸ Verifying on the
+   real desktop app): `pnpm tauri dev --features table-link --config <file>`, the file holding
+   `{"build":{"devUrl":"http://localhost:<port>/dev/table-live","beforeDevCommand":""}}`.
+3. In a second terminal, from `src-tauri/`, with `CHARNIK_LIVE_TABLE` naming `.table-live` in the
+   data folder:
+   `cargo test --features table-link -- --ignored a_live_player_sits_at_the_apps_table`.
+4. Say yes to "open a table?", then to "let Probe player in?".
+5. Read `table-live-probe.txt` in the data folder.
+
+The probe (`routes/dev/table-live`) opens a table with NO relay, so nothing leaves the machine,
+writes the invitation and a sheet into `.table-live`, and waits. The test is a player in a
+process of its own (`session.rs`): it follows that invitation, shows that sheet, answers a roll
+with a roll and a hit with a no, and leaves when the table closes. The probe checks that the
+sheet arrived whole, that each answer landed on the ask it answers, that the door makes a new
+invitation, and that the table closes; it puts the relay setting back and deletes nothing it did
+not write.
+
+`/dev/table-link?expect=on|off` is the smaller probe beside it: it asks the running webview
+whether the commands are there and whether each one refuses what it should, and raises no
+question at all.
+
 ## What is left to a device and a table
 
-Driven so far on one machine with no relay. Not driven: two real networks through n0's relays and
+Driven so far on one machine with no relay: the transport inside a test, the screen over
+hand-made state, and `/dev/table-link` on the real desktop build. Not driven: two real networks through n0's relays and
 through none; how often a path stays on the relay; a relay that is unreachable mid-session; two
 Charnik versions at one table.

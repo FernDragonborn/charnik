@@ -1232,4 +1232,79 @@ mod tests {
         };
         assert!(!is_followable(&plain));
     }
+
+    /// The other end of `/dev/table-live`: a player in a process of its own, sitting at a table the
+    /// running desktop app hosts. It follows the invitation the probe wrote, shows the sheet the
+    /// probe wrote beside it, answers a roll with a roll and anything else with a no, and leaves
+    /// when the table closes. `CHARNIK_LIVE_TABLE` names the probe's folder.
+    #[tokio::test(flavor = "multi_thread")]
+    #[ignore = "needs the desktop app on /dev/table-live (table-link.md ▸ Driving a live table)"]
+    async fn a_live_player_sits_at_the_apps_table() {
+        const LIVE_WAIT: Duration = Duration::from_secs(180);
+        let folder = std::path::PathBuf::from(
+            std::env::var("CHARNIK_LIVE_TABLE")
+                .expect("CHARNIK_LIVE_TABLE names the probe's folder"),
+        );
+        let invite = timeout(LIVE_WAIT, async {
+            loop {
+                let written = std::fs::read_to_string(folder.join("invite.txt"));
+                if let Some(invite) = written.ok().as_deref().and_then(Invite::from_text) {
+                    break invite;
+                }
+                sleep(Duration::from_millis(500)).await;
+            }
+        })
+        .await
+        .expect("the app wrote an invitation");
+        let sheet = std::fs::read_to_string(folder.join("view.json")).expect("the probe's sheet");
+        let sheet: Value = serde_json::from_str(&sheet).expect("the sheet is JSON");
+
+        let (emit, mut events) = listening();
+        let seat = join(&invite, "Probe player", emit).await.expect("a seat");
+        let mut answered = 0;
+        loop {
+            let event = timeout(LIVE_WAIT, events.recv())
+                .await
+                .expect("the table said something in time")
+                .expect("the session is still there");
+            match event {
+                TableEvent::Connection {
+                    state: ConnectionState::Connected,
+                    ..
+                } => assert_eq!(seat.publish(view(sheet.clone())), Delivery::Delivered),
+                TableEvent::Request {
+                    request_id,
+                    request,
+                    ..
+                } => {
+                    let answer = if matches!(request, TableRequest::Roll { .. }) {
+                        TableAnswer {
+                            outcome: wire::AnswerOutcome::Accepted,
+                            roll: Some(json!({
+                                "total": 17, "natural": 15, "advantage": "neither", "mod": 2,
+                            })),
+                        }
+                    } else {
+                        TableAnswer {
+                            outcome: wire::AnswerOutcome::Declined,
+                            roll: None,
+                        }
+                    };
+                    assert_eq!(seat.respond(request_id, answer), Delivery::Delivered);
+                    answered += 1;
+                }
+                TableEvent::Connection {
+                    state: ConnectionState::Closed,
+                    reason,
+                    ..
+                } => {
+                    assert_eq!(reason, Some(CloseReason::TableClosed));
+                    break;
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(answered, 2, "a roll and a hit were asked for");
+        seat.leave().await;
+    }
 }

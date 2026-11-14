@@ -83,7 +83,9 @@
 
 	const whole = (value: number, max: number): number =>
 		Math.max(0, Math.min(max, Math.round(Number.isFinite(value) ? value : 0)));
-	const heldTo = $derived(dc === null ? undefined : whole(dc, DC_MAX));
+	// an emptied number field is not a number, whichever empty value the binding leaves in it
+	const hasDc = $derived(typeof dc === 'number');
+	const heldTo = $derived(typeof dc === 'number' ? whole(dc, DC_MAX) : undefined);
 
 	const request = $derived.by<TableRequest | null>(() => {
 		switch (kind) {
@@ -204,8 +206,8 @@
 			/>
 			<span class="ask-announce" use:provenance={$_('table.ask.announceHint')}>
 				<Switch
-					on={announce && dc !== null}
-					lock={dc === null}
+					on={announce && hasDc}
+					lock={!hasDc}
 					title={$_('table.ask.announce')}
 					onclick={() => (announce = !announce)}
 				/>

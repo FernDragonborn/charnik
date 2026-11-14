@@ -231,6 +231,10 @@ and answers; nobody sits without the door's secret and the GM's yes; dismissing 
 the seat why. `session.rs` knows nothing of Tauri so that this is possible: the GM's approval is
 a closure there and a native dialog in the app.
 
+One test there is `#[ignore]`d: `a_live_player_sits_at_the_apps_table` is the player's end of a
+table the running desktop app hosts, and runs only beside the `/dev/table-live` probe, with a
+person answering the app's native questions (`table-link.md` ▸ Driving a live table).
+
 Not held by any test: a relay, two networks, and a dropped connection dialled again
 (`work/release.md` ▸ TABLE-LINK-FIELD).
 

@@ -41,6 +41,7 @@
 		try {
 			return new URL(app.tableRelay.url).host;
 		} catch {
+			// not a web address yet: shown as typed, and refused by name when the table is opened
 			return app.tableRelay.url;
 		}
 	});
@@ -207,7 +208,7 @@
 					aria-labelledby="table-host-title"
 					onsubmit={(e) => {
 						e.preventDefault();
-						void table.host(tableName);
+						if (tableName.trim()) void table.host(tableName);
 					}}
 				>
 					<h2 id="table-host-title">{$_('table.host.title')}</h2>
@@ -240,7 +241,7 @@
 					aria-labelledby="table-join-title"
 					onsubmit={(e) => {
 						e.preventDefault();
-						void table.join(invite);
+						if (invite.trim() && character) void table.join(invite);
 					}}
 				>
 					<h2 id="table-join-title">{$_('table.join.title')}</h2>
