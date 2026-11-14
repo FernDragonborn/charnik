@@ -207,6 +207,13 @@ describe("the table's view of a character", () => {
 		expect(view.hp.current).toBe(character.play.hp.current);
 	});
 
+	it('names a condition once, not again as the effect that put it on', () => {
+		// the demo character is Poisoned by an effect that does nothing else
+		expect(view.conditions).toContain('poisoned');
+		expect(view.effects).not.toContain('Poisoned');
+		expect(view.effects).toContain('Bless');
+	});
+
 	it('carries nothing a player would not say aloud', () => {
 		expect(Object.keys(view).sort()).toEqual(Object.keys(tableViewSchema.shape).sort());
 		for (const kept of ['inventory', 'notes', 'build', 'portrait', 'resolvedEffects', 'castCtx'])

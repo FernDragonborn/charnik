@@ -93,8 +93,10 @@ const playerSeat = (table: TableId, code: string, early: EarlyEvents): PlayerSea
 	code,
 	leave: () => invoke('table_link_leave', { table }),
 	publish: (character, sheet) => {
+		// as JSON, which is how it travels: a key the engine left undefined is not a key
+		const sent: unknown = JSON.parse(JSON.stringify(tableViewOf(character, sheet)));
 		// held to the shape the GM's app will hold it to, so what cannot be shown is never sent
-		const view = tableViewSchema.safeParse(tableViewOf(character, sheet));
+		const view = tableViewSchema.safeParse(sent);
 		if (!view.success) {
 			logger.warn('table link: this character has no view the table can show');
 			return Promise.resolve(DELIVERY.notDelivered);

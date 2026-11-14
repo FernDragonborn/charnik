@@ -195,6 +195,38 @@ unseen, and a repeated request id is one request.
 
 On the GM's side an answer is believed only from the participant who was asked, and only once.
 
+## The screen
+
+**The table is in the app only where the build has one.** `TableLink.available()` asks the build
+without opening anything, and the navigation's Table entry and Settings ▸ Table exist only when
+it says yes — so a release build, which has no table link, shows neither.
+
+`/table` is one screen in three states (`routes/table/+page.svelte`):
+
+- **No seat**: open a table (its name, and the relay it will be reached through with a link to
+  change it) or join one (the invitation, and the name of the character who will sit). Why the
+  last seat was not given or ended is said above both, as a sentence that says what to change.
+- **A GM's seat**: the invitation with its copy button and the door's switch; a card per player
+  (`TableSeatCard`) — hit points, death saves, AC, initiative, speed, saves, passives, states,
+  what they resist, skills folded away — where every number carries the provenance popover the
+  player's own sheet does, built from the trace the player's app sent; one composer
+  (`AskComposer`) for asking — who, what, and the closed choices "what" is made of; and the list
+  of what was asked with what came back. A roll held to a DC reads passed or failed there whether
+  or not the players were told the DC, and telling them is a switch that is off until pressed.
+  A player whose connection dropped stays on screen, dimmed, until they are back or removed.
+- **A player's seat**: where the connection stands, the code to read to the GM until they are let
+  in, and one sentence saying what the GM sees and what they do not.
+
+**A request is raised over whatever screen the player is on** (`TableRequestDialog`, mounted by
+the layout) as the house dialog, with no way out but Decline and its accept button — Escape and a
+click outside answer nothing. It says what is asked in this app's own words, shows what a hit
+comes to after the character's defense against its type, and counts the requests waiting behind
+it. A request this sheet cannot carry out leaves the accept button blocked with its reason beside
+it. The layout also starts `TableVM.keepPublishing`, which tells the table whenever what it sees
+of the open character changes.
+
+`/dev/table` mounts the same screen over hand-made state, since a real table needs a second app.
+
 ## Staying seated
 
 - **A key the GM let in is not asked about twice.** A player whose connection drops dials again —
@@ -222,10 +254,9 @@ character's edition, and the GM's app names conditions from its own catalog.
 - `src/lib/table-link/` — `types.ts` (the seam), `wire-schema.ts` (what a peer is believed to have
   said), `view.ts` (the table's view of a character), `tauri.ts` and `noop.ts` (the two
   implementations), `provider.ts` (the one place one is chosen).
-- `src/routes/table/table-view-model.svelte.ts` — `TableVM`: the seat this app holds, who a GM
-  has seated and what was asked of them, and what a player's app does with a request. **No
-  screen mounts it yet** (`work/release.md` ▸ TABLE-LINK-MVP); its copy is in the catalogs under
-  `table.*` and `settings.table.*`.
+- `src/routes/table/` — `table-view-model.svelte.ts` (`TableVM`: the seat this app holds, who a GM
+  has seated and what was asked of them, what a player's app does with a request) and the screen
+  over it, below. `components/settings/TableSettings.svelte` is the relay setting.
 
 ## What is left to a device and a table
 

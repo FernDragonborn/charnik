@@ -367,6 +367,24 @@ describe('a seat that was not given', () => {
 	});
 });
 
+describe('whether the build has a table', () => {
+	it('is asked once, and the first answer stands', async () => {
+		let asked = 0;
+		const link: TableLink = {
+			available: () => Promise.resolve(++asked === 1),
+			host: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
+			join: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
+		};
+		const table = new TableVM(() => link);
+		expect(await Promise.all([table.checkAvailable(), table.checkAvailable()])).toEqual([
+			true,
+			true,
+		]);
+		expect(await table.checkAvailable()).toBe(true);
+		expect(asked).toBe(2);
+	});
+});
+
 describe('a roll against a DC', () => {
 	it('passes on meeting it, and a forced outcome decides over the number', () => {
 		const roll = { total: 15, advantage: 'neither', mod: 2 } as const;

@@ -58,25 +58,25 @@ const contributionSchema = z.object({
 	layer: z.enum(LAYERS),
 	op: z.enum(OPS),
 	amount: bounded,
-	note: text(LABEL_MAX).optional(),
-	origin: text(ID_MAX).optional(),
-	superseded: z.literal(true).optional(),
-	key: text(LABEL_MAX).optional(),
-	noteKey: text(LABEL_MAX).optional(),
-	params: params.optional(),
+	note: text(LABEL_MAX).exactOptional(),
+	origin: text(ID_MAX).exactOptional(),
+	superseded: z.literal(true).exactOptional(),
+	key: text(LABEL_MAX).exactOptional(),
+	noteKey: text(LABEL_MAX).exactOptional(),
+	params: params.exactOptional(),
 });
 
 const noteSchema = z.object({
 	text: text(NOTE_MAX),
-	key: text(LABEL_MAX).optional(),
-	params: params.optional(),
+	key: text(LABEL_MAX).exactOptional(),
+	params: params.exactOptional(),
 });
 
 /** A value with the trace that explains it — what lets a GM hover a player's number. */
 const computedSchema = z.object({
 	value: bounded,
 	trace: z.array(contributionSchema).max(TRACE_MAX),
-	notes: z.array(noteSchema).max(LIST_MAX).optional(),
+	notes: z.array(noteSchema).max(LIST_MAX).exactOptional(),
 });
 
 const abilitySchema = z.object({

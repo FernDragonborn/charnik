@@ -156,7 +156,11 @@ export class TableVM {
 	private stopListening: Unsubscribe | null = null;
 
 	checkAvailable = async (): Promise<boolean> => {
-		this.available ??= await this.link().available();
+		if (this.available === null) {
+			const has = await this.link().available();
+			// asked from two places at once, the first answer stands
+			this.available ??= has;
+		}
 		return this.available;
 	};
 

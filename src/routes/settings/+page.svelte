@@ -13,6 +13,8 @@
 	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
 	import ThemesSettings from '$lib/components/settings/ThemesSettings.svelte';
+	import TableSettings from '$lib/components/settings/TableSettings.svelte';
+	import { table } from '../table/table-view-model.svelte';
 	import { _ } from '$lib/i18n';
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { updates } from '$lib/content/remote/updates.svelte';
@@ -25,6 +27,7 @@
 		'sources',
 		'collisions',
 		'plugins',
+		'table',
 	] as const;
 	type Tab = (typeof TAB_IDS)[number];
 
@@ -51,7 +54,7 @@
 	const collisionCount = $derived(graph ? detectCollisions(graph).length : 0);
 
 	// a tab's NAME derives from its id (`settings.tab.<id>`), so a tab is spelled in one place
-	const TABS: { id: Tab; badge?: () => number }[] = [
+	const TABS = $derived<{ id: Tab; badge?: () => number }[]>([
 		{ id: 'general' },
 		{ id: 'themes' },
 		{ id: 'data' },
@@ -60,7 +63,9 @@
 		{ id: 'sources', badge: () => Object.keys(updates.pending).length },
 		{ id: 'collisions', badge: () => collisionCount },
 		{ id: 'plugins' },
-	];
+		// only where the build has a table to open
+		...(table.available ? [{ id: 'table' as const }] : []),
+	]);
 </script>
 
 <svelte:head><title>{$_('nav.settings')} — Charnik</title></svelte:head>
@@ -89,6 +94,8 @@
 			<SourceManager />
 		{:else if tab === 'collisions'}
 			<CollisionManager />
+		{:else if tab === 'table' && table.available}
+			<TableSettings />
 		{:else}
 			<PluginsSettings />
 		{/if}

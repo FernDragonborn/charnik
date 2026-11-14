@@ -6,7 +6,8 @@
  * out is left out here, before anything leaves: no notes, no inventory, no build, no portrait.
  */
 import type { CharacterSheet } from '$lib/character/derive';
-import type { Character } from '$lib/character/schema';
+import type { Character, EffectInstance } from '$lib/character/schema';
+import { conditionIdOf } from '$lib/combat/effects-view';
 import { ABILITY_IDS } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import { hitPointMaximum } from '$lib/play/hit-points';
@@ -21,6 +22,10 @@ const explained = ({ value, trace, notes }: Computed): TableView['ac'] => ({
 
 const explainedEach = (values: Record<string, Computed>): Record<string, TableView['ac']> =>
 	Object.fromEntries(Object.entries(values).map(([id, value]) => [id, explained(value)]));
+
+/** An effect that is nothing but a condition put on: the condition's own name already says it. */
+const isBareCondition = (effect: EffectInstance): boolean =>
+	effect.effects.length === 1 && conditionIdOf(effect) !== null;
 
 export function tableViewOf(character: Character, sheet: CharacterSheet): TableView {
 	const { play } = character;
@@ -48,7 +53,10 @@ export function tableViewOf(character: Character, sheet: CharacterSheet): TableV
 		exhaustion: play.exhaustion,
 		concentration: play.concentration,
 		conditions: [...sheet.facts.conditions],
-		effects: play.effects.slice(0, LIST_MAX).map((effect) => effect.label.slice(0, LABEL_MAX)),
+		effects: play.effects
+			.filter((effect) => !isBareCondition(effect))
+			.slice(0, LIST_MAX)
+			.map((effect) => effect.label.slice(0, LABEL_MAX)),
 		ac: explained(sheet.ac),
 		initiative: explained(sheet.initiative),
 		speed: explained(sheet.speed),

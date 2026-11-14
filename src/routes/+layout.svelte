@@ -78,6 +78,8 @@
 	} from '$lib/update/updater.svelte';
 	import { initDiag, captureGlobalErrors, logger } from '$lib/diag/logger';
 	import DiagnosticsModal from '$lib/components/DiagnosticsModal.svelte';
+	import { table } from './table/table-view-model.svelte';
+	import TableRequestDialog from './table/TableRequestDialog.svelte';
 
 	let { children } = $props();
 
@@ -120,12 +122,14 @@
 		}
 	}
 
-	const nav = [
+	// the table is in the navigation only in a build that has one to sit at
+	const nav = $derived([
 		{ href: '/', key: 'nav.roster' },
 		{ href: '/combat', key: 'nav.combat' },
 		{ href: '/compendium', key: 'nav.compendium' },
+		...(table.available ? [{ href: '/table', key: 'nav.table' }] : []),
 		{ href: '/settings', key: 'nav.settings' },
-	];
+	]);
 
 	// Links must include the base path so navigation works under a subpath (GitHub Pages
 	// serves the app at /<repo>). base is '' for the desktop build (served at root).
@@ -210,6 +214,7 @@
 	// just load. Cached — a no-op if a page already loaded it.
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
 	let stopErrorCapture: (() => void) | null = null;
+	let stopPublishingToTable: (() => void) | null = null;
 	onMount(async () => {
 		void initDiag(); // wire the desktop file sink (no-op on web); ring buffer works immediately
 		stopErrorCapture = captureGlobalErrors(); // route uncaught errors/rejections into the logger
@@ -217,6 +222,8 @@
 		const flash = takeFlash(); // a success note stashed before a reload (e.g. data-folder move)
 		if (flash) toast.success(flash);
 		void checkForUpdate(); // fire-and-forget; self-guards to desktop, never blocks the load
+		void table.checkAvailable(); // asks the build, opens nothing
+		stopPublishingToTable = table.keepPublishing();
 		// Dev preview of the update chip: `?dev-update` in the URL. No-op in production.
 		if (import.meta.env.DEV && page.url.searchParams.has('dev-update')) simulateUpdateAvailable();
 		if (detectPlatform() !== Platform.Desktop) {
@@ -249,6 +256,7 @@
 		stopContentWatcher();
 		stopCharacterWatcher();
 		stopErrorCapture?.();
+		stopPublishingToTable?.();
 	});
 
 	/** Reconcile custom themes with the data dir (files are the source of truth; a first launch after
@@ -451,6 +459,9 @@
 <CommandPalette />
 
 <CharacterConflictDialog />
+
+<!-- What a GM asks arrives over whatever screen the player is on, and waits for their answer. -->
+<TableRequestDialog />
 
 {#if showDiagnostics}
 	<DiagnosticsModal onDismiss={() => (showDiagnostics = false)} />
