@@ -86,9 +86,20 @@
       own note stands where its hint opens, so the two are placed together.
 
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
-      and `app.html` names none, so a browser tab shows its blank default. The desktop app has its
-      icon set (`src-tauri/icons/`); the tab wants the same mark, as an SVG that reads at 16px in a
-      light and a dark browser chrome. The mark is the maintainer's to choose.
+      and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
+      set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only
+      the tab's: one SVG that reads at 16px in a light and a dark browser chrome.
+      **The maintainer's brief:** not the name — no letter, no pun on it; tied to the PROCESS OF
+      PLAY or to the character sheet as a concept, or plainly abstract; and no d20, nor a die of
+      any kind. Shown at tab size and turned down, each for what it reads as rather than for what
+      it meant: a page with a portrait and lines (a document editor's icon), a circle, a triangle
+      and a diamond on a tile (a face), parts converging on a node (a neural network), a 2×2 of
+      resource pips with one spent (unconvincing), an ability box with its modifier bubble (says
+      nothing). So what is drawn next is checked first for what a stranger takes it for.
+      **What is drawn next, in the maintainer's order:** a PENCIL STUB — the most interesting as a
+      concept: a sheet is kept in pencil because its numbers keep changing; then a MINIATURE on
+      its base — it is your character on the table. A GM screen's three panels got no yes. Tally
+      marks and an hourglass for rounds are undrawn and unjudged.
 
 - [ ] **PICK-CONTROL-STUDY · which rendering of a two-state choice players actually read — asked of
   users, not of us.** FINESSE-ABILITY shipped the first one: both abilities standing with the live
