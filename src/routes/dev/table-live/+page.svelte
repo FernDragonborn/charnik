@@ -26,6 +26,7 @@
 		table,
 		type TableRole,
 	} from '../../table/table-view-model.svelte';
+	import { firstDifference } from './first-difference';
 
 	const REPORT = 'table-live-probe.txt';
 	const FOLDER = '.table-live';
@@ -104,7 +105,8 @@
 		if (!player) return;
 		say(`     seated as "${player.name}"`);
 		await until('their sheet arrived, and is the sheet they sent', () => !!player.view);
-		check('…name, hit points and AC intact', JSON.stringify(player.view) === JSON.stringify(view));
+		const changed = firstDifference(view, player.view, 'view');
+		check('…name, hit points and AC intact', changed === null, changed ?? '');
 
 		// --- 3. the GM asks, and what comes back is the answer to that ask ---------------------------
 		await table.ask(
