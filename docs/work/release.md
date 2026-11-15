@@ -135,8 +135,13 @@
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
   on one LAN; how often a path stays on the relay and what a session's traffic comes to against
-  n0's unpublished limits; a relay that drops mid-session and the six redials; two Charnik
-  versions at one table; `cargo audit` over the crates the feature adds. The release workflow
+  n0's unpublished limits; a relay that drops mid-session and the redials after it; **ten real
+  minutes without a network**, once at a player's end and once at the GM's, each ending with the
+  table whole again and nobody asked anything — a power cut is an ordinary evening for part of
+  the people this is for, and what a path does after ten minutes of silence (a NAT mapping gone,
+  an address changed, a phone's hotspot in place of the router) is iroh's and the network's to
+  show, not a timer's; two Charnik versions at one table; `cargo audit` over the crates the
+  feature adds. The release workflow
   then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
   no release, and the changelog of that release is where the table is first named: until then no
   release has it, so no changelog mentions it.
@@ -144,12 +149,33 @@
   (`../research/table-features-elsewhere.md`) and not in the first table: players' rolls on the
   GM's screen as one stream, GM-only rolls, and moderation from day one. A star gives a player
   nobody but the GM to hear from, so another player's roll reaches them through the GM's app.
-- **TABLE-LINK-REMEMBER · a table that is there next week.** A table lives for one session and
-  its keys are in memory. Remembering one means a key that outlives the app: the OS store through
-  the `keyring` crate, never the data folder (design review ▸ 11), a list of tables with "forget
-  this one", and a GM key that changes being a new table to join rather than a warning. The GM's
-  log of asks belongs with it: it is the one thing a page that loads again is not handed back
-  (`../internals/table-link.md` ▸ Staying seated).
+  **Designed in one pass with TABLE-LINK-REMEMBER**, on one model, the maintainer's rule being
+  that no app is the master of the table's state — a GM's lags and restarts like anyone's:
+  every record has ONE author (a player their sheet and rolls, the GM their asks), the author's
+  app is the truth for it and says it again on reconnecting, every app that saw a record keeps a
+  copy, and a record is signed with its author's table key so a copy handed back by anyone is
+  either the author's words or refused. Nothing is agreed on, because no two apps write one
+  record; the log is the union, shown in the order of its times.
+- **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.** A
+  table lives for one session and its keys are in memory, so an app that restarts — a desktop in
+  a power cut — comes back a stranger. Remembering one means a key that outlives the app: the OS
+  store through the `keyring` crate, never the data folder (design review ▸ 11), a list of tables
+  with "forget this one", and a GM key that changes being a new table to join rather than a
+  warning. For the restart: the GM's set of keys already let in is kept with the table, the
+  player's side waits for a GM that is gone (it already dials without end), and the app that
+  comes back asks its person ONE native question — return to this table? — before any socket,
+  as going online always does. The GM's log of asks belongs here too: it is the one thing a page
+  that loads again is not handed back (`../internals/table-link.md` ▸ Staying seated), and after
+  a restart it is rebuilt from the copies the players hold (TABLE-LINK-LOG's model).
+- **TABLE-LINK-HUB · the table's hub is somebody other than the GM, and can move.** Asked for a
+  GM on a poor connection. Today it would move nothing that matters: every frame on the wire has
+  the GM at one end — a sheet goes to the GM, an ask comes from the GM — so the GM's link is in
+  the path whoever holds the connections, and what a poor link needs is the redial it has. It
+  starts to pay with TABLE-LINK-LOG, the first traffic between players. It stands on that item's
+  signed records: an ask that arrives through a hub is the GM's because the GM signed it, where
+  today it is the GM's because it came down the GM's connection (threats ▸ the forwarded
+  request). With that, a hub is a forwarder any app at the table can be, letting people in stays
+  the GM's, and moving it is a signed notice of the new hub's key that every seat redials.
 - **TABLE-LINK-MECHANICS · what a table turns from text into mechanics.** Found by re-reading
   every class feature the app keeps as text because it sees no ally, no target, no GM roll and no
   scene:
