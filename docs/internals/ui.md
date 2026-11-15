@@ -429,6 +429,14 @@ good", so they are pinned here and every component follows them.
     builder's todo list; a conditional equipment answer uses a solid accent border. Draft status,
     explanatory tags, inherited damage types, reference-only rules notes and spent spell pips use
     solid borders: none offers room for an optional addition.
+22. **The circular-arrow chip, Ctrl+R and F5 are one act, and it can break nothing.** To someone
+    who is not technical the three are the same thing, so they never diverge, on any screen: each
+    re-reads the disk into the live stores and says under the chip that it did. Nothing a press of
+    them does may lose a state, a seat at a table or a keystroke — which is why the act is the
+    refresh and not the page reload. The reload is the deliberate, deeper key (Ctrl+Shift+R,
+    Ctrl+F5, Shift+F5), says so in the chip's tooltip, and still flushes pending writes first
+    (`overview.md` ▸ the reload keys). The web demo is the exception the browser imposes: its
+    keys are the browser's own.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
