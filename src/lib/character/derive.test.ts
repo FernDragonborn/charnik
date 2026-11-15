@@ -1309,6 +1309,17 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 		expect(s.abilities.str.save.trace.map((t) => t.source)).toContain('Raging → Rage');
 	});
 
+	it('names a condition once when what applied it carries the same name', async () => {
+		const g = await condGraph();
+		const c = brute();
+		c.play.effects = [
+			{ iid: 'r', label: 'Rage', effects: ['apply_condition:rage'], positive: true },
+		];
+		const sources = deriveSheet(c, g).abilities.str.save.trace.map((t) => t.source);
+		expect(sources).toContain('Rage');
+		expect(sources).not.toContain('Rage → Rage');
+	});
+
 	it('does NOT expand a condition row from the OTHER edition (A16(a) edition filter)', async () => {
 		// `marked` here is a 5e row (+5 AC); a 5.5e character applying it must find NOTHING — before
 		// the edition filter, both-roots-loaded would wrongly apply the 5e condition to the 5e char.

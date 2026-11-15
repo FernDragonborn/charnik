@@ -63,9 +63,17 @@ function makeInst(eff: ActiveEffect, raw: string, condId?: string, condLabel?: s
 	};
 }
 
+/** What a condition's effects are sourced to: "<what applied it> → <condition>". One applied
+ *  under its own name — the Rage feature putting on Rage — is said once. */
+function imposedSource(applier: string, condition: string): string {
+	return applier === condition ? condition : `${applier} → ${condition}`;
+}
+
 /** Human label for an instance's source (a condition child appends "→ <condition>"). */
 function sourceOf(inst: Inst): string {
-	return inst.condLabel !== undefined ? `${inst.eff.source} → ${inst.condLabel}` : inst.eff.source;
+	return inst.condLabel !== undefined
+		? imposedSource(inst.eff.source, inst.condLabel)
+		: inst.eff.source;
 }
 
 /** Kept token strings from a list: applied → body (guard-stripped), inert → raw (kept verbatim). */
@@ -107,7 +115,11 @@ function assembleResolved(
 		if (!applier) continue;
 		const kept = keptTokens(ex.children);
 		if (kept.length)
-			out.push({ source: `${applier.eff.source} → ${ex.label}`, layer: 'condition', tokens: kept });
+			out.push({
+				source: imposedSource(applier.eff.source, ex.label),
+				layer: 'condition',
+				tokens: kept,
+			});
 	}
 	return out;
 }
