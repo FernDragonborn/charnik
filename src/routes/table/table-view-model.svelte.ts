@@ -37,6 +37,7 @@ import {
 	TABLE_ANSWER,
 	TABLE_EVENT,
 	TABLE_REQUEST,
+	TABLE_ROLE,
 	type CloseReason,
 	type ConnectionState,
 	type GmEvent,
@@ -47,6 +48,7 @@ import {
 	type RequestId,
 	type TableLink,
 	type TableRequest,
+	type TableRole,
 	type UnavailableReason,
 	type Unsubscribe,
 } from '$lib/table-link/types';
@@ -55,8 +57,7 @@ import type { TableRoll, TableView } from '$lib/table-link/wire-schema';
 import type { StateChoice } from '../combat/effects-editor.svelte';
 import { combat } from '../combat/combat-view-model.svelte';
 
-export const TABLE_ROLE = { none: 'none', gm: 'gm', player: 'player' } as const;
-export type TableRole = (typeof TABLE_ROLE)[keyof typeof TABLE_ROLE];
+export { TABLE_ROLE, type TableRole };
 
 /** There is nobody to sit down as: joining publishes the open character, and none is open. */
 export const NO_CHARACTER = 'no_character';
@@ -179,13 +180,48 @@ export class TableVM {
 				this.problem = seating.reason;
 				return;
 			}
-			this.gmSeat = seating.seat;
-			this.tableName = name.trim();
-			this.invite = seating.seat.invite;
-			this.players = [];
-			this.asked = [];
-			this.role = TABLE_ROLE.gm;
-			this.stopListening = await seating.seat.subscribe(this.onGmEvent);
+			await this.sitAsGm(seating.seat, name.trim());
+		} finally {
+			this.busy = false;
+		}
+	};
+
+	private async sitAsGm(seat: GmSeat, name: string): Promise<void> {
+		this.gmSeat = seat;
+		this.tableName = name;
+		this.invite = seat.invite;
+		this.players = [];
+		this.asked = [];
+		this.role = TABLE_ROLE.gm;
+		this.stopListening = await seat.subscribe(this.onGmEvent);
+	}
+
+	private async sitAsPlayer(seat: PlayerSeat): Promise<void> {
+		this.playerSeat = seat;
+		this.code = seat.code;
+		this.connection = CONNECTION.connecting;
+		this.requests = [];
+		this.role = TABLE_ROLE.player;
+		this.stopListening = await seat.subscribe(this.onPlayerEvent);
+	}
+
+	/**
+	 * Pick up the seat the app still holds. A page that loads again has forgotten its table, and
+	 * the table has not ended: the players are still at it. What comes back is who is seated and
+	 * their sheets, or the player's connection and the requests they had not answered; the GM's log
+	 * of asks was this page's own and starts empty.
+	 */
+	resume = async (): Promise<void> => {
+		if (this.busy || this.role !== TABLE_ROLE.none) return;
+		this.busy = true;
+		try {
+			const held = await this.link().resume();
+			if (held.role === TABLE_ROLE.gm) await this.sitAsGm(held.seat, held.name);
+			if (held.role === TABLE_ROLE.player) {
+				// the sheet the table is told again is the open character's
+				if (!combat.character) await combat.load();
+				await this.sitAsPlayer(held.seat);
+			}
 		} finally {
 			this.busy = false;
 		}
@@ -212,12 +248,7 @@ export class TableVM {
 				this.problem = seating.reason;
 				return;
 			}
-			this.playerSeat = seating.seat;
-			this.code = seating.seat.code;
-			this.connection = CONNECTION.connecting;
-			this.requests = [];
-			this.role = TABLE_ROLE.player;
-			this.stopListening = await seating.seat.subscribe(this.onPlayerEvent);
+			await this.sitAsPlayer(seating.seat);
 		} finally {
 			this.busy = false;
 		}

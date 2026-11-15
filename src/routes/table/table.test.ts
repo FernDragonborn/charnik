@@ -22,11 +22,13 @@ import {
 	UNAVAILABLE,
 	type GmEvent,
 	type GmSeat,
+	type HeldSeat,
 	type PlayerEvent,
 	type PlayerSeat,
 	type TableAnswer,
 	type TableLink,
 	type TableRequest,
+	type TableRole,
 } from '$lib/table-link/types';
 import { tableViewOf } from '$lib/table-link/view';
 import type { TableView } from '$lib/table-link/wire-schema';
@@ -40,8 +42,11 @@ import {
 	type PendingRequest,
 } from './table-view-model.svelte';
 
-/** A table link whose other side is this test. */
-function tableOfOne() {
+const NO_SEAT_HELD = () => Promise.resolve({ role: TABLE_ROLE.none });
+
+/** A table link whose other side is this test. `held` is the seat the app kept from a page that
+ *  was here before. */
+function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 	const heard = {
 		views: [] as TableView[],
 		answers: [] as { requestId: string; answer: TableAnswer }[],
@@ -91,6 +96,12 @@ function tableOfOne() {
 		available: () => Promise.resolve(true),
 		host: () => Promise.resolve({ status: SEATING.seated, seat: gmSeat }),
 		join: () => Promise.resolve({ status: SEATING.seated, seat: playerSeat }),
+		resume: (): Promise<HeldSeat> => {
+			if (held === TABLE_ROLE.gm)
+				return Promise.resolve({ role: held, seat: gmSeat, name: 'Thursday' });
+			if (held === TABLE_ROLE.player) return Promise.resolve({ role: held, seat: playerSeat });
+			return NO_SEAT_HELD();
+		},
 	};
 	return {
 		table: new TableVM(() => link),
@@ -349,6 +360,60 @@ describe("a GM's seat", () => {
 	});
 });
 
+describe('a page that loads again', () => {
+	const lira = { id: 'p-1', name: 'Lira' };
+
+	it("picks up the GM's table: its name, its invitation, and who the app says is at it", async () => {
+		const { table, tellGm, heard } = tableOfOne(TABLE_ROLE.gm);
+		await table.resume();
+		expect(table.role).toBe(TABLE_ROLE.gm);
+		expect(table.tableName).toBe('Thursday');
+		expect(table.invite).toBe('charnik-table:first');
+		// the log of asks was the page's own
+		expect(table.asked).toEqual([]);
+
+		const view = tableViewOf(character, combat.sheet!);
+		tellGm({ kind: TABLE_EVENT.participantJoined, participant: lira });
+		tellGm({ kind: TABLE_EVENT.view, participant: 'p-1', view });
+		expect(table.players).toEqual([{ ...lira, view, present: true }]);
+
+		// and it is a seat like any other: it asks, and it closes the table
+		await table.ask(['p-1'], { kind: TABLE_REQUEST.heal, amount: 2 });
+		expect(heard.requests).toHaveLength(1);
+		await table.leave();
+		expect(heard.left).toBe(1);
+	});
+
+	it("picks up a player's seat, says its sheet again, and shows what still waits", async () => {
+		const { table, tellPlayer, heard } = tableOfOne(TABLE_ROLE.player);
+		await table.resume();
+		expect(table.role).toBe(TABLE_ROLE.player);
+		expect(table.code).toBe('123-456');
+
+		tellPlayer({ kind: TABLE_EVENT.connection, state: CONNECTION.connected });
+		await Promise.resolve();
+		expect(heard.views.at(-1)?.name).toBe(character.build.name);
+		tellPlayer({
+			kind: TABLE_EVENT.request,
+			requestId: 'r-1',
+			request: { kind: TABLE_REQUEST.heal, amount: 2 },
+		});
+		expect(table.requests).toHaveLength(1);
+	});
+
+	it('holds nothing where the app holds no seat, and leaves a seat already held alone', async () => {
+		const { table } = tableOfOne();
+		await table.resume();
+		expect(table.role).toBe(TABLE_ROLE.none);
+		expect(table.busy).toBe(false);
+
+		await table.host('Thursday');
+		await table.ask([], { kind: TABLE_REQUEST.heal, amount: 1 });
+		await table.resume();
+		expect(table.role).toBe(TABLE_ROLE.gm);
+	});
+});
+
 describe('a seat that was not given', () => {
 	it('says why', async () => {
 		const refusing: TableLink = {
@@ -356,6 +421,7 @@ describe('a seat that was not given', () => {
 			host: () =>
 				Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.relayUnreachable }),
 			join: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.badInvite }),
+			resume: NO_SEAT_HELD,
 		};
 		const table = new TableVM(() => refusing);
 		expect(await table.checkAvailable()).toBe(false);
@@ -374,6 +440,7 @@ describe('whether the build has a table', () => {
 			available: () => Promise.resolve(++asked === 1),
 			host: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
 			join: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
+			resume: NO_SEAT_HELD,
 		};
 		const table = new TableVM(() => link);
 		expect(await Promise.all([table.checkAvailable(), table.checkAvailable()])).toEqual([

@@ -17,6 +17,7 @@ import {
 	TABLE_ANSWER,
 	TABLE_EVENT,
 	TABLE_REQUEST,
+	TABLE_ROLE,
 	UNAVAILABLE,
 } from './types';
 import type { GmEvent, PlayerEvent } from './types';
@@ -184,6 +185,84 @@ describe('the desktop table link', () => {
 		push({ kind: TABLE_EVENT.participantLeft, table: 'table-1', participant: 'p-2' });
 		push(closed);
 		expect(heard).toEqual([asked, closed]);
+	});
+
+	it('holds no seat where the app holds none, or has no table at all', async () => {
+		expect(await noopTableLink.resume()).toEqual({ role: TABLE_ROLE.none });
+		expect(invoke).not.toHaveBeenCalled();
+		invoke.mockResolvedValueOnce(null);
+		expect(await tauriTableLink.resume()).toEqual({ role: TABLE_ROLE.none });
+		invoke.mockRejectedValueOnce('Command table_link_resume not found');
+		expect(await tauriTableLink.resume()).toEqual({ role: TABLE_ROLE.none });
+		// and listens for nothing afterwards
+		expect(handlers.size).toBe(0);
+	});
+
+	it("picks up a GM's table and tells its page the table as it stands", async () => {
+		const joined = {
+			kind: TABLE_EVENT.participantJoined,
+			table: 'table-1',
+			participant: { id: 'p-1', name: 'Lira' },
+		};
+		const showed = { kind: TABLE_EVENT.view, table: 'table-1', participant: 'p-1', view };
+		const left = { kind: TABLE_EVENT.participantLeft, table: 'table-1', participant: 'p-1' };
+		invoke.mockResolvedValueOnce({
+			role: TABLE_ROLE.gm,
+			table: 'table-1',
+			name: 'Friday game',
+			invite: null,
+			// a sheet in what is told again began as a peer's bytes: one that is no sheet is dropped
+			told: [joined, showed, { ...showed, view: { hp: 'plenty' } }],
+		});
+		const held = await tauriTableLink.resume();
+		if (held.role !== TABLE_ROLE.gm) throw new Error('no GM seat');
+		expect(invoke).toHaveBeenCalledExactlyOnceWith('table_link_resume');
+		expect(held.name).toBe('Friday game');
+		expect(held.seat.table).toBe('table-1');
+		// the door was shut when the page went
+		expect(held.seat.invite).toBeNull();
+
+		// said while the page was still picking the seat up: heard after what stood before it
+		push(left);
+		const heard: GmEvent[] = [];
+		await held.seat.subscribe((event) => heard.push(event));
+		expect(heard).toEqual([joined, showed, left]);
+		push(joined);
+		expect(heard).toHaveLength(4);
+	});
+
+	it("picks up a player's seat with its connection and what was asked of it", async () => {
+		const connected = {
+			kind: TABLE_EVENT.connection,
+			table: 'table-1',
+			state: CONNECTION.connected,
+		};
+		const asked = {
+			kind: TABLE_EVENT.request,
+			table: 'table-1',
+			requestId: 'r-1',
+			request: { kind: TABLE_REQUEST.heal, amount: 4 },
+		};
+		invoke.mockResolvedValueOnce({
+			role: TABLE_ROLE.player,
+			table: 'table-1',
+			code: '123-456',
+			told: [connected, asked],
+		});
+		const held = await tauriTableLink.resume();
+		if (held.role !== TABLE_ROLE.player) throw new Error('no player seat');
+		expect(held.seat.code).toBe('123-456');
+		const heard: PlayerEvent[] = [];
+		await held.seat.subscribe((event) => heard.push(event));
+		expect(heard).toEqual([connected, asked]);
+
+		invoke.mockResolvedValueOnce(DELIVERY.delivered);
+		await held.seat.respond('r-1', { outcome: TABLE_ANSWER.accepted });
+		expect(invoke).toHaveBeenLastCalledWith('table_link_respond', {
+			table: 'table-1',
+			requestId: 'r-1',
+			answer: { outcome: TABLE_ANSWER.accepted },
+		});
 	});
 
 	it('answers not delivered when a call cannot be made', async () => {

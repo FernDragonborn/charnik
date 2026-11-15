@@ -243,6 +243,9 @@
 			await loadContentStore();
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			startCharacterWatcher(); // and ask, when the open character's file is written by someone else
+			// a page that loaded again picks up the table the app still holds; after content, because
+			// a player's seat tells the table the open character's sheet again
+			void table.resume();
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 			void syncThemes(); // load user themes from the data dir now it's granted
 			void overrides.load(getUserStorage());

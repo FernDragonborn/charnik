@@ -177,6 +177,7 @@
 			participant: 'nobody',
 		});
 		await answers('leaving no table answers', null, 'table_link_leave', { table: 'probe' });
+		await answers('no seat is held where none was taken', null, 'table_link_resume', {});
 
 		// --- 3. a request is ids and numbers, and Rust holds it to that ------------------------------
 		const asking = { table: 'probe', participant: 'nobody', requestId: 'r-1' };

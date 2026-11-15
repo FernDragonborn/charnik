@@ -10,6 +10,11 @@
 //! One seat at a time, held in memory: a table lives for a session, under a key made for it and
 //! written nowhere.
 //!
+//! **The seat is the app's, not the page's.** A page that loads again finds the seat still held
+//! and picks it up (`table_link_resume`): it is told again what the page before it was told and
+//! still stands — who is at the table and the sheets they showed, the connection, the requests
+//! nobody answered. That opens no socket and asks nobody, because the person already said yes.
+//!
 //! The whole module sits behind the `table-link` Cargo feature, with its capability file
 //! (`capabilities/table-link/`) and its entries in `build.rs`. A build without the feature has none
 //! of the three, and the page learns that by calling: a command that is not there is refused.
@@ -25,7 +30,9 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 use crate::native_strings::native_string;
-use session::{Approve, Delivery, Emit, GmTable, PlayerSeat, RelaySetting, Unavailable};
+use session::{
+    Approve, Delivery, Emit, GmTable, PlayerSeat, RelaySetting, TableEvent, Unavailable,
+};
 use wire::{Invite, TableAnswer, TableRequest};
 
 /// The one channel every table event travels on, told apart by its `kind`.
@@ -34,23 +41,126 @@ const MAIN_WINDOW: &str = "main";
 /// Where the native dialogs' words sit in a catalog.
 const NATIVE_KEY: &str = "table.native";
 
+/// How many unanswered requests are kept for a page that is not there to answer them.
+const TOLD_REQUESTS_MAX: usize = 12;
+
 enum Seat {
-    Gm(GmTable),
+    Gm {
+        table: GmTable,
+        /// The table's name, as the GM typed it.
+        name: String,
+        /// The invitation in force, or None while the door is shut.
+        invite: Option<String>,
+    },
     Player(PlayerSeat),
 }
 
 impl Seat {
     fn table(&self) -> &str {
         match self {
-            Self::Gm(table) => &table.id,
+            Self::Gm { table, .. } => &table.id,
             Self::Player(seat) => &seat.id,
         }
     }
 }
 
+/// What the page has been told that still stands, in the order a page must hear it.
+type Told = Arc<std::sync::Mutex<Vec<TableEvent>>>;
+
+/// A seat, and what its page has been told.
+struct Held {
+    seat: Seat,
+    told: Told,
+}
+
 /// The seat this app holds, if it holds one.
 #[derive(Default)]
-pub struct TableLinkState(tokio::sync::Mutex<Option<Seat>>);
+pub struct TableLinkState(tokio::sync::Mutex<Option<Held>>);
+
+fn is_left(event: &TableEvent, id: &str) -> bool {
+    matches!(event, TableEvent::ParticipantLeft { participant, .. } if participant == id)
+}
+
+fn is_joined(event: &TableEvent, id: &str) -> bool {
+    matches!(event, TableEvent::ParticipantJoined { participant, .. } if participant.id == id)
+}
+
+fn is_view(event: &TableEvent, id: &str) -> bool {
+    matches!(event, TableEvent::View { participant, .. } if participant == id)
+}
+
+fn is_request(event: &TableEvent) -> bool {
+    matches!(event, TableEvent::Request { .. })
+}
+
+/// Keep an event for a page that loads again, in place of whatever it makes untrue. An answer is
+/// not kept: it belongs to the GM's log of asks, which is the page's own.
+fn remember(told: &mut Vec<TableEvent>, event: &TableEvent) {
+    match event {
+        TableEvent::ParticipantJoined { participant, .. } => {
+            told.retain(|kept| !is_left(kept, &participant.id));
+            // in place, so the sheet they showed still comes after them
+            if let Some(seated) = told
+                .iter_mut()
+                .find(|kept| is_joined(kept, &participant.id))
+            {
+                *seated = event.clone();
+                return;
+            }
+        }
+        TableEvent::ParticipantLeft { participant, .. } => {
+            told.retain(|kept| !is_left(kept, participant));
+        }
+        TableEvent::View { participant, .. } => told.retain(|kept| !is_view(kept, participant)),
+        TableEvent::Connection { .. } => {
+            told.retain(|kept| !matches!(kept, TableEvent::Connection { .. }));
+        }
+        TableEvent::Request { .. } => {
+            if told.iter().filter(|kept| is_request(kept)).count() >= TOLD_REQUESTS_MAX {
+                return;
+            }
+        }
+        TableEvent::Answer { .. } => return,
+    }
+    told.push(event.clone());
+}
+
+/// A participant the GM sent away is nobody a page should hear of again.
+fn forget_participant(told: &mut Vec<TableEvent>, id: &str) {
+    told.retain(|kept| !is_joined(kept, id) && !is_left(kept, id) && !is_view(kept, id));
+}
+
+/// A request that was answered waits for nobody.
+fn forget_request(told: &mut Vec<TableEvent>, id: &str) {
+    told.retain(|kept| !matches!(kept, TableEvent::Request { request_id, .. } if request_id == id));
+}
+
+/// A lock a panicking holder left behind still guards a list that is only ever whole.
+fn told_of(told: &Told) -> std::sync::MutexGuard<'_, Vec<TableEvent>> {
+    told.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// What `resume` answers: the seat still held, and what to tell its page again.
+#[derive(Serialize)]
+#[serde(
+    tag = "role",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+pub enum Resumed {
+    Gm {
+        table: String,
+        name: String,
+        invite: Option<String>,
+        told: Vec<TableEvent>,
+    },
+    Player {
+        table: String,
+        code: String,
+        told: Vec<TableEvent>,
+    },
+}
 
 /// What `host` and `join` answer.
 #[derive(Serialize)]
@@ -128,9 +238,10 @@ fn relay_host(url: &str) -> Option<String> {
     Some(session::parse_relay(url)?.host_str()?.to_string())
 }
 
-fn emitter(app: &tauri::AppHandle) -> Emit {
-    let app = app.clone();
+fn emitter(app: &tauri::AppHandle, told: &Told) -> Emit {
+    let (app, told) = (app.clone(), told.clone());
     Arc::new(move |event| {
+        remember(&mut told_of(&told), &event);
         // best-effort: a window that is not listening has no table screen to be wrong
         let _ = app.emit_to(MAIN_WINDOW, TABLE_EVENT, event);
     })
@@ -187,10 +298,19 @@ pub async fn table_link_host(
     if !question.ask(app.clone()).await {
         return unavailable(Unavailable::Cancelled);
     }
-    match session::host(&name, &relay, emitter(&app), approver(&app, &locale)).await {
+    let told = Told::default();
+    let emit = emitter(&app, &told);
+    match session::host(&name, &relay, emit, approver(&app, &locale)).await {
         Ok((table, invite)) => {
             let id = table.id.clone();
-            *seat = Some(Seat::Gm(table));
+            *seat = Some(Held {
+                seat: Seat::Gm {
+                    table,
+                    name,
+                    invite: Some(invite.clone()),
+                },
+                told,
+            });
             Seating::Seated {
                 table: id,
                 invite: Some(invite),
@@ -238,10 +358,14 @@ pub async fn table_link_join(
     if !question.ask(app.clone()).await {
         return unavailable(Unavailable::Cancelled);
     }
-    match session::join(&invite, &name, emitter(&app)).await {
+    let told = Told::default();
+    match session::join(&invite, &name, emitter(&app, &told)).await {
         Ok(player) => {
             let (table, code) = (player.id.clone(), player.code.clone());
-            *seat = Some(Seat::Player(player));
+            *seat = Some(Held {
+                seat: Seat::Player(player),
+                told,
+            });
             Seating::Seated {
                 table,
                 invite: None,
@@ -256,14 +380,40 @@ pub async fn table_link_join(
 #[tauri::command]
 pub async fn table_link_leave(app: tauri::AppHandle, table: String) {
     let state = app.state::<TableLinkState>();
-    let mut seat = state.0.lock().await;
-    if seat.as_ref().is_some_and(|seat| seat.table() == table) {
-        match seat.take() {
-            Some(Seat::Gm(table)) => table.close().await,
+    let mut held = state.0.lock().await;
+    if held.as_ref().is_some_and(|held| held.seat.table() == table) {
+        match held.take().map(|held| held.seat) {
+            Some(Seat::Gm { table, .. }) => table.close().await,
             Some(Seat::Player(player)) => player.leave().await,
             None => {}
         }
     }
+}
+
+/// The seat this app still holds, for a page that has loaded again and knows of none.
+#[tauri::command]
+pub async fn table_link_resume(app: tauri::AppHandle) -> Option<Resumed> {
+    let state = app.state::<TableLinkState>();
+    let held = state.0.lock().await;
+    let held = held.as_ref()?;
+    let told = told_of(&held.told).clone();
+    Some(match &held.seat {
+        Seat::Gm {
+            table,
+            name,
+            invite,
+        } => Resumed::Gm {
+            table: table.id.clone(),
+            name: name.clone(),
+            invite: invite.clone(),
+            told,
+        },
+        Seat::Player(seat) => Resumed::Player {
+            table: seat.id.clone(),
+            code: seat.code.clone(),
+            told,
+        },
+    })
 }
 
 /// A player says what is true of their character now.
@@ -274,7 +424,10 @@ pub async fn table_link_publish(
     view: Map<String, Value>,
 ) -> Delivery {
     match &*app.state::<TableLinkState>().0.lock().await {
-        Some(Seat::Player(seat)) if seat.id == table => seat.publish(view),
+        Some(Held {
+            seat: Seat::Player(seat),
+            ..
+        }) if seat.id == table => seat.publish(view),
         _ => Delivery::NotDelivered,
     }
 }
@@ -288,7 +441,13 @@ pub async fn table_link_respond(
     answer: TableAnswer,
 ) -> Delivery {
     match &*app.state::<TableLinkState>().0.lock().await {
-        Some(Seat::Player(seat)) if seat.id == table => seat.respond(request_id, answer),
+        Some(Held {
+            seat: Seat::Player(seat),
+            told,
+        }) if seat.id == table => {
+            forget_request(&mut told_of(told), &request_id);
+            seat.respond(request_id, answer)
+        }
         _ => Delivery::NotDelivered,
     }
 }
@@ -303,7 +462,10 @@ pub async fn table_link_request(
     request: TableRequest,
 ) -> Delivery {
     match &*app.state::<TableLinkState>().0.lock().await {
-        Some(Seat::Gm(gm)) if gm.id == table => gm.request(&participant, request_id, request),
+        Some(Held {
+            seat: Seat::Gm { table: gm, .. },
+            ..
+        }) if gm.id == table => gm.request(&participant, request_id, request),
         _ => Delivery::NotDelivered,
     }
 }
@@ -311,9 +473,14 @@ pub async fn table_link_request(
 /// A GM takes a participant's seat away.
 #[tauri::command]
 pub async fn table_link_dismiss(app: tauri::AppHandle, table: String, participant: String) {
-    if let Some(Seat::Gm(gm)) = &*app.state::<TableLinkState>().0.lock().await {
+    if let Some(Held {
+        seat: Seat::Gm { table: gm, .. },
+        told,
+    }) = &*app.state::<TableLinkState>().0.lock().await
+    {
         if gm.id == table {
             gm.dismiss(&participant);
+            forget_participant(&mut told_of(told), &participant);
         }
     }
 }
@@ -321,8 +488,16 @@ pub async fn table_link_dismiss(app: tauri::AppHandle, table: String, participan
 /// A GM opens the door — answering the new invitation — or shuts it.
 #[tauri::command]
 pub async fn table_link_door(app: tauri::AppHandle, table: String, open: bool) -> Option<String> {
-    match &*app.state::<TableLinkState>().0.lock().await {
-        Some(Seat::Gm(gm)) if gm.id == table => gm.set_door(open),
+    match &mut *app.state::<TableLinkState>().0.lock().await {
+        Some(Held {
+            seat: Seat::Gm {
+                table: gm, invite, ..
+            },
+            ..
+        }) if gm.id == table => {
+            *invite = gm.set_door(open);
+            invite.clone()
+        }
         _ => None,
     }
 }
@@ -370,6 +545,130 @@ mod tests {
                 assert!(said.contains("relay.example.org"), "{locale} {route}");
             }
         }
+    }
+
+    fn joined(id: &str, name: &str) -> TableEvent {
+        TableEvent::ParticipantJoined {
+            table: "t".into(),
+            participant: session::Participant {
+                id: id.into(),
+                name: name.into(),
+            },
+        }
+    }
+
+    fn left(id: &str) -> TableEvent {
+        TableEvent::ParticipantLeft {
+            table: "t".into(),
+            participant: id.into(),
+        }
+    }
+
+    fn showed(id: &str, hp: u32) -> TableEvent {
+        TableEvent::View {
+            table: "t".into(),
+            participant: id.into(),
+            view: serde_json::json!({ "hp": hp }),
+        }
+    }
+
+    fn asked(request_id: &str) -> TableEvent {
+        TableEvent::Request {
+            table: "t".into(),
+            request_id: request_id.into(),
+            request: TableRequest::Heal { amount: 3 },
+        }
+    }
+
+    fn connection(state: session::ConnectionState) -> TableEvent {
+        TableEvent::Connection {
+            table: Some("t".into()),
+            state,
+            reason: None,
+        }
+    }
+
+    /// Events as the JSON a page receives: `TableEvent` has no equality of its own.
+    fn as_json(events: &[TableEvent]) -> Vec<Value> {
+        events
+            .iter()
+            .map(|event| serde_json::to_value(event).expect("an event is JSON"))
+            .collect()
+    }
+
+    /// What a page that loads again is told after these.
+    fn retold(events: &[TableEvent]) -> Vec<Value> {
+        let mut told = Vec::new();
+        for event in events {
+            remember(&mut told, event);
+        }
+        as_json(&told)
+    }
+
+    #[test]
+    fn a_page_that_loads_again_hears_the_table_as_it_stands() {
+        // a player who came, showed two sheets, dropped and came back under a new name is one
+        // player with their last sheet, heard of before it
+        assert_eq!(
+            retold(&[
+                joined("a", "Ann"),
+                showed("a", 7),
+                joined("b", "Bo"),
+                left("a"),
+                showed("a", 5),
+                joined("a", "Anna"),
+            ]),
+            as_json(&[joined("a", "Anna"), joined("b", "Bo"), showed("a", 5)]),
+        );
+        // one who is away is still at the table, and said to be away once
+        assert_eq!(
+            retold(&[joined("a", "Ann"), left("a"), left("a")]),
+            as_json(&[joined("a", "Ann"), left("a")]),
+        );
+        // the connection is the last one said, and an answer is nobody's to hear twice
+        let answer = TableEvent::Answer {
+            table: "t".into(),
+            participant: "a".into(),
+            request_id: "r".into(),
+            answer: TableAnswer {
+                outcome: wire::AnswerOutcome::Declined,
+                roll: None,
+            },
+        };
+        assert_eq!(
+            retold(&[
+                connection(session::ConnectionState::Connecting),
+                answer,
+                connection(session::ConnectionState::Connected),
+            ]),
+            as_json(&[connection(session::ConnectionState::Connected)]),
+        );
+    }
+
+    #[test]
+    fn what_is_over_is_not_told_again() {
+        let mut told = Vec::new();
+        for event in [
+            joined("a", "Ann"),
+            showed("a", 7),
+            joined("b", "Bo"),
+            asked("r1"),
+            asked("r2"),
+        ] {
+            remember(&mut told, &event);
+        }
+        forget_participant(&mut told, "a");
+        forget_request(&mut told, "r1");
+        assert_eq!(as_json(&told), as_json(&[joined("b", "Bo"), asked("r2")]));
+
+        // a GM's app cannot fill the memory of a player whose page is not there to answer
+        for n in 0..TOLD_REQUESTS_MAX * 2 {
+            remember(&mut told, &asked(&format!("more-{n}")));
+        }
+        assert_eq!(
+            told.iter().filter(|kept| is_request(kept)).count(),
+            TOLD_REQUESTS_MAX
+        );
     }
 
     #[test]

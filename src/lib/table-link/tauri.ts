@@ -17,11 +17,13 @@ import {
 	DELIVERY,
 	SEATING,
 	TABLE_EVENT,
+	TABLE_ROLE,
 	UNAVAILABLE,
 	type Asked,
 	type Delivery,
 	type GmEvent,
 	type GmSeat,
+	type HeldSeat,
 	type PlayerEvent,
 	type PlayerSeat,
 	type Seating,
@@ -38,15 +40,22 @@ const TABLE_EVENT_CHANNEL = 'table-link-event';
 /** An event as Rust sends it: one of a seat's, addressed to its table. */
 export type TableLinkWireEvent = z.infer<typeof tableEventSchema>;
 
+/** A payload as the event it is, or null when it is not one. */
+function heldToShape(payload: unknown): TableLinkWireEvent | null {
+	const parsed = tableEventSchema.safeParse(payload);
+	if (parsed.success) return parsed.data;
+	// the payload is a peer's and is not logged; that one was refused is worth knowing
+	logger.warn('table link: an event that is not one was dropped');
+	return null;
+}
+
 /** Every table event Rust pushes, whichever table it is for, once it has been held to its shape. */
 export const listenToTableLink = (
 	listener: (event: TableLinkWireEvent) => void,
 ): Promise<Unsubscribe> =>
 	listen<unknown>(TABLE_EVENT_CHANNEL, (event) => {
-		const parsed = tableEventSchema.safeParse(event.payload);
-		if (parsed.success) listener(parsed.data);
-		// the payload is a peer's and is not logged; that one was refused is worth knowing
-		else logger.warn('table link: an event that is not one was dropped');
+		const held = heldToShape(event.payload);
+		if (held) listener(held);
 	});
 
 /** An event as the seat it is for hears it, or null when it is the other seat's. */
@@ -65,6 +74,14 @@ interface EarlyEvents {
 	stop: Unsubscribe;
 }
 const EARLY_EVENTS_MAX = 64;
+
+async function hearEarly(): Promise<EarlyEvents> {
+	const early: EarlyEvents = { heard: [], stop: () => {} };
+	early.stop = await listenToTableLink((event) => {
+		if (early.heard.length < EARLY_EVENTS_MAX) early.heard.push(event);
+	});
+	return early;
+}
 
 /** A seat's `subscribe`: its table's events of its own kind, the early ones first. */
 const subscribing =
@@ -107,7 +124,7 @@ const playerSeat = (table: TableId, code: string, early: EarlyEvents): PlayerSea
 	subscribe: subscribing(table, early, playerEvent),
 });
 
-const gmSeat = (table: TableId, invite: string, early: EarlyEvents): GmSeat => ({
+const gmSeat = (table: TableId, invite: string | null, early: EarlyEvents): GmSeat => ({
 	table,
 	invite,
 	leave: () => invoke('table_link_leave', { table }),
@@ -133,10 +150,7 @@ async function seat<S>(
 	args: Record<string, unknown>,
 	seatAt: (table: TableId, token: string, early: EarlyEvents) => S,
 ): Promise<Seating<S>> {
-	const early: EarlyEvents = { heard: [], stop: () => {} };
-	early.stop = await listenToTableLink((event) => {
-		if (early.heard.length < EARLY_EVENTS_MAX) early.heard.push(event);
-	});
+	const early = await hearEarly();
 	// a refusal is a build without the feature, and reads as no table
 	const seating = await invoke<RustSeating>(command, args).catch(() => null);
 	if (seating?.status !== SEATING.seated) {
@@ -149,6 +163,33 @@ async function seat<S>(
 	};
 }
 
+/** What `table_link_resume` answers: the seat Rust still holds, and what its page was told. */
+type RustHeld =
+	| {
+			role: typeof TABLE_ROLE.gm;
+			table: TableId;
+			name: string;
+			invite: string | null;
+			told: unknown[];
+	  }
+	| { role: typeof TABLE_ROLE.player; table: TableId; code: string; told: unknown[] };
+
+async function resume(): Promise<HeldSeat> {
+	const early = await hearEarly();
+	// a refusal is a build without the feature, and reads as no seat
+	const held = await invoke<RustHeld | null>('table_link_resume').catch(() => null);
+	if (!held) {
+		early.stop();
+		return { role: TABLE_ROLE.none };
+	}
+	// what the page before this one was told comes first, then whatever was said since; a sheet in
+	// it began as another app's bytes, so it is held to its shape like any event
+	early.heard.unshift(...held.told.flatMap((payload) => heldToShape(payload) ?? []));
+	return held.role === TABLE_ROLE.gm
+		? { role: held.role, seat: gmSeat(held.table, held.invite, early), name: held.name }
+		: { role: held.role, seat: playerSeat(held.table, held.code, early) };
+}
+
 export const tauriTableLink: TableLink = {
 	// leaving a table that is not there does nothing in a build with the feature, and is refused
 	// in a build without it
@@ -159,4 +200,5 @@ export const tauriTableLink: TableLink = {
 		),
 	host: ({ name, relay, locale }) => seat('table_link_host', { name, relay, locale }, gmSeat),
 	join: ({ invite, name, locale }) => seat('table_link_join', { invite, name, locale }, playerSeat),
+	resume,
 };

@@ -2458,6 +2458,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GmSeat`
 - `const SEATING`
 - `type Seating`
+- `const TABLE_ROLE`
+- `type TableRole`
+- `type HeldSeat` — The seat the app was already holding when a page asked: a reload ends a page, not a table.
 - `interface HostOptions`
 - `interface JoinOptions`
 - `interface TableLink`
@@ -2551,4 +2554,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 59 components · 1559 exports across 218 modules · 107 duplicate suspects._
+_50 tokens · 97 global classes · 59 components · 1562 exports across 218 modules · 107 duplicate suspects._

@@ -147,7 +147,9 @@
 - **TABLE-LINK-REMEMBER · a table that is there next week.** A table lives for one session and
   its keys are in memory. Remembering one means a key that outlives the app: the OS store through
   the `keyring` crate, never the data folder (design review ▸ 11), a list of tables with "forget
-  this one", and a GM key that changes being a new table to join rather than a warning.
+  this one", and a GM key that changes being a new table to join rather than a warning. The GM's
+  log of asks belongs with it: it is the one thing a page that loads again is not handed back
+  (`../internals/table-link.md` ▸ Staying seated).
 - **TABLE-LINK-MECHANICS · what a table turns from text into mechanics.** Found by re-reading
   every class feature the app keeps as text because it sees no ally, no target, no GM roll and no
   scene:

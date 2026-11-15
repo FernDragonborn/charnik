@@ -159,8 +159,9 @@ export type Asked =
 	| { delivery: typeof DELIVERY.notDelivered };
 
 export interface GmSeat extends Seat<GmEvent> {
-	/** What to hand a player. It names the table and knocks; the GM still lets each one in. */
-	readonly invite: string;
+	/** What to hand a player. It names the table and knocks; the GM still lets each one in. Null
+	 *  at a seat picked up again while its door was shut. */
+	readonly invite: string | null;
 	request(participant: ParticipantId, request: TableRequest): Promise<Asked>;
 	/** Take a participant's seat away, and their way back in. */
 	dismiss(participant: ParticipantId): Promise<void>;
@@ -173,6 +174,15 @@ export const SEATING = { seated: 'seated', unavailable: 'unavailable' } as const
 export type Seating<S> =
 	| { status: typeof SEATING.seated; seat: S }
 	| { status: typeof SEATING.unavailable; reason: UnavailableReason };
+
+export const TABLE_ROLE = { none: 'none', gm: 'gm', player: 'player' } as const;
+export type TableRole = (typeof TABLE_ROLE)[keyof typeof TABLE_ROLE];
+
+/** The seat the app was already holding when a page asked: a reload ends a page, not a table. */
+export type HeldSeat =
+	| { role: typeof TABLE_ROLE.none }
+	| { role: typeof TABLE_ROLE.gm; seat: GmSeat; name: string }
+	| { role: typeof TABLE_ROLE.player; seat: PlayerSeat };
 
 export interface HostOptions {
 	/** The table's name, as players are shown it. */
@@ -197,4 +207,8 @@ export interface TableLink {
 	host(options: HostOptions): Promise<Seating<GmSeat>>;
 	/** So is joining one — and so is the GM's letting this seat in. */
 	join(options: JoinOptions): Promise<Seating<PlayerSeat>>;
+	/** Pick up the seat the app still holds. It asks nobody and opens nothing: the person said yes
+	 *  when the seat was taken. Its first listener hears the table as it stands — who is at it and
+	 *  the sheets they showed, the connection, the requests nobody answered. */
+	resume(): Promise<HeldSeat>;
 }

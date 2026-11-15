@@ -237,6 +237,16 @@ of the open character changes.
 - **A GM's leaving closes the table**: every seat is told `table_closed`.
 - **A player who never got in is not retried**: the first dial that fails ends as `unreachable`,
   and a refusal ends as its reason.
+- **A page that loads again keeps its seat.** The seat is the app's, held in Rust, and a reload —
+  Ctrl+Shift+R, a changed data folder — ends the page and not the table: nobody is dropped. The
+  page asks for the seat on load (`table_link_resume`, `TableVM.resume`) and is told again what
+  the page before it was told and still stands: who is at the table and the last sheet each
+  showed, a player's connection, the requests nobody answered. Rust keeps that list as it emits
+  (`remember` in `mod.rs`), and a sheet in it is held to `tableViewSchema` again, since it began as
+  a peer's bytes. Picking a seat up opens no socket and raises no native question — the person
+  said yes when the seat was taken. What does not come back is the GM's log of asks, which was
+  the page's own: an answer to something asked before the reload has no row to land on. Closing
+  the app is what ends a table.
 
 ## Versions
 
@@ -272,6 +282,7 @@ them would be the thing they exist to refuse.
 3. In a second terminal, from `src-tauri/`, with `CHARNIK_LIVE_TABLE` naming `.table-live` in the
    data folder:
    `cargo test --features table-link -- --ignored a_live_player_sits_at_the_apps_table`.
+   Build it beforehand (`--no-run`): the probe gives the player two minutes to arrive.
 4. Say yes to "open a table?", then to "let Probe player in?".
 5. Read `table-live-probe.txt` in the data folder.
 
@@ -279,9 +290,10 @@ The probe (`routes/dev/table-live`) opens a table with NO relay, so nothing leav
 writes the invitation and a sheet into `.table-live`, and waits. The test is a player in a
 process of its own (`session.rs`): it follows that invitation, shows that sheet, answers a roll
 with a roll and a hit with a no, and leaves when the table closes. The probe checks that the
-sheet arrived whole, that each answer landed on the ask it answers, that the door makes a new
-invitation, and that the table closes; it puts the relay setting back and deletes nothing it did
-not write.
+sheet arrived whole, that a page loading again — a view-model that knows nothing — is handed the
+same table with the player and their sheet, that each answer landed on the ask it answers, that
+the door makes a new invitation, and that the table closes; it puts the relay setting back and
+deletes nothing it did not write.
 
 `/dev/table-link?expect=on|off` is the smaller probe beside it: it asks the running webview
 whether the commands are there and whether each one refuses what it should, and raises no

@@ -22,6 +22,7 @@
 	import {
 		ASK_STATUS,
 		TABLE_ROLE,
+		TableVM,
 		rollPassed,
 		table,
 		type TableRole,
@@ -108,7 +109,23 @@
 		const changed = firstDifference(view, player.view, 'view');
 		check('…name, hit points and AC intact', changed === null, changed ?? '');
 
-		// --- 3. the GM asks, and what comes back is the answer to that ask ---------------------------
+		// --- 3. a page that loads again finds the table as it stands ---------------------------------
+		// a view-model that knows nothing is what a reloaded page starts as: all it shows is Rust's
+		const reloaded = new TableVM();
+		await reloaded.resume();
+		check(
+			'a page that loads again holds the same table, under the same invitation',
+			reloaded.role === TABLE_ROLE.gm &&
+				reloaded.tableName === TABLE_NAME &&
+				reloaded.invite === first,
+			`${reloaded.role} "${reloaded.tableName}"`,
+		);
+		const [stillSeated] = reloaded.players;
+		check('…with the player still at it', stillSeated?.name === player.name);
+		const lost = firstDifference(view, stillSeated?.view, 'view');
+		check('…and the sheet they showed', lost === null, lost ?? '');
+
+		// --- 4. the GM asks, and what comes back is the answer to that ask ---------------------------
 		await table.ask(
 			[player.id],
 			{ kind: TABLE_REQUEST.roll, roll: REQUESTED_ROLL.savingThrow, id: 'dex', dc: 15 },
@@ -131,7 +148,7 @@
 		const hit = () => table.asked.find((row) => row.request.kind === TABLE_REQUEST.damage);
 		await until('a hit the player declines says so', () => hit()?.status === ASK_STATUS.declined);
 
-		// --- 4. the door, and the way out -------------------------------------------------------------
+		// --- 5. the door, and the way out -------------------------------------------------------------
 		await table.setDoor(false);
 		check('shutting the door takes the invitation away', table.invite === null);
 		await table.setDoor(true);
