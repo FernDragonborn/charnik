@@ -1394,6 +1394,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/reload.ts`
 
+- `const RELOAD_INTENT`
+- `type ReloadIntent`
+- `function reloadIntentOf` — * What a key press asks for, read the way every browser reads it: F5 and Ctrl+R are one key, and * Shift (or Ctrl on …
 - `function onBeforeReload` — Register a flush callback; returns an unregister fn (hand it to `onMount` for auto-cleanup).
 - `function reloadApp` — Flush pending writes, then reload the webview so every view re-reads fresh data from disk.
 
@@ -2548,4 +2551,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 59 components · 1556 exports across 218 modules · 107 duplicate suspects._
+_50 tokens · 97 global classes · 59 components · 1559 exports across 218 modules · 107 duplicate suspects._

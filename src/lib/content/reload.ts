@@ -1,18 +1,42 @@
 /*
  * Coordinated refresh so a view can show new on-disk data WITHOUT restarting the app process.
  *
- * Phase A (here): `reloadApp()` flushes any pending writes, then reloads the webview — NOT an app
- * restart (the Rust process stays alive; the SPA re-mounts and re-reads content + characters from
- * disk). Views register a flusher via `onBeforeReload` so a debounced autosave isn't lost if the
- * user refreshes mid-edit.
- *
- * Phase B (later) will add a no-flash live reload (reset caches + bump a content-version signal that
- * views watch) — see docs/plan.md. Until then a webview reload is the reliable, simple answer.
+ * `reloadApp()` flushes any pending writes, then reloads the webview — NOT an app restart (the Rust
+ * process stays alive; the SPA re-mounts and re-reads content + characters from disk). Views
+ * register a flusher via `onBeforeReload` so a debounced autosave isn't lost if the user reloads
+ * mid-edit. The lighter refresh, which re-reads the disk and reloads nothing, is `reloadContent()`;
+ * `reloadIntentOf` says which of the two a key asks for.
  */
 import { logger } from '$lib/diag/logger';
 import { errText } from '$lib/util/format';
 import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
+
+export const RELOAD_INTENT = {
+	/** Not a reload key here: the browser keeps it. */
+	none: 'none',
+	/** Re-read the disk into the live stores; the page and everything it holds stay. */
+	refresh: 'refresh',
+	/** Flush pending writes and load the page again. */
+	reload: 'reload',
+} as const;
+export type ReloadIntent = (typeof RELOAD_INTENT)[keyof typeof RELOAD_INTENT];
+
+/**
+ * What a key press asks for, read the way every browser reads it: F5 and Ctrl+R are one key, and
+ * Shift (or Ctrl on F5) makes it the hard one. On the web the keys are the browser's: only F5 is
+ * taken, so the page it reloads has its pending writes on disk first.
+ */
+export function reloadIntentOf(
+	key: Pick<KeyboardEvent, 'code' | 'ctrlKey' | 'metaKey' | 'shiftKey'>,
+	isDesktop: boolean,
+): ReloadIntent {
+	const isF5 = key.code === 'F5';
+	const withCommand = key.ctrlKey || key.metaKey;
+	if (!isDesktop) return isF5 ? RELOAD_INTENT.reload : RELOAD_INTENT.none;
+	if (!isF5 && !(withCommand && key.code === 'KeyR')) return RELOAD_INTENT.none;
+	return key.shiftKey || (isF5 && withCommand) ? RELOAD_INTENT.reload : RELOAD_INTENT.refresh;
+}
 
 // Pending-write flushers (e.g. a debounced character autosave) — awaited before any reload.
 const flushers = new Set<() => Promise<void> | void>();

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$lib/styles/app.css';
+	import { anchored } from '$lib/actions/anchored';
 	import { provenance } from '$lib/actions/provenance';
 	import favicon from '$lib/assets/favicon.svg';
 	import { browser } from '$app/environment';
@@ -66,7 +67,7 @@
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import MobileWarning from '$lib/components/MobileWarning.svelte';
-	import { reloadApp } from '$lib/content/reload';
+	import { RELOAD_INTENT, reloadApp, reloadIntentOf } from '$lib/content/reload';
 	import { reloadContent } from '$lib/content/store.svelte';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { loadRoster } from '$lib/character/store.svelte';
@@ -93,33 +94,38 @@
 	let showDiagnostics = $state(false);
 
 	// The refresh chip does a no-flash refresh: re-read content + roster from disk into their reactive
-	// stores, so every view re-derives without a page reload. F5 keeps the familiar hard reload
-	// (flush + reload the webview — not a process restart). See $lib/content/reload.
+	// stores, so every view re-derives without a page reload. Nothing on screen moves when the disk
+	// held nothing new, so it says that it ran.
 	let refreshing = $state(false);
+	let refreshChip = $state<HTMLButtonElement>();
+	/** The note under the chip is up. It is said at the control, where the eye already is, rather
+	 *  than as a toast across the screen. */
+	let refreshed = $state(false);
+	const REFRESHED_NOTE_MS = 2500;
 	async function softRefresh() {
 		if (refreshing) return;
 		refreshing = true;
+		// a second refresh takes the note down first, so its coming back is seen
+		refreshed = false;
 		try {
 			await reloadContent();
 			await loadRoster();
+			refreshed = true;
 		} finally {
 			refreshing = false;
 		}
 	}
-	// Ctrl+R interception is DESKTOP ONLY. In the browser (web target / dev) Ctrl+R and Ctrl+Shift+R
-	// must stay the native page reload — we don't hijack them. F5 stays intercepted everywhere so it
-	// flushes pending writes before reloading.
+	$effect(() => {
+		if (!refreshed) return;
+		const leaving = setTimeout(() => (refreshed = false), REFRESHED_NOTE_MS);
+		return () => clearTimeout(leaving);
+	});
 	const isDesktop = browser && detectPlatform() === Platform.Desktop;
 	function onGlobalKey(e: KeyboardEvent) {
-		if (e.code === 'F5') {
-			e.preventDefault();
-			void reloadApp(); // hard reload (flush + reload the webview)
-		} else if (isDesktop && (e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyR') {
-			// Desktop only: the webview's native Ctrl+R is a hard reload → swap it for our no-flash soft
-			// refresh (matches the refresh chip). Ctrl+Shift+R is left alone.
-			e.preventDefault();
-			void softRefresh();
-		}
+		const intent = reloadIntentOf(e, isDesktop);
+		if (intent === RELOAD_INTENT.none) return;
+		e.preventDefault();
+		void (intent === RELOAD_INTENT.reload ? reloadApp() : softRefresh());
 	}
 
 	// the table is in the navigation only in a build that has one to sit at
@@ -397,10 +403,11 @@
 		<button
 			type="button"
 			class="chip"
+			bind:this={refreshChip}
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
-			title={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
-			aria-label={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
+			title={isDesktop ? `${$_('refresh.title')} (F5)` : $_('refresh.title')}
+			aria-label={isDesktop ? `${$_('refresh.title')} (F5)` : $_('refresh.title')}
 			><Icon name="rotate-cw" /></button
 		>
 		<!-- Content packs with an update waiting. "Check and notify" has to NOTIFY somewhere the user
@@ -493,6 +500,18 @@
 	/>
 {/if}
 
+<!-- the live region is there before its words are, or a screen reader never hears them -->
+<div role="status">
+	{#if refreshed && refreshChip}
+		<div
+			class="provenance-popover is-open refreshed-note"
+			use:anchored={{ anchor: refreshChip, onclose: () => (refreshed = false) }}
+		>
+			<Icon name="check" size={13} /><span>{$_('refresh.done')}</span>
+		</div>
+	{/if}
+</div>
+
 <Toaster
 	position="top-center"
 	theme={toasterTheme}
@@ -502,6 +521,15 @@
 />
 
 <style>
+	.provenance-popover.refreshed-note {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
+		white-space: nowrap;
+	}
+	.refreshed-note :global(svg) {
+		color: var(--color-success);
+	}
 	.topbar {
 		display: flex;
 		align-items: center;

@@ -1865,6 +1865,7 @@
 		"baseNotHigher": "{source}: base {amount} — the base is already {winner}"
 	},
 	"refresh": {
+		"done": "Characters and data re-read from disk",
 		"title": "Refresh data (re-read from disk)"
 	},
 	"roller": {

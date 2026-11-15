@@ -148,6 +148,12 @@ root, the graph, the roster, spell access, and search all rotate together in `re
 heavier `reloadApp()` — flush pending writes, then reload the webview, not the process — stays the
 fallback and is what a changed data folder uses.
 
+**The reload keys are read as a browser reads them** (`reloadIntentOf`). On desktop F5, Ctrl+R and
+the refresh chip are one act — `reloadContent()` and the roster, which says that it ran in a note
+under the chip, since nothing on screen moves when the disk held nothing new — and Ctrl+Shift+R,
+Ctrl+F5 and Shift+F5 are `reloadApp()`. On the web the keys are the browser's own; only F5 is
+taken, so the reload has the pending writes on disk first.
+
 ## Toolchain
 
 Building the desktop app needs Rust (rustup) plus the platform's native toolchain: MSVC C++ Build

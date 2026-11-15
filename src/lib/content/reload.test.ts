@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
-import { onBeforeReload, reloadApp } from './reload';
+import { RELOAD_INTENT, onBeforeReload, reloadApp, reloadIntentOf } from './reload';
 
 // ── the reload coordinator: pending writes flush before the webview reload ───────────────────────
 describe('reload coordinator', () => {
@@ -49,6 +49,44 @@ describe('reload coordinator', () => {
 		await reloadApp();
 		off();
 		expect(reload).not.toHaveBeenCalled();
+	});
+});
+
+// ── which reload a key asks for ────────────────────────────────────────────────────────────────────
+describe('reloadIntentOf', () => {
+	const press = (code: string, held: { ctrl?: boolean; meta?: boolean; shift?: boolean } = {}) => ({
+		code,
+		ctrlKey: held.ctrl ?? false,
+		metaKey: held.meta ?? false,
+		shiftKey: held.shift ?? false,
+	});
+
+	it('on desktop, F5 and Ctrl+R are one key: the refresh that reloads nothing', () => {
+		expect(reloadIntentOf(press('F5'), true)).toBe(RELOAD_INTENT.refresh);
+		expect(reloadIntentOf(press('KeyR', { ctrl: true }), true)).toBe(RELOAD_INTENT.refresh);
+		expect(reloadIntentOf(press('KeyR', { meta: true }), true)).toBe(RELOAD_INTENT.refresh);
+	});
+
+	it('on desktop, Shift or Ctrl+F5 makes it the page reload', () => {
+		expect(reloadIntentOf(press('KeyR', { ctrl: true, shift: true }), true)).toBe(
+			RELOAD_INTENT.reload,
+		);
+		expect(reloadIntentOf(press('F5', { ctrl: true }), true)).toBe(RELOAD_INTENT.reload);
+		expect(reloadIntentOf(press('F5', { shift: true }), true)).toBe(RELOAD_INTENT.reload);
+	});
+
+	it('leaves a bare R and every other key alone', () => {
+		expect(reloadIntentOf(press('KeyR'), true)).toBe(RELOAD_INTENT.none);
+		expect(reloadIntentOf(press('KeyR', { shift: true }), true)).toBe(RELOAD_INTENT.none);
+		expect(reloadIntentOf(press('KeyK', { ctrl: true }), true)).toBe(RELOAD_INTENT.none);
+	});
+
+	it('on the web takes only F5, and leaves Ctrl+R to the browser', () => {
+		expect(reloadIntentOf(press('F5'), false)).toBe(RELOAD_INTENT.reload);
+		expect(reloadIntentOf(press('KeyR', { ctrl: true }), false)).toBe(RELOAD_INTENT.none);
+		expect(reloadIntentOf(press('KeyR', { ctrl: true, shift: true }), false)).toBe(
+			RELOAD_INTENT.none,
+		);
 	});
 });
 
