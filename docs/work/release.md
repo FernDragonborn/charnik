@@ -124,13 +124,13 @@
   ceilings, the bounded schemas the page holds a peer to, and the `TableLink` seam over them.
   Built too: `TableVM` and the Table screen over it (`routes/table/`) for both seats, the request
   prompt the layout raises over every screen, and Settings ▸ Table — all of it shown only where
-  the build has a table link.
-  **Left:** the live run on the real desktop build (`../internals/table-link.md` ▸ Driving a live
-  table). The probe and its player are written and wait for a person: the two native questions
-  cannot be answered by a script, which is the point of them. Everything else has been driven —
-  the transport inside a test, every state of the screen over hand-made state (`/dev/table`), and
-  the commands on the real build (`/dev/table-link`). Then a requested roll built in the dice
-  tray, which needs the tray to hand its result back; today it is rolled at once.
+  the build has a table link. Driven: the transport inside a test, every state of the screen over
+  hand-made state (`/dev/table`), the commands on the real build (`/dev/table-link`), and a live
+  table on the real desktop build with a person answering the two native questions
+  (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
+  a roll asked and answered, a hit declined, the door, the close.
+  **Left:** a requested roll built in the dice tray, which needs the tray to hand its result back;
+  today it is rolled at once.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay

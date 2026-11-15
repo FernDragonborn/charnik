@@ -302,6 +302,6 @@ question at all.
 ## What is left to a device and a table
 
 Driven so far on one machine with no relay: the transport inside a test, the screen over
-hand-made state, and `/dev/table-link` on the real desktop build. Not driven: two real networks through n0's relays and
-through none; how often a path stays on the relay; a relay that is unreachable mid-session; two
-Charnik versions at one table.
+hand-made state, and `/dev/table-link` and the live table of `/dev/table-live` on the real desktop
+build. Not driven: two real networks through n0's relays and through none; how often a path stays
+on the relay; a relay that is unreachable mid-session; two Charnik versions at one table.
