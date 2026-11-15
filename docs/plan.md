@@ -264,6 +264,8 @@ position and are given per wave, because most of them were learned the hard way.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
+  2. **HINT-WARMUP** — `ui.md`. Once one hint is being read, the next opens at once; the icon
+     controls' native `title`s move onto the popover, which then owns the timing.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
   DEFENCE-STRIP stays in 0.9.0, waiting on the maintainer's mock.
