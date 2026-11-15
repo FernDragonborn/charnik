@@ -432,6 +432,20 @@ pub async fn table_link_publish(
     }
 }
 
+/// A player whose connection dropped asks for a dial now, in place of the wait before the next.
+#[tauri::command]
+pub async fn table_link_redial(app: tauri::AppHandle, table: String) {
+    if let Some(Held {
+        seat: Seat::Player(seat),
+        ..
+    }) = &*app.state::<TableLinkState>().0.lock().await
+    {
+        if seat.id == table {
+            seat.redial();
+        }
+    }
+}
+
 /// A player answers a request.
 #[tauri::command]
 pub async fn table_link_respond(

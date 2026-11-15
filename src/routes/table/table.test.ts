@@ -53,6 +53,7 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 		requests: [] as { participant: string; request: TableRequest }[],
 		dismissed: [] as string[],
 		left: 0,
+		redials: 0,
 	};
 	let toPlayer: (event: PlayerEvent) => void = () => {};
 	let toGm: (event: GmEvent) => void = () => {};
@@ -72,6 +73,7 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 			heard.answers.push({ requestId, answer });
 			return Promise.resolve(DELIVERY.delivered);
 		},
+		redial: () => Promise.resolve(void heard.redials++),
 	};
 	const gmSeat: GmSeat = {
 		table: 'table-1',
@@ -256,6 +258,22 @@ describe("a player's seat", () => {
 		expect(table.requests.length).toBeLessThan(40);
 		const declined = heard.answers.filter(({ answer }) => answer.outcome === TABLE_ANSWER.declined);
 		expect(table.requests.length + declined.length).toBe(40);
+	});
+
+	it('keeps its seat while the connection is down, and dials at once when asked', async () => {
+		const { table, heard, tellPlayer } = tableOfOne();
+		await table.join('an invite');
+		tellPlayer({ kind: TABLE_EVENT.connection, state: CONNECTION.connected });
+		tellPlayer({ kind: TABLE_EVENT.connection, state: CONNECTION.reconnecting });
+		expect(table.role).toBe(TABLE_ROLE.player);
+		expect(table.connection).toBe(CONNECTION.reconnecting);
+		await table.redial();
+		expect(heard.redials).toBe(1);
+		// back at the table, it says its sheet again
+		const told = heard.views.length;
+		tellPlayer({ kind: TABLE_EVENT.connection, state: CONNECTION.connected });
+		await Promise.resolve();
+		expect(heard.views.length).toBe(told + 1);
 	});
 
 	it('says why the seat ended, and holds none afterwards', async () => {

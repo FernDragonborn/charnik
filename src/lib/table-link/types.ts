@@ -151,6 +151,9 @@ export interface PlayerSeat extends Seat<PlayerEvent> {
 	 *  what crosses the wire — the keys of it that changed — is the transport's to decide. */
 	publish(character: Character, sheet: CharacterSheet): Promise<Delivery>;
 	respond(request: RequestId, answer: TableAnswer): Promise<Delivery>;
+	/** Dial the table now. A seat whose connection dropped dials again by itself, for as long as it
+	 *  is held and less often as time passes; this is the person not waiting for the next one. */
+	redial(): Promise<void>;
 }
 
 /** What asking came to: the id an answer will carry, when the request left. */

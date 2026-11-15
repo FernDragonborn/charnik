@@ -178,6 +178,11 @@
 		</header>
 		<div class="card table-status" aria-live="polite">
 			<p class="table-status-line">{$_(`table.player.state.${table.connection}`)}</p>
+			{#if table.connection === CONNECTION.reconnecting}
+				<button class="btn" onclick={() => void table.redial()}>
+					{$_('table.player.redial')}
+				</button>
+			{/if}
 			{#if table.connection !== CONNECTION.connected}
 				<p class="eyebrow">{$_('table.player.code')}</p>
 				<p class="table-code">{table.code}</p>

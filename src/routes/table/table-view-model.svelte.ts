@@ -379,6 +379,11 @@ export class TableVM {
 		this.requests = [...this.requests, pending];
 	}
 
+	/** Dial the table now instead of waiting for the next try the seat makes by itself. */
+	redial = async (): Promise<void> => {
+		await this.playerSeat?.redial();
+	};
+
 	/** Tell the table what the open character says now. */
 	publish = async (): Promise<void> => {
 		const { character, sheet } = combat;

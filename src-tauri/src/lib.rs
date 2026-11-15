@@ -314,6 +314,8 @@ pub fn run() {
             #[cfg(feature = "table-link")]
             table_link::table_link_resume,
             #[cfg(feature = "table-link")]
+            table_link::table_link_redial,
+            #[cfg(feature = "table-link")]
             table_link::table_link_publish,
             #[cfg(feature = "table-link")]
             table_link::table_link_respond,

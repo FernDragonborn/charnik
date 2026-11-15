@@ -229,9 +229,15 @@ of the open character changes.
 
 ## Staying seated
 
-- **A key the GM let in is not asked about twice.** A player whose connection drops dials again —
-  six tries, five seconds apart — and is seated without a question, door open or shut. A newer
-  connection of a key replaces its older one.
+- **A key the GM let in is not asked about twice.** A player whose connection drops dials again
+  and is seated without a question, door open or shut. A newer connection of a key replaces its
+  older one.
+- **A dropped seat is dialled for as long as it is held.** Often at first, since most drops are
+  short — 1, 2, 5, 10, 20 seconds — then every 30 (`reconnect_pause`), with no last try: a power
+  cut takes a router away for many minutes, and a seat that gave up would cost the player a new
+  invitation and the GM a new question. The player's screen says the connection dropped and
+  offers "Try now" (`table_link_redial`), which dials at once and starts the frequent pace over;
+  leaving the table is what stops it. The GM sees that player as away the whole time.
 - **Dismissing takes the seat and the way back.** The key leaves the let-in set, the player is
   told `dismissed`, and their app does not dial again.
 - **A GM's leaving closes the table**: every seat is told `table_closed`.

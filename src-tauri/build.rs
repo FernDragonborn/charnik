@@ -29,6 +29,7 @@ const TABLE_LINK_COMMANDS: &[&str] = &[
     "table_link_join",
     "table_link_leave",
     "table_link_resume",
+    "table_link_redial",
     "table_link_publish",
     "table_link_respond",
     "table_link_request",

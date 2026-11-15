@@ -19,7 +19,7 @@ use iroh::endpoint::{presets, BeforeConnectOutcome, Connection, EndpointHooks, R
 use iroh::{Endpoint, EndpointAddr, EndpointId, RelayMode, RelayUrl, SecretKey, TransportAddr};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use tokio::sync::{mpsc, Semaphore};
+use tokio::sync::{mpsc, Notify, Semaphore};
 use tokio::time::{sleep, timeout};
 
 use super::wire::{
@@ -36,9 +36,16 @@ const CONNECT_WAIT: Duration = Duration::from_secs(20);
 const APPROVAL_WAIT: Duration = Duration::from_secs(300);
 /// A goodbye is written and then the other side is given this long to hang up on it.
 const GOODBYE_WAIT: Duration = Duration::from_secs(1);
-/// A seat that drops is dialled again this many times, this far apart, before it is lost.
-const RECONNECT_TRIES: u32 = 6;
-const RECONNECT_PAUSE: Duration = Duration::from_secs(5);
+/// How long a seat that dropped waits before each dial, in seconds: often at first, since most
+/// drops are short, then at the last pace for as long as the seat is held. A power cut takes a
+/// table away for many minutes, so only the person at the seat gives it up.
+const RECONNECT_PAUSES: [u64; 6] = [1, 2, 5, 10, 20, 30];
+
+/// The wait before the dial that follows `failed` dials in a row.
+fn reconnect_pause(failed: usize) -> Duration {
+    let last = RECONNECT_PAUSES.len() - 1;
+    Duration::from_secs(RECONNECT_PAUSES[failed.min(last)])
+}
 /// The least time between two frames read from one peer — a ceiling on what one seat can make
 /// the other app do.
 const FRAME_PACE: Duration = Duration::from_millis(10);
@@ -80,8 +87,6 @@ pub enum CloseReason {
     Full,
     Dismissed,
     TableClosed,
-    /// The connection dropped and dialling again did not bring it back.
-    Lost,
     /// The other app said something the protocol does not.
     Protocol,
 }
@@ -679,6 +684,8 @@ struct PlayerShared {
     table: String,
     /// The way to the GM while a connection is seated, and None while there is none.
     outbound: Mutex<Option<mpsc::Sender<Outgoing>>>,
+    /// The person asked for a dial now, in place of the wait before the next one.
+    dial_now: Notify,
     emit: Emit,
 }
 
@@ -790,10 +797,10 @@ async fn sit(
 }
 
 /// Hold a seat for as long as it can be held: a connection the GM had let in is dialled again
-/// when it drops, and one that never got in is not.
+/// when it drops, for as long as the person keeps the seat, and one that never got in is not.
 async fn keep_seat(endpoint: Endpoint, gm: EndpointAddr, hello: Hello, shared: Arc<PlayerShared>) {
     let mut seated_before = false;
-    let mut tries_left = RECONNECT_TRIES;
+    let mut failed = 0;
     let reason = loop {
         let state = if seated_before {
             ConnectionState::Reconnecting
@@ -808,16 +815,16 @@ async fn keep_seat(endpoint: Endpoint, gm: EndpointAddr, hello: Hello, shared: A
             SeatEnd::Dropped { seated } => {
                 if seated {
                     seated_before = true;
-                    tries_left = RECONNECT_TRIES;
+                    failed = 0;
                 }
                 if !seated_before {
                     break CloseReason::Unreachable;
                 }
-                if tries_left == 0 {
-                    break CloseReason::Lost;
+                tokio::select! {
+                    () = sleep(reconnect_pause(failed)) => failed += 1,
+                    // asked for by hand, so the dials after it are frequent again
+                    () = shared.dial_now.notified() => failed = 0,
                 }
-                tries_left -= 1;
-                sleep(RECONNECT_PAUSE).await;
             }
         }
     };
@@ -870,6 +877,7 @@ pub async fn join(invite: &Invite, name: &str, emit: Emit) -> Result<PlayerSeat,
     let shared = Arc::new(PlayerShared {
         table: table.clone(),
         outbound: Mutex::default(),
+        dial_now: Notify::new(),
         emit,
     });
     let hello = Hello {
@@ -908,6 +916,12 @@ impl PlayerSeat {
             return Delivery::NotDelivered;
         }
         self.send(Outgoing::Answer { request_id, answer })
+    }
+
+    /// Dial the table now instead of waiting out the pause. While a connection is up, or a dial
+    /// is already on its way, the next pause is skipped instead.
+    pub fn redial(&self) {
+        self.shared.dial_now.notify_one();
     }
 
     /// Get up. The task holding the seat ends first, so the close is not taken for a drop and
@@ -1231,6 +1245,16 @@ mod tests {
             ..invite
         };
         assert!(!is_followable(&plain));
+    }
+
+    #[test]
+    fn a_dropped_seat_dials_often_at_first_and_then_keeps_one_pace() {
+        let pauses: Vec<u64> = (0..9)
+            .map(|failed| reconnect_pause(failed).as_secs())
+            .collect();
+        assert_eq!(pauses, [1, 2, 5, 10, 20, 30, 30, 30, 30]);
+        // and never stops: ten minutes of dials that all fail is still followed by one
+        assert_eq!(reconnect_pause(usize::MAX), Duration::from_secs(30));
     }
 
     /// The other end of `/dev/table-live`: a player in a process of its own, sitting at a table the

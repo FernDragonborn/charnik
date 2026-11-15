@@ -167,6 +167,10 @@ describe('the desktop table link', () => {
 			answer,
 		});
 
+		invoke.mockResolvedValueOnce(null);
+		await seat.redial();
+		expect(invoke).toHaveBeenLastCalledWith('table_link_redial', { table: 'table-1' });
+
 		const heard: PlayerEvent[] = [];
 		await seat.subscribe((event) => heard.push(event));
 		const asked = {

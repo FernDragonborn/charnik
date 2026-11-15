@@ -2284,7 +2284,7 @@
 			"relayHint": {
 				"n0": "Free public relays run by number 0, the makers of iroh. A table works across the internet with nothing to set up. They promise no uptime.",
 				"custom": "A relay you or your group runs. Players' apps connect to it too, and are told its address before they do.",
-				"none": "No relay. Players must be on your local network, or able to reach this computer directly, and the invitation carries this computer's network addresses."
+				"none": "No relay. Players must be on your local network, or able to reach this computer directly, and the invitation carries this computer's network addresses. A router that restarts can change them, and players then cannot find the table again: where the power or the network may drop, a relay is the safer choice."
 			},
 			"relayUrl": "Relay address",
 			"relayUrlPlaceholder": "https://relay.example.org",
@@ -2589,9 +2589,10 @@
 				"connecting": "Reaching the GM's app…",
 				"waiting": "Waiting for the GM to let you in.",
 				"connected": "Seated. The GM sees this character's sheet and can ask you for rolls.",
-				"reconnecting": "The connection dropped. Charnik is dialling the table again…",
+				"reconnecting": "The connection dropped. Charnik keeps dialling the table, less often as time passes, until you leave it.",
 				"closed": "The seat is closed."
 			},
+			"redial": "Try now",
 			"code": "Your code — read it to the GM",
 			"sees": "The GM sees: name, level, hit points and death saves, states, AC, initiative, speed, abilities, saves, skills and passives, and what the character resists. Not your notes, inventory, spells or build.",
 			"leave": "Leave table"

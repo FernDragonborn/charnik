@@ -121,6 +121,7 @@ const playerSeat = (table: TableId, code: string, early: EarlyEvents): PlayerSea
 		return delivery('table_link_publish', { table, view: view.data });
 	},
 	respond: (requestId, answer) => delivery('table_link_respond', { table, requestId, answer }),
+	redial: () => invoke('table_link_redial', { table }),
 	subscribe: subscribing(table, early, playerEvent),
 });
 

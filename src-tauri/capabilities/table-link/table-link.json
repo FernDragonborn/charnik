@@ -8,6 +8,7 @@
 		"allow-table-link-join",
 		"allow-table-link-leave",
 		"allow-table-link-resume",
+		"allow-table-link-redial",
 		"allow-table-link-publish",
 		"allow-table-link-respond",
 		"allow-table-link-request",
