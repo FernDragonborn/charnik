@@ -85,6 +85,11 @@
       value's popover stays instant: it is the answer to pointing at a number. The refresh chip's
       own note stands where its hint opens, so the two are placed together.
 
+- [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
+      and `app.html` names none, so a browser tab shows its blank default. The desktop app has its
+      icon set (`src-tauri/icons/`); the tab wants the same mark, as an SVG that reads at 16px in a
+      light and a dark browser chrome. The mark is the maintainer's to choose.
+
 - [ ] **PICK-CONTROL-STUDY · which rendering of a two-state choice players actually read — asked of
   users, not of us.** FINESSE-ABILITY shipped the first one: both abilities standing with the live
   one lit (`STR DEX`), on the attack row of a finesse weapon. Three renderings went up first and the
