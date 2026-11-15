@@ -164,9 +164,9 @@
   warning. For the restart: the GM's set of keys already let in is kept with the table, the
   player's side waits for a GM that is gone (it already dials without end), and the app that
   comes back asks its person ONE native question — return to this table? — before any socket,
-  as going online always does. The GM's log of asks belongs here too: it is the one thing a page
-  that loads again is not handed back (`../internals/table-link.md` ▸ Staying seated), and after
-  a restart it is rebuilt from the copies the players hold (TABLE-LINK-LOG's model).
+  as going online always does. The GM's log of asks belongs here too: it lasts through a page
+  that loads again and not past the app (`../internals/table-link.md` ▸ Staying seated), and
+  after a restart it is rebuilt from the copies the players hold (TABLE-LINK-LOG's model).
 - **TABLE-LINK-HUB · the table's hub is somebody other than the GM, and can move.** Asked for a
   GM on a poor connection. Today it would move nothing that matters: every frame on the wire has
   the GM at one end — a sheet goes to the GM, an ask comes from the GM — so the GM's link is in

@@ -4,7 +4,7 @@
  * the sheet's own actions.
  */
 import 'fake-indexeddb/auto'; // accepting a request saves the character
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -417,6 +417,52 @@ describe('a page that loads again', () => {
 			request: { kind: TABLE_REQUEST.heal, amount: 2 },
 		});
 		expect(table.requests).toHaveLength(1);
+	});
+
+	describe('with somewhere to keep a log', () => {
+		beforeEach(() => {
+			const kept = new Map<string, string>();
+			vi.stubGlobal('sessionStorage', {
+				getItem: (key: string) => kept.get(key) ?? null,
+				setItem: (key: string, value: string) => void kept.set(key, value),
+				removeItem: (key: string) => void kept.delete(key),
+			});
+		});
+		afterEach(() => vi.unstubAllGlobals());
+
+		it("finds the GM's log of asks, and an answer the last page missed lands on its row", async () => {
+			const before = tableOfOne();
+			await before.table.host('Thursday');
+			before.tellGm({ kind: TABLE_EVENT.participantJoined, participant: lira });
+			const request = { kind: TABLE_REQUEST.roll, roll: REQUESTED_ROLL.skill, id: 'stealth' };
+			await before.table.ask(['p-1'], request, 15);
+
+			// the page goes and another loads over the same seat
+			const { table, tellGm } = tableOfOne(TABLE_ROLE.gm);
+			await table.resume();
+			expect(table.asked).toMatchObject([
+				{ requestId: 'r-1', name: 'Lira', request, dc: 15, status: ASK_STATUS.pending },
+			]);
+			const roll = { total: 17, natural: 14, advantage: 'neither', mod: 3 } as const;
+			tellGm({
+				kind: TABLE_EVENT.answer,
+				participant: 'p-1',
+				requestId: 'r-1',
+				answer: { outcome: TABLE_ANSWER.accepted, roll },
+			});
+			expect(table.asked[0]).toMatchObject({ status: ASK_STATUS.accepted, roll });
+
+			// and the answer is kept too: a third page sees the row answered
+			const third = tableOfOne(TABLE_ROLE.gm);
+			await third.table.resume();
+			expect(third.table.asked[0]).toMatchObject({ status: ASK_STATUS.accepted, roll });
+
+			// a table that is over leaves no log for the next one
+			await third.table.leave();
+			const after = tableOfOne(TABLE_ROLE.gm);
+			await after.table.resume();
+			expect(after.table.asked).toEqual([]);
+		});
 	});
 
 	it('holds nothing where the app holds no seat, and leaves a seat already held alone', async () => {

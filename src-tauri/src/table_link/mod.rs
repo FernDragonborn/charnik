@@ -13,7 +13,8 @@
 //! **The seat is the app's, not the page's.** A page that loads again finds the seat still held
 //! and picks it up (`table_link_resume`): it is told again what the page before it was told and
 //! still stands — who is at the table and the sheets they showed, the connection, the requests
-//! nobody answered. That opens no socket and asks nobody, because the person already said yes.
+//! nobody answered, the newest answers. That opens no socket and asks nobody, because the person
+//! already said yes.
 //!
 //! The whole module sits behind the `table-link` Cargo feature, with its capability file
 //! (`capabilities/table-link/`) and its entries in `build.rs`. A build without the feature has none
@@ -43,6 +44,9 @@ const NATIVE_KEY: &str = "table.native";
 
 /// How many unanswered requests are kept for a page that is not there to answer them.
 const TOLD_REQUESTS_MAX: usize = 12;
+/// How many answers are kept for a GM's page that was not there to hear them: as many as the
+/// asks it keeps on screen.
+const TOLD_ANSWERS_MAX: usize = 50;
 
 enum Seat {
     Gm {
@@ -93,8 +97,13 @@ fn is_request(event: &TableEvent) -> bool {
     matches!(event, TableEvent::Request { .. })
 }
 
-/// Keep an event for a page that loads again, in place of whatever it makes untrue. An answer is
-/// not kept: it belongs to the GM's log of asks, which is the page's own.
+fn is_answer(event: &TableEvent) -> bool {
+    matches!(event, TableEvent::Answer { .. })
+}
+
+/// Keep an event for a page that loads again, in place of whatever it makes untrue. The newest
+/// answers are kept as they came: the GM's page keeps its own log of asks, and one that was not
+/// there when an answer landed finds it here.
 fn remember(told: &mut Vec<TableEvent>, event: &TableEvent) {
     match event {
         TableEvent::ParticipantJoined { participant, .. } => {
@@ -120,14 +129,23 @@ fn remember(told: &mut Vec<TableEvent>, event: &TableEvent) {
                 return;
             }
         }
-        TableEvent::Answer { .. } => return,
+        TableEvent::Answer { .. } => {
+            if told.iter().filter(|kept| is_answer(kept)).count() >= TOLD_ANSWERS_MAX {
+                if let Some(oldest) = told.iter().position(is_answer) {
+                    told.remove(oldest);
+                }
+            }
+        }
     }
     told.push(event.clone());
 }
 
 /// A participant the GM sent away is nobody a page should hear of again.
 fn forget_participant(told: &mut Vec<TableEvent>, id: &str) {
-    told.retain(|kept| !is_joined(kept, id) && !is_left(kept, id) && !is_view(kept, id));
+    told.retain(|kept| {
+        let answered = matches!(kept, TableEvent::Answer { participant, .. } if participant == id);
+        !is_joined(kept, id) && !is_left(kept, id) && !is_view(kept, id) && !answered
+    });
 }
 
 /// A request that was answered waits for nobody.
@@ -610,6 +628,18 @@ mod tests {
             .collect()
     }
 
+    fn answered(participant: &str, request_id: &str) -> TableEvent {
+        TableEvent::Answer {
+            table: "t".into(),
+            participant: participant.into(),
+            request_id: request_id.into(),
+            answer: TableAnswer {
+                outcome: wire::AnswerOutcome::Declined,
+                roll: None,
+            },
+        }
+    }
+
     /// What a page that loads again is told after these.
     fn retold(events: &[TableEvent]) -> Vec<Value> {
         let mut told = Vec::new();
@@ -639,24 +669,39 @@ mod tests {
             retold(&[joined("a", "Ann"), left("a"), left("a")]),
             as_json(&[joined("a", "Ann"), left("a")]),
         );
-        // the connection is the last one said, and an answer is nobody's to hear twice
-        let answer = TableEvent::Answer {
-            table: "t".into(),
-            participant: "a".into(),
-            request_id: "r".into(),
-            answer: TableAnswer {
-                outcome: wire::AnswerOutcome::Declined,
-                roll: None,
-            },
-        };
+        // the connection is the last one said; an answer is kept for a page that missed it
         assert_eq!(
             retold(&[
                 connection(session::ConnectionState::Connecting),
-                answer,
+                answered("a", "r"),
                 connection(session::ConnectionState::Connected),
             ]),
-            as_json(&[connection(session::ConnectionState::Connected)]),
+            as_json(&[
+                answered("a", "r"),
+                connection(session::ConnectionState::Connected)
+            ]),
         );
+    }
+
+    #[test]
+    fn the_newest_answers_are_kept_and_no_more_than_a_page_shows() {
+        let mut told = Vec::new();
+        remember(&mut told, &joined("a", "Ann"));
+        for n in 0..TOLD_ANSWERS_MAX + 3 {
+            remember(&mut told, &answered("a", &format!("r{n}")));
+        }
+        let kept: Vec<Value> = as_json(&told).into_iter().skip(1).collect();
+        assert_eq!(kept.len(), TOLD_ANSWERS_MAX);
+        assert_eq!(kept[0]["requestId"], "r3");
+        assert_eq!(
+            kept[TOLD_ANSWERS_MAX - 1]["requestId"],
+            format!("r{}", TOLD_ANSWERS_MAX + 2)
+        );
+
+        // what somebody who was sent away answered goes with them
+        remember(&mut told, &answered("b", "other"));
+        forget_participant(&mut told, "a");
+        assert_eq!(as_json(&told), as_json(&[answered("b", "other")]));
     }
 
     #[test]

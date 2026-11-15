@@ -56,6 +56,15 @@ import { tableViewOf } from '$lib/table-link/view';
 import type { TableRoll, TableView } from '$lib/table-link/wire-schema';
 import type { StateChoice } from '../combat/effects-editor.svelte';
 import { combat } from '../combat/combat-view-model.svelte';
+import {
+	ASKED_MAX,
+	ASK_STATUS,
+	dropAskedLog,
+	keepAskedLog,
+	readAskedLog,
+	type AskStatus,
+	type AskedRow,
+} from './asked-log';
 
 export { TABLE_ROLE, type TableRole };
 
@@ -63,12 +72,7 @@ export { TABLE_ROLE, type TableRole };
 export const NO_CHARACTER = 'no_character';
 export type TableProblem = UnavailableReason | CloseReason | typeof NO_CHARACTER;
 
-export const ASK_STATUS = {
-	pending: 'pending',
-	accepted: 'accepted',
-	declined: 'declined',
-} as const;
-export type AskStatus = (typeof ASK_STATUS)[keyof typeof ASK_STATUS];
+export { ASK_STATUS, type AskStatus, type AskedRow };
 
 /** Somebody the GM let in, and the sheet they show. */
 export interface SeatedPlayer {
@@ -80,18 +84,6 @@ export interface SeatedPlayer {
 	present: boolean;
 }
 
-/** Something the GM asked, and what came back. */
-export interface AskedRow {
-	requestId: RequestId;
-	participant: ParticipantId;
-	name: string;
-	request: TableRequest;
-	/** The DC the roll is held to on the GM's side, announced to the player or not. */
-	dc?: number;
-	status: AskStatus;
-	roll?: TableRoll;
-}
-
 /** Something the GM asked of this player, waiting for a press. */
 export interface PendingRequest {
 	requestId: RequestId;
@@ -100,8 +92,6 @@ export interface PendingRequest {
 
 /** How long the open character is left to settle before the table is told what it says now. */
 const PUBLISH_DEBOUNCE_MS = 150;
-/** How many of the GM's asks are kept on screen. */
-const ASKED_MAX = 50;
 /** How many requests may wait for the player at once; one past that is declined unseen, so a GM's
  *  app cannot fill the player's screen or memory. */
 const PENDING_MAX = 12;
@@ -191,7 +181,9 @@ export class TableVM {
 		this.tableName = name;
 		this.invite = seat.invite;
 		this.players = [];
-		this.asked = [];
+		// a table just opened has no log; one picked up again has the log its last page kept, and
+		// the answers that page missed are among what its first listener hears
+		this.asked = readAskedLog(seat.table);
 		this.role = TABLE_ROLE.gm;
 		this.stopListening = await seat.subscribe(this.onGmEvent);
 	}
@@ -208,8 +200,8 @@ export class TableVM {
 	/**
 	 * Pick up the seat the app still holds. A page that loads again has forgotten its table, and
 	 * the table has not ended: the players are still at it. What comes back is who is seated and
-	 * their sheets, or the player's connection and the requests they had not answered; the GM's log
-	 * of asks was this page's own and starts empty.
+	 * their sheets with the log of asks the last page kept, or the player's connection and the
+	 * requests they had not answered.
 	 */
 	resume = async (): Promise<void> => {
 		if (this.busy || this.role !== TABLE_ROLE.none) return;
@@ -269,6 +261,7 @@ export class TableVM {
 		this.requests = [];
 		this.invite = null;
 		this.problem = problem;
+		dropAskedLog();
 		// best-effort: the seat is already given up here, and Rust drops its half with the app
 		await seat?.leave().catch(() => {});
 	}
@@ -308,6 +301,7 @@ export class TableVM {
 						? ASK_STATUS.accepted
 						: ASK_STATUS.declined;
 				if (event.answer.roll) row.roll = event.answer.roll;
+				this.keepAsked();
 				break;
 			}
 		}
@@ -342,10 +336,16 @@ export class TableVM {
 				status: ASK_STATUS.pending,
 			};
 			this.asked = [row, ...this.asked].slice(0, ASKED_MAX);
+			this.keepAsked();
 		}
 		if (unheard.length)
 			toast.warning(t('table.notice.notDelivered', { names: unheard.join(', ') }));
 	};
+
+	/** Keep the log for the page that loads next (`asked-log.ts`). */
+	private keepAsked(): void {
+		if (this.gmSeat) keepAskedLog(this.gmSeat.table, $state.snapshot(this.asked));
+	}
 
 	/** Take a player's seat away, and their way back in. */
 	dismiss = async (participant: ParticipantId): Promise<void> => {

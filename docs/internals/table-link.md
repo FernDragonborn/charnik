@@ -250,9 +250,11 @@ of the open character changes.
   showed, a player's connection, the requests nobody answered. Rust keeps that list as it emits
   (`remember` in `mod.rs`), and a sheet in it is held to `tableViewSchema` again, since it began as
   a peer's bytes. Picking a seat up opens no socket and raises no native question — the person
-  said yes when the seat was taken. What does not come back is the GM's log of asks, which was
-  the page's own: an answer to something asked before the reload has no row to land on. Closing
-  the app is what ends a table.
+  said yes when the seat was taken. **The GM's log of asks is the page's own** — the DC a roll is
+  held to never crosses the wire, so Rust has no copy to hand back — and the page keeps it in
+  sessionStorage under its table (`routes/table/asked-log.ts`), which lasts through a reload and
+  not past the app's window. Rust keeps the newest fifty answers in the same list, so one that
+  landed while no page was there finds its row. Closing the app is what ends a table.
 
 ## Versions
 
