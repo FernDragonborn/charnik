@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (107)
+## Duplicate suspects (108)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -111,6 +111,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
+- `take` ×2 — src/lib/stores/flash.ts · src/routes/build/feat-slots.svelte.ts
 - `takeFocus` ×2 — src/lib/actions/takeFocus.ts · src/routes/build/blocks/OwnEntries.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
 - `TOOL_PREFIX` ×2 — src/lib/character/derive-targets.ts · src/lib/character/granted-proficiency.ts
@@ -513,8 +514,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/stores/flash.ts`
 
-- `function flashAfterReload` — Queue a message to toast right after the coming reload.
-- `function takeFlash` — Read and clear the queued message (null if none).
+- `const flashAfterReload` — Queue a message to toast right after the coming reload.
+- `const takeFlash` — Read and clear the queued message (null if none).
+- `const markReload` — Leave word that the page is about to be reloaded by the app itself.
+- `const takeReloadMark` — Was this page loaded by the app's own reload?
 
 ### `src/lib/stores/motion.svelte.ts`
 
@@ -2554,4 +2557,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 59 components · 1562 exports across 218 modules · 107 duplicate suspects._
+_50 tokens · 97 global classes · 59 components · 1564 exports across 218 modules · 108 duplicate suspects._

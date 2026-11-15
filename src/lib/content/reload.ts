@@ -8,6 +8,7 @@
  * `reloadIntentOf` says which of the two a key asks for.
  */
 import { logger } from '$lib/diag/logger';
+import { markReload } from '$lib/stores/flash';
 import { errText } from '$lib/util/format';
 import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
@@ -67,5 +68,7 @@ export async function reloadApp(): Promise<void> {
 		toast(t('character.notSaved'), { description: t('character.reloadHeld') });
 		return;
 	}
+	// only a reload that goes ahead is one the next page may say happened
+	markReload();
 	if (typeof location !== 'undefined') location.reload();
 }

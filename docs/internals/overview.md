@@ -152,7 +152,10 @@ fallback and is what a changed data folder uses.
 the refresh chip are one act — `reloadContent()` and the roster, which says that it ran in a note
 under the chip, since nothing on screen moves when the disk held nothing new — and Ctrl+Shift+R,
 Ctrl+F5 and Shift+F5 are `reloadApp()`. On the web the keys are the browser's own; only F5 is
-taken, so the reload has the pending writes on disk first.
+taken, so the reload has the pending writes on disk first. A reload that goes ahead leaves a mark
+in sessionStorage (`stores/flash.ts`), and the page that loads next says under the same chip that
+the interface was reloaded — unless the reload came with a message of its own, as a moved data
+folder's does.
 
 ## Toolchain
 

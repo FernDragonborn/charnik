@@ -1866,6 +1866,8 @@
 	},
 	"refresh": {
 		"done": "Characters and data re-read from disk",
+		"reload": "Reload the interface",
+		"reloaded": "Interface reloaded, changes saved",
 		"title": "Refresh data (re-read from disk)"
 	},
 	"roller": {

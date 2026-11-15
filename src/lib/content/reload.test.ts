@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
+import { takeReloadMark } from '../stores/flash';
 import { loadContent } from './loader';
 import { RELOAD_INTENT, onBeforeReload, reloadApp, reloadIntentOf } from './reload';
 
@@ -49,6 +50,27 @@ describe('reload coordinator', () => {
 		await reloadApp();
 		off();
 		expect(reload).not.toHaveBeenCalled();
+	});
+
+	it('leaves word for the page that loads next, once, and only when it reloads', async () => {
+		const kept = new Map<string, string>();
+		vi.stubGlobal('sessionStorage', {
+			getItem: (key: string) => kept.get(key) ?? null,
+			setItem: (key: string, value: string) => void kept.set(key, value),
+			removeItem: (key: string) => void kept.delete(key),
+		});
+		vi.stubGlobal('location', { reload: vi.fn() });
+		expect(takeReloadMark()).toBe(false);
+
+		const off = onBeforeReload(() => Promise.reject(new Error('disk full')));
+		await reloadApp();
+		off();
+		// held back: nothing was reloaded, so nothing says it was
+		expect(takeReloadMark()).toBe(false);
+
+		await reloadApp();
+		expect(takeReloadMark()).toBe(true);
+		expect(takeReloadMark()).toBe(false);
 	});
 });
 

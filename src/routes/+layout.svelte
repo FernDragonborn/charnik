@@ -49,7 +49,7 @@
 	import type { RestampFailure } from '$lib/content/restamp';
 	import { Toaster } from 'svelte-sonner';
 	import { toast } from '$lib/toast/toast';
-	import { takeFlash } from '$lib/stores/flash';
+	import { takeFlash, takeReloadMark } from '$lib/stores/flash';
 	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
 	import { onMount, onDestroy } from 'svelte';
 	import {
@@ -98,26 +98,27 @@
 	// held nothing new, so it says that it ran.
 	let refreshing = $state(false);
 	let refreshChip = $state<HTMLButtonElement>();
-	/** The note under the chip is up. It is said at the control, where the eye already is, rather
-	 *  than as a toast across the screen. */
-	let refreshed = $state(false);
-	const REFRESHED_NOTE_MS = 2500;
+	const CHIP_NOTE = { refreshed: 'refresh.done', reloaded: 'refresh.reloaded' } as const;
+	/** What the note under the chip says, as its catalog key, or null while it is down. It is said
+	 *  at the control, where the eye already is, rather than as a toast across the screen. */
+	let chipNote = $state<(typeof CHIP_NOTE)[keyof typeof CHIP_NOTE] | null>(null);
+	const CHIP_NOTE_MS = 3000;
 	async function softRefresh() {
 		if (refreshing) return;
 		refreshing = true;
 		// a second refresh takes the note down first, so its coming back is seen
-		refreshed = false;
+		chipNote = null;
 		try {
 			await reloadContent();
 			await loadRoster();
-			refreshed = true;
+			chipNote = CHIP_NOTE.refreshed;
 		} finally {
 			refreshing = false;
 		}
 	}
 	$effect(() => {
-		if (!refreshed) return;
-		const leaving = setTimeout(() => (refreshed = false), REFRESHED_NOTE_MS);
+		if (chipNote === null) return;
+		const leaving = setTimeout(() => (chipNote = null), CHIP_NOTE_MS);
 		return () => clearTimeout(leaving);
 	});
 	const isDesktop = browser && detectPlatform() === Platform.Desktop;
@@ -226,7 +227,11 @@
 		stopErrorCapture = captureGlobalErrors(); // route uncaught errors/rejections into the logger
 		logger.info('app started', { version: __APP_VERSION__, platform: detectPlatform() });
 		const flash = takeFlash(); // a success note stashed before a reload (e.g. data-folder move)
+		// the reload is asked about either way, so its mark never outlives the page it was for; a
+		// reload that came with its own message has said what happened
+		const reloaded = takeReloadMark();
 		if (flash) toast.success(flash);
+		else if (reloaded) chipNote = CHIP_NOTE.reloaded;
 		void checkForUpdate(); // fire-and-forget; self-guards to desktop, never blocks the load
 		void table.checkAvailable(); // asks the build, opens nothing
 		stopPublishingToTable = table.keepPublishing();
@@ -409,7 +414,9 @@
 			bind:this={refreshChip}
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
-			title={isDesktop ? `${$_('refresh.title')} (F5)` : $_('refresh.title')}
+			title={isDesktop
+				? `${$_('refresh.title')} (F5)\n${$_('refresh.reload')} (Ctrl+Shift+R)`
+				: $_('refresh.title')}
 			aria-label={isDesktop ? `${$_('refresh.title')} (F5)` : $_('refresh.title')}
 			><Icon name="rotate-cw" /></button
 		>
@@ -505,12 +512,12 @@
 
 <!-- the live region is there before its words are, or a screen reader never hears them -->
 <div role="status">
-	{#if refreshed && refreshChip}
+	{#if chipNote && refreshChip}
 		<div
 			class="provenance-popover is-open refreshed-note"
-			use:anchored={{ anchor: refreshChip, onclose: () => (refreshed = false) }}
+			use:anchored={{ anchor: refreshChip, onclose: () => (chipNote = null) }}
 		>
-			<Icon name="check" size={13} /><span>{$_('refresh.done')}</span>
+			<Icon name="check" size={13} /><span>{$_(chipNote)}</span>
 		</div>
 	{/if}
 </div>
