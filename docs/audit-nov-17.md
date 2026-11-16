@@ -120,8 +120,8 @@ connections; `/dev/table-link*`.
 
 ## Outside the table, found on the way
 
-- **The web build has no CSP** — the desktop's refuses inline script, the web's has none. Before a
-  table on the web, in TABLE-LINK-WEB.
+- **The web build's CSP has no `script-src`** — the desktop's refuses inline script, the web's
+  (`kit.csp`) does not. Before a table on the web, in TABLE-LINK-WEB.
 - **JS advisories** (`pnpm audit`): `@sveltejs/kit` and `adapter-static` (server and Vercel paths
   the static build does not run), `deepmerge` under `svelte-i18n` (merges the app's own catalogs),
   `minimatch` under eslint (dev only). None reaches a user.

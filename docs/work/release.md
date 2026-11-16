@@ -252,11 +252,13 @@
     web seat with that in mind.
   - **A web player first**; a web GM is read and specified beside it, since the page's prompt
     removes what kept the GM on the desktop.
-  - **The web build has no CSP at all** — no meta tag in `src/app.html`, no `kit.csp` — where
-    the desktop's (`tauri.conf.json`) refuses inline script. On the web, prose that escapes
-    DOMPurify runs, so a prompt in the page stands on one layer instead of two. A CSP for the web
-    build (SvelteKit's `kit.csp`, hashed for its own inline bootstrap) is the first step of this
-    item, before any table code.
+  - **The web build's CSP has no `script-src`** — `kit.csp` in `vite.config.ts` sets images,
+    forms, `base` and objects only — where the desktop's (`tauri.conf.json`) refuses inline
+    script. On the web, prose that escapes DOMPurify runs, so a prompt in the page stands on one
+    layer instead of two. A `script-src` there is the first step of this item, before any table
+    code: it is a `<meta>` the desktop webview enforces too, on top of Tauri's, so it carries
+    `'wasm-unsafe-eval'` for the plugin sandbox and SvelteKit's hashes for its own bootstrap, and
+    is driven on the real desktop app before it lands.
   - **A backgrounded tab is a seat that drops.** Chrome freezes CPU-heavy background tabs under
     Energy Saver (from 133; <https://developer.chrome.com/blog/freezing-on-energy-saver>), throttles
     timers in long-hidden tabs, and discards tabs under memory pressure, which ends a WebSocket
