@@ -232,12 +232,35 @@ impl Question {
         )
     }
 
+    /// The body with its `{placeholders}` filled in one pass over the catalog's words, so a value
+    /// that itself reads `{code}` is printed as it is and never filled in again.
     fn body(&self) -> String {
-        self.values
-            .iter()
-            .fold(self.said("body").to_string(), |body, (name, value)| {
-                body.replace(&format!("{{{name}}}"), value)
-            })
+        let template = self.said("body");
+        let mut out = String::with_capacity(template.len());
+        let mut rest = template;
+        while let Some(open) = rest.find('{') {
+            out.push_str(&rest[..open]);
+            let after = &rest[open + 1..];
+            let filled = after.find('}').and_then(|close| {
+                let (_, value) = self
+                    .values
+                    .iter()
+                    .find(|(key, _)| *key == &after[..close])?;
+                Some((value.as_str(), close))
+            });
+            match filled {
+                Some((value, close)) => {
+                    out.push_str(value);
+                    rest = &after[close + 1..];
+                }
+                None => {
+                    out.push('{');
+                    rest = after;
+                }
+            }
+        }
+        out.push_str(rest);
+        out
     }
 
     /// Ask it in the question window and wait for the answer. A window that could not be shown,
@@ -958,5 +981,17 @@ mod tests {
             body.contains("\"Lira\"") && body.contains("\"Thursday\"") && body.contains("123-456")
         );
         assert!(!body.contains('{'));
+
+        // a name that reads like a placeholder is printed as it is, not filled in again
+        let sly = Question {
+            dialog: "approve",
+            locale: "en".into(),
+            values: vec![
+                ("player", "{code}".into()),
+                ("table", "Thursday".into()),
+                ("code", "123-456".into()),
+            ],
+        };
+        assert!(sly.body().contains("\"{code}\" wants to join"));
     }
 }

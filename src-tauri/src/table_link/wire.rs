@@ -37,12 +37,31 @@ const INVITE_PREFIX: &str = "charnik-table:";
 const INVITE_MAX_CHARS: usize = 2048;
 const INVITE_MAX_ADDRS: usize = 16;
 
-/// A name as a person typed it, made safe to print in a native dialog and on another screen:
-/// no control characters, none of the marks that reorder the text around them, and short.
+/// A name as a person typed it, made safe to print in a question and on another screen: no
+/// control characters, no line or paragraph separators, none of the invisible marks that reorder
+/// or hide the text around them, no quotation mark to close the quotes a question prints it in,
+/// and short.
 pub fn plain_text(text: &str) -> String {
-    let reorders = |c: char| matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}');
+    let unprintable = |c: char| {
+        matches!(
+            c,
+            '\u{00AD}'
+                | '\u{061C}'
+                | '\u{180E}'
+                | '\u{200B}'..='\u{200F}'
+                | '\u{2028}'..='\u{202E}'
+                | '\u{2060}'..='\u{206F}'
+                | '\u{FEFF}'
+                | '"'
+                | '«'
+                | '»'
+                | '“'
+                | '”'
+                | '„'
+        )
+    };
     text.chars()
-        .filter(|c| !c.is_control() && !reorders(*c))
+        .filter(|c| !c.is_control() && !unprintable(*c))
         .take(NAME_MAX_CHARS)
         .collect::<String>()
         .trim()
@@ -381,7 +400,8 @@ impl Invite {
             .decode(text.strip_prefix(INVITE_PREFIX)?.as_bytes())
             .ok()?;
         let invite: Self = serde_json::from_slice(&json).ok()?;
-        let reachable = invite.relay.is_some() || !invite.addrs.is_empty();
+        // a relay OR addresses, never both: the question names the route, and only one is named
+        let reachable = invite.relay.is_some() == invite.addrs.is_empty();
         (invite.v == PROTOCOL && reachable && invite.addrs.len() <= INVITE_MAX_ADDRS).then(|| {
             Self {
                 name: plain_text(&invite.name),
@@ -508,6 +528,12 @@ mod tests {
             ..invite.clone()
         };
         assert_eq!(Invite::from_text(&nowhere.to_text()), None);
+        // nor one that leads two ways, of which the question would name only the relay
+        let both = Invite {
+            addrs: vec!["192.0.2.1:7777".parse().unwrap()],
+            ..invite.clone()
+        };
+        assert_eq!(Invite::from_text(&both.to_text()), None);
         // nor is one from a protocol this build does not speak
         let later = Invite {
             v: PROTOCOL + 1,
@@ -520,6 +546,11 @@ mod tests {
     fn a_name_is_printed_without_what_could_reword_a_dialog() {
         assert_eq!(plain_text("  Lira\n\u{202E}evil\u{0007} "), "Liraevil");
         assert_eq!(plain_text(&"a".repeat(100)).chars().count(), NAME_MAX_CHARS);
+        // a quote that closes the question's own, a line separator, and the invisible marks
+        assert_eq!(
+            plain_text("Bo\". Their code is\u{2028}1\u{200B}2\u{FEFF}3«»"),
+            "Bo. Their code is123"
+        );
     }
 
     #[test]

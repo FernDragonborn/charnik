@@ -12,17 +12,19 @@
 	const lines = $derived(table.log.shown);
 	const seat = $derived(table.role === TABLE_ROLE.gm ? 'gm' : 'player');
 
+	/** A player's name is whatever they typed, "GM" included, so the GM is marked as a badge no
+	 *  name can draw. */
 	const whoRolled = (line: LogLine): string =>
-		line.mine
-			? $_('table.log.you')
-			: line.record.author === line.record.table
-				? $_('table.log.gm')
-				: (line.name ?? '');
-	/** The roll's words in this app's language when its key needs nothing else to be worded. */
+		line.mine ? $_('table.log.you') : (line.name ?? '');
+	/** The roll's words in this app's language when its key names a roll; any other key is a peer
+	 *  reaching for one of this app's sentences, and its own words are shown instead. */
 	const rollName = (line: LogLine): string => {
 		const { text, key } = line.record.body.name;
-		return key ? $_(key, { default: text }) : text;
+		return key && ROLL_NAME_KEY.test(key) ? $_(key, { default: text }) : text;
 	};
+	const ROLL_NAME_KEY = /^(combat\.roll\.(check|save)\.[a-z]+|skillName\.[a-z_]+)$/;
+	const byTheGm = (line: LogLine): boolean =>
+		!line.mine && line.record.author === line.record.table;
 	const timeOf = (at: number): string =>
 		new Date(at).toLocaleTimeString(app.activeLocale, { hour: '2-digit', minute: '2-digit' });
 </script>
@@ -49,7 +51,9 @@
 			{#each lines as line (`${line.record.author}#${line.record.seq}`)}
 				<li class="table-row">
 					<span class="muted table-log-time">{timeOf(line.record.at)}</span>
-					<b class="table-log-who">{whoRolled(line)}</b>
+					{#if byTheGm(line)}<span class="durpill">{$_('table.log.gm')}</span>{:else}<b
+							class="table-log-who">{whoRolled(line)}</b
+						>{/if}
 					<span class="table-log-name">{rollName(line)}</span>
 					{#if line.record.body.to === AUDIENCE.gm}
 						<span class="durpill">{$_('table.log.gmOnly')}</span>

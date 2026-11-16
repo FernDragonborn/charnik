@@ -24,54 +24,58 @@
 </script>
 
 {#if pending && request}
-	<DialogShell
-		titleId="table-request-title"
-		title={$_('table.prompt.title')}
-		subtitle={$_('table.prompt.subtitle')}
-		width="min(460px, calc(100vw - 2 * var(--space-4)))"
-	>
-		<div class="dialog-body table-request-body">
-			<p class="table-request-ask">
-				<TableRequestLine {request} />
-				{#if waiting > 1}<span class="count-pill">1 / {waiting}</span>{/if}
-			</p>
-			{#if defended}
-				<p class="muted">
-					{$_(`combat.hp.damagePreview.${defended.bucket}`, {
-						values: { raw: defended.raw, final: defended.final },
-					})}
+	<!-- keyed by the request: the next one opens as a new dialog, its focus on Decline, so a second
+	     press meant for the first cannot accept what replaced it -->
+	{#key pending.requestId}
+		<DialogShell
+			titleId="table-request-title"
+			title={$_('table.prompt.title')}
+			subtitle={$_('table.prompt.subtitle')}
+			width="min(460px, calc(100vw - 2 * var(--space-4)))"
+		>
+			<div class="dialog-body table-request-body">
+				<p class="table-request-ask">
+					<TableRequestLine {request} />
+					{#if waiting > 1}<span class="count-pill">1 / {waiting}</span>{/if}
 				</p>
-			{/if}
-			{#if !takeable}
-				<p class="table-request-cannot" id="table-request-cannot">
-					{request.kind === TABLE_REQUEST.effect
-						? $_('table.prompt.cannotEffect', { values: { id: request.id } })
-						: $_('table.prompt.cannotRoll')}
-				</p>
-			{/if}
-		</div>
-		<footer class="dialog-foot">
-			<span class="dialog-spacer"></span>
-			<button class="btn ghost" onclick={() => void table.asks.decline(pending)}
-				>{$_('table.prompt.decline')}</button
-			>
-			<!-- offered only where the tray is mounted: the play screen -->
-			{#if buildable}
-				<button class="btn" onclick={() => void table.asks.buildInTray(pending)}
-					>{$_('table.prompt.inTray')}</button
+				{#if defended}
+					<p class="muted">
+						{$_(`combat.hp.damagePreview.${defended.bucket}`, {
+							values: { raw: defended.raw, final: defended.final },
+						})}
+					</p>
+				{/if}
+				{#if !takeable}
+					<p class="table-request-cannot" id="table-request-cannot">
+						{request.kind === TABLE_REQUEST.effect
+							? $_('table.prompt.cannotEffect', { values: { id: request.id } })
+							: $_('table.prompt.cannotRoll')}
+					</p>
+				{/if}
+			</div>
+			<footer class="dialog-foot">
+				<span class="dialog-spacer"></span>
+				<button class="btn ghost" onclick={() => void table.asks.decline(pending)}
+					>{$_('table.prompt.decline')}</button
 				>
-			{/if}
-			<!-- blocked, not disabled: a disabled control takes no focus, so its reason could not be read -->
-			<button
-				class="btn primary"
-				class:is-blocked={!takeable}
-				aria-disabled={!takeable}
-				aria-describedby={takeable ? undefined : 'table-request-cannot'}
-				onclick={() => void table.asks.accept(pending)}
-				>{$_(`table.prompt.accept.${request.kind}`)}</button
-			>
-		</footer>
-	</DialogShell>
+				<!-- offered only where the tray is mounted: the play screen -->
+				{#if buildable}
+					<button class="btn" onclick={() => void table.asks.buildInTray(pending)}
+						>{$_('table.prompt.inTray')}</button
+					>
+				{/if}
+				<!-- blocked, not disabled: a disabled control takes no focus, so its reason could not be read -->
+				<button
+					class="btn primary"
+					class:is-blocked={!takeable}
+					aria-disabled={!takeable}
+					aria-describedby={takeable ? undefined : 'table-request-cannot'}
+					onclick={() => void table.asks.accept(pending)}
+					>{$_(`table.prompt.accept.${request.kind}`)}</button
+				>
+			</footer>
+		</DialogShell>
+	{/key}
 {/if}
 
 <style>

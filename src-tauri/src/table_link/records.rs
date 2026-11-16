@@ -141,9 +141,19 @@ pub fn now_ms() -> u64 {
 /// The records one app holds at one table.
 #[derive(Default)]
 pub struct Log {
-    records: BTreeMap<(String, u64), (Record, Signed)>,
+    /// Each record with the order it arrived in: the oldest ARRIVAL is what goes when the log is
+    /// full, since the author's clock is the author's to set.
+    records: BTreeMap<(String, u64), (Record, Signed, u64)>,
+    arrivals: u64,
+    /// The highest number ever held from each author, kept past eviction: an author's numbers go
+    /// on from it, and what a peer is told it lacks is measured against it.
+    highest: HashMap<String, u64>,
     recent: HashMap<String, VecDeque<Instant>>,
 }
+
+/// How far ahead of this app's clock a record's time may be: clocks differ by minutes, and a time
+/// further ahead would sit at the top of every log until then.
+const AHEAD_MAX_MS: u64 = 10 * 60 * 1000;
 
 /// What became of a record offered to the log.
 #[derive(Debug, PartialEq, Eq)]
@@ -156,16 +166,20 @@ pub enum Kept {
 impl Log {
     /// The highest number held from each author.
     pub fn have(&self) -> BTreeMap<String, u64> {
-        let mut have = BTreeMap::new();
-        for (author, seq) in self.records.keys() {
-            have.insert(author.clone(), *seq);
-        }
-        have
+        self.highest
+            .iter()
+            .map(|(author, seq)| (author.clone(), *seq))
+            .collect()
     }
 
     /// The next number for a record this app writes as `author`.
     pub fn next_seq(&self, author: &str) -> u64 {
-        self.have().get(author).map_or(1, |seq| seq + 1)
+        self.highest.get(author).map_or(1, |seq| seq + 1)
+    }
+
+    /// Is this record held already?
+    pub fn holds(&self, author: &str, seq: u64) -> bool {
+        self.records.contains_key(&(author.to_string(), seq))
     }
 
     /// The records past what `have` says, oldest first, that `may_see` allows.
@@ -174,37 +188,43 @@ impl Log {
         have: &BTreeMap<String, u64>,
         may_see: impl Fn(&Record) -> bool,
     ) -> Vec<Signed> {
-        let mut out: Vec<&(Record, Signed)> = self
+        let mut out: Vec<&(Record, Signed, u64)> = self
             .records
             .iter()
-            .filter(|((author, seq), (record, _))| {
+            .filter(|((author, seq), (record, _, _))| {
                 have.get(author).is_none_or(|held| seq > held) && may_see(record)
             })
             .map(|(_, kept)| kept)
             .collect();
-        out.sort_by_key(|(record, _)| record.at);
-        out.into_iter().map(|(_, signed)| signed.clone()).collect()
+        out.sort_by_key(|(_, _, arrived)| *arrived);
+        out.into_iter()
+            .map(|(_, signed, _)| signed.clone())
+            .collect()
     }
 
-    /// Keep a record already checked by `verify`. The oldest record goes once the log is full.
+    /// Keep a record already checked by `verify`. One dated further ahead than clocks differ is
+    /// refused, and the record that arrived first goes once the log is full.
     pub fn keep(&mut self, record: Record, signed: Signed) -> Kept {
         let id = (record.author.clone(), record.seq);
-        let new_author = !self
-            .records
-            .keys()
-            .any(|(author, _)| *author == record.author);
-        if self.records.contains_key(&id) || (new_author && self.have().len() >= AUTHORS_MAX) {
+        let new_author = !self.highest.contains_key(&record.author);
+        if self.records.contains_key(&id)
+            || (new_author && self.highest.len() >= AUTHORS_MAX)
+            || record.at > now_ms().saturating_add(AHEAD_MAX_MS)
+        {
             return Kept::Not;
         }
-        self.records.insert(id, (record, signed));
+        let highest = self.highest.entry(record.author.clone()).or_default();
+        *highest = (*highest).max(record.seq);
+        self.arrivals += 1;
+        self.records.insert(id, (record, signed, self.arrivals));
         if self.records.len() > LOG_MAX {
-            if let Some(oldest) = self
+            if let Some(first) = self
                 .records
                 .iter()
-                .min_by_key(|(_, (record, _))| record.at)
+                .min_by_key(|(_, (_, _, arrived))| *arrived)
                 .map(|(id, _)| id.clone())
             {
-                self.records.remove(&oldest);
+                self.records.remove(&first);
             }
         }
         Kept::New
@@ -367,6 +387,35 @@ mod tests {
         let signed = sign(&one_more, &record).expect("signs");
         assert_eq!(log.keep(record, signed), Kept::Not);
         assert_eq!(log.have().len(), AUTHORS_MAX);
+    }
+
+    #[test]
+    fn a_far_future_time_neither_pins_the_log_nor_pushes_anyone_out() {
+        let honest = SecretKey::generate();
+        let flooder = SecretKey::generate();
+        let mut log = Log::default();
+        let mut ahead = roll("t", &flooder, 1, Audience::Table);
+        ahead.at = now_ms() + AHEAD_MAX_MS + 60_000;
+        let signed = sign(&flooder, &ahead).expect("signs");
+        assert_eq!(log.keep(ahead, signed), Kept::Not);
+
+        // a full log of the flooder's records, then the honest author's: the first ARRIVED goes
+        for seq in 1..=LOG_MAX as u64 {
+            let mut record = roll("t", &flooder, seq, Audience::Table);
+            record.at = now_ms() + AHEAD_MAX_MS - 1_000;
+            let signed = sign(&flooder, &record).expect("signs");
+            assert_eq!(log.keep(record, signed), Kept::New);
+        }
+        let first = roll("t", &honest, 1, Audience::Table);
+        let signed = sign(&honest, &first).expect("signs");
+        assert_eq!(log.keep(first, signed), Kept::New);
+        assert!(log.holds(&honest.public().to_string(), 1));
+        assert!(!log.holds(&flooder.public().to_string(), 1));
+        // and an author's numbers go on past what was evicted
+        assert_eq!(
+            log.next_seq(&flooder.public().to_string()),
+            LOG_MAX as u64 + 1
+        );
     }
 
     #[test]

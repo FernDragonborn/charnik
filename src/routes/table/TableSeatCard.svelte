@@ -47,7 +47,8 @@
 
 <article class="card table-seat" class:is-away={!player.present} aria-label={player.name}>
 	<header class="table-seat-head">
-		<h3 class="table-seat-name">{view?.name ?? player.name}</h3>
+		<!-- the name the GM let this seat in by: what its sheet calls itself is the player's to say -->
+		<h3 class="table-seat-name">{player.name}</h3>
 		{#if view}
 			<span class="muted">
 				{$_('table.seat.level', { values: { level: view.level } })}

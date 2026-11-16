@@ -146,7 +146,7 @@
 				class="pill-btn"
 				class:accent={on}
 				aria-pressed={on}
-				onclick={() => pick(player.id)}>{player.view?.name ?? player.name}</button
+				onclick={() => pick(player.id)}>{player.name}</button
 			>
 		{/each}
 	</div>

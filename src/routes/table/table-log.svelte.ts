@@ -51,25 +51,29 @@ const recordId = (author: string, seq: number): string => `${author}#${seq}`;
 export class TableLog {
 	constructor(private host: () => TableLogHost) {}
 
-	/** Oldest first, hidden ones included: a hide that arrives first still finds its record. */
+	/** Oldest first. A hidden roll is not among them, and a hide that arrives before its roll keeps
+	 *  that roll out when it comes. */
 	private lines = $state<LogLine[]>([]);
 	private hidden = $state<string[]>([]);
 
 	/** What the log shows, newest first. */
 	get shown(): LogLine[] {
-		return this.lines
-			.filter((line) => !this.hidden.includes(recordId(line.record.author, line.record.seq)))
-			.reverse();
+		return this.lines.toReversed();
 	}
 
 	take = (event: RecordEvent): void => {
 		const { record } = event;
 		if (record.body.kind === LOG_BODY.hide) {
 			const id = recordId(record.body.author, record.body.seq);
-			if (!this.hidden.includes(id)) this.hidden = [...this.hidden, id];
+			// the roll goes, and its place with it; the hide is kept for a roll that arrives after it
+			this.lines = this.lines.filter(
+				(line) => recordId(line.record.author, line.record.seq) !== id,
+			);
+			if (!this.hidden.includes(id)) this.hidden = [...this.hidden, id].slice(-LINES_MAX);
 			return;
 		}
 		const id = recordId(record.author, record.seq);
+		if (this.hidden.includes(id)) return;
 		if (this.lines.some((line) => recordId(line.record.author, line.record.seq) === id)) return;
 		const line: LogLine = {
 			record: { ...record, body: record.body },

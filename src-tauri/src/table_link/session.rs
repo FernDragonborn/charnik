@@ -57,6 +57,13 @@ const MAX_WAITING: usize = 4;
 /// How many connections may be between arriving and saying hello at once. Whoever dials past
 /// that is refused before the handshake, so a flood of dials costs the table nothing it keeps.
 const MAX_GREETING: usize = 16;
+/** How many connections may be mid-handshake at once, before anyone's key is known. A key the GM
+ *  let in skips the greeting pool after it, so strangers holding that pool keep nobody out who
+ *  was let in before. */
+const MAX_HANDSHAKES: usize = 64;
+/** The code a GM's app closes a connection with when a key it never let in arrives at a shut
+ *  door: the player's app reads it as the invitation no longer working. */
+const DOOR_SHUT: u32 = 1;
 const OUTBOUND_QUEUE: usize = 32;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -344,6 +351,9 @@ struct SeatHandle {
     /// Which connection of this key the seat is: a player who dials again replaces the old one.
     generation: u64,
     outbound: mpsc::Sender<GmFrame>,
+    /// Closed when the seat is taken away or replaced, so a peer that stopped reading cannot keep
+    /// a seat its goodbye never reached.
+    conn: Connection,
 }
 
 struct GmShared {
@@ -407,7 +417,12 @@ impl GmShared {
         };
         let kept = {
             let mut log = locked(&self.log);
-            if !at_table || !may || (from.is_some() && !log.within_pace(&record.author)) {
+            if !at_table || !may || log.holds(&record.author, record.seq) {
+                return;
+            }
+            // counted against the seat that handed it over: another seat replaying an author's
+            // records spends its own pace, not the author's
+            if from.is_some_and(|sender| !log.within_pace(&sender.to_string())) {
                 return;
             }
             log.keep(record.clone(), signed.clone())
@@ -458,20 +473,23 @@ impl GmShared {
             .is_some_and(|door| wire::same_secret(door, secret))
     }
 
-    /// May this key sit? A key already let in may. Anyone else needs the open door's secret, a
-    /// free seat, and the GM's yes — asked one at a time, in a dialog the page cannot press.
+    /// May this key sit, and under what name? A key already let in may, under the name the GM
+    /// let it in by — a hello cannot rename it. Anyone else needs the open door's secret, a free
+    /// seat, and the GM's yes — asked one at a time, in a window the page cannot answer.
     async fn admit(
         &self,
         player: EndpointId,
         protocol: u32,
         secret: &str,
         name: &str,
-    ) -> Result<(), Refusal> {
+    ) -> Result<String, Refusal> {
         if protocol != PROTOCOL {
             return Err(Refusal::Version);
         }
         if locked(&self.allowed).contains(&player) {
-            return Ok(());
+            return Ok(self
+                .name_of(&player.to_string())
+                .unwrap_or_else(|| name.to_string()));
         }
         if name.is_empty() || !self.knocks(secret) {
             return Err(Refusal::Invite);
@@ -494,11 +512,12 @@ impl GmShared {
             return Err(Refusal::Declined);
         }
         locked(&self.allowed).insert(player);
+        locked(&self.names).insert(player, name.to_string());
         (self.keep)(Keep::LetIn {
             key: player,
             name: name.to_string(),
         });
-        Ok(())
+        Ok(name.to_string())
     }
 }
 
@@ -517,7 +536,7 @@ async fn say_goodbye(mut send: iroh::endpoint::SendStream, conn: &Connection, fr
 async fn seat_player(
     conn: Connection,
     shared: Arc<GmShared>,
-    greeting: tokio::sync::OwnedSemaphorePermit,
+    greeting: Option<tokio::sync::OwnedSemaphorePermit>,
 ) {
     let player = conn.remote_id();
     let Ok(Ok((mut send, mut recv))) = timeout(HELLO_WAIT, conn.accept_bi()).await else {
@@ -534,11 +553,16 @@ async fn seat_player(
     };
     // the hello is said: what waits from here is counted by `admit`
     drop(greeting);
-    let name = wire::plain_text(&name);
-    if let Err(reason) = shared.admit(player, protocol, &secret, &name).await {
-        say_goodbye(send, &conn, &GmFrame::Refused { reason }).await;
-        return;
-    }
+    let name = match shared
+        .admit(player, protocol, &secret, &wire::plain_text(&name))
+        .await
+    {
+        Ok(name) => name,
+        Err(reason) => {
+            say_goodbye(send, &conn, &GmFrame::Refused { reason }).await;
+            return;
+        }
+    };
     let welcome = GmFrame::Welcome {
         table: shared.name.clone(),
     };
@@ -550,20 +574,23 @@ async fn seat_player(
     }
 
     let participant = player.to_string();
-    locked(&shared.names).insert(player, name.clone());
     let (outbound, mut outgoing) = mpsc::channel(OUTBOUND_QUEUE);
     // what this app holds, so the player's app hands over what it lacks
     let _ = outbound.try_send(GmFrame::Have {
         have: locked(&shared.log).have(),
     });
     let generation = shared.generations.fetch_add(1, Ordering::Relaxed);
-    locked(&shared.seats).insert(
+    let replaced = locked(&shared.seats).insert(
         player,
         SeatHandle {
             generation,
             outbound,
+            conn: conn.clone(),
         },
     );
+    if let Some(older) = replaced {
+        older.conn.close(0u32.into(), b"");
+    }
     (shared.emit)(TableEvent::ParticipantJoined {
         table: shared.table.clone(),
         participant: Participant {
@@ -748,17 +775,33 @@ pub async fn host(
     let accepting = tokio::spawn({
         let (endpoint, shared) = (endpoint.clone(), shared.clone());
         async move {
+            let handshakes = Arc::new(Semaphore::new(MAX_HANDSHAKES));
             let greeting = Arc::new(Semaphore::new(MAX_GREETING));
             while let Some(incoming) = endpoint.accept().await {
-                let Ok(permit) = greeting.clone().try_acquire_owned() else {
+                let Ok(handshake) = handshakes.clone().try_acquire_owned() else {
                     incoming.refuse();
                     continue;
                 };
-                let shared = shared.clone();
+                let (shared, greeting) = (shared.clone(), greeting.clone());
                 tokio::spawn(async move {
-                    if let Ok(conn) = incoming.await {
-                        seat_player(conn, shared, permit).await;
-                    }
+                    let Ok(Ok(conn)) = timeout(HELLO_WAIT, incoming).await else {
+                        return;
+                    };
+                    drop(handshake);
+                    let known = locked(&shared.allowed).contains(&conn.remote_id());
+                    let permit = if known {
+                        None
+                    } else if locked(&shared.door).is_none() {
+                        // a stranger at a shut door has nothing to say that could be heard
+                        conn.close(DOOR_SHUT.into(), b"");
+                        return;
+                    } else if let Ok(permit) = greeting.try_acquire_owned() {
+                        Some(permit)
+                    } else {
+                        conn.close(0u32.into(), b"");
+                        return;
+                    };
+                    seat_player(conn, shared, permit).await;
                 });
             }
         }
@@ -840,11 +883,22 @@ impl GmTable {
             locked(&self.shared.allowed).remove(&player);
             (self.shared.keep)(Keep::SentAway { key: player });
         }
-        if let Some(seat) = self.seat_of(participant) {
-            let _ = seat.try_send(GmFrame::Closed {
+        let Ok(player) = participant.parse::<EndpointId>() else {
+            return;
+        };
+        let Some(conn) = locked(&self.shared.seats).get(&player).map(|seat| {
+            let _ = seat.outbound.try_send(GmFrame::Closed {
                 reason: Goodbye::Dismissed,
             });
-        }
+            seat.conn.clone()
+        }) else {
+            return;
+        };
+        // the goodbye is given a moment to be read; a peer that is not reading is cut off anyway
+        tokio::spawn(async move {
+            sleep(GOODBYE_WAIT * 2).await;
+            conn.close(0u32.into(), b"");
+        });
     }
 
     /// Open the door under a fresh secret and answer the invitation that carries it, or shut it.
@@ -959,8 +1013,17 @@ async fn sit(
     let Ok(Ok(conn)) = timeout(CONNECT_WAIT, endpoint.connect(gm.clone(), ALPN)).await else {
         return dropped;
     };
+    // a GM that closed this connection at a shut door said so in its close code
+    let ended = |conn: &Connection| match conn.close_reason() {
+        Some(iroh::endpoint::ConnectionError::ApplicationClosed(close))
+            if close.error_code == DOOR_SHUT.into() =>
+        {
+            SeatEnd::Gone(CloseReason::Invite)
+        }
+        _ => SeatEnd::Dropped { seated: false },
+    };
     let Ok((mut send, recv)) = conn.open_bi().await else {
-        return dropped;
+        return ended(&conn);
     };
     let frame = PlayerFrame::Hello {
         protocol: PROTOCOL,
@@ -971,7 +1034,7 @@ async fn sit(
         .await
         .is_err()
     {
-        return dropped;
+        return ended(&conn);
     }
     shared.says(ConnectionState::Waiting, None);
 
@@ -982,7 +1045,7 @@ async fn sit(
         Ok(Some(Ok(_) | Err(FrameError::Malformed | FrameError::TooLarge))) => {
             return SeatEnd::Gone(CloseReason::Protocol)
         }
-        _ => return dropped,
+        _ => return ended(&conn),
     }
 
     let (outbound, mut outgoing) = mpsc::channel(OUTBOUND_QUEUE);
@@ -1983,6 +2046,219 @@ mod tests {
             "a key let in before is not asked about"
         );
         lira.leave().await;
+        table.close().await;
+    }
+
+    // --- what the 2026-11-17 audit's attacks no longer get (docs/audit-2026-11-17.md) ---------
+
+    async fn open_table() -> (GmTable, Invite, UnboundedReceiver<TableEvent>) {
+        let (emit, events) = listening();
+        let (approve, _) = answering(true);
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
+        (table, invite, events)
+    }
+
+    /// A bare endpoint that may dial this table's GM: a modified build, speaking frames by hand.
+    async fn by_hand(invite: &Invite) -> (Endpoint, Connection) {
+        let (gm, _) = address_of(invite).expect("an address");
+        let endpoint = bind(
+            SecretKey::generate(),
+            RelayMode::Disabled,
+            false,
+            Some(gm.id),
+        )
+        .await
+        .expect("an endpoint");
+        let conn = timeout(EVENT_WAIT, endpoint.connect(gm, ALPN))
+            .await
+            .expect("in time")
+            .expect("a connection");
+        (endpoint, conn)
+    }
+
+    async fn joined_name(events: &mut UnboundedReceiver<TableEvent>) -> String {
+        loop {
+            if let TableEvent::ParticipantJoined { participant, .. } = next(events).await {
+                return participant.name;
+            }
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_seat_let_in_sits_again_under_the_name_it_was_let_in_by() {
+        let (table, invite, mut gm_events) = open_table().await;
+        let (mallory, _) = seated(&invite, "Mallory").await;
+        assert_eq!(joined_name(&mut gm_events).await, "Mallory");
+        let key = mallory.key().clone();
+        mallory.leave().await;
+        let again = Again {
+            key,
+            allowed: vec![],
+            records: vec![],
+        };
+        let (emit, _events) = listening();
+        let back = join(fresh_id(), &invite, "Bo", emit, forgetting(), Some(again))
+            .await
+            .expect("a seat");
+        assert_eq!(joined_name(&mut gm_events).await, "Mallory");
+        back.leave().await;
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_seat_replaying_another_authors_rolls_spends_its_own_pace_not_theirs() {
+        let (table, invite, _gm_events) = open_table().await;
+        let (ann, _) = seated(&invite, "Ann").await;
+        let (bevan, _) = seated(&invite, "Bevan").await;
+        let gm = invite.id.clone();
+        let ann_id = ann.key().public().to_string();
+        let bevan_id = bevan.key().public();
+        let as_ann = |seq: u64| {
+            let record = Record {
+                table: gm.clone(),
+                author: ann_id.clone(),
+                seq,
+                at: records::now_ms(),
+                body: roll_to(Audience::Table, 3),
+            };
+            records::sign(ann.key(), &record).expect("signs")
+        };
+        // Bevan hands over Ann's rolls, again and again: what is held costs nothing, and what is
+        // new is counted against Bevan
+        for seq in 100..120 {
+            table.shared.offer(as_ann(seq), Some(bevan_id));
+            table.shared.offer(as_ann(seq), Some(bevan_id));
+        }
+        // Ann's own next roll still reaches the table
+        table.shared.offer(as_ann(500), Some(ann.key().public()));
+        assert!(locked(&table.shared.log).holds(&ann_id, 500));
+        ann.leave().await;
+        bevan.leave().await;
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn strangers_who_never_say_hello_keep_out_nobody_already_let_in() {
+        let (table, invite, _gm_events) = open_table().await;
+        let (lira, _) = seated(&invite, "Lira").await;
+        let key = lira.key().clone();
+        lira.leave().await;
+        // more silent dials than there are places to greet in
+        let mut silent = vec![];
+        for _ in 0..MAX_GREETING + 4 {
+            silent.push(by_hand(&invite).await);
+        }
+        let again = Again {
+            key,
+            allowed: vec![],
+            records: vec![],
+        };
+        let (emit, mut events) = listening();
+        let back = join(fresh_id(), &invite, "Lira", emit, forgetting(), Some(again))
+            .await
+            .expect("a seat");
+        loop {
+            match next(&mut events).await {
+                TableEvent::Connection {
+                    state: ConnectionState::Connected,
+                    ..
+                } => break,
+                TableEvent::Connection {
+                    state: ConnectionState::Closed,
+                    reason,
+                    ..
+                } => panic!("a seat let in before was kept out: {reason:?}"),
+                _ => {}
+            }
+        }
+        // and with the door shut a stranger is let go at once, told why
+        table.set_door(false);
+        let (_endpoint, conn) = by_hand(&invite).await;
+        let closed = timeout(EVENT_WAIT, conn.closed())
+            .await
+            .expect("let go in time");
+        assert!(matches!(
+            closed,
+            iroh::endpoint::ConnectionError::ApplicationClosed(close)
+                if close.error_code == DOOR_SHUT.into()
+        ));
+        drop(silent);
+        back.leave().await;
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_dismissed_seat_that_stopped_reading_is_cut_off() {
+        let (table, invite, _gm_events) = open_table().await;
+        let fat = |text: &str| Body::Roll {
+            name: records::RollName {
+                text: text.into(),
+                key: None,
+            },
+            roll: json!({ "pad": "y".repeat(1500) }),
+            to: Audience::Table,
+        };
+        for _ in 0..300 {
+            table.record(fat("filler"));
+        }
+        let (endpoint, conn) = by_hand(&invite).await;
+        let me = endpoint.id().to_string();
+        let (mut send, mut recv) = conn.open_bi().await.expect("a stream");
+        let hello = PlayerFrame::Hello {
+            protocol: PROTOCOL,
+            secret: invite.secret.clone(),
+            name: "Mal".into(),
+        };
+        wire::write_frame(&mut send, &hello, HELLO_CAP)
+            .await
+            .expect("hello");
+        let welcome: GmFrame = timeout(EVENT_WAIT, wire::read_frame(&mut recv, GM_FRAME_CAP))
+            .await
+            .expect("in time")
+            .expect("a frame");
+        assert!(matches!(welcome, GmFrame::Welcome { .. }));
+        // ask for the whole log again and again, and read none of it
+        for _ in 0..40 {
+            let have = PlayerFrame::Have {
+                have: std::collections::BTreeMap::new(),
+            };
+            if wire::write_frame(&mut send, &have, VIEW_CAP).await.is_err() {
+                break;
+            }
+            sleep(Duration::from_millis(15)).await;
+        }
+        sleep(Duration::from_secs(1)).await;
+        table.dismiss(&me);
+        sleep(GOODBYE_WAIT * 3).await;
+        table.record(fat("after dismissal"));
+        // what it can still read ends, and never reaches a roll made after it was sent away
+        let read = timeout(EVENT_WAIT * 3, async {
+            loop {
+                match wire::read_frame::<GmFrame>(&mut recv, GM_FRAME_CAP).await {
+                    Ok(GmFrame::Record { record, .. })
+                        if record.text.contains("after dismissal") =>
+                    {
+                        break false
+                    }
+                    Ok(_) => {}
+                    Err(_) => break true,
+                }
+            }
+        })
+        .await
+        .expect("the stream ends in time");
+        assert!(read, "a seat sent away was handed a roll made after");
         table.close().await;
     }
 }
