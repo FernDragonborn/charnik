@@ -211,6 +211,8 @@ export default ts.config(
 			'coverage/',
 			// gitignored scratch: design mocks + their vendored support scripts, not our code to lint
 			'design-preview/',
+			// an agent's git worktree is a second copy of the repo, with a tsconfig of its own
+			'.claude/',
 		],
 	},
 );
