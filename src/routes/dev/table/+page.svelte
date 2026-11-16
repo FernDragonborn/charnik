@@ -5,14 +5,18 @@
 	// from, so this fills the view-model by hand and mounts the real screen: `?seat=gm`,
 	// `?seat=player&state=waiting|connected|reconnecting`, `?seat=none&problem=<reason>`, and
 	// `&ask=damage|roll|effect|unknown` to raise the request prompt over it. `&tray` mounts the play
-	// screen's dice tray, so a roll can be built in it as on that screen.
+	// screen's dice tray, so a roll can be built in it as on that screen. `&log` fills the table's log.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import {
+		AUDIENCE,
 		CONNECTION,
+		LOG_BODY,
 		REQUESTED_ROLL,
+		TABLE_EVENT,
 		TABLE_REQUEST,
+		type Audience,
 		type ConnectionState,
 		type TableRequest,
 	} from '$lib/table-link/types';
@@ -103,6 +107,43 @@
 		];
 	}
 
+	/** A few rolls from around the table: the GM's, a player's kept to the GM, one hidden, this app's. */
+	function fillLog(): void {
+		const gm = 'gm-key';
+		const roll = (
+			author: string,
+			seq: number,
+			minutesAgo: number,
+			total: number,
+			to: Audience = AUDIENCE.table,
+		) => ({
+			table: gm,
+			author,
+			seq,
+			at: Date.now() - minutesAgo * 60_000,
+			body: {
+				kind: LOG_BODY.roll,
+				name: { text: 'DEX save', key: 'combat.roll.save.dex' },
+				roll: { total, natural: total - 2, advantage: 'neither', mod: 2 },
+				to,
+			} as const,
+		});
+		const heard = [
+			{ record: roll('lira', 1, 9, 17), name: 'Lira Swiftfoot', mine: false },
+			{ record: roll(gm, 1, 7, 11), mine: false },
+			{ record: roll('lira', 2, 5, 4, AUDIENCE.gm), name: 'Lira Swiftfoot', mine: false },
+			{ record: roll('me', 1, 2, 20), mine: true },
+			{
+				record: {
+					...roll('bevan', 1, 1, 9),
+					body: { kind: LOG_BODY.hide, author: 'lira', seq: 9 } as const,
+				},
+				mine: false,
+			},
+		];
+		for (const event of heard) table.log.take({ kind: TABLE_EVENT.record, ...event });
+	}
+
 	// the screen is mounted once the state is in place, so its own loads find nothing left to do
 	let seeded = $state(false);
 	const withTray = page.url.searchParams.has('tray');
@@ -133,6 +174,7 @@
 					{ requestId: 'r-2', request: ASKS.roll },
 				]
 			: [];
+		if (asked.has('log')) fillLog();
 		seeded = true;
 	});
 </script>

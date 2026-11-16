@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (108)
+## Duplicate suspects (110)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -102,6 +102,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
+- `roll` ×2 — src/routes/dev/table-live/+page.svelte · src/routes/dev/table/+page.svelte
+- `ROLL_NAME_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/table-log.svelte.ts
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
@@ -166,7 +168,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (97)
+## Global CSS classes (102)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -262,6 +264,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.slabtoggle` | components.css | whole label clickable to collapse (chev + name), no button box |
 | `.source-line` | components.css |  |
 | `.stepper` | components.css | --- number stepper: a count you can nudge either way (class level, ability scores, item qty) --- |
+| `.table-row` | components.css |  |
+| `.table-row-roll` | components.css |  |
+| `.table-row-spacer` | components.css |  |
+| `.table-rows` | components.css |  |
+| `.table-section` | components.css | --- the Table screen: a section's heading, and the rows of what was asked or rolled at the table, shared by the scree… |
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
 | `.trace` | components.css | --- small shared bits --- |
@@ -2454,6 +2461,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const TABLE_ANSWER`
 - `interface TableAnswer`
 - `const TABLE_EVENT`
+- `const AUDIENCE` — Who a roll in the table's log is for: everyone at the table, or the GM alone.
+- `type Audience`
+- `const LOG_BODY`
+- `type LogBody` — What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log).
+- `interface LogRecord` — A record as its author signed it; Rust has checked the signature before the page hears it.
+- `interface RecordEvent` — A record this app now holds, with the name the GM let its author in under — none for the GM's * own, and none for a p…
 - `type PlayerEvent`
 - `type GmEvent`
 - `type Unsubscribe`
@@ -2558,4 +2571,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 59 components · 1565 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 59 components · 1571 exports across 218 modules · 110 duplicate suspects._

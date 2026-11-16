@@ -13,8 +13,10 @@ import type { Character } from '$lib/character/schema';
 import { demoCharacter } from '$lib/demo/sheet';
 import { startI18n, locale, waitLocale } from '$lib/i18n';
 import {
+	AUDIENCE,
 	CLOSE_REASON,
 	CONNECTION,
+	LOG_BODY,
 	DELIVERY,
 	REQUESTED_ROLL,
 	SEATING,
@@ -25,6 +27,8 @@ import {
 	type GmEvent,
 	type GmSeat,
 	type HeldSeat,
+	type LogBody,
+	type LogRecord,
 	type PlayerEvent,
 	type PlayerSeat,
 	type TableAnswer,
@@ -38,6 +42,7 @@ import { combat } from '../combat/combat-view-model.svelte';
 import { ASK_STATUS, NO_CHARACTER, TABLE_ROLE, TableVM } from './table-view-model.svelte';
 import type { PendingRequest } from './player-requests.svelte';
 import { rollPassed } from './requested-roll';
+import { plainRollName } from './table-log.svelte';
 
 const NO_SEAT_HELD = () => Promise.resolve({ role: TABLE_ROLE.none });
 
@@ -49,6 +54,7 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 		answers: [] as { requestId: string; answer: TableAnswer }[],
 		requests: [] as { participant: string; request: TableRequest }[],
 		dismissed: [] as string[],
+		records: [] as LogBody[],
 		left: 0,
 		redials: 0,
 	};
@@ -71,6 +77,7 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 			return Promise.resolve(DELIVERY.delivered);
 		},
 		redial: () => Promise.resolve(void heard.redials++),
+		record: (body) => Promise.resolve(void heard.records.push(body)).then(() => DELIVERY.delivered),
 	};
 	const gmSeat: GmSeat = {
 		table: 'table-1',
@@ -90,6 +97,7 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 		},
 		dismiss: (participant) => Promise.resolve(void heard.dismissed.push(participant)),
 		setDoor: (open) => Promise.resolve(open ? 'charnik-table:second' : null),
+		record: (body) => Promise.resolve(void heard.records.push(body)).then(() => DELIVERY.delivered),
 	};
 	const link: TableLink = {
 		available: () => Promise.resolve(true),
@@ -598,5 +606,100 @@ describe('a roll against a DC', () => {
 		expect(rollPassed(roll, 16)).toBe(false);
 		expect(rollPassed({ ...roll, outcome: 'fail' }, 5)).toBe(false);
 		expect(rollPassed({ ...roll, total: 0, outcome: 'succeed' }, 30)).toBe(true);
+	});
+});
+
+describe("the table's log", () => {
+	const roll = (author: string, seq: number, at: number, total = 12): LogRecord => ({
+		table: 'gm-key',
+		author,
+		seq,
+		at,
+		body: {
+			kind: LOG_BODY.roll,
+			name: { text: 'DEX save', key: 'combat.roll.save.dex' },
+			roll: { total, advantage: 'neither', mod: 2 },
+			to: AUDIENCE.table,
+		},
+	});
+	const heardRecord = (record: LogRecord, name?: string, mine = false) => ({
+		kind: TABLE_EVENT.record,
+		record,
+		...(name ? { name } : {}),
+		mine,
+	});
+
+	it('shows the rolls it holds newest first, once each, under the name the GM let them in by', async () => {
+		const { table, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		tellPlayer(heardRecord(roll('lira', 2, 200), 'Lira'));
+		tellPlayer(heardRecord(roll('lira', 1, 100), 'Lira'));
+		tellPlayer(heardRecord(roll('lira', 1, 100), 'Lira'));
+		tellPlayer(heardRecord(roll('gm-key', 1, 150)));
+		expect(table.log.shown.map((line) => [line.record.author, line.record.seq, line.name])).toEqual(
+			[
+				['lira', 2, 'Lira'],
+				['gm-key', 1, null],
+				['lira', 1, 'Lira'],
+			],
+		);
+	});
+
+	it('drops a hidden roll, even one whose hide came first', async () => {
+		const { table, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		const hide = (author: string, seq: number): LogRecord => ({
+			table: 'gm-key',
+			author: 'gm-key',
+			seq: 9,
+			at: 999,
+			body: { kind: LOG_BODY.hide, author, seq },
+		});
+		tellPlayer(heardRecord(hide('lira', 2)));
+		tellPlayer(heardRecord(roll('lira', 1, 100), 'Lira'));
+		tellPlayer(heardRecord(roll('lira', 2, 200), 'Lira'));
+		expect(table.log.shown.map((line) => line.record.seq)).toEqual([1]);
+	});
+
+	it("writes the sheet's rolls to whom the person said, and only while seated", async () => {
+		const { table, heard } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		const stop = table.keepPublishing();
+		combat.roll({ text: 'WIS save', key: 'combat.roll.save.wis' }, 3, new Event('tap'), 'save.wis');
+		table.rollsTo = AUDIENCE.gm;
+		combat.roll({ text: 'WIS save', key: 'combat.roll.save.wis' }, 3, new Event('tap'), 'save.wis');
+		table.rollsTo = AUDIENCE.table;
+		expect(heard.records.map((body) => body.kind === LOG_BODY.roll && body.to)).toEqual([
+			AUDIENCE.table,
+			AUDIENCE.gm,
+		]);
+		const first = heard.records[0];
+		expect(first?.kind === LOG_BODY.roll && first.name).toEqual({
+			text: 'WIS save',
+			key: 'combat.roll.save.wis',
+		});
+		await table.leave();
+		combat.roll({ text: 'WIS save', key: 'combat.roll.save.wis' }, 3, new Event('tap'), 'save.wis');
+		expect(heard.records).toHaveLength(2);
+		stop();
+	});
+
+	it("lets a player hide only their own roll, and the GM anyone's", async () => {
+		const seated = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		seated.tellPlayer(heardRecord(roll('me', 1, 100), undefined, true));
+		seated.tellPlayer(heardRecord(roll('lira', 1, 110), 'Lira'));
+		const [theirs, mine] = seated.table.log.shown;
+		expect(seated.table.log.canHide(theirs!)).toBe(false);
+		seated.table.log.hide(theirs!);
+		seated.table.log.hide(mine!);
+		expect(seated.heard.records).toEqual([{ kind: LOG_BODY.hide, author: 'me', seq: 1 }]);
+
+		const gm = tableOfOne();
+		await gm.table.host('Thursday');
+		gm.tellGm(heardRecord(roll('lira', 1, 100), 'Lira'));
+		const [line] = gm.table.log.shown;
+		expect(gm.table.log.canHide(line!)).toBe(true);
+	});
+
+	it("cuts a roll's words to what Rust keeps", () => {
+		expect(plainRollName('  Fire\u202Eball\u0007 ')).toBe('Fireball');
+		expect(plainRollName('x'.repeat(60))).toHaveLength(40);
 	});
 });

@@ -60,7 +60,11 @@ export const listenToTableLink = (
 
 /** An event as the seat it is for hears it, or null when it is the other seat's. */
 const playerEvent = (event: TableLinkWireEvent): PlayerEvent | null =>
-	event.kind === TABLE_EVENT.request || event.kind === TABLE_EVENT.connection ? event : null;
+	event.kind === TABLE_EVENT.request ||
+	event.kind === TABLE_EVENT.connection ||
+	event.kind === TABLE_EVENT.record
+		? event
+		: null;
 const gmEvent = (event: TableLinkWireEvent): GmEvent | null =>
 	event.kind === TABLE_EVENT.request || event.kind === TABLE_EVENT.connection ? null : event;
 
@@ -122,6 +126,7 @@ const playerSeat = (table: TableId, code: string, early: EarlyEvents): PlayerSea
 	},
 	respond: (requestId, answer) => delivery('table_link_respond', { table, requestId, answer }),
 	redial: () => invoke('table_link_redial', { table }),
+	record: (body) => delivery('table_link_record', { table, body }),
 	subscribe: subscribing(table, early, playerEvent),
 });
 
@@ -138,6 +143,7 @@ const gmSeat = (table: TableId, invite: string | null, early: EarlyEvents): GmSe
 	},
 	dismiss: (participant) => invoke('table_link_dismiss', { table, participant }),
 	setDoor: (open) => invoke<string | null>('table_link_door', { table, open }).catch(() => null),
+	record: (body) => delivery('table_link_record', { table, body }),
 	subscribe: subscribing(table, early, gmEvent),
 });
 

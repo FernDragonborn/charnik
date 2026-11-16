@@ -12,7 +12,7 @@ import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 import { readStored, writeStored } from '$lib/util/persist';
 import { REDUCE_MOTION, type ReduceMotion } from '$lib/util/motion';
 import type { CustomTheme } from '$lib/styles/customThemes';
-import { RELAY_MODE, type RelaySetting } from '$lib/table-link/types';
+import { AUDIENCE, RELAY_MODE, type Audience, type RelaySetting } from '$lib/table-link/types';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
 export type SystemId = (typeof SYSTEMS)[number];
@@ -49,6 +49,10 @@ interface AppState {
 	/** Which relay servers a table THIS app opens is reached through (`table-link/types.ts`). A
 	 *  GM's choice: a player's app follows the invitation it was handed. */
 	tableRelay: RelaySetting;
+	/** Who a player's rolls go to in the table's log, and who a GM's do (`table-link.md` ▸ The
+	 *  table's log): a player's go to the table and a GM's to nobody else, until switched. */
+	tablePlayerRollsTo: Audience;
+	tableGmRollsTo: Audience;
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -64,6 +68,8 @@ function defaults(): AppState {
 		critMethod: CRIT_METHOD.classic,
 		reduceMotion: REDUCE_MOTION.system,
 		tableRelay: { mode: RELAY_MODE.n0 },
+		tablePlayerRollsTo: AUDIENCE.table,
+		tableGmRollsTo: AUDIENCE.gm,
 	};
 }
 
@@ -99,6 +105,8 @@ function persist(): void {
 		critMethod: app.critMethod,
 		reduceMotion: app.reduceMotion,
 		tableRelay: app.tableRelay,
+		tablePlayerRollsTo: app.tablePlayerRollsTo,
+		tableGmRollsTo: app.tableGmRollsTo,
 	});
 }
 

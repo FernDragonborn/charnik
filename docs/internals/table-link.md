@@ -134,11 +134,13 @@ JSON (`wire.rs`), each read against a ceiling before a byte of the body is:
 | frame | from | ceiling | carries |
 | --- | --- | --- | --- |
 | `hello` | player | 1 KiB | protocol version, the invitation's secret, the player's name |
-| `welcome` · `refused` | GM | 4 KiB | the table's name · why not (`invite`, `declined`, `version`, `full`) |
+| `welcome` · `refused` | GM | 16 KiB | the table's name · why not (`invite`, `declined`, `version`, `full`) |
 | `view` | player | 256 KiB | the top-level keys of the view that changed, and the keys that went |
-| `request` | GM | 4 KiB | a request id and one `TableRequest` |
+| `request` | GM | 16 KiB | a request id and one `TableRequest` |
 | `answer` | player | 256 KiB | the request id, accepted or declined, and the roll if one was made |
-| `closed` | GM | 4 KiB | `dismissed` or `table_closed` |
+| `closed` | GM | 16 KiB | `dismissed` or `table_closed` |
+| `record` | both | 16 KiB · 256 KiB | one signed log record, and from the GM the name its author was let in under |
+| `have` | both | 16 KiB · 256 KiB | the highest record number held from each author, at most 32 |
 
 - **Closed shapes.** Every frame is a serde enum that refuses a field it does not name
   (`deny_unknown_fields`), and each side can only parse the frames the OTHER side sends: a player's
@@ -228,7 +230,12 @@ click outside answer nothing. It says what is asked in this app's own words, sho
 comes to after the character's defense against its type, and counts the requests waiting behind
 it. A request this sheet cannot carry out leaves the accept button blocked with its reason beside
 it. The layout also starts `TableVM.keepPublishing`, which tells the table whenever what it sees
-of the open character changes.
+of the open character changes and writes every roll the sheet makes into the table's log.
+
+**Both seats show the table's log** (`TableLogPanel`): the rolls this app holds, newest first,
+each with its time, who rolled it — "you", "GM", or the name the GM let them in under — and a
+mark on a roll kept to the GM; a Hide on every roll the GM sees and on a player's own; and the
+switch for who this app's own rolls go to, kept in the app's settings per seat.
 
 `/dev/table` mounts the same screen over hand-made state, since a real table needs a second app;
 `&tray` mounts the play screen's dice tray beside it, so a roll can be built there too.
@@ -264,8 +271,8 @@ of the open character changes.
 
 ## The table's log
 
-> TABLE-LINK-LOG is built to this section; TABLE-LINK-REMEMBER, the half below it, is not yet.
-> What is still open for the maintainer to rule on is listed in the item (`../work/release.md`).
+> The calls in this section taken without the maintainer are listed in TABLE-LINK-LOG
+> (`../work/release.md`).
 
 **One model: every record has one author, and nobody is the master of the table's state.** A GM's
 app lags and restarts like anyone's, so nothing waits on it to say what is true:
@@ -306,8 +313,8 @@ record drops it, and one that comes back later is still hidden. Nothing is delet
 app's disk — it cannot be — so the GM's word is what every honest copy shows.
 
 **Bounds.** A record's text is at most 2 KiB and is read against that before it is parsed; a
-roll's name is cut like any peer name; a table keeps its newest 500 records and refuses an
-author's eleventh in ten seconds. A record whose author is not at the table — not let in, or
+roll's name is cut like any peer name; a table keeps its newest 500 records, from at most 32
+authors, and refuses an author's eleventh in ten seconds. A record whose author is not at the table — not let in, or
 dismissed — is not kept.
 
 ## Remembering a table
@@ -332,8 +339,9 @@ dismissed — is not kept.
 
 ## Versions
 
-The ALPN is `charnik/table/1` and the hello says `protocol: 1`. A GM refuses another number with
-`version`, and an invitation of another version is not one (`bad_invite`). Two builds that share a
+The ALPN is `charnik/table/1` and the hello says `protocol: 2`: the ALPN names the framing and the
+number names the frames, so an app of another number is reached and refused with `version` rather
+than not reached at all. An invitation of another version is not one (`bad_invite`). Two builds that share a
 protocol number sit together whatever their app versions; a peer's field this build does not know
 is a malformed frame, so a change to a frame's shape is a new protocol number. A view carries its
 character's edition, and the GM's app names conditions from its own catalog.
@@ -342,14 +350,16 @@ character's edition, and the GM's app names conditions from its own catalog.
 
 - `src-tauri/src/table_link/` — `wire.rs` (frames, invitation, the cut of a view), `session.rs`
   (the two endpoints; knows nothing of Tauri, so two sessions sit at one table in a test),
+  `records.rs` (a log record: signing, checking, what each side holds and lacks),
   `mod.rs` (commands, the seat this app holds, the native questions).
 - `src/lib/table-link/` — `types.ts` (the seam), `wire-schema.ts` (what a peer is believed to have
   said), `view.ts` (the table's view of a character), `tauri.ts` and `noop.ts` (the two
   implementations), `provider.ts` (the one place one is chosen).
 - `src/routes/table/` — `table-view-model.svelte.ts` (`TableVM`: the seat this app holds, who a GM
   has seated and what was asked of them), `player-requests.svelte.ts` (`PlayerRequests`: what a
-  player's app does with a request), `requested-roll.ts` (the roll a request asks for, read back)
-  and the screen over them, above. `components/settings/TableSettings.svelte` is the relay setting.
+  player's app does with a request), `requested-roll.ts` (the roll a request asks for, read back),
+  `table-log.svelte.ts` (`TableLog`: the table's log as this app holds it) and the screen over
+  them, above. `components/settings/TableSettings.svelte` is the relay setting.
 
 ## Driving a live table
 
@@ -372,10 +382,11 @@ them would be the thing they exist to refuse.
 The probe (`routes/dev/table-live`) opens a table with NO relay, so nothing leaves the machine,
 writes the invitation and a sheet into `.table-live`, and waits. The test is a player in a
 process of its own (`session.rs`): it follows that invitation, shows that sheet, answers a roll
-with a roll and a hit with a no, and leaves when the table closes. The probe checks that the
-sheet arrived whole, that a page loading again — a view-model that knows nothing — is handed the
-same table with the player and their sheet, that each answer landed on the ask it answers, that
-the door makes a new invitation, and that the table closes; it puts the relay setting back and
+with a roll and a hit with a no, writes its roll into the table's log, and leaves when the table
+closes. The probe checks that the sheet arrived whole, that a page loading again — a view-model
+that knows nothing — is handed the same table with the player and their sheet, that each answer
+landed on the ask it answers, that the player's roll reaches the log under their name and the
+GM's hide takes it away, that the door makes a new invitation, and that the table closes; it puts the relay setting back and
 deletes nothing it did not write.
 
 `/dev/table-link?expect=on|off` is the smaller probe beside it: it asks the running webview

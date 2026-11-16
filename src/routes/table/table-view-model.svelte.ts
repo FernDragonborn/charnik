@@ -21,6 +21,7 @@ import {
 	TABLE_ROLE,
 	type CloseReason,
 	type ConnectionState,
+	type Audience,
 	type GmEvent,
 	type GmSeat,
 	type ParticipantId,
@@ -36,6 +37,7 @@ import { tableViewOf } from '$lib/table-link/view';
 import type { TableView } from '$lib/table-link/wire-schema';
 import { combat } from '../combat/combat-view-model.svelte';
 import { PlayerRequests } from './player-requests.svelte';
+import { TableLog } from './table-log.svelte';
 import {
 	ASKED_MAX,
 	ASK_STATUS,
@@ -95,6 +97,12 @@ export class TableVM {
 			this.playerSeat?.respond(requestId, answer) ?? Promise.resolve(undefined),
 	);
 
+	/** The table's log, as this app holds it — the GM's and a player's alike. */
+	log = new TableLog(() => ({
+		role: this.role,
+		write: (body) => (this.gmSeat ?? this.playerSeat)?.record(body),
+	}));
+
 	private gmSeat: GmSeat | null = null;
 	private playerSeat: PlayerSeat | null = null;
 	private stopListening: Unsubscribe | null = null;
@@ -137,6 +145,7 @@ export class TableVM {
 		// a table just opened has no log; one picked up again has the log its last page kept, and
 		// the answers that page missed are among what its first listener hears
 		this.asked = readAskedLog(seat.table);
+		this.log.clear();
 		this.role = TABLE_ROLE.gm;
 		this.stopListening = await seat.subscribe(this.onGmEvent);
 	}
@@ -146,6 +155,7 @@ export class TableVM {
 		this.code = seat.code;
 		this.connection = CONNECTION.connecting;
 		this.asks.clear();
+		this.log.clear();
 		this.role = TABLE_ROLE.player;
 		this.stopListening = await seat.subscribe(this.onPlayerEvent);
 	}
@@ -212,6 +222,7 @@ export class TableVM {
 		this.players = [];
 		this.asked = [];
 		this.asks.clear();
+		this.log.clear();
 		this.invite = null;
 		this.problem = problem;
 		dropAskedLog();
@@ -240,6 +251,9 @@ export class TableVM {
 				if (seated) seated.view = event.view;
 				break;
 			}
+			case TABLE_EVENT.record:
+				this.log.take(event);
+				break;
 			case TABLE_EVENT.answer: {
 				// only the participant who was asked may answer it, and only once
 				const row = this.asked.find(
@@ -318,6 +332,10 @@ export class TableVM {
 			this.asks.queue({ requestId: event.requestId, request: event.request });
 			return;
 		}
+		if (event.kind === TABLE_EVENT.record) {
+			this.log.take(event);
+			return;
+		}
 		this.connection = event.state;
 		if (event.state === CONNECTION.connected) void this.publish();
 		if (event.state === CONNECTION.closed) void this.endSeat(event.reason ?? CLOSE_REASON.lost);
@@ -334,11 +352,25 @@ export class TableVM {
 		if (this.playerSeat && character && sheet) await this.playerSeat.publish(character, sheet);
 	};
 
+	/** Who this app's rolls go to: each seat has its own setting, since a GM's rolls are kept and
+	 *  a player's shown unless the person says otherwise. */
+	get rollsTo(): Audience {
+		return this.role === TABLE_ROLE.gm ? app.tableGmRollsTo : app.tablePlayerRollsTo;
+	}
+	set rollsTo(to: Audience) {
+		if (this.role === TABLE_ROLE.gm) app.tableGmRollsTo = to;
+		else app.tablePlayerRollsTo = to;
+	}
+
 	/**
 	 * Keep the table told for as long as this app is seated: whenever what the table sees of the
-	 * open character changes, say so. Started once by the layout; answers the way to stop.
+	 * open character changes, say so, and write every roll the sheet makes into the table's log.
+	 * Started once by the layout; answers the way to stop.
 	 */
 	keepPublishing = (): (() => void) => {
+		combat.journal.onRecorded = (entries) => {
+			if (this.role !== TABLE_ROLE.none) this.log.share(entries, this.rollsTo);
+		};
 		let settling: ReturnType<typeof setTimeout> | undefined;
 		const stop = $effect.root(() => {
 			$effect(() => {
@@ -352,6 +384,7 @@ export class TableVM {
 			});
 		});
 		return () => {
+			combat.journal.onRecorded = undefined;
 			clearTimeout(settling);
 			stop();
 		};

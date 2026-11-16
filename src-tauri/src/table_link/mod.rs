@@ -20,6 +20,7 @@
 //! (`capabilities/table-link/`) and its entries in `build.rs`. A build without the feature has none
 //! of the three, and the page learns that by calling: a command that is not there is refused.
 
+mod records;
 mod session;
 mod wire;
 
@@ -31,6 +32,7 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 use crate::native_strings::native_string;
+use records::Body;
 use session::{
     Approve, Delivery, Emit, GmTable, PlayerSeat, RelaySetting, TableEvent, Unavailable,
 };
@@ -101,6 +103,10 @@ fn is_answer(event: &TableEvent) -> bool {
     matches!(event, TableEvent::Answer { .. })
 }
 
+fn is_record(event: &TableEvent) -> bool {
+    matches!(event, TableEvent::Record { .. })
+}
+
 /// Keep an event for a page that loads again, in place of whatever it makes untrue. The newest
 /// answers are kept as they came: the GM's page keeps its own log of asks, and one that was not
 /// there when an answer landed finds it here.
@@ -132,6 +138,14 @@ fn remember(told: &mut Vec<TableEvent>, event: &TableEvent) {
         TableEvent::Answer { .. } => {
             if told.iter().filter(|kept| is_answer(kept)).count() >= TOLD_ANSWERS_MAX {
                 if let Some(oldest) = told.iter().position(is_answer) {
+                    told.remove(oldest);
+                }
+            }
+        }
+        // the log the session holds, as the page was told it: the same bound, the oldest first out
+        TableEvent::Record { .. } => {
+            if told.iter().filter(|kept| is_record(kept)).count() >= records::LOG_MAX {
+                if let Some(oldest) = told.iter().position(is_record) {
                     told.remove(oldest);
                 }
             }
@@ -498,6 +512,22 @@ pub async fn table_link_request(
             seat: Seat::Gm { table: gm, .. },
             ..
         }) if gm.id == table => gm.request(&participant, request_id, request),
+        _ => Delivery::NotDelivered,
+    }
+}
+
+/// Write a record into the table's log as this app's seat: a roll, or a hide.
+#[tauri::command]
+pub async fn table_link_record(app: tauri::AppHandle, table: String, body: Body) -> Delivery {
+    match &*app.state::<TableLinkState>().0.lock().await {
+        Some(Held {
+            seat: Seat::Gm { table: gm, .. },
+            ..
+        }) if gm.id == table => gm.record(body),
+        Some(Held {
+            seat: Seat::Player(seat),
+            ..
+        }) if seat.id == table => seat.record(body),
         _ => Delivery::NotDelivered,
     }
 }

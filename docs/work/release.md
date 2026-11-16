@@ -146,7 +146,7 @@
   then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
   no release, and the changelog of that release is where the table is first named: until then no
   release has it, so no changelog mentions it.
-- **TABLE-LINK-LOG · a roll log the table shares.** Every other tool's floor
+- [~] **TABLE-LINK-LOG · a roll log the table shares.** Every other tool's floor
   (`../research/table-features-elsewhere.md`) and not in the first table: players' rolls on the
   GM's screen as one stream, GM-only rolls, and moderation from day one. A star gives a player
   nobody but the GM to hear from, so another player's roll reaches them through the GM's app.
@@ -163,6 +163,11 @@
   their own, and nothing is deleted; the name a record is shown under is the GM's roster name,
   outside the signature; 500 records a table, ten an author in ten seconds, 2 KiB a record; asks
   and answers become records with TABLE-LINK-REMEMBER, not before.
+  **Built:** signed records and the `have` exchange (`table_link/records.rs`, `session.rs`, held
+  by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
+  `TableLogPanel`), protocol 2. **Left:** the live drive on the real app, which now covers the log
+  (`../internals/table-link.md` ▸ Driving a live table) and needs the person answering the native
+  questions.
 - **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.** A
   table lives for one session and its keys are in memory, so an app that restarts — a desktop in
   a power cut — comes back a stranger. Remembering one means a key that outlives the app: the OS

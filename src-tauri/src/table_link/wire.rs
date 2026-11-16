@@ -6,19 +6,24 @@
 //! So a frame is bounded before it is read, parsed into closed types that refuse a field they do
 //! not name, and bounded again in its values.
 
+use std::collections::BTreeMap;
+
 use data_encoding::BASE64URL_NOPAD;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
+use super::records::Signed;
+
 /// The protocol's name on a connection. A peer speaking another is refused by the handshake.
 pub const ALPN: &[u8] = b"charnik/table/1";
 /// Said in the hello; a GM refuses a number it does not speak.
-pub const PROTOCOL: u32 = 1;
+pub const PROTOCOL: u32 = 2;
 
 /// The hello is a name and a secret.
 pub const HELLO_CAP: usize = 1024;
-/// A GM says small things: a welcome, a request of ids and numbers, a goodbye.
-pub const GM_FRAME_CAP: usize = 4 * 1024;
+/// A GM says small things: a welcome, a request of ids and numbers, a goodbye — and hands on a
+/// log record, whose 2 KiB of text can grow under escaping inside the frame.
+pub const GM_FRAME_CAP: usize = 16 * 1024;
 /// A whole view is about 25 KiB; this is the ceiling of one frame and of the view a GM keeps.
 pub const VIEW_CAP: usize = 256 * 1024;
 
@@ -51,6 +56,15 @@ fn is_slug(text: &str) -> bool {
     chars.next().is_some_and(lower_or_digit)
         && text.len() <= ID_MAX_CHARS
         && chars.all(|c| lower_or_digit(c) || c == '-' || c == '_')
+}
+
+/// A catalog key the page names a roll by (`combat.roll.save.dex`, `skillName.athletics`).
+pub fn is_catalog_key(text: &str) -> bool {
+    !text.is_empty()
+        && text.len() <= ID_MAX_CHARS
+        && text
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
 }
 
 /// A request's id: minted by the GM's app, echoed by the player's.
@@ -174,6 +188,10 @@ pub enum PlayerFrame {
         request_id: String,
         answer: TableAnswer,
     },
+    /// A log record: the player's own, or one the GM's app lacks.
+    Record { record: Signed },
+    /// The highest record number this app holds from each author.
+    Have { have: BTreeMap<String, u64> },
 }
 
 /// What a GM's app sends.
@@ -194,6 +212,15 @@ pub enum GmFrame {
     Request {
         request_id: String,
         request: TableRequest,
+    },
+    /// A log record, with the name the GM let its author in under; none for the GM's own.
+    Record {
+        record: Signed,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    Have {
+        have: BTreeMap<String, u64>,
     },
     Closed {
         reason: Goodbye,

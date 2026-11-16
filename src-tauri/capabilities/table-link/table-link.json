@@ -13,6 +13,7 @@
 		"allow-table-link-respond",
 		"allow-table-link-request",
 		"allow-table-link-dismiss",
-		"allow-table-link-door"
+		"allow-table-link-door",
+		"allow-table-link-record"
 	]
 }

@@ -17,6 +17,7 @@
 	import AskComposer from './AskComposer.svelte';
 	import TableRequestLine from './TableRequestLine.svelte';
 	import TableSeatCard from './TableSeatCard.svelte';
+	import TableLogPanel from './TableLogPanel.svelte';
 
 	let tableName = $state('');
 	let invite = $state('');
@@ -119,15 +120,15 @@
 
 			<h2 class="table-section">{$_('table.asked.title')}</h2>
 			{#if table.asked.length}
-				<ul class="table-asked">
+				<ul class="table-rows">
 					{#each table.asked as row (row.requestId)}
 						{@const verdict = verdictKey(row)}
-						<li class="table-asked-row">
+						<li class="table-row table-asked-row">
 							<b class="table-asked-name">{row.name}</b>
 							<TableRequestLine request={row.request} heldTo={row.dc} />
-							<span class="table-asked-spacer"></span>
+							<span class="table-row-spacer"></span>
 							{#if row.roll}
-								<span class="table-asked-roll">
+								<span class="table-row-roll">
 									{#if row.roll.outcome}
 										{$_(`table.asked.forced.${row.roll.outcome}`)}
 									{:else}
@@ -163,6 +164,7 @@
 		{:else}
 			<p class="muted">{$_('table.gm.empty')}</p>
 		{/if}
+		<TableLogPanel />
 	{:else if table.role === TABLE_ROLE.player}
 		<header class="table-head">
 			<div>
@@ -184,6 +186,7 @@
 			{/if}
 			<p class="muted">{$_('table.player.sees')}</p>
 		</div>
+		<TableLogPanel />
 	{:else}
 		<header class="table-head">
 			<div>
@@ -312,11 +315,6 @@
 		margin: var(--space-2) 0 0;
 		max-width: 70ch;
 	}
-	.table-section {
-		margin: var(--space-2) 0 0;
-		font-family: var(--font-display);
-		font-size: var(--font-size-h6);
-	}
 	.table-problem,
 	.table-busy {
 		margin: 0;
@@ -379,32 +377,6 @@
 	.table-invite-row .table-field {
 		flex: 1;
 		min-width: 0;
-	}
-	.table-asked {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-	}
-	.table-asked-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		background: var(--color-surface);
-		font-size: var(--font-size-sm);
-	}
-	.table-asked-spacer {
-		flex: 1;
-	}
-	.table-asked-roll b {
-		font-family: var(--font-display);
-		font-size: var(--font-size-md);
 	}
 	.table-asked-verdict {
 		color: var(--color-accent-bright);

@@ -144,6 +144,15 @@
 		);
 		check('…and it passes the DC it was held to', !!made && rollPassed(made, 15));
 
+		// --- the table's log: the player's roll arrives signed, under the name they were let in by,
+		// and the GM's hide takes it away
+		const logged = () => table.log.shown.find((line) => line.name === player.name);
+		await until("the player's roll reaches the table's log", () => !!logged());
+		check('…as the roll they made', logged()?.record.body.roll.total === 17);
+		const line = logged();
+		if (line) table.log.hide(line);
+		await until('…and the GM can hide it', () => !logged());
+
 		await table.ask([player.id], { kind: TABLE_REQUEST.damage, amount: 9, type: 'fire' });
 		const hit = () => table.asked.find((row) => row.request.kind === TABLE_REQUEST.damage);
 		await until('a hit the player declines says so', () => hit()?.status === ASK_STATUS.declined);

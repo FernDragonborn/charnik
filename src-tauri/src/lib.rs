@@ -324,7 +324,9 @@ pub fn run() {
             #[cfg(feature = "table-link")]
             table_link::table_link_dismiss,
             #[cfg(feature = "table-link")]
-            table_link::table_link_door
+            table_link::table_link_door,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_record
         ])
         .setup(|app| {
             open_main_window(app.handle())?;

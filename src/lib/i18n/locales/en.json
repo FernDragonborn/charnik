@@ -2612,6 +2612,20 @@
 			"cannotRoll": "This sheet has nothing by that name to roll, so you can only decline.",
 			"cannotEffect": "This app has no state called “{id}” — the GM may be using content you do not have. You can only decline."
 		},
+		"log": {
+			"title": "The table's log",
+			"empty": "No rolls yet. Every roll made on a sheet at this table lands here.",
+			"rollsTo": "Your rolls go to",
+			"audience": {
+				"player": { "table": "Everyone", "gm": "The GM alone" },
+				"gm": { "table": "Everyone", "gm": "You alone" }
+			},
+			"you": "You",
+			"gm": "GM",
+			"gmOnly": "GM only",
+			"hide": "Hide",
+			"hideLabel": "Hide this roll from the table's log, for everyone"
+		},
 		"notice": {
 			"passed": "Passed — DC {dc}",
 			"failed": "Failed — DC {dc}",

@@ -22,6 +22,7 @@ use serde_json::{Map, Value};
 use tokio::sync::{mpsc, Notify, Semaphore};
 use tokio::time::{sleep, timeout};
 
+use super::records::{self, Audience, Body, Kept, Log, Record, Signed};
 use super::wire::{
     self, FrameError, GmFrame, Goodbye, Invite, PlayerFrame, Refusal, TableAnswer, TableRequest,
     ALPN, GM_FRAME_CAP, HELLO_CAP, PROTOCOL, VIEW_CAP,
@@ -150,6 +151,16 @@ pub enum TableEvent {
         request_id: String,
         answer: TableAnswer,
     },
+    /// A log record this app holds now, with the name the GM let its author in under — none for
+    /// the GM's own records, and for a player's own on their side.
+    Record {
+        table: String,
+        record: Record,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+        /// Written by this app.
+        mine: bool,
+    },
     Connection {
         table: Option<String>,
         state: ConnectionState,
@@ -240,12 +251,13 @@ impl EndpointHooks for DialPolicy {
 /// An endpoint for one table, under a key made for it and kept nowhere. No address lookup is
 /// configured: nothing about the endpoint is published, and the invitation is how it is found.
 async fn bind(
+    key: SecretKey,
     relay: RelayMode,
     accepts: bool,
     only_dial: Option<EndpointId>,
 ) -> Result<Endpoint, Unavailable> {
     Endpoint::builder(presets::Minimal)
-        .secret_key(SecretKey::generate())
+        .secret_key(key)
         .relay_mode(relay)
         .alpns(if accepts { vec![ALPN.to_vec()] } else { vec![] })
         .hooks(DialPolicy { only: only_dial })
@@ -323,9 +335,78 @@ struct GmShared {
     asking: tokio::sync::Mutex<()>,
     emit: Emit,
     approve: Approve,
+    /// The GM's key at this table, which signs the GM's records.
+    key: SecretKey,
+    log: Mutex<Log>,
+    /// The name each key was let in under: the name its records are handed on with.
+    names: Mutex<HashMap<EndpointId, String>>,
+}
+
+/// May this seat be handed this record? A roll kept to the GM reaches its roller and nobody else.
+fn visible_to(record: &Record, seat: &str) -> bool {
+    !matches!(
+        record.body,
+        Body::Roll {
+            to: Audience::Gm,
+            ..
+        }
+    ) || record.author == seat
 }
 
 impl GmShared {
+    fn name_of(&self, author: &str) -> Option<String> {
+        let id: EndpointId = author.parse().ok()?;
+        locked(&self.names).get(&id).cloned()
+    }
+
+    /// Take a record into the log — the GM's own, or one a seat (`from`) handed over — and hand
+    /// it on to every other seat that may see it. A record whose author is not at the table, or a
+    /// hide its author may not make, is not kept.
+    fn offer(&self, signed: Signed, from: Option<EndpointId>) {
+        let gm = self.gm.to_string();
+        let Some(record) = records::verify(&signed, &gm) else {
+            return;
+        };
+        let at_table = record.author == gm
+            || record
+                .author
+                .parse()
+                .is_ok_and(|author: EndpointId| locked(&self.allowed).contains(&author));
+        let may = match &record.body {
+            Body::Hide { author, .. } => records::may_hide(&record.author, &gm, author),
+            Body::Roll { .. } => true,
+        };
+        let kept = {
+            let mut log = locked(&self.log);
+            if !at_table || !may || (from.is_some() && !log.within_pace(&record.author)) {
+                return;
+            }
+            log.keep(record.clone(), signed.clone())
+        };
+        if kept != Kept::New {
+            return;
+        }
+        let name = self.name_of(&record.author);
+        (self.emit)(TableEvent::Record {
+            table: self.table.clone(),
+            mine: record.author == gm,
+            record: record.clone(),
+            name: name.clone(),
+        });
+        let seats: Vec<_> = locked(&self.seats)
+            .iter()
+            .filter(|(seat, _)| Some(**seat) != from && seat.to_string() != record.author)
+            .filter(|(seat, _)| visible_to(&record, &seat.to_string()))
+            .map(|(_, handle)| handle.outbound.clone())
+            .collect();
+        for seat in seats {
+            let _ = seat.try_send(GmFrame::Record {
+                record: signed.clone(),
+                name: name.clone(),
+            });
+        }
+    }
+
     fn invite(&self, secret: String) -> String {
         Invite {
             v: PROTOCOL,
@@ -432,7 +513,12 @@ async fn seat_player(
     }
 
     let participant = player.to_string();
+    locked(&shared.names).insert(player, name.clone());
     let (outbound, mut outgoing) = mpsc::channel(OUTBOUND_QUEUE);
+    // what this app holds, so the player's app hands over what it lacks
+    let _ = outbound.try_send(GmFrame::Have {
+        have: locked(&shared.log).have(),
+    });
     let generation = shared.generations.fetch_add(1, Ordering::Relaxed);
     locked(&shared.seats).insert(
         player,
@@ -473,6 +559,25 @@ async fn seat_player(
                         request_id,
                         answer,
                     });
+                }
+                Some(Ok(PlayerFrame::Record { record })) => shared.offer(record, Some(player)),
+                Some(Ok(PlayerFrame::Have { have })) if have.len() <= records::AUTHORS_MAX => {
+                    let missing = locked(&shared.log)
+                        .missing(&have, |record| visible_to(record, &participant));
+                    let gm = shared.gm.to_string();
+                    let mut failed = false;
+                    for record in missing {
+                        let name = records::verify(&record, &gm)
+                            .and_then(|kept| shared.name_of(&kept.author));
+                        let frame = GmFrame::Record { record, name };
+                        if wire::write_frame(&mut send, &frame, GM_FRAME_CAP).await.is_err() {
+                            failed = true;
+                            break;
+                        }
+                    }
+                    if failed {
+                        break None;
+                    }
                 }
                 // the connection ended, or the peer stopped speaking the protocol
                 _ => break None,
@@ -533,7 +638,8 @@ pub async fn host(
     }
     let mode = relay.mode().ok_or(Unavailable::BadRelay)?;
     let relayed = mode != RelayMode::Disabled;
-    let endpoint = bind(mode, true, None).await?;
+    let key = SecretKey::generate();
+    let endpoint = bind(key.clone(), mode, true, None).await?;
     if relayed && timeout(RELAY_WAIT, endpoint.online()).await.is_err() {
         endpoint.close().await;
         return Err(Unavailable::RelayUnreachable);
@@ -570,6 +676,9 @@ pub async fn host(
         asking: tokio::sync::Mutex::default(),
         emit,
         approve,
+        log: Mutex::new(Log::default()),
+        names: Mutex::default(),
+        key,
     });
     let accepting = tokio::spawn({
         let (endpoint, shared) = (endpoint.clone(), shared.clone());
@@ -629,6 +738,30 @@ impl GmTable {
         }
     }
 
+    /// Write a record as the GM: keep it, and hand it to every seat that may see it.
+    pub fn record(&self, body: Body) -> Delivery {
+        let shared = &self.shared;
+        let gm = shared.gm.to_string();
+        let signed = {
+            let log = locked(&shared.log);
+            let record = Record {
+                table: gm.clone(),
+                author: gm.clone(),
+                seq: log.next_seq(&gm),
+                at: records::now_ms(),
+                body,
+            };
+            records::sign(&shared.key, &record)
+        };
+        match signed {
+            Some(signed) => {
+                shared.offer(signed, None);
+                Delivery::Delivered
+            }
+            None => Delivery::NotDelivered,
+        }
+    }
+
     /// Take a seat away, and the key's right to sit again without being asked about.
     pub fn dismiss(&self, participant: &str) {
         if let Ok(player) = participant.parse::<EndpointId>() {
@@ -674,6 +807,7 @@ impl GmTable {
 
 enum Outgoing {
     View(Map<String, Value>),
+    Record(Signed),
     Answer {
         request_id: String,
         answer: TableAnswer,
@@ -682,6 +816,11 @@ enum Outgoing {
 
 struct PlayerShared {
     table: String,
+    /// The GM's key: the table a record names.
+    gm: String,
+    /// This app's key at the table, which signs its records.
+    key: SecretKey,
+    log: Mutex<Log>,
     /// The way to the GM while a connection is seated, and None while there is none.
     outbound: Mutex<Option<mpsc::Sender<Outgoing>>>,
     /// The person asked for a dial now, in place of the wait before the next one.
@@ -690,6 +829,24 @@ struct PlayerShared {
 }
 
 impl PlayerShared {
+    /// Keep a record the GM handed over, if it is this table's and signed by its author.
+    fn take(&self, signed: Signed, name: Option<String>) {
+        let Some(record) = records::verify(&signed, &self.gm) else {
+            return;
+        };
+        if locked(&self.log).keep(record.clone(), signed) == Kept::New {
+            let name = (record.author != self.gm)
+                .then(|| name.map(|name| wire::plain_text(&name)))
+                .flatten();
+            (self.emit)(TableEvent::Record {
+                table: self.table.clone(),
+                mine: record.author == self.key.public().to_string(),
+                record,
+                name,
+            });
+        }
+    }
+
     fn says(&self, state: ConnectionState, reason: Option<CloseReason>) {
         (self.emit)(TableEvent::Connection {
             table: Some(self.table.clone()),
@@ -754,6 +911,12 @@ async fn sit(
     *locked(&shared.outbound) = Some(outbound);
     shared.says(ConnectionState::Connected, None);
     let dropped = SeatEnd::Dropped { seated: true };
+    let have = PlayerFrame::Have {
+        have: locked(&shared.log).have(),
+    };
+    if wire::write_frame(&mut send, &have, VIEW_CAP).await.is_err() {
+        return dropped;
+    }
     // what the GM's app holds of the view, so only what changed is sent
     let mut sent = Map::new();
     loop {
@@ -767,6 +930,16 @@ async fn sit(
                         request_id,
                         request,
                     });
+                }
+                Some(Ok(GmFrame::Record { record, name })) => shared.take(record, name),
+                Some(Ok(GmFrame::Have { have })) if have.len() <= records::AUTHORS_MAX => {
+                    let missing = locked(&shared.log).missing(&have, |_| true);
+                    for record in missing {
+                        let frame = PlayerFrame::Record { record };
+                        if wire::write_frame(&mut send, &frame, VIEW_CAP).await.is_err() {
+                            return dropped;
+                        }
+                    }
                 }
                 Some(Ok(GmFrame::Closed { reason })) => return SeatEnd::Gone(reason.into()),
                 Some(Err(FrameError::Closed)) | None => return dropped,
@@ -785,6 +958,7 @@ async fn sit(
                     Some(Outgoing::Answer { request_id, answer }) => {
                         PlayerFrame::Answer { request_id, answer }
                     }
+                    Some(Outgoing::Record(record)) => PlayerFrame::Record { record },
                     // nothing holds the other end any more: this connection is no longer the seat
                     None => return dropped,
                 };
@@ -872,10 +1046,14 @@ pub async fn join(invite: &Invite, name: &str, emit: Emit) -> Result<PlayerSeat,
     }
     let (gm, relay) = address_of(invite).ok_or(Unavailable::BadInvite)?;
     let mode = relay.map_or(RelayMode::Disabled, |relay| RelayMode::custom([relay]));
-    let endpoint = bind(mode, false, Some(gm.id)).await?;
+    let key = SecretKey::generate();
+    let endpoint = bind(key.clone(), mode, false, Some(gm.id)).await?;
     let table = wire::new_local_id().map_err(|_| Unavailable::Network)?;
     let shared = Arc::new(PlayerShared {
         table: table.clone(),
+        gm: gm.id.to_string(),
+        key,
+        log: Mutex::new(Log::default()),
         outbound: Mutex::default(),
         dial_now: Notify::new(),
         emit,
@@ -916,6 +1094,40 @@ impl PlayerSeat {
             return Delivery::NotDelivered;
         }
         self.send(Outgoing::Answer { request_id, answer })
+    }
+
+    /// Write a record as this player: keep it and show it here, and send it to the GM — now, or
+    /// when the GM's app next says what it lacks.
+    pub fn record(&self, body: Body) -> Delivery {
+        let shared = &self.shared;
+        let me = self.endpoint.id().to_string();
+        if let Body::Hide { author, .. } = &body {
+            if !records::may_hide(&me, &shared.gm, author) {
+                return Delivery::NotDelivered;
+            }
+        }
+        let signed = {
+            let mut log = locked(&shared.log);
+            let record = Record {
+                table: shared.gm.clone(),
+                author: me.clone(),
+                seq: log.next_seq(&me),
+                at: records::now_ms(),
+                body,
+            };
+            let Some(signed) = records::sign(&shared.key, &record) else {
+                return Delivery::NotDelivered;
+            };
+            log.keep(record.clone(), signed.clone());
+            (shared.emit)(TableEvent::Record {
+                table: shared.table.clone(),
+                record,
+                name: None,
+                mine: true,
+            });
+            signed
+        };
+        self.send(Outgoing::Record(signed))
     }
 
     /// Dial the table now instead of waiting out the pause. While a connection is up, or a dial
@@ -1314,7 +1526,15 @@ mod tests {
                             roll: None,
                         }
                     };
+                    let rolled = matches!(request, TableRequest::Roll { .. });
                     assert_eq!(seat.respond(request_id, answer), Delivery::Delivered);
+                    // and the roll goes into the table's log too, as a sheet's roll does
+                    if rolled {
+                        assert_eq!(
+                            seat.record(roll_to(Audience::Table, 17)),
+                            Delivery::Delivered
+                        );
+                    }
                     answered += 1;
                 }
                 TableEvent::Connection {
@@ -1330,5 +1550,130 @@ mod tests {
         }
         assert_eq!(answered, 2, "a roll and a hit were asked for");
         seat.leave().await;
+    }
+
+    fn roll_to(to: Audience, total: u32) -> Body {
+        Body::Roll {
+            name: records::RollName {
+                text: "DEX save".into(),
+                key: Some("combat.roll.save.dex".into()),
+            },
+            roll: json!({ "total": total }),
+            to,
+        }
+    }
+
+    /// The next log record an app holds, and the name it is shown under.
+    async fn next_record(events: &mut UnboundedReceiver<TableEvent>) -> (Record, Option<String>) {
+        loop {
+            if let TableEvent::Record { record, name, .. } = next(events).await {
+                return (record, name);
+            }
+        }
+    }
+
+    async fn seated(invite: &Invite, name: &str) -> (PlayerSeat, UnboundedReceiver<TableEvent>) {
+        let (emit, mut events) = listening();
+        let seat = join(invite, name, emit).await.expect("a seat");
+        loop {
+            if let TableEvent::Connection {
+                state: ConnectionState::Connected,
+                ..
+            } = next(&mut events).await
+            {
+                return (seat, events);
+            }
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn the_log_reaches_every_seat_that_may_see_it_and_a_hide_takes_a_record_away() {
+        let (gm_emit, mut gm_events) = listening();
+        let (approve, _) = answering(true);
+        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
+            .await
+            .expect("a table");
+        let invite = Invite::from_text(&invite).expect("its invitation");
+        let gm = invite.id.clone();
+        let (lira, mut lira_events) = seated(&invite, "Lira").await;
+        let (bevan, mut bevan_events) = seated(&invite, "Bevan").await;
+
+        // a roll to the table: shown at once to its roller, and handed on under the GM's name for them
+        assert_eq!(
+            lira.record(roll_to(Audience::Table, 12)),
+            Delivery::Delivered
+        );
+        let (own, own_name) = next_record(&mut lira_events).await;
+        assert_eq!((own.seq, own_name), (1, None));
+        let (at_gm, name) = next_record(&mut gm_events).await;
+        assert_eq!(
+            (at_gm.clone(), name.as_deref()),
+            (own.clone(), Some("Lira"))
+        );
+        let (at_bevan, name) = next_record(&mut bevan_events).await;
+        assert_eq!((at_bevan, name.as_deref()), (own.clone(), Some("Lira")));
+
+        // a roll kept to the GM reaches the GM and nobody else: Bevan's next record is the GM's
+        lira.record(roll_to(Audience::Gm, 3));
+        let (private, _) = next_record(&mut gm_events).await;
+        assert!(matches!(
+            private.body,
+            Body::Roll {
+                to: Audience::Gm,
+                ..
+            }
+        ));
+        table.record(roll_to(Audience::Table, 20));
+        let (from_gm, name) = next_record(&mut bevan_events).await;
+        assert_eq!((from_gm.author.as_str(), name), (gm.as_str(), None));
+
+        // a player hides only their own; the GM hides anyone's, and every seat hears it
+        let hide_lira = Body::Hide {
+            author: own.author.clone(),
+            seq: own.seq,
+        };
+        assert_eq!(bevan.record(hide_lira.clone()), Delivery::NotDelivered);
+        assert_eq!(table.record(hide_lira.clone()), Delivery::Delivered);
+        for events in [&mut lira_events, &mut bevan_events] {
+            loop {
+                let (record, _) = next_record(events).await;
+                if record.body == hide_lira {
+                    break;
+                }
+            }
+        }
+
+        // somebody who sits down later is handed what they may see, the private roll excepted
+        let (_late, mut late_events) = seated(&invite, "Newcomer").await;
+        let mut handed = Vec::new();
+        while handed.len() < 3 {
+            handed.push(next_record(&mut late_events).await.0);
+        }
+        assert!(handed.contains(&own) && handed.contains(&from_gm));
+        assert!(handed.iter().all(|record| *record != private));
+        assert!(handed.iter().any(|record| record.body == hide_lira));
+
+        lira.leave().await;
+        bevan.leave().await;
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_record_written_before_the_seat_was_let_in_arrives_once_it_is() {
+        let (gm_emit, mut gm_events) = listening();
+        let (approve, _) = answering(true);
+        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
+            .await
+            .expect("a table");
+        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (emit, mut lira_events) = listening();
+        let lira = join(&invite, "Lira", emit).await.expect("a seat");
+        // written while the dial is still on its way: kept here, and handed over on the GM's have
+        lira.record(roll_to(Audience::Table, 9));
+        let (kept, _) = next_record(&mut lira_events).await;
+        let (arrived, name) = next_record(&mut gm_events).await;
+        assert_eq!((arrived, name.as_deref()), (kept, Some("Lira")));
+        lira.leave().await;
+        table.close().await;
     }
 }

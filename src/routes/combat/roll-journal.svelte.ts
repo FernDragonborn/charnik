@@ -121,6 +121,8 @@ export class RollJournal {
 	 *  the builder; nothing about the roll under construction lives beside it. */
 	diceTray = new DiceTray();
 	log = $state<RollLogEntry[]>([]);
+	/** Told of every completed roll as it is recorded — the table's log, while a seat is held. */
+	onRecorded: ((entries: readonly RollLogEntry[]) => void) | undefined = undefined;
 
 	/**
 	 * Sinks to the persistent `log.jsonl` (B4), injected by CombatVM so this module stays
@@ -272,6 +274,7 @@ export class RollJournal {
 		});
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
+		this.onRecorded?.([entry]);
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
@@ -316,6 +319,7 @@ export class RollJournal {
 		const action = entries.map((e) => this.stampCritThreshold(group ? { ...e, group } : e));
 		this.log = [...action, ...this.log].slice(0, ROLL_LOG_MAX);
 		for (const entry of action) this.persist?.(entry);
+		this.onRecorded?.(action);
 		toastRoll(action);
 	};
 

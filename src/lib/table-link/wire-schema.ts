@@ -16,8 +16,10 @@ import { LAYERS, OPS, SYSTEMS } from '$lib/rules/pipeline';
 import { AUTO_OUTCOME } from '$lib/combat/roll';
 import { EXHAUSTION_MAX } from '$lib/character/schema';
 import {
+	AUDIENCE,
 	CLOSE_REASON,
 	CONNECTION,
+	LOG_BODY,
 	REQUESTED_ROLL,
 	TABLE_ANSWER,
 	TABLE_EVENT,
@@ -158,6 +160,33 @@ const requestId = z
 	.max(ID_MAX)
 	.regex(/^[A-Za-z0-9-]+$/);
 
+/** The words a roll is logged under at the table: Rust cuts a peer's to forty characters. */
+const ROLL_NAME_MAX = 40;
+const catalogKey = z
+	.string()
+	.min(1)
+	.max(ID_MAX)
+	.regex(/^[A-Za-z0-9._-]+$/);
+const sequence = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
+
+const logBodySchema = z.discriminatedUnion('kind', [
+	z.strictObject({
+		kind: z.literal(LOG_BODY.roll),
+		name: z.strictObject({ text: text(ROLL_NAME_MAX).min(1), key: catalogKey.exactOptional() }),
+		roll: tableRollSchema,
+		to: z.enum(AUDIENCE),
+	}),
+	z.strictObject({ kind: z.literal(LOG_BODY.hide), author: participantId, seq: sequence }),
+]);
+
+const logRecordSchema = z.strictObject({
+	table: participantId,
+	author: participantId,
+	seq: sequence,
+	at: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+	body: logBodySchema,
+});
+
 /** Every event Rust pushes, as the page will believe it. */
 export const tableEventSchema = z.discriminatedUnion('kind', [
 	z.object({
@@ -184,6 +213,13 @@ export const tableEventSchema = z.discriminatedUnion('kind', [
 		participant: participantId,
 		requestId,
 		answer: tableAnswerSchema,
+	}),
+	z.object({
+		kind: z.literal(TABLE_EVENT.record),
+		table,
+		record: logRecordSchema,
+		name: text(NAME_MAX).exactOptional(),
+		mine: z.boolean(),
 	}),
 	z.object({
 		kind: z.literal(TABLE_EVENT.connection),

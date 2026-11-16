@@ -35,6 +35,7 @@ const TABLE_LINK_COMMANDS: &[&str] = &[
     "table_link_request",
     "table_link_dismiss",
     "table_link_door",
+    "table_link_record",
 ];
 /// The capability files of every build, and with them the ones a feature brings in its own folder.
 /// A capability naming a permission the build does not declare fails it, so a feature's file is

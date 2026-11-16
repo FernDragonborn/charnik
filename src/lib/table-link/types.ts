@@ -116,11 +116,52 @@ export const TABLE_EVENT = {
 	view: 'view',
 	request: 'request',
 	answer: 'answer',
+	record: 'record',
 	connection: 'connection',
 } as const;
 
+/** Who a roll in the table's log is for: everyone at the table, or the GM alone. */
+export const AUDIENCE = { table: 'table', gm: 'gm' } as const;
+export type Audience = (typeof AUDIENCE)[keyof typeof AUDIENCE];
+
+export const LOG_BODY = { roll: 'roll', hide: 'hide' } as const;
+
+/** What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log). */
+export type LogBody =
+	| {
+			kind: typeof LOG_BODY.roll;
+			/** The roll's words as its roller's sheet said them, and the catalog key they came from. */
+			name: { text: string; key?: string };
+			roll: TableRoll;
+			to: Audience;
+	  }
+	/** Take a record out of the log: the GM's for anyone's, a player's for their own. */
+	| { kind: typeof LOG_BODY.hide; author: ParticipantId; seq: number };
+
+/** A record as its author signed it; Rust has checked the signature before the page hears it. */
+export interface LogRecord {
+	/** The GM's key. */
+	table: string;
+	author: ParticipantId;
+	/** One more than the author's last record at this table. */
+	seq: number;
+	/** The author's clock, in milliseconds. */
+	at: number;
+	body: LogBody;
+}
+
+/** A record this app now holds, with the name the GM let its author in under — none for the GM's
+ *  own, and none for a player's own on their side — and whether this app wrote it. */
+export interface RecordEvent {
+	kind: typeof TABLE_EVENT.record;
+	record: LogRecord;
+	name?: string;
+	mine: boolean;
+}
+
 export type PlayerEvent =
 	| { kind: typeof TABLE_EVENT.request; requestId: RequestId; request: TableRequest }
+	| RecordEvent
 	| { kind: typeof TABLE_EVENT.connection; state: ConnectionState; reason?: CloseReason };
 
 export type GmEvent =
@@ -133,7 +174,8 @@ export type GmEvent =
 			participant: ParticipantId;
 			requestId: RequestId;
 			answer: TableAnswer;
-	  };
+	  }
+	| RecordEvent;
 
 export type Unsubscribe = () => void;
 
@@ -142,6 +184,9 @@ interface Seat<Event> {
 	/** A GM's leaving closes the table for everyone at it. */
 	leave(): Promise<void>;
 	subscribe(listener: (event: Event) => void): Promise<Unsubscribe>;
+	/** Write a record into the table's log as this seat. It is kept and shown here at once, and
+	 *  reaches the table now or when the connection is back. */
+	record(body: LogBody): Promise<Delivery>;
 }
 
 export interface PlayerSeat extends Seat<PlayerEvent> {
