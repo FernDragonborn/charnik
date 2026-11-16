@@ -2049,7 +2049,7 @@ mod tests {
         table.close().await;
     }
 
-    // --- what the 2026-11-17 audit's attacks no longer get (docs/audit-2026-11-17.md) ---------
+    // --- what the 2026-11-17 audit's attacks no longer get (docs/audit-nov-17.md) ---------
 
     async fn open_table() -> (GmTable, Invite, UnboundedReceiver<TableEvent>) {
         let (emit, events) = listening();

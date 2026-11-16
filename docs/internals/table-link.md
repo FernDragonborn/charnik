@@ -131,10 +131,12 @@ GM pastes one line into a group chat.
 holds one secret; shutting it drops the secret, and opening it again makes a new one — so every
 invitation handed out before stops working either way. Whoever is seated stays.
 
-What bounds a leaked invitation: a stranger's hello with the right secret raises one native
-question at a time, at most four wait behind it and the rest are told the table is full, and the
-GM shuts the door once everyone is in. A dial that never says hello holds one of sixteen places
-for ten seconds, and a dial past those is refused before its handshake.
+What bounds a leaked invitation: a stranger's hello with the right secret raises one question at
+a time, at most four wait behind it and the rest are told the table is full, and the GM shuts the
+door once everyone is in. Sixty-four connections may be mid-handshake at once, each for ten seconds
+at most. Once a key is known, one let in before goes straight to its hello; a stranger at a shut
+door is let go at once with a close code its app reads as the invitation no longer working
+(`DOOR_SHUT`); a stranger at an open door holds one of sixteen greeting places for ten seconds.
 
 ## What crosses the wire
 
@@ -253,8 +255,11 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
 ## Staying seated
 
 - **A key the GM let in is not asked about twice.** A player whose connection drops dials again
-  and is seated without a question, door open or shut. A newer connection of a key replaces its
-  older one.
+  and is seated without a question, door open or shut, **under the name it was let in by** — a
+  hello cannot rename it, and the GM's screen shows that name rather than the one the player's
+  sheet claims. A newer connection of a key replaces its older one and closes it.
+- **Dismissing a seat closes its connection**, a moment after the goodbye is queued, so a peer that
+  stopped reading cannot keep a seat its goodbye never reached.
 - **A dropped seat is dialled for as long as it is held.** Often at first, since most drops are
   short — 1, 2, 5, 10, 20 seconds — then every 30 (`reconnect_pause`), with no last try: a power
   cut takes a router away for many minutes, and a seat that gave up would cost the player a new
@@ -324,9 +329,14 @@ record drops it, and one that comes back later is still hidden. Nothing is delet
 app's disk — it cannot be — so the GM's word is what every honest copy shows.
 
 **Bounds.** A record's text is at most 2 KiB and is read against that before it is parsed; a
-roll's name is cut like any peer name; a table keeps its newest 500 records, from at most 32
-authors, and refuses an author's eleventh in ten seconds. A record whose author is not at the table — not let in, or
-dismissed — is not kept.
+roll's name is cut like any peer name, and worded from this app's catalog only under a roll's own
+key. **A record's time is its author's and decides nothing but its place in the list:** one dated
+more than ten minutes ahead of this app's clock is refused, and when the 500 a table keeps are
+full, the record that ARRIVED first goes. An author's numbers go on past what was evicted. A table
+holds records from at most 32 authors. A record already held costs nothing; past that a seat may
+hand over ten in ten seconds, counted against the seat and not the author, so replaying another
+player's rolls spends the replayer's pace. A record whose author is not at the table — not let in,
+or dismissed — is not kept. The GM's rolls carry a badge in the log that no player's name can draw.
 
 ## Remembering a table
 

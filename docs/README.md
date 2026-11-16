@@ -45,6 +45,9 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
+- [Audit — the table link](audit-nov-17.md) — a blind pass and a checklist pass over the table
+  link at its first log and remembered tables: what an attacker at the table got, each closed with
+  the test that holds it, and what is still open in TABLE-LINK-AUDIT-OPEN.
 - [Audit — 0.8.2, with the 0.8.1 security audit](audit-oct-27.md) — vulnerabilities and bugs in
   rules, play state, player data, packs and UI. Each finding says whether it is closed (and the test
   or probe that holds it) or open (and the tracker item it lives in); it also keeps what was ruled out
