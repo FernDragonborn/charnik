@@ -2607,6 +2607,7 @@
 				"effect": "Take it"
 			},
 			"decline": "Decline",
+			"inTray": "Build in the tray",
 			"afterDefenses": "{final} after your defenses",
 			"cannotRoll": "This sheet has nothing by that name to roll, so you can only decline.",
 			"cannotEffect": "This app has no state called “{id}” — the GM may be using content you do not have. You can only decline."

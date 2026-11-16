@@ -260,9 +260,10 @@ position and are given per wave, because most of them were learned the hard way.
     asks for an ability check, a save or a skill and sees the roll land; damage a GM sends arrives
     raw with its type and the player's app applies its defenses. No chat, no maps, no initiative
     order. Then TABLE-LINK-FIELD: two real networks, and the feature on in a release.
-    **The 0.9.0 table is desktop players.** The maintainer's call: a player joining from a phone — the
-    web demo at a table, or the mobile build — comes only once the base engine supports the SRD
-    through level 20 (the 5–10 and 11–20 waves below), which is TABLE-LINK-PHONE.
+    **The 0.9.0 table is desktop players.** The maintainer's call: the mobile build comes only once
+    the base engine supports the SRD through level 20 (the 5–10 and 11–20 waves below), which is
+    TABLE-LINK-PHONE. The web demo at a table does not wait for it: after TABLE-LINK-MVP, the
+    order is TABLE-LINK-LOG with TABLE-LINK-REMEMBER, then TABLE-LINK-WEB, then DEMO-FULL.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.

@@ -5,6 +5,8 @@
  */
 import 'fake-indexeddb/auto'; // accepting a request saves the character
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
+import { registerDiceTray } from '$lib/dice/tray.svelte';
+import { rollPool } from '$lib/rules/dice';
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -33,14 +35,9 @@ import {
 import { tableViewOf } from '$lib/table-link/view';
 import type { TableView } from '$lib/table-link/wire-schema';
 import { combat } from '../combat/combat-view-model.svelte';
-import {
-	ASK_STATUS,
-	NO_CHARACTER,
-	TABLE_ROLE,
-	TableVM,
-	rollPassed,
-	type PendingRequest,
-} from './table-view-model.svelte';
+import { ASK_STATUS, NO_CHARACTER, TABLE_ROLE, TableVM } from './table-view-model.svelte';
+import type { PendingRequest } from './player-requests.svelte';
+import { rollPassed } from './requested-roll';
 
 const NO_SEAT_HELD = () => Promise.resolve({ role: TABLE_ROLE.none });
 
@@ -136,7 +133,7 @@ async function askedOf(request: TableRequest, requestId = 'r-1') {
 	await seated.table.join('an invite');
 	seated.tellPlayer({ kind: TABLE_EVENT.connection, state: CONNECTION.connected });
 	seated.tellPlayer({ kind: TABLE_EVENT.request, requestId, request });
-	const pending = seated.table.requests[0] as PendingRequest;
+	const pending = seated.table.asks.requests[0] as PendingRequest;
 	return { ...seated, pending };
 }
 
@@ -173,31 +170,31 @@ describe("a player's seat", () => {
 		const before = character.play.hp.current + character.play.hp.temp;
 		expect(character.play.hp.current + character.play.hp.temp).toBe(before);
 
-		await table.accept(pending);
+		await table.asks.accept(pending);
 		// the demo character resists fire: ten becomes five
 		expect(character.play.hp.current + character.play.hp.temp).toBe(before - 5);
 		expect(heard.answers).toEqual([
 			{ requestId: 'r-1', answer: { outcome: TABLE_ANSWER.accepted } },
 		]);
-		expect(table.requests).toEqual([]);
+		expect(table.asks.requests).toEqual([]);
 	});
 
 	it('is healed by what the GM sends', async () => {
 		const { table, pending } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 4 });
 		const before = character.play.hp.current;
-		await table.accept(pending);
+		await table.asks.accept(pending);
 		expect(character.play.hp.current).toBe(before + 4);
 	});
 
 	it('takes a state by its catalog id, once', async () => {
 		const { table, pending } = await askedOf({ kind: TABLE_REQUEST.effect, id: 'prone' });
 		expect(combat.sheet?.facts.conditions).not.toContain('prone');
-		await table.accept(pending);
+		await table.asks.accept(pending);
 		expect(combat.sheet?.facts.conditions).toContain('prone');
 
 		const again = await askedOf({ kind: TABLE_REQUEST.effect, id: 'prone' }, 'r-2');
 		const count = character.play.effects.length;
-		await again.table.accept(again.pending);
+		await again.table.asks.accept(again.pending);
 		expect(character.play.effects).toHaveLength(count);
 	});
 
@@ -208,7 +205,7 @@ describe("a player's seat", () => {
 			id: 'wis',
 			dc: 12,
 		});
-		await table.accept(pending);
+		await table.asks.accept(pending);
 
 		const made = combat.journal.log.find((entry) => entry.labelKey === 'combat.roll.save.wis');
 		expect(made).toBeDefined();
@@ -222,22 +219,100 @@ describe("a player's seat", () => {
 		expect(combat.journal.log.some((entry) => entry.labelKey === verdict)).toBe(true);
 	});
 
+	describe('a roll built in the dice tray', () => {
+		let unregister: () => void = () => {};
+		const saveOfWisdom: TableRequest = {
+			kind: TABLE_REQUEST.roll,
+			roll: REQUESTED_ROLL.savingThrow,
+			id: 'wis',
+		};
+		/** What the tray's Roll press hands the sheet: a throw the player may have added to. */
+		const trayThrows = (extra: number) =>
+			combat.recordTrayRolls([
+				combat.journal.entryFor(
+					{ text: 'Wisdom save', key: 'combat.roll.save.wis' },
+					rollPool({ 20: 1 }, { mod: (combat.sheet?.abilities.wis.save.value ?? 0) + extra }),
+				),
+			]);
+		beforeEach(() => {
+			unregister = registerDiceTray(() => {});
+		});
+		afterEach(() => unregister());
+
+		it('is offered only where a tray is mounted', async () => {
+			const { table, pending } = await askedOf(saveOfWisdom);
+			expect(table.asks.canBuildInTray(pending.request)).toBe(true);
+			unregister();
+			expect(table.asks.canBuildInTray(pending.request)).toBe(false);
+			const hit = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+			expect(hit.table.asks.canBuildInTray(hit.pending.request)).toBe(false);
+		});
+
+		it('answers with what the tray rolled, the player’s additions included', async () => {
+			const { table, heard, pending } = await askedOf(saveOfWisdom);
+			await table.asks.buildInTray(pending);
+			expect(table.asks.requests).toEqual([]);
+			expect(table.asks.inTray).toBe(pending);
+			expect(heard.answers).toEqual([]);
+
+			trayThrows(4);
+			await vi.waitFor(() => expect(heard.answers).toHaveLength(1));
+			const made = combat.journal.log[0];
+			expect(heard.answers[0]?.answer.roll?.total).toBe(made?.total);
+			expect(heard.answers[0]?.answer.roll?.mod).toBe(
+				(combat.sheet?.abilities.wis.save.value ?? 0) + 4,
+			);
+			expect(table.asks.inTray).toBeNull();
+
+			// the next roll the tray makes is the player's own
+			trayThrows(0);
+			await Promise.resolve();
+			expect(heard.answers).toHaveLength(1);
+		});
+
+		it('is asked again when another roll was built over it in the tray', async () => {
+			const { table, heard, pending } = await askedOf(saveOfWisdom);
+			await table.asks.buildInTray(pending);
+			combat.rolls.recordTrayRolls([
+				combat.journal.entryFor(
+					{ text: 'STR check', key: 'combat.roll.check.str' },
+					rollPool({ 20: 1 }, { mod: 0 }),
+				),
+			]);
+			await Promise.resolve();
+			expect(heard.answers).toEqual([]);
+			expect(table.asks.requests).toEqual([pending]);
+		});
+
+		it('is asked again when the tray is put away unrolled', async () => {
+			const { table, heard, pending } = await askedOf(saveOfWisdom);
+			await table.asks.buildInTray(pending);
+			combat.rolls.trayPutAway();
+			expect(table.asks.requests).toEqual([pending]);
+			expect(table.asks.inTray).toBeNull();
+
+			trayThrows(0);
+			await Promise.resolve();
+			expect(heard.answers).toEqual([]);
+		});
+	});
+
 	it('can only decline what names nothing its sheet has', async () => {
 		const unknownSkill = await askedOf({
 			kind: TABLE_REQUEST.roll,
 			roll: REQUESTED_ROLL.skill,
 			id: 'basket_weaving',
 		});
-		expect(unknownSkill.table.canAccept(unknownSkill.pending.request)).toBe(false);
-		await unknownSkill.table.accept(unknownSkill.pending);
+		expect(unknownSkill.table.asks.canAccept(unknownSkill.pending.request)).toBe(false);
+		await unknownSkill.table.asks.accept(unknownSkill.pending);
 		expect(unknownSkill.heard.answers).toEqual([]);
-		await unknownSkill.table.decline(unknownSkill.pending);
+		await unknownSkill.table.asks.decline(unknownSkill.pending);
 		expect(unknownSkill.heard.answers).toEqual([
 			{ requestId: 'r-1', answer: { outcome: TABLE_ANSWER.declined } },
 		]);
 
 		const unknownState = await askedOf({ kind: TABLE_REQUEST.effect, id: 'no_such_state' });
-		expect(unknownState.table.canAccept(unknownState.pending.request)).toBe(false);
+		expect(unknownState.table.asks.canAccept(unknownState.pending.request)).toBe(false);
 	});
 
 	it('keeps one of a repeated request, and declines unseen what it has no room for', async () => {
@@ -247,7 +322,7 @@ describe("a player's seat", () => {
 			requestId: 'r-1',
 			request: { kind: TABLE_REQUEST.heal, amount: 999 },
 		});
-		expect(table.requests).toHaveLength(1);
+		expect(table.asks.requests).toHaveLength(1);
 
 		for (let n = 2; n <= 40; n++)
 			tellPlayer({
@@ -255,9 +330,9 @@ describe("a player's seat", () => {
 				requestId: `r-${n}`,
 				request: { kind: TABLE_REQUEST.heal, amount: 1 },
 			});
-		expect(table.requests.length).toBeLessThan(40);
+		expect(table.asks.requests.length).toBeLessThan(40);
 		const declined = heard.answers.filter(({ answer }) => answer.outcome === TABLE_ANSWER.declined);
-		expect(table.requests.length + declined.length).toBe(40);
+		expect(table.asks.requests.length + declined.length).toBe(40);
 	});
 
 	it('keeps its seat while the connection is down, and dials at once when asked', async () => {
@@ -286,7 +361,7 @@ describe("a player's seat", () => {
 		await Promise.resolve();
 		expect(table.role).toBe(TABLE_ROLE.none);
 		expect(table.problem).toBe(CLOSE_REASON.dismissed);
-		expect(table.requests).toEqual([]);
+		expect(table.asks.requests).toEqual([]);
 		expect(heard.left).toBe(1);
 	});
 });
@@ -416,7 +491,7 @@ describe('a page that loads again', () => {
 			requestId: 'r-1',
 			request: { kind: TABLE_REQUEST.heal, amount: 2 },
 		});
-		expect(table.requests).toHaveLength(1);
+		expect(table.asks.requests).toHaveLength(1);
 	});
 
 	describe('with somewhere to keep a log', () => {

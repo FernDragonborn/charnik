@@ -128,9 +128,10 @@
   hand-made state (`/dev/table`), the commands on the real build (`/dev/table-link`), and a live
   table on the real desktop build with a person answering the two native questions
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
-  a roll asked and answered, a hit declined, the door, the close.
-  **Left:** a requested roll built in the dice tray, which needs the tray to hand its result back;
-  today it is rolled at once.
+  a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
+  dice tray too, driven over `/dev/table?…&tray`.
+  **Left:** the live drive again with a roll built in the tray, which needs the person answering
+  the native questions.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
@@ -225,13 +226,14 @@
     gossip. So the question is whether `table_link/wire.rs` and the player half of `session.rs`
     compile to wasm without Tauri and tokio's `rt` — they are 1,850 lines, and `mod.rs`, which
     holds the Tauri commands and the native dialogs, is the part that cannot come.
-  - **The native questions have no browser equivalent.** On the desktop no socket exists until a
-    person answers a dialog the page cannot draw or press (`../internals/table-link.md` ▸ Going
-    online is a native question). In a browser the page IS the app, so script that reaches it — a
-    plugin, prose that escapes sanitising — can press its own "join". What stands in for the
-    dialog is the first decision of the spec: a separate origin or a cross-origin iframe holding
-    the endpoint, a user-activation gate, or a narrower trust statement for the web seat. The
-    threat catalog (`../research/table-link-threats.md`) is re-read for the web seat as a whole.
+  - **On the web the questions are the page's own prompt** — the maintainer's call: the native
+    dialogs were a stage, not a requirement. What that gives up is said once, in the spec: script
+    that reaches the page — a plugin, prose that escapes sanitising — can press a prompt the page
+    draws, where it cannot press a native one. The threat catalog
+    (`../research/table-link-threats.md`) is re-read for the web seat with that in mind. Whether
+    the desktop keeps its native dialogs or moves to the same prompt is the maintainer's to say.
+  - **A web player first**; a web GM is read and specified beside it, since the page's prompt
+    removes what kept the GM on the desktop.
   - Still to read: what a backgrounded tab does to a WebSocket (Chrome's throttling and freezing,
     Safari on iPadOS), where a browser keeps the table key (TABLE-LINK-REMEMBER, which today means
     the OS store), and whether a web GM is in scope or only a web player.

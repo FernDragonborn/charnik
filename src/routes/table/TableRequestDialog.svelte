@@ -9,10 +9,12 @@
 	import { table } from './table-view-model.svelte';
 	import TableRequestLine from './TableRequestLine.svelte';
 
-	const pending = $derived(table.requests[0]);
-	const waiting = $derived(table.requests.length);
+	// one ask at a time: the next waits while a roll is being built in the tray, which it would cover
+	const pending = $derived(table.asks.inTray ? undefined : table.asks.requests[0]);
+	const waiting = $derived(table.asks.requests.length);
 	const request = $derived(pending?.request);
-	const takeable = $derived(!!request && table.canAccept(request));
+	const takeable = $derived(!!request && table.asks.canAccept(request));
+	const buildable = $derived(!!request && table.asks.canBuildInTray(request));
 	/** What a hit comes to once this character's defense against its type applies. */
 	const defended = $derived(
 		request?.kind === TABLE_REQUEST.damage
@@ -50,16 +52,22 @@
 		</div>
 		<footer class="dialog-foot">
 			<span class="dialog-spacer"></span>
-			<button class="btn ghost" onclick={() => void table.decline(pending)}
+			<button class="btn ghost" onclick={() => void table.asks.decline(pending)}
 				>{$_('table.prompt.decline')}</button
 			>
+			<!-- offered only where the tray is mounted: the play screen -->
+			{#if buildable}
+				<button class="btn" onclick={() => void table.asks.buildInTray(pending)}
+					>{$_('table.prompt.inTray')}</button
+				>
+			{/if}
 			<!-- blocked, not disabled: a disabled control takes no focus, so its reason could not be read -->
 			<button
 				class="btn primary"
 				class:is-blocked={!takeable}
 				aria-disabled={!takeable}
 				aria-describedby={takeable ? undefined : 'table-request-cannot'}
-				onclick={() => void table.accept(pending)}
+				onclick={() => void table.asks.accept(pending)}
 				>{$_(`table.prompt.accept.${request.kind}`)}</button
 			>
 		</footer>

@@ -55,6 +55,9 @@ export function registerDiceTray(handler: DiceTrayHandler): () => void {
 	};
 }
 
+/** Is a real tray mounted — one a roll can be built in, rather than the instant fallback? */
+export const diceTrayIsLive = (): boolean => registry.handler !== null;
+
 /** Open the tray for a request — or, with no tray registered, roll instantly + toast (the fallback so
  *  the roll affordance works everywhere today; the tray just makes it richer where present). */
 export function openDiceTray(request: DiceTrayRequest): void {

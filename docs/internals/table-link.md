@@ -175,7 +175,7 @@ HTML.
 ## What a request does on a sheet
 
 A request waits until the player presses, and it is then carried out by the SAME actions a click
-on the sheet uses (`routes/table/table-view-model.svelte.ts` ▸ `TableVM.accept`):
+on the sheet uses (`routes/table/player-requests.svelte.ts` ▸ `PlayerRequests.accept`):
 
 - **Damage** is `takeDamage` with the amount and the type as sent: the character's own defenses
   apply first, then temporary hit points, a form's own, instant death and the concentration save.
@@ -183,11 +183,15 @@ on the sheet uses (`routes/table/table-view-model.svelte.ts` ▸ `TableVM.accept
 - **A state** is the row of that id in the character's own picker, switched on with the row's own
   duration — and left alone when the character already has it. An id this app's content does not
   have can only be declined.
-- **A roll** is the sheet's own check, save or skill (`combat/sheet-roll-specs.ts`), rolled at
-  once with the effects it picks up, logged like any other, and read back as five facts: the
-  total, the d20 that counted, how it was read, the modifier, and a forced outcome. It is not
-  built in the dice tray, which hands no result back to answer the GM with. An announced DC is
-  answered on the player's side as a passed-or-failed line; a DC the GM kept stays on the GM's.
+- **A roll** is the sheet's own check, save or skill (`combat/sheet-roll-specs.ts`) with the
+  effects it picks up, logged like any other, and read back as five facts: the total, the d20 that
+  counted, how it was read, the modifier, and a forced outcome. The player rolls it at once, or —
+  where the dice tray is mounted, the play screen — builds it in the tray first, to add what the
+  sheet does not know (Guidance, a helper's advantage). The tray's next roll is then the answer
+  (`SheetRolls.handNextTrayRollTo`); a tray put away unrolled answers nothing and puts the request
+  back in front of the player, and the next request waits while the tray is open, because its
+  prompt would cover it. A roll a condition decides opens no tray. An announced DC is answered on
+  the player's side as a passed-or-failed line; a DC the GM kept stays on the GM's.
 
 The character is saved after each, because the play screen's autosave is not running on every
 screen a request can arrive over. At most twelve requests wait at once; one past that is declined
@@ -225,7 +229,8 @@ it. A request this sheet cannot carry out leaves the accept button blocked with 
 it. The layout also starts `TableVM.keepPublishing`, which tells the table whenever what it sees
 of the open character changes.
 
-`/dev/table` mounts the same screen over hand-made state, since a real table needs a second app.
+`/dev/table` mounts the same screen over hand-made state, since a real table needs a second app;
+`&tray` mounts the play screen's dice tray beside it, so a roll can be built there too.
 
 ## Staying seated
 
@@ -273,8 +278,9 @@ character's edition, and the GM's app names conditions from its own catalog.
   said), `view.ts` (the table's view of a character), `tauri.ts` and `noop.ts` (the two
   implementations), `provider.ts` (the one place one is chosen).
 - `src/routes/table/` — `table-view-model.svelte.ts` (`TableVM`: the seat this app holds, who a GM
-  has seated and what was asked of them, what a player's app does with a request) and the screen
-  over it, below. `components/settings/TableSettings.svelte` is the relay setting.
+  has seated and what was asked of them), `player-requests.svelte.ts` (`PlayerRequests`: what a
+  player's app does with a request), `requested-roll.ts` (the roll a request asks for, read back)
+  and the screen over them, above. `components/settings/TableSettings.svelte` is the relay setting.
 
 ## Driving a live table
 

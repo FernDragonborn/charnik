@@ -4,39 +4,20 @@
  * the layout mounts over every screen.
  *
  * A GM's side keeps who is seated, the sheet each one shows, and what was asked of them. A
- * player's side keeps the connection's state and the requests waiting for an answer.
- *
- * **A request never applies itself.** It waits in `requests` until the player presses, and it is
- * then carried out by the SAME actions a click on the sheet uses (`combat.act`, `combat.roll`,
- * the effects picker's switch) — so what a GM's damage does to a sheet is what the player's own
- * Damage press does, defenses, concentration and death included (`docs/internals/table-link.md`).
+ * player's side keeps the connection's state, and `asks` (`PlayerRequests`) the requests waiting
+ * for an answer — **a request never applies itself**.
  */
 import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
-import { saveCharacterGuarded } from '$lib/character/store.svelte';
-import type { CharacterSheet } from '$lib/character/derive';
-import { naturalOf } from '$lib/rules/dice';
-import { AUTO_OUTCOME } from '$lib/combat/roll';
-import { heal, takeDamage } from '$lib/play/hit-points';
-import {
-	abilityCheckRoll,
-	abilityOf,
-	savingThrowRoll,
-	skillOf,
-	skillRoll,
-	type SheetRollSpec,
-} from '$lib/combat/sheet-roll-specs';
 import { getTableLink } from '$lib/table-link/provider';
 import {
 	CLOSE_REASON,
 	CONNECTION,
 	DELIVERY,
-	REQUESTED_ROLL,
 	SEATING,
 	TABLE_ANSWER,
 	TABLE_EVENT,
-	TABLE_REQUEST,
 	TABLE_ROLE,
 	type CloseReason,
 	type ConnectionState,
@@ -45,7 +26,6 @@ import {
 	type ParticipantId,
 	type PlayerEvent,
 	type PlayerSeat,
-	type RequestId,
 	type TableLink,
 	type TableRequest,
 	type TableRole,
@@ -53,9 +33,9 @@ import {
 	type Unsubscribe,
 } from '$lib/table-link/types';
 import { tableViewOf } from '$lib/table-link/view';
-import type { TableRoll, TableView } from '$lib/table-link/wire-schema';
-import type { StateChoice } from '../combat/effects-editor.svelte';
+import type { TableView } from '$lib/table-link/wire-schema';
 import { combat } from '../combat/combat-view-model.svelte';
+import { PlayerRequests } from './player-requests.svelte';
 import {
 	ASKED_MAX,
 	ASK_STATUS,
@@ -84,38 +64,8 @@ export interface SeatedPlayer {
 	present: boolean;
 }
 
-/** Something the GM asked of this player, waiting for a press. */
-export interface PendingRequest {
-	requestId: RequestId;
-	request: TableRequest;
-}
-
 /** How long the open character is left to settle before the table is told what it says now. */
 const PUBLISH_DEBOUNCE_MS = 150;
-/** How many requests may wait for the player at once; one past that is declined unseen, so a GM's
- *  app cannot fill the player's screen or memory. */
-const PENDING_MAX = 12;
-
-/** Did a roll meet its DC? A condition that forced the outcome decides it over the number. */
-export const rollPassed = (roll: TableRoll, dc: number): boolean =>
-	roll.outcome ? roll.outcome === AUTO_OUTCOME.succeed : roll.total >= dc;
-
-/** The roll a request asks for, on this sheet — or null when it names nothing the sheet rolls. */
-export function requestedRollSpec(
-	request: Extract<TableRequest, { kind: typeof TABLE_REQUEST.roll }>,
-	sheet: CharacterSheet,
-): SheetRollSpec | null {
-	if (request.roll === REQUESTED_ROLL.skill) {
-		const skill = skillOf(request.id);
-		return skill ? skillRoll(skill, sheet) : null;
-	}
-	const ability = abilityOf(request.id);
-	if (!ability) return null;
-	return request.roll === REQUESTED_ROLL.savingThrow
-		? savingThrowRoll(ability, sheet)
-		: abilityCheckRoll(ability, sheet);
-}
-
 export class TableVM {
 	constructor(private link: () => TableLink = getTableLink) {}
 
@@ -139,8 +89,11 @@ export class TableVM {
 	/** The digits to read to the GM. */
 	code = $state('');
 	connection = $state<ConnectionState>(CONNECTION.connecting);
-	/** Oldest first: the prompt shows the first. */
-	requests = $state<PendingRequest[]>([]);
+	/** What the GM asked of this player, waiting for a press. */
+	asks = new PlayerRequests(
+		(requestId, answer) =>
+			this.playerSeat?.respond(requestId, answer) ?? Promise.resolve(undefined),
+	);
 
 	private gmSeat: GmSeat | null = null;
 	private playerSeat: PlayerSeat | null = null;
@@ -192,7 +145,7 @@ export class TableVM {
 		this.playerSeat = seat;
 		this.code = seat.code;
 		this.connection = CONNECTION.connecting;
-		this.requests = [];
+		this.asks.clear();
 		this.role = TABLE_ROLE.player;
 		this.stopListening = await seat.subscribe(this.onPlayerEvent);
 	}
@@ -258,7 +211,7 @@ export class TableVM {
 		this.role = TABLE_ROLE.none;
 		this.players = [];
 		this.asked = [];
-		this.requests = [];
+		this.asks.clear();
 		this.invite = null;
 		this.problem = problem;
 		dropAskedLog();
@@ -362,22 +315,13 @@ export class TableVM {
 
 	private onPlayerEvent = (event: PlayerEvent): void => {
 		if (event.kind === TABLE_EVENT.request) {
-			this.queue({ requestId: event.requestId, request: event.request });
+			this.asks.queue({ requestId: event.requestId, request: event.request });
 			return;
 		}
 		this.connection = event.state;
 		if (event.state === CONNECTION.connected) void this.publish();
 		if (event.state === CONNECTION.closed) void this.endSeat(event.reason ?? CLOSE_REASON.lost);
 	};
-
-	private queue(pending: PendingRequest): void {
-		if (this.requests.some((waiting) => waiting.requestId === pending.requestId)) return;
-		if (this.requests.length >= PENDING_MAX) {
-			void this.playerSeat?.respond(pending.requestId, { outcome: TABLE_ANSWER.declined });
-			return;
-		}
-		this.requests = [...this.requests, pending];
-	}
 
 	/** Dial the table now instead of waiting for the next try the seat makes by itself. */
 	redial = async (): Promise<void> => {
@@ -412,99 +356,6 @@ export class TableVM {
 			stop();
 		};
 	};
-
-	/** The state a request names, as this character's own picker lists it. */
-	stateFor = (id: string): StateChoice | undefined =>
-		combat.effects.stateCatalog.find((choice) => choice.rowId === id);
-
-	/** Can this request be carried out on the open sheet? One naming a skill or a state this app
-	 *  does not have can only be declined. */
-	canAccept = (request: TableRequest): boolean => {
-		if (request.kind === TABLE_REQUEST.roll)
-			return !!combat.sheet && !!requestedRollSpec(request, combat.sheet);
-		if (request.kind === TABLE_REQUEST.effect) return !!this.stateFor(request.id);
-		return !!combat.sheet;
-	};
-
-	/** Do what was asked, through the sheet's own actions, and answer. */
-	accept = async (pending: PendingRequest): Promise<void> => {
-		if (!this.requests.includes(pending) || !this.canAccept(pending.request)) return;
-		this.requests = this.requests.filter((waiting) => waiting !== pending);
-		const roll = this.carryOut(pending.request);
-		// the play screen's autosave is not running on every screen a request can arrive over
-		if (combat.character) void saveCharacterGuarded(combat.character);
-		await this.answer(pending.requestId, {
-			outcome: TABLE_ANSWER.accepted,
-			...(roll ? { roll } : {}),
-		});
-	};
-
-	decline = async (pending: PendingRequest): Promise<void> => {
-		if (!this.requests.includes(pending)) return;
-		this.requests = this.requests.filter((waiting) => waiting !== pending);
-		await this.answer(pending.requestId, { outcome: TABLE_ANSWER.declined });
-	};
-
-	private async answer(
-		requestId: RequestId,
-		answer: Parameters<PlayerSeat['respond']>[1],
-	): Promise<void> {
-		const delivery = await this.playerSeat?.respond(requestId, answer);
-		if (delivery !== DELIVERY.delivered) toast.warning(t('table.notice.answerLost'));
-	}
-
-	/** Carry a request out on the open character; the roll it made, when it made one. */
-	private carryOut(request: TableRequest): TableRoll | undefined {
-		switch (request.kind) {
-			case TABLE_REQUEST.damage: {
-				const hit = { amount: request.amount, type: request.type };
-				combat.act((character, ctx) => takeDamage(character, hit, ctx));
-				return undefined;
-			}
-			case TABLE_REQUEST.heal:
-				combat.act((character, ctx) => heal(character, { amount: request.amount }, ctx));
-				return undefined;
-			case TABLE_REQUEST.effect: {
-				const state = this.stateFor(request.id);
-				if (!state) return undefined;
-				// a state already on the character is not put on a second time
-				const { owned, foreign } = combat.effects.presenceOf(state);
-				if (!owned.length && !foreign.length) combat.effects.toggleState(state);
-				return undefined;
-			}
-			case TABLE_REQUEST.roll:
-				return this.rollFor(request);
-		}
-	}
-
-	/** Make the roll a request asks for, the way a tap on the sheet makes it, and read it back. */
-	private rollFor(
-		request: Extract<TableRequest, { kind: typeof TABLE_REQUEST.roll }>,
-	): TableRoll | undefined {
-		const spec = combat.sheet ? requestedRollSpec(request, combat.sheet) : null;
-		if (!spec) return undefined;
-		const before = combat.journal.log[0];
-		// a plain event rolls at once: the dice tray hands no result back to answer the GM with
-		combat.roll(spec.name, spec.mod, new Event('table-request'), spec.target);
-		const entry = combat.journal.log[0];
-		if (!entry || entry === before) return undefined;
-		const natural = naturalOf(entry);
-		const roll: TableRoll = {
-			total: Number.isFinite(entry.total) ? entry.total : 0,
-			...(natural === undefined ? {} : { natural }),
-			advantage: entry.advantage,
-			mod: entry.mod,
-			...(entry.outcome ? { outcome: entry.outcome } : {}),
-		};
-		if (request.dc !== undefined)
-			combat.notify({
-				text: {
-					key: rollPassed(roll, request.dc) ? 'table.notice.passed' : 'table.notice.failed',
-					values: { dc: request.dc },
-				},
-			});
-		return roll;
-	}
 }
 
 export const table = new TableVM();

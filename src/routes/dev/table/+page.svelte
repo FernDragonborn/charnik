@@ -4,7 +4,8 @@
 	// A table needs the desktop app with the `table-link` feature and a second app to sit across
 	// from, so this fills the view-model by hand and mounts the real screen: `?seat=gm`,
 	// `?seat=player&state=waiting|connected|reconnecting`, `?seat=none&problem=<reason>`, and
-	// `&ask=damage|roll|effect|unknown` to raise the request prompt over it.
+	// `&ask=damage|roll|effect|unknown` to raise the request prompt over it. `&tray` mounts the play
+	// screen's dice tray, so a roll can be built in it as on that screen.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadContentStore } from '$lib/content/store.svelte';
@@ -25,6 +26,7 @@
 		type TableProblem,
 	} from '../../table/table-view-model.svelte';
 	import TablePage from '../../table/+page.svelte';
+	import CombatMenus from '../../combat/CombatMenus.svelte';
 
 	const ASKS = {
 		damage: { kind: TABLE_REQUEST.damage, amount: 12, type: 'fire' },
@@ -103,6 +105,9 @@
 
 	// the screen is mounted once the state is in place, so its own loads find nothing left to do
 	let seeded = $state(false);
+	const withTray = page.url.searchParams.has('tray');
+
+	onMount(() => (withTray ? combat.registerTray() : undefined));
 
 	onMount(async () => {
 		await loadContentStore();
@@ -122,7 +127,7 @@
 			table.problem = asked.get('problem') as TableProblem | null;
 		}
 		const ask = askNamed(asked.get('ask'));
-		table.requests = ask
+		table.asks.requests = ask
 			? [
 					{ requestId: 'r-1', request: ask },
 					{ requestId: 'r-2', request: ASKS.roll },
@@ -134,4 +139,5 @@
 
 {#if seeded}
 	<TablePage />
+	{#if withTray}<CombatMenus />{/if}
 {/if}

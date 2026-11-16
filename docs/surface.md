@@ -487,6 +487,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DiceTrayRequest` — * A request to open the tray.
 - `type DiceTrayHandler` — A live tray registers a handler for the request.
 - `function registerDiceTray` — Register the live tray (a DiceTray component calls this on mount); returns an unregister fn.
+- `const diceTrayIsLive` — Is a real tray mounted — one a roll can be built in, rather than the instant fallback?
 - `function openDiceTray` — Open the tray for a request — or, with no tray registered, roll instantly + toast (the fallback so * the roll afforda…
 
 ### `src/lib/effects/plugin-store.svelte.ts`
@@ -2557,4 +2558,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 97 global classes · 59 components · 1564 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 97 global classes · 59 components · 1565 exports across 218 modules · 108 duplicate suspects._

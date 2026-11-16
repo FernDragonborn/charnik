@@ -23,10 +23,10 @@
 		ASK_STATUS,
 		TABLE_ROLE,
 		TableVM,
-		rollPassed,
 		table,
 		type TableRole,
 	} from '../../table/table-view-model.svelte';
+	import { rollPassed } from '../../table/requested-roll';
 	import { firstDifference } from './first-difference';
 
 	const REPORT = 'table-live-probe.txt';

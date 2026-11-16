@@ -12,13 +12,8 @@
 	import { signed } from '$lib/combat/helpers';
 	import { CONNECTION, RELAY_MODE } from '$lib/table-link/types';
 	import { combat } from '../combat/combat-view-model.svelte';
-	import {
-		ASK_STATUS,
-		TABLE_ROLE,
-		rollPassed,
-		table,
-		type AskedRow,
-	} from './table-view-model.svelte';
+	import { ASK_STATUS, TABLE_ROLE, table, type AskedRow } from './table-view-model.svelte';
+	import { rollPassed } from './requested-roll';
 	import AskComposer from './AskComposer.svelte';
 	import TableRequestLine from './TableRequestLine.svelte';
 	import TableSeatCard from './TableSeatCard.svelte';

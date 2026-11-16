@@ -48,6 +48,8 @@ export interface SheetRollsHost {
 	journal: RollJournal;
 	economy: TurnEconomy;
 	openMenu(kind: MenuKind, e: Event): void;
+	/** Where a menu with nothing to anchor it to is opened. */
+	menus: { openMenuCentered(kind: MenuKind): void };
 	/** Tell the player something about their character, and keep it in the log. */
 	notify(notice: PlayNotice): void;
 }
@@ -56,6 +58,12 @@ export interface SheetRollsHost {
  *  scopes that narrow which of the matching ones apply. A bare string is the common case — a key with
  *  nothing to narrow — so most call sites read exactly as they did before scopes existed. */
 export type RollTarget = string | { key: string; scopes?: Set<string> };
+
+/** Somebody waiting on the next roll the tray makes. */
+export interface TrayRollTaker {
+	rolled(entries: RollLogEntry[]): void;
+	putAway(): void;
+}
 
 export class SheetRolls {
 	/* Accessor, not an object — a $derived field initialiser runs before a constructor parameter
@@ -130,6 +138,44 @@ export class SheetRolls {
 	// narrows the key the way a weapon's tags narrow an attack: a skill check says whether it adds
 	// your proficiency bonus, which is the only thing RAW's Reliable Talent keys off.
 	roll = (name: RollName, mod: number, e: Event, target?: RollTarget) => {
+		const test = this.sheetTest(name, mod, target);
+		if (!test) return;
+		if (wantsTray(e)) this.openRoll(test, e);
+		else this.host().journal.rollDiceNow(test);
+	};
+
+	/**
+	 * Open the tray on a sheet roll from somewhere with no control to anchor it to — a roll the GM
+	 * asked for. False when a condition decided the roll instead, which is then already logged.
+	 */
+	rollInTray = (name: RollName, mod: number, target?: RollTarget): boolean => {
+		const test = this.sheetTest(name, mod, target);
+		if (!test) return false;
+		this.host().journal.prefill(test);
+		this.host().menus.openMenuCentered('dice');
+		return true;
+	};
+
+	/** Who, besides the log, is handed the next rolls the tray makes — or told it was put away
+	 *  unrolled. One taker, taken once. */
+	private trayRollTaker: TrayRollTaker | null = null;
+	handNextTrayRollTo = (taker: TrayRollTaker | null) => {
+		this.trayRollTaker = taker;
+	};
+	/** The tray left the screen; a taker still waiting gets no roll. */
+	trayPutAway = () => {
+		const taker = this.trayRollTaker;
+		this.trayRollTaker = null;
+		taker?.putAway();
+	};
+
+	/** The d20 test a sheet roll makes, with the effects it picks up — or null when a condition
+	 *  forces its outcome, which is logged and toasted here because no die is thrown. */
+	private sheetTest(
+		name: RollName,
+		mod: number,
+		target?: RollTarget,
+	): (RollSpec & Required<Pick<RollSpec, 'test'>>) | null {
 		const { key, scopes } = typeof target === 'string' ? { key: target } : (target ?? {});
 		const label = name.text;
 		// a forced outcome (paralyzed → auto-fail its STR/DEX save) skips the die entirely — the result
@@ -147,41 +193,23 @@ export class SheetRolls {
 					{ label: sayRollName(name, translator()) },
 				),
 			);
-			return;
+			return null;
 		}
 		const fx = key ? this.effectsFor(key, scopes) : null;
-		const adv = fx ? netAdvantage(fx) : 0;
-		if (wantsTray(e))
-			// the effect DICE ride too: the tray used to drop them, so Shift-clicking a roll under Bless
-			// rolled a d4 short of the same roll tapped normally — a silently-wrong number, and exactly
-			// what the roller's pills exist to make visible
-			this.openRoll(
-				{
-					label,
-					...(name.key ? { labelKey: name.key } : {}),
-					test: {
-						dice: { 20: 1 },
-						mod,
-						advantage: adv,
-						bonusDice: fx?.bonusDice ?? [],
-						mods: fx ? dieModsOf(fx) : {},
-					},
-				},
-				e,
-			);
-		else
-			this.host().journal.rollDiceNow({
-				label,
-				...(name.key ? { labelKey: name.key } : {}),
-				test: {
-					dice: { 20: 1 },
-					mod,
-					advantage: adv,
-					bonusDice: fx?.bonusDice ?? [],
-					mods: fx ? dieModsOf(fx) : {},
-				},
-			});
-	};
+		// the effect DICE ride into the tray too: dropping them rolled a Bless d4 short of the same
+		// roll tapped normally — a silently-wrong number, and exactly what the roller's pills show
+		return {
+			label,
+			...(name.key ? { labelKey: name.key } : {}),
+			test: {
+				dice: { 20: 1 },
+				mod,
+				advantage: fx ? netAdvantage(fx) : 0,
+				bonusDice: fx?.bonusDice ?? [],
+				mods: fx ? dieModsOf(fx) : {},
+			},
+		};
+	}
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
@@ -295,6 +323,9 @@ export class SheetRolls {
 	 */
 	recordTrayRolls = (entries: RollLogEntry[]) => {
 		this.host().journal.recordRolls(entries);
+		const taker = this.trayRollTaker;
+		this.trayRollTaker = null;
+		taker?.rolled(entries);
 		const entry = entries[0];
 		// a granted roll whose rule is "once per turn" is marked where it LANDS, not where the tray
 		// opened: a tray put away unrolled used nothing. The mark stays the player's to lift — the same

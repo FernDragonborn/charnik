@@ -12,9 +12,12 @@
 	import { rollerCandidates } from '$lib/dice/roller-vocabulary';
 	import { app } from '$lib/stores/app.svelte';
 	import { content } from '$lib/content/store.svelte';
+	import { onDestroy } from 'svelte';
 	import { combat } from '../combat-view-model.svelte';
 
 	const diceTray = combat.journal.diceTray;
+	// closed, or gone with the screen: whoever waited on its roll is told there is none
+	onDestroy(combat.rolls.trayPutAway);
 	const log = $derived(combat.journal.log);
 
 	// the tray keeps the roll it was building between openings, but not a MENU that was open when it
