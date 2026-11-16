@@ -40,16 +40,25 @@ Charnik is free software, so any peer may run a build that sends whatever the wi
 - **Nobody is trusted with the other's machine.** No peer's bytes become a file, a path, markup,
   or a formula on the other side.
 
-## Going online is a native question, asked each time
+## Going online is a question the page cannot answer
 
-No socket exists until a person says so in a dialog the page cannot draw over or press
-(`src-tauri/src/table_link/mod.rs`):
+No socket exists until a person says so in **the question window** (`table_link/question.rs`): a
+window Rust opens over the app, words, and believes an answer only from. The answer command checks
+the label of the webview that calls it — which Tauri sets and a caller cannot — and only that
+window's capability (`capabilities/table-link/table-question.json`) allows it at all. The app's
+page holds no permission to open, close, hide or move a window (`core:default` grants those read
+only), so it cannot press the question, cover it, or open one of its own. The window shows one
+static page, `static/table-question.html`, which renders the words as text, starts with the focus
+on the refusal so an Enter pressed by habit says no, and navigates nowhere; closing it is a no. It
+does not follow the user's theme on purpose: a theme is the page's to set. One question is on
+screen at a time.
 
 | the question | who is asked | what it names |
 | --- | --- | --- |
 | open this table? | the GM, on `host` | the table's name and the relay it is reached through |
 | join this table? | the player, on `join` | the table's name, the name they join under, the relay |
 | let this player in? | the GM, per new key | the player's name and their six-digit code |
+| return to this table? | either seat, on `return` | the table's name and its route |
 
 The words are the UI catalogs' own, compiled into the binary by `build.rs` (`NATIVE_ROOTS`): the
 page names a locale and never a sentence. What the page or a peer does supply — a name — is
@@ -364,7 +373,8 @@ character's edition, and the GM's app names conditions from its own catalog.
 - `src-tauri/src/table_link/` — `wire.rs` (frames, invitation, the cut of a view), `session.rs`
   (the two endpoints; knows nothing of Tauri, so two sessions sit at one table in a test),
   `records.rs` (a log record: signing, checking, what each side holds and lacks),
-  `mod.rs` (commands, the seat this app holds, the native questions).
+  `mod.rs` (commands, the seat this app holds, the questions' words), `question.rs` (the
+  question window).
 - `src/lib/table-link/` — `types.ts` (the seam), `wire-schema.ts` (what a peer is believed to have
   said), `view.ts` (the table's view of a character), `tauri.ts` and `noop.ts` (the two
   implementations), `provider.ts` (the one place one is chosen).

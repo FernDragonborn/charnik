@@ -20,6 +20,7 @@
 //! (`capabilities/table-link/`) and its entries in `build.rs`. A build without the feature has none
 //! of the three, and the page learns that by calling: a command that is not there is refused.
 
+pub mod question;
 mod records;
 mod remember;
 mod session;
@@ -30,7 +31,6 @@ use std::sync::Arc;
 use serde::Serialize;
 use serde_json::{Map, Value};
 use tauri::{Emitter, Manager};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 use crate::native_strings::native_string;
 use records::Body;
@@ -240,24 +240,17 @@ impl Question {
             })
     }
 
-    /// Ask it and wait for the answer. A dialog that could not be shown is a no.
+    /// Ask it in the question window and wait for the answer. A window that could not be shown,
+    /// or was closed unanswered, is a no.
     async fn ask(self, app: tauri::AppHandle) -> bool {
-        let asking = tauri::async_runtime::spawn_blocking(move || {
-            let mut dialog = app
-                .dialog()
-                .message(self.body())
-                .title(self.said("title"))
-                .kind(MessageDialogKind::Warning)
-                .buttons(MessageDialogButtons::OkCancelCustom(
-                    self.said("allow").into(),
-                    self.said("deny").into(),
-                ));
-            if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-                dialog = dialog.parent(&window);
-            }
-            dialog.blocking_show()
-        });
-        asking.await.unwrap_or(false)
+        let words = question::Words {
+            title: self.said("title").to_string(),
+            body: self.body(),
+            allow: self.said("allow").to_string(),
+            deny: self.said("deny").to_string(),
+            locale: self.locale.clone(),
+        };
+        question::ask(&app, words).await
     }
 }
 

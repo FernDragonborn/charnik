@@ -111,8 +111,9 @@ step.
    > **The table link's commands are in no release build.** They sit behind the `table-link`
    > Cargo feature with their capability file (`overview.md` ▸ TableLink is the seam a table
    > stands on). In a build that has them the page can ASK for a table and cannot have one: `host`,
-   > `join` and each admission are answered by the person in a native dialog whose words are
-   > compiled in, and the page supplies a locale and names that are printed as quoted data. A
+   > `join`, each admission and a return are answered by the person in a window Rust opens and
+   > believes an answer only from (`table-link.md` ▸ Going online is a question the page cannot
+   > answer), whose words are compiled in, and the page supplies a locale and names that are printed as quoted data. A
    > GM's request is a closed set of typed, bounded fields — an unknown field or kind is refused
    > in Rust, so a token or a formula has no way in — and a peer's event is held to a bounded
    > schema before the page's own code hears it (`table-link.md`). `/dev/table-link` asks the

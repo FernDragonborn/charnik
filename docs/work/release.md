@@ -234,14 +234,14 @@
   - **iroh builds for `wasm_browser` with wasm-bindgen**, is not published to npm, and n0 says to
     write an app-specific wrapper crate. `iroh-gossip` builds there from 0.33; the table uses no
     gossip. So the question is whether `table_link/wire.rs` and the player half of `session.rs`
-    compile to wasm without Tauri and tokio's `rt` — they are 1,850 lines, and `mod.rs`, which
-    holds the Tauri commands and the native dialogs, is the part that cannot come.
-  - **On the web the questions are the page's own prompt** — the maintainer's call: the native
-    dialogs were a stage, not a requirement. What that gives up is said once, in the spec: script
-    that reaches the page — a plugin, prose that escapes sanitising — can press a prompt the page
-    draws, where it cannot press a native one. The threat catalog
-    (`../research/table-link-threats.md`) is re-read for the web seat with that in mind. Whether
-    the desktop keeps its native dialogs or moves to the same prompt is the maintainer's to say.
+    compile to wasm without Tauri and tokio's `rt` — and `mod.rs` and `question.rs`, which hold
+    the Tauri commands and the question window, are the part that cannot come.
+  - **On the web the questions are the page's own prompt** — the maintainer's call. What that
+    gives up is said once, in the spec: script that reaches the page — prose that escapes
+    sanitising and the CSP both — can press a prompt the page draws, where on the desktop it cannot
+    reach the question window (`../internals/table-link.md` ▸ Going online is a question the page
+    cannot answer). The threat catalog (`../research/table-link-threats.md`) is re-read for the
+    web seat with that in mind.
   - **A web player first**; a web GM is read and specified beside it, since the page's prompt
     removes what kept the GM on the desktop.
   - Still to read: what a backgrounded tab does to a WebSocket (Chrome's throttling and freezing,

@@ -1,0 +1,171 @@
+//! The window a table's question is asked in — open a table, join one, let a player in, return to
+//! one (`docs/internals/table-link.md` ▸ Going online is a question the page cannot answer).
+//!
+//! Rust opens it, words it from the catalog compiled into the binary, and believes an answer only
+//! from it: the command that answers checks the label of the webview that called it, which Tauri
+//! sets and the caller cannot, and only this window's capability allows that command at all. The
+//! app's page has no permission to close, hide, move or open a window, so it cannot press, cover
+//! or forge this one; and the window loads one static page that renders the words as text.
+
+use std::sync::Mutex;
+
+use serde::Serialize;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tokio::sync::oneshot;
+
+/// The question window's label: what the answer command checks, and what its capability names.
+pub const LABEL: &str = "table-question";
+const PAGE: &str = "table-question.html";
+const WIDTH: f64 = 480.0;
+const HEIGHT: f64 = 300.0;
+
+/// What the window shows: every word composed in Rust.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Words {
+    pub title: String,
+    pub body: String,
+    pub allow: String,
+    pub deny: String,
+    pub locale: String,
+}
+
+struct Pending {
+    words: Words,
+    answer: oneshot::Sender<bool>,
+}
+
+/// The question on screen, if any. One at a time: `ASKING` holds the rest back.
+static PENDING: Mutex<Option<Pending>> = Mutex::new(None);
+static ASKING: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+fn pending() -> std::sync::MutexGuard<'static, Option<Pending>> {
+    PENDING
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// Answer the question on screen, once. Anything after the first answer is nobody's.
+fn settle(allow: bool) {
+    if let Some(asked) = pending().take() {
+        let _ = asked.answer.send(allow);
+    }
+}
+
+/// Is this the question window speaking? Tauri sets a webview's label; a caller cannot.
+fn is_question(label: &str) -> bool {
+    label == LABEL
+}
+
+/// Ask, and wait for the person's answer. A window that could not be opened, or was closed
+/// without an answer, is a no.
+pub async fn ask(app: &tauri::AppHandle, words: Words) -> bool {
+    let _one_at_a_time = ASKING.lock().await;
+    let (answer, answered) = oneshot::channel();
+    *pending() = Some(Pending { words, answer });
+    let window = match open(app) {
+        Ok(window) => window,
+        Err(e) => {
+            log::warn!("table link: the question window did not open: {e}");
+            pending().take();
+            return false;
+        }
+    };
+    let allow = answered.await.unwrap_or(false);
+    // best-effort: a window already gone has nothing left to close
+    let _ = window.destroy();
+    allow
+}
+
+fn open(app: &tauri::AppHandle) -> tauri::Result<tauri::WebviewWindow> {
+    let title = pending()
+        .as_ref()
+        .map(|asked| asked.words.title.clone())
+        .unwrap_or_default();
+    let mut builder = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App(PAGE.into()))
+        .title(title)
+        .inner_size(WIDTH, HEIGHT)
+        .resizable(false)
+        .minimizable(false)
+        .maximizable(false)
+        .always_on_top(true)
+        .focused(true)
+        .center()
+        // the one page it shows, and no other: no link, no form, no script takes it elsewhere
+        .on_navigation(|url| url.path().trim_start_matches('/') == PAGE)
+        .on_new_window(|_, _| tauri::webview::NewWindowResponse::Deny);
+    if let Some(main) = app.get_webview_window(super::MAIN_WINDOW) {
+        builder = builder.parent(&main)?;
+    }
+    let window = builder.build()?;
+    window.on_window_event(|event| {
+        if matches!(
+            event,
+            WindowEvent::CloseRequested { .. } | WindowEvent::Destroyed
+        ) {
+            settle(false);
+        }
+    });
+    Ok(window)
+}
+
+/// The words of the question on screen, for the question window and nobody else.
+#[tauri::command]
+pub fn table_question_words(webview: tauri::Webview) -> Option<Words> {
+    if !is_question(webview.label()) {
+        return None;
+    }
+    pending().as_ref().map(|asked| asked.words.clone())
+}
+
+/// The person's answer, believed only from the question window.
+#[tauri::command]
+pub fn table_question_answer(webview: tauri::Webview, allow: bool) {
+    if is_question(webview.label()) {
+        settle(allow);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn words() -> Words {
+        Words {
+            title: "t".into(),
+            body: "b".into(),
+            allow: "a".into(),
+            deny: "d".into(),
+            locale: "en".into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn an_answer_is_believed_once_and_only_from_the_question_window() {
+        let _one = ASKING.lock().await;
+        let (answer, answered) = oneshot::channel();
+        *pending() = Some(Pending {
+            words: words(),
+            answer,
+        });
+        // the app's own page is not the question window
+        assert!(!is_question("main"));
+        assert!(is_question(LABEL));
+        settle(true);
+        settle(false);
+        assert_eq!(answered.await, Ok(true));
+        assert!(pending().is_none());
+    }
+
+    #[tokio::test]
+    async fn a_question_closed_without_an_answer_is_a_no() {
+        let _one = ASKING.lock().await;
+        let (answer, answered) = oneshot::channel();
+        *pending() = Some(Pending {
+            words: words(),
+            answer,
+        });
+        // what closing the window does
+        settle(false);
+        assert_eq!(answered.await, Ok(false));
+    }
+}

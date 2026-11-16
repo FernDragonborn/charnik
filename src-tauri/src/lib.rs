@@ -332,7 +332,11 @@ pub fn run() {
             #[cfg(feature = "table-link")]
             table_link::table_link_return,
             #[cfg(feature = "table-link")]
-            table_link::table_link_forget
+            table_link::table_link_forget,
+            #[cfg(feature = "table-link")]
+            table_link::question::table_question_words,
+            #[cfg(feature = "table-link")]
+            table_link::question::table_question_answer
         ])
         .setup(|app| {
             open_main_window(app.handle())?;
