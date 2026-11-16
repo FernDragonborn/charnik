@@ -101,6 +101,22 @@
       its base — it is your character on the table. A GM screen's three panels got no yes. Tally
       marks and an hourglass for rounds are undrawn and unjudged.
 
+- [ ] **DAMAGE-GLYPHS · three of the thirteen damage glyphs are redrawn.** A damage type is its
+      `DamageIcon` and never a word wherever room is scarce (`../internals/ui.md` ▸ the hit line),
+      so a glyph a player cannot name is a type they cannot pick. The maintainer's reading of the
+      set in `components/damage-glyphs.ts`:
+      - **Piercing** — an arrow in three strokes — does not read clearly as piercing. What replaces
+        it is open.
+      - **Bludgeoning** — a hammer — is tried as a SLEDGEHAMMER, the two shown side by side.
+      - **Acid** — two droplets — is redrawn for certain. The ideas on the table: a broken or
+        overturned flask beside a puddle that fumes, or the fuming puddle alone.
+
+      What the new ones answer to is what the set already does: line art in `currentColor` and no
+      colour coding, flat path strings on Lucide's 24-unit grid, and legible at 14px, the size every
+      caller draws them at. The key list does not change, so nothing that offers or matches a type
+      moves. Picked from rendered variants at 14px beside the ten that stay, never from a
+      description.
+
 - [ ] **PICK-CONTROL-STUDY · which rendering of a two-state choice players actually read — asked of
   users, not of us.** FINESSE-ABILITY shipped the first one: both abilities standing with the live
   one lit (`STR DEX`), on the attack row of a finesse weapon. Three renderings went up first and the
