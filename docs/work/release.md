@@ -244,9 +244,25 @@
     web seat with that in mind.
   - **A web player first**; a web GM is read and specified beside it, since the page's prompt
     removes what kept the GM on the desktop.
-  - Still to read: what a backgrounded tab does to a WebSocket (Chrome's throttling and freezing,
-    Safari on iPadOS), where a browser keeps the table key (TABLE-LINK-REMEMBER, which today means
-    the OS store), and whether a web GM is in scope or only a web player.
+  - **The web build has no CSP at all** — no meta tag in `src/app.html`, no `kit.csp` — where
+    the desktop's (`tauri.conf.json`) refuses inline script. On the web, prose that escapes
+    DOMPurify runs, so a prompt in the page stands on one layer instead of two. A CSP for the web
+    build (SvelteKit's `kit.csp`, hashed for its own inline bootstrap) is the first step of this
+    item, before any table code.
+  - **A backgrounded tab is a seat that drops.** Chrome freezes CPU-heavy background tabs under
+    Energy Saver (from 133; <https://developer.chrome.com/blog/freezing-on-energy-saver>), throttles
+    timers in long-hidden tabs, and discards tabs under memory pressure, which ends a WebSocket
+    without a close; a WebSocket dropped after about five minutes hidden is reported and not settled
+    (XWIKI-23928). Safari on iPadOS was not read. The seat already dials again for as long as it is
+    held, so a drop costs a reconnect, not a seat — but a browser seat should expect it, say it,
+    and answer a request that waited. To drive on a device.
+  - **The key in a browser** has no OS store: it is the origin's, in IndexedDB, readable by any
+    script that runs in the page, and evictable (DEMO-FULL ▸ storage). iroh needs the raw Ed25519
+    bytes, so a non-extractable WebCrypto key does not fit. A web seat is therefore one session by
+    default, and remembering it is the person's choice, said with what it costs.
+  - **A web GM** depends on whether a browser endpoint can accept connections through its relay; n0's
+    browser examples include an echo server, which suggests it can (to confirm in code). A web player
+    comes first either way.
 - **DEMO-FULL · the web demo saves, installs and fetches packs.** The maintainer's call
   (`../plan.md` ▸ The web demo carries everything a browser allows). Today the hosted demo is
   read-only by a build flag (`config/demo.ts` ▸ `isReadOnlyContent`), not by a limit of the
