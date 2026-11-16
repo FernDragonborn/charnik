@@ -78,8 +78,9 @@ step.
    > `$DOCUMENT/charnik` plus whatever folder Rust granted. `fs:default` is not used, because it
    > carries a scope over every app directory that is global — it applies to the write commands
    > another permission enables, not only to the reads it names. Anything that must be out of page
-   > script's reach — the pointer today, pairing state and keys later — goes in those directories,
-   > written by a Rust command. `open_app_dir` is the same rule for the file manager: the page
+   > script's reach — the pointer, a remembered table (`table-link.md` ▸ Remembering a table) —
+   > goes in those directories, written by a Rust command; a table's key goes further, into the
+   > OS's credential store. `open_app_dir` is the same rule for the file manager: the page
    > says `data` or `logs`, Rust resolves the folder, and the opener's `open_path` is not granted.
    >
    > **Verified on Windows and on Linux** (under WSL): the data folder reads and writes, a

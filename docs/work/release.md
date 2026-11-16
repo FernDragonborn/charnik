@@ -168,17 +168,16 @@
   `TableLogPanel`), protocol 2. **Left:** the live drive on the real app, which now covers the log
   (`../internals/table-link.md` ▸ Driving a live table) and needs the person answering the native
   questions.
-- **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.** A
-  table lives for one session and its keys are in memory, so an app that restarts — a desktop in
-  a power cut — comes back a stranger. Remembering one means a key that outlives the app: the OS
-  store through the `keyring` crate, never the data folder (design review ▸ 11), a list of tables
-  with "forget this one", and a GM key that changes being a new table to join rather than a
-  warning. For the restart: the GM's set of keys already let in is kept with the table, the
-  player's side waits for a GM that is gone (it already dials without end), and the app that
-  comes back asks its person ONE native question — return to this table? — before any socket,
-  as going online always does. The GM's log of asks belongs here too: it lasts through a page
-  that loads again and not past the app (`../internals/table-link.md` ▸ Staying seated), and
-  after a restart it is rebuilt from the copies the players hold (TABLE-LINK-LOG's model).
+- [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
+  Specified and built to `../internals/table-link.md` ▸ Remembering a table: the key in the OS
+  store, the rest where only Rust writes, the list with Return and Forget, the native question
+  before any socket, the door shut on a table opened again. Held by `session.rs`'s test of a GM
+  that goes down and opens again, `remember.rs`'s tests (the Windows credential store among
+  them), and the page's tests. **Decided without the maintainer, for their word:** leaving forgets
+  the table; a table opened again keeps its door shut. **Left:** the GM's log of asks as records,
+  rebuilt from the players' copies; a store on Linux (Secret Service) and macOS; a no-relay table
+  at its old address (it comes back at a new one); and the drive on the real app — quit it while
+  seated, start it, Return — which needs the person answering the question.
 - **TABLE-LINK-HUB · the table's hub is somebody other than the GM, and can move.** Asked for a
   GM on a poor connection. Today it would move nothing that matters: every frame on the wire has
   the GM at one end — a sheet goes to the GM, an ask comes from the GM — so the GM's link is in

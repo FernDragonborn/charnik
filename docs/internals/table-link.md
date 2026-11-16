@@ -13,9 +13,10 @@ then on the GM's app shows that player's sheet live and can ask four things of i
 damage, be healed, take this state, make this roll. Nothing the GM asks applies itself — it
 arrives, the player sees it and answers.
 
-**A table lives for one session.** Its keys are made when it opens, held in memory and written
-nowhere; closing the app ends it. A GM who plays again next week opens a new table and lets each
-player in again. There is nothing to remember, list, forget or leak between sessions.
+**A table lasts until it is left.** Its key is made when it opens and kept in the OS's own
+credential store, so an app that went down — a restart, a power cut — returns to the same table
+under the same key instead of coming back a stranger (Remembering a table). Leaving is what ends
+it: a GM's leaving closes it for everyone, and either seat's leaving forgets it on that computer.
 
 **It is desktop to desktop.** The web demo has no table (`table-link/noop.ts`), and a desktop
 build has one only with the `table-link` Cargo feature, which is OFF in a release
@@ -267,7 +268,8 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
   held to never crosses the wire, so Rust has no copy to hand back — and the page keeps it in
   sessionStorage under its table (`routes/table/asked-log.ts`), which lasts through a reload and
   not past the app's window. Rust keeps the newest fifty answers in the same list, so one that
-  landed while no page was there finds its row. Closing the app is what ends a table.
+  landed while no page was there finds its row. Closing the app takes the seat down with it,
+  and the table stays remembered.
 
 ## The table's log
 
@@ -319,23 +321,34 @@ dismissed — is not kept.
 
 ## Remembering a table
 
-> TABLE-LINK-REMEMBER — specified, not built.
+(`table_link/remember.rs`; the session's half is `Again` and `Keeper` in `session.rs`.)
 
-- **A table's key outlives the app, in the OS's own store** (`keyring`), never the data folder,
-  which a folder sync or a restored backup carries (design review ▸ 11). An app whose key cannot be
-  opened treats the table as gone and says to join again.
-- **The rest is a file only Rust writes**, in the app's local data folder, which the page's file
-  access is denied (`capabilities/default.json`): the tables this app sits at, each with its name,
-  its GM's key and route, this app's role, and — for a GM — the keys let in. The records each app
-  holds sit beside it, so the log lasts as long as the table.
-- **Coming back asks first.** After a restart nothing dials until the person answers one native
-  question per table — return to this table? — as going online always does. A "no" keeps the
-  table listed; "forget this table" is the way it goes, key and records with it.
+- **A table's key outlives the app, in the OS's own store** (`keyring-core`), never the data
+  folder, which a folder sync or a restored backup carries (design review ▸ 11). An app whose key
+  cannot be opened treats the table as gone and says to join again (`forgotten`). **Only Windows
+  has a store this build reaches**; elsewhere nothing is remembered and a table lasts one session.
+- **The rest is a file only Rust writes**, in `tables/` under the app's local data folder, which
+  the page's file access is denied (`capabilities/default.json`): one `<table>.json` per table —
+  a GM's table name, relay setting and the keys let in under their names; a player's invitation
+  and the name they sat under — and one `<table>.records.jsonl` of the records the app holds,
+  each with the name it was shown under, rewritten to its newest 500 once it reaches 2 000 lines.
+  A file is written whole beside the old one and renamed over it, and a table id is the only file
+  name the module makes. The session asks for each line as it happens (`Keep`), so a power cut
+  loses at most what was not yet written.
+- **Coming back asks first.** The Table screen lists the tables this app sat at and did not leave
+  (`table_link_remembered`); Return asks one native question — return to this table? — before any
+  socket, as going online always does, and Forget asks first in the page, since it cannot be undone.
+- **A table opened again is the same table**: the GM's endpoint binds under the kept key, so the
+  invitation players hold still names it, and whoever was let in is seated without being asked
+  about. **Its door is shut** until the GM opens it, so invitations handed out before the app went
+  down do not still knock. A player's seat that was dialling all along finds it — through a
+  relay; a table with no relay comes back at a new address, and its players sit again from a new
+  invitation, under their old keys and without a question.
 - **A GM key that changes is a new table**, joined from a new invitation, never a warning to click
   past.
-- **The GM's log of asks becomes records** — an ask is the GM's, an answer the player's — so a GM's
-  app that restarted gets it back from the players' copies. A DC the GM kept is in the GM's own
-  copy only, since it never crosses the wire.
+- **Not yet:** the GM's log of asks as records — an ask the GM's, an answer the player's — so a
+  GM's app that restarted gets it back from the players' copies. Until then it lasts through a page
+  that loads again and not past the app.
 
 ## Versions
 

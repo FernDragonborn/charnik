@@ -13,4 +13,7 @@ export const noopTableLink: TableLink = {
 	host: unavailable,
 	join: unavailable,
 	resume: () => Promise.resolve({ role: TABLE_ROLE.none }),
+	remembered: () => Promise.resolve([]),
+	returnTo: unavailable,
+	forget: () => Promise.resolve(),
 };

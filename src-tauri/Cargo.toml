@@ -17,7 +17,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 # The table link's commands and their capability (`src/table_link.rs`). Off in a release: the app
 # ships with no command of it for the page to call. CI compiles it on.
-table-link = ["dep:iroh", "dep:tokio", "dep:data-encoding", "dep:getrandom"]
+table-link = [
+    "dep:iroh",
+    "dep:tokio",
+    "dep:data-encoding",
+    "dep:getrandom",
+    "dep:keyring-core",
+    "dep:windows-native-keyring-store",
+]
 
 [build-dependencies]
 tauri-build = { version = "2.6.3", features = [] }
@@ -52,6 +59,9 @@ tokio = { version = "1", features = ["sync", "time", "macros", "rt"], optional =
 # An invitation is bytes a person pastes (`table_link/wire.rs`), and its secret is the OS's randomness.
 data-encoding = { version = "2", optional = true }
 getrandom = { version = "0.4", optional = true }
+# A remembered table's key lives in the OS's own credential store, never a file
+# (`table_link/remember.rs`). Windows only for now: elsewhere a table lasts one session.
+keyring-core = { version = "1.0.1", optional = true }
 
 [dev-dependencies]
 # `remote.rs` builds a response by hand to test its size ceiling without a network.
@@ -64,3 +74,6 @@ tauri-plugin-updater = "2"
 # One process per data folder: a second launch focuses the open window instead of becoming a second
 # writer of the same `character.json`.
 tauri-plugin-single-instance = "2"
+
+[target."cfg(windows)".dependencies]
+windows-native-keyring-store = { version = "1.1.0", optional = true }

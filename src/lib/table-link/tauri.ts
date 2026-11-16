@@ -26,6 +26,8 @@ import {
 	type HeldSeat,
 	type PlayerEvent,
 	type PlayerSeat,
+	type RememberedTable,
+	type Returned,
 	type Seating,
 	type TableId,
 	type TableLink,
@@ -197,6 +199,22 @@ async function resume(): Promise<HeldSeat> {
 		: { role: held.role, seat: playerSeat(held.table, held.code, early) };
 }
 
+/** Sit at a remembered table again: the seat is the role it was. */
+async function returnTo(remembered: RememberedTable, locale: string): Promise<Returned> {
+	const { table, role, name } = remembered;
+	const args = { table, locale };
+	if (role === TABLE_ROLE.gm) {
+		const seating = await seat('table_link_return', args, gmSeat);
+		return seating.status === SEATING.seated
+			? { status: seating.status, held: { role, seat: seating.seat, name } }
+			: seating;
+	}
+	const seating = await seat('table_link_return', args, playerSeat);
+	return seating.status === SEATING.seated
+		? { status: seating.status, held: { role, seat: seating.seat } }
+		: seating;
+}
+
 export const tauriTableLink: TableLink = {
 	// leaving a table that is not there does nothing in a build with the feature, and is refused
 	// in a build without it
@@ -208,4 +226,8 @@ export const tauriTableLink: TableLink = {
 	host: ({ name, relay, locale }) => seat('table_link_host', { name, relay, locale }, gmSeat),
 	join: ({ invite, name, locale }) => seat('table_link_join', { invite, name, locale }, playerSeat),
 	resume,
+	// a refusal is a build without the feature, which remembers nothing
+	remembered: () => invoke<RememberedTable[]>('table_link_remembered').catch(() => []),
+	returnTo,
+	forget: (table) => invoke('table_link_forget', { table }),
 };

@@ -19,6 +19,7 @@ import {
 	TABLE_ANSWER,
 	TABLE_EVENT,
 	TABLE_ROLE,
+	UNAVAILABLE,
 	type CloseReason,
 	type ConnectionState,
 	type Audience,
@@ -27,6 +28,7 @@ import {
 	type ParticipantId,
 	type PlayerEvent,
 	type PlayerSeat,
+	type RememberedTable,
 	type TableLink,
 	type TableRequest,
 	type TableRole,
@@ -209,6 +211,43 @@ export class TableVM {
 		}
 	};
 
+	// --- tables this app sat at --------------------------------------------------------------------
+
+	/** The tables this app can return to: sat at, and not left. */
+	remembered = $state<RememberedTable[]>([]);
+
+	loadRemembered = async (): Promise<void> => {
+		this.remembered = await this.link().remembered();
+	};
+
+	/** Sit at a remembered table again. The person is asked natively before anything goes online. */
+	returnTo = async (remembered: RememberedTable): Promise<void> => {
+		if (this.busy || this.role !== TABLE_ROLE.none) return;
+		this.busy = true;
+		this.problem = null;
+		try {
+			const returned = await this.link().returnTo(remembered, app.activeLocale);
+			if (returned.status !== SEATING.seated) {
+				this.problem = returned.reason;
+				if (returned.reason === UNAVAILABLE.forgotten) await this.loadRemembered();
+				return;
+			}
+			const { held } = returned;
+			if (held.role === TABLE_ROLE.gm) await this.sitAsGm(held.seat, held.name);
+			else {
+				if (!combat.character) await combat.load();
+				await this.sitAsPlayer(held.seat);
+			}
+		} finally {
+			this.busy = false;
+		}
+	};
+
+	forget = async (remembered: RememberedTable): Promise<void> => {
+		await this.link().forget(remembered.table);
+		await this.loadRemembered();
+	};
+
 	/** Give the seat up. A GM's leaving closes the table for everyone at it. */
 	leave = (): Promise<void> => this.endSeat(null);
 
@@ -228,6 +267,8 @@ export class TableVM {
 		dropAskedLog();
 		// best-effort: the seat is already given up here, and Rust drops its half with the app
 		await seat?.leave().catch(() => {});
+		// a table left is a table forgotten
+		await this.loadRemembered();
 	}
 
 	// --- the GM's side ----------------------------------------------------------------------------

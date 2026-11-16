@@ -9,7 +9,7 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { toast } from '$lib/toast/toast';
 	import { loadContentStore } from '$lib/content/store.svelte';
-	import { CONNECTION, RELAY_MODE } from '$lib/table-link/types';
+	import { CONNECTION, RELAY_MODE, type RememberedTable } from '$lib/table-link/types';
 	import { combat } from '../combat/combat-view-model.svelte';
 	import { ASK_STATUS, TABLE_ROLE, table, type AskedRow } from './table-view-model.svelte';
 	import { rollPassed } from './requested-roll';
@@ -22,11 +22,14 @@
 	let tableName = $state('');
 	let invite = $state('');
 	let confirmClose = $state(false);
+	/** A remembered table about to be forgotten, while the person is asked. */
+	let confirmForget = $state<RememberedTable | null>(null);
 
 	// joining sits the open character down, so the screen names who that is before the press
 	onMount(() => {
 		void loadContentStore();
 		void table.checkAvailable();
+		void table.loadRemembered();
 		if (!combat.character) void combat.load();
 	});
 
@@ -191,6 +194,35 @@
 		{#if table.available === false}
 			<p class="card muted">{$_('table.webOnly')}</p>
 		{:else}
+			{#if table.remembered.length}
+				<section class="card table-remembered" aria-labelledby="table-remembered-title">
+					<h2 id="table-remembered-title">{$_('table.remembered.title')}</h2>
+					<p class="muted">{$_('table.remembered.blurb')}</p>
+					<ul class="table-rows">
+						{#each table.remembered as kept (kept.table)}
+							<li class="table-row">
+								<b>{kept.name}</b>
+								<span class="muted">{$_(`table.remembered.as.${kept.role}`)}</span>
+								<span class="table-row-spacer"></span>
+								<button
+									type="button"
+									class="btn ghost"
+									class:is-blocked={table.busy}
+									aria-disabled={table.busy}
+									onclick={() => (confirmForget = kept)}>{$_('table.remembered.forget')}</button
+								>
+								<button
+									type="button"
+									class="btn primary"
+									class:is-blocked={table.busy}
+									aria-disabled={table.busy}
+									onclick={() => void table.returnTo(kept)}>{$_('table.remembered.return')}</button
+								>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
 			<div class="table-doors">
 				<form
 					class="card table-door"
@@ -261,6 +293,21 @@
 		{/if}
 	{/if}
 </section>
+
+{#if confirmForget}
+	{@const kept = confirmForget}
+	<ConfirmDialog
+		title={$_('table.remembered.forgetTitle', { values: { table: kept.name } })}
+		message={$_(`table.remembered.forgetBody.${kept.role}`)}
+		confirmLabel={$_('table.remembered.forget')}
+		danger
+		onConfirm={() => {
+			confirmForget = null;
+			void table.forget(kept);
+		}}
+		onCancel={() => (confirmForget = null)}
+	/>
+{/if}
 
 {#if confirmClose}
 	<ConfirmDialog
@@ -384,6 +431,15 @@
 	.table-asked-row .table-asked-status.is-declined {
 		color: var(--color-warning);
 		border-color: var(--color-warning);
+	}
+	.table-remembered {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.table-remembered h2,
+	.table-remembered p {
+		margin: 0;
 	}
 	.table-status {
 		display: flex;

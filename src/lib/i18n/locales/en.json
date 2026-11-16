@@ -2444,6 +2444,12 @@
 				"relay": "The connection is set up through the relay server {relay}. It sees your network address and never what is sent.",
 				"direct": "The connection goes straight to the GM's computer, with no relay server."
 			},
+			"return": {
+				"title": "Charnik — return to a table?",
+				"body": "Return to the table \"{table}\"?\n\nCharnik will go online again, under the same key it sat at this table with. {route}",
+				"allow": "Return",
+				"deny": "Not now"
+			},
 			"approve": {
 				"title": "Charnik — a player wants to join",
 				"body": "\"{player}\" wants to join the table \"{table}\".\n\nTheir code is {code}. Let them in only if that is the code the player reads to you.",
@@ -2464,6 +2470,7 @@
 			"bad_relay": "The relay address in Settings ▸ Table is not a web address starting with https://. Nothing was opened.",
 			"relay_unreachable": "The relay server did not answer, so players could not have found this table. Check the connection, or choose another relay in Settings ▸ Table.",
 			"network": "Charnik could not open a network connection on this computer. Nothing was opened.",
+			"forgotten": "That table is no longer remembered — it was forgotten, or its key is gone from this computer's store. Join it again from a new invitation.",
 			"no_character": "There is no character open to sit down as. Open one from the roster, then join.",
 			"unreachable": "The GM's app could not be reached. Check that the table is still open and that this is the GM's latest invitation.",
 			"invite": "The table did not take this invitation: its door is shut, or the GM has made a newer one. Ask for the current invitation.",
@@ -2611,6 +2618,18 @@
 			"afterDefenses": "{final} after your defenses",
 			"cannotRoll": "This sheet has nothing by that name to roll, so you can only decline.",
 			"cannotEffect": "This app has no state called “{id}” — the GM may be using content you do not have. You can only decline."
+		},
+		"remembered": {
+			"title": "Tables you sat at",
+			"blurb": "Charnik remembers a table until you leave it, so a restart or a power cut does not cost you your seat. Returning asks first, as going online always does.",
+			"as": { "gm": "You are the GM", "player": "You play" },
+			"return": "Return",
+			"forget": "Forget",
+			"forgetTitle": "Forget “{table}”?",
+			"forgetBody": {
+				"gm": "This computer forgets the table's key and its log. Nobody can reach this table again — players join a new one from a new invitation.",
+				"player": "This computer forgets your seat at the table and its log. To sit there again, ask the GM for a new invitation."
+			}
 		},
 		"log": {
 			"title": "The table's log",

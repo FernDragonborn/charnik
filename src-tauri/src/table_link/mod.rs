@@ -21,6 +21,7 @@
 //! of the three, and the page learns that by calling: a command that is not there is refused.
 
 mod records;
+mod remember;
 mod session;
 mod wire;
 
@@ -279,6 +280,26 @@ fn emitter(app: &tauri::AppHandle, told: &Told) -> Emit {
     })
 }
 
+/// The shelf of remembered tables, where this build can remember one. One for the app, so every
+/// writer to it holds the same lock.
+fn shelf(app: &tauri::AppHandle) -> Option<remember::Shelf> {
+    static SHELF: std::sync::OnceLock<Option<remember::Shelf>> = std::sync::OnceLock::new();
+    SHELF
+        .get_or_init(|| {
+            let folder = app.path().app_local_data_dir().ok()?.join("tables");
+            Some(remember::Shelf::new(folder, remember::os_vault()?))
+        })
+        .clone()
+}
+
+/// What a session asks to keep goes onto the shelf, or nowhere where there is none.
+fn keeper(shelf: Option<&remember::Shelf>, id: &str) -> session::Keeper {
+    shelf.map_or_else(
+        || Arc::new(|_| {}) as session::Keeper,
+        |shelf| shelf.keeper(id),
+    )
+}
+
 /// The GM's yes or no to somebody at the door, asked natively.
 fn approver(app: &tauri::AppHandle, locale: &str) -> Approve {
     let (app, locale) = (app.clone(), locale.to_string());
@@ -332,20 +353,42 @@ pub async fn table_link_host(
     }
     let told = Told::default();
     let emit = emitter(&app, &told);
-    match session::host(&name, &relay, emit, approver(&app, &locale)).await {
+    let Ok(id) = wire::new_local_id() else {
+        return unavailable(Unavailable::Network);
+    };
+    let shelf = shelf(&app);
+    let keep = keeper(shelf.as_ref(), &id);
+    match session::host(
+        id.clone(),
+        &name,
+        &relay,
+        emit,
+        approver(&app, &locale),
+        keep,
+        None,
+    )
+    .await
+    {
         Ok((table, invite)) => {
-            let id = table.id.clone();
+            if let Some(shelf) = &shelf {
+                let kept = remember::KeptSeat::Gm {
+                    name: name.clone(),
+                    relay: relay.clone(),
+                    allowed: vec![],
+                };
+                shelf.put(&id, &kept, table.key());
+            }
             *seat = Some(Held {
                 seat: Seat::Gm {
                     table,
                     name,
-                    invite: Some(invite.clone()),
+                    invite: invite.clone(),
                 },
                 told,
             });
             Seating::Seated {
                 table: id,
-                invite: Some(invite),
+                invite,
                 code: None,
             }
         }
@@ -391,8 +434,28 @@ pub async fn table_link_join(
         return unavailable(Unavailable::Cancelled);
     }
     let told = Told::default();
-    match session::join(&invite, &name, emitter(&app, &told)).await {
+    let Ok(id) = wire::new_local_id() else {
+        return unavailable(Unavailable::Network);
+    };
+    let shelf = shelf(&app);
+    match session::join(
+        id.clone(),
+        &invite,
+        &name,
+        emitter(&app, &told),
+        keeper(shelf.as_ref(), &id),
+        None,
+    )
+    .await
+    {
         Ok(player) => {
+            if let Some(shelf) = &shelf {
+                let kept = remember::KeptSeat::Player {
+                    invite: invite.to_text(),
+                    name: name.clone(),
+                };
+                shelf.put(&id, &kept, player.key());
+            }
             let (table, code) = (player.id.clone(), player.code.clone());
             *seat = Some(Held {
                 seat: Seat::Player(player),
@@ -414,10 +477,135 @@ pub async fn table_link_leave(app: tauri::AppHandle, table: String) {
     let state = app.state::<TableLinkState>();
     let mut held = state.0.lock().await;
     if held.as_ref().is_some_and(|held| held.seat.table() == table) {
+        // leaving is for good: the table is not offered back next time
+        if let Some(shelf) = shelf(&app) {
+            shelf.forget(&table);
+        }
         match held.take().map(|held| held.seat) {
             Some(Seat::Gm { table, .. }) => table.close().await,
             Some(Seat::Player(player)) => player.leave().await,
             None => {}
+        }
+    }
+}
+
+/// The tables this app sat at and did not leave: what it can return to after a restart.
+#[tauri::command]
+pub async fn table_link_remembered(app: tauri::AppHandle) -> Vec<remember::Shelved> {
+    shelf(&app).map(|shelf| shelf.list()).unwrap_or_default()
+}
+
+/// Take a table off the shelf, key and records with it.
+#[tauri::command]
+pub async fn table_link_forget(app: tauri::AppHandle, table: String) {
+    let held = app.state::<TableLinkState>();
+    // the table this app is seated at is left, not forgotten from under it
+    if held
+        .0
+        .lock()
+        .await
+        .as_ref()
+        .is_some_and(|held| held.seat.table() == table)
+    {
+        return;
+    }
+    if let Some(shelf) = shelf(&app) {
+        shelf.forget(&table);
+    }
+}
+
+/// Go back to a table this app sat at before it went down, under the key it sat under. Nothing
+/// dials until the person says yes, as going online always asks.
+#[tauri::command]
+pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: String) -> Seating {
+    let unavailable = |reason| Seating::Unavailable { reason };
+    let state = app.state::<TableLinkState>();
+    let mut seat = state.0.lock().await;
+    if seat.is_some() {
+        return unavailable(Unavailable::AlreadySeated);
+    }
+    let Some(shelf) = shelf(&app) else {
+        return unavailable(Unavailable::Forgotten);
+    };
+    let Some((kept, again)) = shelf.take(&table) else {
+        return unavailable(Unavailable::Forgotten);
+    };
+    let (name, route) = match &kept {
+        remember::KeptSeat::Gm { name, relay, .. } => {
+            let route = match relay {
+                RelaySetting::N0 => route_sentence(&locale, "hostRoute.n0", None),
+                RelaySetting::None => route_sentence(&locale, "hostRoute.none", None),
+                RelaySetting::Custom { url } => {
+                    route_sentence(&locale, "hostRoute.custom", relay_host(url).as_deref())
+                }
+            };
+            (name.clone(), route)
+        }
+        remember::KeptSeat::Player { invite, .. } => {
+            let Some(invite) = Invite::from_text(invite) else {
+                return unavailable(Unavailable::BadInvite);
+            };
+            let route = match invite.relay.as_deref().and_then(relay_host) {
+                Some(host) => route_sentence(&locale, "joinRoute.relay", Some(&host)),
+                None => route_sentence(&locale, "joinRoute.direct", None),
+            };
+            (invite.name, route)
+        }
+    };
+    let question = Question {
+        dialog: "return",
+        locale: locale.clone(),
+        values: vec![("table", name.clone()), ("route", route)],
+    };
+    if !question.ask(app.clone()).await {
+        return unavailable(Unavailable::Cancelled);
+    }
+    let told = Told::default();
+    let keep = shelf.keeper(&table);
+    match kept {
+        remember::KeptSeat::Gm { relay, .. } => {
+            let emit = emitter(&app, &told);
+            let approve = approver(&app, &locale);
+            match session::host(table, &name, &relay, emit, approve, keep, Some(again)).await {
+                Ok((gm, invite)) => {
+                    let id = gm.id.clone();
+                    *seat = Some(Held {
+                        seat: Seat::Gm {
+                            table: gm,
+                            name,
+                            invite: invite.clone(),
+                        },
+                        told,
+                    });
+                    Seating::Seated {
+                        table: id,
+                        invite,
+                        code: None,
+                    }
+                }
+                Err(reason) => unavailable(reason),
+            }
+        }
+        remember::KeptSeat::Player { invite, name } => {
+            let Some(invite) = Invite::from_text(&invite) else {
+                return unavailable(Unavailable::BadInvite);
+            };
+            let emit = emitter(&app, &told);
+            match session::join(table, &invite, &name, emit, keep, Some(again)).await {
+                Ok(player) => {
+                    let (id, code) = (player.id.clone(), player.code.clone());
+                    *seat = Some(Held {
+                        seat: Seat::Player(player),
+                        told,
+                    });
+                    Seating::Seated {
+                        table: id,
+                        invite: None,
+                        code: Some(code),
+                    }
+                }
+                Err(reason) => unavailable(reason),
+            }
         }
     }
 }
@@ -571,10 +759,11 @@ mod tests {
 
     #[test]
     fn every_bundled_locale_words_every_native_question() {
-        let placeholders: [(&str, &[&str]); 3] = [
+        let placeholders: [(&str, &[&str]); 4] = [
             ("host", &["{table}", "{route}"]),
             ("join", &["{table}", "{player}", "{route}"]),
             ("approve", &["{table}", "{player}", "{code}"]),
+            ("return", &["{table}", "{route}"]),
         ];
         for locale in NATIVE_LOCALES {
             for (dialog, names) in placeholders {

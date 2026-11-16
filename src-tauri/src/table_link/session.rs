@@ -181,9 +181,37 @@ pub enum Unavailable {
     BadRelay,
     RelayUnreachable,
     Network,
+    /// The table to return to is not remembered: forgotten, or its key is gone from the store.
+    Forgotten,
 }
 
 pub type Emit = Arc<dyn Fn(TableEvent) + Send + Sync>;
+
+/// What a session asks the app to keep beyond what it shows, so a table outlives the app
+/// (`docs/internals/table-link.md` ▸ Remembering a table).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Keep {
+    /// A record this app now holds, with the name it is shown under.
+    Record {
+        record: Signed,
+        name: Option<String>,
+    },
+    /// A key the GM let in, under the name it gave.
+    LetIn { key: EndpointId, name: String },
+    /// A key the GM sent away.
+    SentAway { key: EndpointId },
+}
+pub type Keeper = Arc<dyn Fn(Keep) + Send + Sync>;
+
+/// What an app that sat at this table before brings back to it.
+pub struct Again {
+    /// The key it sat under: the same key is the same seat, and for a GM the same table.
+    pub key: SecretKey,
+    /// For a GM, whom it had let in, and under what name.
+    pub allowed: Vec<(EndpointId, String)>,
+    /// The records it held, each with the name it was shown under.
+    pub records: Vec<(Signed, Option<String>)>,
+}
 
 /// Somebody at the door, as the GM is asked about them.
 pub struct JoinRequest {
@@ -196,7 +224,7 @@ pub type Approve =
     Arc<dyn Fn(JoinRequest) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>;
 
 /// Which relay servers a table is reached through — the GM's choice, carried by the invitation.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RelaySetting {
     /// number 0's public relays.
@@ -340,6 +368,7 @@ struct GmShared {
     log: Mutex<Log>,
     /// The name each key was let in under: the name its records are handed on with.
     names: Mutex<HashMap<EndpointId, String>>,
+    keep: Keeper,
 }
 
 /// May this seat be handed this record? A roll kept to the GM reaches its roller and nobody else.
@@ -387,6 +416,10 @@ impl GmShared {
             return;
         }
         let name = self.name_of(&record.author);
+        (self.keep)(Keep::Record {
+            record: signed.clone(),
+            name: name.clone(),
+        });
         (self.emit)(TableEvent::Record {
             table: self.table.clone(),
             mine: record.author == gm,
@@ -461,6 +494,10 @@ impl GmShared {
             return Err(Refusal::Declined);
         }
         locked(&self.allowed).insert(player);
+        (self.keep)(Keep::LetIn {
+            key: player,
+            name: name.to_string(),
+        });
         Ok(())
     }
 }
@@ -627,18 +664,23 @@ pub struct GmTable {
 /// Open a table: bind an endpoint, wait for its relay if it has one, and start letting people
 /// knock. Answers the table and the first invitation to it.
 pub async fn host(
+    table: String,
     name: &str,
     relay: &RelaySetting,
     emit: Emit,
     approve: Approve,
-) -> Result<(GmTable, String), Unavailable> {
+    keep: Keeper,
+    again: Option<Again>,
+) -> Result<(GmTable, Option<String>), Unavailable> {
     let name = wire::plain_text(name);
     if name.is_empty() {
         return Err(Unavailable::BadName);
     }
     let mode = relay.mode().ok_or(Unavailable::BadRelay)?;
     let relayed = mode != RelayMode::Disabled;
-    let key = SecretKey::generate();
+    let key = again
+        .as_ref()
+        .map_or_else(SecretKey::generate, |again| again.key.clone());
     let endpoint = bind(key.clone(), mode, true, None).await?;
     if relayed && timeout(RELAY_WAIT, endpoint.online()).await.is_err() {
         endpoint.close().await;
@@ -653,7 +695,7 @@ pub async fn host(
     } else {
         addr.ip_addrs().copied().collect()
     };
-    let (Ok(table), Ok(secret)) = (wire::new_local_id(), wire::new_secret()) else {
+    let Ok(secret) = wire::new_secret() else {
         endpoint.close().await;
         return Err(Unavailable::Network);
     };
@@ -668,7 +710,9 @@ pub async fn host(
         gm: endpoint.id(),
         relay,
         addrs,
-        door: Mutex::new(Some(secret.clone())),
+        // a table opened again keeps its door shut until the GM opens it: the invitations handed
+        // out before the app went down should not still knock
+        door: Mutex::new(again.is_none().then(|| secret.clone())),
         allowed: Mutex::default(),
         seats: Mutex::default(),
         generations: AtomicU64::new(0),
@@ -679,7 +723,28 @@ pub async fn host(
         log: Mutex::new(Log::default()),
         names: Mutex::default(),
         key,
+        keep,
     });
+    if let Some(again) = again {
+        for (player, name) in again.allowed {
+            locked(&shared.allowed).insert(player);
+            locked(&shared.names).insert(player, name);
+        }
+        let gm = shared.gm.to_string();
+        for (signed, name) in again.records {
+            let Some(record) = records::verify(&signed, &gm) else {
+                continue;
+            };
+            if locked(&shared.log).keep(record.clone(), signed) == Kept::New {
+                (shared.emit)(TableEvent::Record {
+                    table: shared.table.clone(),
+                    mine: record.author == gm,
+                    record,
+                    name,
+                });
+            }
+        }
+    }
     let accepting = tokio::spawn({
         let (endpoint, shared) = (endpoint.clone(), shared.clone());
         async move {
@@ -698,7 +763,9 @@ pub async fn host(
             }
         }
     });
-    let invite = shared.invite(secret);
+    let invite = locked(&shared.door)
+        .is_some()
+        .then(|| shared.invite(secret));
     log::info!("table link: a table is open");
     Ok((
         GmTable {
@@ -712,6 +779,11 @@ pub async fn host(
 }
 
 impl GmTable {
+    /// The key this table is opened under: kept, it opens the same table again.
+    pub fn key(&self) -> &SecretKey {
+        &self.shared.key
+    }
+
     fn seat_of(&self, participant: &str) -> Option<mpsc::Sender<GmFrame>> {
         let player: EndpointId = participant.parse().ok()?;
         locked(&self.shared.seats)
@@ -766,6 +838,7 @@ impl GmTable {
     pub fn dismiss(&self, participant: &str) {
         if let Ok(player) = participant.parse::<EndpointId>() {
             locked(&self.shared.allowed).remove(&player);
+            (self.shared.keep)(Keep::SentAway { key: player });
         }
         if let Some(seat) = self.seat_of(participant) {
             let _ = seat.try_send(GmFrame::Closed {
@@ -821,6 +894,7 @@ struct PlayerShared {
     /// This app's key at the table, which signs its records.
     key: SecretKey,
     log: Mutex<Log>,
+    keep: Keeper,
     /// The way to the GM while a connection is seated, and None while there is none.
     outbound: Mutex<Option<mpsc::Sender<Outgoing>>>,
     /// The person asked for a dial now, in place of the wait before the next one.
@@ -834,10 +908,14 @@ impl PlayerShared {
         let Some(record) = records::verify(&signed, &self.gm) else {
             return;
         };
-        if locked(&self.log).keep(record.clone(), signed) == Kept::New {
+        if locked(&self.log).keep(record.clone(), signed.clone()) == Kept::New {
             let name = (record.author != self.gm)
                 .then(|| name.map(|name| wire::plain_text(&name)))
                 .flatten();
+            (self.keep)(Keep::Record {
+                record: signed,
+                name: name.clone(),
+            });
             (self.emit)(TableEvent::Record {
                 table: self.table.clone(),
                 mine: record.author == self.key.public().to_string(),
@@ -1039,25 +1117,39 @@ pub fn is_followable(invite: &Invite) -> bool {
 
 /// Take a seat: bind an endpoint that may dial this invitation's GM and nobody else, and start
 /// dialling. Answers at once — what becomes of the dial is told as `Connection` events.
-pub async fn join(invite: &Invite, name: &str, emit: Emit) -> Result<PlayerSeat, Unavailable> {
+pub async fn join(
+    table: String,
+    invite: &Invite,
+    name: &str,
+    emit: Emit,
+    keep: Keeper,
+    again: Option<Again>,
+) -> Result<PlayerSeat, Unavailable> {
     let name = wire::plain_text(name);
     if name.is_empty() {
         return Err(Unavailable::BadName);
     }
     let (gm, relay) = address_of(invite).ok_or(Unavailable::BadInvite)?;
     let mode = relay.map_or(RelayMode::Disabled, |relay| RelayMode::custom([relay]));
-    let key = SecretKey::generate();
+    let key = again
+        .as_ref()
+        .map_or_else(SecretKey::generate, |again| again.key.clone());
     let endpoint = bind(key.clone(), mode, false, Some(gm.id)).await?;
-    let table = wire::new_local_id().map_err(|_| Unavailable::Network)?;
     let shared = Arc::new(PlayerShared {
         table: table.clone(),
         gm: gm.id.to_string(),
         key,
         log: Mutex::new(Log::default()),
+        keep,
         outbound: Mutex::default(),
         dial_now: Notify::new(),
         emit,
     });
+    if let Some(again) = again {
+        for (signed, name) in again.records {
+            shared.take(signed, name);
+        }
+    }
     let hello = Hello {
         secret: invite.secret.clone(),
         name,
@@ -1073,6 +1165,11 @@ pub async fn join(invite: &Invite, name: &str, emit: Emit) -> Result<PlayerSeat,
 }
 
 impl PlayerSeat {
+    /// The key this seat sits under: kept, it is the same seat at the table again.
+    pub fn key(&self) -> &SecretKey {
+        &self.shared.key
+    }
+
     fn send(&self, out: Outgoing) -> Delivery {
         match locked(&self.shared.outbound).as_ref() {
             Some(outbound) if outbound.try_send(out).is_ok() => Delivery::Delivered,
@@ -1119,6 +1216,10 @@ impl PlayerSeat {
                 return Delivery::NotDelivered;
             };
             log.keep(record.clone(), signed.clone());
+            (shared.keep)(Keep::Record {
+                record: signed.clone(),
+                name: None,
+            });
             (shared.emit)(TableEvent::Record {
                 table: shared.table.clone(),
                 record,
@@ -1198,6 +1299,15 @@ mod tests {
         }
     }
 
+    fn fresh_id() -> String {
+        wire::new_local_id().expect("an id")
+    }
+
+    /// A keeper that keeps nothing: a table that is not to outlive the test.
+    fn forgetting() -> Keeper {
+        Arc::new(|_| {})
+    }
+
     fn view(value: Value) -> Map<String, Value> {
         value.as_object().cloned().expect("an object")
     }
@@ -1206,15 +1316,25 @@ mod tests {
     async fn a_player_the_gm_lets_in_is_seen_asked_and_answers() {
         let (gm_emit, mut gm_events) = listening();
         let (approve, asked) = answering(true);
-        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
-            .await
-            .expect("a table");
-        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
         assert_eq!(invite.name, "Thursday");
         assert!(invite.relay.is_none() && !invite.addrs.is_empty());
 
         let (player_emit, mut player_events) = listening();
-        let seat = join(&invite, "Lira", player_emit).await.expect("a seat");
+        let seat = join(fresh_id(), &invite, "Lira", player_emit, forgetting(), None)
+            .await
+            .expect("a seat");
 
         // the GM was asked about this player, by the name and the code the player's app shows
         assert!(matches!(
@@ -1328,10 +1448,18 @@ mod tests {
     async fn nobody_sits_without_the_door_secret_and_the_gms_yes() {
         let (gm_emit, _gm_events) = listening();
         let (approve, asked) = answering(false);
-        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
-            .await
-            .expect("a table");
-        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
         let closed_for = |event: TableEvent| match event {
             TableEvent::Connection {
                 state: ConnectionState::Closed,
@@ -1343,7 +1471,9 @@ mod tests {
 
         // the right secret, and the GM says no
         let (emit, mut events) = listening();
-        let declined = join(&invite, "Lira", emit).await.expect("an endpoint");
+        let declined = join(fresh_id(), &invite, "Lira", emit, forgetting(), None)
+            .await
+            .expect("an endpoint");
         assert_eq!(
             closed_for(next(&mut events).await),
             Some(CloseReason::Declined)
@@ -1357,7 +1487,9 @@ mod tests {
             ..invite.clone()
         };
         let (emit, mut events) = listening();
-        let stranger = join(&forged, "Mallory", emit).await.expect("an endpoint");
+        let stranger = join(fresh_id(), &forged, "Mallory", emit, forgetting(), None)
+            .await
+            .expect("an endpoint");
         assert_eq!(
             closed_for(next(&mut events).await),
             Some(CloseReason::Invite)
@@ -1368,7 +1500,9 @@ mod tests {
         // a shut door answers the old invitation the same way, and opening it makes a new one
         assert_eq!(table.set_door(false), None);
         let (emit, mut events) = listening();
-        let late = join(&invite, "Lira", emit).await.expect("an endpoint");
+        let late = join(fresh_id(), &invite, "Lira", emit, forgetting(), None)
+            .await
+            .expect("an endpoint");
         assert_eq!(
             closed_for(next(&mut events).await),
             Some(CloseReason::Invite)
@@ -1387,12 +1521,22 @@ mod tests {
     async fn closing_the_table_tells_every_seat() {
         let (gm_emit, mut gm_events) = listening();
         let (approve, _asked) = answering(true);
-        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
-            .await
-            .expect("a table");
-        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
         let (emit, mut events) = listening();
-        let seat = join(&invite, "Lira", emit).await.expect("a seat");
+        let seat = join(fresh_id(), &invite, "Lira", emit, forgetting(), None)
+            .await
+            .expect("a seat");
         assert!(matches!(
             next(&mut gm_events).await,
             TableEvent::ParticipantJoined { .. }
@@ -1496,7 +1640,16 @@ mod tests {
         let sheet: Value = serde_json::from_str(&sheet).expect("the sheet is JSON");
 
         let (emit, mut events) = listening();
-        let seat = join(&invite, "Probe player", emit).await.expect("a seat");
+        let seat = join(
+            fresh_id(),
+            &invite,
+            "Probe player",
+            emit,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a seat");
         let mut answered = 0;
         loop {
             let event = timeout(LIVE_WAIT, events.recv())
@@ -1574,7 +1727,9 @@ mod tests {
 
     async fn seated(invite: &Invite, name: &str) -> (PlayerSeat, UnboundedReceiver<TableEvent>) {
         let (emit, mut events) = listening();
-        let seat = join(invite, name, emit).await.expect("a seat");
+        let seat = join(fresh_id(), invite, name, emit, forgetting(), None)
+            .await
+            .expect("a seat");
         loop {
             if let TableEvent::Connection {
                 state: ConnectionState::Connected,
@@ -1590,10 +1745,18 @@ mod tests {
     async fn the_log_reaches_every_seat_that_may_see_it_and_a_hide_takes_a_record_away() {
         let (gm_emit, mut gm_events) = listening();
         let (approve, _) = answering(true);
-        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
-            .await
-            .expect("a table");
-        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
         let gm = invite.id.clone();
         let (lira, mut lira_events) = seated(&invite, "Lira").await;
         let (bevan, mut bevan_events) = seated(&invite, "Bevan").await;
@@ -1662,17 +1825,163 @@ mod tests {
     async fn a_record_written_before_the_seat_was_let_in_arrives_once_it_is() {
         let (gm_emit, mut gm_events) = listening();
         let (approve, _) = answering(true);
-        let (table, invite) = host("Thursday", &RelaySetting::None, gm_emit, approve)
-            .await
-            .expect("a table");
-        let invite = Invite::from_text(&invite).expect("its invitation");
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
         let (emit, mut lira_events) = listening();
-        let lira = join(&invite, "Lira", emit).await.expect("a seat");
+        let lira = join(fresh_id(), &invite, "Lira", emit, forgetting(), None)
+            .await
+            .expect("a seat");
         // written while the dial is still on its way: kept here, and handed over on the GM's have
         lira.record(roll_to(Audience::Table, 9));
         let (kept, _) = next_record(&mut lira_events).await;
         let (arrived, name) = next_record(&mut gm_events).await;
         assert_eq!((arrived, name.as_deref()), (kept, Some("Lira")));
+        lira.leave().await;
+        table.close().await;
+    }
+
+    /// A keeper that keeps everything, for a table that is to come back.
+    fn keeping() -> (Keeper, Arc<Mutex<Vec<Keep>>>) {
+        let kept = Arc::new(Mutex::new(Vec::new()));
+        let keeper: Keeper = Arc::new({
+            let kept = kept.clone();
+            move |keep| locked(&kept).push(keep)
+        });
+        (keeper, kept)
+    }
+
+    fn records_of(kept: &Arc<Mutex<Vec<Keep>>>) -> Vec<(Signed, Option<String>)> {
+        locked(kept)
+            .iter()
+            .filter_map(|keep| match keep {
+                Keep::Record { record, name } => Some((record.clone(), name.clone())),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_table_opened_again_under_its_key_seats_whom_it_let_in_and_holds_its_log() {
+        let (gm_keeper, gm_kept) = keeping();
+        let (gm_emit, _gm_events) = listening();
+        let (approve, _) = answering(true);
+        let (first, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            approve,
+            gm_keeper,
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
+        let (player_keeper, player_kept) = keeping();
+        let (emit, mut events) = listening();
+        let lira = join(fresh_id(), &invite, "Lira", emit, player_keeper, None)
+            .await
+            .expect("a seat");
+        loop {
+            if let TableEvent::Connection {
+                state: ConnectionState::Connected,
+                ..
+            } = next(&mut events).await
+            {
+                break;
+            }
+        }
+        lira.record(roll_to(Audience::Table, 14));
+        let roll = loop {
+            let kept = records_of(&gm_kept);
+            if let Some(first) = kept.first() {
+                break first.clone();
+            }
+            sleep(Duration::from_millis(50)).await;
+        };
+        assert_eq!(roll.1.as_deref(), Some("Lira"));
+
+        // the GM's app goes down without a word to anyone
+        let gm_key = first.key().clone();
+        let allowed: Vec<(EndpointId, String)> = locked(&gm_kept)
+            .iter()
+            .filter_map(|keep| match keep {
+                Keep::LetIn { key, name } => Some((*key, name.clone())),
+                _ => None,
+            })
+            .collect();
+        first.endpoint.close().await;
+        let lira_key = lira.key().clone();
+        lira.leave().await;
+
+        // ...and opens again under its key: the same table, its log, and nobody asked about again
+        let (gm_emit, mut gm_events) = listening();
+        let (refuse, asked) = answering(false);
+        let again = Again {
+            key: gm_key,
+            allowed,
+            records: records_of(&gm_kept),
+        };
+        let (table, shut) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None,
+            gm_emit,
+            refuse,
+            forgetting(),
+            Some(again),
+        )
+        .await
+        .expect("the table again");
+        assert_eq!(shut, None, "a table opened again keeps its door shut");
+        let (held, _) = next_record(&mut gm_events).await;
+        assert_eq!(Some(held), records::verify(&roll.0, &invite.id));
+
+        // its address changed with the app, so the seat follows a new invitation, under its old key
+        let reopened = Invite::from_text(&table.set_door(true).expect("an open door"))
+            .expect("its invitation");
+        assert_eq!(reopened.id, invite.id);
+        let (emit, mut events) = listening();
+        let back = Again {
+            key: lira_key,
+            allowed: vec![],
+            records: records_of(&player_kept),
+        };
+        let lira = join(
+            fresh_id(),
+            &reopened,
+            "Lira",
+            emit,
+            forgetting(),
+            Some(back),
+        )
+        .await
+        .expect("a seat");
+        let (own, _) = next_record(&mut events).await;
+        assert_eq!(Some(own), records::verify(&roll.0, &invite.id));
+        loop {
+            if let TableEvent::Connection {
+                state: ConnectionState::Connected,
+                ..
+            } = next(&mut events).await
+            {
+                break;
+            }
+        }
+        assert!(
+            locked(&asked).is_empty(),
+            "a key let in before is not asked about"
+        );
         lira.leave().await;
         table.close().await;
     }

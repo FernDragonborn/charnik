@@ -63,6 +63,8 @@ export const UNAVAILABLE = {
 	badRelay: 'bad_relay',
 	relayUnreachable: 'relay_unreachable',
 	network: 'network',
+	/** The table to return to is not remembered: forgotten, or its key is gone from the store. */
+	forgotten: 'forgotten',
 } as const;
 export type UnavailableReason = (typeof UNAVAILABLE)[keyof typeof UNAVAILABLE];
 
@@ -232,6 +234,18 @@ export type HeldSeat =
 	| { role: typeof TABLE_ROLE.gm; seat: GmSeat; name: string }
 	| { role: typeof TABLE_ROLE.player; seat: PlayerSeat };
 
+/** A table this app sat at and did not leave: one it can return to after a restart. */
+export interface RememberedTable {
+	table: TableId;
+	role: typeof TABLE_ROLE.gm | typeof TABLE_ROLE.player;
+	name: string;
+}
+
+/** What returning came to: the seat taken again, or why not. */
+export type Returned =
+	| { status: typeof SEATING.seated; held: Exclude<HeldSeat, { role: typeof TABLE_ROLE.none }> }
+	| { status: typeof SEATING.unavailable; reason: UnavailableReason };
+
 export interface HostOptions {
 	/** The table's name, as players are shown it. */
 	name: string;
@@ -259,4 +273,11 @@ export interface TableLink {
 	 *  when the seat was taken. Its first listener hears the table as it stands — who is at it and
 	 *  the sheets they showed, the connection, the requests nobody answered. */
 	resume(): Promise<HeldSeat>;
+	/** The tables this app sat at and did not leave. Asks nobody and opens nothing. */
+	remembered(): Promise<RememberedTable[]>;
+	/** Sit at a remembered table again, under the key this app sat there with. Asked natively
+	 *  first, as going online always is. */
+	returnTo(table: RememberedTable, locale: string): Promise<Returned>;
+	/** Take a table off the list, key and records with it. */
+	forget(table: TableId): Promise<void>;
 }

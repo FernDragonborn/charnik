@@ -326,7 +326,13 @@ pub fn run() {
             #[cfg(feature = "table-link")]
             table_link::table_link_door,
             #[cfg(feature = "table-link")]
-            table_link::table_link_record
+            table_link::table_link_record,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_remembered,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_return,
+            #[cfg(feature = "table-link")]
+            table_link::table_link_forget
         ])
         .setup(|app| {
             open_main_window(app.handle())?;

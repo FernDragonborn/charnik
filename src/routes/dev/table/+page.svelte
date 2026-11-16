@@ -5,7 +5,7 @@
 	// from, so this fills the view-model by hand and mounts the real screen: `?seat=gm`,
 	// `?seat=player&state=waiting|connected|reconnecting`, `?seat=none&problem=<reason>`, and
 	// `&ask=damage|roll|effect|unknown` to raise the request prompt over it. `&tray` mounts the play
-	// screen's dice tray, so a roll can be built in it as on that screen. `&log` fills the table's log.
+	// screen's dice tray, so a roll can be built in it as on that screen. `&log` fills the table's log, and `&remembered` lists two tables to return to.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadContentStore } from '$lib/content/store.svelte';
@@ -175,6 +175,15 @@
 				]
 			: [];
 		if (asked.has('log')) fillLog();
+		// the screen asks the link on mount, and the web build's link remembers nothing
+		if (asked.has('remembered'))
+			table.loadRemembered = () => {
+				table.remembered = [
+					{ table: 'a1', role: TABLE_ROLE.gm, name: 'Thursday game' },
+					{ table: 'b2', role: TABLE_ROLE.player, name: 'Curse of the Sunday' },
+				];
+				return Promise.resolve();
+			};
 		seeded = true;
 	});
 </script>

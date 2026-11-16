@@ -14,6 +14,9 @@
 		"allow-table-link-request",
 		"allow-table-link-dismiss",
 		"allow-table-link-door",
-		"allow-table-link-record"
+		"allow-table-link-record",
+		"allow-table-link-remembered",
+		"allow-table-link-return",
+		"allow-table-link-forget"
 	]
 }

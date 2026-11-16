@@ -28,6 +28,8 @@ import {
 	type GmSeat,
 	type HeldSeat,
 	type LogBody,
+	type RememberedTable,
+	type Returned,
 	type LogRecord,
 	type PlayerEvent,
 	type PlayerSeat,
@@ -45,6 +47,11 @@ import { rollPassed } from './requested-roll';
 import { plainRollName } from './table-log.svelte';
 
 const NO_SEAT_HELD = () => Promise.resolve({ role: TABLE_ROLE.none });
+const REMEMBERS_NOTHING = {
+	remembered: () => Promise.resolve([]),
+	returnTo: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.forgotten }),
+	forget: () => Promise.resolve(),
+} satisfies Pick<TableLink, 'remembered' | 'returnTo' | 'forget'>;
 
 /** A table link whose other side is this test. `held` is the seat the app kept from a page that
  *  was here before. */
@@ -57,6 +64,8 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 		records: [] as LogBody[],
 		left: 0,
 		redials: 0,
+		forgotten: [] as string[],
+		shelf: [] as RememberedTable[],
 	};
 	let toPlayer: (event: PlayerEvent) => void = () => {};
 	let toGm: (event: GmEvent) => void = () => {};
@@ -108,6 +117,23 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 				return Promise.resolve({ role: held, seat: gmSeat, name: 'Thursday' });
 			if (held === TABLE_ROLE.player) return Promise.resolve({ role: held, seat: playerSeat });
 			return NO_SEAT_HELD();
+		},
+		remembered: () => Promise.resolve([...heard.shelf]),
+		returnTo: (remembered): Promise<Returned> => {
+			if (!heard.shelf.includes(remembered))
+				return Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.forgotten });
+			return Promise.resolve({
+				status: SEATING.seated,
+				held:
+					remembered.role === TABLE_ROLE.gm
+						? { role: remembered.role, seat: gmSeat, name: remembered.name }
+						: { role: remembered.role, seat: playerSeat },
+			});
+		},
+		forget: (table) => {
+			heard.forgotten.push(table);
+			heard.shelf = heard.shelf.filter((kept) => kept.table !== table);
+			return Promise.resolve();
 		},
 	};
 	return {
@@ -569,6 +595,7 @@ describe('a seat that was not given', () => {
 				Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.relayUnreachable }),
 			join: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.badInvite }),
 			resume: NO_SEAT_HELD,
+			...REMEMBERS_NOTHING,
 		};
 		const table = new TableVM(() => refusing);
 		expect(await table.checkAvailable()).toBe(false);
@@ -588,6 +615,7 @@ describe('whether the build has a table', () => {
 			host: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
 			join: () => Promise.resolve({ status: SEATING.unavailable, reason: UNAVAILABLE.noTable }),
 			resume: NO_SEAT_HELD,
+			...REMEMBERS_NOTHING,
 		};
 		const table = new TableVM(() => link);
 		expect(await Promise.all([table.checkAvailable(), table.checkAvailable()])).toEqual([
@@ -701,5 +729,40 @@ describe("the table's log", () => {
 	it("cuts a roll's words to what Rust keeps", () => {
 		expect(plainRollName('  Fire\u202Eball\u0007 ')).toBe('Fireball');
 		expect(plainRollName('x'.repeat(60))).toHaveLength(40);
+	});
+});
+
+describe('a table this app sat at before', () => {
+	const thursday: RememberedTable = { table: 'table-1', role: TABLE_ROLE.gm, name: 'Thursday' };
+	const sunday: RememberedTable = { table: 'table-2', role: TABLE_ROLE.player, name: 'Sunday' };
+
+	it('is listed, and returned to in the role it was taken in', async () => {
+		const { table, heard } = tableOfOne();
+		heard.shelf = [thursday, sunday];
+		await table.loadRemembered();
+		expect(table.remembered.map((kept) => kept.name)).toEqual(['Thursday', 'Sunday']);
+
+		await table.returnTo(thursday);
+		expect(table.role).toBe(TABLE_ROLE.gm);
+		expect(table.tableName).toBe('Thursday');
+		await table.leave();
+
+		await table.returnTo(sunday);
+		expect(table.role).toBe(TABLE_ROLE.player);
+	});
+
+	it('is forgotten on asking, and one gone from under the app says so', async () => {
+		const { table, heard } = tableOfOne();
+		heard.shelf = [thursday, sunday];
+		await table.loadRemembered();
+		await table.forget(sunday);
+		expect(heard.forgotten).toEqual(['table-2']);
+		expect(table.remembered).toEqual([thursday]);
+
+		heard.shelf = [];
+		await table.returnTo(thursday);
+		expect(table.problem).toBe(UNAVAILABLE.forgotten);
+		expect(table.role).toBe(TABLE_ROLE.none);
+		expect(table.remembered).toEqual([]);
 	});
 });
