@@ -9,7 +9,6 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { toast } from '$lib/toast/toast';
 	import { loadContentStore } from '$lib/content/store.svelte';
-	import { signed } from '$lib/combat/helpers';
 	import { CONNECTION, RELAY_MODE } from '$lib/table-link/types';
 	import { combat } from '../combat/combat-view-model.svelte';
 	import { ASK_STATUS, TABLE_ROLE, table, type AskedRow } from './table-view-model.svelte';
@@ -18,6 +17,7 @@
 	import TableRequestLine from './TableRequestLine.svelte';
 	import TableSeatCard from './TableSeatCard.svelte';
 	import TableLogPanel from './TableLogPanel.svelte';
+	import TableRollResult from './TableRollResult.svelte';
 
 	let tableName = $state('');
 	let invite = $state('');
@@ -127,21 +127,7 @@
 							<b class="table-asked-name">{row.name}</b>
 							<TableRequestLine request={row.request} heldTo={row.dc} />
 							<span class="table-row-spacer"></span>
-							{#if row.roll}
-								<span class="table-row-roll">
-									{#if row.roll.outcome}
-										{$_(`table.asked.forced.${row.roll.outcome}`)}
-									{:else}
-										<b>{row.roll.total}</b>
-										{#if row.roll.natural !== undefined}
-											<span class="muted"
-												>{$_('table.asked.natural', { values: { natural: row.roll.natural } })}
-												{signed(row.roll.mod)}</span
-											>
-										{/if}
-									{/if}
-								</span>
-							{/if}
+							{#if row.roll}<TableRollResult roll={row.roll} />{/if}
 							{#if verdict}
 								<span
 									class="durpill table-asked-verdict"

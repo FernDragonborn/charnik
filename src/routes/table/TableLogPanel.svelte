@@ -4,10 +4,10 @@
 	// text (`docs/internals/table-link.md` ▸ The table's log).
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
-	import { signed } from '$lib/combat/helpers';
 	import { AUDIENCE } from '$lib/table-link/types';
 	import { TABLE_ROLE, table } from './table-view-model.svelte';
 	import type { LogLine } from './table-log.svelte';
+	import TableRollResult from './TableRollResult.svelte';
 
 	const lines = $derived(table.log.shown);
 	const seat = $derived(table.role === TABLE_ROLE.gm ? 'gm' : 'player');
@@ -47,7 +47,6 @@
 	{#if lines.length}
 		<ul class="table-rows">
 			{#each lines as line (`${line.record.author}#${line.record.seq}`)}
-				{@const roll = line.record.body.roll}
 				<li class="table-row">
 					<span class="muted table-log-time">{timeOf(line.record.at)}</span>
 					<b class="table-log-who">{whoRolled(line)}</b>
@@ -56,19 +55,7 @@
 						<span class="durpill">{$_('table.log.gmOnly')}</span>
 					{/if}
 					<span class="table-row-spacer"></span>
-					<span class="table-row-roll table-log-roll">
-						{#if roll.outcome}
-							{$_(`table.asked.forced.${roll.outcome}`)}
-						{:else}
-							<b>{roll.total}</b>
-							{#if roll.natural !== undefined}
-								<span class="muted"
-									>{$_('table.asked.natural', { values: { natural: roll.natural } })}
-									{signed(roll.mod)}</span
-								>
-							{/if}
-						{/if}
-					</span>
+					<TableRollResult roll={line.record.body.roll} />
 					{#if table.log.canHide(line)}
 						<button
 							type="button"
@@ -114,10 +101,5 @@
 	.table-log-who,
 	.table-log-name {
 		overflow-wrap: anywhere;
-	}
-	.table-log-roll {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-1-5);
 	}
 </style>

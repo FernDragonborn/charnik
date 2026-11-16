@@ -160,8 +160,8 @@ const requestId = z
 	.max(ID_MAX)
 	.regex(/^[A-Za-z0-9-]+$/);
 
-/** The words a roll is logged under at the table: Rust cuts a peer's to forty characters. */
-const ROLL_NAME_MAX = 40;
+/** The words a roll is logged under at the table: Rust refuses a name past forty characters. */
+export const ROLL_NAME_MAX = 40;
 const catalogKey = z
 	.string()
 	.min(1)

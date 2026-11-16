@@ -14,6 +14,7 @@ import {
 	type RecordEvent,
 	type TableRole,
 } from '$lib/table-link/types';
+import { ROLL_NAME_MAX } from '$lib/table-link/wire-schema';
 import { tableRollOf } from './requested-roll';
 
 type RollBody = Extract<LogBody, { kind: typeof LOG_BODY.roll }>;
@@ -34,8 +35,6 @@ export interface TableLogHost {
 
 /** Rust keeps a table's newest 500 records; the page holds as many rolls. */
 const LINES_MAX = 500;
-/** The words a roll is logged under; Rust refuses a name it would have to cut. */
-const ROLL_NAME_MAX = 40;
 // control characters, and the marks that reorder the text around them — what Rust's `plain_text` drops
 const UNPRINTABLE = /[\p{Cc}‪-‮⁦-⁩]/u;
 

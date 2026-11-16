@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (110)
+## Duplicate suspects (108)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -102,8 +102,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
-- `roll` ×2 — src/routes/dev/table-live/+page.svelte · src/routes/dev/table/+page.svelte
-- `ROLL_NAME_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/table-log.svelte.ts
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
@@ -2496,6 +2494,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const tableRequestSchema`
 - `const tableRollSchema` — A roll as it travels back to the GM: what it came to and how, never the sentence around it.
 - `type TableRoll`
+- `const ROLL_NAME_MAX` — The words a roll is logged under at the table: Rust refuses a name past forty characters.
 - `const tableEventSchema` — Every event Rust pushes, as the page will believe it.
 
 ### `src/lib/toast/toast.ts`
@@ -2571,4 +2570,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 59 components · 1571 exports across 218 modules · 110 duplicate suspects._
+_50 tokens · 102 global classes · 59 components · 1572 exports across 218 modules · 108 duplicate suspects._

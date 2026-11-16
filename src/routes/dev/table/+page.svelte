@@ -110,7 +110,7 @@
 	/** A few rolls from around the table: the GM's, a player's kept to the GM, one hidden, this app's. */
 	function fillLog(): void {
 		const gm = 'gm-key';
-		const roll = (
+		const rollRecord = (
 			author: string,
 			seq: number,
 			minutesAgo: number,
@@ -129,13 +129,13 @@
 			} as const,
 		});
 		const heard = [
-			{ record: roll('lira', 1, 9, 17), name: 'Lira Swiftfoot', mine: false },
-			{ record: roll(gm, 1, 7, 11), mine: false },
-			{ record: roll('lira', 2, 5, 4, AUDIENCE.gm), name: 'Lira Swiftfoot', mine: false },
-			{ record: roll('me', 1, 2, 20), mine: true },
+			{ record: rollRecord('lira', 1, 9, 17), name: 'Lira Swiftfoot', mine: false },
+			{ record: rollRecord(gm, 1, 7, 11), mine: false },
+			{ record: rollRecord('lira', 2, 5, 4, AUDIENCE.gm), name: 'Lira Swiftfoot', mine: false },
+			{ record: rollRecord('me', 1, 2, 20), mine: true },
 			{
 				record: {
-					...roll('bevan', 1, 1, 9),
+					...rollRecord('bevan', 1, 1, 9),
 					body: { kind: LOG_BODY.hide, author: 'lira', seq: 9 } as const,
 				},
 				mine: false,
