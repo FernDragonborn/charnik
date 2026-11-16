@@ -154,9 +154,10 @@ JSON (`wire.rs`), each read against a ceiling before a byte of the body is:
 - **Live or not delivered.** There is no queue. A call made with no connection answers
   `not_delivered` and is not pending; a player's app publishes its view again when it is seated
   again.
-- **No signatures, no sequence numbers.** The research asks for both under gossip, where a
-  message is forwarded by peers who are not its author. In a star each frame arrives on a QUIC
-  stream from the key that wrote it, in order.
+- **A frame is not signed; a record is.** The research asks for signatures and sequence numbers
+  where a message is forwarded by peers who are not its author. A request, an answer and a view
+  arrive on a QUIC stream from the key that wrote them, in order, so they carry neither; a log
+  record is handed on by the GM, so it carries both (The table's log).
 
 ### Then the page holds it to a shape
 
@@ -260,6 +261,74 @@ of the open character changes.
   sessionStorage under its table (`routes/table/asked-log.ts`), which lasts through a reload and
   not past the app's window. Rust keeps the newest fifty answers in the same list, so one that
   landed while no page was there finds its row. Closing the app is what ends a table.
+
+## The table's log
+
+> TABLE-LINK-LOG is built to this section; TABLE-LINK-REMEMBER, the half below it, is not yet.
+> What is still open for the maintainer to rule on is listed in the item (`../work/release.md`).
+
+**One model: every record has one author, and nobody is the master of the table's state.** A GM's
+app lags and restarts like anyone's, so nothing waits on it to say what is true:
+
+- **A record is written by one app and never changed.** A player's roll is theirs; a GM's roll and
+  a GM's notice are the GM's. No two apps write one record, so nothing is merged or agreed on: the
+  log is the union of the records an app holds, shown in the order of their times.
+- **A record is signed with its author's key at this table**, so a copy handed on by anyone is the
+  author's words or is refused. The signed bytes are the record's own JSON text, carried as text,
+  so nobody re-serialises before checking; they are signed under `charnik/table/record/1` and a NUL
+  ahead of them, so a signature made for a record cannot be passed off as anything else
+  (threats ▸ I5). Inside them are the table's key (a record for another table is refused, I4), the
+  author's key, a sequence number that grows by one per author, and the author's clock.
+- **Every app that saw a record keeps a copy, and says what it has.** On every connection both
+  sides send `have` — the highest sequence number held from each author — and each sends what the
+  other lacks. A player who was away for ten minutes is given the rolls they missed, and a GM's app
+  that lost a record gets it back from whoever kept it.
+- **A star still.** A player's record goes to the GM; the GM keeps it and hands it to every other
+  seat with the name the GM let that key in under. The name is the GM's to say — it is not in the
+  signed bytes — and the record is the author's.
+
+What a record is:
+
+| record | author | who is handed it |
+| --- | --- | --- |
+| `roll` — its name, the five facts of a table roll | anyone | the table, or the GM alone |
+| `hide` — the author and number of a record | the GM, or a record's own author | the table |
+
+**Who sees a roll is the roller's choice**, said on the roll: a player's rolls go to the table
+unless the player turned that off on the Table screen, and then to the GM alone; a GM's rolls go
+nowhere unless the GM turned showing them on. A roll kept to the GM is not handed on, and a player
+is never given one. Every roll the sheet logs is a roll the log can carry, so nothing new is pressed
+to share one.
+
+**Moderation ships with the log** (`../research/adoption-friction.md` ▸ 9). The GM can hide any
+record and a player their own; a `hide` is itself a signed record, so every app that holds the
+record drops it, and one that comes back later is still hidden. Nothing is deleted from another
+app's disk — it cannot be — so the GM's word is what every honest copy shows.
+
+**Bounds.** A record's text is at most 2 KiB and is read against that before it is parsed; a
+roll's name is cut like any peer name; a table keeps its newest 500 records and refuses an
+author's eleventh in ten seconds. A record whose author is not at the table — not let in, or
+dismissed — is not kept.
+
+## Remembering a table
+
+> TABLE-LINK-REMEMBER — specified, not built.
+
+- **A table's key outlives the app, in the OS's own store** (`keyring`), never the data folder,
+  which a folder sync or a restored backup carries (design review ▸ 11). An app whose key cannot be
+  opened treats the table as gone and says to join again.
+- **The rest is a file only Rust writes**, in the app's local data folder, which the page's file
+  access is denied (`capabilities/default.json`): the tables this app sits at, each with its name,
+  its GM's key and route, this app's role, and — for a GM — the keys let in. The records each app
+  holds sit beside it, so the log lasts as long as the table.
+- **Coming back asks first.** After a restart nothing dials until the person answers one native
+  question per table — return to this table? — as going online always does. A "no" keeps the
+  table listed; "forget this table" is the way it goes, key and records with it.
+- **A GM key that changes is a new table**, joined from a new invitation, never a warning to click
+  past.
+- **The GM's log of asks becomes records** — an ask is the GM's, an answer the player's — so a GM's
+  app that restarted gets it back from the players' copies. A DC the GM kept is in the GM's own
+  copy only, since it never crosses the wire.
 
 ## Versions
 

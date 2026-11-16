@@ -156,7 +156,13 @@
   app is the truth for it and says it again on reconnecting, every app that saw a record keeps a
   copy, and a record is signed with its author's table key so a copy handed back by anyone is
   either the author's words or refused. Nothing is agreed on, because no two apps write one
-  record; the log is the union, shown in the order of its times.
+  record; the log is the union, shown in the order of its times. Specified in
+  `../internals/table-link.md` ▸ The table's log, with the maintainer's leave to decide and build
+  overnight; **these were decided without the maintainer and wait for their word**: a player's
+  rolls go to the table and a GM's to nobody unless switched; the GM hides any record and a player
+  their own, and nothing is deleted; the name a record is shown under is the GM's roster name,
+  outside the signature; 500 records a table, ten an author in ten seconds, 2 KiB a record; asks
+  and answers become records with TABLE-LINK-REMEMBER, not before.
 - **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.** A
   table lives for one session and its keys are in memory, so an app that restarts — a desktop in
   a power cut — comes back a stranger. Remembering one means a key that outlives the app: the OS
