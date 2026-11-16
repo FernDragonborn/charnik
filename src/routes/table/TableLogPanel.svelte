@@ -20,9 +20,9 @@
 	 *  reaching for one of this app's sentences, and its own words are shown instead. */
 	const rollName = (line: LogLine): string => {
 		const { text, key } = line.record.body.name;
-		return key && ROLL_NAME_KEY.test(key) ? $_(key, { default: text }) : text;
+		return key && LOGGED_ROLL_KEY.test(key) ? $_(key, { default: text }) : text;
 	};
-	const ROLL_NAME_KEY = /^(combat\.roll\.(check|save)\.[a-z]+|skillName\.[a-z_]+)$/;
+	const LOGGED_ROLL_KEY = /^(combat\.roll\.(check|save)\.[a-z]+|skillName\.[a-z_]+)$/;
 	const byTheGm = (line: LogLine): boolean =>
 		!line.mine && line.record.author === line.record.table;
 	const timeOf = (at: number): string =>
