@@ -176,8 +176,10 @@ items. Each may carry **effects** (bounded vocab).
   it — you don't reinterpret a 5e character as 5.5e. The active-system switch only sets
   the **compendium/creation** context. **Converting a character between systems is OUT
   of scope** (mechanics differ too much); a character stays in its system.
-- **PWA deferred** (not dropped): it would add install and an offline shell to the web demo, and
-  the demo keeps nothing a player returns for.
+- **The web demo carries everything a browser allows** — the maintainer's call: it saves, it
+  installs as a PWA, it fetches packs and it sits at a table, rather than staying a read-only
+  preview. Where a browser cannot do what the desktop does, the demo says so instead of hiding the
+  feature. The work is DEMO-FULL and TABLE-LINK-WEB (`work/release.md`).
 - **Accessibility baseline (in scope)**: proper **keyboard navigation** from the start —
   correct **Tab / Shift+Tab** focus order, visible focus, ARIA roles/labels; **command/search
   palette in two scopes — `Ctrl+K` = GLOBAL** (all content + every character) and

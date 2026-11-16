@@ -827,7 +827,7 @@ the one that changes the plan: the first table-link milestone is a refactor with
 9. **Delivery semantics.** Live-or-fail in the first version, with sequence numbers and expiry; no
    offline queue (F-11).
 10. **Does the web demo ever join?** If yes, the wire format must not assume a file-owning peer
-    (F-09).
+    (F-09). **Yes** — the maintainer's call; the work is TABLE-LINK-WEB (`../work/release.md`).
 11. **Removability.** A Cargo feature plus a no-op `TableLink` implementation, with a test that the
     app plays without it; no socket until the user enables the module (F-09, S-12).
 12. **Version policy.** What the handshake carries and what happens on a mismatch, across app,

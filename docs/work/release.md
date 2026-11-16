@@ -196,11 +196,61 @@
   Beside them, what other tools give a table and this one does not yet: initiative entered by the
   player and broadcast (D&D Beyond since June 2026), and a GM's manual entry for a player without
   Charnik (`../research/adoption-friction.md`).
-- **TABLE-LINK-PHONE · a player joins from a phone.** After the engine carries the SRD through
-  level 20 (`../plan.md` ▸ Levels 11–20). What reading could settle is in the design review ▸ 7
-  and 11: iroh on Android and iOS, the iOS local-network prompt, backgrounding, key storage. What
-  only a device can: `keyring` inside a Tauri mobile build, a restore onto a second phone, App
-  Review's answer to an endpoint that accepts connections.
+- **TABLE-LINK-PHONE · a player joins from a phone or a tablet.** After the engine carries the
+  SRD through level 20 (`../plan.md` ▸ Levels 11–20). What reading could settle is in the design
+  review ▸ 7 and 11: iroh on Android and iOS, the iOS local-network prompt, backgrounding, key
+  storage. What only a device can: `keyring` inside a Tauri mobile build, a restore onto a second
+  phone, App Review's answer to an endpoint that accepts connections.
+  **Android ships through Google Play and F-Droid** — the maintainer's call. A bare APK is not a
+  channel: Google's developer verification covers apps installed outside Play too (enforced in
+  Brazil, Indonesia, Singapore and Thailand since 2026-09-30, everywhere from 2027), and an
+  unverified app then installs only through the "advanced flow" — developer mode, a restart, a
+  day's wait. To research before building: F-Droid's inclusion rules for a Tauri app (it builds
+  from source, so Rust, Node and the NDK on its build server; IzzyOnDroid as the repository that
+  takes a built APK meanwhile), Play's terms for a new personal account (the closed test before
+  production, the verification, the fee), and what replaces the Tauri updater on Android, which
+  is desktop-only. A Windows tablet already runs the desktop build. **iOS and iPadOS need a Mac to
+  build on**, which the maintainer does not have — until one exists the iPad's way in is the web
+  demo (TABLE-LINK-WEB).
+- **TABLE-LINK-WEB · the web demo sits at a table.** The maintainer's call (design review ▸
+  decision 10). Research first, autonomously, then a spec in `../internals/table-link.md`. What is
+  already read:
+  - **iroh in a browser is relay-only** (<https://docs.iroh.computer/deployment/wasm-browser-support>):
+    no UDP from the sandbox, so no direct path and no hole punching; the relay carries everything,
+    end-to-end encrypted, over a WebSocket. So a browser cannot join a table whose relay setting is
+    *none*, and a browser at the table needs the internet for as long as it sits there. The
+    invitation and the join screen must say both before anything dials.
+  - **iroh builds for `wasm_browser` with wasm-bindgen**, is not published to npm, and n0 says to
+    write an app-specific wrapper crate. `iroh-gossip` builds there from 0.33; the table uses no
+    gossip. So the question is whether `table_link/wire.rs` and the player half of `session.rs`
+    compile to wasm without Tauri and tokio's `rt` — they are 1,850 lines, and `mod.rs`, which
+    holds the Tauri commands and the native dialogs, is the part that cannot come.
+  - **The native questions have no browser equivalent.** On the desktop no socket exists until a
+    person answers a dialog the page cannot draw or press (`../internals/table-link.md` ▸ Going
+    online is a native question). In a browser the page IS the app, so script that reaches it — a
+    plugin, prose that escapes sanitising — can press its own "join". What stands in for the
+    dialog is the first decision of the spec: a separate origin or a cross-origin iframe holding
+    the endpoint, a user-activation gate, or a narrower trust statement for the web seat. The
+    threat catalog (`../research/table-link-threats.md`) is re-read for the web seat as a whole.
+  - Still to read: what a backgrounded tab does to a WebSocket (Chrome's throttling and freezing,
+    Safari on iPadOS), where a browser keeps the table key (TABLE-LINK-REMEMBER, which today means
+    the OS store), and whether a web GM is in scope or only a web player.
+- **DEMO-FULL · the web demo saves, installs and fetches packs.** The maintainer's call
+  (`../plan.md` ▸ The web demo carries everything a browser allows). Today the hosted demo is
+  read-only by a build flag (`config/demo.ts` ▸ `isReadOnlyContent`), not by a limit of the
+  browser: IndexedDB already holds the web build's writes. What it takes:
+  - **Saving on.** The flag stops blocking the hosted build; what it still guards is re-read.
+  - **Storage that stays.** Browser storage is evictable (`../internals/overview.md` ▸ Web), and
+    nothing calls `navigator.storage.persist()`. Chrome grants it to an installed app among
+    others, Firefox asks the person, and Safari wipes a site's script-written storage after seven
+    days without a visit unless it is a Home Screen web app — to confirm against each browser's
+    current docs. A pack can be fetched again; a character cannot, so the demo asks for
+    persistence, shows whether it got it, and keeps export in sight while it did not.
+  - **Installable.** A manifest and a service worker for an offline shell; the FAVICON mark is
+    its icon.
+  - **Packs.** Fetching goes through Rust on the desktop (`content/remote/` ▸ `tauriFetcher`); the
+    web needs a fetcher over `fetch`, which stands on the host's CORS headers — to check for
+    GitHub's raw and API hosts.
 - **AUDIT-LOCKED-FILE · a pack file held open by another program still blocks a seed or a listing**
   (`../audit-oct-27.md` ▸ D10). Reads are per-file now; two paths are not. The seed
   (`content/provider.ts`) throws out of `buildGraph` when its rename lands on a file Excel holds, and
