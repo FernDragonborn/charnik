@@ -45,6 +45,9 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
+- [Audit — bugs since 0.8.2](audit-nov-17-bugs.md) — a blind pass over player data and the numbers
+  on the sheet in what changed after 0.8.2: each finding with the test that reproduces it, what it
+  ruled out, and where the reading stopped.
 - [Audit — the table link](audit-nov-17.md) — a blind pass and a checklist pass over the table
   link at its first log and remembered tables: what an attacker at the table got, each closed with
   the test that holds it, and what is still open in TABLE-LINK-AUDIT-OPEN.
