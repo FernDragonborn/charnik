@@ -91,6 +91,21 @@ export function translatedRowIds(local: string): string[] {
 		.map((row) => cell(row, 'id'));
 }
 
+/** The translation columns of `fields` a merge carries: every one, or those of `onlyLocales`. */
+function carriedColumns(
+	fields: readonly string[],
+	sourceLang: string,
+	onlyLocales: readonly string[] | undefined,
+) {
+	const wanted = onlyLocales?.map((locale) => locale.toLowerCase());
+	return fields.flatMap((column) => {
+		const parts = ownedColumn(column, sourceLang);
+		return parts && (wanted?.includes(parts.locale.toLowerCase()) ?? true)
+			? [{ column, ...parts }]
+			: [];
+	});
+}
+
 /**
  * Merge `local`'s translations into `incoming`.
  *
@@ -121,16 +136,19 @@ export async function carryLocaleCells(
 	const next = mergeTarget(incoming);
 	const mine = parseCsv(local);
 
-	const wanted = options.onlyLocales?.map((locale) => locale.toLowerCase());
-	const owned = mine.fields.flatMap((column) => {
-		const parts = ownedColumn(column, sourceLang);
-		return parts && (wanted?.includes(parts.locale.toLowerCase()) ?? true)
-			? [{ column, ...parts }]
-			: [];
-	});
+	const owned = carriedColumns(mine.fields, sourceLang, options.onlyLocales);
 	const report: CarryReport = { carried: [], replaced: [], outdated: [], orphaned: [] };
 	const unchanged = { text: incoming, ...report };
-	if (owned.length === 0 || !next.fields.includes('id')) return unchanged;
+	if (owned.length === 0) return unchanged;
+	// a damaged incoming file lands as its own bytes, so every translated row of `local` goes with it
+	if (next.damage.length)
+		return {
+			...unchanged,
+			orphaned: mine.rows
+				.filter((row) => owned.some(({ column }) => cell(row, column) !== ''))
+				.map((row) => cell(row, 'id')),
+		};
+	if (!next.fields.includes('id')) return unchanged;
 
 	const fields = [...next.fields];
 	const set = (row: CsvRow, column: string, value: string): void => {

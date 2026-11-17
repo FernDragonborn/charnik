@@ -173,18 +173,24 @@ function payForCast(
 ): { paid: PlayOutcome; slot: string | null } {
 	const sheet = ctx.derive(character);
 	const none = (paid: PlayOutcome) => ({ paid, slot: null });
-	const pool = poolId ? sheet.resources.find((r) => r.id === poolId) : undefined;
+	const allows = (r: ResourceDef) =>
+		poolAllowsSpell(r, { ref: spell.subject.ref, id: spell.data.id });
+	const named = poolId ? sheet.resources.find((r) => r.id === poolId) : undefined;
 	// a pool this character does not have must not cast for free
-	if (poolId && (!pool || !poolAllowsSpell(pool, { ref: spell.subject.ref, id: spell.data.id })))
+	if (poolId && (!named || !allows(named)))
 		return none(refusal(character, { text: { key: 'combat.notice.poolCannotCast' } }));
-	if (pool && resourceSpent(character, sheet, pool.id) >= pool.max)
-		return none(useResource(character, pool, ctx));
 	const { pools } = sheet.spellcasting;
 	const reserved =
-		pool || ritual
+		named || ritual
 			? null
 			: slotToSpend(spell.subject.level, pools, character.play.spellSlotsSpent, chosen);
 	if (reserved && 'block' in reserved) return none(refusal(character, { text: reserved.block }));
+	// a leveled spell with no slot to take it is paid from the pool linked to it (Magic Initiate)
+	const pool =
+		named ??
+		(!reserved && !ritual && spell.subject.level > 0 ? sheet.resources.find(allows) : undefined);
+	if (pool && resourceSpent(character, sheet, pool.id) >= pool.max)
+		return none(useResource(character, pool, ctx));
 	const slot = reserved?.key ?? null;
 	const turnSlot = TURN_SLOT_OF[castingIcon(spell.data.casting_time ?? '')] ?? 'action';
 	const paid = chain(spendTurnSlot(character, { slot: turnSlot }, ctx), (charged) => {

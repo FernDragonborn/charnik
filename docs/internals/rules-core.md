@@ -92,8 +92,9 @@ an **effect** (`ParsedEffect`). String-form identifiers say token (`token`, `tok
 A homebrew or third-party class is added as CSV rows with **zero code changes**. Never write
 `if (className === …)`.
 
-Express per-class rules as descriptor columns: `caster_share` (`full` / `half` / `half-up` / `third` /
-`none` — the multiclass contribution and its rounding, so Artificer's round-up is just `half-up`),
+Express per-class rules as descriptor columns: `caster_share` (`full` / `half` / `half_up` / `third` /
+`none` — the multiclass contribution and its rounding, so the 5.5e Paladin's and Ranger's round-up
+is just `half_up`; a blank cell takes the share from `caster`),
 `slot_table` (an id pointing at an arbitrary `spell_slots` table, not a fixed four-value enum),
 `prepare_style`, `spell_ability`, `ritual_source`. Non-spell class mechanics — Infusions, Crimson Rite, Rage,
 Ki — are **resources** granted by tokens.

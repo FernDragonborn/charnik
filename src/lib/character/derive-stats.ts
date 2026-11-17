@@ -16,7 +16,7 @@ import {
 } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { Character } from './schema';
-import { SKILL_ABILITY, type SkillId } from './skills';
+import { CHECK_PREFIX, SKILL_ABILITY, type SkillId } from './skills';
 import { applyEffects, matchesTarget, type EffectFacts } from '../effects/apply';
 import { computed, SOURCE_KEY, type Computed, type Contribution } from '../rules/pipeline';
 import {
@@ -29,7 +29,6 @@ import { tagInt, parseItemTags, ITEM_TAG } from '../content/item-tags';
 import type { ResolvedItem } from '../content/resolved-item';
 import { SENSE_PREFIX, INCOMING_ATTACK_TARGET } from './derive-targets';
 import {
-	CHECK_PREFIX,
 	maxProf,
 	partialFrom,
 	TOOL_PREFIX,

@@ -23,7 +23,7 @@ smallest one that would close it, not one that was applied.
 
 ## D · Player data
 
-### [ ] D1 · A pack file that arrives malformed replaces a translated file with no copy kept and no word said — medium · CONFIRMED · both
+### [x] D1 · A pack file that arrives malformed replaces a translated file with no copy kept and no word said — medium · closed · both
 
 A translator's cells live inside the pack file. When an update, the seed or a restore replaces that
 file with one that does not parse whole (an unclosed quote, a row with too many cells, a repeated
@@ -33,7 +33,7 @@ and every translation in the file being replaced goes with it. No copy is writte
 replaced is copied aside first … whenever a translation was at stake" does not hold on this path.
 After a pack update the only way back is "undo this update", until the next apply replaces `.prev`.
 
-Repro: `src/lib/content/translation-carry.audit-repro.test.ts`
+Held by: `src/lib/content/translation-carry-damaged.test.ts`
 
 ```
 AssertionError: expected false to be true // Object.is equality
@@ -49,13 +49,13 @@ Fix: in `carryLocaleCells`, where the incoming side has no `id` column to merge 
 `translatedRowIds(local)` as `orphaned`. `mergeOver` then sees a translation at stake, the copy is set
 aside, and both the pack-update preview and the seed's toast name the rows.
 
-### [ ] D2 · A second homebrew row with a name already taken cannot be saved — low · CONFIRMED · both
+### [x] D2 · A second homebrew row with a name already taken cannot be saved — low · closed · both
 
 Adding "My Item" twice: the second save is refused with "Id — id must be a lowercase snake_case slug
 (a-z 0-9 _)", about an id field the player left blank. The row stays an unsaved draft; nothing is
 lost, and nothing says that renaming it is the way out.
 
-Repro: `src/lib/content/homebrew.audit-repro.test.ts`
+Held by: `src/lib/content/homebrew-duplicate-name.test.ts`
 
 ```
 AssertionError: expected [ Array(1) ] to deeply equal []
@@ -70,7 +70,7 @@ Fix: `_` in place of `-` on those two lines.
 
 ## R · Rules and numbers
 
-### [ ] R1 · A 5.5e Paladin or Ranger who multiclasses has too few spell slots — a Paladin 1 / Ranger 1 has none — high · CONFIRMED · 5.5e
+### [x] R1 · A 5.5e Paladin or Ranger who multiclasses has too few spell slots — a Paladin 1 / Ranger 1 has none — high · closed · 5.5e
 
 Each of the two classes alone has two level 1 slots at class level 1. Together they have no slot
 pool at all, so the sheet shows no pips and every leveled cast is refused or free (R3). A Paladin 1 /
@@ -82,7 +82,7 @@ SRD 5.2.1, Multiclassing ▸ Spellcasting ▸ Spell Slots: "Half your levels (ro
 and Ranger classes". The pack ships no row for that chapter; the sentence is read from the
 publisher's free rules page. SRD 5.1 rounds down, and the 5e numbers are right.
 
-Repro: `src/lib/play/cast.audit-repro.test.ts` (both `R1` cases)
+Held by: `src/lib/play/cast-rules-5-5e.test.ts` (the two multiclass cases)
 
 ```
 AssertionError: expected 0 to be greater than 0
@@ -98,13 +98,13 @@ used to read the table's first row.
 Fix: in `charnik-content-srd`, a `caster_share` column on `srd-2024/classes_srd.csv` with `half_up`
 for `paladin` and `ranger` — the value the engine already has for a share that rounds up.
 
-### [ ] R2 · A 2014 druid who takes a long rest in Wild Shape wakes with the hit points they had before the form — high · CONFIRMED · 5e
+### [x] R2 · A 2014 druid who takes a long rest in Wild Shape wakes with the hit points they had before the form — high · closed · 5e
 
 A druid at 5 of 31 hit points assumes a wolf and takes a long rest. The rest ends the form (it lasts
 two hours at level 4) and the sheet shows 5 hit points, not 31. The slots and the Hit Dice are back;
 the hit points are not. SRD 5.1, Resting ▸ Long Rest: "a character regains all lost hit points".
 
-Repro: `src/lib/play/form-shift.audit-repro.test.ts`
+Held by: `src/lib/play/form-rest.test.ts`, both cases: the form that ends inside the rest and the one that outlasts it.
 
 ```
 AssertionError: expected 5 to be 31 // Object.is equality
@@ -120,7 +120,7 @@ Fix: in `rest()`, drop the effects the rest outlasts and leave the form BEFORE t
 runs, and derive the sheet the hit points are read from after that. For a form that outlasts the
 rest (druid 16 and up), set `form.hpBefore` to the druid's own maximum (`withoutForm`).
 
-### [ ] R3 · A character with no spell slots casts their Magic Initiate spell any number of times for nothing — medium · CONFIRMED · 5.5e
+### [x] R3 · A character with no spell slots casts their Magic Initiate spell any number of times for nothing — medium · closed · 5.5e
 
 A Fighter, Barbarian, Monk or Rogue with Magic Initiate has one "Magic Initiate · Cure Wounds" use
 and no slots. The spell row's own button casts the spell, rolls the healing, and spends nothing — the
@@ -129,7 +129,7 @@ on casting. SRD 5.2.1, Magic Initiate ▸ Level 1 Spell: "You can cast it once w
 and you regain the ability to cast it in that way when you finish a Long Rest. You can also cast the
 spell using any spell slots you have."
 
-Repro: `src/lib/play/cast.audit-repro.test.ts` (`R3`)
+Held by: `src/lib/play/cast-rules-5-5e.test.ts` (the Magic Initiate case)
 
 ```
 AssertionError: expected 0 to be greater than 0
@@ -144,7 +144,7 @@ Fix: in `payForCast`, a leveled non-ritual cast that reserved no slot looks for 
 spell (`poolAllowsSpell`): one with a use left pays, a spent one refuses with the pool's own "none
 left", and a spell no pool is linked to casts as it does today.
 
-### [ ] R4 · Rage, Poisoned and Frightened do not reach a plain ability check — medium · CONFIRMED · both
+### [x] R4 · Rage, Poisoned and Frightened do not reach a plain ability check — medium · closed · both
 
 A tap on the STR tile of the Abilities panel rolls a straight d20 while raging — Athletics and the
 Strength save do get advantage. The same tap under Poisoned or Frightened rolls without
@@ -152,7 +152,7 @@ disadvantage, while a skill and an attack get it. Both SRDs, Rage: "advantage on
 Strength saving throws"; Poisoned: "disadvantage on attack rolls and ability checks"; Frightened:
 "disadvantage on ability checks and attack rolls".
 
-Repro: `src/lib/combat/roll.audit-repro.test.ts` (six cases, three per edition)
+Held by: `src/lib/combat/roll-ability-checks.test.ts`. The rows read `advantage:check.str` and `disadvantage:ability_checks`; `check.<ability>` is a roll target that reaches the skills built on it, and both reach initiative.
 
 ```
 AssertionError: expected 0 to be greater than 0   (Rage, :45)
@@ -167,18 +167,17 @@ to `skill.*` only; the bare check rolls as `check.<ability>`.
 
 Fix: in `charnik-content-srd`, `advantage:check.str` beside the Athletics token on both `rage` rows,
 and `disadvantage:ability_checks` in place of `disadvantage:skills` on the four other rows — the
-target the 2014 `exhaustion` row already uses. Initiative is a Dexterity check in both SRDs and
-`ability_checks` does not reach it either (`facts.ts:31`); that is the same gap one step further and
-is not reproduced here.
+target the 2014 `exhaustion` row already uses. Initiative is a Dexterity check in both SRDs, so
+`ability_checks` and `check.dex` reach it as well (`facts.ts` ▸ `matchesTarget`).
 
-### [ ] R5 · A 5.5e Ranger is never offered the Expertise of Deft Explorer — medium · CONFIRMED · 5.5e
+### [x] R5 · A 5.5e Ranger is never offered the Expertise of Deft Explorer — medium · closed · 5.5e
 
 A Ranger of level 2 to 8 has no Expertise pick in the builder, so one skill is short by the
 proficiency bonus on the sheet. SRD 5.2.1, Ranger ▸ Deft Explorer (level 2): "Expertise. Choose one
 of your skill proficiencies with which you lack Expertise. You gain Expertise in that skill." The
 grant has no restriction, so the count expresses it honestly.
 
-Repro: `src/lib/build/derive.audit-repro.test.ts`
+Held by: `src/lib/build/ranger-expertise.test.ts`
 
 ```
 AssertionError: expected +0 to be 1 // Object.is equality
@@ -208,14 +207,26 @@ whose `damage` has dice. That is a rule decided in code from the shape of a cell
 Fix: make it the row's statement — the rows whose text adds the modifier say so in data (a term in
 the `damage` cell, or a column), and `spellOutcomeParts` reads that instead of "has dice".
 
-### [ ] R7 · A 5.5e Rage runs out by itself after one minute — low · CONFIRMED · 5.5e
+Left open on one maintainer decision. The shape is a spell column `heal_modifier`, an open enum whose
+one value today is `spellcasting`, set on the rows whose text adds it (5e: Cure Wounds, Healing Word,
+Prayer of Healing and both Mass forms; 5.5e: the same less Prayer of Healing), and read by
+`spellOutcomeParts` in place of "has dice" — about thirty lines across the schema, the vocabulary, the
+homebrew form, `SpellRow`, the two spell files and `content.md`. The decision is what a homebrew
+spell file written before the column means:
+
+- **blank adds nothing.** The column is the only truth, as `content.md` asks; a homebrew healing spell
+  that relied on the old guess heals by its dice until its author sets the column.
+- **blank keeps the old guess for files without the column.** No homebrew row changes, at the price
+  of a rule decided in code from a cell's shape surviving for those files.
+
+### [x] R7 · A 5.5e Rage runs out by itself after one minute — low · closed · 5.5e
 
 Entering Rage puts a 10-round clock on it, and the catalog entry reads "Lasts up to 1 minute". A
 fight that passes round 10 loses the resistance and the damage bonus with no word. SRD 5.2.1, Rage ▸
 Duration: "You can maintain a Rage for up to 10 minutes." Ten rounds is right for 5e ("Your rage
 lasts for 1 minute").
 
-Repro: `src/lib/play/options.audit-repro.test.ts`
+Held by: `src/lib/play/rage-duration.test.ts`
 
 ```
 AssertionError: expected 10 to be 100 // Object.is equality
@@ -246,9 +257,17 @@ Root cause: `src/routes/build/mastery-picks.svelte.ts:51` asks proficiency and n
 Fix: the feature row states it (a tag list beside `mastery_slots`, `melee` on this one row), and
 `MasteryPicks.options` filters by it.
 
+Left open on one maintainer decision: where the statement lives. Either way the reader is one filter
+in `MasteryPicks.options` against the weapon's `melee`/`ranged` tag, with a test per edition.
+
+- **a column on class features** (`mastery_weapons`, a tag list: `melee` on the Barbarian's row,
+  blank everywhere else) — one more column on a wide file, readable on its own.
+- **a qualifier in `mastery_slots`** (`2@1|melee`) — no new column, at the price of a second grammar
+  inside a cell that holds a ladder.
+
 ## U · UI state
 
-### [ ] U1 · A character whose folder was deleted outside the app stays open after "take the file", and its next edit writes the folder back — medium · CONFIRMED · both
+### [x] U1 · A character whose folder was deleted outside the app stays open after "take the file", and its next edit writes the folder back — medium · closed · both
 
 Desktop: the player deletes `characters/<slug>/` in the file manager while that sheet is open. The
 next edit raises the conflict question, as it should. Answering that the file's state wins removes
@@ -256,7 +275,7 @@ the character from the roster and closes the dialog — and the sheet stays on s
 point pressed saves normally and the folder is back. The way out the player chose is undone by the
 app.
 
-Repro: `src/lib/character/store.audit-repro.test.ts`
+Held by: `src/lib/character/store-deleted-folder.test.ts`
 
 ```
 AssertionError: expected true to be false // Object.is equality
@@ -286,6 +305,9 @@ teardown, and the timer fires on a form that is gone.
 
 Fix: `clearTimeout(writeTimer)` in `save()` before the draft is deleted. Not in an effect teardown:
 a form closed mid-debounce has to keep its last write.
+
+The fix is in (`EditContentForm.svelte` ▸ `save`). The box stays open until a browser test mounts the
+form, saves inside the debounce, and finds no draft afterwards.
 
 ## Ruled out
 

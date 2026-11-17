@@ -588,15 +588,16 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 				system,
 			);
 
-	it('2024: Rogue 2@L1 +2@L6, Bard 2@L2 +2@L9, Ranger 2@L9', async () => {
+	it('2024: Rogue 2@L1 +2@L6, Bard 2@L2 +2@L9, Ranger 1@L2 +2@L9', async () => {
 		const b = budgetAt(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e');
 		expect(b('rogue', 1)).toBe(2);
 		expect(b('rogue', 5)).toBe(2);
 		expect(b('rogue', 6)).toBe(4);
 		expect(b('bard', 2)).toBe(2);
 		expect(b('bard', 9)).toBe(4);
-		expect(b('ranger', 8)).toBe(0);
-		expect(b('ranger', 9)).toBe(2);
+		expect(b('ranger', 1)).toBe(0);
+		expect(b('ranger', 8)).toBe(1);
+		expect(b('ranger', 9)).toBe(3);
 	});
 	it('2014: Rogue 2@L1 +2@L6, Bard 2@L3 +2@L10 (no Ranger expertise)', async () => {
 		const b = budgetAt(await loadEdition('srd-2014'), 'SRD 5.1', '5e');

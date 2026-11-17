@@ -8,6 +8,7 @@
  */
 import type { Layer, Op } from '../rules/pipeline';
 import { rechargeRank } from '../rules/recharge';
+import { CHECK_PREFIX, SKILL_ABILITY, type SkillId } from '../character/skills';
 import type {
 	ActiveEffect,
 	DamageSensitivity,
@@ -21,25 +22,32 @@ import type {
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`→`skill.*`, `ability_checks`→both the skill checks and the BARE ability
  *  checks (`check.*`) the sheet rolls — 2014 exhaustion L1 rides `ability_checks` — and
- *  `d20_tests`→every d20-based roll (saves, ability checks/skills, attack, initiative), which is what
- *  the 2024 exhaustion penalty rides. */
+ *  `check.<ability>`→that ability's bare check and every skill built on it, the one sentence the
+ *  rules make of them (Rage's "Strength checks"), and `d20_tests`→every d20-based roll (saves,
+ *  ability checks/skills, attack, initiative), which is what the 2024 exhaustion penalty rides. */
 export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
 	if (effTarget === key) return true;
-	if (effTarget === 'saves' && key.startsWith('save')) return true;
-	if (effTarget === 'skills' && key.startsWith('skill')) return true;
-	if (effTarget === 'ability_checks' && (key.startsWith('skill') || key.startsWith('check')))
-		return true;
-	if (
-		effTarget === 'd20_tests' &&
-		(key.startsWith('save') ||
-			key.startsWith('skill') ||
-			key.startsWith('check') ||
-			key === 'attack' ||
-			key === 'initiative')
-	)
-		return true;
+	if (effTarget === 'saves') return key.startsWith('save');
+	if (effTarget === 'skills') return key.startsWith('skill');
+	if (effTarget === 'ability_checks') return isAbilityCheck(key);
+	if (effTarget === 'd20_tests')
+		return key.startsWith('save') || isAbilityCheck(key) || key === 'attack';
+	if (effTarget.startsWith(CHECK_PREFIX))
+		return checkOfAbilityReaches(effTarget.slice(CHECK_PREFIX.length), key);
 	return false;
+}
+
+/** A skill, a bare ability check, or initiative — a Dexterity check in both SRDs. */
+const isAbilityCheck = (key: string): boolean =>
+	key.startsWith('skill') || key.startsWith('check') || key === 'initiative';
+
+/** Does `check.<ability>` reach this key, beyond the bare check it names exactly? */
+function checkOfAbilityReaches(ability: string, key: string): boolean {
+	if (key === 'initiative') return ability === 'dex';
+	return (
+		key.startsWith('skill.') && SKILL_ABILITY[key.slice('skill.'.length) as SkillId] === ability
+	);
 }
 
 /** Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an

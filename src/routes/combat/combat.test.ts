@@ -2128,10 +2128,10 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 		expect(character.play.effects.filter((e) => e.label === 'Rage')).toHaveLength(1);
 	});
 
-	it('the Rage buff carries the STR-check advantage as a LIVE fact (Athletics), not just a note', () => {
+	it('the Rage buff carries the STR-check advantage as a LIVE fact (every STR check), not just a note', () => {
 		combat.useResourceOrEnter('rage', 3);
 		const sheet = combat.sheet;
-		expect(sheet?.facts.advantage.some((a) => a.target === 'skill.athletics')).toBe(true);
+		expect(sheet?.facts.advantage.some((a) => a.target === 'check.str')).toBe(true);
 		expect(sheet?.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 	});
 

@@ -234,7 +234,9 @@ export async function resolveConflict(choice: ConflictChoice): Promise<void> {
 		upsertRosterEntry(mine);
 	} else if (choice === CONFLICT_CHOICE.file) {
 		const theirs = await adoptBySlug(mine.id);
+		// a folder deleted outside the app is a file state too: no character, so none stays open
 		if (open && theirs) putIntoActive(theirs);
+		else if (open) characters.active = null;
 		await loadRoster();
 	} else {
 		const copy: Character = {

@@ -116,7 +116,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 
 ### Targets
 
-`matchesTarget` (`apply.ts`) matches an exact key OR a group that fans out. Specific keys:
+`matchesTarget` (`effects/facts.ts`) matches an exact key OR a group that fans out. Specific keys:
 `ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `speed.climb`, `hp_max`, `attack`,
 `attacked`, `damage`,
 `spell_dc`, `spell_attack`, `heal`, `crit_threshold`, `save.<ability>`, `save.death`, `skill.<id>`,
@@ -124,7 +124,10 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets** (fan out):
 
 - `saves` → every `save.*`
-- `skills` / `ability_checks` → every `skill.*` (2014 exhaustion L1 rides `ability_checks`)
+- `skills` → every `skill.*`; `ability_checks` → every `skill.*` and every bare `check.*` (2014
+  exhaustion L1, Poisoned, Frightened)
+- `check.<ability>` → that ability's bare check and every skill built on it (Rage's "Strength
+  checks") — the same reading the proficiency grants give it
 - `d20_tests` → every d20-based roll (saves, skills, `attack`, `initiative`) — the 2024
   exhaustion penalty rides this one group.
 

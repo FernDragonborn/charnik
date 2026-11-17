@@ -310,8 +310,8 @@ function buildRow(
 	// de-duplicate the id within the homebrew file so two "My Item"s coexist
 	if (row.id && existingIds.has(row.id)) {
 		let n = 2;
-		while (existingIds.has(`${row.id}-${n}`)) n++;
-		row.id = `${row.id}-${n}`;
+		while (existingIds.has(`${row.id}_${n}`)) n++;
+		row.id = `${row.id}_${n}`;
 	}
 	const res = parseRow(type, row);
 	if (!res.success)

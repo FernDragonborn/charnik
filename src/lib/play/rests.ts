@@ -18,8 +18,10 @@ import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
 import { rechargeCount } from '$lib/effects/recharge-amount';
 import { remainingRounds, ROUNDS_PER_UNIT } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
+import { withoutForm } from '$lib/character/forms';
 import type { CharacterSheet } from '$lib/character/derive';
 import { dropEffects, endConcentration } from './concentration';
+import { leaveForm } from './form';
 import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { hitDiceSpent } from './resources';
 import { settled } from './settle';
@@ -96,9 +98,21 @@ export function rest(
 	{ kind, choice = {} }: { kind: RestKind; choice?: RestChoice },
 	ctx: PlayContext,
 ): PlayOutcome {
-	const sheet = ctx.derive(character);
 	const before = character.play;
-	const resourcesSpent = { ...before.resourcesSpent };
+	// a rest expires an effect it OUTLASTS: rounds LEFT (not total duration) against the rest's own
+	// length. A 24-hour effect is still running when you get up. That happens FIRST, and a form whose
+	// carrier goes is left with it, so what the rest restores is the character's own and not a form's.
+	const restRounds = REST_HOURS[kind] * (ROUNDS_PER_UNIT.hour ?? 0);
+	const outlasted = dropEffects(before, (effect) => {
+		const left = remainingRounds(effect, before.round);
+		return left != null && left <= restRounds;
+	});
+	const formGone =
+		outlasted.form &&
+		!outlasted.effects.some((effect) => effect.source === outlasted.form?.monster);
+	const waking: Character = { ...character, play: formGone ? leaveForm(outlasted) : outlasted };
+	const sheet = ctx.derive(waking);
+	const resourcesSpent = { ...waking.play.resourcesSpent };
 	for (const pool of sheet.resources) {
 		// what this rest gives the pool back is the recharge model's call: `null` nothing, `'all'`
 		// the whole pool, otherwise an amount to roll or read
@@ -111,20 +125,21 @@ export function rest(
 				resourcesSpent[pool.id] = Math.max(0, countAt(resourcesSpent, pool.id) - count);
 		}
 	}
-	let play: CharacterPlay = { ...before, resourcesSpent };
-	if (kind === 'long') play = longRest(character, play, sheet, choice);
-	else {
+	let play: CharacterPlay = { ...waking.play, resourcesSpent };
+	if (kind === 'long') {
+		play = longRest(waking, play, sheet, choice);
+		// a form still standing (a 2014 druid of 16 and up) rests on its own count; the hit points
+		// waiting under it are the character's, and a long rest restores those too
+		const form = play.form;
+		if (form?.hpBefore !== undefined) {
+			const own = ctx.derive(withoutForm(waking)).maxHp;
+			play = { ...play, form: { ...form, hpBefore: effectiveHpMax(play.hp.max ?? null, own) } };
+		}
+	} else {
 		// warlock pact slots return on a short rest
 		const { [PACT_SLOT_KEY]: _pact, ...spellSlotsSpent } = play.spellSlotsSpent;
 		play = { ...play, spellSlotsSpent };
 	}
-	// a rest expires an effect it OUTLASTS: rounds LEFT (not total duration) against the rest's own
-	// length. A 24-hour effect is still running when you get up.
-	const restRounds = REST_HOURS[kind] * (ROUNDS_PER_UNIT.hour ?? 0);
-	play = dropEffects(play, (effect) => {
-		const left = remainingRounds(effect, play.round);
-		return left != null && left <= restRounds;
-	});
 	return settled(
 		{
 			character: { ...character, play },

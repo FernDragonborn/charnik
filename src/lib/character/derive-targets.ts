@@ -76,6 +76,7 @@ const ROLL_TARGETS = new Set<string>([
 	...SAVE_TARGETS,
 	DEATH_SAVE_TARGET,
 	...SKILL_TARGETS,
+	...ABILITIES.map((a) => `check.${a}`),
 ]);
 // grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep
 // `save.`; a bare ability grants that save). Equipment carries its own prefix, because "heavy" and

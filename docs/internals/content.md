@@ -532,7 +532,9 @@ the data folder, whenever a translation was at stake; ten runs are kept. The mer
 the incoming file dropped or re-ided, and a log line cannot hold what the text was — it carries ids,
 never prose — so the copy is the only record of it. A file an update DELETES is copied the same way
 (`setAsideRemovedTranslations`): it has no incoming side to merge into, so every translated row in
-it is one the copy alone keeps, and restoring the copy brings the file back.
+it is one the copy alone keeps, and restoring the copy brings the file back. An incoming file that
+does not parse whole is the same case: it lands as its own bytes so the loader can name the damage,
+nothing is merged into it, and every translated row of the file it replaces counts as orphaned.
 
 **The copies have a way back out** (`content/translation-backups.ts`): Settings ▸ packs lists the
 runs under the pack whose files they hold, and putting one back goes through the apply's own swap,

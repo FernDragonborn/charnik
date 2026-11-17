@@ -12,16 +12,13 @@ import type { Ability, PartialProficiency } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { ContentGraph } from '../content/loader';
 import { gatherProfGrants, withGrantedProfs, type ProfGrants } from '../rules/proficiency';
-import { SKILL_ABILITY, type SkillId } from './skills';
+import { CHECK_PREFIX, SKILL_ABILITY, type SkillId } from './skills';
 
 /** Skill proficiency level (a rung, not two booleans): none → partial (Jack of All Trades) →
  *  proficient → expertise (×2). `partial` rather than `half`: a rung is written BEFORE its target in
  *  a token, so `half:skills` reads as "half the skills", and "half" reads as a reduction when this
  *  rung is a GAIN — a lesser proficiency, not a cut-down one. */
 export type SkillProficiency = 'none' | 'partial' | 'proficient' | 'expertise';
-
-/** The `check.<ability>` target namespace — a grant aimed at every check one ability makes. */
-export const CHECK_PREFIX = 'check.';
 
 /** One effect-granted rung, with what the sheet needs to SAY it: the feature's own name for the
  *  trace, and how its `partial` rounds. A bare `SkillProficiency` lost both, so every partial rung

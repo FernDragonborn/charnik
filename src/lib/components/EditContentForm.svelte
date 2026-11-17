@@ -264,6 +264,9 @@
 				issues = res.issues ?? [$_('homebrewForm.saveFailed')];
 				return;
 			}
+			// a pending autosave would write the draft back after `onsave` unmounts the form, and a
+			// destroyed effect never runs again to clear it
+			clearTimeout(writeTimer);
 			await deleteDraft(getUserStorage(), draftCacheTarget); // saved → drop the cached draft
 			baseline = JSON.stringify(draft); // stop the auto-save effect from re-spawning it
 			resetContentGraph();
