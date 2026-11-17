@@ -131,7 +131,7 @@ const PLUGIN_FILE = /(^|\/)plugins\/[^/]+\/(plugin\.json|main\.js)$/;
  *  README, a leftover from an older layout, notes the user keeps beside the data — is never
  *  proposed for deletion just because the remote doesn't list it. */
 export const isPackFile = (path: string): boolean =>
-	path.endsWith('.csv') || PLUGIN_FILE.test(path);
+	path.toLowerCase().endsWith('.csv') || PLUGIN_FILE.test(path);
 
 /**
  * Group a GitHub tree response into packs. The rule is deliberately the same one used locally —

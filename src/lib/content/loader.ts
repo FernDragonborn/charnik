@@ -13,6 +13,7 @@
  *     layer can "render what's possible + flag it" instead of crashing.
  */
 import type { Storage, FileEntry } from '../storage/types';
+import { listPackEntries } from '../storage/walk';
 import { describeDamage, parseCsvTable } from './csv-table';
 import { errText } from '../util/format';
 import {
@@ -255,7 +256,7 @@ function resolveFileType(
 		});
 		return null;
 	}
-	const base = entry.name.replace(/\.csv$/i, '');
+	const base = entry.name.slice(entry.name.lastIndexOf('/') + 1).replace(/\.csv$/i, '');
 	// type = the filebase that the name equals or starts with (e.g. species_srd → species)
 	const match = acc.typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
 	if (match) return { type: match[1], kind: undefined };
@@ -529,15 +530,12 @@ export async function loadContent(
 	// dedup / source:id merge is order-sensitive, so processing order must stay identical to before.
 	const files: FileRef[] = [];
 	for (const { storage: st, root } of sources)
-		for (const entry of await st.list(root)) files.push({ st, root, entry });
+		for (const entry of await listPackEntries(st, root)) files.push({ st, root, entry });
 	const withRaw = await Promise.all(
 		files.map(async (file) => ({
 			file,
-			raw:
-				// `.CSV` from a tool that upper-cases extensions is the same file
-				file.entry.isDir || !file.entry.name.toLowerCase().endsWith('.csv')
-					? null
-					: await readOrIssue(file, acc),
+			// `.CSV` from a tool that upper-cases extensions is the same file
+			raw: file.entry.name.toLowerCase().endsWith('.csv') ? await readOrIssue(file, acc) : null,
 		})),
 	);
 	for (const { file, raw } of withRaw) if (raw != null) await processFile(file, acc, raw);

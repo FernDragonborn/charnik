@@ -2473,6 +2473,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/storage/walk.ts`
 
 - `function listFilesRecursive` — * Every file under `dir`, at any depth, as dataDir-relative paths.
+- `function listPackEntries` — Every entry of a pack, subfolders included — a remote pack installs them, so they load — named * by its path within t…
 
 ### `src/lib/styles/customThemes.ts`
 
@@ -2662,4 +2663,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1632 exports across 225 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1633 exports across 225 modules · 116 duplicate suspects._

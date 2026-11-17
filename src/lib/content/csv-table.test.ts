@@ -71,3 +71,19 @@ describe('a file that cannot be read', () => {
 		expect(graph.list('effect').map((r) => r.id)).toEqual(['b']);
 	});
 });
+
+describe('a pack with subfolders (audit-oct-27 D13)', () => {
+	it('loads the CSVs a remote pack installs in a subfolder, and never its plugin code', async () => {
+		const s = new MemoryStorage();
+		await s.write('pack/effects_top.csv', [HEAD, row('a')].join('\n'));
+		await s.write('pack/extra/effects_nested.csv', [HEAD, row('b')].join('\n'));
+		await s.write('pack/plugins/ns/effects_not.csv', [HEAD, row('c')].join('\n'));
+		const graph = await loadContent(s, ['pack']);
+		expect(
+			graph
+				.list('effect')
+				.map((r) => r.id)
+				.sort(),
+		).toEqual(['a', 'b']);
+	});
+});

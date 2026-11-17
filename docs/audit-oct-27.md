@@ -258,8 +258,9 @@ the file's own columns that the form never saw.
   the steps that can still throw (`updates.test.ts`).
 - [ ] **The seed matched files by path, not by `#content-id`.** A renamed SRD file was seeded beside
   itself, giving duplicate ids; a file deleted from the pack came back with the next seed.
-- [ ] **Case and nesting.** Upper-case `.CSV` files were ignored with no health entry — closed, the loader
-  reads them. CSVs in subfolders of a remote pack were installed but never loaded — open.
+- [x] **Case and nesting** · closed. Upper-case `.CSV` files load, and a remote pack's upper-case CSV
+  is a pack file to install. CSVs in a pack's subfolders load, `plugins/` excepted
+  (`csv-table.test.ts`).
 - [x] **The web demo did not ask for `navigator.storage.persist()`** · closed. The layout asks for it
   on the web and logs the answer.
 - [x] **Two demo tabs** · closed. A config write is announced on a `BroadcastChannel` and the other

@@ -8,7 +8,9 @@
 Content **roots** are the subfolders of `<dataDir>/content/`. One folder is one pack. They are
 **discovered by scanning** — no list in any config names them.
 
-A root holds any number of CSVs per type (`species_srd.csv`, `species_phb.csv`, …) and everything of
+A root holds any number of CSVs per type (`species_srd.csv`, `species_phb.csv`, …), in its subfolders
+too (a file there is named by its path within the pack; `plugins/` is code and never read as
+content), and everything of
 one type merges into one table. Which type a file is comes from its `#content-type:` directive, or
 failing that from its filename.
 

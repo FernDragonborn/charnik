@@ -11,7 +11,7 @@
  * a bundled pack's `plugins/<ns>/` subtree was invisible to the half that writes it and visible to
  * the half that compares it.
  */
-import type { Storage } from './types';
+import type { FileEntry, Storage } from './types';
 
 /**
  * Every file under `dir`, at any depth, as dataDir-relative paths.
@@ -35,5 +35,18 @@ export async function listFilesRecursive(storage: Storage, dir: string): Promise
 	for (const entry of entries)
 		if (entry.isDir) out.push(...(await listFilesRecursive(storage, entry.path)));
 		else out.push(entry.path);
+	return out;
+}
+
+/** Every entry of a pack, subfolders included — a remote pack installs them, so they load — named
+ *  by its path within the pack. `plugins/` is code, read by the plugin host and never as content. */
+export async function listPackEntries(st: Storage, root: string, dir = root): Promise<FileEntry[]> {
+	const out: FileEntry[] = [];
+	for (const entry of await st.list(dir)) {
+		const name = dir === root ? entry.name : `${dir.slice(root.length + 1)}/${entry.name}`;
+		if (!entry.isDir) out.push({ ...entry, name });
+		else if (!(dir === root && entry.name.toLowerCase() === 'plugins'))
+			out.push(...(await listPackEntries(st, root, `${dir}/${entry.name}`)));
+	}
 	return out;
 }
