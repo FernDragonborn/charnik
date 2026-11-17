@@ -27,7 +27,8 @@ import {
 
 export type DepKey = string; // 'ability:<ab>' | 'hp_max' | 'condition:<id>' | 'resource:<id>'
 export const HP_MAX_KEY = 'hp_max';
-export const abilityKey = (ab: string): DepKey => `ability:${ab}`;
+export const ABILITY_KEY_PREFIX = 'ability:';
+export const abilityKey = (ab: string): DepKey => `${ABILITY_KEY_PREFIX}${ab}`;
 const conditionKey = (id: string): DepKey => `condition:${id}`;
 const resourceKey = (id: string): DepKey => `resource:${id}`;
 const ABILITY_KEYSET: ReadonlySet<string> = new Set(ABILITY_IDS);

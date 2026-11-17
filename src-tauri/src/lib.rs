@@ -220,7 +220,25 @@ fn open_main_window(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Er
         .ok_or("tauri.conf.json declares no window")?
         .clone();
     let opener = app.clone();
+    let navigator = app.clone();
+    // the dev server is the app's own page only in a debug build; a release never loads it
+    let dev_origin = cfg!(debug_assertions)
+        .then(|| app.config().build.dev_url.as_ref().map(|dev| dev.origin()))
+        .flatten();
     tauri::WebviewWindowBuilder::from_config(app, &config)?
+        // the page's click handler is the first guard against an outside link replacing the app;
+        // this is the one that does not depend on the page's script running at all (S15)
+        .on_navigation(move |url| {
+            let own = matches!(url.scheme(), "tauri" | "about")
+                || url.host_str() == Some("tauri.localhost")
+                || dev_origin.as_ref() == Some(&url.origin());
+            if !own && matches!(url.scheme(), "http" | "https") {
+                if let Err(e) = navigator.opener().open_url(url.as_str(), None::<&str>) {
+                    log::warn!("could not open {url} in the browser: {e}");
+                }
+            }
+            own
+        })
         .on_new_window(move |url, _features| {
             if matches!(url.scheme(), "http" | "https") {
                 if let Err(e) = opener.opener().open_url(url.as_str(), None::<&str>) {

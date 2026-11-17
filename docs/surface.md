@@ -1813,6 +1813,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type DepKey`
 - `const HP_MAX_KEY`
+- `const ABILITY_KEY_PREFIX`
 - `const abilityKey`
 - `function writeKeyOf` — The value node a token WRITES (null = plain stat token — nothing downstream can read it).
 - `interface ResolveState` — The mutable dependency-resolve state.
@@ -1914,6 +1915,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PluginEvaluator`
 - `function registerPluginEvaluator` — Install the evaluator (the sandbox host, once ≥1 plugin is enabled).
 - `function clearPluginEvaluator` — Remove the evaluator (kill switch / module teardown) — plugin tokens degrade to notes.
+- `const OVER_BUDGET` — The reason a call tripped a limit — the one failure that costs a context reboot.
 - `function clearPluginMemo` — Drop all memoized results + failure counts.
 - `interface PluginExpansion`
 - `function expandPluginEffects` — * Resolve every `plugin:` token in the resolved effect list — once per DISTINCT token (memoized), * applied once per …
@@ -2583,7 +2585,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/util/links.ts`
 
-- `function externalLinkToOpen` — * What to do with a click on `href` from a page served at `origin`: * - a URL string → open it in the OS browser (and…
+- `function parseUrl` — `URL.parse` without `URL.parse`: WebKitGTK before 2.46 lacks it, and a listener that throws on * its first line lets …
+- `function externalLinkToOpen`
 - `function shouldCancelNavigation` — …and whether the click must be CANCELLED even when nothing gets opened.
 
 ### `src/lib/util/motion.ts`
@@ -2635,4 +2638,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1614 exports across 222 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1617 exports across 222 modules · 116 duplicate suspects._

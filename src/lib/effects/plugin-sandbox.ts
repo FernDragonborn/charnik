@@ -29,7 +29,12 @@ import {
 	type QuickJSRuntime,
 	type QuickJSWASMModule,
 } from 'quickjs-emscripten-core';
-import type { PluginCallOutcome, PluginEvaluator, PluginTokenRef } from './plugin-registry';
+import {
+	OVER_BUDGET,
+	type PluginCallOutcome,
+	type PluginEvaluator,
+	type PluginTokenRef,
+} from './plugin-registry';
 
 /** Per-call budget in interpreter steps (§5 budgets) — the count of QuickJS interrupt checks. It
  *  does not move with load, so whether a handler is "over budget" is a property of the plugin rather
@@ -270,7 +275,7 @@ function callPlugin(
 		// disabled the handler instead (PLG-SEC 8).
 		res.error.dispose();
 		disposePlugin(p);
-		return { ok: false, reason: 'over budget', steps };
+		return { ok: false, reason: OVER_BUDGET, steps };
 	}
 	const raw = context.getString(res.value);
 	res.value.dispose();

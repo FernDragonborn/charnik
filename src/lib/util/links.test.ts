@@ -32,3 +32,21 @@ describe('links that leave the app', () => {
 		expect(shouldCancelNavigation('not a url', APP)).toBe(false);
 	});
 });
+
+/* audit-oct-27 S15: WebKitGTK before 2.46 has no URL.parse, and a throwing listener let the click
+ * through to navigate the app window */
+describe('without URL.parse', () => {
+	it('still finds an outside link and cancels it', () => {
+		const parse = URL.parse;
+		Object.defineProperty(URL, 'parse', { value: undefined, configurable: true });
+		try {
+			expect(externalLinkToOpen('https://example.com/x', 'http://tauri.localhost')).toBe(
+				'https://example.com/x',
+			);
+			expect(shouldCancelNavigation('https://example.com/x', 'http://tauri.localhost')).toBe(true);
+			expect(shouldCancelNavigation('/compendium', 'http://tauri.localhost')).toBe(false);
+		} finally {
+			Object.defineProperty(URL, 'parse', { value: parse, configurable: true });
+		}
+	});
+});

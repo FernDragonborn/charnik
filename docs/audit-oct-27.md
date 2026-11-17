@@ -650,29 +650,36 @@ the `$derived` in the builder, combat and Spellbook fell over.
 
 #### S14 · Smaller — low / info
 
-- [ ] **Dice finiteness.** The flat part of dice in an expression skipped the finiteness check
-  (`expression-evaluator.ts`): `1d6+inf` showed "+Infinity", `(1d6+inf)*0` silently became 0.
-- [ ] **Plugin tokens.** Ability tokens a plugin returns were silently ignored
-  (`character/derive-plugins.ts`, no issue).
+- [x] **Dice finiteness** · closed. The flat part of dice in an expression skipped the finiteness
+  check (`expression-evaluator.ts`): `1d6+inf` showed "+Infinity", `(1d6+inf)*0` silently became 0.
+  One constructor guards it (`expression.test.ts` ▸ fails loudly the moment arithmetic touches it).
+- [x] **Plugin tokens** · closed. Ability tokens a plugin returns were silently ignored: the scores
+  fold before the handler runs. They are refused with an issue (`plugin.test.ts` ▸ a returned token
+  that writes an ability score is said).
 - [x] **Plugin error length** · closed. The error text was cut with the sandbox's own
   `String.prototype.slice` (`plugin-sandbox.ts`), so a plugin returned 40 k characters. It is cut on
   the host.
-- [ ] **Plugin restart.** A restart after a limit hit is not counted against the derive budget, and the
-  three-failure counter resets on a run of successes (`plugin-sandbox.ts` ▸ `callPlugin`). Not
-  measured.
-- [ ] **Prototype names.** The expression parser accepted `Object.prototype` names (`constructor(1)`,
-  `__proto__`) as valid (`expression-parser.ts`). They failed at evaluation, so nothing leaked.
-- [ ] **`remote.rs`** accepted userinfo (`user:tok@api.github.com`) and non-default ports. Harmless for a
-  GET to a pinned host, but cheap to refuse.
-- [ ] **Demo isolation.** The web demo lives at `<owner>.github.io/<repo>` and shares IndexedDB and
-  localStorage with the owner's other Pages sites.
+- [x] **Plugin restart** · closed. The three-failure counter reset on a run of successes, so a
+  handler tripping a limit every other call paid a context reboot for ever. Limit trips are counted
+  apart and never reset; three disable the handler (`plugin.test.ts` ▸ three limit trips). The
+  reboot's own cost stays uncharged to the call, as `callPlugin` says why.
+- [x] **Prototype names** · closed. The parser looks functions and enum variables up as own keys
+  (`expression.test.ts` ▸ names an object already has).
+- [x] **`remote.rs`** · closed. Userinfo and a port of its own are refused
+  (`remote.rs` ▸ `a_pack_lives_on_two_hosts_and_nowhere_else`).
+- [x] **Demo isolation** · moved to `work/release.md` ▸ WEB-DEMO-ORIGIN, a hosting change.
 
-#### [ ] S15 · Main-window navigation is held back by JS alone — low · LIKELY (Linux)
+#### [x] S15 · Main-window navigation is held back by JS alone — low · closed, Linux run owed
 
 `lib.rs` has `on_new_window` but no `on_navigation`. The only guard against a left click on an outside
 link replacing the app is a capture listener (`+layout.svelte`). `util/links.ts` used `URL.parse`,
 which WebKitGTK lacks before 2.46: on older Linux the listener throws before `preventDefault`, and the
-outside page opens in the app window — S6 back. Not run on Linux.
+outside page opens in the app window — S6 back.
+
+**Fix:** the main window has an `on_navigation` guard in Rust that lets only the app's own origin
+load and hands an outside web address to the OS browser, so the guard no longer depends on the page's
+script; `util/links.ts` ▸ `parseUrl` replaces `URL.parse` there and in the pack fetchers. **Held by**
+`links.test.ts` and the desktop app loading under the guard on Windows. Not run on Linux.
 
 #### S16 · Dependencies
 

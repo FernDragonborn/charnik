@@ -768,6 +768,20 @@ describe('EXPR · per_slot() upcast sugar (UPCAST §2)', () => {
 	});
 });
 
+describe('EXPR · names an object already has', () => {
+	/* audit-oct-27 S14: `constructor(1)` and `__proto__` parsed, and failed only at evaluation */
+	it('are no function and no variable', () => {
+		for (const src of [
+			'constructor(1)',
+			'toString()',
+			'__proto__',
+			'constructor',
+			'hasOwnProperty(1)',
+		])
+			expect(parseExpression(src).ok, src).toBe(false);
+	});
+});
+
 describe('EXPR · the `inf` terminal literal', () => {
 	it('passes through the pass-through positions (step value, if branch, var)', () => {
 		expect(n('inf')).toBe(Infinity);
@@ -781,6 +795,9 @@ describe('EXPR · the `inf` terminal literal', () => {
 
 	it('fails loudly the moment arithmetic touches it (terminal-only, NaN never escapes)', () => {
 		for (const src of ['inf+1', 'inf-inf', '0*inf', 'inf/inf', '-inf', 'floor(inf)', 'max(inf,3)'])
+			expect(evalExpression(src, ctx()).ok, src).toBe(false);
+		// …and the flat part of dice is held to the same rule (audit-oct-27 S14)
+		for (const src of ['1d6+inf', '(1d6+inf)*0', '1d6*inf'])
 			expect(evalExpression(src, ctx()).ok, src).toBe(false);
 	});
 

@@ -301,6 +301,11 @@
   tooling only. The patch is 11.0.1; ESLint and TypeScript ESLint still require 10.x, including their
   available updates. The patterns are repository-owned and no minimatch ships in the app. Move with
   the upstream toolchain rather than forcing a major across its dependency ranges.
+- **WEB-DEMO-ORIGIN · the web demo shares its origin with the owner's other Pages sites.** It is
+  served at `<owner>.github.io/<repo>`, so IndexedDB and localStorage — the demo's characters — are
+  readable by any other site under the same `github.io` host of that owner. A host of its own (a
+  custom domain on the Pages site, or a dedicated `<name>.github.io` repository) gives it an origin
+  nobody else writes to. A deployment change, no code.
 - **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4 and DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
   - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
     `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). Its warnings

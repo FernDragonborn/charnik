@@ -60,6 +60,13 @@ const num = (n: number): ExprValue => {
 	return { type: 'number', value: n };
 };
 
+/** The ONE constructor of a dice value, holding its flat part to the finite-guard `num` holds a
+ *  number to: `1d6+inf` is an error, not "+Infinity", and `(1d6+inf)*0` is not a silent 0. */
+function dice(pool: Record<number, number>, flat: number): ExprValue {
+	if (!Number.isFinite(flat)) throw new EvalError('the flat part of a dice term is not finite');
+	return { type: 'dice', dice: { pool, flat } };
+}
+
 /** A number operand required where an expression yielded dice → an error (e.g. dice as a die-size,
  *  or a comparison on dice). Extracts the JS number or throws EvalError. */
 function asNumber(v: ExprValue): number {
@@ -77,7 +84,7 @@ function addValues(a: ExprValue, b: ExprValue): ExprValue {
 	// within the length cap could otherwise pile ~73k dice past the cost bound)
 	for (const [s, c] of Object.entries(db.pool))
 		pool[Number(s)] = Math.min((pool[Number(s)] ?? 0) + c, MAX_DICE_PER_TERM);
-	return { type: 'dice', dice: { pool, flat: da.flat + db.flat } };
+	return dice(pool, da.flat + db.flat);
 }
 
 function evalNode(n: Node, ctx: ExprContext): ExprValue {
@@ -201,7 +208,7 @@ function scaleDice(a: ExprValue, b: ExprValue): ExprValue {
 		const scaled = Math.max(0, Math.min(c * factor, MAX_DICE_PER_TERM));
 		if (scaled > 0) pool[Number(s)] = scaled;
 	}
-	return { type: 'dice', dice: { pool, flat: d.flat * factor + 0 } }; // +0 normalizes -0 → 0
+	return dice(pool, d.flat * factor + 0); // +0 normalizes -0 → 0
 }
 
 function isEnumCompare(l: Node, r: Node): boolean {

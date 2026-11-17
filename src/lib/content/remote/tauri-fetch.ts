@@ -10,6 +10,7 @@
  * config, a bad URL, or a bug up here. The page hands over an address and, for a listing, the
  * `ETag` to replay — nothing else. The check in this file is the second layer, not the boundary.
  */
+import { parseUrl } from '$lib/util/links';
 import { invoke } from '@tauri-apps/api/core';
 import type { FetchResult, RemoteFetcher } from './types';
 
@@ -18,7 +19,7 @@ import type { FetchResult, RemoteFetcher } from './types';
  *  An EXACT scheme match: `startsWith` also accepted `httpsx:`, in the one function whose whole job
  *  is to be the second line of defence. */
 function assertHttps(url: string): void {
-	if (URL.parse(url)?.protocol !== 'https:') throw new Error(`not an https URL: ${url}`);
+	if (parseUrl(url)?.protocol !== 'https:') throw new Error(`not an https URL: ${url}`);
 }
 
 /** What `fetch_pack_text` answers. A 304 and an error status carry no body. */

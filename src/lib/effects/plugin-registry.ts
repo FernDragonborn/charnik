@@ -17,6 +17,7 @@ import { ISSUE_KEY } from './token-parser';
 import { z } from 'zod';
 import type { Ability } from '../rules/core';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
+import { ABILITY_KEY_PREFIX, writeKeyOf } from './dependency-graph';
 import type { NumericFact } from './apply';
 // the §4.4 target vocabulary, asked of the module that owns it. `derive-targets` is a pure leaf (no
 // derive.ts, no Svelte), so this costs the effects module nothing it does not already carry.
@@ -108,6 +109,8 @@ const AGGREGATE_STEP_BUDGET = 400;
 const AGGREGATE_BACKSTOP_MS = 100;
 /** Consecutive failures before a plugin is disabled for the session (§5 fail-closed). */
 const MAX_CONSECUTIVE_FAILURES = 3;
+/** The reason a call tripped a limit — the one failure that costs a context reboot. */
+export const OVER_BUDGET = 'over budget';
 
 const contributionSchema = z.object({
 	layer: z.enum(['feature', 'item', 'condition']),
@@ -195,6 +198,7 @@ export function clearPluginMemo(): void {
 	memoBuild.clear();
 	memoFull.clear();
 	failCounts.clear();
+	limitTrips.clear();
 }
 
 // --- Fail-closed counter (§5: 3 consecutive failures disable the plugin for the session) --------
@@ -210,9 +214,16 @@ const failCounts = new Map<string, number>();
  *  contains it. */
 const failKey = (namespace: string, handlerName: string, scope: string): string =>
 	`${namespace}\0${handlerName}\0${scope}`;
-const isDisabled = (key: string): boolean => (failCounts.get(key) ?? 0) >= MAX_CONSECUTIVE_FAILURES;
-function noteFailure(key: string): void {
+/** Limit trips, counted apart and never wiped by a success (audit-oct-27 S14): each one drops the
+ *  sandbox context and pays its reboot on the next call, so a handler that trips every other call
+ *  would otherwise cost that forever while its streak of failures never reached three. */
+const limitTrips = new Map<string, number>();
+const isDisabled = (key: string): boolean =>
+	(failCounts.get(key) ?? 0) >= MAX_CONSECUTIVE_FAILURES ||
+	(limitTrips.get(key) ?? 0) >= MAX_CONSECUTIVE_FAILURES;
+function noteFailure(key: string, reason = ''): void {
 	failCounts.set(key, (failCounts.get(key) ?? 0) + 1);
+	if (reason === OVER_BUDGET) limitTrips.set(key, (limitTrips.get(key) ?? 0) + 1);
 }
 function noteSuccess(key: string): void {
 	failCounts.delete(key);
@@ -297,8 +308,12 @@ export function expandPluginEffects(
 			// fail-closed counter is per (namespace, handler, character) — a fail on THIS handler, for
 			// THIS character only
 			const r = resolvePluginToken(ref, failKey(namespace, handlerName, scope), keys, budget);
-			if (r.ok) applyResult({ out, eff, namespace, token, result: r.result });
-			else degrade(eff, token, r.reason);
+			if (!r.ok) {
+				degrade(eff, token, r.reason);
+				continue;
+			}
+			for (const late of applyResult({ out, eff, namespace, token, result: r.result }))
+				degrade(eff, late, 'an ability score is what a plugin reads, so it cannot change one');
 		}
 	}
 	return out;
@@ -355,7 +370,7 @@ function resolvePluginToken(
 	const outcome = evaluator.call(ref, keys.buildJson, keys.playJson);
 	budget.steps += outcome.steps;
 	if (!outcome.ok) {
-		noteFailure(fkey);
+		noteFailure(fkey, outcome.reason);
 		const suffix = isDisabled(fkey) ? '; plugin disabled for the session' : '';
 		return { ok: false, reason: `${outcome.reason}${suffix}` };
 	}
@@ -383,10 +398,19 @@ interface ApplyResultInput {
 }
 
 /** Fold one validated result into the expansion, attributed to the CARRYING effect (§4.4a). */
-function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): void {
+/** Does a returned token write an ability score? Those are folded before any plugin runs — they are
+ *  its input — so one returned here would change nothing, and must say so rather than vanish. */
+const writesAbilityScore = (token: string): boolean =>
+	writeKeyOf(parseToken(token))?.startsWith(ABILITY_KEY_PREFIX) ?? false;
+
+/** Apply a validated result; hands back the returned tokens it could not apply. */
+function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): string[] {
+	const tooLate = (result.tokens ?? []).filter(writesAbilityScore);
 	if (result.tokens?.length) {
 		// nested `plugin:` tokens are IGNORED (no recursion — §4.3)
-		const tokens = result.tokens.filter((t) => parseToken(t).kind !== EFFECT_KIND.plugin);
+		const tokens = result.tokens.filter(
+			(t) => parseToken(t).kind !== EFFECT_KIND.plugin && !writesAbilityScore(t),
+		);
 		if (tokens.length)
 			out.syntheticEffects.push({
 				source: `${eff.source} · ${namespace}`,
@@ -410,4 +434,5 @@ function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): 
 	}
 	for (const text of result.notes ?? [])
 		out.notes.push({ source: `${eff.source} · ${namespace}`, text });
+	return tooLate;
 }

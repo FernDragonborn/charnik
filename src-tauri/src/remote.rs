@@ -25,7 +25,12 @@ const MAX_REDIRECTS: usize = 5;
 /// `api.github.com/repos/`, or a file on `raw.githubusercontent.com`. Compiled in, like the
 /// capability it stands in for — no config, pasted URL or bug in the page widens it.
 fn is_pack_host(url: &Url) -> bool {
+    // a pack address carries no credentials and no port of its own: neither is ever needed, and a
+    // token in the address would travel with every redirect and land in every log
     url.scheme() == "https"
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.port().is_none()
         && match url.host_str() {
             Some("api.github.com") => url.path().starts_with("/repos/"),
             Some("raw.githubusercontent.com") => true,
@@ -173,6 +178,12 @@ mod tests {
         // credentials in the address do not change which host it is
         assert!(!allowed(
             "https://api.github.com@evil.example/repos/owner/repo"
+        ));
+        // and on the right host they are refused outright, as is a port of its own
+        assert!(!allowed("https://user:tok@api.github.com/repos/owner/repo"));
+        assert!(!allowed("https://api.github.com:8443/repos/owner/repo"));
+        assert!(!allowed(
+            "https://raw.githubusercontent.com:444/o/r/main/x.csv"
         ));
     }
 }

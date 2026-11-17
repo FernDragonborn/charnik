@@ -22,8 +22,18 @@ const OPENABLE = new Set(['https:', 'http:']);
  * Same-origin is deliberately "leave it alone": that is SvelteKit's router, and hijacking it would
  * break every internal link in the app.
  */
+/** `URL.parse` without `URL.parse`: WebKitGTK before 2.46 lacks it, and a listener that throws on
+ *  its first line lets the click through to navigate the app window (audit-oct-27 S15). */
+export function parseUrl(href: string): URL | null {
+	try {
+		return new URL(href);
+	} catch {
+		return null; // not an absolute address — an in-app path, which is the router's
+	}
+}
+
 export function externalLinkToOpen(href: string, origin: string): string | null {
-	const url = URL.parse(href);
+	const url = parseUrl(href);
 	if (!url || url.origin === origin) return null;
 	return OPENABLE.has(url.protocol) ? url.href : null;
 }
@@ -32,6 +42,6 @@ export function externalLinkToOpen(href: string, origin: string): string | null 
  *  opener won't take (`file:`, an invented scheme) must not fall through to the webview and navigate
  *  it — refusing to open it and letting it load anyway would be the whole bug, dressed up. */
 export function shouldCancelNavigation(href: string, origin: string): boolean {
-	const url = URL.parse(href);
+	const url = parseUrl(href);
 	return url !== null && url.origin !== origin;
 }

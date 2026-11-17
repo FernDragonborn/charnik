@@ -245,7 +245,8 @@ All three keys optional; an empty object is a valid "nothing applies" answer.
   tokens are host-CLAMPED like any content (a bonus is finite-guarded; a resource/dice count is
   cost-capped) — the same treatment content gets, since these ride the same parser.
   **`api: 1` limit:** the pre-pass runs AFTER the dependency-resolve stage (your handler reads
-  the RESOLVED state), so returned tokens cannot feed condition guards or the effects DAG. A
+  the RESOLVED state), so returned tokens cannot feed condition guards or the effects DAG. A returned token that writes an ability score is refused with an issue on the effects panel:
+  the scores are folded before the handler runs — they are its input — so it could change nothing. A
   returned `apply_condition:<id>` registers the condition AND expands its stat tokens **one
   level** (a plugin-granted Poisoned really disadvantages attacks) — but tokens inside that
   expansion don't cascade further, and no guard sees the plugin-granted state until the next
@@ -337,7 +338,8 @@ the keys documented here were rejected, and a rejected key takes the whole resul
   one session and fails in the next. Keep a margin — that boundary is the only place the count
   is not exact.
 - **Failure is contained and fail-closed.** A throw, a timeout, or an invalid result becomes
-  an inert note; 3 consecutive failures disable the plugin for the session (with a notice). An
+  an inert note; 3 consecutive failures disable the plugin for the session (with a notice), and so
+  do 3 limit trips, whatever succeeded between them — each one costs a context reboot. An
   exhausted per-computation budget is NOT a failure of the plugin that spent it — the tokens it
   cuts off belong to whoever came next — so a slow handler that keeps succeeding is never
   disabled by the counter.

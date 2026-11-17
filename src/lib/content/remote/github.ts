@@ -21,6 +21,7 @@
  * scheduled for much later and deliberately not a tail of REL-4. Until then this file is the fast
  * path AND the only path — deliberately.
  */
+import { parseUrl } from '$lib/util/links';
 import {
 	MAX_PACK_BYTES,
 	MAX_PACK_FILES,
@@ -49,7 +50,7 @@ const FALLBACK_BRANCH = 'master';
  * Accepts `https://github.com/owner/repo`, a `.git` suffix, a trailing slash, and `/tree/<branch>`.
  */
 export function parseGithubRepo(url: string): GithubRepo | null {
-	const u = URL.parse(url);
+	const u = parseUrl(url);
 	// `www.` because that is what some browsers put in the address bar, and the URL a user pastes is
 	// the one they copied from there
 	if (u?.hostname !== 'github.com' && u?.hostname !== 'www.github.com') return null;

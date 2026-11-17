@@ -16,6 +16,7 @@ import {
 	clearPluginMemo,
 	type PluginEvaluator,
 	type PluginTokenRef,
+	OVER_BUDGET,
 } from './plugin-registry';
 
 const ctx = (over?: { hp?: number }) => pluginCtx(over?.hp === undefined ? {} : { hp: over.hp });
@@ -137,6 +138,18 @@ describe('the tokens dialect (§4.3) — returned L1 tokens ride the content mac
 		);
 		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), []);
 		expect(out?.syntheticEffects[0]?.tokens).toEqual(['flat_bonus:ac+1']);
+	});
+	/* audit-oct-27 S14: ability scores fold before any plugin runs, so these vanished in silence */
+	it('a returned token that writes an ability score is said, and the rest still apply', () => {
+		registerPluginEvaluator(
+			fakeEvaluator({ 'ns1:fn1': () => ({ tokens: ['flat_bonus:str+2', 'flat_bonus:ac+1'] }) }),
+		);
+		const issues: EffectIssue[] = [];
+		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
+		expect(out?.syntheticEffects[0]?.tokens).toEqual(['flat_bonus:ac+1']);
+		expect(issues).toHaveLength(1);
+		expect(issues[0]?.token).toBe('flat_bonus:str+2');
+		expect(out?.unknown.map((u) => u.token)).toContain('flat_bonus:str+2');
 	});
 	it('a `;` inside one token element rejects the WHOLE result (PLG-SEC 20)', () => {
 		registerPluginEvaluator(
@@ -283,6 +296,25 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			expandPluginEffects([carrier('plugin:ns1:fn1')], ctx({ hp: i }), issues);
 		expect(n).toBe(3);
 		expect(issues.at(-1)?.detail).toMatch(/disabled after repeated failures/);
+	});
+
+	/* audit-oct-27 S14: successes between limit trips wiped the streak, so each trip's reboot was
+	 * paid for ever */
+	it('three limit trips disable the handler even with successes between them', () => {
+		let n = 0;
+		const ev: PluginEvaluator = {
+			has: () => true,
+			call: () => {
+				n++;
+				return n % 2
+					? { ok: false, reason: OVER_BUDGET, steps: 0 }
+					: { ok: true, resultJson: '{}', readPlay: true, steps: 0 }; // reads play: no memo between calls
+			},
+		};
+		registerPluginEvaluator(ev);
+		for (let i = 0; i < 10; i++)
+			expandPluginEffects([carrier('plugin:ns1:fn1')], ctx({ hp: i }), []);
+		expect(n).toBe(5); // trip, ok, trip, ok, trip — and then no more calls
 	});
 
 	it('the counter is per (namespace, character): a fail on ONE character never disables another (PLG-3)', () => {

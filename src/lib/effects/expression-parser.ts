@@ -405,7 +405,8 @@ class Parser {
 	private identNode(name: string): Node {
 		// function call?
 		if (this.isOp('(')) {
-			const spec = FUNCTIONS[name];
+			// own keys only: `constructor(1)` must not find Object.prototype's
+			const spec = Object.hasOwn(FUNCTIONS, name) ? FUNCTIONS[name] : undefined;
 			if (!spec) throw new ParseError(`unknown function '${name}'`);
 			this.eat(); // '('
 			this.guardDepth();
@@ -457,7 +458,7 @@ function varNode(name: string): Node {
 	}
 	if (NUMERIC_VARS.has(name)) return { t: 'numvar', name };
 	if (BOOLEAN_VARS.has(name)) return { t: 'boolvar', name };
-	if (name in ENUM_VARS) return { t: 'enumvar', name };
+	if (Object.hasOwn(ENUM_VARS, name)) return { t: 'enumvar', name };
 	if (ENUM_LITERALS.has(name)) return { t: 'enumlit', name };
 	// a KNOWN variable glued straight onto a die (`leveld6`) is indivisible by design — hint the
 	// supported spelling instead of guessing a split (NEVER-support, decisions doc)
