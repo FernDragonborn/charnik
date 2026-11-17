@@ -18,8 +18,15 @@ export const TOAST_TONE = {
 } as const;
 export type ToastTone = (typeof TOAST_TONE)[keyof typeof TOAST_TONE];
 
+/** A button on the card: the one thing a toast may let the player DO — take back what it reports. */
+export interface ToastAction {
+	label: string;
+	onClick: () => void;
+}
+
 export interface ToastOptions {
 	description?: string;
+	action?: ToastAction;
 	/** Names a notice that must not be said twice: a later one with the same key replaces it. */
 	id?: string;
 	/** `Infinity` makes the notice STANDING — it rides every card after it until dismissed. */
@@ -31,6 +38,7 @@ export interface ToastNote {
 	tone: ToastTone;
 	title: string;
 	description?: string;
+	action?: ToastAction;
 }
 
 interface NotePart extends ToastNote {
@@ -82,8 +90,10 @@ function flush(): void {
 	const [only] = notes;
 	if (rolls.length === 0 && notes.length === 1 && only) {
 		const description = only.description === undefined ? {} : { description: only.description };
-		if (only.tone === TOAST_TONE.plain) sonner(only.title, { ...options, ...description });
-		else sonner[only.tone](only.title, { ...options, ...description });
+		const action = only.action === undefined ? {} : { action: only.action };
+		const said = { ...options, ...description, ...action };
+		if (only.tone === TOAST_TONE.plain) sonner(only.title, said);
+		else sonner[only.tone](only.title, said);
 		return;
 	}
 	sonner.custom(RollToast, {
@@ -97,6 +107,7 @@ function sayNote(tone: ToastTone, title: string, options: ToastOptions = {}): vo
 		tone,
 		title,
 		...(options.description === undefined ? {} : { description: options.description }),
+		...(options.action === undefined ? {} : { action: options.action }),
 		...(options.id === undefined ? {} : { key: options.id }),
 		standing: options.duration === Infinity,
 	});

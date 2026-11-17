@@ -28,6 +28,7 @@ import type { RollMod } from '$lib/effects/facts';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
 import type { Character } from '$lib/character/schema';
 import { LOG_KIND, type LogKind } from '$lib/character/log-kind';
+import type { PlayDelta } from '$lib/play/delta';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -190,6 +191,9 @@ export type RollLogEntry = Rolled & {
 	 *  survived only until the page reloaded, and three Eldritch Blast beams came back as three
 	 *  unrelated rolls. */
 	group?: string;
+	/** What the act changed in play state — only the fields that moved, so the capped file pays for
+	 *  what the act touched. The line says it, and Undo applies it in reverse (`$lib/play/delta`). */
+	delta?: PlayDelta;
 };
 
 /** A line that threw nothing — what an action was, what followed from it, what it said. */
@@ -199,6 +203,8 @@ export interface LogEvent {
 	outcome?: AutoOutcome;
 	/** What the line explains itself with — a notice's description. */
 	noteParts?: Said[];
+	/** What the act this line opens changed in play state (`$lib/play/delta`). */
+	delta?: PlayDelta;
 }
 
 /**
@@ -208,9 +214,10 @@ export interface LogEvent {
  */
 export function eventEntries(events: readonly LogEvent[], at: number): RollLogEntry[] {
 	const group = events.length > 1 ? crypto.randomUUID() : undefined;
-	return events.map(({ name, outcome, kind, noteParts }, i) => ({
+	return events.map(({ name, outcome, kind, noteParts, delta }, i) => ({
 		...nameFields(name),
 		...(outcome ? { outcome } : {}),
+		...(delta?.length ? { delta } : {}),
 		...(kind && kind !== LOG_KIND.roll ? { kind } : {}),
 		...(noteParts?.length ? { noteParts } : {}),
 		...(group ? { group } : {}),
@@ -238,6 +245,7 @@ export type StoredRollLogEntry = StoredRoll & {
 	group?: string;
 	amendments?: RollAmendment[];
 	outcome?: AutoOutcome;
+	delta?: PlayDelta;
 	damage?: (StoredRoll & { type: string })[];
 };
 
@@ -262,6 +270,7 @@ export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
 	...(e.critThreshold !== undefined ? { critThreshold: e.critThreshold } : {}),
 	...(e.amendments ? { amendments: e.amendments } : {}),
 	...(e.outcome ? { outcome: e.outcome } : {}),
+	...(e.delta ? { delta: e.delta } : {}),
 	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),
 });
 

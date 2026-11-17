@@ -468,12 +468,19 @@ When `openCharacter` returned null, `ensureActiveCharacter` silently took the de
 **Fix:** both stay on the roster with a toast that names the character and points at its backups.
 **Held by** a Playwright drive over an unreadable `character.json` and an unknown `?levelup=`.
 
-### [ ] U7 · One-way doors — medium · design
+### [x] U7 · One-way doors — medium · closed
 
 - **Removing an inventory row** (`InventoryPanel.svelte`) had no confirmation, and adding it back lost
   the quantity, attunement and answers.
 - **Short and long rest**, dawn and dusk had no undo.
 - **Deleting a custom theme** (`ThemesSettings.svelte`) had no confirmation.
+
+**Fix:** every play act writes its delta on its log line, and a rest, dawn, dusk and a dropped row
+offer Undo on their toast, which puts back exactly what moved — a row with its quantity,
+attunement and answers. A theme is deleted only on a yes. Rewinding through the whole log is
+`work/ui.md` ▸ LOG-REWIND. **Held by** `delta.test.ts` (both editions), `combat.test.ts` ▸ a long
+rest leaves what it moved on its log line, and a Playwright drive of a long rest, its Undo and the
+log.
 
 ### U8 · Smaller — low
 

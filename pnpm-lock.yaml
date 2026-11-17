@@ -35,6 +35,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2.7.1
         version: 2.7.1
+      dequal:
+        specifier: ^2.0.3
+        version: 2.0.3
       dompurify:
         specifier: ^3.4.17
         version: 3.4.17
@@ -1566,6 +1569,10 @@ packages:
     resolution: {integrity: sha512-K9zBwKDZrot3RkxizugpVSdImxULAg4Ycp3+ydy2r561k96oiiw6nfsOR15fwNDQ5BF2UXe+2JFM/H5Xz4MGQg==}
     engines: {node: '>=18'}
     hasBin: true
+
+  dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
+    engines: {node: '>=6'}
 
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
@@ -4213,6 +4220,8 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
+
+  dequal@2.0.3: {}
 
   detect-libc@2.1.2: {}
 

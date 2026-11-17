@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (108)
+## Duplicate suspects (113)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -48,6 +48,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
+- `rowName` ×3 — src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -59,6 +60,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
+- `change` ×2 — src/lib/play/changes.ts · src/lib/play/delta.ts
 - `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
 - `closeOnOutside` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `COMMANDS` ×2 — src/lib/components/CommandPalette.svelte · src/routes/dev/table-link/+page.svelte
@@ -67,6 +69,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `DC_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
 - `DEATH_SAVE_TRACK` ×2 — src/lib/play/hit-points.ts · src/lib/table-link/wire-schema.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
+- `DEPTH` ×2 — src/lib/play/delta.ts · src/routes/build/draft-history.svelte.ts
 - `DRAFTS_DIR` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `entryOf` ×2 — src/lib/components/EntryList.svelte · src/routes/combat/roll-journal.svelte.ts
@@ -77,6 +80,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
+- `isRecord` ×2 — src/lib/character/migrations.ts · src/lib/play/delta.ts
 - `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
@@ -91,9 +95,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `optionsOf` ×2 — src/lib/content/homebrew.ts · src/lib/content/options.ts
+- `ORDER` ×2 — src/lib/play/delta.ts · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `picks` ×2 — src/routes/build/form-picks.svelte.ts · src/routes/build/option-picks.svelte.ts
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
+- `read` ×2 — src/lib/play/delta.ts · src/routes/build/blocks/ChangeList.svelte
 - `reask` ×2 — src/routes/build/blocks/SheetInventory.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
@@ -103,7 +109,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
-- `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
@@ -122,7 +127,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical one-liner body, different names:**
 
-- `isRecord` (src/lib/character/migrations.ts) = `isPlainRecord` (src/lib/character/schema.ts)
+- `isRecord` (src/lib/character/migrations.ts) = `isPlainRecord` (src/lib/character/schema.ts) = `isRecord` (src/lib/play/delta.ts)
 - `optionParentKey` (src/lib/content/options.ts) = `articleKey` (src/lib/content/sources.svelte.ts)
 - `where` (src/lib/content/resource-joins.ts) = `filePath` (src/lib/content/sources.svelte.ts)
 
@@ -545,7 +550,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (202 modules)
+## Library functions & types (204 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2035,6 +2040,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const isIncapacitated` — Incapacitated → no actions, bonus actions or reactions, and no concentration.
 
+### `src/lib/play/delta.ts`
+
+- `interface PlayChange` — One field an action moved.
+- `type PlayDelta`
+- `const isRecord`
+- `function playDelta` — What moved between two states of one character.
+- `function undoDelta` — * The character with `delta` taken back, or null when anything it changed has moved since — an * Undo then would put …
+
 ### `src/lib/play/effects.ts`
 
 - `interface NewEffect` — An effect to put on the character.
@@ -2098,7 +2111,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ownItem` — Start carrying an item, and stop carrying it altogether — the two a picker asks for, which * speak of the ITEM.
 - `const ownItemInstance` — Start carrying one particular instance — see `addItemInstance`.
 - `const disownItem`
-- `const dropItem`
+- `function dropItem` — One row leaves — said, so its line in the log carries what Undo puts back with its quantity, * attunement and answers…
 - `const changeQuantity` — Change how many of a stack are carried.
 - `const reorderInventory` — * Reorder what is carried.
 - `const setItemAnswers` — Which one a carried row is, answered again (`answerItem`).
@@ -2177,6 +2190,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function markRollUsed` — Record that something once-per-turn was done.
 - `function toggleRollUsed` — The player's own mark on a granted roll, on or off.
 - `function toggleCombat` — Enter or leave combat.
+
+### `src/lib/play/undo.ts`
+
+- `function undoAct`
 
 ### `src/lib/rules/advancement.ts`
 
@@ -2539,6 +2556,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const TOAST_TONE`
 - `type ToastTone`
+- `interface ToastAction` — A button on the card: the one thing a toast may let the player DO — take back what it reports.
 - `interface ToastOptions`
 - `interface ToastNote` — A sentence on a card — what a notice toast says, and what a roll's card carries under the roll.
 - `const toast` — Say a notice.
@@ -2610,4 +2628,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1606 exports across 219 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1613 exports across 221 modules · 113 duplicate suspects._

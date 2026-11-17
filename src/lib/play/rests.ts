@@ -157,6 +157,7 @@ export function rest(
 	return settled(
 		{
 			character: { ...character, play },
+			undoable: true,
 			log: [],
 			notices: [
 				{

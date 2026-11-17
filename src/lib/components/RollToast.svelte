@@ -42,6 +42,8 @@
 			...notes.map((note) => note.title),
 		].join('. '),
 	);
+	// a note's action sits BESIDE the card, never inside it: the card is the dismiss button
+	const actions = $derived(notes.flatMap((note) => (note.action ? [note.action] : [])));
 	const noteIcon = {
 		[TOAST_TONE.warning]: 'triangle-alert',
 		[TOAST_TONE.error]: 'circle-x',
@@ -78,6 +80,11 @@
 			</span>
 		{/each}
 	</button>
+	{#each actions as action, index (index)}
+		<button type="button" class="btn ghost toast-action" onclick={action.onClick}
+			>{action.label}</button
+		>
+	{/each}
 </div>
 
 <style>

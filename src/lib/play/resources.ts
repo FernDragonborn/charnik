@@ -316,6 +316,7 @@ export function passBoundary(
 	return settled(
 		{
 			character: { ...character, play: { ...character.play, resourcesSpent: spent } },
+			undoable: true,
 			log: [],
 			notices: [
 				{

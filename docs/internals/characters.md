@@ -15,6 +15,14 @@ including one stored under another extension, and removing one deletes the file 
 reference. An optional append-only `log.jsonl` sits beside it, deliberately
 **out** of `character.json` so a long campaign cannot bloat the save.
 
+**Every act that changes play state leaves its delta on its own log line** (`$lib/play/delta`):
+only the fields that moved, from and to, read off the character before and after the act — the
+play state and the inventory, a row of a list named by its `iid`. The log says it under the line
+(`HP 38 → 73 · d10 spent 2 → 0`), and what followed from the act folds away beneath it. **Undo
+applies a delta in reverse** (`$lib/play/undo`), all or nothing, and refuses when anything the act
+changed has moved since. A rest, dawn, dusk and a dropped inventory row offer it on their toast;
+reversing a level-up is a build change and not part of it.
+
 There is no database. Writes are atomic — temp file, then rename — with a debounced autosave and
 **rotating backups**: two rings beside the save, `character.bak.save.*` (2 deep, throttled to one
 checkpoint per 10 minutes) and `character.bak.launch.*` (3 deep, one per app run), keyed by the

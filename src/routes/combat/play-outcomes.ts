@@ -5,12 +5,14 @@
  * log and the notices. This is the one place that result reaches the world — the character the
  * panels hold, the log, the toasts — so every action lands the same way whichever control built it.
  */
-import { toast } from '$lib/toast/toast';
+import { toast, type ToastAction } from '$lib/toast/toast';
 import { translator } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { say, type Said } from '$lib/util/say';
 import { LOG_KIND } from '$lib/character/log-kind';
 import { playChanges } from '$lib/play/changes';
+import { playDelta } from '$lib/play/delta';
+import { undoAct } from '$lib/play/undo';
 import { resourceName } from '$lib/play/resources';
 import { localizedName } from '$lib/content/detail';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -88,6 +90,7 @@ export class PlayOutcomes {
 		const { hp, journal, sheet, graph } = this.host();
 		// shallow is enough: an action replaces what it changes and never edits what it was handed
 		const before = { ...held.play };
+		const delta = playDelta({ ...held, play: before, build: { ...held.build } }, outcome.character);
 		adoptCharacter(held, outcome.character);
 		const events: LogEvent[] = [];
 		for (const { name, rolled, quiet, kind } of outcome.log)
@@ -107,8 +110,24 @@ export class PlayOutcomes {
 				said,
 			),
 		);
-		events.push(...outcome.notices.map((notice) => this.announce(notice)));
-		journal.logEvents(events);
+		const undo =
+			outcome.undoable && delta.length
+				? {
+						label: translator()('combat.undo'),
+						onClick: () => this.act((c) => undoAct(c, { delta })),
+					}
+				: undefined;
+		const noticesFrom = events.length;
+		events.push(
+			...outcome.notices.map((notice, i) => this.announce(notice, i === 0 ? undo : undefined)),
+		);
+		// the line that names the ACT carries what it changed — said under it, and what an Undo
+		// reverses: its own line if it has one, else its first notice, never a consequence line
+		const named = outcome.log.some((line) => !line.rolled) ? 0 : noticesFrom;
+		const head = named < events.length ? named : 0;
+		journal.logEvents(
+			delta.length ? events.map((event, i) => (i === head ? { ...event, delta } : event)) : events,
+		);
 		if (outcome.concentrationSave) hp.owe(outcome.concentrationSave);
 		// an owed save belongs to the concentration it names, and goes when that one ends or is
 		// replaced — whichever writer of `play.concentration` did it
@@ -125,7 +144,7 @@ export class PlayOutcomes {
 
 	/** Say a notice in the reader's language, naming the content rows it points at, and hand back
 	 *  its log line. The names are resolved now: a row's name is data, which no catalog holds. */
-	private announce(notice: PlayNotice): LogEvent {
+	private announce(notice: PlayNotice, action?: ToastAction): LogEvent {
 		const graph = this.host().graph;
 		const names = Object.fromEntries(
 			Object.entries(notice.rows ?? {}).map(([name, ref]) => {
@@ -139,7 +158,10 @@ export class PlayOutcomes {
 		const description = [notice.description ?? []].flat().map(named);
 		const translate = translator();
 		const spoken = description.map((part) => say(part, translate)).join(SENTENCE_SEPARATOR);
-		toast(say(text, translate), spoken ? { description: spoken } : {});
+		toast(say(text, translate), {
+			...(spoken ? { description: spoken } : {}),
+			...(action ? { action } : {}),
+		});
 		return {
 			name:
 				typeof text === 'string'

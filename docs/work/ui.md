@@ -11,6 +11,11 @@
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
+- [ ] **LOG-REWIND · any line of the log can be taken back, and a character rewound through it.**
+  Every play act already writes its delta on its line (`characters.md` ▸ log.jsonl), and Undo
+  applies one in reverse; today only the toast of a rest, dawn, dusk or a dropped row offers it.
+  Left: an Undo on the line itself, and rewinding through several lines newest-first, each refused
+  once something it changed has moved. A level-up is a build change and stays out.
 - [ ] **LOCALE-DROP-IN · a language a user adds is a file they drop in — and nothing loads one yet.**
   `i18n/index.ts` discovers locales from a registry so a new one needs no component change, but the
   registry holds only the catalogs built in (`LOCALES`): no reader picks a `<id>.json` up from the

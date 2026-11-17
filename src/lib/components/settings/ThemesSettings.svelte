@@ -6,6 +6,7 @@
 	// the CSV content packs. Built-in dark/light are read-only bases you clone from; the bundled
 	// Dracula/Catppuccin presets are worked examples you can add.
 	import Icon, { type IconName } from '../Icon.svelte';
+	import ConfirmDialog from '../ConfirmDialog.svelte';
 	import { sayIfFails, toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
@@ -83,6 +84,10 @@
 			{ edit: true },
 		);
 	}
+
+	/** The theme asking to be deleted: a theme is a file the user wrote, so it goes only on a yes
+	 *  (audit-oct-27 U7). */
+	let deleting = $state<{ id: string; name: string } | null>(null);
 
 	function remove(id: string) {
 		app.customThemes = app.customThemes.filter((t) => t.id !== id);
@@ -246,7 +251,7 @@
 						class="btn ghost danger"
 						onclick={(e) => {
 							e.stopPropagation();
-							remove(t.id);
+							deleting = { id: t.id, name: t.name };
 						}}>{$_('settings.themes.delete')}</button
 					>
 				</div>
@@ -300,6 +305,21 @@
 			</div>
 		{/each}
 	</div>
+{/if}
+
+{#if deleting}
+	{@const theme = deleting}
+	<ConfirmDialog
+		title={$_('settings.themes.deleteTitle', { values: { name: theme.name } })}
+		message={$_('settings.themes.deleteMessage')}
+		confirmLabel={$_('settings.themes.delete')}
+		danger
+		onConfirm={() => {
+			remove(theme.id);
+			deleting = null;
+		}}
+		onCancel={() => (deleting = null)}
+	/>
 {/if}
 
 <style>

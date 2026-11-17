@@ -64,7 +64,28 @@ export const ownItemInstance = listAction<{ item: string; answers: InstanceAnswe
 export const disownItem = listAction<{ item: string }>((list, { item }) =>
 	removeItemsOf(list, item),
 );
-export const dropItem = listAction<{ row: string }>((list, { row }) => removeItem(list, row));
+/** One row leaves — said, so its line in the log carries what Undo puts back with its quantity,
+ *  attunement and answers (audit-oct-27 U7). */
+export function dropItem(
+	character: Character,
+	{ row }: { row: string },
+	ctx: PlayContext,
+): PlayOutcome {
+	const entry = character.build.inventory.find((carried) => carried.iid === row);
+	if (!entry) return { ...quietly(character), refused: true };
+	const dropped = settled(
+		quietly(withInventory(character, removeItem(character.build.inventory, row))),
+		ctx,
+	);
+	return {
+		...dropped,
+		undoable: true,
+		notices: [
+			{ text: { key: 'combat.notice.itemDropped' }, rows: { item: entry.item } },
+			...dropped.notices,
+		],
+	};
+}
 
 /** Change how many of a stack are carried. */
 export const changeQuantity = listAction<{ row: string; by: number }>((list, { row, by }) =>

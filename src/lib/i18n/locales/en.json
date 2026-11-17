@@ -1010,7 +1010,10 @@
 			"rechargedAll": "{name} fully restored",
 			"nothingRecharged": "Nothing recharges then",
 			"windowOpen": "{name} can be used now",
-			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)"
+			"deathFailureFromDamage": "Hit at 0 HP — {count} death-save failure(s)",
+			"undone": "Taken back",
+			"undoRefused": "Cannot take it back: something it changed has moved since.",
+			"itemDropped": "Dropped {item}"
 		},
 		"panel": {
 			"actions": "Actions",
@@ -1246,6 +1249,21 @@
 			"tempHp": "+{n} temp HP",
 			"enhancement": "+{n} attack & damage",
 			"permanent": "permanent"
+		},
+		"undo": "Undo",
+		"delta": {
+			"hp": "HP {from} → {to}",
+			"tempHp": "Temp HP {from} → {to}",
+			"hitDice": "{die} spent {from} → {to}",
+			"slots": "Level {level} slots spent {from} → {to}",
+			"pactSlots": "Pact slots spent {from} → {to}",
+			"resource": "{name} spent {from} → {to}",
+			"exhaustion": "Exhaustion {from} → {to}",
+			"other": "{field} {from} → {to}",
+			"added": "+ {name}",
+			"removed": "− {name}",
+			"changed": "{name} changed",
+			"more": "{count, plural, one {# more line} other {# more lines}}"
 		}
 	},
 	"command": {
@@ -2277,6 +2295,8 @@
 			"builtIn": "built-in",
 			"clone": "Clone",
 			"delete": "Delete",
+			"deleteTitle": "Delete the theme “{name}”?",
+			"deleteMessage": "Its file is removed from your data folder. Export it first to keep a copy.",
 			"duplicate": "Duplicate",
 			"edit": "Edit",
 			"export": "Export",

@@ -13,24 +13,53 @@
 	// costs no second rendering path, because each throw is still its own ordinary row.
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
-	import { actionRuns } from '$lib/combat/roll';
+	import { actionRuns, type RollLogEntry } from '$lib/combat/roll';
+	import { isTurnAct, LOG_KIND } from '$lib/character/log-kind';
 	import { _ } from '$lib/i18n';
+	import { app } from '$lib/stores/app.svelte';
+	import { localizedName } from '$lib/content/detail';
+	import { resourceName } from '$lib/play/resources';
 	import RollRow from '$lib/components/RollRow.svelte';
+	import { deltaPhrases } from '../delta-text';
 
 	const actions = $derived(actionRuns(combat.journal.log));
+
+	/** An act and what followed from it: the act stays in view, what it led to folds away
+	 *  (audit-oct-27 U7) — the delta under the act already says what moved. */
+	const isAct = (line: RollLogEntry): boolean => isTurnAct(line.kind ?? LOG_KIND.roll);
+	const shownOf = (run: RollLogEntry[]): RollLogEntry[] =>
+		run.some(isAct) && run.some((line) => !isAct(line)) ? run.filter(isAct) : run;
+	const foldedOf = (run: RollLogEntry[]): RollLogEntry[] =>
+		run.some(isAct) ? run.filter((line) => !isAct(line)) : [];
+
+	const phrasesOf = (line: RollLogEntry): string[] =>
+		line.delta
+			? deltaPhrases(line.delta, {
+					t: (key, values) => $_(key, { values }),
+					resource: (id) => (combat.sheet ? resourceName(combat.sheet, id) : id),
+					item: (ref) => {
+						const row = combat.graph?.get(ref);
+						return row ? localizedName(row, app.activeLocale) : ref;
+					},
+				})
+			: [];
 </script>
 
 <div class="log-head"><span class="menu-title eyebrow">{$_('combat.log.rollLog')}</span></div>
 <div class="log-scroll">
 	{#each actions as run, i (i)}
-		<div class="log-row" class:one-action={run.length > 1}>
+		<div
+			class="log-row"
+			class:one-action={run.length > 1}
+			class:volley={run.length > 1 && run.every((l) => !l.kind)}
+		>
 			<!-- how many throws one action made. The bracket alone is too quiet to carry it at this
 			     contrast, and "×3" is what a player says out loud about a volley anyway. A run that is
 			     an action and what followed from it is not three of anything, so it has no count. -->
 			{#if run.length > 1 && run.every((l) => !l.kind)}<span class="action-count eyebrow"
 					>×{run.length}</span
 				>{/if}
-			{#each run as l, j (j)}
+			{#each shownOf(run) as l, j (j)}
 				<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
 			     d20 to apply advantage after the fact, tap a damage pill marked with the reroll icon to reroll it. N2 Savage
 			     Attacker's offer is one of those pills — the label comes from the granting feature
@@ -48,7 +77,17 @@
 							}
 						: undefined}
 				/>
+				{@const phrases = phrasesOf(l)}
+				{#if phrases.length}<p class="delta">{phrases.join(' · ')}</p>{/if}
 			{/each}
+			{#if foldedOf(run).length && shownOf(run).length < run.length}
+				<details class="folded">
+					<summary>{$_('combat.delta.more', { values: { count: foldedOf(run).length } })}</summary>
+					{#each foldedOf(run) as l, j (j)}
+						<RollRow model={rollToastModel(l, $_)} />
+					{/each}
+				</details>
+			{/if}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
 			{$_('combat.log.noRolls')}
@@ -93,7 +132,7 @@
 	   the ×N have not already said, and it pushed the numbers a player is comparing further apart.
 	   Decided here rather than with a prop on the row: which throw is a repeat is a fact about the
 	   RUN, and the run is the chrome's (`RollRow` ▸ the component's own note). */
-	.log-row.one-action :global(.roll-row ~ .roll-row .roll-label) {
+	.log-row.volley :global(.roll-row ~ .roll-row .roll-label) {
 		display: none;
 	}
 	.action-count {
@@ -102,6 +141,18 @@
 		top: var(--space-2);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
+	}
+	.delta {
+		margin: 0;
+		padding: 0 var(--space-2) var(--space-1);
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
+	}
+	.folded summary {
+		padding: 0 var(--space-2) var(--space-1);
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
+		cursor: pointer;
 	}
 	.note {
 		font-size: var(--font-size-xs);

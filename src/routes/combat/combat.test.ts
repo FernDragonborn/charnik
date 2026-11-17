@@ -5,6 +5,7 @@
  */
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
+import { undoAct } from '$lib/play/undo';
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 
 /** What was toasted, in order. A notice is the deliverable for a few of these behaviours (a window
@@ -303,6 +304,21 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		combat.resources.rest('long');
 		combat.syncPendingConcentration();
 		expect(combat.hp.owedConcentrationSaves).toEqual([]);
+	});
+
+	/* audit-oct-27 U7: a rest had no way back. Its log line now carries what it moved, and the
+	 * Undo its toast offers applies that in reverse. */
+	it('a long rest leaves what it moved on its log line, and taking it back restores the sheet', () => {
+		character.play.hp = { current: 7, max: 30, temp: 0 };
+		combat.resources.rest('long');
+		expect(character.play.hp.current).toBe(30);
+		const line = combat.journal.log.find((entry) => entry.delta);
+		expect(line?.delta?.map((step) => step.path.join('.'))).toContain('play.hp.current');
+
+		expect(combat.outcomes.act((c) => undoAct(c, { delta: line?.delta ?? [] }))).toBe(true);
+		expect(character.play.hp.current).toBe(7);
+		// a second Undo finds the state moved on, and refuses
+		expect(combat.outcomes.act((c) => undoAct(c, { delta: line?.delta ?? [] }))).toBe(false);
 	});
 
 	it('waving an owed save off KEEPS concentration, and a new hit owes a new one', () => {

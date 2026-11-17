@@ -14,6 +14,8 @@ export const LOG_KIND = {
 	damage: 'damage',
 	healing: 'healing',
 	rest: 'rest',
+	/** An act taken back (`$lib/play/undo`): the player's own doing, with what it reversed under it. */
+	undo: 'undo',
 	/** What an action SAID — the sentence its toast carried. */
 	notice: 'notice',
 	tempHp: 'tempHp',
@@ -39,6 +41,7 @@ export function isTurnAct(kind: LogKind): boolean {
 		case LOG_KIND.damage:
 		case LOG_KIND.healing:
 		case LOG_KIND.rest:
+		case LOG_KIND.undo:
 			return true;
 		case LOG_KIND.notice:
 		case LOG_KIND.tempHp:

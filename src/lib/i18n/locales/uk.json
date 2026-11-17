@@ -1010,7 +1010,10 @@
 			"rechargedAll": "{name} відновлено повністю",
 			"nothingRecharged": "Тоді ніщо не відновлюється",
 			"windowOpen": "{name} можна використати зараз",
-			"deathFailureFromDamage": "Удар на 0 ХП — провалів рятівних кидків: {count}"
+			"deathFailureFromDamage": "Удар на 0 ХП — провалів рятівних кидків: {count}",
+			"undone": "Скасовано",
+			"undoRefused": "Не вдається скасувати: щось із того, що змінилося, відтоді змінилося знову.",
+			"itemDropped": "Викинуто: {item}"
 		},
 		"panel": {
 			"actions": "Дії",
@@ -1246,6 +1249,21 @@
 			"tempHp": "+{n} тимч. ОЖ",
 			"enhancement": "+{n} до атаки та шкоди",
 			"permanent": "постійно"
+		},
+		"undo": "Скасувати",
+		"delta": {
+			"hp": "ХП {from} → {to}",
+			"tempHp": "Тимчасові ХП {from} → {to}",
+			"hitDice": "{die} витрачено {from} → {to}",
+			"slots": "Комірки {level} рівня витрачено {from} → {to}",
+			"pactSlots": "Комірки пакту витрачено {from} → {to}",
+			"resource": "{name}: витрачено {from} → {to}",
+			"exhaustion": "Виснаження {from} → {to}",
+			"other": "{field} {from} → {to}",
+			"added": "+ {name}",
+			"removed": "− {name}",
+			"changed": "{name}: змінено",
+			"more": "{count, plural, one {ще # рядок} few {ще # рядки} many {ще # рядків} other {ще # рядка}}"
 		}
 	},
 	"command": {
@@ -2277,6 +2295,8 @@
 			"builtIn": "вбудована",
 			"clone": "Клонувати",
 			"delete": "Видалити",
+			"deleteTitle": "Видалити тему «{name}»?",
+			"deleteMessage": "Її файл буде видалено з вашої теки даних. Щоб зберегти копію, спершу експортуйте її.",
 			"duplicate": "Дублювати",
 			"edit": "Редагувати",
 			"export": "Експортувати",

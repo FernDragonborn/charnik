@@ -109,6 +109,9 @@ export interface PlayOutcome {
 	 *  there — what a later "that was one blow" adds up against the maximum. Absent for a hit that
 	 *  left hit points standing. */
 	pastZero?: number;
+	/** The player may take this act back at once (audit-oct-27 U7): a rest, a new day, a row
+	 *  dropped. The host offers Undo, which applies the act's delta in reverse. */
+	undoable?: true;
 	/** The action did not happen — the pool was empty, the option is not offered — and the character
 	 *  is the one it was given. An action is all-or-nothing, so a caller with a further step to take
 	 *  reads this before taking it. */
@@ -140,6 +143,7 @@ export function chain(
 		notices: [...first.notices, ...second.notices],
 		...(owed ? { concentrationSave: owed } : {}),
 		...(asks.length ? { asks } : {}),
+		...(first.undoable || second.undoable ? { undoable: true as const } : {}),
 	};
 }
 
