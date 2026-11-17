@@ -260,10 +260,11 @@ the file's own columns that the form never saw.
   itself, giving duplicate ids; a file deleted from the pack came back with the next seed.
 - [ ] **Case and nesting.** Upper-case `.CSV` files were ignored with no health entry — closed, the loader
   reads them. CSVs in subfolders of a remote pack were installed but never loaded — open.
-- [ ] **The web demo did not ask for `navigator.storage.persist()`**, so the browser could evict the
-  IndexedDB with the characters in it.
-- [ ] **Two demo tabs.** Config sections (pack pin, source toggles) are last-writer-wins
-  (`json-config.ts`). Characters are covered by the conflict check; only a millisecond race remains.
+- [x] **The web demo did not ask for `navigator.storage.persist()`** · closed. The layout asks for it
+  on the web and logs the answer.
+- [x] **Two demo tabs** · closed. A config write is announced on a `BroadcastChannel` and the other
+  tabs read the file again (`storage/tab-sync.ts`; `tab-sync.test.ts`), so a tab holding the state
+  from before no longer writes it back.
 
 ---
 

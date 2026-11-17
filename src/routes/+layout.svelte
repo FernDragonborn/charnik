@@ -250,6 +250,12 @@
 		if (detectPlatform() !== Platform.Desktop) {
 			void loadContentStore();
 			void syncThemes(); // web: IndexedDB storage is always ready
+			// unasked, a browser may evict the IndexedDB the characters live in to free space; a refusal
+			// changes nothing the page can do, so it is logged rather than said
+			navigator.storage
+				?.persist?.()
+				.then((kept) => logger.info('storage: persistence', { kept }))
+				.catch((e: unknown) => logger.warn('storage: persistence refused', { error: String(e) }));
 			void overrides.load(getUserStorage()); // the descriptions the player rewrote for everyone
 			return;
 		}

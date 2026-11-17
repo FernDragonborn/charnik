@@ -16,6 +16,7 @@
  */
 import { errText } from '../util/format';
 import { readConfigFile, writeConfigSection } from '$lib/storage/json-config';
+import { onConfigWrittenElsewhere } from '$lib/storage/tab-sync';
 import { HOMEBREW_ROOT } from './homebrew';
 
 /** The app-config file in the data root. Named by the architecture invariant (CLAUDE.md). */
@@ -355,9 +356,12 @@ export function unDismissMissing(packs: string[]): void {
 	persist();
 }
 
+let followingOtherTabs: (() => void) | undefined;
+
 /** Load the registry from the data root (once, at app start). Never throws — a read failure leaves
  *  the defaults, which are "nothing installed, never check". */
 export async function initPackConfig(): Promise<void> {
+	followingOtherTabs ??= onConfigWrittenElsewhere(CONFIG_PATH, () => void initPackConfig());
 	const cfg = await readConfigFile(CONFIG_PATH);
 	// The pre-sections layout, where the registry owned the whole file (REL-4 dev builds). Detected
 	// by a field only the registry ever wrote at top level; drop this once a release has shipped.

@@ -21,7 +21,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `probe` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `REPORT` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `check` ×9 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
-- `open` ×7 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
+- `open` ×8 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/lib/storage/tab-sync.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
@@ -553,7 +553,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (207 modules)
+## Library functions & types (208 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2441,6 +2441,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function getUserStorage`
 - `function resetUserStorage` — Drop the cached storage instance so the next `getUserStorage()` re-resolves the data root — used * when the user chan…
 
+### `src/lib/storage/tab-sync.ts`
+
+- `function announceConfigWrite` — Tell the other tabs this file was just written.
+- `function onConfigWrittenElsewhere` — Run `reload` whenever ANOTHER tab writes this file (a channel never echoes to its sender).
+
 ### `src/lib/storage/tauri.ts`
 
 - `function setDataDirOverride` — Persist a user-chosen data dir to the pointer.
@@ -2657,4 +2662,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1630 exports across 224 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1632 exports across 225 modules · 116 duplicate suspects._

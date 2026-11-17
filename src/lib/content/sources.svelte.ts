@@ -15,6 +15,7 @@
 import { rowName, type ContentGraph, type LoadedRow } from './loader';
 import { readStored } from '$lib/util/persist';
 import { getUserStorage } from '$lib/storage/provider';
+import { announceConfigWrite, onConfigWrittenElsewhere } from '$lib/storage/tab-sync';
 
 /** The browse-config file in the data root (Tauri fs on desktop/mobile; IndexedDB on web). */
 const CONFIG_PATH = 'collisions.json';
@@ -65,10 +66,13 @@ function adoptConfig(cfg: SourceConfigData): void {
 	sourceConfig.collisions = cfg.collisions;
 }
 
+let stopFollowingOtherTabs: (() => void) | undefined;
+
 /** Load the persisted browse-config from the data root (once, at app start). If the file is absent
  *  but an old localStorage blob exists, migrate it into the file. Never throws — a read failure just
  *  leaves the all-active defaults. */
 export async function initSourceConfig(): Promise<void> {
+	stopFollowingOtherTabs ??= onConfigWrittenElsewhere(CONFIG_PATH, () => void initSourceConfig());
 	const storage = getUserStorage();
 	let raw: string | null = null;
 	try {
@@ -95,6 +99,7 @@ function persist(): void {
 	writeChain = writeChain
 		.catch(() => {})
 		.then(() => getUserStorage().write(CONFIG_PATH, JSON.stringify(sourceConfig)))
+		.then(() => announceConfigWrite(CONFIG_PATH))
 		// a persist failure (quota, or no backing store in tests/SSR) must not crash the session or
 		// surface as an unhandled rejection — the session continues, the change just isn't saved.
 		.catch(() => {});

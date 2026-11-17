@@ -14,6 +14,7 @@
  * latest state of a reactive `$state` object rather than a stale snapshot.
  */
 import { getUserStorage } from './provider';
+import { announceConfigWrite } from './tab-sync';
 
 /** The whole file as a plain object — `{}` when it is missing, unreadable, or not a JSON object.
  *  Never throws: a corrupt config degrades to defaults, which every section parser already handles. */
@@ -81,6 +82,7 @@ export function writeConfigSection(
 			const merged = { ...(await readConfigFile(file)) };
 			for (const [k, v] of sections) merged[k] = v;
 			await getUserStorage().write(file, JSON.stringify(merged, null, 2));
+			announceConfigWrite(file);
 			onWrite?.(null);
 		})
 		.catch((e: unknown) => {
