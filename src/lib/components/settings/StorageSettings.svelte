@@ -21,7 +21,7 @@
 	import { configWritesSettled } from '$lib/storage/json-config';
 	import { errText } from '$lib/util/format';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
-	import { reloadApp } from '$lib/content/reload';
+	import { flushPendingWrites, reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
 	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
@@ -31,7 +31,11 @@
 		recreateDemoCharacter,
 		restoreBackup,
 	} from '$lib/character/store.svelte';
-	import { listCharacterBackups, type CharacterBackup } from '$lib/character/repository';
+	import {
+		characterWritesSettled,
+		listCharacterBackups,
+		type CharacterBackup,
+	} from '$lib/character/repository';
 	import { getUserStorage } from '$lib/storage/provider';
 	import DataMigrationDialog from './DataMigrationDialog.svelte';
 	import DataConflictDialog from './DataConflictDialog.svelte';
@@ -144,7 +148,14 @@
 	/** Every path below swaps the `Storage` root out from under the config queue, which is
 	 *  fire-and-forget: a pin or an ETag written a moment ago is still queued, so it would be COPIED
 	 *  in its pre-write state and then flushed against a root that no longer exists. */
-	const settleBeforeSwap = () => configWritesSettled();
+	/** Everything still on its way to the old folder lands there before it is copied: the debounced
+	 *  autosaves, the character queues, the config. An edit that cannot be written stops the move,
+	 *  which would otherwise copy the folder without it and then delete the only place it was meant for. */
+	async function settleBeforeSwap(): Promise<void> {
+		if (!(await flushPendingWrites())) throw new Error($_('character.notSaved'));
+		await characterWritesSettled();
+		await configWritesSettled();
+	}
 
 	async function applyOutcome(outcome: MigrateOutcome, failTitle: string, successMsg: string) {
 		if (!outcome.ok) {

@@ -127,6 +127,26 @@ describe('system-agnostic formulas', () => {
 		).toBe(7);
 	});
 
+	it('each level adds at least 1 HP, however low CON is (audit-oct-27 R14)', () => {
+		// d6 with CON 1 (−5): level 1 is 6−5 = 1, each later level 4−5 = −1 → 1
+		const hp = maxHpForClass({
+			hitDie: 'd6',
+			level: 3,
+			conScore: 1,
+			includesCharacterLevel1: true,
+		});
+		expect(hp.value).toBe(3);
+		expect(hp.trace.some((c) => c.key === 'provenance.source.hpPerLevelFloor')).toBe(true);
+		// a CON that never cancels a die leaves no floor line in the trace
+		const fine = maxHpForClass({
+			hitDie: 'd6',
+			level: 3,
+			conScore: 8,
+			includesCharacterLevel1: true,
+		});
+		expect(fine.trace.some((c) => c.key === 'provenance.source.hpPerLevelFloor')).toBe(false);
+	});
+
 	it('multiclass HP: only the first class gets the max hit die (A2)', () => {
 		// Fighter 3 / Wizard 2, CON 14 (+2). Fighter is the level-1 class → max die.
 		// Fighter d10: 10 + 6 + 6 = 22 dice + CON 2×3 = 6 → 28

@@ -367,7 +367,35 @@ export function maxHpForClass(args: {
 		noteKey: SOURCE_KEY.abilityScore('con'),
 		params: { levels: args.level, score: args.conScore },
 	});
+	// A level never lowers the maximum: each one adds at least 1 (SRD 5.2.1 ▸ Level Advancement,
+	// "minimum of 1"; SRD 5.1 is silent and the same floor is taken as RAI). Only a die whose
+	// value a CON modifier can cancel reaches it, so the floor is its own visible line.
+	const floored = levelsBelowOne(args, max, avgUp, conMod);
+	if (floored.levels > 0)
+		c.push({
+			source: `at least 1 per level × ${floored.levels}`,
+			layer: 'ability',
+			op: 'add',
+			amount: floored.shortfall,
+			key: SOURCE_KEY.hpPerLevelFloor,
+			params: { levels: floored.levels },
+		});
 	return computed(c, { min: 1 });
+}
+
+/** The levels whose die value plus CON comes to less than 1, and how far below 1 they sum to. */
+function levelsBelowOne(
+	args: { level: number; includesCharacterLevel1: boolean },
+	max: number,
+	avgUp: number,
+	conMod: number,
+): { levels: number; shortfall: number } {
+	const values = Array.from(
+		{ length: Math.max(0, args.level) },
+		(_, i) => (i === 0 && args.includesCharacterLevel1 ? max : avgUp) + conMod,
+	);
+	const below = values.filter((v) => v < 1);
+	return { levels: below.length, shortfall: below.reduce((sum, v) => sum + (1 - v), 0) };
 }
 
 // prettier-ignore

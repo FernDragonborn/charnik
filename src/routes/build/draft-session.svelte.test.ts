@@ -20,7 +20,6 @@ describe('DraftSession', () => {
 		expect(await listDrafts(storage)).toHaveLength(1);
 
 		await session.discard();
-		session.retire();
 		// the autosave the photo write armed, landing after Create
 		await session.persist();
 		expect(await listDrafts(storage)).toEqual([]);
@@ -29,5 +28,15 @@ describe('DraftSession', () => {
 		draft.name = 'Brann';
 		await session.persist();
 		expect((await listDrafts(storage)).map((d) => d.guid)).toEqual([session.guid]);
+	});
+
+	it('a write already on its way when Create lands does not leave the build behind as a draft', async () => {
+		const draft = { ...blankDraft(), name: 'Cora' };
+		const session = new DraftSession(() => ({ draft, classPicks: new Map(), isEditing: false }));
+		const inFlight = session.persist(); // the debounce fired a moment before Create
+		const created = session.guid;
+		await session.discard();
+		await inFlight;
+		expect((await listDrafts(storage)).map((d) => d.guid)).not.toContain(created);
 	});
 });

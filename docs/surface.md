@@ -553,7 +553,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (205 modules)
+## Library functions & types (206 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -860,6 +860,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function downscalePhoto` — Decode → downscale → re-encode one picked image.
 - `function photoMime` — The media type a stored portrait's NAME implies — what an object URL needs to render it.
 
+### `src/lib/character/portrait-files.ts`
+
+- `function writeCharacterPhoto` — Write a character's portrait and return the name to store in `build.photo`.
+- `function readCharacterPhoto` — Read a stored portrait's bytes.
+- `function copyCharacterPhoto` — Give a second character its own copy of a portrait, under the same name.
+- `function removeCharacterPhotos` — Remove every portrait file but the one the save names (`kept` null: the way OUT of having one).
+
 ### `src/lib/character/repository.ts`
 
 - `const dirOf` — A character's own folder, relative to the data folder.
@@ -871,6 +878,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function restoreCharacterBackup` — * Put one snapshot back as the live save.
 - `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
 - `function enqueue`
+- `function characterWritesSettled` — Every character's queue drained, a task queued while waiting included: what a folder move waits for.
 - `const wasDeleted`
 - `const SAVE_MODE` — How a write treats the file already on disk.
 - `type SaveMode`
@@ -879,10 +887,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function adoptCharacter` — * Load a character as the copy the app will EDIT: the same parse → migrate → validate, and the * file's text is remem…
 - `function characterChangedOutside` — Has `character.json` stopped being the text this app holds?
 - `function characterSlugOfPath` — The slug a path under the data folder names, when that path is a character's own save.
-- `function writeCharacterPhoto` — Write a character's portrait and return the name to store in `build.photo`.
-- `function readCharacterPhoto` — Read a stored portrait's bytes.
-- `function copyCharacterPhoto` — Give a second character its own copy of a portrait, under the same name.
-- `function removeCharacterPhotos` — Remove every portrait file in a character's folder (the way OUT of having one).
 - `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
 - `function readCharacterFiles` — * Every saved character as RAW json, keyed by slug.
@@ -1432,7 +1436,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type ReloadIntent`
 - `function reloadIntentOf` — * What a key press asks for, read the way every browser reads it: F5 and Ctrl+R are one key, and * Shift (or Ctrl on …
 - `function onBeforeReload` — Register a flush callback; returns an unregister fn (hand it to `onMount` for auto-cleanup).
+- `function flushPendingWrites` — Run every flusher; true when all of them landed.
 - `function reloadApp` — Flush pending writes, then reload the webview so every view re-reads fresh data from disk.
+- `function holdCloseForPendingWrites` — Whether a close request waits: never once the writes are flushed.
 
 ### `src/lib/content/remote/diff.ts`
 
@@ -2432,7 +2438,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function currentDataDir` — The active data dir (the saved choice or the default) — for display in settings.
 - `function pickTargetDataDir` — Open the folder picker and propose `<picked parent>/charnik` as the move target.
 - `function openDataDir` — Open the active data folder in the OS file manager (shows content/ + characters/).
-- `function openExternalUrl` — Hand an external URL to the OS browser.
+- `function onWindowCloseRequested` — Ask before the main window closes: `holdClose` runs first, and only a `true` keeps it open.
+- `function openExternalUrl`
 - `function repointDataDir` — Persist a chosen data folder WITHOUT moving anything — "just read from here now".
 - `function dirIsEmpty` — True when `dir` has no entries (or doesn't exist yet) — the precondition for an automatic move.
 - `function listDataDirFiles` — The current data folder's files — for the merge dialog's name table (see docs/plan.md).
@@ -2638,4 +2645,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1617 exports across 222 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1621 exports across 223 modules · 116 duplicate suspects._

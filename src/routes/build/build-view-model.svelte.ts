@@ -18,11 +18,8 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import type { Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
 import { saveBuildToStore, openCharacter } from '$lib/character/store.svelte';
-import {
-	removeCharacterPhotos,
-	uniqueCharacterId,
-	writeCharacterPhoto,
-} from '$lib/character/repository';
+import { uniqueCharacterId } from '$lib/character/repository';
+import { removeCharacterPhotos, writeCharacterPhoto } from '$lib/character/portrait-files';
 import {
 	downscalePhoto,
 	type PickedPhoto,
@@ -607,20 +604,20 @@ export class BuildVM {
 		this.draft.photo = null;
 	};
 
-	/** Write the portrait alongside the character being saved, and put its NAME in the save. Both
-	 *  branches touch the folder, never the JSON only: a picked photo replaces whatever is there, and
-	 *  a cleared one removes the file, so the folder never keeps a portrait nothing references. */
+	/** Write a picked portrait beside the character being saved, and put its NAME in the save. The
+	 *  portrait it replaces, or a cleared one, goes only once that save has landed
+	 *  (`dropUnnamedPhotos`): until then it is the file the character on disk still names. */
 	private async persistPhoto(character: Character): Promise<void> {
-		const storage = getUserStorage();
-		if (this.pickedPhoto) {
-			const name = await writeCharacterPhoto(storage, character.id, this.pickedPhoto);
-			character.build.photo = name;
-			this.draft.photo = name;
-			this.pickedPhoto = null;
-		} else if (!this.draft.photo) {
-			await removeCharacterPhotos(storage, character.id);
-		}
+		if (!this.pickedPhoto) return;
+		const name = await writeCharacterPhoto(getUserStorage(), character.id, this.pickedPhoto);
+		character.build.photo = name;
+		this.draft.photo = name;
+		this.pickedPhoto = null;
 	}
+
+	/** The folder never keeps a portrait nothing references. */
+	private dropUnnamedPhotos = (character: Character): Promise<void> =>
+		removeCharacterPhotos(getUserStorage(), character.id, character.build.photo ?? null);
 
 	save = async (): Promise<string | null> => {
 		if (!this.canCreate) return null;
@@ -636,11 +633,11 @@ export class BuildVM {
 			}
 			await this.persistPhoto(character);
 			if (!(await saveBuildToStore(character))) return null;
+			await this.dropUnnamedPhotos(character);
 			// the draft became a character, so the unfinished copy has nothing left to be — and the
 			// session retires it, or the autosave landing after Create (the photo write above is itself
 			// a draft mutation, which arms one) writes it back and resurrects it in the roster
 			await this.drafts.discard();
-			this.drafts.retire();
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
 			return character.id;

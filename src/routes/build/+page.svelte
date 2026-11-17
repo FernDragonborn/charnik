@@ -15,6 +15,7 @@
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
 	import { loadDraft } from '$lib/character/draft-repository';
 	import { getUserStorage } from '$lib/storage/provider';
+	import { onBeforeReload } from '$lib/content/reload';
 	import { content } from '$lib/content/store.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { _ } from '$lib/i18n';
@@ -92,6 +93,8 @@
 		}, AUTOSAVE_DELAY_MS);
 		return () => clearTimeout(timer);
 	});
+	// a reload, a closing window or a folder move inside the delay writes the draft first
+	$effect(() => onBeforeReload(build.drafts.persist));
 
 	// Ctrl/Cmd+Z and Ctrl+Shift+Z / Ctrl+Y over the whole draft. Bound to the physical key (`code`),
 	// and deliberately NOT taken from a text field: a caret in the name box has the browser's own

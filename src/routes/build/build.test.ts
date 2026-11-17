@@ -9,7 +9,8 @@ import 'fake-indexeddb/auto'; // the draft session writes through the real Stora
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
-import { loadCharacter, readCharacterPhoto } from '$lib/character/repository';
+import { loadCharacter } from '$lib/character/repository';
+import { readCharacterPhoto } from '$lib/character/portrait-files';
 import { type ContentGraph } from '$lib/content/loader';
 import {
 	characterSchema,

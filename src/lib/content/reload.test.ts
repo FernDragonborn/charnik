@@ -2,7 +2,13 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { takeReloadMark } from '../stores/flash';
 import { loadContent } from './loader';
-import { RELOAD_INTENT, onBeforeReload, reloadApp, reloadIntentOf } from './reload';
+import {
+	RELOAD_INTENT,
+	holdCloseForPendingWrites,
+	onBeforeReload,
+	reloadApp,
+	reloadIntentOf,
+} from './reload';
 
 // ── the reload coordinator: pending writes flush before the webview reload ───────────────────────
 describe('reload coordinator', () => {
@@ -50,6 +56,18 @@ describe('reload coordinator', () => {
 		await reloadApp();
 		off();
 		expect(reload).not.toHaveBeenCalled();
+	});
+
+	it('a closing window waits for the flush, holds once when it failed, and then lets go', async () => {
+		const landed = vi.fn();
+		const offOk = onBeforeReload(landed);
+		expect(await holdCloseForPendingWrites()).toBe(false);
+		expect(landed).toHaveBeenCalledOnce();
+		offOk();
+		const offBroken = onBeforeReload(() => Promise.reject(new Error('disk full')));
+		expect(await holdCloseForPendingWrites()).toBe(true);
+		expect(await holdCloseForPendingWrites()).toBe(false); // a window that can never close is worse
+		offBroken();
 	});
 
 	it('leaves word for the page that loads next, once, and only when it reloads', async () => {

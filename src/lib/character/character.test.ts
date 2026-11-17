@@ -13,9 +13,7 @@ import {
 	listCharacterBackups,
 	restoreCharacterBackup,
 	uniqueCharacterId,
-	writeCharacterPhoto,
-	readCharacterPhoto,
-	removeCharacterPhotos,
+	characterWritesSettled,
 	readCharacterFiles,
 	adoptCharacter,
 	characterChangedOutside,
@@ -23,6 +21,7 @@ import {
 	CharacterConflictError,
 	SAVE_MODE,
 } from './repository';
+import { writeCharacterPhoto, readCharacterPhoto, removeCharacterPhotos } from './portrait-files';
 import { appendLog, reviseLog, logLineFor, readLog } from './log-repository';
 import { LOG_KIND } from './log-kind';
 import { charactersReferencing } from '$lib/content/remote/diff';
@@ -299,8 +298,11 @@ describe('the portrait file beside the character (PORTRAIT)', () => {
 	it('a second portrait REPLACES the first, even under another extension', async () => {
 		const s = new MemoryStorage();
 		await saveCharacter(s, sample());
-		await writeCharacterPhoto(s, 'mirt', photoOf('webp', 'image/webp', 7));
+		const first = await writeCharacterPhoto(s, 'mirt', photoOf('webp', 'image/webp', 7));
 		const name = await writeCharacterPhoto(s, 'mirt', photoOf('png', 'image/png', 9));
+		// until the save naming the new one lands, the old one is what character.json still points at
+		expect(Array.from(await readCharacterPhoto(s, 'mirt', first))).toEqual([7]);
+		await removeCharacterPhotos(s, 'mirt', name);
 		// the save names ONE file, so a leftover under the old extension would be invisible + permanent
 		const files = (await s.list('characters/mirt'))
 			.map((e) => e.name)
@@ -813,5 +815,16 @@ describe('one writer per open character (CHARACTER-WRITER)', () => {
 		expect(characterSlugOfPath('characters\\mirt\\character.json')).toBe('mirt');
 		expect(characterSlugOfPath('characters/mirt/log.jsonl')).toBeNull();
 		expect(characterSlugOfPath('characters/mirt/character.bak.save.1.json')).toBeNull();
+	});
+});
+
+describe('moving the data folder waits for the character queues (audit-oct-27 D13)', () => {
+	it('a save already queued has landed when the wait resolves', async () => {
+		const s = new MemoryStorage();
+		const c = sample();
+		const saving = saveCharacter(s, c); // fire and forget, as the play loop does
+		await characterWritesSettled();
+		expect((await loadCharacter(s, c.id)).ok).toBe(true);
+		await saving;
 	});
 });

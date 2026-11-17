@@ -37,6 +37,7 @@
 		"notSaved": "This character isn't being saved",
 		"notSavedBody": "Charnik can't write to your data folder, so nothing since the last successful save is on disk. Check the folder still exists and has room — the next change tries again.",
 		"reloadHeld": "The reload was held back so the unsaved change is not lost. Reload again once saving works.",
+		"closeHeld": "The window stayed open so the unsaved change is not lost. Close it again to leave without it.",
 		"portraitOf": "Portrait of {name}",
 		"conflict": {
 			"title": "This character changed outside Charnik",
@@ -1865,6 +1866,7 @@
 			"baseScore": "Base score",
 			"carryCapacity": "STR × 15",
 			"conPerLevel": "CON × {levels}",
+			"hpPerLevelFloor": "at least 1 per level × {levels}",
 			"dexCapped": "DEX (max {cap})",
 			"dexIgnored": "DEX (heavy: ignored)",
 			"dexUnderArmor": "DEX",

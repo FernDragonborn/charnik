@@ -158,6 +158,7 @@ export const SOURCE_KEY = {
 	hitDieFirst: 'provenance.source.hitDieFirst',
 	hitDieAverage: 'provenance.source.hitDieAverage',
 	conPerLevel: 'provenance.source.conPerLevel',
+	hpPerLevelFloor: 'provenance.source.hpPerLevelFloor',
 	carryCapacity: 'provenance.source.carryCapacity',
 	speciesDefault: 'provenance.source.speciesDefault',
 	armorTooHeavy: 'provenance.source.armorTooHeavy',

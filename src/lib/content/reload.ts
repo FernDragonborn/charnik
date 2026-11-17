@@ -48,8 +48,9 @@ export function onBeforeReload(fn: () => Promise<void> | void): () => void {
 	return () => void flushers.delete(fn);
 }
 
-/** Run every flusher; true when all of them landed. */
-async function flushAll(): Promise<boolean> {
+/** Run every flusher; true when all of them landed. A move of the data folder and a closing window
+ *  wait on it as a reload does: each is the end of the page the debounced edit lives in. */
+export async function flushPendingWrites(): Promise<boolean> {
 	// allSettled, not all: one rejecting flusher must not stop the others from writing
 	const settled = await Promise.allSettled([...flushers].map((fn) => Promise.resolve(fn())));
 	let flushed = true;
@@ -64,11 +65,23 @@ async function flushAll(): Promise<boolean> {
 /** Flush pending writes, then reload the webview so every view re-reads fresh data from disk. A
  *  flush that failed holds the reload back and says so: the reload would discard the very edit. */
 export async function reloadApp(): Promise<void> {
-	if (!(await flushAll())) {
+	if (!(await flushPendingWrites())) {
 		toast(t('character.notSaved'), { description: t('character.reloadHeld') });
 		return;
 	}
 	// only a reload that goes ahead is one the next page may say happened
 	markReload();
 	if (typeof location !== 'undefined') location.reload();
+}
+
+let closeHeldOnce = false;
+
+/** Whether a close request waits: never once the writes are flushed. A failed flush holds the FIRST
+ *  close back and says so, like a reload; the second goes ahead, because a window that cannot be
+ *  closed while the disk is broken is worse than the edit it would keep. */
+export async function holdCloseForPendingWrites(): Promise<boolean> {
+	if ((await flushPendingWrites()) || closeHeldOnce) return false;
+	closeHeldOnce = true;
+	toast(t('character.notSaved'), { description: t('character.closeHeld') });
+	return true;
 }

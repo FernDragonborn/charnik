@@ -50,7 +50,7 @@ export class DraftSession {
 	/** The build became a character: a new identity, with what it holds counted as written, so an
 	 *  autosave armed before Create and landing after it does not write the character back as a draft
 	 *  under that identity. The next change is a new draft. */
-	retire = () => {
+	private retire = () => {
 		this.renew();
 		this.written = this.bodyOf(this.host());
 	};
@@ -58,9 +58,15 @@ export class DraftSession {
 	private bodyOf = (host: DraftSessionHost): string =>
 		JSON.stringify([$state.snapshot(host.draft), [...host.classPicks]]);
 
+	/** The write in flight, so `discard` can wait for it: a write that started before Create and
+	 *  landed after the delete put the finished build back as a draft (audit-oct-27 D13). */
+	private landing: Promise<void> = Promise.resolve();
+
 	/** Write the draft, or remove it once there is nothing left worth keeping. Safe to call at any
-	 *  time; the page calls it debounced. */
-	persist = async (): Promise<void> => {
+	 *  time; the page calls it debounced. Writes run one after another, never two at once. */
+	persist = (): Promise<void> => (this.landing = this.landing.then(this.writeNow));
+
+	private writeNow = async (): Promise<void> => {
 		const host = this.host();
 		if (host.isEditing) return;
 		const storage = getUserStorage();
@@ -96,8 +102,15 @@ export class DraftSession {
 		}
 	};
 
-	/** The draft became a character, so the unfinished copy has nothing left to be. */
-	discard = (): Promise<void> => deleteDraft(getUserStorage(), this.guid);
+	/** The draft became a character, so the unfinished copy has nothing left to be: the session
+	 *  retires, the write in flight lands, and then its file goes. */
+	discard = async (): Promise<void> => {
+		const guid = this.guid;
+		// retired BEFORE waiting, so a write queued behind the one in flight finds nothing new to write
+		this.retire();
+		await this.landing;
+		await deleteDraft(getUserStorage(), guid);
+	};
 
 	/** Take over a resumed record's identity. The caller restores the draft itself. */
 	adopt = (record: DraftRecord) => {

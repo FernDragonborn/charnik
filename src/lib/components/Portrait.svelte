@@ -4,7 +4,7 @@
 	// call sites each minting their own URL is the same bug written twice.
 	import Icon from './Icon.svelte';
 	import { photoMime, type PortraitSource } from '$lib/character/photo';
-	import { readCharacterPhoto } from '$lib/character/repository';
+	import { readCharacterPhoto } from '$lib/character/portrait-files';
 	import { getUserStorage } from '$lib/storage/provider';
 
 	let {

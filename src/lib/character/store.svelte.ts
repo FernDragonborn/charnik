@@ -15,7 +15,6 @@ import {
 	deleteCharacter,
 	rosterEntryOf,
 	uniqueCharacterId,
-	copyCharacterPhoto,
 	characterChangedOutside,
 	characterSlugOfPath,
 	dirOf,
@@ -26,6 +25,7 @@ import {
 	restoreCharacterBackup,
 	type LoadResult,
 } from './repository';
+import { copyCharacterPhoto } from './portrait-files';
 import type { Character } from './schema';
 import type { Storage } from '$lib/storage/types';
 import { demoCharacter, DEMO_ID } from '$lib/demo/sheet';

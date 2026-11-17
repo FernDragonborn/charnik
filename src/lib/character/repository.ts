@@ -12,7 +12,6 @@ import type { Storage, FileEntry } from '../storage/types';
 import { migrate, CHARACTER_SCHEMA_VERSION, type Versioned } from '../schema/version';
 import { CHARACTER_MIGRATIONS } from './migrations';
 import { characterSchema, parseCharacter, withUnknownKeysOf, type Character } from './schema';
-import type { PickedPhoto } from './photo';
 import { SYSTEMS } from '../rules/pipeline';
 import { errText } from '../util/format';
 import { logger, redactPath } from '../diag/logger';
@@ -208,6 +207,11 @@ export function enqueue<T>(slug: string, task: () => Promise<T>): Promise<T> {
 	return next;
 }
 
+/** Every character's queue drained, a task queued while waiting included: what a folder move waits for. */
+export async function characterWritesSettled(): Promise<void> {
+	while (characterQueues.size > 0) await Promise.allSettled([...characterQueues.values()]);
+}
+
 /**
  * The text of each `character.json` as this app last read it for editing or wrote it, per storage.
  * It is what "the file on disk is not the one the app last wrote" is asked of: a hand edit and a
@@ -387,71 +391,6 @@ export function characterSlugOfPath(path: string): string | null {
 	return parts.length === 3 && parts[0] === CHARACTERS_DIR && parts[2] === 'character.json'
 		? (parts[1] ?? null)
 		: null;
-}
-
-/** The portrait's file name inside a character folder — one per character, so picking a new one
- *  REPLACES the old rather than leaving a folder of orphans the user has to recognise. */
-const photoNameOf = (ext: string) => `photo.${ext}`;
-
-/** Write a character's portrait and return the name to store in `build.photo`. Any portrait already
- *  in the folder is removed first, including one with a different extension — the name is the only
- *  reference, so a leftover file would be invisible and permanent. */
-export async function writeCharacterPhoto(
-	storage: Storage,
-	id: string,
-	photo: PickedPhoto,
-): Promise<string> {
-	await storage.mkdir(dirOf(id));
-	await removeCharacterPhotos(storage, id);
-	const name = photoNameOf(photo.ext);
-	await storage.writeBytes(`${dirOf(id)}/${name}`, photo.bytes);
-	return name;
-}
-
-/** Read a stored portrait's bytes. Throws like any other missing file — a character whose photo was
- *  deleted from the folder renders without one, which is the caller's decision to make. */
-export function readCharacterPhoto(
-	storage: Storage,
-	id: string,
-	name: string,
-): Promise<Uint8Array> {
-	return storage.readBytes(`${dirOf(id)}/${name}`);
-}
-
-/** Give a second character its own copy of a portrait, under the same name. A portrait that cannot
- *  be read is left behind: the copy renders without one, as the original would. */
-export async function copyCharacterPhoto(
-	storage: Storage,
-	from: string,
-	to: string,
-	name: string,
-): Promise<void> {
-	let bytes: Uint8Array;
-	try {
-		bytes = await readCharacterPhoto(storage, from, name);
-	} catch {
-		return;
-	}
-	await storage.mkdir(dirOf(to));
-	await storage.writeBytes(`${dirOf(to)}/${name}`, bytes);
-}
-
-/** Remove every portrait file in a character's folder (the way OUT of having one). Best-effort per
- *  file: a folder that cannot be listed simply has nothing to remove. */
-export async function removeCharacterPhotos(storage: Storage, id: string): Promise<void> {
-	let entries: FileEntry[];
-	try {
-		entries = await storage.list(dirOf(id));
-	} catch {
-		return;
-	}
-	for (const e of entries)
-		if (!e.isDir && e.name.startsWith('photo.'))
-			try {
-				await storage.remove(e.path);
-			} catch {
-				/* best-effort — a portrait we cannot delete is not a reason to fail the save */
-			}
 }
 
 /** A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried

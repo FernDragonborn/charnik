@@ -64,10 +64,17 @@
 		setDataDirOverride,
 		pickDataDir,
 		openExternalUrl,
+		onWindowCloseRequested,
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import MobileWarning from '$lib/components/MobileWarning.svelte';
-	import { RELOAD_INTENT, reloadApp, reloadIntentOf } from '$lib/content/reload';
+	import {
+		RELOAD_INTENT,
+		flushPendingWrites,
+		holdCloseForPendingWrites,
+		reloadApp,
+		reloadIntentOf,
+	} from '$lib/content/reload';
 	import { reloadContent } from '$lib/content/store.svelte';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { loadRoster } from '$lib/character/store.svelte';
@@ -224,6 +231,7 @@
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
 	let stopErrorCapture: (() => void) | null = null;
 	let stopPublishingToTable: (() => void) | null = null;
+	let stopHoldingClose: (() => void) | null = null;
 	onMount(async () => {
 		void initDiag(); // wire the desktop file sink (no-op on web); ring buffer works immediately
 		stopErrorCapture = captureGlobalErrors(); // route uncaught errors/rejections into the logger
@@ -245,6 +253,10 @@
 			void overrides.load(getUserStorage()); // the descriptions the player rewrote for everyone
 			return;
 		}
+		// a debounced autosave still waiting when the window closes lands before it goes (D13)
+		void onWindowCloseRequested(holdCloseForPendingWrites).then(
+			(stop) => (stopHoldingClose = stop),
+		);
 		const saved = await applySavedDataDir(); // Rust re-grants the custom folder from its own pointer
 		if (saved) {
 			await loadContentStore();
@@ -273,6 +285,7 @@
 		stopCharacterWatcher();
 		stopErrorCapture?.();
 		stopPublishingToTable?.();
+		stopHoldingClose?.();
 	});
 
 	/** Reconcile custom themes with the data dir (files are the source of truth; a first launch after
@@ -382,7 +395,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<svelte:window onkeydown={onGlobalKey} />
+<!-- a closing tab cannot wait for a write, but one started here may still land -->
+<svelte:window onkeydown={onGlobalKey} onpagehide={() => void flushPendingWrites()} />
 
 <a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
 

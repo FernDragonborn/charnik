@@ -233,15 +233,18 @@ the file's own columns that the form never saw.
 
 - [ ] **No flush on window close.** `onBeforeReload` covers reload only; closing the app inside the 800 ms
   combat debounce (600 ms for a draft) lost the last edit. LIKELY.
-- [ ] **Orphan draft after Create** (`build-view-model.svelte.ts`). An autosave landing after
-  `discard()` / `renew()` wrote the finished build under a new guid. Mechanism CONFIRMED, timing
-  LIKELY.
-- [ ] **Moving the data folder did not wait for the character queues** (`StorageSettings` ▸
-  `settleBeforeSwap`). A late save went to the old folder, which is then deleted. LIKELY.
+- [x] **Orphan draft after Create** · closed. An autosave landing after `discard()` / `renew()` wrote
+  the finished build under a new guid, and a write already in flight at Create landed after the
+  delete. Draft writes now run one at a time, and `discard` retires the session, waits for the write
+  in flight, then deletes (`draft-session.svelte.test.ts`).
+- [x] **Moving the data folder did not wait for the character queues** · closed. `settleBeforeSwap`
+  flushes the debounced autosaves, waits for every character queue (`characterWritesSettled`) and the
+  config, and refuses the move when an edit cannot be written (`character.test.ts`).
 - [ ] **Atomic write without fsync** (`tauri.ts`). A power loss can leave a zero-length
   `character.json`, and `*.tmp-*` files were never cleaned up. LIKELY, desktop only.
-- [ ] **The old portrait was deleted before the new one was safe** (`repository.ts`). If the write
-  failed or the save lost a conflict, `character.json` pointed at a file that no longer existed.
+- [x] **The old portrait was deleted before the new one was safe** · closed. The new portrait is
+  written first, and the ones the save does not name go only after that save has landed
+  (`removeCharacterPhotos` with the kept name; `character.test.ts`).
 - [ ] **The folder pointer and `plugins.json` were written non-atomically** (`std::fs::write` in
   `lib.rs`, `plugin_consent.rs`). A crash mid-write opens the app on first run, or drops every plugin
   consent. Both fail closed, but the data looks lost.

@@ -12,7 +12,8 @@ and re-encoded, so the extension always matches the bytes and a 12 MB phone phot
 folder the user is told they own. A build in progress has no folder yet, so the bytes wait in the
 build view-model and are written at the first save; picking a second portrait replaces the first,
 including one stored under another extension, and removing one deletes the file rather than only the
-reference. An optional append-only `log.jsonl` sits beside it, deliberately
+reference. The file being replaced goes only after the save naming the new one has landed, so the
+character on disk never names a portrait that is gone. An optional append-only `log.jsonl` sits beside it, deliberately
 **out** of `character.json` so a long campaign cannot bloat the save.
 
 **Every act that changes play state leaves its delta on its own log line** (`$lib/play/delta`):

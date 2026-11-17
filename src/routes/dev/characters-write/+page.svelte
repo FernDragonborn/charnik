@@ -23,11 +23,14 @@
 		listCharacterBackups,
 		loadCharacter,
 		readCharacterFiles,
-		readCharacterPhoto,
 		restoreCharacterBackup,
 		saveCharacter,
-		writeCharacterPhoto,
 	} from '$lib/character/repository';
+	import {
+		readCharacterPhoto,
+		writeCharacterPhoto,
+		removeCharacterPhotos,
+	} from '$lib/character/portrait-files';
 	import { newCharacter } from '$lib/character/schema';
 	import {
 		characters,
@@ -128,6 +131,7 @@
 		);
 		const second = await writeCharacterPhoto(s, ID, picked('png', 9, 9));
 		check('a second portrait lands under ITS extension', second === 'photo.png', second);
+		await removeCharacterPhotos(s, ID, second); // what the builder does once the save has landed
 		const stray = (await s.list(DIR)).filter((e) => e.name.startsWith('photo.')).map((e) => e.name);
 		check(
 			'…and the first one is gone, not orphaned',

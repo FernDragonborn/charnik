@@ -26,6 +26,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
@@ -102,6 +103,14 @@ export async function openDataDir(): Promise<void> {
 
 /** Hand an external URL to the OS browser. Lives here because this is the module the architecture
  *  gate lets talk to Tauri; the POLICY of which links leave the app is `util/links.ts`. */
+/** Ask before the main window closes: `holdClose` runs first, and only a `true` keeps it open. The
+ *  window closes itself once the handler returns, so a flush awaited here lands before it goes. */
+export function onWindowCloseRequested(holdClose: () => Promise<boolean>): Promise<() => void> {
+	return getCurrentWindow().onCloseRequested(async (event) => {
+		if (await holdClose()) event.preventDefault();
+	});
+}
+
 export async function openExternalUrl(url: string): Promise<void> {
 	await openUrl(url);
 }
