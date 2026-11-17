@@ -24,3 +24,21 @@ describe.each(EDITIONS)('$system · casters in armour', ({ pack, source, system,
 		expect(sheet.deriveIssues.some((i) => i.key === ISSUE_KEY.armorBlocksCasting)).toBe(true);
 	});
 });
+
+describe.each(EDITIONS)('$system · a class entered later', ({ pack, source, system, plate }) => {
+	it('a Wizard who takes a Fighter level is still untrained in plate (audit-oct-27 R14)', async () => {
+		const graph = await loadPacks(pack);
+		const c = newCharacter('mc_probe', 'Probe', system);
+		c.build.classes = [
+			classRow({ class: `class:${source}:wizard`, level: 1 }),
+			classRow({ class: `class:${source}:fighter`, level: 1 }),
+		];
+		c.build.inventory = [
+			inventoryRow({ item: `item:${source}:${plate}`, qty: 1, equipped: true, attuned: false }),
+		];
+		expect(deriveSheet(c, graph).spellcasting.armorBlock?.category).toBe('heavy');
+		// …and the Fighter who takes a Wizard level keeps the plate they started trained in
+		c.build.classes.reverse();
+		expect(deriveSheet(c, graph).spellcasting.armorBlock).toBeUndefined();
+	});
+});

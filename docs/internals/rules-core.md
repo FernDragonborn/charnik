@@ -96,7 +96,11 @@ Express per-class rules as descriptor columns: `caster_share` (`full` / `half` /
 `none` — the multiclass contribution and its rounding, so the 5.5e Paladin's and Ranger's round-up
 is just `half_up`; a blank cell takes the share from `caster`),
 `slot_table` (an id pointing at an arbitrary `spell_slots` table, not a fixed four-value enum),
-`prepare_style`, `spell_ability`, `ritual_source`. Non-spell class mechanics — Infusions, Crimson Rite, Rage,
+`prepare_style`, `spell_ability`, `ritual_source`, and the multiclass columns: `multiclass_armor_profs`
+/ `multiclass_weapon_profs` (what a class entered LATER hands over — the class the character started
+in hands over its full `armor_profs` / `weapon_profs`; `none` for nothing, blank for the full lists)
+and `multiclass_prereq` (`|` or, `,` and; each named score at 13, `rules/multiclass.ts`), said beside
+the class in the builder and never enforced. Every level adds at least 1 hit point (`maxHpForClass`). Non-spell class mechanics — Infusions, Crimson Rite, Rage,
 Ki — are **resources** granted by tokens.
 
 **A grant that grows with level is ONE row with a `count@level` ladder** — `expertise_slots`

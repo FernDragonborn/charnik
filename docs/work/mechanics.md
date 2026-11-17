@@ -250,6 +250,12 @@ stay semi-manual.
   actually left: the guided choices at the new level (ASI/feat, new spells, subclass at its level)
   are picked in the builder like any other build choice rather than being walked through, and adding
   a class while levelling goes through the builder too.
+- [ ] **Skills and tools a class entered later hands over** — SRD ▸ Multiclassing gives a Bard one
+  skill and one instrument, a Ranger one skill from its list, a Rogue one skill and Thieves' Tools.
+  The builder offers class skill picks for the first class only, so these are not offered at all yet.
+  Needs a `multiclass_skills_choose` / tool column beside `multiclass_armor_profs` and the picker
+  reading it per class row.
+
 ## Spellcasting
 
 - [~] **Resource subsystem · Mystic Arcanum is a pool, not a slot.** Pools, their pips, the spend

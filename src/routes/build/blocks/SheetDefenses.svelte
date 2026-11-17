@@ -14,7 +14,7 @@
 	import { provenance } from '$lib/actions/provenance';
 	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
 	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
-	import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
+	import { classEquipmentColumn, grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 	import { splitList } from '$lib/content/schemas';
 	const b = build;
 
@@ -39,13 +39,13 @@
 	const granted = $derived(s ? grantedEquipmentProfs(s.facts) : { armor: [], weapons: [] });
 	const armor = $derived(
 		profText(
-			classRows.map((r) => r.data.armor_profs),
+			classRows.map((r, i) => classEquipmentColumn(r.data, 'armor', i === 0)),
 			granted.armor,
 		),
 	);
 	const weapons = $derived(
 		profText(
-			classRows.map((r) => r.data.weapon_profs),
+			classRows.map((r, i) => classEquipmentColumn(r.data, 'weapon', i === 0)),
 			granted.weapons,
 		),
 	);

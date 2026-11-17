@@ -210,6 +210,12 @@ const classSchema = baseRow.extend({
 	 *  light/medium/heavy/shield. BLANK = unconstrained (lenient — proficient with all). */
 	weapon_profs: optStr,
 	armor_profs: optStr,
+	/** What the class hands over when it is NOT the character's first (SRD ▸ Multiclassing): same
+	 *  lists, `none` for nothing. Blank = the full lists above. */
+	multiclass_armor_profs: optStr,
+	multiclass_weapon_profs: optStr,
+	/** The scores a multiclass needs at 13: `,` = and, `|` = or (`str|dex`, `dex,wis`). */
+	multiclass_prereq: optStr,
 	subclass_level: optInt,
 	/** Levels at which this class grants an ASI-or-feat slot (e.g. "4,6,8,12,14,16,19" for Fighter).
 	 *  Data, not a class-name switch — derived from the SRD progression by the converters. */

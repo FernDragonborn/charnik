@@ -401,11 +401,12 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
 - [ ] **Size and carrying capacity.** Capacity is always STR×15 (`rules/core.ts`): the 2024 Goliath's
   "count as one size larger" is ignored. The SRD folder carries no multiplier table, so the multiplier
   is LIKELY.
-- [ ] **Multiclassing.** 2024 half-casters in a multiclass probably round up (`rules/spellcasting.ts`, no
-  `caster_share` on 2024 rows). Proficiencies on entering a multiclass are granted in full (Wizard →
-  Fighter gets heavy armour). Multiclass prerequisites are checked nowhere (`primary_ability` is
-  unused). The 1-HP minimum is checked in total, not per level. All LIKELY: the SRD folder has no
-  multiclass tables.
+- [x] **Multiclassing** · closed. The 2024 Paladin and Ranger carry `caster_share` `half_up`
+  (`spellcasting.test.ts`). A class entered later hands over only its `multiclass_armor_profs` /
+  `multiclass_weapon_profs`, transcribed from SRD 5.1 and 5.2.1 (`armor-untrained-content.test.ts`).
+  `multiclass_prereq` is said under the class in the builder when a score is short of 13
+  (`multiclass.test.ts`). Every level adds at least 1 HP (`core.test.ts`). The skills and tools a
+  class entered later hands over moved to `work/mechanics.md` ▸ Builder and character.
 - [x] **Dice** · closed. A die with no faces is no dice term, so `1d0` stays a fragment that blocks
   the roll, and a tray line past 500 dice, its volley counted, says so and rolls nothing
   (`roller.test.ts`).

@@ -9,7 +9,21 @@
 	import { rowDetail, rowText, savesLabel } from '../rows';
 	import { classFeatureLines } from '$lib/build/derive';
 	import PickerCard from './PickerCard.svelte';
+	import { MULTICLASS_MIN_SCORE, meetsMulticlassPrereq, multiclassPrereq } from '$lib/rules/multiclass';
+	import { abilityShortLabel } from '$lib/util/format';
 	const b = build;
+
+	/** The scores a class asks of a multiclassed character, when this one falls short — said beside
+	 *  the class, never enforced: the table may waive it. Null when met or single-classed. */
+	function unmetPrereq(cell: string | undefined): string | null {
+		const sheet = b.sheet;
+		if (b.draft.classes.length < 2 || !sheet) return null;
+		const alternatives = multiclassPrereq(cell);
+		if (meetsMulticlassPrereq(alternatives, (a) => sheet.abilities[a].score.value)) return null;
+		return alternatives
+			.map((alt) => alt.map((a) => `${abilityShortLabel(a, $_)} ${MULTICLASS_MIN_SCORE}`).join(' + '))
+			.join(` ${$_('build.classes.or')} `);
+	}
 
 	const features = $derived(
 		b.graph
@@ -164,6 +178,10 @@
 				>
 			{/if}
 		</div>
+		{@const unmet = unmetPrereq(clsRow?.data.multiclass_prereq)}
+		{#if unmet}
+			<p class="prereq">{$_('build.classes.prereqUnmet', { values: { scores: unmet } })}</p>
+		{/if}
 	{/each}
 
 	{#snippet featureGrid(gainedLines: typeof features, upcomingLines: typeof features)}
@@ -238,6 +256,11 @@
 		gap: var(--space-2);
 		padding: var(--space-1-5) 0;
 		border-top: 1px solid var(--color-border);
+	}
+	.prereq {
+		margin: 0 0 var(--space-1-5);
+		color: var(--color-warning);
+		font-size: var(--font-size-sm);
 	}
 	.classrow:first-of-type {
 		border-top: 0;

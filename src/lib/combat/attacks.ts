@@ -25,7 +25,7 @@ import { needsAttunement } from '$lib/character/inventory';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { grantedEquipmentProfs } from '$lib/character/granted-proficiency';
+import { classEquipmentColumn, grantedEquipmentProfs } from '$lib/character/granted-proficiency';
 import { parseDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import {
@@ -360,9 +360,9 @@ export function weaponProfGrants(
 ): ProfGrants {
 	return withGrantedProfs(
 		gatherProfGrants(
-			classes.map((c) => {
+			classes.map((c, i) => {
 				const r = graph.get(c.class);
-				return r?.type === 'class' ? r.data.weapon_profs : undefined;
+				return r?.type === 'class' ? classEquipmentColumn(r.data, 'weapon', i === 0) : undefined;
 			}),
 		),
 		grantedEquipmentProfs(facts).weapons,

@@ -553,7 +553,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (206 modules)
+## Library functions & types (207 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -801,6 +801,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
 - `function partialFrom` — The `partial` argument `skillCheck` takes, when the rung in force IS partial and a grant said so.
 - `function grantedEquipmentProfs` — Armor / weapon proficiencies a FEATURE granted, as the bare categories or weapon ids * `rules/proficiency` matches eq…
+- `function classEquipmentColumn` — The equipment one class row grants: its full list for the class the character started in, its * multiclass list for o…
 - `function armorProfGrants` — Which armour this character is proficient with: the classes' own `armor_profs`, plus whatever a * feature granted.
 
 ### `src/lib/character/inventory.ts`
@@ -2295,6 +2296,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then * `rollPool`.
 
+### `src/lib/rules/multiclass.ts`
+
+- `const MULTICLASS_MIN_SCORE`
+- `function multiclassPrereq` — A `multiclass_prereq` cell as alternatives of abilities that must ALL reach 13: `str|dex` is * two alternatives of on…
+- `function meetsMulticlassPrereq` — Does this character's score line meet a class's prerequisite?
+
 ### `src/lib/rules/pipeline.ts`
 
 - `const SYSTEMS` — The two supported rule systems — the ONE owner (AUDIT F7/D2).
@@ -2646,4 +2653,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1622 exports across 223 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1626 exports across 224 modules · 116 duplicate suspects._

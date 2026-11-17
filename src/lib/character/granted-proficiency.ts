@@ -11,6 +11,7 @@ import type { EffectFacts } from '../effects/apply';
 import type { Ability, PartialProficiency } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { ContentGraph } from '../content/loader';
+import type { RowData } from '../content/schemas';
 import { gatherProfGrants, withGrantedProfs, type ProfGrants } from '../rules/proficiency';
 import { CHECK_PREFIX, SKILL_ABILITY, type SkillId } from './skills';
 
@@ -158,6 +159,18 @@ export function grantedEquipmentProfs(facts: EffectFacts): { armor: string[]; we
 	return { armor, weapons };
 }
 
+/** The equipment one class row grants: its full list for the class the character started in, its
+ *  multiclass list for one entered later (a blank multiclass list falls back to the full one). */
+export function classEquipmentColumn(
+	data: RowData<'class'>,
+	kind: 'armor' | 'weapon',
+	isFirstClass: boolean,
+): string | undefined {
+	const full = kind === 'armor' ? data.armor_profs : data.weapon_profs;
+	if (isFirstClass) return full;
+	return (kind === 'armor' ? data.multiclass_armor_profs : data.multiclass_weapon_profs) ?? full;
+}
+
 /** Which armour this character is proficient with: the classes' own `armor_profs`, plus whatever a
  *  feature granted. Lenient — a class that declares none stays proficient with everything. */
 export function armorProfGrants(
@@ -167,9 +180,9 @@ export function armorProfGrants(
 ): ProfGrants {
 	return withGrantedProfs(
 		gatherProfGrants(
-			classes.map((c) => {
+			classes.map((c, i) => {
 				const r = graph.get(c.class);
-				return r?.type === 'class' ? r.data.armor_profs : undefined;
+				return r?.type === 'class' ? classEquipmentColumn(r.data, 'armor', i === 0) : undefined;
 			}),
 		),
 		grantedEquipmentProfs(facts).armor,

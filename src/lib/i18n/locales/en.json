@@ -95,6 +95,8 @@
 			"title": "Class & features",
 			"featureCount": "{count, plural, =0 {no features yet} one {# feature so far} other {# features so far}}",
 			"multiclass": "Multiclass",
+			"prereqUnmet": "Multiclassing asks for {scores} — the table may waive it",
+			"or": "or",
 			"chooseClass": "Choose a class",
 			"chooseAnotherClass": "Choose another class",
 			"classHint": "Hit die, saves, the skill list, and every feature by level.",
