@@ -105,6 +105,19 @@ describe('seedShippedContent (an uninstalled pack stays uninstalled)', () => {
 		expect(await to.read('content/srd-2024/my_classes.csv')).toContain('wizard');
 	});
 
+	it('a deleted shipped file comes back, and one switched off stays off', async () => {
+		const to = new MemoryStorage();
+		await to.write('content/srd-2024/notes.txt', 'the pack is still installed');
+		const switchedOff = JSON.stringify({ disabledFiles: ['content/srd-2024/classes_srd.csv'] });
+		await to.write('collisions.json', switchedOff);
+		await to.write('content/.seed-version', '1');
+
+		await seedShippedContent(await bundled(), to, ['content/srd-2024'], 2);
+
+		expect(await to.exists('content/srd-2024/classes_srd.csv')).toBe(true);
+		expect(await to.read('collisions.json')).toBe(switchedOff);
+	});
+
 	it('a fresh data dir gets every bundled pack', async () => {
 		const to = new MemoryStorage();
 		await seedShippedContent(await bundled(), to, BOTH, 1);

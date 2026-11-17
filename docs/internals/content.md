@@ -379,6 +379,11 @@ The hash is not a health-panel cosmetic. It is also the **overwrite guard**
 (`isProtectedFromOverwrite`): a file whose body no longer matches its stamp, or that carries no stamp
 at all, is treated as the user's own, so desktop seeding and every pack update skip it **forever**.
 So is a file carrying **`#content-adopted: <date>`**, whatever its hash says.
+**A shipped file is dropped by switching it off, not by deleting it.** The seed refreshes every
+shipped file of an installed pack, so one deleted from the folder comes back with the next app
+update — by design: the bundle is the floor. Switching it off is kept in `collisions.json`, which no
+seed and no pack update writes, so that choice survives every update. A file the user renamed is the
+same file, found by its `#content-id` and refreshed where it is.
 A file that PASSES the guard is not thereby replaced blindly — the cells somebody translated are
 carried across (▸ A translation survives the file being replaced).
 

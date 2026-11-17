@@ -260,7 +260,8 @@ the file's own columns that the form never saw.
   the steps that can still throw (`updates.test.ts`).
 - [x] **The seed matched files by path, not by `#content-id`** · closed. A shipped file the user
   renamed is found by its `#content-id` and refreshed where it is (`provider.test.ts`). A file the user
-  deleted coming back with the next seed moved to `work/content.md` ▸ SEED-DELETED.
+  deleted coming back with the next seed is the intended behaviour: a shipped file is dropped by
+  switching it off, which no seed touches (`content.md` ▸ the overwrite guard).
 - [x] **Case and nesting** · closed. Upper-case `.CSV` files load, and a remote pack's upper-case CSV
   is a pack file to install. CSVs in a pack's subfolders load, `plugins/` excepted
   (`csv-table.test.ts`).

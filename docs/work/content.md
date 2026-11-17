@@ -71,12 +71,6 @@
   (`../internals/content.md` ▸ Where the shipped data comes from). Until it exists a re-run is a
   re-write: whoever regenerates a pack must carry the hand-typed columns across, and the app
   repo's content tests are what fail if they do not.
-- [ ] **SEED-DELETED · a shipped file the user deleted comes back with the next app update.** The
-  seed refreshes every shipped file of an installed pack and cannot tell "the user deleted this"
-  from "this file is new in the bundle": nothing on disk remembers what was seeded, and a list of it
-  would be the manifest `../internals/content.md` ▸ No manifests rules out. The in-app way to drop a
-  file is switching it off in the browse-config, which survives the seed. Needs an in-band record —
-  a tombstone file per deleted id in the pack folder, say — before the seed can honour a deletion.
 - [ ] **RULES-TEXT · the packs carry the SRD's ROWS and none of its rules chapters.** Both packs hold
   spells, items, monsters, classes, species, feats, backgrounds, languages and states — every
   row-shaped thing — and nothing else, because a converter that walks rows produces rows. So text
