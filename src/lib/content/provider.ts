@@ -28,6 +28,7 @@ import { listFilesRecursive } from '$lib/storage/walk';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
 import { CONTENT_DIR, discoverContentRoots, isProtectedFromOverwrite, packNameOf } from './disk';
+import { parseContentDirectives } from './meta';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import { duringPackWrite, isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
 import {
@@ -245,10 +246,17 @@ export async function seedShippedContent(
 		// after that the bundle only ever REFRESHES packs that are still there, so a bundled pack is
 		// exactly as deletable as any other and an app update can't quietly put it back.
 		if (!firstRun && !(await to.exists(root))) continue;
+		// a shipped file the user renamed is the same file: it is found by its `#content-id` and
+		// refreshed where it is, never seeded again beside itself as a second copy of every row
+		const renamed = firstRun ? new Map<string, string>() : await pathsByContentId(to, root);
 		// RECURSIVE, because a pack may carry plugins in `plugins/<ns>/` (PLUGINS §2) and a one-level
 		// listing dropped their code silently — while the pack DIFFER walked the same folder in full,
 		// so the two halves of "what is in this pack" disagreed about a bundled one.
-		for (const path of await listFilesRecursive(from, root)) {
+		for (const shipped of await listFilesRecursive(from, root)) {
+			const bytes = await from.readBytes(shipped);
+			const path = (await to.exists(shipped))
+				? shipped
+				: (renamed.get(contentIdOf(bytes)) ?? shipped);
 			if ((await to.exists(path)) && (await isProtectedFromOverwrite(to, path))) {
 				preserved.push(path); // user hand-edited this shipped file → keep their version
 				continue;
@@ -257,10 +265,7 @@ export async function seedShippedContent(
 			// translations is merged rather than replaced: an app update is the one writer here with no
 			// preview and no undo, so it is the last place a translation may be lost to.
 			try {
-				await to.writeBytes(
-					path,
-					await keepLocalTranslations(run, path, await from.readBytes(path)),
-				);
+				await to.writeBytes(path, await keepLocalTranslations(run, path, bytes));
 			} catch (e) {
 				failed.push(path);
 				logger.warn('content: a shipped file could not be refreshed', { path, error: errText(e) });
@@ -272,6 +277,26 @@ export async function seedShippedContent(
 	if (failed.length === 0) await to.write(SEED_VERSION_FILE, String(shippedVersion));
 	logger.info('content: seed complete', { preserved, failed });
 	return { preserved, failed };
+}
+
+/** A CSV's own `#content-id`, or '' when it carries none. */
+function contentIdOf(bytes: Uint8Array): string {
+	return parseContentDirectives(new TextDecoder().decode(bytes)).directives.get('id') ?? '';
+}
+
+/** Every CSV already in a pack folder, by its `#content-id`. A file that cannot be read is left out:
+ *  it is not a file the seed could write to anyway. */
+async function pathsByContentId(store: Storage, root: string): Promise<Map<string, string>> {
+	const byId = new Map<string, string>();
+	for (const path of await listFilesRecursive(store, root)) {
+		if (!path.toLowerCase().endsWith('.csv')) continue;
+		const id = await store
+			.readBytes(path)
+			.then(contentIdOf)
+			.catch(() => '');
+		if (id) byId.set(id, path);
+	}
+	return byId;
 }
 
 /** Drop the cache (e.g. after the user adds/edits homebrew and wants a reload). */

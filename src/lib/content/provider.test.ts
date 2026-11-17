@@ -84,6 +84,27 @@ describe('seedShippedContent (an uninstalled pack stays uninstalled)', () => {
 		return from;
 	}
 
+	it('a shipped file the user renamed is refreshed where it is, not seeded beside itself (audit-oct-27 D13)', async () => {
+		const withId = (body: string) =>
+			stampWithHash(
+				new Map<MetaKey, string>([
+					['source', 'Test'],
+					['id', '0190aaaa-0000-7000-8000-000000000001'],
+				]),
+				body,
+			);
+		const from = new MemoryStorage();
+		await from.write('content/srd-2024/classes_srd.csv', await withId('id\nwizard'));
+		const to = new MemoryStorage();
+		await to.write('content/srd-2024/my_classes.csv', await withId('id\nOLD'));
+		await to.write('content/.seed-version', '1');
+
+		await seedShippedContent(from, to, ['content/srd-2024'], 2);
+
+		expect(await to.exists('content/srd-2024/classes_srd.csv')).toBe(false);
+		expect(await to.read('content/srd-2024/my_classes.csv')).toContain('wizard');
+	});
+
 	it('a fresh data dir gets every bundled pack', async () => {
 		const to = new MemoryStorage();
 		await seedShippedContent(await bundled(), to, BOTH, 1);

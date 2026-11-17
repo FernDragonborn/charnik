@@ -256,8 +256,9 @@ the file's own columns that the form never saw.
   failed swap or a recovery gives it back (`install.test.ts`, `recover-ours.test.ts`).
 - [x] **`renamePack`** · closed. The registry and the browse-config follow the folder at once, before
   the steps that can still throw (`updates.test.ts`).
-- [ ] **The seed matched files by path, not by `#content-id`.** A renamed SRD file was seeded beside
-  itself, giving duplicate ids; a file deleted from the pack came back with the next seed.
+- [x] **The seed matched files by path, not by `#content-id`** · closed. A shipped file the user
+  renamed is found by its `#content-id` and refreshed where it is (`provider.test.ts`). A file the user
+  deleted coming back with the next seed moved to `work/content.md` ▸ SEED-DELETED.
 - [x] **Case and nesting** · closed. Upper-case `.CSV` files load, and a remote pack's upper-case CSV
   is a pack file to install. CSVs in a pack's subfolders load, `plugins/` excepted
   (`csv-table.test.ts`).
