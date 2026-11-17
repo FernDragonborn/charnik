@@ -470,7 +470,10 @@ list is also how a linked row is REACHED to be edited or deleted.
 never touched, so it survives the next pack update and keeps its attribution. The editor is the
 current article beside the same form Add uses, so every widget and every validation is shared.
 `upsertHomebrewRow` replaces the same-id row and keeps columns beyond the schema, so localized prose
-survives an edit. **An override SORTS, it does not hide**: the homebrew row floats above the original
+survives an edit. **A fork never replaces a row**: where the homebrew file already holds the id — the
+same row forked in the other edition, or the original forked again — the fork takes the id qualified
+by its edition (`fireball_5_5e`, then `_2`), sorts as its own entry, and the player is told their
+other version is still there. **An override SORTS, it does not hide**: the homebrew row floats above the original
 in every group (`homebrewFirst`) and both coexist, which is what source-namespaced identity promises;
 choosing one is `collisions.json`.
 

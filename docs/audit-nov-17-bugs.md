@@ -320,7 +320,7 @@ Root cause: `DraftSession.renew` forgets what was written, so the pending `persi
 has never written. Fix: Create calls `retire`, which renews the identity and counts what the build
 holds as written.
 
-### [ ] U4 · Forking a row a second time replaces the first fork — medium · CONFIRMED · both
+### [x] U4 · Forking a row a second time replaces the first fork — medium · closed · both
 
 Found after the blind pass, from its "Not checked" list. Editing a shipped row forks it into the
 homebrew file under the shipped id. Forking a second shipped row with the same id — 5e Fireball after
@@ -328,9 +328,9 @@ homebrew file under the shipped id. Forking a second shipped row with the same i
 fork: its edits are gone, with no word. Two homebrew rows cannot keep one id either, since homebrew
 rows share one source and the loader drops an exact `type:source:id` duplicate.
 
-Repro (a node test, not kept in the suite): `rowToDraft` of `spell:SRD 5.1:fireball` with `damage`
-`9d6 fire`, `upsertHomebrewRow`; then of `spell:SRD 5.2.1:fireball` with `10d6 fire`; the homebrew
-file holds only the second.
+Held by: `src/lib/content/homebrew-fork-editions.test.ts`. Before the fix, `rowToDraft` of
+`spell:SRD 5.1:fireball` with `damage` `9d6 fire` and then of `spell:SRD 5.2.1:fireball` with `10d6
+fire` left only the second in the homebrew file.
 
 ```
 AssertionError: expected [ false, true ] to deeply equal [ true, true ]
@@ -339,12 +339,10 @@ AssertionError: expected [ false, true ] to deeply equal [ true, true ]
 Root cause: `src/lib/content/homebrew.ts` ▸ `upsertHomebrewRow` matches the row to replace by `id`
 alone, and the editor does not tell a fork of a shipped row from an edit of the fork.
 
-Left open on one maintainer decision — what a second fork does:
-
-- **refuse, and offer the fork.** The editor says a fork of this row exists and opens it; a second
-  edition of the same id cannot be forked until the first is renamed.
-- **fork under an edition-qualified id** (`fireball_5_5e`). Both coexist; the second no longer shares
-  the shipped id, so it does not sort above its original.
+The maintainers' call: a fork whose id the file already holds takes the id qualified by its edition
+(`fireball_5_5e`, numbered past that), and a toast tells the player their version of the other
+edition is kept. `upsertHomebrewRow` takes `UPSERT_MODE.fork` for a shipped row; an edit of the
+player's own row still replaces it in place.
 
 ## Ruled out
 

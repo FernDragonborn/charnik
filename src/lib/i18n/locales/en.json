@@ -1623,7 +1623,9 @@
 		"eyebrowFork": "{type} · fork to homebrew",
 		"eyebrowNew": "{type} · new homebrew",
 		"fixFirst": "Fix before saving:",
-		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
+		"forkedBeside": "Saved as a separate entry, “{id}”",
+		"forkedBesideBody": "You already have your own version of this entry ({systems}), and it keeps its id — both are kept.",
+		"idHint": "lowercase, with underscores — e.g. fire_bolt. Leave blank to auto-generate from the name.",
 		"info": {
 			"text_en": "The main description. Markdown is supported.",
 			"level": "Spell level 0–9 (0 = cantrip). Levels above 9 have no spell slot in the classic rules.",

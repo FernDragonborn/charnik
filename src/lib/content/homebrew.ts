@@ -296,6 +296,26 @@ export interface SaveResult {
 	id?: string;
 	/** Validation problems ("path: message"), when not ok. */
 	issues?: string[];
+	/** A fork that could not take the shipped id: the id of the homebrew row already holding it, and
+	 *  that row's systems, so the player is told their own version of another edition is there. */
+	forkedBeside?: { id: string; systems: string };
+}
+
+/** How an editor save treats the row it is given: `edit` replaces the same-id row of the file (the
+ *  player's own row, edited in place); `fork` copies a shipped row in and never replaces one. */
+export const UPSERT_MODE = { edit: 'edit', fork: 'fork' } as const;
+export type UpsertMode = (typeof UPSERT_MODE)[keyof typeof UPSERT_MODE];
+
+/** The id a fork takes: the shipped one while it is free, else that id qualified by the fork's edition
+ *  (`fireball_5_5e`), else that with a number. A fork that took a taken id would replace the first
+ *  fork and its edits with no word. */
+function forkId(id: string, systems: string, taken: ReadonlySet<string>): string {
+	if (!taken.has(id)) return id;
+	const qualified = slugify(`${id}_${systems}`);
+	if (!taken.has(qualified)) return qualified;
+	let n = 2;
+	while (taken.has(`${qualified}_${n}`)) n++;
+	return `${qualified}_${n}`;
 }
 
 /** Fill identity + validate a draft against the type's schema. Returns the row object (all columns)
@@ -358,8 +378,9 @@ export function rowToDraft(row: LoadedRow): Record<string, string> {
 /**
  * Editor-mode save (UPSERT). Validates the edited draft, then REPLACES the same-id row in `targetFile`
  * (or appends it). Homebrew authoring forces `source=Homebrew`, so editing a shipped SRD row and
- * pointing `targetFile` at the homebrew CSV forks it (same id → sorts above the original via
- * `compareRows`); editing a homebrew row in its own file edits in place. Columns beyond the schema
+ * pointing `targetFile` at the homebrew CSV with `mode` `fork` forks it (same id → sorts above the
+ * original via `compareRows`, or `forkId`'s when the file already holds that id); editing a homebrew
+ * row in its own file edits in place. Columns beyond the schema
  * (localized prose, etc.) present in the file or the draft are preserved, never dropped.
  */
 export async function upsertHomebrewRow(
@@ -367,11 +388,17 @@ export async function upsertHomebrewRow(
 	type: ContentType,
 	draft: Record<string, string>,
 	targetFile: string = homebrewFile(type),
+	mode: UpsertMode = UPSERT_MODE.edit,
 ): Promise<SaveResult> {
 	if (!isHomebrewTarget(targetFile)) return notHomebrewTarget(targetFile);
-	const id = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
+	const asked = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
 
 	const { rows: existing, directives, header } = await readHomebrewFile(storage, targetFile);
+	const holder = existing.find((r) => r.id === asked);
+	const id =
+		mode === UPSERT_MODE.fork
+			? forkId(asked, draft.systems ?? '', new Set(existing.map((r) => r.id ?? '')))
+			: asked;
 
 	// validate through the schema (buildRow forces source + slugs a blank id); pass no existingIds so
 	// the id is KEPT (an upsert reuses it), not de-duplicated like a fresh add.
@@ -387,7 +414,9 @@ export async function upsertHomebrewRow(
 	else existing.push(finalRow);
 
 	await writeStampedHomebrew(storage, targetFile, { columns, rows: existing }, directives);
-	return { ok: true, id };
+	return id !== asked && holder
+		? { ok: true, id, forkedBeside: { id: asked, systems: holder.systems ?? '' } }
+		: { ok: true, id };
 }
 
 /** Delete a homebrew row (by id) from its CSV — the only content the app may remove (never a shipped

@@ -1235,6 +1235,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface TargetFile`
 - `function listTypeTargets` — Existing CSV files that can hold `type` (filename matches its filebase), across the shipped roots + * the homebrew ro…
 - `interface SaveResult`
+- `const UPSERT_MODE` — How an editor save treats the row it is given: `edit` replaces the same-id row of the file (the * player's own row, e…
+- `type UpsertMode`
 - `function rowToDraft` — Seed an editor draft from an existing row — every column as a string cell (`systems` from the * stamped `row.systems`…
 - `function upsertHomebrewRow` — * Editor-mode save (UPSERT).
 - `function removeHomebrewRow` — Delete a homebrew row (by id) from its CSV — the only content the app may remove (never a shipped * file).
@@ -2579,4 +2581,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 60 components · 1580 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 60 components · 1582 exports across 218 modules · 108 duplicate suspects._

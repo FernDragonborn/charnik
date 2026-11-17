@@ -20,6 +20,7 @@
 		isShippedFile,
 		listTypeTargets,
 		HOMEBREW_SOURCE,
+		UPSERT_MODE,
 		type TargetFile,
 	} from '$lib/content/homebrew';
 	import { slugify } from '$lib/util/slug';
@@ -38,6 +39,7 @@
 	} from '$lib/drafts/store';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
+	import { toast } from '$lib/toast/toast';
 	import { app } from '$lib/stores/app.svelte';
 
 	// Localised field label. A localizable column (name_<loc> / text_<loc>) shows the base label plus
@@ -258,7 +260,13 @@
 			// editor mode UPSERTs into the row's homebrew file (fork if shipped); add mode appends a new row
 			const res =
 				editing && editTarget
-					? await upsertHomebrewRow(getUserStorage(), type, draft, editTarget)
+					? await upsertHomebrewRow(
+							getUserStorage(),
+							type,
+							draft,
+							editTarget,
+							editShipped ? UPSERT_MODE.fork : UPSERT_MODE.edit,
+						)
 					: await saveHomebrewRow(getUserStorage(), type, draft, target);
 			if (!res.ok) {
 				issues = res.issues ?? [$_('homebrewForm.saveFailed')];
@@ -270,6 +278,13 @@
 			await deleteDraft(getUserStorage(), draftCacheTarget); // saved → drop the cached draft
 			baseline = JSON.stringify(draft); // stop the auto-save effect from re-spawning it
 			resetContentGraph();
+			// the player's own version of this row in another edition already holds its id
+			if (res.forkedBeside)
+				toast($_('homebrewForm.forkedBeside', { values: { id: res.id ?? '' } }), {
+					description: $_('homebrewForm.forkedBesideBody', {
+						values: { systems: res.forkedBeside.systems },
+					}),
+				});
 			if (res.id) onsave(res.id, type);
 		} finally {
 			saving = false;
