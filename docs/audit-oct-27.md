@@ -557,7 +557,7 @@ Nothing escaped the sandbox; the plugin's own numbers went stale.
 GHSA-cg2g-xh64-v4q7 (`SAFE_FOR_TEMPLATES` with DOM output), GHSA-mrv2-3pqr-j5jr (`IN_PLACE`),
 GHSA-c6gr-qvv4-5v3f (xhtml parser). `markdown.ts` uses none of those modes. **Fix:** `^3.4.17`.
 
-#### [ ] S5 · Dev-only advisories — closed where a patch exists
+#### [x] S5 · Dev-only advisories — closed
 
 `@vitest/mocker` < 4.1.12 (GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp) let anything reaching the
 browser-test server register a mock while `pnpm test` runs; the vitest family is `^4.1.12`. `braces`
@@ -678,11 +678,11 @@ outside page opens in the app window — S6 back. Not run on Linux.
 
 | Done | Package | Advisory | Reach | Action |
 |---|---|---|---|---|
-| [ ] | `zod` 4.6.5 (direct) | GHSA-mrhx-c7xc-m3w5, high: memory exhaustion on large bounded collections | Validates characters, content rows, plugin results; input size bounded by file caps and QuickJS 8 MB | `^4.6.6` |
-| [ ] | `@sveltejs/kit` < 3 | GHSA-pfhg-q3qv-9q6r, GHSA-27mw-82g8-phjj, low | Static adapter, no form actions, no server headers | tracker, move with 3.x |
-| [ ] | `fast-uri` < 4.2.3 | four advisories | dev only, under `stylelint` | override |
-| [ ] | `zip` 4.6.1 (Rust) | RUSTSEC-2026-0367/0368/0369 | DEP-3 | none |
-| [ ] | `tokio` 1.53.2 | RUSTSEC-2026-0386, unsound `AsyncFd` | Unix-only API our code does not call | warning only |
+| [x] | `zod` 4.6.5 (direct) | GHSA-mrhx-c7xc-m3w5, high: memory exhaustion on large bounded collections | Validates characters, content rows, plugin results; input size bounded by file caps and QuickJS 8 MB | `^4.6.6` |
+| [x] | `@sveltejs/kit` < 3 | GHSA-pfhg-q3qv-9q6r, GHSA-27mw-82g8-phjj, low | Static adapter, no form actions, no server headers | `work/release.md` ▸ DEP-4 |
+| [x] | `fast-uri` < 4.2.3 | four advisories | dev only, under `stylelint` | no longer reported by `pnpm audit` |
+| [x] | `zip` 4.6.1 (Rust) | RUSTSEC-2026-0367/0368/0369 | DEP-3 | `work/release.md` ▸ DEP-3 |
+| [x] | `tokio` 1.53.2 | RUSTSEC-2026-0386, unsound `AsyncFd` | Unix-only API our code does not call | warning only, `work/release.md` ▸ AUDIT-DRIFT |
 
 ---
 
@@ -695,8 +695,8 @@ outside page opens in the app window — S6 back. Not run on Linux.
 - [x] **Nested conditions.** `internals/effects.md` settled one level; the shipped SRD needs two (R11).
 - [x] **Hand-copied folders.** `internals/characters.md` called a hand-copied character folder normal;
   the code was not ready (D5).
-- [ ] **AUDIT-DRIFT** in `work/release.md` said `pnpm audit` shows DEP-2 and nothing else; it now shows
-  `zod`, `kit` and `fast-uri`, and no longer `braces` (S16).
+- [x] **AUDIT-DRIFT** in `work/release.md` said `pnpm audit` shows DEP-2 and nothing else; it now
+  names what `pnpm audit` reports (DEP-4, DEP-6) (S16).
 
 ---
 

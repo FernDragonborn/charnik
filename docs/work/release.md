@@ -290,23 +290,22 @@
   three concern Unix permission bits and symlink extraction; the fourth can abort extraction on an
   oversized symlink entry. The updater's ZIP extraction is Windows-only and follows minisign
   verification, so an untrusted archive cannot reach it. Moves with the updater's dependency bump.
-- **DEP-4 · SvelteKit 2 has two low advisories** (GHSA-pfhg-q3qv-9q6r and
-  GHSA-27mw-82g8-phjj), fixed in 3.0.0. They concern enhanced form redirects and an untrusted
-  cache-control header at prerender time. Charnik uses neither enhanced forms nor an untrusted
-  prerender response; the shipped app is static. Move with the SvelteKit 3 migration, not a hotfix.
-- **DEP-5 · `deepmerge 4.3.1` prototype poisoning** (GHSA-gcqx-w48m-w2h4, low) — via
-  `svelte-i18n` and the Svelte Vite plugin. The advisory's patched 4.3.2 is not published to the
-  registry. Runtime UI catalogs are bundled, not user-loaded; adding external catalogs must account
-  for this boundary. Update within the parents' existing ranges when the patch is published.
+- **DEP-4 · SvelteKit 2 has four advisories fixed only in 3.x.** Two low (GHSA-pfhg-q3qv-9q6r,
+  GHSA-27mw-82g8-phjj, fixed in 3.0.0) concern enhanced form redirects and an untrusted
+  cache-control header at prerender time; a high and a moderate (GHSA-3r8g-jcqq-3p5j,
+  GHSA-6cf5-gc4q-fm3x, fixed in 3.1.1) concern remote functions' `form` and `query.batch`. Charnik
+  uses no enhanced forms, no remote functions and no untrusted prerender response; the shipped app
+  is static. Move with the SvelteKit 3 migration, not a hotfix. The advisories with a 2.x patch are
+  taken as they land (`^2.70.4`, adapter-static `^3.0.11`).
 - **DEP-6 · `minimatch 10.2.6` glob amplification** (GHSA-g3hv-75wg-m249, moderate) — build/lint
   tooling only. The patch is 11.0.1; ESLint and TypeScript ESLint still require 10.x, including their
   available updates. The patterns are repository-owned and no minimatch ships in the app. Move with
   the upstream toolchain rather than forcing a major across its dependency ranges.
-- **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4, DEP-5 and
-  DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
+- **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4 and DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
   - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
     `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). Its warnings
-    (unmaintained `zbus_names`/`zvariant`, `proc-macro-error`, unsound `glib`) are Linux-only crates
+    (unmaintained `zbus_names`/`zvariant`, `proc-macro-error`, unsound `glib`, and `tokio`'s unsound
+    `AsyncFd`, a Unix-only API the table link does not call) are Linux-only crates
     Tauri pins, DEP-1's kind. A patch release that fixes an advisory is
     `cargo update -p <name>`.
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
