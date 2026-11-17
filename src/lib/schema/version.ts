@@ -218,7 +218,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v81: the healing spells that add the spellcasting modifier say so (`heal_modifier`), and the 5.5e
 // Barbarian's Weapon Mastery asks for a melee weapon (`|melee`). An install left at v80 heals by the
 // dice alone and offers the Barbarian ranged weapons.
-export const CONTENT_SEED_VERSION = 81;
+// v82: Wizard, Sorcerer and Monk declare no armour (`none`), 2014 Jack of All Trades reaches every
+// ability check, and the 2014 Dwarf is not slowed by heavy armour. An install left at v81 keeps the
+// three casters trained in every armour, the half bonus off bare checks, and the Dwarf slowed.
+export const CONTENT_SEED_VERSION = 82;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

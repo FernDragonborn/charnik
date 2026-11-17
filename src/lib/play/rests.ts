@@ -22,6 +22,7 @@ import { withoutForm } from '$lib/character/forms';
 import type { CharacterSheet } from '$lib/character/derive';
 import { dropEffects, endConcentration } from './concentration';
 import { leaveForm } from './form';
+import { refusedWhileDead } from './hit-points';
 import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { hitDiceSpent } from './resources';
 import { settled } from './settle';
@@ -98,6 +99,8 @@ export function rest(
 	{ kind, choice = {} }: { kind: RestKind; choice?: RestChoice },
 	ctx: PlayContext,
 ): PlayOutcome {
+	const dead = refusedWhileDead(character);
+	if (dead) return dead;
 	const before = character.play;
 	// a rest expires an effect it OUTLASTS: rounds LEFT (not total duration) against the rest's own
 	// length. A 24-hour effect is still running when you get up. That happens FIRST, and a form whose
@@ -125,7 +128,8 @@ export function rest(
 				resourcesSpent[pool.id] = Math.max(0, countAt(resourcesSpent, pool.id) - count);
 		}
 	}
-	let play: CharacterPlay = { ...waking.play, resourcesSpent };
+	// the rest's hours pass on the clock, so what it did not outlast has that much less left
+	let play: CharacterPlay = { ...waking.play, resourcesSpent, round: before.round + restRounds };
 	const notices: PlayNotice[] = [];
 	if (kind === 'long') {
 		play = longRest(waking, play, sheet, choice);
@@ -184,6 +188,8 @@ export function spendHitDie(
 	{ die }: { die: string },
 	ctx: PlayContext,
 ): PlayOutcome {
+	const dead = refusedWhileDead(character);
+	if (dead) return dead;
 	const sheet = ctx.derive(character);
 	const pool = sheet.hitDice.find((h) => h.die === die);
 	if (!pool) return { ...quietly(character), refused: true };

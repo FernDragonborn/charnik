@@ -63,8 +63,13 @@ describe('a long rest taken in a 2014 Wild Shape', () => {
 			key: 'combat.notice.formOwnHpRestored',
 			values: { from: 5, to: ownMaximum },
 		});
-		// and said again on a rest that finds them full: the player cannot see them to know
-		const again = rest(outcome.character, { kind: 'long' }, ctx);
+		// and said on a rest that finds them full too: the player cannot see them to know
+		const full = assumeForm(
+			{ ...druid, play: { ...druid.play, hp: { ...druid.play.hp, current: ownMaximum } } },
+			{ form: 'wild_shape', monster: 'monster:SRD 5.1:wolf', label: 'Wolf' },
+			ctx,
+		);
+		const again = rest(full.character, { kind: 'long' }, ctx);
 		expect(again.notices.map((notice) => notice.text)).toContainEqual({
 			key: 'combat.notice.formOwnHpRestored',
 			values: { from: ownMaximum, to: ownMaximum },

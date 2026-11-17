@@ -149,14 +149,14 @@ describe.each(['5e', '5.5e'] as const)('turn actions · %s', (system) => {
 		expect(play.turn.action).toBe(1);
 	});
 
-	it('entering combat starts a clean turn at round 1; a mark needs a turn to hold it', () => {
+	it('entering combat starts a clean turn without resetting the clock; a mark needs a turn to hold it', () => {
 		const resting = fighter((x) => {
 			x.play.inCombat = false;
 			x.play.round = 40;
 		});
 		expect(markRollUsed(resting, { id: 'sneak' }).character).toBe(resting);
 		const fighting = toggleCombat(resting, ctx).character;
-		expect(fighting.play).toMatchObject({ inCombat: true, round: 1 });
+		expect(fighting.play).toMatchObject({ inCombat: true, round: 40, fightStartRound: 40 });
 		expect(markRollUsed(fighting, { id: 'sneak' }).character.play.turn.usedRolls).toEqual([
 			'sneak',
 		]);

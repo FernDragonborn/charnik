@@ -50,6 +50,7 @@ export const EFFECT_KINDS = [
 	'blocks_concentration',
 	'blocks_spellcasting',
 	'damage_reroll',
+	'ignores_armor_speed_penalty',
 	'regain_on_initiative',
 	'on_event',
 	'plugin',

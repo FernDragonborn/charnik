@@ -113,6 +113,9 @@ export const EFFECT_KIND = {
 	// data-driven — any CSV feature carrying the token gets the affordance, labelled from the feature's
 	// own name (never an id/string hardcoded in code).
 	damageReroll: 'damage_reroll',
+	// MARKER (`ignores_armor_speed_penalty`): armour too heavy for the wearer's Strength does not cost
+	// them speed — 2014 Dwarf's "Your speed is not reduced by wearing heavy armor".
+	ignoresArmorSpeedPenalty: 'ignores_armor_speed_penalty',
 	// AUTO EVENT (`regain_on_initiative:<resource>:<n>`): a no-choice feature that, WHEN YOU ROLL
 	// INITIATIVE, regains expended uses of <resource> until you have <n> (2024 Perfect Focus → Focus 4,
 	// Superior Inspiration → Bardic Inspiration 2, Evergreen Wild Shape → 1). Same `kind:target:int`
@@ -147,6 +150,7 @@ const MARKER_KINDS = new Set<string>([
 	EFFECT_KIND.blocksConcentration,
 	EFFECT_KIND.blocksSpellcasting,
 	EFFECT_KIND.damageReroll,
+	EFFECT_KIND.ignoresArmorSpeedPenalty,
 ]);
 
 // The recharge model's single owner is `rules/recharge`; re-exported here so token consumers keep

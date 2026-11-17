@@ -475,6 +475,15 @@
 						{#if preview}<span class="meta">{preview}</span>{/if}
 					</button>
 				{/each}
+				<!-- a Warlock multiclass pays with either kind of slot (SRD 5.1, Multiclassing ▸ Pact Magic) -->
+				{@const pactLevel = combat.castablePact(r)}
+				{#if pactLevel !== null}
+					<button class="menu-row" onclick={(e) => combat.castWithPact(e)}>
+						<span class="main"
+							>{$_('combat.menu.castFromPact', { values: { level: pactLevel } })}</span
+						>
+					</button>
+				{/if}
 				<!-- FEAT-FREE-CAST: the other way to pay. A pool is offered, never chosen for the player —
 				     nothing in the data says which pool a given spell may spend, and the feat's own text,
 				     which the player is reading, does. -->

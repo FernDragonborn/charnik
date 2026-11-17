@@ -160,19 +160,19 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(healed.character.play.hp.current).toBe(5 + 1 + 2);
 	});
 
-	it('entering combat starts round 1, and ending a turn starts the next', () => {
+	it("entering combat starts the fight at the clock's round, and ending a turn starts the next", () => {
 		const resting = build('fighter', 3, (x) => {
 			x.play.inCombat = false;
 			x.play.round = 30;
 		});
 		const fighting = enterOrLeaveCombat(resting, { effectRounds: EFFECT_ROUNDS }, ctx()).character;
-		expect(fighting.play).toMatchObject({ inCombat: true, round: 1 });
+		expect(fighting.play).toMatchObject({ inCombat: true, round: 30, fightStartRound: 30 });
 		const spent = {
 			...fighting,
 			play: { ...fighting.play, turn: { ...fighting.play.turn, action: 1 } },
 		};
 		const next = startNextTurn(spent, { effectRounds: EFFECT_ROUNDS }, ctx()).character;
-		expect(next.play.round).toBe(2);
+		expect(next.play.round).toBe(31);
 		expect(next.play.turn.action).toBe(0);
 	});
 

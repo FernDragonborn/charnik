@@ -265,6 +265,11 @@ decides a re-pick: the reconciliation subtracts what the SAVE's own picks grante
 (`EditContext.loaded`), never what the live ones grant — measured against the live picks, moving a
 saved ability improvement left the old one with nothing to cancel against.
 
+**`play.round` is the game's clock, and it only runs forward.** Every timed effect counts against
+it from its `startedRound`; a turn, a skip of time and a rest's hours move it on, and entering a fight
+does not reset it — the fight marks where it began (`fightStartRound`) and the turnbar counts from
+there, so a Bless cast before the fight keeps the rounds it had.
+
 **Concentration is a REF, not a clock.** `play.concentration` names a spell, and its timer lives on
 an ordinary carrier effect in `play.effects` — so editing that effect's `durationRounds` IS editing
 the concentration, and expiry, display and removal are the paths that already exist. A concentration

@@ -8,6 +8,7 @@ import { recordOf } from '../util/records';
 import {
 	savingThrow,
 	skillCheck,
+	initiative,
 	unarmoredAC,
 	armoredAC,
 	passiveScore,
@@ -189,6 +190,15 @@ export function deriveAbilityBlocks(
 	});
 }
 
+/** Initiative, a Dexterity check: the partial rung that reaches every Dexterity check reaches it. */
+export function deriveInitiative(
+	{ scores, level, facts }: StatInputs,
+	grantedChecks: Map<string, GrantedProficiency>,
+): Computed {
+	const partial = partialFrom('partial', grantedChecks.get(`${CHECK_PREFIX}dex`));
+	return applyEffects('initiative', initiative({ dexScore: scores.dex, level, ...partial }), facts);
+}
+
 /** Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the
  *  effect-granted level by MAX on the one ladder, so no boolean combination can express an invalid
  *  state. */
@@ -298,7 +308,10 @@ export function deriveSpeed(
 		},
 	];
 	const armorStrMin = equippedArmor ? (tagInt(equippedArmor.tags, ITEM_TAG.strMin) ?? 0) : 0;
-	if (armorStrMin > 0 && scores.str < armorStrMin)
+	// a feature can say the weight costs this character nothing (2014 Dwarf); the effects module is
+	// what reads it, so with effects off the penalty stands
+	const ignored = facts.armorSpeedPenaltyIgnored.length > 0;
+	if (armorStrMin > 0 && scores.str < armorStrMin && !ignored)
 		speedBase.push({
 			source: `${equippedArmor ? rowName(equippedArmor.row) : 'Armor'} (STR ${armorStrMin})`,
 			layer: 'item',

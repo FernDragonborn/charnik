@@ -240,6 +240,8 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.blocksSpellcasting]: (_p, tr) =>
 		say(tr, 'combat.tag.blocksSpellcasting', 'blocks spellcasting'),
 	[EFFECT_KIND.damageReroll]: (_p, tr) => say(tr, 'combat.tag.damageReroll', 'may reroll damage'),
+	[EFFECT_KIND.ignoresArmorSpeedPenalty]: (_p, tr) =>
+		say(tr, 'combat.tag.ignoresArmorSpeedPenalty', 'heavy armour does not slow'),
 	[EFFECT_KIND.regainOnInitiative]: (p, tr) =>
 		p.target &&
 		say(tr, 'combat.tag.regainOnInitiative', `${titleCase(p.target)} +${p.amount} on initiative`, {

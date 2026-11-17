@@ -283,6 +283,9 @@ export interface EffectFacts {
 	 *  reroll labelled from the feature itself — no id/string hardcoded (data-driven). Empty = no such
 	 *  feature; the once-per-turn cadence + keep-higher live in the combat layer. */
 	damageReroll: { source: string }[];
+	/** `ignores_armor_speed_penalty` markers (2014 Dwarf): the speed armour too heavy for the wearer's
+	 *  Strength would cost is not lost. The source names it in the speed's trace. */
+	armorSpeedPenaltyIgnored: { source: string }[];
 	/** `regain_on_initiative` auto features (Perfect Focus, Superior Inspiration): at combat start the
 	 *  combat layer restores `id` up to `upTo` uses and NOTIFIES (auto-apply + toast, the maintainer's
 	 *  call for these no-choice features). `source` = the feature name, for the notice. Empty = none. */
@@ -324,6 +327,7 @@ export const emptyFacts = (): EffectFacts => ({
 	breaksConcentration: false,
 	spellcastingBlocks: [],
 	damageReroll: [],
+	armorSpeedPenaltyIgnored: [],
 	initiativeRegain: [],
 	onEvent: [],
 	rerolls: [],
@@ -368,6 +372,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.breaksConcentration ||= extra.breaksConcentration;
 	base.spellcastingBlocks.push(...extra.spellcastingBlocks);
 	base.damageReroll.push(...extra.damageReroll);
+	base.armorSpeedPenaltyIgnored.push(...extra.armorSpeedPenaltyIgnored);
 	base.initiativeRegain.push(...extra.initiativeRegain);
 	base.onEvent.push(...extra.onEvent);
 	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];

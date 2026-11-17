@@ -27,7 +27,7 @@
 </script>
 
 <section class="turnbar combat-bar">
-	<span class="bar-label">{$_('combat.turn.round')} <b>{combat.round}</b></span>
+	<span class="bar-label">{$_('combat.turn.round')} <b>{combat.fightRound}</b></span>
 	{#each SLOTS as slot (slot)}
 		{@const label = slotLabel(slot)}
 		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot; the

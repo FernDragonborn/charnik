@@ -89,7 +89,8 @@ const TOOL_PREFIX = 'tool.';
 const PROFICIENCY_TARGETS = new Set<string>([
 	...ABILITIES,
 	'saves', // the group: proficiency in ALL saving throws (Diamond Soul)
-	'skills', // the group: a rung on EVERY skill at once (Jack of All Trades' half)
+	'skills', // the group: a rung on EVERY skill at once (2024 Jack of All Trades' half)
+	'ability_checks', // every skill and the six bare checks (2014 Jack of All Trades' "any ability check")
 	// `check.<ability>` — every check that ability makes, its BARE check and its skills alike, which
 	// is how 2014 Remarkable Athlete's "any Strength, Dexterity, or Constitution check" reads. A bare
 	// ability above means the SAVE, so the checks needed a prefix of their own.

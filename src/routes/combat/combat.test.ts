@@ -829,18 +829,19 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 });
 
 describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => {
-	it('enters combat at round 1 and Next turn advances the persisted counter', async () => {
+	it('a fight counts its rounds from 1 on a clock that keeps running', async () => {
 		const graph = await graphOf();
 		const character = newCharacter('valen', 'Valen', '5.5e');
 		combat.graph = graph;
 		combat.character = character;
 		character.play.inCombat = false;
+		character.play.round = 7;
 		combat.economy.toggleCombat(); // enter combat
-		expect(character.play.round).toBe(1);
-		expect(combat.round).toBe(1);
+		expect(character.play.round).toBe(7); // the clock is not reset (a Bless keeps its rounds)
+		expect(combat.fightRound).toBe(1);
 		combat.economy.nextTurn();
-		expect(character.play.round).toBe(2); // advanced on the persisted field, not a VM copy
-		expect(combat.round).toBe(2);
+		expect(character.play.round).toBe(8); // advanced on the persisted field, not a VM copy
+		expect(combat.fightRound).toBe(2);
 	});
 });
 

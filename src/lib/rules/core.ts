@@ -146,9 +146,19 @@ export function passiveScore(check: Computed): Computed {
 	]);
 }
 
-/** Initiative = DEX modifier (feats/effects add more later). */
-export function initiative(args: { dexScore: number }): Computed {
-	return computed([abilityContribution('dex', args.dexScore)]);
+/** Initiative is a Dexterity check in both SRDs: the DEX modifier, and a partial proficiency that
+ *  reaches every Dexterity check (Jack of All Trades, Remarkable Athlete). Effects add the rest. */
+export function initiative(args: {
+	dexScore: number;
+	level: number;
+	partial?: PartialProficiency;
+}): Computed {
+	return skillCheck({
+		ability: 'dex',
+		score: args.dexScore,
+		level: args.level,
+		...(args.partial ? { partial: args.partial } : {}),
+	});
 }
 
 /**

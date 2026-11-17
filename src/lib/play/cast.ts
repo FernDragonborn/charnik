@@ -8,7 +8,13 @@
  */
 import { tokensOf, type LoadedRowOf } from '$lib/content/loader';
 import { localizedName } from '$lib/content/detail';
-import { pactPool, slotToSpend, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+import {
+	pactPool,
+	slotToSpend,
+	spendPactSlot,
+	PACT_SLOT_KEY,
+	type SlotSpend,
+} from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import { evalUpcast } from '$lib/effects/upcast';
 import { canCastAsRitual, spellEntries } from '$lib/character/spellcasting';
@@ -88,6 +94,8 @@ export interface CastIntent {
 	slot?: number;
 	/** A pool that pays instead of a slot ("cast it once without a slot"). */
 	pool?: string;
+	/** Pay with a Pact Magic slot — a Warlock multiclass's choice beside its leveled slots. */
+	pact?: boolean;
 	/** The weapon a magic-weapon buff lands on: its id, or `null` once it is settled there is none.
 	 *  Absent means not asked yet. */
 	weapon?: string | null;
@@ -129,6 +137,19 @@ interface CastSpell {
 	name: string;
 }
 
+/** The slot a cast takes when no pool pays for it: a Pact Magic slot when the player chose one, else
+ *  the lowest leveled slot that fits or the one they picked. */
+function reserveSlot(
+	level: number,
+	pools: CharacterSheet['spellcasting']['pools'],
+	character: Character,
+	{ chosen, pact }: { chosen: number | undefined; pact: boolean | undefined },
+): SlotSpend {
+	const spent = character.play.spellSlotsSpent;
+	if (!pact) return slotToSpend(level, pools, spent, chosen);
+	return spendPactSlot(level, pools, spent) ?? { block: 'You have no Pact Magic slots.' };
+}
+
 /**
  * The weapon a magic-weapon buff lands on, settled BEFORE anything is spent: with one weapon there
  * is nothing to ask, with several the answer is `undefined` — ask — and with none it is `null`, and
@@ -168,7 +189,12 @@ function isRitual(character: Character, sheet: CharacterSheet, spell: CastSpell,
 function payForCast(
 	character: Character,
 	spell: CastSpell,
-	{ pool: poolId, slot: chosen, ritual }: { pool?: string; slot?: number; ritual: boolean },
+	{
+		pool: poolId,
+		slot: chosen,
+		pact,
+		ritual,
+	}: { pool?: string; slot?: number; pact?: boolean; ritual: boolean },
 	ctx: PlayContext,
 ): { paid: PlayOutcome; slot: string | null } {
 	const sheet = ctx.derive(character);
@@ -181,9 +207,7 @@ function payForCast(
 		return none(refusal(character, { text: { key: 'combat.notice.poolCannotCast' } }));
 	const { pools } = sheet.spellcasting;
 	const reserved =
-		named || ritual
-			? null
-			: slotToSpend(spell.subject.level, pools, character.play.spellSlotsSpent, chosen);
+		named || ritual ? null : reserveSlot(spell.subject.level, pools, character, { chosen, pact });
 	if (reserved && 'block' in reserved) return none(refusal(character, { text: reserved.block }));
 	// a leveled spell with no slot to take it is paid from the pool linked to it (Magic Initiate)
 	const pool =
@@ -317,6 +341,7 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 		{
 			ritual,
 			...(intent.pool ? { pool: intent.pool } : {}),
+			...(intent.pact ? { pact: true } : {}),
 			...(intent.slot === undefined ? {} : { slot: intent.slot }),
 		},
 		ctx,

@@ -51,9 +51,11 @@ const EQUIPMENT_PREFIX = { armor: 'armor.', weapon: 'weapon.' } as const;
  *  answers "does my proficiency bonus ride this check", and only one of them is a roll. */
 export const TOOL_PREFIX = 'tool.';
 
-/** The group targets that mean every save, or every skill, at once. */
+/** The group targets that mean every save, every skill, or every ability check at once. */
 const ALL_SAVES = 'saves';
 const ALL_SKILLS = 'skills';
+/** Every check: the six bare ones and every skill — 2014 Jack of All Trades' "any ability check". */
+const ALL_ABILITY_CHECKS = 'ability_checks';
 
 /** Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
  *  `grant_proficiency:[expertise:]<target>` — the parser already stripped any `skill.` prefix; a
@@ -87,13 +89,19 @@ export function gatherGrantedProficiencies(facts: EffectFacts): {
 /**
  * Which check keys one grant target names.
  *
- * `skills` is the whole ladder-bearing set (Jack of All Trades' one token rather than eighteen), and
+ * `skills` is the whole ladder-bearing set, `ability_checks` that and the six bare checks (2014 Jack
+ * of All Trades' "any ability check" in one token rather than twenty-four), and
  * `check.<ability>` is every check that ability makes — 2014 Remarkable Athlete's "any Strength,
  * Dexterity, or Constitution check". That is the BARE check plus every skill built on it, because in
  * the rules those are one sentence. Anything else names one key.
  */
 function grantTargets(target: string): string[] {
 	if (target === ALL_SKILLS) return Object.keys(SKILL_ABILITY);
+	if (target === ALL_ABILITY_CHECKS)
+		return [
+			...ABILITIES.map((ability) => `${CHECK_PREFIX}${ability}`),
+			...Object.keys(SKILL_ABILITY),
+		];
 	const ability = target.startsWith(CHECK_PREFIX) ? target.slice(CHECK_PREFIX.length) : undefined;
 	if (ability !== undefined && (ABILITIES as readonly string[]).includes(ability))
 		return [

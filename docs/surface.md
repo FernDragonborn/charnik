@@ -699,6 +699,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function toolCheck` — * A tool check: the ability check, plus your proficiency bonus because you are proficient.
 - `function resolveClassSaves` — Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves.
 - `function deriveAbilityBlocks`
+- `function deriveInitiative` — Initiative, a Dexterity check: the partial rung that reaches every Dexterity check reaches it.
 - `function deriveSkills` — Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the * effect-granted level…
 - `interface WornIids` — Which inventory rows are worn as armour and held as a shield — absent when none is.
 - `function deriveAc`
@@ -2060,6 +2061,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function resolveDamagePart` — One part of a hit against a set of defenses: what was dealt, what it takes.
 - `const hitPointMaximum` — The EFFECTIVE hit-point maximum: a manual max still has `hp_max` effects folded onto it (A14).
 - `function takeDamage` — * Take a hit of one type.
+- `function refusedWhileDead` — A dead character neither heals nor rests: those would fill the hit points while `death` stays set, * and the way back…
 - `function heal` — Heal.
 - `function setTempHp` — Set Temporary Hit Points to an amount — set, never added: they do not stack.
 - `function rollDeathSave` — * Roll a death save: a d20 against 10, with whatever `save.death` picks up (Bless, exhaustion).
@@ -2176,7 +2178,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PartialProficiency` — * The lesser proficiency rung, and who granted it — half the proficiency bonus, rounded the way the * granting featur…
 - `function skillCheck` — A skill (or ability) check bonus.
 - `function passiveScore` — Passive score = 10 + the check bonus (no roll).
-- `function initiative` — Initiative = DEX modifier (feats/effects add more later).
+- `function initiative` — Initiative is a Dexterity check in both SRDs: the DEX modifier, and a partial proficiency that * reaches every Dexter…
 - `function attacksPerAction` — * How many attacks one Attack action makes.
 - `const CRIT_THRESHOLD_MAX` — * The lowest d20 face that can be a critical hit.
 - `function critThreshold`
@@ -2273,6 +2275,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const UNCONSTRAINED` — * What a character is proficient with — either the declared set, or `UNCONSTRAINED`.
 - `type ProfGrants`
+- `const NO_PROFICIENCY` — A prof column that DECLARES no proficiency (a Wizard's armour).
 - `function gatherProfGrants` — * Union the prof grants across a character's classes.
 - `function withGrantedProfs` — * Fold in the categories or weapon ids a FEATURE granted (`grant_proficiency:armor.heavy`) on top of * what the class…
 - `function isWeaponProficient` — Is the character proficient with this weapon?
@@ -2297,7 +2300,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const PACT_SLOT_KEY` — The `spellSlotsSpent` key for the Warlock Pact Magic pool.
 - `type SlotSpend` — What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a * `spellSlotsSpent` key, "1".."9…
 - `function slotToSpend` — * Which spell slot a cast of `spellLevel` consumes.
+- `function castablePactLevel` — The level a Pact Magic slot casts `spellLevel` at, when a caster who ALSO has leveled slots may pay * with one now — …
 - `function pactPool` — The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined.
+- `function spendPactSlot` — Spend a Pact Magic slot for a cast of `spellLevel`: `{key:'pact'}` when the pool has a use left, * `{block}` when it'…
 - `function castableSlotLevels` — Every leveled slot level a spell of `spellLevel` can be cast from RIGHT NOW — each level ≥ the * spell's own with at …
 - `function shareContribution` — One caster class's contribution to the shared multiclass caster level.
 - `function shareFromCaster` — Default `caster_share` from the `caster` column when the data leaves it blank.
@@ -2583,4 +2588,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 60 components · 1584 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 60 components · 1589 exports across 218 modules · 108 duplicate suspects._

@@ -251,7 +251,7 @@ the file's own columns that the form never saw.
 
 Where the rule is in the shipped SRD, the quote is from `charnik-content-srd`.
 
-### [ ] R1 · Wizard, Sorcerer and Monk are trained in every armour — high · CONFIRMED · both editions
+### [x] R1 · Wizard, Sorcerer and Monk are trained in every armour — high · closed · both
 
 A Wizard 1 in plate had AC 18, and the "cannot cast in armour you are not trained in" block did not
 fire for the class it matters to most. A Wizard multiclass made the whole character "unconstrained".
@@ -260,11 +260,15 @@ Why: `armor_profs` is empty on the `wizard`, `sorcerer` and `monk` rows of both 
 `parseProfGrants` read an empty cell as `UNCONSTRAINED` (`rules/proficiency.ts`), and
 `gatherProfGrants` absorbed the union into it.
 
-### [ ] R2 · A Dwarf (2014) in heavy armour loses 10 feet of speed — high · CONFIRMED · 5e
+**Fix:** the six rows say `armor_profs` = `none`, which `parseProfGrants` reads as the empty set; blank stays the lenient hole. **Held by** `character/armor-untrained-content.test.ts` (a Wizard and a Sorcerer in plate, both editions) and `rules/proficiency.test.ts`.
+
+### [x] R2 · A Dwarf (2014) in heavy armour loses 10 feet of speed — high · closed · 5e
 
 SRD (`srd-2014/species_srd.csv`, dwarf): "Your speed is not reduced by wearing heavy armor."
 A Dwarf Cleric with STR 10 in chain mail had speed 15 instead of 25. The −10 was a hard-coded
 contribution (`character/derive-stats.ts`) no effect could cancel.
+
+**Fix:** the 2014 `dwarf` row carries the marker `ignores_armor_speed_penalty`, and `deriveSpeed` leaves the −10 out while a fact says so. **Held by** `character/dwarf-armor-speed-content.test.ts`.
 
 ### [x] R3 · Paladin 1 / Ranger 1 (2014) gets slots and a prepare limit — high · closed · 5e
 
@@ -278,11 +282,13 @@ not a caster yet — it neither casts nor joins the multiclass level; a caster l
 A level the table has no row for still counts as casting. **Held by** `spellcasting.test.ts` ▸ a 2014
 half-caster at level 1 has no Spellcasting yet, over the shipped SRD 5.1 pack.
 
-### [ ] R4 · Entering combat resets the round to 1, so timed effects grow younger — high · CONFIRMED · both
+### [x] R4 · Entering combat resets the round to 1, so timed effects grow younger — high · closed · both
 
 Bless cast in round 7 for 10 rounds showed 16 rounds left after leaving and re-entering combat.
 `toggleCombat` wrote `round: 1` (`play/turn.ts`), and `remainingRounds` counts from `startedRound`
 (`combat/effects-view.ts`).
+
+**Fix:** entering a fight marks `fightStartRound` and leaves the clock running; the turnbar counts the fight from it. **Held by** `play/round-clock.test.ts` and `routes/combat/combat.test.ts` ▸ a fight counts its rounds from 1.
 
 ### [ ] R5 · The second damage type of a blow that drops to 0 HP records a death-save failure — high · CONFIRMED in code, LIKELY by rule
 
@@ -303,10 +309,12 @@ SRD 5.1 (hunters_mark): "…you can maintain your concentration on the spell for
 **Fix:** `longRest` calls `endConcentration`. **Held by** `resources.test.ts` ▸ a long rest fills hit
 points, ends concentration…, whose 24-hour spell effect goes with it.
 
-### [ ] R7 · A rest does not advance the clock — medium · CONFIRMED
+### [x] R7 · A rest does not advance the clock — medium · closed
 
 `rests.ts` dropped effects with ≤ 1 h or ≤ 8 h left but did not add `restRounds` to `play.round`. A
 24-hour effect still had 14400 rounds after three long rests.
+
+**Fix:** a rest adds its hours to `play.round`. **Held by** `play/round-clock.test.ts` ▸ a long rest's eight hours.
 
 ### [x] R8 · An ASI or half-feat raises a score above 20 — medium · closed in Strict · both
 
@@ -321,18 +329,22 @@ builder's other caps are; Free lets them through (`feat-slots.svelte.ts` ▸ `pa
 a Belt of Giant Strength blocks an ASI it should not — a `shortcut:` in the code. A save that already
 holds 23 is not lowered.
 
-### [ ] R9 · A Warlock multiclass cannot spend a Pact Magic slot — medium · CONFIRMED by trace · 5e (5.5e LIKELY)
+### [x] R9 · A Warlock multiclass cannot spend a Pact Magic slot — medium · closed · both
 
 SRD 5.1: "you can use the spell slots you gain from the Pact Magic feature to cast spells you know or
 have prepared from classes with the Spellcasting class feature…". `pactSpend` fired only when no
 ordinary pool existed (`rules/spellcasting.ts`).
 
-### [ ] R10 · Jack of All Trades (2014) does not apply to plain ability checks — medium · CONFIRMED (initiative LIKELY) · 5e
+**Fix:** a mixed caster with no leveled slot left takes a pact slot, and the slot picker offers "Pact Magic slot" beside the leveled ones (`castablePactLevel`, `CastIntent.pact`). **Held by** `play/cast-pact-multiclass.test.ts`.
+
+### [x] R10 · Jack of All Trades (2014) does not apply to plain ability checks — medium · closed · 5e
 
 SRD: "…to any ability check you make that doesn't already include your proficiency bonus." A Bard 2
 had a STR check of +0 instead of +1; the content row carried only
 `grant_proficiency:partial:skills`. Initiative (`rules/core.ts`, `derive-assemble.ts`) got no half
 bonus from JoAT or Remarkable Athlete either.
+
+**Fix:** the 2014 row grants `partial:ability_checks` — every skill and the six bare checks — and initiative takes the partial rung on `check.dex`. The 2024 row stays `skills`, as its text reads. **Held by** `character/jack-of-all-trades-content.test.ts`.
 
 ### [x] R11 · Nested conditions are not expanded, and the shipped SRD needs them — medium · closed
 
@@ -354,11 +366,13 @@ first, then doubles: 3 → 6.
 **Fix:** RAW order. **Held by** `helpers.test.ts` ▸ halves before doubling a type it both resists
 and is vulnerable to.
 
-### [ ] R13 · Rests, healing and Hit Dice work on a dead character — low-medium · CONFIRMED
+### [x] R13 · Rests, healing and Hit Dice work on a dead character — low-medium · closed
 
 A dead character after a long rest had full HP with `death` still set; `takeBackLastSave` then
 refused, so a mistaken third failure could only be undone by revive. Where: `rests.ts`,
 `spendHitDie`, `heal`, `halfShortRest`.
+
+**Fix:** `rest`, `heal` and `spendHitDie` refuse while `death` is set, and say why (`refusedWhileDead`); the short rests refuse through `rest`. **Held by** `play/dead-character.test.ts`.
 
 ### R14 · Smaller — low
 

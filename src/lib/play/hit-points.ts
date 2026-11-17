@@ -207,6 +207,23 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 	);
 }
 
+/** A dead character neither heals nor rests: those would fill the hit points while `death` stays set,
+ *  and the way back from a mistaken death is `takeBackLastSave` or a revival, which a full bar refuses.
+ *  The refusal, or `null` for a character who is alive. */
+export function refusedWhileDead(character: Character): PlayOutcome | null {
+	if (!character.play.death) return null;
+	return {
+		...quietly(character),
+		refused: true,
+		notices: [
+			{
+				text: { key: 'combat.notice.deadCannotHeal' },
+				description: { key: 'combat.notice.deadCannotHealBody' },
+			},
+		],
+	};
+}
+
 /** Heal. The log records what came BACK rather than what was asked: healing past the maximum is
  *  lost, and the line says so by being smaller. */
 export function heal(
@@ -214,6 +231,8 @@ export function heal(
 	intent: { amount: number },
 	ctx: PlayContext,
 ): PlayOutcome {
+	const dead = refusedWhileDead(character);
+	if (dead) return dead;
 	const hp = character.play.hp;
 	const amount = Math.max(0, Math.round(intent.amount));
 	const current = Math.min(hitPointMaximum(character, ctx.derive(character)), hp.current + amount);

@@ -233,6 +233,9 @@ class FactsCollector {
 				// carry the feature's name so the combat layer can label the offered reroll from data
 				this.facts.damageReroll.push({ source: eff.source });
 				break;
+			case EFFECT_KIND.ignoresArmorSpeedPenalty:
+				this.facts.armorSpeedPenaltyIgnored.push({ source: eff.source });
+				break;
 			case EFFECT_KIND.regainOnInitiative:
 				// auto-regain-at-initiative: id (target) + the floor to top up to (amount); the combat layer
 				// applies it on entering combat + notifies, labelled from the feature's name

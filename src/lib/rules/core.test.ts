@@ -94,7 +94,7 @@ describe('system-agnostic formulas', () => {
 	});
 
 	it('initiative = DEX mod', () => {
-		expect(initiative({ dexScore: 18 }).value).toBe(4);
+		expect(initiative({ dexScore: 18, level: 1 }).value).toBe(4);
 	});
 
 	it('spell DC and attack (wizard INT 16, level 1)', () => {

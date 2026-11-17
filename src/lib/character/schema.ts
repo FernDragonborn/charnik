@@ -336,8 +336,12 @@ const playSchema = z.object({
 	 *  enforcement (rolls always go through); on → attacks/spells spend their slot and are blocked
 	 *  when the slot is exhausted. */
 	inCombat: z.boolean().default(false),
-	/** Combat round counter (drives effect expiry). */
+	/** The game's clock in six-second rounds — what every timed effect counts against. It only ever
+	 *  runs forward: a turn, a skip of time and a rest move it, and entering a fight does not. */
 	round: z.number().int().min(0).default(0),
+	/** The `round` the current fight began at, so the turnbar can say "Round 3" of THIS fight while the
+	 *  clock behind it keeps the effects' time. */
+	fightStartRound: z.number().int().min(0).default(0),
 	/** Action-economy for the current turn: pips SPENT of each slot (base max 1 until a feature
 	 *  grants extras), and feet of movement used. `Next turn` resets these + advances `round`. */
 	turn: z

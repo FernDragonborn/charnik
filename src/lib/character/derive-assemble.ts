@@ -17,6 +17,7 @@ import {
 	resolveClassSaves,
 	deriveAbilityBlocks,
 	deriveSkills,
+	deriveInitiative,
 	deriveTools,
 	deriveAc,
 	deriveSpeed,
@@ -29,7 +30,6 @@ import {
 	type StatInputs,
 } from './derive-stats';
 import {
-	initiative as initiativeOf,
 	attacksPerAction as attacksPerActionBase,
 	critThreshold as critThresholdBase,
 	carryingCapacity,
@@ -266,7 +266,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		skills,
 		tools,
 		ac,
-		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), facts),
+		initiative: deriveInitiative(statInputs, grantedSkills),
 		critThreshold: applyEffects('crit_threshold', critThresholdBase(), facts),
 		speed,
 		...deriveMovementModes(facts, withWalkingSpeed(baseCtx ?? NO_VARS, speed.value)),

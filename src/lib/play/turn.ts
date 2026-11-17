@@ -181,7 +181,9 @@ export function toggleRollUsed(character: Character, { id }: { id: string }): Pl
 	return quietly(withTurn(character, { usedRolls }));
 }
 
-/** Enter or leave combat. Entering starts a clean turn at round 1; leaving lifts the economy. */
+/** Enter or leave combat. Entering starts a clean turn and marks where the fight began on the clock,
+ *  which it does not reset — a Bless cast before the fight has the rounds it had; leaving lifts the
+ *  economy. */
 export function toggleCombat(character: Character, ctx: PlayContext): PlayOutcome {
 	const play = character.play;
 	const entered = !play.inCombat;
@@ -189,7 +191,7 @@ export function toggleCombat(character: Character, ctx: PlayContext): PlayOutcom
 		quietly({
 			...character,
 			play: entered
-				? { ...play, inCombat: true, turn: freshTurn(), round: 1 }
+				? { ...play, inCombat: true, turn: freshTurn(), fightStartRound: play.round }
 				: { ...play, inCombat: false },
 		}),
 		ctx,

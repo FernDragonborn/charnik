@@ -111,6 +111,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `blocks_concentration`       | `blocks_concentration`                                  | MARKER, no target: the carrying state forbids Concentration (RAW Rage). A fact the combat layer reads to drop or withhold it. |
 | `blocks_spellcasting` | `blocks_spellcasting` | MARKER, no target: the carrying state forbids every spell cast. Facts carry the source for the disabled control's explanation; spells remain readable. |
 | `damage_reroll`              | `damage_reroll`                                         | MARKER, no target: once per turn you may reroll a WEAPON's damage dice and keep either (2024 Savage Attacker). Offered as a post-roll button, never auto-applied. |
+| `ignores_armor_speed_penalty` | `ignores_armor_speed_penalty`                       | MARKER, no target: armour too heavy for the wearer's Strength does not cost them speed (2014 Dwarf). Facts carry the source; with the effects module off the penalty stands. |
 | `on_event`                   | `on_event:<event>:<action>`                             | When `<event>` happens to this character, run `<action>` — one of the bounded executor verbs (`actions.md` §2), so the trigger and the effect are two closed vocabularies crossed rather than a token per feature. The event set holds only what the app actually FIRES (`turn_start` today: the Next-turn button and entering combat, whose round 1 is the first turn); an unfired name would parse and then never happen. "Only while Bloodied" is the ordinary L2 guard: `is_bloodied ? on_event:turn_start:heal:5+con_mod`. |
 | `plugin`                     | `plugin:<namespace>:<handlerName>[:<args>]`             | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (plugins.md).                                                                                                   |
 
@@ -179,7 +180,8 @@ it, and a value naming the cast's `slot` is resolved again at that slot (`combat
 **`grant_proficiency` has its own target namespace**, because what you can be proficient WITH is not
 what a bonus can land on: a bare ability or `save.<ability>` (and the `saves` group — "proficiency in
 all saving throws" is one statement in the rules, so it is one token), a skill (`skill.<id>`, which
-canonicalizes to the bare id, plus the `skills` group for a rung on every skill at once),
+canonicalizes to the bare id, plus the `skills` group for a rung on every skill at once and the
+`ability_checks` group for every skill and the six bare checks — 2014 Jack of All Trades),
 `armor.<light|medium|heavy|shield>`, `weapon.<simple|martial>` or
 `weapon.<item_id>` for a feature that names specific weapons (Dwarven Combat Training), and
 `tool.<item_id>` for one that names a trade. Equipment and tool
@@ -210,7 +212,8 @@ row's own name — which is DATA, already in the player's language, so it carrie
 not a hardcoded "Jack of All Trades", which is the wrong number under the wrong name twice over.
 
 **`check.<ability>` is every check that ability makes**, its BARE check and its skills alike, which is
-how 2014 Remarkable Athlete's "any Strength, Dexterity, or Constitution check" reads. A bare ability in
+how 2014 Remarkable Athlete's "any Strength, Dexterity, or Constitution check" reads; initiative is a
+Dexterity check in both SRDs, so a partial rung on `check.dex` reaches it too. A bare ability in
 this kind's target slot already means the SAVE, so the checks needed a prefix of their own. What reads
 the grants is `character/granted-proficiency.ts`, one module because it is one question asked from both
 ends: derive folds the rungs, the builder shows what it may not un-pick.

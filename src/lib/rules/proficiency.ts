@@ -9,7 +9,8 @@
  * LENIENT by design (never wrong-downward): a class with NO declared prof column, or a character
  * with no classes at all, is treated as UNCONSTRAINED (proficient with everything) — old homebrew
  * that predates these columns keeps today's always-proficient behavior. Only a class that DOES
- * declare its grants can make a weapon/armor non-proficient.
+ * declare its grants can make a weapon/armor non-proficient — `none` included, which is how a
+ * Wizard says it has no armour at all.
  */
 
 /**
@@ -22,9 +23,15 @@
 export const UNCONSTRAINED = 'unconstrained';
 export type ProfGrants = Set<string> | typeof UNCONSTRAINED;
 
-/** Parse one class's comma-list prof column into a lowercased set. Blank/absent → UNCONSTRAINED. */
+/** A prof column that DECLARES no proficiency (a Wizard's armour). Blank is a hole and stays lenient;
+ *  this is the statement that there is none. */
+export const NO_PROFICIENCY = 'none';
+
+/** Parse one class's comma-list prof column into a lowercased set. Blank/absent → UNCONSTRAINED,
+ *  `none` → the empty set. */
 function parseProfGrants(raw: string | undefined): ProfGrants {
 	if (raw == null || raw.trim() === '') return UNCONSTRAINED;
+	if (raw.trim().toLowerCase() === NO_PROFICIENCY) return new Set();
 	const set = new Set(
 		raw
 			.split(',')

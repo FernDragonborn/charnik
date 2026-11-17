@@ -31,13 +31,19 @@ import {
 	type MenuKind,
 	type Attack,
 } from '$lib/combat/helpers';
-import { castableSlotLevels } from '$lib/rules/spellcasting';
+import { castablePactLevel, castableSlotLevels } from '$lib/rules/spellcasting';
 import { NO_VARS, withWalkingSpeed } from '$lib/effects/context';
 import { SpellCastRolls, type CastRollsHost, type UpcastFlatKind } from './spell-cast-rolls';
 
 /** How a cast was asked for. `weapon` is the one a magic-weapon buff lands on: a weapon id, or
  *  `null` once it is settled that there is none to touch. Absent means not asked yet. */
-type CastOptions = { ritual?: boolean; slot?: number; pool?: string; weapon?: string | null };
+type CastOptions = {
+	ritual?: boolean;
+	slot?: number;
+	pool?: string;
+	pact?: boolean;
+	weapon?: string | null;
+};
 
 /** What casting needs from the sheet around it. A narrow structural interface rather than the VM
  *  class, so this module does not import the thing that imports it. */
@@ -117,6 +123,17 @@ export class SpellCasting {
 					this.host.character?.play.spellSlotsSpent ?? {},
 				);
 
+	/** The level a Pact Magic slot would cast this at, for a Warlock multiclass that may pay with one
+	 *  beside its leveled slots; `null` when there is no such choice. */
+	castablePact = (r: SpellRow): number | null =>
+		this.blockedReason
+			? null
+			: castablePactLevel(
+					r.level,
+					this.host.sheet?.spellcasting.pools ?? [],
+					this.host.character?.play.spellSlotsSpent ?? {},
+				);
+
 	castablePools = (r: SpellRow): ResourceDef[] =>
 		r.level === 0 || this.blockedReason
 			? []
@@ -135,7 +152,9 @@ export class SpellCasting {
 	 *  `castableSlots` is empty for a single option rather than holding it, so a pool beside that one
 	 *  implied slot is already a choice; the menu spells the implied option out as its own row. */
 	hasCastChoice = (r: SpellRow): boolean =>
-		this.castableSlots(r).length > 1 || this.castablePools(r).length > 0;
+		this.castableSlots(r).length > 1 ||
+		this.castablePools(r).length > 0 ||
+		this.castablePact(r) !== null;
 
 	/** The cast waiting on the weapon-picker (drives the `enchantweapon` overlay menu). */
 	enchanting = $state<{ r: SpellRow; opts: CastOptions } | null>(null);
@@ -169,6 +188,13 @@ export class SpellCasting {
 		if (!r) return;
 		this.host.overlay = null;
 		this.cast(r, e, { slot });
+	};
+	/** Cast the picker's spell with a Pact Magic slot, then close the picker. */
+	castWithPact = (e: Event) => {
+		const r = this.upcastSpell;
+		if (!r) return;
+		this.host.overlay = null;
+		this.cast(r, e, { pact: true });
 	};
 	/** Cast the picker's spell paid for by a POOL rather than a slot, then close the picker. */
 	castFromPool = (pool: string, e: Event) => {

@@ -3,6 +3,7 @@ import {
 	gatherProfGrants,
 	isWeaponProficient,
 	isArmorProficient,
+	NO_PROFICIENCY,
 	UNCONSTRAINED,
 } from './proficiency';
 
@@ -16,6 +17,17 @@ describe('proficiency model (pure)', () => {
 	it('gatherProfGrants: any undeclared (blank) class → UNCONSTRAINED (lenient)', () => {
 		expect(gatherProfGrants(['simple', undefined])).toBe(UNCONSTRAINED);
 		expect(gatherProfGrants(['simple', ''])).toBe(UNCONSTRAINED);
+	});
+
+	it('gatherProfGrants: `none` declares no proficiency, and a union with it keeps the others', () => {
+		const wizard = gatherProfGrants([NO_PROFICIENCY]);
+		expect(wizard).not.toBe(UNCONSTRAINED);
+		expect(isArmorProficient(wizard, 'light')).toBe(false);
+		const multiclass = gatherProfGrants([NO_PROFICIENCY, 'light,medium']);
+		expect([
+			isArmorProficient(multiclass, 'medium'),
+			isArmorProficient(multiclass, 'heavy'),
+		]).toEqual([true, false]);
 	});
 
 	it('gatherProfGrants: no classes at all → UNCONSTRAINED (lenient, never wrong-downward)', () => {

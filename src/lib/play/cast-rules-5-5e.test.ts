@@ -1,7 +1,5 @@
-/*
- * Audit repro (2026-11-17) — docs/audit-nov-17-bugs.md ▸ R2, R3. Each case fails on the code as it
- * stands.
- */
+/** 5.5e casting against the shipped pack: multiclass slots of the half-casters, which round up, and
+ *  Magic Initiate's free cast for a character with no slots. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { classRow, newCharacter, type Character } from '$lib/character/schema';

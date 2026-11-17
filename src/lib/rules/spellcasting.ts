@@ -66,10 +66,10 @@ export function slotToSpend(
 		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined,
 	);
 	// No leveled pool: a pure-pact caster (warlock) spends from the Pact Magic pool, which forces every
-	// cast up to its own slot level; a true non-caster has no pool at all → nothing to spend. (A mixed
-	// warlock+leveled caster keeps the leveled path below and casts pact spells from either pool — that
-	// pool choice is a richer UI, out of scope; the shared leveled slots gate first.)
-	if (!leveled.length) return pactSpend(spellLevel, pools, spent);
+	// cast up to its own slot level; a true non-caster has no pool at all → nothing to spend. A mixed
+	// caster takes the leveled slots first and the pact slot once none is left — SRD 5.1, Multiclassing:
+	// pact slots cast spells "from classes with the Spellcasting class feature", and the other way round.
+	if (!leveled.length) return spendPactSlot(spellLevel, pools, spent);
 	const isOpen = (lvl: number) =>
 		leveled.some((p) => p.spellLevel === lvl && p.max - (spent[String(p.spellLevel)] ?? 0) > 0);
 	// UPCAST picker (§6): an explicit slot choice is HONOURED or blocked — never silently downshifted to
@@ -88,11 +88,27 @@ export function slotToSpend(
 	const open = leveled
 		.filter((p) => p.spellLevel >= spellLevel && p.max - (spent[String(p.spellLevel)] ?? 0) > 0)
 		.sort((a, b) => a.spellLevel - b.spellLevel)[0];
-	return open
-		? { key: String(open.spellLevel) }
+	if (open) return { key: String(open.spellLevel) };
+	const pact = spendPactSlot(spellLevel, pools, spent);
+	return pact && 'key' in pact
+		? pact
 		: {
 				block: `No slot left that can cast a ${ordinal(spellLevel)}-level spell — rest to get slots back.`,
 			};
+}
+
+/** The level a Pact Magic slot casts `spellLevel` at, when a caster who ALSO has leveled slots may pay
+ *  with one now — the one choice the slot picker adds for a Warlock multiclass. `null` otherwise: a
+ *  pure Warlock spends the pact slot without being asked. */
+export function castablePactLevel(
+	spellLevel: number,
+	pools: readonly CastPool[],
+	spent: Readonly<Record<string, number>>,
+): number | null {
+	if (spellLevel <= 0 || !pools.some((p) => !p.forcedUpcast && p.spellLevel !== undefined))
+		return null;
+	const pact = spendPactSlot(spellLevel, pools, spent);
+	return pact && 'key' in pact ? (pactPool(pools)?.spellLevel ?? null) : null;
 }
 
 /** The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined. */
@@ -107,7 +123,7 @@ export function pactPool(
 /** Spend a Pact Magic slot for a cast of `spellLevel`: `{key:'pact'}` when the pool has a use left,
  *  `{block}` when it's exhausted or the spell outranks the pact slot level, `null` when there's no
  *  pact pool (a true non-caster). Every pact cast is forced up to the pool's slot level. */
-function pactSpend(
+export function spendPactSlot(
 	spellLevel: number,
 	pools: readonly CastPool[],
 	spent: Readonly<Record<string, number>>,
