@@ -5,7 +5,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { provenance } from '$lib/actions/provenance';
-	import { why } from '$lib/combat/helpers';
+	import { whyHitPoints } from '$lib/combat/effects-view';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
@@ -13,6 +13,7 @@
 
 	let { c, s, pencil }: { c: Character; s: CharacterSheet; pencil: Snippet } = $props();
 	const hpBar = $derived(combat.hpBar);
+	const hpWhy = $derived(whyHitPoints(s.maxHp, combat.forms.current?.hpBefore, $_));
 	const { openMenu } = combat;
 </script>
 
@@ -30,7 +31,7 @@
 	>
 		<Icon name="plus" size={13} /><span class="hp-heal-words">{$_('combat.hp.healOrTemp')}</span>
 	</button>
-	<div class="hp-value" use:provenance={why(s.maxHp, $_)}>
+	<div class="hp-value" use:provenance={hpWhy}>
 		{c.play.hp.current}<small>&nbsp;/ {combat.hpMax}</small>{#if c.play.hp.temp > 0}<span
 				class="temp">+{c.play.hp.temp} {$_('combat.hp.temp')}</span
 			>{/if}

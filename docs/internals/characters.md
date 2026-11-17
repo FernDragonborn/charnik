@@ -280,7 +280,10 @@ Shape): the character's own current HP, waiting, while `hp.current` counts the f
 why damage, healing and the bar need no second pool. Damage the form cannot hold ends it and lands
 on the character, RAW's own example. A rest ends what it outlasts BEFORE it restores anything, so a
 long rest that outlasts the form fills the character's own hit points, and one the form outlasts
-fills the form's and sets `hpBefore` to the character's full maximum. The forms a character KNOWS are `build.forms`, by form id.
+fills the form's and sets `hpBefore` to the character's full maximum, and says it on every such rest
+— full or not, since the sheet shows the form's count. The HP number's popover says `hpBefore` first
+(`whyHitPoints`), where a player looks for their own hit points. The forms a character KNOWS are
+`build.forms`, by form id.
 
 **A runtime effect's `source` decides where its tokens are read from, by the row's TYPE.** An entry
 added from the state catalog (an `effect` row) is read LIVE, so a fix to the catalog reaches effects

@@ -21,7 +21,9 @@ vi.mock('$lib/toast/toast', () => ({
 import { loadPacks } from '../../test-support/real-content';
 import { newCharacter, type Character, classRow } from '$lib/character/schema';
 import { combat } from './combat-view-model.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
+import { startI18n, locale, waitLocale, _ } from '$lib/i18n';
+import { get } from 'svelte/store';
+import { whyHitPoints } from '$lib/combat/effects-view';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },
@@ -194,6 +196,13 @@ describe('Wild Shape at the table · whose hit points', () => {
 		expect(c.play.form?.hpBefore).toBe(own);
 		expect(c.play.hp.current).toBe(wolfHp);
 		expect(combat.hpMax).toBe(wolfHp);
+		// the HP number's own popover says the druid's, since the number is the wolf's
+		const maxHp = combat.sheet?.maxHp;
+		if (!maxHp) throw new Error('a druid in a form has a sheet');
+		const said = whyHitPoints(maxHp, combat.forms.current?.hpBefore, get(_));
+		const [first] = said.split('\n');
+		expect(first).toBe(get(_)('combat.controls.formHintOwnHp', { values: { hp: own } }));
+		expect(first).toContain(String(own));
 
 		combat.hpAmount = wolfHp - 1;
 		combat.damage();

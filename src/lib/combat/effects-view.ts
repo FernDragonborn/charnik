@@ -63,6 +63,21 @@ export function why(c: Computed, translate?: Translate): string {
 	);
 }
 
+/** `why` for the hit-point number. Under a 2014 Wild Shape the number shown is the form's, so the
+ *  character's own hit points (`ownUnderForm`) are said first — where the player looks for them. */
+export function whyHitPoints(
+	maxHp: Computed,
+	ownUnderForm: number | undefined,
+	translate?: Translate,
+): string {
+	if (ownUnderForm === undefined) return why(maxHp, translate);
+	const own = translate
+		? translate('combat.controls.formHintOwnHp', { values: { hp: ownUnderForm } })
+		: `Your own hit points: ${ownUnderForm}`;
+	// the popover renders `pre-line`, so the sentence and the breakdown read as two lines
+	return `${own}\n${why(maxHp, translate)}`;
+}
+
 /** What a passive score IS, said before the arithmetic of one. The sheet shows a passive beside
  *  every skill and never said what the number is FOR, which is the one thing a player new to it asks.
  *  Carries its own English for the translator-less callers, the same contract `why` keeps. */
