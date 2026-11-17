@@ -13,7 +13,7 @@ import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider'
 import type { FilledMeta } from './meta';
 import type { ContentType } from './schemas';
 import { isPackWriteInFlight } from './remote/install';
-import { restampFiles, type RestampFailure } from './restamp';
+import { releaseAdoptedText, restampFiles, RESTAMP_FOR, type RestampFailure } from './restamp';
 import { content, reloadContent } from './store.svelte';
 
 export const review = $state<{ metaDismissed: boolean; driftDismissed: boolean }>({
@@ -43,7 +43,7 @@ const today = (): string => new Date().toISOString().slice(0, 10);
 export async function adoptDriftedFiles(files: readonly string[]): Promise<RestampFailure[]> {
 	const stamp = today();
 	const sets: FilledMeta = Object.fromEntries(files.map((f) => [f, { updated_at: stamp }]));
-	const failures = await restampFiles(getUserStorage(), files, sets);
+	const failures = await restampFiles(getUserStorage(), files, sets, RESTAMP_FOR.user);
 	await reloadContent();
 	return failures;
 }
@@ -59,7 +59,7 @@ export async function fillMissingMeta(fills: FilledMeta): Promise<RestampFailure
 	const filled = Object.keys(fills).filter((file) =>
 		Object.values(fills[file] ?? {}).some((v) => v !== undefined && v !== ''),
 	);
-	const failures = await restampFiles(getUserStorage(), filled, fills);
+	const failures = await restampFiles(getUserStorage(), filled, fills, RESTAMP_FOR.user);
 	await reloadContent();
 	return failures;
 }
@@ -72,9 +72,28 @@ export async function fillMissingMeta(fills: FilledMeta): Promise<RestampFailure
  * "open the file and add a line", which is the thing Charnik promises you never have to do.
  */
 export async function assignFileType(file: string, type: ContentType): Promise<RestampFailure[]> {
-	const failures = await restampFiles(getUserStorage(), [file], { [file]: { type } });
+	const failures = await restampFiles(
+		getUserStorage(),
+		[file],
+		{ [file]: { type } },
+		RESTAMP_FOR.user,
+	);
 	await reloadContent();
 	return failures;
+}
+
+/** Give an adopted file back to its pack: the next seed or update may replace it, carrying its
+ *  translations over as for any pack file. The way out of "keep my changes". */
+export async function releaseAdoptedFile(file: string): Promise<RestampFailure[]> {
+	const storage = getUserStorage();
+	try {
+		await storage.write(file, await releaseAdoptedText(await storage.read(file)));
+	} catch (e) {
+		return [{ file, error: e instanceof Error ? e.message : String(e) }];
+	} finally {
+		await reloadContent();
+	}
+	return [];
 }
 
 /** Re-entrancy guard: adopting WRITES, the watcher sees those writes and reloads, and that reload

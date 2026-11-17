@@ -19,7 +19,7 @@
 	import { levelLadderIssues } from '$lib/content/level-gate';
 	import { TYPE_ASSIGNABLE_KEYS } from '$lib/content/issue-text';
 	import { CONTENT_TYPES, type ContentType } from '$lib/content/schemas';
-	import { assignFileType } from '$lib/content/review.svelte';
+	import { assignFileType, releaseAdoptedFile } from '$lib/content/review.svelte';
 	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
 	import { app } from '$lib/stores/app.svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
@@ -31,6 +31,7 @@
 	const warnings = $derived(issues.filter((i) => i.level === 'warn'));
 	const metaIssues = $derived(graph?.metaIssues ?? []);
 	const driftItems = $derived(graph?.driftItems ?? []);
+	const adoptedFiles = $derived(graph?.adoptedFiles ?? []);
 	// authoring-slip warnings in effect tokens (mixed-type if(), unusual die) — spec-promised soft
 	// warns, computed once per graph load (parses are memoized)
 	const tokenLints = $derived.by(() => {
@@ -97,6 +98,18 @@
 	}
 	// The setting lives HERE, next to the drift list it governs — and it exists at all so the drift
 	// dialog's "don't ask again" can be undone. Desktop-only: the web build cannot write content back.
+	let releasing = $state<string | null>(null);
+	async function releaseAdopted(file: string) {
+		if (releasing) return;
+		releasing = file;
+		try {
+			const [failure] = await releaseAdoptedFile(file);
+			if (failure) toastFailure($_('app.actionFailed'), failure.error);
+		} finally {
+			releasing = null;
+		}
+	}
+
 	const canEditContent = detectPlatform() === Platform.Desktop;
 </script>
 
@@ -212,6 +225,26 @@
 							},
 						})}
 					</div>
+				</div>
+			{/each}
+		{/if}
+
+		{#if adoptedFiles.length}
+			<div class="group-label eyebrow">{$_('settings.health.groupAdopted')}</div>
+			<p class="sec-note group-note">{$_('settings.health.groupAdoptedBlurb')}</p>
+			{#each adoptedFiles as a (a.file)}
+				<div class="row">
+					<div class="row-file">{a.file}</div>
+					<div class="row-detail">
+						{$_('settings.health.adoptedSince', { values: { date: a.adoptedAt } })}
+					</div>
+					{#if canEditContent}
+						<button
+							class="retry-btn"
+							disabled={releasing === a.file}
+							onclick={() => releaseAdopted(a.file)}>{$_('settings.health.releaseAdopted')}</button
+						>
+					{/if}
 				</div>
 			{/each}
 		{/if}

@@ -459,6 +459,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function adoptDriftedFiles` — Re-stamp the chosen drifted files and rebuild the graph.
 - `function fillMissingMeta` — Write the metadata the user supplied into each file's header.
 - `function assignFileType` — * Tell a file what content type it holds: write `#content-type:` into its header and reload.
+- `function releaseAdoptedFile` — Give an adopted file back to its pack: the next seed or update may replace it, carrying its * translations over as fo…
 - `function autoAdoptDrift` — * Content-editing mode: the author is editing CSVs on disk right now and does not want a dialog on * every reload, so…
 
 ### `src/lib/content/sources.svelte.ts`
@@ -1363,7 +1364,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function stampDirectives` — Inverse of {@link parseContentDirectives}: re-assemble a full CSV file from a directive map + a * body.
 - `interface MetaIssue`
 - `function checkFileMeta` — Classify a file's directives.
-- `interface DriftItem` — A file whose body no longer matches its recorded `#content-hash:` — the DATA was edited outside the * app after the h…
+- `interface AdoptedFile` — A file the user adopted as their own, listed so the adoption can be taken back.
+- `interface DriftItem`
 - `const HASH_STATE` — * The three states a file's `#content-hash` can be in.
 - `type HashState`
 
@@ -1516,6 +1518,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function matchStyle` — Restore the file's original BOM/EOL style — `stampWithHash` always emits BOM + CRLF.
 - `function restampText` — * The pure half: a content file's text in, the re-stamped text out.
 - `interface RestampFailure` — One file that could not be re-stamped, with the reason — surfaced, never swallowed.
+- `const RESTAMP_FOR` — Who is asking for the re-stamp — which decides whether a file the user changed stays theirs.
+- `type RestampFor`
+- `function releaseAdoptedText` — Take the user's claim off a file: updates may replace it again.
 - `function restampFiles` — * The IO half: re-stamp each file through the `Storage` seam (atomic temp→rename in the real impls).
 
 ### `src/lib/content/schema-cells.ts`
@@ -2593,4 +2598,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 61 components · 1593 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 61 components · 1598 exports across 218 modules · 108 duplicate suspects._

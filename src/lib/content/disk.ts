@@ -9,7 +9,7 @@
  * module could not be lifted out or tested on its own.
  */
 import type { Storage } from '$lib/storage/types';
-import { HASH_STATE } from './meta';
+import { HASH_STATE, parseContentDirectives } from './meta';
 import { fileHashState } from './hash';
 import { isReservedPackName } from './packs.svelte';
 
@@ -80,5 +80,8 @@ export async function isProtectedFromOverwrite(store: Storage, path: string): Pr
  *  another reason (the diff hashes it) and must not read it a second time to ask this. */
 export async function isProtectedText(path: string, text: string): Promise<boolean> {
 	if (path.includes('/plugins/')) return false;
+	// Adoption is its own fact: a re-stamp makes an adopted edit hash clean again, and that must not
+	// make it replaceable (audit-oct-27 D1).
+	if (parseContentDirectives(text).directives.has('adopted')) return true;
 	return (await fileHashState(text)) !== HASH_STATE.match;
 }

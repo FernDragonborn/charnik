@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { fileHashState } from './hash';
 import { HASH_STATE, parseContentDirectives } from './meta';
-import { restampFiles, restampText } from './restamp';
+import { restampFiles, restampText, RESTAMP_FOR } from './restamp';
+import { stampWithHash } from './hash';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent } from './loader';
 
@@ -127,5 +128,34 @@ describe('restampFiles', () => {
 		expect(failures.map((f) => f.file)).toEqual(['content/a/gone.csv']);
 		expect(failures[0]?.error).toBeTruthy();
 		expect(await fileHashState(await s.read('content/a/ok.csv'))).toBe(HASH_STATE.match);
+	});
+});
+
+describe('restampFiles for the user (audit-oct-27 D1)', () => {
+	const adoptedOf = async (s: MemoryStorage, f: string) =>
+		parseContentDirectives(await s.read(f)).directives.get('adopted');
+
+	it("marks a drifted pack file as the user's, and leaves a pristine one replaceable", async () => {
+		const s = new MemoryStorage();
+		const clean = await stampWithHash(new Map([['source', 'Pack']]), 'id\nfireball');
+		await s.write('content/p/clean.csv', clean);
+		await s.write('content/p/edited.csv', clean.replace('fireball', 'house'));
+		await restampFiles(s, ['content/p/clean.csv', 'content/p/edited.csv'], {}, RESTAMP_FOR.user);
+		expect(await adoptedOf(s, 'content/p/clean.csv')).toBeUndefined();
+		expect(await adoptedOf(s, 'content/p/edited.csv')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
+
+	it("claims nothing from the maintainer's terminal, nor in homebrew", async () => {
+		const s = new MemoryStorage();
+		const edited = (await stampWithHash(new Map([['source', 'P']]), 'id\nzzz')).replace(
+			'zzz',
+			'yyy',
+		);
+		await s.write('content/p/x.csv', edited);
+		await s.write('content/homebrew/x.csv', edited);
+		await restampFiles(s, ['content/p/x.csv']);
+		await restampFiles(s, ['content/homebrew/x.csv'], {}, RESTAMP_FOR.user);
+		expect(await adoptedOf(s, 'content/p/x.csv')).toBeUndefined();
+		expect(await adoptedOf(s, 'content/homebrew/x.csv')).toBeUndefined();
 	});
 });

@@ -7,6 +7,7 @@ import { duringPackWrite } from './remote/install';
 import { type MetaKey } from './meta';
 import { stampWithHash } from './hash';
 import { saveTranslation } from './translate';
+import { releaseAdoptedText, restampFiles, RESTAMP_FOR } from './restamp';
 
 /** A CSV with a correct `#content-hash` header for its body — an "untouched, app-seeded" file. */
 async function stamped(body: string): Promise<string> {
@@ -189,6 +190,46 @@ describe('seedShippedContent (versioned re-seed on update)', () => {
 		expect(preserved).toEqual([P]);
 		expect(await to.read(P)).toContain('MY_HOUSE_RULE'); // user's edit survives
 		expect(await to.read(P)).not.toContain('fireball_v2');
+	});
+
+	/* audit-oct-27 D1: "Yes, record my changes" re-stamps the file, and a clean hash alone would make
+	 * the house rule replaceable again. */
+	it('UPDATE keeps a hand-edit the user adopted in the app, through a later translation too', async () => {
+		const HEAD = 'id,name_en,name_uk';
+		const from = new MemoryStorage();
+		await from.write(P, await stamped(`${HEAD}\nfireball,Fireball v2,`));
+		const to = new MemoryStorage();
+		const drifted = (await stamped(`${HEAD}\nfireball,Fireball,`)).replace('Fireball,', 'House,');
+		await to.write(P, drifted);
+		expect(await restampFiles(to, [P], {}, RESTAMP_FOR.user)).toEqual([]);
+		await saveTranslation(
+			to,
+			{ root: ROOTS[0] ?? '', file: 'spells_srd.csv', id: 'fireball' },
+			'uk',
+			{
+				name: 'Дім',
+			},
+		);
+
+		const { preserved } = await seedShippedContent(from, to, ROOTS, 2);
+
+		expect(preserved).toEqual([P]);
+		expect(await to.read(P)).toContain('House');
+		expect(await to.read(P)).not.toContain('Fireball v2');
+	});
+
+	it('UPDATE replaces an adopted file once the user hands it back', async () => {
+		const from = new MemoryStorage();
+		await from.write(P, await stamped('id\nfireball_v2'));
+		const to = new MemoryStorage();
+		await to.write(P, (await stamped('id\nfireball_v1')).replace('fireball_v1', 'MINE'));
+		await restampFiles(to, [P], {}, RESTAMP_FOR.user);
+		await to.write(P, await releaseAdoptedText(await to.read(P)));
+
+		const { preserved } = await seedShippedContent(from, to, ROOTS, 2);
+
+		expect(preserved).toEqual([]);
+		expect(await to.read(P)).toContain('fireball_v2');
 	});
 
 	it('already at the current version: does not rewrite anything', async () => {

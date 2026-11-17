@@ -376,6 +376,7 @@ and `#content-updated_at`. `stampWithHash` (`src/lib/content/hash.ts`) is the on
 The hash is not a health-panel cosmetic. It is also the **overwrite guard**
 (`isProtectedFromOverwrite`): a file whose body no longer matches its stamp, or that carries no stamp
 at all, is treated as the user's own, so desktop seeding and every pack update skip it **forever**.
+So is a file carrying **`#content-adopted: <date>`**, whatever its hash says.
 A file that PASSES the guard is not thereby replaced blindly — the cells somebody translated are
 carried across (▸ A translation survives the file being replaced).
 
@@ -387,7 +388,16 @@ and one stamped from the UI come out byte-identical. It rewrites the hash and `u
 **The app re-stamps a file it did not create, and only because the user asked.** The neighbouring
 rule — the app writes only files it owns — exists so a hand-edit is never silently clobbered; here
 the user has confirmed, and only the stamp lines move. Without it a drifted file could not be fixed
-from inside the app at all, in a project built for people who have no terminal. **"Don't ask again"
+from inside the app at all, in a project built for people who have no terminal.
+
+**Adoption is its own fact, not a clean hash.** A re-stamp makes the hash match again, which alone
+would make the user's edit replaceable by the next update. So every in-app re-stamp (the drift
+dialog, the metadata prompt, assigning a type — `restampFiles(…, RESTAMP_FOR.user)`) writes
+`#content-adopted` on a file that drifted or carried no stamp, outside homebrew. `pnpm restamp` does
+not: the maintainer's terminal stamps the pack's own file. Saving a translation keeps the line. The
+way back is Settings ▸ Content health ▸ "Your versions of pack files" ▸ Take updates again
+(`releaseAdoptedFile`), which removes the line; the next update then replaces the file, carrying its
+translations over as for any pack file. **"Don't ask again"
 is content-editing mode** (`app.contentEditingMode`): it adopts a hand-edit instead of asking and
 mutes both prompts, and it is reachable again in Settings ▸ Content health, because an answer must
 not be a door that locks behind you. Auto-adoption skips a pack mid-swap — an apply re-checks disk

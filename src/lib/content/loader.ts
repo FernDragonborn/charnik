@@ -31,6 +31,7 @@ import {
 	HASH_STATE,
 	type MetaIssue,
 	type DriftItem,
+	type AdoptedFile,
 } from './meta';
 import { fileHashState } from './hash';
 import { declaredSchema, migrateRows } from './migrations';
@@ -138,6 +139,8 @@ export interface ContentGraph {
 	metaIssues: MetaIssue[];
 	/** Files whose body no longer matches their recorded `#content-hash` → drive the HashDriftModal. */
 	driftItems: DriftItem[];
+	/** Files the user kept as their own (`#content-adopted`): updates skip them until given back. */
+	adoptedFiles: AdoptedFile[];
 
 	/** Rows of one type, precisely typed: `list('spell')` → `Spell` rows; a runtime `ContentType`
 	 *  yields the full `LoadedRow` union (the return distributes over `T`). */
@@ -202,6 +205,8 @@ interface LoadAcc {
 	issues: ContentIssue[];
 	metaIssues: MetaIssue[];
 	driftItems: DriftItem[];
+	/** Files the user kept as their own (`#content-adopted`): updates skip them until given back. */
+	adoptedFiles: AdoptedFile[];
 	localeSet: Set<string>;
 	/** longest filebase first, so a specific type wins over a type whose filebase is its prefix
 	 *  (e.g. `species_options_*` must match `species_option`, not `species`). */
@@ -393,6 +398,8 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			declaredDate: directives.get('updated_at'),
 			changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined,
 		});
+	const adoptedAt = directives.get('adopted');
+	if (adoptedAt !== undefined) acc.adoptedFiles.push({ file: fileLabel, adoptedAt });
 
 	const header: FileHeader = {
 		type,
@@ -510,6 +517,7 @@ export async function loadContent(
 		issues: [],
 		metaIssues: [],
 		driftItems: [],
+		adoptedFiles: [],
 		localeSet: new Set<string>(['en']),
 		typeByFilebase: Object.entries(CONTENT_TYPES)
 			.map(([t, d]) => [d.filebase, t as ContentType] as const)
@@ -535,7 +543,7 @@ export async function loadContent(
 	for (const { file, raw } of withRaw) if (raw != null) await processFile(file, acc, raw);
 
 	// same references as `acc.*` — phases below read/push through these bindings unchanged
-	const { rows, issues, metaIssues, driftItems, localeSet } = acc;
+	const { rows, issues, metaIssues, driftItems, adoptedFiles, localeSet } = acc;
 
 	const { byType, byEffectiveId, articles, uniqueRows } = buildIndices(rows, issues);
 
@@ -555,6 +563,7 @@ export async function loadContent(
 		issues,
 		metaIssues,
 		driftItems,
+		adoptedFiles,
 		list<T extends ContentType>(type: T, opts?: ListOptions): LoadedRowByType<T>[] {
 			// byType is keyed by `type`, so every row under it is a LoadedRowByType<T>; the Map value
 			// widens to the union, so narrow it back here — the single seam that keeps `list` precise.

@@ -15,8 +15,15 @@
  */
 import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 import type { Storage } from '$lib/storage/types';
-import { stampWithHash } from './hash';
-import { META_KEYS, parseContentDirectives, type FilledMeta, type MetaKey } from './meta';
+import { fileHashState, stampWithHash } from './hash';
+import { HOMEBREW_ROOT } from './homebrew';
+import {
+	HASH_STATE,
+	META_KEYS,
+	parseContentDirectives,
+	type FilledMeta,
+	type MetaKey,
+} from './meta';
 
 /** Machine keys filled only when ABSENT. `schema` is deliberately not bumped on an existing value:
  *  claiming a file sits at the current schema without migrating it would be a lie the loader
@@ -64,6 +71,38 @@ export interface RestampFailure {
 	error: string;
 }
 
+/** Who is asking for the re-stamp — which decides whether a file the user changed stays theirs. */
+export const RESTAMP_FOR = {
+	/** The maintainer's terminal (`pnpm restamp`): the file is the pack's own and stays replaceable. */
+	pack: 'pack',
+	/** The user, from inside the app: a file that drifted or was never stamped is theirs, and the
+	 *  stamp records that before the hash goes clean (audit-oct-27 D1). */
+	user: 'user',
+} as const;
+export type RestampFor = (typeof RESTAMP_FOR)[keyof typeof RESTAMP_FOR];
+
+/** The text with `#content-adopted` set when the user is restamping a file the pack would not
+ *  recognise as its own; a pristine file is left replaceable. */
+async function adoptedIfUsers(
+	file: string,
+	raw: string,
+	set: Partial<Record<MetaKey, string>> | undefined,
+	today: string,
+): Promise<Partial<Record<MetaKey, string>>> {
+	const own = (await fileHashState(raw)) !== HASH_STATE.match;
+	// homebrew is never a pack's to replace, so there is nothing to claim it from
+	const already = parseContentDirectives(raw).directives.has('adopted');
+	const homebrew = file.startsWith(`${HOMEBREW_ROOT}/`);
+	return own && !already && !homebrew ? { ...set, adopted: today } : { ...set };
+}
+
+/** Take the user's claim off a file: updates may replace it again. */
+export async function releaseAdoptedText(raw: string): Promise<string> {
+	const { directives, body } = parseContentDirectives(raw);
+	directives.delete('adopted');
+	return matchStyle(await stampWithHash(directives, body), raw);
+}
+
 /**
  * The IO half: re-stamp each file through the `Storage` seam (atomic temp→rename in the real impls).
  * A file that throws does NOT stop the rest — one unreadable file must not leave the others frozen —
@@ -73,11 +112,18 @@ export async function restampFiles(
 	storage: Storage,
 	files: readonly string[],
 	sets: FilledMeta = {},
+	restampFor: RestampFor = RESTAMP_FOR.pack,
 ): Promise<RestampFailure[]> {
 	const failures: RestampFailure[] = [];
+	const today = new Date().toISOString().slice(0, 10);
 	for (const file of files) {
 		try {
-			await storage.write(file, await restampText(await storage.read(file), sets[file]));
+			const raw = await storage.read(file);
+			const set =
+				restampFor === RESTAMP_FOR.user
+					? await adoptedIfUsers(file, raw, sets[file], today)
+					: sets[file];
+			await storage.write(file, await restampText(raw, set, today));
 		} catch (e) {
 			failures.push({ file, error: e instanceof Error ? e.message : String(e) });
 		}

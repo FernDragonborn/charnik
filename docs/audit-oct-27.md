@@ -58,7 +58,7 @@ way. The file is deleted, with its line in `README.md`, once every box is ticked
 
 ## D · Player data: loss and corruption
 
-### [ ] D1 · Edits to an SRD file are silently overwritten by the next update — high · CONFIRMED
+### [x] D1 · Edits to an SRD file are silently overwritten by the next update — high · closed
 
 A player opens an SRD CSV in Excel and writes a house rule (`8d6` → `10d6`). On launch the app says
 "This is allowed, nothing is lost… Yes, keep my changes", and the player agrees. The next app seed or
@@ -73,8 +73,11 @@ Why: "the user's file" and "the file drifted from its stamp" were one fact. Rest
 (`disk.ts`), so the seed (`provider.ts`) and the pack diff (`remote/diff.ts`) both treated it as
 replaceable. Probe: edit → `restampText` → seed v2 gave `preserved: []`, edit gone.
 
-Fix direction: adoption is its own fact in the stamp (`#content-adopted`), and `isProtectedText`
-honours it. Saving a translation does not clear it.
+**Fix:** adoption is its own fact in the stamp (`#content-adopted`), written by every in-app re-stamp
+of a file that drifted or had no stamp, and `isProtectedText` honours it. Saving a translation keeps
+it. Settings ▸ Content health lists adopted files with a way to hand each back to updates. **Held
+by** `provider.test.ts` ▸ UPDATE keeps a hand-edit the user adopted in the app, and ▸ replaces an
+adopted file once the user hands it back; `restamp.test.ts` ▸ restampFiles for the user.
 
 ### [ ] D2 · First run: the chosen folder is ignored for the whole first session — high · fixed, desktop check owed
 

@@ -28,6 +28,9 @@ export const META_KEYS = [
 	'updated_at',
 	'hash',
 	'upstream',
+	/** The date the user said "keep my changes" to this file. A file carrying it is theirs: no seed
+	 *  and no pack update replaces it, whatever its hash says (`disk.ts` ▸ `isProtectedText`). */
+	'adopted',
 ] as const;
 
 export type MetaKey = (typeof META_KEYS)[number];
@@ -124,6 +127,12 @@ export function checkFileMeta(file: string, directives: Map<MetaKey, string>): M
 
 /** A file whose body no longer matches its recorded `#content-hash:` — the DATA was edited outside the
  *  app after the header was last stamped. Drives the separate "data changed, bump the date?" pop-up. */
+/** A file the user adopted as their own, listed so the adoption can be taken back. */
+export interface AdoptedFile {
+	file: string;
+	adoptedAt: string;
+}
+
 export interface DriftItem {
 	file: string;
 	/** what the header claims as the revision date (`#content-updated-at`), or undefined if absent. */
