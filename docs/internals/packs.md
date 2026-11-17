@@ -66,8 +66,9 @@ cap per download, an aggregate pre-download budget, and a request timeout.
 
 ## Applying is all-or-nothing
 
-`applyPackUpdate` stages into `<pack>.new`, then swaps: the live folder becomes `<pack>.prev`, the
-staged folder becomes live. **Windows refuses to rename a directory onto an existing one**, and the
+`applyPackUpdate` stages into `<pack>.new`, then swaps: the undo copy it already had waits as
+`<pack>.old`, the live folder becomes `<pack>.prev`, the staged folder becomes live, and `.old` goes
+only then — a swap that fails gives the old undo copy back. **Windows refuses to rename a directory onto an existing one**, and the
 whole design leans on that — which is why this path is verified with a real desktop probe and not with
 a fake (`tooling.md`).
 
@@ -84,7 +85,8 @@ a fake (`tooling.md`).
 - **The disk is settled before a throw escapes**, or the registry entry dies while the folders are
   half-swapped.
 - **A failed registry write reaches the user.** It used to be the one report nobody saw.
-- **`recoverInterruptedApply`** finishes or reverses an apply that died mid-swap, on startup.
+- **`recoverInterruptedApply`** finishes or reverses an apply that died mid-swap, on startup, and
+  only for a pack the registry names or the app ships: a `notes.prev` folder the user made is theirs.
 - **A lone `<pack>.prev` is unreachable** from either writer, so startup must not resurrect it. It
   once did, which meant an uninstall quietly undid itself at the next launch.
 - **Folder names are compared case-insensitively.** NTFS and APFS fold case, so `SRD-2024` installs

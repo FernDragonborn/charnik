@@ -263,15 +263,17 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 	const moved = await guardedDisk(false, () =>
 		duringPackWrite(async () => {
 			await storage.rename(`content/${from}`, `content/${target}`);
+			// the bookkeeping follows the folder AT ONCE: a step below that throws must not leave a
+			// renamed folder under an entry naming the old one, which `forgetUninstalledPacks` drops
+			renamePackEntry(from, target);
+			// …and the browse-config, which disables content FILES by path: leaving those behind would
+			// turn every file the user had switched off back on, as a side effect of a rename
+			renameFileRoot(`content/${from}`, `content/${target}`);
 			// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
 			// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
 			if (await storage.exists(`content/${from}.prev`))
 				await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
 			await renameTranslationBackups(storage, from, target);
-			renamePackEntry(from, target);
-			// …and the browse-config, which disables content FILES by path: leaving those behind would
-			// turn every file the user had switched off back on, as a side effect of a rename
-			renameFileRoot(`content/${from}`, `content/${target}`);
 			return true;
 		}),
 	);

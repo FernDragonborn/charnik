@@ -153,8 +153,9 @@ export const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-cont
  * case-sensitive check would be a bypass rather than a check.
  */
 const RESERVED_PACK_NAMES = new Set([HOMEBREW_ROOT.slice(HOMEBREW_ROOT.lastIndexOf('/') + 1)]);
-/** Staging suffixes used by an apply (`<pack>.new` → swap → `<pack>.prev`). */
-const STAGING_SUFFIX = /\.(new|prev)$/i;
+/** Staging suffixes used by an apply (`<pack>.new` → swap → `<pack>.prev`, the undo copy it
+ *  replaces waiting as `<pack>.old`). */
+const STAGING_SUFFIX = /\.(new|prev|old)$/i;
 
 export function isReservedPackName(pack: string): boolean {
 	const name = pack.toLowerCase();

@@ -75,8 +75,8 @@ async function buildGraph(): Promise<ContentGraph> {
 		const user = getUserStorage();
 		// an apply that was killed mid-swap left staging folders behind; settle them before anything
 		// looks at `content/`, or a half-swapped pack is what gets loaded
-		await recoverInterruptedApplies(user);
 		const shipped = await discoverContentRoots(bundled);
+		await recoverInterruptedApplies(user, shipped.map(packNameOf));
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
 		const installed = await discoverContentRoots(user);
 		// Mid-write (apply / rename / rollback / uninstall) a pack folder is briefly absent, and
@@ -117,7 +117,10 @@ function adoptShippedPacks(shipped: string[]): void {
  * find the base names, and let `recoverInterruptedApply` decide per pack which state it is in.
  * `.prev` beside a live folder is not an interruption; it is the kept undo copy, and stays.
  */
-async function recoverInterruptedApplies(storage: Storage): Promise<void> {
+export async function recoverInterruptedApplies(
+	storage: Storage,
+	shipped: string[],
+): Promise<void> {
 	// An apply in flight owns those folders; they are evidence of a DEAD run only between runs. This
 	// is reached on every content rebuild, including the one the watcher fires from an apply's own
 	// writes — so without this guard a long apply sweeps its own staging tree (`isPackWriteInFlight`).
@@ -125,10 +128,12 @@ async function recoverInterruptedApplies(storage: Storage): Promise<void> {
 	const entries = await storage.list(CONTENT_DIR).catch(() => []);
 	const interrupted = new Set(
 		entries
-			.filter((e) => e.isDir && /\.(new|prev)$/i.test(e.name))
-			.map((e) => e.name.replace(/\.(new|prev)$/i, '')),
+			.filter((e) => e.isDir && /\.(new|prev|old)$/i.test(e.name))
+			.map((e) => e.name.replace(/\.(new|prev|old)$/i, '')),
 	);
-	for (const pack of interrupted) await recoverInterruptedApply(storage, pack);
+	// only a pack this app installed or ships: a `notes.prev` folder the user made is theirs
+	const ours = (pack: string) => packConfig.packs[pack] !== undefined || shipped.includes(pack);
+	for (const pack of interrupted) if (ours(pack)) await recoverInterruptedApply(storage, pack);
 }
 
 /**

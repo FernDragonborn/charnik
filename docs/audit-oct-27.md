@@ -248,14 +248,14 @@ the file's own columns that the form never saw.
 - [ ] **The folder pointer and `plugins.json` were written non-atomically** (`std::fs::write` in
   `lib.rs`, `plugin_consent.rs`). A crash mid-write opens the app on first run, or drops every plugin
   consent. Both fail closed, but the data looks lost.
-- [ ] **Startup recovery** (`provider.ts`, `install.ts`) removed or renamed ANY `content/*.prev` or
-  `*.new` folder, even one the user made. It should touch registered packs only.
+- [x] **Startup recovery** · closed. It settles only the staging folders of a pack the registry names
+  or the app ships (`recover-ours.test.ts`).
 - [x] **`reload.ts`** · closed. If a flusher rejected, the error was logged but `location.reload()` still
   ran, with no toast. A failed flush now holds the reload back and says so (`reload.test.ts`).
-- [ ] **`buildAndSwap`** (`install.ts`) deleted `.prev` before the swap; a failed swap lost the undo copy
-  too.
-- [ ] **`renamePack`** (`pack-lifecycle.ts`). An exception after the folder rename left the registry on
-  the old name, and `forgetUninstalledPacks` then lost the URL and pin.
+- [x] **`buildAndSwap`** · closed. The undo copy waits as `<pack>.old` until the swap succeeds, and a
+  failed swap or a recovery gives it back (`install.test.ts`, `recover-ours.test.ts`).
+- [x] **`renamePack`** · closed. The registry and the browse-config follow the folder at once, before
+  the steps that can still throw (`updates.test.ts`).
 - [ ] **The seed matched files by path, not by `#content-id`.** A renamed SRD file was seeded beside
   itself, giving duplicate ids; a file deleted from the pack came back with the next seed.
 - [ ] **Case and nesting.** Upper-case `.CSV` files were ignored with no health entry — closed, the loader

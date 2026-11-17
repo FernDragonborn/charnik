@@ -242,6 +242,8 @@ function rowsDroppedByUpdate(
  *  a content load that caught one of them would load every row twice. */
 export const stagingDir = (pack: string): string => localPath(`${pack}.new`);
 export const previousDir = (pack: string): string => localPath(`${pack}.prev`);
+/** Where the undo copy waits while a swap makes a new one, so a swap that fails gives it back. */
+export const olderDir = (pack: string): string => localPath(`${pack}.old`);
 
 /**
  * Which files the diff's decisions no longer match. The diff recorded what it saw on disk
@@ -333,9 +335,12 @@ async function buildAndSwap(
 		await storage.writeBytes(`${next}/${withinPack(file.path)}`, file.bytes);
 
 	const prev = previousDir(pack);
-	await storage.remove(prev).catch(() => {});
+	const older = olderDir(pack);
+	await storage.remove(older).catch(() => {});
+	if (await storage.exists(prev)) await storage.rename(prev, older);
 	if (await storage.exists(live)) await storage.rename(live, prev);
 	await storage.rename(next, live);
+	await storage.remove(older).catch(() => {});
 }
 
 /**
@@ -384,7 +389,7 @@ export async function duringPackWrite<T>(run: () => Promise<T>): Promise<T> {
  * undo.
  *
  * **Why a lone `.prev` cannot be an interrupted run.** Both writers build the replacement tree
- * FIRST and rename it in LAST (`buildAndSwap`: remove `.prev` → live→`.prev` → `.new`→live;
+ * FIRST and rename it in LAST (`buildAndSwap`: `.prev`→`.old` → live→`.prev` → `.new`→live;
  * `rollbackPack`: live→`.new` → `.prev`→live), so at the only moment the pack is missing, BOTH
  * staging folders exist. A `.prev` on its own therefore means the live folder left by some other
  * route — deleted in a file manager, or by an older build's uninstall, which did not clean up after
@@ -392,6 +397,11 @@ export async function duringPackWrite<T>(run: () => Promise<T>): Promise<T> {
  * later), so it is dropped instead: an undo copy for a pack that is gone has nothing left to undo.
  */
 export async function recoverInterruptedApply(storage: Storage, pack: string): Promise<void> {
+	await recoverSwap(storage, pack);
+	await settleOlderCopy(storage, pack);
+}
+
+async function recoverSwap(storage: Storage, pack: string): Promise<void> {
 	const live = localPath(pack);
 	const next = stagingDir(pack);
 	const prev = previousDir(pack);
@@ -409,12 +419,24 @@ export async function recoverInterruptedApply(storage: Storage, pack: string): P
 	if (halfSwapped) await storage.rename(next, live);
 }
 
+/** A swap that stopped before it finished leaves the undo copy it set aside under `.old`: it goes
+ *  back to being `.prev` when nothing took that place, and is dropped when something did or when
+ *  the pack itself is gone. */
+async function settleOlderCopy(storage: Storage, pack: string): Promise<void> {
+	const older = olderDir(pack);
+	if (!(await storage.exists(older))) return;
+	if ((await storage.exists(localPath(pack))) && !(await storage.exists(previousDir(pack))))
+		await storage.rename(older, previousDir(pack));
+	else await storage.remove(older).catch(() => {});
+}
+
 /** Delete a pack's staging folders. An UNINSTALL must take them with it: `<pack>.prev` is dead
  *  weight the moment the pack is gone, and a later install of the same name would inherit it as its
  *  "undo", putting a stranger's files back under a rollback. */
 export async function removeStaging(storage: Storage, pack: string): Promise<void> {
 	await storage.remove(stagingDir(pack)).catch(() => {});
 	await storage.remove(previousDir(pack)).catch(() => {});
+	await storage.remove(olderDir(pack)).catch(() => {});
 }
 
 interface GatherRequest {

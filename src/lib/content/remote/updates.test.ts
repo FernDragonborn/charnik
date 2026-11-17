@@ -354,6 +354,28 @@ describe('two repos publishing the same folder name', () => {
 		expect(sourceConfig.disabledFiles).toEqual(['content/athas/classes_srd.csv']);
 	});
 
+	it('a step after the folder moved that throws still leaves the entry on the new name (audit-oct-27 D13)', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		const storage = getUserStorage();
+		await storage.remove('content/athas');
+		await storage.writeBytes('content/dark-sun.prev/classes_srd.csv', enc('old'));
+		const realRename = storage.rename.bind(storage);
+		storage.rename = async (from: string, to: string) => {
+			if (from === 'content/dark-sun.prev') throw new Error('EBUSY');
+			return realRename(from, to);
+		};
+		try {
+			await renamePack('dark-sun', 'athas');
+		} finally {
+			storage.rename = realRename;
+		}
+		expect(await storage.exists('content/athas/classes_srd.csv')).toBe(true);
+		expect(packConfig.packs['athas']).toEqual({ repo: REPO, remotePack: 'dark-sun' });
+		await storage.remove('content/dark-sun.prev');
+		await storage.remove('content/athas');
+	});
+
 	it('renaming refuses a name that is already a folder, rather than merging two packs', async () => {
 		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
 		await installPack('dark-sun', { fetcher: fetcher(ALL) });

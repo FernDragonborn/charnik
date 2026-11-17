@@ -1426,6 +1426,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/provider.ts`
 
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
+- `function recoverInterruptedApplies` — * Settle any pack left mid-apply (crash, kill, power loss).
 - `function forgetUninstalledPacks` — * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the * pack in a file m…
 - `function restoreBundledPacks` — * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at * launch (when the…
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
@@ -1482,6 +1483,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
 - `const stagingDir` — Where a replacement tree is built, and where the one it replaces is kept.
 - `const previousDir`
+- `const olderDir` — Where the undo copy waits while a swap makes a new one, so a swap that fails gives it back.
 - `function swapInNewTree` — * Build `<pack>.new` as a COMPLETE tree — every file the pack currently has, minus the ones being * removed, plus the…
 - `const isPackWriteInFlight`
 - `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
@@ -2655,4 +2657,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1628 exports across 224 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1630 exports across 224 modules · 116 duplicate suspects._

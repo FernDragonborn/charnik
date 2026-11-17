@@ -405,6 +405,30 @@ describe('apply is a folder swap', () => {
 		expect(await s.exists('content/p.new')).toBe(false);
 	});
 
+	it('a swap that fails keeps the undo copy it already had (audit-oct-27 D13)', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		await s.writeBytes('content/p.prev/a.csv', enc('id\nolder'));
+		const diff = await diffFor(s, 'p/a.csv');
+		const realRename = s.rename.bind(s);
+		s.rename = async (from: string, to: string) => {
+			if (from === 'content/p.new') throw new Error('EBUSY');
+			return realRename(from, to);
+		};
+		await expect(
+			applyPackUpdate({
+				storage: s,
+				fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+				repo: REPO,
+				diff,
+			}),
+		).rejects.toThrow('EBUSY');
+		s.rename = realRename;
+		expect(await s.read('content/p/a.csv')).toBe('id\nold');
+		expect(await s.read('content/p.prev/a.csv')).toBe('id\nolder');
+		expect(await s.exists('content/p.old')).toBe(false);
+	});
+
 	it('leaves the previous version behind, and can roll back to it', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/a.csv', enc('id\nold'));
