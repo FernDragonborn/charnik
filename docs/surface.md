@@ -275,7 +275,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (60)
+## Shared components (61)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -331,6 +331,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `models`, `notes`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
+| **SlotPips** | `full`, `spent`, `title`, `onpick` | A spell-slot pool as pips: the ones left lit, the spent ones dim. |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
@@ -1114,6 +1115,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PrepareToggleInput` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
 - `function canTogglePreparedFor`
 - `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
+- `function prepState` — A build entry's prepared state: always-prepared wins, since the toggle cannot unset it.
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
@@ -2589,4 +2591,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 60 components · 1590 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 61 components · 1591 exports across 218 modules · 108 duplicate suspects._

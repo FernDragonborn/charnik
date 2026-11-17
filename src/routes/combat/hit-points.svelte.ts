@@ -49,8 +49,6 @@ export interface HitPointsHost {
 	overlay: OpenOverlay | null;
 	/** Carry out a play-state action on the open character. */
 	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): void;
-	/** …and hand back what came of it. */
-	enact(action: (character: Character, ctx: PlayContext) => PlayOutcome): PlayOutcome | null;
 }
 
 export class HitPoints {
@@ -155,7 +153,8 @@ export class HitPoints {
 		const play = this.host().character?.play;
 		const before = play?.hp.current ?? 0;
 		const failuresBefore = play?.deathSaves.failures ?? 0;
-		const outcome = this.host().enact((c, ctx) => takeDamage(c, hit, ctx));
+		let outcome: PlayOutcome | undefined;
+		this.host().act((c, ctx) => (outcome = takeDamage(c, hit, ctx)));
 		const pastZero = outcome && !outcome.refused ? outcome.pastZero : undefined;
 		const failed =
 			before === 0 && (outcome?.character.play.deathSaves.failures ?? 0) > failuresBefore;

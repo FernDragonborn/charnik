@@ -443,11 +443,13 @@ by code reading only: the view-model has no unit harness.
   `combat-view-model.svelte.ts` (`appendLog`, `reviseLog`), `PackUpdatesSettings.svelte`,
   `translate/+page.svelte`, `EditContentForm.svelte`.
 
-### [ ] U5 · "Cast" and "Pin" in the Spellbook do not do what they promise — medium · CONFIRMED
+### [x] U5 · "Cast" and "Pin" in the Spellbook do not do what they promise — medium · closed
 
 Cast only showed a toast: no slot spent, no dice rolled. Pin was a local `Set` that vanished on
 navigation and was not tied to `ui.spellsPinned`. The hard-coded `['fire-bolt','shield']` did not even
 match the ids (`fire_bolt`). The toast showed `name_en`.
+
+**Fix:** the Spellbook acts through the Combat view-model on the same character: Cast is Combat's `cast` (the slot spent, the dice rolled), the slot pools stand in the header beside the prepared count (`SlotPips`, shared with the Combat panel), and Pin is `ui.spellsPinned`. **Held by** a Playwright drive on the demo warlock: Cast on Hex took the pact pip from 1/2 to 0/2 and rolled its damage, and a pin survived a reload and showed in Combat's Pinned group.
 
 ### [x] U6 · Clicking a broken character in the roster opens a different one — medium · closed
 

@@ -1,8 +1,9 @@
 <script lang="ts">
 	// Spellbook manager (d-spellmgr) — same two-pane as the Compendium, plus per-spell
-	// management: show-on-sheet (eye), pin, prepare (switch). Reuses EntryList + WikiDetail;
-	// prepare + show-on-sheet edit the ACTIVE character (persisted: prepared on the spellEntry,
-	// hidden in ui.spellsHidden — Issue #3); pin is still a local UI set (D3, no schema field yet).
+	// management: show-on-sheet (eye), pin, prepare (switch). Reuses EntryList + WikiDetail. All of it
+	// edits the ACTIVE character through the Combat view-model, so a pin, a prepared spell and a cast
+	// here are the ones Combat shows: prepared on the spellEntry, hidden in ui.spellsHidden, pinned
+	// in ui.spellsPinned, and Cast is Combat's own cast — a slot spent, the dice rolled.
 	import { foldForSearch } from '$lib/util/search-fold';
 	import { onMount } from 'svelte';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
@@ -12,7 +13,7 @@
 	import { _ } from '$lib/i18n';
 	import { sayText } from '$lib/util/say';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
+	import { saveCharacterGuarded } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
 	import { spellEntries } from '$lib/character/spellcasting';
 	import { isRowActive } from '$lib/content/sources.svelte';
@@ -31,6 +32,11 @@
 	import Switch from '$lib/components/Switch.svelte';
 	import EyeToggle from '$lib/components/EyeToggle.svelte';
 	import Pin from '$lib/components/Pin.svelte';
+	import SlotPips from '$lib/components/SlotPips.svelte';
+	import { combat } from '../combat/combat-view-model.svelte';
+	import { prepState, spellRow } from '$lib/combat/spells';
+	import { casterForSpell } from '$lib/character/spellcasting';
+	import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 
 	type SpellEntry = Character['build']['spells'][number];
 
@@ -38,7 +44,6 @@
 	let character = $state<Character | null>(null);
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
-	let pinned = $state<Set<string>>(new Set());
 	let filter = $state<'all' | 'prepared' | 'pinned'>('all');
 	// true once onMount resolves — lets the markup tell "still loading" apart from "loaded, no
 	// character" (the user deleted the demo and has none of their own → the empty state).
@@ -47,14 +52,10 @@
 	onMount(async () => {
 		const g = await loadContentStore();
 		if (!g) return; // content load failed — error surfaces via the content store
-		// edit the ACTIVE character so show-on-sheet / prepare persist to the same save combat reads;
-		// ensureActiveCharacter returns the persisted demo by default — the same instance combat edits.
-		character = await ensureActiveCharacter();
-		for (const s of character?.build.spells ?? []) {
-			const row = g.get(s.spell);
-			if (row && ['fire-bolt', 'shield'].includes(String(row.data.id))) pinned.add(row.effectiveId);
-		}
-		pinned = new Set(pinned);
+		// the ACTIVE character, held by the Combat view-model: the same instance Combat edits, so a
+		// cast here spends the slot Combat shows
+		await combat.load();
+		character = combat.character;
 		loaded = true;
 	});
 
@@ -86,7 +87,7 @@
 			.filter(({ entry, row }) => {
 				if (q && !foldForSearch(rowName(row)).includes(q)) return false;
 				if (filter === 'prepared' && !isPrepared(entry)) return false;
-				if (filter === 'pinned' && !pinned.has(row.effectiveId)) return false;
+				if (filter === 'pinned' && !isPinned(row.effectiveId)) return false;
 				return true;
 			})
 			.map((x) => x.row);
@@ -121,15 +122,43 @@
 		if (e) e.prepared = !e.prepared;
 		if (character) void saveCharacterGuarded(character);
 	}
-	function toggleSet(set: Set<string>, id: string): Set<string> {
-		const next = new Set(set);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		return next;
+	const isPinned = (id: string) => character?.ui.spellsPinned.includes(id) ?? false;
+	function togglePin(id: string) {
+		if (!character) return;
+		combat.togglePin(id);
+		void saveCharacterGuarded(character);
 	}
-	function cast() {
-		if (selected) toast($_('spellbook.notice.cast', { values: { name: selected.data.name_en } }));
+	/** Cast the selected spell the way Combat does: its row as Combat builds it, through Combat. */
+	function cast(event: Event) {
+		const entry = selected ? entryOf.get(selected.effectiveId) : undefined;
+		if (!graph || !selected || !entry) return;
+		const row = spellRow(graph, selected.effectiveId, prepState(entry), {
+			charLevel: sheet?.level ?? 1,
+			locale: app.activeLocale,
+			caster: casterForSpell(sheet, selected.effectiveId),
+		});
+		if (row) combat.cast(row, event);
 	}
+	// the slot pools beside the prepared count, so the slot a cast takes is seen to go
+	const slotPools = $derived(
+		(sheet?.spellcasting.pools ?? []).flatMap((pool) =>
+			pool.spellLevel === undefined
+				? []
+				: [
+						{
+							key: pool.forcedUpcast ? PACT_SLOT_KEY : String(pool.spellLevel),
+							label: $_(pool.forcedUpcast ? 'combat.spells.pactMagic' : 'spellLevel.nth', {
+								values: { level: pool.spellLevel },
+							}),
+							full: pool.max,
+							spent:
+								character?.play.spellSlotsSpent[
+									pool.forcedUpcast ? PACT_SLOT_KEY : String(pool.spellLevel)
+								] ?? 0,
+						},
+					],
+		),
+	);
 </script>
 
 <svelte:head><title>{$_('nav.spellbook')} — Charnik</title></svelte:head>
@@ -146,6 +175,12 @@
 				values: { count: resolved.length },
 			})}</span
 		>
+		{#each slotPools as pool (pool.key)}
+			<span class="slot-pool"
+				>{pool.label}
+				<SlotPips full={pool.full} spent={pool.spent} title={$_('combat.spells.slotPip')} /></span
+			>
+		{/each}
 		<span class="spacer"></span>
 		<button class="cta" onclick={() => goto(`${base}/combat`)}>{$_('spellbook.done')}</button>
 	</div>
@@ -175,11 +210,7 @@
 					title={$_('spellbook.showOnSheet')}
 					onclick={() => toggleHidden(e.id)}
 				/>
-				<Pin
-					on={pinned.has(e.id)}
-					title={$_('spellbook.pinToBar')}
-					onclick={() => (pinned = toggleSet(pinned, e.id))}
-				/>
+				<Pin on={isPinned(e.id)} title={$_('spellbook.pinToBar')} onclick={() => togglePin(e.id)} />
 			{/snippet}
 			{#snippet trailing(e)}
 				{@const en = entryOf.get(e.id)}
@@ -213,8 +244,8 @@
 				<span class="detail-toggle">
 					{$_('spellbook.filterPinned')}
 					<Switch
-						on={selected ? pinned.has(selected.effectiveId) : false}
-						onclick={() => selected && (pinned = toggleSet(pinned, selected.effectiveId))}
+						on={selected ? isPinned(selected.effectiveId) : false}
+						onclick={() => selected && togglePin(selected.effectiveId)}
 					/>
 				</span>
 			{/snippet}
@@ -237,6 +268,14 @@
 		margin: 0;
 	}
 	.prepared-count {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	.slot-pool {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1-5);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);

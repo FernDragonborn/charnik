@@ -263,7 +263,10 @@ export interface SpellGroupsInput {
 }
 
 /** A build entry's prepared state: always-prepared wins, since the toggle cannot unset it. */
-function prepState(sp: { prepared: boolean; alwaysPrepared: boolean }): SpellRow['prepState'] {
+export function prepState(sp: {
+	prepared: boolean;
+	alwaysPrepared: boolean;
+}): SpellRow['prepState'] {
 	if (sp.alwaysPrepared) return 'always';
 	return sp.prepared ? 'on' : '';
 }

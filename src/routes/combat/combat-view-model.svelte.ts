@@ -8,7 +8,6 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from '$lib/toast/toast';
-import type { PlayOutcome } from '$lib/play/outcome';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
@@ -244,16 +243,13 @@ class CombatVM {
 			: null;
 	});
 
-	/** Carrying a play-state action out on the open character — see play-outcomes.ts. `act` stays
-	 *  here because the subsystems declare it on their host interfaces. */
+	/** Carrying a play-state action out — play-outcomes.ts; here because hosts declare `act`. */
 	outcomes = new PlayOutcomes(() => this);
 	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
-	enact = (...a: Parameters<PlayOutcomes['enact']>): PlayOutcome | null =>
-		this.outcomes.enact(...a);
+	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
 	notify = (...a: Parameters<PlayOutcomes['notify']>) => this.outcomes.notify(...a);
 
-	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
-	// drift; Next turn, a skip of time and a rest advance it, and effect expiry reads it.
+	// the clock is the PERSISTED play.round — no VM copy to drift; effect expiry reads it
 	get round(): number {
 		return this.character?.play.round ?? 0;
 	}
@@ -264,10 +260,8 @@ class CombatVM {
 	 *  and went was a control the player could not ask for when they wanted it. */
 	hasDawnPool = $derived(this.resources.hasBoundaryPool('dawn'));
 	hasDuskPool = $derived(this.resources.hasBoundaryPool('dusk'));
-	// D3: pins persist per character in ui.spellsPinned, keyed by the spell's REF the way
-	// `spellsHidden` is — a bare id pinned every same-id spell from every pack at once, and the eye one
-	// row over disagreed about what a spell is. Exposed as a boolean map for the panel's lookup;
-	// toggle via togglePin so the array stays the source.
+	// pins live in ui.spellsPinned by the spell's REF, as `spellsHidden` does — a bare id pinned every
+	// same-id spell of every pack; a map for the panel's lookup, `togglePin` keeps the array the source
 	pinned = $derived<Record<string, boolean>>(
 		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((ref) => [ref, true])),
 	);

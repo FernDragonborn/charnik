@@ -2,12 +2,13 @@
 	// Spells panel body: per-class cast line (save DC / attack), an armor-block warning, then spell
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import Icon from '$lib/components/Icon.svelte';
+	import SlotPips from '$lib/components/SlotPips.svelte';
 	import { _ } from '$lib/i18n';
 	import { abilityShortLabel } from '$lib/util/format';
 	import { toast } from '$lib/toast/toast';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed, range } from '$lib/combat/helpers';
+	import { why, signed } from '$lib/combat/helpers';
 	import { provenance } from '$lib/actions/provenance';
 	import { ISSUE_KEY } from '$lib/effects/token-parser';
 	import { spellcastingBlock } from '$lib/play/cast';
@@ -87,15 +88,12 @@
 								...(g.labelValues ? { values: g.labelValues } : {}),
 							})
 						: g.label}
-					{#if g.slots}{@const sl = g.slots}<span class="pips"
-							>{#each range(sl.full) as i (i)}<button
-									class="slot-pip"
-									class:full={i < sl.full - sl.spent}
-									class:spent={i >= sl.full - sl.spent}
-									title={$_('combat.spells.slotPip')}
-									onclick={() => slotClick(g.key, sl.full, sl.spent, i)}
-								></button>{/each}</span
-						>{/if}
+					{#if g.slots}{@const sl = g.slots}<SlotPips
+							full={sl.full}
+							spent={sl.spent}
+							title={$_('combat.spells.slotPip')}
+							onpick={(i) => slotClick(g.key, sl.full, sl.spent, i)}
+						/>{/if}
 				</div>
 				{#each g.rows as r (g.key + r.id)}
 					<!-- the row is a DIV and each control on it is a real `<button>`: they used to be spans and
@@ -222,27 +220,6 @@
 	}
 	.spell-category.star {
 		color: var(--color-accent-bright);
-	}
-	.spell-category .pips {
-		display: flex;
-		gap: var(--space-1);
-	}
-	.spell-category .slot-pip {
-		width: 12px;
-		height: 12px;
-		padding: 0;
-		border-radius: 50%;
-		border: 1px solid var(--color-good-line);
-		cursor: pointer;
-	}
-	.spell-category .slot-pip.full {
-		background: var(--color-good);
-		border-color: var(--color-good);
-		box-shadow: 0 0 8px color-mix(in srgb, var(--color-good) 45%, transparent);
-	}
-	.spell-category .slot-pip.spent {
-		background: transparent;
-		opacity: 0.5;
 	}
 	.spell-row {
 		position: relative;

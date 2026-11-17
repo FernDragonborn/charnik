@@ -2366,9 +2366,6 @@
 		"filterPrepared": "Prepared",
 		"known": "spellbook {count}",
 		"loading": "Loading spellbook…",
-		"notice": {
-			"cast": "Cast {name}"
-		},
 		"pinToBar": "Pin to quick bar",
 		"prepare": "prepare",
 		"search": "Search spellbook…",
