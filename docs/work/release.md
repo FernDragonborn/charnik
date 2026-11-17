@@ -281,12 +281,6 @@
   - **Packs.** Fetching goes through Rust on the desktop (`content/remote/` ▸ `tauriFetcher`); the
     web needs a fetcher over `fetch`, which stands on the host's CORS headers — to check for
     GitHub's raw and API hosts.
-- **AUDIT-LOCKED-FILE · a pack file held open by another program still blocks a seed or a listing**
-  (`../audit-oct-27.md` ▸ D10). Reads are per-file now; two paths are not. The seed
-  (`content/provider.ts`) throws out of `buildGraph` when its rename lands on a file Excel holds, and
-  `storage/tauri.ts` runs `stat` on an entry that vanished during the listing. Both become a
-  `preserved`/`failed` entry or a skipped entry rather than a failed load. Verified only on the desktop
-  app, with the CSV open in Excel during an app update.
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have

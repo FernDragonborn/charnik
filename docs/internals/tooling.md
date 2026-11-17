@@ -338,6 +338,13 @@ a file open from another process. In the data folder, before starting the app:
   `character.json` and `locked.bin` held open by another process for the run
   (`[IO.File]::Open(path, 'Open', 'ReadWrite', 'None')` in PowerShell).
 
+**`/dev/locked-seed` needs one held file:** `content/.probe-seed/held.csv` and `free.csv` in the
+data folder, `held.csv` held open by another process for the run, the same way. It runs the seed
+under a version no build ships, so the real `content/.seed-version` moves only if a held file was
+written anyway, and the probe then puts it back. While an installed Charnik is open, give the probe
+its own `"identifier"` in the config overlay: the single-instance guard is keyed by it, and may hand the launch to the installed
+app instead of starting the probe.
+
 Remove the junctions with `rmdir`, never a recursive delete, which would follow them. The probe drives
 the move's refusal, copy failure and rollback; it cannot drive the verify failure or a successful
 move — a success would repoint the real data folder (`security.md` ▸ Where the desktop sandbox is

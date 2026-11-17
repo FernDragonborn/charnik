@@ -232,6 +232,30 @@ describe('seedShippedContent (versioned re-seed on update)', () => {
 		expect(await to.read(P)).toContain('fireball_v2');
 	});
 
+	/* audit-oct-27 D10: a CSV open in Excel during an app update threw out of the seed and the whole
+	 * content load failed until Excel closed. */
+	it('UPDATE goes past a file another program holds, and seeds again next launch', async () => {
+		const from = new MemoryStorage();
+		const other = 'content/srd-2024/items_srd.csv';
+		await from.write(P, await stamped('id\nfireball_v2'));
+		await from.write(other, await stamped('id\nrope_v2'));
+		const to = new MemoryStorage();
+		await to.write(P, await stamped('id\nfireball_v1'));
+		await to.write(other, await stamped('id\nrope_v1'));
+		const write = to.writeBytes.bind(to);
+		to.writeBytes = (path, bytes) =>
+			path === P ? Promise.reject(new Error('EBUSY: resource busy or locked')) : write(path, bytes);
+
+		const { failed } = await seedShippedContent(from, to, ROOTS, 2);
+
+		expect(failed).toEqual([P]);
+		expect(await to.read(other)).toContain('rope_v2');
+		expect(await to.exists('content/.seed-version')).toBe(false);
+		to.writeBytes = write; // Excel closed
+		expect((await seedShippedContent(from, to, ROOTS, 2)).failed).toEqual([]);
+		expect(await to.read(P)).toContain('fireball_v2');
+	});
+
 	it('already at the current version: does not rewrite anything', async () => {
 		const from = new MemoryStorage();
 		await from.write(P, await stamped('id\nfireball_v2'));

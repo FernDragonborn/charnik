@@ -188,7 +188,7 @@ and a repeated header. The loader raises `contentIssue.damagedCsv`; the homebrew
 writers refuse with `DamagedCsvError`; a pack merge leaves a damaged incoming file as its own bytes.
 **Held by** `csv-table.test.ts`.
 
-### [ ] D10 · One locked file stops all content from loading — medium · reads closed, seed and stat open
+### [x] D10 · One locked file stops all content from loading — medium · closed
 
 After an app update with an SRD CSV open in Excel, launch showed the content error screen until Excel
 was closed.
@@ -198,9 +198,14 @@ was closed.
 - `storage/tauri.ts` ran `stat` on a file that vanished during the listing.
 
 **Fix (reads):** a file that cannot be read is `contentIssue.unreadableFile` on that file, and the
-rest loads. **Held by** `csv-table.test.ts` ▸ a file that cannot be read. The seed rename and the
-listing `stat` are open (`work/release.md` ▸ AUDIT-LOCKED-FILE), and the Excel lock itself is owed a
-desktop run.
+rest loads. **Held by** `csv-table.test.ts` ▸ a file that cannot be read.
+
+**Fix (seed and listing):** a file the seed cannot write is named in `failed`, the rest go through,
+and the version marker is left so the next launch seeds again; a listed entry that vanished before
+its `stat` is skipped, and one that will not say its date is listed without it. **Held by**
+`provider.test.ts` ▸ UPDATE goes past a file another program holds, and `/dev/locked-seed` on the
+desktop app with the file held open by another process (`tooling.md`): ALL PASSED. The vanished
+`stat` is a race no probe can time; it is held by the code alone.
 
 ### [x] D11 · A demo folder without `demo-seeded.json` breaks roster and combat on every launch — medium · closed
 

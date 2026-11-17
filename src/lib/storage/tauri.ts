@@ -30,6 +30,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
 import { errText } from '../util/format';
+import { logger } from '$lib/diag/logger';
 import {
 	copyFailures,
 	mergeCopyList,
@@ -320,13 +321,23 @@ export class TauriStorage implements Storage {
 		if (!(await fsExists(full))) return [];
 		const entries = await readDir(full);
 		const prefix = dir.replace(/^\/+|\/+$/g, '');
-		return Promise.all(
-			entries.map(async (e) => {
+		const listed = await Promise.all(
+			entries.map(async (e): Promise<FileEntry | null> => {
+				const full = await this.abs(prefix ? `${prefix}/${e.name}` : e.name);
 				// stat each file for its mtime (readDir entries don't carry it); dirs skip it
 				let mtime: number | undefined;
 				if (!e.isDirectory) {
-					const info = await fsStat(await this.abs(prefix ? `${prefix}/${e.name}` : e.name));
-					mtime = info.mtime ? info.mtime.getTime() : undefined;
+					try {
+						const info = await fsStat(full);
+						mtime = info.mtime ? info.mtime.getTime() : undefined;
+					} catch (error) {
+						// gone since the listing (an editor's temp file, a swap) is not an entry; one
+						// that is there but will not say when it changed is listed without the date
+						if (!(await fsExists(full))) return null;
+						logger.warn('storage: a file would not say when it changed', {
+							error: errText(error),
+						});
+					}
 				}
 				return {
 					path: prefix ? `${prefix}/${e.name}` : e.name,
@@ -336,6 +347,7 @@ export class TauriStorage implements Storage {
 				};
 			}),
 		);
+		return listed.filter((entry): entry is FileEntry => entry !== null);
 	}
 	async mkdir(path: string): Promise<void> {
 		await fsMkdir(await this.abs(path), { recursive: true });

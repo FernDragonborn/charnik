@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (113)
+## Duplicate suspects (116)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,10 +17,10 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `say` ×12 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
-- `probe` ×9 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
-- `REPORT` ×9 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
-- `check` ×8 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
+- `say` ×13 — src/lib/combat/effects-view.ts · src/lib/util/say.ts · src/routes/build/blocks/ChangeList.svelte · src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
+- `probe` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
+- `REPORT` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
+- `check` ×9 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `open` ×7 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
@@ -73,6 +73,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `DRAFTS_DIR` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `entryOf` ×2 — src/lib/components/EntryList.svelte · src/routes/combat/roll-journal.svelte.ts
+- `errorOf` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `fold` ×2 — src/lib/character/spellcasting.ts · src/lib/rules/pipeline.ts
@@ -88,6 +89,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MARGIN` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
+- `MARKER` ×2 — src/lib/combat/actions.ts · src/routes/dev/locked-seed/+page.svelte
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `MIDDLE_BUTTON` ×2 — src/routes/+layout.svelte · src/routes/dev/page-reach/+page.svelte
 - `MODES` ×2 — src/lib/components/settings/TableSettings.svelte · src/lib/dice/roller-sources.ts
@@ -108,6 +110,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
+- `ROOT` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
@@ -2628,4 +2631,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1613 exports across 221 modules · 113 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1613 exports across 221 modules · 116 duplicate suspects._

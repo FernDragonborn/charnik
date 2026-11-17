@@ -41,6 +41,7 @@ import {
 	unDismissMissing,
 } from './packs.svelte';
 import { logger } from '$lib/diag/logger';
+import { errText } from '$lib/util/format';
 import {
 	beginCarryRun,
 	finishCarryRun,
@@ -218,9 +219,9 @@ export async function seedShippedContent(
 	to: Storage,
 	roots: string[],
 	shippedVersion: number,
-): Promise<{ preserved: string[] }> {
+): Promise<{ preserved: string[]; failed: string[] }> {
 	const onDisk = await readSeedVersion(to);
-	if (onDisk === shippedVersion) return { preserved: [] };
+	if (onDisk === shippedVersion) return { preserved: [], failed: [] };
 	const firstRun = onDisk === null;
 	logger.info('content: seeding shipped packs', {
 		roots: roots.length,
@@ -230,6 +231,9 @@ export async function seedShippedContent(
 	});
 
 	const preserved: string[] = [];
+	/** Files another program held open (Excel locks the CSV it shows): left as they are, and the
+	 *  seed runs again at the next launch, rather than one lock failing the whole load. */
+	const failed: string[] = [];
 	const run = beginCarryRun(to);
 	for (const root of roots) {
 		// A pack the user UNINSTALLED stays uninstalled. A fresh data dir gets every bundled pack;
@@ -247,14 +251,22 @@ export async function seedShippedContent(
 			// writeBytes creates parent dirs + preserves exact bytes (BOM/CRLF intact). A file holding
 			// translations is merged rather than replaced: an app update is the one writer here with no
 			// preview and no undo, so it is the last place a translation may be lost to.
-			await to.writeBytes(path, await keepLocalTranslations(run, path, await from.readBytes(path)));
+			try {
+				await to.writeBytes(
+					path,
+					await keepLocalTranslations(run, path, await from.readBytes(path)),
+				);
+			} catch (e) {
+				failed.push(path);
+				logger.warn('content: a shipped file could not be refreshed', { path, error: errText(e) });
+			}
 		}
 	}
 	await finishCarryRun(run);
 	noteOrphanedTranslations(run);
-	await to.write(SEED_VERSION_FILE, String(shippedVersion));
-	logger.info('content: seed complete', { preserved });
-	return { preserved };
+	if (failed.length === 0) await to.write(SEED_VERSION_FILE, String(shippedVersion));
+	logger.info('content: seed complete', { preserved, failed });
+	return { preserved, failed };
 }
 
 /** Drop the cache (e.g. after the user adds/edits homebrew and wants a reload). */
