@@ -637,11 +637,10 @@ export class BuildVM {
 			await this.persistPhoto(character);
 			if (!(await saveBuildToStore(character))) return null;
 			// the draft became a character, so the unfinished copy has nothing left to be — and the
-			// session gives up its identity with it, or the autosave landing after Create (the photo
-			// write above is itself a draft mutation, which arms one) writes the draft back under the
-			// same guid and resurrects it in the roster
+			// session retires it, or the autosave landing after Create (the photo write above is itself
+			// a draft mutation, which arms one) writes it back and resurrects it in the roster
 			await this.drafts.discard();
-			this.drafts.renew();
+			this.drafts.retire();
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
 			return character.id;

@@ -303,6 +303,49 @@ bug. Without the fix:
 AssertionError: expected [ { schemaVersion: 3, …(3) } ] to deeply equal []
 ```
 
+### [x] U3 · A character just created comes back as a draft when the autosave lands after Create — low · closed · both
+
+Found after the blind pass, from its "Not checked" list. Create discards the draft and gives the
+session a new identity, but the autosave the portrait write armed is still pending; landing after
+Create, it writes the whole build under the new identity, and the roster shows a draft of the
+character that already exists.
+
+Held by: `src/routes/build/draft-session.svelte.test.ts`
+
+```
+AssertionError: expected [ { …(5) } ] to deeply equal []
+```
+
+Root cause: `DraftSession.renew` forgets what was written, so the pending `persist` sees content it
+has never written. Fix: Create calls `retire`, which renews the identity and counts what the build
+holds as written.
+
+### [ ] U4 · Forking a row a second time replaces the first fork — medium · CONFIRMED · both
+
+Found after the blind pass, from its "Not checked" list. Editing a shipped row forks it into the
+homebrew file under the shipped id. Forking a second shipped row with the same id — 5e Fireball after
+5.5e Fireball, or the original of a row already forked — upserts by that id and replaces the first
+fork: its edits are gone, with no word. Two homebrew rows cannot keep one id either, since homebrew
+rows share one source and the loader drops an exact `type:source:id` duplicate.
+
+Repro (a node test, not kept in the suite): `rowToDraft` of `spell:SRD 5.1:fireball` with `damage`
+`9d6 fire`, `upsertHomebrewRow`; then of `spell:SRD 5.2.1:fireball` with `10d6 fire`; the homebrew
+file holds only the second.
+
+```
+AssertionError: expected [ false, true ] to deeply equal [ true, true ]
+```
+
+Root cause: `src/lib/content/homebrew.ts` ▸ `upsertHomebrewRow` matches the row to replace by `id`
+alone, and the editor does not tell a fork of a shipped row from an edit of the fork.
+
+Left open on one maintainer decision — what a second fork does:
+
+- **refuse, and offer the fork.** The editor says a fork of this row exists and opens it; a second
+  edition of the same id cannot be forked until the first is renamed.
+- **fork under an edition-qualified id** (`fireball_5_5e`). Both coexist; the second no longer shares
+  the shipped id, so it does not sort above its original.
+
 ## Ruled out
 
 - A fork of a shipped row into homebrew changing what it does: every row of both packs goes through
@@ -335,11 +378,7 @@ AssertionError: expected [ { schemaVersion: 3, …(3) } ] to deeply equal []
 - Mounted components: the builder's spell pane, picker cards and ability pane, the combat panels, and
   whatever needs a drag, a hover or an input method.
 - `tools/import-translations.ts` run against a real pull request — read only.
-- The builder's draft autosave firing between Create and the page leaving (`build-view-model.svelte.ts:643-646`
-  against the 600 ms timer in `routes/build/+page.svelte:84-93`): a new draft of the character just
-  created is possible on reading, and needs the page to show.
-- A long or short rest taken in a 2014 form by its Hit Dice, and a 2014 form that outlasts the rest.
-- A second fork of one shipped row replacing the first fork in the homebrew file.
+- A short rest taken in a 2014 form by its Hit Dice.
 - `sheet-rolls.svelte.ts`, `+layout.svelte` and the reload keys, the settings pages, starting
   equipment, the plugin sandbox, the iterative Tarjan beyond reading it, and `src-tauri`.
 - Spell `upcast` cells, monster stat blocks and magic-item numbers as a whole: rows are checked only

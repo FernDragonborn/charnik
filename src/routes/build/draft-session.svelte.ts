@@ -47,6 +47,17 @@ export class DraftSession {
 		this.written = null; // a new file has nothing written to it yet
 	};
 
+	/** The build became a character: a new identity, with what it holds counted as written, so an
+	 *  autosave armed before Create and landing after it does not write the character back as a draft
+	 *  under that identity. The next change is a new draft. */
+	retire = () => {
+		this.renew();
+		this.written = this.bodyOf(this.host());
+	};
+
+	private bodyOf = (host: DraftSessionHost): string =>
+		JSON.stringify([$state.snapshot(host.draft), [...host.classPicks]]);
+
 	/** Write the draft, or remove it once there is nothing left worth keeping. Safe to call at any
 	 *  time; the page calls it debounced. */
 	persist = async (): Promise<void> => {
@@ -60,7 +71,7 @@ export class DraftSession {
 				return;
 			}
 			const snapshot = $state.snapshot(host.draft);
-			const body = JSON.stringify([snapshot, [...host.classPicks]]);
+			const body = this.bodyOf(host);
 			if (body === this.written) return;
 			await saveDraft(storage, {
 				guid: this.guid,

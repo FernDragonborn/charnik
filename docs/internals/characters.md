@@ -120,7 +120,7 @@ reconstruction of them.
 an unreadable file is dropped from the roster rather than repaired into something they did not build —
 the opposite of `character.json`, which is migrated forward. Two things are never written: a draft
 holding no decision yet (opening the builder must not litter the data folder), and any edit of an
-existing character, whose own save is already the record. Creating the character deletes the draft.
+existing character, whose own save is already the record. Creating the character deletes the draft, and an autosave still pending from before writes nothing after it.
 
 ## The demo character
 
