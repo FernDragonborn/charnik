@@ -275,6 +275,10 @@ export async function mergeDataDir(
 	return finalizeMove(oldDir, newDir, deleteOld);
 }
 
+/** A path as the hex of its UTF-8 — what `write_file_durable` takes, since a header is ASCII. */
+export const utf8Hex = (text: string): string =>
+	[...new TextEncoder().encode(text)].map((b) => b.toString(16).padStart(2, '0')).join('');
+
 export class TauriStorage implements Storage {
 	/** Cached absolute data root (lazy — resolved on first op, then reused). */
 	#root: Promise<string> | null = null;
@@ -310,10 +314,7 @@ export class TauriStorage implements Storage {
 	 *  the page's own fs API has no flush. One sibling name per file, removed on failure, so no
 	 *  `*.tmp-*` piles up beside a save. */
 	async writeBytes(path: string, data: Uint8Array): Promise<void> {
-		const full = await this.abs(path);
-		const hex = [...new TextEncoder().encode(full)]
-			.map((b) => b.toString(16).padStart(2, '0'))
-			.join('');
+		const hex = utf8Hex(await this.abs(path));
 		await invoke('write_file_durable', data, { headers: { path: hex } });
 	}
 	async exists(path: string): Promise<boolean> {

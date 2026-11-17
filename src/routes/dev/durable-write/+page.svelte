@@ -8,7 +8,7 @@
 	// discovery and the roster both ignore, and removes it at the end. The close-flush marker it
 	// leaves is read after the window is closed from outside (`tooling.md`).
 	import { onMount } from 'svelte';
-	import { currentDataDir } from '$lib/storage/tauri';
+	import { currentDataDir, utf8Hex } from '$lib/storage/tauri';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { onBeforeReload } from '$lib/content/reload';
 	import { invokeRaw } from '../invoke-raw';
@@ -30,23 +30,10 @@
 
 	/** The webview's own IPC with a raw body and headers, as `TauriStorage.writeBytes` sends it. */
 	async function rawWrite(absolute: string, bytes: Uint8Array): Promise<string> {
-		const internals: unknown = Reflect.get(window, '__TAURI_INTERNALS__');
-		const invoke: unknown =
-			typeof internals === 'object' && internals !== null ? Reflect.get(internals, 'invoke') : null;
-		if (typeof invoke !== 'function') return 'no IPC entry';
-		const hex = [...new TextEncoder().encode(absolute)]
-			.map((b) => b.toString(16).padStart(2, '0'))
-			.join('');
-		try {
-			await Reflect.apply(invoke, internals, [
-				'write_file_durable',
-				bytes,
-				{ headers: { path: hex } },
-			]);
-			return 'written';
-		} catch (e) {
-			return `refused: ${String(e)}`;
-		}
+		const out = await invokeRaw('write_file_durable', bytes, {
+			headers: { path: utf8Hex(absolute) },
+		});
+		return out.resolved ? 'written' : `refused: ${out.reason}`;
 	}
 
 	async function probe(): Promise<void> {

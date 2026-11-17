@@ -2464,6 +2464,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface MigrateOutcome`
 - `function migrateDataDir` — Move the data folder into an EMPTY target: copy every file `oldDir → newDir`, verify the copy is * complete (each sou…
 - `function mergeDataDir` — Merge the data folder into a NON-empty target: copy only the files the target lacks or that the * source has a newer …
+- `const utf8Hex` — A path as the hex of its UTF-8 — what `write_file_durable` takes, since a header is ASCII.
 - `class TauriStorage`
 
 ### `src/lib/storage/types.ts`
@@ -2664,4 +2665,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1633 exports across 225 modules · 117 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1634 exports across 225 modules · 117 duplicate suspects._
