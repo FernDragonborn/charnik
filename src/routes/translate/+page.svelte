@@ -11,7 +11,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { toast } from '$lib/toast/toast';
+	import { sayIfFails, toast } from '$lib/toast/toast';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
 	import { provenance } from '$lib/actions/provenance';
@@ -169,21 +169,23 @@
 		});
 		// then, async, restore a cached draft if one exists for this exact target (unless read-only)
 		if (r && !demo) {
-			void readDraft<Partial<WikiEditDraft>>(getUserStorage(), translateTarget(r, loc)).then(
-				(env) => {
-					if (!env || selected !== r || targetLocale !== loc) return; // selection moved on; ignore
-					const d = env.data;
-					const restored: WikiEditDraft = {
-						name: String(d.name ?? ''),
-						text: String(d.text ?? ''),
-						material: String(d.material ?? ''),
-						higher_level: String(d.higher_level ?? ''),
-						instance_name: String(d.instance_name ?? ''),
-					};
-					draft = restored;
-					baseline = JSON.stringify(restored); // a restored draft is the new clean baseline
-				},
-			);
+			const restoring = readDraft<Partial<WikiEditDraft>>(
+				getUserStorage(),
+				translateTarget(r, loc),
+			).then((env) => {
+				if (!env || selected !== r || targetLocale !== loc) return; // selection moved on; ignore
+				const d = env.data;
+				const restored: WikiEditDraft = {
+					name: String(d.name ?? ''),
+					text: String(d.text ?? ''),
+					material: String(d.material ?? ''),
+					higher_level: String(d.higher_level ?? ''),
+					instance_name: String(d.instance_name ?? ''),
+				};
+				draft = restored;
+				baseline = JSON.stringify(restored); // a restored draft is the new clean baseline
+			});
+			sayIfFails($_('app.actionFailed'), restoring);
 		}
 	});
 
@@ -197,7 +199,10 @@
 		if (demo || !r || current === baseline) return;
 		const snapshot: WikiEditDraft = { ...draft };
 		writeTimer = setTimeout(() => {
-			void writeDraft(getUserStorage(), translateTarget(r, loc), snapshot);
+			sayIfFails(
+				$_('homebrewForm.draftNotSaved'),
+				writeDraft(getUserStorage(), translateTarget(r, loc), snapshot),
+			);
 		}, 600);
 	});
 

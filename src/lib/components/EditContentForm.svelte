@@ -39,7 +39,7 @@
 	} from '$lib/drafts/store';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
-	import { toast } from '$lib/toast/toast';
+	import { sayIfFails, toast, toastFailure } from '$lib/toast/toast';
 	import { app } from '$lib/stores/app.svelte';
 
 	// Localised field label. A localizable column (name_<loc> / text_<loc>) shows the base label plus
@@ -132,7 +132,11 @@
 		if (readOnly || current === baseline) return;
 		const snapshot = { ...draft };
 		writeTimer = setTimeout(
-			() => void writeDraft(getUserStorage(), draftCacheTarget, snapshot),
+			() =>
+				sayIfFails(
+					$_('homebrewForm.draftNotSaved'),
+					writeDraft(getUserStorage(), draftCacheTarget, snapshot),
+				),
 			600,
 		);
 	});
@@ -283,6 +287,8 @@
 					}),
 				});
 			if (res.id) onsave(res.id, type);
+		} catch (e) {
+			toastFailure($_('homebrewForm.saveFailed'), e);
 		} finally {
 			saving = false;
 		}

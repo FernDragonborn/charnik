@@ -7,6 +7,7 @@
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import Icon from '../Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { toastFailure } from '$lib/toast/toast';
 	import { sayText } from '$lib/util/say';
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
@@ -88,6 +89,8 @@
 			const failures = await assignFileType(file, type);
 			const failure = failures[0];
 			if (failure) assignError = { ...assignError, [file]: failure.error };
+		} catch (e) {
+			toastFailure($_('app.actionFailed'), e);
 		} finally {
 			assigning = null;
 		}

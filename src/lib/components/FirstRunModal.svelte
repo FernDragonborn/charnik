@@ -6,6 +6,7 @@
 	import Icon from './Icon.svelte';
 	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
+	import { toastFailure } from '$lib/toast/toast';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	import LangSwitcher from './LangSwitcher.svelte';
 
@@ -37,6 +38,8 @@
 		try {
 			const parent = await pickFolder();
 			if (parent) dir = withCharnik(parent);
+		} catch (e) {
+			toastFailure($_('app.actionFailed'), e);
 		} finally {
 			busy = false;
 		}

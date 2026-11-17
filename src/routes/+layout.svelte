@@ -48,7 +48,7 @@
 	import type { FilledMeta } from '$lib/content/meta';
 	import type { RestampFailure } from '$lib/content/restamp';
 	import { Toaster } from 'svelte-sonner';
-	import { toast } from '$lib/toast/toast';
+	import { toast, toastFailure } from '$lib/toast/toast';
 	import { takeFlash, takeReloadMark } from '$lib/stores/flash';
 	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
 	import { onMount, onDestroy } from 'svelte';
@@ -112,6 +112,8 @@
 			await reloadContent();
 			await loadRoster();
 			chipNote = CHIP_NOTE.refreshed;
+		} catch (e) {
+			toastFailure($_('app.actionFailed'), e);
 		} finally {
 			refreshing = false;
 		}

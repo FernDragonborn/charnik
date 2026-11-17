@@ -7,7 +7,7 @@
  * Methods are arrow-function fields so they can be destructured / passed to markup with the
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
-import { toast } from '$lib/toast/toast';
+import { sayIfFails, toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
@@ -336,19 +336,19 @@ class CombatVM {
 		);
 	};
 
-	/** Persist one completed roll to the active character's `log.jsonl` (B4). Fire-and-forget: a log
-	 *  write must never block or fail a roll. */
+	/** Persist one completed roll to the active character's `log.jsonl` (B4). Never awaited — a log
+	 *  write must not block or fail a roll — but said when it fails. */
 	private persistRoll = (e: RollLogEntry): void => {
 		const id = this.character?.id;
 		if (!id) return;
-		void appendLog(getUserStorage(), id, logLineFor(e));
+		sayIfFails(t('combat.notice.logNotSaved'), appendLog(getUserStorage(), id, logLineFor(e)));
 	};
 
 	/** An amendment rewrites the line its roll already wrote — same roll, decided differently. */
 	private persistRevision = (e: RollLogEntry): void => {
 		const id = this.character?.id;
 		if (!id) return;
-		void reviseLog(getUserStorage(), id, logLineFor(e));
+		sayIfFails(t('combat.notice.logNotSaved'), reviseLog(getUserStorage(), id, logLineFor(e)));
 	};
 
 	/** EFX-ROLL: feature-granted named rollables (Sneak Attack, Bardic Inspiration die) — the derive

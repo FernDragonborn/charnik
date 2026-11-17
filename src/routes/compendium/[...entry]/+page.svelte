@@ -4,6 +4,7 @@
 	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
+	import { sayIfFails } from '$lib/toast/toast';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -100,8 +101,8 @@
 		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
 		groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
-		void detectStaleDrafts();
-		void detectOrphans();
+		sayIfFails($_('app.actionFailed'), detectStaleDrafts());
+		sayIfFails($_('app.actionFailed'), detectOrphans());
 	});
 
 	// on load, warn if any cached draft was saved under a different content schema (it will be dropped —
@@ -577,7 +578,8 @@
 							<EditContentForm
 								type={editRow.type}
 								editRow={editRow ?? undefined}
-								onsave={onSaved}
+								onsave={(id, savedType) =>
+									sayIfFails($_('app.actionFailed'), onSaved(id, savedType))}
 								oncancel={() => (editRow = null)}
 								ondelete={() => (confirmDelete = editRow)}
 							/>
@@ -588,7 +590,7 @@
 				{#key resumeAdd?.guid ?? selectedType}
 					<EditContentForm
 						type={selectedType}
-						onsave={onSaved}
+						onsave={(id, savedType) => sayIfFails($_('app.actionFailed'), onSaved(id, savedType))}
 						oncancel={() => {
 							adding = false;
 							resumeAdd = undefined;
@@ -612,7 +614,11 @@
 						{#if isHomebrew(selected)}
 							<!-- your own row: manage it from the bottom of its article -->
 							<div class="homebrew-actions">
-								<button class="hb-btn" onclick={() => selected && convertToDraft(selected)}>
+								<button
+									class="hb-btn"
+									onclick={() =>
+										selected && sayIfFails($_('app.actionFailed'), convertToDraft(selected))}
+								>
 									{$_('compendium.moveToDrafts')}
 								</button>
 								<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
@@ -634,7 +640,8 @@
 			message={$_('compendium.deleteBody')}
 			confirmLabel={$_('compendium.deleteConfirm')}
 			danger
-			onConfirm={() => confirmDelete && deleteRow(confirmDelete)}
+			onConfirm={() =>
+				confirmDelete && sayIfFails($_('app.actionFailed'), deleteRow(confirmDelete))}
 			onCancel={() => (confirmDelete = null)}
 		/>
 	{/if}
@@ -643,7 +650,7 @@
 		<SchemaDiscardDialog
 			drafts={staleDrafts}
 			unreadable={unreadableDrafts}
-			onDiscard={discardStale}
+			onDiscard={() => sayIfFails($_('app.actionFailed'), discardStale())}
 			onKeep={() => {
 				staleDrafts = [];
 				unreadableDrafts = [];

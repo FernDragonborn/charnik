@@ -6,7 +6,7 @@
 	// the CSV content packs. Built-in dark/light are read-only bases you clone from; the bundled
 	// Dracula/Catppuccin presets are worked examples you can add.
 	import Icon, { type IconName } from '../Icon.svelte';
-	import { toast } from '$lib/toast/toast';
+	import { sayIfFails, toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import {
@@ -41,15 +41,20 @@
 
 	// --- persistence (one JSON file per theme, via the Storage seam) ----------------------------
 	const persist = (theme: CustomTheme) =>
-		void writeThemeFile(getUserStorage(), theme).catch(() => {});
-	// edits (typing a hex) debounce their file write; the live preview is instant regardless
-	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+		sayIfFails($_('settings.themes.saveFailed'), writeThemeFile(getUserStorage(), theme));
+	// edits (typing a hex) debounce their file write; the live preview is instant regardless. One
+	// timer PER theme: a shared one let an edit to a second theme cancel the first one's save.
+	const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	function scheduleSave(id: string) {
-		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => {
-			const t = app.customThemes.find((x) => x.id === id);
-			if (t) persist(t);
-		}, 400);
+		clearTimeout(saveTimers.get(id));
+		saveTimers.set(
+			id,
+			setTimeout(() => {
+				saveTimers.delete(id);
+				const t = app.customThemes.find((x) => x.id === id);
+				if (t) persist(t);
+			}, 400),
+		);
 	}
 
 	function addTheme(theme: CustomTheme, { activate: act = false, edit = false } = {}) {
@@ -81,7 +86,7 @@
 
 	function remove(id: string) {
 		app.customThemes = app.customThemes.filter((t) => t.id !== id);
-		void removeThemeFile(getUserStorage(), id);
+		sayIfFails($_('settings.themes.saveFailed'), removeThemeFile(getUserStorage(), id));
 		if (app.theme === id) app.theme = 'dark'; // don't leave <html> pointing at a deleted theme
 		if (mode.view === 'edit' && mode.id === id) mode = { view: 'list' };
 	}

@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { _ } from '$lib/i18n';
+	import { toastFailure } from '$lib/toast/toast';
 	import { recreateDemoCharacter } from '$lib/character/store.svelte';
 
 	let busy = $state(false);
@@ -18,6 +19,8 @@
 			// goto to the same route wouldn't re-run the page's load() → the view would stay on the empty
 			// state despite the demo now existing. A full load re-initializes the play view cleanly.
 			window.location.assign(`${base}/combat`);
+		} catch (e) {
+			toastFailure($_('app.actionFailed'), e);
 		} finally {
 			busy = false;
 		}

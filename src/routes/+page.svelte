@@ -17,7 +17,7 @@
 	import { getUserStorage } from '$lib/storage/provider';
 	import { systemShortLabel } from '$lib/rules/pipeline';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { toast } from '$lib/toast/toast';
+	import { sayIfFails, toast } from '$lib/toast/toast';
 
 	const demo = isDemo();
 
@@ -123,7 +123,7 @@
 								title: $_('roster.discardDraftTitle', { values: { name } }),
 								body: $_('roster.discardDraftBody'),
 								label: $_('roster.discardDraftConfirm'),
-								run: () => void discardDraft(d.guid),
+								run: () => sayIfFails($_('app.actionFailed'), discardDraft(d.guid)),
 							};
 						}}
 					>
@@ -152,7 +152,7 @@
 								title: $_('roster.deleteTitle', { values: { name: c.name } }),
 								body: $_('roster.deleteBody'),
 								label: $_('roster.deleteConfirm'),
-								run: () => void removeCharacter(c.id),
+								run: () => sayIfFails($_('app.actionFailed'), removeCharacter(c.id)),
 							};
 						}}
 					>

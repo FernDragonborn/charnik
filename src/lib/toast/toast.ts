@@ -8,6 +8,7 @@
 import { toast as sonner } from 'svelte-sonner';
 import RollToast from '$lib/components/RollToast.svelte';
 import type { RollToastModel } from '$lib/dice/roll-toast';
+import { errText } from '$lib/util/format';
 
 export const TOAST_TONE = {
 	plain: 'plain',
@@ -117,3 +118,13 @@ export function toastRollCard(model: RollToastModel): void {
 	said.rolls.push(model);
 	queueFlush();
 }
+
+/** Say that something the player asked for did not happen, with what the platform said. A rejection
+ *  that reaches an `onclick` is otherwise an unhandled one, and the button just resets. */
+export const toastFailure = (title: string, e: unknown): void =>
+	toast.error(title, { description: errText(e) });
+
+/** Start work nobody awaits — a click's, an effect's — and say it if it fails, rather than leaving a
+ *  rejection nobody sees. */
+export const sayIfFails = (title: string, work: Promise<unknown>): void =>
+	void work.catch((e: unknown) => toastFailure(title, e));

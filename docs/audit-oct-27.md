@@ -431,7 +431,7 @@ prompt), `rolls.savagePending` and `savageUsedRound`, `rests.hdPick`, `casting.u
 **Fix:** `load()` forgets all of them (and `casting.enchanting`) whenever the character changes. Held
 by code reading only: the view-model has no unit harness.
 
-### [ ] U4 · Save errors are silent — medium · CONFIRMED
+### [x] U4 · Save errors are silent — medium · closed
 
 - try/finally with no catch (a disk error became an unhandled rejection and the button just reset):
   `EditContentForm.svelte`, `compendium/[...entry]/+page.svelte`, `NoCharacter.svelte`,
@@ -442,6 +442,8 @@ by code reading only: the view-model has no unit harness.
 - Floating calls with no handling: `+page.svelte` (delete a draft or a character),
   `combat-view-model.svelte.ts` (`appendLog`, `reviseLog`), `PackUpdatesSettings.svelte`,
   `translate/+page.svelte`, `EditContentForm.svelte`.
+
+**Fix:** a failure is said, never dropped. `toastFailure` toasts what the platform said; `sayIfFails` starts work nobody awaits and toasts its rejection. Every listed `try/finally` gained a `catch` that says it; the pack settings route every disk action through one `act`; the roster's delete and discard, the roll log's writes, the draft autosaves of the homebrew form and of Translate, and the compendium's checks and row actions go through `sayIfFails`. Themes say a failed save, and each theme has its own save timer. **Held by** `toast/say-if-fails.test.ts`; the sites are read, not driven.
 
 ### [x] U5 · "Cast" and "Pin" in the Spellbook do not do what they promise — medium · closed
 

@@ -2526,6 +2526,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ToastNote` — A sentence on a card — what a notice toast says, and what a roll's card carries under the roll.
 - `const toast` — Say a notice.
 - `function toastRollCard` — Show a completed roll's card — joined by whatever else the same action says.
+- `const toastFailure` — Say that something the player asked for did not happen, with what the platform said.
+- `const sayIfFails` — Start work nobody awaits — a click's, an effect's — and say it if it fails, rather than leaving a * rejection nobody …
 
 ### `src/lib/util/format.ts`
 
@@ -2591,4 +2593,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 61 components · 1591 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 61 components · 1593 exports across 218 modules · 108 duplicate suspects._

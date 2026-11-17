@@ -16,6 +16,7 @@
 		"cha": "CHA"
 	},
 	"app": {
+		"actionFailed": "That didn't go through",
 		"add": "Add",
 		"cancel": "Cancel",
 		"close": "Close",
@@ -938,6 +939,7 @@
 		},
 		"moveRow": "Move {name} — drag, or use the arrow keys",
 		"notice": {
+			"logNotSaved": "A roll was not written to the log",
 			"deadCannotHeal": "A dead character cannot rest or heal",
 			"deadCannotHealBody": "Revive them first, or take back the death save that killed them.",
 			"poolCannotCast": "This resource cannot pay for this spell.",
@@ -1623,6 +1625,7 @@
 		"cancel": "Cancel",
 		"classHint": "Ticked classes resolve by id; a custom class is stored by name (it won’t link to a class row).",
 		"classPlaceholder": "Add a class not in the list…",
+		"draftNotSaved": "Your unsaved draft could not be kept",
 		"editForkNote": "This entry ships with Charnik, so your edit is saved as a homebrew copy (the original stays untouched and your version sorts above it).",
 		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
 		"editInPlaceNote": "Editing your homebrew entry in place.",
@@ -2264,6 +2267,7 @@
 			"export": "Export",
 			"import": "Import theme…",
 			"namePlaceholder": "Theme name",
+			"saveFailed": "Your theme was not saved",
 			"title": "Themes",
 			"tokenColorLabel": "Colour of {token}"
 		},

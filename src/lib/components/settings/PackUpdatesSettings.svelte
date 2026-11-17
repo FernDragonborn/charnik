@@ -4,7 +4,7 @@
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
-	import { toast } from '$lib/toast/toast';
+	import { toast, toastFailure, sayIfFails } from '$lib/toast/toast';
 	import { submitOnEnter } from '$lib/actions/submitOnEnter';
 	import {
 		bundledPacks,
@@ -65,6 +65,10 @@
 	 *  nothing new can run because of this. */
 	/** Install a discovered pack under the folder name shown — the Install button, and Enter in the
 	 *  folder field beside it. */
+	/** A click's disk work, said if it fails — the disk is where these go wrong (full, locked,
+	 *  gone), and a rejected promise in an `onclick` only resets the button. */
+	const act = (work: () => Promise<unknown>) => sayIfFails($_('app.actionFailed'), work());
+
 	async function installFound(found: (typeof updates.discovered)[number]) {
 		const res = await installPack(found.pack, {
 			localName: folderName[found.pack] ?? found.localName,
@@ -91,14 +95,14 @@
 	/** The copies set aside before a translated file was replaced. Read from the disk for the reason
 	 *  `rollbackable` is: they outlive the session that made them. */
 	let backups = $state<TranslationBackup[]>([]);
-	$effect(() => void translationBackups().then((runs) => (backups = runs)));
+	$effect(() => act(() => translationBackups().then((runs) => (backups = runs))));
 	const backupsOf = (pack: string): TranslationBackup[] =>
 		backups.filter((backup) => backup.packs[pack] !== undefined);
 
 	/** Packs with a previous version still on disk (kept by the last apply). Read from the disk
 	 *  rather than tracked in state — a `.prev` also survives a restart, and so must the offer. */
 	let rollbackable = $state<string[]>([]);
-	$effect(() => void rollbackablePacks().then((packs) => (rollbackable = packs)));
+	$effect(() => act(() => rollbackablePacks().then((packs) => (rollbackable = packs))));
 
 	/** Files this update would write / preserve / delete, as a count per kind. */
 	function counts(changes: { kind: string }[]) {
@@ -159,12 +163,12 @@
 				type="url"
 				bind:value={repoUrl}
 				placeholder={$_('settings.packs.addPlaceholder')}
-				onkeydown={(e) => e.key === 'Enter' && repoUrl && discoverPacks(repoUrl)}
+				onkeydown={(e) => e.key === 'Enter' && repoUrl && act(() => discoverPacks(repoUrl))}
 			/>
 			<button
 				class="pill-btn"
 				disabled={updates.checking || repoUrl.trim() === ''}
-				onclick={() => discoverPacks(repoUrl.trim())}
+				onclick={() => act(() => discoverPacks(repoUrl.trim()))}
 			>
 				{$_('settings.packs.lookUp')}
 			</button>
@@ -181,7 +185,7 @@
 			disabled={updates.checking}
 			onclick={() => {
 				repoUrl = SHIPPED_PACK_REPO;
-				void discoverPacks(SHIPPED_PACK_REPO);
+				act(() => discoverPacks(SHIPPED_PACK_REPO));
 			}}
 		>
 			{$_('settings.packs.ownRepoLoad')}
@@ -231,7 +235,7 @@
 							<div class="pack-warn">
 								{$_('settings.packs.nameTaken', { values: { name: found.pack } })}
 							</div>
-							<label class="pack-rename" use:submitOnEnter={() => void installFound(found)}>
+							<label class="pack-rename" use:submitOnEnter={() => act(() => installFound(found))}>
 								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
 								<input
 									class="add-url"
@@ -246,20 +250,21 @@
 						{#if found.installed}
 							<span class="pack-sub">{$_('settings.packs.alreadyInstalled')}</span>
 						{:else}
-							<button class="pill-btn accent" onclick={() => installFound(found)}>
+							<button class="pill-btn accent" onclick={() => act(() => installFound(found))}>
 								{$_('settings.packs.install')}
 							</button>
 							{#if claimToAccept === found.pack}
 								<button
 									class="pill-btn"
-									onclick={async () => {
-										claimToAccept = null;
-										await installPack(found.pack, {
-											localName: folderName[found.pack] ?? found.localName,
-											acceptSourceClaim: true,
-										});
-										await afterDiskChange();
-									}}
+									onclick={() =>
+										act(async () => {
+											claimToAccept = null;
+											await installPack(found.pack, {
+												localName: folderName[found.pack] ?? found.localName,
+												acceptSourceClaim: true,
+											});
+											await afterDiskChange();
+										})}
 								>
 									{$_('settings.packs.installAnyway')}
 								</button>
@@ -286,16 +291,19 @@
 						<button
 							class="pill-btn accent"
 							disabled={restoring}
-							onclick={async () => {
-								restoring = true;
-								try {
-									await restoreBundledPacks([pack]);
-									missingBundled.packs = missingBundled.packs.filter((p) => p !== pack);
-									await afterDiskChange();
-								} finally {
-									restoring = false;
-								}
-							}}
+							onclick={() =>
+								act(async () => {
+									restoring = true;
+									try {
+										await restoreBundledPacks([pack]);
+										missingBundled.packs = missingBundled.packs.filter((p) => p !== pack);
+										await afterDiskChange();
+									} catch (e) {
+										toastFailure($_('app.actionFailed'), e);
+									} finally {
+										restoring = false;
+									}
+								})}
 						>
 							{$_('settings.packs.restore')}
 						</button>
@@ -329,7 +337,7 @@
 						{#if renaming?.pack === pack}
 							<label
 								class="pack-rename"
-								use:submitOnEnter={() => void confirmRename(pack, renaming?.to ?? pack)}
+								use:submitOnEnter={() => act(() => confirmRename(pack, renaming?.to ?? pack))}
 							>
 								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
 								<!-- svelte-ignore a11y_autofocus -->
@@ -443,11 +451,12 @@
 						{#if rollbackable.includes(pack)}
 							<button
 								class="pill-btn"
-								onclick={async () => {
-									if (await undoUpdate(pack))
-										toast.success($_('settings.packs.undoDone', { values: { pack } }));
-									await afterDiskChange();
-								}}
+								onclick={() =>
+									act(async () => {
+										if (await undoUpdate(pack))
+											toast.success($_('settings.packs.undoDone', { values: { pack } }));
+										await afterDiskChange();
+									})}
 							>
 								{$_('settings.packs.undo')}
 							</button>
@@ -457,7 +466,10 @@
 						     mean opening the config file. -->
 						{#if renaming?.pack === pack}
 							{@const target = renaming.to}
-							<button class="pill-btn accent" onclick={() => confirmRename(pack, target)}>
+							<button
+								class="pill-btn accent"
+								onclick={() => act(() => confirmRename(pack, target))}
+							>
 								{$_('settings.packs.renameConfirm')}
 							</button>
 							<button class="pill-btn" onclick={() => (renaming = null)}>
@@ -479,24 +491,26 @@
 						{#if pending}
 							<button
 								class="pill-btn accent"
-								onclick={async () => {
-									const res = await applyUpdate(pack);
-									// it stopped to show rows that would vanish from inside changed files — the
-									// second click is the one that accepts them
-									rowsToAccept = res.rowRemovals !== undefined ? pack : null;
-									await afterDiskChange();
-								}}
+								onclick={() =>
+									act(async () => {
+										const res = await applyUpdate(pack);
+										// it stopped to show rows that would vanish from inside changed files — the
+										// second click is the one that accepts them
+										rowsToAccept = res.rowRemovals !== undefined ? pack : null;
+										await afterDiskChange();
+									})}
 							>
 								{$_('settings.packs.apply')}
 							</button>
 							{#if rowsToAccept === pack}
 								<button
 									class="pill-btn"
-									onclick={async () => {
-										rowsToAccept = null;
-										await applyUpdate(pack, { acceptRowRemovals: true });
-										await afterDiskChange();
-									}}
+									onclick={() =>
+										act(async () => {
+											rowsToAccept = null;
+											await applyUpdate(pack, { acceptRowRemovals: true });
+											await afterDiskChange();
+										})}
 								>
 									{$_('settings.packs.applyAnyway')}
 								</button>
@@ -506,10 +520,11 @@
 							{#if pending.diff.changes.some((c) => c.kind === FILE_CHANGE.removed)}
 								<button
 									class="pill-btn"
-									onclick={async () => {
-										await applyUpdate(pack, { removeDeleted: true, acceptRowRemovals: true });
-										await afterDiskChange();
-									}}
+									onclick={() =>
+										act(async () => {
+											await applyUpdate(pack, { removeDeleted: true, acceptRowRemovals: true });
+											await afterDiskChange();
+										})}
 								>
 									{$_('settings.packs.applyWithRemovals')}
 								</button>
@@ -518,13 +533,14 @@
 						{#if uninstalling === pack}
 							<button
 								class="pill-btn accent"
-								onclick={async () => {
-									// the plugin revoke is PART of uninstalling (it happens inside), not a step this
-									// button remembers: consent outlives the files, so it can't hang off one caller
-									await uninstallPack(pack);
-									uninstalling = null;
-									await afterDiskChange();
-								}}
+								onclick={() =>
+									act(async () => {
+										// the plugin revoke is PART of uninstalling (it happens inside), not a step this
+										// button remembers: consent outlives the files, so it can't hang off one caller
+										await uninstallPack(pack);
+										uninstalling = null;
+										await afterDiskChange();
+									})}
 							>
 								{$_('settings.packs.uninstallConfirm')}
 							</button>

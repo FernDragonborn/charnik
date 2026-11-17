@@ -8,6 +8,7 @@
 	// and one of them is "I meant it, stop asking" — but because a stray click dismissing the only
 	// offer to put your rules back is the exact outcome this exists to prevent.
 	import { _ } from '$lib/i18n';
+	import { toastFailure } from '$lib/toast/toast';
 	import DialogShell from './DialogShell.svelte';
 	import { keepMissingPacks, missingBundled } from '$lib/content/packs.svelte';
 	import { restoreBundledPacks } from '$lib/content/provider';
@@ -21,6 +22,8 @@
 			await restoreBundledPacks(missingBundled.packs);
 			missingBundled.packs = [];
 			await reloadContent();
+		} catch (e) {
+			toastFailure($_('app.actionFailed'), e);
 		} finally {
 			busy = false;
 		}
