@@ -3,7 +3,7 @@
 	// (audit-oct-27 D8): a plain rollback drops every translation, edit and note made after it.
 	import { _ } from '$lib/i18n';
 	import DialogShell from '../DialogShell.svelte';
-	import { ROLLBACK_MODE, type RollbackMode } from '$lib/content/remote/install';
+	import { ROLLBACK_MODE, type RollbackMode } from '$lib/content/remote/rollback';
 
 	let {
 		pack,

@@ -29,7 +29,7 @@
 	import type { TranslationBackup } from '$lib/content/translation-backups';
 	import PackTranslationBackups from './PackTranslationBackups.svelte';
 	import PackUndoDialog from './PackUndoDialog.svelte';
-	import type { RollbackMode } from '$lib/content/remote/install';
+	import type { RollbackMode } from '$lib/content/remote/rollback';
 	import {
 		discoverPacks,
 		installPack,

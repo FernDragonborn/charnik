@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { stampWithHash } from './hash';
-import { hasRollback, rollbackPack } from './remote/install';
+import { hasRollback, rollbackPack } from './remote/rollback';
 import { saveTranslation } from './translate';
 import {
 	listTranslationBackups,

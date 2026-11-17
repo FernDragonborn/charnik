@@ -20,11 +20,10 @@
 	import { gitBlobSha } from '$lib/content/hash';
 	import {
 		applyPackUpdate,
-		hasRollback,
 		recoverInterruptedApply,
 		removeStaging,
-		rollbackPack,
 	} from '$lib/content/remote/install';
+	import { hasRollback, rollbackPack } from '$lib/content/remote/rollback';
 	import { stampWithHash } from '$lib/content/hash';
 	import type { RemoteFetcher } from '$lib/content/remote/types';
 	import { discoverContentRoots } from '$lib/content/disk';

@@ -40,18 +40,20 @@ import {
 } from './diff';
 import {
 	applyPackUpdate,
-	hasRollback,
 	isStaged,
 	pluginsIn,
 	pluginsTouchedBy,
 	pruneCache,
-	rollbackPack,
-	ROLLBACK_MODE,
 	stagePackUpdate,
 	type ApplyResult,
+} from './install';
+import {
+	hasRollback,
+	rollbackPack,
+	ROLLBACK_MODE,
 	type RollbackMode,
 	type RolledBack,
-} from './install';
+} from './rollback';
 import {
 	updates,
 	fail,

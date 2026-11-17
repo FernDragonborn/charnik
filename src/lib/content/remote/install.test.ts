@@ -18,16 +18,14 @@ import {
 import {
 	applyPackUpdate,
 	cachePath,
-	hasRollback,
 	isPackWriteInFlight,
 	isStaged,
 	pluginsIn,
 	pruneCache,
 	recoverInterruptedApply,
-	rollbackPack,
-	ROLLBACK_MODE,
 	stagePackUpdate,
 } from './install';
+import { hasRollback, rollbackPack, ROLLBACK_MODE } from './rollback';
 import { listTranslationBackups } from '../translation-backups';
 import type { RemotePack } from './github';
 import type { RemoteFetcher } from './types';

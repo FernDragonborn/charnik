@@ -545,7 +545,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (201 modules)
+## Library functions & types (202 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1461,19 +1461,17 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/remote/install.ts`
 
 - `const cachePath`
+- `interface StagedFile` — One file in hand, not yet on disk.
 - `interface ApplyResult`
 - `interface ApplyRequest`
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
+- `const stagingDir` — Where a replacement tree is built, and where the one it replaces is kept.
+- `const previousDir`
 - `function swapInNewTree` — * Build `<pack>.new` as a COMPLETE tree — every file the pack currently has, minus the ones being * removed, plus the…
 - `const isPackWriteInFlight`
 - `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
 - `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on * every content reb…
 - `function removeStaging` — Delete a pack's staging folders.
-- `const ROLLBACK_MODE` — What happens to what the user changed in the pack since the update they are undoing * (audit-oct-27 D8).
-- `type RollbackMode`
-- `interface RolledBack` — What a rollback did.
-- `function rollbackPack` — Roll one applied update back to the copy the swap kept.
-- `const hasRollback` — Is there something to roll back to?
 - `function stagePackUpdate` — * Pre-download an update's bytes into the cache, so applying it later is instant and works offline * (the `download` …
 - `function isStaged` — Is this whole update already downloaded?
 - `function pruneCache` — * Throw away staged bytes nothing is waiting for.
@@ -1486,6 +1484,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function installPack` — * Install one discovered pack.
 - `function renamePack` — * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at * install time (or a…
 - `function uninstallPack` — * Uninstall a pack: revoke what its plugins were granted, delete its folder (which takes their code * with it — it li…
+
+### `src/lib/content/remote/rollback.ts`
+
+- `const ROLLBACK_MODE` — What happens to what the user changed in the pack since the update they are undoing * (audit-oct-27 D8).
+- `type RollbackMode`
+- `interface RolledBack` — What a rollback did.
+- `function rollbackPack` — Roll one applied update back to the copy the swap kept.
+- `const hasRollback` — Is there something to roll back to?
 
 ### `src/lib/content/remote/tauri-fetch.ts`
 
@@ -2604,4 +2610,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1603 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1606 exports across 219 modules · 108 duplicate suspects._
