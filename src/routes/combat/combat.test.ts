@@ -1163,6 +1163,27 @@ describe('CombatVM · S2 split net', () => {
 		}
 	});
 
+	it('a one-press attack whose d20 shows the crit face rolls its damage as a crit', () => {
+		const random = vi.spyOn(Math, 'random');
+		const dice = () => (combat.journal.log[0]?.damage ?? []).flatMap((part) => part.dice);
+		const twins = () => dice().filter((d) => d.role === DIE_ROLE.crit).length;
+		let thrown = 0;
+		try {
+			for (const attack of combat.attacks) {
+				random.mockReturnValue(0.999); // every die at its top face: the d20 shows 20
+				combat.rolls.rollAttackNow(attack);
+				thrown += dice().length - twins();
+				expect(twins()).toBe(dice().length - twins()); // every die the blow made gains a twin
+				random.mockReturnValue(0.5); // an 11 is no crit
+				combat.rolls.rollAttackNow(attack);
+				expect(twins()).toBe(0);
+			}
+		} finally {
+			random.mockRestore();
+		}
+		expect(thrown).toBeGreaterThan(0); // at least one attack here rolls a die to twin
+	});
+
 	it('damage at 0 HP is a death-save failure, and a critical is the second one pressed by hand', () => {
 		character.play.hp = { current: 0, max: 20, temp: 0 };
 		combat.hpAmount = 3;

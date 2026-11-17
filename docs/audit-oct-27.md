@@ -412,9 +412,9 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
 - [x] **Resources and rituals** · closed. `regainResource`, `restoreResourceUpTo`, partial recovery in
   `rest()` and `passBoundary` read the clamped count (`resourceSpent`), and a ritual cast in combat
   spends no turn slot (`resources.test.ts`, `cast.test.ts`).
-- [ ] **A one-press attack with a natural 20** wrote ordinary damage, and there is no "×2 crit" fix-up on
-  already-written damage (`routes/combat/sheet-rolls.svelte.ts`). `roller.md` settles that a crit is
-  not inferred from a 20, so this is a suggestion only.
+- [x] **A one-press attack with a natural 20** · closed. It wrote ordinary damage. The d20 that shows
+  the character's crit face now rolls the damage as a crit, by the crit method in Settings
+  (`SheetRolls.critFaceShown`; `combat.test.ts`), as the decision above says.
 - [x] **Division of negatives** · closed. A negative floors towards −∞ (`speed-level/2` at level 3 is
   −2), which is RAW and now written in `effects.md` ▸ "Rounding" (`context.test.ts`).
 

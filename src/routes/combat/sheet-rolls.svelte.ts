@@ -13,7 +13,16 @@ import { EFFECT_KIND, EXTRA_ATTACK_WORD, ROLL_LIMIT } from '$lib/effects/token-p
 import type { ExprContext } from '$lib/effects/expression-evaluator';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { DIE_ROLE, rollPool, totalOf, type RolledDie } from '$lib/rules/dice';
+import {
+	DIE_ROLE,
+	naturalOf,
+	rollPool,
+	totalOf,
+	type Rolled,
+	type RolledDie,
+} from '$lib/rules/dice';
+import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
+import { app } from '$lib/stores/app.svelte';
 import { toastRoll } from '$lib/dice/roll-toast';
 import type { PlayNotice } from '$lib/play/outcome';
 import {
@@ -294,13 +303,15 @@ export class SheetRolls {
 		const { parts, fx, hasDmg } = this.attackSpec(at);
 		const stamp = Date.now();
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry each
-		const entries = names.map((name, i) =>
-			this.host().journal.entryFor(
-				name,
-				rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) }),
-				{ at: stamp + i, ...(hasDmg ? { damage: rollDamageParts(parts) } : {}) },
-			),
-		);
+		const entries = names.map((name, i) => {
+			const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) });
+			const crit = this.critFaceShown(toHit);
+			const damage = rollDamageParts(crit ? parts.map((part) => ({ ...part, crit })) : parts);
+			return this.host().journal.entryFor(name, toHit, {
+				at: stamp + i,
+				...(hasDmg ? { damage } : {}),
+			});
+		});
 		this.host().journal.recordRolls(entries);
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
@@ -310,6 +321,14 @@ export class SheetRolls {
 		const savage = this.savageOffer(parts[0], first?.damage);
 		if (savage && first?.at !== undefined)
 			this.savagePending = { spec: savage.spec, roll: savage.roll, at: first.at };
+	};
+
+	/** The crit method when the d20 that counted shows this character's crit face (20, or a
+	 *  Champion's 19 or 18) — a one-press attack has no tray to toggle it in, so that face rolls its
+	 *  damage as a crit at once. A crit without the face (a paralysed target) stays the tray's toggle. */
+	private critFaceShown = (toHit: Rolled) => {
+		const face = this.host().sheet?.critThreshold.value ?? CRIT_THRESHOLD_MAX;
+		return (naturalOf(toHit) ?? 0) >= face ? app.critMethod : undefined;
 	};
 
 	/**

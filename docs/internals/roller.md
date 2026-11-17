@@ -95,13 +95,14 @@ override in the roller.
 RAW: **every die the roll made gains a twin** — the weapon's and an effect's alike — and the flat
 modifier gains nothing, which is the half of the rule tables get wrong.
 
-**A crit is never inferred from a natural 20.** The same 20 is a crit on an attack and just a 20 on a
-check, and a crit happens without one. The tracker surfaces; it does not rule.
+**An attack whose d20 shows the character's crit face rolls its damage as a crit at once** — the 20,
+or a Champion's 19 or 18. That is the one-press attack, which has no tray to toggle in
+(`SheetRolls.critFaceShown`). A crit WITHOUT that face (a paralysed target) stays the player's toggle
+on the damage line, which turns a crit off as well as on, and a check's 20 is just a 20.
 
-**What the roll DOES carry is the face that was as good as a 20 for that character** —
+**What the roll carries is the face that was as good as a 20 for that character** —
 `RollLogEntry.critThreshold`, a Champion's 19 or 18, written only when it is not the RAW 20 so every
-line ever recorded already reads correctly. It decides the GOLD and nothing else, which is what makes
-it compatible with the rule above. The record carries it rather than the view looking it up, for the
+line ever recorded already reads correctly. In the log it decides the GOLD. The record carries it rather than the view looking it up, for the
 same reason a roll's name is a catalog key: levelling up must not rewrite what the log says happened.
 **A roll is stamped when it threw a d20 AND rolled damage**, which is the app's whole definition of an
 attack and is asked once, at the record (`RollJournal.stampCritThreshold`), rather than in each of the
