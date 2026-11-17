@@ -15,6 +15,8 @@ vi.mock('$lib/toast/toast', () => {
 	return {
 		toast: Object.assign(say, { success: say, warning: say, error: say }),
 		toastRollCard: () => {},
+		toastFailure: () => {},
+		sayIfFails: () => {},
 	};
 });
 import { loadPacks } from '../../test-support/real-content';

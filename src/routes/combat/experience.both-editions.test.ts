@@ -11,6 +11,8 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('$lib/toast/toast', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
+	toastFailure: () => {},
+	sayIfFails: () => {},
 }));
 
 import { loadPacks } from '../../test-support/real-content';

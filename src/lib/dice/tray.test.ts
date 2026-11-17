@@ -5,6 +5,8 @@ import { registerDiceTray, openDiceTray, type DiceTrayRequest } from './tray.sve
 vi.mock('$lib/toast/toast', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
+	toastFailure: () => {},
+	sayIfFails: () => {},
 }));
 
 describe('dice tray contract', () => {
