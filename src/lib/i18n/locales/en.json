@@ -2164,6 +2164,17 @@
 			"applyAnyway": "Apply and accept the deletions",
 			"undo": "Undo this update",
 			"undoDone": "“{pack}” is back to the version it had before the last update.",
+			"undoDoneBackup": "“{pack}” is back to the version it had before the last update. The pack as it stood is in {folder}, and the backups list below can put it back.",
+			"undoTitle": "Undo the last update of “{pack}”",
+			"undoSubtitle": "The version from before that update comes back. What about anything you changed in this pack since — translations, edits, notes?",
+			"undoMode": {
+				"keepAsBackup": "Keep my changes as a backup",
+				"keepAsBackupWhat": "The pack as it is now is copied aside first. The old version comes back as it was, and the backup can be restored from this page.",
+				"carryChanges": "Carry my changes over",
+				"carryChangesWhat": "The old version comes back the way an update arrives: files you made your own stay, and your translations move across.",
+				"discardChanges": "Discard my changes",
+				"discardChangesWhat": "The old version comes back exactly as it was. Anything changed in this pack since the update is gone."
+			},
 			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",
 			"uninstallWarnEmpty": "Deletes its files from your disk. Characters using anything from it go blank there. You can get it back any time from {repo}."
 		},

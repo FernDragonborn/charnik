@@ -25,8 +25,10 @@ import {
 	pruneCache,
 	recoverInterruptedApply,
 	rollbackPack,
+	ROLLBACK_MODE,
 	stagePackUpdate,
 } from './install';
+import { listTranslationBackups } from '../translation-backups';
 import type { RemotePack } from './github';
 import type { RemoteFetcher } from './types';
 import type { ContentGraph, LoadedRow } from '../loader';
@@ -416,7 +418,7 @@ describe('apply is a folder swap', () => {
 		});
 		expect(await hasRollback(s, 'p')).toBe(true);
 
-		expect(await rollbackPack(s, 'p')).toBe(true);
+		expect(await rollbackPack(s, 'p')).not.toBeNull();
 		expect(await s.read('content/p/a.csv')).toBe('id\nold');
 		expect(await hasRollback(s, 'p')).toBe(false); // one generation only, and it was just used
 	});
@@ -576,7 +578,7 @@ describe('recovering an interrupted apply', () => {
 			sawInFlight ||= isPackWriteInFlight();
 			return spy(from, to);
 		};
-		expect(await rollbackPack(s, 'p')).toBe(true);
+		expect(await rollbackPack(s, 'p')).not.toBeNull();
 
 		expect(sawInFlight).toBe(true);
 		expect(isPackWriteInFlight()).toBe(false);
@@ -891,5 +893,62 @@ describe('an update over a file that holds translations', () => {
 		const runs = (await s.list('content-backups')).map((e) => e.name).sort();
 		expect(runs).toHaveLength(10);
 		expect(runs[0]).toBe('2026-01-03T00-00-00');
+	});
+});
+
+/** audit-oct-27 D8: undoing an update once dropped every translation, edit and note made after it,
+ *  in one click. Each of the three ways out is said in the dialog and held here. */
+describe('undoing an update: what becomes of the changes made since', () => {
+	const HEAD = 'id,name_en,name_uk';
+	async function updatedPack(): Promise<MemoryStorage> {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p.prev/a.csv', enc(await shippedFile(`${HEAD}\nfireball,Old,`)));
+		await s.writeBytes('content/p.prev/b.csv', enc(await shippedFile('id\nold_b')));
+		await s.writeBytes('content/p/a.csv', enc(await shippedFile(`${HEAD}\nfireball,New,`)));
+		await saveTranslation(s, { root: 'content/p', file: 'a.csv', id: 'fireball' }, 'uk', {
+			name: 'Вогняна куля',
+		});
+		const mine = (await shippedFile('id\nnew_b')).replace('new_b', 'house_rule');
+		await s.writeBytes('content/p/b.csv', enc(mine));
+		await s.writeBytes('content/p/c.csv', enc(await shippedFile('id\nonly_in_update')));
+		await s.writeBytes('content/p/notes.txt', enc('my notes'));
+		return s;
+	}
+
+	it('carries the changes over the way an update would', async () => {
+		const s = await updatedPack();
+
+		expect(await rollbackPack(s, 'p', ROLLBACK_MODE.carryChanges)).toEqual({});
+
+		const a = await s.read('content/p/a.csv');
+		expect(a).toContain('Old');
+		expect(a).toContain('Вогняна куля');
+		expect(await s.read('content/p/b.csv')).toContain('house_rule');
+		expect(await s.exists('content/p/c.csv')).toBe(false);
+		expect(await s.read('content/p/notes.txt')).toBe('my notes');
+		expect(await hasRollback(s, 'p')).toBe(false);
+	});
+
+	it('keeps the pack as it stood in a backup the backups list can restore', async () => {
+		const s = await updatedPack();
+		const before = await s.read('content/p/b.csv');
+
+		const rolled = await rollbackPack(s, 'p', ROLLBACK_MODE.keepAsBackup);
+
+		expect(await s.read('content/p/b.csv')).toContain('old_b');
+		expect(rolled?.backupDir).toBeDefined();
+		expect(await s.read(`${rolled?.backupDir}/p/b.csv`)).toBe(before);
+		const [listed] = await listTranslationBackups(s);
+		expect(listed?.packs['p']).toEqual(expect.arrayContaining(['a.csv', 'b.csv', 'notes.txt']));
+	});
+
+	it('discards them when asked, and by default', async () => {
+		const s = await updatedPack();
+
+		expect(await rollbackPack(s, 'p')).toEqual({});
+
+		expect(await s.read('content/p/b.csv')).toContain('old_b');
+		expect(await s.exists('content/p/notes.txt')).toBe(false);
+		expect(await s.exists('content-backups')).toBe(false);
 	});
 });

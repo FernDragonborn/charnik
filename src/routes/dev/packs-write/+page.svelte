@@ -177,7 +177,7 @@
 		);
 
 		// --- 2. rollback: the undo an applied update never had --------------------------------------
-		check('rollback reports it happened', await rollbackPack(s, PACK));
+		check('rollback reports it happened', (await rollbackPack(s, PACK)) !== null);
 		check('the CSV is the old one again', (await s.read(`${ROOT}/a.csv`)).includes('old'));
 		check('and there is nothing left to roll back to', !(await hasRollback(s, PACK)));
 
@@ -332,7 +332,7 @@ fireball,Fireball,,A bigger boom,`,
 			(await s.read(`${ROOT}.prev/a.csv`).catch(() => '')) === after,
 		);
 		check('the staging folder is gone', !(await s.exists(`${ROOT}.new`)));
-		check('and "undo this update" reverses the restore', await rollbackPack(s, PACK));
+		check('and "undo this update" reverses the restore', (await rollbackPack(s, PACK)) !== null);
 		check('…to the merged file', (await s.read(`${ROOT}/a.csv`)) === after);
 
 		// --- 10. a file the update DELETES leaves a copy too, and the copy brings it back ------------

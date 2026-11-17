@@ -454,7 +454,7 @@ describe('the check runs alone', () => {
 		expect((await applyUpdate('dark-sun', { fetcher: conditional })).error).toBeUndefined();
 		expect(updates.pending['dark-sun']).toBeUndefined();
 
-		expect(await undoUpdate('dark-sun')).toBe(true);
+		expect(await undoUpdate('dark-sun')).not.toBeNull();
 		await checkNow({ manual: true, fetcher: conditional });
 
 		expect(updates.pending['dark-sun']).toBeDefined();

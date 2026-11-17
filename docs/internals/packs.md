@@ -99,6 +99,11 @@ a fake (`tooling.md`).
   `content-backups/`, which are listed by the folder they would be put back into.
 
 `rollbackPack` restores from `<pack>.prev`; `hasRollback` says whether that is still possible.
+**Undoing an update asks what becomes of what changed since** (`ROLLBACK_MODE`), because `.prev`
+can be months old: keep the pack as it stands in a `content-backups/` run (listed and restorable like
+any other copy there), carry the changes over (the previous version applied the way an update is —
+a file the overwrite guard protects keeps the user's bytes, translations are merged, a file only the
+update brought is dropped unless it is the user's), or discard them. Each consumes `.prev`.
 
 **Removals are what break a character; additions never do.** So the preview before an apply names the
 rows that would DISAPPEAR and the characters referencing them, down to the row — upstream deletes

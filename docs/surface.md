@@ -275,7 +275,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (61)
+## Shared components (62)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -318,6 +318,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **OwnWords** | `rowId`, `original`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
 | **PackTranslationBackups** | `pack`, `backups`, `onRestored` | The way back out of `content-backups/`, under the pack whose files a run copied aside before it |
+| **PackUndoDialog** | `pack`, `onChoose`, `onCancel` | "Undo this update" asks what becomes of what the player changed in the pack since the update |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
@@ -1468,6 +1469,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
 - `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on * every content reb…
 - `function removeStaging` — Delete a pack's staging folders.
+- `const ROLLBACK_MODE` — What happens to what the user changed in the pack since the update they are undoing * (audit-oct-27 D8).
+- `type RollbackMode`
+- `interface RolledBack` — What a rollback did.
 - `function rollbackPack` — Roll one applied update back to the copy the swap kept.
 - `const hasRollback` — Is there something to roll back to?
 - `function stagePackUpdate` — * Pre-download an update's bytes into the cache, so applying it later is instant and works offline * (the `download` …
@@ -1634,6 +1638,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const TRANSLATION_BACKUP_DIR`
 - `interface CarryRun` — One writer's pass over `content/`: what it merged, and where the files it replaced were copied.
+- `const backupPathOf` — Where a run keeps its copy of one content file: the same path, below the run's folder.
 - `function backupRunTime` — A run folder's name back as epoch ms, or null for a folder this module did not name.
 - `function beginCarryRun`
 - `function translationsOrphanedBy` — * The translated rows replacing `path` with `incoming` would leave with nowhere to go, by row id — * the merge as a d…
@@ -1641,6 +1646,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function keepLocalTranslations` — * The bytes to write at `path` in place of `incoming`: the same bytes, unless the file already there * carries transl…
 - `function setAsideRemovedTranslations` — * Copy aside a file that is about to be DELETED, if it holds translations.
 - `function finishCarryRun` — Close a run: say what it did, and drop the backup folders past the ones kept.
+- `function pruneBackupRuns` — Drop the backup runs past the ones kept.
 
 ### `src/lib/content/watcher.ts`
 
@@ -2598,4 +2604,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 61 components · 1598 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1603 exports across 218 modules · 108 duplicate suspects._

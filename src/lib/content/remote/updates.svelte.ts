@@ -46,8 +46,11 @@ import {
 	pluginsTouchedBy,
 	pruneCache,
 	rollbackPack,
+	ROLLBACK_MODE,
 	stagePackUpdate,
 	type ApplyResult,
+	type RollbackMode,
+	type RolledBack,
 } from './install';
 import {
 	updates,
@@ -413,20 +416,25 @@ async function runRestore(): Promise<void> {
 /**
  * Undo the last applied update for one pack, from the copy the swap kept beside it. One generation
  * only — the next apply replaces it — so this is "put back what I had an hour ago", not a history.
- * Returns false when there is nothing to go back to.
+ * `mode` is what becomes of what changed since (`ROLLBACK_MODE`). Null when there is nothing to go
+ * back to, or the rollback failed (said on the panel's error channel).
  */
-export async function undoUpdate(pack: string): Promise<boolean> {
+export async function undoUpdate(
+	pack: string,
+	mode: RollbackMode = ROLLBACK_MODE.discardChanges,
+): Promise<RolledBack | null> {
 	// a rollback is two renames on the real filesystem, so it can fail the way an apply can — reported
 	// on the panel's error channel rather than rejecting into the button's `onclick`
-	const done = await guardedDisk(false, () => rollbackPack(getUserStorage(), pack));
-	logger.info('packs: rollback', { pack, done });
+	const rolled = await guardedDisk(null, () => rollbackPack(getUserStorage(), pack, mode));
+	const done = rolled !== null;
+	logger.info('packs: rollback', { pack, mode, done });
 	// the rolled-back files are older than the remote again, so the offer is live once more; the next
 	// check re-derives it, and until then the pack simply reads as up to date
 	if (done) {
 		forgetPending(pack);
 		forgetListingOf(pack);
 	}
-	return done;
+	return rolled;
 }
 
 /** The disk went back to an older state of this pack, so its repo is asked afresh next time. */

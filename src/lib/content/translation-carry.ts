@@ -38,7 +38,7 @@ export interface CarryRun {
 }
 
 /** Where a run keeps its copy of one content file: the same path, below the run's folder. */
-const backupPath = (run: CarryRun, path: string): string =>
+export const backupPathOf = (run: CarryRun, path: string): string =>
 	`${run.backupDir}/${path.slice(CONTENT_DIR.length + 1)}`;
 
 /** `2026-10-07T16-41-17` — sortable as text, and legal in a Windows folder name. */
@@ -103,7 +103,7 @@ export async function keepLocalTranslations(
 	if (merge === null) return incoming;
 	const { localBytes, text, report } = merge;
 	run.files[path] = report;
-	await run.storage.writeBytes(backupPath(run, path), localBytes);
+	await run.storage.writeBytes(backupPathOf(run, path), localBytes);
 	return report.carried.length > 0 || report.outdated.length > 0
 		? new TextEncoder().encode(text)
 		: incoming;
@@ -119,7 +119,7 @@ export async function setAsideRemovedTranslations(run: CarryRun, path: string): 
 	const orphaned = translatedRowIds(new TextDecoder().decode(localBytes));
 	if (orphaned.length === 0) return;
 	run.files[path] = { carried: [], replaced: [], outdated: [], orphaned };
-	await run.storage.writeBytes(backupPath(run, path), localBytes);
+	await run.storage.writeBytes(backupPathOf(run, path), localBytes);
 }
 
 /** Close a run: say what it did, and drop the backup folders past the ones kept. */
@@ -135,12 +135,16 @@ export async function finishCarryRun(run: CarryRun): Promise<void> {
 			orphaned: report.orphaned,
 			backup: run.backupDir,
 		});
-	// best-effort: a backup folder that outlives its turn costs disk, and failing the update that
-	// just succeeded over it would cost the update
-	const runs = (await run.storage.list(TRANSLATION_BACKUP_DIR).catch(() => []))
+	await pruneBackupRuns(run.storage);
+}
+
+/** Drop the backup runs past the ones kept. Best-effort: a backup folder that outlives its turn
+ *  costs disk, and failing the write that just succeeded over it would cost that write. */
+export async function pruneBackupRuns(storage: Storage): Promise<void> {
+	const runs = (await storage.list(TRANSLATION_BACKUP_DIR).catch(() => []))
 		.filter((entry) => entry.isDir)
 		.map((entry) => entry.path)
 		.sort()
 		.reverse();
-	for (const stale of runs.slice(BACKUP_RUNS_KEPT)) await run.storage.remove(stale).catch(() => {});
+	for (const stale of runs.slice(BACKUP_RUNS_KEPT)) await storage.remove(stale).catch(() => {});
 }

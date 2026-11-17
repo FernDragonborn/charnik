@@ -165,11 +165,15 @@ field. A save carries the stored file's unknown keys over at the top level and i
 inside a row are not carried. **Held by** `character.test.ts` ▸ a field this build does not know
 survives a save.
 
-### [ ] D8 · "Undo update" on a pack discards everything changed since — medium-high · CONFIRMED by trace
+### [x] D8 · "Undo update" on a pack discards everything changed since — medium-high · closed
 
 `rollbackPack` (`install.ts`) moved live → `.new`, then `.prev` → live, then deleted `.new`. `.prev`
 lives until the next apply, possibly months. One click with no confirmation
 (`PackUpdatesSettings.svelte`) discarded every translation, edit and note made since.
+
+**Fix:** "Undo this update" opens `PackUndoDialog` with the three ways out decided above
+(`ROLLBACK_MODE`). **Held by** `install.test.ts` ▸ undoing an update: what becomes of the changes
+made since.
 
 ### [x] D9 · An unclosed quote in a CSV silently swallows every following row — medium · closed
 

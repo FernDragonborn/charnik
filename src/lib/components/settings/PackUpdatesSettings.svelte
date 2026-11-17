@@ -28,6 +28,8 @@
 	} from '$lib/content/remote/updates.svelte';
 	import type { TranslationBackup } from '$lib/content/translation-backups';
 	import PackTranslationBackups from './PackTranslationBackups.svelte';
+	import PackUndoDialog from './PackUndoDialog.svelte';
+	import type { RollbackMode } from '$lib/content/remote/install';
 	import {
 		discoverPacks,
 		installPack,
@@ -103,6 +105,22 @@
 	 *  rather than tracked in state — a `.prev` also survives a restart, and so must the offer. */
 	let rollbackable = $state<string[]>([]);
 	$effect(() => act(() => rollbackablePacks().then((packs) => (rollbackable = packs))));
+	/** The pack whose "Undo this update" is asking what becomes of the changes made since. */
+	let undoing = $state<string | null>(null);
+
+	function undo(pack: string, mode: RollbackMode) {
+		undoing = null;
+		act(async () => {
+			const rolled = await undoUpdate(pack, mode);
+			if (rolled)
+				toast.success(
+					rolled.backupDir
+						? $_('settings.packs.undoDoneBackup', { values: { pack, folder: rolled.backupDir } })
+						: $_('settings.packs.undoDone', { values: { pack } }),
+				);
+			await afterDiskChange();
+		});
+	}
 
 	/** Files this update would write / preserve / delete, as a count per kind. */
 	function counts(changes: { kind: string }[]) {
@@ -449,15 +467,7 @@
 						     is "put back what I had before the last update" — the only way back once an update
 						     is in, since a pin only prevents. -->
 						{#if rollbackable.includes(pack)}
-							<button
-								class="pill-btn"
-								onclick={() =>
-									act(async () => {
-										if (await undoUpdate(pack))
-											toast.success($_('settings.packs.undoDone', { values: { pack } }));
-										await afterDiskChange();
-									})}
-							>
+							<button class="pill-btn" onclick={() => (undoing = pack)}>
 								{$_('settings.packs.undo')}
 							</button>
 						{/if}
@@ -557,6 +567,11 @@
 			{/each}
 		</div>
 	{/if}
+{/if}
+
+{#if undoing}
+	{@const pack = undoing}
+	<PackUndoDialog {pack} onChoose={(mode) => undo(pack, mode)} onCancel={() => (undoing = null)} />
 {/if}
 
 <style>

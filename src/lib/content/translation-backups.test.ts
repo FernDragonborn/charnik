@@ -58,7 +58,7 @@ describe('the copies set aside before a translated file is replaced', () => {
 		expect(await s.read(FILE)).toBe(before);
 		expect(await s.read('content/p/notes.md')).toBe('mine'); // a file the run never copied stays
 		expect(await hasRollback(s, 'p')).toBe(true);
-		expect(await rollbackPack(s, 'p')).toBe(true);
+		expect(await rollbackPack(s, 'p')).not.toBeNull();
 		expect(await s.read(FILE)).toBe(updated);
 		expect(await listTranslationBackups(s)).toHaveLength(1); // the copy is not spent by using it
 	});
