@@ -2219,6 +2219,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ABILITY_IDS` — The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare.
 - `type Ability`
 - `const SIZES` — Creature sizes, smallest→largest (an ORDERED ladder — L2 `size` compares by ordinal).
+- `type Size`
+- `function carrySize` — The size a character counts as for carrying: their own, `steps` larger (2024 Goliath: one).
 - `const ARMOR_TYPES` — Armor weight classes ('none' = unarmored).
 - `type ArmorType`
 - `function abilityModifier` — Ability modifier: floor((score − 10) / 2).
@@ -2653,4 +2655,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1626 exports across 224 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1628 exports across 224 modules · 116 duplicate suspects._

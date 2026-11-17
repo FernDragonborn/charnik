@@ -33,6 +33,7 @@ import {
 	attacksPerAction as attacksPerActionBase,
 	critThreshold as critThresholdBase,
 	carryingCapacity,
+	carrySize,
 	type Ability,
 } from '../rules/core';
 import { isArmorProficient } from '../rules/proficiency';
@@ -201,6 +202,25 @@ export interface AssembleInput {
 	issues: EffectIssue[];
 }
 
+/** Carrying capacity at the size the character counts as for it: the species' own, plus any size
+ *  steps an effect adds for carrying alone (`carry_size`), named in the trace by what added them. */
+function capacityAt(
+	strScore: number,
+	system: System,
+	speciesRow: LoadedRow | undefined,
+	facts: EffectFacts,
+): Computed {
+	const steps = applyEffects('carry_size', computed([]), facts);
+	const own = speciesRow?.type === 'species' ? String(speciesRow.data.size) : 'medium';
+	const sources = steps.trace.map((c) => c.source).join(', ');
+	return carryingCapacity({
+		strScore,
+		system,
+		size: carrySize(own, steps.value),
+		...(sources ? { sizeSource: sources } : {}),
+	});
+}
+
 export function assembleSheet(input: AssembleInput): CharacterSheet {
 	const { character, graph, isActive, setup, state, missing, issues } = input;
 	const { facts, scores, abilityComputed, maxHpBase, effCtx, resolvedEffects } = state;
@@ -273,7 +293,7 @@ export function assembleSheet(input: AssembleInput): CharacterSheet {
 		maxHp,
 		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),
-		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
+		carryingCapacity: capacityAt(scores.str, system, speciesRow, facts),
 		attacksPerAction: applyEffects('attacks', attacksPerActionBase(), facts),
 		damageSensitivities,
 		conditionImmunities,

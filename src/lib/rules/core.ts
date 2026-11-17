@@ -24,6 +24,24 @@ export type Ability = (typeof ABILITY_IDS)[number];
 
 /** Creature sizes, smallest→largest (an ORDERED ladder — L2 `size` compares by ordinal). */
 export const SIZES = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'] as const;
+export type Size = (typeof SIZES)[number];
+
+/** How a size multiplies carrying capacity — each size above Medium doubles it, Tiny halves it, Small
+ *  is Medium's (SRD 5.1 ▸ Size and Strength, SRD 5.2.1 ▸ Carrying Capacity). */
+const CARRY_FACTOR: Record<Size, number> = {
+	tiny: 0.5,
+	small: 1,
+	medium: 1,
+	large: 2,
+	huge: 4,
+	gargantuan: 8,
+};
+
+/** The size a character counts as for carrying: their own, `steps` larger (2024 Goliath: one). */
+export function carrySize(size: string, steps: number): Size {
+	const own = SIZES.indexOf(size as Size);
+	return SIZES[Math.max(0, Math.min(SIZES.length - 1, (own < 0 ? 2 : own) + steps))] ?? 'medium';
+}
 
 /** Armor weight classes ('none' = unarmored). Unordered in rules terms (L2 allows only ==/!=). */
 export const ARMOR_TYPES = ['none', 'light', 'medium', 'heavy'] as const;
@@ -414,7 +432,13 @@ export function fullCasterSlots(casterLevel: number): number[] {
 
 /** Carrying capacity in pounds = STR × 15. The encumbrance tiers (×5 / ×10) are a 5e-only
  *  variant surfaced as notes; 5.5e just drops speed to 5 ft over capacity. */
-export function carryingCapacity(args: { strScore: number; system: System }): Computed {
+export function carryingCapacity(args: {
+	strScore: number;
+	system: System;
+	/** The size counted for carrying (`carrySize`), and what made it differ from the creature's own. */
+	size?: Size;
+	sizeSource?: string;
+}): Computed {
 	const notes: Note[] =
 		args.system === '5e'
 			? [
@@ -442,10 +466,27 @@ export function carryingCapacity(args: { strScore: number; system: System }): Co
 				noteKey: SOURCE_KEY.abilityScore('str'),
 				params: { score: args.strScore },
 			},
+			...sizeContribution(args.strScore * 15, args.size ?? 'medium', args.sizeSource),
 		],
 		undefined,
 		notes,
 	);
+}
+
+function sizeContribution(base: number, size: Size, source?: string): Contribution[] {
+	const factor = CARRY_FACTOR[size];
+	if (factor === 1) return [];
+	return [
+		{
+			source: `${size} ×${factor}`,
+			layer: 'base',
+			op: 'add',
+			amount: Math.floor(base * factor) - base,
+			...(source ? { note: source } : {}),
+			key: SOURCE_KEY.carrySize,
+			params: { size, factor },
+		},
+	];
 }
 
 /** Effective max HP under an optional manual-max override (A14 — a Free-block affordance).

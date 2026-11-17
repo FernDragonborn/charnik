@@ -398,9 +398,9 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
 
 ### R14 · Smaller — low
 
-- [ ] **Size and carrying capacity.** Capacity is always STR×15 (`rules/core.ts`): the 2024 Goliath's
-  "count as one size larger" is ignored. The SRD folder carries no multiplier table, so the multiplier
-  is LIKELY.
+- [x] **Size and carrying capacity** · closed. Capacity follows the size counted for carrying, from
+  the rule both SRDs state (×2 per size above Medium, ×½ at Tiny), and the 2024 Goliath's Powerful
+  Build is `flat_bonus:carry_size+1` on its row (`carry-size-content.test.ts`).
 - [x] **Multiclassing** · closed. The 2024 Paladin and Ranger carry `caster_share` `half_up`
   (`spellcasting.test.ts`). A class entered later hands over only its `multiclass_armor_profs` /
   `multiclass_weapon_profs`, transcribed from SRD 5.1 and 5.2.1 (`armor-untrained-content.test.ts`).

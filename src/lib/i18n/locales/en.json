@@ -1867,6 +1867,7 @@
 			"base": "Base",
 			"baseScore": "Base score",
 			"carryCapacity": "STR × 15",
+			"carrySize": "carries as {size} ×{factor}",
 			"conPerLevel": "CON × {levels}",
 			"hpPerLevelFloor": "at least 1 per level × {levels}",
 			"dexCapped": "DEX (max {cap})",

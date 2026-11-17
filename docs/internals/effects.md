@@ -120,7 +120,8 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 `matchesTarget` (`effects/facts.ts`) matches an exact key OR a group that fans out. Specific keys:
 `ac`, `initiative`, `speed`, `speed.fly`, `speed.swim`, `speed.climb`, `hp_max`, `attack`,
 `attacked`, `damage`,
-`spell_dc`, `spell_attack`, `heal`, `crit_threshold`, `save.<ability>`, `save.death`, `skill.<id>`,
+`spell_dc`, `spell_attack`, `heal`, `crit_threshold`, `carry_size` (size steps counted for carrying
+capacity alone — a 2024 Goliath's `flat_bonus:carry_size+1`), `save.<ability>`, `save.death`, `skill.<id>`,
 `passive.<skill>`,
 plus the action-economy targets `action` / `bonus` / `reaction`. **Group targets** (fan out):
 

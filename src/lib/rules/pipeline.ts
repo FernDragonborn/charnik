@@ -160,6 +160,7 @@ export const SOURCE_KEY = {
 	conPerLevel: 'provenance.source.conPerLevel',
 	hpPerLevelFloor: 'provenance.source.hpPerLevelFloor',
 	carryCapacity: 'provenance.source.carryCapacity',
+	carrySize: 'provenance.source.carrySize',
 	speciesDefault: 'provenance.source.speciesDefault',
 	armorTooHeavy: 'provenance.source.armorTooHeavy',
 	armorStrShort: 'provenance.source.armorStrShort',

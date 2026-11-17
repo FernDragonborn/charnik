@@ -305,7 +305,9 @@ RAI-resolved, or a free architectural choice, so decisions are asked only where 
 Render **imperial first with metric in parentheses** — feet to metres ×0.3048, pounds to kilograms
 ×0.4536.
 
-Carrying capacity is **optional**, behind a toggle. The encumbrance tiers with their ×5 and ×10 speed
+Carrying capacity is STR × 15 at Small or Medium, doubled for each size above Medium and halved at
+Tiny — the same rule in both SRDs — at the size the character counts as for carrying: the species'
+own, plus any `carry_size` steps an effect adds (`carrySize`). It is **optional**, behind a toggle. The encumbrance tiers with their ×5 and ×10 speed
 penalties are a **5e-only variant**, off by default, and not part of 5.5e core — in 5.5e, being over
 capacity simply drops speed to 5 ft.
 

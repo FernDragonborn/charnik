@@ -1867,6 +1867,7 @@
 			"base": "База",
 			"baseScore": "Базове значення",
 			"carryCapacity": "СИЛ × 15",
+			"carrySize": "несе як {size} ×{factor}",
 			"conPerLevel": "СТА × {levels}",
 			"hpPerLevelFloor": "щонайменше 1 за рівень × {levels}",
 			"dexCapped": "СПР (максимум {cap})",

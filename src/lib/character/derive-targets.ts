@@ -50,6 +50,8 @@ const NUMERIC_TARGETS = new Set<string>([
 	// the lowest d20 face that can crit — LOWERED by an effect (Champion), never raised, which is why
 	// the shipped tokens are `set_override:crit_threshold:<n>:cap`
 	'crit_threshold',
+	// size steps counted for carrying capacity only (2024 Goliath's Powerful Build: one larger)
+	'carry_size',
 	'action',
 	'bonus',
 	'reaction',
