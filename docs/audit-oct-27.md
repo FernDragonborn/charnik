@@ -37,6 +37,11 @@ way. The file is deleted, with its line in `README.md`, once every box is ticked
 - **R14 · Crits.** An attack whose d20 shows the character's crit face (20, or a Champion's 19/18)
   rolls its damage as a crit at once. A crit without that face (a paralysed target) stays the player's
   toggle, which turns a crit off as well as on. `roller.md` and `effects.md` change with it.
+- **R14 · Division of negatives** stays floored towards −∞, as RAW; `effects.md` ▸ "Rounding" says why.
+- **R14 · Size, capacity and multiclassing** are transcribed from SRD 5.1 / 5.2.1 into
+  `charnik-content-srd`, and the code reads the columns.
+- **R14 · The dice tray** takes at most 500 dice on one line; a longer line says so and rolls nothing.
+- **"Not checked"** stays open in this pass; only D13 and R14 are closed.
 
 ---
 
@@ -406,8 +411,8 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
 - [ ] **A one-press attack with a natural 20** wrote ordinary damage, and there is no "×2 crit" fix-up on
   already-written damage (`routes/combat/sheet-rolls.svelte.ts`). `roller.md` settles that a crit is
   not inferred from a 20, so this is a suggestion only.
-- [ ] **Division of negatives rounds towards −∞.** `speed-level/2` at level 3 gave −2 instead of −1
-  (`token-parser.ts`). No SRD token does this; the RAI belongs in `effects.md`.
+- [x] **Division of negatives** · closed. A negative floors towards −∞ (`speed-level/2` at level 3 is
+  −2), which is RAW and now written in `effects.md` ▸ "Rounding" (`context.test.ts`).
 
 ---
 

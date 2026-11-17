@@ -146,6 +146,8 @@ describe('resolveEffectValue · literal vs expression', () => {
 		});
 		// division floors at the final stat value: 7/2 = 3.5 → 3
 		expect(resolveEffectValue(parseToken('flat_bonus:ac+level/2'), ctx)).toEqual({ amount: 3 });
+		// a negative floors towards −∞, as the ability-modifier table does (effects.md ▸ Rounding)
+		expect(resolveEffectValue(parseToken('flat_bonus:speed-level/2'), ctx)).toEqual({ amount: -4 });
 	});
 
 	it('evaluates a dice-count expression to a roller formula (Sneak Attack)', () => {

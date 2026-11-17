@@ -45,9 +45,6 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
 - [Reuse surface](surface.md) — generated; never hand-edited
-- [Audit — bugs since 0.8.2](audit-nov-17-bugs.md) — a blind pass over player data and the numbers
-  on the sheet in what changed after 0.8.2: each finding with the test that reproduces it, what it
-  ruled out, and where the reading stopped.
 - [Audit — 0.8.2, with the 0.8.1 security audit](audit-oct-27.md) — vulnerabilities and bugs in
   rules, play state, player data, packs and UI. Each finding says whether it is closed (and the test
   or probe that holds it) or open (and the tracker item it lives in); it also keeps what was ruled out

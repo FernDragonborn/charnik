@@ -394,7 +394,9 @@ the guard has no else branch.
 - **No randomness at eval** — a dice term is DATA that rides to the roller, never rolled during
   evaluation, so eval is deterministic (reproducible traces).
 - **Rounding:** division keeps an exact intermediate; a non-integer FINAL value fed to a stat is
-  **floored** (5e "round down" default); `ceil()`/`round()` are the explicit opt-in.
+  **floored** (5e "round down" default); `ceil()`/`round()` are the explicit opt-in. A negative
+  value floors towards −∞ too (`-1.5` → `-2`): RAW, because the game's own ability-modifier table
+  rounds the same way (a score of 9 is −1, not 0). No official ruling says otherwise.
 - **Read boundary (cycle rule):** an expression may read base/build values + dependency-resolved
   play-state, but NEVER the post-effect DERIVED value of the stat it modifies. `base_speed` is the
   deliberate exception (species input, not derived speed), and `speed` is not one: a movement
