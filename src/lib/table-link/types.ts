@@ -213,11 +213,13 @@ export interface GmSeat extends Seat<GmEvent> {
 	 *  at a seat picked up again while its door was shut. */
 	readonly invite: string | null;
 	request(participant: ParticipantId, request: TableRequest): Promise<Asked>;
-	/** Take a participant's seat away, and their way back in. */
-	dismiss(participant: ParticipantId): Promise<void>;
+	/** Take a participant's seat away, and their way back in, once the GM says yes in the native
+	 *  question window, worded in `locale`. True when the seat was taken. */
+	dismiss(participant: ParticipantId, locale: string): Promise<boolean>;
 	/** Open the door under a NEW invitation, which is answered, or shut it (null). Either way every
-	 *  invitation handed out before stops working; whoever is seated stays. */
-	setDoor(open: boolean): Promise<string | null>;
+	 *  invitation handed out before stops working; whoever is seated stays. Opening asks in the
+	 *  native question window first; a no answers the invitation still in force. */
+	setDoor(open: boolean, locale: string): Promise<string | null>;
 }
 
 export const SEATING = { seated: 'seated', unavailable: 'unavailable' } as const;

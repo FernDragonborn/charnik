@@ -143,8 +143,10 @@ const gmSeat = (table: TableId, invite: string | null, early: EarlyEvents): GmSe
 			? { delivery: sent, requestId }
 			: { delivery: DELIVERY.notDelivered };
 	},
-	dismiss: (participant) => invoke('table_link_dismiss', { table, participant }),
-	setDoor: (open) => invoke<string | null>('table_link_door', { table, open }).catch(() => null),
+	dismiss: (participant, locale) =>
+		invoke<boolean>('table_link_dismiss', { table, participant, locale }),
+	setDoor: (open, locale) =>
+		invoke<string | null>('table_link_door', { table, open, locale }).catch(() => null),
 	record: (body) => delivery('table_link_record', { table, body }),
 	subscribe: subscribing(table, early, gmEvent),
 });

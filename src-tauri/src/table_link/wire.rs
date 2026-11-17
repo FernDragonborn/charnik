@@ -348,6 +348,40 @@ pub fn new_local_id() -> Result<String, getrandom::Error> {
     Ok(data_encoding::HEXLOWER.encode(&bytes))
 }
 
+/// How many leading zero bits a stranger's key must show against the open door before it may take
+/// a greeting place: about 65 000 keys tried, a second or so of one core, once per table joined.
+/// Strangers holding the greeting places with dials that never say hello each pay that, and one
+/// without the invitation's secret cannot pay it at all.
+#[cfg(not(test))]
+const KNOCK_BITS: u32 = 16;
+/// Small in a test build: an unoptimised key generation is slow, and the rule is the same.
+#[cfg(test)]
+const KNOCK_BITS: u32 = 4;
+const KNOCK_DOMAIN: &[u8] = b"charnik/table/knock/1";
+
+/// Does this key knock at this door: does the hash of the door's secret, the GM's key and the
+/// joiner's key start with `KNOCK_BITS` zero bits?
+pub fn knocks(secret: &str, gm: &[u8; 32], joiner: &[u8; 32]) -> bool {
+    let mut hasher = blake3::Hasher::new();
+    hasher.update(KNOCK_DOMAIN);
+    hasher.update(&(secret.len() as u64).to_le_bytes());
+    hasher.update(secret.as_bytes());
+    hasher.update(gm);
+    hasher.update(joiner);
+    leading_zero_bits(hasher.finalize().as_bytes()) >= KNOCK_BITS
+}
+
+fn leading_zero_bits(bytes: &[u8]) -> u32 {
+    let mut bits = 0;
+    for byte in bytes {
+        bits += byte.leading_zeros();
+        if *byte != 0 {
+            break;
+        }
+    }
+    bits
+}
+
 /// Compare two secrets in time that does not depend on where they first differ.
 pub fn same_secret(a: &str, b: &str) -> bool {
     a.len() == b.len()

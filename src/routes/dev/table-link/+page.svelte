@@ -171,10 +171,12 @@
 		await answers('no door opens on no table', null, 'table_link_door', {
 			table: 'probe',
 			open: true,
+			locale: 'en',
 		});
-		await answers('dismissing nobody answers', null, 'table_link_dismiss', {
+		await answers('dismissing nobody answers', false, 'table_link_dismiss', {
 			table: 'probe',
 			participant: 'nobody',
+			locale: 'en',
 		});
 		await answers('leaving no table answers', null, 'table_link_leave', { table: 'probe' });
 		await answers('no seat is held where none was taken', null, 'table_link_resume', {});

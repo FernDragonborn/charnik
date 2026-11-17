@@ -355,15 +355,16 @@ export class TableVM {
 		if (this.gmSeat) keepAskedLog(this.gmSeat.table, $state.snapshot(this.asked));
 	}
 
-	/** Take a player's seat away, and their way back in. */
+	/** Take a player's seat away, and their way back in — when the GM says yes in the native
+	 *  question the app raises for it. */
 	dismiss = async (participant: ParticipantId): Promise<void> => {
-		await this.gmSeat?.dismiss(participant);
+		if (!(await this.gmSeat?.dismiss(participant, app.activeLocale))) return;
 		this.players = this.players.filter((player) => player.id !== participant);
 	};
 
 	/** Open the door under a new invitation, or shut it. */
 	setDoor = async (open: boolean): Promise<void> => {
-		if (this.gmSeat) this.invite = await this.gmSeat.setDoor(open);
+		if (this.gmSeat) this.invite = await this.gmSeat.setDoor(open, app.activeLocale);
 	};
 
 	// --- the player's side ------------------------------------------------------------------------

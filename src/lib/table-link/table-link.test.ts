@@ -134,13 +134,18 @@ describe('the desktop table link', () => {
 		expect(heard).toHaveLength(2);
 
 		invoke.mockResolvedValueOnce('charnik-table:new');
-		expect(await seat.setDoor(true)).toBe('charnik-table:new');
-		expect(invoke).toHaveBeenLastCalledWith('table_link_door', { table: 'table-1', open: true });
-		invoke.mockResolvedValueOnce(null);
-		await seat.dismiss('p-1');
+		expect(await seat.setDoor(true, 'uk')).toBe('charnik-table:new');
+		expect(invoke).toHaveBeenLastCalledWith('table_link_door', {
+			table: 'table-1',
+			open: true,
+			locale: 'uk',
+		});
+		invoke.mockResolvedValueOnce(true);
+		expect(await seat.dismiss('p-1', 'uk')).toBe(true);
 		expect(invoke).toHaveBeenLastCalledWith('table_link_dismiss', {
 			table: 'table-1',
 			participant: 'p-1',
+			locale: 'uk',
 		});
 		invoke.mockResolvedValueOnce(null);
 		await seat.leave();

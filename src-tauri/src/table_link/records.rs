@@ -172,6 +172,25 @@ impl Log {
             .collect()
     }
 
+    /// `have` as one seat may be told it: an author's newest records that seat may not see are left
+    /// out of the count, so the GM's answer does not say how many rolls were just kept from it.
+    /// A hidden record with a visible one above it shows as a gap in the numbers either way.
+    pub fn have_for(&self, may_see: impl Fn(&Record) -> bool) -> BTreeMap<String, u64> {
+        self.highest
+            .iter()
+            .map(|(author, top)| {
+                let mut seq = *top;
+                while let Some((record, _, _)) = self.records.get(&(author.clone(), seq)) {
+                    if seq == 0 || may_see(record) {
+                        break;
+                    }
+                    seq -= 1;
+                }
+                (author.clone(), seq)
+            })
+            .collect()
+    }
+
     /// The next number for a record this app writes as `author`.
     pub fn next_seq(&self, author: &str) -> u64 {
         self.highest.get(author).map_or(1, |seq| seq + 1)
@@ -299,6 +318,29 @@ mod tests {
             sig: BASE64URL_NOPAD.encode(&author.sign(signed.text.as_bytes()).to_bytes()),
         };
         assert_eq!(verify(&bare, "t"), None);
+    }
+
+    #[test]
+    fn a_seat_is_not_told_how_many_rolls_were_just_kept_from_it() {
+        let gm = SecretKey::generate();
+        let mut log = Log::default();
+        for (seq, to) in [(1, Audience::Table), (2, Audience::Gm), (3, Audience::Gm)] {
+            let record = roll("t", &gm, seq, to);
+            let signed = sign(&gm, &record).expect("signs");
+            log.keep(record, signed);
+        }
+        let table_only = |r: &Record| {
+            matches!(
+                r.body,
+                Body::Roll {
+                    to: Audience::Table,
+                    ..
+                }
+            )
+        };
+        let gm_key = gm.public().to_string();
+        assert_eq!(log.have_for(table_only).get(&gm_key), Some(&1));
+        assert_eq!(log.have_for(|_| true).get(&gm_key), Some(&3));
     }
 
     #[test]

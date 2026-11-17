@@ -7,13 +7,13 @@
 //! Nothing in this file knows about Tauri: what a session tells the app is an `Emit`, and what it
 //! asks the GM is an `Approve`, so two sessions can sit at one table inside a test.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use iroh::endpoint::{presets, BeforeConnectOutcome, Connection, EndpointHooks, RecvStream};
 use iroh::{Endpoint, EndpointAddr, EndpointId, RelayMode, RelayUrl, SecretKey, TransportAddr};
@@ -577,7 +577,7 @@ async fn seat_player(
     let (outbound, mut outgoing) = mpsc::channel(OUTBOUND_QUEUE);
     // what this app holds, so the player's app hands over what it lacks
     let _ = outbound.try_send(GmFrame::Have {
-        have: locked(&shared.log).have(),
+        have: locked(&shared.log).have_for(|record| visible_to(record, &participant)),
     });
     let generation = shared.generations.fetch_add(1, Ordering::Relaxed);
     let replaced = locked(&shared.seats).insert(
@@ -789,10 +789,14 @@ pub async fn host(
                     };
                     drop(handshake);
                     let known = locked(&shared.allowed).contains(&conn.remote_id());
+                    let knocked = locked(&shared.door).as_deref().is_some_and(|secret| {
+                        wire::knocks(secret, shared.gm.as_bytes(), conn.remote_id().as_bytes())
+                    });
                     let permit = if known {
                         None
-                    } else if locked(&shared.door).is_none() {
-                        // a stranger at a shut door has nothing to say that could be heard
+                    } else if !knocked {
+                        // a shut door, or a key that did not do the work the open door asks of a
+                        // stranger: either way the invitation it came with does not open this door
                         conn.close(DOOR_SHUT.into(), b"");
                         return;
                     } else if let Ok(permit) = greeting.try_acquire_owned() {
@@ -878,6 +882,15 @@ impl GmTable {
     }
 
     /// Take a seat away, and the key's right to sit again without being asked about.
+    /// A participant as a question names them: the name they were let in under, else their key.
+    pub fn participant_name(&self, participant: &str) -> String {
+        participant
+            .parse::<EndpointId>()
+            .ok()
+            .and_then(|key| locked(&self.shared.names).get(&key).cloned())
+            .unwrap_or_else(|| participant.to_string())
+    }
+
     pub fn dismiss(&self, participant: &str) {
         if let Ok(player) = participant.parse::<EndpointId>() {
             locked(&self.shared.allowed).remove(&player);
@@ -954,29 +967,97 @@ struct PlayerShared {
     /// The person asked for a dial now, in place of the wait before the next one.
     dial_now: Notify,
     emit: Emit,
+    /// What the GM handed over is believed for the GM's sake, but this app's disk is its own to
+    /// pace: records wait here, in the order they came, until the pace lets them be written.
+    disk: Mutex<DiskPace>,
+    /// A later write of what is waiting is already on its way.
+    disk_later: AtomicBool,
+}
+
+/// How many records a player's app writes to disk per `DISK_WINDOW`. What waits past that is shown
+/// and held at once, and written as the pace allows; past `records::LOG_MAX` waiting, the oldest
+/// is dropped, as the file's own compaction would drop it.
+const DISK_MAX: usize = 60;
+const DISK_WINDOW: Duration = Duration::from_secs(10);
+
+#[derive(Default)]
+struct DiskPace {
+    waiting: VecDeque<(Signed, Option<String>)>,
+    written: VecDeque<Instant>,
+}
+
+impl DiskPace {
+    /// The records the pace lets be written now, oldest first.
+    fn due(&mut self, now: Instant) -> Vec<(Signed, Option<String>)> {
+        while self
+            .written
+            .front()
+            .is_some_and(|at| now.duration_since(*at) > DISK_WINDOW)
+        {
+            self.written.pop_front();
+        }
+        let room = DISK_MAX
+            .saturating_sub(self.written.len())
+            .min(self.waiting.len());
+        self.written.extend(std::iter::repeat_n(now, room));
+        self.waiting.drain(..room).collect()
+    }
 }
 
 impl PlayerShared {
-    /// Keep a record the GM handed over, if it is this table's and signed by its author.
-    fn take(&self, signed: Signed, name: Option<String>) {
-        let Some(record) = records::verify(&signed, &self.gm) else {
-            return;
+    /// Write what the pace allows of what waits, and come back for the rest once it allows more.
+    fn write_waiting(self: &Arc<Self>) {
+        let (due, more) = {
+            let mut disk = locked(&self.disk);
+            let due = disk.due(Instant::now());
+            (due, !disk.waiting.is_empty())
         };
-        if locked(&self.log).keep(record.clone(), signed.clone()) == Kept::New {
-            let name = (record.author != self.gm)
-                .then(|| name.map(|name| wire::plain_text(&name)))
-                .flatten();
-            (self.keep)(Keep::Record {
-                record: signed,
-                name: name.clone(),
-            });
-            (self.emit)(TableEvent::Record {
-                table: self.table.clone(),
-                mine: record.author == self.key.public().to_string(),
-                record,
-                name,
+        for (record, name) in due {
+            (self.keep)(Keep::Record { record, name });
+        }
+        if more && !self.disk_later.swap(true, Ordering::AcqRel) {
+            let shared = self.clone();
+            tokio::spawn(async move {
+                sleep(DISK_WINDOW).await;
+                shared.disk_later.store(false, Ordering::Release);
+                shared.write_waiting();
             });
         }
+    }
+
+    /// Keep a record the GM handed over, if it is this table's and signed by its author, and write
+    /// it to disk as the pace allows.
+    fn take(self: &Arc<Self>, signed: Signed, name: Option<String>) {
+        let Some(kept) = self.hold(signed, name) else {
+            return;
+        };
+        {
+            let mut disk = locked(&self.disk);
+            disk.waiting.push_back(kept);
+            if disk.waiting.len() > records::LOG_MAX {
+                disk.waiting.pop_front();
+            }
+        }
+        self.write_waiting();
+    }
+
+    /// Keep a record in memory and tell the page, handing back what a disk write of it is. None
+    /// when it is not this table's, not its author's, or held already.
+    fn hold(&self, signed: Signed, name: Option<String>) -> Option<(Signed, Option<String>)> {
+        let record = records::verify(&signed, &self.gm)?;
+        if locked(&self.log).keep(record.clone(), signed.clone()) != Kept::New {
+            return None;
+        }
+        let name = (record.author != self.gm)
+            .then(|| name.map(|name| wire::plain_text(&name)))
+            .flatten();
+        (self.emit)(TableEvent::Record {
+            table: self.table.clone(),
+            mine: record.author == self.key.public().to_string(),
+            record,
+            name: name.clone(),
+        });
+        Some((signed, name))
     }
 
     fn says(&self, state: ConnectionState, reason: Option<CloseReason>) {
@@ -1001,13 +1082,24 @@ struct Hello {
     name: String,
 }
 
+/// A key that knocks at this door (`wire::knocks`): tried until one does. A seat keeps the key it
+/// was let in under, so this is paid once per table joined.
+fn knocking_key(secret: &str, gm: &EndpointId) -> SecretKey {
+    loop {
+        let key = SecretKey::generate();
+        if wire::knocks(secret, gm.as_bytes(), key.public().as_bytes()) {
+            return key;
+        }
+    }
+}
+
 /// One connection: dial, say hello, wait to be let in, then carry views and answers out and
 /// requests in until it ends.
 async fn sit(
     endpoint: &Endpoint,
     gm: &EndpointAddr,
     hello: &Hello,
-    shared: &PlayerShared,
+    shared: &Arc<PlayerShared>,
 ) -> SeatEnd {
     let dropped = SeatEnd::Dropped { seated: false };
     let Ok(Ok(conn)) = timeout(CONNECT_WAIT, endpoint.connect(gm.clone(), ALPN)).await else {
@@ -1194,9 +1286,15 @@ pub async fn join(
     }
     let (gm, relay) = address_of(invite).ok_or(Unavailable::BadInvite)?;
     let mode = relay.map_or(RelayMode::Disabled, |relay| RelayMode::custom([relay]));
-    let key = again
-        .as_ref()
-        .map_or_else(SecretKey::generate, |again| again.key.clone());
+    let key = match &again {
+        Some(again) => again.key.clone(),
+        None => {
+            let (secret, door) = (invite.secret.clone(), gm.id);
+            tokio::task::spawn_blocking(move || knocking_key(&secret, &door))
+                .await
+                .map_err(|_| Unavailable::Network)?
+        }
+    };
     let endpoint = bind(key.clone(), mode, false, Some(gm.id)).await?;
     let shared = Arc::new(PlayerShared {
         table: table.clone(),
@@ -1207,10 +1305,13 @@ pub async fn join(
         outbound: Mutex::default(),
         dial_now: Notify::new(),
         emit,
+        disk: Mutex::default(),
+        disk_later: AtomicBool::new(false),
     });
     if let Some(again) = again {
+        // read back from this app's own disk, so nothing to write again
         for (signed, name) in again.records {
-            shared.take(signed, name);
+            shared.hold(signed, name);
         }
     }
     let hello = Hello {
@@ -1318,6 +1419,26 @@ mod tests {
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 
     const EVENT_WAIT: Duration = Duration::from_secs(20);
+
+    #[test]
+    fn a_flood_from_the_gm_reaches_the_disk_at_its_pace_and_in_its_order() {
+        let mut disk = DiskPace::default();
+        for n in 0..DISK_MAX + 5 {
+            let record = Signed {
+                text: n.to_string(),
+                sig: String::new(),
+            };
+            disk.waiting.push_back((record, None));
+        }
+        let now = Instant::now();
+        let first = disk.due(now);
+        assert_eq!(first.len(), DISK_MAX);
+        assert_eq!(first[0].0.text, "0");
+        assert!(disk.due(now).is_empty(), "nothing more inside the window");
+        let later = disk.due(now + DISK_WINDOW + Duration::from_millis(1));
+        assert_eq!(later.len(), 5);
+        assert_eq!(later[0].0.text, DISK_MAX.to_string());
+    }
 
     fn listening() -> (Emit, UnboundedReceiver<TableEvent>) {
         let (heard, events) = unbounded_channel();
@@ -2049,7 +2170,7 @@ mod tests {
         table.close().await;
     }
 
-    // --- what the 2026-11-17 audit's attacks no longer get (docs/audit-nov-17.md) ---------
+    // --- attacks a peer at the table tried, and what holds them -----------------------------
 
     async fn open_table() -> (GmTable, Invite, UnboundedReceiver<TableEvent>) {
         let (emit, events) = listening();
@@ -2073,7 +2194,7 @@ mod tests {
     async fn by_hand(invite: &Invite) -> (Endpoint, Connection) {
         let (gm, _) = address_of(invite).expect("an address");
         let endpoint = bind(
-            SecretKey::generate(),
+            knocking_key(&invite.secret, &gm.id),
             RelayMode::Disabled,
             false,
             Some(gm.id),
@@ -2145,6 +2266,31 @@ mod tests {
         assert!(locked(&table.shared.log).holds(&ann_id, 500));
         ann.leave().await;
         bevan.leave().await;
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_stranger_whose_key_did_not_knock_takes_no_greeting_place() {
+        let (table, invite, _gm_events) = open_table().await;
+        let (gm, _) = address_of(&invite).expect("an address");
+        let lazy = std::iter::repeat_with(SecretKey::generate)
+            .find(|key| !wire::knocks(&invite.secret, gm.id.as_bytes(), key.public().as_bytes()))
+            .expect("a key that does not knock");
+        let endpoint = bind(lazy, RelayMode::Disabled, false, Some(gm.id))
+            .await
+            .expect("an endpoint");
+        let conn = timeout(EVENT_WAIT, endpoint.connect(gm, ALPN))
+            .await
+            .expect("in time")
+            .expect("a connection");
+        let closed = timeout(EVENT_WAIT, conn.closed())
+            .await
+            .expect("let go in time");
+        assert!(matches!(
+            closed,
+            iroh::endpoint::ConnectionError::ApplicationClosed(close)
+                if close.error_code == DOOR_SHUT.into()
+        ));
         table.close().await;
     }
 

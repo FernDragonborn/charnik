@@ -61,6 +61,8 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 		answers: [] as { requestId: string; answer: TableAnswer }[],
 		requests: [] as { participant: string; request: TableRequest }[],
 		dismissed: [] as string[],
+		/** What the GM answers the native question a dismissal raises. */
+		dismissAnswer: true,
 		records: [] as LogBody[],
 		left: 0,
 		redials: 0,
@@ -104,7 +106,10 @@ function tableOfOne(held: TableRole = TABLE_ROLE.none) {
 					: { delivery: DELIVERY.delivered, requestId: `r-${heard.requests.length}` },
 			);
 		},
-		dismiss: (participant) => Promise.resolve(void heard.dismissed.push(participant)),
+		dismiss: (participant) => {
+			heard.dismissed.push(participant);
+			return Promise.resolve(heard.dismissAnswer);
+		},
 		setDoor: (open) => Promise.resolve(open ? 'charnik-table:second' : null),
 		record: (body) => Promise.resolve(void heard.records.push(body)).then(() => DELIVERY.delivered),
 	};
@@ -467,6 +472,14 @@ describe("a GM's seat", () => {
 		const { table } = await hosting();
 		await table.ask(['gone'], { kind: TABLE_REQUEST.heal, amount: 1 });
 		expect(table.asked).toEqual([]);
+	});
+
+	/* audit-nov-17 T10: the page's own code could send a player away with no question asked */
+	it('keeps the player when the GM says no in the question window', async () => {
+		const { table, heard } = await hosting();
+		heard.dismissAnswer = false;
+		await table.dismiss('p-1');
+		expect(table.players).toHaveLength(1);
 	});
 
 	it('shuts and reopens the door, dismisses a player, and closes the table', async () => {

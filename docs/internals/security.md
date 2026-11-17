@@ -117,7 +117,10 @@ step.
    > GM's request is a closed set of typed, bounded fields — an unknown field or kind is refused
    > in Rust, so a token or a formula has no way in — and a peer's event is held to a bounded
    > schema before the page's own code hears it (`table-link.md`). `/dev/table-link` asks the
-   > running webview in both builds.
+   > running webview in both builds. Reopening a shut door and dismissing a seat ask the
+   > question window too. Shutting the door, leaving a table and forgetting a remembered one do
+   > not, as an accepted risk: each only takes away its own person's way in, so the worst page
+   > script gets from them is that person off their own table.
    >
    > **The log takes only what the app itself says.** `tauri-plugin-log` installs the
    > process-global logger, so it is filtered to the page's own lines (`webview`) and this crate's:

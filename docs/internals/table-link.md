@@ -59,6 +59,12 @@ screen at a time.
 | join this table? | the player, on `join` | the table's name, the name they join under, the relay |
 | let this player in? | the GM, per new key | the player's name and their six-digit code |
 | return to this table? | either seat, on `return` | the table's name and its route |
+| open the door again? | the GM, on opening a shut door | the table's name |
+| send this player away? | the GM, on dismissing a seat | the player's name and the table's |
+
+Shutting the door, leaving a table and forgetting one ask nothing: each takes the GM's or the
+player's own way in away and lets nobody else in, so the worst page script can do with them is end
+its own person's seat (`security.md` ▸ the table link's commands).
 
 The words are the UI catalogs' own, compiled into the binary by `build.rs` (`NATIVE_ROOTS`): the
 page names a locale and never a sentence. What the page or a peer does supply — a name — is
@@ -138,6 +144,13 @@ at most. Once a key is known, one let in before goes straight to its hello; a st
 door is let go at once with a close code its app reads as the invitation no longer working
 (`DOOR_SHUT`); a stranger at an open door holds one of sixteen greeting places for ten seconds.
 
+**A stranger's key has to knock before it takes a greeting place** (`wire::knocks`): the BLAKE3
+hash of the door's secret, the GM's key and the stranger's key must start with sixteen zero bits.
+A joining app tries keys until one does — about 65 000, a second or so of one core, once per table,
+since a seat keeps the key it was let in under. A key that does not knock is let go at once under
+`DOOR_SHUT`, the same as at a shut door. So silent dials that hold the greeting places cost their
+sender a second of work each, and without the invitation's secret no amount of work opens one.
+
 ## What crosses the wire
 
 One bidirectional stream per connection, opened by the player. Frames are a four-byte length and
@@ -196,7 +209,8 @@ on the sheet uses (`routes/table/player-requests.svelte.ts` ▸ `PlayerRequests.
   apply first, then temporary hit points, a form's own, instant death and the concentration save.
 - **Healing** is `heal`.
 - **A state** is the row of that id in the character's own picker, switched on with the row's own
-  duration — and left alone when the character already has it. An id this app's content does not
+  duration — and left alone when the character already has it. The prompt names it by that same
+  row, so the words the player accepts are the state the sheet puts on. An id this app's content does not
   have can only be declined.
 - **A roll** is the sheet's own check, save or skill (`combat/sheet-roll-specs.ts`) with the
   effects it picks up, logged like any other, and read back as five facts: the total, the d20 that
@@ -304,7 +318,8 @@ app lags and restarts like anyone's, so nothing waits on it to say what is true:
   author's key, a sequence number that grows by one per author, and the author's clock.
 - **Every app that saw a record keeps a copy, and says what it has.** On every connection both
   sides send `have` — the highest sequence number held from each author — and each sends what the
-  other lacks. A player who was away for ten minutes is given the rolls they missed, and a GM's app
+  other lacks. The GM's `have` to a seat leaves out an author's newest records that seat may not
+  see (`Log::have_for`), so it does not say how many rolls were just kept from it. A player who was away for ten minutes is given the rolls they missed, and a GM's app
   that lost a record gets it back from whoever kept it.
 - **A star still.** A player's record goes to the GM; the GM keeps it and hands it to every other
   seat with the name the GM let that key in under. The name is the GM's to say — it is not in the
@@ -337,6 +352,9 @@ holds records from at most 32 authors. A record already held costs nothing; past
 hand over ten in ten seconds, counted against the seat and not the author, so replaying another
 player's rolls spends the replayer's pace. A record whose author is not at the table — not let in,
 or dismissed — is not kept. The GM's rolls carry a badge in the log that no player's name can draw.
+**A player's app paces its own disk:** what the GM hands over is held and shown at once, and written
+at most sixty records in ten seconds, in the order it came, the rest waiting (`DiskPace`). The GM is
+trusted with what the table says, not with how fast this app writes.
 
 ## Remembering a table
 

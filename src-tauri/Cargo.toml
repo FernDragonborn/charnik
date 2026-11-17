@@ -22,6 +22,7 @@ table-link = [
     "dep:tokio",
     "dep:data-encoding",
     "dep:getrandom",
+    "dep:blake3",
     "dep:keyring-core",
     "dep:windows-native-keyring-store",
 ]
@@ -59,6 +60,9 @@ tokio = { version = "1", features = ["sync", "time", "macros", "rt"], optional =
 # An invitation is bytes a person pastes (`table_link/wire.rs`), and its secret is the OS's randomness.
 data-encoding = { version = "2", optional = true }
 getrandom = { version = "0.4", optional = true }
+# What a stranger's key must show against the open door before it takes a greeting place
+# (`table_link/wire.rs` ▸ `knocks`). The hash iroh already builds on.
+blake3 = { version = "1.8", optional = true }
 # A remembered table's key lives in the OS's own credential store, never a file
 # (`table_link/remember.rs`). Windows only for now: elsewhere a table lasts one session.
 keyring-core = { version = "1.0.1", optional = true }

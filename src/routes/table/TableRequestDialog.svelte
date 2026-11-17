@@ -35,7 +35,7 @@
 		>
 			<div class="dialog-body table-request-body">
 				<p class="table-request-ask">
-					<TableRequestLine {request} />
+					<TableRequestLine {request} sheetState={(id) => table.asks.stateFor(id)?.label} />
 					{#if waiting > 1}<span class="count-pill">1 / {waiting}</span>{/if}
 				</p>
 				{#if defended}

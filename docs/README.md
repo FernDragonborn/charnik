@@ -48,9 +48,6 @@ Open the one whose subject you are about to touch, before the recommendation and
 - [Audit — bugs since 0.8.2](audit-nov-17-bugs.md) — a blind pass over player data and the numbers
   on the sheet in what changed after 0.8.2: each finding with the test that reproduces it, what it
   ruled out, and where the reading stopped.
-- [Audit — the table link](audit-nov-17.md) — a blind pass and a checklist pass over the table
-  link at its first log and remembered tables: what an attacker at the table got, each closed with
-  the test that holds it, and what is still open in TABLE-LINK-AUDIT-OPEN.
 - [Audit — 0.8.2, with the 0.8.1 security audit](audit-oct-27.md) — vulnerabilities and bugs in
   rules, play state, player data, packs and UI. Each finding says whether it is closed (and the test
   or probe that holds it) or open (and the tracker item it lives in); it also keeps what was ruled out

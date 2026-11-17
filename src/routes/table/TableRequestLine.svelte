@@ -12,14 +12,22 @@
 	let {
 		request,
 		heldTo,
+		sheetState,
 	}: {
 		request: TableRequest;
 		/** The DC the GM holds a roll to, when it is the GM reading and the request does not say it. */
 		heldTo?: number | undefined;
+		/** On the player's prompt: the name of the state the open sheet would put on for this id —
+		 *  the row of the character's own edition and sources, which is not always the first row of
+		 *  that id in the graph. */
+		sheetState?: ((id: string) => string | undefined) | undefined;
 	} = $props();
 
-	/** A state's name in this app's own content; an id it does not have reads as itself. */
+	/** A state's name as the sheet would apply it, else in this app's own content; an id it does
+	 *  not have reads as itself. */
 	const stateName = (id: string): string => {
+		const onSheet = sheetState?.(id);
+		if (onSheet !== undefined) return onSheet;
 		const row = content.graph?.list('effect').find((state) => state.id === id);
 		return row ? localizedName(row, app.activeLocale) : titleCase(id);
 	};

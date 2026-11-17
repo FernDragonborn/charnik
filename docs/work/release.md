@@ -178,14 +178,6 @@
   rebuilt from the players' copies; a store on Linux (Secret Service) and macOS; a no-relay table
   at its old address (it comes back at a new one); and the drive on the real app — quit it while
   seated, start it, Return — which needs the person answering the question.
-- [ ] **TABLE-LINK-AUDIT-OPEN · what the table link's audit left, all low**
-  (`../audit-nov-17.md` ▸ T10). With the door open, strangers who never say hello can still crowd
-  out new joiners — a limit per address where one is seen, or a hello that costs the knocker
-  something. Page script can forget or leave a table, reopen the door and dismiss seats without a
-  question — each wants the question window or an accepted note in `security.md`. The player's
-  app writes whatever the GM hands it to disk unpaced. `have` tells every seat how many rolls each
-  author kept to the GM. The request prompt names a state by the first row of its id in the graph
-  while the sheet applies the character's own row.
 - **TABLE-LINK-HUB · the table's hub is somebody other than the GM, and can move.** Asked for a
   GM on a poor connection. Today it would move nothing that matters: every frame on the wire has
   the GM at one end — a sheet goes to the GM, an ask comes from the GM — so the GM's link is in

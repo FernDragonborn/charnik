@@ -2475,6 +2475,18 @@
 				"allow": "Return",
 				"deny": "Not now"
 			},
+			"door": {
+				"title": "Charnik — open the door again?",
+				"body": "Open the door of the table \"{table}\" again?\n\nA new invitation is made, and anyone who has it can knock and ask you to let them in.",
+				"allow": "Open the door",
+				"deny": "Keep it shut"
+			},
+			"dismiss": {
+				"title": "Charnik — send a player away?",
+				"body": "Send \"{player}\" away from the table \"{table}\"?\n\nTheir seat is taken, and they cannot come back without knocking again.",
+				"allow": "Send away",
+				"deny": "Keep them"
+			},
 			"approve": {
 				"title": "Charnik — a player wants to join",
 				"body": "\"{player}\" wants to join the table \"{table}\".\n\nTheir code is {code}. Let them in only if that is the code the player reads to you.",

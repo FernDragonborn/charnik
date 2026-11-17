@@ -736,9 +736,47 @@ pub async fn table_link_record(app: tauri::AppHandle, table: String, body: Body)
     }
 }
 
-/// A GM takes a participant's seat away.
+/// The GM's table by its id, as the name it was opened under — None at any other seat.
+async fn gm_table_name(app: &tauri::AppHandle, table: &str) -> Option<String> {
+    match &*app.state::<TableLinkState>().0.lock().await {
+        Some(Held {
+            seat: Seat::Gm {
+                table: gm, name, ..
+            },
+            ..
+        }) if gm.id == table => Some(name.clone()),
+        _ => None,
+    }
+}
+
+/// A GM takes a participant's seat away, once the GM says so in the question window: the page's
+/// own code cannot send a player away on its own. True when the seat was taken.
 #[tauri::command]
-pub async fn table_link_dismiss(app: tauri::AppHandle, table: String, participant: String) {
+pub async fn table_link_dismiss(
+    app: tauri::AppHandle,
+    table: String,
+    participant: String,
+    locale: String,
+) -> bool {
+    let Some(name) = gm_table_name(&app, &table).await else {
+        return false;
+    };
+    let player = match &*app.state::<TableLinkState>().0.lock().await {
+        Some(Held {
+            seat: Seat::Gm { table: gm, .. },
+            ..
+        }) if gm.id == table => gm.participant_name(&participant),
+        _ => return false,
+    };
+    let question = Question {
+        dialog: "dismiss",
+        locale,
+        values: vec![("player", player), ("table", name)],
+    };
+    if !question.ask(app.clone()).await {
+        return false;
+    }
+    // the table may have closed while the question was open
     if let Some(Held {
         seat: Seat::Gm { table: gm, .. },
         told,
@@ -747,13 +785,33 @@ pub async fn table_link_dismiss(app: tauri::AppHandle, table: String, participan
         if gm.id == table {
             gm.dismiss(&participant);
             forget_participant(&mut told_of(told), &participant);
+            return true;
         }
     }
+    false
 }
 
-/// A GM opens the door — answering the new invitation — or shuts it.
+/// A GM opens the door — answering the new invitation — or shuts it. Opening asks in the question
+/// window first, since it lets strangers knock again; shutting asks nothing. Answers the
+/// invitation in force afterwards, None while the door is shut.
 #[tauri::command]
-pub async fn table_link_door(app: tauri::AppHandle, table: String, open: bool) -> Option<String> {
+pub async fn table_link_door(
+    app: tauri::AppHandle,
+    table: String,
+    open: bool,
+    locale: String,
+) -> Option<String> {
+    let name = gm_table_name(&app, &table).await?;
+    if open {
+        let question = Question {
+            dialog: "door",
+            locale,
+            values: vec![("table", name)],
+        };
+        if !question.ask(app.clone()).await {
+            return current_invite(&app, &table).await;
+        }
+    }
     match &mut *app.state::<TableLinkState>().0.lock().await {
         Some(Held {
             seat: Seat::Gm {
@@ -764,6 +822,18 @@ pub async fn table_link_door(app: tauri::AppHandle, table: String, open: bool) -
             *invite = gm.set_door(open);
             invite.clone()
         }
+        _ => None,
+    }
+}
+
+async fn current_invite(app: &tauri::AppHandle, table: &str) -> Option<String> {
+    match &*app.state::<TableLinkState>().0.lock().await {
+        Some(Held {
+            seat: Seat::Gm {
+                table: gm, invite, ..
+            },
+            ..
+        }) if gm.id == table => invite.clone(),
         _ => None,
     }
 }
