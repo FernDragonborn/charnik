@@ -9,7 +9,7 @@
  * 2014 has no such rule, ships no `mastery_slots` and no `mastery:` tag, so the cap is 0 there and
  * every surface that asks about mastery gets nothing rather than a 5.5e idea leaking into it.
  */
-import { masteryBudget } from '$lib/build/derive';
+import { masteryBudget, masteryWeaponTags } from '$lib/build/derive';
 import { weaponProfGrants } from '$lib/combat/attacks';
 import { isWeaponProficient } from '$lib/rules/proficiency';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from '$lib/content/item-tags';
@@ -33,8 +33,9 @@ export class MasteryPicks {
 		return graph ? masteryBudget(this.host().draft.classes, graph, this.host().draft.system) : 0;
 	});
 
-	/** The weapons that HAVE a mastery property and that this character is proficient with — the two
-	 *  halves RAW asks for ("kinds of weapons of your choice with which you have proficiency"). */
+	/** The weapons that HAVE a mastery property, that this character is proficient with, and that a
+	 *  grant's own limit admits — what RAW asks for ("kinds of weapons of your choice with which you
+	 *  have proficiency"; the 5.5e Barbarian's "Melee weapons"). */
 	options = $derived.by<LoadedRowByType<'item'>[]>(() => {
 		const { graph, sheet } = this.host();
 		if (!graph || !sheet || this.cap === 0) return [];
@@ -42,12 +43,16 @@ export class MasteryPicks {
 		// and a question about what may be picked must not depend on the answer
 		const classes = this.host().draft.classes.flatMap((c) => (c.classId ? [{ class: c.classId }] : []));
 		const grants = weaponProfGrants(classes, sheet.facts, graph);
+		// shortcut: every grant shares one cap, so a multiclass Barbarian/Fighter may spend all its picks
+		// on what the Fighter's grant alone admits; a cap per grant is the upgrade when a table asks
+		const asked = masteryWeaponTags(this.host().draft.classes, graph, this.host().draft.system);
 		return graph
 			.list('item', { system: this.host().draft.system })
 			.filter((row) => {
 				if (row.data.category !== 'weapon') return false;
 				const tags = parseItemTags(row.data.tags);
 				if (!tags.get(ITEM_TAG.mastery)) return false;
+				if (!asked.some((wanted) => wanted.every((tag) => tags.has(tag)))) return false;
 				return isWeaponProficient(grants, weaponCategoryOf(tags), row.data.id);
 			})
 			.sort((a, b) => String(a.data.name_en).localeCompare(String(b.data.name_en)));

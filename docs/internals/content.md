@@ -175,7 +175,9 @@ to). `content/level-gate.ts` is the one reader; the ladder columns are `choose`,
 `mastery_slots`, and a class feature's `spells` grants by the same mark — `bless@3`, or a bare
 `bless` from the feature's own level (`rules-core.md` ▸ Preparation). The form those columns had before, `level:count`, grants nothing and is said in
 content health with the step it is now — a count read the wrong way round would be a wrong number on
-the sheet, so it is never guessed at.
+the sheet, so it is never guessed at. `mastery_slots` may close its ladder on `|` and the item tags a
+weapon it counts must all carry — the 5.5e Barbarian's `2@1,1@4,1@10|melee` is "Simple or Martial
+Melee weapons"; on any other ladder column a `|` is said in content health as unread.
 
 **Starting equipment is a column with a grammar of its own**, `starting_equipment` on a class and a
 background, read by `content/starting-equipment.ts` and nothing else. `;` separates the lines the
@@ -643,6 +645,12 @@ category for mundane gear (`martial melee`) and a prose phrase for magic items (
 that deals slashing damage)`) — three readers sniffed substrings out of it, so a magic weapon had no
 properties, no damage dice and no fighting-style scopes. The `tags` column and `base_item_id`
 replaced it; the phrase is now read once, upstream, into a column.
+
+**A cell's shape is not a rule either.** Whether a healing spell adds the spellcasting modifier is
+the spell's `heal_modifier` (an open enum; `spellcasting` is "plus your spellcasting ability
+modifier"), never "its `damage` has dice": 5.5e Prayer of Healing rolls dice and adds nothing. Blank
+adds nothing, in a homebrew file written before the column as anywhere else — its author sets it in
+the editor's "Healing adds".
 
 ## The content repo
 

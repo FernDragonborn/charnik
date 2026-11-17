@@ -6,7 +6,7 @@
 import { ordinal, titleCase } from '$lib/util/format';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { localizedName } from '$lib/content/detail';
-import type { RowData } from '$lib/content/schemas';
+import type { HealModifier, RowData } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import {
@@ -78,6 +78,8 @@ export interface SpellRow {
 	 *  ephemeral slot ctx — NOT here (the slot isn't known until cast). Empty when the spell doesn't
 	 *  scale structurally (its `higher_level` prose is the fallback). See src/lib/effects/upcast.ts. */
 	upcast: string;
+	/** What a healing cast adds to its dice, as the row states it ('' adds nothing). */
+	healModifier: '' | HealModifier;
 	/** Whether casting this spell requires concentration. */
 	concentration: boolean;
 	prepState: '' | 'on' | 'always';
@@ -397,6 +399,7 @@ export function spellRow(
 		// typed parts keep a multi-type spell's types through the cast (Ice Knife piercing + cold, item 2)
 		damageParts: dmg ? parseDamageParts(dmg) : [],
 		upcast: d.upcast ?? '',
+		healModifier: d.heal_modifier ?? '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
 		ritualCast: canCastAsRitual(caster, { ritual: d.ritual ?? false, isPrepared: prep !== '' }),

@@ -275,7 +275,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (59)
+## Shared components (60)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -298,6 +298,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
 | **EditableTitle** | `value`, `placeholder` | The article title field shown in edit/translate mode. |
 | **EditContentForm** | `type`, `onsave`, `oncancel`, `resumeGuid`, `resumeDraft`, `editRow`, `ondelete` | Homebrew authoring — the compendium article, but its fields are editable. |
+| **EditContentFormHost.test-host** | `onsave` | The compendium's shape around the form: `onsave` flips the `{#if}` that holds it, so the form is |
 | **EntryList** | `groups`, `selectedId`, `onselect`, `searchValue`, `searchPlaceholder`, `showEdition`, `filters`, `leading`, `trailing` | Left-pane list (d-spellmgr design): search + optional filter chips + grouped rows. |
 | **EyeIcon** | `on` | The open/closed eye glyph, in `currentColor` — shared by EyeToggle (the spellbook show-on-sheet |
 | **EyeToggle** | `on`, `title`, `onclick` | Show-on-sheet toggle (d-spellmgr `.ic.eye`): open eye = on the sheet, closed = hidden. |
@@ -592,6 +593,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function halfFeatAbilities` — The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all * six (Epic Boons), …
 - `function expertiseBudget` — N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's * active features'…
 - `function masteryBudget` — MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the * same sum over `mast…
+- `function masteryWeaponTags` — The item tags each mastery grant the drafted character has unlocked asks of a weapon — one list * per granting featur…
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
 - `function speciesFixedAbilities` — Abilities raised by a species/sub-option's FIXED ASI (its flat_bonus effects) — excluded from the * free choice (5e H…
 - `function asiBoost` — One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map.
@@ -1147,6 +1149,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RITUAL_SOURCES`
 - `const SPELLS_AS` — How a feature's `spells` are had: `prepared` — always prepared, never counted against the class's * number (Domain, O…
 - `const SPELLS_AS_VALUES`
+- `const HEAL_MODIFIER` — What a healing spell adds to its dice, as its text states it: `spellcasting` is "plus your * spellcasting ability mod…
+- `type HealModifier`
+- `const HEAL_MODIFIERS`
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const RESOLUTION` — The same words by name, for code that compares against one.
@@ -1280,6 +1285,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const LEVEL_MARK`
 - `const LEVEL_LADDER_COLUMNS` — The class-feature columns that are a ladder of counts by class level.
+- `const LADDER_QUALIFIER_MARK` — Closes a ladder on the item tags each thing it counts must ALL carry: `2@1|melee`.
+- `function splitLadderQualifier` — A ladder cell split at its qualifier: the ladder, and the tags it asks for (`[]` asks none).
 - `interface LevelStep` — One step of a ladder: how many, from which level.
 - `function readLevelLadder` — A ladder read: the steps it states, and every part it could not read, kept to be said.
 - `const countAtLevel` — How many a ladder has granted by this level.
@@ -2572,4 +2579,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 59 components · 1574 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 60 components · 1580 exports across 218 modules · 108 duplicate suspects._

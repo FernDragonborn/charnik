@@ -106,6 +106,7 @@ import {
 	RITUAL_SOURCES,
 	SCHOOLS,
 	RESOLUTIONS,
+	HEAL_MODIFIERS,
 	ITEM_CATEGORIES,
 	RARITIES,
 	FEAT_CATEGORIES,
@@ -341,6 +342,8 @@ const spellSchema = baseRow.extend({
 	resolution: enumDefault(Resolution, 'none'),
 	save_ability: z.preprocess(blankToUndef, Ability.optional()),
 	damage: optStr, // "8d6 fire" base damage/effect summary
+	/** What a healing spell adds to its `damage` dice (`HEAL_MODIFIER`); blank adds nothing. */
+	heal_modifier: z.preprocess(blankToUndef, z.enum(HEAL_MODIFIERS).optional()),
 	higher_level: optStr, // upcast / cantrip-scaling PROSE (the fallback for non-scalar upcasts)
 	// Structured upcast (docs/internals/rules-core.md ▸ Spellcasting): a `;`-list of `kind[:type]:formula` tokens
 	// (`damage:per_slot(1d6)`, `count:slot+1`) evaluated at cast time. Language-agnostic (a formula,

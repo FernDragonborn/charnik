@@ -337,11 +337,13 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			`quarterstaff,5.5e,${S},Quarterstaff,,weapon,"simple, melee",1d6 bludgeoning`,
 		].join('\n'),
 		'spells_srd.csv': [
-			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast,effects',
+			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast,effects,heal_modifier',
 			// level-1 save-damage spell: base 3d8, +1d8 per slot above 1st
 			`chromatic_orb,5.5e,${S},Chromatic Orb,1,evocation,action,90 ft,Instantaneous,V S M,false,save,dex,3d8 fire,damage:per_slot(1d8)`,
 			// level-1 healing spell: base 1d8 + spellcasting mod, +1d8 per slot above 1st
-			`cure_wounds,5.5e,${S},Cure Wounds,1,evocation,action,Touch,Instantaneous,V S,false,auto,,1d8,heal:per_slot(1d8)`,
+			`cure_wounds,5.5e,${S},Cure Wounds,1,evocation,action,Touch,Instantaneous,V S,false,auto,,1d8,heal:per_slot(1d8),,spellcasting`,
+			// a healing spell whose row states no modifier (5.5e Prayer of Healing): its dice alone
+			`prayer,5.5e,${S},Prayer,2,abjuration,10 minutes,30 ft,Instantaneous,V,false,auto,,2d8,heal:per_slot(1d8),,`,
 			// a spell whose upcast formula is broken → must degrade (base only), never wrong dice
 			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`,
 			// a token-less concentration spell whose DURATION upcasts (absolute rounds) — Hunter's Mark-style
@@ -415,6 +417,12 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		combat.cast(spellRow(graph, `spell:${S}:cure_wounds`, 'on')!, noModifiers);
 		expect(diceOf(8)).toBe(2); // 1d8 base + 1d8 upcast
 		expect(combat.journal.log[0]?.expr).toContain('+3'); // spellcasting mod still added
+	});
+
+	it('a healing spell whose row states no modifier heals by its dice alone (5.5e Prayer of Healing)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:prayer`, 'on')!, noModifiers);
+		expect(diceOf(8)).toBe(2);
+		expect(combat.journal.log[0]?.expr).not.toContain('+3');
 	});
 
 	it('a heal that reads the slot (Disciple of Life) is read at the slot cast from', () => {

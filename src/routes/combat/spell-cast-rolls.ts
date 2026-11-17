@@ -33,6 +33,7 @@ import {
 } from '$lib/combat/helpers';
 import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import { combinePools } from '$lib/effects/upcast';
+import { HEAL_MODIFIER } from '$lib/content/schemas';
 import { withCastSlot } from '$lib/effects/context';
 import type { ExprContext } from '$lib/effects/expression-evaluator';
 
@@ -198,9 +199,10 @@ export class SpellCastRolls {
 	): { parts: DamagePartSpec[]; kind: SpellOutcomeKind } {
 		const heal = r.resolution === 'auto';
 		const temp = r.resolution === 'temp';
-		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
 		const healMod =
-			heal && healDice && caster ? (this.host.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
+			heal && r.healModifier === HEAL_MODIFIER.spellcasting && caster
+				? (this.host.sheet?.abilities[caster.ability]?.mod ?? 0)
+				: 0;
 		const primaryFx: RollEffects = temp
 			? NO_ROLL_EFFECTS
 			: heal

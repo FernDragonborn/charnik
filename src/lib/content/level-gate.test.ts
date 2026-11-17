@@ -3,7 +3,12 @@
  * The form the ladder columns had before, `level:count`, grants nothing and is said with its new step.
  */
 import { describe, it, expect } from 'vitest';
-import { countAtLevel, levelLadderIssues, readLevelLadder } from './level-gate';
+import {
+	countAtLevel,
+	levelLadderIssues,
+	readLevelLadder,
+	splitLadderQualifier,
+} from './level-gate';
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from './loader';
 
@@ -31,6 +36,23 @@ describe('a ladder of counts by level', () => {
 			['old', 'contentIssue.levelLadderOldForm', { column: 'choose', now: '2@2' }],
 			['old', 'contentIssue.levelLadderOldForm', { column: 'choose', now: '1@5' }],
 			['odd', 'contentIssue.levelLadderUnread', { column: 'mastery_slots' }],
+		]);
+	});
+
+	it('splits a qualifier off the ladder, and says it as unread where no reader honours it', () => {
+		expect(splitLadderQualifier('2@1,1@4|melee, simple')).toEqual({
+			ladder: '2@1,1@4',
+			tags: ['melee', 'simple'],
+		});
+		expect(splitLadderQualifier('2@1')).toEqual({ ladder: '2@1', tags: [] });
+		const graph = {
+			list: () => [
+				{ id: 'ok', root: 'pack', file: 'cf.csv', data: { mastery_slots: '2@1|melee' } },
+				{ id: 'no', root: 'pack', file: 'cf.csv', data: { choose: '2@1|melee' } },
+			],
+		} as unknown as ContentGraph;
+		expect(levelLadderIssues(graph, '5.5e').map((i) => [i.id, i.values])).toEqual([
+			['no', { column: 'choose' }],
 		]);
 	});
 

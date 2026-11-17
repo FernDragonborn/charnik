@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { masteryBudget } from '../build/derive';
+import { masteryBudget, masteryWeaponTags } from '../build/derive';
 import { newCharacter, characterSchema, classRow, inventoryRow } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { attackMeta, attackNotes, attackPropertyRows, computeAttacks } from '../combat/attacks';
@@ -49,6 +49,15 @@ describe('weapon mastery · the ladder is shipped data', () => {
 
 		const g2014 = await loadPacks('srd-2014');
 		expect(masteryBudget(entry('fighter', 20), g2014, '5e')).toBe(0);
+	});
+
+	// SRD 5.2.1, Barbarian ▸ Weapon Mastery: "two kinds of Simple or Martial Melee weapons"; the
+	// Fighter's "Simple or Martial weapons" has no such limit
+	it("the Barbarian's grant asks for a melee weapon, and the Fighter's for nothing", async () => {
+		const g2024 = await loadPacks('srd-2024');
+		expect(masteryWeaponTags(entry('barbarian', 1), g2024, '5.5e')).toEqual([['melee']]);
+		expect(masteryWeaponTags(entry('fighter', 1), g2024, '5.5e')).toEqual([[]]);
+		expect(masteryWeaponTags(entry('wizard', 20), g2024, '5.5e')).toEqual([]);
 	});
 
 	it('every 2024 weapon carries a mastery property, and no 2014 weapon does', async () => {

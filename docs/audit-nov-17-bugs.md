@@ -188,13 +188,13 @@ Root cause: `srd-2024/class_features_srd.csv:390` (`ranger_deft_explorer`) has a
 
 Fix: in `charnik-content-srd`, `expertise_slots` = `1@2` on that row.
 
-### [ ] R6 · A 5.5e Prayer of Healing adds the spellcasting modifier it does not have — medium · CONFIRMED · 5.5e
+### [x] R6 · A 5.5e Prayer of Healing adds the spellcasting modifier it does not have — medium · closed · 5.5e
 
 A cleric with Wisdom 16 rolls 2d8+3. SRD 5.2.1, Prayer of Healing: "…and also regain 2d8 Hit
 Points." The 5e spell does add it ("2d8 + your spellcasting ability modifier"), as do Cure Wounds,
 Healing Word and their Mass forms in both editions.
 
-Repro: `src/routes/combat/spell-cast-rolls.audit-repro.test.ts`
+Held by: `src/lib/combat/heal-modifier-content.test.ts` (the shipped rows, per edition) and `src/routes/combat/combat.test.ts` (a row with no modifier heals by its dice).
 
 ```
 AssertionError: expected 3 to be +0 // Object.is equality
@@ -207,17 +207,10 @@ whose `damage` has dice. That is a rule decided in code from the shape of a cell
 Fix: make it the row's statement — the rows whose text adds the modifier say so in data (a term in
 the `damage` cell, or a column), and `spellOutcomeParts` reads that instead of "has dice".
 
-Left open on one maintainer decision. The shape is a spell column `heal_modifier`, an open enum whose
-one value today is `spellcasting`, set on the rows whose text adds it (5e: Cure Wounds, Healing Word,
-Prayer of Healing and both Mass forms; 5.5e: the same less Prayer of Healing), and read by
-`spellOutcomeParts` in place of "has dice" — about thirty lines across the schema, the vocabulary, the
-homebrew form, `SpellRow`, the two spell files and `content.md`. The decision is what a homebrew
-spell file written before the column means:
-
-- **blank adds nothing.** The column is the only truth, as `content.md` asks; a homebrew healing spell
-  that relied on the old guess heals by its dice until its author sets the column.
-- **blank keeps the old guess for files without the column.** No homebrew row changes, at the price
-  of a rule decided in code from a cell's shape surviving for those files.
+The spell column `heal_modifier`, an open enum whose one value is `spellcasting`, is set on the rows
+whose text adds it (5e: Cure Wounds, Healing Word, Prayer of Healing and both Mass forms; 5.5e: the
+same less Prayer of Healing) and read by `spellOutcomeParts` in place of "has dice". The maintainers'
+call: blank adds nothing, including in a homebrew file written before the column.
 
 ### [x] R7 · A 5.5e Rage runs out by itself after one minute — low · closed · 5.5e
 
@@ -238,14 +231,14 @@ sentence; `src/lib/play/options.ts:149` starts the clock from it.
 Fix: in `charnik-content-srd`, `duration_rounds` = 100 on that row, and "up to 10 minutes" in its
 text.
 
-### [ ] R8 · A 5.5e Barbarian is offered ranged weapons for Weapon Mastery — low · CONFIRMED · 5.5e
+### [x] R8 · A 5.5e Barbarian is offered ranged weapons for Weapon Mastery — low · closed · 5.5e
 
 The mastery picker lists the blowgun, dart, the three crossbows, longbow, shortbow, sling, musket and
 pistol for a Barbarian, in Strict as in Free. SRD 5.2.1, Barbarian ▸ Weapon Mastery: "two kinds of
 Simple or Martial Melee weapons of your choice". The Fighter's, Paladin's, Ranger's and Rogue's text
 has no such limit.
 
-Repro: `src/routes/build/mastery-picks.audit-repro.test.ts`
+Held by: `src/lib/content/mastery_content.test.ts` (the grants per class) and `src/lib/content/level-gate.test.ts` (the qualifier).
 
 ```
 AssertionError: expected [ 'blowgun', 'dart', …(8) ] to deeply equal []
@@ -257,13 +250,9 @@ Root cause: `src/routes/build/mastery-picks.svelte.ts:51` asks proficiency and n
 Fix: the feature row states it (a tag list beside `mastery_slots`, `melee` on this one row), and
 `MasteryPicks.options` filters by it.
 
-Left open on one maintainer decision: where the statement lives. Either way the reader is one filter
-in `MasteryPicks.options` against the weapon's `melee`/`ranged` tag, with a test per edition.
-
-- **a column on class features** (`mastery_weapons`, a tag list: `melee` on the Barbarian's row,
-  blank everywhere else) — one more column on a wide file, readable on its own.
-- **a qualifier in `mastery_slots`** (`2@1|melee`) — no new column, at the price of a second grammar
-  inside a cell that holds a ladder.
+The maintainers' call is a qualifier in the ladder cell: `mastery_slots` = `2@1,1@4,1@10|melee` on the
+Barbarian's row, read by `level-gate.ts` ▸ `splitLadderQualifier`, and `MasteryPicks.options` offers a
+weapon one unlocked grant admits.
 
 ## U · UI state
 
@@ -291,7 +280,7 @@ write (`src/lib/character/repository.ts:313-319`).
 Fix: where `theirs` is null because the file is gone, close the character
 (`characters.active = null`) — the same end state `removeCharacter` leaves.
 
-### [ ] U2 · A homebrew row saved right after typing comes back as an unsaved draft — low · LIKELY · both
+### [x] U2 · A homebrew row saved right after typing comes back as an unsaved draft — low · closed · both
 
 Typing the last field and pressing Enter inside 600 ms: the row is saved and its draft deleted, and
 the pending autosave then writes the draft again. The Drafts pane shows a pending entry for content
@@ -306,8 +295,13 @@ teardown, and the timer fires on a form that is gone.
 Fix: `clearTimeout(writeTimer)` in `save()` before the draft is deleted. Not in an effect teardown:
 a form closed mid-debounce has to keep its last write.
 
-The fix is in (`EditContentForm.svelte` ▸ `save`). The box stays open until a browser test mounts the
-form, saves inside the debounce, and finds no draft afterwards.
+Held by: `src/lib/components/EditContentForm.browser.test.ts`, which mounts the form inside an `{#if}`
+the way the compendium does — a bare `unmount()` flushes the form's own effects first and hides the
+bug. Without the fix:
+
+```
+AssertionError: expected [ { schemaVersion: 3, …(3) } ] to deeply equal []
+```
 
 ## Ruled out
 

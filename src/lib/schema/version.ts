@@ -215,7 +215,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v80: 5.5e Paladin and Ranger levels round up into a multiclass caster level, Rage reaches every
 // Strength check and a 5.5e Rage runs ten minutes, Poisoned and Frightened reach every ability check,
 // and Deft Explorer grants its Expertise. An install left at v79 keeps the old numbers.
-export const CONTENT_SEED_VERSION = 80;
+// v81: the healing spells that add the spellcasting modifier say so (`heal_modifier`), and the 5.5e
+// Barbarian's Weapon Mastery asks for a melee weapon (`|melee`). An install left at v80 heals by the
+// dice alone and offers the Barbarian ranged weapons.
+export const CONTENT_SEED_VERSION = 81;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

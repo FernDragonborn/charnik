@@ -14,6 +14,24 @@ export const LEVEL_MARK = '@';
 /** The class-feature columns that are a ladder of counts by class level. */
 export const LEVEL_LADDER_COLUMNS = ['choose', 'expertise_slots', 'mastery_slots'] as const;
 
+/** Closes a ladder on the item tags each thing it counts must ALL carry: `2@1|melee`. */
+export const LADDER_QUALIFIER_MARK = '|';
+/** The ladders whose reader honours a qualifier; on any other column it is said as unread. */
+const QUALIFIED_LADDER_COLUMNS: ReadonlySet<string> = new Set(['mastery_slots']);
+
+/** A ladder cell split at its qualifier: the ladder, and the tags it asks for (`[]` asks none). */
+export function splitLadderQualifier(spec: string | undefined): { ladder: string; tags: string[] } {
+	const cell = spec ?? '';
+	const at = cell.indexOf(LADDER_QUALIFIER_MARK);
+	if (at < 0) return { ladder: cell, tags: [] };
+	const tags = cell
+		.slice(at + LADDER_QUALIFIER_MARK.length)
+		.split(',')
+		.map((tag) => tag.trim())
+		.filter(Boolean);
+	return { ladder: cell.slice(0, at), tags };
+}
+
 /** One step of a ladder: how many, from which level. */
 export interface LevelStep {
 	count: number;
@@ -87,7 +105,11 @@ export function levelLadderIssues(graph: ContentGraph, system: string): JoinIssu
 	const out: JoinIssue[] = [];
 	for (const row of graph.list('class_feature', { system })) {
 		for (const column of LEVEL_LADDER_COLUMNS) {
-			for (const part of readLevelLadder(row.data[column]).unread) {
+			const cell = row.data[column];
+			const ladder = QUALIFIED_LADDER_COLUMNS.has(column)
+				? splitLadderQualifier(cell).ladder
+				: cell;
+			for (const part of readLevelLadder(ladder).unread) {
 				const old = OLD_STEP.exec(part);
 				out.push({
 					file: `${row.root}/${row.file}`,

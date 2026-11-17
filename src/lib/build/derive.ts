@@ -3,7 +3,7 @@
  * `$derived`. Kept out of build/rules.ts (which stays "just numbers, no graph") and out of the VM
  * (which keeps only reactive wiring), so these are plain, unit-testable functions. No Svelte runes.
  */
-import { countAtLevel } from '$lib/content/level-gate';
+import { countAtLevel, splitLadderQualifier } from '$lib/content/level-gate';
 import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
@@ -53,9 +53,23 @@ export function masteryBudget(
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
 		const spec = feature.row.data.mastery_slots;
-		if (spec) total += countAtLevel(spec, feature.entry.level);
+		if (spec) total += countAtLevel(splitLadderQualifier(spec).ladder, feature.entry.level);
 	}
 	return total;
+}
+
+/** The item tags each mastery grant the drafted character has unlocked asks of a weapon — one list
+ *  per granting feature, `[]` for a grant open to every weapon (the 5.5e Barbarian's `|melee` is
+ *  "Simple or Martial Melee weapons"). A weapon one list fits may be picked. Pure. */
+export function masteryWeaponTags(
+	classes: readonly DraftClassEntry[],
+	graph: ContentGraph,
+	system: string,
+): string[][] {
+	return [...activeClassFeatures(classes, graph, system)].flatMap((feature) => {
+		const { ladder, tags } = splitLadderQualifier(feature.row.data.mastery_slots);
+		return countAtLevel(ladder, feature.entry.level) > 0 ? [tags] : [];
+	});
 }
 
 /** Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null. */

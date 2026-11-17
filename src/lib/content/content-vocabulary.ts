@@ -23,6 +23,12 @@ export const RITUAL_SOURCES = Object.values(RITUAL_SOURCE);
  *  member here. */
 export const SPELLS_AS = { prepared: 'prepared', list: 'list' } as const;
 export const SPELLS_AS_VALUES = Object.values(SPELLS_AS);
+/** What a healing spell adds to its dice, as its text states it: `spellcasting` is "plus your
+ *  spellcasting ability modifier". Blank adds nothing. An open enum: a spell adding another ability's
+ *  modifier is a member here. */
+export const HEAL_MODIFIER = { spellcasting: 'spellcasting' } as const;
+export type HealModifier = (typeof HEAL_MODIFIER)[keyof typeof HEAL_MODIFIER];
+export const HEAL_MODIFIERS = Object.values(HEAL_MODIFIER);
 export const SCHOOLS = [
 	'abjuration',
 	'conjuration',
