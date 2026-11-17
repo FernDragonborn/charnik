@@ -136,15 +136,14 @@ export function rest(
 			const own = ctx.derive(withoutForm(waking)).maxHp;
 			const restored = effectiveHpMax(play.hp.max ?? null, own);
 			play = { ...play, form: { ...form, hpBefore: restored } };
-			// the sheet shows the form's count, so a healing that happens under it is said or unseen
-			if (restored > form.hpBefore)
-				notices.push({
-					text: {
-						key: 'combat.notice.formOwnHpRestored',
-						values: { from: form.hpBefore, to: restored },
-					},
-					kind: LOG_KIND.rest,
-				});
+			// the sheet shows the form's count, so the hit points under it are said on every rest, full or not
+			notices.push({
+				text: {
+					key: 'combat.notice.formOwnHpRestored',
+					values: { from: form.hpBefore, to: restored },
+				},
+				kind: LOG_KIND.rest,
+			});
 		}
 	} else {
 		// warlock pact slots return on a short rest
