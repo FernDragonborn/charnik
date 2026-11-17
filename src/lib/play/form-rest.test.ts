@@ -56,7 +56,12 @@ describe('a long rest taken in a 2014 Wild Shape', () => {
 			ctx,
 		);
 		// nine hours of form against an eight-hour rest
-		const rested = rest(shaped.character, { kind: 'long' }, ctx).character;
-		expect(rested.play.form?.hpBefore).toBe(ownMaximum);
+		const outcome = rest(shaped.character, { kind: 'long' }, ctx);
+		expect(outcome.character.play.form?.hpBefore).toBe(ownMaximum);
+		// the sheet shows the wolf's count, so the healing under it is said
+		expect(outcome.notices.map((notice) => notice.text)).toContainEqual({
+			key: 'combat.notice.formOwnHpRestored',
+			values: { from: 5, to: ownMaximum },
+		});
 	});
 });

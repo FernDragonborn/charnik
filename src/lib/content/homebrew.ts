@@ -228,7 +228,6 @@ export function blankDraft(type: ContentType): Record<string, string> {
 	return d;
 }
 
-/** Slugify a display name into an id (lowercase, a-z0-9 + hyphens) — matches the loader's id rule. */
 /** Which file a type's homebrew rows live in (e.g. `content/homebrew/items_hb.csv`). */
 export function homebrewFile(type: ContentType): string {
 	return `${HOMEBREW_ROOT}/${CONTENT_TYPES[type].filebase}_hb.csv`;

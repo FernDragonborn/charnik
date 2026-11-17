@@ -977,6 +977,7 @@
 			"slotGained": "Gained a level {level} spell slot",
 			"restRestored": "{kind} rest — resources restored",
 			"exhaustionChanged": "Exhaustion {from} → {to}",
+			"formOwnHpRestored": "Your own hit points under the form: {from} → {to}",
 			"noHitDice": "No {die} Hit Dice left",
 			"regainOnLongRest": "Regain some on a long rest",
 			"shortRestHealed": "Short rest — healed {hp} HP",

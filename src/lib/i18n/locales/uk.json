@@ -977,6 +977,7 @@
 			"slotGained": "Отримано комірку заклять {level} рівня",
 			"restRestored": "{kind} відпочинок — ресурси відновлено",
 			"exhaustionChanged": "Виснаження {from} → {to}",
+			"formOwnHpRestored": "Ваші власні хіти під формою: {from} → {to}",
 			"noHitDice": "Кубиків здоров’я {die} не лишилось",
 			"regainOnLongRest": "Частина повернеться після тривалого відпочинку",
 			"shortRestHealed": "Короткий відпочинок — відновлено {hp} HP",

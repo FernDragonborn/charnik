@@ -22,7 +22,7 @@ import { withoutForm } from '$lib/character/forms';
 import type { CharacterSheet } from '$lib/character/derive';
 import { dropEffects, endConcentration } from './concentration';
 import { leaveForm } from './form';
-import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
+import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { hitDiceSpent } from './resources';
 import { settled } from './settle';
 import { countAt } from '$lib/util/records';
@@ -126,6 +126,7 @@ export function rest(
 		}
 	}
 	let play: CharacterPlay = { ...waking.play, resourcesSpent };
+	const notices: PlayNotice[] = [];
 	if (kind === 'long') {
 		play = longRest(waking, play, sheet, choice);
 		// a form still standing (a 2014 druid of 16 and up) rests on its own count; the hit points
@@ -133,7 +134,17 @@ export function rest(
 		const form = play.form;
 		if (form?.hpBefore !== undefined) {
 			const own = ctx.derive(withoutForm(waking)).maxHp;
-			play = { ...play, form: { ...form, hpBefore: effectiveHpMax(play.hp.max ?? null, own) } };
+			const restored = effectiveHpMax(play.hp.max ?? null, own);
+			play = { ...play, form: { ...form, hpBefore: restored } };
+			// the sheet shows the form's count, so a healing that happens under it is said or unseen
+			if (restored > form.hpBefore)
+				notices.push({
+					text: {
+						key: 'combat.notice.formOwnHpRestored',
+						values: { from: form.hpBefore, to: restored },
+					},
+					kind: LOG_KIND.rest,
+				});
 		}
 	} else {
 		// warlock pact slots return on a short rest
@@ -160,6 +171,7 @@ export function rest(
 							}
 						: {}),
 				},
+				...notices,
 			],
 		},
 		ctx,
