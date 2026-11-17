@@ -41,6 +41,7 @@
 	import { _ } from '$lib/i18n';
 	import { sayIfFails, toast, toastFailure } from '$lib/toast/toast';
 	import { app } from '$lib/stores/app.svelte';
+	import { localizedName } from '$lib/content/detail';
 
 	// Localised field label. A localizable column (name_<loc> / text_<loc>) shows the base label plus
 	// the locale tag when it isn't the current UI language (e.g. "Name (uk)" in an EN interface);
@@ -244,8 +245,9 @@
 	const classList = $derived.by(() => {
 		const byId = new Map<string, { id: string; name: string }>();
 		for (const c of content.graph?.list('class') ?? [])
-			if (classCasts(c) && !byId.has(c.id)) byId.set(c.id, { id: c.id, name: c.data.name_en });
-		return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+			if (classCasts(c) && !byId.has(c.id))
+				byId.set(c.id, { id: c.id, name: localizedName(c, app.activeLocale) });
+		return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, app.activeLocale));
 	});
 
 	function toggleSystem(sys: string) {

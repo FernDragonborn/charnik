@@ -68,7 +68,7 @@
 	/** Clone any base theme (built-in dark/light OR a bundled palette) into a new editable copy. Reads
 	 *  the base's live token values via the injected `[data-theme]` rule, so the copy is self-contained. */
 	function cloneTheme(base: string, baseName: string) {
-		const name = `${baseName} copy`;
+		const name = $_('settings.themes.copyName', { values: { name: baseName } });
 		const theme: CustomTheme = {
 			id: uniqueThemeId(name, takenIds()),
 			name,
@@ -78,7 +78,7 @@
 	}
 
 	function duplicate(src: CustomTheme) {
-		const name = `${src.name} copy`;
+		const name = $_('settings.themes.copyName', { values: { name: src.name } });
 		addTheme(
 			{ id: uniqueThemeId(name, takenIds()), name, tokens: { ...src.tokens } },
 			{ edit: true },

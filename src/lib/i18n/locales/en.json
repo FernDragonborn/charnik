@@ -1251,6 +1251,14 @@
 			"permanent": "permanent"
 		},
 		"undo": "Undo",
+		"slotRefusal": {
+			"chosenTooLow": "A {chosen, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}-level slot is too low for a {spell, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}-level spell — pick {spell, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} or higher.",
+			"chosenEmpty": "No {chosen, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}-level spell slots left — cast it from a higher slot, or rest.",
+			"noneLeft": "No slot left that can cast a {spell, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}-level spell — rest to get slots back.",
+			"pactTooLow": "Your Pact Magic slots are {pact, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} level, too low for this spell.",
+			"pactEmpty": "No Pact Magic slots left — they come back on a short rest.",
+			"pactNone": "You have no Pact Magic slots."
+		},
 		"delta": {
 			"hp": "HP {from} → {to}",
 			"tempHp": "Temp HP {from} → {to}",
@@ -2295,6 +2303,7 @@
 			"builtIn": "built-in",
 			"clone": "Clone",
 			"delete": "Delete",
+			"copyName": "{name} copy",
 			"deleteTitle": "Delete the theme “{name}”?",
 			"deleteMessage": "Its file is removed from your data folder. Export it first to keep a copy.",
 			"duplicate": "Duplicate",

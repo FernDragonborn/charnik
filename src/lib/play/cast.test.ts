@@ -72,7 +72,10 @@ describe.each(['5e', '5.5e'] as const)('cast actions · %s', (system) => {
 		const refused = castSpell(none, { spell: spell('bless') }, ctx);
 		expect(refused.refused).toBe(true);
 		expect(refused.character).toBe(none);
-		expect(typeof refused.notices[0]?.text).toBe('string');
+		// said in the reader's language: a catalog key, not an English sentence (audit-oct-27 U8)
+		expect(refused.notices[0]?.text).toMatchObject({
+			key: expect.stringMatching(/^combat\.slotRefusal\./),
+		});
 	});
 
 	it('in combat a cast costs its casting time, and with none left nothing is spent', () => {

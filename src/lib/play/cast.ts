@@ -147,7 +147,7 @@ function reserveSlot(
 ): SlotSpend {
 	const spent = character.play.spellSlotsSpent;
 	if (!pact) return slotToSpend(level, pools, spent, chosen);
-	return spendPactSlot(level, pools, spent) ?? { block: 'You have no Pact Magic slots.' };
+	return spendPactSlot(level, pools, spent) ?? { block: { key: 'combat.slotRefusal.pactNone' } };
 }
 
 /**

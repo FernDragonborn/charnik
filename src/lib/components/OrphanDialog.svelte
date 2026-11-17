@@ -24,6 +24,8 @@
 	import { getUserStorage } from '$lib/storage/provider';
 	import { rowName, type ContentGraph, type LoadedRow } from '$lib/content/loader';
 	import LangSwitcher from './LangSwitcher.svelte';
+	import { localizedName } from '$lib/content/detail';
+	import { app } from '$lib/stores/app.svelte';
 
 	let {
 		orphans,
@@ -216,7 +218,7 @@
 							class:sel={selectedRow?.effectiveId === row.effectiveId}
 							onclick={() => (selectedRow = row)}
 						>
-							<span class="nm">{row.data.name_en}</span>
+							<span class="nm">{localizedName(row, app.activeLocale)}</span>
 							<span class="src">{row.source}</span>
 						</button>
 					{:else}
@@ -241,7 +243,7 @@
 			<button class="btn primary" disabled={!selectedRow} onclick={() => reassign(true)}>
 				{selectedRow
 					? $_('orphan.reassignNamed', {
-							values: { name: String(selectedRow.data.name_en) },
+							values: { name: localizedName(selectedRow, app.activeLocale) },
 						})
 					: $_('orphan.reassign')}
 			</button>

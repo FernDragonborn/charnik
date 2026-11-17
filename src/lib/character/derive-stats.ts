@@ -364,7 +364,8 @@ export function derivePassives(
  *  list of senses anywhere, by design — and each folds from 0 so a sense nothing grants is absent
  *  rather than present at zero feet. */
 export function deriveSenses(facts: EffectFacts): Record<string, Computed> {
-	const senses: Record<string, Computed> = {};
+	// no prototype: a homebrew sense named `constructor` or `toString` is a sense like any other
+	const senses: Record<string, Computed> = Object.create(null) as Record<string, Computed>;
 	for (const f of facts.numeric) {
 		if (!f.target.startsWith(SENSE_PREFIX)) continue;
 		const name = f.target.slice(SENSE_PREFIX.length);

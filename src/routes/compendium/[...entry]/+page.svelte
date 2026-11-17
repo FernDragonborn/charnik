@@ -76,6 +76,10 @@
 	$effect(() => writeStored(LOCALE_KEY, contentLocale));
 	// localized display name for a row (the chosen content locale, English fallback)
 	const localName = (r: LoadedRow) => localizedName(r, contentLocale);
+	const classNameOf = (effectiveId: string, fallback: string): string => {
+		const row = graph?.get(effectiveId);
+		return row ? localName(row) : fallback;
+	};
 	let selectedType = $state<ContentType>('spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
@@ -257,7 +261,7 @@
 		return getSpellAccess(graph)
 			.classesForSpell(selected.effectiveId)
 			.map((e) => ({
-				name: String(graph?.get(e.classEffectiveId)?.data.name_en ?? e.classId),
+				name: classNameOf(e.classEffectiveId, e.classId),
 				homebrew: e.via === 'spell_list',
 			}))
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
@@ -528,7 +532,7 @@
 							<small>
 								{selected
 									? $_('compendium.modeEditorHint', {
-											values: { name: String(selected.data.name_en) },
+											values: { name: localName(selected) },
 										})
 									: $_('compendium.modeEditorEmpty')}
 							</small>
@@ -635,7 +639,7 @@
 	{#if confirmDelete}
 		<ConfirmDialog
 			title={$_('compendium.deleteTitle', {
-				values: { name: String(confirmDelete.data.name_en) },
+				values: { name: localName(confirmDelete) },
 			})}
 			message={$_('compendium.deleteBody')}
 			confirmLabel={$_('compendium.deleteConfirm')}

@@ -32,40 +32,38 @@
 	<span class="bar-label">{$_('combat.turn.round')} <b>{fightRound}</b></span>
 	{#each SLOTS as slot (slot)}
 		{@const label = slotLabel(slot)}
-		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot; the
-		     pips inside still set the count exactly (click a spent one to restore) and stop the
-		     pill's click, the same nesting the resource chips use. A button can't nest a button, so the
-		     pips are role=button/tabindex=-1: by keyboard you spend via the pill and refresh with
-		     "Next turn" — restoring ONE pip stays mouse-only, as on the resource chips. -->
-		<button
-			type="button"
-			class="turn-slot"
-			onclick={() => combat.economy.trySpend(slot)}
-			title={$_('combat.turn.spendOne', { values: { label } })}
-			aria-label={$_('combat.turn.spendOne', { values: { label } })}
-		>
-			<span class="slot-label">{label}</span>
+		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot: the
+		     spend button is stretched over the pill, and the pips sit above it as buttons of their
+		     own that set the count exactly (click a spent one to restore). Siblings rather than one
+		     button inside another, which no assistive technology can operate. By keyboard you spend
+		     via the pill and refresh with "Next turn"; the pips stay out of the tab order. -->
+		<div class="turn-slot">
+			<button
+				type="button"
+				class="slot-spend"
+				onclick={() => combat.economy.trySpend(slot)}
+				title={$_('combat.turn.spendOne', { values: { label } })}
+				aria-label={$_('combat.turn.spendOne', { values: { label } })}
+			>
+				<span class="slot-label">{label}</span>
+			</button>
 			<span class="turn-pips">
 				{#each range(combat.economy.slotMax[slot]) as i (i)}
 					{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<span
+					<button
+						type="button"
 						class="turn-pip pip-{slot}"
 						class:used
-						role="button"
 						tabindex="-1"
-						onclick={(e) => {
-							e.stopPropagation();
-							combat.economy.usePip(slot, i);
-						}}
+						onclick={() => combat.economy.usePip(slot, i)}
 						title={$_(used ? 'combat.turn.pipUsed' : 'combat.turn.pipAvailable', {
 							values: { label },
 						})}
 						aria-label={$_('combat.turn.pip', { values: { label, n: i + 1 } })}
-					></span>
+					></button>
 				{/each}
 			</span>
-		</button>
+		</div>
 	{/each}
 	<button
 		type="button"
@@ -161,7 +159,34 @@
 	.turn-slot:hover {
 		border-color: var(--color-accent);
 	}
+	/* the slot pill is a box around two kinds of button; the spend one covers all of it */
+	div.turn-slot {
+		position: relative;
+	}
+	.slot-spend {
+		background: none;
+		border: 0;
+		padding: 0;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+	.slot-spend::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.slot-spend:focus-visible {
+		outline: none;
+	}
+	div.turn-slot:has(.slot-spend:focus-visible) {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-offset);
+	}
 	.turn-slot .turn-pips {
+		position: relative;
+		z-index: 1;
 		display: inline-flex;
 		gap: var(--space-1);
 	}
@@ -179,6 +204,8 @@
 		width: 13px;
 		height: 13px;
 		padding: 0;
+		border: 0;
+		background: none;
 		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--pip-color) 55%, transparent));
 		cursor: pointer;
 	}

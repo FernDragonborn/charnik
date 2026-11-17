@@ -10,7 +10,6 @@
  */
 import type { SaidText } from '$lib/util/say';
 import type { System } from './pipeline';
-import { ordinal } from '../util/format';
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
@@ -45,7 +44,8 @@ export const PACT_SLOT_KEY = 'pact';
 
 /** What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a
  *  `spellSlotsSpent` key, "1".."9" or `pact`), do nothing (`null`), or refuse with `block`. */
-export type SlotSpend = { key: string } | { block: string } | null;
+/** `block` is facts, not a sentence: this module has no locale (the reason `PrepareAttempt` is). */
+export type SlotSpend = { key: string } | { block: SaidText } | null;
 
 /**
  * Which spell slot a cast of `spellLevel` consumes. The LOWEST leveled slot ≥ the spell's level that
@@ -77,12 +77,15 @@ export function slotToSpend(
 	if (chosenLevel !== undefined) {
 		if (chosenLevel < spellLevel)
 			return {
-				block: `A ${ordinal(chosenLevel)}-level slot is too low for a ${ordinal(spellLevel)}-level spell — pick ${ordinal(spellLevel)} or higher.`,
+				block: {
+					key: 'combat.slotRefusal.chosenTooLow',
+					values: { chosen: chosenLevel, spell: spellLevel },
+				},
 			};
 		return isOpen(chosenLevel)
 			? { key: String(chosenLevel) }
 			: {
-					block: `No ${ordinal(chosenLevel)}-level spell slots left — cast it from a higher slot, or rest.`,
+					block: { key: 'combat.slotRefusal.chosenEmpty', values: { chosen: chosenLevel } },
 				};
 	}
 	const open = leveled
@@ -93,7 +96,7 @@ export function slotToSpend(
 	return pact && 'key' in pact
 		? pact
 		: {
-				block: `No slot left that can cast a ${ordinal(spellLevel)}-level spell — rest to get slots back.`,
+				block: { key: 'combat.slotRefusal.noneLeft', values: { spell: spellLevel } },
 			};
 }
 
@@ -132,11 +135,11 @@ export function spendPactSlot(
 	if (!pact) return null; // non-caster — don't gate
 	if (spellLevel > pact.spellLevel)
 		return {
-			block: `Your Pact Magic slots are ${ordinal(pact.spellLevel)} level, too low for this spell.`,
+			block: { key: 'combat.slotRefusal.pactTooLow', values: { pact: pact.spellLevel } },
 		};
 	return pact.max - (spent[PACT_SLOT_KEY] ?? 0) > 0
 		? { key: PACT_SLOT_KEY }
-		: { block: 'No Pact Magic slots left — they come back on a short rest.' };
+		: { block: { key: 'combat.slotRefusal.pactEmpty' } };
 }
 
 /** Every leveled slot level a spell of `spellLevel` can be cast from RIGHT NOW — each level ≥ the

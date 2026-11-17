@@ -553,7 +553,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (204 modules)
+## Library functions & types (205 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2338,7 +2338,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type SlotTable` — A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots).
 - `interface CastPool` — A castable pool — a slot group (has `spellLevel`) or a generic/limited resource.
 - `const PACT_SLOT_KEY` — The `spellSlotsSpent` key for the Warlock Pact Magic pool.
-- `type SlotSpend` — What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a * `spellSlotsSpent` key, "1".."9…
+- `type SlotSpend` — `block` is facts, not a sentence: this module has no locale (the reason `PrepareAttempt` is).
 - `function slotToSpend` — * Which spell slot a cast of `spellLevel` consumes.
 - `function castablePactLevel` — The level a Pact Magic slot casts `spellLevel` at, when a caster who ALSO has leveled slots may pay * with one now — …
 - `function pactPool` — The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined.
@@ -2577,6 +2577,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
 - `const abilityShortLabel` — What an ability is CALLED, short: `dex` → "DEX", "СПР".
 
+### `src/lib/util/keyed-debounce.ts`
+
+- `class KeyedDebounce` — * A debounced write that belongs to a key — the row and language a draft was typed in.
+
 ### `src/lib/util/links.ts`
 
 - `function externalLinkToOpen` — * What to do with a click on `href` from a page served at `origin`: * - a URL string → open it in the OS browser (and…
@@ -2631,4 +2635,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1613 exports across 221 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1614 exports across 222 modules · 116 duplicate suspects._

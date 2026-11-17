@@ -7,7 +7,8 @@
 	// Reuses EntryList + WikiDetail + the shared list helpers — only the shell is new.
 	import { foldForSearch } from '$lib/util/search-fold';
 	import Icon, { type IconName } from '$lib/components/Icon.svelte';
-	import { onMount, untrack } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
+	import { KeyedDebounce } from '$lib/util/keyed-debounce';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
@@ -56,10 +57,14 @@
 	const graph = $derived(content.graph);
 	// FROM (source) and TO (target) locales are freely chosen via the two dropdowns above the panes.
 	let sourceLocale = $state(savedT.sourceLocale ?? 'en');
-	let targetLocale = $state(
-		savedT.targetLocale ?? (app.activeLocale === 'en' ? 'uk' : app.activeLocale),
-	);
 	const locales = $derived(graph?.locales ?? ['en']);
+	/** Into what, the first time: the reader's own language, unless that is what is read from — then
+	 *  the first other language the content has. No language is named here: they are discovered. */
+	const firstTarget = (): string =>
+		app.activeLocale !== sourceLocale
+			? app.activeLocale
+			: (locales.find((locale) => locale !== sourceLocale) ?? sourceLocale);
+	let targetLocale = $state(savedT.targetLocale ?? firstTarget());
 	// PROSE, not "article": a resource pool's name and a spend-option's label are shown on the sheet
 	// and were untranslatable purely because neither type is browsable
 	const types = $derived(graph ? [...graph.byType.keys()].filter(hasProse).sort() : []);
@@ -189,22 +194,28 @@
 		}
 	});
 
-	// auto-save the draft to disk (debounced) whenever it diverges from the loaded baseline
-	let writeTimer: ReturnType<typeof setTimeout> | undefined;
+	// auto-save the draft to disk (debounced) whenever it diverges from the loaded baseline. The
+	// write waiting belongs to the row and language it was typed in: moving to another one writes it
+	// at once rather than dropping it with the timer (audit-oct-27 U8).
+	const drafts = new KeyedDebounce(600);
 	$effect(() => {
 		const current = JSON.stringify(draft);
 		const r = selected;
 		const loc = targetLocale;
-		clearTimeout(writeTimer);
-		if (demo || !r || current === baseline) return;
+		const target = r ? `${r.effectiveId}|${loc}` : '';
+		if (demo || !r || current === baseline) {
+			drafts.settle(target);
+			return;
+		}
 		const snapshot: WikiEditDraft = { ...draft };
-		writeTimer = setTimeout(() => {
+		drafts.schedule(target, () =>
 			sayIfFails(
 				$_('homebrewForm.draftNotSaved'),
 				writeDraft(getUserStorage(), translateTarget(r, loc), snapshot),
-			);
-		}, 600);
+			),
+		);
 	});
+	onDestroy(() => drafts.flush());
 
 	async function save() {
 		if (!selected || saving) return;

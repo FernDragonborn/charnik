@@ -8,4 +8,11 @@ const APOSTROPHE_LIKE = /[`´ʹʻʼʽˈ‘’‛′＇ꞌ]/g;
  * index found in the folded string is the same index in the original.
  */
 export const foldForSearch = (text: string): string =>
-	text.toLowerCase().replace(APOSTROPHE_LIKE, "'");
+	text.replace(/[^]/gu, lowerKeepingLength).replace(APOSTROPHE_LIKE, "'");
+
+/** A character lower-cased without growing: `İ` lower-cases to `i` plus a combining dot, which
+ *  would shift every highlight after it. The base letter is what a search for `i` means. */
+function lowerKeepingLength(char: string): string {
+	const lower = char.toLowerCase();
+	return lower.length === char.length ? lower : lower.slice(0, char.length);
+}

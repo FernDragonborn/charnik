@@ -193,7 +193,9 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 	});
 
 	it('blocks a chosen slot below the spell level, or a chosen-but-empty level (never downshifts)', () => {
-		expect(slotToSpend(3, pools, {}, 1)).toMatchObject({ block: /1st-level slot is too low/ });
+		expect(slotToSpend(3, pools, {}, 1)).toEqual({
+			block: { key: 'combat.slotRefusal.chosenTooLow', values: { chosen: 1, spell: 3 } },
+		});
 		expect(slotToSpend(1, pools, { '3': 2 }, 3)).toMatchObject({
 			block: /No 3rd-level spell slots/,
 		});

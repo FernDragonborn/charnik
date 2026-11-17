@@ -235,8 +235,8 @@
 						</button>
 					{/if}
 				</span>
-				<!-- the way OUT, mirroring the grip on the other edge: one press, no confirm — it is one
-				     press to add the item back from the same panel -->
+				<!-- the way OUT, mirroring the grip on the other edge: one press, no confirm — its toast
+				     offers Undo, which puts the row back with its quantity, attunement and answers -->
 				<button
 					class="row-remove"
 					onclick={() => inv.remove(row.entry.iid)}

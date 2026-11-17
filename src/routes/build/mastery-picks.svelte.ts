@@ -16,6 +16,8 @@ import { ITEM_TAG, parseItemTags, weaponCategoryOf } from '$lib/content/item-tag
 import type { LoadedRowByType } from '$lib/content/loader';
 import { weaponPropertyRows, type WeaponPropertyRow } from '$lib/content/weapon-properties';
 import { toggleCapped } from './draft';
+import { localizedName } from '$lib/content/detail';
+import { app } from '$lib/stores/app.svelte';
 import type { BuildVM } from './build-view-model.svelte';
 
 /** What the picker needs from the build view-model around it. `import type` is erased, so picking the
@@ -55,7 +57,12 @@ export class MasteryPicks {
 				if (!asked.some((wanted) => wanted.every((tag) => tags.has(tag)))) return false;
 				return isWeaponProficient(grants, weaponCategoryOf(tags), row.data.id);
 			})
-			.sort((a, b) => String(a.data.name_en).localeCompare(String(b.data.name_en)));
+			.sort((a, b) =>
+				localizedName(a, app.activeLocale).localeCompare(
+					localizedName(b, app.activeLocale),
+					app.activeLocale,
+				),
+			);
 	});
 
 	/** The picks, trimmed to what the character still unlocks — dropping a class level must not leave

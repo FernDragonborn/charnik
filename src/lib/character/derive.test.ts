@@ -1003,6 +1003,22 @@ describe('deriveSheet aggregator', () => {
 		expect(s.senses.blindsight).toBeUndefined();
 	});
 
+	/* audit-oct-27 U8: `??=` on a plain object found the prototype's `constructor` and kept it */
+	it('a homebrew sense named like an object method is a sense like any other', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 's',
+				label: 'Odd senses',
+				// targets are lower-cased on the way in, so `constructor` is the one such name a token reaches
+				effects: ['set_override:senses.constructor:40:floor'],
+				positive: true,
+			},
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.senses['constructor']?.value).toBe(40);
+	});
+
 	it('a sense name is open vocabulary, so a pack may invent one', () => {
 		const c = wizard();
 		c.play.effects = [

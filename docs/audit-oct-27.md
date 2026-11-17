@@ -489,23 +489,29 @@ log.
 
 ### U8 · Smaller — low
 
-- [ ] **Autosave debounce.** Switching character within 800 ms lost the previous one's save
-  (`combat/+page.svelte`) — closed: the pending character is saved at once when another replaces it.
-  Translation behaves the same, per row (`translate/+page.svelte`) — open.
+- [x] **Autosave debounce** · closed. Switching character within 800 ms lost the previous one's save
+  (`combat/+page.svelte`): the pending character is saved at once when another replaces it.
+  Translation did the same per row (`translate/+page.svelte`): its draft write now belongs to the row
+  and language it was typed in, and moving on writes it at once (`keyed-debounce.test.ts`).
 - [x] **`readLog`** · closed. It took `JSON.parse(line) as LogEntry` unchecked: a `null` line broke
   `combat.load`. Non-object lines are skipped (`character.test.ts` ▸ appends and reads newest-first).
-- [ ] **`Turnbar.svelte`:** `role=button` inside a `<button>`, a nested interactive element.
-- [ ] **Raw `name_en` in the reader's language:** `compendium/[...entry]/+page.svelte`, `spellbook`,
-  `mastery-picks.svelte.ts`, `EditContentForm.svelte`, `OrphanDialog.svelte`.
-- [ ] **Hard-coded English:** `'level ' + c.level` (`+page.svelte`, closed — `roster.level`), `` `${name} copy` ``
-  (`ThemesSettings.svelte`), `'uk'` as default (`translate/+page.svelte`), slot refusals
-  (`rules/spellcasting.ts`).
+- [x] **`Turnbar.svelte`** · closed. `role=button` sat inside a `<button>`. The slot pill is now a
+  box: the spend button is stretched over it and the pips are buttons beside it. Held by a Playwright
+  drive (pill click spends, pip click restores, Enter on the focused pill spends).
+- [x] **Raw `name_en` in the reader's language** · closed. `compendium/[...entry]/+page.svelte`,
+  `mastery-picks.svelte.ts`, `EditContentForm.svelte` and `OrphanDialog.svelte` name a row through
+  `localizedName`; `spellbook` already did. Held by `pnpm check` and the code; no test pins a name.
+- [x] **Hard-coded English** · closed. `'level ' + c.level` is `roster.level`; a theme's copy is
+  `settings.themes.copyName`; the translation target starts at the reader's language or the first
+  other one the content has, with no language named; a slot refusal is a `combat.slotRefusal.*` key
+  (`spellcasting.test.ts`, `cast.test.ts`).
 - [ ] **About 500 px literals in `<style>`**, most in `EditContentForm`, `HpPanel/DownSide`,
   `SpellsPanel` and `CombatMenus`.
-- [ ] **A homebrew sense named `constructor` or `toString` vanished**, since `??=` ran on `{}`
-  (`derive-stats.ts`).
-- [ ] **Search snippet highlighting drifted** on text like `İ`, because `toLowerCase` changes length
-  (`search-fold.ts`).
+- [x] **A homebrew sense named `constructor` vanished** · closed. `??=` ran on `{}`; the senses map
+  has no prototype (`derive.test.ts` ▸ a homebrew sense named like an object method). Targets are
+  lower-cased on the way in, so `toString` never reached it.
+- [x] **Search snippet highlighting drifted** · closed. `İ` lower-cased to two characters; each
+  character now folds without growing (`search-fold.test.ts`).
 
 ---
 
