@@ -10,6 +10,8 @@
 	import { _ } from '$lib/i18n';
 
 	let { c }: { c: Character } = $props();
+	// the round of THIS fight, counted from 1, on a clock that keeps running under it
+	const fightRound = $derived(c.play.round - c.play.fightStartRound + 1);
 
 	// action-economy slots (id + label); base 1 pip each until a feature grants extras. Each slot's
 	// pip has its own SHAPE (see the styles) — on the narrow bar the words are gone and the shape is
@@ -27,7 +29,7 @@
 </script>
 
 <section class="turnbar combat-bar">
-	<span class="bar-label">{$_('combat.turn.round')} <b>{combat.fightRound}</b></span>
+	<span class="bar-label">{$_('combat.turn.round')} <b>{fightRound}</b></span>
 	{#each SLOTS as slot (slot)}
 		{@const label = slotLabel(slot)}
 		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot; the

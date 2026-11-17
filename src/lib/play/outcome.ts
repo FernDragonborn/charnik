@@ -105,6 +105,10 @@ export interface PlayOutcome {
 	concentrationSave?: OwedConcentrationSave;
 	/** What the host is asked to do now that the action has done its part. */
 	asks?: PlayRequest[];
+	/** The damage a hit carried PAST 0 hit points, when it drove the character to 0 or found them
+	 *  there — what a later "that was one blow" adds up against the maximum. Absent for a hit that
+	 *  left hit points standing. */
+	pastZero?: number;
 	/** The action did not happen — the pool was empty, the option is not offered — and the character
 	 *  is the one it was given. An action is all-or-nothing, so a caller with a further step to take
 	 *  reads this before taking it. */

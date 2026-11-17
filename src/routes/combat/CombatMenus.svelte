@@ -476,9 +476,9 @@
 					</button>
 				{/each}
 				<!-- a Warlock multiclass pays with either kind of slot (SRD 5.1, Multiclassing ▸ Pact Magic) -->
-				{@const pactLevel = combat.castablePact(r)}
+				{@const pactLevel = combat.casting.castablePact(r)}
 				{#if pactLevel !== null}
-					<button class="menu-row" onclick={(e) => combat.castWithPact(e)}>
+					<button class="menu-row" onclick={(e) => combat.casting.castWithPact(e)}>
 						<span class="main"
 							>{$_('combat.menu.castFromPact', { values: { level: pactLevel } })}</span
 						>

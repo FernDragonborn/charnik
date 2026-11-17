@@ -20,6 +20,7 @@ import {
 	die,
 	heal,
 	hitPointMaximum,
+	oneBlow,
 	resolveDamagePart,
 	revive,
 	rollConcentrationSave,
@@ -48,6 +49,8 @@ export interface HitPointsHost {
 	overlay: OpenOverlay | null;
 	/** Carry out a play-state action on the open character. */
 	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): void;
+	/** …and hand back what came of it. */
+	enact(action: (character: Character, ctx: PlayContext) => PlayOutcome): PlayOutcome | null;
 }
 
 export class HitPoints {
@@ -140,9 +143,33 @@ export class HitPoints {
 		return raw > 0 && bucket ? { raw, final, bucket } : null;
 	};
 
+	/** What the last press carried past 0 when it DROPPED the character there — kept for the press
+	 *  after it, which may be the same blow's second damage type. */
+	private dropPastZero: number | null = null;
+	/** What "that was one blow" sums: offered while the press right after a drop recorded a
+	 *  death-save failure, and gone with the next thing done to the track. */
+	oneBlowPastZero = $state<number | null>(null);
+
 	damage = () => {
 		const hit = { amount: this.hpAmount, type: this.damageType };
-		this.host().act((c, ctx) => takeDamage(c, hit, ctx));
+		const play = this.host().character?.play;
+		const before = play?.hp.current ?? 0;
+		const failuresBefore = play?.deathSaves.failures ?? 0;
+		const outcome = this.host().enact((c, ctx) => takeDamage(c, hit, ctx));
+		const pastZero = outcome && !outcome.refused ? outcome.pastZero : undefined;
+		const failed =
+			before === 0 && (outcome?.character.play.deathSaves.failures ?? 0) > failuresBefore;
+		this.oneBlowPastZero =
+			failed && this.dropPastZero !== null && pastZero !== undefined
+				? this.dropPastZero + pastZero
+				: null;
+		this.dropPastZero = before > 0 && pastZero !== undefined ? pastZero : null;
+	};
+	/** "That was one blow" — see `oneBlow`. */
+	oneBlow = () => {
+		const pastZero = this.oneBlowPastZero;
+		this.oneBlowPastZero = null;
+		if (pastZero !== null) this.host().act((c, ctx) => oneBlow(c, { pastZero }, ctx));
 	};
 	heal = () => {
 		this.host().act((c, ctx) => heal(c, { amount: this.healAmount }, ctx));
@@ -169,11 +196,19 @@ export class HitPoints {
 	/** Roll a death save (shown while at 0 HP). Always rolled at once and applied: unlike other rolls
 	 *  it MUTATES play-state, the tray has no result callback, and a fixed d20-vs-10 has nothing to
 	 *  customize. */
-	deathSave = () => this.host().act(rollDeathSave);
-	toggleDeathSave = (kind: DeathSavePip['kind'], index: number) =>
+	deathSave = () => {
+		this.oneBlowPastZero = null;
+		this.host().act(rollDeathSave);
+	};
+	toggleDeathSave = (kind: DeathSavePip['kind'], index: number) => {
+		this.oneBlowPastZero = null;
 		this.host().act((c) => setDeathSavePip(c, { kind, index }));
+	};
 	/** Undo the press that ended the dying — the third success or the third failure. */
-	takeBackLastSave = () => this.host().act(takeBackLastSave);
+	takeBackLastSave = () => {
+		this.oneBlowPastZero = null;
+		this.host().act(takeBackLastSave);
+	};
 	die = (cause: DeathCause) => this.host().act((c) => die(c, cause));
 	revive = () => this.host().act(revive);
 

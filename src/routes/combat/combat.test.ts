@@ -838,10 +838,10 @@ describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => 
 		character.play.round = 7;
 		combat.economy.toggleCombat(); // enter combat
 		expect(character.play.round).toBe(7); // the clock is not reset (a Bless keeps its rounds)
-		expect(combat.fightRound).toBe(1);
+		expect(character.play.round - character.play.fightStartRound + 1).toBe(1);
 		combat.economy.nextTurn();
 		expect(character.play.round).toBe(8); // advanced on the persisted field, not a VM copy
-		expect(combat.fightRound).toBe(2);
+		expect(character.play.round - character.play.fightStartRound + 1).toBe(2);
 	});
 });
 
@@ -2045,6 +2045,20 @@ describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaust
 		combat.damage();
 		expect(character.play.hp.current).toBe(0);
 		expect(character.play.death).toBeNull();
+	});
+
+	it('offers "same blow" after a two-type blow, which sums it for massive damage (R5)', () => {
+		combat.hpAmount = 12; // at 6 → 0, 6 past it
+		combat.damage();
+		expect(combat.hp.oneBlowPastZero).toBeNull();
+		combat.hpAmount = 6; // the second type, at 0 → a failure
+		combat.damage();
+		expect(character.play.deathSaves.failures).toBe(1);
+		expect(combat.hp.oneBlowPastZero).toBe(12);
+		combat.hp.oneBlow();
+		expect(character.play.deathSaves.failures).toBe(0);
+		expect(character.play.death).toMatchObject({ cause: 'massive_damage' }); // 12 past 0 = max
+		expect(combat.hp.oneBlowPastZero).toBeNull();
 	});
 
 	it('temp HP soaks first, so it can keep the leftover under the lethal threshold', () => {

@@ -347,7 +347,10 @@ state, a replacing cast and a rest are all consequences of something the player 
 **A Damage press is one hit of one type.** It meets its own defense, and temp HP, the concentration
 save and instant death are then asked of what is left. A hit of two types — a flame tongue's slashing
 and its fire — is two presses: composing it in one press put a second amount, a second type and an
-add control on the damage line of every character to serve the few hits that need them. The press
+add control on the damage line of every character to serve the few hits that need them. Where the
+first press drops the character to 0 and the second records a death-save failure, the down panel
+offers "Same blow" (`oneBlow`): one blow is one hit, so the failure goes and massive damage reads what
+both presses carried past 0 (`pastZero`). The press
 leaves a line in the roll log saying what it was (`combat.log.damageTaken*`: a key and its values,
 the type after a separator rather than inside the phrase), which is the only record of what the
 damage WAS — the hit points say what was left. A Heal press leaves the same kind of line

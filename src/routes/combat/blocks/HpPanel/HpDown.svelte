@@ -140,6 +140,19 @@
 	</button>
 {/snippet}
 
+<!-- the hit before this one dropped the character to 0, and the player may say the two presses were
+     the damage types of ONE attack: the failure this one recorded is not a second hit -->
+{#snippet sameBlow()}
+	{#if combat.hp.oneBlowPastZero !== null}
+		<button
+			type="button"
+			class="same-blow"
+			onclick={combat.hp.oneBlow}
+			use:provenance={$_('combat.hp.oneBlowHint')}>{$_('combat.hp.oneBlow')}</button
+		>
+	{/if}
+{/snippet}
+
 <div class="hp-face down {over ?? ''}" class:over={!!over} inert={shown ? true : undefined}>
 	<div class="grounds">
 		<DownSide tone="good" earned={earned.good} motion={playing} />
@@ -163,6 +176,7 @@
 					<DiceIcon size={18} /><span class="roll-words">{$_('combat.hp.deathSave')}</span>
 				</button>
 				{@render heal()}
+				{@render sameBlow()}
 			</div>
 		</div>
 		{@render track('failures')}
@@ -179,6 +193,7 @@
 			{:else}
 				{@render heal()}
 			{/if}
+			{@render sameBlow()}
 			{#if canTakeBack}
 				<button
 					type="button"
@@ -320,7 +335,8 @@
 	}
 	.roll:hover,
 	.hp-heal:hover,
-	.revive:hover {
+	.revive:hover,
+	.same-blow:hover {
 		filter: brightness(1.14);
 	}
 
@@ -363,7 +379,8 @@
 		background: var(--color-death);
 		color: var(--color-death-text);
 	}
-	.revive {
+	.revive,
+	.same-blow {
 		padding: var(--space-1) var(--space-2-5);
 		border-radius: var(--radius);
 		border: 1px solid var(--color-border-strong);

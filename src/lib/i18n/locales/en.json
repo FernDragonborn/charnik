@@ -744,6 +744,8 @@
 			"hitPointsAt": "Hit points {current} / {max}",
 			"dead": "Dead",
 			"stable": "Stabilized",
+			"oneBlow": "Same blow",
+			"oneBlowHint": "The hit before this one dropped you to 0. If both were one attack's damage types, it is one hit: this failure goes, and massive damage counts the whole blow.",
 			"takeBackSave": "Take back the save that ended it",
 			"options": "Hit-point block options",
 			"motionTitle": "At 0 hit points",

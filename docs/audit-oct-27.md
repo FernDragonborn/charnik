@@ -290,7 +290,7 @@ Bless cast in round 7 for 10 rounds showed 16 rounds left after leaving and re-e
 
 **Fix:** entering a fight marks `fightStartRound` and leaves the clock running; the turnbar counts the fight from it. **Held by** `play/round-clock.test.ts` and `routes/combat/combat.test.ts` ▸ a fight counts its rounds from 1.
 
-### [ ] R5 · The second damage type of a blow that drops to 0 HP records a death-save failure — high · CONFIRMED in code, LIKELY by rule
+### [x] R5 · The second damage type of a blow that drops to 0 HP records a death-save failure — high · closed · both
 
 "15 slashing plus 7 fire" against a fighter on 10 HP is two Damage presses (`characters.md`: one
 press, one type). The second saw `before === 0` and recorded a failure (`play/hit-points.ts`). Massive
@@ -299,6 +299,8 @@ kill. SRD 5.1 has 63 monster attacks of the form "… plus N (XdY) <type>".
 
 Decision: the existing "this was one blow" merge (`mergeOwedConcentrationSaves`) also takes back the
 failure and checks massive damage against the sum. One press stays one type.
+
+**Fix:** a damage outcome says what it carried past 0 (`pastZero`); after a press that dropped the character, a press that records a failure makes the down panel offer "Same blow" (`oneBlow`), which takes that failure back and reads massive damage against the sum. One press stays one type. **Held by** `play/one-blow.test.ts` and `routes/combat/combat.test.ts` ▸ offers "same blow".
 
 ### [x] R6 · A long rest ends concentration but leaves the spell's effect — medium · closed · both
 

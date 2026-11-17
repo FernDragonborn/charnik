@@ -2061,6 +2061,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function resolveDamagePart` — One part of a hit against a set of defenses: what was dealt, what it takes.
 - `const hitPointMaximum` — The EFFECTIVE hit-point maximum: a manual max still has `hp_max` effects folded onto it (A14).
 - `function takeDamage` — * Take a hit of one type.
+- `function oneBlow` — * "That was one blow": the hit that dropped the character to 0 and the hit after it were two damage * types of ONE at…
 - `function refusedWhileDead` — A dead character neither heals nor rests: those would fill the hit points while `death` stays set, * and the way back…
 - `function heal` — Heal.
 - `function setTempHp` — Set Temporary Hit Points to an amount — set, never added: they do not stack.
@@ -2588,4 +2589,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 60 components · 1589 exports across 218 modules · 108 duplicate suspects._
+_50 tokens · 102 global classes · 60 components · 1590 exports across 218 modules · 108 duplicate suspects._

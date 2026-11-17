@@ -8,6 +8,7 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from '$lib/toast/toast';
+import type { PlayOutcome } from '$lib/play/outcome';
 import { t } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
@@ -247,18 +248,14 @@ class CombatVM {
 	 *  here because the subsystems declare it on their host interfaces. */
 	outcomes = new PlayOutcomes(() => this);
 	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
-	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
+	enact = (...a: Parameters<PlayOutcomes['enact']>): PlayOutcome | null =>
+		this.outcomes.enact(...a);
 	notify = (...a: Parameters<PlayOutcomes['notify']>) => this.outcomes.notify(...a);
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
 	// drift; Next turn, a skip of time and a rest advance it, and effect expiry reads it.
 	get round(): number {
 		return this.character?.play.round ?? 0;
-	}
-	/** The round of the current fight, counted from 1 — what the turnbar says. */
-	get fightRound(): number {
-		const play = this.character?.play;
-		return play ? play.round - play.fightStartRound + 1 : 1;
 	}
 	/** Pools that come back at dawn / at dusk — each gates its own control in the time bar, so a
 	 *  character with no such pool never sees a button that would do nothing. The STEPS are not gated
@@ -502,10 +499,6 @@ class CombatVM {
 		this.casting.hasCastChoice(...args);
 	castFromPool = (...args: Parameters<SpellCasting['castFromPool']>) =>
 		this.casting.castFromPool(...args);
-	castablePact = (...args: Parameters<SpellCasting['castablePact']>) =>
-		this.casting.castablePact(...args);
-	castWithPact = (...args: Parameters<SpellCasting['castWithPact']>) =>
-		this.casting.castWithPact(...args);
 	upcastLadder = (...args: Parameters<SpellCasting['upcastLadder']>) =>
 		this.casting.upcastLadder(...args);
 	openUpcast = (...args: Parameters<SpellCasting['openUpcast']>) =>

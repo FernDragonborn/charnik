@@ -167,6 +167,7 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 
 	const before = play.hp.current;
 	play = { ...play, hp: { ...play.hp, current: Math.max(0, before - left) } };
+	const pastZero = play.hp.current === 0 && left > 0 ? left - before : undefined;
 	// INSTANT DEATH (SRD 5.1 "Instant Death"): damage reduces you to 0 AND the damage REMAINING
 	// equals or exceeds your hit-point MAXIMUM (the full max, not half) → you die outright, no death
 	// saves. The same threshold covers "Damage at 0 Hit Points" (already at 0 → the leftover is the
@@ -202,9 +203,36 @@ export function takeDamage(character: Character, hit: DamagePart, ctx: PlayConte
 			log,
 			notices,
 			...(owed ? { concentrationSave: owed } : {}),
+			...(pastZero !== undefined ? { pastZero } : {}),
 		},
 		ctx,
 	);
+}
+
+/**
+ * "That was one blow": the hit that dropped the character to 0 and the hit after it were two damage
+ * types of ONE attack — one press is one type (`characters.md`), so a blow of two types is two
+ * presses. One blow at 0 hit points is one hit, not a second one: the failure the second press
+ * recorded is taken back, and massive damage is read against what the WHOLE blow carried past 0
+ * (`pastZero`, both presses summed). SRD 5.1, Instant Death; Damage at 0 Hit Points.
+ */
+export function oneBlow(
+	character: Character,
+	{ pastZero }: { pastZero: number },
+	ctx: PlayContext,
+): PlayOutcome {
+	let play = character.play;
+	if (play.hp.current !== 0 || play.deathSaves.failures === 0)
+		return { ...quietly(character), refused: true };
+	const killedByTrack = play.death?.cause === 'death_saves';
+	play = {
+		...play,
+		...(killedByTrack ? { death: null } : {}),
+		deathSaves: { ...play.deathSaves, failures: play.deathSaves.failures - 1 },
+	};
+	if (pastZero >= hitPointMaximum(character, ctx.derive(character)))
+		play = dead(play, 'massive_damage');
+	return settled({ character: { ...character, play }, log: [], notices: [] }, ctx);
 }
 
 /** A dead character neither heals nor rests: those would fill the hit points while `death` stays set,
