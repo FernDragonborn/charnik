@@ -216,7 +216,8 @@ the builder's picker gets a section, and a non-caster class who took the feat ca
 **The rules that are easy to get wrong**, each of which the model has to keep expressible:
 always-prepared spells (domain, oath) sit OUTSIDE the prepared count but still count
 as class spells, and a spell a FEAT teaches is outside it because the feat is its own caster profile
-(below), not because of a flag; a ritual is castable without a slot, and its SOURCE varies (a wizard
+(below), not because of a flag; a ritual is castable without a slot and takes no turn slot in
+combat (it is ten minutes longer than the spell), and its SOURCE varies (a wizard
 rituals from the spellbook unprepared, a prepared caster only what is prepared) — `ritual_source`
 says which, on the class, on a subclass that grants it to a class with none, or on an option the
 character chose of a class feature (a 2014 warlock's Book of Ancient Secrets), the option's

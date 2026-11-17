@@ -12,6 +12,7 @@ import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import type { PlayContext } from './outcome';
 import {
 	canAfford,
+	regainResource,
 	resourceLeft,
 	restoreResourceUpTo,
 	setResourcePip,
@@ -40,6 +41,13 @@ describe.each(['5e', '5.5e'] as const)('resource and rest actions · %s', (syste
 		locale: 'en',
 		graph: graphs[system],
 		...(draws.length ? { rng: rngSequence(...draws) } : {}),
+	});
+
+	it('a pool whose stored count outran its max regains from the clamped count (audit-oct-27 R14)', () => {
+		// a feature removed or a max that dropped leaves more spent than the pool now holds
+		const { c, pool } = monk((x) => (x.play.resourcesSpent = { ki: 9, focus: 9 }));
+		const back = regainResource(c, { id: pool.id, count: 1 }, ctx()).character;
+		expect(resourceLeft(back, derive(back), pool.id)).toBe(1);
 	});
 
 	/** A level-5 monk at 20 of their hit points, and the pool their class grants (Ki, or Focus). */

@@ -226,7 +226,9 @@ instead of two lines (both halves must be visible at once); a separate "situatio
 ## What is NOT wrong — do not "fix" these
 
 The injectable `Rng` that makes tests deterministic. The `MAX_DICE_PER_TERM` / `MAX_DIE_SIDES` caps
-(1000 each) that stop a hostile formula freezing the tab. `DieMods` deliberately not touching signed
+(1000 each) that stop a hostile formula freezing the tab, and the tray's own 500 dice per line, its
+volley counted, past which the line says so and rolls nothing (`MAX_DICE_PER_LINE`). A die with no
+faces (`1d0`) is not a dice term at all, so it stays a fragment that blocks the roll. `DieMods` deliberately not touching signed
 bonus dice — Great Weapon Fighting rerolls the weapon's dice, not a Bless die. The single roll path,
 which exists because three copies had already drifted.
 

@@ -406,11 +406,12 @@ refused, so a mistaken third failure could only be undone by revive. Where: `res
   Fighter gets heavy armour). Multiclass prerequisites are checked nowhere (`primary_ability` is
   unused). The 1-HP minimum is checked in total, not per level. All LIKELY: the SRD folder has no
   multiclass tables.
-- [ ] **Dice.** `1d0` rolled 1 (`rules/dice.ts`) instead of being flagged. The tray had no dice cap per
-  line (`dice/roller.ts`): millions of dice froze the tab.
-- [ ] **Resources and rituals.** `regainResource`, partial recovery in `rest()` and `passBoundary` read the
-  raw `spent` counter, not the clamped one (`resources.ts`, `rests.ts`). A ritual cast in combat still
-  took an Action (`cast.ts`).
+- [x] **Dice** · closed. A die with no faces is no dice term, so `1d0` stays a fragment that blocks
+  the roll, and a tray line past 500 dice, its volley counted, says so and rolls nothing
+  (`roller.test.ts`).
+- [x] **Resources and rituals** · closed. `regainResource`, `restoreResourceUpTo`, partial recovery in
+  `rest()` and `passBoundary` read the clamped count (`resourceSpent`), and a ritual cast in combat
+  spends no turn slot (`resources.test.ts`, `cast.test.ts`).
 - [ ] **A one-press attack with a natural 20** wrote ordinary damage, and there is no "×2 crit" fix-up on
   already-written damage (`routes/combat/sheet-rolls.svelte.ts`). `roller.md` settles that a crit is
   not inferred from a 20, so this is a suggestion only.

@@ -217,7 +217,9 @@ function payForCast(
 		return none(useResource(character, pool, ctx));
 	const slot = reserved?.key ?? null;
 	const turnSlot = TURN_SLOT_OF[castingIcon(spell.data.casting_time ?? '')] ?? 'action';
-	const paid = chain(spendTurnSlot(character, { slot: turnSlot }, ctx), (charged) => {
+	// a ritual takes ten minutes longer than the spell, so it is no part of a combat turn (SRD 5.2.1)
+	const turn = ritual ? quietly(character) : spendTurnSlot(character, { slot: turnSlot }, ctx);
+	const paid = chain(turn, (charged) => {
 		if (pool) return useResource(charged, pool, ctx);
 		if (!slot) return quietly(charged);
 		const spent = charged.play.spellSlotsSpent;

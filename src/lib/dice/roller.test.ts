@@ -125,6 +125,22 @@ describe('a compound token typed without spaces', () => {
 		expect(canRoll([line])).toBe(false);
 	});
 
+	it('a die with no faces is a fragment to fix, never a 1 (audit-oct-27 R14)', () => {
+		const line = type(ROLLER_ROLE.damage, '1d0');
+		expect(line.pills).toEqual([{ kind: PILL_KIND.raw, text: '1d0' }]);
+		expect(canRoll([line])).toBe(false);
+	});
+
+	it('a line past 500 dice, its volley counted, says so and rolls nothing', () => {
+		expect(canRoll([type(ROLLER_ROLE.damage, '500d6')])).toBe(true);
+		const many = type(ROLLER_ROLE.damage, '250d6', '251d6');
+		expect(rollerIssues([many])).toContainEqual(
+			expect.objectContaining({ key: 'roller.issue.tooManyDice', blocking: true }),
+		);
+		expect(canRoll([many])).toBe(false);
+		expect(canRoll([type(ROLLER_ROLE.damage, '100d6', '×6')])).toBe(false);
+	});
+
 	it('does not cut a hyphenated label in half', () => {
 		const line = type(ROLLER_ROLE.test, 'd20', "dm's-luck");
 		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.note, text: "dm's-luck" });

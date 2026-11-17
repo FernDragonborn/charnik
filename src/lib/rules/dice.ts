@@ -244,7 +244,7 @@ const formatModifier = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
  *  two parsers disagreeing about that is the shape of UBUG-22. The unicode minus is accepted beside
  *  the ASCII one because `signed()` writes it, so a term read back off the UI comes in that way. */
 export function parseDiceTerm(term: string): BonusDie | null {
-	const m = /^([+\-−]?)(\d*)d(\d+)$/.exec(term.trim());
+	const m = /^([+\-−]?)(\d*)d([1-9]\d*)$/.exec(term.trim());
 	if (!m) return null;
 	return {
 		count: Math.min(m[2] ? Number(m[2]) : 1, MAX_DICE_PER_TERM),
@@ -259,7 +259,7 @@ export function parseDiceTerm(term: string): BonusDie | null {
  *  UBUG-22 lost a `+3`. The sign is captured because a pool keyed by sides cannot hold one, and a
  *  reader that skipped it ADDED `2d6-1d4`. Global, so only use it with `matchAll`/`replace` (both
  *  leave `lastIndex` alone). */
-const DICE_TERM = /([+\-−]?)\s*(\d*)d(\d+)/gi;
+const DICE_TERM = /([+\-−]?)\s*(\d*)d([1-9]\d*)/gi;
 
 /** Every dice term of a string, split by its sign: the added ones as a pool ({sides: count}), the
  *  SUBTRACTED ones as signed `BonusDie`s, which is the only shape that can express them. `rollPool`
@@ -311,7 +311,7 @@ export function parseFlatModifier(s: string): number {
 
 /** A dice term together with the sign that binds it. `DICE_TERM` alone leaves the `+` of `+1d4`
  *  behind, and a dangling operator is precisely what the residue walk treats as unaccounted. */
-const SIGNED_DICE_TERM = /[+\-−]?\s*\d*d\d+/gi;
+const SIGNED_DICE_TERM = /[+\-−]?\s*\d*d[1-9]\d*/gi;
 
 /** Punctuation a formula may carry around its terms — the statblock form's parentheses, the `;`
  *  between damage segments. It separates, it never contributes, so it is not residue. */

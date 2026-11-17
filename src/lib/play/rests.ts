@@ -24,9 +24,8 @@ import { dropEffects, endConcentration } from './concentration';
 import { leaveForm } from './form';
 import { refusedWhileDead } from './hit-points';
 import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
-import { hitDiceSpent } from './resources';
+import { hitDiceSpent, resourceSpent } from './resources';
 import { settled } from './settle';
-import { countAt } from '$lib/util/records';
 
 export type RestKind = 'short' | 'long';
 
@@ -125,7 +124,7 @@ export function rest(
 		else {
 			const count = rechargeCount(back, sheet.castCtx, ctx.rng);
 			if (count !== null)
-				resourcesSpent[pool.id] = Math.max(0, countAt(resourcesSpent, pool.id) - count);
+				resourcesSpent[pool.id] = Math.max(0, resourceSpent(waking, sheet, pool.id) - count);
 		}
 	}
 	// the rest's hours pass on the clock, so what it did not outlast has that much less left

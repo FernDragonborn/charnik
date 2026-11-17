@@ -1764,6 +1764,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function testRoll` — A test line → what `rollPool` needs.
 - `function damageParts` — * A damage line → one part per damage type.
 - `interface RollerIssue` — Something the line cannot answer for.
+- `const MAX_DICE_PER_LINE` — The most dice one line may throw, its volley counted: past it the tab freezes before any table * needs the number, so…
 - `function rollerIssues` — Everything wrong with a set of lines, in reading order.
 - `const canRoll` — Can these lines be rolled at all?
 
@@ -2645,4 +2646,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1621 exports across 223 modules · 116 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1622 exports across 223 modules · 116 duplicate suspects._

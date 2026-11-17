@@ -1941,6 +1941,7 @@
 		"issue": {
 			"ambiguous": "“{text}” means two things here — pick one from the menu",
 			"unaccounted": "I can’t account for “{text}”",
+			"tooManyDice": "more than {max} dice in one line — split it up",
 			"untypedDamage": "damage with no type — rolling anyway",
 			"blockingWhy": "rolling the part I did understand would just be a quietly smaller number",
 			"warnWhy": "a type is not arithmetic, so the number is right without it"

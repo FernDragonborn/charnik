@@ -88,6 +88,18 @@ describe.each(['5e', '5.5e'] as const)('cast actions · %s', (system) => {
 		expect(refused.character.play.spellSlotsSpent).toEqual({});
 	});
 
+	it('a ritual is ten minutes longer than the spell, so it costs no Action in combat', () => {
+		const acted = caster('cleric', 5, (x) => {
+			x.build.spells = [{ spell: spell('detect_magic'), prepared: true, alwaysPrepared: false }];
+			x.play.inCombat = true;
+			x.play.turn = { ...x.play.turn, action: 1 };
+		});
+		const out = castSpell(acted, { spell: spell('detect_magic'), ritual: true }, ctx);
+		expect(out.refused).not.toBe(true);
+		expect(out.character.play.turn.action).toBe(1);
+		expect(out.character.play.spellSlotsSpent).toEqual({});
+	});
+
 	it('a new concentration spell takes the old one down, in one step', () => {
 		const first = castSpell(caster('cleric', 5), { spell: spell('bless') }, ctx).character;
 		const second = castSpell(first, { spell: spell('shield_of_faith') }, ctx).character;

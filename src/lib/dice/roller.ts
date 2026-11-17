@@ -547,12 +547,32 @@ export interface RollerIssue {
 	blocking: boolean;
 }
 
+/** The most dice one line may throw, its volley counted: past it the tab freezes before any table
+ *  needs the number, so the line says so and rolls nothing. */
+export const MAX_DICE_PER_LINE = 500;
+
+/** Every die a line throws — each dice pill, times the volley the line is fired in. */
+function diceInLine(line: RollerLine): number {
+	let dice = 0;
+	let times = 1;
+	for (const p of line.pills)
+		if (p.kind === PILL_KIND.dice) dice += p.count;
+		else if (p.kind === PILL_KIND.count) times *= p.times;
+	return dice * times;
+}
+
 /** Everything wrong with a set of lines, in reading order. Collected and returned rather than
  *  thrown — the content loader's `issues[]` precedent, and the `{roll, issues}` shape plan.md ▸
  *  `docs/internals/roller.md` asks for at the point the formula string is a plugin's public API. */
 export function rollerIssues(lines: RollerLine[]): RollerIssue[] {
 	const issues: RollerIssue[] = [];
 	for (const line of lines) {
+		if (diceInLine(line) > MAX_DICE_PER_LINE)
+			issues.push({
+				key: 'roller.issue.tooManyDice',
+				values: { max: String(MAX_DICE_PER_LINE) },
+				blocking: true,
+			});
 		for (const p of line.pills)
 			// nonsense and a name two candidates SHARE both land here — the vocabulary leaves an ambiguous
 			// one unresolved rather than picking a side — and each says which it is: "I can't account for

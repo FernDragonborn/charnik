@@ -260,7 +260,7 @@ export function regainResource(
 	{ id, count }: { id: string; count: number },
 	ctx: PlayContext,
 ): PlayOutcome {
-	const spent = countAt(character.play.resourcesSpent, id);
+	const spent = resourceSpent(character, ctx.derive(character), id);
 	return settled(quietly(withSpent(character, id, Math.max(0, spent - count))), ctx);
 }
 
@@ -272,9 +272,10 @@ export function restoreResourceUpTo(
 	{ id, upTo }: { id: string; upTo: number },
 	ctx: PlayContext,
 ): PlayOutcome {
-	const pool = poolOf(ctx.derive(character), id);
+	const sheet = ctx.derive(character);
+	const pool = poolOf(sheet, id);
 	if (!pool) return quietly(character);
-	const spent = countAt(character.play.resourcesSpent, id);
+	const spent = resourceSpent(character, sheet, id);
 	return settled(
 		quietly(withSpent(character, id, Math.min(spent, Math.max(0, pool.max - upTo)))),
 		ctx,
@@ -296,7 +297,7 @@ export function passBoundary(
 	const spent = { ...character.play.resourcesSpent };
 	const recharged: SaidText[] = [];
 	for (const pool of sheet.resources) {
-		const before = spent[pool.id] ?? 0;
+		const before = resourceSpent(character, sheet, pool.id);
 		// nothing spent to give back — say nothing about it
 		if (pool.recharge.trigger !== trigger || before === 0) continue;
 		if (pool.recharge.amount === RECHARGE_ALL) {
