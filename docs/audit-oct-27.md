@@ -79,7 +79,7 @@ it. Settings ▸ Content health lists adopted files with a way to hand each back
 by** `provider.test.ts` ▸ UPDATE keeps a hand-edit the user adopted in the app, and ▸ replaces an
 adopted file once the user hands it back; `restamp.test.ts` ▸ restampFiles for the user.
 
-### [ ] D2 · First run: the chosen folder is ignored for the whole first session — high · fixed, desktop check owed
+### [x] D2 · First run: the chosen folder is ignored for the whole first session — high · closed
 
 The player picks their own folder on first run and creates characters. After a restart the folder is
 empty, and everything from the first session sits in `Documents/charnik`.
@@ -91,9 +91,9 @@ but never calls `resetUserStorage()`, and `loadContentStore()` without `remount`
 storage. Nobody sees an error, because `Documents/charnik` is in the static scope.
 
 **Fix:** `confirmDataDir` calls `resetUserStorage()` right after `setDataDirOverride`, then reloads
-the roster from the chosen folder. **Not yet run on the desktop app:** first run, pick another folder,
-create a character, restart. The demo the roster seeded into `Documents/charnik` behind the modal stays
-there.
+the roster from the chosen folder. **Held by** a run on the desktop app under a fresh identifier:
+first run, another folder picked, a character created — it was written to the chosen folder and
+not to `Documents/charnik`.
 
 ### [x] D3 · Editing or forking an article with several effects breaks its mechanics — high · closed
 
