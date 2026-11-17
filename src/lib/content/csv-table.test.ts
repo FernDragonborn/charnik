@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { parseCsvTable, DamagedCsvError } from './csv-table';
-import { upsertHomebrewRow, homebrewFile } from './homebrew';
+import { upsertHomebrewRow, homebrewFile, UPSERT_MODE } from './homebrew';
 import { saveTranslation } from './translate';
 
 const HEAD = 'id,systems,source,name_en,text_en';
@@ -37,7 +37,12 @@ describe('a CSV that does not parse whole', () => {
 		const damaged = [HEAD, row('a', '"open'), row('b')].join('\n');
 		await s.write(file, damaged);
 		await expect(
-			upsertHomebrewRow(s, 'effect', { id: 'a', name_en: 'A', systems: '5e' }, file),
+			upsertHomebrewRow(
+				s,
+				'effect',
+				{ id: 'a', name_en: 'A', systems: '5e' },
+				{ file, mode: UPSERT_MODE.edit },
+			),
 		).rejects.toBeInstanceOf(DamagedCsvError);
 		await s.write('pack/effects_x.csv', damaged);
 		await expect(

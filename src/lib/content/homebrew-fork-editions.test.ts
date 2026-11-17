@@ -22,8 +22,7 @@ describe('a second fork of the same id', () => {
 			storage,
 			'spell',
 			{ ...rowToDraft(row), damage },
-			homebrewFile('spell'),
-			UPSERT_MODE.fork,
+			{ file: homebrewFile('spell'), mode: UPSERT_MODE.fork },
 		);
 
 	it('in the other edition is kept beside the first, under an edition-qualified id', async () => {
@@ -59,7 +58,7 @@ describe('a second fork of the same id', () => {
 			storage,
 			'spell',
 			{ ...rowToDraft(old), damage: '8d6 fire' },
-			homebrewFile('spell'),
+			{ file: homebrewFile('spell'), mode: UPSERT_MODE.edit },
 		);
 		expect(edited).toEqual({ ok: true, id: 'fireball' });
 		expect((await storage.read(homebrewFile('spell'))).includes('9d6 fire')).toBe(false);

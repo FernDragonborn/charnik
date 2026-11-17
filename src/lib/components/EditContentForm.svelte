@@ -260,13 +260,10 @@
 			// editor mode UPSERTs into the row's homebrew file (fork if shipped); add mode appends a new row
 			const res =
 				editing && editTarget
-					? await upsertHomebrewRow(
-							getUserStorage(),
-							type,
-							draft,
-							editTarget,
-							editShipped ? UPSERT_MODE.fork : UPSERT_MODE.edit,
-						)
+					? await upsertHomebrewRow(getUserStorage(), type, draft, {
+							file: editTarget,
+							mode: editShipped ? UPSERT_MODE.fork : UPSERT_MODE.edit,
+						})
 					: await saveHomebrewRow(getUserStorage(), type, draft, target);
 			if (!res.ok) {
 				issues = res.issues ?? [$_('homebrewForm.saveFailed')];

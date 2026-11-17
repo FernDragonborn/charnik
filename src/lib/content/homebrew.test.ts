@@ -10,6 +10,7 @@ import {
 	removeHomebrewRow,
 	homebrewFile,
 	HOMEBREW_SOURCE,
+	UPSERT_MODE,
 } from './homebrew';
 import { makeRow } from './test-utils';
 import { parseRow } from './schemas';
@@ -55,7 +56,12 @@ describe('the writers refuse a target outside the homebrew root', () => {
 		const s = new MemoryStorage();
 		await s.write(shipped, 'id,name_en\nold,Old');
 		const add = await saveHomebrewRow(s, 'item', { name_en: 'Axe', systems: '5e' }, shipped);
-		const edit = await upsertHomebrewRow(s, 'item', { id: 'old', name_en: 'X' }, shipped);
+		const edit = await upsertHomebrewRow(
+			s,
+			'item',
+			{ id: 'old', name_en: 'X' },
+			{ file: shipped, mode: UPSERT_MODE.edit },
+		);
 		expect(add.ok).toBe(false);
 		expect(edit.ok).toBe(false);
 		expect(await s.read(shipped)).toBe('id,name_en\nold,Old');
@@ -86,13 +92,13 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 			s,
 			'effect',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v1' },
-			file,
+			{ file, mode: UPSERT_MODE.edit },
 		);
 		await upsertHomebrewRow(
 			s,
 			'effect',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v2' },
-			file,
+			{ file, mode: UPSERT_MODE.edit },
 		);
 		const rows = await readRows(s, file);
 		expect(rows.length).toBe(1);
@@ -109,7 +115,7 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const draft = rowToDraft(shipped);
 		draft.systems = '5e';
 		draft.text_en = 'my house rule';
-		const res = await upsertHomebrewRow(s, 'effect', draft, file);
+		const res = await upsertHomebrewRow(s, 'effect', draft, { file, mode: UPSERT_MODE.edit });
 		expect(res.ok).toBe(true);
 		const rows = await readRows(s, file);
 		expect(rows[0]?.id).toBe('blinded');
@@ -126,7 +132,7 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		);
 		const draft = rowToDraft(row);
 		draft.systems = '5e';
-		await upsertHomebrewRow(s, 'effect', draft, file);
+		await upsertHomebrewRow(s, 'effect', draft, { file, mode: UPSERT_MODE.edit });
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_uk).toBe('Ікс');
 		expect(rows[0]?.text_uk).toBe('опис');
@@ -141,7 +147,7 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		);
 		const draft = rowToDraft(row);
 		draft.systems = '5e';
-		await upsertHomebrewRow(s, 'effect', draft, file);
+		await upsertHomebrewRow(s, 'effect', draft, { file, mode: UPSERT_MODE.edit });
 		const reloaded = parseRow('effect', (await readRows(s, file))[0] ?? {});
 		expect(reloaded.success && reloaded.data.effects).toEqual(['adv:attack', 'speed:+10']);
 	});
@@ -149,7 +155,12 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 	it('an edit keeps the file’s own columns that the form never saw', async () => {
 		const s = new MemoryStorage();
 		await s.write(file, 'id,name_en,systems,my_notes\r\nx,X,5e,KEEP ME');
-		await upsertHomebrewRow(s, 'effect', { id: 'x', name_en: 'X2', systems: '5e' }, file);
+		await upsertHomebrewRow(
+			s,
+			'effect',
+			{ id: 'x', name_en: 'X2', systems: '5e' },
+			{ file, mode: UPSERT_MODE.edit },
+		);
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_en).toBe('X2');
 		expect(rows[0]?.my_notes).toBe('KEEP ME');
@@ -157,8 +168,18 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 
 	it('removes a row by id (rewriting the file), and deletes the file when its last row goes', async () => {
 		const s = new MemoryStorage();
-		await upsertHomebrewRow(s, 'effect', { id: 'a', name_en: 'A', systems: '5e' }, file);
-		await upsertHomebrewRow(s, 'effect', { id: 'b', name_en: 'B', systems: '5e' }, file);
+		await upsertHomebrewRow(
+			s,
+			'effect',
+			{ id: 'a', name_en: 'A', systems: '5e' },
+			{ file, mode: UPSERT_MODE.edit },
+		);
+		await upsertHomebrewRow(
+			s,
+			'effect',
+			{ id: 'b', name_en: 'B', systems: '5e' },
+			{ file, mode: UPSERT_MODE.edit },
+		);
 		await removeHomebrewRow(s, 'effect', file, 'a');
 		expect((await readRows(s, file)).map((r) => r.id)).toEqual(['b']);
 		await removeHomebrewRow(s, 'effect', file, 'b'); // last row → file removed
@@ -167,7 +188,12 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 
 	it('stamps a #content header (source+license) so the metadata-check pop-up never nags', async () => {
 		const s = new MemoryStorage();
-		await upsertHomebrewRow(s, 'effect', { id: 'x', name_en: 'X', systems: '5e' }, file);
+		await upsertHomebrewRow(
+			s,
+			'effect',
+			{ id: 'x', name_en: 'X', systems: '5e' },
+			{ file, mode: UPSERT_MODE.edit },
+		);
 		const { directives } = parseContentDirectives(await s.read(file));
 		expect(directives.get('source')).toBe(HOMEBREW_SOURCE);
 		expect(directives.get('license')).toBeTruthy();

@@ -306,6 +306,12 @@ export interface SaveResult {
 export const UPSERT_MODE = { edit: 'edit', fork: 'fork' } as const;
 export type UpsertMode = (typeof UPSERT_MODE)[keyof typeof UPSERT_MODE];
 
+/** Where an editor save lands, and how it treats the row already there (`UPSERT_MODE`). */
+export interface UpsertTarget {
+	file: string;
+	mode: UpsertMode;
+}
+
 /** The id a fork takes: the shipped one while it is free, else that id qualified by the fork's edition
  *  (`fireball_5_5e`), else that with a number. A fork that took a taken id would replace the first
  *  fork and its edits with no word. */
@@ -378,7 +384,7 @@ export function rowToDraft(row: LoadedRow): Record<string, string> {
 /**
  * Editor-mode save (UPSERT). Validates the edited draft, then REPLACES the same-id row in `targetFile`
  * (or appends it). Homebrew authoring forces `source=Homebrew`, so editing a shipped SRD row and
- * pointing `targetFile` at the homebrew CSV with `mode` `fork` forks it (same id → sorts above the
+ * pointing the target at the homebrew CSV with `mode` `fork` forks it (same id → sorts above the
  * original via `compareRows`, or `forkId`'s when the file already holds that id); editing a homebrew
  * row in its own file edits in place. Columns beyond the schema
  * (localized prose, etc.) present in the file or the draft are preserved, never dropped.
@@ -387,8 +393,7 @@ export async function upsertHomebrewRow(
 	storage: Storage,
 	type: ContentType,
 	draft: Record<string, string>,
-	targetFile: string = homebrewFile(type),
-	mode: UpsertMode = UPSERT_MODE.edit,
+	{ file: targetFile, mode }: UpsertTarget = { file: homebrewFile(type), mode: UPSERT_MODE.edit },
 ): Promise<SaveResult> {
 	if (!isHomebrewTarget(targetFile)) return notHomebrewTarget(targetFile);
 	const asked = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
