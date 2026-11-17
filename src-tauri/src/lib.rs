@@ -11,6 +11,7 @@ use tauri_plugin_opener::OpenerExt;
 mod native_strings {
     include!(concat!(env!("OUT_DIR"), "/native_strings.rs"));
 }
+mod durable;
 mod plugin_consent;
 mod remote;
 #[cfg(desktop)]
@@ -156,7 +157,54 @@ fn set_data_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
     }
     let body = serde_json::to_vec_pretty(&serde_json::json!({ "dataDir": path }))
         .map_err(|e| e.to_string())?;
-    std::fs::write(&ptr, body).map_err(|e| e.to_string())
+    durable::write_durable(&ptr, &body).map_err(|e| e.to_string())
+}
+
+/// Write a file of the data folder durably (`durable.rs`): the page's own atomic write cannot flush
+/// before its rename. Raw bytes as the body, the absolute path as UTF-8 hex in a `path` header (a
+/// header is ASCII, and a Documents folder need not be). Only a path inside a folder this session
+/// granted, or inside the default data folder, is written — the same trust `set_data_dir` asks.
+#[tauri::command]
+fn write_file_durable(
+    app: tauri::AppHandle,
+    request: tauri::ipc::Request<'_>,
+) -> Result<(), String> {
+    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
+        return Err("expected the file's bytes as the body".into());
+    };
+    let hex = request
+        .headers()
+        .get("path")
+        .and_then(|v| v.to_str().ok())
+        .ok_or("no path")?;
+    let path = PathBuf::from(decode_hex_utf8(hex)?);
+    if !path.is_absolute() || path.components().any(|c| matches!(c, Component::ParentDir)) {
+        return Err("path must be absolute and must not contain `..`".into());
+    }
+    let inside = |root: &PathBuf| path.starts_with(root) && path != *root;
+    let trusted = app
+        .state::<GrantedDirs>()
+        .0
+        .lock()
+        .map_err(|e| e.to_string())?
+        .iter()
+        .any(inside)
+        || default_data_dir(&app).is_ok_and(|d| inside(&d));
+    if !trusted {
+        return Err("path is outside the data folder".into());
+    }
+    durable::write_durable(&path, bytes).map_err(|e| e.to_string())
+}
+
+fn decode_hex_utf8(hex: &str) -> Result<String, String> {
+    if !hex.len().is_multiple_of(2) {
+        return Err("path is not hex".into());
+    }
+    let bytes = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| e.to_string()))
+        .collect::<Result<Vec<u8>, String>>()?;
+    String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
 /// The saved data-dir choice for display / first-run detection (read-only, no grant).
@@ -312,6 +360,7 @@ pub fn run() {
             apply_saved_data_dir,
             open_app_dir,
             proposed_data_dir,
+            write_file_durable,
             remote::fetch_pack_text,
             remote::fetch_pack_bytes,
             plugin_consent::plugin_prefs,

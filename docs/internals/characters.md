@@ -24,7 +24,8 @@ applies a delta in reverse** (`$lib/play/undo`), all or nothing, and refuses whe
 changed has moved since. A rest, dawn, dusk and a dropped inventory row offer it on their toast;
 reversing a level-up is a build change and not part of it.
 
-There is no database. Writes are atomic — temp file, then rename — with a debounced autosave and
+There is no database. Writes are atomic and durable — a temp file flushed to the disk, then renamed
+(`write_file_durable`, `src-tauri/src/durable.rs`) — with a debounced autosave and
 **rotating backups**: two rings beside the save, `character.bak.save.*` (2 deep, throttled to one
 checkpoint per 10 minutes) and `character.bak.launch.*` (3 deep, one per app run), keyed by the
 snapshot's epoch-ms in the filename so pruning needs no mtime. **Settings ▸ Data ▸ Snapshots is the

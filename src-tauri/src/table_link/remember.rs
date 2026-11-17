@@ -370,11 +370,9 @@ fn compact(path: &Path) -> bool {
 /// Write a file whole: to a sibling first, then over the old one, so a crash leaves one or the
 /// other and never half of either.
 fn write_whole(path: &Path, text: &str) -> bool {
-    let fresh = path.with_extension("tmp");
-    let written = fs::write(&fresh, text).and_then(|()| fs::rename(&fresh, path));
+    let written = crate::durable::write_durable(path, text.as_bytes());
     if let Err(e) = &written {
         log::warn!("table link: a table was not kept: {e}");
-        let _ = fs::remove_file(&fresh);
     }
     written.is_ok()
 }

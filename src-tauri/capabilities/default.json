@@ -12,6 +12,7 @@
 		"allow-apply-saved-data-dir",
 		"allow-open-app-dir",
 		"allow-proposed-data-dir",
+		"allow-write-file-durable",
 		"allow-fetch-pack-text",
 		"allow-fetch-pack-bytes",
 		"allow-plugin-prefs",

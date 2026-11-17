@@ -271,7 +271,9 @@ step.
 9. **Minimal Rust surface.** Prefer official audited plugins; keep custom Tauri commands
    few and narrow (each is native attack surface).
 10. **No secrets, no telemetry.** FOSS; nothing phones home.
-11. **Atomic writes** (temp→rename) + rotating backups (corruption robustness).
+11. **Atomic writes** (flushed temp→rename, `durable.rs`) + rotating backups (corruption robustness).
+    The page's file writes go through `write_file_durable`, which refuses a path that is not inside
+    a folder granted this session or the default data folder, or that carries `..`.
 12. **Dependency hygiene.** Minimal deps; pin versions; periodic `npm audit` + `cargo
     audit` (Rust crates from Tauri).
 

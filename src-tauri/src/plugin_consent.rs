@@ -81,11 +81,8 @@ fn update(
     let mut prefs = read(app);
     change(&mut prefs);
     let path = record_path(app)?;
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    }
     let body = serde_json::to_string_pretty(&prefs).map_err(|e| e.to_string())?;
-    std::fs::write(&path, body).map_err(|e| e.to_string())?;
+    crate::durable::write_durable(&path, body.as_bytes()).map_err(|e| e.to_string())?;
     Ok(prefs)
 }
 

@@ -12,6 +12,7 @@ const APP_COMMANDS: &[&str] = &[
     "apply_saved_data_dir",
     "open_app_dir",
     "proposed_data_dir",
+    "write_file_durable",
     "fetch_pack_text",
     "fetch_pack_bytes",
     "plugin_prefs",

@@ -231,8 +231,9 @@ the file's own columns that the form never saw.
 
 ### D13 · Smaller — low
 
-- [ ] **No flush on window close.** `onBeforeReload` covers reload only; closing the app inside the 800 ms
-  combat debounce (600 ms for a draft) lost the last edit. LIKELY.
+- [x] **No flush on window close** · closed. A close request waits for every flusher, the draft's
+  included (`holdCloseForPendingWrites`; `reload.test.ts`), and `/dev/durable-write` saw its marker
+  land when the desktop window was closed.
 - [x] **Orphan draft after Create** · closed. An autosave landing after `discard()` / `renew()` wrote
   the finished build under a new guid, and a write already in flight at Create landed after the
   delete. Draft writes now run one at a time, and `discard` retires the session, waits for the write
@@ -240,14 +241,15 @@ the file's own columns that the form never saw.
 - [x] **Moving the data folder did not wait for the character queues** · closed. `settleBeforeSwap`
   flushes the debounced autosaves, waits for every character queue (`characterWritesSettled`) and the
   config, and refuses the move when an edit cannot be written (`character.test.ts`).
-- [ ] **Atomic write without fsync** (`tauri.ts`). A power loss can leave a zero-length
-  `character.json`, and `*.tmp-*` files were never cleaned up. LIKELY, desktop only.
+- [x] **Atomic write without fsync** · closed. Every data-folder write goes through Rust's
+  `write_file_durable`, which flushes the temp sibling before the rename and writes through one
+  `<file>.tmp` name that the next write consumes (`durable.rs` test; `/dev/durable-write` on the
+  desktop app: ALL PASSED).
 - [x] **The old portrait was deleted before the new one was safe** · closed. The new portrait is
   written first, and the ones the save does not name go only after that save has landed
   (`removeCharacterPhotos` with the kept name; `character.test.ts`).
-- [ ] **The folder pointer and `plugins.json` were written non-atomically** (`std::fs::write` in
-  `lib.rs`, `plugin_consent.rs`). A crash mid-write opens the app on first run, or drops every plugin
-  consent. Both fail closed, but the data looks lost.
+- [x] **The folder pointer and `plugins.json` were written non-atomically** · closed. Both go through
+  `durable::write_durable` (`/dev/durable-write` rewrites and reads back each on the desktop app).
 - [x] **Startup recovery** · closed. It settles only the staging folders of a pack the registry names
   or the app ships (`recover-ours.test.ts`).
 - [x] **`reload.ts`** · closed. If a flusher rejected, the error was logged but `location.reload()` still

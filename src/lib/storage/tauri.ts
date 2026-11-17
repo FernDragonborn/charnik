@@ -14,7 +14,6 @@
 import {
 	readTextFile,
 	readFile,
-	writeFile,
 	copyFile,
 	exists as fsExists,
 	readDir,
@@ -306,21 +305,16 @@ export class TauriStorage implements Storage {
 	async write(path: string, data: string): Promise<void> {
 		await this.writeBytes(path, new TextEncoder().encode(data));
 	}
-	/** Atomic: write a temp sibling, then rename into place (crash-safe). */
+	/** Atomic AND durable: Rust writes a flushed temp sibling and renames it into place
+	 *  (`durable.rs`), so a power cut leaves the old file or the new one, never a zero-length one —
+	 *  the page's own fs API has no flush. One sibling name per file, removed on failure, so no
+	 *  `*.tmp-*` piles up beside a save. */
 	async writeBytes(path: string, data: Uint8Array): Promise<void> {
 		const full = await this.abs(path);
-		await fsMkdir(await this.parent(full), { recursive: true });
-		const tmp = `${full}.tmp-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-		try {
-			await writeFile(tmp, data);
-			await fsRename(tmp, full);
-		} catch (e) {
-			// Windows refuses the rename onto a file another process holds open, and the temp sibling
-			// would stay in the user's folder for good. Best-effort: the original error is the one to
-			// surface, and a temp that cannot be removed either is no worse than before.
-			await fsRemove(tmp).catch(() => {});
-			throw e;
-		}
+		const hex = [...new TextEncoder().encode(full)]
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('');
+		await invoke('write_file_durable', data, { headers: { path: hex } });
 	}
 	async exists(path: string): Promise<boolean> {
 		return fsExists(await this.abs(path));
