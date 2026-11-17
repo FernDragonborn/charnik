@@ -534,7 +534,7 @@
 		background: color-mix(in srgb, currentColor 42%, var(--color-death));
 	}
 	.flame {
-		bottom: -6px;
+		bottom: calc(-1 * var(--space-1-5));
 		left: var(--x);
 		width: var(--w);
 		height: calc(var(--h) * (0.35 + var(--level) * 0.325));

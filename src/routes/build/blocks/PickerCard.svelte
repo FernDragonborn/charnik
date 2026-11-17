@@ -159,7 +159,7 @@
 	   controls would cost a row of height on every card for the sake of it */
 	.corner {
 		position: absolute;
-		top: 8px;
+		top: var(--space-2);
 		inset-inline-end: var(--space-2-5);
 		z-index: 1;
 		display: flex;

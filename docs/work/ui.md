@@ -11,6 +11,15 @@
         its own design session, and the todo bar already carries the guidance a first-time build
         needs. Cheap when it comes: the inspector's targets are a data descriptor, so a wizard is a
         second entry point onto the same view-model, not a rewrite.
+- [ ] **PX-SCALE · the sizes components still write as px get a scale of their own.** 815 px
+  literals sit in `<style>` blocks, most in
+  `HpPanel/DownSide`, `EditContentForm`, `CombatMenus` and the compendium entry. Every one that
+  equals a spacing, radius or font-size token is already that token, so what is left needs a
+  decision first: 287 `1px` and 80 `2px` are border widths (a `--border-*` pair), the rest are
+  widths and heights of controls and icons and in-between spacings (2, 3, 5, 7 px) with no token
+  of their own. Widths inside `@container`/`@media` conditions stay literal — CSS does not read a
+  custom property there. Verified the way the first pass was: `tools/visual/shot.mjs` before and
+  after, zero pixels of drift.
 - [ ] **LOG-REWIND · any line of the log can be taken back, and a character rewound through it.**
   Every play act already writes its delta on its line (`characters.md` ▸ log.jsonl), and Undo
   applies one in reverse; today only the toast of a rest, dawn, dusk or a dropped row offers it.

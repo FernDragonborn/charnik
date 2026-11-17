@@ -505,7 +505,7 @@
 	.resource-pip::before {
 		content: '';
 		position: absolute;
-		inset: -4px;
+		inset: calc(-1 * var(--space-1));
 	}
 	.resource-pip.off {
 		background: transparent;

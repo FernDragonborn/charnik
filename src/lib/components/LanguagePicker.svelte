@@ -130,7 +130,7 @@
 	}
 	.menu {
 		position: absolute;
-		top: calc(100% + 4px);
+		top: calc(100% + var(--space-1));
 		inset-inline-start: 0;
 		z-index: 30;
 		width: 260px;

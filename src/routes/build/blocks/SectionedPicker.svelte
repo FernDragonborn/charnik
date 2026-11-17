@@ -381,7 +381,7 @@
 	   non-sticky wrapper travels no further than the wrapper does */
 	.sect-row {
 		position: sticky;
-		top: -8px;
+		top: calc(-1 * var(--space-2));
 		z-index: 3;
 		margin: var(--space-1-5) 0 2px;
 	}

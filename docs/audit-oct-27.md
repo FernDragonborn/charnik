@@ -505,8 +505,9 @@ log.
   `settings.themes.copyName`; the translation target starts at the reader's language or the first
   other one the content has, with no language named; a slot refusal is a `combat.slotRefusal.*` key
   (`spellcasting.test.ts`, `cast.test.ts`).
-- [ ] **About 500 px literals in `<style>`**, most in `EditContentForm`, `HpPanel/DownSide`,
-  `SpellsPanel` and `CombatMenus`.
+- [x] **About 500 px literals in `<style>`** · moved to `work/ui.md` ▸ PX-SCALE. Every literal
+  equal to an existing token is that token (zero pixels of drift in `shot.mjs`); the 815 left need a
+  border and size scale decided first.
 - [x] **A homebrew sense named `constructor` vanished** · closed. `??=` ran on `{}`; the senses map
   has no prototype (`derive.test.ts` ▸ a homebrew sense named like an object method). Targets are
   lower-cased on the way in, so `toString` never reached it.
