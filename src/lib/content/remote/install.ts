@@ -406,7 +406,7 @@ async function recoverSwap(storage: Storage, pack: string): Promise<void> {
 	const next = stagingDir(pack);
 	const prev = previousDir(pack);
 	if (await storage.exists(live)) {
-		await storage.remove(next).catch(() => {});
+		if (await storage.exists(next)) await storage.remove(next).catch(() => {});
 		return;
 	}
 	const halfSwapped = await storage.exists(next);

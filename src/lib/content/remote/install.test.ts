@@ -504,6 +504,23 @@ describe('rows that would vanish from inside a changed file', () => {
 /** A kill between the two renames is the one moment the pack can be missing. Each in-between state
  *  is distinguishable from the folders left on disk, which is why no journal is needed. */
 describe('recovering an interrupted apply', () => {
+	it('does not remove absent staging beside a live pack and its undo copy', async () => {
+		class StrictStorage extends MemoryStorage {
+			removed: string[] = [];
+			override async remove(path: string): Promise<void> {
+				this.removed.push(path);
+				if (!(await this.exists(path))) throw new Error('missing path');
+				await super.remove(path);
+			}
+		}
+		const storage = new StrictStorage();
+		await storage.write('content/p/a.csv', 'id\nlive');
+		await storage.write('content/p.prev/a.csv', 'id\nundo');
+		await recoverInterruptedApply(storage, 'p');
+		expect(storage.removed).toEqual([]);
+		expect(await storage.read('content/p.prev/a.csv')).toBe('id\nundo');
+	});
+
 	it('discards a half-built replacement when the pack is still live', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/a.csv', enc('id\nlive'));

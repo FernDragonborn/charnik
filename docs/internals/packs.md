@@ -87,6 +87,8 @@ a fake (`tooling.md`).
 - **A failed registry write reaches the user.** It used to be the one report nobody saw.
 - **`recoverInterruptedApply`** finishes or reverses an apply that died mid-swap, on startup, and
   only for a pack the registry names or the app ships: a `notes.prev` folder the user made is theirs.
+  A live pack with only its undo copy is already settled: no absent staging tree is removed or
+  reported as a failed write.
 - **A lone `<pack>.prev` is unreachable** from either writer, so startup must not resurrect it. It
   once did, which meant an uninstall quietly undid itself at the next launch.
 - **Folder names are compared case-insensitively.** NTFS and APFS fold case, so `SRD-2024` installs

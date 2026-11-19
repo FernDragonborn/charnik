@@ -2548,6 +2548,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Audience`
 - `const LOG_BODY`
 - `type LogBody` — What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log).
+- `type HistoryBody`
 - `interface LogRecord` — A record as its author signed it; Rust has checked the signature before the page hears it.
 - `interface RecordEvent` — A record this app now holds, with the name the GM let its author in under — none for the GM's * own, and none for a p…
 - `type PlayerEvent`
@@ -2665,4 +2666,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1634 exports across 225 modules · 117 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1635 exports across 225 modules · 117 duplicate suspects._
