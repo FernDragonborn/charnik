@@ -17,7 +17,8 @@ use super::records::Signed;
 /// The protocol's name on a connection. A peer speaking another is refused by the handshake.
 pub const ALPN: &[u8] = b"charnik/table/1";
 /// Said in the hello; a GM refuses a number it does not speak.
-pub const PROTOCOL: u32 = 2;
+pub const PROTOCOL: u32 = 3;
+pub const INVITE_VERSION: u32 = 2;
 
 /// The hello is a name and a secret.
 pub const HELLO_CAP: usize = 1024;
@@ -203,10 +204,6 @@ pub enum PlayerFrame {
         set: Map<String, Value>,
         unset: Vec<String>,
     },
-    Answer {
-        request_id: String,
-        answer: TableAnswer,
-    },
     /// A log record: the player's own, or one the GM's app lacks.
     Record { record: Signed },
     /// The highest record number this app holds from each author.
@@ -229,8 +226,7 @@ pub enum GmFrame {
         reason: Refusal,
     },
     Request {
-        request_id: String,
-        request: TableRequest,
+        record: Signed,
     },
     /// A log record, with the name the GM let its author in under; none for the GM's own.
     Record {
@@ -436,12 +432,12 @@ impl Invite {
         let invite: Self = serde_json::from_slice(&json).ok()?;
         // a relay OR addresses, never both: the question names the route, and only one is named
         let reachable = invite.relay.is_some() == invite.addrs.is_empty();
-        (invite.v == PROTOCOL && reachable && invite.addrs.len() <= INVITE_MAX_ADDRS).then(|| {
-            Self {
+        (invite.v == INVITE_VERSION && reachable && invite.addrs.len() <= INVITE_MAX_ADDRS).then(
+            || Self {
                 name: plain_text(&invite.name),
                 ..invite
-            }
-        })
+            },
+        )
     }
 }
 
@@ -542,7 +538,7 @@ mod tests {
     #[test]
     fn an_invitation_survives_being_pasted_and_nothing_else_is_one() {
         let invite = Invite {
-            v: PROTOCOL,
+            v: INVITE_VERSION,
             id: "k".repeat(64),
             relay: Some("https://relay.example./".into()),
             addrs: vec![],
@@ -570,7 +566,7 @@ mod tests {
         assert_eq!(Invite::from_text(&both.to_text()), None);
         // nor is one from a protocol this build does not speak
         let later = Invite {
-            v: PROTOCOL + 1,
+            v: INVITE_VERSION + 1,
             ..invite
         };
         assert_eq!(Invite::from_text(&later.to_text()), None);

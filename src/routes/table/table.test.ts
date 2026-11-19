@@ -587,6 +587,55 @@ describe('a page that loads again', () => {
 		});
 	});
 
+	it('rebuilds a GM conversation from signed-record events in either order', async () => {
+		const { table, tellGm } = tableOfOne(TABLE_ROLE.gm);
+		await table.resume();
+		const answer = { outcome: TABLE_ANSWER.declined };
+		tellGm({
+			kind: TABLE_EVENT.record,
+			mine: false,
+			record: {
+				table: 'gm',
+				author: 'p-2',
+				at: 2,
+				seq: 1,
+				body: {
+					kind: LOG_BODY.answer,
+					requestId: 'r-1',
+					answer: { outcome: TABLE_ANSWER.accepted },
+				},
+			},
+		});
+		tellGm({
+			kind: TABLE_EVENT.record,
+			mine: false,
+			record: {
+				table: 'gm',
+				author: 'p-1',
+				at: 2,
+				seq: 1,
+				body: { kind: LOG_BODY.answer, requestId: 'r-1', answer },
+			},
+		});
+		const request = { kind: TABLE_REQUEST.roll, roll: REQUESTED_ROLL.skill, id: 'stealth' };
+		const ask: GmEvent = {
+			kind: TABLE_EVENT.record,
+			mine: true,
+			record: {
+				table: 'gm',
+				author: 'gm',
+				at: 1,
+				seq: 1,
+				body: { kind: LOG_BODY.ask, requestId: 'r-1', participant: 'p-1', name: 'Lira', request },
+			},
+		};
+		tellGm(ask);
+		tellGm(ask);
+		expect(table.asked).toMatchObject([{ requestId: 'r-1', request, status: ASK_STATUS.declined }]);
+		expect(table.asked[0]?.dc).toBeUndefined();
+		expect(table.log.shown).toEqual([]);
+	});
+
 	it('holds nothing where the app holds no seat, and leaves a seat already held alone', async () => {
 		const { table } = tableOfOne();
 		await table.resume();

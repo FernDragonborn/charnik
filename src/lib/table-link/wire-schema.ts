@@ -177,6 +177,14 @@ const logBodySchema = z.discriminatedUnion('kind', [
 		to: z.enum(AUDIENCE),
 	}),
 	z.strictObject({ kind: z.literal(LOG_BODY.hide), author: participantId, seq: sequence }),
+	z.strictObject({
+		kind: z.literal(LOG_BODY.ask),
+		participant: participantId,
+		name: text(NAME_MAX).min(1),
+		requestId,
+		request: tableRequestSchema,
+	}),
+	z.strictObject({ kind: z.literal(LOG_BODY.answer), requestId, answer: tableAnswerSchema }),
 ]);
 
 const logRecordSchema = z.strictObject({

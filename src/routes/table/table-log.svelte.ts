@@ -72,6 +72,7 @@ export class TableLog {
 			if (!this.hidden.includes(id)) this.hidden = [...this.hidden, id].slice(-LINES_MAX);
 			return;
 		}
+		if (record.body.kind !== LOG_BODY.roll) return;
 		const id = recordId(record.author, record.seq);
 		if (this.hidden.includes(id)) return;
 		if (this.lines.some((line) => recordId(line.record.author, line.record.seq) === id)) return;

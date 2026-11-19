@@ -126,7 +126,7 @@ export const TABLE_EVENT = {
 export const AUDIENCE = { table: 'table', gm: 'gm' } as const;
 export type Audience = (typeof AUDIENCE)[keyof typeof AUDIENCE];
 
-export const LOG_BODY = { roll: 'roll', hide: 'hide' } as const;
+export const LOG_BODY = { roll: 'roll', hide: 'hide', ask: 'ask', answer: 'answer' } as const;
 
 /** What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log). */
 export type LogBody =
@@ -140,6 +140,16 @@ export type LogBody =
 	/** Take a record out of the log: the GM's for anyone's, a player's for their own. */
 	| { kind: typeof LOG_BODY.hide; author: ParticipantId; seq: number };
 
+export type HistoryBody =
+	| {
+			kind: typeof LOG_BODY.ask;
+			participant: ParticipantId;
+			name: string;
+			requestId: RequestId;
+			request: TableRequest;
+	  }
+	| { kind: typeof LOG_BODY.answer; requestId: RequestId; answer: TableAnswer };
+
 /** A record as its author signed it; Rust has checked the signature before the page hears it. */
 export interface LogRecord {
 	/** The GM's key. */
@@ -149,7 +159,7 @@ export interface LogRecord {
 	seq: number;
 	/** The author's clock, in milliseconds. */
 	at: number;
-	body: LogBody;
+	body: LogBody | HistoryBody;
 }
 
 /** A record this app now holds, with the name the GM let its author in under — none for the GM's

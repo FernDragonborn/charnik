@@ -117,7 +117,7 @@
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
 ## Security and dependencies
-- [ ] **TABLE-LINK-MVP · the smallest table worth sitting at — 0.9.0.** The maintainer's goal for
+- [~] **TABLE-LINK-MVP · the smallest table worth sitting at — 0.9.0.** The maintainer's goal for
   0.9.0 is people playing levels 1–4 together, each on their own app. The specification is
   `../internals/table-link.md`. Built: the transport (iroh, a star, a key per table, relays by the
   GM's setting), the invitation and the door, the three native questions, the wire with its
@@ -130,9 +130,19 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  **Left:** the live drive again with a roll built in the tray, which needs the person answering
-  the native questions.
-- [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
+  **Left:** the live drive on protocol 3 with a roll built in the tray, which needs the person
+  answering the native questions.
+  - [~] checked by GPT6.1 Sol High — Windows Rust passes 54 tests with `table-link` (the
+    native-consent live drive is ignored) and six without it. The real Windows desktop command
+    probe covers 22 checks with the feature on and eight with it off before protocol 3. The browser
+    preview checks both editions' view schemas, live EN/dark → UK/light switching, and the requested
+    roll's keyboard path: Enter opens the tray, Escape restores the request, Ctrl+Enter rolls.
+    The real Windows startup/recovery probe reports no errors and preserves both live and undo
+    files: recovery does not try to remove an absent staging folder.
+    The full Vitest suite passes 3 698 tests with three skipped on retry with a 15-second timeout
+    after the atomic-write test exceeds the default five seconds. Type checking, lint, the web
+    build, and the changed-files type-aware lint pass.
+- [~] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
   on one LAN; how often a path stays on the relay and what a session's traffic comes to against
@@ -146,6 +156,10 @@
   then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
   no release, and the changelog of that release is where the table is first named: until then no
   release has it, so no changelog mentions it.
+  - [~] checked by GPT6.1 Sol High — advisory checks complete with
+    `cargo audit --no-fetch --no-yanked`: six `zip` advisories remain under DEP-3, and the
+    lockfile uses patched `rustix 1.1.6`. Yanked crates are not checked: the registry request
+    times out. No two-network or ten-minute outage result is claimed.
 - [~] **TABLE-LINK-LOG · a roll log the table shares.** Every other tool's floor
   (`../research/table-features-elsewhere.md`) and not in the first table: players' rolls on the
   GM's screen as one stream, GM-only rolls, and moderation from day one. A star gives a player
@@ -161,23 +175,43 @@
   overnight; **these were decided without the maintainer and wait for their word**: a player's
   rolls go to the table and a GM's to nobody unless switched; the GM hides any record and a player
   their own, and nothing is deleted; the name a record is shown under is the GM's roster name,
-  outside the signature; 500 records a table, ten an author in ten seconds, 2 KiB a record; asks
-  and answers become records with TABLE-LINK-REMEMBER, not before.
+  outside the signature. The log keeps 500 records a table, at most 2 KiB each; a player
+  connection may supply ten new records in ten seconds, even when returning another author's copy.
   **Built:** signed records and the `have` exchange (`table_link/records.rs`, `session.rs`, held
   by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
-  `TableLogPanel`), protocol 2. **Left:** the live drive on the real app, which now covers the log
-  (`../internals/table-link.md` ▸ Driving a live table) and needs the person answering the native
-  questions.
+  `TableLogPanel`). A live request carries the GM's signed ask; the player's answer is also
+  signed. Hello uses protocol 3 and refuses protocol 2 peers before admission; the invitation
+  format stays at version 2. **Left:** the live log drive on the real app, with a person answering
+  the native questions (`../internals/table-link.md` ▸ Driving a live table).
+  - [~] checked by GPT6.1 Sol High — Rust tests cover signatures, table binding, audience filtering,
+    replay and disk pacing, and moderation; view-model tests cover ordering, duplicates and hiding.
+    The browser preview shows four Hide controls for the GM and only the player's own for a player.
+    The protocol 3 transport test refuses protocol 2 before admission.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
   Specified and built to `../internals/table-link.md` ▸ Remembering a table: the key in the OS
   store, the rest where only Rust writes, the list with Return and Forget, the native question
   before any socket, the door shut on a table opened again. Held by `session.rs`'s test of a GM
   that goes down and opens again, `remember.rs`'s tests (the Windows credential store among
   them), and the page's tests. **Decided without the maintainer, for their word:** leaving forgets
-  the table; a table opened again keeps its door shut. **Left:** the GM's log of asks as records,
-  rebuilt from the players' copies; a store on Linux (Secret Service) and macOS; a no-relay table
-  at its old address (it comes back at a new one); and the drive on the real app — quit it while
-  seated, start it, Return — which needs the person answering the question.
+  the table; a table opened again keeps its door shut. The native stores cover Windows, Linux
+  Secret Service and the macOS login Keychain; no-relay tables keep their UDP ports, refuse a
+  busy saved port and accept an older saved table without addresses. CI targets the transport
+  tests on all three desktops; the Linux/macOS store round-trip needs an unlocked native store.
+  The addressed player returns signed asks and answers on reconnect so the GM can rebuild the
+  request history without reopening prompts. An unannounced DC is local to the GM's session,
+  not part of the recoverable history. **Left:** verify recovery past the ten-record input window
+  (the reconnect exchange is subject to the live pace limit); verify Linux Secret Service and
+  macOS Keychain at runtime; and drive quit → restart → Return on the real app with a person
+  answering the native question.
+  - [~] checked by GPT6.1 Sol High — Rust tests pass the Windows credential-store round-trip,
+    persisted table/key/roster/log, and automatic redial to the saved direct ports with the old
+    invitation and no admission question. Tests cover busy-port refusal, older metadata, and a
+    failed port update preserving the key and old metadata; view-model tests pass Return and Forget.
+    Rust covers recovery of a missing ask and answer below the GM's latest sequence without
+    reopening the prompt; the view-model tests render the pair in either arrival order.
+    The Linux build and transport tests pass in Ubuntu/WSL: 53 passed, two ignored (the unlocked
+    native store and native-consent live drive). macOS is not run locally.
+    This does not replace the app-exit/native-consent drive above.
 - **TABLE-LINK-HUB · the table's hub is somebody other than the GM, and can move.** Asked for a
   GM on a poor connection. Today it would move nothing that matters: every frame on the wire has
   the GM at one end — a sheet goes to the GM, an ask comes from the GM — so the GM's link is in
@@ -285,11 +319,13 @@
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- **DEP-3 · `zip 4.6.1`, four advisories** (RUSTSEC-2026-0367/0368/0369/0429) — transitive via
-  `tauri-plugin-updater` 2.14; the fix is `zip 9`, outside that updater's dependency range. The first
+- **DEP-3 · `zip 4.6.1`, six advisories** (RUSTSEC-2026-0367/0368/0369/0429/0545/0548) — transitive via
+  `tauri-plugin-updater` 2.14; the fix is `zip >=9.0.5`, outside that updater's dependency range. The first
   three concern Unix permission bits and symlink extraction; the fourth can abort extraction on an
-  oversized symlink entry. The updater's ZIP extraction is Windows-only and follows minisign
-  verification, so an untrusted archive cannot reach it. Moves with the updater's dependency bump.
+  oversized symlink entry. The others concern truncated AES entries (the updater does not enable
+  `aes-crypto`) and inconsistent local-header names in stream extraction (the updater uses
+  `ZipArchive`, not `ZipStreamReader`). Its ZIP extraction is Windows-only and follows minisign
+  verification, so an unsigned archive cannot reach it. Moves with the updater's dependency bump.
 - **DEP-4 · SvelteKit 2 has four advisories fixed only in 3.x.** Two low (GHSA-pfhg-q3qv-9q6r,
   GHSA-27mw-82g8-phjj, fixed in 3.0.0) concern enhanced form redirects and an untrusted
   cache-control header at prerender time; a high and a moderate (GHSA-3r8g-jcqq-3p5j,
@@ -309,9 +345,8 @@
 - **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4 and DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
   - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
     `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). Its warnings
-    (unmaintained `zbus_names`/`zvariant`, `proc-macro-error`, unsound `glib`, and `tokio`'s unsound
-    `AsyncFd`, a Unix-only API the table link does not call) are Linux-only crates
-    Tauri pins, DEP-1's kind. A patch release that fixes an advisory is
+    include unmaintained `chrono`, `paste`, `zbus_names`/`zvariant` and `proc-macro-error`;
+    the Linux `glib` warning is DEP-1. A patch release that fixes an advisory is
     `cargo update -p <name>`.
   - **A direct dependency is bumped in `package.json`**, never overridden (`dompurify`, the vitest
     family).

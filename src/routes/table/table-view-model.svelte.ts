@@ -15,6 +15,7 @@ import {
 	CLOSE_REASON,
 	CONNECTION,
 	DELIVERY,
+	LOG_BODY,
 	SEATING,
 	TABLE_ANSWER,
 	TABLE_EVENT,
@@ -28,7 +29,10 @@ import {
 	type ParticipantId,
 	type PlayerEvent,
 	type PlayerSeat,
+	type RecordEvent,
 	type RememberedTable,
+	type RequestId,
+	type TableAnswer,
 	type TableLink,
 	type TableRequest,
 	type TableRole,
@@ -108,6 +112,7 @@ export class TableVM {
 	private gmSeat: GmSeat | null = null;
 	private playerSeat: PlayerSeat | null = null;
 	private stopListening: Unsubscribe | null = null;
+	private earlyAnswers = new Map<string, TableAnswer>();
 
 	checkAvailable = async (): Promise<boolean> => {
 		if (this.available === null) {
@@ -147,6 +152,7 @@ export class TableVM {
 		// a table just opened has no log; one picked up again has the log its last page kept, and
 		// the answers that page missed are among what its first listener hears
 		this.asked = readAskedLog(seat.table);
+		this.earlyAnswers.clear();
 		this.log.clear();
 		this.role = TABLE_ROLE.gm;
 		this.stopListening = await seat.subscribe(this.onGmEvent);
@@ -260,6 +266,7 @@ export class TableVM {
 		this.role = TABLE_ROLE.none;
 		this.players = [];
 		this.asked = [];
+		this.earlyAnswers.clear();
 		this.asks.clear();
 		this.log.clear();
 		this.invite = null;
@@ -293,27 +300,70 @@ export class TableVM {
 				break;
 			}
 			case TABLE_EVENT.record:
-				this.log.take(event);
+				this.takeGmRecord(event);
 				break;
-			case TABLE_EVENT.answer: {
-				// only the participant who was asked may answer it, and only once
-				const row = this.asked.find(
-					(asked) =>
-						asked.requestId === event.requestId &&
-						asked.participant === event.participant &&
-						asked.status === ASK_STATUS.pending,
-				);
-				if (!row) break;
-				row.status =
-					event.answer.outcome === TABLE_ANSWER.accepted
-						? ASK_STATUS.accepted
-						: ASK_STATUS.declined;
-				if (event.answer.roll) row.roll = event.answer.roll;
-				this.keepAsked();
+			case TABLE_EVENT.answer:
+				this.takeAnswer(event.participant, event.requestId, event.answer);
 				break;
-			}
 		}
 	};
+
+	private takeGmRecord(event: RecordEvent): void {
+		const { record } = event;
+		const { body } = record;
+		if (body.kind === LOG_BODY.ask) {
+			if (record.author !== record.table) return;
+			this.addAsk({
+				requestId: body.requestId,
+				participant: body.participant,
+				name: body.name,
+				request: body.request,
+				at: record.at,
+				status: ASK_STATUS.pending,
+			});
+		} else if (body.kind === LOG_BODY.answer) {
+			if (record.author !== record.table)
+				this.takeAnswer(record.author, body.requestId, body.answer);
+		} else {
+			this.log.take(event);
+		}
+	}
+
+	private takeAnswer(participant: ParticipantId, requestId: RequestId, answer: TableAnswer): void {
+		const row = this.asked.find(
+			(asked) => asked.requestId === requestId && asked.participant === participant,
+		);
+		if (!row) {
+			const key = JSON.stringify([participant, requestId]);
+			if (!this.earlyAnswers.has(key) && this.earlyAnswers.size < ASKED_MAX) {
+				this.earlyAnswers.set(key, answer);
+			}
+			return;
+		}
+		if (row.status !== ASK_STATUS.pending) return;
+		row.status =
+			answer.outcome === TABLE_ANSWER.accepted ? ASK_STATUS.accepted : ASK_STATUS.declined;
+		if (answer.roll) row.roll = answer.roll;
+		this.keepAsked();
+	}
+
+	private addAsk(row: AskedRow): void {
+		const existing = this.asked.find(
+			(asked) => asked.requestId === row.requestId && asked.participant === row.participant,
+		);
+		if (existing && row.dc !== undefined) existing.dc = row.dc;
+		if (existing && row.at !== undefined) existing.at = row.at;
+		this.asked = (existing ? [...this.asked] : [row, ...this.asked])
+			.sort((left, right) => (right.at ?? 0) - (left.at ?? 0))
+			.slice(0, ASKED_MAX);
+		const key = JSON.stringify([row.participant, row.requestId]);
+		const answer = this.earlyAnswers.get(key);
+		if (answer) {
+			this.earlyAnswers.delete(key);
+			this.takeAnswer(row.participant, row.requestId, answer);
+		}
+		this.keepAsked();
+	}
 
 	/**
 	 * Ask the same thing of several players. `heldTo` is the DC a roll is judged against on the GM's
@@ -331,20 +381,20 @@ export class TableVM {
 		for (const participant of participants) {
 			const name = this.players.find((player) => player.id === participant)?.name ?? participant;
 			const sent = await seat.request(participant, request);
+			if (this.gmSeat !== seat) return;
 			if (sent.delivery !== DELIVERY.delivered) {
 				unheard.push(name);
 				continue;
 			}
-			const row: AskedRow = {
+			this.addAsk({
 				requestId: sent.requestId,
 				participant,
 				name,
 				request,
+				at: Date.now(),
 				...(heldTo === undefined ? {} : { dc: heldTo }),
 				status: ASK_STATUS.pending,
-			};
-			this.asked = [row, ...this.asked].slice(0, ASKED_MAX);
-			this.keepAsked();
+			});
 		}
 		if (unheard.length)
 			toast.warning(t('table.notice.notDelivered', { names: unheard.join(', ') }));

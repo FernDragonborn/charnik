@@ -24,6 +24,7 @@ const askedRowSchema = z.object({
 	participant: z.string(),
 	name: z.string(),
 	request: tableRequestSchema,
+	at: z.number().int().nonnegative().exactOptional(),
 	/** The DC the roll is held to on the GM's side, announced to the player or not. */
 	dc: z.number().exactOptional(),
 	status: z.enum(ASK_STATUS),

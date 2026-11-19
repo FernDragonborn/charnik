@@ -12,6 +12,7 @@
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
@@ -21,6 +22,13 @@ use serde::{Deserialize, Serialize};
 
 use super::records::{self, Signed, LOG_MAX};
 use super::session::{Again, Keep, Keeper, RelaySetting};
+
+#[cfg(target_os = "macos")]
+use apple_native_keyring_store::keychain::Store as NativeStore;
+#[cfg(target_os = "linux")]
+use dbus_secret_service_keyring_store::Store as NativeStore;
+#[cfg(windows)]
+use windows_native_keyring_store::Store as NativeStore;
 
 /// The credential store's service name; the user is the table's id.
 const VAULT_SERVICE: &str = "charnik-table";
@@ -53,6 +61,8 @@ pub enum KeptSeat {
         name: String,
         relay: RelaySetting,
         allowed: Vec<LetIn>,
+        #[serde(default)]
+        bind_addrs: Vec<SocketAddr>,
     },
     Player {
         /// The invitation it followed: the GM's key, the route to it, and the table's name.
@@ -81,22 +91,30 @@ pub trait Vault: Send + Sync {
     fn forget(&self, table: &str);
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux", target_os = "macos"))]
 struct OsVault;
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux", target_os = "macos"))]
 impl OsVault {
     fn entry(table: &str) -> Option<keyring_core::Entry> {
-        static STORE: std::sync::Once = std::sync::Once::new();
-        STORE.call_once(|| match windows_native_keyring_store::Store::new() {
-            Ok(store) => keyring_core::set_default_store(store),
-            Err(e) => log::warn!("table link: the credential store did not open: {e}"),
-        });
-        keyring_core::Entry::new(VAULT_SERVICE, table).ok()
+        static STORE: std::sync::OnceLock<Arc<keyring_core::CredentialStore>> =
+            std::sync::OnceLock::new();
+        if STORE.get().is_none() {
+            match NativeStore::new() {
+                Ok(store) => {
+                    let _ = STORE.set(store);
+                }
+                Err(e) => {
+                    log::warn!("table link: the credential store did not open: {e}");
+                    return None;
+                }
+            }
+        }
+        STORE.get()?.build(VAULT_SERVICE, table, None).ok()
     }
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux", target_os = "macos"))]
 impl Vault for OsVault {
     fn put(&self, table: &str, key: &SecretKey) -> bool {
         Self::entry(table).is_some_and(|entry| entry.set_secret(&key.to_bytes()).is_ok())
@@ -117,11 +135,11 @@ impl Vault for OsVault {
 
 /// The store this build reaches, if any.
 pub fn os_vault() -> Option<Arc<dyn Vault>> {
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
     {
         Some(Arc::new(OsVault))
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     {
         None
     }
@@ -202,6 +220,27 @@ impl Shelf {
         serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
     }
 
+    pub fn update_bind_addrs(&self, id: &str, bind_addrs: Vec<SocketAddr>) -> bool {
+        if !is_table_id(id) {
+            return false;
+        }
+        let _writing = self.lock();
+        let Some(mut seat) = self.read_seat(id) else {
+            return false;
+        };
+        let KeptSeat::Gm {
+            bind_addrs: kept, ..
+        } = &mut seat
+        else {
+            return false;
+        };
+        if *kept == bind_addrs {
+            return true;
+        }
+        *kept = bind_addrs;
+        self.write_seat_held(id, &seat)
+    }
+
     /// Every table on the shelf whose key is still in the store.
     pub fn list(&self) -> Vec<Shelved> {
         let Ok(entries) = fs::read_dir(&self.folder) else {
@@ -249,12 +288,17 @@ impl Shelf {
             KeptSeat::Player { .. } => vec![],
         };
         let records = self.read_records(id);
+        let bind_addrs = match &seat {
+            KeptSeat::Gm { bind_addrs, .. } => bind_addrs.clone(),
+            KeptSeat::Player { .. } => vec![],
+        };
         Some((
             seat,
             Again {
                 key,
                 allowed,
                 records,
+                bind_addrs,
             },
         ))
     }
@@ -313,6 +357,7 @@ impl Shelf {
             name,
             relay,
             mut allowed,
+            bind_addrs,
         }) = self.read_seat(id)
         else {
             return;
@@ -324,6 +369,7 @@ impl Shelf {
                 name,
                 relay,
                 allowed,
+                bind_addrs,
             },
         );
     }
@@ -433,6 +479,7 @@ mod tests {
             name: "Thursday".into(),
             relay: RelaySetting::N0,
             allowed: vec![],
+            bind_addrs: vec!["0.0.0.0:31415".parse().unwrap()],
         };
         assert!(shelf.put(id, &seat, &key));
         let keep = shelf.keeper(id);
@@ -452,9 +499,14 @@ mod tests {
         assert_eq!(again.key.to_bytes(), key.to_bytes());
         assert_eq!(again.allowed, vec![(player, "Lira".to_string())]);
         assert_eq!(again.records, vec![(record, None)]);
+        assert_eq!(
+            again.bind_addrs,
+            vec!["0.0.0.0:31415".parse::<SocketAddr>().unwrap()]
+        );
 
         keep(Keep::SentAway { key: player });
         assert!(shelf.take(id).expect("still there").1.allowed.is_empty());
+        assert_eq!(shelf.take(id).unwrap().0, seat);
 
         shelf.forget(id);
         assert!(shelf.list().is_empty() && shelf.take(id).is_none());
@@ -465,6 +517,49 @@ mod tests {
         });
         assert!(!shelf.records_path(id).exists());
         let _ = fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn a_failed_port_update_keeps_the_key_and_the_old_table() {
+        let (shelf, folder) = shelf();
+        let key = SecretKey::generate();
+        let id = "00ff";
+        let seat = KeptSeat::Gm {
+            name: "Thursday".into(),
+            relay: RelaySetting::None,
+            allowed: vec![],
+            bind_addrs: vec![],
+        };
+        assert!(shelf.put(id, &seat, &key));
+        let blocker = folder.join(format!("{id}.json.tmp"));
+        fs::create_dir(&blocker).unwrap();
+        let addrs = vec!["0.0.0.0:31415".parse().unwrap()];
+        assert!(!shelf.update_bind_addrs(id, addrs.clone()));
+        let (kept, again) = shelf.take(id).expect("the table is still remembered");
+        assert_eq!(kept, seat);
+        assert_eq!(again.key.to_bytes(), key.to_bytes());
+        fs::remove_dir(blocker).unwrap();
+        assert!(shelf.update_bind_addrs(id, addrs.clone()));
+        assert_eq!(shelf.take(id).unwrap().1.bind_addrs, addrs);
+        shelf.forget(id);
+        fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn an_older_table_without_bind_addresses_still_returns() {
+        let (shelf, folder) = shelf();
+        let key = SecretKey::generate();
+        assert!(shelf.vault.put("00ff", &key));
+        fs::create_dir_all(&folder).unwrap();
+        fs::write(
+            shelf.table_path("00ff"),
+            r#"{"role":"gm","name":"Thursday","relay":{"mode":"none"},"allowed":[]}"#,
+        )
+        .unwrap();
+        let (_, again) = shelf.take("00ff").expect("an older table returns");
+        assert!(again.bind_addrs.is_empty());
+        shelf.forget("00ff");
+        fs::remove_dir_all(folder).unwrap();
     }
 
     #[test]
@@ -507,7 +602,8 @@ mod tests {
         let _ = fs::remove_dir_all(folder);
     }
 
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
+    #[cfg_attr(not(windows), ignore = "requires an unlocked native credential store")]
     #[test]
     fn the_os_store_keeps_a_key_and_lets_it_go() {
         let vault = OsVault;

@@ -74,10 +74,20 @@ pub enum Body {
         author: String,
         seq: u64,
     },
+    Ask {
+        participant: String,
+        name: String,
+        request_id: String,
+        request: wire::TableRequest,
+    },
+    Answer {
+        request_id: String,
+        answer: wire::TableAnswer,
+    },
 }
 
 impl Body {
-    fn is_bounded(&self) -> bool {
+    fn is_bounded(&self, is_gm: bool) -> bool {
         match self {
             Body::Roll { name, .. } => {
                 wire::plain_text(&name.text) == name.text
@@ -85,7 +95,25 @@ impl Body {
                     && name.key.as_deref().is_none_or(wire::is_catalog_key)
             }
             Body::Hide { author, .. } => EndpointId::from_str(author).is_ok(),
+            Body::Ask {
+                participant,
+                name,
+                request_id,
+                request,
+            } => {
+                is_gm
+                    && EndpointId::from_str(participant).is_ok()
+                    && !name.is_empty()
+                    && wire::plain_text(name) == *name
+                    && wire::is_request_id(request_id)
+                    && request.is_bounded()
+            }
+            Body::Answer { request_id, .. } => !is_gm && wire::is_request_id(request_id),
         }
+    }
+
+    pub fn is_history(&self) -> bool {
+        matches!(self, Self::Ask { .. } | Self::Answer { .. })
     }
 }
 
@@ -127,7 +155,8 @@ pub fn verify(signed: &Signed, table: &str) -> Option<Record> {
     let record: Record = serde_json::from_str(&signed.text).ok()?;
     let author = EndpointId::from_str(&record.author).ok()?;
     author.verify(&signed_bytes(&signed.text), &sig).ok()?;
-    (record.table == table && record.seq > 0 && record.body.is_bounded()).then_some(record)
+    (record.table == table && record.seq > 0 && record.body.is_bounded(record.author == table))
+        .then_some(record)
 }
 
 pub fn now_ms() -> u64 {
@@ -211,7 +240,8 @@ impl Log {
             .records
             .iter()
             .filter(|((author, seq), (record, _, _))| {
-                have.get(author).is_none_or(|held| seq > held) && may_see(record)
+                (record.body.is_history() || have.get(author).is_none_or(|held| seq > held))
+                    && may_see(record)
             })
             .map(|(_, kept)| kept)
             .collect();
@@ -219,6 +249,17 @@ impl Log {
         out.into_iter()
             .map(|(_, signed, _)| signed.clone())
             .collect()
+    }
+
+    pub fn can_answer(&self, player: &str, id: &str) -> bool {
+        self.records.values().any(|(record, _, _)| {
+            matches!(&record.body, Body::Ask { participant, request_id, .. }
+                if participant == player && request_id == id)
+        }) && !self.records.values().any(|(record, _, _)| {
+            record.author == player
+                && matches!(&record.body, Body::Answer { request_id, .. }
+                if request_id == id)
+        })
     }
 
     /// Keep a record already checked by `verify`. One dated further ahead than clocks differ is

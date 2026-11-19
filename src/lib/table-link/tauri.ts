@@ -79,7 +79,7 @@ interface EarlyEvents {
 	heard: TableLinkWireEvent[];
 	stop: Unsubscribe;
 }
-const EARLY_EVENTS_MAX = 64;
+const EARLY_EVENTS_MAX = 1024;
 
 async function hearEarly(): Promise<EarlyEvents> {
 	const early: EarlyEvents = { heard: [], stop: () => {} };

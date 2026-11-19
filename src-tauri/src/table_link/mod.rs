@@ -391,6 +391,7 @@ pub async fn table_link_host(
                     name: name.clone(),
                     relay: relay.clone(),
                     allowed: vec![],
+                    bind_addrs: table.bind_addrs(),
                 };
                 shelf.put(&id, &kept, table.key());
             }
@@ -585,6 +586,7 @@ pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: Str
             match session::host(table, &name, &relay, emit, approve, keep, Some(again)).await {
                 Ok((gm, invite)) => {
                     let id = gm.id.clone();
+                    shelf.update_bind_addrs(&id, gm.bind_addrs());
                     *seat = Some(Held {
                         seat: Seat::Gm {
                             table: gm,

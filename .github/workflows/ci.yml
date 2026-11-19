@@ -63,15 +63,19 @@ jobs:
   # compiles it — the transport, its commands, and the capability file that is read only with the
   # feature on — and nothing but this runs its tests, which no `pnpm` gate reaches.
   table-link:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
       # what Tauri links against on Linux, as release.yml installs it
       - name: Install Linux dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y             libwebkit2gtk-4.1-dev             libayatana-appindicator3-dev             librsvg2-dev             libxdo-dev             libssl-dev             build-essential
+          sudo apt-get install -y             libwebkit2gtk-4.1-dev             libayatana-appindicator3-dev             librsvg2-dev             libxdo-dev             libssl-dev             libdbus-1-dev             build-essential
 
       - uses: dtolnay/rust-toolchain@stable
 
