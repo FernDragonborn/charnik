@@ -101,13 +101,13 @@ export function resolveResourceOptions({
 	);
 	for (const row of graph.rows) {
 		if (row.type !== 'resource_option' || !row.systems.includes(system) || !isActive(row)) continue;
-		const resourceId = String(row.data.resource_id);
-		if (!resourceIds.has(resourceId)) continue;
+		const resourceId = row.data.resource_id ?? '';
+		if (resourceId && !resourceIds.has(resourceId)) continue;
 		// an option another feature gives on this pool is not this character's until they have it —
 		// absent, never greyed: greyed is for a window that can open
 		const grantedBy = String(row.data.granted_by ?? '').trim();
 		if (grantedBy && !featureIds.has(grantedBy)) continue;
-		const raw = String(row.data.cost ?? '').trim();
+		const raw = String(row.data.cost ?? (resourceId ? '' : '0')).trim();
 		let cost: number | 'x';
 		if (raw === 'x') cost = 'x';
 		else if (/^\d+$/.test(raw)) cost = Number(raw);

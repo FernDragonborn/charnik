@@ -258,6 +258,9 @@ const classFeatureSchema = baseRow.extend({
 	spells: optStr,
 	/** `SPELLS_AS`; blank is `prepared`. */
 	spells_as: enumDefault(z.enum(SPELLS_AS_VALUES), SPELLS_AS.prepared),
+	/** Which rest reopens a feature's single option choice. */
+	choose_on_rest: z.preprocess(blankToUndef, z.enum(['short', 'long']).optional()),
+	cantrips: optInt,
 	language_grants: optStr,
 });
 
@@ -548,19 +551,24 @@ const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
  *  in content-health and then fold onto nothing. Omitted so the authoring form never offers it. */
 const namedRow = baseRow.omit({ effects: true });
 
-const resourceOptionSchema = namedRow.extend({
-	resource_id: reqStr,
-	cost: optStr,
-	action: optStr,
-	action_type: enumDefault(z.enum(ACTION_TYPES), 'action'),
-	// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
-	// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
-	available: optStr,
-	// the bare id of the feature, feat or trait that GIVES this option, when that is not the row
-	// granting the pool: Land's Aid spends a use of Wild Shape, and only a Circle of the Land druid
-	// has it. Empty → whoever has the pool has the option.
-	granted_by: optStr,
-});
+const resourceOptionSchema = namedRow
+	.extend({
+		resource_id: optStr,
+		cost: optStr,
+		action: optStr,
+		action_type: enumDefault(z.enum(ACTION_TYPES), 'action'),
+		// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
+		// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
+		available: optStr,
+		// the bare id of the feature, feat or trait that GIVES this option, when that is not the row
+		// granting the pool: Land's Aid spends a use of Wild Shape, and only a Circle of the Land druid
+		// has it. Empty → whoever has the pool has the option.
+		granted_by: optStr,
+	})
+	.refine((row) => row.resource_id || (row.granted_by && (!row.cost || row.cost === '0')), {
+		path: ['resource_id'],
+		message: 'An option needs a resource or a granting feature with no pool cost',
+	});
 
 /**
  * A resource POOL, by name (RES-NAME). `grant_resource:<id>:…` names the pool by id — the id is the
@@ -604,6 +612,8 @@ const optionSchema = baseRow.extend({
 	/** How many more cantrips its class knows, from that class's own list ("You know one extra
 	 *  cantrip from the Cleric spell list"); summed into the class's cantrip cap. */
 	cantrips: optInt,
+	spells: optStr,
+	spells_as: enumDefault(z.enum(SPELLS_AS_VALUES), SPELLS_AS.prepared),
 	/** The languages this row teaches, as a comma list of language ids, where `any` is one more of
 	 *  the player's choice (`thieves_cant,any` — "You know Thieves' Cant and one other language of
 	 *  your choice"). The builder lists the named ones as known and adds the choices to its count. */

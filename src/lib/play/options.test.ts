@@ -13,6 +13,8 @@ import { enterOrLeaveCombat, startNextTurn } from './events';
 import { activateOption, activateOptionById, runAction } from './options';
 import { PLAY_REQUEST, type PlayContext } from './outcome';
 import { resourceLeft } from './resources';
+import { castSpell } from './cast';
+import { rest } from './rests';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },
@@ -88,6 +90,45 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 			ctx(),
 		);
 		expect(shut.notices[0]?.text).toMatchObject({ key: 'combat.notice.notAvailable' });
+	});
+
+	it('class reactions work without a pool and spend the reaction once', () => {
+		const monk = build('monk', 4);
+		const option = derive(monk).resourceOptions.find((o) => o.id === 'monk_slow_fall_reduce');
+		if (!option) throw new Error('a level 4 monk has Slow Fall');
+		const use = { option, effectRounds: EFFECT_ROUNDS };
+		const out = activateOption(monk, use, ctx());
+		expect(out.log[0]?.rolled?.total).toBe(20);
+		expect(out.character.play.turn.reaction).toBe(1);
+		expect(out.character.play.resourcesSpent).toEqual({});
+		expect(activateOption(out.character, use, ctx()).refused).toBe(true);
+	});
+
+	it('Divine Smite follows its edition’s slot and resource rules', () => {
+		const paladin = build('paladin', 2);
+		const sheet = derive(paladin);
+		if (system === '5.5e') {
+			const spell = `spell:${source}:divine_smite`;
+			expect(sheet.spellcasting.classes[0]?.grantedSpells).toContain(spell);
+			const cast = castSpell(paladin, { spell, pool: 'paladins_smite' }, ctx());
+			expect(cast.refused).not.toBe(true);
+			expect(cast.character.play.resourcesSpent.paladins_smite).toBe(1);
+			expect(cast.character.play.spellSlotsSpent).toEqual({});
+			expect(
+				rest(cast.character, { kind: 'long' }, ctx()).character.play.resourcesSpent.paladins_smite,
+			).toBe(0);
+			return;
+		}
+		const option = sheet.resourceOptions.find((o) => o.id === 'paladin_divine_smite_fiend_undead');
+		if (!option) throw new Error('a level 2 paladin has Divine Smite');
+		const use = { option, effectRounds: EFFECT_ROUNDS };
+		paladin.play.spellSlotsGained = { '4': 1 };
+		const asked = activateOption(paladin, use, ctx());
+		expect(asked.character).toBe(paladin);
+		expect(asked.asks).toEqual([{ kind: PLAY_REQUEST.slot, levels: [1, 4] }]);
+		const out = activateOption(paladin, { ...use, slot: 4 }, ctx(0, 0, 0, 0, 0, 0));
+		expect(out.character.play.spellSlotsSpent).toEqual({ '4': 1 });
+		expect(out.log[0]?.rolled?.total).toBe(6);
 	});
 
 	it('a strike is asked of the host, capped against a typo; a form is asked BEFORE anything is paid', () => {

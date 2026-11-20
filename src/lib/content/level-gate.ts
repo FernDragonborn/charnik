@@ -85,7 +85,10 @@ export function grantedAtLevel(spec: string | undefined, level: number): string[
 function featureSpellIssues(graph: ContentGraph, system: string): JoinIssue[] {
 	const spells = new Set(graph.list('spell', { system }).map((spell) => spell.id));
 	const out: JoinIssue[] = [];
-	for (const row of graph.list('class_feature', { system }))
+	for (const row of [
+		...graph.list('class_feature', { system }),
+		...graph.list('option', { system }),
+	])
 		for (const raw of (row.data.spells ?? '').split(',')) {
 			const part = raw.trim();
 			const m = GRANT.exec(part);

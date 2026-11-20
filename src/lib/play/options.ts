@@ -9,8 +9,15 @@
 import { LOG_KIND } from '$lib/character/log-kind';
 import { rollFormula } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
-import { MAX_SLOT_LEVEL, castableSlotLevels, slotToSpend } from '$lib/rules/spellcasting';
-import { isResolvedFormula } from '$lib/effects/action-token';
+import {
+	MAX_SLOT_LEVEL,
+	PACT_SLOT_KEY,
+	castablePactLevel,
+	castableSlotLevels,
+	slotToSpend,
+} from '$lib/rules/spellcasting';
+import { isResolvedFormula, resolveActionFormula, ROLL_WITH_SLOT } from '$lib/effects/action-token';
+import { withCastSlot } from '$lib/effects/context';
 import type { ActionSlot } from '$lib/combat/roll';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
@@ -49,11 +56,13 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
 	free: null,
 };
 
+export const OPTION_SPENDS_SLOT = 'spend_slot';
+
 const VERB = {
 	note: 'note',
 	assumeForm: 'assume_form',
 	spendResource: 'spend_resource',
-	spendSlot: 'spend_slot',
+	spendSlot: OPTION_SPENDS_SLOT,
 } as const;
 
 /** The lowest level a slot has: any slot will pay for an option that asks for one. */
@@ -377,19 +386,51 @@ export function activateOption(
 	const chosen = use.form;
 	if (form && !chosen) return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.form, form }] };
 	let spellSlot: string | null = null;
+	let spentLevel = 0;
 	if (verbs.some(({ verb }) => verb === VERB.spendSlot)) {
 		const { pools } = sheet.spellcasting;
 		const spentSlots = character.play.spellSlotsSpent;
 		const levels = castableSlotLevels(ANY_SLOT_LEVEL, pools, spentSlots);
-		if (levels.length > 1 && use.slot === undefined)
-			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.slot, levels }] };
-		const reserved = slotToSpend(ANY_SLOT_LEVEL, pools, spentSlots, use.slot);
+		const pactLevel = castablePactLevel(ANY_SLOT_LEVEL, pools, spentSlots);
+		const distinctPact = pactLevel !== null && !levels.includes(pactLevel);
+		const offered = distinctPact ? [...levels, pactLevel].sort((a, b) => a - b) : levels;
+		if (offered.length > 1 && use.slot === undefined)
+			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.slot, levels: offered }] };
+		const reserved =
+			distinctPact && use.slot === pactLevel
+				? { key: PACT_SLOT_KEY }
+				: slotToSpend(ANY_SLOT_LEVEL, pools, spentSlots, use.slot);
 		if (!reserved || 'block' in reserved)
 			return refuse({
 				text: { key: 'combat.notice.noSpellSlot', values: { name: option.name } },
 				description: { key: 'combat.notice.restToRecharge' },
 			});
 		spellSlot = reserved.key;
+		spentLevel =
+			spellSlot === PACT_SLOT_KEY
+				? (pools.find((pool) => pool.forcedUpcast)?.spellLevel ?? 0)
+				: Number(spellSlot);
+	}
+	let action = option.action;
+	if (verbs.some(({ verb }) => verb === ROLL_WITH_SLOT)) {
+		const slotCtx = spentLevel > 0 && sheet.castCtx && withCastSlot(sheet.castCtx, spentLevel, 0);
+		const resolved: string[] = [];
+		for (const { verb, arg } of verbs) {
+			if (verb !== ROLL_WITH_SLOT) {
+				resolved.push(arg ? `${verb}:${arg}` : verb);
+				continue;
+			}
+			const roll = slotCtx
+				? resolveActionFormula(`roll:${arg}`, slotCtx, option.name, undefined)
+				: '';
+			if (!roll || !isResolvedFormula(roll.slice('roll:'.length)))
+				return {
+					...unresolved(character, { ...option, effectRounds: use.effectRounds }, arg),
+					refused: true,
+				};
+			resolved.push(roll);
+		}
+		action = resolved.join(';');
 	}
 	const paid = chain(
 		chain(slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character), (charged) =>
@@ -404,11 +445,7 @@ export function activateOption(
 	);
 	if (form && chosen) return chain(paid, (payer) => assumeForm(payer, { form, ...chosen }, ctx));
 	return chain(paid, (payer) =>
-		runAction(
-			payer,
-			{ name: option.name, action: option.action, effectRounds: use.effectRounds, amount },
-			ctx,
-		),
+		runAction(payer, { name: option.name, action, effectRounds: use.effectRounds, amount }, ctx),
 	);
 }
 

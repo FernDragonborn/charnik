@@ -902,6 +902,7 @@
 				"amount": "{value, plural, one {# use} other {# uses}}"
 			},
 			"takeLongRest": "Take long rest",
+			"restKeepCurrent": "Keep current choice",
 			"takeShortRest": "Take short rest",
 			"takeShortRestSpend": "Take short rest · spend {count}",
 			"tempHpNote": "Temp HP is a separate pool — teal in the HP bar. It doesn't stack; setting it takes the value given.",

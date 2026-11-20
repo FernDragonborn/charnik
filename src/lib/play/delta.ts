@@ -83,6 +83,7 @@ export function playDelta(before: Character, after: Character): PlayDelta {
 	return plain([
 		...fieldChanges(['play'], before.play, after.play),
 		...fieldChanges(['build', 'inventory'], before.build.inventory, after.build.inventory),
+		...fieldChanges(['build', 'options'], before.build.options, after.build.options),
 	]);
 }
 

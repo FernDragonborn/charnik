@@ -19,7 +19,7 @@ import { getSpellAccess } from '../content/spellAccess';
 import { featCasterProfiles } from './feat-spells';
 export { featSpellGrants, type FeatSpellGrant } from './feat-spells';
 import type { Character } from './schema';
-import { heldClassOptions } from './features';
+import { activeClassFeatures, heldClassOptions } from './features';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import { SYSTEM_LABELS, type Computed } from '../rules/pipeline';
 import { applyEffects, type EffectFacts } from '../effects/apply';
@@ -253,6 +253,11 @@ function extraCantripsFor(
 	character: Pick<Character, 'system' | 'build'>,
 ): number {
 	let extra = 0;
+	const classes = [
+		{ classId: entry.class, subclassId: entry.subclass ?? null, level: entry.level },
+	];
+	for (const { row } of activeClassFeatures(classes, graph, character.system))
+		extra += row.data.cantrips ?? 0;
 	for (const { row } of heldClassOptions(entry, graph, character)) extra += row.data.cantrips ?? 0;
 	return extra;
 }

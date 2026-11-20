@@ -32,16 +32,20 @@ export function resolveActionFormula(
 /** WHICH verbs carry an L2 formula. `apply_condition:` / `note:` / `restore_resource:` carry an id or
  *  a sentence, and evaluating those would be reading a value out of prose. */
 const FORMULA_VERBS = new Set(['heal', 'roll', 'temp_hp']);
+export const ROLL_WITH_SLOT = 'roll_slot';
 
 /** The L2 expression a single action sub-token carries, or null when it carries none. */
-function formulaOf(action: string): string | null {
+function formulaOf(action: string, includeSlotRoll = false): string | null {
 	const i = action.indexOf(':');
 	if (i === -1) return null;
 	const rest = action.slice(i + 1).trim();
 	// `x` is the amount the player answers at the press, not an expression: there is nothing to
 	// resolve until then (`play/options.ts` ▸ HEAL_ANSWERED)
 	if (rest === 'x') return null;
-	return FORMULA_VERBS.has(action.slice(0, i)) && rest ? rest : null;
+	const verb = action.slice(0, i);
+	return (FORMULA_VERBS.has(verb) || (includeSlotRoll && verb === ROLL_WITH_SLOT)) && rest
+		? rest
+		: null;
 }
 
 /** Every L2 expression slot inside an action token (a `;`-separated multi-action carries one per verb).
@@ -50,7 +54,7 @@ function formulaOf(action: string): string | null {
 export function actionFormulas(action: string): string[] {
 	return action
 		.split(';')
-		.map((tok) => formulaOf(tok.trim()))
+		.map((tok) => formulaOf(tok.trim(), true))
 		.filter((f): f is string => f !== null);
 }
 

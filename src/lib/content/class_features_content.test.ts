@@ -21,6 +21,7 @@ import { attackNotes, computeAttacks, formatDamageParts } from '../combat/helper
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 import { EFFECT_KIND, parseToken, splitGuard } from '../effects/token-parser';
 import { isEffectTargetSupported } from '../character/derive-targets';
+import { rest, restOptionGroups } from '../play/rests';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -1685,6 +1686,36 @@ describe('spells a feature always has prepared', () => {
 			.spellcasting.classes.flatMap((p) => p.grantedSpells)
 			.map((ref) => ref.split(':').pop())
 			.sort();
+
+	it('2014 Circle of the Land learns an extra cantrip before its chosen terrain gives spells', async () => {
+		const graph = await loadEdition('srd-2014');
+		const druid = withSubclass('SRD 5.1', '5e', 'druid', 'circleoftheland', 2);
+		druid.build.options.circleoftheland_circle_spells = ['circle_land_arctic'];
+		expect(deriveSheet(druid, graph).spellcasting.classes[0]?.cantripCap).toBe(3);
+		expect(granted(druid, graph)).toEqual([]);
+		const entry = druid.build.classes[0];
+		if (!entry) throw new Error('a druid has a class');
+		entry.level = 3;
+		expect(granted(druid, graph)).toEqual(['hold_person', 'spike_growth']);
+	});
+
+	it('2024 Circle of the Land replaces its prepared spells only on a long rest', async () => {
+		const graph = await loadEdition('srd-2024');
+		const druid = withSubclass('SRD 5.2.1', '5.5e', 'druid', 'circle_of_the_land', 3);
+		const feature = 'circle_of_the_land_circle_of_the_land_spells';
+		druid.build.options[feature] = ['circle_land_arid'];
+		const derive = (character: Character) => deriveSheet(character, graph);
+		const ctx = { graph, derive, locale: 'en' };
+		const choice = { options: { [feature]: 'circle_land_polar' } };
+		expect(granted(druid, graph)).toContain('fire_bolt');
+		expect(restOptionGroups(druid, graph, 'short')).toEqual([]);
+		expect(rest(druid, { kind: 'short', choice }, ctx).character.build.options[feature]).toEqual([
+			'circle_land_arid',
+		]);
+		const rested = rest(druid, { kind: 'long', choice }, ctx).character;
+		expect(granted(rested, graph)).toContain('ray_of_frost');
+		expect(granted(rested, graph)).not.toContain('fire_bolt');
+	});
 
 	it('2014: a Life cleric has bless and cure wounds at 1st, two more at 3rd', async () => {
 		const g = await loadEdition('srd-2014');

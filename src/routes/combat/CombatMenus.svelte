@@ -142,6 +142,20 @@
 
 <!-- one Hit-Die size with a stepper: the short rest spends them, the long rest (SRD 5.1) chooses
      which come back, and both ask "how many of THIS size" the same way -->
+{#snippet restOptions(kind: 'short' | 'long')}
+	{#each combat.rests.optionGroups(kind) as group (group.row.id)}
+		<label class="field">
+			<span>{localizedName(group.row, app.activeLocale)}</span>
+			<select bind:value={combat.rests.optionPicks[group.row.id]}>
+				<option value="">{$_('combat.menu.restKeepCurrent')}</option>
+				{#each group.options as option (option.effectiveId)}
+					<option value={option.id}>{localizedName(option, app.activeLocale)}</option>
+				{/each}
+			</select>
+		</label>
+	{/each}
+{/snippet}
+
 {#snippet hitDieRow(row: {
 	die: string;
 	count: string;
@@ -550,7 +564,8 @@
 			<p class="note" style="padding: 2px 13px 6px">{$_('combat.menu.trackAmmunitionNote')}</p>
 		{:else if overlay.kind === 'restshort'}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
-			{#if combat.hitDice.length}
+			{@render restOptions('short')}
+			{#if combat.shortRestMode === 'dice' && combat.hitDice.length}
 				{#each combat.hitDice as h (h.die)}
 					{@render hitDieRow({
 						die: h.die,
@@ -572,7 +587,9 @@
 					</button>
 				</div>
 			{:else}
-				<p class="note" style="padding: 8px 13px">{$_('combat.menu.noHitDiceNote')}</p>
+				{#if combat.shortRestMode === 'dice'}
+					<p class="note" style="padding: 8px 13px">{$_('combat.menu.noHitDiceNote')}</p>
+				{/if}
 				<div class="field" style="padding: 0 13px 4px">
 					<button class="submit-btn" onclick={() => combat.commitShortRest()}
 						>{$_('combat.menu.takeShortRest')}</button
@@ -582,21 +599,25 @@
 		{:else if overlay.kind === 'restlong'}
 			{@const rests = combat.rests}
 			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.longRestTitle')}</div>
-			{#each rests.hitDice.filter((h) => h.spent > 0) as h (h.die)}
-				{@render hitDieRow({
-					die: h.die,
-					count: $_('combat.menu.hitDiceSpent', { values: { count: h.spent } }),
-					picked: rests.hdRecover[h.die] ?? 0,
-					canMore:
-						(rests.hdRecover[h.die] ?? 0) < h.spent && rests.hdRecoverCount < rests.hdRecoverBudget,
-					step: (delta) => rests.hdRecoverInc(h.die, delta),
-				})}
-			{/each}
-			<p class="note" style="padding: 4px 13px">
-				{$_('combat.menu.longRestNote', {
-					values: { count: rests.hdRecoverCount, budget: rests.hdRecoverBudget },
-				})}
-			</p>
+			{@render restOptions('long')}
+			{#if rests.longRestAsksWhich}
+				{#each rests.hitDice.filter((h) => h.spent > 0) as h (h.die)}
+					{@render hitDieRow({
+						die: h.die,
+						count: $_('combat.menu.hitDiceSpent', { values: { count: h.spent } }),
+						picked: rests.hdRecover[h.die] ?? 0,
+						canMore:
+							(rests.hdRecover[h.die] ?? 0) < h.spent &&
+							rests.hdRecoverCount < rests.hdRecoverBudget,
+						step: (delta) => rests.hdRecoverInc(h.die, delta),
+					})}
+				{/each}
+				<p class="note" style="padding: 4px 13px">
+					{$_('combat.menu.longRestNote', {
+						values: { count: rests.hdRecoverCount, budget: rests.hdRecoverBudget },
+					})}
+				</p>
+			{/if}
 			<div class="field" style="padding: 0 13px 4px">
 				<button class="submit-btn" onclick={rests.commitLongRest}
 					>{$_('combat.menu.takeLongRest')}</button

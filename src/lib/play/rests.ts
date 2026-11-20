@@ -20,6 +20,10 @@ import { remainingRounds, ROUNDS_PER_UNIT } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import { withoutForm } from '$lib/character/forms';
 import type { CharacterSheet } from '$lib/character/derive';
+import { activeClassFeatures } from '$lib/character/features';
+import type { ContentGraph } from '$lib/content/loader';
+import { countAtLevel } from '$lib/content/level-gate';
+import { optionsOf } from '$lib/content/options';
 import { dropEffects, endConcentration } from './concentration';
 import { leaveForm } from './form';
 import { refusedWhileDead } from './hit-points';
@@ -38,6 +42,50 @@ const REST_HOURS: Record<RestKind, number> = { short: 1, long: 8 };
 export interface RestChoice {
 	/** Which spent Hit Dice a long rest returns, die size → count (`rules/core` ▸ `hitDiceRecovery`). */
 	hitDice?: Record<string, number>;
+	options?: Record<string, string>;
+}
+
+export function restOptionGroups(character: Character, graph: ContentGraph, kind: RestKind) {
+	const entries = character.build.classes.map((entry) => ({
+		classId: entry.class,
+		subclassId: entry.subclass ?? null,
+		level: entry.level,
+	}));
+	return [...activeClassFeatures(entries, graph, character.system)]
+		.filter(({ row, entry }) => {
+			const when = row.data.choose_on_rest;
+			return (
+				when &&
+				(when === 'short' || kind === 'long') &&
+				countAtLevel(row.data.choose, entry.level) === 1
+			);
+		})
+		.map(({ row, entry }) => ({
+			row,
+			options: optionsOf(graph, row).filter(
+				(option) =>
+					option.systems.includes(character.system) &&
+					(option.data.level ?? 1) <= entry.level &&
+					!option.data.answer &&
+					!option.data.requires,
+			),
+		}))
+		.filter(({ options }) => options.length > 0);
+}
+
+function buildAfterRest(
+	character: Character,
+	choice: RestChoice,
+	graph: ContentGraph,
+	kind: RestKind,
+) {
+	if (!choice.options) return character.build;
+	const options = { ...character.build.options };
+	for (const group of restOptionGroups(character, graph, kind)) {
+		const id = choice.options[group.row.id];
+		if (id && group.options.some((option) => option.id === id)) options[group.row.id] = [id];
+	}
+	return { ...character.build, options };
 }
 
 /** How many spent Hit Dice a long rest may return to this character, whichever sizes they are. */
@@ -155,7 +203,7 @@ export function rest(
 	}
 	return settled(
 		{
-			character: { ...character, play },
+			character: { ...character, play, build: buildAfterRest(character, choice, ctx.graph, kind) },
 			undoable: true,
 			log: [],
 			notices: [
@@ -231,10 +279,10 @@ export function spendHitDie(
 /** The RAW short rest: recharge, then spend each chosen Hit Die (die size → count). */
 export function diceShortRest(
 	character: Character,
-	{ hitDice }: { hitDice: Record<string, number> },
+	{ hitDice, ...choice }: RestChoice & { hitDice: Record<string, number> },
 	ctx: PlayContext,
 ): PlayOutcome {
-	let outcome = rest(character, { kind: 'short' }, ctx);
+	let outcome = rest(character, { kind: 'short', choice }, ctx);
 	for (const [die, count] of Object.entries(hitDice))
 		for (let i = 0; i < count; i++)
 			outcome = chain(outcome, (rested) => spendHitDie(rested, { die }, ctx));
@@ -245,8 +293,12 @@ export function diceShortRest(
 }
 
 /** The `half` short rest (a house variant): recharge and heal half the maximum, no Hit Dice spent. */
-export function halfShortRest(character: Character, ctx: PlayContext): PlayOutcome {
-	return chain(rest(character, { kind: 'short' }, ctx), (rested) => {
+export function halfShortRest(
+	character: Character,
+	ctx: PlayContext,
+	choice?: RestChoice,
+): PlayOutcome {
+	return chain(rest(character, { kind: 'short', ...(choice ? { choice } : {}) }, ctx), (rested) => {
 		const play = rested.play;
 		const max = effectiveHpMax(play.hp.max ?? null, ctx.derive(rested).maxHp);
 		const hp = shortRestHalfHeal(max);

@@ -8,7 +8,14 @@
  * hands it over.
  */
 import { hitDiceRecovery } from '$lib/rules/core';
-import { diceShortRest, halfShortRest, spendHitDie } from '$lib/play/rests';
+import {
+	diceShortRest,
+	halfShortRest,
+	restOptionGroups,
+	spendHitDie,
+	type RestKind,
+} from '$lib/play/rests';
+import type { ContentGraph } from '$lib/content/loader';
 import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -20,6 +27,7 @@ import type { OpenOverlay } from './menu-overlay.svelte';
 export interface RestControlsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
+	graph: ContentGraph | null;
 	resources: ResourceTracker;
 	/** Carry out a play-state action on the open character; false when it was refused. */
 	act(action: (character: Character, ctx: PlayContext) => PlayOutcome): boolean;
@@ -29,6 +37,20 @@ export interface RestControlsHost {
 
 export class RestControls {
 	constructor(private host: () => RestControlsHost) {}
+
+	optionPicks = $state<Record<string, string>>({});
+
+	optionGroups(kind: RestKind) {
+		const { character, graph } = this.host();
+		return character && graph ? restOptionGroups(character, graph, kind) : [];
+	}
+
+	private prefillOptions(kind: RestKind) {
+		const options = this.host().character?.build.options;
+		this.optionPicks = Object.fromEntries(
+			this.optionGroups(kind).map(({ row }) => [row.id, options?.[row.id]?.[0] ?? '']),
+		);
+	}
 
 	/** Hit-dice pools for the panel: each die size with its spent/left counts (left disables the spend
 	 *  button when the pool is empty — refilled on a long rest).
@@ -66,21 +88,28 @@ export class RestControls {
 	 *  popover (choose how many Hit Dice to spend). Both run the shared short-rest recharge (pools /
 	 *  pact slots / effect expiry). */
 	startShortRest = (e: Event) => {
-		if (this.shortRestMode === 'half') return this.doHalfShortRest();
+		if (this.shortRestMode === 'half' && !this.optionGroups('short').length)
+			return this.doHalfShortRest();
+		this.prefillOptions('short');
 		this.hdPick = {}; // a fresh selection each time the picker opens
 		this.host().openMenu('restshort', e);
 	};
 	/** The `half` short rest (BG3 / house variant): recharge + heal ½ max HP, no Hit Dice spent. */
 	private doHalfShortRest() {
-		if (this.host().act(halfShortRest)) this.host().resources.saveNow();
+		if (this.host().act((c, ctx) => halfShortRest(c, ctx, { options: this.optionPicks })))
+			this.host().resources.saveNow();
 	}
 	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (each shows its own roll
 	 *  in the log), and close the picker. */
 	commitShortRest = () => {
 		const hitDice = this.hdPick;
-		if (this.host().act((c, ctx) => diceShortRest(c, { hitDice }, ctx)))
+		if (this.shortRestMode === 'half') this.doHalfShortRest();
+		else if (
+			this.host().act((c, ctx) => diceShortRest(c, { hitDice, options: this.optionPicks }, ctx))
+		)
 			this.host().resources.saveNow();
 		this.hdPick = {};
+		this.optionPicks = {};
 		this.host().overlay = null;
 	};
 
@@ -94,7 +123,7 @@ export class RestControls {
 	}
 	/** Whether there is anything to CHOOSE: the rest cannot return every spent die, and they are not
 	 *  all one size. RAW only SRD 5.1 gets here — 5.2.1 returns them all. */
-	private get longRestAsksWhich(): boolean {
+	get longRestAsksWhich(): boolean {
 		const out = this.hitDice.filter((h) => h.spent > 0);
 		return out.length > 1 && out.reduce((n, h) => n + h.spent, 0) > this.hdRecoverBudget;
 	}
@@ -110,15 +139,18 @@ export class RestControls {
 	 *  ask which — pre-filled largest-first, so confirming at once is the rest it always was.
 	 *  Everywhere else there is nothing to ask and the rest is taken on the press. */
 	startLongRest = (e: Event) => {
-		if (!this.longRestAsksWhich) return this.host().resources.rest('long');
+		if (!this.longRestAsksWhich && !this.optionGroups('long').length)
+			return this.host().resources.rest('long');
+		this.prefillOptions('long');
 		const spent = Object.fromEntries(this.hitDice.map((h) => [h.die, h.spent]));
 		this.hdRecover = hitDiceRecovery(this.hitDice, spent, this.hdRecoverBudget);
 		this.host().openMenu('restlong', e);
 	};
 	/** Commit the long rest with the chosen Hit Dice, and close the picker. */
 	commitLongRest = () => {
-		this.host().resources.rest('long', { hitDice: this.hdRecover });
+		this.host().resources.rest('long', { hitDice: this.hdRecover, options: this.optionPicks });
 		this.hdRecover = {};
+		this.optionPicks = {};
 		this.host().overlay = null;
 	};
 }

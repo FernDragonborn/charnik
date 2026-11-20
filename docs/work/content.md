@@ -4,11 +4,9 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **CIRCLE-OF-THE-LAND · the land a druid chooses, and its spells.** SRD 5.1: a terrain of eight
-  at level 2, each a table of circle spells by druid level, and a bonus cantrip; SRD 5.2.1: a land
-  type chosen at each Long Rest (arid, polar, temperate, tropical) with its own table. Option rows,
-  which want the class feature's `spells` column on `option` too (read through `heldClassOptions`),
-  and the bonus cantrip an option's `cantrips`.
+- [~] **CIRCLE-OF-THE-LAND · `to audit`.** SRD 5.1 has seven terrains, selectable at Druid level 2,
+  with a bonus cantrip pick and terrain spells from level 3. SRD 5.2.1 has four land types with
+  spells from level 3 and lets the player change land on a Long Rest.
 - [ ] **SPECIES-SPELLS · the spells a lineage or legacy grants at character level 3 and 5.** SRD
   5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
   (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). The class feature's `spells` grammar on a

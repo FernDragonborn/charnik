@@ -12,6 +12,7 @@
 	import { ROW_PANEL } from '$lib/combat/row-order';
 	import type { StandardAction } from '$lib/combat/helpers';
 	import { ACTION_DEFAULT } from '$lib/combat/actions';
+	import { OPTION_SPENDS_SLOT } from '$lib/play/options';
 	/** The three things this panel lists. A player sees one list of things they can do, so they order
 	 *  one list: a spend-option that opens the character's whole turn has as much claim to the top as
 	 *  Dash does. The kind rides on the row because each renders differently, not because each sorts
@@ -163,12 +164,11 @@
 				>
 					<span class="row-name">{o.name}</span>
 					<span class="combat-row-hint">
-						<!-- an option that takes nothing from its pool is paid some other way, and says which -->
-						<span class="cost-chip"
-							>{o.cost === 0
-								? $_('combat.actions.costSlot')
-								: `${o.cost === 'x' ? 'X' : o.cost} ${o.resourceName}`}</span
-						>
+						{#if o.cost === 'x' || o.cost > 0}
+							<span class="cost-chip">{`${o.cost === 'x' ? 'X' : o.cost} ${o.resourceName}`}</span>
+						{:else if o.action.split(';').includes(OPTION_SPENDS_SLOT)}
+							<span class="cost-chip">{$_('combat.actions.costSlot')}</span>
+						{/if}
 					</span>
 					<span class="combat-row-desc">{o.description}</span>
 					<!-- a closed vocabulary reads from the catalog; `bonus_action` is not the word every

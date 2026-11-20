@@ -245,13 +245,18 @@ always-prepared and domain spells flagged, and rituals castable unprepared where
 it. A **known** caster (sorcerer, bard, warlock, ranger) skips preparation — everything known is
 castable.
 
-**A spell a feature grants is derived, never stored.** A class feature's `spells` column names them
+**A spell a feature grants is derived, never stored.** A class feature or its held option names spells
+in its `spells` column
 (`bless@1`, by class level) and `spells_as` how they are had: `prepared` — always prepared and never
 counted against the class's number (Domain, Oath and Patron spells, Druidic's Speak with Animals) —
 or `list`, added to the class's list to choose from (the 2014 Fiend). `deriveSpellcasting` puts them
 on the class's profile (`grantedSpells`, and its access list), and `spellEntries` is the one reading
 of what a character has: `build.spells` plus those, so a subclass changed or a level lost takes its
 spells along. A chosen spell a feature later grants turns always prepared and stops counting.
+
+A class feature's `cantrips` raises the class's cantrip pick cap. `choose_on_rest` reopens a single
+class-feature pick in the rest dialog. `long` allows a replacement on a Long Rest and `short` allows
+one on either rest. Changing the choice replaces its spell grants and other derived benefits.
 
 A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
 because house rules exist and the tracker does not enforce.

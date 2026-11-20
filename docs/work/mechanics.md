@@ -145,12 +145,9 @@ stay semi-manual.
   Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
   (FEATURE-PASSIVES lists them). The fix is the cast offering its school and `cantrip` beside the
   class, the way a weapon offers its tags.
-- [ ] **DIVINE-SMITE · a roll that grows with the slot it spends.** SRD 5.1 paladin, level 2: "expend
-  one spell slot to deal radiant damage … 2d8 for a 1st-level spell slot, plus 1d8 for each spell
-  level higher than 1st, to a maximum of 5d8 … increased by 1d8 if the target is an undead or a
-  fiend". `spend_slot` exists; a roll that reads the level of the slot it spent does not. SRD 5.2.1's
-  Paladin's Smite is the Divine Smite SPELL always prepared with one free cast a long rest — a
-  feature's `spells` and a pool.
+- [~] **DIVINE-SMITE · `to audit`.** The 2014 Actions list has Divine Smite and its fiend/undead
+  variant. Both use the expended slot's level to roll damage. The 2024 spell is always prepared at
+  level 2 and has one spell-linked use per Long Rest.
 - [ ] **FEATURE-SKILLS · a skill or an expertise a feature has the player choose.** SRD 5.2.1 Primal
   Knowledge (one more skill from the barbarian list), Scholar (Expertise in one of six skills
   already held) and Deft Explorer (Expertise in one held skill, and two languages); College of Lore's
@@ -160,10 +157,10 @@ stay semi-manual.
   Recovery (the designed `recover_slots`, Spellcasting ▸ Resource subsystem below) and SRD 5.2.1
   Magical Cunning ("regain expended Pact Magic spell slots but no more than a number equal to half
   the maximum (round up)", once a long rest).
-- [ ] **REACTION-ROLLS · the dice a reaction or a rest rolls, as options.** Cutting Words (a Bardic
-  Inspiration die off an enemy's roll), Song of Rest (SRD 5.1, a d6 more on a short rest's hit
-  dice), Deflect Missiles / Deflect Attacks (1d10 + Dexterity + monk level), Slow Fall (five times
-  the monk level), Tactical Mind (SRD 5.2.1, a Second Wind use for +1d10 to a failed check).
+- [~] **REACTION-ROLLS · the dice a reaction or a rest rolls, as options.** Cutting Words, Deflect
+  Missiles / Deflect Attacks, and Slow Fall are `to audit`. The player reads the rolled reduction
+  in the journal and applies it to the triggering roll or damage. Song of Rest (2014 short-rest
+  Hit Dice) and Tactical Mind (2024 Second Wind for +1d10, spent only on success) remain open.
 - [ ] **ACTION-OPTIONS · a feature's action that spends no pool.** Many features are an action, a Bonus
   Action or a Reaction that does something and has no uses to count: Cunning Action, Fast Hands,
   Steady Aim, Stillness of Mind, Self-Restoration, Tranquility, Countercharm; Dark One's Blessing is

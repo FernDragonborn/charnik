@@ -1793,6 +1793,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/action-token.ts`
 
 - `function resolveActionFormula` — Resolve the L2 values inside an action token.
+- `const ROLL_WITH_SLOT`
 - `function actionFormulas` — Every L2 expression slot inside an action token (a `;`-separated multi-action carries one per verb).
 - `const isResolvedFormula` — * Is this the formula of a `heal:` / `roll:` verb as the resolver left it — dice and numbers only?
 
@@ -2137,6 +2138,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/play/options.ts`
 
+- `const OPTION_SPENDS_SLOT`
 - `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
 - `interface ActionRun` — What running an action is told besides its verbs.
 - `const HEAL_ANSWERED` — The one formula a `heal:` may leave to the press: `x`, the amount an `x` cost was answered with * (Lay on Hands: "res…
@@ -2181,6 +2183,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type RestKind`
 - `interface RestChoice` — What the player decided about a rest before taking it.
+- `function restOptionGroups`
 - `const longRestHitDiceBudget` — How many spent Hit Dice a long rest may return to this character, whichever sizes they are.
 - `function rest` — * Take a rest: recharge pools by what each one's recharge says of this rest, reset spell slots (long * = all, short =…
 - `function spendHitDie` — Spend one Hit Die of a size: roll it plus the Constitution modifier, heal a MINIMUM of 1 (RAW) * up to the maximum, a…
@@ -2666,4 +2669,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1635 exports across 225 modules · 117 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1638 exports across 225 modules · 117 duplicate suspects._
