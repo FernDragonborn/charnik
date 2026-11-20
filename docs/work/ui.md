@@ -99,6 +99,12 @@
       value's popover stays instant: it is the answer to pointing at a number. The refresh chip's
       own note stands where its hint opens, so the two are placed together.
 
+- [ ] **SYSTEM-QUESTION-STYLE · the system's questions get a style of their own — 0.9.0.** The
+  maintainer's call: before 0.9.0 the flags and the accent line on the left of a dialog go, and the
+  questions the system asks (the table's window, `static/table-question.html`, first) get another
+  look, to be found by rendered variants. In the same window: it is too short for its words, a
+  fixed 480 × 300 (`table_link/question.rs`), so the Ukrainian question does not fit; the window is
+  sized to what it says, in both locales.
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
       and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
       set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only

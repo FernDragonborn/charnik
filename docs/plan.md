@@ -269,7 +269,9 @@ position and are given per wave, because most of them were learned the hard way.
      maintainer redraws the mock, and nothing is built until it exists.
   2. **HINT-WARMUP** — `ui.md`. Once one hint is being read, the next opens at once; the icon
      controls' native `title`s move onto the popover, which then owns the timing.
-  3. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
+  3. **SYSTEM-QUESTION-STYLE** — `ui.md`. The flags and the left line leave the dialogs, the
+     system's questions get a look of their own, and the table's question window fits its words.
+  4. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
 
