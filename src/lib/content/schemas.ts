@@ -236,6 +236,7 @@ const classFeatureSchema = baseRow.extend({
 	 *  as a single L1 row that also grants +2 at L6 → `"2@1,2@6"`; Bard 2024 `"2@2,2@9"`, 2014
 	 *  `"2@3,2@10"`). Curated onto the row like `effects` (not in the prose); empty → 0. */
 	expertise_slots: optStr,
+	skill_slots: optStr,
 	/** MASTERY-HALF: weapon-mastery CHOICES this feature unlocks, in the same ladder `expertise_slots`
 	 *  uses and summed by the same reader — 2024 Barbarian `"2@1,1@4,1@10"` is two
 	 *  kinds at 1st and one more at 4th and 10th. Only two SRD classes grow it (the Weapon Mastery
@@ -261,6 +262,11 @@ const classFeatureSchema = baseRow.extend({
 	/** Which rest reopens a feature's single option choice. */
 	choose_on_rest: z.preprocess(blankToUndef, z.enum(['short', 'long']).optional()),
 	cantrips: optInt,
+	/** Shared spell-slot levels a feature can restore on a Short Rest, as an L2 budget. */
+	short_rest_slots: optStr,
+	short_rest_slot_pool: optStr,
+	short_rest_slot_max: optInt,
+	short_rest_heal: optStr,
 	language_grants: optStr,
 });
 

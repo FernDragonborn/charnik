@@ -14,7 +14,8 @@ import { activateOption, activateOptionById, runAction } from './options';
 import { PLAY_REQUEST, type PlayContext } from './outcome';
 import { resourceLeft } from './resources';
 import { castSpell } from './cast';
-import { rest } from './rests';
+import { diceShortRest, rest } from './rests';
+import { shortRestSlotGroups } from './rest-slot-recovery';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },
@@ -102,6 +103,72 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(out.character.play.turn.reaction).toBe(1);
 		expect(out.character.play.resourcesSpent).toEqual({});
 		expect(activateOption(out.character, use, ctx()).refused).toBe(true);
+	});
+
+	it('Arcane Recovery restores only selected slot levels and spends one use', () => {
+		const wizard = build('wizard', 4);
+		wizard.play.spellSlotsSpent = { '1': 2, '2': 1 };
+		const recovery = shortRestSlotGroups(wizard, derive(wizard), graphs[system]);
+		expect(recovery[0]).toMatchObject({ id: 'arcane_recovery', budget: 2 });
+		const recover = (slots: Record<string, number>) =>
+			rest(wizard, { kind: 'short', choice: { recoverSlots: { arcane_recovery: slots } } }, ctx());
+		expect(recover({ '1': 1, '2': 1 }).character).toBe(wizard);
+		const rested = recover({ '2': 1 });
+		expect(rested.character.play.spellSlotsSpent).toEqual({ '1': 2, '2': 0 });
+		expect(rested.character.play.resourcesSpent.arcane_recovery).toBe(1);
+		expect(shortRestSlotGroups(rested.character, derive(rested.character), graphs[system])).toEqual(
+			[],
+		);
+	});
+
+	it('Magical Cunning restores half the 2024 Pact Magic pool only when spent', () => {
+		const warlock = build('warlock', 4);
+		const option = derive(warlock).resourceOptions.find(
+			(o) => o.id === 'warlock_magical_cunning_recover',
+		);
+		if (system === '5e') {
+			expect(option).toBeUndefined();
+			return;
+		}
+		if (!option) throw new Error('a level 4 warlock has Magical Cunning');
+		const use = { option, effectRounds: EFFECT_ROUNDS };
+		expect(activateOption(warlock, use, ctx()).character).toBe(warlock);
+		warlock.play.spellSlotsSpent = { pact: 2 };
+		const outcome = activateOption(warlock, use, ctx());
+		expect(outcome.character.play.spellSlotsSpent.pact).toBe(1);
+		expect(outcome.character.play.resourcesSpent.magical_cunning).toBe(1);
+	});
+
+	it('Tactical Mind spends Second Wind only if the check succeeds', () => {
+		const fighter = build('fighter', 2);
+		const option = derive(fighter).resourceOptions.find(
+			(o) => o.id === 'fighter_tactical_mind_roll',
+		);
+		if (system === '5e') {
+			expect(option).toBeUndefined();
+			return;
+		}
+		if (!option) throw new Error('a level 2 fighter has Tactical Mind');
+		const use = { option, effectRounds: EFFECT_ROUNDS };
+		const trial = activateOption(fighter, use, ctx(0.5));
+		expect(trial.asks).toEqual([{ kind: PLAY_REQUEST.confirmSpend, total: 6 }]);
+		expect(trial.character).toBe(fighter);
+		const out = activateOption(fighter, { ...use, confirmed: true }, ctx());
+		expect(out.log).toEqual([]);
+		expect(out.character.play.resourcesSpent.second_wind).toBe(1);
+		expect(out.character.play.turn.bonus).toBe(0);
+	});
+
+	it('a 2014 bard can choose Song of Rest once when spending Hit Dice', () => {
+		const bard = build('bard', 2);
+		const choice = { healFrom: 'bard_song_of_rest' };
+		const outcome = diceShortRest(bard, { ...choice, hitDice: { d8: 1 } }, ctx(0, 0));
+		expect(outcome.character.play.hp.current).toBe(system === '5e' ? 9 : 8);
+		expect(outcome.log.filter((line) => line.name.text === 'Song of Rest')).toHaveLength(
+			system === '5e' ? 1 : 0,
+		);
+		const noDice = diceShortRest(bard, { ...choice, hitDice: {} }, ctx());
+		expect(noDice.character.play.hp.current).toBe(5);
 	});
 
 	it('Divine Smite follows its edition’s slot and resource rules', () => {

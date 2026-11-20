@@ -144,7 +144,7 @@
      which come back, and both ask "how many of THIS size" the same way -->
 {#snippet restOptions(kind: 'short' | 'long')}
 	{#each combat.rests.optionGroups(kind) as group (group.row.id)}
-		<label class="field">
+		<label class="field rest-choice">
 			<span>{localizedName(group.row, app.activeLocale)}</span>
 			<select bind:value={combat.rests.optionPicks[group.row.id]}>
 				<option value="">{$_('combat.menu.restKeepCurrent')}</option>
@@ -162,16 +162,25 @@
 	picked: number;
 	canMore: boolean;
 	step: (delta: number) => void;
+	slot?: boolean;
 })}
 	<div class="hitdice-row">
 		<span class="hitdice-name">{row.die} <small>{row.count}</small></span>
 		<div class="hitdice-steppers">
 			<button class="pill-btn" disabled={row.picked <= 0} onclick={() => row.step(-1)}
-				><Icon name="minus" size={12} label={$_('combat.menu.dieFewer')} /></button
+				><Icon
+					name="minus"
+					size={12}
+					label={$_(row.slot ? 'combat.menu.slotFewer' : 'combat.menu.dieFewer')}
+				/></button
 			>
 			<span class="hitdice-pick">{row.picked}</span>
 			<button class="pill-btn" disabled={!row.canMore} onclick={() => row.step(1)}
-				><Icon name="plus" size={12} label={$_('combat.menu.dieMore')} /></button
+				><Icon
+					name="plus"
+					size={12}
+					label={$_(row.slot ? 'combat.menu.slotMore' : 'combat.menu.dieMore')}
+				/></button
 			>
 		</div>
 	</div>
@@ -563,8 +572,28 @@
 			</div>
 			<p class="note" style="padding: 2px 13px 6px">{$_('combat.menu.trackAmmunitionNote')}</p>
 		{:else if overlay.kind === 'restshort'}
-			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.shortRestTitle')}</div>
+			<div class="popup-heading eyebrow" style="border: 0">
+				{$_(
+					combat.shortRestMode === 'dice' ? 'combat.menu.shortRestTitle' : 'combat.restKind.short',
+				)}
+			</div>
 			{@render restOptions('short')}
+			{#each combat.rests.slotRecoveryGroups as group (group.id)}
+				<div class="popup-heading eyebrow">
+					{localizedName(group.row, app.activeLocale)}
+					· {$_('combat.menu.slotRecoveryBudget', { values: { budget: group.budget } })}
+				</div>
+				{#each group.slots as slot (slot.level)}
+					{@render hitDieRow({
+						die: $_('combat.menu.slotRecoveryLevel', { values: { level: slot.level } }),
+						count: $_('combat.menu.hitDiceSpent', { values: { count: slot.count } }),
+						picked: combat.rests.slotRecoveries[group.id]?.[String(slot.level)] ?? 0,
+						canMore: combat.rests.slotRecoveryRoom(group.id, slot.level) > 0,
+						step: (delta) => combat.rests.stepSlotRecovery(group.id, slot.level, delta),
+						slot: true,
+					})}
+				{/each}
+			{/each}
 			{#if combat.shortRestMode === 'dice' && combat.hitDice.length}
 				{#each combat.hitDice as h (h.die)}
 					{@render hitDieRow({
@@ -575,6 +604,17 @@
 						step: (delta) => combat.hdPickInc(h.die, delta),
 					})}
 				{/each}
+				{#if combat.hdPickCount > 0 && combat.rests.shortRestHealing.length}
+					<label class="field rest-choice">
+						<span>{$_('combat.menu.restHealing')}</span>
+						<select bind:value={combat.rests.shortRestHealingPick}>
+							<option value="">{$_('combat.menu.restHealingNone')}</option>
+							{#each combat.rests.shortRestHealing as { row } (row.effectiveId)}
+								<option value={row.id}>{localizedName(row, app.activeLocale)}</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
 				<p class="note" style="padding: 4px 13px">
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
 					{@html sanitizeHtml($_('combat.menu.hitDiceNote'))}
@@ -598,7 +638,9 @@
 			{/if}
 		{:else if overlay.kind === 'restlong'}
 			{@const rests = combat.rests}
-			<div class="popup-heading eyebrow" style="border: 0">{$_('combat.menu.longRestTitle')}</div>
+			<div class="popup-heading eyebrow" style="border: 0">
+				{$_(rests.longRestAsksWhich ? 'combat.menu.longRestTitle' : 'combat.restKind.long')}
+			</div>
 			{@render restOptions('long')}
 			{#if rests.longRestAsksWhich}
 				{#each rests.hitDice.filter((h) => h.spent > 0) as h (h.die)}
@@ -780,8 +822,13 @@
 		gap: var(--space-2);
 		margin: var(--space-1-5) 0 var(--space-2);
 	}
+	.rest-choice {
+		align-items: center;
+		padding-inline: var(--space-3);
+	}
 	/* menu text inputs: the roll-builder field and the custom-modifier target share one style */
 	.field input,
+	.rest-choice select,
 	.modifier-target {
 		flex: 1;
 		min-width: 0;

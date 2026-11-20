@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (117)
+## Duplicate suspects (118)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -77,6 +77,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `errorOf` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
+- `fit` ×2 — src/lib/actions/growToFit.ts · src/lib/build/derive.ts
 - `fold` ×2 — src/lib/character/spellcasting.ts · src/lib/rules/pipeline.ts
 - `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
@@ -554,7 +555,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (208 modules)
+## Library functions & types (209 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -604,6 +605,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function halfFeatAbilities` — The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all * six (Epic Boons), …
 - `function expertiseBudget` — N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's * active features'…
+- `function featureSkillSlots` — An empty list is an unrestricted slot.
+- `function skillsFitSlots` — Assign each pick to its own eligible slot, reassigning earlier picks if they can switch.
 - `function masteryBudget` — MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the * same sum over `mast…
 - `function masteryWeaponTags` — The item tags each mastery grant the drafted character has unlocked asks of a weapon — one list * per granting featur…
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
@@ -1793,6 +1796,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/action-token.ts`
 
 - `function resolveActionFormula` — Resolve the L2 values inside an action token.
+- `const ROLL_TO_CONFIRM_SPEND` — WHICH verbs carry an L2 formula.
 - `const ROLL_WITH_SLOT`
 - `function actionFormulas` — Every L2 expression slot inside an action token (a `;`-separated multi-action carries one per verb).
 - `const isResolvedFormula` — * Is this the formula of a `heal:` / `roll:` verb as the resolver left it — dice and numbers only?
@@ -2179,10 +2183,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function restoreResourceUpTo` — Regain expended uses until at least `upTo` are AVAILABLE — never fewer than are there already * ("regain expended unt…
 - `function passBoundary` — * Dawn, or dusk.
 
+### `src/lib/play/rest-slot-recovery.ts`
+
+- `type SlotRecoveryPicks`
+- `function shortRestSlotGroups` — Each recovery rule contributes its own budget.
+- `const slotRecoveryCost`
+- `function recoverSlots` — Validate every selection against both its budget and the slots still available to restore.
+
 ### `src/lib/play/rests.ts`
 
 - `type RestKind`
 - `interface RestChoice` — What the player decided about a rest before taking it.
+- `function shortRestHealingOptions`
 - `function restOptionGroups`
 - `const longRestHitDiceBudget` — How many spent Hit Dice a long rest may return to this character, whichever sizes they are.
 - `function rest` — * Take a rest: recharge pools by what each one's recharge says of this rest, reset spell slots (long * = all, short =…
@@ -2669,4 +2681,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1638 exports across 225 modules · 117 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1646 exports across 226 modules · 118 duplicate suspects._

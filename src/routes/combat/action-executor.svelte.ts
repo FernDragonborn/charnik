@@ -27,8 +27,9 @@ import type { InventoryTracker } from './inventory.svelte';
 /** A question an option asks with a number for an answer: a slot's level, or a count of uses. */
 export interface OptionQuestion {
 	name: string;
-	kind: 'slot' | 'amount';
+	kind: 'slot' | 'amount' | 'confirmSpend';
 	values: number[];
+	total?: number;
 	answer: (value: number) => void;
 }
 
@@ -70,6 +71,7 @@ export class ActionExecutor {
 			form: (monster: string) => void;
 			slot: (levels: number[]) => void;
 			amount: (max: number) => void;
+			confirmSpend: (total: number) => void;
 		}> = {},
 	) {
 		for (const ask of this.host().enact(action)?.asks ?? [])
@@ -78,6 +80,7 @@ export class ActionExecutor {
 				this.host().forms.ask(ask.form, answers.form);
 			else if (ask.kind === PLAY_REQUEST.slot) answers.slot?.(ask.levels);
 			else if (ask.kind === PLAY_REQUEST.amount) answers.amount?.(ask.max);
+			else if (ask.kind === PLAY_REQUEST.confirmSpend) answers.confirmSpend?.(ask.total);
 	}
 
 	/** Use a spend-option: resource cost and turn slot validated ALL-OR-NOTHING, both paid, its verbs
@@ -90,18 +93,20 @@ export class ActionExecutor {
 			kind: OptionQuestion['kind'],
 			values: number[],
 			answer: (value: number) => void,
+			total?: number,
 		) => {
 			this.asking = {
 				name: option.name,
 				kind,
 				values,
+				...(total === undefined ? {} : { total }),
 				answer: (value) => {
 					this.asking = null;
 					answer(value);
 				},
 			};
 		};
-		const use = (answer: Pick<OptionUse, 'form' | 'slot' | 'amount'>) =>
+		const use = (answer: Pick<OptionUse, 'form' | 'slot' | 'amount' | 'confirmed'>) =>
 			this.run((c, ctx) => activateOption(c, { option, effectRounds, ...answer }, ctx), {
 				form: (monster) =>
 					use({ ...answer, form: { monster, label: this.host().forms.nameOf(monster) } }),
@@ -111,6 +116,15 @@ export class ActionExecutor {
 						'amount',
 						Array.from({ length: max }, (_, i) => i + 1),
 						(picked) => use({ ...answer, amount: picked }),
+					),
+				confirmSpend: (total) =>
+					question(
+						'confirmSpend',
+						[0, 1],
+						(picked) => {
+							if (picked === 1) use({ ...answer, confirmed: true });
+						},
+						total,
 					),
 			});
 		use(amount === undefined ? {} : { amount });

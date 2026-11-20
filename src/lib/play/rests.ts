@@ -20,16 +20,19 @@ import { remainingRounds, ROUNDS_PER_UNIT } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import { withoutForm } from '$lib/character/forms';
 import type { CharacterSheet } from '$lib/character/derive';
-import { activeClassFeatures } from '$lib/character/features';
+import { activeClassFeatures, characterFeatures } from '$lib/character/features';
 import type { ContentGraph } from '$lib/content/loader';
 import { countAtLevel } from '$lib/content/level-gate';
 import { optionsOf } from '$lib/content/options';
 import { dropEffects, endConcentration } from './concentration';
 import { leaveForm } from './form';
-import { refusedWhileDead } from './hit-points';
+import { heal, refusedWhileDead } from './hit-points';
 import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { hitDiceSpent, resourceSpent } from './resources';
 import { settled } from './settle';
+import { recoverSlots, type SlotRecoveryPicks } from './rest-slot-recovery';
+import { localizedName } from '$lib/content/detail';
+import { isResolvedFormula, resolveActionFormula } from '$lib/effects/action-token';
 
 export type RestKind = 'short' | 'long';
 
@@ -43,6 +46,16 @@ export interface RestChoice {
 	/** Which spent Hit Dice a long rest returns, die size → count (`rules/core` ▸ `hitDiceRecovery`). */
 	hitDice?: Record<string, number>;
 	options?: Record<string, string>;
+	recoverSlots?: SlotRecoveryPicks;
+	healFrom?: string;
+}
+
+export function shortRestHealingOptions(character: Character, graph: ContentGraph) {
+	return characterFeatures(character, graph).flatMap(({ row }) =>
+		row.type === 'class_feature' && row.data.short_rest_heal
+			? [{ row, formula: row.data.short_rest_heal }]
+			: [],
+	);
 }
 
 export function restOptionGroups(character: Character, graph: ContentGraph, kind: RestKind) {
@@ -79,13 +92,14 @@ function buildAfterRest(
 	graph: ContentGraph,
 	kind: RestKind,
 ) {
-	if (!choice.options) return character.build;
-	const options = { ...character.build.options };
+	if (!choice.options || !Object.keys(choice.options).length) return character.build;
+	let options = character.build.options;
 	for (const group of restOptionGroups(character, graph, kind)) {
 		const id = choice.options[group.row.id];
-		if (id && group.options.some((option) => option.id === id)) options[group.row.id] = [id];
+		if (id && options[group.row.id]?.[0] !== id && group.options.some((option) => option.id === id))
+			options = { ...options, [group.row.id]: [id] };
 	}
-	return { ...character.build, options };
+	return options === character.build.options ? character.build : { ...character.build, options };
 }
 
 /** How many spent Hit Dice a long rest may return to this character, whichever sizes they are. */
@@ -162,6 +176,16 @@ export function rest(
 		!outlasted.effects.some((effect) => effect.source === outlasted.form?.monster);
 	const waking: Character = { ...character, play: formGone ? leaveForm(outlasted) : outlasted };
 	const sheet = ctx.derive(waking);
+	const recovery =
+		kind === 'short' && choice.recoverSlots
+			? recoverSlots(waking, sheet, ctx.graph, choice.recoverSlots)
+			: undefined;
+	if (recovery === null)
+		return {
+			...quietly(character),
+			refused: true,
+			notices: [{ text: { key: 'combat.notice.slotRecoveryInvalid' } }],
+		};
 	const resourcesSpent = { ...waking.play.resourcesSpent };
 	for (const pool of sheet.resources) {
 		// what this rest gives the pool back is the recharge model's call: `null` nothing, `'all'`
@@ -198,8 +222,13 @@ export function rest(
 		}
 	} else {
 		// warlock pact slots return on a short rest
-		const { [PACT_SLOT_KEY]: _pact, ...spellSlotsSpent } = play.spellSlotsSpent;
-		play = { ...play, spellSlotsSpent };
+		const { [PACT_SLOT_KEY]: _pact, ...spellSlotsSpent } =
+			recovery?.spellSlotsSpent ?? play.spellSlotsSpent;
+		play = {
+			...play,
+			spellSlotsSpent,
+			resourcesSpent: { ...play.resourcesSpent, ...recovery?.recoveredPools },
+		};
 	}
 	return settled(
 		{
@@ -283,9 +312,29 @@ export function diceShortRest(
 	ctx: PlayContext,
 ): PlayOutcome {
 	let outcome = rest(character, { kind: 'short', choice }, ctx);
+	const hpBeforeDice = outcome.character.play.hp.current;
 	for (const [die, count] of Object.entries(hitDice))
 		for (let i = 0; i < count; i++)
 			outcome = chain(outcome, (rested) => spendHitDie(rested, { die }, ctx));
+	if (outcome.character.play.hp.current > hpBeforeDice && choice.healFrom)
+		outcome = chain(outcome, (rested) => {
+			const benefit = shortRestHealingOptions(rested, ctx.graph).find(
+				({ row }) => row.id === choice.healFrom,
+			);
+			if (!benefit) return quietly(rested);
+			const name = localizedName(benefit.row, ctx.locale);
+			const castCtx = ctx.derive(rested).castCtx;
+			const formula = resolveActionFormula(
+				`heal:${benefit.formula}`,
+				castCtx,
+				name,
+				undefined,
+			).slice('heal:'.length);
+			if (!isResolvedFormula(formula)) return quietly(rested);
+			const rolled = rollFormula(formula, ctx.rng);
+			const healed = heal(rested, { amount: Math.max(0, rolled.total) }, ctx);
+			return { ...healed, log: [{ name: { text: name }, rolled }, ...healed.log] };
+		});
 	return chain(outcome, (rested) => ({
 		...quietly(rested),
 		notices: [{ text: { key: 'combat.notice.shortRestTaken' }, kind: LOG_KIND.rest }],

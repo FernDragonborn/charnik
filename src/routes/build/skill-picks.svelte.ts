@@ -10,10 +10,25 @@
 import { toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { SKILL_ABILITY, type SkillId } from '$lib/character/skills';
-import { expertiseBudget } from '$lib/build/derive';
+import { featureSkillSlots, skillsFitSlots } from '$lib/build/derive';
 import { ANY_OPTION, splitList } from '$lib/content/schemas';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
+
+function fitSkillPick(
+	picks: string[],
+	skill: string,
+	slots: readonly string[][],
+	canReplace: (skill: string) => boolean,
+): string[] | undefined {
+	const added = [...picks, skill];
+	if (skillsFitSlots(added, slots)) return added;
+	for (const [index, candidate] of picks.entries()) {
+		if (!canReplace(candidate)) continue;
+		const replaced = added.filter((_, i) => i !== index);
+		if (skillsFitSlots(replaced, slots)) return replaced;
+	}
+}
 
 /** What the pickers need from the build view-model around them. `import type` is erased, so picking
  *  the shape off the class costs no runtime cycle and cannot drift from it. */
@@ -38,14 +53,29 @@ export class SkillPicks {
 	   parameter property is assigned, so a direct reference reads it before it exists. */
 	constructor(private host: () => SkillPicksHost) {}
 
-	/** How many skills the class lets you choose. */
-	classSkillCount = $derived.by(() => Number(this.host().classRow?.data.skills_choose ?? 0));
+	private proficiencySlots = $derived.by(() => {
+		const { classRow } = this.host();
+		const allowed = splitList(classRow?.data.skills_from).filter(
+			(id) => id.toLowerCase() !== ANY_OPTION,
+		);
+		const count = Math.min(Object.keys(SKILL_ABILITY).length, Number(classRow?.data.skills_choose ?? 0));
+		return [
+			...Array.from({ length: count }, () => allowed),
+			...this.featureSlots('skill_slots'),
+		];
+	});
+	/** How many skills the class and its features let you choose. */
+	classSkillCount = $derived(this.proficiencySlots.length);
 	/** The list they are chosen from — a class saying "any" offers every skill there is. */
 	classSkillOptions = $derived.by<string[]>(() => {
-		const from = splitList(this.host().classRow?.data.skills_from);
-		if (from.length === 1 && from[0]?.toLowerCase() === ANY_OPTION) return Object.keys(SKILL_ABILITY);
-		return from;
+		if (this.proficiencySlots.some((slot) => !slot.length)) return Object.keys(SKILL_ABILITY);
+		return [...new Set(this.proficiencySlots.flat())];
 	});
+
+	private featureSlots(column: 'skill_slots' | 'expertise_slots') {
+		const { graph, draft } = this.host();
+		return graph ? featureSkillSlots(draft.classes, graph, draft.system, column) : [];
+	}
 	/** Skills granted for free by the background — always proficient, never a pick. */
 	autoSkills = $derived.by(() => splitList(this.host().backgroundRow?.data.skills));
 	/** How many skills the SPECIES grants by choice (0 = it grants none). Read off the sub-option
@@ -107,21 +137,25 @@ export class SkillPicks {
 			return;
 		}
 		// Strict: the cap counts only NON-background picks (a background overlap frees a slot)
-		if (this.classSkillCount === 0 || this.chosenCount < this.classSkillCount) {
+		if (this.classSkillCount === 0) {
 			draft.skills = [...draft.skills, skill];
 			return;
 		}
 		// At the cap a click replaces the oldest pick. A skill carried in from a level-up is never the
 		// one dropped: Strict refuses to unlearn those, and replacing one would be unlearning under
 		// another name.
-		const droppable = draft.skills.find(
-			(s) => !this.autoSkills.includes(s) && !this.host().edit?.skills.has(s),
+		const next = fitSkillPick(
+			draft.skills.filter((s) => !this.autoSkills.includes(s)),
+			skill,
+			this.proficiencySlots,
+			(s) => !this.host().edit?.skills.has(s),
 		);
-		if (!droppable) {
+		if (!next) {
 			toast(t('build.notice.strictAllTrained'));
 			return;
 		}
-		draft.skills = [...draft.skills.filter((s) => s !== droppable), skill];
+		draft.skills = [...draft.skills.filter((s) => this.autoSkills.includes(s)), ...next];
+		draft.expertise = draft.expertise.filter((s) => this.isProficient(s));
 	};
 	chosenCount = $derived.by(
 		() => this.host().draft.skills.filter((s) => !this.autoSkills.includes(s)).length,
@@ -147,10 +181,8 @@ export class SkillPicks {
 		this.classSkillOptions.includes(skill);
 
 	/** N4a: expertise slots the drafted classes' features unlock (Rogue L1+L6, Bard L3+L10). */
-	expertiseCap = $derived.by(() => {
-		const graph = this.host().graph;
-		return graph ? expertiseBudget(this.host().draft.classes, graph, this.host().draft.system) : 0;
-	});
+	private expertiseSlots = $derived.by(() => this.featureSlots('expertise_slots'));
+	expertiseCap = $derived(this.expertiseSlots.length);
 	expertiseUsed = $derived.by(
 		() => this.host().draft.expertise.filter((s) => this.isProficient(s)).length,
 	);
@@ -161,7 +193,7 @@ export class SkillPicks {
 	 */
 	expertiseOffered = (skill: string): boolean =>
 		this.isProficient(skill) &&
-		(this.expertiseCap > 0 ||
+		(this.expertiseSlots.some((slot) => !slot.length || slot.includes(skill)) ||
 			!this.host().draft.strict ||
 			this.host().draft.expertise.includes(skill));
 	/** Toggle expertise (×2) on a proficient skill. Strict enforces the class-granted cap the way every
@@ -181,6 +213,16 @@ export class SkillPicks {
 			toast(t('build.notice.noExpertiseSlots'));
 			return;
 		}
-		draft.expertise = toggleCapped(draft.expertise, skill, this.expertiseCap);
+		if (has) {
+			draft.expertise = draft.expertise.filter((s) => s !== skill);
+			return;
+		}
+		const next = fitSkillPick(
+			draft.expertise.filter(this.isProficient),
+			skill,
+			this.expertiseSlots,
+			() => true,
+		);
+		if (next) draft.expertise = next;
 	};
 }

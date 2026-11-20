@@ -107,9 +107,10 @@ Ki — are **resources** granted by tokens.
 (`2@1,2@6` for a Rogue), `mastery_slots` (`3@1,1@4,1@10,1@16` for a 2024 Fighter) and `choose`, all
 read by `content/level-gate.ts` ▸ `countAtLevel` (`content.md` ▸ At a level is `@`). Strict enforces the cap and Free does not; at the cap a click replaces the
 oldest pick (`ui.md` ▸ rule 10). Multiclass mastery grants SUM, which is RAW rather than a convenience:
-the 2024 multiclassing rules name their exceptions and Weapon Mastery is not one. A grant the count
-cannot express honestly is left out rather than over-permitted — the Wizard's one expertise from a
-restricted list is not encoded. A feat that raises one of several abilities says so in
+the 2024 multiclassing rules name their exceptions and Weapon Mastery is not one. A class feature's
+`skill_slots` adds proficiency picks. Both `skill_slots` and `expertise_slots` accept a qualifier
+after the ladder (`1@2|arcana,history`). In Strict mode each pick must fit a distinct eligible slot.
+A feat that raises one of several abilities says so in
 `ability_choice` (`str,dex`, or `any`), the same "list or keyword" grammar a species' `feat_choice`
 uses.
 

@@ -13,6 +13,7 @@ import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import { ANY_OPTION } from '../content/schemas';
 import type { StatMethod } from './rules';
 import { activeClassFeatures } from '../character/features';
+import { SKILL_ABILITY } from '../character/skills';
 
 /** The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all
  *  six (Epic Boons), else the listed subset (`str,dex` → Grappler). Empty/absent → `[]` (not a
@@ -37,9 +38,41 @@ export function expertiseBudget(
 	let total = 0;
 	for (const feature of activeClassFeatures(classes, graph, system)) {
 		const spec = feature.row.data.expertise_slots;
-		if (spec) total += countAtLevel(spec, feature.entry.level);
+		if (spec) total += countAtLevel(splitLadderQualifier(spec).ladder, feature.entry.level);
 	}
 	return total;
+}
+
+/** An empty list is an unrestricted slot. A qualifier lists eligible skill ids. */
+export function featureSkillSlots(
+	classes: readonly DraftClassEntry[],
+	graph: ContentGraph,
+	system: string,
+	column: 'skill_slots' | 'expertise_slots',
+): string[][] {
+	return [...activeClassFeatures(classes, graph, system)].flatMap(({ row, entry }) => {
+		const { ladder, tags } = splitLadderQualifier(row.data[column]);
+		const count = Math.min(Object.keys(SKILL_ABILITY).length, countAtLevel(ladder, entry.level));
+		return Array.from({ length: count }, () => tags);
+	});
+}
+
+/** Assign each pick to its own eligible slot, reassigning earlier picks if they can switch. */
+export function skillsFitSlots(picks: readonly string[], slots: readonly string[][]): boolean {
+	if (picks.length > slots.length) return false;
+	const assigned = new Map<number, string>();
+	const fit = (skill: string, visited: Set<number>): boolean => {
+		for (const [index, allowed] of slots.entries()) {
+			if (visited.has(index) || (allowed.length && !allowed.includes(skill))) continue;
+			visited.add(index);
+			const previous = assigned.get(index);
+			if (previous && !fit(previous, visited)) continue;
+			assigned.set(index, skill);
+			return true;
+		}
+		return false;
+	};
+	return picks.every((skill) => fit(skill, new Set()));
 }
 
 /** MASTERY-HALF: how many WEAPON KINDS the drafted character may use the mastery property of — the

@@ -841,6 +841,8 @@
 			"concentrationEnded": "Concentration ended · {spell}",
 			"slotSpent": "{count, plural, one {Level {level} spell slot spent} other {# level {level} spell slots spent}}",
 			"slotRestored": "{count, plural, one {Level {level} spell slot restored} other {# level {level} spell slots restored}}",
+			"slotRecoveryInvalid": "The selected spell slots can no longer be recovered.",
+			"pactRecoveryUnavailable": "There are no expended Pact Magic slots to recover.",
 			"slotGained": "{count, plural, one {Level {level} spell slot gained} other {# level {level} spell slots gained}}",
 			"pactSlotSpent": "{count, plural, one {Pact slot spent} other {# pact slots spent}}",
 			"pactSlotRestored": "{count, plural, one {Pact slot restored} other {# pact slots restored}}",
@@ -895,14 +897,22 @@
 			"slotLevelBase": "Level {level} · base",
 			"optionQuestion": {
 				"slot": "Which spell slot pays for it. Nothing is spent until you choose.",
-				"amount": "How many uses to spend. Nothing is spent until you choose."
+				"amount": "How many uses to spend. Nothing is spent until you choose.",
+				"confirmSpend": "Add +{total} to the check. Did it succeed?"
 			},
 			"optionAnswer": {
 				"slot": "Level {value}",
-				"amount": "{value, plural, one {# use} other {# uses}}"
+				"amount": "{value, plural, one {# use} other {# uses}}",
+				"confirmSpend": "{value, select, 1 {Succeeded · spend the use} other {Failed · keep the use}}"
 			},
 			"takeLongRest": "Take long rest",
 			"restKeepCurrent": "Keep current choice",
+			"slotRecoveryBudget": "{budget, plural, one {# slot level} other {# slot levels}}",
+			"slotRecoveryLevel": "Level {level} slot",
+			"slotFewer": "Recover one fewer slot",
+			"slotMore": "Recover one more slot",
+			"restHealing": "Bonus healing",
+			"restHealingNone": "None",
 			"takeShortRest": "Take short rest",
 			"takeShortRestSpend": "Take short rest · spend {count}",
 			"tempHpNote": "Temp HP is a separate pool — teal in the HP bar. It doesn't stack; setting it takes the value given.",

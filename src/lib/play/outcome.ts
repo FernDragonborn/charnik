@@ -65,6 +65,7 @@ export const PLAY_REQUEST = {
 	weapon: 'weapon',
 	slot: 'slot',
 	amount: 'amount',
+	confirmSpend: 'confirm_spend',
 } as const;
 
 /**
@@ -84,7 +85,8 @@ type PlayRequest =
 	/** Which spell slot an option is paid with, where more than one level has a slot left. */
 	| { kind: typeof PLAY_REQUEST.slot; levels: number[] }
 	/** How many uses an option with a cost of `x` spends, up to what its pool has left. */
-	| { kind: typeof PLAY_REQUEST.amount; max: number };
+	| { kind: typeof PLAY_REQUEST.amount; max: number }
+	| { kind: typeof PLAY_REQUEST.confirmSpend; total: number };
 
 /** A concentration save a hit has made due: the damage that made it due, the DC that damage sets,
  *  and the spell it is owed for. The damage is kept because two of these may turn out to be ONE hit

@@ -7,6 +7,7 @@ import {
 	buildTodos,
 	type BuildTodoInput,
 	expertiseBudget,
+	skillsFitSlots,
 	openSubclassChoices,
 	halfFeatAbilities,
 	classFeatureLines,
@@ -86,6 +87,12 @@ describe('expertiseBudget (drafted-class expertise cap)', () => {
 		expect(expertiseBudget([{ classId: 'rogue', subclassId: null, level: 6 }], graph, '5e')).toBe(0);
 		expect(expertiseBudget([{ classId: null, subclassId: null, level: 6 }], graph, '5.5e')).toBe(0);
 	});
+});
+
+it('a restricted skill slot and an unrestricted one can reassign earlier picks', () => {
+	const slots = [[], ['arcana', 'history']];
+	expect(skillsFitSlots(['arcana', 'stealth'], slots)).toBe(true);
+	expect(skillsFitSlots(['stealth', 'athletics'], slots)).toBe(false);
 });
 
 describe('openSubclassChoices', () => {

@@ -13,7 +13,9 @@
 	<DialogShell
 		titleId="option-question-title"
 		title={asking.name}
-		subtitle={$_(`combat.menu.optionQuestion.${asking.kind}`)}
+		subtitle={$_(`combat.menu.optionQuestion.${asking.kind}`, {
+			values: { total: asking.total ?? 0 },
+		})}
 		width="360px"
 		badge="flame-kindling"
 		onDismiss={() => (combat.executor.asking = null)}

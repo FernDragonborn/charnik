@@ -31,7 +31,8 @@ export function resolveActionFormula(
 
 /** WHICH verbs carry an L2 formula. `apply_condition:` / `note:` / `restore_resource:` carry an id or
  *  a sentence, and evaluating those would be reading a value out of prose. */
-const FORMULA_VERBS = new Set(['heal', 'roll', 'temp_hp']);
+export const ROLL_TO_CONFIRM_SPEND = 'roll_confirm_spend';
+const FORMULA_VERBS = new Set(['heal', 'roll', 'temp_hp', ROLL_TO_CONFIRM_SPEND]);
 export const ROLL_WITH_SLOT = 'roll_slot';
 
 /** The L2 expression a single action sub-token carries, or null when it carries none. */

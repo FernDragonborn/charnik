@@ -16,7 +16,12 @@ import {
 	castableSlotLevels,
 	slotToSpend,
 } from '$lib/rules/spellcasting';
-import { isResolvedFormula, resolveActionFormula, ROLL_WITH_SLOT } from '$lib/effects/action-token';
+import {
+	isResolvedFormula,
+	resolveActionFormula,
+	ROLL_TO_CONFIRM_SPEND,
+	ROLL_WITH_SLOT,
+} from '$lib/effects/action-token';
 import { withCastSlot } from '$lib/effects/context';
 import type { ActionSlot } from '$lib/combat/roll';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
@@ -63,7 +68,20 @@ const VERB = {
 	assumeForm: 'assume_form',
 	spendResource: 'spend_resource',
 	spendSlot: OPTION_SPENDS_SLOT,
+	recoverPact: 'recover_pact_slots',
 } as const;
+
+const HALF_ROUNDED_UP = 'half_up';
+
+function pactRecovery(character: Character, sheet: ReturnType<PlayContext['derive']>) {
+	const pact = sheet.spellcasting.pools.find((pool) => pool.forcedUpcast);
+	const spent = Math.min(pact?.max ?? 0, character.play.spellSlotsSpent[PACT_SLOT_KEY] ?? 0);
+	return {
+		spent,
+		count: Math.min(spent, Math.ceil((pact?.max ?? 0) / 2)),
+		level: pact?.spellLevel,
+	};
+}
 
 /** The lowest level a slot has: any slot will pay for an option that asks for one. */
 const ANY_SLOT_LEVEL = 1;
@@ -280,6 +298,25 @@ const VERBS: Record<string, Verb> = {
 	},
 	// the slot was chosen and paid before any verb ran, with everything else the option costs
 	[VERB.spendSlot]: (character) => quietly(character),
+	[ROLL_TO_CONFIRM_SPEND]: (character) => quietly(character),
+	[VERB.recoverPact]: (character, run, arg, ctx) => {
+		if (arg !== HALF_ROUNDED_UP) return unresolved(character, run, arg);
+		const { spent, count, level } = pactRecovery(character, ctx.derive(character));
+		if (!count || level === undefined) return quietly(character);
+		const spellSlotsSpent = { ...character.play.spellSlotsSpent, [PACT_SLOT_KEY]: spent - count };
+		return settled(
+			{
+				...quietly({ ...character, play: { ...character.play, spellSlotsSpent } }),
+				notices: [
+					{
+						text: { key: 'combat.notice.slotRestored', values: { count, level } },
+						kind: LOG_KIND.slot,
+					},
+				],
+			},
+			ctx,
+		);
+	},
 	// affordability was settled before the option paid for anything
 	[VERB.spendResource]: (character, _run, arg, ctx) =>
 		arg ? spendResource(character, idAndCount(arg), ctx) : quietly(character),
@@ -325,6 +362,7 @@ export interface OptionUse {
 	amount?: number;
 	form?: { monster: string; label: string };
 	slot?: number;
+	confirmed?: boolean;
 	effectRounds: number;
 }
 
@@ -360,6 +398,13 @@ export function activateOption(
 	const amount = use.amount ?? 1;
 	const spend = optionSpend(option, amount);
 	const verbs = verbsOf(option.action);
+	const recoverPact = verbs.find(({ verb }) => verb === VERB.recoverPact);
+	if (recoverPact && recoverPact.arg !== HALF_ROUNDED_UP)
+		return refuse({
+			text: { key: 'combat.notice.actionUnresolved', values: { name: option.name } },
+		});
+	if (recoverPact && !pactRecovery(character, sheet).count)
+		return refuse({ text: { key: 'combat.notice.pactRecoveryUnavailable' } });
 	const further = verbs
 		.filter(({ verb, arg }) => verb === VERB.spendResource && !!arg)
 		.map(({ arg }) => idAndCount(arg))
@@ -431,6 +476,20 @@ export function activateOption(
 			resolved.push(roll);
 		}
 		action = resolved.join(';');
+	}
+	const trial = verbs.find(({ verb }) => verb === ROLL_TO_CONFIRM_SPEND);
+	if (trial && !isResolvedFormula(trial.arg))
+		return {
+			...unresolved(character, { ...option, effectRounds: use.effectRounds }, trial.arg),
+			refused: true,
+		};
+	if (trial && !use.confirmed) {
+		const rolled = rollFormula(trial.arg, ctx.rng);
+		return {
+			...quietly(character),
+			log: [{ name: { text: option.name }, rolled }],
+			asks: [{ kind: PLAY_REQUEST.confirmSpend, total: rolled.total }],
+		};
 	}
 	const paid = chain(
 		chain(slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character), (charged) =>

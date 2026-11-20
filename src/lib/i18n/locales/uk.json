@@ -841,6 +841,8 @@
 			"concentrationEnded": "Концентрацію припинено · {spell}",
 			"slotSpent": "{count, plural, one {Витрачено комірку {level} рівня} few {Витрачено # комірки {level} рівня} other {Витрачено # комірок {level} рівня}}",
 			"slotRestored": "{count, plural, one {Відновлено комірку {level} рівня} few {Відновлено # комірки {level} рівня} other {Відновлено # комірок {level} рівня}}",
+			"slotRecoveryInvalid": "Вибрані комірки заклять уже не можна відновити.",
+			"pactRecoveryUnavailable": "Немає витрачених комірок магії угоди для відновлення.",
 			"slotGained": "{count, plural, one {Отримано комірку {level} рівня} few {Отримано # комірки {level} рівня} other {Отримано # комірок {level} рівня}}",
 			"pactSlotSpent": "{count, plural, one {Витрачено комірку пакту} few {Витрачено # комірки пакту} other {Витрачено # комірок пакту}}",
 			"pactSlotRestored": "{count, plural, one {Відновлено комірку пакту} few {Відновлено # комірки пакту} other {Відновлено # комірок пакту}}",
@@ -895,14 +897,22 @@
 			"slotLevelBase": "Рівень {level} · базовий",
 			"optionQuestion": {
 				"slot": "Якою коміркою заклять заплатити. Нічого не витрачається, доки ви не оберете.",
-				"amount": "Скільки використань витратити. Нічого не витрачається, доки ви не оберете."
+				"amount": "Скільки використань витратити. Нічого не витрачається, доки ви не оберете.",
+				"confirmSpend": "Додайте +{total} до перевірки. Вона успішна?"
 			},
 			"optionAnswer": {
 				"slot": "Рівень {value}",
-				"amount": "{value, plural, one {# використання} few {# використання} other {# використань}}"
+				"amount": "{value, plural, one {# використання} few {# використання} other {# використань}}",
+				"confirmSpend": "{value, select, 1 {Успіх · витратити використання} other {Провал · зберегти використання}}"
 			},
 			"takeLongRest": "Довгий відпочинок",
 			"restKeepCurrent": "Залишити поточний вибір",
+			"slotRecoveryBudget": "{budget, plural, one {# рівень комірок} few {# рівні комірок} other {# рівнів комірок}}",
+			"slotRecoveryLevel": "Комірка {level} рівня",
+			"slotFewer": "Відновити на одну комірку менше",
+			"slotMore": "Відновити ще одну комірку",
+			"restHealing": "Додаткове лікування",
+			"restHealingNone": "Немає",
 			"takeShortRest": "Короткий відпочинок",
 			"takeShortRestSpend": "Короткий відпочинок · витратити {count}",
 			"tempHpNote": "Тимчасові ОЗ — окремий запас, бірюзовий на смузі ОЗ. Вони не додаються: встановлюється задане значення.",

@@ -12,10 +12,16 @@ import {
 	diceShortRest,
 	halfShortRest,
 	restOptionGroups,
+	shortRestHealingOptions,
 	spendHitDie,
 	type RestKind,
 } from '$lib/play/rests';
 import type { ContentGraph } from '$lib/content/loader';
+import {
+	shortRestSlotGroups,
+	slotRecoveryCost,
+	type SlotRecoveryPicks,
+} from '$lib/play/rest-slot-recovery';
 import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -39,6 +45,41 @@ export class RestControls {
 	constructor(private host: () => RestControlsHost) {}
 
 	optionPicks = $state<Record<string, string>>({});
+	slotRecoveries = $state<SlotRecoveryPicks>({});
+	shortRestHealingPick = $state('');
+
+	get shortRestHealing() {
+		const { character, graph } = this.host();
+		return character && graph ? shortRestHealingOptions(character, graph) : [];
+	}
+
+	get slotRecoveryGroups() {
+		const { character, graph, sheet } = this.host();
+		return character && graph && sheet ? shortRestSlotGroups(character, sheet, graph) : [];
+	}
+
+	slotRecoveryRoom(id: string, level: number): number {
+		const group = this.slotRecoveryGroups.find((item) => item.id === id);
+		const slot = group?.slots.find((item) => item.level === level);
+		if (!group || !slot) return 0;
+		const chosen = Object.values(this.slotRecoveries).reduce(
+			(sum, picked) => sum + (picked[String(level)] ?? 0),
+			0,
+		);
+		const levelsLeft = group.budget - slotRecoveryCost(this.slotRecoveries[id] ?? {});
+		return Math.max(0, Math.min(slot.count - chosen, Math.floor(levelsLeft / level)));
+	}
+
+	stepSlotRecovery = (id: string, level: number, delta: number) => {
+		const key = String(level);
+		const byLevel = this.slotRecoveries[id] ?? {};
+		const current = byLevel[key] ?? 0;
+		const count = Math.max(
+			0,
+			Math.min(current + delta, current + this.slotRecoveryRoom(id, level)),
+		);
+		this.slotRecoveries = { ...this.slotRecoveries, [id]: { ...byLevel, [key]: count } };
+	};
 
 	optionGroups(kind: RestKind) {
 		const { character, graph } = this.host();
@@ -88,28 +129,41 @@ export class RestControls {
 	 *  popover (choose how many Hit Dice to spend). Both run the shared short-rest recharge (pools /
 	 *  pact slots / effect expiry). */
 	startShortRest = (e: Event) => {
-		if (this.shortRestMode === 'half' && !this.optionGroups('short').length)
-			return this.doHalfShortRest();
+		this.slotRecoveries = {};
+		this.shortRestHealingPick = '';
+		if (
+			this.shortRestMode === 'half' &&
+			!this.optionGroups('short').length &&
+			!this.slotRecoveryGroups.length
+		) {
+			if (this.host().act(halfShortRest)) this.host().resources.saveNow();
+			return;
+		}
 		this.prefillOptions('short');
 		this.hdPick = {}; // a fresh selection each time the picker opens
 		this.host().openMenu('restshort', e);
 	};
-	/** The `half` short rest (BG3 / house variant): recharge + heal ½ max HP, no Hit Dice spent. */
-	private doHalfShortRest() {
-		if (this.host().act((c, ctx) => halfShortRest(c, ctx, { options: this.optionPicks })))
-			this.host().resources.saveNow();
-	}
 	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (each shows its own roll
 	 *  in the log), and close the picker. */
 	commitShortRest = () => {
-		const hitDice = this.hdPick;
-		if (this.shortRestMode === 'half') this.doHalfShortRest();
-		else if (
-			this.host().act((c, ctx) => diceShortRest(c, { hitDice, options: this.optionPicks }, ctx))
+		const choice = {
+			options: this.optionPicks,
+			recoverSlots: this.slotRecoveries,
+			healFrom: this.shortRestHealingPick,
+		};
+		const half = this.shortRestMode === 'half';
+		if (
+			!this.host().act((c, ctx) =>
+				half
+					? halfShortRest(c, ctx, choice)
+					: diceShortRest(c, { hitDice: this.hdPick, ...choice }, ctx),
+			)
 		)
-			this.host().resources.saveNow();
+			return;
+		this.host().resources.saveNow();
 		this.hdPick = {};
 		this.optionPicks = {};
+		this.slotRecoveries = {};
 		this.host().overlay = null;
 	};
 

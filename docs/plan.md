@@ -248,10 +248,8 @@ position and are given per wave, because most of them were learned the hard way.
   subclass works through level 4 in both editions, and players can sit at one table across their
   own apps. Two halves:
   - **Levels 1–4, after 0.8.2's level 1.** DIVINE-SMITE (`to audit`) ·
-    FEATURE-SKILLS (a skill or an expertise a feature has the player choose) · SLOT-RECOVERY (Arcane
-    and Natural Recovery, Magical Cunning) · CIRCLE-OF-THE-LAND (`to audit`) ·
-    SPECIES-SPELLS (lineage and legacy spells at character level 3) · REACTION-ROLLS (Cutting Words,
-    Deflect Missiles/Attacks and Slow Fall `to audit`; Song of Rest and Tactical Mind open) ·
+    FEATURE-SKILLS (`to audit`) · SLOT-RECOVERY (`to audit`) · CIRCLE-OF-THE-LAND (`to audit`) ·
+    SPECIES-SPELLS (lineage and legacy spells at character level 3) · REACTION-ROLLS (`to audit`) ·
     TOGGLE-STATES · HUNTERS-PREY · FRENZY.
     A class feature's `spells` (0.8.2) is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: the
     same column on an option and a species row, and they are mostly content.

@@ -75,6 +75,8 @@ still landing on an existing system per the table above:
 | `spend_resource:<id>[:<n>]` | **spend `n` uses (default 1) of ANOTHER pool** — the one the option's own `cost` does not name. A feature that pays out of a pool a different feature owns and is itself limited says both: Wild Resurgence's cost is its once-a-rest gate, and its action spends the use of Wild Shape. Checked with the cost, BEFORE anything is paid, so a pool that cannot cover it refuses the whole action. |
 | `spend_slot` | **the option is paid with a spell slot**, of whatever level — reserved and spent with the option's other costs, before any verb runs, so an option with no slot to give is refused whole. Where more than one level has a slot left it ASKS which (`PLAY_REQUEST.slot`), and backing out costs nothing; a single open level is taken without asking. A warlock with only Pact Magic pays from that pool. |
 | `roll_slot:<formula>` | Roll an L2 formula using `slot` as the level of the slot reserved by `spend_slot` in the same activation. The executor resolves and validates it before payment. |
+| `roll_confirm_spend:<formula>` | Roll once and ask whether the check succeeded. Confirmation pays the option's cost. |
+| `recover_pact_slots:half_up` | Restore expended Pact Magic slots up to half of the pool's maximum, rounded up. The option checks that there are expended slots before payment. |
 | `gain_slot:<level>` | **one more spell slot of that level** — or `gain_slot:<n>*x`, `n` levels for each use an `x` cost was answered with (Nature Magician's "each use contributing 2 spell levels"); a bounded form, not an expression — `play.spellSlotsGained`, counted into the slot pools the cast and the pips read (`rules-core.md` ▸ Spellcasting). It is a slot, not a restored one: it stands above the table's count until a Long Rest. |
 | `attack:<weapon id>[:<count>]` | **make `count` attacks** (default 1) with that weapon, through the ORDINARY attack path (`SheetRolls.rollAttackNow`) — same to-hit, magic bonus, Rage damage and scoped effects as a tap on the Attacks panel. Flurry of Blows is `attack:unarmed_strike:2`. The weapon is its **bare content id**, never its display name, so the token survives a translated sheet; `unarmed_strike` names the fists, which have no row. Charges **no turn slot of its own** — the option's `action_type` already paid for the whole flurry. A weapon the character has not equipped is **surfaced by toast**, because an action that rolls nothing is the bug this verb exists to remove. Capped at 12 strikes, against a content typo rather than against a rule. |
 | `assume_form:<form id>` | **assume a form** whose rules the character's features state (`effects.md` ▸ A form) — Wild Shape. The one verb that ASKS before anything is paid: the picker opens on the eligible stat blocks, and the resource use and the turn slot are spent when one is taken, so backing out costs nothing. Taking one sets `play.form`, hands over hit points as the form's rules say, and adds the carrier effect whose clock is the form's. A form already worn is left first. |
@@ -115,6 +117,11 @@ option that belongs to a pool and takes nothing from it — one paid some other 
 how (a spell slot) — and its window is its `available` guard (`resource.wild_shape==0`). `x` is
 the player's to say: the option ASKS how many (`PLAY_REQUEST.amount`), from one to what the pool
 has left, before anything else is checked, and a verb written per use reads the answer.
+
+A Short Rest restores selected shared spell slots when a class feature declares a
+`short_rest_slots` level budget, the `short_rest_slot_pool` it spends, and optionally a
+`short_rest_slot_max`. Each selected slot charges its level to that budget. A chosen
+`short_rest_heal` formula heals once after Hit Dice recover hit points on a Short Rest.
 
 **`resource_options` surfacing + identity (design decisions):**
 - **A combat action-option (Flurry of Blows, Stunning Strike) surfaces in the ACTIONS block with a

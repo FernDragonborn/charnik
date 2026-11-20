@@ -148,19 +148,15 @@ stay semi-manual.
 - [~] **DIVINE-SMITE · `to audit`.** The 2014 Actions list has Divine Smite and its fiend/undead
   variant. Both use the expended slot's level to roll damage. The 2024 spell is always prepared at
   level 2 and has one spell-linked use per Long Rest.
-- [ ] **FEATURE-SKILLS · a skill or an expertise a feature has the player choose.** SRD 5.2.1 Primal
-  Knowledge (one more skill from the barbarian list), Scholar (Expertise in one of six skills
-  already held) and Deft Explorer (Expertise in one held skill, and two languages); College of Lore's
-  three skills of any kind in both editions. Skills come from a class, a species and a background
-  today; a feature's `expertise_slots` names a count and no list.
-- [ ] **SLOT-RECOVERY · one verb for the features that give slots back.** Arcane Recovery, Natural
-  Recovery (the designed `recover_slots`, Spellcasting ▸ Resource subsystem below) and SRD 5.2.1
-  Magical Cunning ("regain expended Pact Magic spell slots but no more than a number equal to half
-  the maximum (round up)", once a long rest).
-- [~] **REACTION-ROLLS · the dice a reaction or a rest rolls, as options.** Cutting Words, Deflect
-  Missiles / Deflect Attacks, and Slow Fall are `to audit`. The player reads the rolled reduction
-  in the journal and applies it to the triggering roll or damage. Song of Rest (2014 short-rest
-  Hit Dice) and Tactical Mind (2024 Second Wind for +1d10, spent only on success) remain open.
+- [~] **FEATURE-SKILLS · `to audit`.** Primal Knowledge and College of Lore add proficiency picks.
+  Scholar adds one expertise pick from its six eligible trained skills and Deft Explorer adds
+  expertise and two language picks.
+- [~] **SLOT-RECOVERY · `to audit`.** The Short Rest dialog accepts Arcane and Natural Recovery slot
+  selections against each feature's level budget. Magical Cunning restores up to half the maximum
+  expended Pact Magic slots, rounded up, once per Long Rest.
+- [~] **REACTION-ROLLS · `to audit`.** Cutting Words, Deflect Missiles / Deflect Attacks, and Slow
+  Fall log a reduction the player applies to the triggering roll or damage. A 2014 bard can add
+  Song of Rest to a Hit Dice rest. Tactical Mind rolls first and spends Second Wind on confirmation.
 - [ ] **ACTION-OPTIONS · a feature's action that spends no pool.** Many features are an action, a Bonus
   Action or a Reaction that does something and has no uses to count: Cunning Action, Fast Hands,
   Steady Aim, Stillness of Mind, Self-Restoration, Tranquility, Countercharm; Dark One's Blessing is
@@ -282,10 +278,5 @@ stay semi-manual.
      - each chosen spell gets a one-use pool of its own; casting it spends that pool, and the cast
        picker offers only that spell's declared pool (`../internals/rules-core.md` ▸ Spellcasting);
      - swapping is the builder's free edit as for any spell; the hover says the edition's rule.
-  - **Arcane Recovery and Natural Recovery — the design, sized at about two hours.** A verb
-    `recover_slots:<budget>:<max slot level>` — `recover_slots:ceil(class_level.wizard/2):5` — on a
-    resource option of the pool that already ships. The player is not asked slot by slot: the
-    executor lists every MAXIMAL combination of spent slots within the budget ("two level 1 slots",
-    "one level 2 slot") as rows of the existing `OptionQuestionDialog`, which learns to show a label
-    rather than a number, and restores the one taken. 2024 Natural Recovery's free cast is its
-    second pool (`natural_recovery_spell`), already shipped.
+  - **2024 Natural Recovery's free cast** still needs its pool `natural_recovery_spell` linked to
+    the leveled spells granted by the active Circle Spells option at Druid level 6.
