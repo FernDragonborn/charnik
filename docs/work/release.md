@@ -130,8 +130,8 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  **Left:** the live drive on protocol 3 with a roll built in the tray, which needs the person
-  answering the native questions.
+  The live drive passes on protocol 3. **Left:** the live drive with a roll built in the tray,
+  which needs the person answering the native questions.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
@@ -167,10 +167,9 @@
   by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
   `TableLogPanel`). *To audit* — a live request carries the GM's signed ask and the player's
   answer is a signed record; hello is protocol 3 and refuses protocol 2 before admission; the
-  invitation format stays at version 2. **Left:** the live log drive on the real app, with a
-  person answering the native questions (`../internals/table-link.md` ▸ Driving a live table);
-  and a live answer that rides the record pace: an answer is a record, so a player past ten records in ten
-  seconds has it dropped by the GM's app while their own app shows it sent, and the ask stays
+  invitation format stays at version 2. The live drive covers the log on protocol 3: the player's
+  roll arrives and the GM hides it. **Left:** a live answer that rides the record pace: an answer
+  is a record, so a player past ten records in ten seconds has it dropped by the GM's app while their own app shows it sent, and the ask stays
   unanswered on the GM's screen.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
   Specified and built to `../internals/table-link.md` ▸ Remembering a table: the key in the OS

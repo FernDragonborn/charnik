@@ -348,15 +348,25 @@ pub fn new_local_id() -> Result<String, getrandom::Error> {
 /// a greeting place: about 65 000 keys tried, a second or so of one core, once per table joined.
 /// Strangers holding the greeting places with dials that never say hello each pay that, and one
 /// without the invitation's secret cannot pay it at all.
+const KNOCK_BITS_RELEASE: u32 = 16;
 #[cfg(not(test))]
-const KNOCK_BITS: u32 = 16;
-/// Small in a test build: an unoptimised key generation is slow, and the rule is the same.
+fn knock_bits() -> u32 {
+    KNOCK_BITS_RELEASE
+}
+/// Small in a test build: an unoptimised key generation is slow, and the rule is the same. The
+/// live drive's player is a test build knocking at the real app's door, so it pays the real price.
 #[cfg(test)]
-const KNOCK_BITS: u32 = 4;
+fn knock_bits() -> u32 {
+    if std::env::var_os("CHARNIK_LIVE_TABLE").is_some() {
+        KNOCK_BITS_RELEASE
+    } else {
+        4
+    }
+}
 const KNOCK_DOMAIN: &[u8] = b"charnik/table/knock/1";
 
 /// Does this key knock at this door: does the hash of the door's secret, the GM's key and the
-/// joiner's key start with `KNOCK_BITS` zero bits?
+/// joiner's key start with `knock_bits()` zero bits?
 pub fn knocks(secret: &str, gm: &[u8; 32], joiner: &[u8; 32]) -> bool {
     let mut hasher = blake3::Hasher::new();
     hasher.update(KNOCK_DOMAIN);
@@ -364,7 +374,7 @@ pub fn knocks(secret: &str, gm: &[u8; 32], joiner: &[u8; 32]) -> bool {
     hasher.update(secret.as_bytes());
     hasher.update(gm);
     hasher.update(joiner);
-    leading_zero_bits(hasher.finalize().as_bytes()) >= KNOCK_BITS
+    leading_zero_bits(hasher.finalize().as_bytes()) >= knock_bits()
 }
 
 fn leading_zero_bits(bytes: &[u8]) -> u32 {

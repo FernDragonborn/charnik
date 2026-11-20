@@ -434,11 +434,17 @@ them would be the thing they exist to refuse.
 1. Start the dev server (`pnpm dev`) and read its port.
 2. Open the desktop app on the probe, built with the feature (`tooling.md` ▸ Verifying on the
    real desktop app): `pnpm tauri dev --features table-link --config <file>`, the file holding
-   `{"build":{"devUrl":"http://localhost:<port>/dev/table-live","beforeDevCommand":""}}`.
+   `{"build":{"devUrl":"http://localhost:<port>/","beforeDevCommand":""},"app":{"windows":[…]}}`,
+   the window being `tauri.conf.json`'s own with `"url":"dev/table-live"`. The question window
+   is `table-question.html` beside the app's root, so a `devUrl` that names the probe leaves it
+   blank.
 3. In a second terminal, from `src-tauri/`, with `CHARNIK_LIVE_TABLE` naming `.table-live` in the
    data folder:
-   `cargo test --features table-link -- --ignored a_live_player_sits_at_the_apps_table`.
-   Build it beforehand (`--no-run`): the probe gives the player two minutes to arrive.
+   the test binary `cargo test --features table-link --no-run` names, run directly with
+   `--ignored a_live_player_sits_at_the_apps_table`. Not through `cargo test`: its build touches
+   `src-tauri/`, `tauri dev` reloads the probe mid-run, and the reloaded probe closes the table
+   the player is dialling. Empty `.table-live` first, or the player follows the last run's
+   invitation. With `CHARNIK_LIVE_TABLE` set the test build knocks at the real app's strength.
 4. Say yes to "open a table?", then to "let Probe player in?".
 5. Read `table-live-probe.txt` in the data folder.
 

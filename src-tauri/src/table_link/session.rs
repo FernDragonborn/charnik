@@ -1964,7 +1964,8 @@ mod tests {
                 text: "DEX save".into(),
                 key: Some("combat.roll.save.dex".into()),
             },
-            roll: json!({ "total": total }),
+            // the whole roll the page holds a record to, so the live drive's page shows it too
+            roll: json!({ "total": total, "natural": total, "advantage": "neither", "mod": 0 }),
             to,
         }
     }
