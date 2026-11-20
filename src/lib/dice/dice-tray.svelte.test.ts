@@ -286,6 +286,21 @@ describe('rolling', () => {
 		expect(new Set(entries.map((e) => e.at)).size).toBe(3);
 	});
 
+	it('uses next-attack advantage for the first throw only, including a repeated roll', () => {
+		diceTray.prefill({
+			label: 'An attack with one-use advantage',
+			test: { dice: { 20: 1 }, mod: 0, advantage: ADVANTAGE_MODE.advantage, laterAdvantage: 0 },
+			times: 2,
+		});
+		expect(diceTray.roll(half).map((roll) => roll.advantage)).toEqual([
+			ADVANTAGE_MODE.advantage,
+			ADVANTAGE_MODE.neither,
+		]);
+		expect(diceTray.roll(half).every((roll) => roll.advantage === ADVANTAGE_MODE.neither)).toBe(
+			true,
+		);
+	});
+
 	it('reads a volley count off whichever line carries it, test or damage', () => {
 		diceTray.lines = [
 			{ role: ROLLER_ROLE.damage, pills: [], advantage: ADVANTAGE_MODE.neither, crit: false },

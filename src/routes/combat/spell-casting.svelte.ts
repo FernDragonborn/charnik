@@ -11,7 +11,7 @@ import { toast } from '$lib/toast/toast';
 import { t, translator, type Translate } from '$lib/i18n';
 import { sayText } from '$lib/util/say';
 import { NOTE_KEY } from '$lib/combat/roll';
-import { spellEntries } from '$lib/character/spellcasting';
+import { canCastWithSlots, spellEntries } from '$lib/character/spellcasting';
 import { upcastPreview } from './spell-roll-name';
 import type { Character } from '$lib/character/schema';
 import type { ResourceDef } from '$lib/effects/facts';
@@ -114,8 +114,17 @@ export class SpellCasting {
 	/** Every slot level this spell can be cast from right now (the upcast picker's options; a UI can
 	 *  offer these and pass the choice as `cast(r, e, { slot })`). Empty = no choice (cantrip / single
 	 *  option / no open slot). */
+	allowsSlots = (r: SpellRow): boolean => {
+		const { character, sheet } = this.host;
+		if (!character || !canCastWithSlots(character, sheet, r.ref)) return false;
+		const innate = sheet?.spellcasting.classes.some(
+			(profile) => profile.innate && profile.grantedSpells.includes(r.ref),
+		);
+		return !innate || (sheet?.spellcasting.pools.some((pool) => pool.spellLevel) ?? false);
+	};
+
 	castableSlots = (r: SpellRow): number[] =>
-		this.blockedReason
+		this.blockedReason || !this.allowsSlots(r)
 			? []
 			: castableSlotLevels(
 					r.level,
@@ -126,7 +135,7 @@ export class SpellCasting {
 	/** The level a Pact Magic slot would cast this at, for a Warlock multiclass that may pay with one
 	 *  beside its leveled slots; `null` when there is no such choice. */
 	castablePact = (r: SpellRow): number | null =>
-		this.blockedReason
+		this.blockedReason || !this.allowsSlots(r)
 			? null
 			: castablePactLevel(
 					r.level,
@@ -235,13 +244,27 @@ export class SpellCasting {
 	 * honoured or blocked, never downshifted.
 	 */
 	cast = (r: SpellRow, e: Event, opts: CastOptions = {}) => {
+		if (
+			r.level > 0 &&
+			!opts.ritual &&
+			!opts.pool &&
+			!this.allowsSlots(r) &&
+			this.castablePools(r).length
+		) {
+			this.openUpcast(r, e);
+			return;
+		}
 		const outcome = this.host.enact((c, ctx) => castSpell(c, { spell: r.ref, ...opts }, ctx));
 		for (const ask of outcome?.asks ?? [])
 			if (ask.kind === PLAY_REQUEST.weapon) {
 				this.enchanting = { r, opts };
 				this.host.openMenu('enchantweapon', e);
 			} else if (ask.kind === PLAY_REQUEST.cast)
-				this.rolls.rollSpellCast(r, e, ask.ritual, ask.slotLevel);
+				this.rolls.rollSpellCast(r, e, {
+					ritual: ask.ritual,
+					slotLevel: ask.slotLevel,
+					...(opts.pool ? { pool: opts.pool } : {}),
+				});
 	};
 
 	/** How many instances this cast fires — Eldritch Blast's beams at level 5. A `count` upcast result

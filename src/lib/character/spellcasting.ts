@@ -17,6 +17,7 @@ import { featureSpellsFor, type FeatureSpells } from './feature-spells';
 export { spellEntries } from './feature-spells';
 import { getSpellAccess } from '../content/spellAccess';
 import { featCasterProfiles } from './feat-spells';
+import { speciesCasterProfile } from './species-spells';
 export { featSpellGrants, type FeatSpellGrant } from './feat-spells';
 import type { Character } from './schema';
 import { activeClassFeatures, heldClassOptions } from './features';
@@ -60,6 +61,7 @@ export interface SpellcastingClass {
 	 *  spells) — never counted against its prepared or known number, and on its list either way. */
 	grantedSpells: string[];
 	chosenSpells?: string[];
+	innate?: { pools: string[]; slotPolicy: 'shared' | 'resource_only' };
 }
 
 /**
@@ -86,12 +88,39 @@ export function canCastAsRitual(
 export function casterForSpell(
 	sheet: { spellcasting: { classes: readonly SpellcastingClass[] } } | null,
 	spellRef: string,
+	pool?: string,
 ): SpellcastingClass | undefined {
 	const classes = sheet?.spellcasting.classes ?? [];
+	const innate =
+		pool &&
+		classes.find(
+			(entry) => entry.innate?.pools.includes(pool) && entry.grantedSpells.includes(spellRef),
+		);
+	if (innate) return innate;
 	const owning = classes.filter((c) => (c.chosenSpells ?? c.accessSpellIds).includes(spellRef));
 	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
 		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
 		undefined,
+	);
+}
+
+export function canCastWithSlots(
+	character: Character,
+	sheet: { spellcasting: { classes: readonly SpellcastingClass[] } } | null,
+	spellRef: string,
+): boolean {
+	const profiles = sheet?.spellcasting.classes ?? [];
+	const limited = profiles.some(
+		(entry) =>
+			entry.innate?.slotPolicy === 'resource_only' && entry.grantedSpells.includes(spellRef),
+	);
+	return (
+		!limited ||
+		character.build.spells.some((entry) => entry.spell === spellRef) ||
+		profiles.some(
+			(entry) =>
+				entry.innate?.slotPolicy !== 'resource_only' && entry.grantedSpells.includes(spellRef),
+		)
 	);
 }
 
@@ -235,7 +264,7 @@ function ritualSourceFor(of: {
 	classRow: LoadedRowOf<'class'>;
 	subclass: LoadedRowOf<'subclass'> | undefined;
 	graph: ContentGraph;
-	character: Pick<Character, 'system' | 'build'>;
+	character: Pick<Character, 'system' | 'build' | 'play'>;
 }): RitualSource | null {
 	for (const { row } of heldClassOptions(of.entry, of.graph, of.character))
 		if (row.data.ritual_source) return row.data.ritual_source;
@@ -250,7 +279,7 @@ function ritualSourceFor(of: {
 function extraCantripsFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
-	character: Pick<Character, 'system' | 'build'>,
+	character: Pick<Character, 'system' | 'build' | 'play'>,
 ): number {
 	let extra = 0;
 	const classes = [
@@ -269,7 +298,7 @@ function extraCantripsFor(
 function casterProfileFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
-	character: Pick<Character, 'system' | 'build'>,
+	character: Pick<Character, 'system' | 'build' | 'play'>,
 ): CasterProfile | null {
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
@@ -433,6 +462,8 @@ export function deriveSpellcasting({
 		statsFor,
 		...(issues ? { issues } : {}),
 	});
+	const innate = speciesCasterProfile(character, graph, totalLevel, statsFor);
+	const otherProfiles = innate ? [...featProfiles, innate] : featProfiles;
 
 	// a slot a feature gave is a slot whoever holds it, so it is counted before the "no caster class"
 	// exit as well as after
@@ -442,13 +473,13 @@ export function deriveSpellcasting({
 
 	if (sources.length === 0)
 		return {
-			classes: featProfiles,
+			classes: otherProfiles,
 			pools: sharedPools([]),
 			casterLevel: 0,
-			ritualCasting: featProfiles.some((p) => p.ritualSource !== null),
+			ritualCasting: otherProfiles.some((p) => p.ritualSource !== null),
 		};
 
-	const ritualCasting = [...sources, ...featProfiles].some((p) => p.ritualSource !== null);
+	const ritualCasting = [...sources, ...otherProfiles].some((p) => p.ritualSource !== null);
 
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
 	const shared = sources.filter((p) => p.caster !== 'pact');
@@ -499,5 +530,5 @@ export function deriveSpellcasting({
 
 	// feat profiles come LAST: `classes[0]` is the character's primary caster everywhere it is read as
 	// a fallback, and a feat is never that
-	return { classes: [...classes, ...featProfiles], pools, casterLevel, ritualCasting };
+	return { classes: [...classes, ...otherProfiles], pools, casterLevel, ritualCasting };
 }

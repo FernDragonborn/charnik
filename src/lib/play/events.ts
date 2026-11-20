@@ -30,7 +30,7 @@ function fireEvent(
 	{ effectRounds }: EventRun,
 	ctx: PlayContext,
 ): PlayOutcome {
-	if (!character.play.autoCalc) return quietly(character);
+	if (!character.play.autoCalc || character.play.death) return quietly(character);
 	return ctx
 		.derive(character)
 		.facts.onEvent.filter((hook) => hook.event === event)

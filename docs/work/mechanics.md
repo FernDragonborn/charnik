@@ -62,9 +62,7 @@ stay semi-manual.
   has the feature that grants it (`granted_by`), Divine Spark as a roll; Stunning Strike; and Sorcery
   Points into a slot at the table's cost, held to 2024's minimum sorcerer level. What is left wants
   a verb: Font of Magic's slot INTO points gives as many points as the slot's level, which no
-  `restore_resource` count can say; Arcane and Natural Recovery restore slots (designed under
-  Spellcasting ▸ Resource subsystem below), and Indomitable rerolls a save — each is a pip the
-  player spends by hand until then.
+  `restore_resource` count can say, and Indomitable rerolls a save. Both are spent by hand.
 - [ ] **OPTION-HELD-ONCE · the maintainer checks that a shared option is held once per character.**
   An option offered by several features (`option_of` naming more than one parent) can be taken
   through only one of them: a 2014 Fighting Style taken by the Fighter is refused (Strict) or noted
@@ -157,23 +155,20 @@ stay semi-manual.
 - [~] **REACTION-ROLLS · `to audit`.** Cutting Words, Deflect Missiles / Deflect Attacks, and Slow
   Fall log a reduction the player applies to the triggering roll or damage. A 2014 bard can add
   Song of Rest to a Hit Dice rest. Tactical Mind rolls first and spends Second Wind on confirmation.
-- [ ] **ACTION-OPTIONS · a feature's action that spends no pool.** Many features are an action, a Bonus
-  Action or a Reaction that does something and has no uses to count: Cunning Action, Fast Hands,
-  Steady Aim, Stillness of Mind, Self-Restoration, Tranquility, Countercharm; Dark One's Blessing is
-  the player pressing "I dropped a creature" for `temp_hp:cha_mod+class_level.warlock`. The turn
-  economy and the verbs exist (`actions.md` §2); a `resource_option` needs a pool. An option bound to
-  the FEATURE that grants it — spending its turn slot and running its verbs — turns a dozen
-  text-only features into buttons. Wants a design of where such options live (a `feature_option`
-  type, or a `resource_option` with no `resource_id`) before code.
-- [ ] **TOGGLE-STATES · a state the player turns on for a turn.** Reckless Attack (Advantage on
-  Strength melee attacks, and attacks against you have it) and SRD 5.2.1 Steady Aim, as effect rows
-  added in one press like any other.
-- [ ] **HUNTERS-PREY · the Hunter's choice.** SRD 5.1: one of Colossus Slayer (an extra 1d8 once a
-  turn), Giant Killer and Horde Breaker; SRD 5.2.1: Colossus Slayer or Horde Breaker, swappable on a
-  rest. Option rows; Colossus Slayer a limited roll.
-- [ ] **FRENZY · the Berserker's.** SRD 5.2.1: Reckless Attack while raging adds Rage-damage d6s to the
-  first hit each turn; SRD 5.1: a bonus-action melee attack each turn of the rage, and a level of
-  Exhaustion when it ends.
+- [~] **ACTION-OPTIONS · a feature's action that spends no pool.** The feature-bound
+  `resource_option` with a blank `resource_id` is `to audit`. Remaining feature rows include
+  Cunning Action, Fast Hands, Stillness of Mind, Self-Restoration, Tranquility, and Countercharm.
+  Dark One's Blessing lets the player report dropping a creature for
+  `temp_hp:cha_mod+class_level.warlock`.
+- [~] **TOGGLE-STATES · `to audit`.** Reckless Attack marks outgoing Strength advantage by
+  edition and incoming advantage until the next turn. Steady Aim requires no spent movement, then
+  reduces Speed to zero for the turn and grants Advantage on the next attack roll.
+- [~] **HUNTERS-PREY · `to audit`.** Both editions have the Colossus Slayer roll and Horde
+  Breaker weapon picker. 2014 also has Giant Killer as a Reaction. In 2024 a rest can swap the
+  choice. The player decides whether the target meets the condition for each option.
+- [~] **FRENZY · `to audit`.** In 2024 a raging Berserker who declares Reckless Attack can roll
+  the extra damage for the first qualifying hit. In 2014 the player enters a Frenzy, gets a
+  Bonus Action melee attack on later turns of the Rage, and gains Exhaustion when it ends.
 - [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
   warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
   that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —

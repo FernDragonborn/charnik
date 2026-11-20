@@ -17,7 +17,7 @@ import {
 } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import { evalUpcast } from '$lib/effects/upcast';
-import { canCastAsRitual, spellEntries } from '$lib/character/spellcasting';
+import { canCastAsRitual, canCastWithSlots, spellEntries } from '$lib/character/spellcasting';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import type { ResourceDef } from '$lib/effects/facts';
@@ -59,11 +59,12 @@ export function upcastAt(
 	sheet: CharacterSheet,
 	spell: UpcastSubject,
 	slotLevel: number,
+	pool?: string,
 ): ReturnType<typeof evalUpcast> {
 	const base = sheet.castCtx;
 	if (!spell.upcast || !base) return [];
 	const withSlot = withCastSlot(base, slotLevel, spell.level);
-	const caster = casterForSpell(sheet, spell.ref);
+	const caster = casterForSpell(sheet, spell.ref, pool);
 	return evalUpcast(
 		spell.upcast,
 		caster ? withSpellcastingMod(withSlot, sheet.abilities[caster.ability]?.mod ?? 0) : withSlot,
@@ -125,9 +126,23 @@ export function spellcastingBlock(sheet: CharacterSheet): SaidText | null {
 	return form ? { key: 'combat.spells.formBlocked', values: { form: form.source } } : null;
 }
 
+function poolSelector(pool: ResourceDef, spell: { ref: string; id: string }) {
+	return pool.spell?.split(',').find((selector) => {
+		const name = selector.split('@')[0];
+		return name === spell.ref || name === spell.id;
+	});
+}
+
 export const poolAllowsSpell = (pool: ResourceDef, spell: { ref: string; id: string }): boolean =>
-	pool.spell?.split(',').some((selector) => selector === spell.ref || selector === spell.id) ??
-	false;
+	poolSelector(pool, spell) !== undefined;
+
+export const poolCastLevel = (
+	pool: ResourceDef,
+	spell: { ref: string; id: string },
+): number | undefined => {
+	const level = Number(poolSelector(pool, spell)?.split('@')[1]);
+	return Number.isInteger(level) && level > 0 ? level : undefined;
+};
 
 /** A spell as a cast reads it: its row, what its upcast is read against, and its name. */
 interface CastSpell {
@@ -316,6 +331,7 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 	const sheet = ctx.derive(character);
 	const blocked = spellcastingBlock(sheet);
 	if (blocked) return refusal(character, { text: blocked });
+	let freeCastLevel: number | undefined;
 	if (intent.pool) {
 		const pool = sheet.resources.find((entry) => entry.id === intent.pool);
 		if (
@@ -326,6 +342,7 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 			return refusal(character, { text: { key: 'combat.notice.poolCannotCast' } });
 		if (resourceSpent(character, sheet, pool.id) >= pool.max)
 			return useResource(character, pool, ctx);
+		freeCastLevel = poolCastLevel(pool, { ref: row.effectiveId, id: row.id });
 	}
 	const spell: CastSpell = {
 		subject: { ref: intent.spell, level: row.data.level, upcast: row.data.upcast ?? '' },
@@ -333,10 +350,22 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 		tokens: tokensOf(row),
 		name: localizedName(row, ctx.locale),
 	};
+	const ritual = isRitual(character, sheet, spell, intent.ritual === true);
+	const innate = sheet.spellcasting.classes.some(
+		(profile) => profile.innate && profile.grantedSpells.includes(spell.subject.ref),
+	);
+	if (
+		innate &&
+		row.data.level > 0 &&
+		!ritual &&
+		!intent.pool &&
+		(!canCastWithSlots(character, sheet, spell.subject.ref) ||
+			!sheet.spellcasting.pools.some((entry) => entry.spellLevel))
+	)
+		return refusal(character, { text: { key: 'combat.notice.innateCastNeedsPool' } });
 	const weapon = weaponFor(character, spell, intent, ctx);
 	if (weapon === undefined)
 		return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.weapon, spell: intent.spell }] };
-	const ritual = isRitual(character, ctx.derive(character), spell, intent.ritual === true);
 	const { paid, slot } = payForCast(
 		character,
 		spell,
@@ -352,10 +381,10 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 
 	const caster = paid.character;
 	const casting = ctx.derive(caster);
-	const slotLevel = castSlotLevel(casting, slot, spell.subject.level);
+	const slotLevel = Math.max(freeCastLevel ?? 0, castSlotLevel(casting, slot, spell.subject.level));
 	const notices: PlayNotice[] = [];
 	const concentrating = takeConcentration(caster.play, casting, spell, notices);
-	const upcast = upcastAt(casting, spell.subject, slotLevel);
+	const upcast = upcastAt(casting, spell.subject, slotLevel, intent.pool);
 	const play = leaveSpellEffect(concentrating, spell, { upcast, weapon }, notices);
 	return settled(
 		{

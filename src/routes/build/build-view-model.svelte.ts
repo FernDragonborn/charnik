@@ -253,6 +253,9 @@ export class BuildVM {
 		return this.list('species_option').filter((r) => String(r.data.species_id) === String(sp.id));
 	});
 	speciesOptionRow = $derived(rowOfType(this.row(this.draft.speciesOptionId), 'species_option'));
+	speciesSpellAbilities = $derived(
+		this.speciesOptionRow?.data.spell_abilities ?? this.speciesRow?.data.spell_abilities ?? [],
+	);
 	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
 	/** The CONTENT's own word for this choice ("Subrace" 2014, "Lineage" 2024). A pack that names
 	 *  none falls back to the catalog's word rather than to an English one written here. */
@@ -263,6 +266,7 @@ export class BuildVM {
 	pickSpecies = (id: string | null) => {
 		this.draft.speciesId = id;
 		this.draft.speciesOptionId = null;
+		this.draft.speciesSpellAbility = null;
 		this.draft.speciesBoostPicks = [];
 	};
 	pickBackground = (id: string | null) => setBackground(this.draft, id);
@@ -394,6 +398,9 @@ export class BuildVM {
 				? (this.draft.speciesOptionId ?? undefined)
 				: undefined,
 			background: this.draft.backgroundId ?? undefined,
+			speciesSpellAbility: this.draft.speciesSpellAbility &&
+				this.speciesSpellAbilities.includes(this.draft.speciesSpellAbility)
+				? this.draft.speciesSpellAbility : this.speciesSpellAbilities[0],
 			classes: this.draft.classes
 				.flatMap((c) =>
 					c.classId

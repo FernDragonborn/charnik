@@ -24,7 +24,8 @@ import { activeClassFeatures, characterFeatures } from '$lib/character/features'
 import type { ContentGraph } from '$lib/content/loader';
 import { countAtLevel } from '$lib/content/level-gate';
 import { optionsOf } from '$lib/content/options';
-import { dropEffects, endConcentration } from './concentration';
+import { endConcentration } from './concentration';
+import { endEffects } from './effects';
 import { leaveForm } from './form';
 import { heal, refusedWhileDead } from './hit-points';
 import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
@@ -32,6 +33,7 @@ import { hitDiceSpent, resourceSpent } from './resources';
 import { settled } from './settle';
 import { recoverSlots, type SlotRecoveryPicks } from './rest-slot-recovery';
 import { localizedName } from '$lib/content/detail';
+import { speciesCantripChoice } from '$lib/character/species-spells';
 import { isResolvedFormula, resolveActionFormula } from '$lib/effects/action-token';
 
 export type RestKind = 'short' | 'long';
@@ -48,6 +50,7 @@ export interface RestChoice {
 	options?: Record<string, string>;
 	recoverSlots?: SlotRecoveryPicks;
 	healFrom?: string;
+	speciesCantrip?: string;
 }
 
 export function shortRestHealingOptions(character: Character, graph: ContentGraph) {
@@ -86,20 +89,24 @@ export function restOptionGroups(character: Character, graph: ContentGraph, kind
 		.filter(({ options }) => options.length > 0);
 }
 
-function buildAfterRest(
+function restOptionsAfter(
 	character: Character,
 	choice: RestChoice,
 	graph: ContentGraph,
 	kind: RestKind,
-) {
-	if (!choice.options || !Object.keys(choice.options).length) return character.build;
-	let options = character.build.options;
+): CharacterPlay['restOptions'] {
+	let options = character.play.restOptions;
+	if (!choice.options || !Object.keys(choice.options).length) return options;
 	for (const group of restOptionGroups(character, graph, kind)) {
 		const id = choice.options[group.row.id];
-		if (id && options[group.row.id]?.[0] !== id && group.options.some((option) => option.id === id))
-			options = { ...options, [group.row.id]: [id] };
+		if (
+			id &&
+			group.options.some((option) => option.id === id) &&
+			id !== (options?.[group.row.id] ?? character.build.options[group.row.id]?.[0])
+		)
+			options = { ...options, [group.row.id]: id };
 	}
-	return options === character.build.options ? character.build : { ...character.build, options };
+	return options;
 }
 
 /** How many spent Hit Dice a long rest may return to this character, whichever sizes they are. */
@@ -167,10 +174,16 @@ export function rest(
 	// length. A 24-hour effect is still running when you get up. That happens FIRST, and a form whose
 	// carrier goes is left with it, so what the rest restores is the character's own and not a form's.
 	const restRounds = REST_HOURS[kind] * (ROUNDS_PER_UNIT.hour ?? 0);
-	const outlasted = dropEffects(before, (effect) => {
-		const left = remainingRounds(effect, before.round);
-		return left != null && left <= restRounds;
-	});
+	const ended = endEffects(
+		character,
+		(effect) => {
+			const left = remainingRounds(effect, before.round);
+			return left != null && left <= restRounds;
+		},
+		ctx,
+	);
+	const outlasted = ended.character.play;
+	if (outlasted.death) return ended;
 	const formGone =
 		outlasted.form &&
 		!outlasted.effects.some((effect) => effect.source === outlasted.form?.monster);
@@ -201,9 +214,16 @@ export function rest(
 	}
 	// the rest's hours pass on the clock, so what it did not outlast has that much less left
 	let play: CharacterPlay = { ...waking.play, resourcesSpent, round: before.round + restRounds };
-	const notices: PlayNotice[] = [];
+	const notices: PlayNotice[] = [...ended.notices];
 	if (kind === 'long') {
 		play = longRest(waking, play, sheet, choice);
+		const swap = choice.speciesCantrip ? speciesCantripChoice(character, ctx.graph) : undefined;
+		const chosenCantrip = swap?.spells.find((spell) => spell.effectiveId === choice.speciesCantrip);
+		if (swap && chosenCantrip)
+			play = {
+				...play,
+				speciesCantrip: { row: swap.row.effectiveId, spell: chosenCantrip.effectiveId },
+			};
 		// a form still standing (a 2014 druid of 16 and up) rests on its own count; the hit points
 		// waiting under it are the character's, and a long rest restores those too
 		const form = play.form;
@@ -230,11 +250,13 @@ export function rest(
 			resourcesSpent: { ...play.resourcesSpent, ...recovery?.recoveredPools },
 		};
 	}
+	const restOptions = restOptionsAfter(character, choice, ctx.graph, kind);
+	if (restOptions) play = { ...play, restOptions };
 	return settled(
 		{
-			character: { ...character, play, build: buildAfterRest(character, choice, ctx.graph, kind) },
+			character: { ...character, play },
 			undoable: true,
-			log: [],
+			log: ended.log,
 			notices: [
 				{
 					text: {

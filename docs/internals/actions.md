@@ -79,6 +79,7 @@ still landing on an existing system per the table above:
 | `recover_pact_slots:half_up` | Restore expended Pact Magic slots up to half of the pool's maximum, rounded up. The option checks that there are expended slots before payment. |
 | `gain_slot:<level>` | **one more spell slot of that level** — or `gain_slot:<n>*x`, `n` levels for each use an `x` cost was answered with (Nature Magician's "each use contributing 2 spell levels"); a bounded form, not an expression — `play.spellSlotsGained`, counted into the slot pools the cast and the pips read (`rules-core.md` ▸ Spellcasting). It is a slot, not a restored one: it stands above the table's count until a Long Rest. |
 | `attack:<weapon id>[:<count>]` | **make `count` attacks** (default 1) with that weapon, through the ORDINARY attack path (`SheetRolls.rollAttackNow`) — same to-hit, magic bonus, Rage damage and scoped effects as a tap on the Attacks panel. Flurry of Blows is `attack:unarmed_strike:2`. The weapon is its **bare content id**, never its display name, so the token survives a translated sheet; `unarmed_strike` names the fists, which have no row. Charges **no turn slot of its own** — the option's `action_type` already paid for the whole flurry. A weapon the character has not equipped is **surfaced by toast**, because an action that rolls nothing is the bug this verb exists to remove. Capped at 12 strikes, against a content typo rather than against a rule. |
+| `attack_pick:<scope>` | Ask for an equipped attack before paying, then run the chosen attack. `weapon` offers weapons, `any` includes Unarmed Strike, and a tag such as `melee` limits the selection. |
 | `assume_form:<form id>` | **assume a form** whose rules the character's features state (`effects.md` ▸ A form) — Wild Shape. The one verb that ASKS before anything is paid: the picker opens on the eligible stat blocks, and the resource use and the turn slot are spent when one is taken, so backing out costs nothing. Taking one sets `play.form`, hands over hit points as the form's rules say, and adds the carrier effect whose clock is the form's. A form already worn is left first. |
 | `note:<text>` | a log/toast line |
 | `a;b;c` (a `;`-list) | **MULTI-action** — run each sub-token in order on ONE activation (Uncanny Metabolism = `restore_resource:focus;heal:<MA die>+monk_level`). Cost + turn slot are still validated once, up front (all-or-nothing). Ceiling: a `note:` can't contain `;` (it's the separator). |
@@ -132,6 +133,7 @@ A Short Rest restores selected shared spell slots when a class feature declares 
   collision UI. `isRowActive` (file+source filtering) applies to this table too.
 - A pool-free action leaves `resource_id` blank, names its granting feature in `granted_by`, and
   has zero pool cost. It appears in Actions and can still pay a turn slot or spell slot.
+- `cadence:turn` records an action option's use once per tracked turn.
 - **`apply_condition` in an action is self-only** — there is no TARGET model, so an on-enemy effect
   (Stunning Strike's condition on the target) degrades to `note:` + the DC, not an applied condition.
 

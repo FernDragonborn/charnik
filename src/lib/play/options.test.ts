@@ -16,6 +16,8 @@ import { resourceLeft } from './resources';
 import { castSpell } from './cast';
 import { diceShortRest, rest } from './rests';
 import { shortRestSlotGroups } from './rest-slot-recovery';
+import { consumeAttackEffects, removeEffects } from './effects';
+import { rollEffectsFor } from '$lib/combat/roll';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },
@@ -169,6 +171,155 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		);
 		const noDice = diceShortRest(bard, { ...choice, hitDice: {} }, ctx());
 		expect(noDice.character.play.hp.current).toBe(5);
+	});
+
+	it('Reckless Attack scopes Strength advantage by edition and ends at the next turn', () => {
+		const barbarian = build('barbarian', 2);
+		const option = derive(barbarian).resourceOptions.find(
+			(o) => o.id === 'barbarian_reckless_attack_enter',
+		);
+		if (!option) throw new Error('a level 2 barbarian has Reckless Attack');
+		const active = activateOption(
+			barbarian,
+			{ option, effectRounds: EFFECT_ROUNDS },
+			ctx(),
+		).character;
+		const sheet = derive(active);
+		expect(
+			rollEffectsFor(sheet.facts, 'attack', new Set(['melee', 'str', 'own_turn'])).advantage,
+		).toBe(true);
+		expect(
+			rollEffectsFor(sheet.facts, 'attack', new Set(['ranged', 'str', 'own_turn'])).advantage,
+		).toBe(system === '5.5e');
+		expect(rollEffectsFor(sheet.facts, 'attack', new Set(['melee', 'str'])).advantage).toBe(
+			system === '5.5e',
+		);
+		expect(sheet.incomingAttacks).toHaveLength(1);
+		const next = startNextTurn(active, { effectRounds: EFFECT_ROUNDS }, ctx()).character;
+		expect(derive(next).incomingAttacks).toHaveLength(0);
+	});
+
+	it('Steady Aim requires no movement and consumes advantage on the next attack only', () => {
+		const rogue = build('rogue', 3);
+		const id = 'rogue_steady_aim_use';
+		const option = derive(rogue).resourceOptions.find((o) => o.id === id);
+		if (system === '5e') {
+			expect(option).toBeUndefined();
+			return;
+		}
+		if (!option) throw new Error('a level 3 rogue has Steady Aim');
+		const moved = build('rogue', 3, (r) => (r.play.turn.move = 5));
+		expect(derive(moved).resourceOptions.find((o) => o.id === id)?.available).toBe(false);
+		const active = activateOption(rogue, { option, effectRounds: EFFECT_ROUNDS }, ctx()).character;
+		expect(derive(active).speed.value).toBe(0);
+		expect(rollEffectsFor(derive(active).facts, 'attack').advantage).toBe(true);
+		const used = consumeAttackEffects(active, ctx()).character;
+		expect(rollEffectsFor(derive(used).facts, 'attack').advantage).toBe(false);
+		expect(derive(used).speed.value).toBe(0);
+		const next = startNextTurn(used, { effectRounds: EFFECT_ROUNDS }, ctx()).character;
+		expect(derive(next).speed.value).toBe(derive(rogue).speed.value);
+	});
+
+	it('Hunter’s Prey switches through rests only in 2024, where the override lives in play', () => {
+		const ranger = build('ranger', 3, (c) => {
+			c.build.classes = [
+				classRow({
+					class: `class:${source}:ranger`,
+					subclass: `subclass:${source}:hunter`,
+					level: 3,
+				}),
+			];
+			c.build.options.hunter_hunters_prey = ['hunter_colossus_slayer'];
+		});
+		expect(derive(ranger).facts.rolls.find((roll) => roll.id === 'colossus_slayer')?.limit).toBe(
+			'turn',
+		);
+		const choice = { options: { hunter_hunters_prey: 'hunter_horde_breaker' } };
+		const rested = rest(ranger, { kind: 'short', choice }, ctx()).character;
+		expect(rested.build).toEqual(ranger.build);
+		expect(rested.play.restOptions?.hunter_hunters_prey).toBe(
+			system === '5.5e' ? 'hunter_horde_breaker' : undefined,
+		);
+		expect(derive(rested).resourceOptions.some((o) => o.id === 'hunter_horde_breaker_attack')).toBe(
+			system === '5.5e',
+		);
+	});
+
+	it('Frenzy follows the berserker’s edition', () => {
+		const id = system === '5e' ? 'pathoftheberserker' : 'path_of_the_berserker';
+		const barbarian = build('barbarian', 3, (c) => {
+			c.build.classes = [
+				classRow({
+					class: `class:${source}:barbarian`,
+					subclass: `subclass:${source}:${id}`,
+					level: 3,
+				}),
+			];
+		});
+		const use = (c: Character, id: string) => {
+			const option = derive(c).resourceOptions.find((candidate) => candidate.id === id);
+			if (!option) throw new Error(`missing ${id}`);
+			return activateOption(c, { option, effectRounds: EFFECT_ROUNDS }, ctx()).character;
+		};
+		if (system === '5.5e') {
+			const raging = use(barbarian, 'barbarian_rage_enter');
+			const reckless = use(raging, 'barbarian_reckless_attack_enter');
+			expect(derive(reckless).facts.rolls.find((roll) => roll.id === 'frenzy')?.formula).toBe(
+				'2d6',
+			);
+			return;
+		}
+		const active = use(barbarian, 'barbarian_frenzy_enter');
+		const canAttack = (c: Character) =>
+			derive(c).resourceOptions.find((o) => o.id === 'barbarian_frenzy_attack')?.available;
+		expect(canAttack(active)).toBe(false);
+		const next = startNextTurn(active, { effectRounds: EFFECT_ROUNDS }, ctx()).character;
+		expect(canAttack(next)).toBe(true);
+		const rage = next.play.effects.find((effect) => effect.source?.endsWith(':rage'));
+		if (!rage) throw new Error('Frenzy starts a Rage');
+		const ended = removeEffects(next, [rage.iid], ctx()).character;
+		expect(ended.play.exhaustion).toBe(1);
+		expect(canAttack(ended)).toBe(false);
+	});
+
+	it('uses character level and the chosen ability for spells from species traits', () => {
+		const tiefling = build('fighter', 3, (c) => {
+			c.build.species = `species:${source}:tiefling`;
+			if (system === '5.5e') {
+				c.build.speciesOption = `species_option:${source}:tiefling_infernal`;
+				c.build.speciesSpellAbility = 'wis';
+			}
+		});
+		const spell = `spell:${source}:hellish_rebuke`;
+		const sheet = derive(tiefling);
+		expect(sheet.spellcasting.classes[0]).toMatchObject({
+			ability: system === '5e' ? 'cha' : 'wis',
+			grantedSpells: expect.arrayContaining([spell, `spell:${source}:thaumaturgy`]),
+		});
+		expect(sheet.spellcasting.classes[0]?.grantedSpells).not.toContain(`spell:${source}:darkness`);
+		expect(castSpell(tiefling, { spell }, ctx()).refused).toBe(true);
+		const cast = castSpell(tiefling, { spell, pool: 'innate_hellish_rebuke' }, ctx());
+		expect(cast.character.play.resourcesSpent.innate_hellish_rebuke).toBe(1);
+		expect(cast.asks?.[0]).toMatchObject({ slotLevel: system === '5e' ? 2 : 1 });
+		expect(cast.character.play.spellSlotsSpent).toEqual({});
+	});
+
+	it('a 2024 High Elf can replace its lineage cantrip on a long rest only', () => {
+		if (system === '5e') return;
+		const elf = build('fighter', 3, (c) => {
+			c.build.species = `species:${source}:elf`;
+			c.build.speciesOption = `species_option:${source}:elf_high_elf`;
+		});
+		const fireBolt = `spell:${source}:fire_bolt`;
+		const original = `spell:${source}:prestidigitation`;
+		const has = (c: Character, ref: string) =>
+			derive(c).spellcasting.classes[0]?.grantedSpells.includes(ref);
+		expect(has(elf, original)).toBe(true);
+		const choice = { speciesCantrip: fireBolt };
+		expect(has(rest(elf, { kind: 'short', choice }, ctx()).character, original)).toBe(true);
+		const rested = rest(elf, { kind: 'long', choice }, ctx()).character;
+		expect(has(rested, fireBolt)).toBe(true);
+		expect(has(rested, original)).toBe(false);
 	});
 
 	it('Divine Smite follows its edition’s slot and resource rules', () => {

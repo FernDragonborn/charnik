@@ -41,6 +41,8 @@ export interface PlayVars {
 	hpMax: number;
 	tempHp: number;
 	exhaustion: number;
+	movementSpent?: number;
+	attacksMade?: number;
 	/** `is_*` flags keyed by their FULL name (`is_raging`), so lookup is direct. */
 	flags: Record<string, boolean>;
 	/** Active condition ids, for `has_condition.<id>`. */
@@ -98,6 +100,8 @@ const SCALAR_NUMBERS: Record<string, (build: BuildVars, play?: PlayVars) => numb
 	hp_max: (_, play) => play?.hpMax ?? 0,
 	temp_hp: (_, play) => play?.tempHp ?? 0,
 	exhaustion: (_, play) => play?.exhaustion ?? 0,
+	movement_spent: (_, play) => play?.movementSpent ?? 0,
+	attacks_made: (_, play) => play?.attacksMade ?? 0,
 	hp_percent: (_, play) => (play && play.hpMax > 0 ? Math.floor((play.hp / play.hpMax) * 100) : 0),
 };
 

@@ -43,7 +43,9 @@ import { RollJournal } from './roll-journal.svelte';
 import { snapshotCharacterOnLaunch } from '$lib/character/repository';
 import { appendLog, reviseLog, readLog, logLineFor } from '$lib/character/log-repository';
 import { getUserStorage } from '$lib/storage/provider';
-import { rehydrateLogEntry } from '$lib/combat/roll';
+import { rehydrateLogEntry, rollEffectsFor } from '$lib/combat/roll';
+import { afterAttackEffects, consumeAttackEffects } from '$lib/play/effects';
+import { ROLL_LIMIT, type RollLimit } from '$lib/effects/token-words';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import { openDiceTray } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -246,6 +248,14 @@ class CombatVM {
 	/** Carrying a play-state action out — play-outcomes.ts; here because hosts declare `act`. */
 	outcomes = new PlayOutcomes(() => this);
 	act = (...a: Parameters<PlayOutcomes['act']>) => this.outcomes.act(...a);
+	consumeAttack = () => this.act(consumeAttackEffects);
+	attackAfterFirst = (scopes: Set<string>) => {
+		const { character, graph } = this;
+		if (!character || !graph) return;
+		const next = afterAttackEffects(character, graph);
+		if (next !== character)
+			return rollEffectsFor(deriveSheet(next, graph, isRowActive).facts, 'attack', scopes);
+	};
 	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
 	notify = (...a: Parameters<PlayOutcomes['notify']>) => this.outcomes.notify(...a);
 
@@ -355,8 +365,13 @@ class CombatVM {
 	 *  already resolved each expr to a dice formula against this character's levels. */
 	featureRolls = $derived(this.sheet?.facts.rolls ?? []);
 	/** Roll a feature rollable through the tray seam (registered above → opens the rich tray). */
-	rollFeature = (r: { label: string; formula: string }) =>
+	rollFeature = (r: { id: string; label: string; formula: string; limit?: RollLimit }) => {
+		if (r.limit === ROLL_LIMIT.turn && this.economy.isRollUsed(r.id)) {
+			this.notify({ text: { key: 'combat.notice.notAvailable', values: { name: r.label } } });
+			return;
+		}
 		openDiceTray({ label: r.label, formula: r.formula });
+	};
 
 	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), shown in the actions
 	 *  block with a cost chip. `left` is the pool remaining so the UI can disable an unaffordable one. */

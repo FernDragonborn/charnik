@@ -853,7 +853,7 @@ describe('shipped species options · the 2024 in-species choices', () => {
 		const graph = await loadPacks('srd-2024');
 		for (const row of graph.list('species_option'))
 			for (const raw of row.data.effects ?? [])
-				expect(parseToken(raw).kind, `${row.id}: "${raw}"`).not.toBe('unknown');
+				expect(parseToken(splitGuard(raw).token).kind, `${row.id}: "${raw}"`).not.toBe('unknown');
 	});
 });
 

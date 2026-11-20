@@ -66,7 +66,10 @@ type so it localizes and extends like everything else, plus a **Custom…** entr
 more bounded-vocab modifiers, or free text with a manual modifier. These live in **play-state**, not
 in the build.
 
-Any active effect may carry an optional duration in rounds (blank = until removed). The round
+Any active effect may carry an optional duration in rounds (blank = until removed). An authored
+effect can end with another catalog effect via `ends_with` and add levels of Exhaustion through
+`exhaustion_on_end`. `expires_after:attack` consumes the effect when a weapon or spell attack
+roll lands, including through the dice tray. The round
 counter decrements them, an effect that reaches zero **expires with a notice rather than
 silently**, rests expire what they should, and manual removal is always available.
 
@@ -377,6 +380,7 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
   it offers in `bonus_choice` (`content.md`); the answer lives on the inventory entry beside `base`.
 - **Guards (dependency-resolved play-state):** `hp`, `hp_max`, `hp_percent`, `temp_hp`,
   `exhaustion` (0..ladder-max), `size` (ordinal), `armor_type` (`none/light/medium/heavy`), the
+  tracked `movement_spent` and `attacks_made` on this turn,
   `is_*` flags, `has_condition.<id>`, `resource.<id>` (remaining), `resource_max.<id>`.
 
 **Operators** (precedence high→low): `d` (dice) > unary `-` > `* / %` > binary `+ -` >

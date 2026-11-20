@@ -173,6 +173,7 @@ export function buildSpellPicker({
 	return sheet.spellcasting.classes.map((profile) => {
 		const access = new Set(profile.accessSpellIds);
 		const pool = allSpells.filter((s) => {
+			if (profile.innate) return access.has(s.effectiveId);
 			if (!strict) return true;
 			// class access gate — cantrips are on the class list too, so gate them the same way
 			if (!access.has(s.effectiveId)) return false;

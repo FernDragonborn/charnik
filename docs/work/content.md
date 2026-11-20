@@ -7,11 +7,9 @@
 - [~] **CIRCLE-OF-THE-LAND · `to audit`.** SRD 5.1 has seven terrains, selectable at Druid level 2,
   with a bonus cantrip pick and terrain spells from level 3. SRD 5.2.1 has four land types with
   spells from level 3 and lets the player change land on a Long Rest.
-- [ ] **SPECIES-SPELLS · the spells a lineage or legacy grants at character level 3 and 5.** SRD
-  5.2.1 Elven Lineages, Fiendish Legacies and Gnomish Lineage; SRD 5.1 tiefling's Infernal Legacy
-  (thaumaturgy, hellish rebuke at 3rd, darkness at 5th). The class feature's `spells` grammar on a
-  species row, where the level is the character's — and a species casts with no class profile behind
-  it, so the spell needs one the way a feat's does.
+- [~] **SPECIES-SPELLS · `to audit`.** The Elf, Gnome and Tiefling traits in SRD 5.2.1 and the
+  2014 Tiefling grant spells by character level. They have their own casting ability and recharge
+  pools. The High Elf can replace its lineage cantrip on a Long Rest.
 - [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature

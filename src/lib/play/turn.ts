@@ -9,7 +9,7 @@ import { pipClick, type ActionSlot } from '$lib/combat/roll';
 import { isEffectExpired } from '$lib/combat/effects-view';
 import type { Character, CharacterPlay } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { dropEffects } from './concentration';
+import { endEffects } from './effects';
 import { isIncapacitated } from './conditions';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { settled } from './settle';
@@ -134,17 +134,17 @@ function expireTimedEffects(character: Character, ctx: PlayContext): PlayOutcome
 	const play = character.play;
 	const expired = play.effects.filter((effect) => isEffectExpired(effect, play.round));
 	if (!expired.length) return settled(quietly(character), ctx);
-	return settled(
-		{
-			character: { ...character, play: dropEffects(play, (effect) => expired.includes(effect)) },
-			log: [],
-			notices: expired.map((effect) => ({
+	const ended = endEffects(character, (effect) => expired.includes(effect), ctx);
+	return {
+		...ended,
+		notices: [
+			...ended.notices,
+			...expired.map((effect) => ({
 				text: { key: 'combat.notice.effectExpired', values: { label: effect.label } },
 				kind: LOG_KIND.effect,
 			})),
-		},
-		ctx,
-	);
+		],
+	};
 }
 
 /** End the turn: every slot fresh, the round counter one on, and whatever ran out expired. */

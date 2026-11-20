@@ -95,6 +95,20 @@ export function heldOptions(
 	});
 }
 
+/** A rest can replace a choice until the next rest without rewriting the character's build. */
+export function currentFeaturePicks(
+	character: Pick<Character, 'build' | 'play'>,
+): Character['build']['options'] {
+	const overrides = character.play.restOptions;
+	if (!overrides) return character.build.options;
+	return {
+		...character.build.options,
+		...Object.fromEntries(
+			Object.entries(overrides).map(([feature, option]) => [feature, [option]]),
+		),
+	};
+}
+
 /**
  * Every option one class entry holds, through the features it has reached — subclass features
  * gated to the subclass it chose. What a held option grants its class (a ritual source, an extra
@@ -103,11 +117,11 @@ export function heldOptions(
 export function* heldClassOptions(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
-	character: Pick<Character, 'system' | 'build'>,
+	character: Pick<Character, 'system' | 'build' | 'play'>,
 ): Generator<HeldOption> {
 	const asked = [{ classId: entry.class, subclassId: entry.subclass ?? null, level: entry.level }];
 	for (const f of activeClassFeatures(asked, graph, character.system))
-		yield* heldOptions(graph, f.row, character.build.options);
+		yield* heldOptions(graph, f.row, currentFeaturePicks(character));
 }
 
 /** The word in `language_grants` that is a language of the player's choice, not a language id. */
@@ -210,6 +224,7 @@ function answerRow(graph: ContentGraph, option: OptionRow, answer: string): Load
  */
 export function characterFeatures(character: Character, graph: ContentGraph): CharacterFeature[] {
 	const b = character.build;
+	const picks = currentFeaturePicks(character);
 	const out: CharacterFeature[] = [];
 	const push = (section: FeatureSection, ref: string | undefined) => {
 		const row = ref ? graph.get(ref) : undefined;
@@ -225,7 +240,7 @@ export function characterFeatures(character: Character, graph: ContentGraph): Ch
 		const className = String(f.classRow.data.name_en);
 		out.push({ section: FEATURE_SECTION.classFeatures, row: f.row, at: f.level, className });
 		// what was chosen of it reads as a feature of its own, straight after the feature that asked
-		for (const held of heldOptions(graph, f.row, b.options)) {
+		for (const held of heldOptions(graph, f.row, picks)) {
 			const answer = held.answer ? answerRow(graph, held.row, held.answer) : undefined;
 			out.push({
 				section: FEATURE_SECTION.classFeatures,

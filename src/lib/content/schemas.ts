@@ -135,7 +135,17 @@ const Rarity = z.enum(RARITIES);
 
 /** Playable species / race. 5e ability bonuses ride on the species (via `effects`);
  *  5.5e moves them to the background — so ASI-bearing rows are usually system-split. */
+const speciesCastingColumns = {
+	spells: optStr,
+	spell_abilities: z.preprocess(blankToUndef, csvList(z.array(Ability).min(1)).optional()),
+	ritual_source: RitualSourceColumn,
+	spell_slots: z.preprocess(blankToUndef, z.enum(['shared', 'resource_only']).optional()),
+	swap_cantrip: optStr,
+	swap_cantrip_list: optStr,
+};
+
 const speciesSchema = baseRow.extend({
+	...speciesCastingColumns,
 	size: Size,
 	/** Walking speed in feet. */
 	speed: z.coerce.number().int(),
@@ -170,6 +180,7 @@ export const SPECIES_OPTION_KINDS = [
 	'variant',
 ] as const;
 const speciesOptionSchema = baseRow.extend({
+	...speciesCastingColumns,
 	species_id: reqStr,
 	kind: enumDefault(z.enum(SPECIES_OPTION_KINDS), 'subrace'),
 	option_label: optStr,
@@ -435,6 +446,9 @@ const effectSchema = baseRow.extend({
 		.default(1),
 	/** Optional default duration the "+" picker applies; the round counter auto-expires it. */
 	duration_rounds: optInt,
+	ends_with: optStr,
+	exhaustion_on_end: optInt,
+	expires_after: z.preprocess(blankToUndef, z.literal('attack').optional()),
 	// ponytail: `derived_when` (a predicate that auto-activates a state, e.g. bloodied = hp_percent<50)
 	// is deliberately NOT added yet — `is_bloodied` already works as a computed flag exposed via the
 	// unified read vocab, and a derived predicate would need DAG-ordering against hp_max with no second
@@ -550,6 +564,7 @@ const spellListsSchema = z.object({
  *  places it in the turn economy.
  *  Carries name/text (shown in the picker) but is NOT a browsable article. */
 const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
+export const OPTION_CADENCE = { turn: 'turn' } as const;
 /** Named, but carries no effect tokens of its own. `effects` rides on `base` for the ARTICLE types,
  *  where a row's own tokens are how it acts on a sheet; on these two the column would be inert AND
  *  inviting — the tokens that matter already live on the class feature / item that grants the pool
@@ -563,6 +578,7 @@ const resourceOptionSchema = namedRow
 		cost: optStr,
 		action: optStr,
 		action_type: enumDefault(z.enum(ACTION_TYPES), 'action'),
+		cadence: z.preprocess(blankToUndef, z.literal(OPTION_CADENCE.turn).optional()),
 		// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
 		// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
 		available: optStr,

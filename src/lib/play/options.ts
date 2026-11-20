@@ -24,11 +24,14 @@ import {
 } from '$lib/effects/action-token';
 import { withCastSlot } from '$lib/effects/context';
 import type { ActionSlot } from '$lib/combat/roll';
+import { sheetAttacks } from '$lib/combat/form-attacks';
+import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
+import { OPTION_CADENCE } from '$lib/content/schemas';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
 import type { Character } from '$lib/character/schema';
 import type { ResourceOption } from '$lib/character/derive';
-import { addEffect } from './effects';
+import { addEffect, endEffects } from './effects';
 import { assumeForm } from './form-shift';
 import {
 	PLAY_REQUEST,
@@ -51,7 +54,7 @@ import {
 } from './resources';
 import { rest } from './rests';
 import { settled } from './settle';
-import { canSpendTurnSlot, spendTurnSlot } from './turn';
+import { canSpendTurnSlot, markRollUsed, spendTurnSlot } from './turn';
 
 /** A resource-option's `action_type` → the turn slot it consumes (`free` = none). */
 const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
@@ -69,6 +72,7 @@ const VERB = {
 	spendResource: 'spend_resource',
 	spendSlot: OPTION_SPENDS_SLOT,
 	recoverPact: 'recover_pact_slots',
+	pickAttack: 'attack_pick',
 } as const;
 
 const HALF_ROUNDED_UP = 'half_up';
@@ -133,6 +137,7 @@ export interface ActionRun {
 	effectRounds: number;
 	/** How many uses an `x` cost was answered with — what a verb written per use multiplies by. */
 	amount?: number;
+	reaction?: boolean;
 }
 
 /** `<n>` or `<n>*x`: a level stated outright, or so many levels for each use of an `x` cost. */
@@ -164,18 +169,21 @@ const applyCatalogEffect: Verb = (character, run, arg, ctx) => {
 				},
 			],
 		};
-	const play = character.play;
-	const effects = play.effects.filter((effect) => effect.source !== row.effectiveId);
-	return addEffect(
-		{ ...character, play: { ...play, effects } },
-		{
-			label: localizedName(row, ctx.locale),
-			tokens: row.data.effects,
-			positive: !isHarmful(row),
-			ref: row.effectiveId,
-			durationRounds: row.data.duration_rounds ?? run.effectRounds,
-		},
-		ctx,
+	const ended = endEffects(character, (effect) => effect.source === row.effectiveId, ctx);
+	return chain(ended, (next) =>
+		next.play.death
+			? quietly(next)
+			: addEffect(
+					next,
+					{
+						label: localizedName(row, ctx.locale),
+						tokens: row.data.effects,
+						positive: !isHarmful(row),
+						ref: row.effectiveId,
+						durationRounds: row.data.duration_rounds ?? run.effectRounds,
+					},
+					ctx,
+				),
 	);
 };
 
@@ -284,7 +292,13 @@ const VERBS: Record<string, Verb> = {
 		return {
 			...quietly(character),
 			asks: [
-				{ kind: PLAY_REQUEST.attack, weapon: id.toLowerCase(), count: strikes, name: run.name },
+				{
+					kind: PLAY_REQUEST.attack,
+					weapon: id.toLowerCase(),
+					count: strikes,
+					name: run.name,
+					...(run.reaction ? { reaction: true } : {}),
+				},
 			],
 		};
 	},
@@ -363,6 +377,7 @@ export interface OptionUse {
 	form?: { monster: string; label: string };
 	slot?: number;
 	confirmed?: boolean;
+	attack?: string;
 	effectRounds: number;
 }
 
@@ -388,7 +403,12 @@ export function activateOption(
 		notices: [notice],
 	});
 	// the `available` guard is a RULE, not a greyed row: every caller passes through here
-	if (!option.available)
+	if (
+		!option.available ||
+		(option.cadence === OPTION_CADENCE.turn &&
+			character.play.inCombat &&
+			character.play.turn.usedRolls.includes(option.id))
+	)
 		return refuse({ text: { key: 'combat.notice.notAvailable', values: { name: option.name } } });
 	// a cost of `x` is the player's to say, up to what the pool has left: asked before anything
 	// else, since every later check is of the amount answered
@@ -491,6 +511,26 @@ export function activateOption(
 			asks: [{ kind: PLAY_REQUEST.confirmSpend, total: rolled.total }],
 		};
 	}
+	const attack = verbs.find(({ verb }) => verb === VERB.pickAttack);
+	if (attack) {
+		const available = sheetAttacks(character, sheet, ctx.graph, ctx.locale).filter(
+			({ id, scopes }) =>
+				attack.arg === 'any' ||
+				(attack.arg === 'weapon' ? id !== UNARMED_STRIKE_ID : scopes.includes(attack.arg)),
+		);
+		const choices = [...new Map(available.map((entry) => [entry.id, entry])).values()];
+		if (choices.length && use.attack === undefined)
+			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.pickAttack, choices }] };
+		const chosen = choices.find((entry) => entry.id === use.attack);
+		if (!chosen)
+			return refuse({
+				text: { key: 'combat.notice.nothingToAttack', values: { name: option.name } },
+			});
+		action = action
+			.split(';')
+			.map((token) => (token.startsWith(`${VERB.pickAttack}:`) ? `attack:${chosen.id}` : token))
+			.join(';');
+	}
 	const paid = chain(
 		chain(slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character), (charged) =>
 			spendOnOption(charged, spend, ctx),
@@ -504,7 +544,23 @@ export function activateOption(
 	);
 	if (form && chosen) return chain(paid, (payer) => assumeForm(payer, { form, ...chosen }, ctx));
 	return chain(paid, (payer) =>
-		runAction(payer, { name: option.name, action, effectRounds: use.effectRounds, amount }, ctx),
+		chain(
+			runAction(
+				payer,
+				{
+					name: option.name,
+					action,
+					effectRounds: use.effectRounds,
+					amount,
+					reaction: ACTION_TYPE_SLOT[option.actionType] === 'reaction',
+				},
+				ctx,
+			),
+			(next) =>
+				option.cadence === OPTION_CADENCE.turn
+					? markRollUsed(next, { id: option.id })
+					: quietly(next),
+		),
 	);
 }
 

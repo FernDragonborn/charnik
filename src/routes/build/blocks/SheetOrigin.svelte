@@ -102,9 +102,31 @@
 			{/if}
 		</button>
 	</div>
+	{#if b.speciesSpellAbilities.length > 1}
+		<label class="origin-casting">
+			<span class="mini">{$_('build.origin.spellAbility')}</span>
+			<select
+				value={b.draft.speciesSpellAbility ?? b.speciesSpellAbilities[0]}
+				onchange={(event) => {
+					const chosen = event.currentTarget.value;
+					b.draft.speciesSpellAbility = b.speciesSpellAbilities.find((a) => a === chosen) ?? null;
+				}}
+			>
+				{#each b.speciesSpellAbilities as ability (ability)}
+					<option value={ability}>{abilityShortLabel(ability, $_)}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
 </div>
 
 <style>
+	.origin-casting {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-block-start: var(--space-2);
+	}
 	.pair {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

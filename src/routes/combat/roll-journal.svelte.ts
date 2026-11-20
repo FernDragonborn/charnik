@@ -68,6 +68,7 @@ export interface RollSpec {
 		mod: number;
 		/** −1 disadvantage · 0 normal · +1 advantage (default 0). */
 		advantage?: number;
+		laterAdvantage?: number;
 		/** Signed effect bonus dice (Bless +1d4). They ride an instant roll, and a prefilled roller
 		 *  shows them as pills you can edit or drag to the other line. */
 		bonusDice?: BonusDie[];
@@ -86,6 +87,7 @@ export interface RollSpec {
 	 *  Attacker), so the tray has to know which kind of action it is holding — a Fire Bolt and a bare
 	 *  tray roll go through the same tray and must not be offered it. */
 	weapon?: boolean;
+	attack?: boolean;
 }
 
 /** One completed roll as a log line. Shared by the single push and the volley so a beam of a volley
@@ -169,10 +171,12 @@ export class RollJournal {
 	 *  tray's rolls to decide whether to arm the weapon-damage reroll. Every way of filling the tray
 	 *  passes through `prefill` or `reset`, so it cannot go stale behind a spell or a custom roll. */
 	weaponAttack = false;
+	attackRoll = false;
 
 	/** Clear the tray to an empty test line (opening the dice menu fresh). */
 	reset = () => {
 		this.weaponAttack = false;
+		this.attackRoll = false;
 		this.diceTray.reset();
 	};
 
@@ -183,6 +187,7 @@ export class RollJournal {
 	 *  the same line. */
 	prefill = (spec: RollSpec) => {
 		this.weaponAttack = spec.weapon === true;
+		this.attackRoll = this.weaponAttack || spec.attack === true;
 		this.diceTray.prefill({
 			label: spec.label,
 			...(spec.labelKey ? { labelKey: spec.labelKey } : {}),
@@ -193,6 +198,9 @@ export class RollJournal {
 							dice: spec.test.dice,
 							mod: spec.test.mod,
 							advantage: advantageFromSign(spec.test.advantage ?? 0),
+							...(spec.test.laterAdvantage === undefined
+								? {}
+								: { laterAdvantage: spec.test.laterAdvantage }),
 							...(spec.test.mods ? { mods: spec.test.mods } : {}),
 							...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
 						},
@@ -288,14 +296,14 @@ export class RollJournal {
 	pushVolley = (
 		name: RollName,
 		times: number,
-		roll: () => { r: Rolled; damage?: TypedRoll[] },
+		roll: (index: number) => { r: Rolled; damage?: TypedRoll[] },
 		noteParts?: SaidText[],
 	): void => {
 		const at = Date.now();
 		this.recordRolls(
 			// `at + i` so an amendment rewrites ITS beam, not a sibling that shared the millisecond
 			Array.from({ length: Math.max(1, times) }, (_, i) => {
-				const { r, damage } = roll();
+				const { r, damage } = roll(i);
 				return this.entryFor(name, r, {
 					at: at + i,
 					...(damage ? { damage } : {}),

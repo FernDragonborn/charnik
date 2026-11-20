@@ -10,13 +10,16 @@ export function parseGrantResource(rest: string, raw: string, kind: EffectKind):
 	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
 	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
 	const m =
-		/^([a-z0-9][a-z0-9_]*)(?::([^:]+):([a-z_]+(?:\([^:]*\))?)(?::spell:([a-z0-9][a-z0-9_]*(?:,[a-z0-9][a-z0-9_]*)*))?)?$/i.exec(
+		/^([a-z0-9][a-z0-9_]*)(?::([^:]+):([a-z_]+(?:\([^:]*\))?)(?::spell:([a-z0-9][a-z0-9_]*(?:@[1-9])?(?:,[a-z0-9][a-z0-9_]*(?:@[1-9])?)*))?)?$/i.exec(
 			rest.trim(),
 		);
 	if (!m?.[1]) return { kind: 'unknown', raw };
 	const id = m[1].toLowerCase();
 	const spells = m[4]?.toLowerCase();
-	if (spells?.includes(',') && spells.split(',').includes(RESOURCE_SPELL_CHOICE))
+	if (
+		spells !== RESOURCE_SPELL_CHOICE &&
+		spells?.split(',').some((spell) => spell.split('@')[0] === RESOURCE_SPELL_CHOICE)
+	)
 		return { kind: 'unknown', raw };
 	const maxSlot = m[2]?.trim();
 	// the recharge word (or `trigger(amount)`) anchors the end; an unknown one leaves the token

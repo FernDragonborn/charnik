@@ -136,6 +136,7 @@ const buildSchema = z.object({
 	species: ref.optional(),
 	/** Chosen species sub-option (2014 subrace / 2024 lineage), a `species_option` ref. */
 	speciesOption: ref.optional(),
+	speciesSpellAbility: z.enum(ABILITIES).optional(),
 	background: ref.optional(),
 	/** ≥1 for a built character; empty is allowed mid-creation. */
 	classes: z.array(classEntry).default([]).transform(withUniqueRowIds),
@@ -262,6 +263,8 @@ const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
 export type DeathCause = (typeof DEATH_CAUSES)[number];
 
 const playSchema = z.object({
+	speciesCantrip: z.object({ row: ref, spell: ref }).optional(),
+	restOptions: z.record(z.string(), z.string()).optional(),
 	hp: z.object({
 		current: z.number().int(),
 		/** Manual max override; absent → derived from build. */

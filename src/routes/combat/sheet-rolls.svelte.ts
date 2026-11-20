@@ -56,6 +56,8 @@ export interface SheetRollsHost {
 	round: number;
 	journal: RollJournal;
 	economy: TurnEconomy;
+	consumeAttack(): boolean;
+	attackAfterFirst(scopes: Set<string>): RollEffects | undefined;
 	openMenu(kind: MenuKind, e: Event): void;
 	/** Where a menu with nothing to anchor it to is opened. */
 	menus: { openMenuCentered(kind: MenuKind): void };
@@ -258,8 +260,9 @@ export class SheetRolls {
 
 	/** One strike, already paid for: a tap rolls it, Shift-click opens the tray on its to-hit. */
 	private rollStrike(at: Attack, name: RollName, e: Event): void {
-		const { fx, parts, hasDmg } = this.attackSpec(at);
+		const { fx, parts, hasDmg, scopes } = this.attackSpec(at);
 		if (wantsTray(e)) {
+			const later = this.host().attackAfterFirst(scopes);
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
 				{
@@ -268,6 +271,7 @@ export class SheetRolls {
 						dice: { 20: 1 },
 						mod: at.toHit,
 						advantage: netAdvantage(fx),
+						...(later ? { laterAdvantage: netAdvantage(this.withWeaponModes(at, later)) } : {}),
 						bonusDice: fx.bonusDice,
 						mods: dieModsOf(fx),
 					},
@@ -299,12 +303,15 @@ export class SheetRolls {
 	 * strikes made in the same millisecond shared it, so re-reading one rewrote both and only one line
 	 * on disk.
 	 */
-	rollAttacks = (at: Attack, names: RollName[]) => {
-		const { parts, fx, hasDmg } = this.attackSpec(at);
+	rollAttacks = (at: Attack, names: RollName[], ownTurn = true) => {
+		const firstAttack = this.attackSpec(at, ownTurn);
+		const { parts } = firstAttack;
 		const stamp = Date.now();
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry each
 		const entries = names.map((name, i) => {
+			const { fx, hasDmg, parts } = i ? this.attackSpec(at, ownTurn) : firstAttack;
 			const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) });
+			this.host().consumeAttack();
 			const crit = this.critFaceShown(toHit);
 			const damage = rollDamageParts(crit ? parts.map((part) => ({ ...part, crit })) : parts);
 			return this.host().journal.entryFor(name, toHit, {
@@ -342,6 +349,8 @@ export class SheetRolls {
 	 */
 	recordTrayRolls = (entries: RollLogEntry[]) => {
 		this.host().journal.recordRolls(entries);
+		if (this.host().journal.attackRoll && entries.some((entry) => naturalOf(entry) !== undefined))
+			this.host().consumeAttack();
 		const taker = this.trayRollTaker;
 		this.trayRollTaker = null;
 		taker?.rolled(entries);
@@ -360,18 +369,13 @@ export class SheetRolls {
 
 	/** The effects and damage parts an attack rolls with — shared by the tap, the tray and the action
 	 *  executor, so the three can never disagree about what a weapon actually swings for. */
-	private attackSpec(at: Attack) {
+	private attackSpec(at: Attack, ownTurn = true) {
 		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
 		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
 		const scopes = new Set(at.scopes);
+		if (ownTurn) scopes.add('own_turn');
 		const sheetFx = this.effectsFor('attack', scopes);
-		// what this weapon's own properties say of its attacks (Heavy) joins what the sheet says
-		const says = (mode: string) => (at.rollModes ?? []).some((own) => own.mode === mode);
-		const fx = {
-			...sheetFx,
-			advantage: sheetFx.advantage || says(EFFECT_KIND.advantage),
-			disadvantage: sheetFx.disadvantage || says(EFFECT_KIND.disadvantage),
-		};
+		const fx = this.withWeaponModes(at, sheetFx);
 		const dmgFx = this.effectsFor('damage', scopes);
 		// The FLAT halves of both axes are already in the row (`computeAttacks` folds them where the
 		// weapon is known), so picking them up here would count them twice — and it is why the row can
@@ -384,7 +388,16 @@ export class SheetRolls {
 			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dieModsOf(dmgFx) } : {}),
 		}));
 		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
-		return { fx, parts, hasDmg: dealsDamage(parts) };
+		return { fx, parts, hasDmg: dealsDamage(parts), scopes };
+	}
+
+	private withWeaponModes(at: Attack, sheet: RollEffects): RollEffects {
+		const says = (mode: string) => (at.rollModes ?? []).some((own) => own.mode === mode);
+		return {
+			...sheet,
+			advantage: sheet.advantage || says(EFFECT_KIND.advantage),
+			disadvantage: sheet.disadvantage || says(EFFECT_KIND.disadvantage),
+		};
 	}
 
 	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature

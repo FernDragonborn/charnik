@@ -555,7 +555,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (209 modules)
+## Library functions & types (210 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -772,6 +772,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ClassEntryLike` — A class row as either half of the app names it: the builder's draft, or a saved character's * `build.classes` entry.
 - `interface ActiveClassFeature` — One class feature a row actually has, with the row it came from.
 - `function heldOptions` — * The options a character HOLDS of one class feature, in the order they were picked.
+- `function currentFeaturePicks` — A rest can replace a choice until the next rest without rewriting the character's build.
 - `const LANGUAGE_OF_CHOICE` — The word in `language_grants` that is a language of the player's choice, not a language id.
 - `interface FeatureLanguages` — What the class features a character has reached teach them to speak: each language they name, * as the edition's row …
 - `const NO_FEATURE_LANGUAGES`
@@ -938,6 +939,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type SkillId` — The 18 SRD skill ids.
 - `const SKILL_IDS` — The same ids as a list, in the order the table above states them.
 
+### `src/lib/character/species-spells.ts`
+
+- `function speciesCantripChoice`
+- `function speciesCasterProfile`
+
 ### `src/lib/character/spellcasting.ts`
 
 - `re-export spellEntries`
@@ -946,6 +952,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellcastingClass`
 - `function canCastAsRitual` — * May this spell be cast as a ritual by the class it is cast AS?
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a * multiclass caster has o…
+- `function canCastWithSlots`
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
@@ -1582,6 +1589,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ROW_KIND` — What a state row IS.
 - `const VALENCE` — Whether a state is something you WANT.
 - `type Valence`
+- `const OPTION_CADENCE`
 - `const CONTENT_TYPES`
 - `type ContentType`
 - `const TYPE_ALIASES` — Type names and filebases that are no longer types of their own, and what they resolve to — with * the `kind` a row of…
@@ -2045,6 +2053,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface CastIntent` — How a cast is asked for.
 - `function spellcastingBlock`
 - `const poolAllowsSpell`
+- `const poolCastLevel`
 - `function castSpell` — * Cast a spell.
 
 ### `src/lib/play/changes.ts`
@@ -2075,6 +2084,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const effectInstanceOf` — The instance an effect is once it is on a character, its clock started at `round`.
 - `function addEffect` — Put an effect on the character.
 - `function removeEffects` — Take effects off by instance id — and the concentration one of them was carrying.
+- `function endEffects` — A dependent state ends when the named effect ends, regardless of how its parent left play.
+- `function consumeAttackEffects`
+- `function afterAttackEffects` — A projection used for later attacks in the same dice-tray volley.
 - `function setEffectDuration` — * Set an effect's remaining duration to an exact number of rounds FROM NOW — the start is * re-anchored to the curren…
 - `function bumpEffectDuration` — Nudge an effect's REMAINING duration by a number of rounds.
 - `const setAutoCalc` — Effects-auto on or off.
@@ -2681,4 +2693,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1646 exports across 226 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1655 exports across 227 modules · 118 duplicate suspects._

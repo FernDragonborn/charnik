@@ -24,7 +24,8 @@
 			{#each asking.values as value (value)}
 				<button class="combat-row" onclick={() => asking.answer(value)}>
 					<span class="row-name"
-						>{$_(`combat.menu.optionAnswer.${asking.kind}`, { values: { value } })}</span
+						>{asking.labels?.[value] ??
+							$_(`combat.menu.optionAnswer.${asking.kind}`, { values: { value } })}</span
 					>
 				</button>
 			{/each}

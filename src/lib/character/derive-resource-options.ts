@@ -14,6 +14,7 @@ import { evalExpression, type ExprContext } from '../effects/expression-evaluato
 import type { System } from '../rules/pipeline';
 import { titleCase } from '../util/format';
 import { characterFeatures } from './features';
+import { OPTION_CADENCE } from '../content/schemas';
 import type { Character } from './schema';
 
 /** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
@@ -39,6 +40,7 @@ export interface ResourceOption {
 	/** Whether the option's `available` L2 guard passes right now (no guard → always true). A false
 	 *  guard greys the option out — e.g. Persistent Rage is offerable only at combat start. */
 	available: boolean;
+	cadence?: typeof OPTION_CADENCE.turn;
 	/** The feature that gives this option on a pool it does not own (`granted_by`); absent for an
 	 *  option that comes with the pool itself. */
 	grantedBy?: string;
@@ -129,7 +131,12 @@ export function resolveResourceOptions({
 			action: resolveActionFormula(String(row.data.action ?? ''), ctx, row.data.name_en, issues),
 			actionType: row.data.action_type ?? 'action',
 			cost,
-			available: resolveAvailable(String(row.data.available ?? ''), ctx, row.data.name_en, issues),
+			available:
+				(row.data.cadence !== OPTION_CADENCE.turn ||
+					!character.play.inCombat ||
+					!character.play.turn.usedRolls.includes(row.id)) &&
+				resolveAvailable(String(row.data.available ?? ''), ctx, row.data.name_en, issues),
+			...(row.data.cadence ? { cadence: row.data.cadence } : {}),
 			...(grantedBy ? { grantedBy } : {}),
 		});
 	}

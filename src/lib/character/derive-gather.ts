@@ -18,7 +18,7 @@ import { instanceName } from '../content/item-instance';
 import { optionNamed, readPick } from '../content/options';
 import { needsAttunement } from './inventory';
 import { formStatTokens } from './forms';
-import { heldOptions } from './features';
+import { currentFeaturePicks, heldOptions } from './features';
 import { featResourceChoices } from './feat-resource-choices';
 import { FORM_SPECIES, type Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
@@ -270,7 +270,7 @@ class EffectGatherer {
 	/** What the character chose of a feature that asks: each option's own tokens, at the feature's
 	 *  layer and under its class. A pick that names no row is reported like any missing ref. */
 	private gatherHeldOptions(f: ClassFeatureRow, ctx: ClassCtx): void {
-		const picks = this.character.build.options;
+		const picks = currentFeaturePicks(this.character);
 		const held = heldOptions(this.graph, f, picks);
 		for (const pick of picks[f.id] ?? []) {
 			const { id } = readPick(pick);

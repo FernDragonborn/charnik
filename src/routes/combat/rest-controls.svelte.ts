@@ -25,6 +25,8 @@ import {
 import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
+import { speciesCantripChoice } from '$lib/character/species-spells';
+import { currentFeaturePicks } from '$lib/character/features';
 import type { MenuKind } from '$lib/combat/helpers';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
@@ -47,6 +49,12 @@ export class RestControls {
 	optionPicks = $state<Record<string, string>>({});
 	slotRecoveries = $state<SlotRecoveryPicks>({});
 	shortRestHealingPick = $state('');
+	longRestCantrip = $state('');
+
+	get cantripChoice() {
+		const { character, graph } = this.host();
+		return character && graph ? speciesCantripChoice(character, graph) : undefined;
+	}
 
 	get shortRestHealing() {
 		const { character, graph } = this.host();
@@ -87,7 +95,8 @@ export class RestControls {
 	}
 
 	private prefillOptions(kind: RestKind) {
-		const options = this.host().character?.build.options;
+		const character = this.host().character;
+		const options = character && currentFeaturePicks(character);
 		this.optionPicks = Object.fromEntries(
 			this.optionGroups(kind).map(({ row }) => [row.id, options?.[row.id]?.[0] ?? '']),
 		);
@@ -193,16 +202,21 @@ export class RestControls {
 	 *  ask which — pre-filled largest-first, so confirming at once is the rest it always was.
 	 *  Everywhere else there is nothing to ask and the rest is taken on the press. */
 	startLongRest = (e: Event) => {
-		if (!this.longRestAsksWhich && !this.optionGroups('long').length)
+		if (!this.longRestAsksWhich && !this.optionGroups('long').length && !this.cantripChoice)
 			return this.host().resources.rest('long');
 		this.prefillOptions('long');
+		this.longRestCantrip = this.cantripChoice?.current.effectiveId ?? '';
 		const spent = Object.fromEntries(this.hitDice.map((h) => [h.die, h.spent]));
 		this.hdRecover = hitDiceRecovery(this.hitDice, spent, this.hdRecoverBudget);
 		this.host().openMenu('restlong', e);
 	};
 	/** Commit the long rest with the chosen Hit Dice, and close the picker. */
 	commitLongRest = () => {
-		this.host().resources.rest('long', { hitDice: this.hdRecover, options: this.optionPicks });
+		this.host().resources.rest('long', {
+			hitDice: this.hdRecover,
+			options: this.optionPicks,
+			speciesCantrip: this.longRestCantrip,
+		});
 		this.hdRecover = {};
 		this.optionPicks = {};
 		this.host().overlay = null;

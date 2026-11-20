@@ -66,6 +66,7 @@ export const PLAY_REQUEST = {
 	slot: 'slot',
 	amount: 'amount',
 	confirmSpend: 'confirm_spend',
+	pickAttack: 'pick_attack',
 } as const;
 
 /**
@@ -78,7 +79,13 @@ export const PLAY_REQUEST = {
  * anything is paid — the action is called again with the answer.
  */
 type PlayRequest =
-	| { kind: typeof PLAY_REQUEST.attack; weapon: string; count: number; name: string }
+	| {
+			kind: typeof PLAY_REQUEST.attack;
+			weapon: string;
+			count: number;
+			name: string;
+			reaction?: boolean;
+	  }
 	| { kind: typeof PLAY_REQUEST.form; form: string }
 	| { kind: typeof PLAY_REQUEST.cast; spell: string; ritual: boolean; slotLevel: number }
 	| { kind: typeof PLAY_REQUEST.weapon; spell: string }
@@ -86,7 +93,11 @@ type PlayRequest =
 	| { kind: typeof PLAY_REQUEST.slot; levels: number[] }
 	/** How many uses an option with a cost of `x` spends, up to what its pool has left. */
 	| { kind: typeof PLAY_REQUEST.amount; max: number }
-	| { kind: typeof PLAY_REQUEST.confirmSpend; total: number };
+	| { kind: typeof PLAY_REQUEST.confirmSpend; total: number }
+	| {
+			kind: typeof PLAY_REQUEST.pickAttack;
+			choices: { id: string; name: string; nameKey?: string }[];
+	  };
 
 /** A concentration save a hit has made due: the damage that made it due, the DC that damage sets,
  *  and the spell it is owed for. The damage is kept because two of these may turn out to be ONE hit

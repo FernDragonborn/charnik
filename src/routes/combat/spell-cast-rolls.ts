@@ -55,6 +55,8 @@ export interface CastRollsHost {
 	sheet: CharacterSheet | null;
 	journal: RollJournal;
 	effectsFor(key: string, scopes?: Set<string>, cast?: ExprContext): RollEffects;
+	consumeAttack(): boolean;
+	attackAfterFirst(scopes: Set<string>): RollEffects | undefined;
 	openRoll(spec: RollSpec, e: Event): void;
 	openMenu(kind: MenuKind, e: Event): void;
 }
@@ -77,7 +79,7 @@ export interface UpcastReads {
 /** The scope every spell's roll carries beside its own id (`advantage:attack.spell`). */
 const SPELL_SCOPE = 'spell';
 const spellScopes = (r: SpellRow, caster: SpellcastingClass | undefined): Set<string> =>
-	new Set([r.id, SPELL_SCOPE, ...(caster ? [caster.classId] : [])]);
+	new Set([r.id, SPELL_SCOPE, ...(caster ? [caster.classId, caster.ability] : [])]);
 
 export class SpellCastRolls {
 	constructor(
@@ -126,6 +128,7 @@ export class SpellCastRolls {
 		const { up, times } = cast;
 		const scopes = spellScopes(r, caster);
 		const fx = this.host.effectsFor('attack', scopes);
+		const later = this.host.attackAfterFirst(scopes);
 		const dmgFx = this.host.effectsFor('damage', scopes);
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
@@ -145,6 +148,7 @@ export class SpellCastRolls {
 						dice: { 20: 1 },
 						mod: toHit,
 						advantage: netAdvantage(fx),
+						...(later ? { laterAdvantage: netAdvantage(later) } : {}),
 						bonusDice: fx.bonusDice,
 						mods: dieModsOf(fx),
 					},
@@ -153,6 +157,7 @@ export class SpellCastRolls {
 					// player's own text, so it is said once here rather than carried as facts
 					...(saidNote(up.noteParts) ? { note: saidNote(up.noteParts) } : {}),
 					...(times > 1 ? { times } : {}),
+					attack: true,
 				},
 				e,
 			);
@@ -162,12 +167,16 @@ export class SpellCastRolls {
 			this.host.journal.pushVolley(
 				label,
 				times,
-				() => ({
-					r: rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
+				(index) => ({
+					r: rollPool(
+						{ 20: 1 },
+						{ ...fx, mod: toHit, advantage: netAdvantage(index > 0 && later ? later : fx) },
+					),
 					...(hasDmg ? { damage: rollDamageParts(parts) } : {}),
 				}),
 				up.noteParts,
 			);
+			this.host.consumeAttack();
 		}
 	}
 
@@ -219,9 +228,13 @@ export class SpellCastRolls {
 	/** The roll half of a cast: an attack spell rolls its TO-HIT (attack-keyed effects) then queued
 	 *  damage; a damage/heal spell rolls its dice (auto = healing + spellcasting mod); a no-roll cast
 	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
-	rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
+	rollSpellCast(
+		r: SpellRow,
+		e: Event,
+		{ ritual, slotLevel, pool }: { ritual: boolean; slotLevel: number; pool?: string },
+	): void {
 		const caster =
-			casterForSpell(this.host.sheet, r.ref) ?? this.host.sheet?.spellcasting.classes[0];
+			casterForSpell(this.host.sheet, r.ref, pool) ?? this.host.sheet?.spellcasting.classes[0];
 		// the upcast contribution + its provenance tag (B8): when actually upcast, the suffix names the
 		// slot AND what it added ("(slot 5 · +2d6)") — reusing castPreview — so the roll log / toast
 		// explains the boosted total instead of a bare number.

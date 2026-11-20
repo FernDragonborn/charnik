@@ -68,7 +68,7 @@ export class SpellPicks {
 		() =>
 			new Set(
 				this.host()
-					.sheet?.spellcasting.classes.filter((profile) => profile.chosenSpells === undefined)
+					.sheet?.spellcasting.classes.filter((profile) => profile.chosenSpells === undefined || profile.innate)
 					.flatMap((profile) => profile.grantedSpells) ?? [],
 			),
 	);
@@ -82,6 +82,7 @@ export class SpellPicks {
 	]);
 
 	toggleForActive = (ref: string) => {
+		if (this.active?.profile.innate) return;
 		const feat = this.activeFeat;
 		if (!feat) {
 			this.toggle(ref);

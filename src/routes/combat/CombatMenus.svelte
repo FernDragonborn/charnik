@@ -21,6 +21,7 @@
 	import { FEATURE_PRESET } from '$lib/character/features';
 	import { ACTION_PRESET } from '$lib/combat/actions';
 	import { localizedName } from '$lib/content/detail';
+	import { poolCastLevel } from '$lib/play/cast';
 	import { app } from '$lib/stores/app.svelte';
 
 	const overlay = $derived(combat.overlay);
@@ -480,7 +481,7 @@
 				<!-- a spell with ONE slot option does not list it (`castableSlots` is empty then), so the
 				     implied cast is spelled out here — otherwise a pool would be the only row offered and
 				     the ordinary way to cast would have disappeared behind the picker. -->
-				{#if !combat.castableSlots(r).length}
+				{#if combat.casting.allowsSlots(r) && !combat.castableSlots(r).length}
 					<button class="menu-row" onclick={(e) => combat.cast(r, e)}>
 						<span class="main"
 							>{$_('combat.menu.slotLevelBase', { values: { level: r.level } })}</span
@@ -511,11 +512,17 @@
 				     nothing in the data says which pool a given spell may spend, and the feat's own text,
 				     which the player is reading, does. -->
 				{#each combat.castablePools(r) as pool (pool.id)}
+					{@const level = poolCastLevel(pool, r)}
 					<button class="menu-row" onclick={(e) => combat.castFromPool(pool.id, e)}>
 						<span class="main"
 							>{$_('combat.menu.castFromPool', { values: { pool: pool.name } })}</span
 						>
-						<span class="meta">{combat.resources.remainingFor(pool.id)}/{pool.max}</span>
+						<span class="meta">
+							{#if level && level > r.level}
+								{$_('combat.menu.slotLevel', { values: { level } })} ·
+							{/if}
+							{combat.resources.remainingFor(pool.id)}/{pool.max}
+						</span>
 					</button>
 				{/each}
 				<p class="note" style="padding: 6px 13px 2px">{$_('combat.menu.upcastNote')}</p>
@@ -642,6 +649,16 @@
 				{$_(rests.longRestAsksWhich ? 'combat.menu.longRestTitle' : 'combat.restKind.long')}
 			</div>
 			{@render restOptions('long')}
+			{#if rests.cantripChoice}
+				<label class="field rest-choice">
+					<span>{$_('combat.menu.lineageCantrip')}</span>
+					<select bind:value={rests.longRestCantrip}>
+						{#each rests.cantripChoice.spells as spell (spell.effectiveId)}
+							<option value={spell.effectiveId}>{localizedName(spell, app.activeLocale)}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
 			{#if rests.longRestAsksWhich}
 				{#each rests.hitDice.filter((h) => h.spent > 0) as h (h.die)}
 					{@render hitDieRow({

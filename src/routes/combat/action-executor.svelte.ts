@@ -10,7 +10,7 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { type Attack } from '$lib/combat/attacks';
 import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
 import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
-import { activateOption, type OptionUse } from '$lib/play/options';
+import { activateOption, activateOptionById, type OptionUse } from '$lib/play/options';
 import { t } from '$lib/i18n';
 import {
 	PLAY_REQUEST,
@@ -27,9 +27,10 @@ import type { InventoryTracker } from './inventory.svelte';
 /** A question an option asks with a number for an answer: a slot's level, or a count of uses. */
 export interface OptionQuestion {
 	name: string;
-	kind: 'slot' | 'amount' | 'confirmSpend';
+	kind: 'slot' | 'amount' | 'confirmSpend' | 'pickAttack';
 	values: number[];
 	total?: number;
+	labels?: (string | undefined)[];
 	answer: (value: number) => void;
 }
 
@@ -72,15 +73,18 @@ export class ActionExecutor {
 			slot: (levels: number[]) => void;
 			amount: (max: number) => void;
 			confirmSpend: (total: number) => void;
+			pickAttack: (choices: { id: string; name: string; nameKey?: string }[]) => void;
 		}> = {},
 	) {
 		for (const ask of this.host().enact(action)?.asks ?? [])
-			if (ask.kind === PLAY_REQUEST.attack) this.makeAttacks(ask.name, ask.weapon, ask.count);
+			if (ask.kind === PLAY_REQUEST.attack)
+				this.makeAttacks(ask.name, ask.weapon, ask.count, !ask.reaction);
 			else if (ask.kind === PLAY_REQUEST.form && answers.form)
 				this.host().forms.ask(ask.form, answers.form);
 			else if (ask.kind === PLAY_REQUEST.slot) answers.slot?.(ask.levels);
 			else if (ask.kind === PLAY_REQUEST.amount) answers.amount?.(ask.max);
 			else if (ask.kind === PLAY_REQUEST.confirmSpend) answers.confirmSpend?.(ask.total);
+			else if (ask.kind === PLAY_REQUEST.pickAttack) answers.pickAttack?.(ask.choices);
 	}
 
 	/** Use a spend-option: resource cost and turn slot validated ALL-OR-NOTHING, both paid, its verbs
@@ -93,40 +97,67 @@ export class ActionExecutor {
 			kind: OptionQuestion['kind'],
 			values: number[],
 			answer: (value: number) => void,
-			total?: number,
+			detail: Pick<OptionQuestion, 'total' | 'labels'> = {},
 		) => {
 			this.asking = {
 				name: option.name,
 				kind,
 				values,
-				...(total === undefined ? {} : { total }),
+				...detail,
 				answer: (value) => {
 					this.asking = null;
 					answer(value);
 				},
 			};
 		};
-		const use = (answer: Pick<OptionUse, 'form' | 'slot' | 'amount' | 'confirmed'>) =>
-			this.run((c, ctx) => activateOption(c, { option, effectRounds, ...answer }, ctx), {
-				form: (monster) =>
-					use({ ...answer, form: { monster, label: this.host().forms.nameOf(monster) } }),
-				slot: (levels) => question('slot', levels, (slot) => use({ ...answer, slot })),
-				amount: (max) =>
-					question(
-						'amount',
-						Array.from({ length: max }, (_, i) => i + 1),
-						(picked) => use({ ...answer, amount: picked }),
-					),
-				confirmSpend: (total) =>
-					question(
-						'confirmSpend',
-						[0, 1],
-						(picked) => {
-							if (picked === 1) use({ ...answer, confirmed: true });
-						},
-						total,
-					),
-			});
+		const use = (answer: Pick<OptionUse, 'form' | 'slot' | 'amount' | 'confirmed' | 'attack'>) =>
+			this.run(
+				(c, ctx) =>
+					answer.attack || answer.confirmed
+						? activateOptionById(
+								c,
+								{
+									option: option.id,
+									resource: option.resourceId,
+									effectRounds,
+									...answer,
+								},
+								ctx,
+							)
+						: activateOption(c, { option, effectRounds, ...answer }, ctx),
+				{
+					form: (monster) =>
+						use({ ...answer, form: { monster, label: this.host().forms.nameOf(monster) } }),
+					slot: (levels) => question('slot', levels, (slot) => use({ ...answer, slot })),
+					amount: (max) =>
+						question(
+							'amount',
+							Array.from({ length: max }, (_, i) => i + 1),
+							(picked) => use({ ...answer, amount: picked }),
+						),
+					confirmSpend: (total) =>
+						question(
+							'confirmSpend',
+							[0, 1],
+							(picked) => {
+								if (picked === 1) use({ ...answer, confirmed: true });
+							},
+							{ total },
+						),
+					pickAttack: (choices) =>
+						question(
+							'pickAttack',
+							choices.map((_, index) => index),
+							(picked) => {
+								const attack = choices[picked]?.id;
+								if (attack) use({ ...answer, attack });
+							},
+							{
+								labels: choices.map((choice) => (choice.nameKey ? t(choice.nameKey) : choice.name)),
+							},
+						),
+				},
+			);
 		use(amount === undefined ? {} : { amount });
 	};
 
@@ -163,7 +194,7 @@ export class ActionExecutor {
 	 * translated sheet. An id the character isn't carrying is SURFACED: an action that silently rolls
 	 * nothing is the bug this verb exists to fix, so it must not become a quieter version of itself.
 	 */
-	private makeAttacks(name: string, id: string, count: number) {
+	private makeAttacks(name: string, id: string, count: number, ownTurn: boolean) {
 		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
 		if (!at) {
 			this.host().notify({
@@ -186,6 +217,7 @@ export class ActionExecutor {
 					Array.from({ length: count }, (_, i) =>
 						count > 1 ? numberedAttackRollName(at, t, i + 1, count) : attackRollName(at, t),
 					),
+					ownTurn,
 				);
 				return true;
 			},

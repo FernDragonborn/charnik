@@ -283,6 +283,7 @@
 			"speciesMeta": "{size} · {feet} фт ({metres})",
 			"lineageChosen": "Гілка виду {species} — додає власні риси зверху.",
 			"lineageAsk": "{species} питає, до якої гілки ви належите.",
+			"spellAbility": "Заклинальна здібність виду",
 			"background": "Бекграунд",
 			"backgroundSkills": "{count, plural, one {# навичка} few {# навички} many {# навичок} other {# навичок}}",
 			"backgroundSkillsUnknown": "навички",
@@ -898,7 +899,8 @@
 			"optionQuestion": {
 				"slot": "Якою коміркою заклять заплатити. Нічого не витрачається, доки ви не оберете.",
 				"amount": "Скільки використань витратити. Нічого не витрачається, доки ви не оберете.",
-				"confirmSpend": "Додайте +{total} до перевірки. Вона успішна?"
+				"confirmSpend": "Додайте +{total} до перевірки. Вона успішна?",
+				"pickAttack": "Оберіть атаку для цієї риси."
 			},
 			"optionAnswer": {
 				"slot": "Рівень {value}",
@@ -907,6 +909,7 @@
 			},
 			"takeLongRest": "Довгий відпочинок",
 			"restKeepCurrent": "Залишити поточний вибір",
+			"lineageCantrip": "Замовляння родоводу",
 			"slotRecoveryBudget": "{budget, plural, one {# рівень комірок} few {# рівні комірок} other {# рівнів комірок}}",
 			"slotRecoveryLevel": "Комірка {level} рівня",
 			"slotFewer": "Відновити на одну комірку менше",
@@ -957,6 +960,7 @@
 			"deadCannotHeal": "Мертвий персонаж не може відпочивати чи лікуватися",
 			"deadCannotHealBody": "Спершу поверніть його до життя або скасуйте рятівний кидок, що його вбив.",
 			"poolCannotCast": "Цей ресурс не може оплатити це закляття.",
+			"innateCastNeedsPool": "Накладайте це закляття рисою виду, доки маєте використання.",
 			"notAvailable": "{name} — зараз недоступно",
 			"notEnoughResource": "Бракує «{resource}» для «{name}»",
 			"noSpellSlot": "Не лишилося комірок заклять для «{name}»",

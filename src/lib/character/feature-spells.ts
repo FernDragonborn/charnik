@@ -6,7 +6,7 @@ import type { ContentGraph } from '../content/loader';
 import { SPELLS_AS } from '../content/schemas';
 import { grantedAtLevel } from '../content/level-gate';
 import type { Character } from './schema';
-import { activeClassFeatures, heldOptions } from './features';
+import { activeClassFeatures, currentFeaturePicks, heldOptions } from './features';
 
 /** The spells a class's features hand it at its level, as this edition's spell rows. */
 export interface FeatureSpells {
@@ -17,7 +17,7 @@ export interface FeatureSpells {
 export function featureSpellsFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph,
-	character: Pick<Character, 'system' | 'build'>,
+	character: Pick<Character, 'system' | 'build' | 'play'>,
 ): FeatureSpells {
 	const out: FeatureSpells = { prepared: [], list: [] };
 	const spells = graph.list('spell', { system: character.system });
@@ -25,7 +25,7 @@ export function featureSpellsFor(
 	for (const { row } of activeClassFeatures(asked, graph, character.system))
 		for (const grant of [
 			row,
-			...heldOptions(graph, row, character.build.options).map((o) => o.row),
+			...heldOptions(graph, row, currentFeaturePicks(character)).map((o) => o.row),
 		])
 			for (const id of grantedAtLevel(grant.data.spells, entry.level)) {
 				const spell = spells.find((s) => s.id === id);

@@ -249,10 +249,8 @@ position and are given per wave, because most of them were learned the hard way.
   own apps. Two halves:
   - **Levels 1–4, after 0.8.2's level 1.** DIVINE-SMITE (`to audit`) ·
     FEATURE-SKILLS (`to audit`) · SLOT-RECOVERY (`to audit`) · CIRCLE-OF-THE-LAND (`to audit`) ·
-    SPECIES-SPELLS (lineage and legacy spells at character level 3) · REACTION-ROLLS (`to audit`) ·
-    TOGGLE-STATES · HUNTERS-PREY · FRENZY.
-    A class feature's `spells` (0.8.2) is what CIRCLE-OF-THE-LAND and SPECIES-SPELLS stand on: the
-    same column on an option and a species row, and they are mostly content.
+    SPECIES-SPELLS (`to audit`) · REACTION-ROLLS (`to audit`) · TOGGLE-STATES (`to audit`) ·
+    HUNTERS-PREY (`to audit`) · FRENZY (`to audit`).
   - **A table, minimally.** TABLE-LINK-MVP, the smallest table worth sitting at, to the
     specification in `internals/table-link.md`: a GM hosts and players join with approval outside
     the webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM
@@ -273,6 +271,8 @@ position and are given per wave, because most of them were learned the hard way.
   4. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
+  5. **RANGED-WEAPON-RANGE** — `ui.md`. Show normal and long range on ranged weapon articles in
+     the compendium before 0.9.0.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.
   DEFENCE-STRIP stays in 0.9.0, waiting on the maintainer's mock.
@@ -287,8 +287,8 @@ position and are given per wave, because most of them were learned the hard way.
   Evocation, Potent Spellcasting) · damage taken by halves (Uncanny Dodge, Evasion — the table link's
   raw incoming damage is where they prompt) · Brutal Strike, Cunning Strike and the other dice a
   hit can spend · and pools beside a feature's `spells` (Wholeness of Body, Dark One's Own Luck, Sorcerous
-  Restoration, Tireless, Divine Intervention, Contact Patron). ACTION-OPTIONS turns most of what was
-  "text" at these levels into buttons.
+  Restoration, Tireless, Divine Intervention, Contact Patron). ACTION-OPTIONS turns these features
+  into buttons using the pool-free executor (`to audit`).
 - **Levels 11–20 — a wave of its own, cheaper than it looks.** About a third is content on tokens
   that exist (Primal Champion's and Body and Mind's raised caps, Improved Divine Smite's and Radiant
   Strikes' typed +1d8, Stroke of Luck and Greater Divine Intervention as pools, the Hunter's later

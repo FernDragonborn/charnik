@@ -53,6 +53,8 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'hp_percent',
 	'temp_hp',
 	'exhaustion',
+	'movement_spent',
+	'attacks_made',
 	...ABILITY_IDS.map((a) => `${a}_mod`),
 	...ABILITY_IDS.map((a) => `${a}_score`),
 ]);

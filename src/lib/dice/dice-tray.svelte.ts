@@ -13,6 +13,9 @@ import { dealsDamage, type DamagePartSpec, type RollLogEntry } from '$lib/combat
 import { damageSpecsOf, rollLines } from './roll-lines';
 import {
 	ADVANTAGE_MODE,
+	ADVANTAGE_SIGN,
+	advantageFromSign,
+	naturalOf,
 	NEXT_ADVANTAGE,
 	type AdvantageMode,
 	type BonusDie,
@@ -61,6 +64,7 @@ export interface RollerPrefill {
 		dice: Record<number, number>;
 		mod: number;
 		advantage?: AdvantageMode;
+		laterAdvantage?: number;
 		/** reroll / bounds that ride the pool's own dice (GWF, Reliable Talent). */
 		mods?: DieMods;
 		/** Signed effect dice (Bless +1d4). They arrive without the effect's NAME — see
@@ -500,7 +504,10 @@ export class DiceTray {
 		this.focus = this.lines.length - 1;
 	};
 
+	private volleyAdvantage: { first: number; later: number } | undefined;
+
 	reset = (): void => {
+		this.volleyAdvantage = undefined;
 		this.label = '';
 		this.labelKey = '';
 		this.labelValues = undefined;
@@ -522,6 +529,11 @@ export class DiceTray {
 		this.labelKey = spec.labelKey ?? '';
 		this.labelValues = spec.labelValues;
 		this.note = spec.note ?? '';
+		if (spec.test?.laterAdvantage !== undefined)
+			this.volleyAdvantage = {
+				first: ADVANTAGE_SIGN[spec.test.advantage ?? ADVANTAGE_MODE.neither],
+				later: spec.test.laterAdvantage,
+			};
 		const lines: RollerLine[] = [];
 		if (spec.test)
 			lines.push({
@@ -591,7 +603,7 @@ export class DiceTray {
 	roll = (rng?: Rng): RollLogEntry[] => {
 		this.commit(this.focus);
 		if (!this.rollable) return [];
-		return rollLines(
+		const entries = rollLines(
 			{
 				lines: this.lines,
 				label: this.label,
@@ -599,8 +611,19 @@ export class DiceTray {
 				...(this.labelValues ? { labelValues: this.labelValues } : {}),
 				note: this.note,
 				critMethod: this.critMethod,
+				...(this.volleyAdvantage ? { volleyAdvantage: this.volleyAdvantage } : {}),
 			},
 			rng,
 		);
+		const advantage = this.volleyAdvantage;
+		if (advantage && entries.some((entry) => naturalOf(entry) !== undefined)) {
+			this.lines = this.lines.map((line) =>
+				line.role === ROLLER_ROLE.test && ADVANTAGE_SIGN[line.advantage] === advantage.first
+					? { ...line, advantage: advantageFromSign(advantage.later) }
+					: line,
+			);
+			this.volleyAdvantage = undefined;
+		}
+		return entries;
 	};
 }

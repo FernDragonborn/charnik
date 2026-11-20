@@ -25,6 +25,7 @@ export interface LineRoll {
 	labelValues?: Record<string, SaidValue>;
 	note: string;
 	critMethod: CritMethod;
+	volleyAdvantage?: { first: number; later: number };
 }
 
 /** The folded test line → what `rollPool` is asked for. Loop-invariant, so a volley builds it once;
@@ -63,9 +64,14 @@ export function rollLines(roll: LineRoll, rng?: Rng): RollLogEntry[] {
 	const note = [roll.note, ...rollerNotes(roll.lines)].filter(Boolean).join(' · ');
 	const at = Date.now();
 	const opts = poolOptions(spec, rng);
+	const later =
+		roll.volleyAdvantage?.first === opts.advantage ? roll.volleyAdvantage?.later : undefined;
 	const out: RollLogEntry[] = [];
 	for (let i = 0; i < times; i++) {
-		const primary = rollPool(spec?.dice ?? {}, opts);
+		const primary = rollPool(
+			spec?.dice ?? {},
+			i > 0 && later !== undefined ? { ...opts, advantage: later } : opts,
+		);
 		const damage = parts.length ? rollDamageParts(parts, rng) : undefined;
 		out.push({
 			// no name typed → the roll is called what the catalog calls an unnamed one, and carries

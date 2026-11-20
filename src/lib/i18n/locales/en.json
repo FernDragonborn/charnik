@@ -283,6 +283,7 @@
 			"speciesMeta": "{size} · {feet} ft ({metres})",
 			"lineageChosen": "A branch of {species} — its own traits on top.",
 			"lineageAsk": "{species} asks which branch you belong to.",
+			"spellAbility": "Species spellcasting ability",
 			"background": "Background",
 			"backgroundSkills": "{count, plural, one {# skill} other {# skills}}",
 			"backgroundSkillsUnknown": "skills",
@@ -898,7 +899,8 @@
 			"optionQuestion": {
 				"slot": "Which spell slot pays for it. Nothing is spent until you choose.",
 				"amount": "How many uses to spend. Nothing is spent until you choose.",
-				"confirmSpend": "Add +{total} to the check. Did it succeed?"
+				"confirmSpend": "Add +{total} to the check. Did it succeed?",
+				"pickAttack": "Choose the attack this feature makes."
 			},
 			"optionAnswer": {
 				"slot": "Level {value}",
@@ -907,6 +909,7 @@
 			},
 			"takeLongRest": "Take long rest",
 			"restKeepCurrent": "Keep current choice",
+			"lineageCantrip": "Lineage cantrip",
 			"slotRecoveryBudget": "{budget, plural, one {# slot level} other {# slot levels}}",
 			"slotRecoveryLevel": "Level {level} slot",
 			"slotFewer": "Recover one fewer slot",
@@ -957,6 +960,7 @@
 			"deadCannotHeal": "A dead character cannot rest or heal",
 			"deadCannotHealBody": "Revive them first, or take back the death save that killed them.",
 			"poolCannotCast": "This resource cannot pay for this spell.",
+			"innateCastNeedsPool": "Cast this spell with its species trait when a use is available.",
 			"notAvailable": "{name} — not available right now",
 			"notEnoughResource": "Not enough {resource} for {name}",
 			"noSpellSlot": "No spell slot left for {name}",

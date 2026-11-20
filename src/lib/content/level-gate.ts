@@ -97,6 +97,8 @@ function featureSpellIssues(graph: ContentGraph, system: string): JoinIssue[] {
 	for (const row of [
 		...graph.list('class_feature', { system }),
 		...graph.list('option', { system }),
+		...graph.list('species', { system }),
+		...graph.list('species_option', { system }),
 	])
 		for (const raw of (row.data.spells ?? '').split(',')) {
 			const part = raw.trim();

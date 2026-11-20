@@ -103,6 +103,8 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 			},
 			tempHp: character.play.hp.temp,
 			exhaustion: character.play.exhaustion,
+			movementSpent: character.play.turn.move,
+			attacksMade: character.play.turn.attacksMade,
 			flags: {
 				get is_bloodied() {
 					return character.play.hp.current <= hpMaxLive() / 2;

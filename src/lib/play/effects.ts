@@ -56,10 +56,67 @@ export function removeEffects(
 	iids: readonly string[],
 	ctx: PlayContext,
 ): PlayOutcome {
-	const play = dropEffects(character.play, (effect) => iids.includes(effect.iid));
-	return play === character.play
-		? quietly(character)
-		: settled(quietly({ ...character, play }), ctx);
+	return endEffects(character, (effect) => iids.includes(effect.iid), ctx);
+}
+
+function effectRow(effect: EffectInstance, graph: ContentGraph) {
+	const row = effect.source ? graph.get(effect.source) : undefined;
+	return row?.type === 'effect' ? row : undefined;
+}
+
+/** A dependent state ends when the named effect ends, regardless of how its parent left play. */
+export function endEffects(
+	character: Character,
+	shouldEnd: (effect: EffectInstance) => boolean,
+	ctx: PlayContext,
+): PlayOutcome {
+	const effects = character.play.effects;
+	const removed = new Set(effects.filter(shouldEnd));
+	if (!removed.size) return quietly(character);
+	const rows = new Map(effects.map((effect) => [effect, effectRow(effect, ctx.graph)]));
+	const ending = new Set<string>();
+	for (const effect of removed) {
+		const id = rows.get(effect)?.id;
+		if (id) ending.add(id);
+	}
+	let expanded = true;
+	while (expanded) {
+		expanded = false;
+		for (const effect of effects) {
+			const row = rows.get(effect);
+			if (!row?.data.ends_with || removed.has(effect) || !ending.has(row.data.ends_with)) continue;
+			removed.add(effect);
+			ending.add(row.id);
+			expanded = true;
+		}
+	}
+	const play = dropEffects(character.play, (effect) => removed.has(effect));
+	const next = { ...character, play };
+	const exhaustion = [...removed].reduce(
+		(sum, effect) => sum + Math.max(0, rows.get(effect)?.data.exhaustion_on_end ?? 0),
+		0,
+	);
+	return exhaustion
+		? setExhaustion(next, { level: play.exhaustion + exhaustion }, ctx)
+		: settled(quietly(next), ctx);
+}
+
+export function consumeAttackEffects(character: Character, ctx: PlayContext): PlayOutcome {
+	return endEffects(
+		character,
+		(effect) => effectRow(effect, ctx.graph)?.data.expires_after === 'attack',
+		ctx,
+	);
+}
+
+/** A projection used for later attacks in the same dice-tray volley. */
+export function afterAttackEffects(character: Character, graph: ContentGraph): Character {
+	const before = character.play;
+	const play = dropEffects(
+		before,
+		(effect) => effectRow(effect, graph)?.data.expires_after === 'attack',
+	);
+	return play === before ? character : { ...character, play };
 }
 
 /**

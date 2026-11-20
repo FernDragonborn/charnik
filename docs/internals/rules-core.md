@@ -257,7 +257,15 @@ spells along. A chosen spell a feature later grants turns always prepared and st
 
 A class feature's `cantrips` raises the class's cantrip pick cap. `choose_on_rest` reopens a single
 class-feature pick in the rest dialog. `long` allows a replacement on a Long Rest and `short` allows
-one on either rest. Changing the choice replaces its spell grants and other derived benefits.
+one on either rest. The replacement lives in `play.restOptions` and supersedes the build choice
+for spell grants and other derived benefits.
+
+For a species and its selected option, `spells` uses character level. The casting profile uses
+one of the abilities in `spell_abilities`, contributes no spell slots and can coexist with class
+profiles. `spell_slots:resource_only` restricts leveled spells to their linked pools unless a
+second source teaches the same spell. A pool selector such as `hellish_rebuke@2` gives the level
+of its free cast. `swap_cantrip` and `swap_cantrip_list` open a replacement from the named class
+list on a Long Rest.
 
 A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
 because house rules exist and the tracker does not enforce.
