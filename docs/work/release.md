@@ -131,7 +131,10 @@
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
   The live drive passes on protocol 3. **Left:** the live drive with a roll built in the tray,
-  which needs the person answering the native questions.
+  which needs the person answering the native questions; and the desktop app that twice quit on
+  its own, exit 0, during the drives — once with the question window open and blank, once ten
+  seconds after the player was let in, the window only switched away from. Not reproduced; the
+  log says nothing before it.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
