@@ -292,8 +292,8 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
   showed, a player's connection, the requests nobody answered. Rust keeps that list as it emits
   (`remember` in `mod.rs`), and a sheet in it is held to `tableViewSchema` again, since it began as
   a peer's bytes. Picking a seat up opens no socket and raises no native question — the person
-  said yes when the seat was taken. The GM's screen reconstructs the log of asks from the signed
-  records; an answer is matched by request id and author, including an answer that arrives before
+  said yes when the seat was taken. *To audit:* the GM's screen reconstructs the log of asks from
+  the signed records; an answer is matched by request id and author, including an answer that arrives before
   its ask. An unannounced DC remains a page-local annotation in sessionStorage
   (`routes/table/asked-log.ts`) and survives a page reload, not an app exit.
 
@@ -332,11 +332,12 @@ What a record is:
 | `ask` — the player, request id and public request | the GM | the addressed player |
 | `answer` — the request id and the player's answer | the addressed player | the GM |
 
-**History is not a prompt.** A live `request` frame carries the signed ask. The player holds a
-copy and answers by signing a record; only the live frame opens the prompt. On reconnect the
+**History is not a prompt** (*to audit*). A live `request` frame carries the signed ask. The
+player holds a copy and answers by signing a record; only the live frame opens the prompt. On reconnect the
 addressed player offers both copies back to the GM through the log exchange, even below the
-GM's highest sequence number. The usual log bounds and pace still apply. The GM never forwards
-these records to other players or reissues them as live prompts. An unannounced DC is not part
+GM's highest sequence number. The usual log bounds and pace apply to it, and to a live answer
+too, which is a record: past ten in ten seconds the GM's app drops it unsaid
+(`../work/release.md` ▸ TABLE-LINK-LOG). The GM never forwards these records to other players or reissues them as live prompts. An unannounced DC is not part
 of the signed request and cannot be recovered from a player's copy.
 
 **Who sees a roll is the roller's choice**, said on the roll: a player's rolls go to the table
@@ -369,8 +370,8 @@ trusted with what the table says, not with how fast this app writes.
 
 - **A table's key outlives the app, in the OS's own store** (`keyring-core`), never the data
   folder, which a folder sync or a restored backup carries (design review ▸ 11). An app whose key
-  cannot be opened treats the table as gone and says to join again (`forgotten`). The desktop
-  stores are Windows Credential Manager, Linux Secret Service over an encrypted D-Bus session,
+  cannot be opened treats the table as gone and says to join again (`forgotten`). *To audit
+  off Windows:* the desktop stores are Windows Credential Manager, Linux Secret Service over an encrypted D-Bus session,
   and the macOS login Keychain. An unavailable store leaves a table session-only; opening the
   store is retried on the next operation. Other targets have no store.
 - **The rest is a file only Rust writes**, in `tables/` under the app's local data folder, which
@@ -389,12 +390,11 @@ trusted with what the table says, not with how fast this app writes.
   invitation players hold still names it, and whoever was let in is seated without being asked
   about. **Its door is shut** until the GM opens it, so invitations handed out before the app went
   down do not still knock. A player's seat that was dialling all along finds it — through a
-  relay. A table with no relay binds its saved UDP ports again, so players on the same LAN
-  redial the old invitation without another admission, even with the door shut. A busy saved
+  relay. *To audit:* a table with no relay binds its saved UDP ports again, so players on the
+  same LAN redial the old invitation without another admission, even with the door shut. A busy saved
   port refuses the return instead of silently moving the table. A changed LAN address still
-  needs a new invitation. A table saved before socket addresses are kept returns once on new
-  ports and keeps those for subsequent returns. Updating those addresses never replaces or
-  deletes the key; a failed metadata write leaves the old table intact.
+  needs a new invitation. A saved table with no addresses binds new ports once and keeps them.
+  Updating those addresses never replaces or deletes the key; a failed metadata write leaves the old table intact.
 - **A GM key that changes is a new table**, joined from a new invitation, never a warning to click
   past.
 

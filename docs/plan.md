@@ -316,7 +316,8 @@ position and are given per wave, because most of them were learned the hard way.
   item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
   pinned rail, left-aligned, with the panel regions re-decided — also its own session; RESOURCE-PIN
   asks the same "where does a pin land" question and wants answering with it) and
-  COMPANION (its research is written; four answers wait on a sign-off).
+  COMPANION (its research is written; four answers wait on a sign-off) and TABLE-LINK-MACOS-STORE
+  (the maintainer's check on a Mac, not soon).
 
 ## Verification
 Automated coverage and conventions live in [testing.md](internals/testing.md) (run
