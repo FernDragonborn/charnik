@@ -77,6 +77,7 @@ export const rowDetail = (row: LoadedRow | undefined, type: ContentType): Detail
 	row
 		? buildDetail(row, type, {
 				locale: app.activeLocale,
+				graph: content.graph,
 				...(content.graph && row.type === 'item'
 					? { propertyRows: weaponPropertyRowsFor(content.graph, row) }
 					: {}),

@@ -121,7 +121,7 @@
       its base — it is your character on the table. A GM screen's three panels got no yes. Tally
       marks and an hourglass for rounds are undrawn and unjudged.
 
-- [ ] **RANGED-WEAPON-RANGE · show ranged weapon range in the compendium — 0.9.0.** Show normal
+- [~] **RANGED-WEAPON-RANGE · show ranged weapon range in the compendium — 0.9.0.** `to audit`. Show normal
   and long range on the article, in feet with metres in parentheses. Read both values from the
   weapon's structured range in the selected edition and show a missing value as missing.
 

@@ -1396,6 +1396,8 @@
 		"primary_ability": "Primary ability",
 		"properties": "Properties",
 		"range": "Range",
+		"normal_range": "Normal range",
+		"long_range": "Long range",
 		"rarity": "Rarity",
 		"rarityAtBonus": "Rarity at +{bonus}",
 		"recharge": "Recharge",
@@ -1528,6 +1530,8 @@
 		"cost": "{amount} {coin}",
 		"disadvantage": "Disadvantage",
 		"required": "Required",
+		"rangeUnspecified": "Unspecified",
+		"weaponDistance": "{feet} ft ({metres})",
 		"yes": "Yes"
 	},
 	"creatureSize": {

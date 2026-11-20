@@ -1396,6 +1396,8 @@
 		"primary_ability": "Основна характеристика",
 		"properties": "Властивості",
 		"range": "Дистанція",
+		"normal_range": "Звичайна дистанція",
+		"long_range": "Дальня дистанція",
 		"rarity": "Рідкісність",
 		"rarityAtBonus": "Рідкісність для +{bonus}",
 		"recharge": "Відновлення",
@@ -1528,6 +1530,8 @@
 		"cost": "{amount} {coin}",
 		"disadvantage": "Перешкода",
 		"required": "Потрібне",
+		"rangeUnspecified": "Не вказано",
+		"weaponDistance": "{feet} фт ({metres})",
 		"yes": "Так"
 	},
 	"creatureSize": {

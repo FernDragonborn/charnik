@@ -87,6 +87,21 @@ describe('buildDetail', () => {
 		expect(bare && [say(bare[1]), bare[2]]).toEqual(['Vex', undefined]);
 	});
 
+	it.each([
+		['ranged, ammunition:80/320', ['80 ft (24.4 m)', '320 ft (97.5 m)']],
+		['ranged, thrown:20/60', ['20 ft (6.1 m)', '60 ft (18.3 m)']],
+		['ranged, range:80_ft', ['80 ft (24.4 m)', 'Unspecified']],
+		['ranged, range', ['Unspecified', 'Unspecified']],
+		['melee, thrown:20/60', [undefined, undefined]],
+	])('item: range cells for %s', (tags, expected) => {
+		const detail = buildDetail(row({ category: 'weapon', tags }, 'item'), 'item');
+		const cells = new Map(detail.meta.map(([label, value]) => [label.key, say(value)]));
+		expect([cells.get('contentField.normal_range'), cells.get('contentField.long_range')]).toEqual(
+			expected,
+		);
+		expect(cells.has('itemTag.range')).toBe(false);
+	});
+
 	it('locale-aware: prose reads <base>_<loc>, falls back to _en, then a bare column', () => {
 		const d = {
 			name_en: 'Fireball',

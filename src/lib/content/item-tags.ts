@@ -75,6 +75,8 @@ export const ITEM_TAG = {
 	mastery: 'mastery',
 	/** A weapon that fires ammunition (`ammunition:80/320` — the value is its range). */
 	ammunition: 'ammunition',
+	thrown: 'thrown',
+	range: 'range',
 	/** WHICH ammunition it fires, and which kind a stack is (`ammo:arrow`). 5.5e states it on both
 	 *  sides; SRD 5.1 never says which ammunition a weapon fires, so its weapons carry none. */
 	ammo: 'ammo',

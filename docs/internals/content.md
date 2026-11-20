@@ -108,6 +108,11 @@ prices a magic item or gives a formula for one, and the rarity→value table is 
 never filled in (`AGENTS.md` ▸ Inventing game data). `rarity` is complete in both editions, which
 is why it is the axis the picker filters magic on, with a blank `rarity` meaning mundane.
 
+The compendium shows normal and long range for weapons tagged `ranged`. It reads the pair in feet
+from `range`, `ammunition`, or `thrown`, in that order, including tags inherited through
+`base_item_id` in the same source. It shows metres in parentheses and marks each missing value
+individually.
+
 - **Fold alternatives, never companions.** A tag cell stays short only because the folded facts are
   mutually exclusive by kind — a weapon never carries armour tags. Folding facts that CO-OCCUR
   (`cost`, `weight_lb`, `rarity` all apply to one row) grows every cell without bound, which is

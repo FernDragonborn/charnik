@@ -270,6 +270,7 @@
 		selected
 			? buildDetail(selected, selectedType, {
 					locale: contentLocale,
+					graph,
 					...(availableTo ? { availableTo } : {}),
 					...(graph && selected.type === 'item'
 						? { propertyRows: weaponPropertyRowsFor(graph, selected) }
@@ -280,7 +281,7 @@
 	// editor mode = a two-panel BEFORE | AFTER: the current rendered article (read-only) beside the
 	// editable form, so you see the original next to your changes.
 	const editorBefore = $derived(
-		editRow ? buildDetail(editRow, editRow.type, { locale: contentLocale }) : null,
+		editRow ? buildDetail(editRow, editRow.type, { locale: contentLocale, graph }) : null,
 	);
 	// the editor is a 3-column view — ask the shell for the full viewport width (like translate);
 	// cleared when editing ends or the page unmounts.

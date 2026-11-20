@@ -271,7 +271,7 @@ position and are given per wave, because most of them were learned the hard way.
   4. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
-  5. **RANGED-WEAPON-RANGE** — `ui.md`. Show normal and long range on ranged weapon articles in
+  5. **RANGED-WEAPON-RANGE** (`to audit`) — `ui.md`. Show normal and long range on ranged weapon articles in
      the compendium before 0.9.0.
 
   **Deliberately not in a wave:** RULES-TEXT, which is transcription from the SRD, not app work.

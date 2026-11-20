@@ -3,15 +3,21 @@
  * same two-pane shape: a grouped list + a wiki detail rendered from the CSV row). No Svelte —
  * unit-testable. This is the DETAIL half, which WikiDetail renders; the list half is `entry-list.ts`.
  */
-import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { asText, signed, titleCase } from '$lib/util/format';
+import {
+	LOCALE_TAG,
+	type ContentGraph,
+	type LoadedRow,
+	type LoadedRowOf,
+} from '$lib/content/loader';
+import { asText, metres, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import { costSaid } from '$lib/rules/currency';
 import { PROSE_BASES, type ContentType, type RowColumn } from '$lib/content/schemas';
 import { cellText, localizedCell } from './prose';
 import type { Said, SaidText } from '$lib/util/say';
 import { packNameOf } from './disk';
-import { ITEM_TAG, parseBonusChoices, parseItemTags } from './item-tags';
+import { ITEM_TAG, parseBonusChoices, parseItemTags, type ItemTags } from './item-tags';
+import { resolveItem } from './resolved-item';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -45,7 +51,7 @@ const CELL_TAGS = new Set([
 	'str_min',
 	'armor',
 	'mastery',
-	'range',
+	ITEM_TAG.range,
 	'ammo',
 	'stealth_disadvantage',
 	'attunement',
@@ -70,11 +76,13 @@ function tagCells(
 	raw: unknown,
 	propertyRows: ReadonlyMap<string, LoadedRow>,
 	locale: string,
+	range: ReturnType<typeof weaponRange>,
 ): MetaCell[] {
 	const labelled: MetaCell[] = [];
 	const properties: string[] = [];
 	const propertyRules: LoadedRow[] = [];
 	for (const [name, value] of parseItemTags(raw)) {
+		if (range && name === ITEM_TAG.range) continue;
 		const rule = propertyRows.get(name === ITEM_TAG.mastery ? value : name);
 		if (name === ITEM_TAG.mastery && rule)
 			labelled.push([tagWord(name), localizedName(rule, locale), [rule]]);
@@ -91,7 +99,9 @@ function tagCells(
 					: { key: BARE_TAG_VALUE[name] ?? 'contentValue.yes', fallback: 'Yes' },
 			]);
 		else {
-			properties.push(value ? `${titleCase(name)} (${value})` : titleCase(name));
+			properties.push(
+				value && name !== range?.rangeTag ? `${titleCase(name)} (${value})` : titleCase(name),
+			);
 			if (rule) propertyRules.push(rule);
 		}
 	}
@@ -165,9 +175,35 @@ export interface SpellModel {
 const withMetric = (range: string): string => {
 	const m = range.match(/(\d+)\s*(?:feet|ft)\.?/i);
 	if (!m) return range;
-	const met = (Number(m[1]) * 0.3048).toFixed(1).replace(/\.0$/, '');
-	return `${range} (${met} m)`;
+	return `${range} (${metres(Number(m[1]))})`;
 };
+
+const RANGE_TAGS = [ITEM_TAG.range, ITEM_TAG.ammunition, ITEM_TAG.thrown];
+
+function rangeValue(raw: string | undefined): SaidText {
+	const feet = Number(/^[\s_]*(\d+)(?:[\s_]*(?:ft|feet)\.?)?[\s_]*$/.exec(raw ?? '')?.[1]);
+	if (!Number.isSafeInteger(feet) || feet <= 0)
+		return { key: 'contentValue.rangeUnspecified', fallback: 'Unspecified' };
+	const metric = metres(feet);
+	return {
+		key: 'contentValue.weaponDistance',
+		values: { feet, metres: metric },
+		fallback: `${feet} ft (${metric})`,
+	};
+}
+
+function weaponRange(tags: ItemTags) {
+	if (!tags.has(ITEM_TAG.ranged)) return;
+	const rangeTag = RANGE_TAGS.find((tag) => tags.get(tag));
+	const raw = rangeTag ? tags.get(rangeTag) : undefined;
+	const distances = raw?.split('/') ?? [];
+	const [normal, long] = distances.length <= 2 ? distances : [];
+	const cells: MetaCell[] = [
+		[fieldLabel('normal_range'), rangeValue(normal)],
+		[fieldLabel('long_range'), rangeValue(long)],
+	];
+	return { rangeTag, cells };
+}
 
 type SpellData = LoadedRowOf<'spell'>['data'];
 
@@ -341,6 +377,7 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 /** What `buildDetail` is told beyond the row — each of it by a caller that has the graph. */
 export interface DetailContext {
 	locale?: string;
+	graph?: ContentGraph | null;
 	/** For a spell: the classes that can take it, from the reverse access index. */
 	availableTo?: SpellModel['availableTo'];
 	/** For an item: property word → the `weapon_property` row that says what it does, in the item's
@@ -354,7 +391,7 @@ const NO_PROPERTY_ROWS: ReadonlyMap<string, LoadedRow> = new Map();
 export function buildDetail(
 	row: LoadedRow,
 	type: ContentType,
-	{ locale = 'en', availableTo, propertyRows = NO_PROPERTY_ROWS }: DetailContext = {},
+	{ locale = 'en', availableTo, propertyRows = NO_PROPERTY_ROWS, graph }: DetailContext = {},
 ): DetailModel {
 	const d = row.data;
 	// fields every type's DetailModel shares (title/prose/attribution); the branch adds its own
@@ -418,11 +455,15 @@ export function buildDetail(
 		{ key: 'contentField.rarityAtBonus', values: { bonus: rung.bonus } },
 		{ key: `itemRarity.${rung.rarity ?? ''}`, fallback: titleCase(rung.rarity ?? '') },
 	]);
+	const range =
+		row.type === 'item' && row.data.category === 'weapon'
+			? weaponRange(graph ? resolveItem(graph, row).tags : parseItemTags(row.data.tags))
+			: undefined;
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.flatMap(([k, v]): MetaCell[] =>
 			k === 'tags'
-				? tagCells(v, propertyRows, locale)
+				? tagCells(v, propertyRows, locale, range)
 				: k === 'cost'
 					? [[fieldLabel(k), costSaid(v)]]
 					: [
@@ -432,7 +473,7 @@ export function buildDetail(
 							],
 						],
 		)
-		.concat(rungCells);
+		.concat(range?.cells ?? [], rungCells);
 	return {
 		...common,
 		eyebrow: [{ key: `contentType.${type}`, fallback: titleCase(type) }],

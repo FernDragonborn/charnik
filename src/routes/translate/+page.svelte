@@ -136,10 +136,10 @@
 
 	// the two rendered models: English source (read-only) + target (editable draft binds to prose)
 	const sourceDetail = $derived(
-		selected ? buildDetail(selected, selectedType, { locale: sourceLocale }) : null,
+		selected ? buildDetail(selected, selectedType, { locale: sourceLocale, graph }) : null,
 	);
 	const targetDetail = $derived(
-		selected ? buildDetail(selected, selectedType, { locale: targetLocale }) : null,
+		selected ? buildDetail(selected, selectedType, { locale: targetLocale, graph }) : null,
 	);
 
 	// draft = the raw target-locale prose of the selected row; reset whenever the row or locale changes.

@@ -90,8 +90,7 @@ function fallbackTargetLabel(target: string): string {
 	return target.toUpperCase();
 }
 
-/** Feet → "N m" (metric in parentheses next to imperial). */
-export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
+export { metres } from '$lib/util/format';
 
 /** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). */
 export const kilograms = (lb: number) => `${(lb * 0.4536).toFixed(1).replace(/\.0$/, '')} kg`;

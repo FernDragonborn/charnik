@@ -1016,7 +1016,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
 - `function modTargetKey` — The catalog key naming ONE modifier target.
 - `function modTargetLabel` — What a custom modifier is called when the player names it nothing: "+1 to AC", "+1 до КЗ".
-- `const metres` — Feet → "N m" (metric in parentheses next to imperial).
+- `re-export metres`
 - `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
 
 ### `src/lib/combat/damage-parts.ts`
@@ -2626,6 +2626,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/util/format.ts`
 
+- `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
 - `const titleCase` — "sleight_of_hand" / "animal-handling" → "Sleight Of Hand" / "Animal Handling".
 - `const contentTypeLabel` — A content-type id as it reads in a sentence: `spell_lists` → "spell lists".
@@ -2693,4 +2694,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1655 exports across 227 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1656 exports across 227 modules · 118 duplicate suspects._
