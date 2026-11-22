@@ -425,6 +425,20 @@ export interface SpellcastingInput {
 	issues?: EffectIssue[];
 }
 
+/** The shared leveled slots: one slot-casting class reads its own table at its own level, and two
+ *  or more read the full caster table at their combined caster level (pact slots are apart). */
+function sharedSlotCounts(
+	graph: ContentGraph,
+	shared: readonly CasterProfile[],
+	casterLevel: number,
+	systems: string[],
+): number[] {
+	const only = shared.length === 1 ? shared[0] : undefined;
+	if (only) return slotCountsFor(slotTable(graph, only.slotKind, systems), only.level);
+	if (shared.length > 1) return slotCountsFor(slotTable(graph, 'full', systems), casterLevel);
+	return [];
+}
+
 export function deriveSpellcasting({
 	character,
 	graph,
@@ -484,14 +498,7 @@ export function deriveSpellcasting({
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
 	const shared = sources.filter((p) => p.caster !== 'pact');
 	const casterLevel = effectiveCasterLevel(shared.map((p) => ({ share: p.share, level: p.level })));
-	let sharedCounts: number[] = [];
-	const only = shared.length === 1 ? shared[0] : undefined;
-	if (only) {
-		sharedCounts = slotCountsFor(slotTable(graph, only.slotKind, systems), only.level);
-	} else if (shared.length > 1) {
-		sharedCounts = slotCountsFor(slotTable(graph, 'full', systems), casterLevel);
-	}
-	const pools: CastPool[] = sharedPools(sharedCounts);
+	const pools: CastPool[] = sharedPools(sharedSlotCounts(graph, shared, casterLevel, systems));
 
 	const classes: SpellcastingClass[] = sources.map((p) => {
 		const isPact = p.caster === 'pact';

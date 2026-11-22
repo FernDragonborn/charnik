@@ -374,6 +374,21 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 	};
 }
 
+/**
+ * A `+1/+2/+3` row is one entry and three items, and its rarity is the rung's: the row's own
+ * `rarity` can state only one of them, so where the ladder states each, the ladder is what is said —
+ * one cell per rung, in place of a single rarity that is wrong for the other two and of the
+ * column's raw grammar. None when the ladder states no rarity.
+ */
+function rarityRungCells(d: LoadedRow['data']): MetaCell[] {
+	return parseBonusChoices('bonus_choice' in d ? asText(d.bonus_choice) : '')
+		.filter((rung) => rung.rarity)
+		.map((rung): MetaCell => [
+			{ key: 'contentField.rarityAtBonus', values: { bonus: rung.bonus } },
+			{ key: `itemRarity.${rung.rarity ?? ''}`, fallback: titleCase(rung.rarity ?? '') },
+		]);
+}
+
 /** What `buildDetail` is told beyond the row — each of it by a caller that has the graph. */
 export interface DetailContext {
 	locale?: string;
@@ -442,19 +457,8 @@ export function buildDetail(
 	}
 	// generic types carry no ability-score columns (only monster does, handled above), so the meta
 	// grid is the whole story here — every non-identity, non-prose column becomes a k/v cell.
-	const skip = new Set(COMMON);
-	// A `+1/+2/+3` row is one entry and three items, and its rarity is the rung's: the row's own
-	// `rarity` can state only one of them, so where the ladder states each, the ladder is what is
-	// said — one cell per rung, in place of a single rarity that is wrong for the other two and of
-	// the column's raw grammar.
-	const rungs = parseBonusChoices('bonus_choice' in d ? asText(d.bonus_choice) : '').filter(
-		(rung) => rung.rarity,
-	);
-	if (rungs.length) for (const column of ['rarity', 'bonus_choice']) skip.add(column);
-	const rungCells = rungs.map((rung): MetaCell => [
-		{ key: 'contentField.rarityAtBonus', values: { bonus: rung.bonus } },
-		{ key: `itemRarity.${rung.rarity ?? ''}`, fallback: titleCase(rung.rarity ?? '') },
-	]);
+	const rungCells = rarityRungCells(d);
+	const skip = new Set([...COMMON, ...(rungCells.length ? ['rarity', 'bonus_choice'] : [])]);
 	const range =
 		row.type === 'item' && row.data.category === 'weapon'
 			? weaponRange(graph ? resolveItem(graph, row).tags : parseItemTags(row.data.tags))

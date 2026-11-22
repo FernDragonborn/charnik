@@ -320,6 +320,42 @@ function leaveSpellEffect(
 	};
 }
 
+/** A cast paid from a feature's pool: the pool must name the spell and have a use left — a spent one
+ *  says so as a use of the resource would — and it may fix the level the spell is cast at. */
+function poolCast(
+	character: Character,
+	{
+		sheet,
+		row,
+		intent,
+		ctx,
+	}: { sheet: CharacterSheet; row: LoadedRowOf<'spell'>; intent: CastIntent; ctx: PlayContext },
+): { halt: PlayOutcome } | { freeCastLevel?: number } {
+	if (!intent.pool) return {};
+	const pool = sheet.resources.find((entry) => entry.id === intent.pool);
+	const spell = { ref: row.effectiveId, id: row.id };
+	if (!pool || !poolAllowsSpell(pool, spell) || row.data.level === 0)
+		return { halt: refusal(character, { text: { key: 'combat.notice.poolCannotCast' } }) };
+	if (resourceSpent(character, sheet, pool.id) >= pool.max)
+		return { halt: useResource(character, pool, ctx) };
+	const level = poolCastLevel(pool, spell);
+	return level === undefined ? {} : { freeCastLevel: level };
+}
+
+/** A leveled spell an origin teaches (a lineage's) is cast from its own pool unless this character
+ *  may pay for it with a slot they have. */
+function innateNeedsPool(character: Character, sheet: CharacterSheet, spell: CastSpell): boolean {
+	const innate = sheet.spellcasting.classes.some(
+		(profile) => profile.innate && profile.grantedSpells.includes(spell.subject.ref),
+	);
+	return (
+		innate &&
+		spell.subject.level > 0 &&
+		(!canCastWithSlots(character, sheet, spell.subject.ref) ||
+			!sheet.spellcasting.pools.some((entry) => entry.spellLevel))
+	);
+}
+
 /**
  * Cast a spell. Which weapon a buff lands on is asked first, and nothing is paid until it is
  * answered; then the cast is paid for whole or refused whole; then it takes concentration and leaves
@@ -331,19 +367,9 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 	const sheet = ctx.derive(character);
 	const blocked = spellcastingBlock(sheet);
 	if (blocked) return refusal(character, { text: blocked });
-	let freeCastLevel: number | undefined;
-	if (intent.pool) {
-		const pool = sheet.resources.find((entry) => entry.id === intent.pool);
-		if (
-			!pool ||
-			!poolAllowsSpell(pool, { ref: row.effectiveId, id: row.id }) ||
-			row.data.level === 0
-		)
-			return refusal(character, { text: { key: 'combat.notice.poolCannotCast' } });
-		if (resourceSpent(character, sheet, pool.id) >= pool.max)
-			return useResource(character, pool, ctx);
-		freeCastLevel = poolCastLevel(pool, { ref: row.effectiveId, id: row.id });
-	}
+	const viaPool = poolCast(character, { sheet, row, intent, ctx });
+	if ('halt' in viaPool) return viaPool.halt;
+	const { freeCastLevel } = viaPool;
 	const spell: CastSpell = {
 		subject: { ref: intent.spell, level: row.data.level, upcast: row.data.upcast ?? '' },
 		data: row.data,
@@ -351,17 +377,7 @@ export function castSpell(character: Character, intent: CastIntent, ctx: PlayCon
 		name: localizedName(row, ctx.locale),
 	};
 	const ritual = isRitual(character, sheet, spell, intent.ritual === true);
-	const innate = sheet.spellcasting.classes.some(
-		(profile) => profile.innate && profile.grantedSpells.includes(spell.subject.ref),
-	);
-	if (
-		innate &&
-		row.data.level > 0 &&
-		!ritual &&
-		!intent.pool &&
-		(!canCastWithSlots(character, sheet, spell.subject.ref) ||
-			!sheet.spellcasting.pools.some((entry) => entry.spellLevel))
-	)
+	if (!ritual && !intent.pool && innateNeedsPool(character, sheet, spell))
 		return refusal(character, { text: { key: 'combat.notice.innateCastNeedsPool' } });
 	const weapon = weaponFor(character, spell, intent, ctx);
 	if (weapon === undefined)

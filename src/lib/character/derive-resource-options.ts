@@ -8,7 +8,7 @@
  */
 import { ISSUE_KEY } from '$lib/effects/token-parser';
 import { resolveActionFormula } from '$lib/effects/action-token';
-import type { ContentGraph, LoadedRow } from '../content/loader';
+import type { ContentGraph, LoadedRow, LoadedRowOf } from '../content/loader';
 import type { EffectIssue } from '../effects/token-parser';
 import { evalExpression, type ExprContext } from '../effects/expression-evaluator';
 import type { System } from '../rules/pipeline';
@@ -84,6 +84,42 @@ function resolveAvailable(
 	return true;
 }
 
+/** An option's cost as a number of uses, or `x` for the player to say; null when the cell says
+ *  neither, and an issue says so. */
+function optionCost(raw: string, name: string, issues: EffectIssue[]): number | 'x' | null {
+	if (raw === 'x') return 'x';
+	if (/^\d+$/.test(raw)) return Number(raw);
+	issues.push({
+		source: name,
+		token: `cost:${raw}`,
+		key: ISSUE_KEY.unreadableOptionCost,
+		detail: `cost: "${raw}"`,
+	});
+	return null;
+}
+
+/** Is a `cadence: turn` option still open this turn: out of combat always, in combat until used. */
+const openThisTurn = (character: Character, row: LoadedRowOf<'resource_option'>): boolean =>
+	row.data.cadence !== OPTION_CADENCE.turn ||
+	!character.play.inCombat ||
+	!character.play.turn.usedRolls.includes(row.id);
+
+const grantedByOf = (row: LoadedRowOf<'resource_option'>): string =>
+	String(row.data.granted_by ?? '').trim();
+
+/** Is this option the character's: on a pool they have, and — when another feature gives it on that
+ *  pool — once they have that feature. Absent otherwise, never greyed: greyed is for a window that
+ *  can open. */
+function isTheirs(
+	row: LoadedRowOf<'resource_option'>,
+	resourceIds: ReadonlySet<string>,
+	featureIds: ReadonlySet<string>,
+): boolean {
+	const resourceId = row.data.resource_id ?? '';
+	const grantedBy = grantedByOf(row);
+	return (!resourceId || resourceIds.has(resourceId)) && (!grantedBy || featureIds.has(grantedBy));
+}
+
 /** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
 export function resolveResourceOptions({
 	graph,
@@ -101,41 +137,31 @@ export function resolveResourceOptions({
 			.filter((feature) => isActive(feature.row))
 			.map((feature) => feature.row.id),
 	);
-	for (const row of graph.rows) {
-		if (row.type !== 'resource_option' || !row.systems.includes(system) || !isActive(row)) continue;
+	const offered = graph.rows.filter(
+		(row): row is LoadedRowOf<'resource_option'> =>
+			row.type === 'resource_option' &&
+			row.systems.includes(system) &&
+			isActive(row) &&
+			isTheirs(row, resourceIds, featureIds),
+	);
+	for (const row of offered) {
 		const resourceId = row.data.resource_id ?? '';
-		if (resourceId && !resourceIds.has(resourceId)) continue;
-		// an option another feature gives on this pool is not this character's until they have it —
-		// absent, never greyed: greyed is for a window that can open
-		const grantedBy = String(row.data.granted_by ?? '').trim();
-		if (grantedBy && !featureIds.has(grantedBy)) continue;
-		const raw = String(row.data.cost ?? (resourceId ? '' : '0')).trim();
-		let cost: number | 'x';
-		if (raw === 'x') cost = 'x';
-		else if (/^\d+$/.test(raw)) cost = Number(raw);
-		else {
-			issues.push({
-				source: row.data.name_en,
-				token: `cost:${raw}`,
-				key: ISSUE_KEY.unreadableOptionCost,
-				detail: `cost: "${raw}"`,
-			});
-			continue;
-		}
+		const grantedBy = grantedByOf(row);
+		const name = row.data.name_en;
+		const cost = optionCost(String(row.data.cost ?? (resourceId ? '' : '0')).trim(), name, issues);
+		if (cost === null) continue;
 		out.push({
 			id: row.id,
 			resourceId,
 			resourceName: poolNames.get(resourceId) ?? titleCase(resourceId),
-			name: row.data.name_en,
+			name,
 			description: String(row.data.text_en ?? ''),
-			action: resolveActionFormula(String(row.data.action ?? ''), ctx, row.data.name_en, issues),
+			action: resolveActionFormula(String(row.data.action ?? ''), ctx, name, issues),
 			actionType: row.data.action_type ?? 'action',
 			cost,
 			available:
-				(row.data.cadence !== OPTION_CADENCE.turn ||
-					!character.play.inCombat ||
-					!character.play.turn.usedRolls.includes(row.id)) &&
-				resolveAvailable(String(row.data.available ?? ''), ctx, row.data.name_en, issues),
+				openThisTurn(character, row) &&
+				resolveAvailable(String(row.data.available ?? ''), ctx, name, issues),
 			...(row.data.cadence ? { cadence: row.data.cadence } : {}),
 			...(grantedBy ? { grantedBy } : {}),
 		});

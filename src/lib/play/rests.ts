@@ -156,6 +156,99 @@ function longRest(
 	};
 }
 
+/** What each pool has spent after this rest: its recharge model says what the rest gives back —
+ *  nothing, the whole pool, or an amount to roll or read. */
+function rechargedPools(
+	waking: Character,
+	sheet: CharacterSheet,
+	kind: RestKind,
+	ctx: PlayContext,
+): CharacterPlay['resourcesSpent'] {
+	const resourcesSpent = { ...waking.play.resourcesSpent };
+	for (const pool of sheet.resources) {
+		const back = restRecharge(pool.recharge, kind);
+		if (back === null) continue;
+		if (back === RECHARGE_ALL) resourcesSpent[pool.id] = 0;
+		else {
+			const count = rechargeCount(back, sheet.castCtx, ctx.rng);
+			if (count !== null)
+				resourcesSpent[pool.id] = Math.max(0, resourceSpent(waking, sheet, pool.id) - count);
+		}
+	}
+	return resourcesSpent;
+}
+
+/** A long rest's own: hit points, Hit Dice and exhaustion, a lineage cantrip swapped, and the hit
+ *  points waiting under a form that still stands. */
+function afterLongRest(
+	waking: Character,
+	rested: CharacterPlay,
+	{ sheet, choice, ctx }: { sheet: CharacterSheet; choice: RestChoice; ctx: PlayContext },
+): { play: CharacterPlay; notices: PlayNotice[] } {
+	let play = longRest(waking, rested, sheet, choice);
+	const swap = choice.speciesCantrip ? speciesCantripChoice(waking, ctx.graph) : undefined;
+	const chosenCantrip = swap?.spells.find((spell) => spell.effectiveId === choice.speciesCantrip);
+	if (swap && chosenCantrip)
+		play = {
+			...play,
+			speciesCantrip: { row: swap.row.effectiveId, spell: chosenCantrip.effectiveId },
+		};
+	// a form still standing (a 2014 druid of 16 and up) rests on its own count; the hit points
+	// waiting under it are the character's, and a long rest restores those too
+	const form = play.form;
+	if (form?.hpBefore === undefined) return { play, notices: [] };
+	const own = ctx.derive(withoutForm(waking)).maxHp;
+	const restored = effectiveHpMax(play.hp.max ?? null, own);
+	// the sheet shows the form's count, so the hit points under it are said on every rest, full or not
+	return {
+		play: { ...play, form: { ...form, hpBefore: restored } },
+		notices: [
+			{
+				text: {
+					key: 'combat.notice.formOwnHpRestored',
+					values: { from: form.hpBefore, to: restored },
+				},
+				kind: LOG_KIND.rest,
+			},
+		],
+	};
+}
+
+/** A short rest's own: the warlock's pact slots back, and the slots a recovery feature chose. */
+function afterShortRest(
+	play: CharacterPlay,
+	recovery: ReturnType<typeof recoverSlots> | undefined,
+): CharacterPlay {
+	const { [PACT_SLOT_KEY]: _pact, ...spellSlotsSpent } =
+		recovery?.spellSlotsSpent ?? play.spellSlotsSpent;
+	return {
+		...play,
+		spellSlotsSpent,
+		resourcesSpent: { ...play.resourcesSpent, ...recovery?.recoveredPools },
+	};
+}
+
+/** The rest said, with the exhaustion it took away when it took one. */
+const restedNotice = (
+	kind: RestKind,
+	exhaustionBefore: number,
+	exhaustion: number,
+): PlayNotice => ({
+	text: {
+		key: 'combat.notice.restRestored',
+		values: { kind: { catalog: 'combat.restKind', id: kind } },
+	},
+	kind: LOG_KIND.rest,
+	...(exhaustionBefore > exhaustion
+		? {
+				description: {
+					key: 'combat.notice.exhaustionChanged',
+					values: { from: exhaustionBefore, to: exhaustion },
+				},
+			}
+		: {}),
+});
+
 /**
  * Take a rest: recharge pools by what each one's recharge says of this rest, reset spell slots (long
  * = all, short = pact only), restore hit points on a long rest, and expire the round-timed effects
@@ -199,57 +292,15 @@ export function rest(
 			refused: true,
 			notices: [{ text: { key: 'combat.notice.slotRecoveryInvalid' } }],
 		};
-	const resourcesSpent = { ...waking.play.resourcesSpent };
-	for (const pool of sheet.resources) {
-		// what this rest gives the pool back is the recharge model's call: `null` nothing, `'all'`
-		// the whole pool, otherwise an amount to roll or read
-		const back = restRecharge(pool.recharge, kind);
-		if (back === null) continue;
-		if (back === RECHARGE_ALL) resourcesSpent[pool.id] = 0;
-		else {
-			const count = rechargeCount(back, sheet.castCtx, ctx.rng);
-			if (count !== null)
-				resourcesSpent[pool.id] = Math.max(0, resourceSpent(waking, sheet, pool.id) - count);
-		}
-	}
+	const resourcesSpent = rechargedPools(waking, sheet, kind, ctx);
 	// the rest's hours pass on the clock, so what it did not outlast has that much less left
 	let play: CharacterPlay = { ...waking.play, resourcesSpent, round: before.round + restRounds };
 	const notices: PlayNotice[] = [...ended.notices];
 	if (kind === 'long') {
-		play = longRest(waking, play, sheet, choice);
-		const swap = choice.speciesCantrip ? speciesCantripChoice(character, ctx.graph) : undefined;
-		const chosenCantrip = swap?.spells.find((spell) => spell.effectiveId === choice.speciesCantrip);
-		if (swap && chosenCantrip)
-			play = {
-				...play,
-				speciesCantrip: { row: swap.row.effectiveId, spell: chosenCantrip.effectiveId },
-			};
-		// a form still standing (a 2014 druid of 16 and up) rests on its own count; the hit points
-		// waiting under it are the character's, and a long rest restores those too
-		const form = play.form;
-		if (form?.hpBefore !== undefined) {
-			const own = ctx.derive(withoutForm(waking)).maxHp;
-			const restored = effectiveHpMax(play.hp.max ?? null, own);
-			play = { ...play, form: { ...form, hpBefore: restored } };
-			// the sheet shows the form's count, so the hit points under it are said on every rest, full or not
-			notices.push({
-				text: {
-					key: 'combat.notice.formOwnHpRestored',
-					values: { from: form.hpBefore, to: restored },
-				},
-				kind: LOG_KIND.rest,
-			});
-		}
-	} else {
-		// warlock pact slots return on a short rest
-		const { [PACT_SLOT_KEY]: _pact, ...spellSlotsSpent } =
-			recovery?.spellSlotsSpent ?? play.spellSlotsSpent;
-		play = {
-			...play,
-			spellSlotsSpent,
-			resourcesSpent: { ...play.resourcesSpent, ...recovery?.recoveredPools },
-		};
-	}
+		const woke = afterLongRest(waking, play, { sheet, choice, ctx });
+		play = woke.play;
+		notices.push(...woke.notices);
+	} else play = afterShortRest(play, recovery);
 	const restOptions = restOptionsAfter(character, choice, ctx.graph, kind);
 	if (restOptions) play = { ...play, restOptions };
 	return settled(
@@ -257,24 +308,7 @@ export function rest(
 			character: { ...character, play },
 			undoable: true,
 			log: ended.log,
-			notices: [
-				{
-					text: {
-						key: 'combat.notice.restRestored',
-						values: { kind: { catalog: 'combat.restKind', id: kind } },
-					},
-					kind: LOG_KIND.rest,
-					...(before.exhaustion > play.exhaustion
-						? {
-								description: {
-									key: 'combat.notice.exhaustionChanged',
-									values: { from: before.exhaustion, to: play.exhaustion },
-								},
-							}
-						: {}),
-				},
-				...notices,
-			],
+			notices: [restedNotice(kind, before.exhaustion, play.exhaustion), ...notices],
 		},
 		ctx,
 	);
