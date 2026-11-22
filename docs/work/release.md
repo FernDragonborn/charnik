@@ -190,7 +190,12 @@
   ten-record pace — the replay is a burst, and what is past ten in ten seconds is dropped until
   the next reconnect; the Linux store at runtime (the round-trip test is ignored off Windows and
   needs an unlocked Secret Service); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
-  restart → Return on the real app with a person answering the native question.
+  restart → Return on the real app with a person answering the native question. An ask or answer
+  the GM's log already evicted is kept again when the player hands it back, as a new arrival that
+  evicts the oldest other record, on every reconnect: `Log::holds` asks only what is held, not what
+  was seen. A saved `[::]:port` that no longer binds — IPv6 switched off since the table was kept
+  — refuses the return the way a busy port does, and the table cannot be returned to until it is
+  forgotten.
 - [ ] **TABLE-LINK-MACOS-STORE · a remembered table on a Mac.** The maintainer checks it on a
   Mac, not soon. `apple-native-keyring-store` is in the macOS build and nothing has compiled or run it:
   `cargo test --features table-link -- --ignored the_os_store_keeps_a_key_and_lets_it_go` on a
