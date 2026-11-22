@@ -327,7 +327,12 @@ Windows binaries, so vite does not run there — but the app does not need it to
 - In WSL: `cargo build --features tauri/custom-protocol`, which embeds `../build` instead of
   asking a dev server for it, with `CARGO_TARGET_DIR` on the Linux filesystem (the repo is on
   `/mnt/`, where a build crawls) and `TAURI_CONFIG='{"app":{"windows":[{…,"url":"dev/<probe>"}]}}'`
-  to open on the probe. No `tauri-cli` is needed; a first build is about three minutes and 5 GB.
+  to open on the probe. No `tauri-cli` is needed; a first build is about three minutes and 5 GB,
+  and WSL needs several GB of memory for it — at 1 GB the VM stops answering while iroh compiles.
+- **The Linux credential store is tested in WSL against gnome-keyring**, which WSL lacks until
+  `apt install gnome-keyring`: inside `dbus-run-session`, `gnome-keyring-daemon --unlock` (any
+  password on stdin) then `--start --components=secrets`, then
+  `cargo test --features table-link table_link -- --include-ignored --skip a_live_player`.
 - Run it with `HOME`, `XDG_CONFIG_HOME` and `XDG_DATA_HOME` pointed under `/tmp`, so a probe that
   accepts a data folder writes its pointer there and not into the real home. Whether the system
   HAS a Documents folder is a file, `$XDG_CONFIG_HOME/user-dirs.dirs` — run both with and without.

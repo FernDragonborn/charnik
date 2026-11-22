@@ -188,8 +188,8 @@
   which has not run yet. An unannounced DC
   stays the GM's session's own and is not recovered. **Left:** a reconnect hands back past the
   ten-record pace — the replay is a burst, and what is past ten in ten seconds is dropped until
-  the next reconnect; the Linux store at runtime (the round-trip test is ignored off Windows and
-  needs an unlocked Secret Service); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
+  the next reconnect; the Linux store in the running app (the round-trip test passes under WSL
+  against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
   restart → Return on the real app with a person answering the native question. An ask or answer
   the GM's log already evicted is kept again when the player hands it back, as a new arrival that
   evicts the oldest other record, on every reconnect: `Log::holds` asks only what is held, not what

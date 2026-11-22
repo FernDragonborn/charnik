@@ -370,9 +370,9 @@ trusted with what the table says, not with how fast this app writes.
 
 - **A table's key outlives the app, in the OS's own store** (`keyring-core`), never the data
   folder, which a folder sync or a restored backup carries (design review ▸ 11). An app whose key
-  cannot be opened treats the table as gone and says to join again (`forgotten`). *To audit
-  off Windows:* the desktop stores are Windows Credential Manager, Linux Secret Service over an encrypted D-Bus session,
-  and the macOS login Keychain. An unavailable store leaves a table session-only; opening the
+  cannot be opened treats the table as gone and says to join again (`forgotten`). The desktop
+  stores are Windows Credential Manager, Linux Secret Service over an encrypted D-Bus session,
+  and the macOS login Keychain (*to audit* — TABLE-LINK-MACOS-STORE). An unavailable store leaves a table session-only; opening the
   store is retried on the next operation. Other targets have no store.
 - **The rest is a file only Rust writes**, in `tables/` under the app's local data folder, which
   the page's file access is denied (`capabilities/default.json`): one `<table>.json` per table —
