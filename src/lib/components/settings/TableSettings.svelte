@@ -42,37 +42,38 @@
 	<p class="sec-note">{$_('settings.table.blurb')}</p>
 </section>
 
-<div class="setting-row">
-	<span class="setting-label" id="table-relay-label">{$_('settings.table.relay')}</span>
-	<div class="setting-options" role="group" aria-labelledby="table-relay-label">
-		{#each MODES as choice (choice)}
-			<button
-				class="pill-btn"
-				class:accent={mode === choice}
-				aria-pressed={mode === choice}
-				onclick={() => choose(choice)}>{$_(`settings.table.relayName.${choice}`)}</button
-			>
-		{/each}
-	</div>
-</div>
-<p class="sec-note table-note">{$_(`settings.table.relayHint.${mode}`)}</p>
-
-{#if mode === RELAY_MODE.none}
+{#snippet choices(
+	key: string,
+	options: readonly string[],
+	current: string,
+	pick: (choice: string) => void,
+)}
 	<div class="setting-row">
-		<span class="setting-label" id="table-addresses-label">{$_('settings.table.addresses')}</span>
-		<div class="setting-options" role="group" aria-labelledby="table-addresses-label">
-			{#each FAMILIES as choice (choice)}
+		<span class="setting-label" id={`table-${key}-label`}>{$_(`settings.table.${key}`)}</span>
+		<div class="setting-options" role="group" aria-labelledby={`table-${key}-label`}>
+			{#each options as choice (choice)}
 				<button
 					class="pill-btn"
-					class:accent={addresses === choice}
-					aria-pressed={addresses === choice}
-					onclick={() => chooseAddresses(choice)}
-					>{$_(`settings.table.addressesName.${choice}`)}</button
+					class:accent={current === choice}
+					aria-pressed={current === choice}
+					onclick={() => pick(choice)}>{$_(`settings.table.${key}Name.${choice}`)}</button
 				>
 			{/each}
 		</div>
 	</div>
-	<p class="sec-note table-note">{$_(`settings.table.addressesHint.${addresses}`)}</p>
+	<p class="sec-note table-note">{$_(`settings.table.${key}Hint.${current}`)}</p>
+{/snippet}
+
+{@render choices('relay', MODES, mode, (picked) => {
+	const next = MODES.find((candidate) => candidate === picked);
+	if (next) choose(next);
+})}
+
+{#if mode === RELAY_MODE.none}
+	{@render choices('addresses', FAMILIES, addresses, (picked) => {
+		const next = FAMILIES.find((candidate) => candidate === picked);
+		if (next) chooseAddresses(next);
+	})}
 {/if}
 
 {#if mode === RELAY_MODE.custom}
