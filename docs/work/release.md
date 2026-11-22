@@ -130,8 +130,8 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  The live drive passes on protocol 3. **Left:** the live drive with a roll built in the tray,
-  which needs the person answering the native questions; and the desktop app that twice quit on
+  The live drive passes on protocol 3. **Left:** the live drive on protocol 4, and with a roll
+  built in the tray, both needing the person answering the native questions; and the desktop app that twice quit on
   its own, exit 0, during the drives — once with the question window open and blank, once ten
   seconds after the player was let in, the window only switched away from. Not reproduced; the
   log says nothing before it.
@@ -157,8 +157,8 @@
   that no app is the master of the table's state — a GM's lags and restarts like anyone's:
   every record has ONE author (a player their sheet and rolls, the GM their asks), the author's
   app is the truth for it and says it again on reconnecting, every app that saw a record keeps a
-  copy, and a record is signed with its author's table key so a copy handed back by anyone is
-  either the author's words or refused. Nothing is agreed on, because no two apps write one
+  copy, and a record is signed with its author's table key so a copy the GM hands on is either the
+  author's words or refused. Nothing is agreed on, because no two apps write one
   record; the log is the union, shown in the order of its times. Specified in
   `../internals/table-link.md` ▸ The table's log, with the maintainer's leave to decide and build
   overnight; **these were decided without the maintainer and wait for their word**: a player's
