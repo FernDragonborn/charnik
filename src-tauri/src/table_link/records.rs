@@ -330,6 +330,14 @@ impl Log {
             .map(|entry| entry.signed.clone())
     }
 
+    /// Give a held record its author's skew, once it is known: a record written before the GM's app
+    /// measured this app's clock is placed again. The record as it is held, or None if it is not.
+    pub fn retime(&mut self, author: &str, seq: u64, skew: i64) -> Option<(Record, Signed)> {
+        let entry = self.records.get_mut(&(author.to_string(), seq))?;
+        entry.skew = skew;
+        Some((entry.record.clone(), entry.signed.clone()))
+    }
+
     /// Is this record held already?
     pub fn holds(&self, author: &str, seq: u64) -> bool {
         self.records.contains_key(&(author.to_string(), seq))

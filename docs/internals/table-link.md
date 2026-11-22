@@ -367,7 +367,9 @@ clock: the GM's app measures how far each seat's clock runs behind its own when 
 every five minutes after (`clock`), keeps that skew beside every record of that author, hands it on
 with the record, and tells the seat its own. Every app sorts by the author's time moved by its skew,
 so a seat whose clock is wrong by minutes or days writes rolls that land where they were made, with
-nothing for any person to do. One dated more than ten minutes ahead on the GM's clock is refused,
+nothing for any person to do. A seat keeps the skew it was last told across restarts; what it wrote
+before any GM's app had measured it is placed again when one does, on its screen and on its disk,
+where the later line for a record is the one read back. One dated more than ten minutes ahead on the GM's clock is refused,
 and when the 500 a table keeps are full, the record that ARRIVED first goes — never the one the
 oldest-looking clock wrote, which would cost a seat with a wrong clock every roll. An author's
 numbers go on past what was evicted. A table holds records from at most 32 authors. **The pace

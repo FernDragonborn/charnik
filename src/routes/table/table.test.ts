@@ -738,6 +738,14 @@ describe("the table's log", () => {
 		);
 	});
 
+	it('places a roll told again where its new time puts it, once', async () => {
+		const { table, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		tellPlayer(heardRecord(roll('lira', 1, 300), 'Lira'));
+		tellPlayer(heardRecord(roll('bevan', 1, 200), 'Bevan'));
+		tellPlayer(heardRecord(roll('lira', 1, 100), 'Lira'));
+		expect(table.log.shown.map((line) => line.record.author)).toEqual(['bevan', 'lira']);
+	});
+
 	it('drops a hidden roll, even one whose hide came first', async () => {
 		const { table, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
 		const hide = (author: string, seq: number): LogRecord => ({

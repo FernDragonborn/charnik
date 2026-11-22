@@ -300,11 +300,20 @@ impl Shelf {
             return vec![];
         };
         let lines: Vec<&str> = text.lines().collect();
-        lines[lines.len().saturating_sub(LOG_MAX)..]
+        let mut held: Vec<Held> = Vec::new();
+        for line in lines[lines.len().saturating_sub(LOG_MAX)..]
             .iter()
             .filter(|line| line.len() <= RECORD_LINE_MAX)
             .filter_map(|line| serde_json::from_str::<Held>(line).ok())
-            .collect()
+        {
+            // a record written again later — placed on the GM's clock once it was known — is read
+            // as its later line, where its first stood
+            match held.iter_mut().find(|kept| kept.record == line.record) {
+                Some(kept) => *kept = line,
+                None => held.push(line),
+            }
+        }
+        held
     }
 
     /// Take a table off the shelf, key and records with it.
@@ -563,6 +572,34 @@ mod tests {
         assert!(again.bind_addrs.is_empty());
         shelf.forget("00ff");
         fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn a_record_written_again_is_read_back_as_its_later_line() {
+        let (shelf, folder) = shelf();
+        let key = SecretKey::generate();
+        let id = "00ff";
+        let seat = KeptSeat::Gm {
+            name: "Thursday".into(),
+            relay: RelaySetting::N0,
+            allowed: vec![],
+            bind_addrs: vec![],
+        };
+        assert!(shelf.put(id, &seat, &key));
+        let keep = shelf.keeper(id);
+        let record = signed_roll(&key, "t", 1);
+        for skew in [0, 3_600_000] {
+            keep(Keep::Record(Held {
+                record: record.clone(),
+                name: None,
+                skew,
+            }));
+        }
+        let read = shelf.read_records(id);
+        assert_eq!(read.len(), 1);
+        assert_eq!(read[0].skew, 3_600_000);
+        shelf.forget(id);
+        let _ = fs::remove_dir_all(folder);
     }
 
     #[test]

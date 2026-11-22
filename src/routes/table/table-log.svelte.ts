@@ -76,13 +76,16 @@ export class TableLog {
 		if (record.body.kind !== LOG_BODY.roll) return;
 		const id = recordId(record.author, record.seq);
 		if (this.hidden.includes(id)) return;
-		if (this.lines.some((line) => recordId(line.record.author, line.record.seq) === id)) return;
 		const line: LogLine = {
 			record: { ...record, body: record.body },
 			name: event.name ?? null,
 			mine: event.mine,
 		};
-		this.lines = [...this.lines, line].sort((a, b) => a.record.at - b.record.at).slice(-LINES_MAX);
+		// a record told again is the same record placed again: its time on the GM's clock became known
+		const others = this.lines.filter(
+			(held) => recordId(held.record.author, held.record.seq) !== id,
+		);
+		this.lines = [...others, line].sort((a, b) => a.record.at - b.record.at).slice(-LINES_MAX);
 	};
 
 	clear = (): void => {

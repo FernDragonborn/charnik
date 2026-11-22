@@ -1178,6 +1178,11 @@ struct PlayerShared {
     emit: Emit,
     /// How far this app's clock runs behind the GM's, as the GM last measured it.
     skew: AtomicI64,
+    /// Whether any GM's app has measured it yet: this app's records written before are placed again
+    /// once it has.
+    skew_known: AtomicBool,
+    /// The numbers of this app's own records written before the skew was known.
+    untimed: Mutex<Vec<u64>>,
     /// What the GM handed over is believed for the GM's sake, but this app's disk is its own to
     /// pace: records wait here, in the order they came, until the pace lets them be written.
     disk: Mutex<DiskPace>,
@@ -1280,6 +1285,36 @@ impl PlayerShared {
             name,
             skew,
         })
+    }
+
+    /// The GM's app says how far this app's clock is off: kept for what this app writes next, and
+    /// the records it wrote before anyone had measured it are placed on the GM's clock now — on
+    /// this screen, and on its disk, where the later line for a record is the one read back.
+    fn learn_skew(&self, skew: i64) {
+        self.skew.store(skew, Ordering::Relaxed);
+        if self.skew_known.swap(true, Ordering::Relaxed) {
+            return;
+        }
+        let me = self.key.public().to_string();
+        let untimed = std::mem::take(&mut *locked(&self.untimed));
+        for seq in untimed {
+            let Some((record, signed)) = locked(&self.log).retime(&me, seq, skew) else {
+                continue;
+            };
+            (self.keep)(Keep::Record(Held {
+                record: signed,
+                name: None,
+                skew,
+            }));
+            if !record.body.is_history() {
+                (self.emit)(TableEvent::Record {
+                    table: self.table.clone(),
+                    mine: true,
+                    record: on_table_clock(record, skew),
+                    name: None,
+                });
+            }
+        }
     }
 
     fn says(&self, state: ConnectionState, reason: Option<CloseReason>) {
@@ -1416,7 +1451,7 @@ async fn sit(
         let due = next_out.is_some_and(|next| next < locked(&shared.log).next_seq(&me));
         tokio::select! {
             frame = frames.recv() => match frame {
-                Some(Ok(GmFrame::Clock { skew })) => shared.skew.store(skew, Ordering::Relaxed),
+                Some(Ok(GmFrame::Clock { skew })) => shared.learn_skew(skew),
                 Some(Ok(GmFrame::Request { record })) => {
                     let Some(Record { body: Body::Ask { request_id, request, .. }, .. }) =
                         records::verify(&record, &shared.gm) else {
@@ -1590,6 +1625,8 @@ pub async fn join(
         dial_now: Notify::new(),
         emit,
         skew: AtomicI64::new(0),
+        skew_known: AtomicBool::new(false),
+        untimed: Mutex::default(),
         disk: Mutex::default(),
         disk_later: AtomicBool::new(false),
     });
@@ -1600,6 +1637,7 @@ pub async fn join(
             // until the GM measures it again, this app's clock is as far off as when it last wrote
             if records::verify(&record, &shared.gm).is_some_and(|kept| kept.author == me) {
                 shared.skew.store(skew, Ordering::Relaxed);
+                shared.skew_known.store(true, Ordering::Relaxed);
             }
             shared.hold(record, name, skew);
         }
@@ -1682,6 +1720,9 @@ impl PlayerSeat {
             };
             if log.keep(record.clone(), signed.clone(), skew) != Kept::New {
                 return Delivery::NotDelivered;
+            }
+            if !shared.skew_known.load(Ordering::Relaxed) {
+                locked(&shared.untimed).push(record.seq);
             }
             (shared.keep)(Keep::Record(Held {
                 record: signed.clone(),
@@ -2369,6 +2410,9 @@ mod tests {
         let (arrived, name) = next_record(&mut gm_events).await;
         assert!(same(&arrived, &kept));
         assert_eq!(name.as_deref(), Some("Lira"));
+        // and written before anyone measured Lira's clock, it is placed again once the GM's app has
+        let (placed, _) = next_record(&mut lira_events).await;
+        assert!(same(&placed, &kept));
         lira.leave().await;
         table.close().await;
     }
