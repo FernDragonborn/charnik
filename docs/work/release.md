@@ -196,6 +196,24 @@
   was seen. A saved `[::]:port` that no longer binds — IPv6 switched off since the table was kept
   — refuses the return the way a busy port does, and the table cannot be returned to until it is
   forgotten.
+- [ ] **TABLE-LINK-PACE · the log's pace counts actions, loses nothing, and does not bring back what
+  it evicted.** A record is one roll line (its dice are inside it — a Fireball is one), and a seat may
+  hand over ten in ten seconds, the rest dropped unsaid. One press can make more: Extra Attack with
+  Action Surge is up to sixteen lines. What the maintainer settled on:
+  - **A record is one action** — every line one press made — so the pace counts actions, the log
+    reads "Lira: Action Surge, four attacks", and a VTT bridge (Owlbear Rodeo is planned) posts one
+    message per action. Changes the record body: protocol 4, held under the 2 KiB record cap.
+  - **The sender paces itself** per destination, queueing past the pace instead of handing the
+    excess over to be dropped; the receiver's limit stays as a guard against a misbehaving peer
+    only. The same paced outbox is what a VTT bridge drains at that VTT's own limits — Owlbear's
+    published docs state none, so its bridge measures before it is tuned.
+  - **An answer to the GM's ask is not counted against the pace**: there is at most one per ask,
+    and today one past the pace is dropped while the player's app shows it sent.
+  - **A record the log already evicted is not kept again** when a seat hands it back: an author's
+    number at or below the highest seen, and not held, was seen and let go. Today a reconnect
+    replays the seat's asks and answers, each evicts the oldest-arrived record, and the next
+    reconnect does it again. Evicting by the records' own times was weighed and turned down: a
+    record's time is its author's clock, and a seat days off would lose every roll it makes.
 - [ ] **TABLE-LINK-CLOCK · a seat whose clock is off is told, with what it costs.** A record's time
   is its author's clock, so a seat whose clock is wrong by hours or days writes records the table
   misplaces: one behind lands far down the log as if rolled long ago, and one more than ten minutes
