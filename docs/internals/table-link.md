@@ -118,7 +118,11 @@ n0 describes its public relays as free, rate-limited and without an uptime promi
 to rely on them for production (design review ▸ 8). They are the default because a remote table
 then works with nothing to set up; the other two settings are how a table stops depending on
 them. A table with no relay works where the players can reach the GM's addresses — one local
-network, or a forwarded port.
+network, or a forwarded port. It is opened on IPv4 and IPv6, or on IPv4 alone (Settings ▸ Table ▸
+Addresses; `AddressFamilies`): for a network or a driver without IPv6, or to keep an IPv6 address,
+which can name a machine for longer than an IPv4 one behind a home router, out of the invitation.
+On IPv4 alone only IPv4 sockets are bound and only IPv4 addresses are invited, and the question
+before opening says so.
 
 An invitation names the relay OR the GM's addresses, never both: a home network's addresses are
 not something to paste into a chat when a relay already finds the table. A player's endpoint uses
@@ -404,7 +408,9 @@ trusted with what the table says, not with how fast this app writes.
   down do not still knock. A player's seat that was dialling all along finds it — through a
   relay. A table with no relay binds its saved UDP ports again, so players on the
   same LAN redial the old invitation without another admission, even with the door shut. A busy saved
-  port refuses the return instead of silently moving the table. A changed LAN address still
+  port refuses the return instead of silently moving the table. A saved IPv6 port that no longer
+  binds — IPv6 switched off since the table was kept — returns the table on its IPv4 port, and the
+  GM is told that players who reached it over IPv6 need a new invitation. A changed LAN address still
   needs a new invitation. A saved table with no addresses binds new ports once and keeps them.
   Updating those addresses never replaces or deletes the key; a failed metadata write leaves the old table intact.
 - **A GM key that changes is a new table**, joined from a new invitation, never a warning to click

@@ -189,10 +189,7 @@
   matrix, which has not run yet. An unannounced DC stays the GM's session's own and is not
   recovered. **Left:** the Linux store in the running app (the round-trip test passes under WSL
   against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
-  restart → Return on the real app with a person answering the native question. A saved
-  `[::]:port` that no longer binds — IPv6 switched off since the table was kept
-  — refuses the return the way a busy port does, and the table cannot be returned to until it is
-  forgotten.
+  restart → Return on the real app with a person answering the native question.
 - [ ] **TABLE-LINK-NOTES · notes the table writes together** (a detective campaign's clue board).
   An edit is its EDITOR's own signed record, never a diff sent to the note's author for approval, so
   the log's "an app hands over only what it wrote" (`../internals/table-link.md`) holds with no

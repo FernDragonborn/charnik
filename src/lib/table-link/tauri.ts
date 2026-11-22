@@ -153,14 +153,20 @@ const gmSeat = (table: TableId, invite: string | null, early: EarlyEvents): GmSe
 
 /** What `table_link_host` and `table_link_join` answer. */
 type RustSeating =
-	| { status: typeof SEATING.seated; table: TableId; invite: string | null; code: string | null }
+	| {
+			status: typeof SEATING.seated;
+			table: TableId;
+			invite: string | null;
+			code: string | null;
+			withoutIpv6?: boolean;
+	  }
 	| { status: typeof SEATING.unavailable; reason: UnavailableReason };
 
 async function seat<S>(
 	command: string,
 	args: Record<string, unknown>,
 	seatAt: (table: TableId, token: string, early: EarlyEvents) => S,
-): Promise<Seating<S>> {
+): Promise<Seating<S> & { withoutIpv6?: true }> {
 	const early = await hearEarly();
 	// a refusal is a build without the feature, and reads as no table
 	const seating = await invoke<RustSeating>(command, args).catch(() => null);
@@ -171,6 +177,7 @@ async function seat<S>(
 	return {
 		status: SEATING.seated,
 		seat: seatAt(seating.table, seating.invite ?? seating.code ?? '', early),
+		...(seating.withoutIpv6 ? { withoutIpv6: true } : {}),
 	};
 }
 
@@ -208,7 +215,11 @@ async function returnTo(remembered: RememberedTable, locale: string): Promise<Re
 	if (role === TABLE_ROLE.gm) {
 		const seating = await seat('table_link_return', args, gmSeat);
 		return seating.status === SEATING.seated
-			? { status: seating.status, held: { role, seat: seating.seat, name } }
+			? {
+					status: seating.status,
+					held: { role, seat: seating.seat, name },
+					...(seating.withoutIpv6 ? { withoutIpv6: true } : {}),
+				}
 			: seating;
 	}
 	const seating = await seat('table_link_return', args, playerSeat);

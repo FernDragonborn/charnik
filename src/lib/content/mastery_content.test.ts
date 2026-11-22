@@ -15,6 +15,16 @@ import { newCharacter, characterSchema, classRow, inventoryRow } from '../charac
 import { deriveSheet } from '../character/derive';
 import { attackMeta, attackNotes, attackPropertyRows, computeAttacks } from '../combat/attacks';
 import { ITEM_TAG, parseItemTags, weaponCategoryOf } from './item-tags';
+import type { ContentGraph } from './loader';
+
+/** One graph per pack for the file's helpers that a test calls several times: each would otherwise
+ *  read the whole pack off disk again, and four reads outlast a test's timeout on a busy machine. */
+const graphs = new Map<string, Promise<ContentGraph>>();
+function packGraph(pack: string): Promise<ContentGraph> {
+	const held = graphs.get(pack) ?? loadPacks(pack);
+	graphs.set(pack, held);
+	return held;
+}
 
 const S = 'SRD 5.2.1';
 /** The plain weapon properties both editions define and a weapon's tags name. */
@@ -278,7 +288,7 @@ describe('weapon properties · the extra attack a weapon allows', () => {
 	) => {
 		const [source, system] =
 			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
-		const graph = await loadPacks(pack);
+		const graph = await packGraph(pack);
 		const c = newCharacter('grog', 'Grog', system);
 		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 		c.build.abilities = { str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 };
@@ -406,7 +416,7 @@ describe('weapon properties · Heavy puts disadvantage on the attacks its rule n
 	) => {
 		const [source, system] =
 			pack === 'srd-2014' ? (['SRD 5.1', '5e'] as const) : ([S, '5.5e'] as const);
-		const graph = await loadPacks(pack);
+		const graph = await packGraph(pack);
 		const c = newCharacter('grog', 'Grog', system);
 		c.build.classes = [classRow({ class: `class:${source}:fighter`, level: 1 })];
 		c.build.abilities = { str, dex, con: 10, int: 10, wis: 10, cha: 10 };

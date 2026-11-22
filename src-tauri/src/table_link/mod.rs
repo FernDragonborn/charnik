@@ -35,7 +35,8 @@ use tauri::{Emitter, Manager};
 use crate::native_strings::native_string;
 use records::Body;
 use session::{
-    Approve, Delivery, Emit, GmTable, PlayerSeat, RelaySetting, TableEvent, Unavailable,
+    AddressFamilies, Approve, Delivery, Emit, GmTable, PlayerSeat, RelaySetting, TableEvent,
+    Unavailable,
 };
 use wire::{Invite, TableAnswer, TableRequest};
 
@@ -211,6 +212,9 @@ pub enum Seating {
         invite: Option<String>,
         /// A player's seat: the digits to read to the GM.
         code: Option<String>,
+        /// A table opened again on IPv4 alone, its saved IPv6 port no longer binding.
+        #[serde(skip_serializing_if = "std::ops::Not::not")]
+        without_ipv6: bool,
     },
     Unavailable {
         reason: Unavailable,
@@ -355,7 +359,12 @@ pub async fn table_link_host(
     }
     let route = match &relay {
         RelaySetting::N0 => route_sentence(&locale, "hostRoute.n0", None),
-        RelaySetting::None => route_sentence(&locale, "hostRoute.none", None),
+        RelaySetting::None {
+            addresses: AddressFamilies::Both,
+        } => route_sentence(&locale, "hostRoute.none", None),
+        RelaySetting::None {
+            addresses: AddressFamilies::Ipv4,
+        } => route_sentence(&locale, "hostRoute.noneIpv4", None),
         RelaySetting::Custom { url } => match relay_host(url) {
             Some(host) => route_sentence(&locale, "hostRoute.custom", Some(&host)),
             None => return unavailable(Unavailable::BadRelay),
@@ -409,6 +418,7 @@ pub async fn table_link_host(
                 table: id,
                 invite,
                 code: None,
+                without_ipv6: false,
             }
         }
         Err(reason) => unavailable(reason),
@@ -484,6 +494,7 @@ pub async fn table_link_join(
                 table,
                 invite: None,
                 code: Some(code),
+                without_ipv6: false,
             }
         }
         Err(reason) => unavailable(reason),
@@ -553,7 +564,12 @@ pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: Str
         remember::KeptSeat::Gm { name, relay, .. } => {
             let route = match relay {
                 RelaySetting::N0 => route_sentence(&locale, "hostRoute.n0", None),
-                RelaySetting::None => route_sentence(&locale, "hostRoute.none", None),
+                RelaySetting::None {
+                    addresses: AddressFamilies::Both,
+                } => route_sentence(&locale, "hostRoute.none", None),
+                RelaySetting::None {
+                    addresses: AddressFamilies::Ipv4,
+                } => route_sentence(&locale, "hostRoute.noneIpv4", None),
                 RelaySetting::Custom { url } => {
                     route_sentence(&locale, "hostRoute.custom", relay_host(url).as_deref())
                 }
@@ -588,6 +604,7 @@ pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: Str
             match session::host(table, &name, &relay, emit, approve, keep, Some(again)).await {
                 Ok((gm, invite)) => {
                     let id = gm.id.clone();
+                    let without_ipv6 = gm.without_ipv6;
                     shelf.update_bind_addrs(&id, gm.bind_addrs());
                     *seat = Some(Held {
                         seat: Seat::Gm {
@@ -601,6 +618,7 @@ pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: Str
                         table: id,
                         invite,
                         code: None,
+                        without_ipv6,
                     }
                 }
                 Err(reason) => unavailable(reason),
@@ -622,6 +640,7 @@ pub async fn table_link_return(app: tauri::AppHandle, table: String, locale: Str
                         table: id,
                         invite: None,
                         code: Some(code),
+                        without_ipv6: false,
                     }
                 }
                 Err(reason) => unavailable(reason),

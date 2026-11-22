@@ -2373,6 +2373,12 @@
 			"relayUrl": "Relay address",
 			"relayUrlPlaceholder": "https://relay.example.org",
 			"relayUrlBad": "A relay address starts with https://",
+			"addresses": "Addresses",
+			"addressesName": { "both": "IPv4 and IPv6", "ipv4": "IPv4 only" },
+			"addressesHint": {
+				"both": "The invitation carries every address this computer has.",
+				"ipv4": "The invitation carries this computer's IPv4 addresses only — for a network or a driver without IPv6, or to keep an IPv6 address out of the invitation."
+			},
 			"joiningNote": "When you JOIN a table, your app uses the relay named in the GM's invitation, and asks you first."
 		}
 	},
@@ -2513,7 +2519,8 @@
 			"hostRoute": {
 				"n0": "Connections are set up through the public relay servers of number 0 (iroh). They see the network addresses of the apps at the table and never what is sent.",
 				"custom": "Connections are set up through the relay server {relay}. It sees the network addresses of the apps at the table and never what is sent.",
-				"none": "No relay server is used. The invitation carries this computer's network addresses, and only players who can reach them can join."
+				"none": "No relay server is used. The invitation carries this computer's network addresses, and only players who can reach them can join.",
+				"noneIpv4": "No relay server is used. The invitation carries this computer's IPv4 addresses only, and only players who can reach them can join."
 			},
 			"join": {
 				"title": "Charnik — join a table?",
@@ -2746,6 +2753,7 @@
 			"notDelivered": "Not delivered to: {names}",
 			"versionRefusedPlayerOlder": "{name} tried to join with Charnik {version}, which is older than yours. They need to update before they can sit at the table.",
 			"versionRefusedGmOlder": "{name} tried to join with Charnik {version}, which is newer than yours. Update Charnik so they can sit at the table.",
+			"withoutIpv6": "IPv6 is not available on this computer any more, so the table is open on IPv4 alone. Players who reached it over IPv6 need a new invitation.",
 			"answerLost": "The GM's app did not get your answer — the connection may have dropped."
 		}
 	}

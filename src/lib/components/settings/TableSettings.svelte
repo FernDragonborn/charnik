@@ -3,9 +3,15 @@
 	// choice — a player's app follows the invitation it was handed, and is asked first.
 	import { app } from '$lib/stores/app.svelte';
 	import { _ } from '$lib/i18n';
-	import { RELAY_MODE, type RelayMode } from '$lib/table-link/types';
+	import {
+		ADDRESS_FAMILIES,
+		RELAY_MODE,
+		type AddressFamilies,
+		type RelayMode,
+	} from '$lib/table-link/types';
 
 	const MODES: RelayMode[] = [RELAY_MODE.n0, RELAY_MODE.custom, RELAY_MODE.none];
+	const FAMILIES: AddressFamilies[] = [ADDRESS_FAMILIES.both, ADDRESS_FAMILIES.ipv4];
 	const RELAY_SCHEME = 'https://';
 
 	const mode = $derived(app.tableRelay.mode);
@@ -13,9 +19,17 @@
 	/** The typed address as it is kept across a switch to another mode and back. */
 	let typedUrl = $state(app.tableRelay.mode === RELAY_MODE.custom ? app.tableRelay.url : '');
 	const urlLooksWrong = $derived(url.trim() !== '' && !url.trim().startsWith(RELAY_SCHEME));
+	const addresses = $derived(
+		app.tableRelay.mode === RELAY_MODE.none
+			? (app.tableRelay.addresses ?? ADDRESS_FAMILIES.both)
+			: ADDRESS_FAMILIES.both,
+	);
 
 	function choose(next: RelayMode): void {
 		app.tableRelay = next === RELAY_MODE.custom ? { mode: next, url: typedUrl } : { mode: next };
+	}
+	function chooseAddresses(next: AddressFamilies): void {
+		app.tableRelay = { mode: RELAY_MODE.none, addresses: next };
 	}
 	function typeUrl(value: string): void {
 		typedUrl = value;
@@ -42,6 +56,24 @@
 	</div>
 </div>
 <p class="sec-note table-note">{$_(`settings.table.relayHint.${mode}`)}</p>
+
+{#if mode === RELAY_MODE.none}
+	<div class="setting-row">
+		<span class="setting-label" id="table-addresses-label">{$_('settings.table.addresses')}</span>
+		<div class="setting-options" role="group" aria-labelledby="table-addresses-label">
+			{#each FAMILIES as choice (choice)}
+				<button
+					class="pill-btn"
+					class:accent={addresses === choice}
+					aria-pressed={addresses === choice}
+					onclick={() => chooseAddresses(choice)}
+					>{$_(`settings.table.addressesName.${choice}`)}</button
+				>
+			{/each}
+		</div>
+	</div>
+	<p class="sec-note table-note">{$_(`settings.table.addressesHint.${addresses}`)}</p>
+{/if}
 
 {#if mode === RELAY_MODE.custom}
 	<div class="setting-row">

@@ -257,9 +257,28 @@ pub enum RelaySetting {
     Custom {
         url: String,
     },
-    /// No relay: the invitation carries this machine's own addresses.
-    None,
+    /// No relay: the invitation carries this machine's own addresses, of the families chosen.
+    None {
+        #[serde(default)]
+        addresses: AddressFamilies,
+    },
 }
+
+/// Which address families a table with no relay is opened on. A GM may keep to IPv4: an IPv6
+/// address can name the machine for longer than an IPv4 one behind a home router, and some
+/// networks or drivers have IPv6 switched off.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AddressFamilies {
+    #[default]
+    Both,
+    Ipv4,
+}
+
+/// Where an IPv4-only table binds when it has no saved port: any interface, a port of the system's
+/// choosing.
+const ANY_IPV4: SocketAddr =
+    SocketAddr::new(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED), 0);
 
 /// A relay is a web address the app will keep a connection to, so it is one over TLS.
 pub fn parse_relay(url: &str) -> Option<RelayUrl> {
@@ -272,7 +291,7 @@ impl RelaySetting {
         Some(match self {
             Self::N0 => RelayMode::Default,
             Self::Custom { url } => RelayMode::custom([parse_relay(url)?]),
-            Self::None => RelayMode::Disabled,
+            Self::None { .. } => RelayMode::Disabled,
         })
     }
 }
@@ -323,6 +342,11 @@ async fn bind(
         .relay_mode(relay)
         .alpns(alpns)
         .hooks(DialPolicy { only: only_dial });
+    // the addresses named are the ones bound: iroh's own default sockets would add IPv6 to a table
+    // kept to IPv4
+    if !bind_addrs.is_empty() {
+        builder = builder.clear_ip_transports();
+    }
     for addr in bind_addrs {
         builder = builder.bind_addr(*addr).map_err(|_| Unavailable::Network)?;
     }
@@ -799,6 +823,9 @@ async fn seat_player(
 /// A table this app hosts.
 pub struct GmTable {
     pub id: String,
+    /// Opened again on IPv4 alone, its saved IPv6 port no longer binding: players who reached it
+    /// over IPv6 need a new invitation.
+    pub without_ipv6: bool,
     endpoint: Endpoint,
     shared: Arc<GmShared>,
     _accepting: TaskGuard,
@@ -824,11 +851,41 @@ pub async fn host(
     let key = again
         .as_ref()
         .map_or_else(SecretKey::generate, |again| again.key.clone());
-    let bind_addrs = again
+    let ipv4_only = matches!(
+        relay,
+        RelaySetting::None {
+            addresses: AddressFamilies::Ipv4
+        }
+    );
+    let saved: Vec<SocketAddr> = again
         .as_ref()
         .filter(|_| !relayed)
-        .map_or(&[][..], |again| again.bind_addrs.as_slice());
-    let endpoint = bind(key.clone(), mode, EndpointRole::Gm, bind_addrs).await?;
+        .map_or_else(Vec::new, |again| again.bind_addrs.clone());
+    let wanted: Vec<SocketAddr> = match (ipv4_only, saved.is_empty()) {
+        (true, true) => vec![ANY_IPV4],
+        (true, false) => saved.iter().copied().filter(SocketAddr::is_ipv4).collect(),
+        (false, _) => saved,
+    };
+    let (endpoint, without_ipv6) =
+        match bind(key.clone(), mode.clone(), EndpointRole::Gm, &wanted).await {
+            Ok(endpoint) => (endpoint, false),
+            // a saved IPv6 port that no longer binds — IPv6 switched off since — returns the table on
+            // its IPv4 port rather than not at all; a busy IPv4 port still refuses, as a busy port does
+            Err(_) if wanted.iter().any(SocketAddr::is_ipv6) => {
+                let ipv4: Vec<SocketAddr> =
+                    wanted.iter().copied().filter(SocketAddr::is_ipv4).collect();
+                let ipv4 = if ipv4.is_empty() {
+                    vec![ANY_IPV4]
+                } else {
+                    ipv4
+                };
+                (
+                    bind(key.clone(), mode, EndpointRole::Gm, &ipv4).await?,
+                    true,
+                )
+            }
+            Err(unavailable) => return Err(unavailable),
+        };
     if relayed && timeout(RELAY_WAIT, endpoint.online()).await.is_err() {
         endpoint.close().await;
         return Err(Unavailable::RelayUnreachable);
@@ -840,7 +897,10 @@ pub async fn host(
     let addrs: Vec<SocketAddr> = if relayed {
         vec![]
     } else {
-        addr.ip_addrs().copied().collect()
+        addr.ip_addrs()
+            .copied()
+            .filter(|addr| addr.is_ipv4() || !(ipv4_only || without_ipv6))
+            .collect()
     };
     let Ok(secret) = wire::new_secret() else {
         endpoint.close().await;
@@ -943,6 +1003,7 @@ pub async fn host(
     Ok((
         GmTable {
             id: table,
+            without_ipv6,
             endpoint,
             shared,
             _accepting: TaskGuard(accepting),
@@ -1756,7 +1817,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             forgetting(),
@@ -1894,7 +1957,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             forgetting(),
@@ -1967,7 +2032,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             forgetting(),
@@ -2199,7 +2266,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             forgetting(),
@@ -2279,7 +2348,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             forgetting(),
@@ -2330,7 +2401,9 @@ mod tests {
         let (first, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             approve,
             gm_keeper,
@@ -2447,7 +2520,9 @@ mod tests {
         let (table, shut) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             gm_emit,
             refuse,
             forgetting(),
@@ -2502,6 +2577,72 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn an_ipv4_only_table_binds_and_invites_on_ipv4_alone() {
+        let (emit, _) = listening();
+        let (approve, _) = answering(true);
+        let ipv4_only = RelaySetting::None {
+            addresses: AddressFamilies::Ipv4,
+        };
+        let (table, invite) = host(
+            fresh_id(),
+            "Thursday",
+            &ipv4_only,
+            emit,
+            approve,
+            forgetting(),
+            None,
+        )
+        .await
+        .expect("a table");
+        let invite = Invite::from_text(&invite.expect("an open door")).expect("its invitation");
+        assert!(!invite.addrs.is_empty());
+        assert!(
+            invite.addrs.iter().all(SocketAddr::is_ipv4),
+            "{:?}",
+            invite.addrs
+        );
+        assert!(table.bind_addrs().iter().all(SocketAddr::is_ipv4));
+        assert!(!table.without_ipv6);
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_saved_ipv6_port_that_no_longer_binds_returns_the_table_on_ipv4() {
+        // a port of the system's choosing: one picked and let go could be taken by a test beside it
+        let free: SocketAddr = "0.0.0.0:0".parse().unwrap();
+        // an address this machine does not have stands for IPv6 switched off since the table was kept
+        let gone: SocketAddr = "[2001:db8::1]:0".parse().unwrap();
+        let again = Again {
+            key: SecretKey::generate(),
+            allowed: vec![],
+            records: vec![],
+            bind_addrs: vec![free, gone],
+        };
+        let (emit, _) = listening();
+        let (approve, _) = answering(false);
+        let (table, _) = host(
+            fresh_id(),
+            "Thursday",
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
+            emit,
+            approve,
+            forgetting(),
+            Some(again),
+        )
+        .await
+        .expect("the table again, on IPv4");
+        assert!(table.without_ipv6);
+        let bound = table.bind_addrs();
+        assert!(
+            bound.len() == 1 && bound.iter().all(SocketAddr::is_ipv4),
+            "{bound:?}"
+        );
+        table.close().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn a_remembered_direct_table_refuses_an_occupied_port_instead_of_moving() {
         let (first, _, _) = open_table().await;
         let again = Again {
@@ -2516,7 +2657,9 @@ mod tests {
             host(
                 fresh_id(),
                 "Thursday",
-                &RelaySetting::None,
+                &RelaySetting::None {
+                    addresses: AddressFamilies::Both,
+                },
                 emit,
                 approve,
                 forgetting(),
@@ -2536,7 +2679,9 @@ mod tests {
         let (table, invite) = host(
             fresh_id(),
             "Thursday",
-            &RelaySetting::None,
+            &RelaySetting::None {
+                addresses: AddressFamilies::Both,
+            },
             emit,
             approve,
             forgetting(),

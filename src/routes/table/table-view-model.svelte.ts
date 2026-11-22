@@ -240,6 +240,7 @@ export class TableVM {
 				return;
 			}
 			const { held } = returned;
+			if (returned.withoutIpv6) toast.warning(t('table.notice.withoutIpv6'));
 			if (held.role === TABLE_ROLE.gm) await this.sitAsGm(held.seat, held.name);
 			else {
 				if (!combat.character) await combat.load();

@@ -527,7 +527,9 @@ mod tests {
         let id = "00ff";
         let seat = KeptSeat::Gm {
             name: "Thursday".into(),
-            relay: RelaySetting::None,
+            relay: RelaySetting::None {
+                addresses: crate::table_link::session::AddressFamilies::Both,
+            },
             allowed: vec![],
             bind_addrs: vec![],
         };

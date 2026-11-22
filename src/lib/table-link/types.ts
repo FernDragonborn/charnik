@@ -74,7 +74,11 @@ export type RelayMode = (typeof RELAY_MODE)[keyof typeof RELAY_MODE];
 export type RelaySetting =
 	| { mode: typeof RELAY_MODE.n0 }
 	| { mode: typeof RELAY_MODE.custom; url: string }
-	| { mode: typeof RELAY_MODE.none };
+	| { mode: typeof RELAY_MODE.none; addresses?: AddressFamilies };
+
+/** Which address families a table with no relay is opened on (`session::AddressFamilies`). */
+export const ADDRESS_FAMILIES = { both: 'both', ipv4: 'ipv4' } as const;
+export type AddressFamilies = (typeof ADDRESS_FAMILIES)[keyof typeof ADDRESS_FAMILIES];
 
 export const TABLE_REQUEST = {
 	damage: 'damage',
@@ -282,7 +286,12 @@ export interface RememberedTable {
 
 /** What returning came to: the seat taken again, or why not. */
 export type Returned =
-	| { status: typeof SEATING.seated; held: Exclude<HeldSeat, { role: typeof TABLE_ROLE.none }> }
+	| {
+			status: typeof SEATING.seated;
+			held: Exclude<HeldSeat, { role: typeof TABLE_ROLE.none }>;
+			/** A GM's table opened again on IPv4 alone: its saved IPv6 port no longer binds. */
+			withoutIpv6?: true;
+	  }
 	| { status: typeof SEATING.unavailable; reason: UnavailableReason };
 
 export interface HostOptions {

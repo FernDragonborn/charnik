@@ -2572,6 +2572,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RELAY_MODE` — Which relay servers a table is reached through — the GM's choice, carried by the invitation.
 - `type RelayMode`
 - `type RelaySetting`
+- `const ADDRESS_FAMILIES` — Which address families a table with no relay is opened on (`session::AddressFamilies`).
+- `type AddressFamilies`
 - `const TABLE_REQUEST`
 - `const REQUESTED_ROLL`
 - `type RequestedRoll`
@@ -2706,4 +2708,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1665 exports across 228 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1667 exports across 228 modules · 118 duplicate suspects._
