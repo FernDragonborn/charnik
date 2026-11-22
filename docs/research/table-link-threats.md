@@ -5,10 +5,26 @@ lets a GM's Charnik and the players' Charniks exchange data across networks, in 
 with no server anyone has to deploy. Transport candidate: iroh.
 
 **The spec this fed is [`internals/table-link.md`](../internals/table-link.md).** It answers the
-catalog below and departs from it in three places, each argued there: one invitation serves the
-whole table rather than a single-use one per player, and frames carry neither a signature nor a
-sequence number, which the catalog asks for under gossip and a star of direct connections does not
-need. Read the catalog as what was feared, and the spec as what was built.
+catalog below and departs from it where the spec argues so:
+
+- **One invitation serves the whole table**, rather than a single-use one per player.
+- **Live frames** — a view, a request, a hello — carry neither a signature nor a sequence number:
+  over a star of direct connections each frame's sender is its connection's key.
+- **The table's log is where signatures and numbers live.** A log record is signed by its author
+  under a domain of its own (I5), names its table (I4), and carries a number one more than its
+  author's last (M5). An app keeps a record once per author and number, takes a record from a seat
+  only when that seat is its author — so nothing reaches the GM second-hand (I2) — and paces each
+  seat. A record its author hands over again after the GM evicted it is kept again: it is that
+  author's own words, already signed, bounded by the seat's pace, and a record is a line in a log,
+  never an operation applied twice. The answer to M5's "rejects ≤ last seen" is therefore "keeps
+  once per number", and it holds because records change no state but the log.
+- **A record's time is its author's clock, trusted for nothing but its place.** The GM's app
+  measures each seat's clock against its own and every app orders the log on the GM's clock; a time
+  more than ten minutes ahead of it is refused (D).
+- **V1's switch is wider than relay-only:** a table with no relay may also keep to IPv4, so an IPv6
+  address is not in its invitation.
+
+Read the catalog as what was feared, and the spec as what was built.
 
 This document is the input to that spec. It lists the ways **our** layer can hurt a user, how each
 one would actually show up in Charnik, and what the spec must do about it. It deliberately does not
