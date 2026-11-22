@@ -117,7 +117,9 @@ serves, which keys talk to which, when, and how much. It never sees what is sent
 n0 describes its public relays as free, rate-limited and without an uptime promise, and says not
 to rely on them for production (design review ▸ 8). They are the default because a remote table
 then works with nothing to set up; the other two settings are how a table stops depending on
-them. A table with no relay works where the players can reach the GM's addresses — one local
+them. The first table opened on a device asks once how players will reach it, with n0 chosen
+(`TableRouteDialog`, Settings ▸ Table's own choices): a no-relay table that players cannot reach is
+the failure a GM should not meet on the night. A table with no relay works where the players can reach the GM's addresses — one local
 network, or a forwarded port. It is opened on IPv4 and IPv6, or on IPv4 alone (Settings ▸ Table ▸
 Addresses; `AddressFamilies`): for a network or a driver without IPv6, or to keep an IPv6 address,
 which can name a machine for longer than an IPv4 one behind a home router, out of the invitation.

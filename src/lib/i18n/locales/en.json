@@ -2584,6 +2584,10 @@
 			"lost": "The connection to the table was lost and did not come back. Join again with the invitation.",
 			"protocol": "The GM's app sent something this app does not understand, so the seat was given up. Check that you both run the same version of Charnik."
 		},
+		"route": {
+			"title": "How will players reach your table?",
+			"subtitle": "Asked once on this device. The public relay works across the internet with nothing to set up; Settings ▸ Table changes it later."
+		},
 		"host": {
 			"title": "Open a table",
 			"blurb": "You are the GM. Players join with an invitation you hand them, and each one sits only after you let them in.",

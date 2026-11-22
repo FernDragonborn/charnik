@@ -2,6 +2,9 @@
 	// Settings ▸ Table: which relay servers a table THIS app opens is reached through. A GM's
 	// choice — a player's app follows the invitation it was handed, and is asked first.
 	import { app } from '$lib/stores/app.svelte';
+
+	/** Inside a dialog that names the subject itself, the section's own heading is left out. */
+	let { embedded = false }: { embedded?: boolean } = $props();
 	import { _ } from '$lib/i18n';
 	import {
 		ADDRESS_FAMILIES,
@@ -37,10 +40,12 @@
 	}
 </script>
 
-<section class="sec-head">
-	<h2>{$_('settings.table.title')}</h2>
-	<p class="sec-note">{$_('settings.table.blurb')}</p>
-</section>
+{#if !embedded}
+	<section class="sec-head">
+		<h2>{$_('settings.table.title')}</h2>
+		<p class="sec-note">{$_('settings.table.blurb')}</p>
+	</section>
+{/if}
 
 {#snippet choices(
 	key: string,
@@ -100,7 +105,9 @@
 	{/if}
 {/if}
 
-<p class="sec-note table-note">{$_('settings.table.joiningNote')}</p>
+{#if !embedded}
+	<p class="sec-note table-note">{$_('settings.table.joiningNote')}</p>
+{/if}
 
 <style>
 	/* rows use the global .setting-row / .setting-label / .setting-options (components.css) */

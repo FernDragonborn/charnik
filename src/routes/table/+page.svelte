@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import TableRouteDialog from './TableRouteDialog.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
@@ -22,6 +23,8 @@
 	let tableName = $state('');
 	let invite = $state('');
 	let confirmClose = $state(false);
+	/** The first Open on this device asks how players will reach the table (`TableRouteDialog`). */
+	let askRoute = $state(false);
 	/** A remembered table about to be forgotten, while the person is asked. */
 	let confirmForget = $state<RememberedTable | null>(null);
 
@@ -240,7 +243,9 @@
 					aria-labelledby="table-host-title"
 					onsubmit={(e) => {
 						e.preventDefault();
-						if (tableName.trim()) void table.host(tableName);
+						if (!tableName.trim()) return;
+						if (app.tableRelayConfirmed) void table.host(tableName);
+						else askRoute = true;
 					}}
 				>
 					<h2 id="table-host-title">{$_('table.host.title')}</h2>
@@ -317,6 +322,17 @@
 			void table.forget(kept);
 		}}
 		onCancel={() => (confirmForget = null)}
+	/>
+{/if}
+
+{#if askRoute}
+	<TableRouteDialog
+		onOpen={() => {
+			askRoute = false;
+			app.tableRelayConfirmed = true;
+			void table.host(tableName);
+		}}
+		onCancel={() => (askRoute = false)}
 	/>
 {/if}
 

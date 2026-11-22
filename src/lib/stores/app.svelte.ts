@@ -49,6 +49,9 @@ interface AppState {
 	/** Which relay servers a table THIS app opens is reached through (`table-link/types.ts`). A
 	 *  GM's choice: a player's app follows the invitation it was handed. */
 	tableRelay: RelaySetting;
+	/** Whoever opens a table on this device has seen how players will reach it and said so once:
+	 *  the first Open asks, every later one opens on the setting it left. */
+	tableRelayConfirmed: boolean;
 	/** Who a player's rolls go to in the table's log, and who a GM's do (`table-link.md` ▸ The
 	 *  table's log): a player's go to the table and a GM's to nobody else, until switched. */
 	tablePlayerRollsTo: Audience;
@@ -68,6 +71,7 @@ function defaults(): AppState {
 		critMethod: CRIT_METHOD.classic,
 		reduceMotion: REDUCE_MOTION.system,
 		tableRelay: { mode: RELAY_MODE.n0 },
+		tableRelayConfirmed: false,
 		tablePlayerRollsTo: AUDIENCE.table,
 		tableGmRollsTo: AUDIENCE.gm,
 	};
@@ -105,6 +109,7 @@ function persist(): void {
 		critMethod: app.critMethod,
 		reduceMotion: app.reduceMotion,
 		tableRelay: app.tableRelay,
+		tableRelayConfirmed: app.tableRelayConfirmed,
 		tablePlayerRollsTo: app.tablePlayerRollsTo,
 		tableGmRollsTo: app.tableGmRollsTo,
 	});

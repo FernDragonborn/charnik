@@ -346,7 +346,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
 | **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
-| **TableSettings** | — | Settings ▸ Table: which relay servers a table THIS app opens is reached through. |
+| **TableSettings** | `embedded` | Settings ▸ Table: which relay servers a table THIS app opens is reached through. |
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **UpcastBuilder** | `value` | The `upcast` cell, built rather than typed. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
