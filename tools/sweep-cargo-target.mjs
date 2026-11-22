@@ -46,7 +46,10 @@ function cleanWholeProfiles() {
 	for (const { folder, flags } of PROFILES) {
 		const bytes = folderBytes(join(TARGET_DIR, folder));
 		if (bytes <= CAP_GIB * GIB) continue;
-		console.log(`sweep: target/${folder} is ${(bytes / GIB).toFixed(1)} GiB — cleaning it`);
+		console.log(
+			`sweep: target/${folder} is ${(bytes / GIB).toFixed(1)} GiB — cleaning it whole.\n` +
+				'sweep: `cargo install cargo-sweep` removes only the oldest artifacts instead, so the next build stays fast',
+		);
 		// best-effort: a running app.exe locks its own binary on Windows; the next start tries again
 		if (cargo(['clean', ...flags]).status !== 0)
 			console.warn(`sweep: cargo clean ${flags.join(' ')} failed; close the app and run it again`);

@@ -51,6 +51,9 @@ version is out, an **Update** button appears in the top bar; click it to update 
 
 Requires Node 22 + pnpm. The TS side runs without Rust; the Tauri desktop build also needs
 Rust + platform toolchain (MSVC C++ Build Tools + WebView2 on Windows; webkit2gtk on Linux).
+`cargo install cargo-sweep` is recommended: every `tauri dev` and `tauri build` caps
+`src-tauri/target` at 15 GB, and with cargo-sweep only the oldest artifacts go instead of a whole
+profile.
 
 ```sh
 pnpm install
