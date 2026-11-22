@@ -6,7 +6,7 @@
 > economy are things the TRACKING app needs with or without plugins, so the model is a CORE concern
 > and plugin hooks are THIN adapters returning this same shape. Where plugins.md §8 and this document
 > disagree, THIS document wins.
-> **Implementation:** `activateOption` + `runAction` (`src/lib/play/options.ts`), all-or-nothing
+> **Implementation:** `activateOption` (`src/lib/play/option-activation.ts`) + `runAction` (`options.ts`), all-or-nothing
 > validate→execute; `ActionExecutor` on the sheet is the names the panels call. What is still
 > open is the plugin `onUse`/`onEvent` hooks at `api: 2`.
 

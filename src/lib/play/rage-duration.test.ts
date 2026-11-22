@@ -4,7 +4,7 @@ import { loadPacks } from '../../test-support/real-content';
 import { classRow, newCharacter, type Character } from '$lib/character/schema';
 import { deriveSheet } from '$lib/character/derive';
 import type { ContentGraph } from '$lib/content/loader';
-import { activateOptionById } from './options';
+import { activateOptionById } from './option-activation';
 import type { PlayContext } from './outcome';
 
 /** A round is six seconds, so ten minutes is a hundred of them. */

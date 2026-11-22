@@ -1,7 +1,7 @@
 /*
- * Using a feature's spend-option, as an action: validate the pool, every further spend and the turn
- * slot ALL-OR-NOTHING, pay, then run the option's verbs (docs/internals/actions.md §2). Each verb
- * lands on an action that already exists — no verb opens a path of its own into play-state.
+ * The verbs a feature's spend-option runs once `option-activation.ts` has checked and paid for it
+ * ALL-OR-NOTHING (docs/internals/actions.md §2). Each verb lands on an action that already exists —
+ * no verb opens a path of its own into play-state.
  *
  * Two verbs cannot finish here, and say so in `asks`: a strike is a roll the host makes through its
  * own dice path, and assuming a form needs to know WHICH stat block before anything is paid.
@@ -9,55 +9,27 @@
 import { LOG_KIND } from '$lib/character/log-kind';
 import { rollFormula } from '$lib/rules/dice';
 import { effectiveHpMax } from '$lib/rules/core';
-import {
-	MAX_SLOT_LEVEL,
-	PACT_SLOT_KEY,
-	castablePactLevel,
-	castableSlotLevels,
-	slotToSpend,
-} from '$lib/rules/spellcasting';
-import {
-	isResolvedFormula,
-	resolveActionFormula,
-	ROLL_TO_CONFIRM_SPEND,
-	ROLL_WITH_SLOT,
-} from '$lib/effects/action-token';
-import { withCastSlot } from '$lib/effects/context';
+import { MAX_SLOT_LEVEL, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+import { isResolvedFormula, ROLL_TO_CONFIRM_SPEND } from '$lib/effects/action-token';
 import type { ActionSlot } from '$lib/combat/roll';
-import { sheetAttacks } from '$lib/combat/form-attacks';
-import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
-import { OPTION_CADENCE } from '$lib/content/schemas';
 import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
 import { localizedName } from '$lib/content/detail';
 import type { Character } from '$lib/character/schema';
 import type { ResourceOption } from '$lib/character/derive';
 import { addEffect, endEffects } from './effects';
-import { assumeForm } from './form-shift';
+import { PLAY_REQUEST, chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import {
-	PLAY_REQUEST,
-	chain,
-	quietly,
-	type PlayContext,
-	type PlayNotice,
-	type PlayOutcome,
-} from './outcome';
-import {
-	canAfford,
 	gainSlot,
 	regainResource,
-	resourceLeft,
-	resourceName,
 	restoreResource,
-	spendOnOption,
 	spendResource,
 	type OptionSpend,
 } from './resources';
 import { rest } from './rests';
 import { settled } from './settle';
-import { canSpendTurnSlot, markRollUsed, spendTurnSlot } from './turn';
 
 /** A resource-option's `action_type` → the turn slot it consumes (`free` = none). */
-const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
+export const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
 	action: 'action',
 	bonus_action: 'bonus',
 	reaction: 'reaction',
@@ -66,7 +38,7 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
 
 export const OPTION_SPENDS_SLOT = 'spend_slot';
 
-const VERB = {
+export const VERB = {
 	note: 'note',
 	assumeForm: 'assume_form',
 	spendResource: 'spend_resource',
@@ -75,9 +47,9 @@ const VERB = {
 	pickAttack: 'attack_pick',
 } as const;
 
-const HALF_ROUNDED_UP = 'half_up';
+export const HALF_ROUNDED_UP = 'half_up';
 
-function pactRecovery(character: Character, sheet: ReturnType<PlayContext['derive']>) {
+export function pactRecovery(character: Character, sheet: ReturnType<PlayContext['derive']>) {
 	const pact = sheet.spellcasting.pools.find((pool) => pool.forcedUpcast);
 	const spent = Math.min(pact?.max ?? 0, character.play.spellSlotsSpent[PACT_SLOT_KEY] ?? 0);
 	return {
@@ -86,9 +58,6 @@ function pactRecovery(character: Character, sheet: ReturnType<PlayContext['deriv
 		level: pact?.spellLevel,
 	};
 }
-
-/** The lowest level a slot has: any slot will pay for an option that asks for one. */
-const ANY_SLOT_LEVEL = 1;
 
 /** How many strikes one action may ask for. RAW's largest is a handful; the cap is against a content
  *  typo (`attack:dagger:200`) turning one press into two hundred log lines. */
@@ -106,7 +75,7 @@ export const optionSpend = (option: ResourceOption, amount = 1): OptionSpend => 
 });
 
 /** The verbs of an action, in order: `a;b;c` is one activation running each. */
-const verbsOf = (action: string): { verb: string; arg: string }[] =>
+export const verbsOf = (action: string): { verb: string; arg: string }[] =>
 	action
 		.split(';')
 		.map((token) => token.trim())
@@ -119,7 +88,7 @@ const verbsOf = (action: string): { verb: string; arg: string }[] =>
 		});
 
 /** `<id>[:<n>]` — an id and a count that defaults to one. */
-function idAndCount(arg: string): { id: string; count: number } {
+export function idAndCount(arg: string): { id: string; count: number } {
 	const sep = arg.lastIndexOf(':');
 	const counted = sep > 0 && /^\d+$/.test(arg.slice(sep + 1));
 	return {
@@ -193,7 +162,7 @@ const applyCatalogEffect: Verb = (character, run, arg, ctx) => {
  * nothing reads as the app being broken, and a roll of whatever dice the parser could find in the
  * raw text reads as a result.
  */
-const unresolved = (character: Character, run: ActionRun, formula: string): PlayOutcome => ({
+export const unresolved = (character: Character, run: ActionRun, formula: string): PlayOutcome => ({
 	...quietly(character),
 	notices: [
 		{
@@ -366,217 +335,4 @@ export function runAction(character: Character, run: ActionRun, ctx: PlayContext
 			chain(outcome, (next) => VERBS[verb]?.(next, run, arg, ctx) ?? quietly(next)),
 		quietly(character),
 	);
-}
-
-/** An option being used: which one, how much of an `x` cost (asked for when it is not given), and — for one that assumes a form —
- *  the stat block chosen, with the name its effect is shown under; for one paid with a spell slot,
- *  the level of the slot given up. */
-export interface OptionUse {
-	option: ResourceOption;
-	amount?: number;
-	form?: { monster: string; label: string };
-	slot?: number;
-	confirmed?: boolean;
-	attack?: string;
-	effectRounds: number;
-}
-
-/**
- * Use a spend-option. Nothing is paid unless everything can be: the option's own window, its pool,
- * every pool its verbs spend from besides, and the turn slot.
- *
- * An option that assumes a form ASKS which one first, and one paid with a spell slot asks which
- * slot when more than one level has one left. Backing out of either question costs nothing: called
- * without the answer it returns the question and the character untouched, and pays when it is
- * called again with it.
- */
-export function activateOption(
-	character: Character,
-	use: OptionUse,
-	ctx: PlayContext,
-): PlayOutcome {
-	const { option } = use;
-	const sheet = ctx.derive(character);
-	const refuse = (notice: PlayNotice): PlayOutcome => ({
-		...quietly(character),
-		refused: true,
-		notices: [notice],
-	});
-	// the `available` guard is a RULE, not a greyed row: every caller passes through here
-	if (
-		!option.available ||
-		(option.cadence === OPTION_CADENCE.turn &&
-			character.play.inCombat &&
-			character.play.turn.usedRolls.includes(option.id))
-	)
-		return refuse({ text: { key: 'combat.notice.notAvailable', values: { name: option.name } } });
-	// a cost of `x` is the player's to say, up to what the pool has left: asked before anything
-	// else, since every later check is of the amount answered
-	const left = resourceLeft(character, sheet, option.resourceId);
-	if (option.cost === 'x' && use.amount === undefined && left >= 1)
-		return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.amount, max: left }] };
-	const amount = use.amount ?? 1;
-	const spend = optionSpend(option, amount);
-	const verbs = verbsOf(option.action);
-	const recoverPact = verbs.find(({ verb }) => verb === VERB.recoverPact);
-	if (recoverPact && recoverPact.arg !== HALF_ROUNDED_UP)
-		return refuse({
-			text: { key: 'combat.notice.actionUnresolved', values: { name: option.name } },
-		});
-	if (recoverPact && !pactRecovery(character, sheet).count)
-		return refuse({ text: { key: 'combat.notice.pactRecoveryUnavailable' } });
-	const further = verbs
-		.filter(({ verb, arg }) => verb === VERB.spendResource && !!arg)
-		.map(({ arg }) => idAndCount(arg))
-		.map(({ id, count }) => ({ resource: id, cost: count }));
-	const short = [spend, ...further].find((cost) => !canAfford(character, sheet, cost));
-	if (short)
-		return refuse({
-			text: {
-				key: 'combat.notice.notEnoughResource',
-				values: { resource: resourceName(sheet, short.resource), name: option.name },
-			},
-			description: { key: 'combat.notice.restToRecharge' },
-		});
-	const slot = ACTION_TYPE_SLOT[option.actionType];
-	if (slot && !canSpendTurnSlot(character, sheet, slot))
-		return refuse({
-			text: {
-				key: 'combat.notice.noSlotLeft',
-				values: { slot: { catalog: 'combat.slot', id: slot } },
-			},
-			description: { key: 'combat.notice.nextTurnToRefresh' },
-		});
-	const form = verbs.find(({ verb, arg }) => verb === VERB.assumeForm && !!arg)?.arg.trim();
-	const chosen = use.form;
-	if (form && !chosen) return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.form, form }] };
-	let spellSlot: string | null = null;
-	let spentLevel = 0;
-	if (verbs.some(({ verb }) => verb === VERB.spendSlot)) {
-		const { pools } = sheet.spellcasting;
-		const spentSlots = character.play.spellSlotsSpent;
-		const levels = castableSlotLevels(ANY_SLOT_LEVEL, pools, spentSlots);
-		const pactLevel = castablePactLevel(ANY_SLOT_LEVEL, pools, spentSlots);
-		const distinctPact = pactLevel !== null && !levels.includes(pactLevel);
-		const offered = distinctPact ? [...levels, pactLevel].sort((a, b) => a - b) : levels;
-		if (offered.length > 1 && use.slot === undefined)
-			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.slot, levels: offered }] };
-		const reserved =
-			distinctPact && use.slot === pactLevel
-				? { key: PACT_SLOT_KEY }
-				: slotToSpend(ANY_SLOT_LEVEL, pools, spentSlots, use.slot);
-		if (!reserved || 'block' in reserved)
-			return refuse({
-				text: { key: 'combat.notice.noSpellSlot', values: { name: option.name } },
-				description: { key: 'combat.notice.restToRecharge' },
-			});
-		spellSlot = reserved.key;
-		spentLevel =
-			spellSlot === PACT_SLOT_KEY
-				? (pools.find((pool) => pool.forcedUpcast)?.spellLevel ?? 0)
-				: Number(spellSlot);
-	}
-	let action = option.action;
-	if (verbs.some(({ verb }) => verb === ROLL_WITH_SLOT)) {
-		const slotCtx = spentLevel > 0 && sheet.castCtx && withCastSlot(sheet.castCtx, spentLevel, 0);
-		const resolved: string[] = [];
-		for (const { verb, arg } of verbs) {
-			if (verb !== ROLL_WITH_SLOT) {
-				resolved.push(arg ? `${verb}:${arg}` : verb);
-				continue;
-			}
-			const roll = slotCtx
-				? resolveActionFormula(`roll:${arg}`, slotCtx, option.name, undefined)
-				: '';
-			if (!roll || !isResolvedFormula(roll.slice('roll:'.length)))
-				return {
-					...unresolved(character, { ...option, effectRounds: use.effectRounds }, arg),
-					refused: true,
-				};
-			resolved.push(roll);
-		}
-		action = resolved.join(';');
-	}
-	const trial = verbs.find(({ verb }) => verb === ROLL_TO_CONFIRM_SPEND);
-	if (trial && !isResolvedFormula(trial.arg))
-		return {
-			...unresolved(character, { ...option, effectRounds: use.effectRounds }, trial.arg),
-			refused: true,
-		};
-	if (trial && !use.confirmed) {
-		const rolled = rollFormula(trial.arg, ctx.rng);
-		return {
-			...quietly(character),
-			log: [{ name: { text: option.name }, rolled }],
-			asks: [{ kind: PLAY_REQUEST.confirmSpend, total: rolled.total }],
-		};
-	}
-	const attack = verbs.find(({ verb }) => verb === VERB.pickAttack);
-	if (attack) {
-		const available = sheetAttacks(character, sheet, ctx.graph, ctx.locale).filter(
-			({ id, scopes }) =>
-				attack.arg === 'any' ||
-				(attack.arg === 'weapon' ? id !== UNARMED_STRIKE_ID : scopes.includes(attack.arg)),
-		);
-		const choices = [...new Map(available.map((entry) => [entry.id, entry])).values()];
-		if (choices.length && use.attack === undefined)
-			return { ...quietly(character), asks: [{ kind: PLAY_REQUEST.pickAttack, choices }] };
-		const chosen = choices.find((entry) => entry.id === use.attack);
-		if (!chosen)
-			return refuse({
-				text: { key: 'combat.notice.nothingToAttack', values: { name: option.name } },
-			});
-		action = action
-			.split(';')
-			.map((token) => (token.startsWith(`${VERB.pickAttack}:`) ? `attack:${chosen.id}` : token))
-			.join(';');
-	}
-	const paid = chain(
-		chain(slot ? spendTurnSlot(character, { slot }, ctx) : quietly(character), (charged) =>
-			spendOnOption(charged, spend, ctx),
-		),
-		(charged) => {
-			if (spellSlot === null) return quietly(charged);
-			const spent = charged.play.spellSlotsSpent;
-			const spellSlotsSpent = { ...spent, [spellSlot]: (spent[spellSlot] ?? 0) + 1 };
-			return quietly({ ...charged, play: { ...charged.play, spellSlotsSpent } });
-		},
-	);
-	if (form && chosen) return chain(paid, (payer) => assumeForm(payer, { form, ...chosen }, ctx));
-	return chain(paid, (payer) =>
-		chain(
-			runAction(
-				payer,
-				{
-					name: option.name,
-					action,
-					effectRounds: use.effectRounds,
-					amount,
-					reaction: ACTION_TYPE_SLOT[option.actionType] === 'reaction',
-				},
-				ctx,
-			),
-			(next) =>
-				option.cadence === OPTION_CADENCE.turn
-					? markRollUsed(next, { id: option.id })
-					: quietly(next),
-		),
-	);
-}
-
-/**
- * Use a spend-option named by the identity a row has — its own id on the pool it spends — which is
- * what a caller that is not the sheet has to go on. An option the sheet does not offer is refused.
- */
-export function activateOptionById(
-	character: Character,
-	use: Omit<OptionUse, 'option'> & { option: string; resource: string },
-	ctx: PlayContext,
-): PlayOutcome {
-	const option = ctx
-		.derive(character)
-		.resourceOptions.find((o) => o.id === use.option && o.resourceId === use.resource);
-	return option
-		? activateOption(character, { ...use, option }, ctx)
-		: { ...quietly(character), refused: true };
 }

@@ -10,7 +10,7 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { type Attack } from '$lib/combat/attacks';
 import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
 import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
-import { activateOption, activateOptionById, type OptionUse } from '$lib/play/options';
+import { activateOption, activateOptionById, type OptionUse } from '$lib/play/option-activation';
 import { t } from '$lib/i18n';
 import {
 	PLAY_REQUEST,

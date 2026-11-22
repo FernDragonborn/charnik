@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (118)
+## Duplicate suspects (117)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -39,6 +39,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
+- `isOpen` ×3 — src/lib/play/option-activation.ts · src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
@@ -46,6 +47,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onKey` ×3 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte
 - `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
+- `refusal` ×3 — src/lib/play/cast.ts · src/lib/play/option-activation.ts · src/lib/play/turn.ts
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `rowName` ×3 — src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
@@ -82,7 +84,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
-- `isOpen` ×2 — src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
 - `isRecord` ×2 — src/lib/character/migrations.ts · src/lib/play/delta.ts
 - `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
@@ -107,8 +108,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `reask` ×2 — src/routes/build/blocks/SheetInventory.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
-- `refusal` ×2 — src/lib/play/cast.ts · src/lib/play/turn.ts
-- `refuse` ×2 — src/lib/content/remote/pack-update-state.svelte.ts · src/lib/play/options.ts
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
@@ -555,7 +554,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (211 modules)
+## Library functions & types (212 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2160,16 +2159,26 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function useItem` — Spend one of a stack — or `count`, never more than it holds.
 - `function setCoin` — How many of one coin the purse holds.
 
-### `src/lib/play/options.ts`
+### `src/lib/play/option-activation.ts`
 
-- `const OPTION_SPENDS_SLOT`
-- `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
-- `interface ActionRun` — What running an action is told besides its verbs.
-- `const HEAL_ANSWERED` — The one formula a `heal:` may leave to the press: `x`, the amount an `x` cost was answered with * (Lay on Hands: "res…
-- `function runAction` — Run an action's RESOLVED verbs in order (a formula in one is already resolved at derive).
 - `interface OptionUse` — An option being used: which one, how much of an `x` cost (asked for when it is not given), and — for one that assumes…
 - `function activateOption` — * Use a spend-option.
 - `function activateOptionById` — * Use a spend-option named by the identity a row has — its own id on the pool it spends — which is * what a caller th…
+
+### `src/lib/play/options.ts`
+
+- `const ACTION_TYPE_SLOT` — A resource-option's `action_type` → the turn slot it consumes (`free` = none).
+- `const OPTION_SPENDS_SLOT`
+- `const VERB`
+- `const HALF_ROUNDED_UP`
+- `function pactRecovery`
+- `const optionSpend` — What an option takes from its pool this time (`x` priced at the amount picked), and what it says * it does — a `note:…
+- `const verbsOf` — The verbs of an action, in order: `a;b;c` is one activation running each.
+- `function idAndCount` — `<id>[:<n>]` — an id and a count that defaults to one.
+- `interface ActionRun` — What running an action is told besides its verbs.
+- `const HEAL_ANSWERED` — The one formula a `heal:` may leave to the press: `x`, the amount an `x` cost was answered with * (Lay on Hands: "res…
+- `const unresolved` — * A `heal:` / `roll:` whose formula did not resolve does not run.
+- `function runAction` — Run an action's RESOLVED verbs in order (a formula in one is already resolved at derive).
 
 ### `src/lib/play/outcome.ts`
 
@@ -2708,4 +2717,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1667 exports across 228 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1674 exports across 229 modules · 117 duplicate suspects._
