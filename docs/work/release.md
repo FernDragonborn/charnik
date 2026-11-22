@@ -130,11 +130,14 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  The live drive passes on protocol 3. **Left:** the live drive on protocol 4, and with a roll
-  built in the tray, both needing the person answering the native questions; and the desktop app that twice quit on
-  its own, exit 0, during the drives — once with the question window open and blank, once ten
-  seconds after the player was let in, the window only switched away from. Not reproduced; the
-  log says nothing before it.
+  The live drive passes on protocol 4, the log's roll and its hide among it. **Left:** the
+  desktop app that twice quit on its own, exit 0, during early drives — once with the question
+  window open and blank, once ten seconds after the player was let in, the window only switched
+  away from. Not reproduced since, over the live drive and a quit-and-Return; the log says nothing
+  before it. Those drives ran the player through `cargo test`, whose build writes into
+  `src-tauri/`, which `tauri dev` watches — the suspect, unproven; the drive now runs the test
+  binary directly and does not touch it. A roll built in the tray needs a player APP at the
+  table, and one machine runs one Charnik (the single-instance plugin), so it is TABLE-LINK-FIELD's.
 - [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
@@ -145,7 +148,11 @@
   the people this is for, and what a path does after ten minutes of silence (a NAT mapping gone,
   an address changed, a phone's hotspot in place of the router) is iroh's and the network's to
   show, not a timer's; two Charnik versions at one table; `cargo audit` over the crates the
-  feature adds. The release workflow
+  feature adds. A player's own app at the table, which no one-machine drive has: a request
+  answered from the page, and a roll built in the dice tray first. **The Windows firewall's
+  question**: Windows asks once per program the first time it listens, and nothing in Charnik says
+  so before it does — what a no-relay table does for a player on the LAN when that question was
+  answered Cancel, and whether the Table screen should warn before the first table. The release workflow
   then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
   no release, and the changelog of that release is where the table is first named: until then no
   release has it, so no changelog mentions it.
@@ -171,8 +178,8 @@
   `TableLogPanel`). A live request carries the GM's signed ask and the player's answer is a
   signed record; hello is protocol 4 and refuses any other before admission, saying whose app is the
   older; the invitation format stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold
-  it). The live drive covers the log on protocol 3: the player's roll arrives and the GM hides it.
-  **Left:** the live drive again on protocol 4. Hiding ONE roll of an action — the record is the
+  it). The live drive covers the log on protocol 4: the player's roll arrives and the GM hides it.
+  **Left:** hiding ONE roll of an action — the record is the
   action, so a hide takes the whole of it; a VTT's targets would make a single roll worth hiding
   (damage dealt to an unseen creature), and the control is undrawn.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
@@ -187,9 +194,11 @@
   player hands back nothing; `table.test.ts` holds the GM's page rebuilding the request history
   from them without reopening a prompt. *To audit* — the transport tests on the three-desktop CI
   matrix, which has not run yet. An unannounced DC stays the GM's session's own and is not
-  recovered. **Left:** the Linux store in the running app (the round-trip test passes under WSL
-  against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
-  restart → Return on the real app with a person answering the native question.
+  recovered. Driven on the real Windows app: a no-relay table quit with the window's close, the
+  app started again, Return answered, and the same table back on its saved UDP ports, its key read
+  from the Credential Manager. **Left:** the Linux store in the running app (the round-trip test
+  passes under WSL against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is
+  TABLE-LINK-MACOS-STORE.
 - [ ] **TABLE-LINK-NOTES · notes the table writes together** (a detective campaign's clue board).
   An edit is its EDITOR's own signed record, never a diff sent to the note's author for approval, so
   the log's "an app hands over only what it wrote" (`../internals/table-link.md`) holds with no

@@ -308,6 +308,12 @@ read the report. `/dev/packs-write` is the worked example.
   artifacts only; without it, a profile over the cap is `cargo clean`ed whole. The working set is
   about 15 GB — the default build, `--features table-link` and `cargo test` each keep their own
   copy of the app crate — so a lower cap rebuilds iroh's crates on every switch between them.
+- **A debugging port on the webview breaks the table's question window.** Playwright reaches the
+  desktop webview only through `--remote-debugging-port`, which Tauri takes from the window's
+  `additionalBrowserArgs` in a `--config` overlay (it passes its own arguments, so
+  `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is ignored). WebView2 then refuses every later webview
+  whose arguments differ (`0x8007139F`), the question window among them, and a question that cannot
+  open is a no. Drive a flow that asks a native question by hand, or through a `/dev/` probe.
 - Stopping `pnpm tauri dev` kills the cargo wrapper but **leaves `app.exe` alive**. Kill it
   explicitly, or windows accumulate and several probe instances fight over the same scratch folder
   and produce nonsense.
