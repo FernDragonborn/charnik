@@ -5,17 +5,13 @@
  * Every one of them can change what the sheet says — a maximum, whether concentration can be held —
  * so every one ends in `settled`.
  */
-import { EXHAUSTION_MAX, type Character, type EffectInstance } from '$lib/character/schema';
-import { conditionRow } from '$lib/content/states';
+import type { Character, EffectInstance } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
 import { remainingRounds } from '$lib/combat/effects-view';
 import { dropEffects, endConcentration } from './concentration';
-import { die } from './hit-points';
+import { effectRow, withExhaustion, withoutEffects } from './effect-endings';
 import { quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { settled } from './settle';
-
-/** The condition whose row states how tall the exhaustion ladder is. */
-const EXHAUSTION_CONDITION_ID = 'exhaustion';
 
 /** An effect to put on the character. */
 export interface NewEffect {
@@ -59,46 +55,14 @@ export function removeEffects(
 	return endEffects(character, (effect) => iids.includes(effect.iid), ctx);
 }
 
-function effectRow(effect: EffectInstance, graph: ContentGraph) {
-	const row = effect.source ? graph.get(effect.source) : undefined;
-	return row?.type === 'effect' ? row : undefined;
-}
-
 /** A dependent state ends when the named effect ends, regardless of how its parent left play. */
 export function endEffects(
 	character: Character,
 	shouldEnd: (effect: EffectInstance) => boolean,
 	ctx: PlayContext,
 ): PlayOutcome {
-	const effects = character.play.effects;
-	const removed = new Set(effects.filter(shouldEnd));
-	if (!removed.size) return quietly(character);
-	const rows = new Map(effects.map((effect) => [effect, effectRow(effect, ctx.graph)]));
-	const ending = new Set<string>();
-	for (const effect of removed) {
-		const id = rows.get(effect)?.id;
-		if (id) ending.add(id);
-	}
-	let expanded = true;
-	while (expanded) {
-		expanded = false;
-		for (const effect of effects) {
-			const row = rows.get(effect);
-			if (!row?.data.ends_with || removed.has(effect) || !ending.has(row.data.ends_with)) continue;
-			removed.add(effect);
-			ending.add(row.id);
-			expanded = true;
-		}
-	}
-	const play = dropEffects(character.play, (effect) => removed.has(effect));
-	const next = { ...character, play };
-	const exhaustion = [...removed].reduce(
-		(sum, effect) => sum + Math.max(0, rows.get(effect)?.data.exhaustion_on_end ?? 0),
-		0,
-	);
-	return exhaustion
-		? setExhaustion(next, { level: play.exhaustion + exhaustion }, ctx)
-		: settled(quietly(next), ctx);
+	const next = withoutEffects(character, shouldEnd, ctx.graph);
+	return next === character ? quietly(character) : settled(quietly(next), ctx);
 }
 
 export function consumeAttackEffects(character: Character, ctx: PlayContext): PlayOutcome {
@@ -162,27 +126,11 @@ export const setAutoCalc = (
 export const stopConcentrating = (character: Character, ctx: PlayContext): PlayOutcome =>
 	settled(quietly({ ...character, play: endConcentration(character.play) }), ctx);
 
-/** How tall the exhaustion ladder is for this character's system: the condition row's own
- *  `max_level`, so a homebrew ladder of another height works. 0 = no such row is loaded. */
-export function exhaustionLadder(character: Character, graph: ContentGraph): number {
-	const row = conditionRow(graph, character.system, EXHAUSTION_CONDITION_ID);
-	return row ? Number(row.data.max_level ?? 1) : 0;
-}
-
-/**
- * Set the exhaustion level, clamped to the ladder. The TOP of it is lethal — RAW "You die if your
- * Exhaustion level is 6" (2024 glossary; 2014's level-6 row is likewise "Death") — and the
- * threshold is the DATA cap, so a homebrew ladder kills at its own top.
- */
+/** Set the exhaustion level (`withExhaustion` clamps it and dies at the top of the ladder). */
 export function setExhaustion(
 	character: Character,
 	{ level }: { level: number },
 	ctx: PlayContext,
 ): PlayOutcome {
-	// the data cap AND the schema's, because the two disagree above 20: a level the schema refuses
-	// makes every later save fail, and the sheet keeps working as if nothing is wrong
-	const max = Math.min(exhaustionLadder(character, ctx.graph), EXHAUSTION_MAX);
-	const exhaustion = Math.max(0, Math.min(max, Math.round(level)));
-	const tired = { ...character, play: { ...character.play, exhaustion } };
-	return settled(max > 0 && exhaustion >= max ? die(tired, 'exhaustion') : quietly(tired), ctx);
+	return settled(quietly(withExhaustion(character, level, ctx.graph)), ctx);
 }

@@ -148,12 +148,6 @@ stay semi-manual.
   `granted_by`. Remaining feature rows include Cunning Action, Fast Hands, Stillness of Mind,
   Self-Restoration, Tranquility, and Countercharm. Dark One's Blessing lets the player report
   dropping a creature for `temp_hp:cha_mod+class_level.warlock`.
-- [ ] **RAGE-ENDS · a Rage ends on its own terms.** SRD 5.1: "It ends early if you are knocked
-  unconscious"; SRD 5.2.1: "it ends early if you don Heavy armor or have the Incapacitated
-  condition." Nothing ends the Rage effect but its clock, the player's ✕ and a rest, so a 2014
-  Berserker knocked out of a Frenzy takes no Exhaustion until the player removes the Rage. The shape
-  is the form's: the effect row states its `ends_when` conditions and `settle.ts` ends it through
-  `endEffects`, which already carries `ends_with` and `exhaustion_on_end`.
 - [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
   warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
   that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —

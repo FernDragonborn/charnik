@@ -27,6 +27,8 @@ describe('how long a 5.5e Rage may run', () => {
 	it('the clock a Rage is entered with reaches ten minutes', () => {
 		const barbarian = newCharacter('rage_probe', 'Rage probe', '5.5e');
 		barbarian.build.classes = [classRow({ class: 'class:SRD 5.2.1:barbarian', level: 3 })];
+		// standing: a Rage ends at 0 hit points, where a bare new character starts
+		barbarian.play.hp.current = 20;
 		const entered = activateOptionById(
 			barbarian,
 			{ option: 'barbarian_rage_enter', resource: 'rage', effectRounds: 0 },

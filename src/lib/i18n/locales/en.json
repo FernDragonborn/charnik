@@ -284,6 +284,8 @@
 			"lineageChosen": "A branch of {species} — its own traits on top.",
 			"lineageAsk": "{species} asks which branch you belong to.",
 			"spellAbility": "Species spellcasting ability",
+			"speciesCantrip": "Species cantrip",
+			"speciesCantripAsk": "Choose a cantrip",
 			"background": "Background",
 			"backgroundSkills": "{count, plural, one {# skill} other {# skills}}",
 			"backgroundSkillsUnknown": "skills",

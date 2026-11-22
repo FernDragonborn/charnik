@@ -25,6 +25,7 @@ import type { Character, CharacterPlay, DeathCause } from '$lib/character/schema
 import type { CharacterSheet } from '$lib/character/derive';
 import { endConcentration } from './concentration';
 import { leaveForm } from './form';
+import { markDead } from './effect-endings';
 import { settled } from './settle';
 import {
 	quietly,
@@ -121,13 +122,7 @@ const notDying = (play: CharacterPlay): CharacterPlay => ({
 	deathSaves: { successes: 0, failures: 0 },
 });
 
-/**
- * Record a death on the play-state. The first cause sticks: a character already dead is returned
- * untouched. Nothing is SAID of it — the hit-point block is what says a character died and of what,
- * and a notice on top of that was a stand-in for a block that could not.
- */
-const dead = (play: CharacterPlay, cause: DeathCause): CharacterPlay =>
-	play.death ? play : { ...play, death: { cause, exhaustion: play.exhaustion } };
+const dead = markDead;
 
 /**
  * Take a hit of one type. It meets its defense BEFORE temp HP soaks anything (RAW ordering); temp

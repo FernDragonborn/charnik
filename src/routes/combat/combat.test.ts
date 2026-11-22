@@ -2173,6 +2173,8 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 		combat.graph = await realGraph('srd-2024');
 		character = newCharacter('grog', 'Grog', '5.5e');
 		character.build.classes = [classRow({ class: `class:${S}:barbarian`, level: 3 })];
+		// standing: a Rage ends at 0 hit points, where a bare new character starts
+		character.play.hp.current = 20;
 		combat.character = character;
 	});
 

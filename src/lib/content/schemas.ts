@@ -142,6 +142,8 @@ const speciesCastingColumns = {
 	spell_slots: z.preprocess(blankToUndef, z.enum(['shared', 'resource_only']).optional()),
 	swap_cantrip: optStr,
 	swap_cantrip_list: optStr,
+	/** A class whose list the player picks one cantrip from at build (2014 High Elf: `wizard`). */
+	cantrip_choice: optStr,
 };
 
 const speciesSchema = baseRow.extend({
@@ -447,6 +449,8 @@ const effectSchema = baseRow.extend({
 	/** Optional default duration the "+" picker applies; the round counter auto-expires it. */
 	duration_rounds: optInt,
 	ends_with: optStr,
+	/** A yes/no expression that ends the effect the moment it holds (Rage: `hp<=0 or has_condition.unconscious`). */
+	ends_if: optStr,
 	exhaustion_on_end: optInt,
 	expires_after: z.preprocess(blankToUndef, z.literal('attack').optional()),
 	// ponytail: `derived_when` (a predicate that auto-activates a state, e.g. bloodied = hp_percent<50)

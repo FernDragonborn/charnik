@@ -153,6 +153,7 @@ export interface DraftState {
 	speciesId: string | null;
 	speciesOptionId: string | null;
 	speciesSpellAbility: Ability | null;
+	speciesCantrip: string | null;
 	/** Abilities the user picked for a 5e species floating ASI. */
 	speciesBoostPicks: Ability[];
 	/** Skills picked against the species' own `skill_choice` grant. Its OWN list, never the class's:
@@ -224,6 +225,7 @@ export function blankDraft(): DraftState {
 		speciesId: null,
 		speciesOptionId: null,
 		speciesSpellAbility: null,
+		speciesCantrip: null,
 		speciesBoostPicks: [],
 		speciesSkills: [],
 		backgroundId: null,
@@ -295,6 +297,7 @@ const draftStateSchema: z.ZodType<DraftState> = z.object({
 	speciesId: z.string().nullable().catch(null),
 	speciesOptionId: z.string().nullable().catch(null),
 	speciesSpellAbility: z.enum(ABILITIES).nullable().catch(null),
+	speciesCantrip: z.string().nullable().catch(null),
 	speciesBoostPicks: z.array(z.enum(ABILITIES)).catch(() => []),
 	speciesSkills: z.array(z.string()).catch(() => []),
 	backgroundId: z.string().nullable().catch(null),
@@ -380,6 +383,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		speciesId: char.build.species ?? null,
 		speciesOptionId: char.build.speciesOption ?? null,
 		speciesSpellAbility: char.build.speciesSpellAbility ?? null,
+		speciesCantrip: char.build.speciesCantrip ?? null,
 		backgroundId: char.build.background ?? null,
 		classes: char.build.classes.length
 			? char.build.classes.map((c) => ({

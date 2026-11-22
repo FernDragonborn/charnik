@@ -555,7 +555,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (210 modules)
+## Library functions & types (211 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -942,6 +942,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/species-spells.ts`
 
 - `function speciesCantripChoice`
+- `const originCantripOptions` — The cantrips an origin row lets the player choose once, at build, from a class's list * (`cantrip_choice` — the 2014 …
 - `function speciesCasterProfile`
 
 ### `src/lib/character/spellcasting.ts`
@@ -2078,6 +2079,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function playDelta` — What moved between two states of one character.
 - `function undoDelta` — * The character with `delta` taken back, or null when anything it changed has moved since — an * Undo then would put …
 
+### `src/lib/play/effect-endings.ts`
+
+- `function effectRow` — The catalog effect row an instance came from, if it came from one.
+- `const markDead` — * Record a death on the play-state.
+- `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
+- `function withExhaustion` — * The exhaustion level, clamped to the ladder.
+- `function withoutEffects` — Take the chosen effects off, with every state that ends with one of them, and add the * exhaustion their rows leave.
+
 ### `src/lib/play/effects.ts`
 
 - `interface NewEffect` — An effect to put on the character.
@@ -2091,8 +2100,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function bumpEffectDuration` — Nudge an effect's REMAINING duration by a number of rounds.
 - `const setAutoCalc` — Effects-auto on or off.
 - `const stopConcentrating` — Stop concentrating: the ref goes, and the effect the spell left with it.
-- `function exhaustionLadder` — How tall the exhaustion ladder is for this character's system: the condition row's own * `max_level`, so a homebrew l…
-- `function setExhaustion` — * Set the exhaustion level, clamped to the ladder.
+- `function setExhaustion` — Set the exhaustion level (`withExhaustion` clamps it and dies at the top of the ladder).
 
 ### `src/lib/play/events.ts`
 
@@ -2694,4 +2702,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1656 exports across 227 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1661 exports across 228 modules · 118 duplicate suspects._

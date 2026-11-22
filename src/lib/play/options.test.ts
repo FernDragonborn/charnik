@@ -17,6 +17,7 @@ import { castSpell } from './cast';
 import { diceShortRest, rest } from './rests';
 import { shortRestSlotGroups } from './rest-slot-recovery';
 import { consumeAttackEffects, removeEffects } from './effects';
+import { settlePlay } from './settle';
 import { rollEffectsFor } from '$lib/combat/roll';
 
 const EDITIONS = {
@@ -282,6 +283,34 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(canAttack(ended)).toBe(false);
 	});
 
+	it('a Rage ends when its barbarian drops, and a 2014 Frenzy leaves its Exhaustion', () => {
+		const id = system === '5e' ? 'pathoftheberserker' : 'path_of_the_berserker';
+		const barbarian = build('barbarian', 3, (c) => {
+			c.build.classes = [
+				classRow({
+					class: `class:${source}:barbarian`,
+					subclass: `subclass:${source}:${id}`,
+					level: 3,
+				}),
+			];
+		});
+		const enter = system === '5e' ? 'barbarian_frenzy_enter' : 'barbarian_rage_enter';
+		const option = derive(barbarian).resourceOptions.find((candidate) => candidate.id === enter);
+		if (!option) throw new Error(`missing ${enter}`);
+		const raging = activateOption(
+			barbarian,
+			{ option, effectRounds: EFFECT_ROUNDS },
+			ctx(),
+		).character;
+		const isRage = (source: string | undefined) => !!source?.endsWith(':rage');
+		expect(raging.play.effects.some((effect) => isRage(effect.source))).toBe(true);
+		const hp = { ...raging.play.hp, current: 0 };
+		const down = settlePlay({ ...raging, play: { ...raging.play, hp } }, ctx()).character;
+		expect(down.play.effects.some((effect) => isRage(effect.source))).toBe(false);
+		expect(down.play.effects).toEqual([]);
+		expect(down.play.exhaustion).toBe(system === '5e' ? 1 : 0);
+	});
+
 	it('uses character level and the chosen ability for spells from species traits', () => {
 		const tiefling = build('fighter', 3, (c) => {
 			c.build.species = `species:${source}:tiefling`;
@@ -302,6 +331,24 @@ describe.each(['5e', '5.5e'] as const)('option actions · %s', (system) => {
 		expect(cast.character.play.resourcesSpent.innate_hellish_rebuke).toBe(1);
 		expect(cast.asks?.[0]).toMatchObject({ slotLevel: system === '5e' ? 2 : 1 });
 		expect(cast.character.play.spellSlotsSpent).toEqual({});
+	});
+
+	it('a 2014 High Elf knows the wizard cantrip it chose, cast with Intelligence', () => {
+		if (system === '5.5e') return;
+		const elf = (cantrip?: string) =>
+			build('fighter', 1, (c) => {
+				c.build.species = `species:${source}:elf`;
+				c.build.speciesOption = `species_option:${source}:high_elf`;
+				if (cantrip) c.build.speciesCantrip = cantrip;
+			});
+		expect(derive(elf()).spellcasting.classes).toEqual([]);
+		const fireBolt = `spell:${source}:fire_bolt`;
+		expect(derive(elf(fireBolt)).spellcasting.classes[0]).toMatchObject({
+			ability: 'int',
+			grantedSpells: [fireBolt],
+		});
+		// a cantrip off the wizard list is no answer
+		expect(derive(elf(`spell:${source}:sacred_flame`)).spellcasting.classes).toEqual([]);
 	});
 
 	it('a 2024 High Elf can replace its lineage cantrip on a long rest only', () => {

@@ -247,8 +247,7 @@ position and are given per wave, because most of them were learned the hard way.
 - **0.9.0 · a table can play levels 1–4 together.** The maintainer's goal: every SRD class and
   subclass works through level 4 in both editions, and players can sit at one table across their
   own apps. Two halves:
-  - **Levels 1–4, after 0.8.2's level 1.** RAGE-ENDS (`mechanics.md`) · HIGH-ELF-CANTRIP
-    (`content.md`).
+  - **Levels 1–4, after 0.8.2's level 1.** Nothing open.
   - **A table, minimally.** TABLE-LINK-MVP, the smallest table worth sitting at, to the
     specification in `internals/table-link.md`: a GM hosts and players join with approval outside
     the webview; the GM sees each player's sheet live (hit points, AC, conditions, saves); the GM

@@ -68,7 +68,9 @@ in the build.
 
 Any active effect may carry an optional duration in rounds (blank = until removed). An authored
 effect can end with another catalog effect via `ends_with` and add levels of Exhaustion through
-`exhaustion_on_end`. `expires_after:attack` consumes the effect when a weapon or spell attack
+`exhaustion_on_end`, and ends the moment its `ends_if` expression holds — a Rage at 0 hit points,
+Incapacitated, or in Heavy armor — through the settle pass every action ends in (`play/settle.ts`).
+`expires_after:attack` consumes the effect when a weapon or spell attack
 roll lands, including through the dice tray. The round
 counter decrements them, an effect that reaches zero **expires with a notice rather than
 silently**, rests expire what they should, and manual removal is always available.

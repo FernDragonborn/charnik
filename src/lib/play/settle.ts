@@ -14,6 +14,9 @@ import { endConcentration } from './concentration';
 import { leaveForm } from './form';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { isIncapacitated } from './conditions';
+import { effectRow, withoutEffects } from './effect-endings';
+import { evalExpression } from '$lib/effects/expression-evaluator';
+import type { ContentGraph } from '$lib/content/loader';
 
 /** One rule's consequence can be another's cause — concentration ending takes an `hp_max` effect
  *  down, which lowers the maximum. More passes than rules is a loop in the rules themselves. */
@@ -83,6 +86,33 @@ function endFinishedForm(character: Character, sheet: CharacterSheet): PlayOutco
 }
 
 /**
+ * An effect whose own row says when it stops (`ends_if`) ends the moment that holds — a Rage when
+ * its barbarian drops (SRD 5.1 "knocked unconscious"; SRD 5.2.1 Incapacitated or Heavy armor), and
+ * whatever ends with it goes too. With effects-auto off there is no sheet state to ask, so nothing
+ * ends on its own.
+ */
+function endStatedEffects(
+	character: Character,
+	sheet: CharacterSheet,
+	graph: ContentGraph,
+): Character {
+	const ctx = sheet.castCtx;
+	if (!ctx) return character;
+	return withoutEffects(
+		character,
+		(effect) => {
+			const rule = effectRow(effect, graph)?.data.ends_if;
+			if (!rule) return false;
+			const result = evalExpression(rule, ctx);
+			// shortcut: an unreadable `ends_if` ends nothing and is not reported in play; the shipped rows
+			// are held by a content test — report it as a content issue once a homebrew row needs it
+			return result.ok && result.value.type === 'number' && result.value.value !== 0;
+		},
+		graph,
+	);
+}
+
+/**
  * Apply every rule until nothing moves, against the sheet as it stands after each step — a rule may
  * change what the sheet says. The form goes first: one that ends at 0 hit points hands the
  * character's own back, and concentration is then asked of those. The character in the outcome is
@@ -97,7 +127,8 @@ export function settlePlay(character: Character, ctx: PlayContext): PlayOutcome 
 		notices.push(...formed.notices);
 		const unbroken =
 			formed.character === settling ? endBrokenConcentration(settling, sheet) : formed.character;
-		const next = unbroken === settling ? settleHitPoints(settling, sheet) : unbroken;
+		const ended = unbroken === settling ? endStatedEffects(settling, sheet, ctx.graph) : unbroken;
+		const next = ended === settling ? settleHitPoints(settling, sheet) : ended;
 		if (next === settling) break;
 		settling = next;
 	}

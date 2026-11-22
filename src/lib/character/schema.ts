@@ -137,6 +137,8 @@ const buildSchema = z.object({
 	/** Chosen species sub-option (2014 subrace / 2024 lineage), a `species_option` ref. */
 	speciesOption: ref.optional(),
 	speciesSpellAbility: z.enum(ABILITIES).optional(),
+	/** The cantrip an origin's `cantrip_choice` was answered with, a `spell` ref. */
+	speciesCantrip: ref.optional(),
 	background: ref.optional(),
 	/** ≥1 for a built character; empty is allowed mid-creation. */
 	classes: z.array(classEntry).default([]).transform(withUniqueRowIds),

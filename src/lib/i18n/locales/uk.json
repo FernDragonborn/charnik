@@ -284,6 +284,8 @@
 			"lineageChosen": "Гілка виду {species} — додає власні риси зверху.",
 			"lineageAsk": "{species} питає, до якої гілки ви належите.",
 			"spellAbility": "Заклинальна здібність виду",
+			"speciesCantrip": "Замовляння виду",
+			"speciesCantripAsk": "Оберіть замовляння",
 			"background": "Бекграунд",
 			"backgroundSkills": "{count, plural, one {# навичка} few {# навички} many {# навичок} other {# навичок}}",
 			"backgroundSkillsUnknown": "навички",

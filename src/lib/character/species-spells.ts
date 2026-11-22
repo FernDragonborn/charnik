@@ -1,4 +1,4 @@
-import type { ContentGraph } from '$lib/content/loader';
+import type { ContentGraph, LoadedRowOf } from '$lib/content/loader';
 import { grantedAtLevel } from '$lib/content/level-gate';
 import { getSpellAccess } from '$lib/content/spellAccess';
 import { parseToken, splitGuard } from '$lib/effects/token-parser';
@@ -17,17 +17,21 @@ function originRows(character: Character, graph: ContentGraph) {
 		: [species];
 }
 
+/** The cantrips on a class's spell list, in the character's edition. */
+function classCantrips(graph: ContentGraph, system: string, classId: string | undefined) {
+	const caster = graph.list('class', { system }).find((entry) => entry.id === classId);
+	if (!caster) return;
+	const access = getSpellAccess(graph).spellIdsForClass(caster.effectiveId);
+	return graph
+		.list('spell', { system })
+		.filter((spell) => spell.data.level === 0 && access.includes(spell.effectiveId));
+}
+
 export function speciesCantripChoice(character: Character, graph: ContentGraph) {
 	const row = originRows(character, graph).find((origin) => origin.data.swap_cantrip);
 	if (!row) return;
-	const caster = graph
-		.list('class', { system: character.system })
-		.find((entry) => entry.id === row.data.swap_cantrip_list);
-	if (!caster) return;
-	const access = getSpellAccess(graph).spellIdsForClass(caster.effectiveId);
-	const spells = graph
-		.list('spell', { system: character.system })
-		.filter((spell) => spell.data.level === 0 && access.includes(spell.effectiveId));
+	const spells = classCantrips(graph, character.system, row.data.swap_cantrip_list);
+	if (!spells) return;
 	const current =
 		spells.find(
 			(spell) =>
@@ -38,6 +42,19 @@ export function speciesCantripChoice(character: Character, graph: ContentGraph) 
 		) ?? spells.find((spell) => spell.id === row.data.swap_cantrip);
 	return current && { row, current, spells, replaces: row.data.swap_cantrip };
 }
+
+/** The cantrips an origin row lets the player choose once, at build, from a class's list
+ *  (`cantrip_choice` — the 2014 High Elf's wizard cantrip). Empty when it asks for none. */
+export const originCantripOptions = (
+	rows: readonly (LoadedRowOf<'species'> | LoadedRowOf<'species_option'>)[],
+	system: string,
+	graph: ContentGraph,
+) =>
+	classCantrips(
+		graph,
+		system,
+		rows.findLast((row) => row.data.cantrip_choice)?.data.cantrip_choice,
+	) ?? [];
 
 type StatsFor = (ability: Ability, id: string) => Pick<SpellcastingClass, 'attack' | 'saveDC'>;
 
@@ -56,7 +73,13 @@ export function speciesCasterProfile(
 	if (!ability) return;
 	const spells = graph.list('spell', { system: character.system });
 	const swap = speciesCantripChoice(character, graph);
-	const unlocked = origin.flatMap((row) => grantedAtLevel(row.data.spells, level));
+	const chosenCantrip = originCantripOptions(origin, character.system, graph).find(
+		(spell) => spell.effectiveId === character.build.speciesCantrip,
+	);
+	const unlocked = [
+		...origin.flatMap((row) => grantedAtLevel(row.data.spells, level)),
+		...(chosenCantrip ? [chosenCantrip.id] : []),
+	];
 	const grantedSpells = [
 		...new Set(
 			unlocked.flatMap((id) => {

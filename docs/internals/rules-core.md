@@ -265,7 +265,8 @@ one of the abilities in `spell_abilities`, contributes no spell slots and can co
 profiles. `spell_slots:resource_only` restricts leveled spells to their linked pools unless a
 second source teaches the same spell. A pool selector such as `hellish_rebuke@2` gives the level
 of its free cast. `swap_cantrip` and `swap_cantrip_list` open a replacement from the named class
-list on a Long Rest.
+list on a Long Rest; `cantrip_choice` names the class list the player picks one cantrip from at
+build, kept in `build.speciesCantrip` (the 2014 High Elf).
 
 A rule option allows preparing PAST the cap (off by default; the counter then reads 12/11),
 because house rules exist and the tracker does not enforce.

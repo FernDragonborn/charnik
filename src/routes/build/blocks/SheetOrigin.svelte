@@ -118,6 +118,20 @@
 			</select>
 		</label>
 	{/if}
+	{#if b.speciesCantripOptions.length}
+		<label class="origin-casting">
+			<span class="mini">{$_('build.origin.speciesCantrip')}</span>
+			<select
+				value={b.draft.speciesCantrip ?? ''}
+				onchange={(event) => (b.draft.speciesCantrip = event.currentTarget.value || null)}
+			>
+				<option value="" disabled>{$_('build.origin.speciesCantripAsk')}</option>
+				{#each b.speciesCantripOptions as spell (spell.effectiveId)}
+					<option value={spell.effectiveId}>{rowName(spell)}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
 </div>
 
 <style>

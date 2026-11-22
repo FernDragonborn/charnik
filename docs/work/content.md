@@ -4,11 +4,6 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [ ] **HIGH-ELF-CANTRIP · the 2014 High Elf's wizard cantrip.** SRD 5.1: "You know one cantrip of
-  your choice from the wizard spell list. Intelligence is your spellcasting ability for it." The
-  2014 `high_elf` row grants no spell, so the cantrip is missing from the sheet. The species caster
-  already reads `spells`, `spell_abilities` and a `swap_cantrip_list`; what it lacks is a cantrip
-  chosen at build with no default, where the 2024 High Elf's swap starts from Prestidigitation.
 - [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature

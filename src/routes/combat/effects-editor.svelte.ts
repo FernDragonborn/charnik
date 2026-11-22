@@ -12,13 +12,13 @@ import type { Character, EffectInstance } from '$lib/character/schema';
 import {
 	addEffect,
 	bumpEffectDuration,
-	exhaustionLadder,
 	removeEffects,
 	setAutoCalc,
 	setEffectDuration,
 	setExhaustion,
 	type NewEffect,
 } from '$lib/play/effects';
+import { exhaustionLadder } from '$lib/play/effect-endings';
 import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
 import type { ContentGraph } from '$lib/content/loader';
 import {

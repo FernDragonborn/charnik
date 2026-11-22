@@ -40,6 +40,7 @@ import { FormPicks } from './form-picks.svelte';
 import { OptionPicks } from './option-picks.svelte';
 import { StartingKitPicks } from './starting-kit-picks.svelte';
 import { featureLanguages, NO_FEATURE_LANGUAGES } from '$lib/character/features';
+import { originCantripOptions } from '$lib/character/species-spells';
 import { SpellPicks } from './spell-picks.svelte';
 import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
 import type { SystemId } from '$lib/stores/app.svelte';
@@ -256,6 +257,16 @@ export class BuildVM {
 	speciesSpellAbilities = $derived(
 		this.speciesOptionRow?.data.spell_abilities ?? this.speciesRow?.data.spell_abilities ?? [],
 	);
+	/** The cantrips the origin lets the player choose from (2014 High Elf), by display name. */
+	speciesCantripOptions = $derived.by(() => {
+		const graph = content.graph;
+		const rows = [this.speciesRow, this.speciesOptionRow].filter((row) => row !== undefined);
+		return graph
+			? originCantripOptions(rows, this.draft.system, graph).sort((a, b) =>
+					rowName(a).localeCompare(rowName(b)),
+				)
+			: [];
+	});
 	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
 	/** The CONTENT's own word for this choice ("Subrace" 2014, "Lineage" 2024). A pack that names
 	 *  none falls back to the catalog's word rather than to an English one written here. */
@@ -267,6 +278,7 @@ export class BuildVM {
 		this.draft.speciesId = id;
 		this.draft.speciesOptionId = null;
 		this.draft.speciesSpellAbility = null;
+		this.draft.speciesCantrip = null;
 		this.draft.speciesBoostPicks = [];
 	};
 	pickBackground = (id: string | null) => setBackground(this.draft, id);
@@ -386,6 +398,20 @@ export class BuildVM {
 		return this.feats.originFeatRef ? [this.feats.originFeatRef] : [];
 	}
 
+	/** The species' casting answers, each kept only while the origin still asks it: a cantrip from
+	 *  its list, and an ability from its own (the first when none was picked). */
+	private speciesCastingAnswers = $derived.by(() => {
+		const { speciesCantrip, speciesSpellAbility } = this.draft;
+		const cantripAsked = this.speciesCantripOptions.some((s) => s.effectiveId === speciesCantrip);
+		return {
+			speciesCantrip: cantripAsked ? (speciesCantrip ?? undefined) : undefined,
+			speciesSpellAbility:
+				speciesSpellAbility && this.speciesSpellAbilities.includes(speciesSpellAbility)
+					? speciesSpellAbility
+					: this.speciesSpellAbilities[0],
+		};
+	});
+
 	assembled = $derived.by<Character>(() => {
 		const build = {
 			name: this.draft.name || t('build.unnamed'),
@@ -398,9 +424,7 @@ export class BuildVM {
 				? (this.draft.speciesOptionId ?? undefined)
 				: undefined,
 			background: this.draft.backgroundId ?? undefined,
-			speciesSpellAbility: this.draft.speciesSpellAbility &&
-				this.speciesSpellAbilities.includes(this.draft.speciesSpellAbility)
-				? this.draft.speciesSpellAbility : this.speciesSpellAbilities[0],
+			...this.speciesCastingAnswers,
 			classes: this.draft.classes
 				.flatMap((c) =>
 					c.classId

@@ -221,7 +221,10 @@ export const CONTENT_SCHEMA_VERSION = 3;
 // v82: Wizard, Sorcerer and Monk declare no armour (`none`), 2014 Jack of All Trades reaches every
 // ability check, and the 2014 Dwarf is not slowed by heavy armour. An install left at v81 keeps the
 // three casters trained in every armour, the half bonus off bare checks, and the Dwarf slowed.
-export const CONTENT_SEED_VERSION = 87;
+// v88: a Rage ends on its own terms (`ends_if`): at 0 hit points or unconscious in 5e, Incapacitated
+// or in Heavy armor in 5.5e; the 2014 High Elf chooses its wizard cantrip (`cantrip_choice`). An
+// install left at v87 keeps a Rage running until its clock or the ✕, and offers the High Elf none.
+export const CONTENT_SEED_VERSION = 88;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 // v4: a character has a `uid`, and its inventory and class rows an id of their own — a class row

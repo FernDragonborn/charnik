@@ -11,12 +11,12 @@ import type { ContentGraph } from '$lib/content/loader';
 import {
 	addEffect,
 	bumpEffectDuration,
-	exhaustionLadder,
 	removeEffects,
 	setEffectDuration,
 	setExhaustion,
 	stopConcentrating,
 } from './effects';
+import { exhaustionLadder } from './effect-endings';
 import type { PlayContext } from './outcome';
 
 const EDITIONS = {
