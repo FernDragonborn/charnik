@@ -4,7 +4,7 @@
 	// text (`docs/internals/table-link.md` ▸ The table's log).
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
-	import { AUDIENCE } from '$lib/table-link/types';
+	import { AUDIENCE, type LogRollLine } from '$lib/table-link/types';
 	import { TABLE_ROLE, table } from './table-view-model.svelte';
 	import type { LogLine } from './table-log.svelte';
 	import TableRollResult from './TableRollResult.svelte';
@@ -18,8 +18,8 @@
 		line.mine ? $_('table.log.you') : (line.name ?? '');
 	/** The roll's words in this app's language when its key names a roll; any other key is a peer
 	 *  reaching for one of this app's sentences, and its own words are shown instead. */
-	const rollName = (line: LogLine): string => {
-		const { text, key } = line.record.body.name;
+	const rollName = (roll: LogRollLine): string => {
+		const { text, key } = roll.name;
 		return key && LOGGED_ROLL_KEY.test(key) ? $_(key, { default: text }) : text;
 	};
 	const LOGGED_ROLL_KEY = /^(combat\.roll\.(check|save)\.[a-z]+|skillName\.[a-z_]+)$/;
@@ -49,17 +49,18 @@
 	{#if lines.length}
 		<ul class="table-rows">
 			{#each lines as line (`${line.record.author}#${line.record.seq}`)}
+				{@const [first, ...more] = line.record.body.lines}
 				<li class="table-row">
 					<span class="muted table-log-time">{timeOf(line.record.at)}</span>
 					{#if byTheGm(line)}<span class="durpill">{$_('table.log.gm')}</span>{:else}<b
 							class="table-log-who">{whoRolled(line)}</b
 						>{/if}
-					<span class="table-log-name">{rollName(line)}</span>
+					{#if first}<span class="table-log-name">{rollName(first)}</span>{/if}
 					{#if line.record.body.to === AUDIENCE.gm}
 						<span class="durpill">{$_('table.log.gmOnly')}</span>
 					{/if}
 					<span class="table-row-spacer"></span>
-					<TableRollResult roll={line.record.body.roll} />
+					{#if first}<TableRollResult roll={first.roll} />{/if}
 					{#if table.log.canHide(line)}
 						<button
 							type="button"
@@ -67,6 +68,18 @@
 							aria-label={$_('table.log.hideLabel')}
 							onclick={() => table.log.hide(line)}>{$_('table.log.hide')}</button
 						>
+					{/if}
+					{#if more.length}
+						<!-- the rest of the action: one press, one record, so hidden together -->
+						<ul class="table-log-more">
+							{#each more as roll, index (index)}
+								<li>
+									<span class="table-log-name">{rollName(roll)}</span>
+									<span class="table-row-spacer"></span>
+									<TableRollResult roll={roll.roll} />
+								</li>
+							{/each}
+						</ul>
 					{/if}
 				</li>
 			{/each}
@@ -105,5 +118,19 @@
 	.table-log-who,
 	.table-log-name {
 		overflow-wrap: anywhere;
+	}
+	.table-log-more {
+		display: flex;
+		flex-basis: 100%;
+		flex-direction: column;
+		gap: var(--space-1);
+		margin: 0;
+		padding: 0 0 0 var(--space-4);
+		list-style: none;
+	}
+	.table-log-more li {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 	}
 </style>

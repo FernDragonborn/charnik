@@ -20,7 +20,7 @@ use std::sync::{Arc, Mutex};
 use iroh::{EndpointId, SecretKey};
 use serde::{Deserialize, Serialize};
 
-use super::records::{self, Signed, LOG_MAX};
+use super::records::{self, Held, LOG_MAX};
 use super::session::{Again, Keep, Keeper, RelaySetting};
 
 #[cfg(target_os = "macos")]
@@ -69,14 +69,6 @@ pub enum KeptSeat {
         invite: String,
         name: String,
     },
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct RecordLine {
-    record: Signed,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    name: Option<String>,
 }
 
 /// A table id as `wire::new_local_id` writes one, and so the only file name this module makes.
@@ -303,7 +295,7 @@ impl Shelf {
         ))
     }
 
-    fn read_records(&self, id: &str) -> Vec<(Signed, Option<String>)> {
+    fn read_records(&self, id: &str) -> Vec<Held> {
         let Ok(text) = fs::read_to_string(self.records_path(id)) else {
             return vec![];
         };
@@ -311,8 +303,7 @@ impl Shelf {
         lines[lines.len().saturating_sub(LOG_MAX)..]
             .iter()
             .filter(|line| line.len() <= RECORD_LINE_MAX)
-            .filter_map(|line| serde_json::from_str::<RecordLine>(line).ok())
-            .map(|line| (line.record, line.name))
+            .filter_map(|line| serde_json::from_str::<Held>(line).ok())
             .collect()
     }
 
@@ -337,7 +328,7 @@ impl Shelf {
 
     fn keep(&self, id: &str, keep: Keep) {
         match keep {
-            Keep::Record { record, name } => self.append_record(id, RecordLine { record, name }),
+            Keep::Record(held) => self.append_record(id, held),
             Keep::LetIn { key, name } => self.change_allowed(id, |allowed| {
                 let key = key.to_string();
                 allowed.retain(|let_in| let_in.key != key);
@@ -374,7 +365,7 @@ impl Shelf {
         );
     }
 
-    fn append_record(&self, id: &str, line: RecordLine) {
+    fn append_record(&self, id: &str, line: Held) {
         let Ok(text) = serde_json::to_string(&line) else {
             return;
         };
@@ -426,6 +417,7 @@ fn write_whole(path: &Path, text: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::table_link::records::Signed;
     use std::collections::HashMap;
 
     /// A store in memory, standing in for the OS's.
@@ -489,16 +481,24 @@ mod tests {
             name: "Lira".into(),
         });
         let record = signed_roll(&key, &key.public().to_string(), 1);
-        keep(Keep::Record {
+        keep(Keep::Record(Held {
             record: record.clone(),
             name: None,
-        });
+            skew: 0,
+        }));
 
         assert_eq!(shelf.list().len(), 1);
         let (_, again) = shelf.take(id).expect("the table comes back");
         assert_eq!(again.key.to_bytes(), key.to_bytes());
         assert_eq!(again.allowed, vec![(player, "Lira".to_string())]);
-        assert_eq!(again.records, vec![(record, None)]);
+        assert_eq!(
+            again.records,
+            vec![Held {
+                record,
+                name: None,
+                skew: 0,
+            }]
+        );
         assert_eq!(
             again.bind_addrs,
             vec!["0.0.0.0:31415".parse::<SocketAddr>().unwrap()]
@@ -511,10 +511,11 @@ mod tests {
         shelf.forget(id);
         assert!(shelf.list().is_empty() && shelf.take(id).is_none());
         // a record that arrives after the table is forgotten does not bring it back
-        keep(Keep::Record {
+        keep(Keep::Record(Held {
             record: signed_roll(&key, "t", 2),
             name: None,
-        });
+            skew: 0,
+        }));
         assert!(!shelf.records_path(id).exists());
         let _ = fs::remove_dir_all(folder);
     }
@@ -588,15 +589,16 @@ mod tests {
         assert!(shelf.put("0a", &seat, &key));
         let keep = shelf.keeper("0a");
         for seq in 1..=RECORDS_COMPACT_AT as u64 {
-            keep(Keep::Record {
+            keep(Keep::Record(Held {
                 record: signed_roll(&key, "t", seq),
                 name: None,
-            });
+                skew: 0,
+            }));
         }
         let kept = shelf.read_records("0a");
         assert_eq!(kept.len(), LOG_MAX);
         assert_eq!(
-            kept.last().map(|(record, _)| record.clone()),
+            kept.last().map(|held| held.record.clone()),
             Some(signed_roll(&key, "t", RECORDS_COMPACT_AT as u64))
         );
         let _ = fs::remove_dir_all(folder);

@@ -17,7 +17,7 @@ use super::records::Signed;
 /// The protocol's name on a connection. A peer speaking another is refused by the handshake.
 pub const ALPN: &[u8] = b"charnik/table/1";
 /// Said in the hello; a GM refuses a number it does not speak.
-pub const PROTOCOL: u32 = 3;
+pub const PROTOCOL: u32 = 4;
 pub const INVITE_VERSION: u32 = 2;
 
 /// The hello is a name and a secret.
@@ -177,6 +177,32 @@ pub enum Refusal {
     Full,
 }
 
+/// What a GM's app speaks, told to a seat refused for its version.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GmSpeaks {
+    pub protocol: u32,
+    pub version: String,
+}
+
+/// A hello from an app of another protocol, read for what every version's hello carries — a
+/// strict read would fail on what that version added and leave its seat unanswered.
+#[derive(Debug, Deserialize)]
+pub struct LooseHello {
+    pub frame: String,
+    pub protocol: u32,
+    #[serde(default)]
+    pub secret: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub version: String,
+}
+
+fn is_zero(skew: &i64) -> bool {
+    *skew == 0
+}
+
 /// Why a GM's app ended a seat that was given.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -198,13 +224,17 @@ pub enum PlayerFrame {
         protocol: u32,
         secret: String,
         name: String,
+        /// The app's Charnik version, so a refusal for protocol can say whose app is older.
+        version: String,
     },
     /// The top-level keys of the view that changed since the last one sent on this connection.
     View {
         set: Map<String, Value>,
         unset: Vec<String>,
     },
-    /// A log record: the player's own, or one the GM's app lacks.
+    /// This app's clock as the seat begins, so the GM's app knows how far it is off its own.
+    Clock { now: u64 },
+    /// One of this app's own log records.
     Record { record: Signed },
     /// The highest record number this app holds from each author.
     Have { have: BTreeMap<String, u64> },
@@ -222,17 +252,28 @@ pub enum GmFrame {
     Welcome {
         table: String,
     },
+    /// Its shape never changes, so a seat of any version reads why it was turned away.
     Refused {
         reason: Refusal,
+        /// For a refusal for version: what the GM's app speaks.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gm: Option<GmSpeaks>,
     },
     Request {
         record: Signed,
     },
-    /// A log record, with the name the GM let its author in under; none for the GM's own.
+    /// How far this seat's clock runs behind the GM's, in milliseconds.
+    Clock {
+        skew: i64,
+    },
+    /// A log record, with the name the GM let its author in under — none for the GM's own — and
+    /// how far its author's clock runs behind the GM's.
     Record {
         record: Signed,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         name: Option<String>,
+        #[serde(default, skip_serializing_if = "is_zero")]
+        skew: i64,
     },
     Have {
         have: BTreeMap<String, u64>,
@@ -491,9 +532,10 @@ mod tests {
 
     #[test]
     fn a_frame_with_a_field_nobody_named_is_malformed() {
-        let hello = json!({ "frame": "hello", "protocol": 1, "secret": "s", "name": "n" });
+        let hello =
+            json!({ "frame": "hello", "protocol": 1, "secret": "s", "name": "n", "version": "0" });
         assert!(serde_json::from_value::<PlayerFrame>(hello).is_ok());
-        let extra = json!({ "frame": "hello", "protocol": 1, "secret": "s", "name": "n", "x": 1 });
+        let extra = json!({ "frame": "hello", "protocol": 1, "secret": "s", "name": "n", "version": "0", "x": 1 });
         assert!(serde_json::from_value::<PlayerFrame>(extra).is_err());
         // a player's app cannot say what only a GM's says
         let request = json!({ "frame": "request", "requestId": "r", "request": { "kind": "heal", "amount": 1 } });

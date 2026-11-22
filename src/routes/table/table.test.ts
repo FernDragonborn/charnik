@@ -6,7 +6,7 @@
 import 'fake-indexeddb/auto'; // accepting a request saves the character
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { registerDiceTray } from '$lib/dice/tray.svelte';
-import { rollPool } from '$lib/rules/dice';
+import { ADVANTAGE_MODE, rollPool } from '$lib/rules/dice';
 import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -39,7 +39,7 @@ import {
 	type TableRole,
 } from '$lib/table-link/types';
 import { tableViewOf } from '$lib/table-link/view';
-import type { TableView } from '$lib/table-link/wire-schema';
+import { LINES_PER_RECORD, type TableView } from '$lib/table-link/wire-schema';
 import { combat } from '../combat/combat-view-model.svelte';
 import { ASK_STATUS, NO_CHARACTER, TABLE_ROLE, TableVM } from './table-view-model.svelte';
 import type { PendingRequest } from './player-requests.svelte';
@@ -390,6 +390,19 @@ describe("a player's seat", () => {
 		expect(heard.views.length).toBe(told + 1);
 	});
 
+	it('a seat refused for its version says whose Charnik is the older', async () => {
+		const { table, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		tellPlayer({
+			kind: TABLE_EVENT.connection,
+			state: CONNECTION.closed,
+			reason: CLOSE_REASON.version,
+			gmVersion: { version: '0.9.2', newer: true },
+		});
+		await Promise.resolve();
+		expect(table.problem).toBe(CLOSE_REASON.version);
+		expect(table.problemGap).toEqual({ version: '0.9.2', newer: true });
+	});
+
 	it('says why the seat ended, and holds none afterwards', async () => {
 		const { table, heard, tellPlayer } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
 		tellPlayer({
@@ -587,36 +600,9 @@ describe('a page that loads again', () => {
 		});
 	});
 
-	it('rebuilds a GM conversation from signed-record events in either order', async () => {
+	it('rebuilds a GM conversation from its signed records', async () => {
 		const { table, tellGm } = tableOfOne(TABLE_ROLE.gm);
 		await table.resume();
-		const answer = { outcome: TABLE_ANSWER.declined };
-		tellGm({
-			kind: TABLE_EVENT.record,
-			mine: false,
-			record: {
-				table: 'gm',
-				author: 'p-2',
-				at: 2,
-				seq: 1,
-				body: {
-					kind: LOG_BODY.answer,
-					requestId: 'r-1',
-					answer: { outcome: TABLE_ANSWER.accepted },
-				},
-			},
-		});
-		tellGm({
-			kind: TABLE_EVENT.record,
-			mine: false,
-			record: {
-				table: 'gm',
-				author: 'p-1',
-				at: 2,
-				seq: 1,
-				body: { kind: LOG_BODY.answer, requestId: 'r-1', answer },
-			},
-		});
 		const request = { kind: TABLE_REQUEST.roll, roll: REQUESTED_ROLL.skill, id: 'stealth' };
 		const ask: GmEvent = {
 			kind: TABLE_EVENT.record,
@@ -631,6 +617,20 @@ describe('a page that loads again', () => {
 		};
 		tellGm(ask);
 		tellGm(ask);
+		const answerBy = (author: string, outcome: TableAnswer['outcome']): GmEvent => ({
+			kind: TABLE_EVENT.record,
+			mine: false,
+			record: {
+				table: 'gm',
+				author,
+				at: 2,
+				seq: 1,
+				body: { kind: LOG_BODY.answer, requestId: 'r-1', answer: { outcome } },
+			},
+		});
+		// only the player asked answers it
+		tellGm(answerBy('p-2', TABLE_ANSWER.accepted));
+		tellGm(answerBy('p-1', TABLE_ANSWER.declined));
 		expect(table.asked).toMatchObject([{ requestId: 'r-1', request, status: ASK_STATUS.declined }]);
 		expect(table.asked[0]?.dc).toBeUndefined();
 		expect(table.log.shown).toEqual([]);
@@ -707,8 +707,12 @@ describe("the table's log", () => {
 		at,
 		body: {
 			kind: LOG_BODY.roll,
-			name: { text: 'DEX save', key: 'combat.roll.save.dex' },
-			roll: { total, advantage: 'neither', mod: 2 },
+			lines: [
+				{
+					name: { text: 'DEX save', key: 'combat.roll.save.dex' },
+					roll: { total, advantage: 'neither', mod: 2 },
+				},
+			],
 			to: AUDIENCE.table,
 		},
 	});
@@ -749,6 +753,28 @@ describe("the table's log", () => {
 		expect(table.log.shown.map((line) => line.record.seq)).toEqual([1]);
 	});
 
+	it('writes one press as one action, and an action past a record in more than one', async () => {
+		const { table, heard } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		const stop = table.keepPublishing();
+		const line = (at: number) => ({
+			label: `Ray ${at}`,
+			expr: '',
+			dice: [],
+			d20s: [],
+			advantage: ADVANTAGE_MODE.neither,
+			mod: 0,
+			total: 5,
+			at,
+		});
+		combat.journal.recordRolls([line(1), line(2), line(3)]);
+		combat.journal.recordRolls(Array.from({ length: LINES_PER_RECORD + 2 }, (_, at) => line(at)));
+		expect(
+			heard.records.map((body) => (body.kind === LOG_BODY.roll ? body.lines.length : 0)),
+		).toEqual([3, LINES_PER_RECORD, 2]);
+		await table.leave();
+		stop();
+	});
+
 	it("writes the sheet's rolls to whom the person said, and only while seated", async () => {
 		const { table, heard } = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
 		const stop = table.keepPublishing();
@@ -761,7 +787,7 @@ describe("the table's log", () => {
 			AUDIENCE.gm,
 		]);
 		const first = heard.records[0];
-		expect(first?.kind === LOG_BODY.roll && first.name).toEqual({
+		expect(first?.kind === LOG_BODY.roll && first.lines[0]?.name).toEqual({
 			text: 'WIS save',
 			key: 'combat.roll.save.wis',
 		});

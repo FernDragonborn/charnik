@@ -6,7 +6,7 @@
 //! re-serialises before checking; it is believed only once the signature holds, the text parses
 //! into the closed shape below, and it names this table.
 
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -27,9 +27,13 @@ pub const LOG_MAX: usize = 500;
 /// The most authors a table's log holds records from: the GM, every seat, and those who left or were
 /// dismissed. It bounds what `have` can say, so the frame that carries it stays small.
 pub const AUTHORS_MAX: usize = 32;
-/// An author's records past this many in `RATE_WINDOW` are refused.
-const RATE_MAX: usize = 10;
-const RATE_WINDOW: Duration = Duration::from_secs(10);
+/// The most roll lines one action's record carries: Extra Attack with Action Surge is sixteen.
+pub const ACTION_LINES_MAX: usize = 16;
+/// How fast a seat's app hands its own records over: a burst of this many, then one a second.
+pub const SEND_PACE: Pace = Pace::new(20, Duration::from_secs(1));
+/// What the GM's app takes from a seat before it refuses: above the pace an honest app keeps, so it
+/// guards only against an app that does not keep it.
+const TAKE_PACE: Pace = Pace::new(30, Duration::from_secs(1));
 
 /// A record as it crosses the wire.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -47,6 +51,27 @@ pub enum Audience {
     Gm,
 }
 
+/// A record as an app holds it: the signed text, the name its author is shown under, and how far
+/// the author's clock runs behind the GM's (`at + skew` is the record's time on the GM's clock).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Held {
+    pub record: Signed,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub skew: i64,
+}
+
+fn is_zero(skew: &i64) -> bool {
+    *skew == 0
+}
+
+/// A record's time on the GM's clock: its author's, moved by how far that clock is off.
+pub fn on_gm_clock(at: u64, skew: i64) -> u64 {
+    u64::try_from(i128::from(at) + i128::from(skew)).unwrap_or(if skew < 0 { 0 } else { u64::MAX })
+}
+
 /// A roll's name as the sheet says it: the words, and the catalog key they came from.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -54,6 +79,14 @@ pub struct RollName {
     pub text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
+}
+
+/// One roll of an action. Its five facts are held to their shape by the page, as an answer's are.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RollLine {
+    pub name: RollName,
+    pub roll: Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -64,10 +97,9 @@ pub struct RollName {
     deny_unknown_fields
 )]
 pub enum Body {
-    /// The roll's five facts are held to their shape by the page, as an answer's are.
+    /// One action's rolls — every line one press made — so the log and its pace count actions.
     Roll {
-        name: RollName,
-        roll: Value,
+        lines: Vec<RollLine>,
         to: Audience,
     },
     Hide {
@@ -89,10 +121,14 @@ pub enum Body {
 impl Body {
     fn is_bounded(&self, is_gm: bool) -> bool {
         match self {
-            Body::Roll { name, .. } => {
-                wire::plain_text(&name.text) == name.text
-                    && !name.text.is_empty()
-                    && name.key.as_deref().is_none_or(wire::is_catalog_key)
+            Body::Roll { lines, .. } => {
+                !lines.is_empty()
+                    && lines.len() <= ACTION_LINES_MAX
+                    && lines.iter().all(|RollLine { name, .. }| {
+                        wire::plain_text(&name.text) == name.text
+                            && !name.text.is_empty()
+                            && name.key.as_deref().is_none_or(wire::is_catalog_key)
+                    })
             }
             Body::Hide { author, .. } => EndpointId::from_str(author).is_ok(),
             Body::Ask {
@@ -170,14 +206,76 @@ pub fn now_ms() -> u64 {
 /// The records one app holds at one table.
 #[derive(Default)]
 pub struct Log {
-    /// Each record with the order it arrived in: the oldest ARRIVAL is what goes when the log is
-    /// full, since the author's clock is the author's to set.
-    records: BTreeMap<(String, u64), (Record, Signed, u64)>,
+    /// Each record with the order it arrived in and its author's skew: the oldest ARRIVAL is what
+    /// goes when the log is full, since the author's clock is the author's to set.
+    records: BTreeMap<(String, u64), Entry>,
     arrivals: u64,
     /// The highest number ever held from each author, kept past eviction: an author's numbers go
     /// on from it, and what a peer is told it lacks is measured against it.
     highest: HashMap<String, u64>,
-    recent: HashMap<String, VecDeque<Instant>>,
+    paces: HashMap<String, Bucket>,
+}
+
+struct Entry {
+    record: Record,
+    signed: Signed,
+    arrived: u64,
+    skew: i64,
+}
+
+/// A rate as a bucket: `burst` at once, then one more each `every`.
+#[derive(Clone, Copy)]
+pub struct Pace {
+    burst: u32,
+    every: Duration,
+}
+
+impl Pace {
+    pub const fn new(burst: u32, every: Duration) -> Self {
+        Self { burst, every }
+    }
+}
+
+/// One sender's bucket under a pace.
+pub struct Bucket {
+    pace: Pace,
+    tokens: f64,
+    at: Instant,
+}
+
+impl Bucket {
+    pub fn new(pace: Pace) -> Self {
+        Self {
+            pace,
+            tokens: f64::from(pace.burst),
+            at: Instant::now(),
+        }
+    }
+
+    fn refill(&mut self, now: Instant) {
+        let gained = now.duration_since(self.at).as_secs_f64() / self.pace.every.as_secs_f64();
+        self.tokens = (self.tokens + gained).min(f64::from(self.pace.burst));
+        self.at = now;
+    }
+
+    /// Take one if there is one.
+    pub fn take(&mut self, now: Instant) -> bool {
+        self.refill(now);
+        if self.tokens < 1.0 {
+            return false;
+        }
+        self.tokens -= 1.0;
+        true
+    }
+
+    /// When the next one is there to take.
+    pub fn next_at(&mut self, now: Instant) -> Instant {
+        self.refill(now);
+        if self.tokens >= 1.0 {
+            return now;
+        }
+        now + self.pace.every.mul_f64(1.0 - self.tokens)
+    }
 }
 
 /// How far ahead of this app's clock a record's time may be: clocks differ by minutes, and a time
@@ -209,7 +307,7 @@ impl Log {
             .iter()
             .map(|(author, top)| {
                 let mut seq = *top;
-                while let Some((record, _, _)) = self.records.get(&(author.clone(), seq)) {
+                while let Some(Entry { record, .. }) = self.records.get(&(author.clone(), seq)) {
                     if seq == 0 || may_see(record) {
                         break;
                     }
@@ -225,63 +323,79 @@ impl Log {
         self.highest.get(author).map_or(1, |seq| seq + 1)
     }
 
+    /// A record held, as it was signed.
+    pub fn signed(&self, author: &str, seq: u64) -> Option<Signed> {
+        self.records
+            .get(&(author.to_string(), seq))
+            .map(|entry| entry.signed.clone())
+    }
+
     /// Is this record held already?
     pub fn holds(&self, author: &str, seq: u64) -> bool {
         self.records.contains_key(&(author.to_string(), seq))
     }
 
-    /// The records past what `have` says, oldest first, that `may_see` allows.
+    /// The records past what `have` says, oldest first, that `may_see` allows, each with its
+    /// author's skew.
     pub fn missing(
         &self,
         have: &BTreeMap<String, u64>,
         may_see: impl Fn(&Record) -> bool,
-    ) -> Vec<Signed> {
-        let mut out: Vec<&(Record, Signed, u64)> = self
+    ) -> Vec<(Signed, i64)> {
+        let mut out: Vec<&Entry> = self
             .records
             .iter()
-            .filter(|((author, seq), (record, _, _))| {
-                (record.body.is_history() || have.get(author).is_none_or(|held| seq > held))
-                    && may_see(record)
+            .filter(|((author, seq), entry)| {
+                have.get(author).is_none_or(|held| seq > held) && may_see(&entry.record)
             })
-            .map(|(_, kept)| kept)
+            .map(|(_, entry)| entry)
             .collect();
-        out.sort_by_key(|(_, _, arrived)| *arrived);
+        out.sort_by_key(|entry| entry.arrived);
         out.into_iter()
-            .map(|(_, signed, _)| signed.clone())
+            .map(|entry| (entry.signed.clone(), entry.skew))
             .collect()
     }
 
     pub fn can_answer(&self, player: &str, id: &str) -> bool {
-        self.records.values().any(|(record, _, _)| {
+        self.records.values().any(|Entry { record, .. }| {
             matches!(&record.body, Body::Ask { participant, request_id, .. }
                 if participant == player && request_id == id)
-        }) && !self.records.values().any(|(record, _, _)| {
+        }) && !self.records.values().any(|Entry { record, .. }| {
             record.author == player
                 && matches!(&record.body, Body::Answer { request_id, .. }
                 if request_id == id)
         })
     }
 
-    /// Keep a record already checked by `verify`. One dated further ahead than clocks differ is
-    /// refused, and the record that arrived first goes once the log is full.
-    pub fn keep(&mut self, record: Record, signed: Signed) -> Kept {
+    /// Keep a record already checked by `verify`, its author's clock `skew` behind the GM's. One
+    /// dated further ahead than that on the GM's clock is refused, and the record that arrived
+    /// first goes once the log is full.
+    pub fn keep(&mut self, record: Record, signed: Signed, skew: i64) -> Kept {
         let id = (record.author.clone(), record.seq);
         let new_author = !self.highest.contains_key(&record.author);
         if self.records.contains_key(&id)
             || (new_author && self.highest.len() >= AUTHORS_MAX)
-            || record.at > now_ms().saturating_add(AHEAD_MAX_MS)
+            || on_gm_clock(record.at, skew) > now_ms().saturating_add(AHEAD_MAX_MS)
         {
             return Kept::Not;
         }
         let highest = self.highest.entry(record.author.clone()).or_default();
         *highest = (*highest).max(record.seq);
         self.arrivals += 1;
-        self.records.insert(id, (record, signed, self.arrivals));
+        self.records.insert(
+            id,
+            Entry {
+                record,
+                signed,
+                arrived: self.arrivals,
+                skew,
+            },
+        );
         if self.records.len() > LOG_MAX {
             if let Some(first) = self
                 .records
                 .iter()
-                .min_by_key(|(_, (_, _, arrived))| *arrived)
+                .min_by_key(|(_, entry)| entry.arrived)
                 .map(|(id, _)| id.clone())
             {
                 self.records.remove(&first);
@@ -290,22 +404,13 @@ impl Log {
         Kept::New
     }
 
-    /// May a peer hand on one more of this author's records now? Counted per author, so a peer
-    /// flooding the table is slowed and nobody else is.
-    pub fn within_pace(&mut self, author: &str) -> bool {
-        let now = Instant::now();
-        let times = self.recent.entry(author.to_string()).or_default();
-        while times
-            .front()
-            .is_some_and(|at| now.duration_since(*at) > RATE_WINDOW)
-        {
-            times.pop_front();
-        }
-        if times.len() >= RATE_MAX {
-            return false;
-        }
-        times.push_back(now);
-        true
+    /// May this seat hand over one more record now? Counted per seat, so a seat flooding the
+    /// table is slowed and nobody else is.
+    pub fn within_pace(&mut self, seat: &str) -> bool {
+        self.paces
+            .entry(seat.to_string())
+            .or_insert_with(|| Bucket::new(TAKE_PACE))
+            .take(Instant::now())
     }
 }
 
@@ -325,11 +430,13 @@ mod tests {
             seq,
             at: 1_000 + seq,
             body: Body::Roll {
-                name: RollName {
-                    text: "DEX save".into(),
-                    key: Some("combat.roll.save.dex".into()),
-                },
-                roll: serde_json::json!({ "total": 14, "advantage": "neither", "mod": 2 }),
+                lines: vec![RollLine {
+                    name: RollName {
+                        text: "DEX save".into(),
+                        key: Some("combat.roll.save.dex".into()),
+                    },
+                    roll: serde_json::json!({ "total": 14, "advantage": "neither", "mod": 2 }),
+                }],
                 to,
             },
         }
@@ -368,7 +475,7 @@ mod tests {
         for (seq, to) in [(1, Audience::Table), (2, Audience::Gm), (3, Audience::Gm)] {
             let record = roll("t", &gm, seq, to);
             let signed = sign(&gm, &record).expect("signs");
-            log.keep(record, signed);
+            log.keep(record, signed, 0);
         }
         let table_only = |r: &Record| {
             matches!(
@@ -388,10 +495,22 @@ mod tests {
     fn a_record_that_does_not_fit_is_refused() {
         let author = SecretKey::generate();
         let mut long = roll("t", &author, 1, Audience::Table);
-        if let Body::Roll { name, .. } = &mut long.body {
-            name.text = "\u{202E}reversed".into();
+        if let Body::Roll { lines, .. } = &mut long.body {
+            lines[0].name.text = "\u{202E}reversed".into();
         }
         assert_eq!(verify(&sign(&author, &long).expect("signs"), "t"), None);
+
+        // an action of no rolls, or of more than one press can make, is no action
+        let mut empty = roll("t", &author, 1, Audience::Table);
+        if let Body::Roll { lines, .. } = &mut empty.body {
+            lines.clear();
+        }
+        assert_eq!(verify(&sign(&author, &empty).expect("signs"), "t"), None);
+        let mut crowded = roll("t", &author, 1, Audience::Table);
+        if let Body::Roll { lines, .. } = &mut crowded.body {
+            *lines = vec![lines[0].clone(); ACTION_LINES_MAX + 1];
+        }
+        assert!(sign(&author, &crowded).is_none_or(|signed| verify(&signed, "t").is_none()));
 
         let unknown_field = Signed {
             text: r#"{"table":"t","author":"x","seq":1,"at":1,"body":{"kind":"hide","author":"x","seq":1},"extra":1}"#.into(),
@@ -418,7 +537,7 @@ mod tests {
         ] {
             let record = roll("t", key, seq, to);
             let signed = sign(key, &record).expect("signs");
-            assert_eq!(log.keep(record, signed), Kept::New);
+            assert_eq!(log.keep(record, signed, 0), Kept::New);
         }
         let player_key = player.public().to_string();
         let have = BTreeMap::from([(player_key.clone(), 1)]);
@@ -446,10 +565,11 @@ mod tests {
         let mut log = Log::default();
         let first = roll("t", &author, 1, Audience::Table);
         let signed = sign(&author, &first).expect("signs");
-        assert_eq!(log.keep(first.clone(), signed.clone()), Kept::New);
-        assert_eq!(log.keep(first, signed), Kept::Not);
+        assert_eq!(log.keep(first.clone(), signed.clone(), 0), Kept::New);
+        assert_eq!(log.keep(first, signed, 0), Kept::Not);
         let key = author.public().to_string();
-        for _ in 0..RATE_MAX {
+        let burst = TAKE_PACE.burst;
+        for _ in 0..burst {
             assert!(log.within_pace(&key));
         }
         assert!(!log.within_pace(&key));
@@ -463,12 +583,12 @@ mod tests {
             let author = SecretKey::generate();
             let record = roll("t", &author, 1, Audience::Table);
             let signed = sign(&author, &record).expect("signs");
-            assert_eq!(log.keep(record, signed), Kept::New);
+            assert_eq!(log.keep(record, signed, 0), Kept::New);
         }
         let one_more = SecretKey::generate();
         let record = roll("t", &one_more, 1, Audience::Table);
         let signed = sign(&one_more, &record).expect("signs");
-        assert_eq!(log.keep(record, signed), Kept::Not);
+        assert_eq!(log.keep(record, signed, 0), Kept::Not);
         assert_eq!(log.have().len(), AUTHORS_MAX);
     }
 
@@ -480,18 +600,20 @@ mod tests {
         let mut ahead = roll("t", &flooder, 1, Audience::Table);
         ahead.at = now_ms() + AHEAD_MAX_MS + 60_000;
         let signed = sign(&flooder, &ahead).expect("signs");
-        assert_eq!(log.keep(ahead, signed), Kept::Not);
+        assert_eq!(log.keep(ahead.clone(), signed.clone(), 0), Kept::Not);
+        // the same time from an author whose clock is known to run an hour fast is no time ahead
+        assert_eq!(log.keep(ahead, signed, -3_600_000), Kept::New);
 
         // a full log of the flooder's records, then the honest author's: the first ARRIVED goes
-        for seq in 1..=LOG_MAX as u64 {
+        for seq in 2..=LOG_MAX as u64 {
             let mut record = roll("t", &flooder, seq, Audience::Table);
             record.at = now_ms() + AHEAD_MAX_MS - 1_000;
             let signed = sign(&flooder, &record).expect("signs");
-            assert_eq!(log.keep(record, signed), Kept::New);
+            assert_eq!(log.keep(record, signed, 0), Kept::New);
         }
         let first = roll("t", &honest, 1, Audience::Table);
         let signed = sign(&honest, &first).expect("signs");
-        assert_eq!(log.keep(first, signed), Kept::New);
+        assert_eq!(log.keep(first, signed, 0), Kept::New);
         assert!(log.holds(&honest.public().to_string(), 1));
         assert!(!log.holds(&flooder.public().to_string(), 1));
         // and an author's numbers go on past what was evicted
@@ -499,6 +621,25 @@ mod tests {
             log.next_seq(&flooder.public().to_string()),
             LOG_MAX as u64 + 1
         );
+    }
+
+    #[test]
+    fn a_bucket_lets_a_burst_through_and_then_one_each_interval() {
+        let start = Instant::now();
+        let mut bucket = Bucket::new(Pace::new(3, Duration::from_secs(1)));
+        assert!((0..3).all(|_| bucket.take(start)));
+        assert!(!bucket.take(start));
+        let next = bucket.next_at(start);
+        assert_eq!(next.duration_since(start), Duration::from_secs(1));
+        assert!(bucket.take(next));
+        assert!(!bucket.take(next));
+    }
+
+    #[test]
+    fn a_time_on_the_gm_clock_is_the_authors_moved_by_its_skew() {
+        assert_eq!(on_gm_clock(10_000, 2_500), 12_500);
+        assert_eq!(on_gm_clock(10_000, -2_500), 7_500);
+        assert_eq!(on_gm_clock(1_000, -5_000), 0);
     }
 
     #[test]

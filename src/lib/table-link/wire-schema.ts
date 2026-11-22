@@ -33,6 +33,8 @@ export const LABEL_MAX = 200;
 export const LIST_MAX = 64;
 const NOTE_MAX = 400;
 const ID_MAX = 64;
+/** A Charnik version as a peer says it (`0.9.0`, `1.0.0-beta.2`). */
+const VERSION_MAX = 40;
 const TRACE_MAX = 64;
 /** Far past any number the game has, and far short of one that breaks a layout or an addition. */
 const NUMBER_MAX = 1_000_000;
@@ -162,6 +164,11 @@ const requestId = z
 
 /** The words a roll is logged under at the table: Rust refuses a name past forty characters. */
 export const ROLL_NAME_MAX = 40;
+/** The most roll lines one action's record carries, as Rust holds it (`records::ACTION_LINES_MAX`). */
+export const ACTION_LINES_MAX = 16;
+/** The lines an action is written in at most per record, so the record stays inside Rust's 2 KiB:
+ *  a longer action is written as more than one. */
+export const LINES_PER_RECORD = 8;
 const catalogKey = z
 	.string()
 	.min(1)
@@ -172,8 +179,18 @@ const sequence = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
 const logBodySchema = z.discriminatedUnion('kind', [
 	z.strictObject({
 		kind: z.literal(LOG_BODY.roll),
-		name: z.strictObject({ text: text(ROLL_NAME_MAX).min(1), key: catalogKey.exactOptional() }),
-		roll: tableRollSchema,
+		lines: z
+			.array(
+				z.strictObject({
+					name: z.strictObject({
+						text: text(ROLL_NAME_MAX).min(1),
+						key: catalogKey.exactOptional(),
+					}),
+					roll: tableRollSchema,
+				}),
+			)
+			.min(1)
+			.max(ACTION_LINES_MAX),
 		to: z.enum(AUDIENCE),
 	}),
 	z.strictObject({ kind: z.literal(LOG_BODY.hide), author: participantId, seq: sequence }),
@@ -234,5 +251,13 @@ export const tableEventSchema = z.discriminatedUnion('kind', [
 		table,
 		state: z.enum(CONNECTION),
 		reason: z.enum(CLOSE_REASON).exactOptional(),
+		gmVersion: z.object({ version: text(VERSION_MAX), newer: z.boolean() }).exactOptional(),
+	}),
+	z.object({
+		kind: z.literal(TABLE_EVENT.versionRefused),
+		table,
+		name: text(NAME_MAX),
+		version: text(VERSION_MAX),
+		playerNewer: z.boolean(),
 	}),
 ]);

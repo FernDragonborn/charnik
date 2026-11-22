@@ -151,6 +151,8 @@ fn remember(told: &mut Vec<TableEvent>, event: &TableEvent) {
                 }
             }
         }
+        // a knock already answered: the page that heard it said so, and a reload need not again
+        TableEvent::VersionRefused { .. } => return,
     }
     told.push(event.clone());
 }
@@ -924,6 +926,7 @@ mod tests {
             table: Some("t".into()),
             state,
             reason: None,
+            gm_version: None,
         }
     }
 

@@ -36,6 +36,7 @@ import {
 	type TableLink,
 	type TableRequest,
 	type TableRole,
+	type VersionGap,
 	type UnavailableReason,
 	type Unsubscribe,
 } from '$lib/table-link/types';
@@ -83,6 +84,8 @@ export class TableVM {
 	busy = $state(false);
 	/** Why the last seat was not given, or ended. Said until the next attempt. */
 	problem = $state<TableProblem | null>(null);
+	/** For a seat refused for its version: the GM's Charnik, so the problem says whose to update. */
+	problemGap = $state<VersionGap | null>(null);
 	role = $state<TableRole>(TABLE_ROLE.none);
 
 	// --- a GM's seat ------------------------------------------------------------------------------
@@ -112,7 +115,6 @@ export class TableVM {
 	private gmSeat: GmSeat | null = null;
 	private playerSeat: PlayerSeat | null = null;
 	private stopListening: Unsubscribe | null = null;
-	private earlyAnswers = new Map<string, TableAnswer>();
 
 	checkAvailable = async (): Promise<boolean> => {
 		if (this.available === null) {
@@ -152,7 +154,6 @@ export class TableVM {
 		// a table just opened has no log; one picked up again has the log its last page kept, and
 		// the answers that page missed are among what its first listener hears
 		this.asked = readAskedLog(seat.table);
-		this.earlyAnswers.clear();
 		this.log.clear();
 		this.role = TABLE_ROLE.gm;
 		this.stopListening = await seat.subscribe(this.onGmEvent);
@@ -257,7 +258,10 @@ export class TableVM {
 	/** Give the seat up. A GM's leaving closes the table for everyone at it. */
 	leave = (): Promise<void> => this.endSeat(null);
 
-	private async endSeat(problem: TableProblem | null): Promise<void> {
+	private async endSeat(
+		problem: TableProblem | null,
+		gap: VersionGap | null = null,
+	): Promise<void> {
 		const seat = this.gmSeat ?? this.playerSeat;
 		this.stopListening?.();
 		this.stopListening = null;
@@ -266,11 +270,11 @@ export class TableVM {
 		this.role = TABLE_ROLE.none;
 		this.players = [];
 		this.asked = [];
-		this.earlyAnswers.clear();
 		this.asks.clear();
 		this.log.clear();
 		this.invite = null;
 		this.problem = problem;
+		this.problemGap = gap;
 		dropAskedLog();
 		// best-effort: the seat is already given up here, and Rust drops its half with the app
 		await seat?.leave().catch(() => {});
@@ -305,6 +309,16 @@ export class TableVM {
 			case TABLE_EVENT.answer:
 				this.takeAnswer(event.participant, event.requestId, event.answer);
 				break;
+			case TABLE_EVENT.versionRefused:
+				toast.warning(
+					t(
+						event.playerNewer
+							? 'table.notice.versionRefusedGmOlder'
+							: 'table.notice.versionRefusedPlayerOlder',
+						{ name: event.name, version: event.version },
+					),
+				);
+				break;
 		}
 	};
 
@@ -333,14 +347,7 @@ export class TableVM {
 		const row = this.asked.find(
 			(asked) => asked.requestId === requestId && asked.participant === participant,
 		);
-		if (!row) {
-			const key = JSON.stringify([participant, requestId]);
-			if (!this.earlyAnswers.has(key) && this.earlyAnswers.size < ASKED_MAX) {
-				this.earlyAnswers.set(key, answer);
-			}
-			return;
-		}
-		if (row.status !== ASK_STATUS.pending) return;
+		if (row?.status !== ASK_STATUS.pending) return;
 		row.status =
 			answer.outcome === TABLE_ANSWER.accepted ? ASK_STATUS.accepted : ASK_STATUS.declined;
 		if (answer.roll) row.roll = answer.roll;
@@ -356,12 +363,6 @@ export class TableVM {
 		this.asked = (existing ? [...this.asked] : [row, ...this.asked])
 			.sort((left, right) => (right.at ?? 0) - (left.at ?? 0))
 			.slice(0, ASKED_MAX);
-		const key = JSON.stringify([row.participant, row.requestId]);
-		const answer = this.earlyAnswers.get(key);
-		if (answer) {
-			this.earlyAnswers.delete(key);
-			this.takeAnswer(row.participant, row.requestId, answer);
-		}
 		this.keepAsked();
 	}
 
@@ -430,7 +431,8 @@ export class TableVM {
 		}
 		this.connection = event.state;
 		if (event.state === CONNECTION.connected) void this.publish();
-		if (event.state === CONNECTION.closed) void this.endSeat(event.reason ?? CLOSE_REASON.lost);
+		if (event.state === CONNECTION.closed)
+			void this.endSeat(event.reason ?? CLOSE_REASON.lost, event.gmVersion ?? null);
 	};
 
 	/** Dial the table now instead of waiting for the next try the seat makes by itself. */

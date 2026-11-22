@@ -120,7 +120,14 @@ export const TABLE_EVENT = {
 	answer: 'answer',
 	record: 'record',
 	connection: 'connection',
+	versionRefused: 'version_refused',
 } as const;
+
+/** Which Charnik the other side of a refusal for version runs, and whether it is the newer. */
+export interface VersionGap {
+	version: string;
+	newer: boolean;
+}
 
 /** Who a roll in the table's log is for: everyone at the table, or the GM alone. */
 export const AUDIENCE = { table: 'table', gm: 'gm' } as const;
@@ -129,12 +136,18 @@ export type Audience = (typeof AUDIENCE)[keyof typeof AUDIENCE];
 export const LOG_BODY = { roll: 'roll', hide: 'hide', ask: 'ask', answer: 'answer' } as const;
 
 /** What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log). */
+/** One roll of an action: its words as the roller's sheet said them, the catalog key they came
+ *  from, and what it came to. */
+export interface LogRollLine {
+	name: { text: string; key?: string };
+	roll: TableRoll;
+}
+
 export type LogBody =
 	| {
 			kind: typeof LOG_BODY.roll;
-			/** The roll's words as its roller's sheet said them, and the catalog key they came from. */
-			name: { text: string; key?: string };
-			roll: TableRoll;
+			/** Every roll one press made: the log, and its pace, count actions. */
+			lines: readonly LogRollLine[];
 			to: Audience;
 	  }
 	/** Take a record out of the log: the GM's for anyone's, a player's for their own. */
@@ -157,7 +170,7 @@ export interface LogRecord {
 	author: ParticipantId;
 	/** One more than the author's last record at this table. */
 	seq: number;
-	/** The author's clock, in milliseconds. */
+	/** When it was written, on the GM's clock (the author's, moved by how far it is off). */
 	at: number;
 	body: LogBody | HistoryBody;
 }
@@ -174,7 +187,13 @@ export interface RecordEvent {
 export type PlayerEvent =
 	| { kind: typeof TABLE_EVENT.request; requestId: RequestId; request: TableRequest }
 	| RecordEvent
-	| { kind: typeof TABLE_EVENT.connection; state: ConnectionState; reason?: CloseReason };
+	| {
+			kind: typeof TABLE_EVENT.connection;
+			state: ConnectionState;
+			reason?: CloseReason;
+			/** For a seat refused for its version: the GM's Charnik. */
+			gmVersion?: VersionGap;
+	  };
 
 export type GmEvent =
 	| { kind: typeof TABLE_EVENT.participantJoined; participant: Participant }
@@ -187,7 +206,15 @@ export type GmEvent =
 			requestId: RequestId;
 			answer: TableAnswer;
 	  }
-	| RecordEvent;
+	| RecordEvent
+	/** Somebody holding the invitation knocked with a Charnik of another table protocol. */
+	| {
+			kind: typeof TABLE_EVENT.versionRefused;
+			name: string;
+			version: string;
+			/** The player's app is the newer, so it is the GM's to update. */
+			playerNewer: boolean;
+	  };
 
 export type Unsubscribe = () => void;
 

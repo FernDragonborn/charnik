@@ -11,10 +11,11 @@ import {
 	type Delivery,
 	type LogBody,
 	type LogRecord,
+	type LogRollLine,
 	type RecordEvent,
 	type TableRole,
 } from '$lib/table-link/types';
-import { ROLL_NAME_MAX } from '$lib/table-link/wire-schema';
+import { LINES_PER_RECORD, ROLL_NAME_MAX } from '$lib/table-link/wire-schema';
 import { tableRollOf } from './requested-roll';
 
 type RollBody = Extract<LogBody, { kind: typeof LOG_BODY.roll }>;
@@ -89,20 +90,21 @@ export class TableLog {
 		this.hidden = [];
 	};
 
-	/** Write the rolls the open sheet just made, to whom the person said. */
+	/** Write the rolls one press of the open sheet made, as one action, to whom the person said. An
+	 *  action longer than a record holds is written as more than one. */
 	share = (entries: readonly RollLogEntry[], to: Audience): void => {
-		for (const entry of entries) {
+		const lines = entries.flatMap((entry): LogRollLine[] => {
 			const text = plainRollName(entry.label);
-			if (!text) continue;
 			// a key that needs values to be worded is not one the other side can word
 			const key = entry.labelKey && !entry.labelValues ? { key: entry.labelKey } : {};
+			return text ? [{ name: { text, ...key }, roll: tableRollOf(entry) }] : [];
+		});
+		for (let at = 0; at < lines.length; at += LINES_PER_RECORD)
 			void this.host().write({
 				kind: LOG_BODY.roll,
-				name: { text, ...key },
-				roll: tableRollOf(entry),
+				lines: lines.slice(at, at + LINES_PER_RECORD),
 				to,
 			});
-		}
 	};
 
 	/** The GM hides anyone's roll, a player their own. */

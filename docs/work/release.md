@@ -164,16 +164,17 @@
   overnight; **these were decided without the maintainer and wait for their word**: a player's
   rolls go to the table and a GM's to nobody unless switched; the GM hides any record and a player
   their own, and nothing is deleted; the name a record is shown under is the GM's roster name,
-  outside the signature. The log keeps 500 records a table, at most 2 KiB each; a player
-  connection may supply ten new records in ten seconds, even when returning another author's copy.
+  outside the signature. The log keeps 500 records a table, at most 2 KiB each; its pace and its
+  clock are `../internals/table-link.md` ▸ The table's log.
   **Built:** signed records and the `have` exchange (`table_link/records.rs`, `session.rs`, held
   by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
   `TableLogPanel`). A live request carries the GM's signed ask and the player's answer is a
-  signed record; hello is protocol 3 and refuses protocol 2 before admission; the invitation format
-  stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold it). The live drive
-  covers the log on protocol 3: the player's roll arrives and the GM hides it. **Left:** a live answer that rides the record pace: an answer
-  is a record, so a player past ten records in ten seconds has it dropped by the GM's app while their own app shows it sent, and the ask stays
-  unanswered on the GM's screen.
+  signed record; hello is protocol 4 and refuses any other before admission, saying whose app is the
+  older; the invitation format stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold
+  it). The live drive covers the log on protocol 3: the player's roll arrives and the GM hides it.
+  **Left:** the live drive again on protocol 4. Hiding ONE roll of an action — the record is the
+  action, so a hide takes the whole of it; a VTT's targets would make a single roll worth hiding
+  (damage dealt to an unseen creature), and the control is undrawn.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
   Specified and built to `../internals/table-link.md` ▸ Remembering a table: the key in the OS
   store, the rest where only Rust writes, the list with Return and Forget, the native question
@@ -182,63 +183,24 @@
   them), and the page's tests. **Decided without the maintainer, for their word:** leaving forgets
   the table; a table opened again keeps its door shut. `session.rs`'s tests hold a no-relay
   table binding its saved UDP ports again, refusing a busy one, and taking a saved table without
-  addresses, and the addressed player handing signed asks and answers back on reconnect;
-  `table.test.ts` holds the GM's page rebuilding the request history from them in either order
-  without reopening a prompt. *To audit* — the transport tests on the three-desktop CI matrix,
-  which has not run yet. An unannounced DC
-  stays the GM's session's own and is not recovered. **Left:** a reconnect hands back past the
-  ten-record pace — the replay is a burst, and what is past ten in ten seconds is dropped until
-  the next reconnect; the Linux store in the running app (the round-trip test passes under WSL
+  addresses, and a GM that opens again holding its asks and answers from its own disk while the
+  player hands back nothing; `table.test.ts` holds the GM's page rebuilding the request history
+  from them without reopening a prompt. *To audit* — the transport tests on the three-desktop CI
+  matrix, which has not run yet. An unannounced DC stays the GM's session's own and is not
+  recovered. **Left:** the Linux store in the running app (the round-trip test passes under WSL
   against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is TABLE-LINK-MACOS-STORE; and quit →
-  restart → Return on the real app with a person answering the native question. An ask or answer
-  the GM's log already evicted is kept again when the player hands it back, as a new arrival that
-  evicts the oldest other record, on every reconnect: `Log::holds` asks only what is held, not what
-  was seen. A saved `[::]:port` that no longer binds — IPv6 switched off since the table was kept
+  restart → Return on the real app with a person answering the native question. A saved
+  `[::]:port` that no longer binds — IPv6 switched off since the table was kept
   — refuses the return the way a busy port does, and the table cannot be returned to until it is
   forgotten.
-- [ ] **TABLE-LINK-PACE · the log's pace counts actions, loses nothing, and does not bring back what
-  it evicted.** A record is one roll line (its dice are inside it — a Fireball is one), and a seat may
-  hand over ten in ten seconds, the rest dropped unsaid. One press can make more: Extra Attack with
-  Action Surge is up to sixteen lines. What the maintainer settled on:
-  - **A record is one action** — every line one press made — so the pace counts actions, the log
-    reads "Lira: Action Surge, four attacks", and a VTT bridge (Owlbear Rodeo is planned) posts one
-    message per action. Changes the record body: protocol 4, held under the 2 KiB record cap.
-  - **The sender paces itself** per destination, queueing past the pace instead of handing the
-    excess over to be dropped; the receiver's limit stays as a guard against a misbehaving peer
-    only. The same paced outbox is what a VTT bridge drains at that VTT's own limits — Owlbear's
-    published docs state none, so its bridge measures before it is tuned.
-  - **An answer to the GM's ask is not counted against the pace**: there is at most one per ask,
-    and today one past the pace is dropped while the player's app shows it sent.
-  - **An app hands over only the records it wrote**, and pulls anyone's it may see. Every author
-    keeps its own copy, so handing on another's record only duplicates what its author sends anyway
-    — and today it is what lets a reconnect replay the seat's asks and answers, each evicting the
-    oldest-arrived record, again on every reconnect. The cost, accepted: a GM's record lost in a
-    crash before it reached the disk (records are written one by one as they happen) stays lost, so
-    TABLE-LINK-REMEMBER's request history is rebuilt from the GM's own disk and the player keeps
-    their answers; the "history is always handed back" exception goes.
-  - **A record the log already evicted is not kept again** — an author's number at or below the
-    highest seen, and not held — as a cheap guard behind the rule above. Evicting by the records'
-    own times was weighed and turned down: a record's time is its author's clock, and a seat days
-    off would lose every roll it makes.
 - [ ] **TABLE-LINK-NOTES · notes the table writes together** (a detective campaign's clue board).
   An edit is its EDITOR's own signed record, never a diff sent to the note's author for approval, so
-  TABLE-LINK-PACE's "hand over only what you wrote" holds with no exception and nobody need be
-  online for a note to change. A note is the union of its edits, merged by a CRDT library (Yjs or
+  the log's "an app hands over only what it wrote" (`../internals/table-link.md`) holds with no
+  exception and nobody need be online for a note to change. A note is the union of its edits, merged by a CRDT library (Yjs or
   Automerge) rather than hand-rolled diffs, which break on two edits to one paragraph at once. Open:
   a store of its own (a note outgrows the log's 2 KiB record and 500 records), who may edit (the GM,
   everyone, or per note), and readers per note as a roll has its audience — a clue meant for one
   player. The GM may hide any edit, as in the log.
-- [ ] **TABLE-LINK-CLOCK · a seat's clock being off changes nothing anyone sees.** A record's time
-  is its author's clock, and the log sorts by it, so a clock off by tens of seconds puts a roll in
-  another turn, by two minutes two or three turns away, and more than ten minutes fast gets every
-  roll refused by every app. It is fixed AUTOMATICALLY, with nothing for any person to do: the hello
-  carries the player's clock, the GM's app measures each seat's offset against its own allowing for
-  the round trip, and hands that offset on beside the name it hands on (outside the signature, so
-  the record is untouched). Every app sorts by the corrected time and holds the ten-minutes-ahead
-  bound against it, so no seat's records are misplaced or refused for its clock. No third-party
-  time service is asked: the GM's clock is the table's reference, measured over the connection the
-  player already opened. No warning is shown — once corrected there is no consequence to warn of.
-  Changing the hello is protocol 4, with TABLE-LINK-PACE.
 - [ ] **TABLE-LINK-MACOS-STORE · a remembered table on a Mac.** The maintainer checks it on a
   Mac, not soon. `apple-native-keyring-store` is in the macOS build and nothing has compiled or run it:
   `cargo test --features table-link -- --ignored the_os_store_keeps_a_key_and_lets_it_go` on a

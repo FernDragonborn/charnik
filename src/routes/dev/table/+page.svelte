@@ -123,8 +123,12 @@
 			at: Date.now() - minutesAgo * 60_000,
 			body: {
 				kind: LOG_BODY.roll,
-				name: { text: 'DEX save', key: 'combat.roll.save.dex' },
-				roll: { total, natural: total - 2, advantage: 'neither', mod: 2 },
+				lines: [
+					{
+						name: { text: 'DEX save', key: 'combat.roll.save.dex' },
+						roll: { total, natural: total - 2, advantage: 'neither', mod: 2 },
+					},
+				],
 				to,
 			} as const,
 		});

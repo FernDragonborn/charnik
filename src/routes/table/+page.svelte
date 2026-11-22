@@ -185,7 +185,18 @@
 		</header>
 
 		{#if table.problem}
-			<p class="table-problem" role="alert">{$_(`table.problem.${table.problem}`)}</p>
+			<p class="table-problem" role="alert">
+				{#if table.problemGap}
+					{$_(
+						table.problemGap.newer
+							? 'table.problem.versionGmNewer'
+							: 'table.problem.versionGmOlder',
+						{ values: { version: table.problemGap.version } },
+					)}
+				{:else}
+					{$_(`table.problem.${table.problem}`)}
+				{/if}
+			</p>
 		{/if}
 		{#if table.busy}
 			<p class="table-busy" role="status">{$_('table.busy')}</p>

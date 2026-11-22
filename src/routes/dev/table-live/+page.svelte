@@ -148,7 +148,7 @@
 		// and the GM's hide takes it away
 		const logged = () => table.log.shown.find((line) => line.name === player.name);
 		await until("the player's roll reaches the table's log", () => !!logged());
-		check('…as the roll they made', logged()?.record.body.roll.total === 17);
+		check('…as the roll they made', logged()?.record.body.lines[0]?.roll.total === 17);
 		const line = logged();
 		if (line) table.log.hide(line);
 		await until('…and the GM can hide it', () => !logged());

@@ -2579,10 +2579,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const TABLE_ANSWER`
 - `interface TableAnswer`
 - `const TABLE_EVENT`
+- `interface VersionGap` — Which Charnik the other side of a refusal for version runs, and whether it is the newer.
 - `const AUDIENCE` — Who a roll in the table's log is for: everyone at the table, or the GM alone.
 - `type Audience`
 - `const LOG_BODY`
-- `type LogBody` — What a record in the table's log says (`docs/internals/table-link.md` ▸ The table's log).
+- `interface LogRollLine` — One roll of an action: its words as the roller's sheet said them, the catalog key they came * from, and what it came to.
+- `type LogBody`
 - `type HistoryBody`
 - `interface LogRecord` — A record as its author signed it; Rust has checked the signature before the page hears it.
 - `interface RecordEvent` — A record this app now holds, with the name the GM let its author in under — none for the GM's * own, and none for a p…
@@ -2618,6 +2620,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const tableRollSchema` — A roll as it travels back to the GM: what it came to and how, never the sentence around it.
 - `type TableRoll`
 - `const ROLL_NAME_MAX` — The words a roll is logged under at the table: Rust refuses a name past forty characters.
+- `const ACTION_LINES_MAX` — The most roll lines one action's record carries, as Rust holds it (`records::ACTION_LINES_MAX`).
+- `const LINES_PER_RECORD` — The lines an action is written in at most per record, so the record stays inside Rust's 2 KiB: * a longer action is w…
 - `const tableEventSchema` — Every event Rust pushes, as the page will believe it.
 
 ### `src/lib/toast/toast.ts`
@@ -2702,4 +2706,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1661 exports across 228 modules · 118 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1665 exports across 228 modules · 118 duplicate suspects._

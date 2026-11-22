@@ -158,13 +158,14 @@ JSON (`wire.rs`), each read against a ceiling before a byte of the body is:
 
 | frame | from | ceiling | carries |
 | --- | --- | --- | --- |
-| `hello` | player | 1 KiB | protocol version, the invitation's secret, the player's name |
-| `welcome` · `refused` | GM | 16 KiB | the table's name · why not (`invite`, `declined`, `version`, `full`) |
+| `hello` | player | 1 KiB | protocol version, the invitation's secret, the player's name, the app's Charnik version |
+| `welcome` · `refused` | GM | 16 KiB | the table's name · why not (`invite`, `declined`, `version`, `full`), and for `version` the GM's protocol and Charnik version |
+| `clock` | both | 16 KiB · 256 KiB | the player's clock as the seat begins and every five minutes · how far it runs behind the GM's |
 | `view` | player | 256 KiB | the top-level keys of the view that changed, and the keys that went |
 | `request` | GM | 16 KiB | a request id and one `TableRequest` |
 | `answer` | player | 256 KiB | the request id, accepted or declined, and the roll if one was made |
 | `closed` | GM | 16 KiB | `dismissed` or `table_closed` |
-| `record` | both | 16 KiB · 256 KiB | one signed log record, and from the GM the name its author was let in under |
+| `record` | both | 16 KiB · 256 KiB | one signed log record; from the GM also the name its author was let in under and its author's clock skew |
 | `have` | both | 16 KiB · 256 KiB | the highest record number held from each author, at most 32 |
 
 - **Closed shapes.** Every frame is a serde enum that refuses a field it does not name
@@ -293,8 +294,7 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
   (`remember` in `mod.rs`), and a sheet in it is held to `tableViewSchema` again, since it began as
   a peer's bytes. Picking a seat up opens no socket and raises no native question — the person
   said yes when the seat was taken. The GM's screen reconstructs the log of asks from
-  the signed records; an answer is matched by request id and author, including an answer that arrives before
-  its ask. An unannounced DC remains a page-local annotation in sessionStorage
+  the signed records; an answer is matched by request id and author. An unannounced DC remains a page-local annotation in sessionStorage
   (`routes/table/asked-log.ts`) and survives a page reload, not an app exit.
 
 ## The table's log
@@ -315,10 +315,17 @@ app lags and restarts like anyone's, so nothing waits on it to say what is true:
   (threats ▸ I5). Inside them are the table's key (a record for another table is refused, I4), the
   author's key, a sequence number that grows by one per author, and the author's clock.
 - **Every app that saw a record keeps a copy, and says what it has.** On every connection both
-  sides send `have` — the highest sequence number held from each author — and each sends what the
-  other lacks. The GM's `have` to a seat leaves out an author's newest records that seat may not
-  see (`Log::have_for`), so it does not say how many rolls were just kept from it. A player who was away for ten minutes is given the rolls they missed, and a GM's app
-  that lost a record gets it back from whoever kept it.
+  sides send `have` — the highest sequence number held from each author. The GM sends a seat every
+  record it lacks and may see; the GM's `have` to a seat leaves out an author's newest records that
+  seat may not see (`Log::have_for`), so it does not say how many rolls were just kept from it. A
+  player who was away for ten minutes is given the rolls they missed.
+- **An app hands over only the records it wrote.** Its author holds every record of its own, so a
+  copy of another's would only be that author's record again, and a copy handed on would bring back
+  a record the GM had evicted, evicting a newer one in its place. A seat sends its
+  own from the number after what the GM's `have` says, and the GM takes a record from a seat only
+  when the seat is its author. The cost, taken knowingly: a record the GM's app lost before it
+  reached the disk stays lost, since nobody else hands it back; records are written one by one as
+  they happen, so that window is a fraction of a second.
 - **A star still.** A player's record goes to the GM; the GM keeps it and hands it to every other
   seat with the name the GM let that key in under. The name is the GM's to say — it is not in the
   signed bytes — and the record is the author's.
@@ -327,18 +334,16 @@ What a record is:
 
 | record | author | who is handed it |
 | --- | --- | --- |
-| `roll` — its name, the five facts of a table roll | anyone | the table, or the GM alone |
+| `roll` — one action: every roll one press made (at most 16, written eight to a record so it fits), each its name and the five facts of a table roll | anyone | the table, or the GM alone |
 | `hide` — the author and number of a record | the GM, or a record's own author | the table |
 | `ask` — the player, request id and public request | the GM | the addressed player |
 | `answer` — the request id and the player's answer | the addressed player | the GM |
 
-**History is not a prompt.** A live `request` frame carries the signed ask. The
-player holds a copy and answers by signing a record; only the live frame opens the prompt. On reconnect the
-addressed player offers both copies back to the GM through the log exchange, even below the
-GM's highest sequence number. The usual log bounds and pace apply to it, and to a live answer
-too, which is a record: past ten in ten seconds the GM's app drops it unsaid
-(`../work/release.md` ▸ TABLE-LINK-LOG). The GM never forwards these records to other players or reissues them as live prompts. An unannounced DC is not part
-of the signed request and cannot be recovered from a player's copy.
+**History is not a prompt.** A live `request` frame carries the signed ask. The player holds a
+copy and answers by signing a record; only the live frame opens the prompt. The GM's app keeps its
+asks and the answers on its own disk, and rebuilds the conversation from them when it opens the
+table again. The GM never forwards these records to other players or reissues them as live prompts.
+An unannounced DC is not part of the signed request and lives only in the GM's page session.
 
 **Who sees a roll is the roller's choice**, said on the roll: a player's rolls go to the table
 unless the player turned that off on the Table screen, and then to the GM alone; a GM's rolls go
@@ -347,19 +352,26 @@ is never given one. Every roll the sheet logs is a roll the log can carry, so no
 to share one.
 
 **Moderation ships with the log** (`../research/adoption-friction.md` ▸ 9). The GM can hide any
-record and a player their own; a `hide` is itself a signed record, so every app that holds the
+record and a player their own — a whole action, since the action is the record; a `hide` is itself a signed record, so every app that holds the
 record drops it, and one that comes back later is still hidden. Nothing is deleted from another
 app's disk — it cannot be — so the GM's word is what every honest copy shows.
 
 **Bounds.** A record's text is at most 2 KiB and is read against that before it is parsed; a
 roll's name is cut like any peer name, and worded from this app's catalog only under a roll's own
-key. **A record's time is its author's and decides nothing but its place in the list:** one dated
-more than ten minutes ahead of this app's clock is refused, and when the 500 a table keeps are
-full, the record that ARRIVED first goes. An author's numbers go on past what was evicted. A table
-holds records from at most 32 authors. A record already held costs nothing; past that a seat may
-hand over ten in ten seconds, counted against the seat and not the author, so replaying another
-player's rolls spends the replayer's pace. A record whose author is not at the table — not let in,
-or dismissed — is not kept. The GM's rolls carry a badge in the log that no player's name can draw.
+key. **A record's time decides nothing but its place in the list**, and that place is on the GM's
+clock: the GM's app measures how far each seat's clock runs behind its own when the seat begins and
+every five minutes after (`clock`), keeps that skew beside every record of that author, hands it on
+with the record, and tells the seat its own. Every app sorts by the author's time moved by its skew,
+so a seat whose clock is wrong by minutes or days writes rolls that land where they were made, with
+nothing for any person to do. One dated more than ten minutes ahead on the GM's clock is refused,
+and when the 500 a table keeps are full, the record that ARRIVED first goes — never the one the
+oldest-looking clock wrote, which would cost a seat with a wrong clock every roll. An author's
+numbers go on past what was evicted. A table holds records from at most 32 authors. **The pace
+loses nothing:** a seat's app hands its records over twenty at once and one a second after, the rest
+waiting in its own log, and the GM's app takes thirty at once and one a second after from each seat
+— above the sender's pace, so it refuses only an app that does not keep it. An answer to an ask the
+GM made of that seat is not counted, at most one per ask. A record already held costs nothing. A
+record whose author is not at the table — not let in, or dismissed — is not kept. The GM's rolls carry a badge in the log that no player's name can draw.
 **A player's app paces its own disk:** what the GM hands over is held and shown at once, and written
 at most sixty records in ten seconds, in the order it came, the rest waiting (`DiskPace`). The GM is
 trusted with what the table says, not with how fast this app writes.
@@ -400,9 +412,13 @@ trusted with what the table says, not with how fast this app writes.
 
 ## Versions
 
-The ALPN is `charnik/table/1` and the hello says `protocol: 3`: the ALPN names the framing and the
+The ALPN is `charnik/table/1` and the hello says `protocol: 4`: the ALPN names the framing and the
 number names the frames, so an app of another number is reached and refused with `version` rather
-than not reached at all. The invitation format stays at version 2, so an existing invitation can
+than not reached at all. A hello of another number is read loosely, for what every version's hello
+carries, and the `refused` frame keeps one shape for good, so the refusal is understood across any
+two versions: it carries the GM's protocol and Charnik version, the player is told whose app is the
+older and who has to update, and a GM is told of a knock refused for version from anyone holding
+the invitation or let in before — a stranger's hello is not the GM's to read about. The invitation format stays at version 2, so an existing invitation can
 still be parsed. An invitation of another format version is not one (`bad_invite`). Two builds that share a
 protocol number sit together whatever their app versions; a peer's field this build does not know
 is a malformed frame, so a change to a frame's shape is a new protocol number. A view carries its

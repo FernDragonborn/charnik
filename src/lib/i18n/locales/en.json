@@ -2569,6 +2569,8 @@
 			"invite": "The table did not take this invitation: its door is shut, or the GM has made a newer one. Ask for the current invitation.",
 			"declined": "The GM did not let you in.",
 			"version": "The GM's app speaks another version of the table link. Update both apps to the same version of Charnik.",
+			"versionGmNewer": "The GM runs Charnik {version}, which is newer than yours. Update Charnik, then join again.",
+			"versionGmOlder": "The GM runs Charnik {version}, which is older than yours. Ask the GM to update Charnik, then join again.",
 			"full": "The table is full, or too many people are waiting to be let in. Try again in a moment.",
 			"dismissed": "The GM removed you from the table.",
 			"table_closed": "The GM closed the table.",
@@ -2742,6 +2744,8 @@
 			"passed": "Passed — DC {dc}",
 			"failed": "Failed — DC {dc}",
 			"notDelivered": "Not delivered to: {names}",
+			"versionRefusedPlayerOlder": "{name} tried to join with Charnik {version}, which is older than yours. They need to update before they can sit at the table.",
+			"versionRefusedGmOlder": "{name} tried to join with Charnik {version}, which is newer than yours. Update Charnik so they can sit at the table.",
 			"answerLost": "The GM's app did not get your answer — the connection may have dropped."
 		}
 	}
