@@ -209,11 +209,25 @@
     published docs state none, so its bridge measures before it is tuned.
   - **An answer to the GM's ask is not counted against the pace**: there is at most one per ask,
     and today one past the pace is dropped while the player's app shows it sent.
-  - **A record the log already evicted is not kept again** when a seat hands it back: an author's
-    number at or below the highest seen, and not held, was seen and let go. Today a reconnect
-    replays the seat's asks and answers, each evicts the oldest-arrived record, and the next
-    reconnect does it again. Evicting by the records' own times was weighed and turned down: a
-    record's time is its author's clock, and a seat days off would lose every roll it makes.
+  - **An app hands over only the records it wrote**, and pulls anyone's it may see. Every author
+    keeps its own copy, so handing on another's record only duplicates what its author sends anyway
+    — and today it is what lets a reconnect replay the seat's asks and answers, each evicting the
+    oldest-arrived record, again on every reconnect. The cost, accepted: a GM's record lost in a
+    crash before it reached the disk (records are written one by one as they happen) stays lost, so
+    TABLE-LINK-REMEMBER's request history is rebuilt from the GM's own disk and the player keeps
+    their answers; the "history is always handed back" exception goes.
+  - **A record the log already evicted is not kept again** — an author's number at or below the
+    highest seen, and not held — as a cheap guard behind the rule above. Evicting by the records'
+    own times was weighed and turned down: a record's time is its author's clock, and a seat days
+    off would lose every roll it makes.
+- [ ] **TABLE-LINK-NOTES · notes the table writes together** (a detective campaign's clue board).
+  An edit is its EDITOR's own signed record, never a diff sent to the note's author for approval, so
+  TABLE-LINK-PACE's "hand over only what you wrote" holds with no exception and nobody need be
+  online for a note to change. A note is the union of its edits, merged by a CRDT library (Yjs or
+  Automerge) rather than hand-rolled diffs, which break on two edits to one paragraph at once. Open:
+  a store of its own (a note outgrows the log's 2 KiB record and 500 records), who may edit (the GM,
+  everyone, or per note), and readers per note as a roll has its audience — a clue meant for one
+  player. The GM may hide any edit, as in the log.
 - [ ] **TABLE-LINK-CLOCK · a seat whose clock is off is told, with what it costs.** A record's time
   is its author's clock, so a seat whose clock is wrong by hours or days writes records the table
   misplaces: one behind lands far down the log as if rolled long ago, and one more than ten minutes
