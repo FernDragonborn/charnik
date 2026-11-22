@@ -143,32 +143,17 @@ stay semi-manual.
   Cleric or Druid cantrip) and Empowered Evocation (evocation spells) have nothing to name
   (FEATURE-PASSIVES lists them). The fix is the cast offering its school and `cantrip` beside the
   class, the way a weapon offers its tags.
-- [~] **DIVINE-SMITE · `to audit`.** The 2014 Actions list has Divine Smite and its fiend/undead
-  variant. Both use the expended slot's level to roll damage. The 2024 spell is always prepared at
-  level 2 and has one spell-linked use per Long Rest.
-- [~] **FEATURE-SKILLS · `to audit`.** Primal Knowledge and College of Lore add proficiency picks.
-  Scholar adds one expertise pick from its six eligible trained skills and Deft Explorer adds
-  expertise and two language picks.
-- [~] **SLOT-RECOVERY · `to audit`.** The Short Rest dialog accepts Arcane and Natural Recovery slot
-  selections against each feature's level budget. Magical Cunning restores up to half the maximum
-  expended Pact Magic slots, rounded up, once per Long Rest.
-- [~] **REACTION-ROLLS · `to audit`.** Cutting Words, Deflect Missiles / Deflect Attacks, and Slow
-  Fall log a reduction the player applies to the triggering roll or damage. A 2014 bard can add
-  Song of Rest to a Hit Dice rest. Tactical Mind rolls first and spends Second Wind on confirmation.
-- [~] **ACTION-OPTIONS · a feature's action that spends no pool.** The feature-bound
-  `resource_option` with a blank `resource_id` is `to audit`. Remaining feature rows include
-  Cunning Action, Fast Hands, Stillness of Mind, Self-Restoration, Tranquility, and Countercharm.
-  Dark One's Blessing lets the player report dropping a creature for
-  `temp_hp:cha_mod+class_level.warlock`.
-- [~] **TOGGLE-STATES · `to audit`.** Reckless Attack marks outgoing Strength advantage by
-  edition and incoming advantage until the next turn. Steady Aim requires no spent movement, then
-  reduces Speed to zero for the turn and grants Advantage on the next attack roll.
-- [~] **HUNTERS-PREY · `to audit`.** Both editions have the Colossus Slayer roll and Horde
-  Breaker weapon picker. 2014 also has Giant Killer as a Reaction. In 2024 a rest can swap the
-  choice. The player decides whether the target meets the condition for each option.
-- [~] **FRENZY · `to audit`.** In 2024 a raging Berserker who declares Reckless Attack can roll
-  the extra damage for the first qualifying hit. In 2014 the player enters a Frenzy, gets a
-  Bonus Action melee attack on later turns of the Rage, and gains Exhaustion when it ends.
+- [~] **ACTION-OPTIONS · a feature's action that spends no pool.** A `resource_option` with a blank
+  `resource_id` runs without a pool, offered only to a character whose features include its
+  `granted_by`. Remaining feature rows include Cunning Action, Fast Hands, Stillness of Mind,
+  Self-Restoration, Tranquility, and Countercharm. Dark One's Blessing lets the player report
+  dropping a creature for `temp_hp:cha_mod+class_level.warlock`.
+- [ ] **RAGE-ENDS · a Rage ends on its own terms.** SRD 5.1: "It ends early if you are knocked
+  unconscious"; SRD 5.2.1: "it ends early if you don Heavy armor or have the Incapacitated
+  condition." Nothing ends the Rage effect but its clock, the player's ✕ and a rest, so a 2014
+  Berserker knocked out of a Frenzy takes no Exhaustion until the player removes the Rage. The shape
+  is the form's: the effect row states its `ends_when` conditions and `settle.ts` ends it through
+  `endEffects`, which already carries `ends_with` and `exhaustion_on_end`.
 - [ ] **A17 · what a 2014 Book of Shadows holds besides the warlock's own spells.** A Tome
   warlock casts rituals: Pact Boon is a choice of three, Book of Ancient Secrets is an invocation
   that requires Pact of the Tome, and holding it gives the warlock `ritual_source: prepared` —

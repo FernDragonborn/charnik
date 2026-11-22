@@ -168,10 +168,10 @@
   connection may supply ten new records in ten seconds, even when returning another author's copy.
   **Built:** signed records and the `have` exchange (`table_link/records.rs`, `session.rs`, held
   by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
-  `TableLogPanel`). *To audit* — a live request carries the GM's signed ask and the player's
-  answer is a signed record; hello is protocol 3 and refuses protocol 2 before admission; the
-  invitation format stays at version 2. The live drive covers the log on protocol 3: the player's
-  roll arrives and the GM hides it. **Left:** a live answer that rides the record pace: an answer
+  `TableLogPanel`). A live request carries the GM's signed ask and the player's answer is a
+  signed record; hello is protocol 3 and refuses protocol 2 before admission; the invitation format
+  stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold it). The live drive
+  covers the log on protocol 3: the player's roll arrives and the GM hides it. **Left:** a live answer that rides the record pace: an answer
   is a record, so a player past ten records in ten seconds has it dropped by the GM's app while their own app shows it sent, and the ask stays
   unanswered on the GM's screen.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
@@ -180,11 +180,12 @@
   before any socket, the door shut on a table opened again. Held by `session.rs`'s test of a GM
   that goes down and opens again, `remember.rs`'s tests (the Windows credential store among
   them), and the page's tests. **Decided without the maintainer, for their word:** leaving forgets
-  the table; a table opened again keeps its door shut. *To audit* — the native stores for Linux
-  (Secret Service) and macOS (login Keychain); a no-relay table binding its saved UDP ports
-  again, refusing a busy one, and taking a saved table without addresses; the CI transport tests
-  on all three desktops; the addressed player handing signed asks and answers back on reconnect
-  so the GM's screen rebuilds the request history without reopening a prompt. An unannounced DC
+  the table; a table opened again keeps its door shut. `session.rs`'s tests hold a no-relay
+  table binding its saved UDP ports again, refusing a busy one, and taking a saved table without
+  addresses, and the addressed player handing signed asks and answers back on reconnect;
+  `table.test.ts` holds the GM's page rebuilding the request history from them in either order
+  without reopening a prompt. *To audit* — the transport tests on the three-desktop CI matrix,
+  which has not run yet. An unannounced DC
   stays the GM's session's own and is not recovered. **Left:** a reconnect hands back past the
   ten-record pace — the replay is a burst, and what is past ten in ten seconds is dropped until
   the next reconnect; the Linux store at runtime (the round-trip test is ignored off Windows and

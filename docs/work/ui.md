@@ -121,10 +121,6 @@
       its base — it is your character on the table. A GM screen's three panels got no yes. Tally
       marks and an hourglass for rounds are undrawn and unjudged.
 
-- [~] **RANGED-WEAPON-RANGE · show ranged weapon range in the compendium — 0.9.0.** `to audit`. Show normal
-  and long range on the article, in feet with metres in parentheses. Read both values from the
-  weapon's structured range in the selected edition and show a missing value as missing.
-
 - [ ] **DAMAGE-GLYPHS · three of the thirteen damage glyphs are redrawn.** A damage type is its
       `DamageIcon` and never a word wherever room is scarce (`../internals/ui.md` ▸ the hit line),
       so a glyph a player cannot name is a type they cannot pick. The maintainer's reading of the

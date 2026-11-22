@@ -4,12 +4,11 @@
 > [`../internals/content.md`](../internals/content.md) and [`../internals/packs.md`](../internals/packs.md); the
 > ORDER is [`plan.md`](../plan.md) ▸ Implementation order.
 
-- [~] **CIRCLE-OF-THE-LAND · `to audit`.** SRD 5.1 has seven terrains, selectable at Druid level 2,
-  with a bonus cantrip pick and terrain spells from level 3. SRD 5.2.1 has four land types with
-  spells from level 3 and lets the player change land on a Long Rest.
-- [~] **SPECIES-SPELLS · `to audit`.** The Elf, Gnome and Tiefling traits in SRD 5.2.1 and the
-  2014 Tiefling grant spells by character level. They have their own casting ability and recharge
-  pools. The High Elf can replace its lineage cantrip on a Long Rest.
+- [ ] **HIGH-ELF-CANTRIP · the 2014 High Elf's wizard cantrip.** SRD 5.1: "You know one cantrip of
+  your choice from the wizard spell list. Intelligence is your spellcasting ability for it." The
+  2014 `high_elf` row grants no spell, so the cantrip is missing from the sheet. The species caster
+  already reads `spells`, `spell_abilities` and a `swap_cantrip_list`; what it lacks is a cantrip
+  chosen at build with no default, where the 2024 High Elf's swap starts from Prestidigitation.
 - [~] **MASTERY-HALF · weapon mastery. The picks, the rules text, the numbers and the extra attacks ship; the tail is surfaces.**
   The weapon half was always data — every 2024 weapon carries its one `mastery:<name>` (5.5e only;
   2014 has no such rule) — and nothing read it, because RAW the property does nothing until a feature

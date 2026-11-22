@@ -292,7 +292,7 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
   showed, a player's connection, the requests nobody answered. Rust keeps that list as it emits
   (`remember` in `mod.rs`), and a sheet in it is held to `tableViewSchema` again, since it began as
   a peer's bytes. Picking a seat up opens no socket and raises no native question — the person
-  said yes when the seat was taken. *To audit:* the GM's screen reconstructs the log of asks from
+  said yes when the seat was taken. The GM's screen reconstructs the log of asks from
   the signed records; an answer is matched by request id and author, including an answer that arrives before
   its ask. An unannounced DC remains a page-local annotation in sessionStorage
   (`routes/table/asked-log.ts`) and survives a page reload, not an app exit.
@@ -332,7 +332,7 @@ What a record is:
 | `ask` — the player, request id and public request | the GM | the addressed player |
 | `answer` — the request id and the player's answer | the addressed player | the GM |
 
-**History is not a prompt** (*to audit*). A live `request` frame carries the signed ask. The
+**History is not a prompt.** A live `request` frame carries the signed ask. The
 player holds a copy and answers by signing a record; only the live frame opens the prompt. On reconnect the
 addressed player offers both copies back to the GM through the log exchange, even below the
 GM's highest sequence number. The usual log bounds and pace apply to it, and to a live answer
@@ -390,7 +390,7 @@ trusted with what the table says, not with how fast this app writes.
   invitation players hold still names it, and whoever was let in is seated without being asked
   about. **Its door is shut** until the GM opens it, so invitations handed out before the app went
   down do not still knock. A player's seat that was dialling all along finds it — through a
-  relay. *To audit:* a table with no relay binds its saved UDP ports again, so players on the
+  relay. A table with no relay binds its saved UDP ports again, so players on the
   same LAN redial the old invitation without another admission, even with the door shut. A busy saved
   port refuses the return instead of silently moving the table. A changed LAN address still
   needs a new invitation. A saved table with no addresses binds new ports once and keeps them.
