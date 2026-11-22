@@ -228,17 +228,17 @@
   a store of its own (a note outgrows the log's 2 KiB record and 500 records), who may edit (the GM,
   everyone, or per note), and readers per note as a roll has its audience — a clue meant for one
   player. The GM may hide any edit, as in the log.
-- [ ] **TABLE-LINK-CLOCK · a seat whose clock is off is told, with what it costs.** A record's time
-  is its author's clock, so a seat whose clock is wrong by hours or days writes records the table
-  misplaces: one behind lands far down the log as if rolled long ago, and one more than ten minutes
-  ahead is refused by every app and never reaches the table. The hello carries the player's clock,
-  the GM measures the difference against its own allowing for the round trip, and past two minutes
-  both seats are WARNED — never refused, the player may still sit. The warning says the consequence,
-  not just the number: to the player, that their rolls will stand out of place in the table's log
-  (refused outright when the clock runs over ten minutes fast) and that turning on the system's time
-  sync fixes it; to the GM, whose rolls those are and how far off they stand. No third-party time
-  service is asked: the GM's clock is the table's reference, and the measurement rides the
-  connection the player already opened. Changing the hello is protocol 4.
+- [ ] **TABLE-LINK-CLOCK · a seat's clock being off changes nothing anyone sees.** A record's time
+  is its author's clock, and the log sorts by it, so a clock off by tens of seconds puts a roll in
+  another turn, by two minutes two or three turns away, and more than ten minutes fast gets every
+  roll refused by every app. It is fixed AUTOMATICALLY, with nothing for any person to do: the hello
+  carries the player's clock, the GM's app measures each seat's offset against its own allowing for
+  the round trip, and hands that offset on beside the name it hands on (outside the signature, so
+  the record is untouched). Every app sorts by the corrected time and holds the ten-minutes-ahead
+  bound against it, so no seat's records are misplaced or refused for its clock. No third-party
+  time service is asked: the GM's clock is the table's reference, measured over the connection the
+  player already opened. No warning is shown — once corrected there is no consequence to warn of.
+  Changing the hello is protocol 4, with TABLE-LINK-PACE.
 - [ ] **TABLE-LINK-MACOS-STORE · a remembered table on a Mac.** The maintainer checks it on a
   Mac, not soon. `apple-native-keyring-store` is in the macOS build and nothing has compiled or run it:
   `cargo test --features table-link -- --ignored the_os_store_keeps_a_key_and_lets_it_go` on a
