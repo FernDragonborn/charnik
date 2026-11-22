@@ -2379,6 +2379,7 @@
 				"both": "The invitation carries every address this computer has.",
 				"ipv4": "The invitation carries this computer's IPv4 addresses only — for a network or a driver without IPv6, or to keep an IPv6 address out of the invitation."
 			},
+			"firewallNote": "Windows will ask whether Charnik may use the network the first time a table opens. Allow it on private networks: without that, players on your network cannot reach a table with no relay.",
 			"joiningNote": "When you JOIN a table, your app uses the relay named in the GM's invitation, and asks you first."
 		}
 	},
@@ -2749,7 +2750,9 @@
 			"gm": "GM",
 			"gmOnly": "GM only",
 			"hide": "Hide",
-			"hideLabel": "Hide this roll from the table's log, for everyone"
+			"hideLabel": "Hide this roll from the table's log, for everyone",
+			"reveal": "Show the table",
+			"revealLabel": "Show this roll to everyone at the table, as it was rolled"
 		},
 		"notice": {
 			"passed": "Passed — DC {dc}",

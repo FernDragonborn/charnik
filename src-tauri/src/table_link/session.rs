@@ -1081,12 +1081,16 @@ impl GmTable {
     fn sign_record(&self, body: Body) -> Option<Signed> {
         let shared = &self.shared;
         let gm = shared.gm.to_string();
-        let record = Record {
-            table: gm.clone(),
-            author: gm.clone(),
-            seq: locked(&shared.log).next_seq(&gm),
-            at: records::now_ms(),
-            body,
+        let record = {
+            let log = locked(&shared.log);
+            let (body, at) = log.as_written(&gm, body)?;
+            Record {
+                table: gm.clone(),
+                author: gm.clone(),
+                seq: log.next_seq(&gm),
+                at,
+                body,
+            }
         };
         records::sign(&shared.key, &record)
     }
@@ -1708,11 +1712,14 @@ impl PlayerSeat {
                     return Delivery::NotDelivered;
                 }
             }
+            let Some((body, at)) = log.as_written(&me, body) else {
+                return Delivery::NotDelivered;
+            };
             let record = Record {
                 table: shared.gm.clone(),
                 author: me.clone(),
                 seq: log.next_seq(&me),
-                at: records::now_ms(),
+                at,
                 body,
             };
             let Some(signed) = records::sign(&shared.key, &record) else {
@@ -2267,6 +2274,7 @@ mod tests {
                 roll: json!({ "total": total, "natural": total, "advantage": "neither", "mod": 0 }),
             }],
             to,
+            reveals: None,
         }
     }
 
@@ -2351,6 +2359,25 @@ mod tests {
         let (from_gm, name) = next_record(&mut bevan_events).await;
         assert_eq!((from_gm.author.as_str(), name), (gm.as_str(), None));
 
+        // shown the table afterwards, it reaches every seat as a roll of its own, the kept one's lines
+        let reveal = Body::Roll {
+            lines: Vec::new(),
+            to: Audience::Gm,
+            reveals: Some(private.seq),
+        };
+        assert_eq!(lira.record(reveal.clone()), Delivery::Delivered);
+        let (shown, name) = next_record(&mut bevan_events).await;
+        let (Body::Roll { lines: kept, .. }, Body::Roll { lines, to, reveals }) =
+            (&private.body, &shown.body)
+        else {
+            panic!("a reveal is a roll");
+        };
+        assert_eq!(
+            (lines, *to, *reveals, name.as_deref()),
+            (kept, Audience::Table, Some(private.seq), Some("Lira"))
+        );
+        assert_eq!(lira.record(reveal), Delivery::NotDelivered, "a roll is shown once");
+
         // a player hides only their own; the GM hides anyone's, and every seat hears it
         let hide_lira = Body::Hide {
             author: own.author.clone(),
@@ -2370,10 +2397,10 @@ mod tests {
         // somebody who sits down later is handed what they may see, the private roll excepted
         let (_late, mut late_events) = seated(&invite, "Newcomer").await;
         let mut handed = Vec::new();
-        while handed.len() < 3 {
+        while handed.len() < 4 {
             handed.push(next_record(&mut late_events).await.0);
         }
-        assert!(handed.contains(&own) && handed.contains(&from_gm));
+        assert!(handed.contains(&own) && handed.contains(&from_gm) && handed.contains(&shown));
         assert!(handed.iter().all(|record| *record != private));
         assert!(handed.iter().any(|record| record.body == hide_lira));
 
@@ -3115,6 +3142,7 @@ mod tests {
                 roll: json!({ "pad": "y".repeat(1500) }),
             }],
             to: Audience::Table,
+            reveals: None,
         };
         for _ in 0..300 {
             table.record(fat("filler"));

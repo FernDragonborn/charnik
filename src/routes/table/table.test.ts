@@ -30,6 +30,7 @@ import {
 	type LogBody,
 	type RememberedTable,
 	type Returned,
+	type Audience,
 	type LogRecord,
 	type PlayerEvent,
 	type PlayerSeat,
@@ -700,7 +701,13 @@ describe('a roll against a DC', () => {
 });
 
 describe("the table's log", () => {
-	const roll = (author: string, seq: number, at: number, total = 12): LogRecord => ({
+	const roll = (
+		author: string,
+		seq: number,
+		at: number,
+		total = 12,
+		more: { to?: Audience; reveals?: number } = {},
+	): LogRecord => ({
 		table: 'gm-key',
 		author,
 		seq,
@@ -714,6 +721,7 @@ describe("the table's log", () => {
 				},
 			],
 			to: AUDIENCE.table,
+			...more,
 		},
 	});
 	const heardRecord = (record: LogRecord, name?: string, mine = false) => ({
@@ -820,6 +828,35 @@ describe("the table's log", () => {
 		gm.tellGm(heardRecord(roll('lira', 1, 100), 'Lira'));
 		const [line] = gm.table.log.shown;
 		expect(gm.table.log.canHide(line!)).toBe(true);
+	});
+
+	it('shows the table a roll of its own kept to the GM, which then stands where it stood', async () => {
+		const seated = await askedOf({ kind: TABLE_REQUEST.heal, amount: 1 });
+		const kept = roll('me', 1, 100, 12, { to: AUDIENCE.gm });
+		seated.tellPlayer(heardRecord(kept, undefined, true));
+		seated.tellPlayer(heardRecord(roll('lira', 1, 110), 'Lira'));
+		const [theirs, mine] = seated.table.log.shown;
+		expect([seated.table.log.canReveal(theirs!), seated.table.log.canReveal(mine!)]).toEqual([
+			false,
+			true,
+		]);
+		seated.table.log.reveal(mine!);
+		expect(seated.heard.records).toEqual([
+			{
+				kind: LOG_BODY.roll,
+				lines: kept.body.kind === LOG_BODY.roll ? kept.body.lines : [],
+				to: AUDIENCE.table,
+				reveals: 1,
+			},
+		]);
+		// Rust writes the reveal at the kept roll's time; the kept one gives way to it
+		const shown = roll('me', 3, 100, 12, { reveals: 1 });
+		seated.tellPlayer(heardRecord(shown, undefined, true));
+		seated.tellPlayer(heardRecord(kept, undefined, true));
+		expect(seated.table.log.shown.map((line) => [line.record.seq, line.record.body.to])).toEqual([
+			[1, AUDIENCE.table],
+			[3, AUDIENCE.table],
+		]);
 	});
 
 	it("cuts a roll's words to what Rust keeps", () => {

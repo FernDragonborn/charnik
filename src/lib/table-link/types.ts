@@ -153,6 +153,9 @@ export type LogBody =
 			/** Every roll one press made: the log, and its pace, count actions. */
 			lines: readonly LogRollLine[];
 			to: Audience;
+			/** The number of the author's own roll kept to the GM that this one shows the table. Rust
+			 *  writes it from that roll, its lines and its time, whatever lines the page sent. */
+			reveals?: number;
 	  }
 	/** Take a record out of the log: the GM's for anyone's, a player's for their own. */
 	| { kind: typeof LOG_BODY.hide; author: ParticipantId; seq: number };

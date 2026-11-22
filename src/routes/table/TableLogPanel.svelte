@@ -50,7 +50,7 @@
 		<ul class="table-rows">
 			{#each lines as line (`${line.record.author}#${line.record.seq}`)}
 				{@const [first, ...more] = line.record.body.lines}
-				<li class="table-row">
+				<li class="table-row" class:is-gm={line.record.author === line.record.table}>
 					<span class="muted table-log-time">{timeOf(line.record.at)}</span>
 					{#if byTheGm(line)}<span class="durpill">{$_('table.log.gm')}</span>{:else}<b
 							class="table-log-who">{whoRolled(line)}</b
@@ -61,6 +61,14 @@
 					{/if}
 					<span class="table-row-spacer"></span>
 					{#if first}<TableRollResult roll={first.roll} />{/if}
+					{#if table.log.canReveal(line)}
+						<button
+							type="button"
+							class="btn ghost table-log-hide"
+							aria-label={$_('table.log.revealLabel')}
+							onclick={() => table.log.reveal(line)}>{$_('table.log.reveal')}</button
+						>
+					{/if}
 					{#if table.log.canHide(line)}
 						<button
 							type="button"
@@ -110,6 +118,10 @@
 	}
 	.table-log-audience .eyebrow {
 		margin: 0;
+	}
+	/* the GM's rolls on a ground of their own: a player's name can say "GM", a background cannot */
+	.table-row.is-gm {
+		background: var(--color-accent-soft);
 	}
 	.table-log-time {
 		font-variant-numeric: tabular-nums;

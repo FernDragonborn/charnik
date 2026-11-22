@@ -130,7 +130,8 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  The live drive passes on protocol 4, the log's roll and its hide among it. **Left:** the
+  The live drive passes on protocol 4, the log's roll and its hide among it; protocol 5 added a
+  reveal to the roll record, and the drive on it is TABLE-LINK-LOG's. **Left:** the
   desktop app that twice quit on its own, exit 0, during early drives — once with the question
   window open and blank, once ten seconds after the player was let in, the window only switched
   away from. Not reproduced since, over the live drive and a quit-and-Return; the log says nothing
@@ -150,9 +151,10 @@
   show, not a timer's; two Charnik versions at one table; `cargo audit` over the crates the
   feature adds. A player's own app at the table, which no one-machine drive has: a request
   answered from the page, and a roll built in the dice tray first. **The Windows firewall's
-  question**: Windows asks once per program the first time it listens, and nothing in Charnik says
-  so before it does — what a no-relay table does for a player on the LAN when that question was
-  answered Cancel, and whether the Table screen should warn before the first table. The release workflow
+  question**: Windows asks once per program the first time it listens, and Settings ▸ Table (the
+  first table's dialog too) says so under *no relay* — what a no-relay table does for a player on
+  the LAN when that question was answered Cancel, and whether a relay table's path stays on the
+  relay after it. The release workflow
   then builds with the feature, `../internals/overview.md` and `security.md` stop saying it is in
   no release, and the changelog of that release is where the table is first named: until then no
   release has it, so no changelog mentions it.
@@ -167,19 +169,20 @@
   copy, and a record is signed with its author's table key so a copy the GM hands on is either the
   author's words or refused. Nothing is agreed on, because no two apps write one
   record; the log is the union, shown in the order of its times. Specified in
-  `../internals/table-link.md` ▸ The table's log, with the maintainer's leave to decide and build
-  overnight; **these were decided without the maintainer and wait for their word**: a player's
-  rolls go to the table and a GM's to nobody unless switched; the GM hides any record and a player
-  their own, and nothing is deleted; the name a record is shown under is the GM's roster name,
-  outside the signature. The log keeps 500 records a table, at most 2 KiB each; its pace and its
+  `../internals/table-link.md` ▸ The table's log, and the maintainer's word taken on it: a player's
+  rolls go to the table and a GM's to nobody unless switched, and the roller can show a kept roll
+  afterwards; the GM hides any record and a player their own, and nothing is deleted; the name a
+  record is shown under is the GM's roster name, outside the signature, and the GM's rows carry a
+  ground of their own besides the badge. The log keeps 500 records a table, at most 2 KiB each; its pace and its
   clock are `../internals/table-link.md` ▸ The table's log.
   **Built:** signed records and the `have` exchange (`table_link/records.rs`, `session.rs`, held
   by its tests), the page's log and its panel on both seats (`routes/table/table-log.svelte.ts`,
   `TableLogPanel`). A live request carries the GM's signed ask and the player's answer is a
-  signed record; hello is protocol 4 and refuses any other before admission, saying whose app is the
+  signed record; hello is protocol 5 and refuses any other before admission, saying whose app is the
   older; the invitation format stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold
   it). The live drive covers the log on protocol 4: the player's roll arrives and the GM hides it.
-  **Left:** hiding ONE roll of an action — the record is the
+  A reveal is held by `records.rs`'s and `session.rs`'s tests over the real transport and by
+  `table.test.ts`. **Left:** the live drive on protocol 5; hiding ONE roll of an action — the record is the
   action, so a hide takes the whole of it; a VTT's targets would make a single roll worth hiding
   (damage dealt to an unseen creature), and the control is undrawn.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
@@ -187,8 +190,8 @@
   store, the rest where only Rust writes, the list with Return and Forget, the native question
   before any socket, the door shut on a table opened again. Held by `session.rs`'s test of a GM
   that goes down and opens again, `remember.rs`'s tests (the Windows credential store among
-  them), and the page's tests. **Decided without the maintainer, for their word:** leaving forgets
-  the table; a table opened again keeps its door shut. `session.rs`'s tests hold a no-relay
+  them), and the page's tests. The maintainer's word: leaving forgets the table; a table opened
+  again keeps its door shut. `session.rs`'s tests hold a no-relay
   table binding its saved UDP ports again, refusing a busy one, and taking a saved table without
   addresses, and a GM that opens again holding its asks and answers from its own disk while the
   player hands back nothing; `table.test.ts` holds the GM's page rebuilding the request history

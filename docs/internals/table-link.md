@@ -306,9 +306,6 @@ switch for who this app's own rolls go to, kept in the app's settings per seat.
 
 ## The table's log
 
-> The calls in this section taken without the maintainer are listed in TABLE-LINK-LOG
-> (`../work/release.md`).
-
 **One model: every record has one author, and nobody is the master of the table's state.** A GM's
 app lags and restarts like anyone's, so nothing waits on it to say what is true:
 
@@ -341,7 +338,7 @@ What a record is:
 
 | record | author | who is handed it |
 | --- | --- | --- |
-| `roll` — one action: every roll one press made (at most 16, written eight to a record so it fits), each its name and the five facts of a table roll | anyone | the table, or the GM alone |
+| `roll` — one action: every roll one press made (at most 16, written eight to a record so it fits), each its name and the five facts of a table roll; a roll that `reveals` an earlier one of its author's | anyone | the table, or the GM alone |
 | `hide` — the author and number of a record | the GM, or a record's own author | the table |
 | `ask` — the player, request id and public request | the GM | the addressed player |
 | `answer` — the request id and the player's answer | the addressed player | the GM |
@@ -355,7 +352,10 @@ An unannounced DC is not part of the signed request and lives only in the GM's p
 **Who sees a roll is the roller's choice**, said on the roll: a player's rolls go to the table
 unless the player turned that off on the Table screen, and then to the GM alone; a GM's rolls go
 nowhere unless the GM turned showing them on. A roll kept to the GM is not handed on, and a player
-is never given one. Every roll the sheet logs is a roll the log can carry, so nothing new is pressed
+is never given one. **Its roller can show it the table afterwards**: a new roll that `reveals` the
+kept one's number, to the table, which the author's app writes from the kept roll — its lines and
+its time — whatever the page sent, so a reveal cannot show numbers the roll did not have, and only
+once. Every app shows the reveal where the kept roll stood and drops the kept one. Every roll the sheet logs is a roll the log can carry, so nothing new is pressed
 to share one.
 
 **Moderation ships with the log** (`../research/adoption-friction.md` ▸ 9). The GM can hide any
@@ -380,7 +380,7 @@ loses nothing:** a seat's app hands its records over twenty at once and one a se
 waiting in its own log, and the GM's app takes thirty at once and one a second after from each seat
 — above the sender's pace, so it refuses only an app that does not keep it. An answer to an ask the
 GM made of that seat is not counted, at most one per ask. A record already held costs nothing. A
-record whose author is not at the table — not let in, or dismissed — is not kept. The GM's rolls carry a badge in the log that no player's name can draw.
+record whose author is not at the table — not let in, or dismissed — is not kept. The GM's rolls carry a badge and a ground of their own in the log, which no player's name can draw.
 **A player's app paces its own disk:** what the GM hands over is held and shown at once, and written
 at most sixty records in ten seconds, in the order it came, the rest waiting (`DiskPace`). The GM is
 trusted with what the table says, not with how fast this app writes.
@@ -423,7 +423,7 @@ trusted with what the table says, not with how fast this app writes.
 
 ## Versions
 
-The ALPN is `charnik/table/1` and the hello says `protocol: 4`: the ALPN names the framing and the
+The ALPN is `charnik/table/1` and the hello says `protocol: 5`: the ALPN names the framing and the
 number names the frames, so an app of another number is reached and refused with `version` rather
 than not reached at all. A hello of another number is read loosely, for what every version's hello
 carries, and the `refused` frame keeps one shape for good, so the refusal is understood across any

@@ -195,6 +195,13 @@
   Nothing here is blocked on code. What it needs first is RENDERED variants, not names
   (`AGENTS.md` ▸ Screenshots go in design-preview).
 
+- [ ] **TABLE-ENTRY · where a player looks for the table.** The maintainer, the first time, looked
+  for tables beside the roster and did not see the Table item in the menu. A table is sat at AS a
+  character, so the roster is where the thought starts; the Table screen is where it lives now. Open:
+  whether a character's card (or the play screen) carries a way to the table — join as this
+  character, return to the table they sat at — and whether the menu item stays beside it. Decided
+  with rendered variants, not names.
+
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
   written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects

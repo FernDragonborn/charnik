@@ -17,7 +17,7 @@ use super::records::Signed;
 /// The protocol's name on a connection. A peer speaking another is refused by the handshake.
 pub const ALPN: &[u8] = b"charnik/table/1";
 /// Said in the hello; a GM refuses a number it does not speak.
-pub const PROTOCOL: u32 = 4;
+pub const PROTOCOL: u32 = 5;
 pub const INVITE_VERSION: u32 = 2;
 
 /// The hello is a name and a secret.

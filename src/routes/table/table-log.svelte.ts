@@ -5,6 +5,7 @@
  */
 import type { RollLogEntry } from '$lib/combat/roll';
 import {
+	AUDIENCE,
 	LOG_BODY,
 	TABLE_ROLE,
 	type Audience,
@@ -65,15 +66,13 @@ export class TableLog {
 	take = (event: RecordEvent): void => {
 		const { record } = event;
 		if (record.body.kind === LOG_BODY.hide) {
-			const id = recordId(record.body.author, record.body.seq);
-			// the roll goes, and its place with it; the hide is kept for a roll that arrives after it
-			this.lines = this.lines.filter(
-				(line) => recordId(line.record.author, line.record.seq) !== id,
-			);
-			if (!this.hidden.includes(id)) this.hidden = [...this.hidden, id].slice(-LINES_MAX);
+			this.takeOut(recordId(record.body.author, record.body.seq));
 			return;
 		}
 		if (record.body.kind !== LOG_BODY.roll) return;
+		// a roll shown the table stands where the one kept to the GM stood
+		if (record.body.reveals !== undefined)
+			this.takeOut(recordId(record.author, record.body.reveals));
 		const id = recordId(record.author, record.seq);
 		if (this.hidden.includes(id)) return;
 		const line: LogLine = {
@@ -87,6 +86,12 @@ export class TableLog {
 		);
 		this.lines = [...others, line].sort((a, b) => a.record.at - b.record.at).slice(-LINES_MAX);
 	};
+
+	/** The roll goes, and its place with it; the id is kept for a roll that arrives after it. */
+	private takeOut(id: string): void {
+		this.lines = this.lines.filter((line) => recordId(line.record.author, line.record.seq) !== id);
+		if (!this.hidden.includes(id)) this.hidden = [...this.hidden, id].slice(-LINES_MAX);
+	}
 
 	clear = (): void => {
 		this.lines = [];
@@ -112,6 +117,19 @@ export class TableLog {
 
 	/** The GM hides anyone's roll, a player their own. */
 	canHide = (line: LogLine): boolean => this.host().role === TABLE_ROLE.gm || line.mine;
+
+	/** A roll of this app's own that went to the GM alone can be shown the table afterwards. */
+	canReveal = (line: LogLine): boolean => line.mine && line.record.body.to === AUDIENCE.gm;
+
+	reveal = (line: LogLine): void => {
+		if (!this.canReveal(line)) return;
+		void this.host().write({
+			kind: LOG_BODY.roll,
+			lines: line.record.body.lines,
+			to: AUDIENCE.table,
+			reveals: line.record.seq,
+		});
+	};
 
 	hide = (line: LogLine): void => {
 		if (!this.canHide(line)) return;

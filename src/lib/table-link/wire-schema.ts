@@ -192,6 +192,7 @@ const logBodySchema = z.discriminatedUnion('kind', [
 			.min(1)
 			.max(ACTION_LINES_MAX),
 		to: z.enum(AUDIENCE),
+		reveals: sequence.exactOptional(),
 	}),
 	z.strictObject({ kind: z.literal(LOG_BODY.hide), author: participantId, seq: sequence }),
 	z.strictObject({

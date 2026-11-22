@@ -101,6 +101,10 @@ pub enum Body {
     Roll {
         lines: Vec<RollLine>,
         to: Audience,
+        /// The number of the author's own roll kept to the GM that this one shows the table: the
+        /// same lines at the same time, so the hidden one gives way to it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reveals: Option<u64>,
     },
     Hide {
         author: String,
@@ -191,8 +195,19 @@ pub fn verify(signed: &Signed, table: &str) -> Option<Record> {
     let record: Record = serde_json::from_str(&signed.text).ok()?;
     let author = EndpointId::from_str(&record.author).ok()?;
     author.verify(&signed_bytes(&signed.text), &sig).ok()?;
-    (record.table == table && record.seq > 0 && record.body.is_bounded(record.author == table))
-        .then_some(record)
+    let reveals_an_earlier_roll = match record.body {
+        Body::Roll {
+            reveals: Some(shown),
+            to,
+            ..
+        } => shown > 0 && shown < record.seq && to == Audience::Table,
+        _ => true,
+    };
+    (record.table == table
+        && record.seq > 0
+        && reveals_an_earlier_roll
+        && record.body.is_bounded(record.author == table))
+    .then_some(record)
 }
 
 pub fn now_ms() -> u64 {
@@ -338,6 +353,42 @@ impl Log {
         Some((entry.record.clone(), entry.signed.clone()))
     }
 
+    /// What showing the table `author`'s roll `seq` writes: that roll's lines, to the table, at its
+    /// time. None when it is not a roll of theirs kept to the GM, or is shown already.
+    pub fn reveal(&self, author: &str, seq: u64) -> Option<(Body, u64)> {
+        let shown_already = self.records.values().any(|Entry { record, .. }| {
+            record.author == author
+                && matches!(record.body, Body::Roll { reveals: Some(shown), .. } if shown == seq)
+        });
+        let Entry { record, .. } = self.records.get(&(author.to_string(), seq))?;
+        match &record.body {
+            Body::Roll {
+                lines,
+                to: Audience::Gm,
+                reveals: None,
+            } if !shown_already => Some((
+                Body::Roll {
+                    lines: lines.clone(),
+                    to: Audience::Table,
+                    reveals: Some(seq),
+                },
+                record.at,
+            )),
+            _ => None,
+        }
+    }
+
+    /// The body and time a record this app writes as `author` is signed with: a reveal takes the
+    /// roll it shows and its time, so the page cannot show the table numbers the roll did not have.
+    pub fn as_written(&self, author: &str, body: Body) -> Option<(Body, u64)> {
+        match body {
+            Body::Roll {
+                reveals: Some(seq), ..
+            } => self.reveal(author, seq),
+            body => Some((body, now_ms())),
+        }
+    }
+
     /// Is this record held already?
     pub fn holds(&self, author: &str, seq: u64) -> bool {
         self.records.contains_key(&(author.to_string(), seq))
@@ -446,6 +497,7 @@ mod tests {
                     roll: serde_json::json!({ "total": 14, "advantage": "neither", "mod": 2 }),
                 }],
                 to,
+                reveals: None,
             },
         }
     }
@@ -648,6 +700,55 @@ mod tests {
         assert_eq!(on_gm_clock(10_000, 2_500), 12_500);
         assert_eq!(on_gm_clock(10_000, -2_500), 7_500);
         assert_eq!(on_gm_clock(1_000, -5_000), 0);
+    }
+
+    #[test]
+    fn a_roll_kept_to_the_gm_is_shown_the_table_once_as_it_was_rolled() {
+        let author = SecretKey::generate();
+        let me = author.public().to_string();
+        let mut log = Log::default();
+        for (seq, to) in [(1, Audience::Gm), (2, Audience::Table)] {
+            let record = roll("t", &author, seq, to);
+            let signed = sign(&author, &record).expect("signs");
+            log.keep(record, signed, 0);
+        }
+        let asked = Body::Roll {
+            lines: Vec::new(),
+            to: Audience::Gm,
+            reveals: Some(1),
+        };
+        let (body, at) = log.as_written(&me, asked).expect("a roll kept to the GM can be shown");
+        let Body::Roll { lines, to, reveals } = &body else {
+            panic!("a reveal is a roll");
+        };
+        // the lines and time are the kept roll's, whatever the page sent
+        assert_eq!((lines.len(), *to, *reveals, at), (1, Audience::Table, Some(1), 1_001));
+        assert!(log.reveal(&me, 2).is_none(), "a roll the table saw has nothing to show");
+        assert!(log.reveal("someone else", 1).is_none());
+        assert!(log.reveal(&me, 9).is_none(), "a roll not held cannot be shown");
+
+        let shown = Record { table: "t".into(), author: me.clone(), seq: 3, at, body };
+        let signed = sign(&author, &shown).expect("signs");
+        assert!(verify(&signed, "t").is_some());
+        log.keep(shown, signed, 0);
+        assert!(log.reveal(&me, 1).is_none(), "a roll is shown once");
+    }
+
+    #[test]
+    fn a_reveal_names_an_earlier_roll_and_goes_to_the_table() {
+        let author = SecretKey::generate();
+        let reveal = |seq, shown, to| {
+            let mut record = roll("t", &author, seq, to);
+            if let Body::Roll { reveals, .. } = &mut record.body {
+                *reveals = Some(shown);
+            }
+            verify(&sign(&author, &record).expect("signs"), "t")
+        };
+        assert!(reveal(2, 1, Audience::Table).is_some());
+        assert!(reveal(2, 2, Audience::Table).is_none(), "not itself");
+        assert!(reveal(2, 3, Audience::Table).is_none(), "not a later one");
+        assert!(reveal(2, 0, Audience::Table).is_none());
+        assert!(reveal(2, 1, Audience::Gm).is_none(), "a reveal kept to the GM shows nobody");
     }
 
     #[test]

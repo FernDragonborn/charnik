@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Settings ▸ Table: which relay servers a table THIS app opens is reached through. A GM's
 	// choice — a player's app follows the invitation it was handed, and is asked first.
+	import { browser } from '$app/environment';
 	import { app } from '$lib/stores/app.svelte';
 
 	/** Inside a dialog that names the subject itself, the section's own heading is left out. */
@@ -16,6 +17,9 @@
 	const MODES: RelayMode[] = [RELAY_MODE.n0, RELAY_MODE.custom, RELAY_MODE.none];
 	const FAMILIES: AddressFamilies[] = [ADDRESS_FAMILIES.both, ADDRESS_FAMILIES.ipv4];
 	const RELAY_SCHEME = 'https://';
+	/** Windows asks once per program whether it may take connections, and a no there leaves a table
+	 *  with no relay unreachable on the local network: said before the question comes. */
+	const onWindows = browser && navigator.userAgent.includes('Windows');
 
 	const mode = $derived(app.tableRelay.mode);
 	const url = $derived(app.tableRelay.mode === RELAY_MODE.custom ? app.tableRelay.url : '');
@@ -79,6 +83,9 @@
 		const next = FAMILIES.find((candidate) => candidate === picked);
 		if (next) chooseAddresses(next);
 	})}
+	{#if onWindows}
+		<p class="sec-note table-note table-firewall-note">{$_('settings.table.firewallNote')}</p>
+	{/if}
 {/if}
 
 {#if mode === RELAY_MODE.custom}
@@ -121,7 +128,8 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 	}
-	.table-relay-problem {
+	.table-relay-problem,
+	.table-firewall-note {
 		color: var(--color-warning);
 	}
 </style>

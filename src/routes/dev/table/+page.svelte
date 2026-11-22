@@ -137,6 +137,8 @@
 			{ record: rollRecord(gm, 1, 7, 11), mine: false },
 			{ record: rollRecord('lira', 2, 5, 4, AUDIENCE.gm), name: 'Lira Swiftfoot', mine: false },
 			{ record: rollRecord('me', 1, 2, 20), mine: true },
+			// this app's own roll kept to the GM, which it can show the table
+			{ record: rollRecord(gm, 2, 1, 14, AUDIENCE.gm), mine: true },
 			{
 				record: {
 					...rollRecord('bevan', 1, 1, 9),
