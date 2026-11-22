@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Icon from '$lib/components/Icon.svelte';
 	import TableRouteDialog from './TableRouteDialog.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import { _ } from '$lib/i18n';
@@ -208,35 +209,6 @@
 		{#if table.available === false}
 			<p class="card muted">{$_('table.webOnly')}</p>
 		{:else}
-			{#if table.remembered.length}
-				<section class="card table-remembered" aria-labelledby="table-remembered-title">
-					<h2 id="table-remembered-title">{$_('table.remembered.title')}</h2>
-					<p class="muted">{$_('table.remembered.blurb')}</p>
-					<ul class="table-rows">
-						{#each table.remembered as kept (kept.table)}
-							<li class="table-row">
-								<b>{kept.name}</b>
-								<span class="muted">{$_(`table.remembered.as.${kept.role}`)}</span>
-								<span class="table-row-spacer"></span>
-								<button
-									type="button"
-									class="btn ghost"
-									class:is-blocked={table.busy}
-									aria-disabled={table.busy}
-									onclick={() => (confirmForget = kept)}>{$_('table.remembered.forget')}</button
-								>
-								<button
-									type="button"
-									class="btn primary"
-									class:is-blocked={table.busy}
-									aria-disabled={table.busy}
-									onclick={() => void table.returnTo(kept)}>{$_('table.remembered.return')}</button
-								>
-							</li>
-						{/each}
-					</ul>
-				</section>
-			{/if}
 			<div class="table-doors">
 				<form
 					class="card table-door"
@@ -306,6 +278,37 @@
 					>
 				</form>
 			</div>
+			{#if table.remembered.length}
+				<section class="card table-remembered" aria-labelledby="table-remembered-title">
+					<h2 id="table-remembered-title">{$_('table.remembered.title')}</h2>
+					<p class="muted">{$_('table.remembered.blurb')}</p>
+					<ul class="table-rows">
+						{#each table.remembered as kept (kept.table)}
+							<li class="table-row">
+								<b>{kept.name}</b>
+								<span class="muted">{$_(`table.remembered.as.${kept.role}`)}</span>
+								<span class="table-row-spacer"></span>
+								<button
+									type="button"
+									class="btn primary"
+									class:is-blocked={table.busy}
+									aria-disabled={table.busy}
+									onclick={() => void table.returnTo(kept)}>{$_('table.remembered.return')}</button
+								>
+								<button
+									type="button"
+									class="icon-button"
+									class:is-blocked={table.busy}
+									aria-disabled={table.busy}
+									title={$_('table.remembered.forget')}
+									aria-label={$_('table.remembered.forget')}
+									onclick={() => (confirmForget = kept)}><Icon name="x" size={12} /></button
+								>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
 		{/if}
 	{/if}
 </section>

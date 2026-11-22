@@ -246,6 +246,7 @@ it says yes — so a release build, which has no table link, shows neither.
 - **No seat**: open a table (its name, and the relay it will be reached through with a link to
   change it) or join one (the invitation, and the name of the character who will sit). Why the
   last seat was not given or ended is said above both, as a sentence that says what to change.
+  Below them, the tables this app remembers, each with Return and a small × to forget it.
 - **A GM's seat**: the invitation with its copy button and the door's switch; a card per player
   (`TableSeatCard`) — hit points, death saves, AC, initiative, speed, saves, passives, states,
   what they resist, skills folded away — where every number carries the provenance popover the
