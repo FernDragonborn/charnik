@@ -301,6 +301,12 @@ read the report. `/dev/packs-write` is the worked example.
   no handler answers it, and the call is refused either way.
 - **A `cargo` build in `src-tauri/` while `pnpm tauri dev` runs reloads the app's page**, so a
   probe mid-run starts over. Build first, then run the test binary `--no-run` names.
+- **`src-tauri/target` is capped at 15 GB** by `tools/sweep-cargo-target.mjs`, which runs before
+  every `tauri dev` and `tauri build`: cargo never deletes an artifact, and every dependency bump
+  and feature set leaves another copy. With `cargo install cargo-sweep` it removes the oldest
+  artifacts only; without it, a profile over the cap is `cargo clean`ed whole. The working set is
+  about 15 GB — the default build, `--features table-link` and `cargo test` each keep their own
+  copy of the app crate — so a lower cap rebuilds iroh's crates on every switch between them.
 - Stopping `pnpm tauri dev` kills the cargo wrapper but **leaves `app.exe` alive**. Kill it
   explicitly, or windows accumulate and several probe instances fight over the same scratch folder
   and produce nonsense.
