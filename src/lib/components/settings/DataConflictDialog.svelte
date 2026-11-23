@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { _ } from '$lib/i18n';
-	import Icon from '../Icon.svelte';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { trapFocus } from '$lib/actions/trapFocus';
 	// Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one).
-	// Offers three ways out: pick another folder, just repoint (the user already copied their data
-	// here), or merge the two. The table lists every file across both folders — collisions (a name in
-	// both) sit up top, and the newer side is highlighted so the user can see which copy a merge keeps.
+	// Three ways out: pick another folder, only repoint (the data was already copied there), or merge
+	// the two. The files are laid side by side as a two-panel file manager shows them — the same name
+	// facing itself, the arrow at the copy a merge keeps — with the clashes shown first.
+	import { _ } from '$lib/i18n';
+	import DialogShell from '../DialogShell.svelte';
+	import FileCompare, { type FileCompareGroup } from '../FileCompare.svelte';
 	import type { ConflictRow } from '$lib/storage/migrate';
-	import LangSwitcher from '../LangSwitcher.svelte';
 
 	let {
 		rows,
@@ -28,86 +26,87 @@
 		onclose: () => void;
 	} = $props();
 
-	const collisions = $derived(rows.filter((r) => r.source && r.target).length);
-	const fmt = (ms?: number) => (ms == null ? '—' : new Date(ms).toLocaleString());
+	const VIEW = { clashes: 'clashes', current: 'current', chosen: 'chosen', all: 'all' } as const;
+	type View = (typeof VIEW)[keyof typeof VIEW];
+	const inView: Record<View, (r: ConflictRow) => boolean> = {
+		clashes: (r) => !!r.source && !!r.target,
+		current: (r) => !!r.source && !r.target,
+		chosen: (r) => !r.source && !!r.target,
+		all: () => true,
+	};
+	const VIEW_KEY: Record<View, string> = {
+		clashes: 'settings.conflict.showClashes',
+		current: 'settings.conflict.showCurrent',
+		chosen: 'settings.conflict.showChosen',
+		all: 'settings.conflict.showAll',
+	};
+	const views = Object.values(VIEW);
+	const countOf = (view: View): number => rows.filter(inView[view]).length;
+	// clashes are what the question is about; with none, the whole list. Chosen once, as it opens.
+	// svelte-ignore state_referenced_locally
+	let view = $state<View>(rows.some(inView.clashes) ? VIEW.clashes : VIEW.all);
 
-	// Move keyboard focus INTO the dialog on open — onto the safe choice, not the merging one.
-	// Handed to `trapFocus` as its initial target (it also contains Tab + restores focus on close).
+	const when = (ms?: number) => (ms == null ? '—' : new Date(ms).toLocaleString());
+	const kb = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+	/** One group per folder, in path order, so `characters/karroth` reads as a heading. */
+	const groups = $derived.by((): FileCompareGroup[] => {
+		const byFolder = new Map<string, FileCompareGroup>();
+		for (const r of rows.filter(inView[view])) {
+			const cut = r.path.lastIndexOf('/');
+			const folder = cut < 0 ? '' : r.path.slice(0, cut).replaceAll('/', ' / ');
+			const group = byFolder.get(folder) ?? { label: folder, rows: [] };
+			group.rows.push({
+				name: r.path.slice(cut + 1),
+				left: r.source && { when: when(r.source.mtime), extra: kb(r.source.size) },
+				right: r.target && { when: when(r.target.mtime), extra: kb(r.target.size) },
+				keeps: r.newer === 'source' ? 'left' : r.newer === 'target' ? 'right' : null,
+			});
+			byFolder.set(folder, group);
+		}
+		return [...byFolder.values()].sort((a, b) => a.label.localeCompare(b.label));
+	});
+
+	// the keyboard starts on the safe choice, not the merging one
 	let safeBtn = $state<HTMLButtonElement | null>(null);
+	const repointWord = $derived($_('settings.conflict.repoint'));
+	const mergeWord = $derived($_('settings.conflict.mergeShort'));
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dialog-backdrop" onclick={onclose}></div>
-<div
-	class="dialog conflict-dialog"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby="cf-title"
-	tabindex="-1"
-	use:dismissOnEscape={onclose}
-	use:trapFocus={safeBtn}
+<DialogShell
+	titleId="cf-title"
+	title={$_('settings.conflict.title')}
+	sub={targetPath}
+	subIsPath
+	subtitle={$_('settings.conflict.blurb', { values: { repoint: repointWord, merge: mergeWord } })}
+	width="min(860px, calc(100vw - 2 * var(--space-4)))"
+	initialFocus={safeBtn}
+	onDismiss={onclose}
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge warn"><Icon name="triangle-alert" size={17} /></span>
-		<h2 id="cf-title" class="dialog-title">{$_('settings.conflict.title')}</h2>
-		<!-- the two choices are named as the buttons name them, so the sentence and the footer cannot
-		     drift apart in any language -->
-		<p class="dialog-subtitle">
-			{$_('settings.conflict.blurb', {
-				values: {
-					repoint: $_('settings.conflict.repoint'),
-					merge: $_('settings.conflict.mergeShort'),
-				},
-			})}
-		</p>
-	</header>
-
-	<div class="body">
-		<div class="paths">
-			<span
-				><em>{$_('settings.conflict.current')}</em>
-				<code title={currentPath}>{currentPath}</code></span
-			>
-			<span
-				><em>{$_('settings.conflict.chosen')}</em>
-				<code title={targetPath}>{targetPath}</code></span
-			>
+	<div class="dialog-body">
+		<div class="views" role="radiogroup" aria-label={$_('settings.conflict.title')}>
+			{#each views as v (v)}
+				<button
+					type="button"
+					class="pill-btn"
+					class:accent={view === v}
+					role="radio"
+					aria-checked={view === v}
+					onclick={() => (view = v)}>{$_(VIEW_KEY[v], { values: { count: countOf(v) } })}</button
+				>
+			{/each}
 		</div>
-
-		<div class="tablewrap">
-			<table>
-				<thead>
-					<tr>
-						<th>{$_('settings.conflict.colFile')}</th>
-						<th>{$_('settings.conflict.colCurrent')}</th>
-						<th>{$_('settings.conflict.colChosen')}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each rows as r (r.path)}
-						<tr class:collide={r.source && r.target}>
-							<td class="fname">{r.path}</td>
-							<td class="when" class:newer={r.newer === 'source'} class:absent={!r.source}>
-								{fmt(r.source?.mtime)}
-								{#if r.newer === 'source'}<span class="tag">{$_('settings.conflict.newer')}</span
-									>{/if}
-							</td>
-							<td class="when" class:newer={r.newer === 'target'} class:absent={!r.target}>
-								{fmt(r.target?.mtime)}
-								{#if r.newer === 'target'}<span class="tag">{$_('settings.conflict.newer')}</span
-									>{/if}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-		<p class="count">
-			{$_('settings.conflict.counts', {
-				values: { files: rows.length, clashes: collisions },
-			})}
-		</p>
+		{#if groups.length}
+			<FileCompare
+				left={{ title: $_('settings.conflict.colCurrent'), detail: currentPath }}
+				right={{ title: $_('settings.conflict.colChosen'), detail: targetPath }}
+				{groups}
+				keepsLabel={$_('settings.conflict.kept')}
+			/>
+		{:else}
+			<p class="explain">{$_('settings.conflict.nothingHere')}</p>
+		{/if}
+		<p class="explain">{$_('settings.conflict.explain', { values: { merge: mergeWord } })}</p>
 	</div>
 
 	<footer class="dialog-foot">
@@ -118,87 +117,17 @@
 		<button class="btn" onclick={onRepoint}>{$_('settings.conflict.repoint')}</button>
 		<button class="btn primary" onclick={onMerge}>{$_('settings.conflict.merge')}</button>
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	.conflict-dialog {
-		width: min(720px, calc(100vw - 2 * var(--space-4)));
-	}
-	.body {
-		padding: var(--space-4) var(--space-6);
-		overflow: auto;
-	}
-	.paths {
+	.views {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-2) var(--space-5);
-		margin-bottom: var(--space-3);
+		gap: var(--space-1-5);
+	}
+	.explain {
+		margin: 0;
 		font-size: var(--font-size-sm);
-	}
-	.paths em {
-		color: var(--color-text-muted);
-		font-style: normal;
-		margin-inline-end: var(--space-2);
-	}
-	.paths code {
-		font-family: var(--font-mono);
-		color: var(--color-text);
-	}
-	.tablewrap {
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		overflow: hidden;
-	}
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: var(--font-size-sm);
-	}
-	th {
-		text-align: start;
-		font-family: var(--font-display);
-		font-weight: 600;
-		color: var(--color-text-muted);
-		padding: var(--space-2) var(--space-3);
-		background: var(--color-surface-2);
-		border-bottom: 1px solid var(--color-border);
-	}
-	td {
-		padding: var(--space-2) var(--space-3);
-		border-bottom: 1px solid var(--color-border);
-		vertical-align: top;
-	}
-	tbody tr:last-child td {
-		border-bottom: 0;
-	}
-	.fname {
-		font-family: var(--font-mono);
-		color: var(--color-text);
-		word-break: break-all;
-	}
-	.when {
-		color: var(--color-text-muted);
-		white-space: nowrap;
-	}
-	.when.absent {
-		color: var(--color-border-strong);
-	}
-	/* the kept-on-merge side of a collision */
-	.when.newer {
-		color: var(--color-good);
-	}
-	.tag {
-		margin-inline-start: var(--space-2);
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-good);
-		border: 1px solid var(--color-good);
-		border-radius: var(--radius-full);
-		padding: 0 var(--space-1-5);
-	}
-	.count {
-		margin: var(--space-3) 0 0;
-		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 </style>

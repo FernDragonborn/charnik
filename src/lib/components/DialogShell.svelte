@@ -19,6 +19,7 @@
 		subIsPath = false,
 		subtitle = '',
 		width,
+		initialFocus,
 		onDismiss,
 		children,
 	}: {
@@ -30,12 +31,14 @@
 		ask?: string;
 		/** A line under the title naming what it concerns. */
 		sub?: string;
-		/** `sub` is a path: set in mono, so a folder reads as one. */
+		/** `sub` is a path: set smaller and lighter, so a long folder reads as one line of detail. */
 		subIsPath?: boolean;
 		/** What follows from the answer, as a paragraph. */
 		subtitle?: string;
 		/** CSS width for the panel (e.g. "min(760px, calc(100vw - 2 * var(--space-4)))"). */
 		width: string;
+		/** Where the keyboard starts, when that is not the first control — the safe choice. */
+		initialFocus?: HTMLElement | null;
 		/** Omit for a dialog with NO way out but its own buttons: the backdrop stops being clickable and
 		 *  Escape stops closing it (the FirstRunModal pattern). For a state the player must resolve —
 		 *  being dead — a stray click must not silently dismiss the only way back. */
@@ -54,7 +57,7 @@
 	aria-labelledby={titleId}
 	tabindex="-1"
 	use:dismissOnEscape={onDismiss}
-	use:trapFocus
+	use:trapFocus={initialFocus}
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

@@ -1358,14 +1358,23 @@
 		"vitals": "Vitals"
 	},
 	"contentDrift": {
-		"title": "Content data changed",
-		"subtitle": "These files were edited outside Charnik — what's inside them no longer matches the fingerprint they carry. That's allowed and nothing is lost; we only want to be sure the change was yours. Shall we record today as their revision date and re-take the fingerprint? Pack updates will then keep these files as you made them; Settings ▸ Content health can hand one back to updates.",
-		"declaredLabel": "Header says updated",
-		"changedLabel": "Actually changed",
-		"unknownDate": "unknown",
-		"update": "Yes, record my changes",
+		"title": "Content files changed outside Charnik",
+		"count": "{count, plural, one {# file} other {# files}}",
+		"subtitle": "Someone — you in a spreadsheet, or another program — changed them directly. That is allowed and nothing is lost; we only check the changes are yours.",
+		"lastWritten": "As Charnik last wrote it",
+		"lastWrittenDetail": "by the fingerprint in the file’s header",
+		"onDisk": "As it is on disk now",
+		"packFile": "a pack’s file",
+		"yourFile": "your files",
+		"declaredLabel": "updated",
+		"changedLabel": "changed",
+		"unknownDate": "date unknown",
+		"kept": "kept",
+		"toggle": "Record this file",
+		"explain": "Recording takes the versions on disk as yours: Charnik writes them a new fingerprint and today’s date. A pack’s file is then left as you made it by the pack’s updates — Settings ▸ Content health ▸ “Your versions of pack files” hands it back. Nothing is deleted. Press a file’s arrow to leave it out.",
+		"update": "Yes, these are my changes — record",
 		"skip": "Skip for now",
-		"neverAsk": "Don't ask again (content-editing mode)"
+		"neverAsk": "Don’t ask again"
 	},
 	"contentField": {
 		"ability_choice": "Ability choice",
@@ -2041,19 +2050,21 @@
 			"title": "Collisions"
 		},
 		"conflict": {
-			"blurb": "An automatic move needs an empty folder. If you’ve already copied your data across, choose “{repoint}”. To combine both folders choose “{merge}” — on a name clash the newer file (highlighted) is kept.",
-			"chosen": "Chosen",
-			"colChosen": "Chosen folder",
+			"title": "That folder already has files",
+			"blurb": "An automatic move needs an empty folder. If you’ve already copied your data there, choose “{repoint}”. To bring both folders into one, choose “{merge}”.",
 			"colCurrent": "Current folder",
-			"colFile": "File",
-			"counts": "{files, plural, one {# file} other {# files}} · {clashes, plural, one {# name clash} other {# name clashes}}",
-			"current": "Current",
+			"colChosen": "Chosen folder",
+			"showClashes": "Same names · {count}",
+			"showCurrent": "Only in current · {count}",
+			"showChosen": "Only in chosen · {count}",
+			"showAll": "All · {count}",
+			"kept": "kept",
+			"explain": "A name in both folders is the same file twice. “{merge}” keeps the newer one — the arrow points at it — and replaces the older. A file in only one folder is simply copied.",
+			"nothingHere": "Nothing in this view.",
 			"merge": "Merge — keep newer",
 			"mergeShort": "Merge",
-			"newer": "newer",
 			"pickAnother": "Choose another folder",
-			"repoint": "Only change read path",
-			"title": "That folder already has files"
+			"repoint": "Only change read path"
 		},
 		"demo": {
 			"blurb": "Charnik ships with a demo character (Karroth the Red) to show the sheet at a glance. Restoring rebuilds it to its original state — this wipes any changes you made to it (HP, spells, layout). Your other characters aren’t touched.",

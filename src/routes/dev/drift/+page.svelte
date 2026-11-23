@@ -5,9 +5,9 @@
 	import type { DriftItem } from '$lib/content/meta';
 
 	const items: DriftItem[] = [
-		{ file: 'spells_homebrew.csv', declaredDate: '2026-06-20', changedAt: '2026-07-06' },
-		{ file: 'monsters_homebrew.csv', declaredDate: '2026-05-01', changedAt: '2026-07-05' },
-		{ file: 'items_homebrew.csv', changedAt: '2026-07-06' }, // no declared date in header yet
+		{ file: 'content/srd-2024/spells.csv', declaredDate: '2026-06-20', changedAt: '2026-07-06' },
+		{ file: 'content/homebrew/monsters.csv', declaredDate: '2026-05-01', changedAt: '2026-07-05' },
+		{ file: 'content/homebrew/items.csv', changedAt: '2026-07-06' }, // no declared date in header yet
 	];
 
 	let shown = $state(true);

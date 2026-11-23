@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (117)
+## Duplicate suspects (119)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -68,6 +68,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `COMMANDS` ×2 — src/lib/components/CommandPalette.svelte · src/routes/dev/table-link/+page.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
+- `countOf` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/routes/combat/delta-text.ts
 - `DC_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
 - `DEATH_SAVE_TRACK` ×2 — src/lib/play/hit-points.ts · src/lib/table-link/wire-schema.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -128,6 +129,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `UNTYPED` ×2 — src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/table/AskComposer.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 - `WALK` ×2 — src/lib/character/forms.ts · src/routes/dev/storage-edges/+page.svelte
+- `when` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 
 **Identical one-liner body, different names:**
 
@@ -285,7 +287,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.types` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 
-## Shared components (62)
+## Shared components (63)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -299,11 +301,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ContentHealth** | — | Content-health diagnostics — surfaces the loader's findings to the USER (not just the dev |
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
 | **DamageIcon** | `type`, `size` | A damage type's glyph. |
-| **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
+| **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` | Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one). |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
 | **DefenseStrip** | `sheet`, `graph`, `system` |  |
 | **DiagnosticsModal** | `onDismiss` | The bug report (audit DIAG-1): one field for what happened and one button that opens a GitHub |
-| **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
+| **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `initialFocus`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
 | **EditableTitle** | `value`, `placeholder` | The article title field shown in edit/translate mode. |
@@ -312,10 +314,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **EntryList** | `groups`, `selectedId`, `onselect`, `searchValue`, `searchPlaceholder`, `showEdition`, `filters`, `leading`, `trailing` | Left-pane list (d-spellmgr design): search + optional filter chips + grouped rows. |
 | **EyeIcon** | `on` | The open/closed eye glyph, in `currentColor` — shared by EyeToggle (the spellbook show-on-sheet |
 | **EyeToggle** | `on`, `title`, `onclick` | Show-on-sheet toggle (d-spellmgr `.ic.eye`): open eye = on the sheet, closed = hidden. |
+| **FileCompare** | `left`, `right`, `groups`, `keepsLabel`, `toggleLabel` | One side of a compared file: when it was written, and anything else worth a glance. |
 | **FirstRunModal** | `defaultDir`, `pickFolder`, `onConfirm` | First-run, full-screen modal: asks WHERE to keep the user's data (characters + content) before |
 | **GeneralSettings** | — | Appearance & language settings: theme, UI locale, the compendium/search edition filter — and |
 | **GenericHead** | `detail`, `editable`, `draft` | The "shapka" for every non-spell, non-monster article (species, class, feat, item, …): eyebrow, |
-| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer |
+| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | The DATA-DRIFT question (DATA-VER-1): a file's body no longer matches its recorded |
 | **Icon** | `name`, `size`, `fill`, `label` | The app's icon set: Lucide (ISC), one component so a caller writes `<Icon name="x" />` and never |
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
@@ -2727,4 +2730,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 103 global classes · 62 components · 1680 exports across 230 modules · 117 duplicate suspects._
+_50 tokens · 103 global classes · 63 components · 1680 exports across 230 modules · 119 duplicate suspects._
