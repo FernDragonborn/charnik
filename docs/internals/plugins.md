@@ -108,7 +108,14 @@ isn't running is worse than one that says why.
 | `version`     | yes      | semver string, ≤ 32 chars                                 |
 | `author`      | no       | ≤ 64 chars                                                |
 | `url`         | no       | **https:// only**; rendered as PLAIN TEXT, never a link   |
-| `description` | no       | ≤ 280 chars                                               |
+| `description` | no       | ≤ 280 chars — what the plugin GIVES a player              |
+| `description_<locale>` | no | ≤ 280 chars — the same in that locale (`description_uk`) |
+
+`description` is what the consent question leads with, under the plugin's name, so it says what the
+plugin gives a player ("level-scaled dice for the Rage Bone"), not how it is built. A reader is shown
+`description_<their locale>` where the author wrote one, `description` otherwise. Beside it the
+question lists what NEEDS the plugin — the rows of the enabled packs whose tokens name its namespace —
+which the app knows whether or not the author wrote a word.
 
 There is no custom entry point, no multi-file imports, no assets in `api: 1` — one `main.js`,
 evaluated once per session per plugin in its own isolated runtime.
@@ -403,6 +410,9 @@ the keys documented here were rejected, and a rejected key takes the whole resul
   least one minor release cycle, with a deprecation notice in Settings.
 - The host refuses manifests with an `api` newer than it supports (clear message: update
   Charnik).
+- A manifest key a host does not know is refused, so a field added within `api: 1` — as
+  `description_<locale>` was — makes a plugin that uses it unloadable in an older Charnik. Such a
+  field is said here when it lands.
 
 ## 8. Reserved: the `onUse` hook (`api: 2`, shape pinned now)
 

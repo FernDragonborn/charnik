@@ -48,7 +48,43 @@ export const pluginManifestSchema = z.strictObject({
 		.optional(),
 	description: z.string().max(280).optional(),
 });
-type PluginManifest = z.infer<typeof pluginManifestSchema>;
+/** What the plugin gives, said in a reader's language: `description_<locale>` beside `description`,
+ *  as content takes `name_<code>` (§2). Read apart from the strict schema, which knows no locale. */
+const LOCALIZED_DESCRIPTION = /^description_([a-z]{2,3}(?:-[a-z0-9]{2,8})*)$/i;
+const DESCRIPTION_MAX = 280;
+type PluginManifest = z.infer<typeof pluginManifestSchema> & {
+	/** `description_<locale>` by locale; a manifest built by hand may carry none. */
+	descriptions?: Record<string, string>;
+};
+
+/** The manifest's translated descriptions taken out of it, so the rest meets the strict schema. */
+function splitDescriptions(parsed: unknown): {
+	rest: unknown;
+	descriptions: Record<string, string>;
+	problem?: string;
+} {
+	if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed))
+		return { rest: parsed, descriptions: {} };
+	const rest: Record<string, unknown> = {};
+	const descriptions: Record<string, string> = {};
+	for (const [key, value] of Object.entries(parsed)) {
+		const locale = LOCALIZED_DESCRIPTION.exec(key)?.[1];
+		if (locale === undefined) rest[key] = value;
+		else if (typeof value !== 'string' || value.length > DESCRIPTION_MAX)
+			return {
+				rest,
+				descriptions,
+				problem: `${key} — text of at most ${DESCRIPTION_MAX} characters`,
+			};
+		else descriptions[locale.toLowerCase()] = value;
+	}
+	return { rest, descriptions };
+}
+
+/** What a plugin gives, in the reader's locale where its author wrote one, else in the one they did. */
+export function pluginDescription(manifest: PluginManifest | undefined, locale: string): string {
+	return manifest?.descriptions?.[locale] ?? manifest?.description ?? '';
+}
 
 /** Where a plugin folder was found. A pack ships code and data as ONE unit, so `pack` is also the
  *  provenance the consent dialog shows — the user didn't place this folder themselves. */
@@ -188,7 +224,10 @@ async function readPlugin(
 	} catch {
 		return { namespace, origin, ok: false, problem: 'plugin.json is not valid JSON' };
 	}
-	const m = pluginManifestSchema.safeParse(parsed);
+	const split = splitDescriptions(parsed);
+	if (split.problem)
+		return { namespace, origin, ok: false, problem: `plugin.json invalid: ${split.problem}` };
+	const m = pluginManifestSchema.safeParse(split.rest);
 	if (!m.success) {
 		const first = m.error.issues[0];
 		return {
@@ -212,7 +251,7 @@ async function readPlugin(
 		namespace,
 		origin,
 		ok: true,
-		manifest: m.data,
+		manifest: { ...m.data, descriptions: split.descriptions },
 		code,
 		hash: await consentHash(code, manifestRaw),
 	};

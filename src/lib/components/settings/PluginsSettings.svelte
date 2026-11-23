@@ -17,7 +17,10 @@
 		pluginStatus,
 		type PluginStatus,
 	} from '$lib/effects/plugin-store.svelte';
-	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { LOCAL_ORIGIN, pluginDescription, type DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { content } from '$lib/content/store.svelte';
+	import { tokensOf } from '$lib/content/loader';
+	import { localizedName } from '$lib/content/detail';
 	import PluginConsentDialog from './PluginConsentDialog.svelte';
 	import { app } from '$lib/stores/app.svelte';
 
@@ -44,6 +47,17 @@
 		if (status === 'enabled') await disablePlugin(p.namespace);
 		else if (status === 'disabled') await enableConsented(p);
 		else if (status === 'needs_consent' || status === 'code_changed') consentFor = p;
+	}
+
+	/** The rows of the enabled packs whose tokens name this plugin: what leaving it off leaves as text. */
+	function neededFor(namespace: string): { name: string; kind: string }[] {
+		const token = `plugin:${namespace}:`;
+		return (content.graph?.rows ?? [])
+			.filter((row) => tokensOf(row).some((t) => t.startsWith(token)))
+			.map((row) => ({
+				name: localizedName(row, app.activeLocale),
+				kind: $_(`contentType.${row.type}`, { default: row.type }),
+			}));
 	}
 
 	async function acceptConsent() {
@@ -101,8 +115,8 @@
 							<div class="plugin-problem">{p.problem}</div>
 						{:else if loadErr}
 							<div class="plugin-problem"><Icon name="triangle-alert" size={13} /> {loadErr}</div>
-						{:else if p.manifest?.description}
-							<div class="plugin-desc">{p.manifest.description}</div>
+						{:else if pluginDescription(p.manifest, app.activeLocale)}
+							<div class="plugin-desc">{pluginDescription(p.manifest, app.activeLocale)}</div>
 						{/if}
 					</div>
 					<!-- a row carrying its OWN problem (the duplicate-namespace loser) says that, not
@@ -137,6 +151,7 @@
 	<PluginConsentDialog
 		plugin={consentFor}
 		codeChanged={pluginStatus(consentFor, plugins.prefs) === 'code_changed'}
+		neededFor={neededFor(consentFor.namespace)}
 		onAccept={acceptConsent}
 		onCancel={() => (consentFor = null)}
 	/>

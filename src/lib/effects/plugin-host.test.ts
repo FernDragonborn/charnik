@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import {
+	pluginDescription,
 	discoverPlugins,
 	consentHash,
 	isRunnable,
@@ -57,11 +58,24 @@ describe('discoverPlugins', () => {
 		['newer api', { manifest: { ...MANIFEST, api: 2 } }, /invalid/],
 		['http url', { manifest: { ...MANIFEST, url: 'http://x.com' } }, /invalid/],
 		['bad semver', { manifest: { ...MANIFEST, version: 'latest' } }, /invalid/],
+		[
+			'an over-long translated description',
+			{ manifest: { ...MANIFEST, description_uk: 'я'.repeat(281) } },
+			/description_uk/,
+		],
 		['oversized main.js', { code: `// ${'x'.repeat(300000)}` }, /256 KB/],
 	])('%s → not ok, problem surfaced', async (_n, over, problemRe) => {
 		const [p] = await discoverPlugins(await seeded(over));
 		expect(p?.ok).toBe(false);
 		expect(p?.problem).toMatch(problemRe);
+	});
+	it('says what it gives in the reader’s language where the author wrote one', async () => {
+		const [p] = await discoverPlugins(
+			await seeded({ manifest: { ...MANIFEST, description_uk: 'Кості, що ростуть із рівнем.' } }),
+		);
+		expect(p?.ok).toBe(true);
+		expect(pluginDescription(p?.manifest, 'uk')).toBe('Кості, що ростуть із рівнем.');
+		expect(pluginDescription(p?.manifest, 'fr')).toBe(MANIFEST.description);
 	});
 	it('a plugin shipped INSIDE a content pack is discovered, and says which pack', async () => {
 		const s = new MemoryStorage();

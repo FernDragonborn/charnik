@@ -121,17 +121,6 @@ stay semi-manual.
     History checks, Elven Chain grants proficiency with ITSELF and not with medium armour, and the
     2024 Sun Blade's grant is conditional on already being proficient with longswords.
 
-- [ ] **PLG-GIVES · the consent question says what the plugin gives, in the player's language.**
-  Asked at a playtest, twice: "what is a plugin" and "what does it give me". `plugin.json` already
-  has `description` (≤ 280 characters), but it is optional, one language, and shown among the
-  technical rows. Rendered in `design-preview/service-dialogs-all.html` (the plugin question): what
-  it gives first, under the name; then **what needs it** — the rows of the pack whose tokens name
-  this plugin, which the app knows whether or not the author wrote a word; then one sentence on
-  what a plugin is and what refusing costs; author, version, origin and hash under "Details".
-  The manifest takes `description_<locale>` beside `description`, as content takes `name_<code>`
-  (`../internals/plugins.md` §2 and §7 — a key an older app's strict manifest rejects, so it is
-  said in the compatibility contract).
-
 - [~] **PLG-TAILS · a sheet cannot tell that a plugin is a DIFFERENT VERSION of the one it was
   built with.** The sheet names each plugin it counts on and is not getting, and why
   (`../internals/plugins.md` §1), which covers a character opened on an install without the plugin.
