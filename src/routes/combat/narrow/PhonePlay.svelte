@@ -7,9 +7,7 @@
 	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import NarrowHead from './NarrowHead.svelte';
-	import Controls from '../blocks/Controls.svelte';
-	import Turnbar from '../blocks/Turnbar.svelte';
-	import TimeSkip from '../blocks/TimeSkip.svelte';
+	import PlayStrip from './PlayStrip.svelte';
 	import Playbar from '../blocks/Playbar.svelte';
 	import PanelCard from '../blocks/PanelCard.svelte';
 	import CombatStrip from '../blocks/CombatStrip.svelte';
@@ -47,10 +45,7 @@
 
 <div class="phone-play">
 	<NarrowHead {c} {s} />
-	<div class="phone-strip">
-		<Controls {c} />
-		{#if c.play.inCombat}<Turnbar {c} />{:else}<TimeSkip />{/if}
-	</div>
+	<PlayStrip {c} />
 	<PluginNeeds issues={s.deriveIssues} />
 
 	<div class="phone-body" role="tabpanel" id="phone-body" aria-labelledby={`phone-tab-${on?.id}`}>
@@ -92,23 +87,6 @@
 		gap: var(--space-2);
 		height: calc(100dvh - var(--column-play-top, 7rem));
 		min-height: 24rem;
-	}
-	.phone-strip {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		overflow-x: auto;
-	}
-	.phone-strip > :global(*) {
-		flex: none;
-	}
-	.phone-strip :global(.controls) {
-		flex-wrap: nowrap;
-		margin-bottom: 0;
-	}
-	.phone-strip :global(.combat-bar) {
-		margin-bottom: 0;
 	}
 	.phone-body {
 		flex: 1;

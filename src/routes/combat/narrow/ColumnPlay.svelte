@@ -8,9 +8,7 @@
 	import { _ } from '#lib/i18n/index.ts';
 	import { playLayout } from '../play-layout.svelte';
 	import NarrowHead from './NarrowHead.svelte';
-	import Controls from '../blocks/Controls.svelte';
-	import Turnbar from '../blocks/Turnbar.svelte';
-	import TimeSkip from '../blocks/TimeSkip.svelte';
+	import PlayStrip from './PlayStrip.svelte';
 	import Playbar from '../blocks/Playbar.svelte';
 	import PanelCard from '../blocks/PanelCard.svelte';
 	import CombatStrip from '../blocks/CombatStrip.svelte';
@@ -30,12 +28,7 @@
 
 <div class="column-play">
 	<NarrowHead {c} {s} />
-	<!-- ONE strip, as the mock draws it: the controls and the turn or the passing of time side by side,
-	     sliding sideways when the window is too narrow for both rather than taking a second row -->
-	<div class="column-strip">
-		<Controls {c} />
-		{#if c.play.inCombat}<Turnbar {c} />{:else}<TimeSkip />{/if}
-	</div>
+	<PlayStrip {c} />
 
 	<PluginNeeds issues={s.deriveIssues} />
 
@@ -87,23 +80,6 @@
 		gap: var(--space-2);
 		height: calc(100dvh - var(--column-play-top, 7rem));
 		min-height: 24rem;
-	}
-	.column-strip {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		overflow-x: auto;
-	}
-	.column-strip > :global(*) {
-		flex: none;
-	}
-	.column-strip :global(.controls) {
-		flex-wrap: nowrap;
-	}
-	.column-strip :global(.combat-bar),
-	.column-play :global(.controls) {
-		margin-bottom: 0;
 	}
 	.panes {
 		flex: 1;
