@@ -212,10 +212,9 @@
   dialog): one sentence saying what the go-between is; the options named for WHO the go-between
   is — through the public server, through your server, directly on your network only — each with
   who can join and who sees what, the explanation following pointer and keyboard (`../internals/ui.md`
-  ▸ the UX pattern contract, 24). Settings ▸ Table says the same. **Open, for the maintainer:**
-  whether the choice moves into a Settings ▸ Privacy and security section beside plugins, update
-  checks, pack fetching and the bug report — everything that decides what leaves the machine —
-  with the Table screen pointing there.
+  ▸ the UX pattern contract, 24). Settings ▸ Table says the same, and the choice stays there — the
+  maintainer's call, over a Settings ▸ Privacy and security section gathering everything that
+  decides what leaves the machine.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
