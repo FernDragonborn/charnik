@@ -189,8 +189,8 @@ short on purpose: a word already self-evident inside its component (`.pip`, `.mo
 ## A narrow window
 
 A phone, or a desktop window dragged small — the same thing, and `MobileWarning` says out loud that
-it is alpha. The app has ONE narrow threshold, **800px**, shared by the root layout's rules and that
-banner, so the warning and the rules that make it survivable agree on where narrow starts. A view
+it is alpha. The app has ONE narrow threshold, **800px**, shared by the root layout's rules, that
+banner and every script that asks (`config/narrow-window.ts`), so the warning and the rules that make it survivable agree on where narrow starts. A view
 whose own floor is higher names its own width instead (the combat stat grid and the settings tab
 strip both at 640px): that number is a fact about the box's min-content, never about a device.
 

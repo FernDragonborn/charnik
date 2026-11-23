@@ -267,10 +267,7 @@ position and are given per wave, because most of them were learned the hard way.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.
-  2. **TABLE-REQUEST-PLAYBAR** — `play-layout.md`, its wide-desktop half (H2). A GM's request
-     waits in the playbar, which widens for it, instead of a dialog over the whole sheet. Its phone
-     and narrow-desktop forms ship with those layouts.
-  3. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
+  2. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
 

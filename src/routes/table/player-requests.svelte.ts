@@ -128,6 +128,28 @@ export class PlayerRequests {
 	/** The roll the GM asked for, open in the dice tray and not rolled yet. */
 	inTray = $state<PendingRequest | null>(null);
 
+	/** The request in front of the player: the first that waits, unless a roll is being built in the
+	 *  tray, which it would cover. */
+	get shown(): PendingRequest | undefined {
+		return this.inTray ? undefined : this.requests[0];
+	}
+
+	/** True while the play screen's playbar stands wide enough to hold a request: it is answered
+	 *  there, beside the sheet, and the dialog is for every other screen. */
+	playbarHolds = $state(false);
+
+	/** What a hit comes to once this character's defense against its type applies. */
+	defendedOf = (request: TableRequest) =>
+		request.kind === TABLE_REQUEST.damage
+			? combat.hp.previewOf({ amount: request.amount, type: request.type })
+			: null;
+
+	/** Why a request this sheet cannot carry out can only be declined. */
+	cannotSay = (request: TableRequest): string =>
+		request.kind === TABLE_REQUEST.effect
+			? t('table.prompt.cannotEffect', { id: request.id })
+			: t('table.prompt.cannotRoll');
+
 	private stopBuildingInTray(): void {
 		if (this.inTray) combat.rolls.handNextTrayRollTo(null);
 		this.inTray = null;

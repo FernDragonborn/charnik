@@ -268,12 +268,15 @@ it says yes — so a release build, which has no table link, shows neither.
 - **A player's seat**: where the connection stands, the code to read to the GM until they are let
   in, and one sentence saying what the GM sees and what they do not.
 
-**A request is raised over whatever screen the player is on** (`TableRequestDialog`, mounted by
-the layout) as the house dialog, with no way out but Decline and its accept button — Escape and a
-click outside answer nothing. It says what is asked in this app's own words, shows what a hit
-comes to after the character's defense against its type, and counts the requests waiting behind
-it. A request this sheet cannot carry out leaves the accept button blocked with its reason beside
-it. The layout also starts `TableVM.keepPublishing`, which tells the table whenever what it sees
+**A request waits beside the sheet on the play screen and is raised over every other screen.** At a
+desktop width the playbar holds it — the strip widens for it, the two long pass-time steps give way,
+and one glow marks its arrival — and the roll log puts it first with every answer, Build in the tray
+among them, which the strip has no room for. Anywhere else, and below the narrow threshold, it is
+`TableRequestDialog`, mounted by the layout, as the house dialog, with no way out but its answers —
+Escape and a click outside answer nothing. Every place says what is asked in this app's own words,
+shows what a hit comes to after the character's defense against its type, and counts the requests
+waiting behind it, and all three offer the same answers (`TableRequestAnswers`). A request this
+sheet cannot carry out leaves the accept button blocked with its reason on it. The layout also starts `TableVM.keepPublishing`, which tells the table whenever what it sees
 of the open character changes and writes every roll the sheet makes into the table's log.
 
 **Both seats show the table's log** (`TableLogPanel`): the rolls this app holds, newest first,

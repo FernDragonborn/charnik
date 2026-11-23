@@ -975,19 +975,20 @@ svg.hand-drawn {
 .btn.danger:hover:not(:disabled) {
 	border-color: var(--color-accent);
 }
-/* inside a dialog's footer the answer is the light button and the irreversible one is framed, so the
-   colour of the brand stands only where something will be gone (`ui.md` ▸ Shared controls) */
-.dialog .btn.primary {
+/* the answer to a question the system asks — in a dialog, or where a GM's request waits beside the
+   sheet (`.system-question`) — is the light button and the irreversible one is framed, so the colour
+   of the brand stands only where something will be gone (`ui.md` ▸ Shared controls) */
+:is(.dialog, .system-question) .btn.primary {
 	background: var(--color-text);
 	border-color: var(--color-text);
 	color: var(--color-bg);
 }
-.dialog .btn.primary:hover:not(:disabled) {
+:is(.dialog, .system-question) .btn.primary:hover:not(:disabled) {
 	background: var(--color-text);
 	border-color: var(--color-text);
 	opacity: 0.88;
 }
-.dialog .btn.danger {
+:is(.dialog, .system-question) .btn.danger {
 	border-color: var(--color-accent-deep);
 }
 .btn:disabled {

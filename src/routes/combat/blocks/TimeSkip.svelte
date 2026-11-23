@@ -9,6 +9,7 @@
 	import { provenance } from '#lib/actions/provenance.ts';
 	import { combat } from '../combat-view-model.svelte';
 	import { _ } from '#lib/i18n/index.ts';
+	import { table } from '../../table/table-view-model.svelte';
 
 	// key → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd). The step is the
 	// app's own vocabulary, and its abbreviation is not "rd" in every language
@@ -18,14 +19,21 @@
 		['combat.timeSkip.tenMinutes', 100],
 		['combat.timeSkip.hour', 600],
 	] as const;
+	/** While a GM's request widens the playbar beside it, the two long steps give way — folding
+	 *  their width as well as their ink, so nothing after them jumps. */
+	const FOLDING_FROM = 2;
+	const givingWay = $derived(table.asks.playbarHolds && !!table.asks.shown);
 </script>
 
 <section class="combat-bar">
 	<span class="bar-label"><Icon name="timer" size={13} /> {$_('combat.timeSkip.title')}</span>
-	{#each STEPS as [key, rounds] (key)}
+	{#each STEPS as [key, rounds], i (key)}
 		<button
 			type="button"
 			class="step"
+			class:gives-way={i >= FOLDING_FROM && givingWay}
+			aria-hidden={i >= FOLDING_FROM && givingWay ? true : undefined}
+			tabindex={i >= FOLDING_FROM && givingWay ? -1 : undefined}
 			onclick={() => combat.economy.advanceTime(rounds)}
 			use:provenance={$_('combat.timeSkip.hint', { values: { rounds } })}>{$_(key)}</button
 		>
@@ -65,6 +73,13 @@
 		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 		color: var(--color-text-muted);
+		max-width: 8rem;
+		overflow: hidden;
+		transition:
+			opacity 140ms linear,
+			max-width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+			padding 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+			margin 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 	/* a boundary is a different KIND of press than "skip ten minutes": it fires a recharge */
 	.step.boundary {
@@ -73,6 +88,16 @@
 		gap: var(--space-1);
 		border-color: var(--color-border-strong);
 		color: var(--color-text);
+	}
+	.step.gives-way {
+		opacity: 0;
+		max-width: 0;
+		padding-inline: 0;
+		border-width: 0;
+		margin-inline-start: calc(-1 * var(--space-2));
+	}
+	:global(:root[data-motion='reduced']) .step {
+		transition: none;
 	}
 	.step:hover {
 		border-color: var(--color-border-strong);

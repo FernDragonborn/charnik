@@ -181,7 +181,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (107)
+## Global CSS classes (108)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -257,7 +257,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.on` | components.css | the SELECTED chip. |
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
-| `.primary` | components.css | inside a dialog's footer the answer is the light button and the irreversible one is framed, so the colour of the bran… |
+| `.primary` | components.css | the answer to a question the system asks — in a dialog, or where a GM's request waits beside the sheet (`.system-ques… |
 | `.prose-break` | components.css | The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every <br>): the source separa… |
 | `.prose-table-scroll` | ArticleProse.svelte :global |  |
 | `.provenance-description` | components.css | the same text as an accessible description. |
@@ -283,6 +283,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.slabtoggle` | components.css | whole label clickable to collapse (chev + name), no button box |
 | `.source-line` | components.css |  |
 | `.stepper` | components.css | --- number stepper: a count you can nudge either way (class level, ability scores, item qty) --- |
+| `.system-question` | components.css | the answer to a question the system asks — in a dialog, or where a GM's request waits beside the sheet (`.system-ques… |
 | `.table-row` | components.css |  |
 | `.table-row-roll` | components.css |  |
 | `.table-row-spacer` | components.css |  |
@@ -571,7 +572,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (216 modules)
+## Library functions & types (217 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1196,6 +1197,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function isDemo` — Show the demo banner: the hosted preview, a `PUBLIC_DEMO=true` build, OR dev (so it can be * previewed while developi…
 - `function isReadOnlyContent` — * Whether shipped content is READ-ONLY here → block saves with a message.
+
+### `src/lib/config/narrow-window.ts`
+
+- `const NARROW_WINDOW_QUERY` — Where the app's narrow layout starts (`docs/internals/ui.md` ▸ A narrow window): one width, so * the warning, the lay…
 
 ### `src/lib/content/content-vocabulary.ts`
 
@@ -2764,4 +2769,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 107 global classes · 63 components · 1693 exports across 233 modules · 123 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1694 exports across 234 modules · 123 duplicate suspects._

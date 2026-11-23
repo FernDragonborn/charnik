@@ -6,8 +6,12 @@
 	// `?seat=player&state=waiting|connected|reconnecting`, `?seat=none&problem=<reason>`, and
 	// `&ask=damage|roll|effect|unknown` to raise the request prompt over it. `&tray` mounts the play
 	// screen's dice tray, so a roll can be built in it as on that screen. `&log` fills the table's log, and `&remembered` lists two tables to return to.
+	// `&go=combat` then opens the play screen on the same state, where a desktop-wide playbar holds the
+	// request instead of the prompt.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { loadContentStore } from '#lib/content/store.svelte.ts';
 	import {
 		AUDIENCE,
@@ -191,6 +195,7 @@
 				return Promise.resolve();
 			};
 		seeded = true;
+		if (asked.get('go') === 'combat') void goto(resolve('/combat'));
 	});
 </script>
 

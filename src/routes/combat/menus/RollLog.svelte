@@ -21,8 +21,14 @@
 	import { resourceName } from '#lib/play/resources.ts';
 	import RollRow from '#lib/components/RollRow.svelte';
 	import { deltaPhrases } from '../delta-text';
+	import { table } from '../../table/table-view-model.svelte';
+	import TableRequestLine from '../../table/TableRequestLine.svelte';
+	import TableRequestAnswers from '../../table/TableRequestAnswers.svelte';
 
 	const actions = $derived(actionRuns(combat.journal.log));
+	/** What the GM is waiting on stands above the rolls, with every answer — the tray among them,
+	 *  which the playbar has no room to offer. */
+	const asked = $derived(table.asks.shown);
 
 	/** An act and what followed from it: the act stays in view, what it led to folds away
 	 *  (audit-oct-27 U7) — the delta under the act already says what moved. */
@@ -46,6 +52,18 @@
 </script>
 
 <div class="log-head"><span class="menu-title eyebrow">{$_('combat.log.rollLog')}</span></div>
+{#if asked}
+	<section class="log-asked system-question" aria-labelledby="log-asked-what">
+		<span class="eyebrow">{$_('table.prompt.title')}</span>
+		<p class="log-asked-what" id="log-asked-what">
+			<TableRequestLine
+				request={asked.request}
+				sheetState={(id) => table.asks.stateFor(id)?.label}
+			/>
+		</p>
+		<div class="log-asked-answers"><TableRequestAnswers pending={asked} /></div>
+	</section>
+{/if}
 <div class="log-scroll">
 	{#each actions as run, i (i)}
 		<div
@@ -103,6 +121,26 @@
 		padding: var(--space-2-5) var(--space-3) var(--space-1-5);
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
+	.log-asked {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1-5);
+		margin: 0 var(--space-3) var(--space-2);
+		padding: var(--space-2) var(--space-2-5);
+		border: 1px solid var(--color-accent-deep);
+		border-radius: var(--radius);
+		background: var(--color-accent-soft);
+	}
+	.log-asked-what {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 600;
+	}
+	.log-asked-answers {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-1-5);
+	}
 	.log-head .menu-title {
 		font-size: var(--font-size-micro);
 	}

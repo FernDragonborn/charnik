@@ -223,20 +223,17 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
 
 ## The table on each layout
 
-- [ ] **TABLE-REQUEST-PLAYBAR · a GM's request waits beside the sheet, not over it.** Today
-  `TableRequestDialog` covers whatever screen the player is on (`../internals/table-link.md`), so the
-  sheet the answer depends on is hidden behind the question. The dialog's guarantees stay on every
-  layout: no answer by Escape or a click elsewhere, the hit after defenses, the count waiting behind
-  it, a blocked Roll with its reason, and nothing applies itself.
-  - **Wide desktop — variant H2** (`design-preview/service-dialogs-and-requests.html`): while a
-    request waits the playbar widens, animated, so Decline, Roll and the log all fit; the bar marks
-    the arrival with one pulse, not a repeating one. This half is in 0.9.0.
+- [~] **TABLE-REQUEST-PLAYBAR · a GM's request waits beside the sheet, not over it.** The wide
+  desktop's form is built (`../internals/table-link.md` ▸ A request waits beside the sheet): the
+  playbar holds it, the log puts it first with every answer, and the dialog asks on every other screen and below the narrow
+  threshold. The guarantees stay on every layout: no answer by Escape or a click elsewhere, the hit
+  after defenses, the count waiting behind it, a blocked answer with its reason, and nothing applies
+  itself. Left:
   - **Phone — drawn** (P2, P11, P12, P35): the request sits in the log's own strip on every tab,
     under the thumb ("GM asks · DEX save · Roll +2"); its count opens the queue — what is owed, then
     the log — and incoming damage shows what it becomes after your defenses with Take it.
   - **Narrow desktop — not drawn.** H2 adapted to the bottom log line of D1–D6; drawn with
     NARROW-DESKTOP.
-  On a screen with no playbar the request still needs a place — decided with the build.
 
 - [ ] **TABLE-ENTRY · where a player looks for the table.** The maintainer, the first time, looked
   for tables beside the roster and did not see the Table item in the menu. A table is sat at AS a

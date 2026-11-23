@@ -1,26 +1,19 @@
 <script lang="ts">
-	// What the GM asks, raised over whatever screen the player is on. The app is asking a question,
-	// so it wears the house dialog shell — and it has no way out but its two buttons: a stray click
-	// on the backdrop must neither take a hit nor turn a roll down.
+	// What the GM asks, raised over whatever screen the player is on — except the play screen at a
+	// desktop width, whose playbar holds it beside the sheet the answer depends on. The app is asking
+	// a question, so it wears the house dialog shell, and it has no way out but its answers: a stray
+	// click on the backdrop must neither take a hit nor turn a roll down.
 	import DialogShell from '#lib/components/DialogShell.svelte';
 	import { _ } from '#lib/i18n/index.ts';
-	import { TABLE_REQUEST } from '#lib/table-link/types.ts';
-	import { combat } from '../combat/combat-view-model.svelte';
 	import { table } from './table-view-model.svelte';
 	import TableRequestLine from './TableRequestLine.svelte';
+	import TableRequestAnswers from './TableRequestAnswers.svelte';
 
-	// one ask at a time: the next waits while a roll is being built in the tray, which it would cover
-	const pending = $derived(table.asks.inTray ? undefined : table.asks.requests[0]);
+	const pending = $derived(table.asks.playbarHolds ? undefined : table.asks.shown);
 	const waiting = $derived(table.asks.requests.length);
 	const request = $derived(pending?.request);
+	const defended = $derived(request ? table.asks.defendedOf(request) : null);
 	const takeable = $derived(!!request && table.asks.canAccept(request));
-	const buildable = $derived(!!request && table.asks.canBuildInTray(request));
-	/** What a hit comes to once this character's defense against its type applies. */
-	const defended = $derived(
-		request?.kind === TABLE_REQUEST.damage
-			? combat.hp.previewOf({ amount: request.amount, type: request.type })
-			: null,
-	);
 </script>
 
 {#if pending && request}
@@ -46,33 +39,12 @@
 					</p>
 				{/if}
 				{#if !takeable}
-					<p class="table-request-cannot" id="table-request-cannot">
-						{request.kind === TABLE_REQUEST.effect
-							? $_('table.prompt.cannotEffect', { values: { id: request.id } })
-							: $_('table.prompt.cannotRoll')}
-					</p>
+					<p class="table-request-cannot">{table.asks.cannotSay(request)}</p>
 				{/if}
 			</div>
 			<footer class="dialog-foot">
 				<span class="dialog-spacer"></span>
-				<button class="btn ghost" onclick={() => void table.asks.decline(pending)}
-					>{$_('table.prompt.decline')}</button
-				>
-				<!-- offered only where the tray is mounted: the play screen -->
-				{#if buildable}
-					<button class="btn" onclick={() => void table.asks.buildInTray(pending)}
-						>{$_('table.prompt.inTray')}</button
-					>
-				{/if}
-				<!-- blocked, not disabled: a disabled control takes no focus, so its reason could not be read -->
-				<button
-					class="btn primary"
-					class:is-blocked={!takeable}
-					aria-disabled={!takeable}
-					aria-describedby={takeable ? undefined : 'table-request-cannot'}
-					onclick={() => void table.asks.accept(pending)}
-					>{$_(`table.prompt.accept.${request.kind}`)}</button
-				>
+				<TableRequestAnswers {pending} />
 			</footer>
 		</DialogShell>
 	{/key}

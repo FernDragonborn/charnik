@@ -19,6 +19,11 @@
 	import { rollToastModel, ROLL_LAYOUT } from '#lib/dice/roll-toast.ts';
 	import RollRow from '#lib/components/RollRow.svelte';
 	import { isTurnAct, LOG_KIND } from '#lib/character/log-kind.ts';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { NARROW_WINDOW_QUERY } from '#lib/config/narrow-window.ts';
+	import { table } from '../../table/table-view-model.svelte';
+	import TableRequestLine from '../../table/TableRequestLine.svelte';
+	import TableRequestAnswers from '../../table/TableRequestAnswers.svelte';
 
 	const { openMenu } = combat;
 	const log = $derived(combat.journal.log);
@@ -28,6 +33,20 @@
 	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
 	// toast expires mid-decision and click-anywhere dismisses it, so it announces and these two act.
 	// `savagePendingEntry` is the one roll whose weapon damage can still be rerolled this turn.
+	// A GM's request waits HERE on a desktop-wide play screen — beside the sheet the answer depends
+	// on, not over it — and the strip widens for it. Narrower, and on every other screen, the dialog
+	// asks instead (`TableRequestDialog`).
+	const narrow = new MediaQuery(NARROW_WINDOW_QUERY);
+	$effect(() => {
+		table.asks.playbarHolds = !narrow.current;
+		return () => {
+			table.asks.playbarHolds = false;
+		};
+	});
+	const pending = $derived(narrow.current ? undefined : table.asks.shown);
+	const waiting = $derived(table.asks.requests.length);
+	const defended = $derived(pending ? table.asks.defendedOf(pending.request) : null);
+
 	const rerollDamage = $derived(
 		last && combat.savageLabel && last === combat.savagePendingEntry
 			? {
@@ -41,8 +60,42 @@
 </script>
 
 <div class="playbar">
-	<div class="last-roll" class:empty={!last}>
-		{#if last}
+	<!-- said once as it arrives: a live region announces a CHANGE, so it stands here empty before the
+	     request does, rather than arriving with its words already in it -->
+	<span class="visually-hidden" role="status"
+		>{#if pending}{$_('table.prompt.title')}: <TableRequestLine
+				request={pending.request}
+				sheetState={(id) => table.asks.stateFor(id)?.label}
+			/>{/if}</span
+	>
+	<div class="last-roll" class:empty={!last && !pending} class:asking={!!pending}>
+		{#if pending}
+			<!-- keyed by the request: the next one arrives as a new face, so a second press meant for
+			     the first cannot answer what replaced it -->
+			{#key pending.requestId}
+				<div class="request-face" role="group" aria-labelledby="playbar-request-what">
+					<div class="request-said">
+						<span class="request-who">{$_('table.prompt.title')}</span>
+						<span class="request-what" id="playbar-request-what"
+							><TableRequestLine
+								request={pending.request}
+								sheetState={(id) => table.asks.stateFor(id)?.label}
+							/>{#if waiting > 1}<span class="count-pill">1 / {waiting}</span>{/if}</span
+						>
+						{#if defended}
+							<span class="request-who"
+								>{$_(`combat.hp.damagePreview.${defended.bucket}`, {
+									values: { raw: defended.raw, final: defended.final },
+								})}</span
+							>
+						{/if}
+					</div>
+					<div class="request-answers system-question">
+						<TableRequestAnswers {pending} withTray={false} />
+					</div>
+				</div>
+			{/key}
+		{:else if last}
 			<RollRow
 				model={rollToastModel(last, $_)}
 				onAdvantage={() => combat.journal.amendAdvantage(last)}
@@ -82,6 +135,70 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		overflow: hidden;
+		/* a request: the strip widens for it and takes the asking colour; one glow as it settles,
+		   then still. Width moves rather than jumps (ui.md ▸ 23), on the mock's one curve and one
+		   length (gm-request-h2-motion.html) */
+		--playbar-grow: 320ms;
+		--playbar-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+		transition:
+			min-width var(--playbar-grow) var(--playbar-ease),
+			border-color var(--playbar-grow) var(--playbar-ease),
+			background-color var(--playbar-grow) var(--playbar-ease);
+	}
+	.last-roll.asking {
+		min-width: min(34rem, 100%);
+		border-color: var(--color-accent-deep);
+		background: var(--color-accent-soft);
+		animation: playbar-arrival 1.4s ease-out var(--playbar-grow) 1;
+	}
+	@keyframes playbar-arrival {
+		from {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 15%, transparent);
+		}
+		to {
+			box-shadow: 0 0 0 5px transparent;
+		}
+	}
+	:global(:root[data-motion='reduced']) .last-roll {
+		transition: none;
+		animation: none;
+	}
+	.request-face {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		min-width: 0;
+	}
+	.request-said {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		flex: 1;
+		min-width: 0;
+		padding: 0 14px;
+	}
+	.request-who {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	.request-what {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: var(--font-size-md);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.request-answers {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
+		padding: 0 var(--space-2-5);
+		border-inline-start: 1px solid var(--color-border);
+		align-self: stretch;
 	}
 	.no-roll {
 		display: flex;
