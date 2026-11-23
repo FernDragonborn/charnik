@@ -45,17 +45,17 @@
 			"putBack": "Put back what was here"
 		},
 		"conflict": {
-			"title": "This character changed outside Charnik",
-			"subtitle": "Another program wrote the file of {name} while it was open here. Nothing has been overwritten — choose which state to keep.",
-			"mine": "On your screen",
+			"title": "Changed in two places at once",
+			"subtitle": "Another program wrote this character’s file while there were changes here it did not have — most often a sync from another device. Nothing was overwritten. Choose which state to keep, or keep both.",
+			"mine": "Here",
 			"file": "In the file",
 			"summary": "Level {level} · {hp} hit points",
 			"unreadable": "The file can no longer be read: {error}",
-			"keepMine": "Keep mine",
-			"useFile": "Use the file",
-			"keepBoth": "Save mine as a copy",
+			"keepThis": "Keep this one",
+			"keepBoth": "Keep both",
+			"bothHint": "Keeping one loses the other. Keeping both makes the state here a character of its own, “{copy}”.",
 			"copyName": "{name} (copy)",
-			"failed": "That could not be saved"
+			"failed": "Couldn’t save"
 		}
 	},
 	"build": {
@@ -150,10 +150,11 @@
 			}
 		},
 		"edition": {
-			"title": "Switch to {system}?",
-			"subtitle": "{count, plural, one {One pick has no equivalent in that edition and will be cleared.} other {# picks have no equivalent in that edition and will be cleared.}}",
-			"keep": "Stay here",
-			"switch": "Switch to {system}"
+			"ask": "Switch edition",
+			"subtitle": "{count, plural, one {{system} has no match for one pick of this character, so it comes off the sheet:} other {{system} has no match for # picks of this character, so they come off the sheet:}}",
+			"undoHint": "Everything else stays as it is. Change your mind — Undo ↶ in the builder brings back the edition and these picks together.",
+			"keep": "Stay on {system}",
+			"switch": "{count, plural, one {Switch and remove 1 pick} other {Switch and remove # picks}}"
 		},
 		"enforcement": "Enforcement",
 		"feats": {

@@ -10,7 +10,7 @@
 	import { toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { SYSTEMS, SYSTEM_SHORT_LABELS } from '$lib/rules/pipeline';
+	import { SYSTEMS, SYSTEM_LABELS, SYSTEM_SHORT_LABELS } from '$lib/rules/pipeline';
 	import { signed } from '$lib/util/format';
 	import EditionSwitchDialog from './EditionSwitchDialog.svelte';
 	import { provenance } from '$lib/actions/provenance';
@@ -154,7 +154,8 @@
 
 {#if pendingSystem}
 	<EditionSwitchDialog
-		system={pendingSystem}
+		system={SYSTEM_LABELS[pendingSystem]}
+		from={SYSTEM_LABELS[b.draft.system]}
 		{losing}
 		onConfirm={() => {
 			if (pendingSystem) b.switchSystem(pendingSystem);

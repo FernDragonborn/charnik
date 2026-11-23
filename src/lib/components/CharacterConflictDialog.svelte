@@ -41,45 +41,54 @@
 	<DialogShell
 		titleId="character-conflict-title"
 		title={$_('character.conflict.title')}
-		subtitle={$_('character.conflict.subtitle', { values: { name: conflict.mine.build.name } })}
-		width="min(620px, calc(100vw - 2 * var(--space-4)))"
+		sub={conflict.mine.build.name}
+		subtitle={$_('character.conflict.subtitle')}
+		width="min(640px, calc(100vw - 2 * var(--space-4)))"
 	>
-		<div class="dialog-body sides">
-			<section class="dialog-card">
-				<span class="dialog-label">{$_('character.conflict.mine')}</span>
-				<span class="who">{conflict.mine.build.name}</span>
-				<span class="what"
-					>{$_('character.conflict.summary', { values: summaryOf(conflict.mine) })}</span
-				>
-			</section>
-			<section class="dialog-card">
-				<span class="dialog-label">{$_('character.conflict.file')}</span>
-				{#if theirs}
-					<span class="who">{theirs.build.name}</span>
-					<span class="what">{$_('character.conflict.summary', { values: summaryOf(theirs) })}</span
-					>
-				{:else}
+		<div class="dialog-body">
+			<div class="sides">
+				<section class="dialog-card">
+					<span class="dialog-label">{$_('character.conflict.mine')}</span>
 					<span class="what"
-						>{$_('character.conflict.unreadable', {
-							values: { error: conflict.file.error ?? '' },
-						})}</span
+						>{$_('character.conflict.summary', { values: summaryOf(conflict.mine) })}</span
 					>
-				{/if}
-			</section>
+					<button class="btn" disabled={settling} onclick={() => settle(CONFLICT_CHOICE.mine)}
+						>{$_('character.conflict.keepThis')}</button
+					>
+				</section>
+				<section class="dialog-card">
+					<span class="dialog-label">{$_('character.conflict.file')}</span>
+					{#if theirs}
+						<span class="what"
+							>{$_('character.conflict.summary', { values: summaryOf(theirs) })}</span
+						>
+					{:else}
+						<span class="what"
+							>{$_('character.conflict.unreadable', {
+								values: { error: conflict.file.error ?? '' },
+							})}</span
+						>
+					{/if}
+					<button
+						class="btn"
+						disabled={settling || !theirs}
+						onclick={() => settle(CONFLICT_CHOICE.file)}>{$_('character.conflict.keepThis')}</button
+					>
+				</section>
+			</div>
+			<p class="hint">
+				{$_('character.conflict.bothHint', {
+					values: {
+						copy: $_('character.conflict.copyName', { values: { name: conflict.mine.build.name } }),
+					},
+				})}
+			</p>
 		</div>
 
 		<footer class="dialog-foot">
-			<button class="btn ghost" disabled={settling} onclick={() => settle(CONFLICT_CHOICE.copy)}
-				>{$_('character.conflict.keepBoth')}</button
-			>
 			<span class="dialog-spacer"></span>
-			<button
-				class="btn"
-				disabled={settling || !theirs}
-				onclick={() => settle(CONFLICT_CHOICE.file)}>{$_('character.conflict.useFile')}</button
-			>
-			<button class="btn" disabled={settling} onclick={() => settle(CONFLICT_CHOICE.mine)}
-				>{$_('character.conflict.keepMine')}</button
+			<button class="btn primary" disabled={settling} onclick={() => settle(CONFLICT_CHOICE.copy)}
+				>{$_('character.conflict.keepBoth')}</button
 			>
 		</footer>
 	</DialogShell>
@@ -87,8 +96,9 @@
 
 <style>
 	.sides {
-		flex-direction: row;
+		display: flex;
 		flex-wrap: wrap;
+		gap: var(--space-3);
 	}
 	.sides section {
 		flex: 1 1 14rem;
@@ -96,11 +106,18 @@
 		flex-direction: column;
 		gap: var(--space-1);
 	}
-	.who {
+	/* the version is the number to compare, so it reads as one */
+	.what {
 		font-family: var(--font-display);
 		font-weight: 600;
 	}
-	.what {
+	.sides .btn {
+		align-self: flex-start;
+		margin-top: var(--space-2);
+	}
+	.hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 	}
 </style>

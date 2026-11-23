@@ -8,11 +8,15 @@
 
 	let {
 		system,
+		from,
 		losing,
 		onConfirm,
 		onCancel,
 	}: {
+		/** The edition switched to, as the player reads it ("5.5e (2024)"). */
 		system: string;
+		/** The edition the character is in now, as the player reads it. */
+		from: string;
 		/** Every pick the target edition has no row for, in the order the draft holds them. */
 		losing: { type: ContentType; ref: string; name: string }[];
 		onConfirm: () => void;
@@ -22,8 +26,9 @@
 
 <DialogShell
 	titleId="edition-switch-title"
-	title={$_('build.edition.title', { values: { system } })}
-	subtitle={$_('build.edition.subtitle', { values: { count: losing.length } })}
+	ask={$_('build.edition.ask')}
+	title={system}
+	subtitle={$_('build.edition.subtitle', { values: { count: losing.length, system } })}
 	width="min(560px, calc(100vw - 2 * var(--space-4)))"
 	onDismiss={onCancel}
 >
@@ -36,13 +41,14 @@
 				</li>
 			{/each}
 		</ul>
+		<p class="hint">{$_('build.edition.undoHint')}</p>
 	</div>
 
 	<footer class="dialog-foot">
+		<button class="btn" onclick={onCancel}>{$_('build.edition.keep', { values: { system: from } })}</button>
 		<span class="dialog-spacer"></span>
-		<button class="btn ghost" onclick={onCancel}>{$_('build.edition.keep')}</button>
 		<button class="btn primary" onclick={onConfirm}
-			>{$_('build.edition.switch', { values: { system } })}</button
+			>{$_('build.edition.switch', { values: { count: losing.length } })}</button
 		>
 	</footer>
 </DialogShell>
@@ -64,6 +70,11 @@
 		padding: var(--space-1) var(--space-2);
 		border-radius: var(--radius-sm);
 		background: var(--color-surface-2);
+	}
+	.hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
 	}
 	.pname {
 		font-family: var(--font-display);
