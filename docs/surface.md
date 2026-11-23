@@ -181,7 +181,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (105)
+## Global CSS classes (107)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -227,6 +227,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.drag-handle` | components.css | The grip is a SPAN with a button role, not a <button>: `svelte-dnd-action` discards a press whose target has a `value… |
 | `.dragging-panel` | components.css |  |
 | `.durpill` | components.css | duration / generic mono pill |
+| `.explanation-stack` | components.css | Texts of different lengths said in one place: every one stands in the same grid cell, so the box keeps the height of … |
 | `.eyebrow` | components.css |  |
 | `.focus-halo` | components.css |  |
 | `.focus-key` | components.css |  |
@@ -240,6 +241,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
 | `.inv-row` | components.css |  |
 | `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its popover says why. |
+| `.is-dormant` | components.css |  |
 | `.is-open` | components.css |  |
 | `.is-path` | components.css |  |
 | `.is-pinned` | components.css | pinned, it is something being read rather than a note on what is under the pointer: it takes the pointer, so its text… |
@@ -2762,4 +2764,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 105 global classes · 63 components · 1693 exports across 233 modules · 123 duplicate suspects._
+_51 tokens · 107 global classes · 63 components · 1693 exports across 233 modules · 123 duplicate suspects._

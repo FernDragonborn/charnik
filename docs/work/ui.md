@@ -134,19 +134,6 @@
   instance — asks the same question, and answering it once settles the house pattern rather than one
   control. Until then the shipped rendering stands.
 
-- [~] **RELAY-CHOICE · how players reach a table, asked the way a person thinks of it.** The
-  maintainer's playtest: nobody knew what a relay is, and the choice read as a privacy setting —
-  which half of it is. Rendered in `design-preview/service-dialogs-all.html` (the first table's
-  dialog): one sentence saying what the go-between is; the options named for WHO the go-between
-  is — through the public server, through your server, directly on your network only — each with
-  who can join and who sees what, the explanation following pointer and keyboard (`../internals/ui.md`
-  ▸ the UX pattern contract, 24). Settings ▸ Table says the same, and the choice stays there — the
-  maintainer's call, over a Settings ▸ Privacy and security section gathering everything that
-  decides what leaves the machine.
-  **Built:** the first table opened on a device asks once, the public relay chosen
-  (`TableRouteDialog`, over Settings ▸ Table's own choices). **Left:** the explanation follows
-  pointer and keyboard — today it describes only the chosen option.
-
 - [ ] **KEYBOARD-NAV · the keyboard works by one standard, and the play screen by it first.** The
   maintainer's call: settled before new UI is built, so new UI is right by construction. The
   standard, from the WAI-ARIA APG (<https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/>,

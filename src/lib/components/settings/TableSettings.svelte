@@ -21,6 +21,9 @@
 	 *  with no relay unreachable on the local network: said before the question comes. */
 	const onWindows = browser && navigator.userAgent.includes('Windows');
 
+	/** Per choice row, the option the pointer or the keyboard is on; null shows the chosen one's. */
+	let lookingAt = $state<Record<string, string | null>>({});
+
 	const mode = $derived(app.tableRelay.mode);
 	const url = $derived(app.tableRelay.mode === RELAY_MODE.custom ? app.tableRelay.url : '');
 	/** The typed address as it is kept across a switch to another mode and back. */
@@ -66,12 +69,27 @@
 					class="pill-btn"
 					class:accent={current === choice}
 					aria-pressed={current === choice}
+					aria-describedby={`table-${key}-hint-${choice}`}
+					onpointerenter={() => (lookingAt[key] = choice)}
+					onpointerleave={() => (lookingAt[key] = null)}
+					onfocus={() => (lookingAt[key] = choice)}
+					onblur={() => (lookingAt[key] = null)}
 					onclick={() => pick(choice)}>{$_(`settings.table.${key}Name.${choice}`)}</button
 				>
 			{/each}
 		</div>
 	</div>
-	<p class="sec-note table-note">{$_(`settings.table.${key}Hint.${current}`)}</p>
+	<!-- the option looked at explains itself; leaving shows the chosen one again (ui.md ▸ 24) -->
+	<div class="sec-note table-note explanation-stack">
+		{#each options as choice (choice)}
+			<p
+				id={`table-${key}-hint-${choice}`}
+				class:is-dormant={(lookingAt[key] ?? current) !== choice}
+			>
+				{$_(`settings.table.${key}Hint.${choice}`)}
+			</p>
+		{/each}
+	</div>
 {/snippet}
 
 {@render choices('relay', MODES, mode, (picked) => {

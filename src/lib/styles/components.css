@@ -513,6 +513,19 @@ svg.hand-drawn {
 	margin: 0 0 var(--space-4);
 	max-width: 640px;
 }
+/* Texts of different lengths said in one place: every one stands in the same grid cell, so the box
+   keeps the height of the longest and nothing under it moves (ui.md ▸ the UX pattern contract, 23);
+   only the one being said is visible. A dormant text is still there for `aria-describedby`. */
+.explanation-stack {
+	display: grid;
+}
+.explanation-stack > * {
+	grid-area: 1 / 1;
+	margin: 0;
+}
+.explanation-stack > .is-dormant {
+	visibility: hidden;
+}
 /* settings option rows (label + pill options / value), shared by the General + Data tabs and the
    dev previews — one row vocabulary so every settings tab lines up on the same label column */
 .setting-row {
