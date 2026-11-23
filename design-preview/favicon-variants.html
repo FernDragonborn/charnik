@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Favicon — pencil stub, miniature</title>
+<style>
+	:root { --crimson: #cf2b40; --ink: #e6e8ec; --bg: #0f1116; --muted: #878f9d; }
+	* { box-sizing: border-box; }
+	body { margin: 0; padding: 28px; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, 'Segoe UI', sans-serif; }
+	h1 { font-size: 20px; margin: 0 0 6px; }
+	p.note { color: var(--muted); max-width: 980px; margin: 0 0 22px; }
+	h2 { font-size: 15px; margin: 26px 0 10px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+	.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+	.card { border: 1px solid #272c37; border-radius: 10px; padding: 14px; background: #171a21; }
+	.card h3 { margin: 0 0 4px; font-size: 14px; }
+	.card .why { color: var(--muted); font-size: 12px; margin: 0 0 4px; min-height: 36px; }
+	.card .risk { color: #e0a339; font-size: 12px; margin: 0 0 12px; min-height: 36px; }
+	/* two browser chromes, a tab in each, the icon at its real 16px */
+	.tabs { display: grid; gap: 8px; margin-bottom: 12px; }
+	.chrome { display: flex; align-items: flex-end; height: 38px; padding: 0 8px; border-radius: 6px; }
+	.chrome.dark { background: #202124; }
+	.chrome.light { background: #dee1e6; }
+	.tab { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 8px 8px 0 0; font: 12px system-ui; width: 190px; }
+	.dark .tab { background: #35363a; color: #e8eaed; }
+	.light .tab { background: #fff; color: #202124; }
+	.tab svg { width: 16px; height: 16px; flex: none; }
+	.sizes { display: flex; align-items: flex-end; gap: 14px; }
+	.sizes svg { display: block; }
+	.sizes .on-light { background: #fff; border-radius: 6px; padding: 6px; }
+	.sizes .on-dark { background: #202124; border-radius: 6px; padding: 6px; }
+</style>
+</head>
+<body>
+<h1>Favicon — два напрями з брифу</h1>
+<p class="note">Кожен варіант — одна SVG 32×32 у кольорах застосунку. Над кожною — вкладка браузера в темній і світлій
+обгортці, де іконка стоїть у справжні 16px; під нею 32 і 64px. Вибирати з вкладки: це місце, де іконку побачать
+найчастіше. Під назвою — для чого вона мала б читатися, а не що в ній намальовано.</p>
+
+<h2>Олівець-недогризок · аркуш ведуть олівцем, бо його числа весь час міняються</h2>
+<div class="grid" id="pencils"></div>
+
+<h2>Мініатюра на підставці · це твій персонаж на столі</h2>
+<div class="grid" id="minis"></div>
+
+<script>
+	// one 32×32 drawing per variant; the crimson is the brand, the ink reads on both chromes because
+	// every shape carries a dark outline
+	const OUT = '#1a1d24';
+	const V = {
+		pencils: [
+			{
+				name: 'P1 · недогризок навскіс',
+				risk: 'На 16px — олівець, і впізнається одразу; «недогризок» видно лише з 32px.',
+				why: 'Короткий олівець, що ним уже багато писали: загострений кінець, гумка в малиновій оправі.',
+				svg: `<g transform="rotate(-45 16 16)" stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<rect x="11" y="9" width="10" height="11" rx="1" fill="#e0a339"/>
+					<rect x="11" y="6" width="10" height="4" fill="#cf2b40"/>
+					<rect x="11" y="3.5" width="10" height="3" rx="1.2" fill="#e6a6ae"/>
+					<path d="M11 20 L16 28 L21 20 Z" fill="#f1d9b5"/>
+					<path d="M14.6 25.8 L16 28 L17.4 25.8 Z" fill="${OUT}"/></g>`,
+			},
+			{
+				name: 'P2 · недогризок над рядком',
+				risk: 'Рядок на 16px — сіра риска, що сходить за тінь; уже на межі «редагування тексту».',
+				why: 'Той самий олівець щойно провів лінію: «записати», а не «редагувати документ».',
+				svg: `<path d="M4 27.5 C 9 25, 12 29, 17 26.5" fill="none" stroke="#878f9d" stroke-width="2.2" stroke-linecap="round"/>
+					<g transform="rotate(-45 18 13)" stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<rect x="13.5" y="5" width="9" height="10" rx="1" fill="#e0a339"/>
+					<rect x="13.5" y="2.5" width="9" height="3.2" fill="#cf2b40"/>
+					<path d="M13.5 15 L18 22.5 L22.5 15 Z" fill="#f1d9b5"/>
+					<path d="M16.8 20.5 L18 22.5 L19.2 20.5 Z" fill="${OUT}"/></g>`,
+			},
+			{
+				name: 'P3 · стоїть, як огризок у склянці',
+				risk: 'На 16px вертикальний силует може прочитатися як свічка або ракета.',
+				why: 'Вертикальний: товстий короткий стрижень і стерта гумка — силует, що не плутається з пензлем.',
+				svg: `<g stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<path d="M10 14 L16 3 L22 14 Z" fill="#f1d9b5"/>
+					<path d="M14.4 6 L16 3 L17.6 6 Z" fill="${OUT}"/>
+					<rect x="10" y="14" width="12" height="9" fill="#e0a339"/>
+					<rect x="10" y="23" width="12" height="3.5" fill="#cf2b40"/>
+					<rect x="10.5" y="26.5" width="11" height="3" rx="1.4" fill="#e6a6ae"/></g>`,
+			},
+		],
+		minis: [
+			{
+				name: 'M1 · фігура в плащі на круглій підставці',
+				risk: 'Читається як шаховий пішак — найсильніший ризик із шести.',
+				why: 'Голова й плащ на диску — читається як «фігурка», а не як людина-аватар завдяки підставці.',
+				svg: `<g stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<ellipse cx="16" cy="26.5" rx="11" ry="3.6" fill="#cf2b40"/>
+					<path d="M9.5 25.5 L13 11 L19 11 L22.5 25.5 Z" fill="#e6e8ec"/>
+					<circle cx="16" cy="8" r="4.2" fill="#e6e8ec"/></g>`,
+			},
+			{
+				name: 'M2 · фігура з мечем',
+				risk: 'Меч на 16px — дві жовті точки; без нього це той самий пішак.',
+				why: 'Те саме, але піднятий меч: «персонаж у грі», а не шахова фігура.',
+				svg: `<g stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<ellipse cx="15" cy="26.5" rx="10.5" ry="3.6" fill="#cf2b40"/>
+					<path d="M9 25.5 L12 12 L18 12 L21 25.5 Z" fill="#e6e8ec"/>
+					<circle cx="15" cy="8.5" r="4" fill="#e6e8ec"/>
+					<path d="M20 13 L26.5 3.5" stroke="#e0a339" stroke-width="2.6" stroke-linecap="round"/>
+					<path d="M19 11.5 L23 14.5" stroke="${OUT}" stroke-width="2.4" stroke-linecap="round"/></g>`,
+			},
+			{
+				name: 'M3 · каптур на шестикутній підставці',
+				risk: 'Схоже на привида або кулю з гільзою; шестикутник на 16px не читається.',
+				why: 'Шестикутник — клітинка карти; каптур — найпростіший силует героя, без обличчя.',
+				svg: `<g stroke="${OUT}" stroke-width="1.6" stroke-linejoin="round">
+					<path d="M5 25 L9.5 21.5 L22.5 21.5 L27 25 L22.5 28.5 L9.5 28.5 Z" fill="#cf2b40"/>
+					<path d="M16 3.5 C 9 5, 8.5 14, 9.5 23 L22.5 23 C 23.5 14, 23 5, 16 3.5 Z" fill="#e6e8ec"/>
+					<path d="M12.5 13 C 13 9.5, 19 9.5, 19.5 13 L19 16 L13 16 Z" fill="${OUT}"/></g>`,
+			},
+		],
+	};
+	const icon = (svg, size) => `<svg viewBox="0 0 32 32" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
+	for (const [id, list] of Object.entries(V)) {
+		document.getElementById(id).innerHTML = list
+			.map(
+				(v) => `<div class="card"><h3>${v.name}</h3><p class="why">${v.why}</p><p class="risk">Ризик: ${v.risk}</p>
+				<div class="tabs">
+					<div class="chrome dark"><div class="tab">${icon(v.svg, 16)} Charnik</div></div>
+					<div class="chrome light"><div class="tab">${icon(v.svg, 16)} Charnik</div></div>
+				</div>
+				<div class="sizes"><span class="on-dark">${icon(v.svg, 32)}</span><span class="on-light">${icon(v.svg, 32)}</span><span class="on-dark">${icon(v.svg, 64)}</span></div></div>`,
+			)
+			.join('');
+	}
+</script>
+</body>
+</html>
