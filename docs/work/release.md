@@ -332,6 +332,11 @@
   `aes-crypto`) and inconsistent local-header names in stream extraction (the updater uses
   `ZipArchive`, not `ZipStreamReader`). Its ZIP extraction is Windows-only and follows minisign
   verification, so an unsigned archive cannot reach it. Moves with the updater's dependency bump.
+- [ ] **KIT3-DRIVES · the two drives SvelteKit 3 has not had.** The migration is verified by the
+  gate, every `shot.mjs` state pixel-identical to 2.x and the `storage-edges` and `page-reach` probes
+  on the desktop app. Not yet: the web demo built under its GitHub Pages subpath, where every
+  `resolve()`, `asset()` and `BASE_PATH` is non-empty for the first time (`ui.md` ▸ links); and the
+  live table (`table-link.md` ▸ Driving a live table) on 3.x. Both before the next release.
 - **DEP-6 · `minimatch 10.2.6` glob amplification** (GHSA-g3hv-75wg-m249, moderate) — build/lint
   tooling only. The patch is 11.0.1; ESLint and TypeScript ESLint still require 10.x, including their
   available updates. The patterns are repository-owned and no minimatch ships in the app. Move with
