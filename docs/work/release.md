@@ -139,7 +139,7 @@
   `src-tauri/`, which `tauri dev` watches — the suspect, unproven; the drive now runs the test
   binary directly and does not touch it. A roll built in the tray needs a player APP at the
   table, and one machine runs one Charnik (the single-instance plugin), so it is TABLE-LINK-FIELD's.
-- [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release.** Everything so
+- [ ] **TABLE-LINK-FIELD · the table on two real networks, then on in a release — blocks 0.9.0.** Everything so
   far is driven on one machine with no relay. Before the `table-link` Cargo feature is turned on
   for a release build: a session through n0's relays between two networks and one with no relay
   on one LAN; how often a path stays on the relay and what a session's traffic comes to against
