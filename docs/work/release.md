@@ -199,9 +199,8 @@
   matrix, which has not run yet. An unannounced DC stays the GM's session's own and is not
   recovered. Driven on the real Windows app: a no-relay table quit with the window's close, the
   app started again, Return answered, and the same table back on its saved UDP ports, its key read
-  from the Credential Manager. **Left:** the Linux store in the running app (the round-trip test
-  passes under WSL against gnome-keyring, `tooling.md` ▸ the Linux build); the macOS store is
-  TABLE-LINK-MACOS-STORE.
+  from the Credential Manager; the same on the real Linux app, the key from gnome-keyring
+  (`tooling.md` ▸ the Linux build). **Left:** the macOS store, which is TABLE-LINK-MACOS-STORE.
 - [ ] **TABLE-LINK-NOTES · notes the table writes together** (a detective campaign's clue board).
   An edit is its EDITOR's own signed record, never a diff sent to the note's author for approval, so
   the log's "an app hands over only what it wrote" (`../internals/table-link.md`) holds with no
