@@ -963,11 +963,9 @@ The left and right arrows walk the answers in the order they stand. Picked from 
 deliberately NOT trapped: `CommandPalette`, which restores focus itself — a second restorer fights
 it — and the combat popovers, which are anchored menus rather than modals.
 
-The command palette has two scopes. **`Ctrl+K` is global** — all content and every character.
-**`Ctrl+Shift+K` is local** — a search of the active character's own spells, items, features,
-actions, conditions, and notes, not a page-text search. Only the global one sits in the header; the
-local one focuses the list's own search box inside the view. Views switch by tab bar, by `Ctrl+1..4`,
-or from the palette.
+**`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar
+or from the palette. A local search of the active character (`Ctrl+Shift+K`) and `Ctrl+1..4` between
+views are not built; they are KEYBOARD-NAV's (`../work/ui.md`).
 
 **Every search box compares through `foldForSearch`** (`lib/util/search-fold.ts`): case-blind, and
 every apostrophe-like mark (`’ ‘ ʼ ´ \``, primes) reads as `'`, so «м'ята» finds «мʼята» however the

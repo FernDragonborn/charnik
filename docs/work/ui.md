@@ -232,6 +232,35 @@
   hit after defenses, the count waiting behind it, a blocked Roll with its reason. On a screen with
   no playbar the request still needs a place — decided with the build.
 
+- [ ] **KEYBOARD-NAV · the keyboard works by one standard, and the play screen by it first.** The
+  maintainer's call: settled before new UI is built, so new UI is right by construction. The
+  standard, from the WAI-ARIA APG (<https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/>,
+  the Toolbar, Grid, Dialog and Menu patterns), WCAG 2.2 (2.1.4, 2.4.3, 2.4.7, 2.4.11) and
+  Microsoft's desktop guidance (F6 between panes): **Tab moves between widgets, never between
+  items** — a list, a strip of pills or a row of pips is one Tab stop with the arrows inside
+  (roving tabindex or `aria-activedescendant`), remembering its last item; ↑/↓ in a list, ←/→ in a
+  strip (mirrored right to left), Home/End to the ends, Enter as a click; a popup takes the focus
+  when it opens and gives it back to its trigger when it closes; Escape closes one layer; after an
+  action the focus lands on something real (the next row, then the previous, then the list), never
+  on `<body>`; a shortcut of printable keys works only inside its widget (2.1.4), a global one takes
+  Ctrl and matches `e.code`. Already built and reused: `trapFocus` + `dismissOnEscape`,
+  `walkOptions`, `SectionedPicker`'s roving stop, `focusHalo`, `RowGrip`'s arrow move, `takeFocus`,
+  `provenance`'s one-layer Escape.
+  **What the play screen breaks** (measured on the demo character in a browser): 342 Tab stops.
+  `svelte-dnd-action` makes every row and list focusable — about 45 duplicate stops its
+  `zoneTabIndex` / `zoneItemTabIndex` options turn off; every row's grip is a stop of its own,
+  invisible at rest (`RowGrip`); a feature row costs five stops; the combat menus are marked modal
+  but neither take the focus nor trap it, and sit after every panel in the page order, so Tab from
+  their button walks the whole sheet first (`CombatMenus.svelte`, `+page.svelte`); removing an
+  inventory item drops the focus to `<body>`; there is no way between regions but the skip link,
+  and the panels are unlabelled `div`s. Not checked: ten controls a script flagged as ringless,
+  and whether the sticky top bar ever covers the focus (2.4.11).
+  **Open, the maintainer's:** F6 / Shift+F6 between the top bar, the hero and each panel (a desktop
+  convention, not a W3C one); per-row controls (prepare · cast · pin) as grid cells reached by ←/→,
+  or one stop per row; the combat menus as true modals, or popups that take the focus and close when
+  it leaves. Reordering by Alt+↑/↓ on the row itself (as in VS Code) takes the grip out of the Tab
+  order.
+
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
   written against a surface that is still changing has to be written twice. Schedule the session once the current UI wave settles; until then this item collects
