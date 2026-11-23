@@ -18,16 +18,16 @@ export type System = (typeof SYSTEMS)[number];
  *  the four hardcoded `['5e','5.5e']` literals this replaced (`docs/internals/compatibility.md` §🟠). Distinct
  *  from `sourceLabel()` in `content/detail.ts`, which names a SOURCE TAG (`SRD 5.1`), not a system. */
 export const SYSTEM_LABELS: Record<System, string> = {
-	'5e': 'D&D 5e (2014)',
-	'5.5e': 'D&D 5.5e (2024)',
+	'5e': '5e (2014)',
+	'5.5e': '5.5e (2024)',
 };
 
 /** The same name where the full one will not fit — a roster badge, a segmented switch. It is a ROW
  *  here rather than a raw id read at the call site, which is the state that had four screens giving
  *  four different answers to "which edition is this". */
 export const SYSTEM_SHORT_LABELS: Record<System, string> = {
-	'5e': 'D&D 5e',
-	'5.5e': 'D&D 5.5e',
+	'5e': '5e',
+	'5.5e': '5.5e',
 };
 
 /** …for the callers holding a plain `string`: a draft summary reads its system out of a file the

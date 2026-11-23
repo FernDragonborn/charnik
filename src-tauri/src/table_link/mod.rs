@@ -238,10 +238,10 @@ impl Question {
         )
     }
 
-    /// The body with its `{placeholders}` filled in one pass over the catalog's words, so a value
+    /// A field with its `{placeholders}` filled in one pass over the catalog's words, so a value
     /// that itself reads `{code}` is printed as it is and never filled in again.
-    fn body(&self) -> String {
-        let template = self.said("body");
+    fn filled(&self, field: &str) -> String {
+        let template = self.said(field);
         let mut out = String::with_capacity(template.len());
         let mut rest = template;
         while let Some(open) = rest.find('{') {
@@ -272,14 +272,25 @@ impl Question {
     /// Ask it in the question window and wait for the answer. A window that could not be shown,
     /// or was closed unanswered, is a no.
     async fn ask(self, app: tauri::AppHandle) -> bool {
-        let words = question::Words {
+        question::ask(&app, self.words()).await
+    }
+
+    fn words(&self) -> question::Words {
+        // a question that compares no code has none in the catalog
+        let code = self.filled("code");
+        question::Words {
             title: self.said("title").to_string(),
-            body: self.body(),
+            ask: self.filled("ask"),
+            fact: self.filled("fact"),
+            code: (!code.is_empty()).then(|| question::Code {
+                label: self.said("codeLabel").to_string(),
+                value: code,
+            }),
+            body: self.filled("body"),
             allow: self.said("allow").to_string(),
             deny: self.said("deny").to_string(),
             locale: self.locale.clone(),
-        };
-        question::ask(&app, words).await
+        }
     }
 }
 
@@ -868,11 +879,13 @@ mod tests {
 
     #[test]
     fn every_bundled_locale_words_every_native_question() {
-        let placeholders: [(&str, &[&str]); 4] = [
+        let placeholders: [(&str, &[&str]); 6] = [
             ("host", &["{table}", "{route}"]),
             ("join", &["{table}", "{player}", "{route}"]),
             ("approve", &["{table}", "{player}", "{code}"]),
             ("return", &["{table}", "{route}"]),
+            ("door", &["{table}"]),
+            ("dismiss", &["{table}", "{player}"]),
         ];
         for locale in NATIVE_LOCALES {
             for (dialog, names) in placeholders {
@@ -881,18 +894,24 @@ mod tests {
                     locale: (*locale).to_string(),
                     values: vec![],
                 };
-                for field in ["title", "allow", "deny"] {
+                for field in ["title", "ask", "fact", "body", "allow", "deny"] {
                     assert!(
                         !question.said(field).is_empty(),
                         "{locale} {dialog}.{field}"
                     );
                 }
+                let said = ["ask", "fact", "code", "body"].map(|field| question.said(field));
                 for name in names {
                     assert!(
-                        question.said("body").contains(name),
+                        said.iter().any(|words| words.contains(name)),
                         "{locale} {dialog} {name}"
                     );
                 }
+                assert_eq!(
+                    question.said("code").is_empty(),
+                    question.said("codeLabel").is_empty(),
+                    "{locale} {dialog}: a code is said with its label"
+                );
             }
             for route in ["hostRoute.n0", "hostRoute.none", "joinRoute.direct"] {
                 assert!(
@@ -1070,11 +1089,15 @@ mod tests {
                 ("code", "123-456".into()),
             ],
         };
-        let body = question.body();
-        assert!(
-            body.contains("\"Lira\"") && body.contains("\"Thursday\"") && body.contains("123-456")
+        let words = question.words();
+        assert_eq!(
+            (words.fact.as_str(), words.code.map(|code| code.value)),
+            ("Lira", Some("123-456".to_string()))
         );
-        assert!(!body.contains('{'));
+        assert!(words.ask.contains("\"Thursday\""));
+        assert!(![&words.ask, &words.fact, &words.body]
+            .iter()
+            .any(|said| said.contains('{')));
 
         // a name that reads like a placeholder is printed as it is, not filled in again
         let sly = Question {
@@ -1086,6 +1109,6 @@ mod tests {
                 ("code", "123-456".into()),
             ],
         };
-        assert!(sly.body().contains("\"{code}\" wants to join"));
+        assert_eq!(sly.words().fact, "{code}");
     }
 }

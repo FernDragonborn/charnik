@@ -186,13 +186,13 @@ This was the only finding that actually touched cross-system compatibility.
 
 ### ✅ 🟠 Single-owner violation: `SYSTEMS` duplicated as literal lists — FIXED 2026-08-14
 
-`SYSTEM_LABELS` (id → "D&D 5e (2014)") and `DEFAULT_SYSTEM` now live beside the `SYSTEMS`
+`SYSTEM_LABELS` (id → "5e (2014)") and `DEFAULT_SYSTEM` now live beside the `SYSTEMS`
 owner in `rules/pipeline.ts`, and every picker **iterates `SYSTEMS`**: the settings edition
 filter, the build page's ruleset switch, the metadata dialog's edition checkboxes, and the
 `activeEditions` default. A third system is one row in that map instead of four literal
 lists to hunt.
 `sourceLabel()` in `content/detail.ts` stays separate on purpose — it names a **source tag**
-(`SRD 5.1` → "D&D 5e"), which is not a system id.
+(`SRD 5.1` → "5e (2014)"), which is not a system id.
 
 ### 🟡 Minor
 

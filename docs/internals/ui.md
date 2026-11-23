@@ -437,6 +437,17 @@ good", so they are pinned here and every component follows them.
     Ctrl+F5, Shift+F5), says so in the chip's tooltip, and still flushes pending writes first
     (`overview.md` ▸ the reload keys). The web demo is the exception the browser imposes: its
     keys are the browser's own.
+23. **Nothing on screen jumps.** A control, a panel or a line of text does not change its size or
+    place in one frame because something next to it changed. What has to grow or give way moves
+    there — a width that widens, a row that folds its own width as it fades — and whatever can
+    show texts of different lengths in one place keeps the height of the longest, so what lies
+    under it never shifts. With reduce motion on the move is instant, still with no jump in
+    between (`Reduce motion is one switch`).
+24. **A choice explains the option you are looking at, not only the one you took.** Where a choice
+    carries an explanation, pointing at an option or reaching it with the keyboard shows that
+    option's explanation, and leaving shows the chosen one's again; a press chooses. A person
+    compares by looking, and an explanation that changes only after the choice makes them choose
+    to find out. The explanation's box holds the height of its longest text (23).
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
@@ -841,6 +852,11 @@ a parameter.
 
 **A closed vocabulary maps to keys, it is not a table of words.** A recharge kind, a stat-generation
 method, and a writing prompt are each a fixed id list in code and a set of catalog entries beside it.
+
+**Copy names what a player sees, not how it is stored.** A content file is a "table" (uk
+«таблиця»), "spreadsheet" in English where "table" is the game table; never "CSV". What a player
+made themselves is "homebrew" (uk «хоумбрю») — one word, everywhere. An edition is "5e (2014)" /
+"5.5e (2024)" (`content.md` ▸ What a source is called).
 
 **Data is not copy.** A content row's own word for something — a species option labelled "Subrace" vs
 "Lineage" — passes through as an ICU *value*, because no UI catalog can know what a user's pack calls

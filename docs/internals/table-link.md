@@ -51,7 +51,12 @@ only), so it cannot press the question, cover it, or open one of its own. The wi
 static page, `static/table-question.html`, which renders the words as text, starts with the focus
 on the refusal so an Enter pressed by habit says no, and navigates nowhere; closing it is a no. It
 does not follow the user's theme on purpose: a theme is the page's to set. One question is on
-screen at a time.
+screen at a time. The words come in four parts, each a catalog string of its own: the question
+said small (`ask`), the one thing the person must recognise said large (`fact` — the table, or the
+player), a code to compare with what is said aloud larger still, where one is asked, and what
+follows from the answer (`body`). The refusal stands on one edge and the yes on the other. The
+page measures its words and asks to be that tall (`table_question_fit`, the question window's own
+command, held between 200 and 640 px), so a longer locale is never cut off.
 
 | the question | who is asked | what it names |
 | --- | --- | --- |

@@ -99,12 +99,16 @@
       value's popover stays instant: it is the answer to pointing at a number. The refresh chip's
       own note stands where its hint opens, so the two are placed together.
 
-- [ ] **SYSTEM-QUESTION-STYLE · the system's questions get a style of their own — 0.9.0.** The
+- [~] **SYSTEM-QUESTION-STYLE · the system's questions get a style of their own — 0.9.0.** The
   maintainer's call: before 0.9.0 the flags and the accent line on the left of a dialog go, and the
-  questions the system asks (the table's window, `static/table-question.html`, first) get another
-  look, to be found by rendered variants. In the same window: it is too short for its words, a
-  fixed 480 × 300 (`table_link/question.rs`), so the Ukrainian question does not fit; the window is
-  sized to what it says, in both locales.
+  questions the system asks get another look. Picked from rendered variants
+  (`design-preview/system-questions.html`, variant C1): the question small, the thing to recognise
+  large, a code larger still, the consequence as a paragraph, no on one edge and yes on the other,
+  the brand colour only on what cannot be undone. **Built** for the table's window
+  (`static/table-question.html`), which is now as tall as its words in either locale. **Left:** the
+  same shape for every dialog on `DialogShell` — content health, packs, diagnostics, the
+  character conflict, the edition switch (`design-preview/service-dialogs-and-requests.html`) —
+  and the table's window seen on the real desktop app.
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
       and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
       set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only
@@ -201,6 +205,17 @@
   whether a character's card (or the play screen) carries a way to the table — join as this
   character, return to the table they sat at — and whether the menu item stays beside it. Decided
   with rendered variants, not names.
+
+- [ ] **RELAY-CHOICE · how players reach a table, asked the way a person thinks of it.** The
+  maintainer's playtest: nobody knew what a relay is, and the choice read as a privacy setting —
+  which half of it is. Rendered in `design-preview/service-dialogs-all.html` (the first table's
+  dialog): one sentence saying what the go-between is; the options named for WHO the go-between
+  is — through the public server, through your server, directly on your network only — each with
+  who can join and who sees what, the explanation following pointer and keyboard (`../internals/ui.md`
+  ▸ the UX pattern contract, 24). Settings ▸ Table says the same. **Open, for the maintainer:**
+  whether the choice moves into a Settings ▸ Privacy and security section beside plugins, update
+  checks, pack fetching and the bug report — everything that decides what leaves the machine —
+  with the Table screen pointing there.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding

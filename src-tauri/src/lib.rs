@@ -403,7 +403,9 @@ pub fn run() {
             #[cfg(feature = "table-link")]
             table_link::question::table_question_words,
             #[cfg(feature = "table-link")]
-            table_link::question::table_question_answer
+            table_link::question::table_question_answer,
+            #[cfg(feature = "table-link")]
+            table_link::question::table_question_fit
         ])
         .setup(|app| {
             open_main_window(app.handle())?;

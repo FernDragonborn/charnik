@@ -13,26 +13,25 @@
 		<style>
 			:root {
 				--color-bg: #0f1116;
-				--color-surface: #171a21;
 				--color-border: #272c37;
 				--color-border-strong: #333a47;
 				--color-text: #e6e8ec;
 				--color-text-muted: #878f9d;
+				--color-text-body: #c7cbd2;
 				--color-accent: #cf2b40;
-				--color-accent-text: #ffffff;
-				--color-accent-deep: #b3243a;
 				--font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 				--font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+				--font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 				color-scheme: dark;
 			}
 			@media (prefers-color-scheme: light) {
 				:root {
 					--color-bg: #eef0ee;
-					--color-surface: #ffffff;
 					--color-border: #d9ddd6;
 					--color-border-strong: #c3c9bd;
 					--color-text: #1b2024;
 					--color-text-muted: #5a6570;
+					--color-text-body: #2c343b;
 					--color-accent: #b3243a;
 					color-scheme: light;
 				}
@@ -42,59 +41,77 @@
 			}
 			html,
 			body {
-				height: 100%;
 				margin: 0;
 			}
 			body {
-				display: flex;
-				flex-direction: column;
 				background: var(--color-bg);
 				color: var(--color-text);
 				font: 14px/1.5 var(--font-body);
 				user-select: none;
 			}
+			/* the window is the surface: no card inside it, no badge, no accent line */
 			main {
-				flex: 1;
 				display: flex;
 				flex-direction: column;
-				gap: 12px;
-				margin: 12px;
-				padding: 20px 22px 16px;
-				background: var(--color-surface);
-				border: 1px solid var(--color-border-strong);
-				border-left: 3px solid var(--color-accent);
-				border-radius: 10px;
+				padding: 22px 24px 20px;
 			}
+			.ask {
+				color: var(--color-text-muted);
+				font-size: 13px;
+			}
+			/* the thing the person has to recognise, large */
 			h1 {
-				margin: 0;
-				font: 600 20px/1.25 var(--font-display);
+				margin: 2px 0 12px;
+				font: 600 26px/1.15 var(--font-display);
+				overflow-wrap: anywhere;
+			}
+			/* a code to compare with what is said aloud, larger still */
+			.code {
+				margin: 0 0 12px;
+			}
+			.code[hidden] {
+				display: none;
+			}
+			.code span {
+				display: block;
+				color: var(--color-text-muted);
+				font-size: 13px;
+			}
+			.code strong {
+				display: block;
+				margin-top: 2px;
+				font: 600 34px/1.1 var(--font-mono);
+				letter-spacing: 0.16em;
 			}
 			p {
 				margin: 0;
 				white-space: pre-line;
 				overflow-wrap: anywhere;
 			}
+			#question-body {
+				color: var(--color-text-body);
+			}
+			/* no on one edge, yes on the other, so the two are not mistaken for each other */
 			footer {
 				display: flex;
-				justify-content: flex-end;
+				justify-content: space-between;
 				gap: 8px;
-				margin-top: auto;
-				padding-top: 8px;
+				margin-top: 18px;
 			}
 			button {
 				min-width: 96px;
-				padding: 8px 16px;
-				border-radius: 6px;
+				padding: 8px 18px;
+				border-radius: 4px;
 				border: 1px solid var(--color-border-strong);
 				background: transparent;
 				color: var(--color-text);
-				font: 600 14px var(--font-body);
+				font: 600 13px var(--font-body);
 				cursor: pointer;
 			}
 			button.allow {
-				background: var(--color-accent-deep);
-				border-color: var(--color-accent-deep);
-				color: var(--color-accent-text);
+				background: var(--color-text);
+				border-color: var(--color-text);
+				color: var(--color-bg);
 			}
 			button:focus-visible {
 				outline: 2px solid var(--color-accent);
@@ -108,8 +125,13 @@
 		<script src="table-question.js" defer></script>
 	</head>
 	<body>
-		<main aria-labelledby="question-title" aria-describedby="question-body">
+		<main
+			aria-labelledby="question-ask question-title"
+			aria-describedby="question-code question-body"
+		>
+			<p class="ask" id="question-ask"></p>
 			<h1 id="question-title"></h1>
+			<div class="code" id="question-code" hidden><span></span><strong></strong></div>
 			<p id="question-body"></p>
 			<footer>
 				<button type="button" class="deny" id="question-deny" disabled></button>

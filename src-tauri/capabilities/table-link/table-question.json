@@ -1,7 +1,11 @@
 {
 	"$schema": "../../gen/schemas/desktop-schema.json",
 	"identifier": "table-question",
-	"description": "the table's question window: its words, and its answer — and nothing else; read only by a build with the table-link feature (build.rs)",
+	"description": "the table's question window: its words, its answer, and its height to fit them — and nothing else; read only by a build with the table-link feature (build.rs)",
 	"windows": ["table-question"],
-	"permissions": ["allow-table-question-words", "allow-table-question-answer"]
+	"permissions": [
+		"allow-table-question-words",
+		"allow-table-question-answer",
+		"allow-table-question-fit"
+	]
 }

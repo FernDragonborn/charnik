@@ -291,10 +291,12 @@ export function compendiumEntryPath(
 
 /** User-facing label for a source tag — the raw "SRD 5.1 / 5.2.1" are too technical, show the
  *  game edition. The underlying `source` value stays exact (CC-BY attribution + identity); this is
- *  a DISPLAY map only. Unknown sources (homebrew, third-party) pass through unchanged. */
+ *  a DISPLAY map only. Unknown sources (homebrew, third-party) pass through unchanged. The edition
+ *  is named without the publisher's trademark (`docs/internals/content.md` ▸ What a source is
+ *  called). */
 const SOURCE_LABELS: Record<string, string> = {
-	'SRD 5.1': 'D&D 5e',
-	'SRD 5.2.1': 'D&D 5.5e',
+	'SRD 5.1': '5e (2014)',
+	'SRD 5.2.1': '5.5e (2024)',
 };
 export function sourceLabel(source: string): string {
 	return SOURCE_LABELS[source] ?? source;
@@ -418,7 +420,7 @@ export function buildDetail(
 		abilities: [] as AbilityScore[],
 		bodyHtml: localized(d, 'text', locale),
 		// The PACK is named beside the source tag, because the tag is not proof of anything: a pack
-		// declares its own `#content-source`, so one stamping `SRD 5.2.1` renders as "D&D 5.5e" exactly
+		// declares its own `#content-source`, so one stamping `SRD 5.2.1` renders as "5.5e (2024)" exactly
 		// like the shipped SRD does. The folder it came from is the fact the app actually knows.
 		source: {
 			key: 'compendium.sourceLine',

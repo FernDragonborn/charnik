@@ -593,7 +593,7 @@ async function sourceClash(
  * publishes under?
  *
  * Why it matters: the tag is not just a label, it is the namespace half of `source:id` AND the only
- * provenance the compendium prints — a pack stamping `SRD 5.2.1` renders as "D&D 5.5e" beside the
+ * provenance the compendium prints — a pack stamping `SRD 5.2.1` renders as "5.5e (2024)" beside the
  * real thing, lands in the same source toggle, and collides ids with it. Nothing in the format stops
  * a publisher writing whatever they like there, so the app has to notice that two of them wrote the
  * same thing.

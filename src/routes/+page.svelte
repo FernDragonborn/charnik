@@ -5,6 +5,7 @@
 	import { base } from '$app/paths';
 	import Icon from '$lib/components/Icon.svelte';
 	import { isDemo } from '$lib/config/demo';
+	import { DEMO_ID } from '$lib/demo/sheet';
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import { _ } from '$lib/i18n';
 	import {
@@ -107,7 +108,7 @@
 					<a class="roster-open" href="{base}/build?draft={d.guid}">
 						<span class="roster-name">
 							{d.summary.name || $_('roster.draftUnnamed')}
-							<span class="draft-tag">{$_('roster.draft')}</span>
+							<span class="roster-tag">{$_('roster.draft')}</span>
 						</span>
 						<span class="roster-subtitle">
 							{d.summary.classes || $_('roster.draftNoClass')}
@@ -134,7 +135,10 @@
 			{#each characters.roster as c (c.id)}
 				<li class="card roster-card">
 					<button class="roster-open" onclick={() => open(c.id, c.name)}>
-						<span class="roster-name">{c.name}</span>
+						<span class="roster-name"
+							>{c.name}{#if c.id === DEMO_ID}
+								<span class="roster-tag">{$_('roster.demoTag')}</span>{/if}</span
+						>
 						<span class="roster-subtitle">
 							{c.classes || $_('roster.level', { values: { level: c.level } })}
 							{#if c.system}<span class="sysbadge">{systemShortLabel(c.system)}</span>{/if}
@@ -305,7 +309,8 @@
 	.roster-card.is-draft .roster-name {
 		color: var(--color-text-muted);
 	}
-	.draft-tag {
+	/* a card's kind said in words: an unfinished draft, the demo character */
+	.roster-tag {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		text-transform: uppercase;

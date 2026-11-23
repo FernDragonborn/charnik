@@ -210,7 +210,7 @@ step.
    > **The gap validation cannot close is IDENTITY** (found and closed 2026-08-12; PLAN · REL-4
    > "the third pass"). A pack declares its own `#content-source`, that tag IS the namespace half of
    > `source:id`, and it is the only provenance the UI shows — so a pack stamping `SRD 5.2.1`
-   > renders as "D&D 5.5e", shares the official pack's source toggle, and collides ids with it.
+   > renders as "5.5e (2024)", shares the official pack's source toggle, and collides ids with it.
    > Schema validation says the row is well-formed, not that the publisher is who it says. **Closed
    > 2026-08-12** the way that implies, not with more zod: installing a pack whose tag another pack
    > already publishes under stops and asks for an explicit second click, and the PACK (a folder on

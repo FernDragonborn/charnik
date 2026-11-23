@@ -5,9 +5,9 @@ import { entryMeta } from './entry-list';
 import { row } from './test-utils';
 
 describe('sourceLabel', () => {
-	it('maps SRD tags to friendly D&D edition names, passes others through', () => {
-		expect(sourceLabel('SRD 5.1')).toBe('D&D 5e');
-		expect(sourceLabel('SRD 5.2.1')).toBe('D&D 5.5e');
+	it('maps SRD tags to edition names without the trademark, passes others through', () => {
+		expect(sourceLabel('SRD 5.1')).toBe('5e (2014)');
+		expect(sourceLabel('SRD 5.2.1')).toBe('5.5e (2024)');
 		expect(sourceLabel('Homebrew')).toBe('Homebrew');
 	});
 });
@@ -36,7 +36,7 @@ describe('buildDetail', () => {
 		expect(cantrip.spell).toBeDefined();
 		// the PACK is named beside the tag: a pack declares its own `#content-source`, so the tag
 		// alone cannot say where a row came from
-		expect(cantrip.source.values).toEqual({ source: 'D&D 5.5e', pack: 'test' });
+		expect(cantrip.source.values).toEqual({ source: '5.5e (2024)', pack: 'test' });
 
 		const leveled = buildDetail(
 			row({ name_en: 'Fireball', level: '3', school: 'evocation' }),

@@ -1305,7 +1305,7 @@
 		"backToBrowse": "Back to compendium",
 		"clearFilters": "Clear filters",
 		"concentration": "Concentration",
-		"deleteBody": "This removes the entry from your homebrew CSV and can’t be undone.",
+		"deleteBody": "This removes the entry from your homebrew spreadsheet and can’t be undone.",
 		"deleteConfirm": "Delete",
 		"deleteEntry": "Delete entry",
 		"deleteTitle": "Delete “{name}”?",
@@ -1441,7 +1441,7 @@
 		"noSubclassRows": "This class hands out a subclass at level {level}, but no subclass in this edition names it — so a character reaching that level is asked for a choice with nothing in it. Add the subclass rows, or clear “subclass_level”.",
 		"option": "“{option}”",
 		"or": " or ",
-		"oversizedFile": "This file is bigger than the {cap} MB Charnik reads for one content file, so it was skipped. A content CSV is normally far smaller than that — check it isn’t a backup, an export, or a damaged file. If it really is content, split it into several files; every file in the folder is loaded.",
+		"oversizedFile": "This file is bigger than the {cap} MB Charnik reads for one content file, so it was skipped. A content spreadsheet is normally far smaller than that — check it isn’t a backup, an export, or a damaged file. If it really is content, split it into several files; every file in the folder is loaded.",
 		"partialTranslation": "Half-translated into {language} — the parts that are missing show in English until you fill them in (Compendium ▸ Edit compendium ▸ Translate).",
 		"optionParentMissing": "This option belongs to a row that is not loaded for this edition, so it is never offered. Check `option_of` — it is the row's type, a colon, and its id.",
 		"levelLadderOldForm": "This count by level is written the old way, so it grants nothing. Write it as `{now}` in `{column}` — the count, then `@` and the level.",
@@ -1462,7 +1462,7 @@
 		"unknownDeclaredType": "This file says it holds a kind of content this version of Charnik doesn’t know, so none of its rows were loaded. Either the type is misspelled, or the file arrived with content newer than the app — updating Charnik would then read it.",
 		"unknownDeclaredTypeSuggested": "This file says it holds a kind of content this version of Charnik doesn’t know, so none of its rows were loaded. Either the type is misspelled (did you mean {options}?), or the file arrived with content newer than the app — updating Charnik would then read it.",
 		"unknownFileType": "This version of Charnik can’t tell what this file holds, so it was skipped — nothing else in the folder is affected. If you wrote it, name it after the kind of content it has (spells_mine.csv, feats_mine.csv) or add a first line saying so: #content-type: spell. If it arrived with a content pack, it is probably a kind of content a newer Charnik adds; updating the app will read it.",
-		"unresolvedBaseItem": "This item says it is built from another item that doesn’t exist under the same source, so it inherits nothing — no damage, no properties, no weapon category. Check the id for a typo, or add the base item to a CSV in the same pack.",
+		"unresolvedBaseItem": "This item says it is built from another item that doesn’t exist under the same source, so it inherits nothing — no damage, no properties, no weapon category. Check the id for a typo, or add the base item to a spreadsheet in the same pack.",
 		"unresolvedBaseItemSuggested": "This item says it is built from another item that doesn’t exist under the same source, so it inherits nothing — no damage, no properties, no weapon category. Did you mean {options}?",
 		"unresolvedJoin": "This row puts a spell on a class’s list, but no “{kind}” in this edition has that id — so the row does nothing. Check the id for a typo, or whether the row’s “systems” column names the edition that “{kind}” is in.",
 		"unresolvedJoinSuggested": "This row puts a spell on a class’s list, but no “{kind}” in this edition has that id — so the row does nothing. Did you mean {options}?"
@@ -1562,7 +1562,7 @@
 	"demo": {
 		"badge": "Demo · in active development",
 		"title": "Heads up — this demo only ships the free SRD content",
-		"body": "Charnik is in active development. We can only include the <b>SRD</b> — the part Wizards of the Coast released for free (CC-BY). The rest of D&D belongs to them, not us, so a lot of it legally can't be here out of the box: <b>Artificer</b>, <b>Aasimar</b>, the <b>Beholder</b>, most <b>subclasses</b>, and loads of <b>spells & monsters</b>. But nothing holds you back — make your own <b>homebrew</b> and, with the flexible CSV system, add whatever you want: from species and classes to spells. You can also download the full desktop app for your computer — it keeps all your data local and needs no internet connection.",
+		"body": "Charnik is in active development. We can only include the <b>SRD</b> — the part Wizards of the Coast released for free (CC-BY). The rest of D&D belongs to them, not us, so a lot of it legally can't be here out of the box: <b>Artificer</b>, <b>Aasimar</b>, the <b>Beholder</b>, most <b>subclasses</b>, and loads of <b>spells & monsters</b>. But nothing holds you back — make your own <b>homebrew</b> and, with the flexible spreadsheet system, add whatever you want: from species and classes to spells. You can also download the full desktop app for your computer — it keeps all your data local and needs no internet connection.",
 		"download": "⬇ Download the desktop app",
 		"readonly": "Editing isn't available in the demo. Download the desktop app to save changes."
 	},
@@ -1614,7 +1614,7 @@
 		"noPreparedCount": "Charnik doesn’t know how many spells {class} prepares at level {level} in {system}, so it shows none — this edition gives no formula to work it out from. Add the count for that level to the class’s casting table in your content.",
 		"pluginFailed": "This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.",
 		"rolledAbilityScore": "An ability score changes by a fixed amount, never by a roll, so this effect was left out.",
-		"unknownCondition": "Something tried to apply a condition called “{id}”, but this edition has no such condition — so nothing was applied. Add it to a conditions CSV, or correct the name.",
+		"unknownCondition": "Something tried to apply a condition called “{id}”, but this edition has no such condition — so nothing was applied. Add it to a conditions spreadsheet, or correct the name.",
 		"unknownConditionSuggested": "Something tried to apply a condition called “{id}”, but this edition has no such condition — so nothing was applied. Did you mean {options}?",
 		"unknownTarget": "Nothing on the sheet is called “{target}”, so this effect changes nothing. Check the spelling in the row’s effects column.",
 		"unknownTargetSuggested": "Nothing on the sheet is called “{target}”, so this effect changes nothing. Did you mean {options}?",
@@ -1709,7 +1709,7 @@
 		},
 		"levelWarning": "No level {level} spell slot in the classic rules (0–9).",
 		"newFilePlaceholder": "name",
-		"ownership": "Homebrew · you own this row (stored as CSV you can edit)",
+		"ownership": "Homebrew · you own this row (stored in a spreadsheet you can edit)",
 		"saveEdit": "Save changes",
 		"saveFailed": "Could not save",
 		"saveNew": "Save homebrew",
@@ -2004,6 +2004,7 @@
 		"empty": "No characters yet. Create one to get started.",
 		"newCharacter": "+ New character",
 		"delete": "Delete {name}",
+		"demoTag": "Demo character",
 		"draft": "draft",
 		"draftUnnamed": "Unnamed character",
 		"draftNoClass": "no class yet",
@@ -2088,7 +2089,7 @@
 			"countWarnings": "{count} warnings",
 			"driftDates": "changed {changed} · fingerprint dated {stamped}",
 			"editingMode": "Content-editing mode",
-			"editingModeBlurb": "While this is on, a CSV you edit on disk has its hash re-stamped automatically and neither startup prompt appears. Turn it off and Charnik asks before touching a file again.",
+			"editingModeBlurb": "While this is on, a spreadsheet you edit on disk has its hash re-stamped automatically and neither startup prompt appears. Turn it off and Charnik asks before touching a file again.",
 			"groupDerive": "Things that didn’t work out on “{name}” (this sheet only)",
 			"groupDrift": "Files edited outside Charnik",
 			"groupDriftBlurb": "Their contents no longer match the fingerprint recorded inside them. Nothing is broken and your edits are being used — and Charnik leaves these files alone rather than replacing them when their content pack updates.",
@@ -2140,7 +2141,7 @@
 		},
 		"packs": {
 			"title": "Content updates",
-			"desc": "Content packs are folders of CSVs — the shipped SRD is simply the one Charnik bundles. Charnik can check whether a pack’s repository has newer rules data, so a correction reaches you without a new app version. Only GitHub repository links work for now. Checking is one request per repository per day at most; APPLYING an update is always your click.",
+			"desc": "Content packs are folders of spreadsheets — the shipped SRD is simply the one Charnik bundles. Charnik can check whether a pack’s repository has newer rules data, so a correction reaches you without a new app version. Only GitHub repository links work for now. Checking is one request per repository per day at most; APPLYING an update is always your click.",
 			"desktopOnly": "Content updates are a desktop feature — the web demo always serves the content of its own deploy.",
 			"mode": "Checking for updates",
 			"modes": {
@@ -2190,7 +2191,7 @@
 			"filesInPack": "{count} file(s)",
 			"install": "Install",
 			"alreadyInstalled": "already installed",
-			"noPacksFound": "No content packs found in {repo} — a pack is a top-level folder holding CSV files.",
+			"noPacksFound": "No content packs found in {repo} — a pack is a top-level folder holding spreadsheets.",
 			"uninstall": "Uninstall",
 			"uninstallConfirm": "Delete this pack",
 			"cancel": "Cancel",
@@ -2512,8 +2513,10 @@
 	"table": {
 		"native": {
 			"host": {
+				"ask": "Open the table?",
+				"fact": "{table}",
+				"body": "Charnik will go online so that the players you invite can connect to this app. {route}\n\nNobody sits at the table until you let them in.",
 				"title": "Charnik — open a table?",
-				"body": "Open the table \"{table}\"?\n\nCharnik will go online so that the players you invite can connect to this app. {route}\n\nNobody sits at the table until you let them in.",
 				"allow": "Open the table",
 				"deny": "Cancel"
 			},
@@ -2524,8 +2527,10 @@
 				"noneIpv4": "No relay server is used. The invitation carries this computer's IPv4 addresses only, and only players who can reach them can join."
 			},
 			"join": {
+				"ask": "Join the table as \"{player}\"?",
+				"fact": "{table}",
+				"body": "Charnik will connect to the GM's app and show it your character's sheet. {route}",
 				"title": "Charnik — join a table?",
-				"body": "Join the table \"{table}\" as \"{player}\"?\n\nCharnik will connect to the GM's app and show it your character's sheet. {route}",
 				"allow": "Join",
 				"deny": "Cancel"
 			},
@@ -2534,26 +2539,36 @@
 				"direct": "The connection goes straight to the GM's computer, with no relay server."
 			},
 			"return": {
+				"ask": "Return to the table?",
+				"fact": "{table}",
+				"body": "Charnik will go online again, under the same key it sat at this table with. {route}",
 				"title": "Charnik — return to a table?",
-				"body": "Return to the table \"{table}\"?\n\nCharnik will go online again, under the same key it sat at this table with. {route}",
 				"allow": "Return",
 				"deny": "Not now"
 			},
 			"door": {
+				"ask": "Open the door again?",
+				"fact": "{table}",
+				"body": "A new invitation is made, and anyone who has it can knock and ask you to let them in.",
 				"title": "Charnik — open the door again?",
-				"body": "Open the door of the table \"{table}\" again?\n\nA new invitation is made, and anyone who has it can knock and ask you to let them in.",
 				"allow": "Open the door",
 				"deny": "Keep it shut"
 			},
 			"dismiss": {
+				"ask": "Send away from \"{table}\"?",
+				"fact": "{player}",
+				"body": "Their seat is taken, and they cannot come back without knocking again.",
 				"title": "Charnik — send a player away?",
-				"body": "Send \"{player}\" away from the table \"{table}\"?\n\nTheir seat is taken, and they cannot come back without knocking again.",
 				"allow": "Send away",
 				"deny": "Keep them"
 			},
 			"approve": {
+				"ask": "Wants to join \"{table}\"",
+				"fact": "{player}",
+				"codeLabel": "Their code",
+				"code": "{code}",
+				"body": "Let them in only if that is the code the player reads to you.",
 				"title": "Charnik — a player wants to join",
-				"body": "\"{player}\" wants to join the table \"{table}\".\n\nTheir code is {code}. Let them in only if that is the code the player reads to you.",
 				"allow": "Let in",
 				"deny": "Refuse"
 			}

@@ -17,16 +17,34 @@ use tokio::sync::oneshot;
 pub const LABEL: &str = "table-question";
 const PAGE: &str = "table-question.html";
 const WIDTH: f64 = 480.0;
+/// The height it opens at, before its page has measured its words.
 const HEIGHT: f64 = 300.0;
+/// The heights its page may ask for: enough for a title and two buttons, and no taller than a
+/// small laptop's screen.
+const HEIGHT_MIN: f64 = 200.0;
+const HEIGHT_MAX: f64 = 640.0;
 
-/// What the window shows: every word composed in Rust.
+/// What the window shows: every word composed in Rust. The question is said small (`ask`), the
+/// thing the person has to recognise large (`fact`), a code to compare larger still, then what
+/// follows from the answer (`body`).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Words {
+    /// The window's own title, for the taskbar and the title bar.
     pub title: String,
+    pub ask: String,
+    pub fact: String,
+    /// A code to compare with what is said aloud, and the words over it — only where one is asked.
+    pub code: Option<Code>,
     pub body: String,
     pub allow: String,
     pub deny: String,
     pub locale: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Code {
+    pub label: String,
+    pub value: String,
 }
 
 struct Pending {
@@ -117,6 +135,18 @@ pub fn table_question_words(webview: tauri::Webview) -> Option<Words> {
     pending().as_ref().map(|asked| asked.words.clone())
 }
 
+/// Size the question window to its words: the page measures them, in whichever locale they are.
+/// Only the question window may, and only within bounds.
+#[tauri::command]
+pub fn table_question_fit(webview: tauri::Webview, height: f64) {
+    if !is_question(webview.label()) || !height.is_finite() {
+        return;
+    }
+    let size = tauri::LogicalSize::new(WIDTH, height.clamp(HEIGHT_MIN, HEIGHT_MAX));
+    // best-effort: a window that keeps its first size still shows every word, with a scrollbar
+    let _ = webview.window().set_size(size);
+}
+
 /// The person's answer, believed only from the question window.
 #[tauri::command]
 pub fn table_question_answer(webview: tauri::Webview, allow: bool) {
@@ -132,6 +162,9 @@ mod tests {
     fn words() -> Words {
         Words {
             title: "t".into(),
+            ask: "a".into(),
+            fact: "f".into(),
+            code: None,
             body: "b".into(),
             allow: "a".into(),
             deny: "d".into(),

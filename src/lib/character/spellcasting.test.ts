@@ -249,7 +249,7 @@ describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls
 		expect(issue?.detail).toMatch(/class_casting:bard — no prepared\/known count at level 3/);
 		// the level and the edition travel as VALUES — the sentence is the catalog's
 		expect(issue?.key).toBe(ISSUE_KEY.noPreparedCount);
-		expect(issue?.values).toMatchObject({ level: 3, system: 'D&D 5.5e (2024)' });
+		expect(issue?.values).toMatchObject({ level: 3, system: '5.5e (2024)' });
 	});
 
 	it('a class that DOES declare the table is untouched', () => {

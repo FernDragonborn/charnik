@@ -93,6 +93,18 @@ that still works and flag the rest.
 asserts the mechanics are identical. Where they are not: two rows sharing a base id for a real
 divergence, or a per-system override column (`mastery@5.5e`) for a small one.
 
+## What a source is called
+
+A source tag is exact on disk — `SRD 5.1`, `SRD 5.2.1` — because it is the attribution CC-BY asks
+for and the namespace half of a row's identity. A player is shown the EDITION instead:
+**"5e (2014)" and "5.5e (2024)"**, or "5e" / "5.5e" where the full name will not fit
+(`content/detail.ts ▸ sourceLabel`, `rules/pipeline.ts ▸ SYSTEM_LABELS`). Never "D&D" in front of
+it: Dungeons & Dragons is the publisher's trademark, CC-BY licenses the SRD's text and no
+trademark, and the SRD's own legal notice allows a work to call itself "compatible with fifth
+edition" or "5E compatible" and asks for no other attribution to the publisher than its own. The
+full attribution — the System Reference Document by name, its licence and its publisher — lives in
+About, where the licence puts it.
+
 ## A column, or a tag
 
 The rule for every schema change:
