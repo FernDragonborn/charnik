@@ -111,7 +111,8 @@
   about to be merged and files changed outside the app compared side by side, a move that left the
   old folder, the plugin question. **Left:** the orphan draft (`OrphanDialog`) as rendered — when
   it was last edited and its fields and prose beside the row it would be tied to, with *keep as a
-  new entry* among the answers; and the table's window seen on the real desktop app.
+  new entry* among the answers. The table's window is seen on the real desktop app, its focus shown
+  from the start (`../internals/table-link.md`).
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
       and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
       set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only
