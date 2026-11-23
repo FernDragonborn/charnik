@@ -2331,6 +2331,16 @@ mod tests {
         }
     }
 
+    /// A record as every seat agrees on it. Each seat shows a record on the table's clock, moved by
+    /// the skew it measured for the author — and two seats on one machine measure it a millisecond
+    /// apart (macOS CI), so the time is the one field that is not the same record everywhere.
+    fn untimed(record: &Record) -> Record {
+        Record {
+            at: 0,
+            ..record.clone()
+        }
+    }
+
     async fn seated(invite: &Invite, name: &str) -> (PlayerSeat, UnboundedReceiver<TableEvent>) {
         let (emit, mut events) = listening();
         let seat = join(fresh_id(), invite, name, emit, forgetting(), None)
@@ -2378,11 +2388,14 @@ mod tests {
         assert_eq!((own.seq, own_name), (1, None));
         let (at_gm, name) = next_record(&mut gm_events).await;
         assert_eq!(
-            (at_gm.clone(), name.as_deref()),
-            (own.clone(), Some("Lira"))
+            (untimed(&at_gm), name.as_deref()),
+            (untimed(&own), Some("Lira"))
         );
         let (at_bevan, name) = next_record(&mut bevan_events).await;
-        assert_eq!((at_bevan, name.as_deref()), (own.clone(), Some("Lira")));
+        assert_eq!(
+            (untimed(&at_bevan), name.as_deref()),
+            (untimed(&own), Some("Lira"))
+        );
 
         // a roll kept to the GM reaches the GM and nobody else: Bevan's next record is the GM's
         lira.record(roll_to(Audience::Gm, 3));
@@ -2443,8 +2456,13 @@ mod tests {
         while handed.len() < 4 {
             handed.push(next_record(&mut late_events).await.0);
         }
-        assert!(handed.contains(&own) && handed.contains(&from_gm) && handed.contains(&shown));
-        assert!(handed.iter().all(|record| *record != private));
+        let handed: Vec<Record> = handed.iter().map(untimed).collect();
+        assert!(
+            handed.contains(&untimed(&own))
+                && handed.contains(&untimed(&from_gm))
+                && handed.contains(&untimed(&shown))
+        );
+        assert!(handed.iter().all(|record| *record != untimed(&private)));
         assert!(handed.iter().any(|record| record.body == hide_lira));
 
         lira.leave().await;
