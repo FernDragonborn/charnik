@@ -10,6 +10,7 @@
 	const body = document.getElementById('question-body');
 	const allow = document.getElementById('question-allow');
 	const deny = document.getElementById('question-deny');
+	const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 	let answered = false;
 	const answer = (yes) => {
 		if (answered) return;
@@ -48,6 +49,12 @@
 	document.addEventListener('keydown', (event) => {
 		if (event.code === 'Escape') answer(false);
 		if (event.code === 'Tab') document.documentElement.dataset.keyboard = '';
+		// two answers, so any arrow goes to the other one, whichever way the words run
+		if (ARROWS.includes(event.code)) {
+			event.preventDefault();
+			document.documentElement.dataset.keyboard = '';
+			(document.activeElement === deny ? allow : deny).focus();
+		}
 	});
 	document.addEventListener('pointerdown', () => delete document.documentElement.dataset.keyboard);
 })();
