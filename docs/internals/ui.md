@@ -968,7 +968,8 @@ ring — a halo that moves reads as "you are here" where a still ring reads as t
 The left and right arrows walk the answers in the order they stand. Picked from rendered variants,
 `design-preview/question-focus-ring.html`; the table's native question window does the same. Two things are
 deliberately NOT trapped: `CommandPalette`, which restores focus itself — a second restorer fights
-it — and the combat popovers, which are anchored menus rather than modals.
+it — and the combat popovers, which are anchored menus rather than modals: one takes the focus as it opens,
+closes once the focus lands outside it, and Escape closes it and hands the focus back to its trigger.
 
 **A list of rows is ONE Tab stop** (`rowGrid`, on every panel of the play screen): ↑/↓ walk the
 rows, a row's own controls are its cells on ←/→ (mirrored right to left), Home and End go to a row's

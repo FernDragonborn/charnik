@@ -134,7 +134,7 @@
   instance — asks the same question, and answering it once settles the house pattern rather than one
   control. Until then the shipped rendering stands.
 
-- [ ] **KEYBOARD-NAV · the keyboard works by one standard, and the play screen by it first.** The
+- [~] **KEYBOARD-NAV · the keyboard works by one standard, and the play screen by it first.** The
   maintainer's call: settled before new UI is built, so new UI is right by construction. The
   standard, from the WAI-ARIA APG (<https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/>,
   the Toolbar, Grid, Dialog and Menu patterns), WCAG 2.2 (2.1.4, 2.4.3, 2.4.7, 2.4.11) and
@@ -148,26 +148,14 @@
   Ctrl and matches `e.code`. Already built and reused: `trapFocus` + `dismissOnEscape`,
   `walkOptions`, `SectionedPicker`'s roving stop, `focusHalo`, `RowGrip`'s arrow move, `takeFocus`,
   `provenance`'s one-layer Escape.
-  **What the play screen still breaks** (walked by Tab on the demo character in a browser): 281 Tab
-  stops in `main`. Every row's grip is a stop of its own, invisible at rest (`RowGrip`, 41 of
-  them); a feature row costs five stops; the combat menus are marked modal but neither take the
-  focus nor trap it, and sit after every panel in the page order, so Tab from their button walks
-  the whole sheet first (`CombatMenus.svelte`, `+page.svelte`); there is no way between regions but
-  the skip link. Each of these waits on an answer below. Not checked: ten controls a script flagged
-  as ringless, and whether the sticky top bar ever covers the focus (2.4.11). What is fixed and
-  holds: the drag library adds no stops of its own (`NO_LIBRARY_TAB_STOPS`), each panel is a
-  landmark named by its title, and removing an item or an effect puts the focus on the same control
-  in the row that takes its place (`removeKeepingFocus`).
-  **Decided, the maintainer's calls, to build:**
-  - **F6 / Shift+F6** walks the top bar, the hero and each panel, a desktop convention rather than a
-    W3C one; more region shortcuts may join it later.
-  - **A row is ONE Tab stop**; its controls (prepare · cast · pin · …) are cells reached by ←/→, ↑/↓
-    walks the rows, and the list remembers its last row (roving tabindex).
-  - **A combat menu is a popup that takes the focus and closes when the focus leaves it** — not a
-    modal that holds it; Escape closes it and hands the focus back to its trigger. Tried first;
-    a modal is the fallback if it reads wrong.
-  Open: reordering by Alt+↑/↓ on the row itself (as in VS Code) would take the grip out of the Tab
-  order.
+  **Built, to the maintainer's three calls** (`../internals/ui.md` ▸ Accessibility): a panel's rows are
+  one Tab stop with the controls as cells on the arrows (`rowGrid`), F6 walks the regions
+  (`cycleRegion`), and a combat menu takes the focus and lets it go; the drag library adds no stops
+  of its own, each panel is a landmark named by its title, and a removed row hands the focus to the
+  one that takes its place. **Left:** ten controls a script flagged as ringless and whether the
+  sticky top bar ever covers the focus (2.4.11), both unchecked; reordering by Alt+↑/↓ on the row
+  itself (as in VS Code), which would take the grip out of its row's cells; more F6 regions as they
+  are asked for.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding

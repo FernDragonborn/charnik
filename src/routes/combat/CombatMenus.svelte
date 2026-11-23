@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { FOCUSABLE } from '#lib/actions/trapFocus.ts';
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-state, custom-effect, show/hide,
 	// pin-skills, spellbook). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
@@ -139,6 +140,33 @@
 			window.removeEventListener('pointerdown', closeOnOutside, true);
 		};
 	});
+
+	/*
+	 * A combat menu is a POPUP that takes the focus and lets it go (work/ui.md ▸ KEYBOARD-NAV, the
+	 * maintainer's call over a modal): it opens with the focus inside, and closes once the focus
+	 * LANDS outside it — Tab out of its last control. A press on nothing focusable is closeOnOutside's
+	 * to judge, so only a real element taking the focus counts here.
+	 */
+	$effect(() => {
+		if (!overlay || !popEl) return;
+		const pop = popEl;
+		const anchor = overlay.anchor;
+		if (!pop.contains(document.activeElement))
+			(pop.querySelector<HTMLElement>(FOCUSABLE) ?? pop).focus();
+		const closeOnFocusLeaving = (e: FocusEvent) => {
+			const to = e.relatedTarget;
+			if (to instanceof Node && !pop.contains(to) && !anchor?.contains(to)) combat.overlay = null;
+		};
+		pop.addEventListener('focusout', closeOnFocusLeaving);
+		return () => pop.removeEventListener('focusout', closeOnFocusLeaving);
+	});
+
+	/** Escape closes the menu and hands the focus back to what opened it. */
+	function closeToTrigger(): void {
+		const anchor = combat.overlay?.anchor;
+		combat.overlay = null;
+		anchor?.focus();
+	}
 </script>
 
 <!-- one Hit-Die size with a stepper: the short rest spends them, the long rest (SRD 5.1) chooses
@@ -194,12 +222,11 @@
 		class:wide={overlay.kind === 'log'}
 		class:dice-tray={overlay.kind === 'dice'}
 		role="dialog"
-		aria-modal="true"
 		tabindex="-1"
 		style="top:{pos.top}px; max-height:min(72vh, {pos.maxHeight}px); {pos.left != null
 			? `left:${pos.left}px`
 			: `right:${pos.right}px`}"
-		use:dismissOnEscape={() => (combat.overlay = null)}
+		use:dismissOnEscape={closeToTrigger}
 	>
 		{#if overlay.kind === 'dice'}
 			<DiceTray />
