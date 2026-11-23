@@ -1,136 +1,156 @@
 <script lang="ts">
-	// Persistent result dialog for a data-folder move. A copy/verify failure is important — the user
-	// needs time to read what went wrong and the reassurance that their original data is safe — so it
-	// stays on screen until dismissed (never a toast that flashes past). Uses the shared global .dialog
-	// shell (styles/components.css); this only sets its width.
-	import Icon from '../Icon.svelte';
-	import { trapFocus } from '$lib/actions/trapFocus';
+	// The result of a data-folder move that did not simply succeed. It stays until it is answered —
+	// a failure needs time to be read, with the reassurance that the original data is safe — so a
+	// click on the backdrop or Escape does not close it. When the move worked but the old folder
+	// stayed, it says what is in that folder, why it most likely stayed, and offers to try again or
+	// to show the folder; the raw reason waits under "Details".
 	import { _ } from '$lib/i18n';
-	import LangSwitcher from '../LangSwitcher.svelte';
+	import DialogShell from '../DialogShell.svelte';
+	import type { LeftFolder } from '$lib/storage/tauri';
 
 	let {
-		tone,
 		title,
 		detail,
 		note,
+		newDir = '',
+		left,
+		reason = '',
+		retrying = false,
+		onRetry,
+		onReveal,
 		onclose,
 	}: {
-		/** 'error' — the move failed; 'warning' — the move succeeded but with a caveat (e.g. leftover). */
-		tone: 'error' | 'warning';
 		title: string;
 		/** What happened, in one sentence (the fs reason / mismatch count). */
 		detail: string;
-		/** Reassurance line, e.g. that the original folder is untouched. */
+		/** Reassurance, said first, e.g. that the original folder is untouched. */
 		note?: string | undefined;
+		/** The folder Charnik reads now, when the move went through. */
+		newDir?: string | undefined;
+		/** The old folder a move could not remove, and what it still holds. */
+		left?: LeftFolder | undefined;
+		/** The system's own words for why — shown only under "Details". */
+		reason?: string | undefined;
+		retrying?: boolean;
+		onRetry?: (() => void) | undefined;
+		onReveal?: (() => void) | undefined;
 		onclose: () => void;
 	} = $props();
 
-	// This dialog MUST be acknowledged — a failed move can't be dismissed by clicking away or Escape
-	// (only the Close button). Those gestures instead give a short shake to signal "you can't close it
-	// like that". Toggling `shaking` off→on restarts the animation on repeated attempts.
-	let shaking = $state(false);
-	// Move keyboard focus INTO the dialog on open, else it stays on the button behind the backdrop.
-	// `trapFocus` takes it from here: initial focus + Tab containment + restore on close.
+	// "access denied" and "in use" are the ways a folder stays on Windows; said as what to do
+	const locked = $derived(/denied|os error (5|32)|in use|EACCES|EBUSY|EPERM/i.test(reason));
+	const size = (bytes: number) =>
+		bytes >= 1048576
+			? `${(bytes / 1048576).toFixed(1)} MB`
+			: `${Math.max(1, Math.round(bytes / 1024))} KB`;
 	let closeBtn = $state<HTMLButtonElement | null>(null);
-	function refuseClose() {
-		shaking = false;
-		requestAnimationFrame(() => (shaking = true));
-	}
-	function onKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') refuseClose();
-	}
 </script>
 
-<svelte:window on:keydown={onKey} />
-
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dialog-backdrop" onclick={refuseClose}></div>
-<div
-	class="dialog migrate-dialog"
-	class:tone-warning={tone === 'warning'}
-	class:shake={shaking}
-	onanimationend={() => (shaking = false)}
-	role="alertdialog"
-	aria-modal="true"
-	aria-labelledby="mig-title"
-	tabindex="-1"
-	use:trapFocus={closeBtn}
+<DialogShell
+	titleId="mig-title"
+	{title}
+	subtitle={note ? `${note} ${detail}` : detail}
+	width="min(640px, calc(100vw - 2 * var(--space-4)))"
+	initialFocus={closeBtn}
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge" class:err={tone === 'error'} class:warn={tone === 'warning'}
-			><Icon name={tone === 'error' ? 'triangle-alert' : 'info'} size={17} /></span
-		>
-		<h2 id="mig-title" class="dialog-title">{title}</h2>
-	</header>
-
-	<div class="body">
-		{#if note}<p class="note">{note}</p>{/if}
-		<p class="detail">{detail}</p>
-	</div>
+	{#if left}
+		<div class="dialog-body">
+			<dl class="where">
+				{#if newDir}<dt>{$_('settings.migrate.nowReads')}</dt>
+					<dd class="path">{newDir}</dd>{/if}
+				<dt>{$_('settings.migrate.leftCopy')}</dt>
+				<dd>
+					<span class="path">{left.dir}</span>
+					<span class="count"
+						>{$_('settings.migrate.leftCount', {
+							values: { files: left.files, size: size(left.bytes) },
+						})}</span
+					>
+				</dd>
+			</dl>
+			<p class="why">
+				{locked ? $_('settings.migrate.whyLocked') : $_('settings.migrate.whyOther')}
+			</p>
+			{#if reason}
+				<details class="raw">
+					<summary>{$_('settings.migrate.details')}</summary>
+					<p>{reason}</p>
+				</details>
+			{/if}
+		</div>
+	{/if}
 
 	<footer class="dialog-foot">
-		<span class="dialog-spacer"></span>
-		<button class="btn primary" bind:this={closeBtn} onclick={onclose}>{$_('app.close')}</button>
+		{#if left}
+			<button class="btn" bind:this={closeBtn} onclick={onclose}
+				>{$_('settings.migrate.keepAsIs')}</button
+			>
+			{#if onReveal}
+				<button class="btn ghost reveal" onclick={onReveal}
+					>{$_('settings.migrate.revealOld')}</button
+				>
+			{/if}
+			<span class="dialog-spacer"></span>
+			{#if onRetry}
+				<button class="btn primary" disabled={retrying} onclick={onRetry}
+					>{$_('settings.migrate.retry')}</button
+				>
+			{/if}
+		{:else}
+			<span class="dialog-spacer"></span>
+			<button class="btn primary" bind:this={closeBtn} onclick={onclose}>{$_('app.close')}</button>
+		{/if}
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	.migrate-dialog {
-		width: min(480px, calc(100vw - 2 * var(--space-4)));
-	}
-	.body {
-		padding: var(--space-5) var(--space-6);
-	}
-	/* Reassurance sits on top (calm the user before the technical reason); the detail follows below. */
-	.note {
-		margin: 0 0 var(--space-3);
-		font-size: var(--font-size-md);
-		color: var(--color-text);
-	}
-	.detail {
+	.where {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: var(--space-2) var(--space-4);
 		margin: 0;
+		padding: var(--space-3) 0;
+		border-top: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border);
+	}
+	.where dt {
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 	}
-	.dialog-badge.err {
-		color: var(--color-accent-bright);
+	.where dd {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		min-width: 0;
 	}
-	.dialog-badge.warn {
-		color: var(--color-resource);
+	.path {
+		font-size: var(--font-size-sm);
+		color: var(--color-text);
+		overflow-wrap: anywhere;
 	}
-	/* Warning tone: recolour the head's accent stripe from crimson to the same gold as the badge. */
-	.migrate-dialog.tone-warning .dialog-head {
-		border-inline-start-color: var(--color-resource);
+	.count {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
 	}
-
-	/* Shake on a dismiss attempt. Keyframes keep the .dialog centring transform (translate(-50%,-50%))
-	   and only add the horizontal wobble on top, so the panel shakes in place. */
-	.migrate-dialog.shake {
-		animation: dialog-shake 0.34s ease;
+	.why {
+		margin: 0;
+		font-size: var(--font-size-body);
 	}
-	@keyframes dialog-shake {
-		0%,
-		100% {
-			transform: translate(-50%, -50%);
-		}
-		15% {
-			transform: translate(-50%, -50%) translateX(-7px);
-		}
-		30% {
-			transform: translate(-50%, -50%) translateX(7px);
-		}
-		45% {
-			transform: translate(-50%, -50%) translateX(-5px);
-		}
-		60% {
-			transform: translate(-50%, -50%) translateX(5px);
-		}
-		75% {
-			transform: translate(-50%, -50%) translateX(-3px);
-		}
+	.raw summary {
+		cursor: pointer;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
 	}
-	:global(:root[data-motion='reduced']) .migrate-dialog.shake {
-		animation: none;
+	.raw p {
+		margin: var(--space-2) 0 0;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+		overflow-wrap: anywhere;
+	}
+	/* a way to look, not an answer: said as a link beside "leave it" */
+	.reveal {
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 </style>

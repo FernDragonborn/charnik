@@ -15,6 +15,9 @@
 		migrateDataDir,
 		mergeDataDir,
 		repointDataDir,
+		removeOldDataDir,
+		revealFolder,
+		type LeftFolder,
 		type MigrateOutcome,
 	} from '$lib/storage/tauri';
 	import { conflictRows, isSameOrInside, type ConflictRow } from '$lib/storage/migrate';
@@ -23,7 +26,7 @@
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { flushPendingWrites, reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
-	import { toast } from '$lib/toast/toast';
+	import { sayIfFails, toast } from '$lib/toast/toast';
 	import { _ } from '$lib/i18n';
 	import {
 		characters,
@@ -88,10 +91,14 @@
 	// dialog (stays until the user closes it), with a reassurance line about the original data. `then`
 	// runs on close (used to reload after a move that succeeded-with-a-caveat).
 	type MigrationNotice = {
-		tone: 'error' | 'warning';
 		title: string;
 		detail: string;
 		note?: string;
+		/** The folder Charnik reads now, when the move itself went through. */
+		newDir?: string;
+		/** The old folder the move could not remove — offered again, and shown on request. */
+		left?: LeftFolder;
+		reason?: string;
 		then?: () => void;
 	};
 	let notice = $state<MigrationNotice | null>(null);
@@ -99,6 +106,21 @@
 		const after = notice?.then;
 		notice = null;
 		after?.();
+	}
+
+	/** Try the old folder's removal again: gone, the notice closes as if answered; still there, it
+	 *  says the new reason. */
+	let retrying = $state(false);
+	async function retryRemoveOld(): Promise<void> {
+		const left = notice?.left;
+		if (!left || retrying) return;
+		retrying = true;
+		const reason = await removeOldDataDir(left.dir);
+		retrying = false;
+		if (reason === null) {
+			flashAfterReload($_('settings.migrate.removedOld'));
+			closeNotice();
+		} else if (notice) notice = { ...notice, reason };
 	}
 
 	// The original folder is never deleted or overwritten on a failed move — say so, so the user knows
@@ -161,7 +183,6 @@
 		if (!outcome.ok) {
 			startContentWatcher(); // pointer unchanged — resume watching the still-active folder
 			notice = {
-				tone: 'error',
 				title: failTitle,
 				detail: moveDetail(outcome),
 				note: originalSafe(),
@@ -170,12 +191,11 @@
 		}
 		if (outcome.stage === 'cleanup') {
 			notice = {
-				tone: 'warning',
 				title: $_('settings.migrate.cleanupTitle'),
-				detail: $_('settings.migrate.cleanupDetail', {
-					values: { error: outcome.error ?? $_('settings.migrate.unknownError') },
-				}),
-				note: $_('settings.migrate.cleanupNote'),
+				detail: $_('settings.migrate.cleanupDetail'),
+				newDir: await currentDataDir(),
+				...(outcome.left ? { left: outcome.left } : {}),
+				reason: outcome.error ?? $_('settings.migrate.unknownError'),
 				then: () => void reloadApp(),
 			};
 			return;
@@ -197,7 +217,6 @@
 			// rather than "comparing" the folder against itself in the conflict dialog.
 			if (isSameOrInside(target, from) && isSameOrInside(from, target)) {
 				notice = {
-					tone: 'error',
 					title: $_('settings.migrate.sameTitle'),
 					detail: $_('settings.migrate.sameDetail'),
 					note: $_('settings.migrate.nothingChanged'),
@@ -219,7 +238,6 @@
 		} catch (e) {
 			startContentWatcher();
 			notice = {
-				tone: 'error',
 				title: $_('settings.migrate.moveFailed'),
 				detail: errText(e),
 				note: originalSafe(),
@@ -250,7 +268,6 @@
 		} catch (e) {
 			startContentWatcher();
 			notice = {
-				tone: 'error',
 				title: $_('settings.migrate.mergeFailed'),
 				detail: errText(e),
 				note: originalSafe(),
@@ -271,7 +288,6 @@
 			await reloadApp();
 		} catch (e) {
 			notice = {
-				tone: 'error',
 				title: $_('settings.migrate.repointFailed'),
 				detail: errText(e),
 				note: $_('settings.migrate.nothingChanged'),
@@ -387,11 +403,17 @@
 {/if}
 
 {#if notice}
+	{@const left = notice.left}
 	<DataMigrationDialog
-		tone={notice.tone}
 		title={notice.title}
 		detail={notice.detail}
 		note={notice.note}
+		newDir={notice.newDir}
+		{left}
+		reason={notice.reason}
+		{retrying}
+		onRetry={left ? retryRemoveOld : undefined}
+		onReveal={left ? () => sayIfFails($_('app.actionFailed'), revealFolder(left.dir)) : undefined}
 		onclose={closeNotice}
 	/>
 {/if}

@@ -167,6 +167,8 @@ describe('migrateDataDir (move into an empty target)', () => {
 		expect(r.error).toContain('locked');
 		expect(at('/data/new/a.csv')).toBe(true);
 		expect(h.state.override).toBe('/data/new'); // pointer already swapped
+		// what stayed is said, so the player knows the old folder is a full copy and not empty
+		expect(r.left).toEqual({ dir: '/data/old', files: 1, bytes: 3 });
 	});
 });
 

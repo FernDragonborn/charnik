@@ -26,7 +26,7 @@ import {
 import { join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { openUrl } from '@tauri-apps/plugin-opener';
+import { openUrl, revealItemInDir } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
 import { errText } from '../util/format';
@@ -169,6 +169,15 @@ export interface MigrateOutcome {
 	failures: string[];
 	/** Human-readable reason for a thrown fs error (`copy`/`cleanup` stages). */
 	error?: string;
+	/** On `cleanup`: the old folder that stayed, and what is still in it — a full copy. */
+	left?: LeftFolder;
+}
+
+/** A data folder a move could not remove: where it is and how much it still holds. */
+export interface LeftFolder {
+	dir: string;
+	files: number;
+	bytes: number;
 }
 
 /** Copy each listed file `oldDir → newDir`, recreating parent folders. Throws on the first fs error.
@@ -191,16 +200,34 @@ async function finalizeMove(
 	oldDir: string,
 	newDir: string,
 	deleteOld: boolean,
+	source: DirFile[],
 ): Promise<MigrateOutcome> {
 	await setDataDirOverride(newDir);
 	if (deleteOld) {
-		try {
-			await fsRemove(oldDir, { recursive: true });
-		} catch (e) {
-			return { ok: true, stage: 'cleanup', failures: [], error: errText(e) };
+		const error = await removeOldDataDir(oldDir);
+		if (error !== null) {
+			const bytes = source.reduce((sum, file) => sum + file.size, 0);
+			const left = { dir: oldDir, files: source.length, bytes };
+			return { ok: true, stage: 'cleanup', failures: [], error, left };
 		}
 	}
 	return { ok: true, failures: [] };
+}
+
+/** Remove a data folder the app no longer reads — the move's last step, and its retry. The reason
+ *  when it could not be removed, else null. */
+export async function removeOldDataDir(dir: string): Promise<string | null> {
+	try {
+		await fsRemove(dir, { recursive: true });
+		return null;
+	} catch (e) {
+		return errText(e);
+	}
+}
+
+/** Show a folder in the system's file manager, so a person can see what is in it and remove it. */
+export async function revealFolder(dir: string): Promise<void> {
+	await revealItemInDir(dir);
 }
 
 /** Best-effort removal of a half-copied target after a failed move. Only safe on the EMPTY-target
@@ -241,7 +268,7 @@ export async function migrateDataDir(
 		return { ok: false, stage: 'verify', failures };
 	}
 
-	return finalizeMove(oldDir, newDir, deleteOld);
+	return finalizeMove(oldDir, newDir, deleteOld, source);
 }
 
 /** Merge the data folder into a NON-empty target: copy only the files the target lacks or that the
@@ -272,7 +299,7 @@ export async function mergeDataDir(
 	const failures = mergeFailures(source, toCopy, await walkTree(newDir));
 	if (failures.length) return { ok: false, stage: 'verify', failures };
 
-	return finalizeMove(oldDir, newDir, deleteOld);
+	return finalizeMove(oldDir, newDir, deleteOld, source);
 }
 
 /** A path as the hex of its UTF-8 — what `write_file_durable` takes, since a header is ASCII. */

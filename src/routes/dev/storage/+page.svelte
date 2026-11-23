@@ -24,10 +24,12 @@
 	let showConflict = $state(false);
 
 	type Notice = {
-		tone: 'error' | 'warning';
 		title: string;
 		detail: string;
 		note?: string;
+		newDir?: string;
+		left?: { dir: string; files: number; bytes: number };
+		reason?: string;
 	};
 
 	const ORIGINAL_SAFE =
@@ -39,7 +41,6 @@
 		{
 			label: 'Copy failed (Windows)',
 			notice: {
-				tone: 'error',
 				title: 'Move failed',
 				detail: 'Copying the files failed: failed to copy file: Access is denied. (os error 5).',
 				note: ORIGINAL_SAFE,
@@ -48,7 +49,6 @@
 		{
 			label: 'Copy failed (Linux)',
 			notice: {
-				tone: 'error',
 				title: 'Move failed',
 				detail: 'Copying the files failed: failed to copy file: Permission denied (os error 13).',
 				note: ORIGINAL_SAFE,
@@ -57,7 +57,6 @@
 		{
 			label: 'Verify mismatch',
 			notice: {
-				tone: 'error',
 				title: 'Move failed',
 				detail:
 					"3 file(s) didn't copy correctly (characters/aria/character.json, content/srd/spells.csv, content/srd/species.csv…).",
@@ -67,7 +66,6 @@
 		{
 			label: 'Target inside source',
 			notice: {
-				tone: 'error',
 				title: 'Move failed',
 				detail:
 					"The chosen folder is inside the current data folder, so it can't be the move target.",
@@ -77,11 +75,13 @@
 		{
 			label: 'Cleanup warning (moved, old folder left)',
 			notice: {
-				tone: 'warning',
-				title: "Data moved, but old folder wasn't deleted",
+				title: 'Data moved. The old folder stayed',
 				detail:
-					"Your data was copied and verified in the new folder, but the old folder couldn't be removed: failed to remove directory: The process cannot access the file (os error 32).",
-				note: 'Nothing was lost — you can delete the old folder yourself.',
+					'Your data was copied to the new folder and checked — everything is there. The old copy is what Charnik could not remove.',
+				newDir: 'D:\\Games\\TTRPG\\charnik',
+				left: { dir: 'C:\\Users\\fern\\Documents\\charnik', files: 214, bytes: 3_355_443 },
+				reason:
+					'failed to remove directory: The process cannot access the file because it is being used by another process. (os error 32)',
 			},
 		},
 	];
@@ -147,10 +147,14 @@
 
 {#if notice}
 	<DataMigrationDialog
-		tone={notice.tone}
 		title={notice.title}
 		detail={notice.detail}
 		note={notice.note}
+		newDir={notice.newDir}
+		left={notice.left}
+		reason={notice.reason}
+		onRetry={notice.left ? () => (last = 'retry') : undefined}
+		onReveal={notice.left ? () => (last = 'reveal') : undefined}
 		onclose={() => (notice = null)}
 	/>
 {/if}

@@ -45,7 +45,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×3 — src/lib/character/derive-setup.ts · src/lib/content/spellAccess.ts · src/routes/build/inspector-specs.ts
 - `onClick` ×3 — src/lib/actions/provenance.ts · src/lib/components/RollButton.svelte · src/routes/+layout.svelte
-- `onKey` ×3 — src/lib/components/settings/DataMigrationDialog.svelte · src/routes/build/+page.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte
 - `rather` ×3 — src/lib/dice/roll-lines.ts · src/lib/play/outcome.ts · src/lib/rules/proficiency.ts
 - `refusal` ×3 — src/lib/play/cast.ts · src/lib/play/option-activation.ts · src/lib/play/turn.ts
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
@@ -100,6 +99,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `onKey` ×2 — src/routes/build/+page.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte
 - `optionsOf` ×2 — src/lib/content/homebrew.ts · src/lib/content/options.ts
 - `ORDER` ×2 — src/lib/play/delta.ts · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
@@ -302,7 +302,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
 | **DamageIcon** | `type`, `size` | A damage type's glyph. |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` | Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one). |
-| **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
+| **DataMigrationDialog** | `title`, `detail`, `note`, `newDir`, `left`, `reason`, `retrying`, `onRetry`, `onReveal`, `onclose` | The result of a data-folder move that did not simply succeed. |
 | **DefenseStrip** | `sheet`, `graph`, `system` |  |
 | **DiagnosticsModal** | `onDismiss` | The bug report (audit DIAG-1): one field for what happened and one button that opens a GitHub |
 | **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `initialFocus`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
@@ -2519,6 +2519,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function dirIsEmpty` — True when `dir` has no entries (or doesn't exist yet) — the precondition for an automatic move.
 - `function listDataDirFiles` — The current data folder's files — for the merge dialog's name table (see docs/plan.md).
 - `interface MigrateOutcome`
+- `interface LeftFolder` — A data folder a move could not remove: where it is and how much it still holds.
+- `function removeOldDataDir` — Remove a data folder the app no longer reads — the move's last step, and its retry.
+- `function revealFolder` — Show a folder in the system's file manager, so a person can see what is in it and remove it.
 - `function migrateDataDir` — Move the data folder into an EMPTY target: copy every file `oldDir → newDir`, verify the copy is * complete (each sou…
 - `function mergeDataDir` — Merge the data folder into a NON-empty target: copy only the files the target lacks or that the * source has a newer …
 - `const utf8Hex` — A path as the hex of its UTF-8 — what `write_file_durable` takes, since a header is ASCII.
@@ -2730,4 +2733,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 103 global classes · 63 components · 1680 exports across 230 modules · 119 duplicate suspects._
+_50 tokens · 103 global classes · 63 components · 1683 exports across 230 modules · 119 duplicate suspects._
