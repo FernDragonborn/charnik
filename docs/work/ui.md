@@ -152,7 +152,7 @@
   pair of eyes that already knew what the control was" is not the same claim as "a player who has
   never been told finds it".
   **The question is NOT which rendering is most visible.** The same playtest said "too much of
-  everything", and a screen that is 43% furniture (COMBAT-RAIL ▸ 4) cannot answer a visibility
+  everything", and a screen that is 43% furniture (`play-layout.md` ▸ COMBAT-RAIL ▸ 4) cannot answer a visibility
   question honestly — every control is most visible alone. So ask first whether a standing control is
   the right shape at all, and only then which one: players who have not seen it before, on their own
   character, with no prompt naming it, and watch whether they look for the choice rather than whether
@@ -163,52 +163,6 @@
   two-state pick the sheet grows later — a versatile weapon's grip, a damage type chosen per
   instance — asks the same question, and answering it once settles the house pattern rather than one
   control. Until then the shipped rendering stands.
-
-- [ ] **COMBAT-RAIL · the play screen is a scrolling body beside a rail that does not scroll — a
-  maintainer-stated rework, its own design session.** Three parts, and the third is the reason the
-  other two are not a CSS tweak:
-  1. **The roll log, and some blocks, move to a PINNED right rail.** The two scroll independently:
-     the combat body scrolls under a log that stays put, and the log scrolls without moving the body.
-     Today everything is one page scroll, so the log — the thing you look at right after acting —
-     leaves the screen exactly when you acted.
-     The log holds the whole turn now — what an action spent, began, ended and said
-     (`../internals/roller.md` ▸ Conventions) — which is what makes it worth a place that stays.
-  2. **The play screen moves to the LEFT edge.** It is centred now, which spends the widest part of
-     a desktop window on gutters while the rail has to come from somewhere.
-  3. **Which blocks live where is re-decided.** `combat.layout` already holds two drag-reorderable
-     columns persisted on `ui.panelColumns`, so a THIRD region is a change to that model and to what
-     a saved layout means for a character who has one — not a wrapper div. That is the design
-     session: which panels are rail-shaped (log, and what else), whether the rail is reorderable and
-     collapsible like the columns are, what a narrow window does with it, and how an existing
-     `ui.panelColumns` migrates rather than being thrown away.
-  4. **How much stands on the resting screen — "too much of everything" from the playtest, counted.**
-     At 1536×864 the Combat screen carries **225 controls inside `main`**, 50 visible at once, over
-     3.2 screens of scroll. **96 of the 225 are FURNITURE** — drag grips, pins, eyes, own-words
-     pencils, show/hide — against 129 that do something to the character. **45 are drag grips alone.**
-     So 43% of the controls on the play screen exist to rearrange the play screen.
-     The reason that reads as clutter rather than as richness: furniture is BIMODAL. A sheet is
-     arranged once and played for months, so those 96 stand permanently for an act performed rarely,
-     while the 129 are wanted every turn. Most of the 96 arrived recently and separately — row
-     reorder, the Features panel's hide/pin, the own-words pencil — each defensible alone, and the
-     sum is what a player met.
-     Three directions, and the middle one is recorded to be rejected: **an arrange MODE** (one
-     control reveals every grip, eye and pin at once — sheds nearly all 96 for the cost of one, works
-     on touch, and has a reverse state); **furniture revealed on row hover** (cheap, matches the
-     auto-calc switch and the concentration ✕, but dead on touch and twitchy across twenty rows);
-     **or cutting** — asking whether a per-row grip earns its place when the keyboard already
-     reorders. Rendered variants decide it, not this paragraph.
-     **It belongs in THIS session and not beside it.** "What stands on the resting screen" and "how
-     the screen is divided" are one question; answered apart they get two answers that do not fit.
-
-  Nothing here is blocked on code. What it needs first is RENDERED variants, not names
-  (`AGENTS.md` ▸ Screenshots go in design-preview).
-
-- [ ] **TABLE-ENTRY · where a player looks for the table.** The maintainer, the first time, looked
-  for tables beside the roster and did not see the Table item in the menu. A table is sat at AS a
-  character, so the roster is where the thought starts; the Table screen is where it lives now. Open:
-  whether a character's card (or the play screen) carries a way to the table — join as this
-  character, return to the table they sat at — and whether the menu item stays beside it. Decided
-  with rendered variants, not names.
 
 - [~] **RELAY-CHOICE · how players reach a table, asked the way a person thinks of it.** The
   maintainer's playtest: nobody knew what a relay is, and the choice read as a privacy setting —
@@ -222,15 +176,6 @@
   **Built:** the first table opened on a device asks once, the public relay chosen
   (`TableRouteDialog`, over Settings ▸ Table's own choices). **Left:** the explanation follows
   pointer and keyboard — today it describes only the chosen option.
-
-- [ ] **TABLE-REQUEST-PLAYBAR · a GM's request waits in the playbar, not over the whole screen.**
-  Today `TableRequestDialog` covers whatever screen the player is on (`../internals/table-link.md`),
-  so the sheet the answer depends on is hidden behind the question. Rendered in
-  `design-preview/service-dialogs-and-requests.html`, variant H2: while a request waits the playbar
-  widens, animated, so Decline, Roll and the log all fit; the bar marks the arrival with one pulse,
-  not a repeating one. The dialog's guarantees stay: no answer by Escape or a click elsewhere, the
-  hit after defenses, the count waiting behind it, a blocked Roll with its reason. On a screen with
-  no playbar the request still needs a place — decided with the build.
 
 - [ ] **KEYBOARD-NAV · the keyboard works by one standard, and the play screen by it first.** The
   maintainer's call: settled before new UI is built, so new UI is right by construction. The
@@ -288,31 +233,3 @@
   **Text volume is not the binding reason to prefer interactive** — onboarding would add on the order
   of ten strings, which is nothing beside what the app already carries. Constraint (b) — tutorials
   repel — stands on its own and is the real reason.
-- [~] **MOBILE-ALPHA · the narrow layout is usable, not finished.** Nothing overflows any more: at
-  393px and 320px, in English and Ukrainian, no route scrolls the document sideways and no box inside
-  `main` escapes it. The one threshold and the rules behind it are
-  [`../internals/ui.md`](../internals/ui.md) ▸ A narrow window; the check is `tools/visual/narrow.mjs`.
-  The banner stays and says alpha rather than absent. The hit-point block's narrow form — one row
-  under the bar, and at 0 hit points the roll and healing as icons between the saves — is the one
-  built for now; a second, with the field on its own row and two worded halves under it, is drawn
-  in `design-preview/damage-type-under-temp.html` and was passed over, not rejected. Left:
-  - [ ] **The row drag handle cannot pass the finger probe, and should not try.** `span.row-grip`
-        is 6px wide and misses 2 of 8 probe points — the two horizontal ones, 11px either side of the
-        mark: the left lands on the card's own border, the right INSIDE the row's hover pill. Passing
-        needs a 24px target and the whole gutter between card edge and row is 10px, so the only way
-        through is to overlap the row — and a handle that swallows taps meant for the row it sits
-        beside is worse than one that is hard to hit. Not a regression from the handle's redesign: at
-        its previous 12px the same two points missed for the same reason. An invisible `::after`
-        expander reaching back across the card's padding was TRIED and removed — measured, it changed
-        the count not at all. What would actually fix it is a different gesture on touch (press-and-
-        hold the row itself to reorder), which is a design question, not a size one.
-  - [ ] **Four tap targets, all of them in combat.** Hit-tested at 393px rather than measured as
-        boxes, which is the difference between a list worth working and a list of false alarms: the
-        controls that LOOK broken (`.prep` at 8×8, `.pin-star` at 18×18) already carry a `::before`
-        expander and fill a finger square, and every route but combat comes back clean. What is left
-        is `.slot-pip` (12×12, misses 4 of 8 probe points), `.resource-pip` (12×12, misses 1),
-        exhaustion's `.pip` (22×10, misses 2 — and a shortcut beside a full-size ∓ stepper that does
-        the same job), and the inventory row's quantity stepper (22×22, misses 1). Each sits ~4px
-        from a neighbour, so the `::before` trick cannot grow it without stealing the neighbour's
-        taps — the fix is to space or restack the row, which is a **phone-in-a-hand** call and not a
-        driver's. `tools/visual/narrow.mjs` prints the list on every run.

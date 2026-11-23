@@ -161,7 +161,7 @@ These are recommendations for the maintainers to accept or change; nothing here 
    has no build, so it is not a roster entry; its hit points, its attacks and the line about its
    turn are read in the middle of the owner's turn, so it belongs where the owner's are. The card
    is the monster view the compendium already has, with the overlay's fields editable. Which
-   region of the Combat screen takes the panel is COMBAT-RAIL's question (`../work/ui.md`).
+   region of the Combat screen takes the panel is COMBAT-RAIL's question (`../work/play-layout.md`).
 2. **Whose turn — said, not enforced, from two facts the granting row states**: where it acts
    (own initiative · after you · mount) and what a command costs. A creature with its own
    initiative gets its own roll.

@@ -46,7 +46,7 @@
   **Vex, Sap, Slow and Push stay text**: each acts on a creature, and the app has no target.
   **What is left:** **an attack row prints only the weapon's first property.** It explains all of them on hover
      and focus, as the article does; the sub-line has room for one word, and which words earn the
-     space is a layout question for COMBAT-RAIL's session.
+     space is a layout question for COMBAT-RAIL's session (`play-layout.md`).
   `versatile:1d10` is still the other half of this shape: data with no mechanic reading it, and a grip
   the player CHOOSES, so it wants a control before it can mean anything.
 - [ ] **SRD-TRANSCRIPTION · shipped rows are typed by hand from the SRD, and nothing parses it.**

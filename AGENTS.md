@@ -326,7 +326,7 @@ What you will reach for most:
 
 - **`docs/plan.md`** — the product spec, and the ORDER the open work is done in. When a decision
   there proves wrong, fix it in the same change.
-- **`docs/work/*.md`** — the open items, one file per subject (`roller`, `ui`, `mechanics`,
+- **`docs/work/*.md`** — the open items, one file per subject (`roller`, `ui`, `play-layout`, `mechanics`,
   `content`, `authoring`, `code-quality`, `release`). An item lives in exactly one of them, and a
   wave in the plan names items, never files.
 - **`docs/internals/`** — how the software works, in the present tense, one file per subsystem:

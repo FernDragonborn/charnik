@@ -71,20 +71,6 @@ stay semi-manual.
   you later get to choose again", and applies to EVERY shared option, not only styles. To check: is
   "once per character" right for every option that may be shared later, or should a row say so?
 
-- [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
-  feedback. Today `ui.spellsPinned` pins spells to the top of the combat spell list and nothing else
-  can be pinned — so a Barbarian hunting Rage, or a player who wants the two potions they are actually
-  carrying within reach, scrolls a panel for them mid-turn.
-  **The shape already exists and is the cheap half**: a pin is a per-character array of refs on `ui`,
-  and `spellsPinned` is exactly that, keyed by the same `type:source:id` identity everything else uses.
-  So a resource and an inventory row pin by their own refs through the same mechanism.
-  **The design half is WHERE a pin lands**, and that is the question to answer first: the spell pin
-  sorts within its own panel, but a pin that spans spells, resources and inventory has no single panel
-  to sort inside. Either it is a surface of its own — which is COMBAT-RAIL's question, so these two
-  want answering together — or each panel keeps sorting its own and "pinned" stops meaning one place.
-  **One rule it must not break:** a pin is a VIEW preference. It never changes what a character has,
-  and un-pinning is always one click from where the pin shows (`AGENTS.md` ▸ Reverse states).
-
 - [ ] **EXCEPT-DAMAGE · "resistance to all damage except X" has no form.** `damage_sensitivity`
   names ONE type or `all`; the exclusion in between is unsayable, so 2024 Superior Defense (all
   damage except Force) degrades to a note. The cheap shape is a subtractive relation

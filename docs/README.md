@@ -7,7 +7,7 @@ pointer at it, not a second set of rules.
 
 - [The plan](plan.md) — the product spec, and **the order the open work is done in**.
 - [work/](work/) — the open items themselves, one file per subject: [roller](work/roller.md) ·
-  [ui](work/ui.md) · [mechanics](work/mechanics.md) · [content](work/content.md) ·
+  [ui](work/ui.md) · [play-layout](work/play-layout.md) · [mechanics](work/mechanics.md) · [content](work/content.md) ·
   [authoring](work/authoring.md) · [code-quality](work/code-quality.md) ·
   [release](work/release.md). An item lives in exactly one of these; the reasoning behind it lives in
   the subsystem's own doc below. There is nowhere else open work may hide.

@@ -215,6 +215,7 @@ and its file does not move with it.
 | --- | --- |
 | [work/roller.md](work/roller.md) | the roller and every surface a roll appears on |
 | [work/ui.md](work/ui.md) | screens, the builder, accessibility, UI copy |
+| [work/play-layout.md](work/play-layout.md) | the play screen's layout at each width, pins, the table's place on it |
 | [work/mechanics.md](work/mechanics.md) | rules core, effects, features, resources, play state |
 | [work/content.md](work/content.md) | shipped rows, converters, packs, versioning |
 | [work/authoring.md](work/authoring.md) | compendium editor, homebrew, drafts, translation |
@@ -270,8 +271,9 @@ position and are given per wave, because most of them were learned the hard way.
      controls' native `title`s move onto the popover, which then owns the timing.
   3. **SYSTEM-QUESTION-STYLE** — `ui.md`. The flags and the left line leave the dialogs, the
      system's questions get a look of their own, and the table's question window fits its words.
-  4. **TABLE-REQUEST-PLAYBAR** — `ui.md`. A GM's request waits in the playbar, which widens for it,
-     instead of a dialog over the whole sheet.
+  4. **TABLE-REQUEST-PLAYBAR** — `play-layout.md`, its wide-desktop half (H2). A GM's request
+     waits in the playbar, which widens for it, instead of a dialog over the whole sheet. Its phone
+     and narrow-desktop forms ship with those layouts.
   5. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
@@ -306,9 +308,15 @@ position and are given per wave, because most of them were learned the hard way.
   Creation; the per-spell pool is Mystic Arcanum's; COMPANION serves Faithful Steed and Dragon
   Companion; TABLE-LINK carries spells on allies, auras, Cutting Words and the incoming-damage
   prompts.
-- **What the playtest left.** The first outside playtest is where the current work comes from, and
-  its tail is MOBILE-ALPHA — a narrow layout that is usable rather than finished. First, because
-  it is a player already standing in front of it.
+- **The play screen's new layout** — `play-layout.md`, from the two layout mocks. The first outside
+  playtest is where it comes from ("too much of everything", MOBILE-ALPHA's narrow layout usable
+  rather than finished), which is why it stands first after the level waves: a player is already
+  standing in front of it. KEYBOARD-NAV's open questions are answered first, then LAYOUT-WIDTHS,
+  ARRANGE-MODE and ROW-MENU, which every layout uses; then the layouts — COMBAT-RAIL with
+  RESOURCE-PIN, NARROW-DESKTOP, PHONE-PLAY (which retires MOBILE-ALPHA) — with NUMBER-PAD,
+  AT-ZERO-HP, MULTI-ATTACK-RESULT, the rest of TABLE-REQUEST-PLAYBAR and TABLE-ENTRY built inside
+  them. INITIATIVE-OFFER and MINE-STARTER-SET are new behaviour and can land on any layout. The
+  phone LAYOUT is not the phone BUILD: TABLE-LINK-PHONE stays after the engine is whole.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
   rule is still only text. A17's tail sits here too: a Tome warlock casts rituals, and the Book of
@@ -316,11 +324,8 @@ position and are given per wave, because most of them were learned the hard way.
 - **Deliberately in no wave:** DISTRIBUTION-EXPANSION (the 1.0.0 pre-release, its own session, blocked on
   accounts, not on code), ANY-HOST-PACKAGE-DISTRIBUTION (post-1.0), ONBOARD (its own design session, once the UI
   stops moving), ITEM-AT-THE-TABLE (a stated big goal with its own design session — authoring a custom
-  item from play, not from the compendium), COMBAT-RAIL (the play screen as a scrolling body beside a
-  pinned rail, left-aligned, with the panel regions re-decided — also its own session; RESOURCE-PIN
-  asks the same "where does a pin land" question and wants answering with it) and
-  COMPANION (its research is written; four answers wait on a sign-off) and TABLE-LINK-MACOS-STORE
-  (the maintainer's check on a Mac, not soon).
+  item from play, not from the compendium), COMPANION (its research is written; four answers wait on
+  a sign-off) and TABLE-LINK-MACOS-STORE (the maintainer's check on a Mac, not soon).
 
 ## Verification
 Automated coverage and conventions live in [testing.md](internals/testing.md) (run
