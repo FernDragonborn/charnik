@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (123)
+## Duplicate suspects (124)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -22,9 +22,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `REPORT` ×11 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/durable-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `check` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/durable-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `open` ×8 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/lib/storage/tab-sync.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
+- `onKeydown` ×6 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/rowGrid.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
-- `onKeydown` ×5 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `add` ×4 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/ItemInstanceAsk.svelte · src/routes/build/blocks/OwnEntries.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `nameOf` ×4 — src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte · src/routes/combat/play-outcomes.ts
@@ -120,6 +120,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
+- `settle` ×2 — src/lib/actions/rowGrid.ts · src/lib/components/CharacterConflictDialog.svelte
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
 - `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
@@ -572,7 +573,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (218 modules)
+## Library functions & types (219 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -608,6 +609,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const CONTROL_HINT_DWELL_MS` — How long the pointer rests on a CONTROL before its hint opens, so a pointer crossing a toolbar * on its way elsewhere…
 - `const HINT_WARM_MS` — While a hint is up, or this soon after one closed, the next opens with no dwell — what every * toolbar does once the …
 - `const provenance`
+
+### `src/lib/actions/rowGrid.ts`
+
+- `const rowGrid`
 
 ### `src/lib/actions/submitOnEnter.ts`
 
@@ -2776,4 +2781,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1698 exports across 235 modules · 123 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1699 exports across 236 modules · 124 duplicate suspects._

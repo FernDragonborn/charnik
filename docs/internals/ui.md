@@ -970,6 +970,12 @@ The left and right arrows walk the answers in the order they stand. Picked from 
 deliberately NOT trapped: `CommandPalette`, which restores focus itself — a second restorer fights
 it — and the combat popovers, which are anchored menus rather than modals.
 
+**A list of rows is ONE Tab stop** (`rowGrid`, on every panel of the play screen): ↑/↓ walk the
+rows, a row's own controls are its cells on ←/→ (mirrored right to left), Home and End go to a row's
+first and last cell, Ctrl+Home and Ctrl+End to the first and last row, and Tab leaves from — and
+comes back to — the cell last used. The APG grid pattern by roving tabindex; a control that answers
+an arrow itself, a grip moving its row, keeps it, and so does anything editable.
+
 **`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar
 or from the palette. A local search of the active character (`Ctrl+Shift+K`) and `Ctrl+1..4` between
 views are not built; they are KEYBOARD-NAV's (`../work/ui.md`).

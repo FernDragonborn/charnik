@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { rowGrid } from '#lib/actions/rowGrid.ts';
+	/** What a row is in every panel: one line of the list, whatever its own markup. */
+	const PANEL_ROWS = '.row-wrap, .effect-row, .resource-row, .inv-row, .spell-row, .skill-row';
 	// One draggable card in the combat panel grid. `pid` selects which panel body it renders — skills /
 	// attacks / actions / effects / spells / inventory — under a shared collapsible head (title + toolbar
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
@@ -145,24 +148,31 @@
 	>
 </div>
 {#if !collapsed[pid]}
-	{#if pid === 'skills'}
-		<SkillsPanel {s} />
-	{:else if pid === 'attacks'}
-		<AttacksPanel />
-	{:else if pid === 'actions'}
-		<ActionsPanel />
-	{:else if pid === 'effects'}
-		<EffectsPanel {c} {s} />
-	{:else if pid === 'spells'}
-		<SpellsPanel {s} />
-	{:else if pid === 'inventory'}
-		<InventoryPanel />
-	{:else if pid === 'features'}
-		<FeaturesPanel />
-	{/if}
+	<!-- the panel's rows are ONE Tab stop, walked by the arrows (work/ui.md ▸ KEYBOARD-NAV) -->
+	<div class="panel-body" use:rowGrid={PANEL_ROWS}>
+		{#if pid === 'skills'}
+			<SkillsPanel {s} />
+		{:else if pid === 'attacks'}
+			<AttacksPanel />
+		{:else if pid === 'actions'}
+			<ActionsPanel />
+		{:else if pid === 'effects'}
+			<EffectsPanel {c} {s} />
+		{:else if pid === 'spells'}
+			<SpellsPanel {s} />
+		{:else if pid === 'inventory'}
+			<InventoryPanel />
+		{:else if pid === 'features'}
+			<FeaturesPanel />
+		{/if}
+	</div>
 {/if}
 
 <style>
+	/* a wrapper for the keyboard, not for the layout: the panel lays itself out as it did */
+	.panel-body {
+		display: contents;
+	}
 	.head-btns {
 		display: flex;
 		gap: var(--space-1-5);
