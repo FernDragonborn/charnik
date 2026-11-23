@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (120)
+## Duplicate suspects (122)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -51,11 +51,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `rowName` ×3 — src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
+- `show` ×3 — src/lib/actions/focusHalo.ts · src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `adoptCharacter` ×2 — src/lib/character/repository.ts · src/lib/play/outcome.ts
 - `AMOUNT_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
+- `answerOf` ×2 — src/lib/actions/focusHalo.ts · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `answerReask` ×2 — src/routes/build/blocks/SheetInventory.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `ARROW_MOVE` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `because` ×2 — src/lib/actions/dragMotion.ts · src/lib/content/remote/pack-update-state.svelte.ts
@@ -87,6 +89,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isRecord` ×2 — src/lib/character/migrations.ts · src/lib/play/delta.ts
 - `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
+- `KEY` ×2 — src/lib/actions/focusHalo.ts · src/routes/table/asked-log.ts
 - `KINDS` ×2 — src/routes/dev/table-question/+page.svelte · src/routes/table/AskComposer.svelte
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -118,7 +121,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
-- `show` ×2 — src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
@@ -162,7 +164,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **elevation** — `--shadow-1`, `--shadow-2`
 
-**focus ring (a11y: visible focus is non-negotiable)** — `--focus-ring`, `--focus-offset`
+**focus ring (a11y: visible focus is non-negotiable)** — `--focus-ring`, `--focus-offset`, `--color-focus-halo`
 
 **semantic colors: DARK (shipped default)** — `--color-bg`, `--color-surface`, `--color-surface-2`, `--color-border`, `--color-border-strong`, `--color-text`, `--color-text-muted`
 
@@ -178,7 +180,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (103)
+## Global CSS classes (105)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -225,6 +227,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dragging-panel` | components.css |  |
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
+| `.focus-halo` | components.css |  |
+| `.focus-key` | components.css |  |
 | `.ghost` | components.css |  |
 | `.good` | components.css |  |
 | `.hand-drawn` | components.css |  |
@@ -560,7 +564,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (213 modules)
+## Library functions & types (214 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -579,6 +583,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/actions/floatInBody.ts`
 
 - `function floatInBody` — * Move a floating element to `document.body` for as long as it lives.
+
+### `src/lib/actions/focusHalo.ts`
+
+- `interface FocusHaloWords` — The key that answers a focused button, as the keyboard prints it.
+- `const focusHalo` — * A dialog's answers carry their focus as a soft halo that TRAVELS between them, with the key that * presses the focu…
 
 ### `src/lib/actions/growToFit.ts`
 
@@ -2735,4 +2744,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 103 global classes · 63 components · 1684 exports across 230 modules · 120 duplicate suspects._
+_51 tokens · 105 global classes · 63 components · 1686 exports across 231 modules · 122 duplicate suspects._

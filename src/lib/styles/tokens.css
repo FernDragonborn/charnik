@@ -72,6 +72,9 @@
 	/* ---- focus ring (a11y: visible focus is non-negotiable) ---- */
 	--focus-ring: 2px solid var(--color-accent);
 	--focus-offset: 2px;
+	/* the soft halo a dialog's answers carry their focus in (`actions/focusHalo`): drawn from the text
+	 * colour, so every theme, a user's own included, gets one that reads on its ground */
+	--color-focus-halo: color-mix(in srgb, var(--color-text) 26%, transparent);
 
 	/* ---- semantic colors: DARK (shipped default) ---- */
 	color-scheme: dark;

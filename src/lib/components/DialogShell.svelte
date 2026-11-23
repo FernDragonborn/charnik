@@ -9,7 +9,12 @@
 	import type { Snippet } from 'svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
+	import { focusHalo } from '$lib/actions/focusHalo';
+	import { _ } from '$lib/i18n';
 	import LangSwitcher from './LangSwitcher.svelte';
+
+	// the key a Mac's keyboard prints is Return
+	const onMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac');
 
 	let {
 		titleId,
@@ -58,6 +63,7 @@
 	tabindex="-1"
 	use:dismissOnEscape={onDismiss}
 	use:trapFocus={initialFocus}
+	use:focusHalo={{ enterKey: $_(onMac ? 'app.returnKey' : 'app.enterKey') }}
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

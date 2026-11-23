@@ -778,11 +778,43 @@ svg.hand-drawn {
 /* no on one edge, the answer on the other: what declines or defers stands at the start, a
    `.dialog-spacer` pushes the answer to the end, so the two are never mistaken for each other */
 .dialog-foot {
+	position: relative;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-4) var(--space-6) var(--space-5);
+}
+/* the focused answer's halo and the key under it (`actions/focusHalo`), drawn in place of the ring:
+   the footer's own padding below holds the key */
+.dialog-foot > .focus-halo,
+.dialog-foot > .focus-key {
+	position: absolute;
+	pointer-events: none;
+	opacity: 0;
+	transition:
+		left 0.22s ease,
+		width 0.22s ease,
+		opacity 0.22s ease;
+}
+.dialog-foot > .focus-halo {
+	border-radius: var(--radius);
+	box-shadow: 0 0 0 3px var(--color-focus-halo);
+}
+.dialog-foot > .focus-key {
+	padding-top: var(--space-1);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-micro);
+	line-height: 1;
+	text-align: center;
+	white-space: nowrap;
+}
+.dialog-foot[data-focus-shown] > .focus-halo,
+.dialog-foot[data-focus-shown] > .focus-key {
+	opacity: 1;
+}
+.dialog-foot[data-focus-shown] button:focus-visible {
+	outline: none;
 }
 .dialog-spacer {
 	flex: 1;

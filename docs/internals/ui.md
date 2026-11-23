@@ -952,7 +952,14 @@ sentence, which is copy and will be rewritten.
 Keyboard navigation is there from the start: correct Tab and Shift+Tab order, visible focus, ARIA
 roles and labels.
 
-**Every dialog traps focus** (`trapFocus`) and hands it back to what opened it. Two things are
+**Every dialog traps focus** (`trapFocus`) and hands it back to what opened it. It opens on the first
+answer in its footer — what declines, by the house footer — so an Enter pressed by habit says no,
+and takes the focus back if a navigation settling hands it to `<body>`. **A dialog's answers show
+their focus from the start** (`focusHalo`, on `DialogShell`): a soft halo that travels between them
+and the key that presses the focused one under it (`↵ Enter`, `↩ Return` on a Mac), in place of the
+ring — a halo that moves reads as "you are here" where a still ring reads as the button's own look.
+The left and right arrows walk the answers in the order they stand. Picked from rendered variants,
+`design-preview/question-focus-ring.html`; the table's native question window does the same. Two things are
 deliberately NOT trapped: `CommandPalette`, which restores focus itself — a second restorer fights
 it — and the combat popovers, which are anchored menus rather than modals.
 

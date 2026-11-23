@@ -10,10 +10,11 @@ export const FOCUSABLE =
  * was missing: backdrop-click + Escape already close it, but Tab could still walk out into the page
  * behind. Applied to the dialog root, so the trap lives exactly as long as the dialog is open.
  *
- * On mount it moves focus to the first focusable child (or the panel itself), so keyboard users start
- * inside; Tab / Shift+Tab wrap at the ends instead of escaping; on destroy it restores focus to
- * whatever was focused before the dialog opened (so the trigger regains focus). Pairs with
- * `dismissOnEscape` on the same node.
+ * On mount it moves focus to the first answer in the dialog's footer (else the first focusable
+ * child, else the panel itself), so keyboard users start inside and on the choice that declines;
+ * Tab / Shift+Tab wrap at the ends instead of escaping; on destroy it restores focus to whatever was
+ * focused before the dialog opened (so the trigger regains focus). Pairs with `dismissOnEscape` on
+ * the same node.
  *
  * Pass an element to start focus THERE instead of on the first control — a dialog whose first button
  * isn't the one to land on (the data-move dialogs open on the safe choice, not the merging one).
@@ -27,8 +28,19 @@ export const trapFocus: Action<HTMLElement, HTMLElement | null | undefined> = (n
 	// visibility check if a dialog ever renders hidden focusable elements.
 	const focusable = (): HTMLElement[] => [...node.querySelectorAll<HTMLElement>(FOCUSABLE)];
 
-	// start inside the dialog: the caller's choice, else the first focusable control, else the panel
-	(initial ?? focusable()[0] ?? node).focus();
+	// start inside the dialog: the caller's choice, else the first answer — the house footer puts what
+	// declines first, so an Enter pressed by habit says no — else the first control, else the panel
+	const start =
+		initial ??
+		node.querySelector<HTMLElement>('.dialog-foot button:not([disabled])') ??
+		focusable()[0] ??
+		node;
+	start.focus();
+	// SvelteKit hands the focus to <body> once a navigation settles, which took it from a dialog
+	// raised as a page loads (a conflict found at start, the first run)
+	requestAnimationFrame(() => {
+		if (!node.contains(document.activeElement)) start.focus();
+	});
 
 	const onKeydown = (e: KeyboardEvent) => {
 		if (e.key !== 'Tab') return;
