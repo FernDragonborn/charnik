@@ -573,7 +573,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (219 modules)
+## Library functions & types (220 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -2755,6 +2755,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const recordOf` — * Build a `Record<K, V>` that has EVERY key in `keys`, computing each value from its key.
 - `const countAt` — * The count a partial map holds under `key`, where the key is one CONTENT names — a resource id.
 
+### `src/lib/util/region-cycle.ts`
+
+- `const REGION_ATTRIBUTE` — * The attribute that makes an element a region F6 reaches (`work/ui.md` ▸ KEYBOARD-NAV, the * maintainer's call): the…
+- `function cycleRegion` — * F6 to the next region, Shift+F6 to the one before, wrapping round; the focus lands on a region's * first control — …
+
 ### `src/lib/util/remove-keeping-focus.ts`
 
 - `function removeKeepingFocus` — * Remove the row holding `control`, then put focus somewhere real — the same control in the row * that takes its plac…
@@ -2781,4 +2786,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1699 exports across 236 modules · 124 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1701 exports across 237 modules · 124 duplicate suspects._

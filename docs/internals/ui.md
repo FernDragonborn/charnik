@@ -976,6 +976,12 @@ first and last cell, Ctrl+Home and Ctrl+End to the first and last row, and Tab l
 comes back to — the cell last used. The APG grid pattern by roving tabindex; a control that answers
 an arrow itself, a grip moving its row, keeps it, and so does anything editable.
 
+**F6 and Shift+F6 walk the regions** (`cycleRegion`, from the root layout's key handler): every
+element marked `data-region` in page order — the top bar, and on the play screen the hero, the
+controls, the status row and each panel — wrapping round, landing on a region's first control (a
+panel's title) or on the region itself when it has none. A desktop convention rather than a W3C one;
+a region joins by being marked.
+
 **`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar
 or from the palette. A local search of the active character (`Ctrl+Shift+K`) and `Ctrl+1..4` between
 views are not built; they are KEYBOARD-NAV's (`../work/ui.md`).

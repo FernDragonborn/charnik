@@ -118,7 +118,7 @@
 
 	<!-- the turn/time bar and the last-roll strip share ONE row: both are one-line status strips, and
 	     stacked they left a wide empty band down the middle of an already-crowded screen -->
-	<div class="statusrow">
+	<div class="statusrow" data-region>
 		{#if c.play.inCombat}
 			<Turnbar {c} />
 		{:else}
@@ -164,7 +164,7 @@
 					<!-- the library makes each card a list item, so the landmark is a section inside it: a panel
 					     is reached by its name, not as "item 3 of 6" -->
 					<div class="card">
-						<section class="panel-region" aria-labelledby={`panel-title-${item.id}`}>
+						<section class="panel-region" data-region aria-labelledby={`panel-title-${item.id}`}>
 							<PanelCard pid={item.id} {c} {s} />
 						</section>
 					</div>

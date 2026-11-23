@@ -24,7 +24,7 @@
 	const number = (n: number) => n.toLocaleString(app.activeLocale);
 </script>
 
-<section class="hero">
+<section class="hero" data-region>
 	<div class="who">
 		<!-- shown only when this character HAS one: an empty placeholder on every sheet would be a
 		     permanent nag for the many players who never add a picture -->

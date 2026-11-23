@@ -24,7 +24,7 @@
 	const state = (on: boolean) => $_(on ? 'combat.controls.on' : 'combat.controls.off');
 </script>
 
-<section class="controls">
+<section class="controls" data-region>
 	<button
 		class="toggle combat-toggle"
 		class:on={c.play.inCombat}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cycleRegion } from '#lib/util/region-cycle.ts';
 	import '#lib/styles/app.css';
 	import { anchored } from '#lib/actions/anchored.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
@@ -133,6 +134,7 @@
 	});
 	const isDesktop = browser && detectPlatform() === Platform.Desktop;
 	function onGlobalKey(e: KeyboardEvent) {
+		if (cycleRegion(e)) return;
 		const intent = reloadIntentOf(e, isDesktop);
 		if (intent === RELOAD_INTENT.none) return;
 		e.preventDefault();
@@ -408,7 +410,7 @@
 
 <a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
 
-<header class="topbar">
+<header class="topbar" data-region>
 	<a class="wordmark" href={resolve('')}>Char<span>nik</span></a>
 	<nav class="nav" aria-label={$_('nav.primary')}>
 		{#each nav as item (item.href)}
