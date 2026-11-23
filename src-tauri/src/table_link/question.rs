@@ -132,6 +132,11 @@ pub fn table_question_words(webview: tauri::Webview) -> Option<Words> {
     if !is_question(webview.label()) {
         return None;
     }
+    // the page is ready to be answered: `.focused(true)` brings the window forward, but on Windows
+    // the keyboard stays outside its webview until a click, so Enter and the arrows went nowhere.
+    // Best-effort: a system that refuses the focus still shows the window, and a click answers it.
+    let _ = webview.window().set_focus();
+    let _ = webview.set_focus();
     pending().as_ref().map(|asked| asked.words.clone())
 }
 
