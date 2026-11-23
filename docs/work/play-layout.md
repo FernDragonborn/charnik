@@ -26,10 +26,11 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
 
 ## The layouts
 
-- [ ] **LAYOUT-WIDTHS · what tells the three layouts apart.** Open: whether phone and narrow desktop
-  are told apart by width alone or by the pointer as well (`pointer: coarse` against `fine`) — the
-  narrow desktop mock is "driven by a mouse and a keyboard", and a desktop window dragged to 360px is
-  not a phone; where wide desktop ends and the column layout begins; and what a character's saved
+- [ ] **LAYOUT-WIDTHS · what tells the three layouts apart.** The phone and the narrow desktop are
+  told apart by the POINTER, not the width — the maintainer's call: a finger gets the phone layout
+  (`pointer: coarse`), a mouse gets the column layout however narrow the window, since the narrow
+  desktop mock is "driven by a mouse and a keyboard" and a desktop window dragged to 360px is not a
+  phone. Open: where wide desktop ends and the column layout begins; and what a character's saved
   layout (`ui.panelColumns`, the row orders, the pins) means in each — one arrangement read three
   ways, or one per layout. `tools/visual/narrow.mjs` and `shot.mjs` gain the narrow desktop widths
   (512 and 768 are the mock's) beside 393 and 1280.
