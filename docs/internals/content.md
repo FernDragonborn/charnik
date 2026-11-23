@@ -517,7 +517,8 @@ The file carries its own target (`type`, `source`, `id`, a locale for a translat
 row that does not exist yet), so the filename is only a safe unique name. A draft is ephemeral, so on
 a schema-version mismatch it is DISCARDED rather than migrated — and the user is told, because
 losing work silently is the surprise. A draft whose target resolves to no row is an ORPHAN, and the
-dialog for it offers reassign, keep-as-new and delete. **Reassign re-points and resumes; it writes
+dialog for it offers reassign, keep-as-new and delete — keep-as-new only for an edit of a whole row,
+since a translation has no row of its own to stand as. **Reassign re-points and resumes; it writes
 nothing** until the user saves, and where the chosen target already has a draft the user picks which
 survives after opening either. Every draft, orphans included, is reachable from the Drafts pane. A
 draft whose `sourceHash` no longer matches its row is kept and flagged. The web demo cannot save, so

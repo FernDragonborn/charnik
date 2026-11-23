@@ -29,8 +29,8 @@ function componentsBuildingTheirOwnDialogHead(): string[] {
 }
 
 describe('every dialog carries the language switcher', () => {
-	it('there are dialogs to scan at all', () => {
-		expect(componentsBuildingTheirOwnDialogHead().length).toBeGreaterThan(1);
+	it('there are dialogs to scan at all — the shared shell first among them', () => {
+		expect(componentsBuildingTheirOwnDialogHead()).toContain('lib/components/DialogShell.svelte');
 	});
 
 	it('…and each of them renders one in its corner', () => {

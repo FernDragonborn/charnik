@@ -83,20 +83,6 @@
       toast that is gone in seconds and inside a line whose keyboard model is a caret walking
       tokens. That is a decision about the roller, taken with it.
 
-- [~] **SYSTEM-QUESTION-STYLE · the system's questions get a style of their own — 0.9.0.** The
-  maintainer's call: before 0.9.0 the flags and the accent line on the left of a dialog go, and the
-  questions the system asks get another look. Picked from rendered variants
-  (`design-preview/system-questions.html`, variant C1): the question small, the thing to recognise
-  large, a code larger still, the consequence as a paragraph, no on one edge and yes on the other,
-  the brand colour only on what cannot be undone. **Built** for the table's window
-  (`static/table-question.html`), which is now as tall as its words in either locale, and for every
-  dialog on `DialogShell` (`design-preview/service-dialogs-all.html`): content health, packs, the
-  bug report as one field and one button, the character conflict, the edition switch, a folder
-  about to be merged and files changed outside the app compared side by side, a move that left the
-  old folder, the plugin question. **Left:** the orphan draft (`OrphanDialog`) as rendered — when
-  it was last edited and its fields and prose beside the row it would be tied to, with *keep as a
-  new entry* among the answers. The table's window is seen on the real desktop app, its focus shown
-  from the start (`../internals/table-link.md`).
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
       and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
       set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only

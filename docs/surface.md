@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (122)
+## Duplicate suspects (123)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -31,11 +31,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `pick` ×4 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/compendium/[...entry]/+page.svelte · src/routes/table/AskComposer.svelte
+- `rowName` ×4 — src/lib/components/OrphanDialog.svelte · src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `choose` ×3 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte · src/lib/components/settings/TableSettings.svelte
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `fieldLabel` ×3 — src/lib/components/EditContentForm.svelte · src/lib/components/OrphanDialog.svelte · src/lib/content/detail.ts
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
@@ -50,7 +52,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `refusal` ×3 — src/lib/play/cast.ts · src/lib/play/option-activation.ts · src/lib/play/turn.ts
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
-- `rowName` ×3 — src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
 - `show` ×3 — src/lib/actions/focusHalo.ts · src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
@@ -81,7 +82,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `entryOf` ×2 — src/lib/components/EntryList.svelte · src/routes/combat/roll-journal.svelte.ts
 - `errorOf` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/storage-edges/+page.svelte
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
-- `fieldLabel` ×2 — src/lib/components/EditContentForm.svelte · src/lib/content/detail.ts
 - `fit` ×2 — src/lib/actions/growToFit.ts · src/lib/build/derive.ts
 - `fold` ×2 — src/lib/character/spellcasting.ts · src/lib/rules/pipeline.ts
 - `follow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
@@ -99,6 +99,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `MIDDLE_BUTTON` ×2 — src/routes/+layout.svelte · src/routes/dev/page-reach/+page.svelte
 - `MODES` ×2 — src/lib/components/settings/TableSettings.svelte · src/lib/dice/roller-sources.ts
+- `moved` ×2 — src/lib/components/OrphanDialog.svelte · src/lib/storage/memory.ts
 - `moveOnArrow` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/RowGrip.svelte
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -337,7 +338,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MobileWarning** | — |  |
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
-| **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
+| **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` | A draft whose entry is gone — deleted, renamed, or its source switched off. |
 | **OwnWords** | `rowId`, `original`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
 | **PackTranslationBackups** | `pack`, `backups`, `onRestored` | The way back out of `content-backups/`, under the pack whose files a run copied aside before it |
 | **PackUndoDialog** | `pack`, `onChoose`, `onCancel` | "Undo this update" asks what becomes of what the player changed in the pack since the update |
@@ -2761,4 +2762,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 105 global classes · 63 components · 1693 exports across 233 modules · 122 duplicate suspects._
+_51 tokens · 105 global classes · 63 components · 1693 exports across 233 modules · 123 duplicate suspects._
